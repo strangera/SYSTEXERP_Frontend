@@ -305,6 +305,24 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     ];
   }
 
+  // 將輸入轉為 ISO datetime（YYYY-MM-DDTHH:MM:SS），並移除毫秒
+  private toSqlNoMs(d: any): string | null {
+    if (d === null || d === undefined || d === '') return null;
+    try {
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return null;
+      const yyyy = dt.getFullYear();
+      const mm = String(dt.getMonth() + 1).padStart(2, '0');
+      const dd = String(dt.getDate()).padStart(2, '0');
+      const hh = String(dt.getHours()).padStart(2, '0');
+      const min = String(dt.getMinutes()).padStart(2, '0');
+      const ss = String(dt.getSeconds()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`;
+    } catch {
+      return null;
+    }
+  }
+
 
 
   // 檢查其他互斥欄位是否有值
@@ -326,20 +344,10 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
   private createInsertBody(frm: FormGroup) {
     const raw = frm.getRawValue();
 
-    const toIso = (d: any) => {
-      if (d === null || d === undefined || d === '') return null;
-      try {
-        const dt = new Date(d);
-        return isNaN(dt.getTime()) ? null : dt.toISOString();
-      } catch {
-        return null;
-      }
-    };
-
     return {
-      NOT_DateTime: toIso(raw.NOT_DateTime),
-      NOT_BegDateTime: toIso(raw.NOT_BegDateTime),
-      NOT_EndDateTime: toIso(raw.NOT_EndDateTime),
+      NOT_DateTime: this.toSqlNoMs(raw.NOT_DateTime),
+      NOT_BegDateTime: this.toSqlNoMs(raw.NOT_BegDateTime),
+      NOT_EndDateTime: this.toSqlNoMs(raw.NOT_EndDateTime),
       NOT_Status: raw.NOT_Status,
       NOT_Remark: raw.NOT_Remark,
       NOT_Desc: raw.NOT_Desc,
@@ -392,9 +400,9 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     return {
       ID: Number(this.rowdata?.ID ?? 0),
       STO_No: this.rowdata?.STO_No ?? '',
-      NOT_DateTime: raw.NOT_DateTime,
-      NOT_BegDateTime: raw.NOT_BegDateTime,
-      NOT_EndDateTime: raw.NOT_EndDateTime,
+      NOT_DateTime: this.toSqlNoMs(raw.NOT_DateTime),
+      NOT_BegDateTime: this.toSqlNoMs(raw.NOT_BegDateTime),
+      NOT_EndDateTime: this.toSqlNoMs(raw.NOT_EndDateTime),
       NOT_Status: raw.NOT_Status,
       NOT_Remark: raw.NOT_Remark,
       NOT_Desc: raw.NOT_Desc,
@@ -419,7 +427,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
         return {
           ID: clone.ID ?? 0,
           STO_No: clone.STO_No ?? this.rowdata?.STO_No ?? '',
-          NOT_DateTime: clone.NOT_DateTime ?? raw.NOT_DateTime,
+          NOT_DateTime: this.toSqlNoMs(clone.NOT_DateTime ?? raw.NOT_DateTime),
           NOT_SeqNo: !isNaN(Number(clone.NOT_SeqNo)) ? Number(clone.NOT_SeqNo) : null,
           TLT_No: clone.TLT_No ?? '',
           ECR_Type: clone.ECR_Type ?? '',
