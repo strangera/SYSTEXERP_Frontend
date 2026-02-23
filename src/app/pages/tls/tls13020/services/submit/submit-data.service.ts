@@ -119,7 +119,15 @@ export class SubmitDataService {
         interval: Number(item.interval) || 0,
         down_payment: Number(item.down_payment) || 0,
         period_nos: Number(item.period_nos) || 0,
-        tpy_rate: Number(item.tpy_rate) || 0
+        tpy_rate: Number(item.tpy_rate) || 0,
+        // D 類型專用欄位
+        cap_saletype: item.cap_saletype || '',
+        instms_type: item.instms_type || '',
+        edc_bank: item.edc_bank || '',
+        pay_no: item.pay_no || '',
+        calc_type: item.calc_type || '',
+        over_base_rate: Number(item.over_base_rate) || 0,
+        rent_plus_rate: Number(item.rent_plus_rate) || 0
       };
 
       // Create 模式：所有已勾選都是 insert
@@ -185,14 +193,15 @@ export class SubmitDataService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (item.discountSettingItems || []).forEach((detail: any) => {
         if (detail._status === 'deleted') {
-          if (this.hasValidId(detail.id)) {
+          // 新建/續約模式下的項目不需要刪除（DB 中不存在）
+          if (!isCreateMode && this.hasValidId(detail.id)) {
             discountSettings.toDelete.push({ id: String(detail.id) });
           }
           return;
         }
-        // 未勾選的項目：既有的送刪除，新增的跳過
+        // 未勾選的項目：既有的送刪除，新增/續約的跳過
         if (!detail.selected) {
-          if (this.hasValidId(detail.id)) {
+          if (!isCreateMode && item._status !== 'new' && detail._status !== 'new' && this.hasValidId(detail.id)) {
             discountSettings.toDelete.push({ id: String(detail.id) });
           }
           return;
@@ -218,7 +227,8 @@ export class SubmitDataService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (item.annualPerformanceItems || []).forEach((detail: any) => {
         if (detail._status === 'deleted') {
-          if (this.hasValidId(detail.id)) {
+          // 新建/續約模式下的項目不需要刪除（DB 中不存在）
+          if (!isCreateMode && this.hasValidId(detail.id)) {
             annualSettings.toDelete.push({ id: Number(detail.id) });
           }
           return;
@@ -243,14 +253,15 @@ export class SubmitDataService {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (item.discountLevelItems || []).forEach((detail: any, index: number) => {
         if (detail._status === 'deleted') {
-          if (this.hasValidId(detail.id)) {
+          // 新建/續約模式下的項目不需要刪除（DB 中不存在）
+          if (!isCreateMode && this.hasValidId(detail.id)) {
             levelSettings.toDelete.push({ id: Number(detail.id) });
           }
           return;
         }
-        // 未勾選的項目：既有的送刪除，新增的跳過
+        // 未勾選的項目：既有的送刪除，新增/續約的跳過
         if (detail.selected === false || detail.is_enabled === false) {
-          if (this.hasValidId(detail.id)) {
+          if (!isCreateMode && item._status !== 'new' && detail._status !== 'new' && this.hasValidId(detail.id)) {
             levelSettings.toDelete.push({ id: Number(detail.id) });
           }
           return;
@@ -376,7 +387,7 @@ export class SubmitDataService {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private formatDateToString(value: any): string {
     if (!value) return '';
-    if (typeof value === 'string') return value.split('T')[0];
+    if (typeof value === 'string') return value.split('T')[0].replace(/\//g, '-');
     if (value instanceof Date && !isNaN(value.getTime())) {
       const y = value.getFullYear();
       const m = String(value.getMonth() + 1).padStart(2, '0');

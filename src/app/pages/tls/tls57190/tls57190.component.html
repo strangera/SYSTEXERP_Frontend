@@ -26,10 +26,9 @@
               [options]="LOGO_NoOptions | async" [optionLabel]="'label'" [optionValue]="'value'"></app-dropdown>
           </div>
           <!-- 國際條碼/商品管理編號/廠商貨號 -->
-          <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryForm.controls.PLU_MagNo"
-            [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
-            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
-          </app-dropdown-table>
+          <app-product-autocomplete class="col-12" [control]="queryForm.controls.PLU_MagNo" optionValue="PLU_MagNo"
+            [submitted]="submitted" />
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="國際條碼" controlName="PLU_No" [control]="queryForm.controls.PLU_No"
               [submitted]="submitted"></app-input-text>

@@ -72,40 +72,6 @@ export interface IQueryTLS56080Response {
 }
 
 /**
- * POS2004 商品查詢條件介面
- * 對應 Swagger: POST /TLS0000/TLS5000/queryPOS2004Detail_TLS56080 的 Request Body
- */
-export interface IQueryPOS2004DetailRequest {
-  PageSize?: number;
-  PageIndex?: number;
-  SortBy?: { field: string; order: number }[];
-  queryNo?: string; // 查詢編號 (國際條碼/商品管理編號/廠商貨號)
-  PLU_Name?: string; // 商品名稱
-  LOGO_No?: string; // 廠商貨號
-  HOS_No?: string; // 品牌編號
-}
-
-/**
- * POS2004 商品查詢回應資料介面
- * 對應 Swagger: POST /TLS0000/TLS5000/queryPOS2004Detail_TLS56080 的 Response Data
- */
-export interface IQueryPOS2004DetailResponse {
-  id: number;
-  PLU_MagNo: string; // 商品管理編號
-  PLU_Name: string; // 商品名稱
-  PLU_No: string; // 國際條碼
-  PLU_OrgPLUNo: string;
-  PLU_Unit: string; // 單位代碼
-  UNIT_NAME: string; // 單位名稱
-  PLU_BoxQty: number; // 箱入數
-  PLU_StockTaxType: string; // 庫存稅別
-  PLU_SalePrc_UNI: number; // 未稅價
-  PLU_SalePrc: number; // 含稅價
-  PLU_TaxType: string; // 稅別
-  NowHaveQty: number; // 目前庫存量
-}
-
-/**
  * 查詢 STORETRADED 資料表 (同業調撥明細) 條件介面
  * 對應 Swagger: POST /TLS0000/TLS5000/querySTORETRADED 的 Request Body
  */
@@ -217,20 +183,6 @@ export class Tls56080Service {
   ): Observable<ApiResponse<IQueryTLS56080Response[]>> {
     return this.http.post<ApiResponse<IQueryTLS56080Response[]>>(
       `${this.apiUrl}/queryTLS56080`,
-      params,
-    );
-  }
-
-  /**
-   * 透過商品管理編號、國際條碼或廠商貨號查詢商品資訊。
-   * @param params 查詢條件。
-   * @returns 包含 IQueryPOS2004DetailResponse 陣列的 API 響應。
-   */
-  queryPOS2004Detail(
-    params: IQueryPOS2004DetailRequest,
-  ): Observable<ApiResponse<IQueryPOS2004DetailResponse[]>> {
-    return this.http.post<ApiResponse<IQueryPOS2004DetailResponse[]>>(
-      `${this.apiUrl}/queryPOS2004Detail_TLS56080`,
       params,
     );
   }

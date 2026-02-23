@@ -47,9 +47,16 @@
           placeholder="請選擇商品" [options]="POS2004Options" optionLabel="PLU_MagNo" [filter]="true" appendTo="body"
           [showClear]="true" (onChange)="onChangePLU_MagNo(rowData)" required [virtualScroll]="true"
           [virtualScrollItemSize]="40">
+          <ng-template let-options pTemplate="item">
+            <div class="flex align-items-center gap-2">
+              <div>
+                {{ options['label'] }}
+              </div>
+            </div>
+          </ng-template>
         </p-dropdown>
         <span *ngIf="store_way === '1' || !isFormCreateable">
-          {{ rowData.PLU_MagNo?.PLU_MagNo || rowData.PLU_No }}
+          {{ (rowData.PLU_MagNo?.PLU_MagNo) || rowData.PLU_MagNo || rowData.PLU_No }}
         </span>
       </td>
       <td class="text-center">

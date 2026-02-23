@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, ElementRef, Renderer2, AfterViewInit, OnInit } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, Renderer2 } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 // UI
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -13,16 +16,13 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
-import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { FIN13050Service } from '@service/api/fin/fin13050.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 
 type SortMeta = { field: string; order: 1 | -1 | number };
 
@@ -200,10 +200,15 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
     // 發票格式
     this.fin13060Service.queryAPS2002DropDownList().subscribe((res: any) => {
       const list = res?.Data ?? [];
-      this.INV_GUITypeOptions = list.map((x: any) => ({
-        value: String(x.No),
-        label: `${x.No}-${x.Name}`,
-      }));
+
+      const allow = new Set(['31', '32']); // ✅只顯示這兩種
+
+      this.INV_GUITypeOptions = list
+        .filter((x: any) => allow.has(String(x?.No)))
+        .map((x: any) => ({
+          value: String(x.No),
+          label: `${x.No}-${x.Name}`,
+        }));
     });
 
     // SYS1000
@@ -549,60 +554,60 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-onDelete(event: any): void {
-  const ids = this.normalizeIds(event);
-  if (!ids.length) {
-    this.messageService.warnBubble('請先選擇要刪除的資料');
-    return;
+  onDelete(event: any): void {
+    const ids = this.normalizeIds(event);
+    if (!ids.length) {
+      this.messageService.warnBubble('請先選擇要刪除的資料');
+      return;
+    }
+
+    // ✅ 確認框：只傳 1 個參數（options 物件）
+    this.messageService.confirm({
+      message: `確定要刪除選取的 ${ids.length} 筆資料嗎？`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: '確定',
+      rejectLabel: '取消',
+      accept: () => {
+        this.messageService.blockUi();
+
+        this.fin13060Service.deleteFIN13060(ids).subscribe({
+          next: () => {
+            this.messageService.successBubble('刪除成功');
+
+            if (this.lastQueryBody) {
+              const pageSize =
+                Number(this.lastQueryBody?.pageSize) > 0 ? this.lastQueryBody.pageSize : 30;
+
+              const body = { ...this.lastQueryBody, pageSize };
+              this.lastQueryBody = body;
+
+              this.fin13060Service.queryFIN13060(body).subscribe({
+                next: (res: any) => {
+                  const raw = res?.Data ?? [];
+                  this.data = raw.map((row: any) => ({
+                    ...row,
+                    TXN_Date: this.toSlashDateDisplay(row?.TXN_Date),
+                  }));
+                  this.totalRecords = res?.TotalCount ?? this.data.length;
+                },
+                error: () => this.messageService.unblockUi(),
+                complete: () => this.messageService.unblockUi(),
+              });
+              return;
+            }
+
+            this.messageService.unblockUi();
+          },
+          error: () => {
+            this.messageService.errorBubble('刪除失敗，請稍後再試');
+            this.messageService.unblockUi();
+          },
+        });
+      },
+      reject: () => { },
+    });
   }
-
-  // ✅ 確認框：只傳 1 個參數（options 物件）
-  this.messageService.confirm({
-    message: `確定要刪除選取的 ${ids.length} 筆資料嗎？`,
-    header: '刪除確認',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: '確定',
-    rejectLabel: '取消',
-    accept: () => {
-      this.messageService.blockUi();
-
-      this.fin13060Service.deleteFIN13060(ids).subscribe({
-        next: () => {
-          this.messageService.successBubble('刪除成功');
-
-          if (this.lastQueryBody) {
-            const pageSize =
-              Number(this.lastQueryBody?.pageSize) > 0 ? this.lastQueryBody.pageSize : 30;
-
-            const body = { ...this.lastQueryBody, pageSize };
-            this.lastQueryBody = body;
-
-            this.fin13060Service.queryFIN13060(body).subscribe({
-              next: (res: any) => {
-                const raw = res?.Data ?? [];
-                this.data = raw.map((row: any) => ({
-                  ...row,
-                  TXN_Date: this.toSlashDateDisplay(row?.TXN_Date),
-                }));
-                this.totalRecords = res?.TotalCount ?? this.data.length;
-              },
-              error: () => this.messageService.unblockUi(),
-              complete: () => this.messageService.unblockUi(),
-            });
-            return;
-          }
-
-          this.messageService.unblockUi();
-        },
-        error: () => {
-          this.messageService.errorBubble('刪除失敗，請稍後再試');
-          this.messageService.unblockUi();
-        },
-      });
-    },
-    reject: () => {},
-  });
-}
 
 
 

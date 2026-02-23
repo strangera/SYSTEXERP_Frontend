@@ -191,10 +191,12 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       defaultVoidDate.setHours(23, 0, 0, 0);
       this.messageService.confirm({
         header: isCross ? '開立折讓單' : '作廢交易資料',
-        message: isCross ? '此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?' : '此筆交易未跨期，確定要作廢交易資料嗎?',
+        message: isCross ? '此筆交易已跨期，確定作廢後會開立折讓單，確定作廢嗎?' : '確定作廢嗎?',
         contentTemplate: this.customTimeTemp,
         templateContext: { data: { selectedDate: defaultVoidDate } },
+        acceptLabel: '確定作廢',
         accept: (result) => {
+          this.messageService.infoBubble('作廢中請稍後...');
           const selectedDate = result?.data?.selectedDate;
           if (!this.isValidVoidDate(selectedDate, rowData.TXN_Date)) return;
           this.loading = true;
@@ -232,12 +234,12 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
             }
           });
         },
-        extraButtons: [
-          {
-            label: '確認資料', severity: 'info',
-            action: () => this.onEdit({ ...rowData, type, TXN_GUIPaper: this.historyRequestBody?.TXN_GUIPaper }, this.historyRequestBody)
-          }
-        ]
+        // extraButtons: [
+        //   {
+        //     label: '確認資料', severity: 'info',
+        //     action: () => this.onEdit({ ...rowData, type, TXN_GUIPaper: this.historyRequestBody?.TXN_GUIPaper }, this.historyRequestBody)
+        //   }
+        // ]
       });
     } else if (type === FIX_TYPE.刪除交易) {
       const txnDate = this.datePipe.transform(rowData.TXN_Date, 'yyyy-MM-dd')
@@ -249,7 +251,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         TXN_No: Number(rowData.TXN_No),
       };
       this.messageService.confirm({
-        header: '刪除交易', message: '確定要刪除交易嗎?',
+        header: '刪除交易', message: '交易資料刪除後，將查不到這筆資料，您確認要刪除嗎?',
         accept: () => {
           this.loading = true;
           this.tls24010Service.deleteTLS24010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
@@ -354,6 +356,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       frm.get('rece_yn')?.setValue(data?.rece_yn);
     }
     const inertData = { ...frm.value, TXN_No: '系統自動產生' };
+    this.queryStateService.setQueryState(this.ProgNo, frm.value);
     this.onCreate(inertData, frm.value);
   }
 

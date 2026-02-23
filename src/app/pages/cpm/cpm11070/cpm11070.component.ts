@@ -95,7 +95,7 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
     { label: '不廣播', value: 'N' },
     { label: '全部', value: 'A' },
   ];
-  SPACE1Options = getSYS1000Options('LOCATION');
+  SPACE1Options = getSYS1000Options('LOCATION').map((item: any) => ({ value: item.value ?? item.No ?? '', label: `${item.value ?? item.No ?? ''} - ${item.label ?? item.Name ?? ''}` }));
   USER5Options = [
     { Name: '遊客', No: '1' },
     { Name: '員工', No: '2' },
@@ -147,16 +147,16 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
         .subscribe({
           next: () => {
             try { SystemOptionsService.refreshCache(); } catch { }
-            this.SPACE1Options = getSYS1000Options('LOCATION');
+            this.SPACE1Options = getSYS1000Options('LOCATION').map((item: any) => ({ value: item.value ?? item.No ?? '', label: `${item.value ?? item.No ?? ''} - ${item.label ?? item.Name ?? ''}` }));
           },
           error: () => {
             try { SystemOptionsService.refreshCache(); } catch { }
-            this.SPACE1Options = getSYS1000Options('LOCATION');
+            this.SPACE1Options = getSYS1000Options('LOCATION').map((item: any) => ({ value: item.value ?? item.No ?? '', label: `${item.value ?? item.No ?? ''} - ${item.label ?? item.Name ?? ''}` }));
           }
         });
     } catch (e) {
       try { SystemOptionsService.refreshCache(); } catch { }
-      this.SPACE1Options = getSYS1000Options('LOCATION');
+      this.SPACE1Options = getSYS1000Options('LOCATION').map((item: any) => ({ value: item.value ?? item.No ?? '', label: `${item.value ?? item.No ?? ''} - ${item.label ?? item.Name ?? ''}` }));
     }
 
     // 載入物品類別下拉（頁面層容錯：若 filter API 失敗則抓全部再過濾）

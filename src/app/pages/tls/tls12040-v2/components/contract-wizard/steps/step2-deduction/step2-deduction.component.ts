@@ -22,6 +22,7 @@ import {
   setColumnsReadonly
 } from '../../../../../tls13010-v2/core/constants/fare-columns.config';
 import { CrudTrackingService, ChangeDetectionConfig, TrackableItem } from '../../../../../tls13010-v2/core/services/crud-tracking.service';
+import { getContractInfoColumns } from '../../../../../tls13010-v2/core/constants/commission-columns';
 
 /** 合約資訊介面 */
 interface ContractInfo {
@@ -33,6 +34,8 @@ interface ContractInfo {
   VEN_Name?: string;
   contract_subno?: string;
   tlt_term_type?: string;
+  tlt_ctype_mtotal?: string;
+  overall_status?: string;
   tlt_bdate?: string;
   tlt_edate?: string;
   tlt_contract_bdate?: string;
@@ -168,26 +171,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
 
   // ========== 合約資訊 ==========
   private initContractInfoColumns(): void {
-    this.contractInfoColumns = [
-      { field: 'apply_no', header: '專櫃招募編號', type: 'text', editable: false, autoWidth: true },
-      { field: 'tlt_no', header: '專櫃編號', type: 'text', editable: false, autoWidth: true },
-      { field: 'tlt_name', header: '品牌(專櫃)名稱', type: 'text', editable: false, autoWidth: true },
-      { field: 'ven_uniform', header: '廠商統編', type: 'text', editable: false, autoWidth: true },
-      { field: 'VEN_Name', header: '廠商名稱', type: 'text', editable: false, autoWidth: true },
-      { field: 'contract_subno', header: '版本編號', type: 'text', editable: false, autoWidth: true },
-      {
-        field: 'tlt_term_type',
-        header: '抽成別',
-        type: 'dropdown',
-        editable: false,
-        options: TLS13010_DROPDOWN_OPTIONS.tltTermType,
-        autoWidth: true
-      },
-      { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-      { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-      { field: 'tlt_contract_bdate', header: '營運起始日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-      { field: 'tlt_contract_edate', header: '營運終止日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' }
-    ];
+    this.contractInfoColumns = getContractInfoColumns();
   }
 
   private setupContractInfo(): void {
@@ -206,6 +190,8 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
       VEN_Name: formValue.VEN_Name || '',
       contract_subno: formValue.contract_subno || '',
       tlt_term_type: formValue.tlt_term_type || '',
+      tlt_ctype_mtotal: formValue.tlt_ctype_mtotal || '',
+      overall_status: formValue.overall_status || '',
       tlt_bdate: formValue.tlt_bdate || '',
       tlt_edate: formValue.tlt_edate || '',
       tlt_contract_bdate: formValue.tlt_contract_bdate || '',
@@ -477,13 +463,19 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     this.payNoOptions = this.dropdownService.getPayNoOptions();
 
     if (this.payNoOptions.length === 0) {
-      setTimeout(() => {
-        this.payNoOptions = this.dropdownService.getPayNoOptions();
-        if (this.payNoOptions.length > 0) {
-          this.clearColumnCache();
-          this.cdr.detectChanges();
+      // 如果 payNoOptions 為空，主動呼叫 API 載入
+      this.dropdownService.initPayNoOptionsWithRetry().subscribe({
+        next: (options) => {
+          this.payNoOptions = options;
+          if (this.payNoOptions.length > 0) {
+            this.clearColumnCache();
+            this.cdr.detectChanges();
+          }
+        },
+        error: (err) => {
+          console.error('❌ 載入支付編號選項失敗:', err);
         }
-      }, 500);
+      });
     }
   }
 

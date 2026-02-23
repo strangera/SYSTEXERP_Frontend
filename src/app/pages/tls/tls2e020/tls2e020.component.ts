@@ -109,13 +109,10 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
   }
 
   onSubmit(frm: FormGroup) {
-    // 移除必填驗證
-    ['money_type', 'sam_termno'].forEach(key => {
-      const control = this.queryForm.get(key);
-      control?.clearValidators();
-      control?.updateValueAndValidity({ emitEvent: false });
-    });
-
+    this.queryForm.controls.money_type.clearValidators();
+    this.queryForm.controls.sam_termno.clearValidators();
+    this.queryForm.controls.money_type.updateValueAndValidity();
+    this.queryForm.controls.sam_termno.updateValueAndValidity();
     this.handleSubmit(frm, () => {
       const val = frm.value;
       const body = {
@@ -152,13 +149,13 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
       sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
       sam_termno: frm.value.sam_termno as number,
       money_type: frm.value.money_type as number,
-      tlt_no: ''
     }
 
     this.tls2e020Service.executeTls2e020(body).pipe(finalize(() => this.settleLoding = false), untilDestroyed(this)).subscribe(res => {
       this.messageService.successBubble(`${res.Data.ErrMsg}`);
     });
   }
+  // -----鎖定拿掉-----
   // lockLoding = false;
   // onLock(frm: FormGroup) {
   //   this.submitted = true;

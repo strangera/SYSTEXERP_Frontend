@@ -71,51 +71,28 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    //--檢查--
-    // 品牌代碼：為唯一值。
-    // 品牌標準進貨折數：文字型態，長度１０，可輸入數字及小數點。例如91.25折時，輸入91.25
-    //                                    預設１００，若為７７折時，輸入７７。
-    //                                    可輸入到小數點以下2位。
-    //
-    //--------
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          const formValue = frm.getRawValue();
-          console.log('insert', JSON.stringify(formValue, null, 2));
-          this.tls51060Service.insertTLS51060(formValue).pipe(untilDestroyed(this)).subscribe(() => {
-            this.messageService.successBubble('新增成功');
-            // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-            this.dataForm.reset(); // 重置表單
-          });
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          const formValue = frm.getRawValue();
-          console.log('update', JSON.stringify(formValue, null, 2));
-          this.tls51060Service.updateTLS51060(formValue).pipe(untilDestroyed(this)).subscribe(() => {
-            // this.messageService.successBubble('更新成功');
-            this.onCancel(); // 儲存後，會返回列表
-          });
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
+    // 使用父類別的 handleSubmit 來處理驗證與泡泡訊息
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            const formValue = frm.getRawValue();
+            this.tls51060Service.insertTLS51060(formValue).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.dataForm.reset();
+            });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            const formValue = frm.getRawValue();
+            this.tls51060Service.updateTLS51060(formValue).subscribe(() => {
+              this.onCancel();
+            });
+          }
+          break;
+      }
+    });
   }
 
   onClearForm() {

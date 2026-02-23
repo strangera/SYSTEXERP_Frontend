@@ -41,7 +41,7 @@ export function validateMinNumber(min: number): (value: string | number, rowData
 
     return {
       isValid,
-      errorMessage: isValid ? [] : [`「不能小於 ${min}`, '格式錯誤'],
+      errorMessage: isValid ? [] : [`「${header}」不能小於 ${min}`, '格式錯誤'],
     };
   };
 }

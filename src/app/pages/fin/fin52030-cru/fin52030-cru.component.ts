@@ -10,7 +10,6 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
@@ -22,7 +21,7 @@ import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { finalize, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailTable, FIN52030InsertPayload, FIN52030UpdatePayload, VendorList } from '../fin52030/fin52030.model';
 import { TableEditComponent } from './table-edit/table-edit.component';
-import { EditColumnExtend } from './table-edit/table-edit.model';
+import { EditColumn, EditColumnExtend } from './table-edit/table-edit.model';
 
 @Component({
   selector: 'app-fin52030-cru',

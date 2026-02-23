@@ -7,6 +7,7 @@ import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { IODDetail, ITLS52030Data, ITLS52030Request, Tls52030Service } from '../../../service/api/tls/tls52030.service';
@@ -19,7 +20,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { validateMinNumber } from '../../../shared/componentkit/table/validate-field.model';
 import { POStatus } from '../tls52030/tls52030.component';
@@ -39,7 +39,7 @@ import { POStatus } from '../tls52030/tls52030.component';
     InputNumberComponent,
     CalendarComponent,
     InputTextareaComponent,
-    TableComponent,
+    TableReportComponent,
     NgIf,
     DialogComponent,
     TranslateModule,
@@ -122,7 +122,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     { field: 'ODD_Remark', header: '單項備註', type: 'input', width: '150px' },
   ]
   constructor(
-    private tls52030Service: Tls52030Service,
+    public readonly tls52030Service: Tls52030Service,
     private readonly dropdown: DropdownApiService
   ) { super(); }
 
@@ -221,7 +221,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
         ODM_TotalSaleTax: totalSaleTax,
         ODM_TotalSaleAmt: formData.ODM_TotalSaleAmt, // 總金額
         ODM_Status: this.isFormCreateable ? POStatus.已確認 : this.rowdata?.ODM_Status,
-        ODM_TaxType: this.rowdata?.ODM_TaxType,
+        ODM_TaxType: this.rowdata?.ODM_TaxType || '1', // 預設應稅
         ODM_Remark: formData.ODM_Remark || '',
         Details: details, // 帶入轉換後的明細資料陣列
       };
@@ -248,6 +248,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
   dialogLoading = false;
   totalRecords = 0;
   dialogData: IODDetail[] = [];
+  dialogLastQueryParams: any | null = null;
   selectedItemsDialog: IODDetail[] = [];
   dialogColumns: Column[] = [
     { field: 'PO_No', header: '採購單編號' },
@@ -260,8 +261,9 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     this.dialogVisible = true
     this.dialogLoading = true;
     this.tls52030Service.getPOS2016(this.dataForm.getRawValue()).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
-      this.dialogData = response.Data.Data;
-      this.totalRecords = response.Data.TotalCount;
+      this.dialogData = response.Data;
+      this.dialogLastQueryParams = this.dataForm.getRawValue();
+      this.totalRecords = response.TotalCount;
     })
   }
   onLazyLoad(event: LazyLoadEvent, dataForm: FormGroup) {

@@ -1,9 +1,10 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DeleteTLS51140Request, QueryTLS51140Request, QueryTLS51140ResponseData, Tls51140Service } from '@service/api/tls/tls51140.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -24,7 +25,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
     MultiSelectComponent,
     ButtonComponent,
     TranslateModule,
-    TableReportComponent
+    TableReportComponent,
+    AsyncPipe
   ],
   templateUrl: './tls51140.component.html'
 })
@@ -45,24 +47,18 @@ export class Tls51140Component extends BasicQueryPageComponent<QueryTLS51140Resp
     { field: 'HOS_No', header: '倉庫代碼' },
     { field: 'HOS_Name', header: '倉庫名稱' },
   ];
-  ECR_NoOptions: IDropdownItem[] = [];
-  TLT_NoOptions: IDropdownItem[] = [];
+  ECR_NoOptions = this.dropdown.queryPos1002EcrType({ ECR_Type: '1' });
+  TLT_NoOptions = this.dropdown.queryTltTalentStoreWay({ store_way: '2' });
 
   constructor(
-    private readonly dropDownListService: DropDownListService,
     public readonly tls51140Service: Tls51140Service,
+    private readonly dropdown: DropdownApiService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS51140', 'tls/tls51140cru', this.queryForm, (form) => this.onSubmit(form));
-    this.dropDownListService.queryTLTTALENT_StoreWay_DropDownList({ store_way: '2' }).pipe(untilDestroyed(this)).subscribe(options => {
-      this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    });
-    this.dropDownListService.queryPOS1002ECR_TypeDropDownList({ ECR_Type: '1' }).pipe(untilDestroyed(this)).subscribe(options => {
-      this.ECR_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    });
   }
 
   onSubmit(frm: FormGroup) {

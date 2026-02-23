@@ -46,7 +46,11 @@
         <app-dropdown *ngIf="rowData.PAY_Type === '0' && isFormCreateable" controlName="CRD_Type"
           [control]="getFormControl(posFormArrayControls[i], 'CRD_Type')" placeholder="請選擇信用卡別"
           [options]="CRD_TypeOptions" [disabled]="rece_yn === 'N'" [submitted]="submitted && rowData.selected"
-          [showLabel]="false" [showErrorMessage]="false" />
+          [showLabel]="false" [showErrorMessage]="false" optionLabel="label" optionValue="value" />
+
+        <span *ngIf="!isFormCreateable">
+          {{ rowData.CRD_Name }}
+        </span>
       </td>
 
       <td class="text-center">
@@ -65,12 +69,22 @@
           [control]="getFormControl(posFormArrayControls[i], 'TXN_PayDesc')" [disabled]="rece_yn === 'N'"
           [submitted]="submitted && rowData.selected" [showLabel]="false" [showErrorMessage]="false"
           [customPlaceholder]="rece_yn === 'N' ? '禁止輸入' : '請輸入應收付款對象'" />
+
+        <span *ngIf="!isFormCreateable">
+          {{ rowData.CRD_No || rowData.TXN_CouponNo || rowData.TXN_PayDesc }}
+        </span>
       </td>
 
       <td class="text-center">
         <app-dropdown *ngIf="rowData.PAY_Type === '0' && isFormCreateable" controlName="TERM_No"
           [disabled]="rece_yn === 'N'" [control]="getFormControl(posFormArrayControls[i], 'TERM_No')"
-          placeholder="請選擇分期數" [options]="sys_typeOptions" [submitted]="submitted && rowData.selected" />
+          placeholder="請選擇分期數" [options]="sys_typeOptions" optionLabel="label" optionValue="value"
+          [submitted]="submitted && rowData.selected" />
+
+
+        <span *ngIf="!isFormCreateable">
+          {{ rowData.TERM_Name }}
+        </span>
       </td>
     </tr>
   </ng-template>

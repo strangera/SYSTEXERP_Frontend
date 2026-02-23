@@ -124,16 +124,29 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
         }));
       });
 
-    //統編API
+    // 統編 API (POS2013)：顯示採用 `${item.No}-${item.Name}` 並去重相同 No+Name
     this.dropDownListService.queryPOS2013_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
-        this.vendorUIDOptions = res.Data.map(item => ({
-          label: `${item.Name} ${item.No}`, // 顯示中文+數字
-          value: item.No,                   // 送出用的值
-          Name: item.Name,                  // 加入 Name 屬性
-          No: item.No                       // 加入 No 屬性
-        }));
+        const data = res.Data || [];
+        const seen = new Set<string>();
+        this.vendorUIDOptions = [];
+        for (const item of data) {
+          const baseNo = item.No ?? '';
+          const name = item.Name ?? item.ShortName ?? '';
+          const key = `${baseNo}|${name}`; // 去重依據仍為 No + Name
+          if (seen.has(key)) continue;
+          seen.add(key);
+          const displayNo = item.VEN_No ?? baseNo; // 下拉顯示使用 VEN_No（若存在）否則回落為 No
+          this.vendorUIDOptions.push({
+            label: `${displayNo}-${name}`,
+            value: baseNo,
+            Name: name,
+            No: baseNo,
+            ShortName: item.ShortName,
+            VEN_No: item.VEN_No
+          });
+        }
       });
 
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {

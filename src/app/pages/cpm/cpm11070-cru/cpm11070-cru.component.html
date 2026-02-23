@@ -2,7 +2,7 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <!-- <app-button *ngIf="isFormEditable" label="已領回" (click)="onMarkReceived()"></app-button> -->
-    <!-- <app-button *ngIf="isFormEditable" label="重新廣播" (click)="onRebroadcast()"></app-button> -->
+    <app-button *ngIf="showRebroadcastButton" label="重新廣播" (click)="onRebroadcast()"></app-button>
     <app-button btnType="back" (click)="onCancel()" />
 
   </div>
@@ -60,8 +60,11 @@
             [control]="dataForm.controls.RECAPTION_NAME" [submitted]="submitted"></app-input-text>
           <app-input-text class="col-12 md:col-6 lg:col-4" label="領回人聯絡電話" controlName="RECAPTION_PHONE"
             [control]="dataForm.controls.RECAPTION_PHONE" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="協助顧客領回處理人員" controlName="PROCESSING_USER"
-            [control]="dataForm.controls.PROCESSING_USER" [submitted]="submitted"></app-input-text>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="協助顧客領回處理人員" controlName="PROCESSING_USER" [options]="ProcessingUserOptions"
+              optionLabel="label" optionValue="value" [control]="dataForm.controls.PROCESSING_USER"
+              [submitted]="submitted"></app-dropdown>
+          </div>
         </div>
       </div>
       <div class="card">

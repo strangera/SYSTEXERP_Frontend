@@ -10,6 +10,7 @@ import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { finalize, Observable, of } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import * as XLSX from 'xlsx';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -434,7 +435,67 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
     return of({ Data: [] });
   };
 
-  onExportTemplate() {
-    this.messageService.infoBubble('準備中');
+  /**
+  * 匯出Excel範本
+  */
+  onExportTemplate(): void {
+    // 建立工作簿
+    const wb = XLSX.utils.book_new();
+
+    // 2. 定義標題列與範例資料
+    // 標題包含：項次, 結算年月(yyyymm), 能源錶號(5碼), 能源類型(G01:水 G02:電 G03:瓦斯), 本次抄錶日(yyyy/mm/dd), 本次抄錶度, 結算金額
+    const header = [
+      '項次',
+      '結算年月\n(yyyymm)',
+      '能源錶號\n(5碼)',
+      '能源類型\n(G01:水 G02:電 G03:瓦斯)',
+      '本次抄錶日\n(yyyy/mm/dd)',
+      '本次抄錶度',
+      '結算金額'
+    ];
+
+    const exampleData = [
+      ['1', '202507', 'W1219', 'G01', '2025/07/25', '1000', '1000']
+    ];
+
+    // 建立工作表
+    const ws = XLSX.utils.aoa_to_sheet([header, ...exampleData]);
+
+    // 3. 設定欄寬 (根據內容長度微調)
+    ws['!cols'] = [
+      { wch: 8 },  // 項次
+      { wch: 15 }, // 結算年月
+      { wch: 15 }, // 能源錶號
+      { wch: 35 }, // 能源類型 (欄位較長)
+      { wch: 20 }, // 本次抄錶日
+      { wch: 15 }, // 本次抄錶度
+      { wch: 15 }  // 結算金額
+    ];
+
+    // 4. 🔑 設定儲存格格式
+    // 我們將 B, C, D 欄（索引 1, 2, 3）設定為文字格式，防止前導零消失
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+
+    // 遍歷每一列（從第 2 列開始，並預留 100 列空列供使用者填寫）
+    for (let row = 1; row <= range.e.r + 100; row++) {
+      [1, 2, 3].forEach(colIdx => { // 針對 結算年月、能源錶號、能源類型
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIdx });
+
+        if (!ws[cellAddress]) {
+          ws[cellAddress] = { t: 's', v: '' };
+        }
+
+        ws[cellAddress].t = 's'; // 設定為 String
+        ws[cellAddress].z = '@'; // 強制 Excel 識別為文字格式
+      });
+    }
+
+    console.log('📤 匯出能源結算 Excel 範本:', [wb, ws]);
+
+    // 5. 將工作表加入工作簿並下載
+    XLSX.utils.book_append_sheet(wb, ws, '能源結算範本');
+
+    const fileName = `能源結算範本_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
   }
 }

@@ -11,15 +11,7 @@ export const TXN_GUI_CarrTypeOptions = [
   { label: '自然人憑證', value: 'CQ0001' },
 ]
 // 付款信用卡卡別，V=VISA、M=MASTER、J=JCB、A=AE、D=DINVER、S=銀聯卡、O=其他
-export const CRD_TypeOptions = [
-  { label: 'VISA', value: 'V' },
-  { label: 'MASTER', value: 'M' },
-  { label: 'JCB', value: 'J' },
-  { label: 'AE', value: 'A' },
-  { label: 'DINVER', value: 'D' },
-  { label: '銀聯卡', value: 'S' },
-  { label: '其他', value: 'O' },
-]
+
 // 將所有支付別(pos1006)預先放入，若需要的則要使用者打 v，若有打v 需傳送給後端
 // 信用卡卡號/券號/應收帳款對象 對應到 付款卡號、券號、付款註記 欄位(欄位 (可利用 pos1006，付款別型態判斷要怎麼傳送給後端)
 // 信用卡別 對應 付款信用卡卡別 欄位，下拉選單 (可利用 pos1006，付款別型態判斷)

@@ -114,6 +114,7 @@ export class ConditionDataManagerService {
 
   /**
    * 建立層級抽成項目
+   * 自動計算金額範圍：接續既有項目最後一筆的迄金額 + 1
    */
   createGraduatedItem(
     talentId: string,
@@ -121,14 +122,15 @@ export class ConditionDataManagerService {
     endDate: string,
     existingItems: GraduatedCommissionCondition[] = []
   ): GraduatedCommissionCondition {
+    const amountRange = this.getSmartAmountRange(existingItems);
     return {
       id: this.generateTempId(),
       talent_id: talentId,
       seq_no: this.getNextSeqNo(existingItems),
       cag_bdate: startDate || this.getDefaultStartDate(),
       cag_edate: endDate || this.getDefaultEndDate(),
-      start_number: 0,
-      end_number: 0,
+      start_number: amountRange.start_number,
+      end_number: amountRange.end_number,
       charge_rate: 0,
       _status: 'new',
       _isNew: true
@@ -137,6 +139,7 @@ export class ConditionDataManagerService {
 
   /**
    * 建立包底加層級項目
+   * 自動計算金額範圍：接續既有項目最後一筆的迄金額 + 1
    */
   createBaseTierItem(
     talentId: string,
@@ -144,6 +147,7 @@ export class ConditionDataManagerService {
     endDate: string,
     existingItems: BaseTierCondition[] = []
   ): BaseTierCondition {
+    const amountRange = this.getSmartAmountRange(existingItems);
     return {
       id: this.generateTempId(),
       talent_id: talentId,
@@ -152,8 +156,8 @@ export class ConditionDataManagerService {
       cag_bdate: startDate || this.getDefaultStartDate(),
       cag_edate: endDate || this.getDefaultEndDate(),
       limit_amt: 0,
-      start_number: 0,
-      end_number: 0,
+      start_number: amountRange.start_number,
+      end_number: amountRange.end_number,
       charge_rate: 0,
       _status: 'new',
       _isNew: true
@@ -233,6 +237,39 @@ export class ConditionDataManagerService {
    */
   filterDisplayItems<T extends ConditionItem>(items: T[]): T[] {
     return items.filter(item => item._status !== 'deleted');
+  }
+
+  // =============== 金額範圍計算 ===============
+
+  /** 最大金額上限 */
+  static readonly MAX_AMOUNT = 9999999999999;
+
+  /**
+   * 智慧計算新增項目的金額範圍
+   * - 無既有項目 → start_number: 0, end_number: 0
+   * - 有既有項目 → start_number = 最後一筆 end_number + 1, end_number: 0
+   * - 最後一筆已達上限 (9999999999999) → start_number: 0, end_number: 0（不應再新增）
+   */
+  getSmartAmountRange(
+    existingItems: (GraduatedCommissionCondition | BaseTierCondition)[]
+  ): { start_number: number; end_number: number } {
+    const validItems = existingItems.filter(item => (item as any)._status !== 'deleted');
+    if (validItems.length === 0) {
+      return { start_number: 0, end_number: 0 };
+    }
+
+    const sortedItems = validItems.sort((a, b) => (a.seq_no || 0) - (b.seq_no || 0));
+    const lastItem = sortedItems[sortedItems.length - 1];
+
+    // 最後一筆已達上限，不應再新增
+    if (lastItem.end_number === ConditionDataManagerService.MAX_AMOUNT) {
+      return { start_number: 0, end_number: 0 };
+    }
+
+    return {
+      start_number: (lastItem.end_number || 0) + 1,
+      end_number: 0
+    };
   }
 
   // =============== 私有方法：類型判斷 ===============
@@ -318,6 +355,6 @@ export class ConditionDataManagerService {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
     const d = String(date.getDate()).padStart(2, '0');
-    return `${y}/${m}/${d}`;
+    return `${y}-${m}-${d}`;
   }
 }

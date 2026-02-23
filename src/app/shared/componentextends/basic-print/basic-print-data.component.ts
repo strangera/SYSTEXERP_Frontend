@@ -69,7 +69,8 @@ export abstract class BasicPrintDataComponent {
         field: col.field,
         header: col.header,
         visible: col.visible ? col.visible : true,
-        exportFormat: exportFormat
+        exportFormat: exportFormat,
+        groupField: col.groupField
       };
     });
 
@@ -115,7 +116,8 @@ export abstract class BasicPrintDataComponent {
         field: col.field,
         header: col.header,
         visible: col.visible ? col.visible : true,
-        exportFormat: exportFormat
+        exportFormat: exportFormat,
+        groupField: col.groupField
       };
     });
 

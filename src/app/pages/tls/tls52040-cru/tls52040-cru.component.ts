@@ -7,9 +7,10 @@ import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { ITLS52040Data, ITLS52040Detail, TLS52040Request, Tls52040Service } from '../../../service/api/tls/tls52040.service';
+import { IGetPOS2031PRequest, ITLS52040Data, ITLS52040Detail, TLS52040Request, Tls52040Service } from '../../../service/api/tls/tls52040.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -19,7 +20,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { validateMinNumber } from '../../../shared/componentkit/table/validate-field.model';
 import { POStatus } from '../tls52040/tls52040.component';
@@ -38,7 +38,7 @@ import { POStatus } from '../tls52040/tls52040.component';
     InputNumberComponent,
     CalendarComponent,
     InputTextareaComponent,
-    TableComponent,
+    TableReportComponent,
     NgIf,
     DialogComponent,
     TranslateModule,
@@ -61,7 +61,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     APPLY_Date: [new Date(), [Validators.required]], // 申請日期
     APRV_Date: [new Date(), [Validators.required]], // 審核日期
     RJM_Remark: [null as string | null, [Validators.maxLength(200)]],// 進貨驗收單說明
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
+    ...createPaginationConfig([{ field: 'APRV_Date', order: 1 }]),
   });
   vendorOptions = this.dropdown.queryPos2013TltTalent()
   brandOptions = this.dropdown.queryPluLogoHosNo(); // 品牌下拉選單選項
@@ -116,7 +116,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     { field: 'RJD_Remark', header: '單項備註', type: 'input', width: '150px' },
   ];
   constructor(
-    private tls52040Service: Tls52040Service,
+    public readonly tls52040Service: Tls52040Service,
     private readonly dropdown: DropdownApiService
   ) { super(); }
   ngOnInit(): void {
@@ -214,7 +214,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
         RJM_TotalSaleTax: totalSaleTax,
         RJM_TotalSaleAmt: formData.RJM_TotalSaleAmt, // 總金額
         RJM_Status: this.isFormCreateable ? POStatus.已確認 : this.rowdata?.RJM_Status,
-        RJM_TaxType: this.rowdata?.RJM_TaxType,
+        RJM_TaxType: this.rowdata?.RJM_TaxType || '1', // 預設應稅
         RJM_Remark: formData.RJM_Remark || '',
         Details: details, // 帶入轉換後的明細資料陣列
       };
@@ -224,15 +224,12 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
           ? this.tls52040Service.insertTLS52040(submitData)
           : this.tls52040Service.updateTLS52040(submitData);
 
-        request$.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe({
-          next: () => {
-            this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
-            if (this.isFormCreateable) {
-              this.dataForm.reset();
-            } else {
-              this.onCancel();
-            }
-          }
+        request$.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+          this.messageService.successBubble(res.Message || this.isFormCreateable ? '新增成功' : '更新成功');
+          const returnValue = {
+            Status: 'insert',
+          };
+          this.onCancel(returnValue);
         });
       });
     })
@@ -241,6 +238,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
   dialogLoading = false;
   totalRecords = 0;
   dialogData: ITLS52040Detail[] = [];
+  dialogLastQueryParams: IGetPOS2031PRequest | null = null;
   selectedItemsDialog: ITLS52040Detail[] = [];
   dialogColumns: Column[] = [
     { field: 'CRN_No', header: '退貨單編號' },
@@ -253,8 +251,9 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     this.dialogVisible = true
     this.dialogLoading = true;
     this.tls52040Service.GetPOS2031P(this.dataForm.getRawValue()).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
-      this.dialogData = response.Data.Data;
-      this.totalRecords = response.Data.TotalCount;
+      this.dialogData = response.Data;
+      this.dialogLastQueryParams = this.dataForm.getRawValue();
+      this.totalRecords = response.TotalCount;
     })
   }
   onLazyLoad(event: LazyLoadEvent, dataForm: FormGroup) {

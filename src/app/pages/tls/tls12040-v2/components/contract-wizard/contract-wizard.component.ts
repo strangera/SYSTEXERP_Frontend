@@ -126,6 +126,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    * - 其他: 全部 4 個步驟
    */
   get steps(): MenuItem[] {
+    // 意向書：只顯示 Step 1（合約基本資料）
+    if (this.dataForm?.get('contract_type')?.value === '2') {
+      return [this.allSteps[0]];
+    }
+
     const commissionType = this.currentCommissionType as CommissionType;
 
     switch (commissionType) {
@@ -144,6 +149,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    * 取得實際步驟索引對應表
    */
   get stepIndexMap(): number[] {
+    // 意向書：只有 Step 0
+    if (this.dataForm?.get('contract_type')?.value === '2') {
+      return [0];
+    }
+
     const commissionType = this.currentCommissionType as CommissionType;
 
     switch (commissionType) {
@@ -363,6 +373,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // ========== 動態驗證器 ==========
   private setupDynamicValidators(): void {
+    // 監聽契約類型變更（意向書時只顯示 Step 1）
+    this.dataForm.get('contract_type')?.valueChanges.subscribe(() => {
+      this.currentStep = 0;
+    });
+
     // 監聽抽成別變更
     this.dataForm.get('tlt_term_type')?.valueChanges.subscribe((value) => {
       this.updateDynamicValidators();
@@ -716,26 +731,63 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   /**
    * 從 ExistingData 物件中提取對應抽成類型的條件項目陣列
+   * 必須明確 map 每種類型所需的欄位，避免多餘欄位（如 limit_amt）
+   * 導致 categorizeConditionItems 的類型判斷錯誤
    */
   private extractConditionItems(existingData: any, commissionType: string): any[] {
     switch (commissionType) {
       case '1': // 固定租金
-        return existingData.RentDetails || [];
+        return (existingData.RentDetails || []).map((item: any) => ({
+          id: item.id || item.ID,
+          tlt_id: item.tlt_id || item.TLT_ID || '',
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          base_rent: Number(item.base_rent || item.BASE_RENT || 0)
+        }));
 
       case '2': // 底租抽成取高者
         return (existingData.RentDetails || []).map((item: any, index: number) => ({
-          ...item,
-          cag_charge_rate: existingData.ChargedDetails?.[index]?.cag_charge_rate || 0
+          id: item.id || item.ID,
+          tlt_id: item.tlt_id || item.TLT_ID || '',
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          base_rent: Number(item.base_rent || item.BASE_RENT || 0),
+          cag_charge_rate: Number(existingData.ChargedDetails?.[index]?.cag_charge_rate || item.cag_charge_rate || 0)
         }));
 
       case '4': // 包底抽成
-        return existingData.LimitDetails || [];
+        return (existingData.LimitDetails || []).map((item: any) => ({
+          id: item.id || item.ID,
+          tlt_id: item.tlt_id || item.TLT_ID || '',
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          limit_amt: Number(item.limit_amt || item.LIMIT_AMT || 0),
+          limit_charge_rate: Number(item.limit_charge_rate || item.LIMIT_CHARGE_RATE || 0)
+        }));
 
-      case '5': // 層級抽成
-        return existingData.LevelDetails || [];
+      case '5': // 層級抽成 — 不可包含 limit_amt，否則會被誤判為包底加層級
+        return (existingData.LevelDetails || []).map((item: any) => ({
+          id: item.id || item.ID,
+          seq_no: Number(item.seq_no || item.SEQ_NO || 0),
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          start_number: Number(item.start_number || item.START_NUMBER || 0),
+          end_number: Number(item.end_number || item.END_NUMBER || 0),
+          charge_rate: Number(item.charge_rate || item.CHARGE_RATE || 0)
+        }));
 
       case '6': // 包底加層級
-        return existingData.BottomTierDetails || existingData.LevelDetails || [];
+        return (existingData.BottomTierDetails || existingData.LevelDetails || []).map((item: any) => ({
+          id: item.id || item.ID,
+          seq_no: Number(item.seq_no || item.SEQ_NO || 0),
+          tlt_id: item.tlt_id || item.TLT_ID || '',
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          limit_amt: Number(item.limit_amt || item.LIMIT_AMT || 0),
+          start_number: Number(item.start_number || item.START_NUMBER || 0),
+          end_number: Number(item.end_number || item.END_NUMBER || 0),
+          charge_rate: Number(item.charge_rate || item.CHARGE_RATE || 0)
+        }));
 
       default:
         return [];
@@ -748,7 +800,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   private formatDateToString(value: any): string {
     if (!value) return '';
     if (typeof value === 'string') {
-      return value.split('T')[0];
+      return value.split('T')[0].replace(/\//g, '-');
     }
     if (value instanceof Date && !isNaN(value.getTime())) {
       const y = value.getFullYear();
@@ -823,54 +875,77 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     const formStartDate = this.dataForm.get('tlt_bdate')?.value || new Date();
     const formEndDate = this.dataForm.get('tlt_edate')?.value || new Date();
 
-    this.wizardState.commissionItems = chargeSettings.map((item: Record<string, unknown>) => ({
-      id: '',
-      tlt_id: (item['tlt_id'] as string) || '',
-      tlt_id_desc: (item['tlt_id_desc'] as string) || '',
-      cag_taxtype: item['cag_taxtype'] ?? '',
-      discountSummary: (item['discountSummary'] as string) || '',
-      sst_amount: (item['sst_amount'] as number) || 0,
-      sst_rate: (item['sst_rate'] as number) || 0,
-      cap_saletype1: item['cap_saletype1'] === 'Y' || item['cap_saletype1'] === true,
-      cap_saletype2: item['cap_saletype2'] === 'Y' || item['cap_saletype2'] === true,
-      cap_saletype3: item['cap_saletype3'] === 'Y' || item['cap_saletype3'] === true,
-      cap_saletype5: item['cap_saletype5'] === 'Y' || item['cap_saletype5'] === true,
-      selectedSettingOption: (item['selectedSettingOption'] as string) || '',
-      charge_rate: (item['charge_rate'] as number) || 0,
-      cag_bdate: formStartDate || item['cag_bdate'] || '',
-      cag_edate: formEndDate || item['cag_edate'] || '',
-      cag_remark: item['cag_remark'] || '',
-      remark: item['cag_remark'] || '',
-      mainStartDate: formStartDate || item['cag_bdate'] || '',
-      mainEndDate: formEndDate || item['cag_edate'] || '',
-      discountSettingItems: this.buildCompleteDiscountItems(
+    this.wizardState.commissionItems = chargeSettings.map((item: Record<string, unknown>) => {
+      // 1. 先建立折扣設定項目（此時仍保留 TLTTENT 的舊 ID）
+      const discountItems = this.buildCompleteDiscountItems(
         (item['ChargeDetails'] as Record<string, unknown>[]) || [],
         true  // forRenewal = true
-      ),
-      annualPerformanceItems: ((item['YearChargeDetails'] as unknown[]) || []).map((d: unknown) => {
-        const detail = d as Record<string, unknown>;
-        return {
-          ...detail,
-          extra_rate: this.convertRateToPercentage(Number(detail['extra_rate'] || detail['EXTRA_RATE'] || 0)),
-          selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
-          _status: 'new' as DataStatus
-        };
-      }),
-      discountLevelItems: ((item['LevelChargeDetails'] as unknown[]) || []).map((d: unknown) => {
-        const detail = d as Record<string, unknown>;
-        return {
-          ...detail,
-          level_charge_rate: this.convertRateToPercentage(Number(detail['level_charge_rate'] || detail['LEVEL_CHARGE_RATE'] || 0)),
-          selected: (detail['is_selected'] ?? detail['selected'] ?? detail['is_enabled'] ?? false) as boolean,
-          is_configured: (detail['is_configured'] ?? true) as boolean,
-          is_enabled: (detail['is_enabled'] ?? true) as boolean,
-          _status: 'new' as DataStatus
-        };
-      }),
-      detailItems: [],
-      currentTab: 'discount',
-      _status: 'new' as DataStatus
-    } as unknown as V2CommissionItem));
+      );
+
+      // 2. 續約模式：將 TLTTENT 舊 ID 替換為臨時 ID，建立 oldId → newTempId 映射
+      //    這樣 levelSettings 的 charged_id 可以正確對應到新的折扣設定
+      const idMapping = new Map<string, string | number>();
+      discountItems.forEach(di => {
+        const oldId = String(di.id || '');
+        if (oldId && !oldId.startsWith('temp_') && !oldId.startsWith('new_')) {
+          const newId = this.generateTempId();
+          idMapping.set(oldId, newId);
+          di.id = newId;
+        }
+      });
+
+      return {
+        id: '',
+        tlt_id: (item['tlt_id'] as string) || '',
+        tlt_id_desc: (item['tlt_id_desc'] as string) || '',
+        cag_taxtype: item['cag_taxtype'] ?? '',
+        discountSummary: (item['discountSummary'] as string) || '',
+        sst_amount: (item['sst_amount'] as number) || 0,
+        sst_rate: (item['sst_rate'] as number) || 0,
+        cap_saletype1: item['cap_saletype1'] === 'Y' || item['cap_saletype1'] === true,
+        cap_saletype2: item['cap_saletype2'] === 'Y' || item['cap_saletype2'] === true,
+        cap_saletype3: item['cap_saletype3'] === 'Y' || item['cap_saletype3'] === true,
+        cap_saletype5: item['cap_saletype5'] === 'Y' || item['cap_saletype5'] === true,
+        selectedSettingOption: (item['selectedSettingOption'] as string) || '',
+        charge_rate: (item['charge_rate'] as number) || 0,
+        cag_bdate: formStartDate || item['cag_bdate'] || '',
+        cag_edate: formEndDate || item['cag_edate'] || '',
+        cag_remark: item['cag_remark'] || '',
+        remark: item['cag_remark'] || '',
+        mainStartDate: formStartDate || item['cag_bdate'] || '',
+        mainEndDate: formEndDate || item['cag_edate'] || '',
+        discountSettingItems: discountItems,
+        annualPerformanceItems: ((item['YearChargeDetails'] as unknown[]) || []).map((d: unknown) => {
+          const detail = d as Record<string, unknown>;
+          // 續約模式：移除 TLTTENT 的 id，避免送出舊合約 ID 給 TLTAPPLY
+          const { id: _id, ID: _ID, ...rest } = detail;
+          return {
+            ...rest,
+            extra_rate: this.convertRateToPercentage(Number(detail['extra_rate'] || detail['EXTRA_RATE'] || 0)),
+            selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
+            _status: 'new' as DataStatus
+          };
+        }),
+        discountLevelItems: ((item['LevelChargeDetails'] as unknown[]) || []).map((d: unknown) => {
+          const detail = d as Record<string, unknown>;
+          // 續約模式：移除 TLTTENT 的 id，charged_id 映射為新的臨時 ID
+          const { id: _id, ID: _ID, ...rest } = detail;
+          const oldChargedId = String(detail['charged_id'] || '');
+          return {
+            ...rest,
+            charged_id: idMapping.get(oldChargedId) || oldChargedId,
+            level_charge_rate: this.convertRateToPercentage(Number(detail['level_charge_rate'] || detail['LEVEL_CHARGE_RATE'] || 0)),
+            selected: (detail['is_selected'] ?? detail['selected'] ?? detail['is_enabled'] ?? false) as boolean,
+            is_configured: (detail['is_configured'] ?? true) as boolean,
+            is_enabled: (detail['is_enabled'] ?? true) as boolean,
+            _status: 'new' as DataStatus
+          };
+        }),
+        detailItems: [],
+        currentTab: 'discount',
+        _status: 'new' as DataStatus
+      } as unknown as V2CommissionItem;
+    });
   }
 
   /**
@@ -1174,12 +1249,14 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private assembleSubmitData(): any {
+    const isIntentionLetter = this.dataForm?.get('contract_type')?.value === '2';
+
     return this.submitDataService.assembleSubmitData(
       this.dataForm.getRawValue(),
       this.wizardState.locationData,
-      this.wizardState.fareItems,
-      this.wizardState.commissionItems,
-      this.wizardState.conditionItems,
+      isIntentionLetter ? [] : this.wizardState.fareItems,
+      isIntentionLetter ? [] : this.wizardState.commissionItems,
+      isIntentionLetter ? [] : this.wizardState.conditionItems,
       this.isFormCreateable || this.isRenewalMode,
       this.isRenewalMode,
       this.currentCommissionType
@@ -1272,6 +1349,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       VEN_Name: formData.VEN_Name || '',
       contract_subno: formData.contract_subno || '',
       tlt_term_type: (formData.tlt_term_type || '').toString().trim(),
+      tlt_ctype_mtotal: formData.tlt_ctype_mtotal || '',
+      overall_status: formData.overall_status || '',
       tlt_bdate: formData.tlt_bdate || '',
       tlt_edate: formData.tlt_edate || '',
       tlt_contract_bdate: formData.tlt_contract_bdate || '',

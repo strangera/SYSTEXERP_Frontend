@@ -4,25 +4,25 @@ import { Component } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize, map } from 'rxjs/operators';
 
+import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23050Service } from '../../../service/api/tls/tls23050.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { FloorService } from '../../../service/basic/querySYS3900.service';
-
-import { CommonModule } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonModule } from 'primeng/button';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls23050',
@@ -118,155 +118,159 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
   }
 
   // === 查詢（送出）===
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const val = this.queryForm.value as any;
+  // === 查詢（送出）===
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.getRawValue() as any;
 
-      const payload: any = {
-        TXN_Date: this.toDateOnly(val?.TXN_Date), // 單日
-        rece_yn: val?.rece_yn ?? undefined,
-        tlt_building: val?.tlt_building ?? undefined,
-        tlt_floor: Array.isArray(val?.tlt_floor) && val?.tlt_floor.length ? val.tlt_floor : undefined,
-        org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
-        ECR_No: Array.isArray(val?.ECR_No) && val?.ECR_No.length ? val.ECR_No : undefined,
+    const payload: any = {
+      TXN_Date: this.toDateOnly(val?.TXN_Date), // 單日
+      rece_yn: val?.rece_yn ?? undefined,
+      tlt_building: val?.tlt_building ?? undefined,
+      tlt_floor: Array.isArray(val?.tlt_floor) && val?.tlt_floor.length ? val.tlt_floor : undefined,
+      org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
+      ECR_No: Array.isArray(val?.ECR_No) && val?.ECR_No.length ? val.ECR_No : undefined,
 
-        // 固定 30
-        pageSize: 30,
-        pageIndex: Number(val?.pageIndex) || 1,
-        SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : [{ field: 'ECR_No', order: 1 }],
-      };
-
-      // 匯出時要拿掉 pageSize/pageIndex，所以另存
-      this.historyRequestBody = { ...payload };
-
-      this.loading = true;
-      this.messageService?.blockUi();
-
-      this.tls23050Service
-        .queryTLS23050(payload)
-        .pipe(
-          finalize(() => {
-            this.loading = false;
-            this.messageService?.unblockUi();
-          }),
-        )
-        .subscribe({
-          next: (res: any) => {
-            const first = Array.isArray(res?.Data) && res.Data.length > 0 ? res.Data[0] : (res?.Data ?? null);
-
-            // 明細
-            const details = Array.isArray(first?.tLS23050Details) ? first.tLS23050Details : [];
-            this.data = details.map((r: any, i: number) => ({
-              ...r,
-              _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-            }));
-            this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
-
-            // 表尾總計（依欄位名稱直接餵值）
-            this.footerData = this.buildFooterFromPack(first);
-
-            // ⭐ 調整 historyRequestBody.pageSize（解決「N 排序不打 API」問題）
-            if (this.historyRequestBody) {
-              const realPageSize =
-                this.data.length || this.historyRequestBody.pageSize || 30;
-              this.historyRequestBody = {
-                ...this.historyRequestBody,
-                pageSize: realPageSize,
-              };
-            }
-          },
-          error: () => {
-            this.data = [];
-            this.totalRecords = 0;
-            this.footerData = {};
-          },
-        });
-    });
-  }
-
-  // === 提供給 app-table-report 的查詢函式（支援分頁/排序；固定 pageSize:30）===
-  public queryTLS23050ForReport = (body: any) => {
-    console.log('=== TLS23050 lazy query body ===', body);
-    console.log('form rece_yn = ', this.queryForm.value.rece_yn);
-
-    const formVal = this.queryForm.value as any;
-
-    // 1. 固定從表單取查詢條件
-    const basePayload: any = {
-      TXN_Date: this.toDateOnly(formVal?.TXN_Date),
-      rece_yn: formVal?.rece_yn ?? undefined,
-      tlt_building: formVal?.tlt_building ?? undefined,
-      tlt_floor:
-        Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length
-          ? formVal.tlt_floor
-          : undefined,
-      org_id:
-        Array.isArray(formVal?.org_id) && formVal.org_id.length
-          ? formVal.org_id
-          : undefined,
-      ECR_No:
-        Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length
-          ? formVal.ECR_No
-          : undefined,
-    };
-
-    // ⭐ 先把 pageIndex 算好，避免在同一行混用 ?? 和 ||
-    const formPageIndex = Number(formVal?.pageIndex) || 1;
-    const pageIndex =
-      body?.pageIndex != null ? body.pageIndex : formPageIndex;
-
-    const sortBy =
-      body?.SortBy && body.SortBy.length
-        ? body.SortBy
-        : formVal?.SortBy && formVal.SortBy.length
-          ? formVal.SortBy
-          : [{ field: 'ECR_No', order: 1 }];
-
-    const pagingAndSort = {
+      // 固定 30（送後端；TableReport 內部分頁不靠這個）
       pageSize: 30,
-      pageIndex,
-      SortBy: sortBy,
+      pageIndex: 1, // ✅ pack 型報表，固定第一頁
+      SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : [{ field: 'ECR_No', order: 1 }],
     };
 
-    return this.tls23050Service
-      .queryTLS23050({
-        ...basePayload,
-        ...pagingAndSort,
-      })
+    // 匯出要用（稍後會 remove pageSize/pageIndex）
+    this.historyRequestBody = { ...payload };
+
+    this.loading = true;
+    this.messageService?.blockUi();
+
+    this.tls23050Service
+      .queryTLS23050(payload)
       .pipe(
-        map((res: any) => {
-          const first =
-            Array.isArray(res?.Data) && res.Data.length > 0
-              ? res.Data[0]
-              : res?.Data ?? null;
-
-          const details = Array.isArray(first?.tLS23050Details)
-            ? first.tLS23050Details
-            : [];
-
-          const rows = details.map((r: any, i: number) => ({
-            ...r,
-            _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-          }));
-
-          let totalCount =
-            typeof res?.TotalCount === 'number'
-              ? res.TotalCount
-              : rows.length;
-
-          // ⭐ 如果是第二頁以上，卻已經沒有任何資料，視為「到底了」
-          //    把 totalCount 壓成目前已載入的筆數，避免 loadMoreData 一直打 pageIndex=2
-          if (pageIndex > 1 && rows.length === 0) {
-            totalCount = this.data.length;
-          }
-
-          const grand = first ? this.buildFooterFromPack(first) : this.footerData ?? {};
-          this.footerData = grand;
-
-          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+        finalize(() => {
+          this.loading = false;
+          this.messageService?.unblockUi();
         }),
-      );
+      )
+      .subscribe({
+next: (res: any) => {
+  const first =
+    Array.isArray(res?.Data) && res.Data.length > 0
+      ? res.Data[0]
+      : res?.Data ?? null;
+
+  const details = Array.isArray(first?.tLS23050Details)
+    ? first.tLS23050Details
+    : [];
+
+  this.data = details.map((r: any, i: number) => ({
+    ...r,
+    _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+  }));
+
+  // ✅ 1) totalRecords 改用後端總筆數（依你後端實際欄位擇一）
+  const total =
+    Number(res?.TotalCount ?? res?.TotalRecords ?? first?.totalCount ?? first?.totalRecords ?? this.data.length);
+
+  this.totalRecords = total;
+
+  // Footer 總計
+  this.footerData = this.buildFooterFromPack(first);
+
+  // ✅ 2) 不要再把 pageSize 撐大
+  if (this.historyRequestBody) {
+    this.historyRequestBody = {
+      ...this.historyRequestBody,
+      pageIndex: 1,
+      pageSize: 30,
+    };
+  }
+},
+
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.footerData = {};
+        },
+      });
+  });
+}
+
+
+  // === 提供給 app-table-report 的查詢函式（支援排序 UI，但不做真正分頁；避免無限 loadMore）===
+// === 提供給 app-table-report 的查詢函式（支援排序，但不做分頁；避免無限 loadMore）===
+public queryTLS23050ForReport = (body: any) => {
+  const formVal = this.queryForm.getRawValue() as any;
+
+  // 1) 固定用表單條件（避免 body 殘留舊條件）
+  const basePayload: any = {
+    TXN_Date: this.toDateOnly(formVal?.TXN_Date),
+    rece_yn: formVal?.rece_yn ?? undefined,
+    tlt_building: formVal?.tlt_building ?? undefined,
+    tlt_floor: Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length ? formVal.tlt_floor : undefined,
+    org_id: Array.isArray(formVal?.org_id) && formVal.org_id.length ? formVal.org_id : undefined,
+    ECR_No: Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length ? formVal.ECR_No : undefined,
   };
+
+  // 2) 排序：優先 table body.SortBy，其次 form.SortBy，最後 default
+  const sortBy =
+    body?.SortBy && Array.isArray(body.SortBy) && body.SortBy.length
+      ? body.SortBy
+      : Array.isArray(formVal?.SortBy) && formVal.SortBy.length
+        ? formVal.SortBy
+        : [{ field: 'ECR_No', order: 1 }];
+
+  // ✅ pack 型：永遠查第一頁（後端會回完整 pack）
+  const payload: any = {
+    ...basePayload,
+    pageSize: 30,     // 給後端用（若有用到）
+    pageIndex: 1,     // ✅ 固定第一頁
+    SortBy: sortBy,
+  };
+
+  return this.tls23050Service.queryTLS23050(payload).pipe(
+    map((res: any) => {
+      const first =
+        Array.isArray(res?.Data) && res.Data.length > 0
+          ? res.Data[0]
+          : res?.Data ?? null;
+
+      const details = Array.isArray(first?.tLS23050Details)
+        ? first.tLS23050Details
+        : [];
+
+      const rows = details.map((r: any, i: number) => ({
+        ...r,
+        _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+      }));
+
+      // ✅ 關鍵：TotalCount 固定等於 rows.length
+      //    TableReportComponent 的 loadMore 條件：data.length < totalRecords
+      //    這裡永遠不會成立，所以不會無限打 API
+      const totalCount = rows.length;
+
+      // Footer 總計
+      const grand = first ? this.buildFooterFromPack(first) : this.footerData ?? {};
+      this.footerData = grand;
+
+      // 同步外層 totalRecords（如果頁面有用到）
+      this.totalRecords = totalCount;
+
+      // ✅ 同步 lastQueryBody，撐大 pageSize 讓 virtualScroll 關閉（避免 onScroll→loadMore）
+      if (this.historyRequestBody) {
+        this.historyRequestBody = {
+          ...this.historyRequestBody,
+          ...basePayload,
+          SortBy: sortBy,
+          pageIndex: 1,
+          pageSize: 999999,
+        };
+      }
+
+      return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+    }),
+  );
+};
+
 
   // === 匯出（PDF / Excel）— 不傳 pageSize / pageIndex ===
   private buildExportBody() {
@@ -350,8 +354,7 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
   }
 
   // === 欄位定義（總計列會以 footerData 顯示）===
-  moneyFormat = (value: number): string =>
-    value != null ? Number(value || 0).toLocaleString('en-US') : '0';
+  moneyFormat = (value: number): string => (value != null ? Number(value || 0).toLocaleString('en-US') : '0');
 
   columns = [
     { field: 'ECR_No', header: '收銀機號', visible: true },

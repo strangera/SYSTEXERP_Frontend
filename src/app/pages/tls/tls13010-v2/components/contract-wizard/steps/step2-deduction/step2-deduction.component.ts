@@ -28,6 +28,7 @@ import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '../../../../
 
 import { FareItem } from '../../../../core/models/deduction';
 import { ContractInfo, LocationItem } from '../../../../core/models/contract';
+import { getContractInfoColumns } from '../../../../core/constants/commission-columns';
 import {
   FareCapType,
   FARE_CAP_TYPE_LABELS,
@@ -199,26 +200,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
 
   // ========== 合約資訊 ==========
   private initContractInfoColumns(): void {
-    this.contractInfoColumns = [
-      { field: 'apply_no', header: '專櫃招募編號', type: 'text', editable: false, autoWidth: true },
-      { field: 'tlt_no', header: '專櫃編號', type: 'text', editable: false, autoWidth: true },
-      { field: 'tlt_name', header: '品牌(專櫃)名稱', type: 'text', editable: false, autoWidth: true },
-      { field: 'ven_uniform', header: '廠商統編', type: 'text', editable: false, autoWidth: true },
-      { field: 'VEN_Name', header: '廠商名稱', type: 'text', editable: false, autoWidth: true },
-      { field: 'contract_subno', header: '版本編號', type: 'text', editable: false, autoWidth: true },
-      {
-        field: 'tlt_term_type',
-        header: '抽成別',
-        type: 'dropdown',
-        editable: false,
-        options: TLS13010_DROPDOWN_OPTIONS.tltTermType,
-        autoWidth: true
-      },
-      { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-      { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-      { field: 'tlt_contract_bdate', header: '營運起始日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-      { field: 'tlt_contract_edate', header: '營運終止日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' }
-    ];
+    this.contractInfoColumns = getContractInfoColumns();
   }
 
   private setupContractInfo(): void {
@@ -239,6 +221,8 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
       VEN_Name: formValue.VEN_Name || '',
       contract_subno: formValue.contract_subno || '',
       tlt_term_type: formValue.tlt_term_type || '',
+      tlt_ctype_mtotal: formValue.tlt_ctype_mtotal || '',
+      overall_status: formValue.overall_status || '',
       tlt_bdate: formValue.tlt_bdate || '',
       tlt_edate: formValue.tlt_edate || '',
       tlt_contract_bdate: formValue.tlt_contract_bdate || '',

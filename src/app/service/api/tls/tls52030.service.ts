@@ -1,7 +1,7 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 介面路徑是否正確
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
 
 /** 查詢 POS2018 資料表 (queryTLS52030) 的請求介面 */
@@ -212,7 +212,15 @@ export class Tls52030Service {
    * @returns 包含 IGetPOS2016Data 陣列的 API 響應
    */
   getPOS2016(params: IGetPOS2016Request): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/GetPOS2016`, params);
+    return this.http.post<any>(`${this.apiUrl}/GetPOS2016`, params).pipe(
+      map((response: ApiResponse<any>) => {
+        return {
+          ...response,
+          Data: response.Data.Data,
+          TotalCount: response.Data.TotalCount
+        };
+      })
+    );
   }
 
   /**

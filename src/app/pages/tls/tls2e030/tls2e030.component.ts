@@ -122,10 +122,17 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
     }
   }
   onSubmit(frm: FormGroup) {
+    // 查詢時移除必填驗證
+    ['sam_yyymm', 'money_type', 'sam_termno'].forEach(key => {
+      const control = this.queryForm.get(key);
+      control?.clearValidators();
+      control?.updateValueAndValidity({ emitEvent: false });
+    });
+
     const body = {
       ...frm.value,
       sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM'),
-      sam_termno: frm.value.sam_termno as number, // 確保型別是 number
+      sam_termno: frm.value.sam_termno === '' ? null : frm.value.sam_termno as number, // 確保型別是 number
       money_type: frm.value.money_type
     } as Tls2e030QueryBody; // 轉換為正確的 Request Body 型別
     this.handleSubmit(frm, () => {
@@ -141,6 +148,14 @@ export class TLS2E030Component extends BasicQueryPageComponent<Tls2e030Data> imp
     });
   }
   onSam(frm: FormGroup) {
+    // 試算時加回必填驗證
+    this.queryForm.controls.money_type.setValidators([Validators.required]);
+    this.queryForm.controls.sam_yyymm.setValidators([Validators.required]);
+    this.queryForm.controls.sam_termno.setValidators([Validators.required]);
+    this.queryForm.controls.money_type.updateValueAndValidity();
+    this.queryForm.controls.sam_yyymm.updateValueAndValidity();
+    this.queryForm.controls.sam_termno.updateValueAndValidity();
+
     this.handleSubmit(frm, () => {
       const baseBody = {
         ...frm.value,

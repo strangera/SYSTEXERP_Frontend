@@ -5,6 +5,7 @@ import { tap, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
+
 export interface ApiResponse<T> {
   ReturnCode?: string;
   ReturnMessage?: string;
@@ -21,6 +22,13 @@ export class TLS23040Service {
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
   ) {}
+downloadPDFByUrl(url: string): Observable<HttpResponse<Blob>> {
+  return this.http.get(url, {
+    observe: 'response',
+    responseType: 'blob' as 'json',
+    headers: { Accept: 'application/pdf' },
+  }) as unknown as Observable<HttpResponse<Blob>>;
+}
 
   /** 查詢（頁面用） */
   queryTLS23040(body: any): Observable<any> {
@@ -70,4 +78,6 @@ export class TLS23040Service {
 
     return rest2 as any;
   }
+
+
 }

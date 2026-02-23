@@ -206,14 +206,25 @@ export class CPM12050Service {
     return this.http.post(`${this.apiUrl}/insertCPM12050Detail`, req);
   }
 
-  // 主檔修改
-  updateCPM12050(req: UpdateCPM12050Request): Observable<any> {
+  // 主檔修改（支援 JSON 或 FormData（含檔案））
+  updateCPM12050(req: UpdateCPM12050Request | FormData): Observable<any> {
+    // 若為 FormData（含檔案），直接傳遞讓瀏覽器自動設定 multipart boundary
+    if (req instanceof FormData) {
+      return this.http.post(`${this.apiUrl}/updateCPM12050`, req);
+    }
+    // 否則以 JSON 傳遞
     return this.http.post(`${this.apiUrl}/updateCPM12050`, req);
   }
 
   // 明細修改
-  updateCPM12050Detail(req: UpdateCPM12050DetailRequest): Observable<any> {
-    return this.http.post(`${this.apiUrl}/updateCPM12050Detail`, req);
+  // 明細修改（支援多筆）
+  updateCPM12050Detail(req: UpdateCPM12050DetailRequest[] | UpdateCPM12050DetailRequest): Observable<any> {
+    const url = `${this.apiUrl}/updateCPM12050Detail`;
+    if (Array.isArray(req)) {
+      // 明確指定為 JSON 陣列，避免中間攔截器或其他邏輯改變內容型別
+      return this.http.post(url, req, { headers: { 'Content-Type': 'application/json' } });
+    }
+    return this.http.post(url, req);
   }
 
   // 派單

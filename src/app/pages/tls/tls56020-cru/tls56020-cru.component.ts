@@ -11,7 +11,7 @@ import { validateRequired } from '@shared/componentkit/table-edit/validate-field
 import { formatAmount } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, finalize, forkJoin, map } from 'rxjs';
-import { IPODetail, IPOS2004DetailData, IQueryPOS2004DetailByVenNoRequest, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { IPODetail, IPOS2004DetailData, IQueryPOS2004DetailRequest, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { Tls56020Service } from '../../../service/api/tls/tls56020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -132,12 +132,12 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       VEN_No: '',
       LOGO_No: logoNo || '',
       HOS_No: this.dataForm.controls.HOS_No.value || '',
-    } as any as IQueryPOS2004DetailByVenNoRequest;
+    } as any as IQueryPOS2004DetailRequest;
     setTimeout(() => {
       if (!this.dataForm.controls.LOGO_No.value || !value) {
         return;
       }
-      this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results: any) => {
         if (results.Data && results.Data.length > 0) {
           const newData = results.Data[0] as IPOS2004DetailData;
           const buyPrc = newData.PLU_SalePrc_UNI || 0;
@@ -526,7 +526,7 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       HOS_No: this.dataForm.controls.HOS_No.value || '',
       VEN_No: '',
     };
-    this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+    this.tls52010Service.queryPOS2004Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe((response: any) => {
       this.dialogData = response.Data;
       this.totalRecords = response.TotalCount;
     });
@@ -674,7 +674,7 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       LOGO_No: this.dataForm.controls.LOGO_No.value || '',
       HOS_No: this.dataForm.controls.HOS_No.value || '',
     };
-    this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(untilDestroyed(this)).subscribe((results) => {
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results: any) => {
       this.suggestions = [...(results.Data || []).map((item: IPOS2004DetailData) => ({
         ...item, label: (item.PLU_No || '') + '/' + (item.PLU_MagNo || '') + ' - ' + (item.PLU_Name || '')
       }))];

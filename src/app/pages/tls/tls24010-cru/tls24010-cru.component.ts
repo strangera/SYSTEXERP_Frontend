@@ -136,13 +136,15 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     private readonly datePipe: DatePipe
   ) { super(); }
   ngOnInit(): void {
+    this.loadInitialData();
+  }
+  loadInitialData() {
+    this.renderComponent = false;
     this.initializePage('TLS24010', this.dataForm);
     const rowDataTyped = this.rowdata as TLS24010Data;
     this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper ?? this.queryData.TXN_GUIPaper;
     this.TLT_Name = rowDataTyped.TLT_Name;
     this.store_way = rowDataTyped.store_way;
-    const titleName = this.isFormCreateable ? '新增補登資訊' : FIX_TYPE_LABEL[this.type!];
-    this.formTitle = (this.store_way === STORE_WAY.專櫃 ? '(專櫃)' : '(自營)') + titleName;
     this.talent_id = rowDataTyped.talent_id;
     this.rece_yn = rowDataTyped.rece_yn;
     const TXN_Date = this.datePipe.transform(rowDataTyped.TXN_Date, 'yyyy-MM-dd');
@@ -161,11 +163,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         ORG_TXN_Date: this.queryData.TXN_Date,
       });
     }
-    // 編輯時候
-    if (this.isFormEditable) {
-      this.type = rowDataTyped?.type as FIX_TYPE;
-      this.dataForm.get('TXN_Remark')?.enable();
-    }
+    this.type = rowDataTyped?.type as FIX_TYPE;
+    const titleName = this.isFormCreateable ? '新增補登資訊' : FIX_TYPE_LABEL[this.type!] || '顯示補登資訊';
+    this.formTitle = (this.store_way === STORE_WAY.專櫃 ? '(專櫃)' : '(自營)') + titleName;
     // 不是新增時候
     if (!this.isFormCreateable) {
       this.dataForm.disable();
@@ -175,9 +175,21 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         ECR_No: rowDataTyped.ECR_No,
         TXN_No: Number(rowDataTyped.TXN_No),
       }
-      this.tls24010Service.queryTLS24010_Detail(body).pipe(untilDestroyed(this)).subscribe((data) => {
-        this.ProductDetailList = data.Data[0].ProductDetailList;
-        this.PaymentDetailsList = data.Data[0].PaymentDetailsList;
+      this.tls24010Service.queryTLS24010_Detail(body).pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.loading = false;
+        })
+      ).subscribe((data) => {
+        this.ProductDetailList = [...data.Data[0].ProductDetailList];
+        this.PaymentDetailsList = [...data.Data[0].PaymentDetailsList];
+        // 如果是編輯模式，手動恢復那些被 disable 掉的欄位
+        if (this.isFormEditable) {
+          this.dataForm.get('TXN_Remark')?.enable();
+          if (this.type === FIX_TYPE.預售交易修正) {
+            this.dataForm.get('TXN_PreOrder')?.enable();
+          }
+        }
       })
     }
     // 檢查是否開立業主發票 (rece_yn)
@@ -186,9 +198,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       this.dataForm.get('TXN_GUIRemark')?.disable();
     }
     this.listenForChanges();
-    if (this.type === FIX_TYPE.預售交易修正) {
-      this.dataForm.get('TXN_PreOrder')?.enable();
-    }
+    setTimeout(() => {
+      this.renderComponent = true;
+    });
   }
   listenForChanges() {
     const controls = this.dataForm.controls;
@@ -347,22 +359,29 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             TXN_No: this.isFormCreateable ? undefined : frm.getRawValue().TXN_No,
             TXN_Time: frm.getRawValue().TXN_Time ? formatTimeToHHMMSS(frm.getRawValue().TXN_Time) : '00:00:00',
             TXN_Status: 'N',
-            POS5007_INFO: pos5007Data.map((item) => {
-              if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
-                return {
-                  PLU_MagNo: item.PLU_MagNo.PLU_MagNo || '',
-                  PLU_No: item.PLU_MagNo.PLU_No || '',
-                  TXN_Qty: item.TXN_Qty || 0,
-                  PLU_SalePrc: item.PLU_SalePrc || 0,
-                  TXN_Disc: item.TXN_Disc || 0,
-                  TXN_SaleAmt: item.TXN_SaleAmt || 0,
-                  tlt_id: item.tlt_id || '0',
-                  PLU_TaxType: item.PLU_TaxType || '1',
-                  TXN_DiscCode: item.TXN_DiscCode || '000'
-                };
-              }
-              return item;
-            }),
+            POS5007_INFO: pos5007Data
+              .filter(item => {
+                const price = (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null)
+                  ? item.PLU_SalePrc
+                  : item.PLU_SalePrc;
+                return Number(price) !== 0;
+              })
+              .map((item) => {
+                if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
+                  return {
+                    PLU_MagNo: item.PLU_MagNo.PLU_MagNo || '',
+                    PLU_No: item.PLU_MagNo.PLU_No || '',
+                    TXN_Qty: item.TXN_Qty || 0,
+                    PLU_SalePrc: item.PLU_SalePrc || 0,
+                    TXN_Disc: item.TXN_Disc || 0,
+                    TXN_SaleAmt: item.TXN_SaleAmt || 0,
+                    tlt_id: item.tlt_id || '0',
+                    PLU_TaxType: item.PLU_TaxType || '1',
+                    TXN_DiscCode: item.TXN_DiscCode || '000'
+                  };
+                }
+                return item;
+              }),
             POS5008_INFO: pos5008Data.map((item) => {
               return {
                 PAY_No: item.PAY_No || '',
@@ -422,7 +441,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     defaultVoidDate.setHours(23, 0, 0, 0);
     this.messageService.confirm({
       header: this.type === FIX_TYPE.交易資料作廢 ? (isCross ? '開立折讓單' : '作廢交易資料') : FIX_TYPE_LABEL[this.type!],
-      message: this.type === FIX_TYPE.交易資料作廢 ? (isCross ? '此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?' : '此筆交易未跨期，確定要作廢交易資料嗎?') : `確定要${FIX_TYPE_LABEL[this.type!]}嗎?`,
+      message: this.type === FIX_TYPE.交易資料作廢 ? (isCross ? '此筆交易已跨期，確定作廢後會開立折讓單，確定作廢嗎?' : '此筆交易未跨期，確定要作廢交易資料嗎?') : `確定要${FIX_TYPE_LABEL[this.type!]}嗎?`,
       contentTemplate: this.type === FIX_TYPE.交易資料作廢 ? this.customTimeTemp : undefined, // 丟入 HTML 樣板
       templateContext: this.type === FIX_TYPE.交易資料作廢 ? { data: { selectedDate: defaultVoidDate } } : undefined,
       accept: (result) => {
@@ -437,11 +456,36 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           TXN_Remark: this.dataForm.getRawValue().TXN_Remark,
         }
         if (this.type === FIX_TYPE.專櫃編號修正) {
+          const rawDataList = this.tltnoComp?.tltIdData || [];
+          // --- 檢查 1：是否至少有一筆資料 ---
+          if (rawDataList.length === 0) {
+            this.messageService.errorBubble('無「專櫃編號修正」資料，無法修正', '專櫃編號修正失敗');
+            this.loading = false;
+            return;
+          }
+          // --- 檢查 2 & 3：檢查每一筆資料是否完整且有效 ---
+          for (const item of rawDataList) {
+            const pluMagNoObj = item.PLU_MagNo as POS2004Item;
+            // 檢查 2：是否有輸入（判斷 pluMagNoObj 是否存在且內部關鍵欄位有值）
+            const hasValue = pluMagNoObj;
+            if (!hasValue) {
+              this.messageService.errorBubble('「商品編號/專櫃編號」必填', '儲存失敗');
+              this.loading = false;
+              return;
+            }
+            // 檢查 3：是否為有效資料（判斷 PLU_Name 是否有值）
+            // 注意：在你的邏輯中，選中後應該會連動帶出 PLU_Name
+            if (!(pluMagNoObj.PLU_MagNo || pluMagNoObj.TLT_No)) {
+              this.messageService.errorBubble('無對應「商品編號/專櫃編號」，請重新輸入', '儲存失敗');
+              this.loading = false;
+              return;
+            }
+          }
           const updatePOS5007List = this.tltnoComp?.tltIdData.map(item => {
             const pluMagNo = item.PLU_MagNo as POS2004Item;
             return {
               POS5007_ID: item.ID,
-              TLT_No: item.TLT_No || '',
+              TLT_No: item.TLT_No || this.dataForm.getRawValue().TLT_No || '',
               PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? pluMagNo.TLT_No as string : pluMagNo.PLU_MagNo as string || '',
               PLU_No: this.store_way === STORE_WAY.專櫃 ? pluMagNo.TLT_No as string : item.PLU_No as string || '',
               Talent_ID: item.Talent_ID || this.talent_id || 0,
@@ -452,15 +496,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
               Contract_SubNo: this.store_way === STORE_WAY.專櫃 ? pluMagNo.Contract_SubNo as string : item.Contract_SubNo as string || ''
             }
           }) || [];
-          const invalidItem = updatePOS5007List.find(item => {
-            return !item.PLU_No || !item.TLT_No || !item.PLU_MagNo || !item.Contract_No || !item.Contract_SubNo;
-          });
-
-          if (invalidItem) {
-            this.messageService.errorBubble('無效的「商品編號/專過編號」或 資料尚未異動', '無法修正');
-            this.loading = false; // 確保 loading 狀態被關閉
-            return; // 阻止執行後續的 API 呼叫
-          }
           // 如果沒資料的話就條出錯誤訊息
           if (!updatePOS5007List.length) {
             this.messageService.errorBubble('無「專櫃編號修正」資料，無法修正', '專櫃編號修正失敗');
@@ -606,6 +641,14 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     }
     controls.ORG_TXN_Date.updateValueAndValidity();
     controls.ORG_ECR_No.updateValueAndValidity();
+  }
+
+  get currentTotalSaleAmt(): number {
+    return this.pos5007Comp?.POS5007Data.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0) || 0;
+  }
+  renderComponent = true;
+  onClear() {
+    this.loadInitialData();
   }
 }
 
