@@ -13,7 +13,6 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { EditColumn, EditColumnExtend } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
@@ -27,6 +26,7 @@ import { concatMap, finalize, Observable, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData } from '../fin52030/fin52030.model';
 import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
 import { TableEditComponent } from './table-edit/table-edit.component';
+import { EditColumn, EditColumnExtend } from './table-edit/table-edit.model';
 
 @Component({
   selector: 'app-fin53010-cru',
@@ -209,52 +209,59 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       {
         field: 'AccNo',
         header: '科目代號/名稱',
-        type: this.isFormCreateable ? 'dropdown' : void 0,
+        textAlign: 'left',
+        type: 'dropdown',
         required: !0,
         showClear: !1,
         options: () => this.service.accNoOptions(),
-        optionLabel: 'templateLabel',
+        optionLabel: 'label',
         optionValue: 'value',
-        templateLabel: 'templateLabel',
+        templateLabel: 'label',
         format: (v, i, r) => {
           if (!r?.AccNo) return '';
           const accItem = accMap.get(String(r.AccNo));
-          return accItem?.['templateLabel'] ?? accItem?.label ?? '';
+          return accItem?.label ?? '';
         },
       },
       {
         field: 'DetailNo',
         header: '廠商/員工代號',
-        type: this.isFormCreateable ? 'template' : void 0,
+        textAlign: 'left',
+        type: 'template',
         templateRef: this.venUsrTemplate(),
       },
       {
         field: 'DetailName',
         header: '廠商/員工名稱',
+        textAlign: 'left',
         format: (v, i, r) => r?.DetailNo ? vendorMap.get(String(r.DetailNo))?.['Name']
           ?? usrMap.get(String(r.DetailNo))?.label ?? '' : '',
       },
       {
         field: 'NoteDesc',
         header: '摘要',
-        type: this.isFormCreateable ? 'input' : void 0,
+        textAlign: 'left',
+        type: 'input',
       },
       {
         field: 'AccAmtD',
         header: '借方金額',
-        type: this.isFormCreateable ? 'inputNumber' : void 0,
+        textAlign: 'right',
+        type: 'inputNumber',
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       },
       {
         field: 'AccAmtC',
         header: '貸方金額',
-        type: this.isFormCreateable ? 'inputNumber' : void 0,
+        textAlign: 'right',
+        type: 'inputNumber',
         format: (v) => (v !== void 0 && v !== null) ? formatAmount(v) : '',
       },
       {
         field: 'ORG_ID',
         header: '組織代號',
-        type: this.isFormCreateable ? 'dropdown' : void 0,
+        textAlign: 'left',
+        type: 'dropdown',
         showClear: !1,
         options: () => this.service.orgNoOptions(),
         optionLabel: 'label',
@@ -263,7 +270,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       {
         field: 'clearingCode',
         header: '立沖代號',
-        type: this.isFormCreateable ? 'dropdown' : void 0,
+        textAlign: 'left',
+        type: 'dropdown',
         options: () => [],
         optionLabel: 'label',
         optionValue: 'value',
@@ -271,7 +279,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       {
         field: 'ReflNo',
         header: '對象別編號',
-        type: this.isFormCreateable ? 'dropdown' : void 0,
+        textAlign: 'left',
+        type: 'dropdown',
         options: () => this.service.refNameOptions(),
         optionLabel: 'label',
         optionValue: 'value',
@@ -279,7 +288,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       {
         field: 'recKey',
         header: '對帳KEY值',
-        type: this.isFormCreateable ? 'input' : void 0,
+        textAlign: 'left',
+        type: 'input',
       },
     ];
   });
@@ -477,8 +487,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         rowData.AccCName = this.service.accNoMap().get('123208')?.label ?? '';
       }
 
-      // 更新 SerNo
-      rowData.SerNo = (index + 1) * 10;
+      // 更新 SerNo（連續序號 1, 2, 3…）
+      rowData.SerNo = index + 1;
     }
   }
 
@@ -522,7 +532,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         ...item,
         index,
         displayIndex: index,
-        SerNo: (index + 1) * 10,
+        SerNo: index + 1,
       }));
     });
 

@@ -42,7 +42,6 @@ export interface TLS43040Detail {
 @Component({
   selector: 'app-tls43040-cru',
   templateUrl: './tls43040-cru.component.html',
-  styleUrls: ['./tls43040-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -96,6 +95,9 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
   data: TLS43040Detail[] = [];
   selectedRows: TLS43040Detail[] = [];
   columns: EditColumn[] = [];
+  // snapshot for cancel/restore
+  private originalDataSnapshot: TLS43040Detail[] | null = null;
+  private originalFormSnapshot: any = null;
 
   ngOnInit(): void {
     this.initializePage('TLS43040', this.dataForm);
@@ -103,6 +105,10 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
     console.log('選擇的資料 rowdata:', this.rowdata);
     console.log('選擇的資料的Details ECR_Details:', this.rowdata?.ECR_Details);
     console.log('表格資料data:', this.data);
+
+    // capture snapshot so cancel can restore (both form and table data)
+    this.captureOriginalSnapshot();
+    try { this.originalFormSnapshot = this.dataForm.getRawValue(); } catch { this.originalFormSnapshot = null; }
     this.data = (this.rowdata?.ECR_Details ?? []).map((item: TLS43040Detail) => ({
       ...item,
       status: 'original'
@@ -120,6 +126,52 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
       .subscribe(value => {
         this.onEcrDtlLimitChange(value);
       });
+  }
+
+  // capture deep copy snapshot of current data for restore on cancel
+  private captureOriginalSnapshot(): void {
+    try {
+      this.originalDataSnapshot = JSON.parse(JSON.stringify(this.data || []));
+    } catch (err) {
+      this.originalDataSnapshot = null;
+    }
+  }
+
+  // restore table data back to captured snapshot (used by cancel button)
+  onCancelClicked(): void {
+    // If no captured snapshot but rowdata exists (loaded from query), use rowdata as fallback
+    if ((!this.originalDataSnapshot || this.originalDataSnapshot.length === 0) && this.rowdata?.ECR_Details?.length) {
+      try {
+        this.originalDataSnapshot = (this.rowdata.ECR_Details ?? []).map((item: TLS43040Detail) => ({ ...item }));
+        this.originalFormSnapshot = {
+          ECR_GrpNo: this.rowdata?.ECR_GrpNo ?? this.dataForm.controls.ECR_GrpNo.value,
+          ECR_GrpName: this.rowdata?.ECR_GrpName ?? this.dataForm.controls.ECR_GrpName.value,
+          ECR_DtlLimit: this.rowdata?.ECR_DtlLimit ?? this.dataForm.controls.ECR_DtlLimit.value,
+          ECR_GrpDesc: this.rowdata?.ECR_GrpDesc ?? this.dataForm.controls.ECR_GrpDesc.value,
+        };
+      } catch (err) {
+        // ignore
+      }
+    }
+
+    if (this.originalDataSnapshot) {
+      // deep copy
+      this.data = JSON.parse(JSON.stringify(this.originalDataSnapshot));
+      // ensure statuses are original
+      this.data = this.data.map(d => ({ ...d, status: 'original' }));
+      this.selectedRows = [];
+      try {
+        if (this.originalFormSnapshot) {
+          // restore main form values to the captured snapshot
+          this.dataForm.reset(this.originalFormSnapshot);
+        } else {
+          this.dataForm.markAsPristine();
+        }
+      } catch { }
+    } else {
+      // fallback: clear table and selection
+      this.resetTable();
+    }
   }
 
   // ===== 載入下拉並設定 columns =====
@@ -197,6 +249,7 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
 
 
   onSubmit(form: FormGroup): void {
+
     if (form.valid) {
       const raw = form.getRawValue();
 
@@ -266,7 +319,13 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
           });
       }
     } else {
-      console.log('表單驗證未通過');
+      this.submitted = true;
+      try { form.markAllAsTouched(); } catch { }
+      try { this.messageService.clearBubble(); } catch { }
+      setTimeout(() => {
+        this.messageService.errorBubble('必填欄位未填');
+      }, 50);
+      return;
     }
   }
 

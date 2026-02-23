@@ -10,7 +10,6 @@ import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { DataViewModule } from 'primeng/dataview';
 import { InputTextModule } from 'primeng/inputtext';
-import { PaginatorModule } from 'primeng/paginator';
 import { TableModule } from 'primeng/table';
 import { TabMenuModule } from 'primeng/tabmenu';
 import { TooltipModule } from 'primeng/tooltip';
@@ -22,7 +21,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
 @Component({
   selector: 'app-tls44020',
   templateUrl: './tls44020.component.html',
@@ -41,7 +40,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     InputTextModule,
     DataViewModule,
     TooltipModule,
-    PaginatorModule,
     MultiSelectComponent,
     DropdownComponent,
     InputTextComponent,
@@ -59,7 +57,6 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     EDC_IP: this.formBuilder.control<string>(''),
     EDC_Online: this.formBuilder.control<string>(''),
     Day: this.formBuilder.control<number>(0),
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
   items: MenuItem[] = [];
   activeItem: MenuItem | undefined;
@@ -70,16 +67,11 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
   floorOptions: IDropdownItem[] = [];
 
   globalFilter = '';
-  data: any[] = []; // Add this property to hold the data
+  data: any[] = [];
   filteredData: any[] = [];
 
   // DataView layout 切換用
   layout: 'list' | 'grid' = 'grid';
-
-  // 分頁用
-  rows = 15;   // 每頁筆數
-  first = 0;   // 起始 index
-  pagedData: any[] = []; // 當前頁顯示的資料
 
   constructor(
     private fb: FormBuilder,
@@ -163,7 +155,6 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     ];
     this.activeItem = this.items[0];
     this.filteredData = this.data;
-    this.updatePagedData();
     this.loadDropdownOptions();
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;
@@ -202,11 +193,8 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     const rawValue = form.value;
 
     const payload = {
-      PageSize: rawValue.PageSize ?? 20,
-      PageIndex: rawValue.PageIndex ?? 1,
-      OrderBy: rawValue.OrderBy ?? '',
-      Offset: rawValue.Offset ?? 0,
-      SortBy: rawValue.SortBy ?? [{ field: 'ECR_No', order: 1 }],
+      PageSize: 9999,  // 設定一個很大的數字來取得所有資料
+      PageIndex: 1,
       Day: rawValue.Day ?? 0,
 
       ECR_No: Array.isArray(rawValue.ECR_No)
@@ -244,8 +232,6 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
       next: (res) => {
         this.data = res?.Data || [];
         this.filteredData = [...this.data];
-        this.first = 0;
-        this.updatePagedData();
       },
       complete: () => {
         this.loading = false;
@@ -270,9 +256,6 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
         return ct !== '交易中' && lt !== '交易中';
       });
     }
-
-    this.first = 0;
-    this.updatePagedData();
   }
 
   applyFilter() {
@@ -291,22 +274,10 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
         (row.ECR_IP?.toLowerCase().includes(keyword))
       );
     }
-    this.first = 0;
-    this.updatePagedData();
   }
 
   onLayoutChange(event: any) {
     this.layout = event as 'list' | 'grid';
-  }
-
-  onPageChange(event: any) {
-    this.first = event.first;
-    this.rows = event.rows;
-    this.updatePagedData();
-  }
-
-  updatePagedData() {
-    this.pagedData = this.filteredData.slice(this.first, this.first + this.rows);
   }
 
 }

@@ -13,18 +13,8 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <!-- 管理碼 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-table [control]="queryForm.controls.queryNo" [submitted]="submitted" optionLabel="PLU_MagNo"
-              optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
-              (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
-              [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
-              [totalRecords]="opTotalRecords">
-              <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
-                [control]="opForm.controls.queryNo" />
-              <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
-                [control]="opForm.controls.PLU_Name" />
-            </app-dropdown-table>
-          </div>
+          <app-product-autocomplete class="col-12" optionValue="PLU_MagNo" [control]="queryForm.controls.queryNo"
+            [submitted]="submitted" />
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="品牌代碼/名稱" controlName="LOGO_NoList" [options]="brandOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.LOGO_NoList" [submitted]="submitted"></app-multi-select>
@@ -71,11 +61,11 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="TRD_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="[{ field: 'TRD_No', order: 1 }]" [totalRecords]="totalRecords" [showCheckBox]="true"
-    [showDelete]="false" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [editDisabled]="editDisabled" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event">
+  <app-table-report dataKey="TRD_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [lastQueryBody]="lastQuery"
+    [queryFunction]="tls56080Service.queryTLS56080.bind(tls56080Service)" [totalRecords]="totalRecords"
+    [showCheckBox]="true" [showDelete]="false" [loading]="loading" [editDisabled]="editDisabled"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
     <header>
       <div class="flex justify-content-end gap-2">
         <p-button styleClass="p-2 p-button-primary" label="確認" [loading]="btnLoading" icon="pi pi-check-circle"
@@ -95,5 +85,5 @@
           [loading]="btnLoading"></p-button>
       </div>
     </header>
-  </app-table>
+  </app-table-report>
 </div>

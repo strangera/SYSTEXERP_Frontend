@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { MultiSelectChangeEvent, MultiSelectModule } from 'primeng/multiselect';
+import { ProgressBarModule } from 'primeng/progressbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { Observable } from 'rxjs';
 import { TableExportComponent } from '../table-export/table-export.component';
@@ -27,7 +28,8 @@ import { toggleButtons } from './table-caption.model';
     TooltipModule,
     FileUploadModule,
     DropdownModule,
-    TableExportComponent
+    TableExportComponent,
+    ProgressBarModule
   ],
   templateUrl: './table-caption.component.html',
 })

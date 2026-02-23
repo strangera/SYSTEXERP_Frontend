@@ -212,147 +212,123 @@ private saveQueryState(): void {
 }
 
   /** 把表單 & table-report body 組成 request */
-  private buildPayload(base: any): Fin32020QueryRequest {
-    const raw = this.queryForm.getRawValue();
+/** 把表單 & table-report body 組成 request（不帶 Offset/OrderBy；pageIndex/pageSize 小寫） */
+private buildPayload(base: any): any {
+  const raw = this.queryForm.getRawValue();
 
-    const pageIndex =
-      Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
-        ? base.pageIndex
-        : 1;
+  const pageIndex =
+    Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
 
-    // ⭐ 固定後端 PageSize = 30（不吃 base.pageSize 也不吃 form.pageSize）
-    const pageSize = 30;
+  // ⭐ 固定 pageSize = 30
+  const pageSize = 30;
 
-    const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
+  // ⭐ 主要用 SortBy
+  const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
 
-    const orderBy =
-      sort && sort.length
-        ? sort
-          .map((s) => {
-            const dir = s.order === -1 ? 'DESC' : 'ASC';
-            return `${s.field} ${dir}`;
-          })
-          .join(', ')
-        : null;
+  const req: any = {
+    pageIndex,
+    pageSize,
+    SortBy: sort,
 
-    const req: Fin32020QueryRequest = {
-      PageIndex: pageIndex,
-      PageSize: pageSize,
-      SortBy: sort,
-      OrderBy: orderBy,
-      Offset: (pageIndex - 1) * pageSize,
+    ADJ_No: raw.adjust_ID ? String(raw.adjust_ID) : null,
+    ADJ_Date_From: this.toYMDOrNull(raw.adjust_Date_From),
+    ADJ_Date_To: this.toYMDOrNull(raw.adjust_Date_To),
+    Remark: raw.remark || null,
+    VouNo_From: raw.summons_ID_From ? String(raw.summons_ID_From) : null,
+    VouNo_To: raw.summons_ID_To ? String(raw.summons_ID_To) : null,
+  };
 
-      ADJ_No: raw.adjust_ID ? String(raw.adjust_ID) : null,
-      ADJ_Date_From: this.toYMDOrNull(raw.adjust_Date_From),
-      ADJ_Date_To: this.toYMDOrNull(raw.adjust_Date_To),
-      Remark: raw.remark || null,
-      VouNo_From: raw.summons_ID_From
-        ? String(raw.summons_ID_From)
-        : null,
-      VouNo_To: raw.summons_ID_To ? String(raw.summons_ID_To) : null,
-    };
+  // 清掉空值
+  Object.keys(req).forEach((k) => {
+    const v = req[k];
+    if (v === '' || v === null || v === undefined) delete req[k];
+  });
 
-    Object.keys(req).forEach((k) => {
-      const v = (req as any)[k];
-      if (v === '' || v === null || v === undefined) delete (req as any)[k];
-    });
+  return req;
+}
 
-    return req;
-  }
 
   /** 給 <app-table-report> 用的查詢函式（分頁載入） */
-  public queryFIN32020ForReport = (body: any) =>
-    this.fin32020Service
-      .queryFIN32020(this.buildPayload(body || {}))
-      .pipe(
-        map((res: ApiResponse<Fin32020Row[] | Fin32020Row>) => {
-          const src = res?.Data as any;
-          const rows: Fin32020Row[] = Array.isArray(src)
-            ? src
-            : src
-              ? [src]
-              : [];
-          const totalCount =
-            Number((res as any)?.TotalCount ?? rows.length) ||
-            rows.length;
+/** 給 <app-table-report> 用的查詢函式（分頁載入） */
+public queryFIN32020ForReport = (body: any) =>
+  this.fin32020Service.queryFIN32020(this.buildPayload(body || {})).pipe(
+    map((res: ApiResponse<Fin32020Row[] | Fin32020Row>) => {
+      const src = res?.Data as any;
+      const rows: Fin32020Row[] = Array.isArray(src) ? src : src ? [src] : [];
+      const totalCount = Number((res as any)?.TotalCount ?? rows.length) || rows.length;
 
-          rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
-
-          return { Data: rows, TotalCount: totalCount, GrandTotal: null };
-        })
-      );
+      rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
+      return { Data: rows, TotalCount: totalCount, GrandTotal: null };
+    })
+  );
 
   /* ----------------- Submit（主表查詢） ----------------- */
-  onSubmit(frm: FormGroup) {
-    this.submitted = true;
+onSubmit(frm: FormGroup) {
+  this.submitted = true;
 
-    if (this.queryForm.invalid) {
-      this.queryForm.markAllAsTouched();
-      return;
-    }
-
-    if (!this.hasPermission(this.Actions.Query)) return;
-
-    const raw: any = this.queryForm.getRawValue();
-    const payload = this.buildPayload({
-      ...raw,
-      pageIndex: 1,
-      // pageSize 這裡給什麼都沒差，buildPayload 會強制改成 30
-      pageSize: raw.pageSize || 30,
-      SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
-    });
-
-    // 再保險一次 PageIndex = 1
-    payload.PageIndex = 1;
-
-    this.loading = true;
-    this.data = [];
-    this.selectedItems = [];
-    this.footerData = undefined;
-    this.totalRecords = 0;
-    this.viewTotalRecords = 0;
-    this.tableVer++;
-
-    this.fin32020Service
-      .queryFIN32020(payload)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: ApiResponse<Fin32020Row[]>) => {
-          const rows: Fin32020Row[] = Array.isArray(res?.Data)
-            ? res.Data
-            : [];
-          rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
-
-          this.data = rows;
-          this.cdr.detectChanges();
-
-          const realTotal =
-            Number(res?.TotalCount ?? rows.length) || rows.length;
-
-          setTimeout(() => {
-            this.totalRecords = realTotal;
-            this.viewTotalRecords = realTotal;
-
-            // ✅ 更新 lastQuery / currentSort
-            this.lastQueryBody = { ...payload };
-            this._currentSortBy = payload.SortBy ?? this.defaultSort;
-
-            // ✅ 存狀態
-            this.saveQueryState();
-          });
-
-          this.loading = false;
-        },
-        error: (err: any) => {
-          console.error('FIN32020 API error:', err);
-          this.data = [];
-          this.totalRecords = 0;
-          this.viewTotalRecords = 0;
-          this.footerData = undefined;
-          this.loading = false;
-        },
-      });
+  if (this.queryForm.invalid) {
+    this.queryForm.markAllAsTouched();
+    return;
   }
+
+  if (!this.hasPermission(this.Actions.Query)) return;
+
+  const raw: any = this.queryForm.getRawValue();
+
+  // ⭐ 查詢一律回第一頁
+  const payload = this.buildPayload({
+    ...raw,
+    pageIndex: 1,
+    pageSize: 30, // buildPayload 也會固定 30
+    SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
+  });
+
+  this.loading = true;
+  this.data = [];
+  this.selectedItems = [];
+  this.footerData = undefined;
+  this.totalRecords = 0;
+  this.viewTotalRecords = 0;
+  this.tableVer++;
+
+  this.fin32020Service
+    .queryFIN32020(payload)
+    .pipe(untilDestroyed(this))
+    .subscribe({
+      next: (res: ApiResponse<Fin32020Row[]>) => {
+        const rows: Fin32020Row[] = Array.isArray(res?.Data) ? res.Data : [];
+        rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
+
+        this.data = rows;
+        this.cdr.detectChanges();
+
+        const realTotal = Number(res?.TotalCount ?? rows.length) || rows.length;
+
+        setTimeout(() => {
+          this.totalRecords = realTotal;
+          this.viewTotalRecords = realTotal;
+
+          // ✅ 更新 lastQuery / currentSort
+          this.lastQueryBody = { ...payload };
+          this._currentSortBy = payload.SortBy ?? this.defaultSort;
+
+          // ✅ 存狀態
+          this.saveQueryState();
+        });
+
+        this.loading = false;
+      },
+      error: (err: any) => {
+        console.error('FIN32020 API error:', err);
+        this.data = [];
+        this.totalRecords = 0;
+        this.viewTotalRecords = 0;
+        this.footerData = undefined;
+        this.loading = false;
+      },
+    });
+}
+
 
   /* ----------------- 清除 ----------------- */
 onClear(frm: FormGroup) {

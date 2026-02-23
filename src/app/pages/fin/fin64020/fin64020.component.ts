@@ -1,147 +1,149 @@
+import { AsyncPipe, CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-// Shared
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { finalize, map } from 'rxjs';
+import { Fin64020Service, Fin64020UpdateRequest, QueryFIN64020Request, QueryFIN64020Row } from '../../../service/api/fin/fin64020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-fin64020',
   templateUrl: './fin64020.component.html',
-  styleUrl: './fin64020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    MenubarComponent,
+    AccordionModule,
+    ButtonModule,
+    DialogModule,
+    CalendarRangeQuickComponent,
+    CalendarComponent,
+    DropdownComponent,
+    InputTextComponent,
+    ButtonComponent,
+    TableReportComponent,
+    AsyncPipe,
+    ButtonModule,
+    DialogComponent,
+    MultiSelectComponent
+  ],
 })
-export class FIN64020Component extends BasicQpageComponent implements OnInit {
-
-
-
+export class FIN64020Component extends BasicQueryPageComponent<QueryFIN64020Row> implements OnInit {
   queryForm = this.formBuilder.group({
-    startdate: [],
-    enddate: [],
-    FNCCode: [],
-    Accountcode: [],
-    display: [],
-    display2: [],
-    Ticketnumber: [],
-    Duesummonsnumber: [],
-    status: [],
+    CompanyAccNoList: [null],
+    ExpireDateFrom: [null],
+    ExpireDateTo: [null],
+    ChkNo: [null, [Validators.maxLength(10)]],
+    VouNoExpire: [null, [Validators.maxLength(20)]],
+    ChkStatus: [null],
+    pageSize: [30],
+    pageIndex: [1],
   });
-
-  // Dropdown options
-  statusOptions: any[] = [
-    { value: 1, label: '未異動' },
-    { value: 2, label: '到期' },
-    { value: 3, label: '兌現' },
+  data: QueryFIN64020Row[] = [];
+  totalRecords = 0;
+  selectedItems: QueryFIN64020Row[] = [];
+  isRowSelectable = (row: QueryFIN64020Row) => row.IsSelectable === 'Y';
+  lastQueryBody: QueryFIN64020Request | null = null;
+  columns: ReportColumn[] = [
+    { field: 'CHK_No', header: '票據號碼' },
+    { field: 'VEN_No', header: '廠客代號' },
+    { field: 'VEN_Name', header: '廠客名稱' },
+    { field: 'BNK_No', header: '全省銀行代碼(含分行)' },
+    { field: 'BNK_Name', header: '票面銀行名稱' },
+    { field: 'CHK_ExpireDate', header: '到期日', format: formatDate },
+    { field: 'CHK_Amt', header: '票面金額', format: formatAmount },
+    { field: 'CHK_BNK_No', header: '託收銀行代碼(含分行)' },
+    { field: 'VouNo_Expire', header: '到期傳票編號' },
+    { field: 'CHK_Status_Name', header: '支票狀態' },
   ];
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  displayOptions: any[] = [];
-  displayOptions2: any[] = [];
-
-  // Table data
-  data: any[] = [
-
+  companyAccOptions$ = this.dropDown.queryAps1002().pipe(
+    map(options => options ? options.filter(opt => opt['BNK_AccType'] !== '1') : null)
+  );
+  chkStatusOptions = [
+    { value: '0', label: '作廢' },
+    { value: '1', label: '未異動' },
+    { value: '2', label: '託收' },
+    { value: '3', label: '兌現' },
+    { value: '4', label: '撤票' },
+    { value: '5', label: '退票' },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'ticketNumber', header: '票據號碼', visible: true },
-    { field: 'vendorCode', header: '廠客代號', visible: true },
-    { field: 'companyBankAccountCode', header: '公司銀行科目代號', visible: true },
-    { field: 'issueDate', header: '開票日', visible: true },
-    { field: 'dueDate', header: '到期日', visible: true },
-    { field: 'cashDate', header: '兌現日', visible: true },
-    { field: 'faceAmount', header: '票面金額', visible: true },
-    { field: 'ticketHead', header: '票據抬頭', visible: true },
-    { field: 'remark', header: '備註', visible: true },
-    { field: 'status', header: '狀態', visible: true }
-  ];
-
-
-
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
+    private readonly fin64020Service: Fin64020Service,
+    private readonly dropDown: DropdownApiService,
+    private readonly datePipe: DatePipe
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
-
   ngOnInit(): void {
-    this.ProgNo = '160015';
-
+    this.initializePage('FIN64020', 'fin/fin64020cru', this.queryForm, (form) => this.onSubmit(form));
   }
-
 
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
+    this.handleSubmit(frm, () => {
+      const raw = this.queryForm.getRawValue();
+      const body: QueryFIN64020Request = {
+        ...raw,
+      }
+      this.fin64020Service.queryFIN64020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount || 0;
+        this.lastQueryBody = body;
+      })
+    });
   }
+  dialogVisible = false;
+  companyAccOptions2$ = this.dropDown.queryAps1002().pipe(
+    map(options => options ? options.filter(opt => opt['BNK_AccType'] !== '1') : null)
+  );
+  dialogLoading = false;
+  dialogQueryForm = this.formBuilder.group({
+    CollectDate: [new Date(), Validators.required],
+    CollectBankNo: [null, Validators.required],
+  });
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+  saveDialog(form: FormGroup) {
+    if (form.invalid || this.selectedItems.length === 0) return;
+    const raw = form.getRawValue();
+    const bankNo = raw.CollectBankNo?.substring(0, 3) || '';
+    const branchNo = raw.CollectBankNo?.substring(3) || '';
+    const body: Fin64020UpdateRequest = {
+      IdList: this.selectedItems.map(item => item.ID), // 從選中的資料抓取 ID
+      ColleDate: this.datePipe.transform(raw.CollectDate, 'yyyy-MM-dd') || '',
+      BNK_No: bankNo,
+      BNK_BranchNo: branchNo
     };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
+    this.dialogLoading = true;
+    this.fin64020Service.updateFIN64020(body).pipe(untilDestroyed(this), finalize(() => this.dialogLoading = false)).subscribe(res => {
+      this.messageService.confirm({
+        header: '支票託收成功',
+        message: res.Message || '託收處理成功',
+        showRejectButton: false,
+        accept: () => {
+          this.dialogVisible = false;
+          this.onSubmit(this.queryForm); // 刷新清單
+          this.selectedItems = [];
+          this.dialogQueryForm.reset();
+        },
+      })
+    });
   }
 }

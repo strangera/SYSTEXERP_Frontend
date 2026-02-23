@@ -32,12 +32,12 @@ export const WorkflowStepLabels: Record<WorkflowStep, string> = {
  * 工作流程步驟對應的路由
  */
 export const WorkflowStepRoutes: Record<WorkflowStep, string> = {
-  [WorkflowStep.QUERY]: 'tls13010v2',
-  [WorkflowStep.CONTRACT_INFO]: 'tls13010v2cru',
-  [WorkflowStep.DEDUCTION]: 'tls13010v2next1',
-  [WorkflowStep.COMMISSION]: 'tls13010v2next2',
-  [WorkflowStep.CONDITION]: 'tls13010v2next3',
-  [WorkflowStep.FINAL]: 'tls13010v2'
+  [WorkflowStep.QUERY]: 'tls13010',
+  [WorkflowStep.CONTRACT_INFO]: 'tls13010cru',
+  [WorkflowStep.DEDUCTION]: 'tls13010next1',
+  [WorkflowStep.COMMISSION]: 'tls13010next2',
+  [WorkflowStep.CONDITION]: 'tls13010next3',
+  [WorkflowStep.FINAL]: 'tls13010'
 };
 
 /**

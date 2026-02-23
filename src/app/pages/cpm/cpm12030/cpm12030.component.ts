@@ -28,6 +28,7 @@ export class CPM12030Component extends BasicQueryPageComponent<CPM12030Data> imp
     KIND_ID: [null], // 主類別
     pageSize: [30],
     pageIndex: [1],
+    SortBy: [[{ field: 'CRT_Date', order: 1 }]],
   });
   data: CPM12030Data[] = [];
   selectedRows: CPM12030Data[] = [];

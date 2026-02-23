@@ -11,8 +11,6 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { formatDateTime } from '@shared/componentkit/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
 import { PanelModule } from 'primeng/panel';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { CPM11020Data } from '../../../service/api/cpm/cpm11020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -59,7 +57,9 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
   mainForm = this.formBuilder.nonNullable.group({
     SEQ_ID: [null as any], // 單號
     KIND_ID: [''], // 客戶意見類別代號
+    KIND_Name: [''], // 客戶意見類別名稱
     KIND_ID_SUB: [''], // 客戶意見子類別代號
+    KIND_SubName: [''], // 客戶意見子類別名稱
     CUST_NAME: [''], // 客戶名稱
     SEX: [''], // 性別
     CONTACT_ADDR: [''], // 聯絡住址
@@ -69,6 +69,7 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
     COMPLAIN_NOTES: [''], // 客戶提供意見內容
     COMPLAIN_DATE: [null as Date | string | null], // 提供日期
     SUGG_SOURCE: [''], // 客戶意見來源別
+    SUGG_SOURCE_NAME: [''], // 客戶意見來源別名稱
     SUGG_SOURCE_OTHER: [''], // 客戶意見來源別:其他
     ORG_ID: [''], // 處理單位
     MEMBER_ID: [''], // 會員編號
@@ -104,12 +105,6 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
     { field: 'UPD_USR_Name', header: '更新者姓名' }
   ];
 
-  // 顧客意見類別下拉選單 (供查詢條件使用，可選)
-  kindOption: option[] = [];
-  // 子類別選單 (連動 KIND_ID)
-  // 1. 修改宣告：不要直接呼叫 API，改為宣告型別
-  KIND_SubIDOptions$: Observable<any[]> | undefined;
-
   // 2. 新增存放資料的變數
   detailTableData: detail12060Data[] = [];
   selectedDetailItems: detail12060Data[] = [];
@@ -128,7 +123,6 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
 
     // 載入主檔資料
     const id = this.dataForm.get('ID')?.value;
-    const SEQ_ID = this.dataForm.get('SEQ_ID')?.value || '';
     if (!id) return;
     this.loading = true; // 開啟載入狀態
     this.cpm12060Service.queryCPM12060_Main({ ID: id })
@@ -137,18 +131,12 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
         if (response?.Data && response.Data.length > 0) {
           this.mainForm.patchValue(response.Data[0]);
           console.log('主檔表格:', this.mainForm.value);
-
-          if (this.mainForm.get('KIND_ID')?.value) {
-            this.KIND_SubIDOptions$ = this.dropdown.queryCss1003({ KIND_ID: this.mainForm.get('KIND_ID')?.value ?? null }).pipe(
-              map(data => data || [])
-            );
-          }
-
-          this.getKindDropdown();
         }
       });
 
     // 載入明細資料
+    const SEQ_ID = this.dataForm.get('SEQ_ID')?.value;
+    if (!SEQ_ID) return;
     this.cpm12060Service.queryCPM12060_Detail({ SEQ_ID: SEQ_ID })
       .pipe(untilDestroyed(this))
       .subscribe(response => {
@@ -163,16 +151,4 @@ export class CPM12060CRUComponent extends BasicCruPageComponent<CPM11020Data> im
     // 提交邏輯
     console.log('提交的表單資料:', dataForm.value);
   }
-
-  /** 取得顧客意見類別下拉選單 */
-  getKindDropdown(): void {
-    this.cpm12010Service.dropdownCPM12010().pipe(untilDestroyed(this)).subscribe(res => {
-      this.kindOption = res.Data.map(item => ({
-        label: item.KIND_ID + '-' + item.KIND_Name,
-        value: item.KIND_ID
-      }));
-      console.log('顧客意見類別下拉選單:', this.kindOption);
-    });
-  }
-
 }

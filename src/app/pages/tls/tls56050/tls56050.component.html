@@ -19,10 +19,7 @@
               [submitted]="submitted"></app-multi-select>
           </div>
           <!-- 國際條碼/商品管理編號/廠商貨號 -->
-          <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryForm.controls.queryNo"
-            [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
-            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
-          </app-dropdown-table>
+          <app-product-autocomplete class="col-12" [control]="queryForm.controls.queryNo" [submitted]="submitted" />
           <!-- 品牌代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="品牌代碼/名稱" controlName="LOGO_NoList" [options]="brandOptions" optionLabel="label"
@@ -89,8 +86,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="MVM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="[{ field: 'MVM_No', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showDelete]="false" [editDisabled]="editDisabled"></app-table>
+  <app-table-report dataKey="MVM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false"
+    [editDisabled]="editDisabled" [lastQueryBody]="lastQuery"
+    [queryFunction]="tls52010Service.queryTLS52010.bind(tls52010Service)"></app-table-report>
 </div>

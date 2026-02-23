@@ -1,7 +1,7 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -20,19 +20,6 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
-// SYSBR10佈告欄管理作業
-// 公告主檔 POS5101 (I/O)
-// 公告明細檔 POS5102 (I/O)
-
-// 公告資料，其中公告類別 3=自動公告，其內容為人事異動資料，資料會由系統排程與HR系統將人事異動資料自動寫入公告主檔，公告明檔的對象會自動帶入組織代碼為全公司。
-// 公告資料查詢出來後，可以預覽，預覽的內容是顯示公告事項及公告內容以HTML方式顯示。
-// 主程式顯示公告資料時，顯示有效的公告資料。
-
-// 預覽格式如下:
-// 順序：緊急公告🡪一般公告🡪自動公告
-// 公告期間: 9999/99/99 HH:NN:SS ~ 9999/99/99 HH:NN:SS
-// 公告事項：ＸＸＸＸＸＸＸＸＸＸＸＸＸＸＸ
-// 公告內容：ＨＴＭＬ內容
 @Component({
   selector: 'app-sysbr10',
   templateUrl: './sysbr10.component.html',
@@ -51,31 +38,42 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
     TranslateModule,
     AsyncPipe,
   ],
+  // 效能優化：改用 OnPush 變更偵測策略
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SYSBR10Component extends BasicQueryPageComponent<QuerySYSBR10Response> implements OnInit {
+  // 使用 inject 簡化注入
+  public readonly sysbr10Service = inject(SYSBR10Service);
+  private readonly dropdown = inject(DropdownApiService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
+  // 使用 Signal 管理狀態 (Angular 18 推薦)
+  data = signal<QuerySYSBR10Response[]>([]);
+  totalRecords = signal(0);
+  selectedItems = signal<QuerySYSBR10Response[]>([]);
+
+  lastQueryBody: QuerySYSBR10Request | null = null;
+
   queryForm = this.formBuilder.group({
-    Pub_StartDate_Start: [null], // 公告開始日 (起)
-    Pub_StartDate_End: [null], // 公告開始日 (迄)
-    Pub_EndDate_Start: [null], // 公告結束日 (起)
-    Pub_EndDate_End: [null], // 公告結束日 (迄)
-    User_No: [null], // 使用者代號
-    Org_ID: [null], // 組織代號
-    Pub_Type: [null], // 公告類型 1. 一般公告 2. 緊急公告 3. 自動公告(與HR串接)
-    pub_enable: [null], // 是否啟用 Y/N
-    Pub_Event: [], // 公告主題關鍵字
+    Pub_StartDate_Start: [null],
+    Pub_StartDate_End: [null],
+    Pub_EndDate_Start: [null],
+    Pub_EndDate_End: [null],
+    User_No: [null],
+    Org_ID: [null],
+    Pub_Type: [null],
+    pub_enable: [null],
+    Pub_Event: [],
     pageSize: [30],
-    pageIndex: [1], // 你將初始頁碼改為 1
+    pageIndex: [1],
     SortBy: [[{ field: 'id', order: 1 }]],
   });
-  User_NoOptions = this.dropdown.queryTblUser();
-  Org_IDOptions = this.dropdown.querySys3100();
-  Pub_TypeOptions = getSYS1000Options('T115')
-  YNOptions = getSYS1000Options('YES_NO');
 
-  selectedItems: QuerySYSBR10Response[] = [];
-  data: QuerySYSBR10Response[] = [];
-  lastQueryBody: QuerySYSBR10Request | null = null;
-  totalRecords = 0;
+  // 選項資料流
+  User_NoOptions$ = this.dropdown.queryTblUser();
+  Org_IDOptions$ = this.dropdown.querySys3100();
+  Pub_TypeOptions = getSYS1000Options('T115');
+  YNOptions = getSYS1000Options('YES_NO');
 
   columns: ReportColumn[] = [
     { field: 'Pub_StartDate', header: '起始時間', format: formatDateTime },
@@ -84,6 +82,7 @@ export class SYSBR10Component extends BasicQueryPageComponent<QuerySYSBR10Respon
     { field: 'Pub_Type', header: '公告類別', format: (v) => getSYS1000('T115', v), exportFormat: transformOptionsForExport(getSYS1000Options('T115')) },
     { field: 'Pub_Event', header: '公告事項' },
   ];
+
   detailcolumns: Column[] = [
     { field: 'User_No', header: '使用者編號' },
     { field: 'User_Name', header: '使用者名稱' },
@@ -92,6 +91,7 @@ export class SYSBR10Component extends BasicQueryPageComponent<QuerySYSBR10Respon
     { field: 'Role_No', header: '角色代號' },
     { field: 'Role_Name', header: '角色名稱' },
   ];
+
   addButton: AddButton[] = [
     {
       label: '停用',
@@ -106,29 +106,34 @@ export class SYSBR10Component extends BasicQueryPageComponent<QuerySYSBR10Respon
       action: (rowData: QuerySYSBR10Response) => this.updateStatus(rowData, 'Y'),
     },
   ];
-  constructor(
-    public readonly sysbr10Service: SYSBR10Service,
-    private readonly dropdown: DropdownApiService
-  ) {
-    super();
-  }
 
   ngOnInit(): void {
     this.initializePage('SYSBR10', '/sys/sysbr10cru', this.queryForm, (form) => this.onSubmit(form));
   }
+
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-      this.sysbr10Service.querySYSBR10(form.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.lastQueryBody = form.value;
-        this.data = res.Data;
-        this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, form.value);
-      });
-    })
+      this.sysbr10Service.querySYSBR10(form.value)
+        .pipe(
+          finalize(() => {
+            this.loading = false;
+            this.cdr.markForCheck(); // OnPush 需要手動標記檢查
+          }),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe(res => {
+          this.lastQueryBody = form.value;
+          this.data.set(res.Data || []);
+          this.totalRecords.set(res.TotalCount || 0);
+          this.queryStateService.setQueryState(this.ProgNo, form.value);
+        });
+    });
   }
+
   expansionLoadFn = (row: QuerySYSBR10Response) => {
     return this.sysbr10Service.querySYSBR10Detail({ pos5101_id: row.id });
   }
+
   onDelete(selectedItems: QuerySYSBR10Response[]): void {
     if (!selectedItems.length) return;
     this.messageService.confirm({
@@ -136,17 +141,25 @@ export class SYSBR10Component extends BasicQueryPageComponent<QuerySYSBR10Respon
       accept: () => {
         this.loading = true;
         const idList = selectedItems.map((item) => item.id);
-        this.sysbr10Service.deleteSYSBR10({ idList }).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-          this.messageService.successBubble(res.Message || '刪除成功');
-          this.selectedItems = [];
-          this.onSubmit(this.queryForm);
-        });
+        this.sysbr10Service.deleteSYSBR10({ idList })
+          .pipe(
+            finalize(() => {
+              this.loading = false;
+              this.cdr.markForCheck();
+            }),
+            takeUntilDestroyed(this.destroyRef)
+          )
+          .subscribe(res => {
+            this.messageService.successBubble(res.Message || '刪除成功');
+            this.selectedItems.set([]);
+            this.onSubmit(this.queryForm);
+          });
       }
-    })
+    });
   }
+
   updateStatus(row: QuerySYSBR10Response, targetStatus: 'Y' | 'N'): void {
     const isEnabling = targetStatus === 'Y';
-
     this.messageService.confirm({
       header: isEnabling ? '確認啟用' : '確認停用',
       message: `是否改為【${isEnabling ? '啟用' : '不啟用'}】？`,
@@ -155,22 +168,23 @@ export class SYSBR10Component extends BasicQueryPageComponent<QuerySYSBR10Respon
       rejectLabel: '否',
       accept: () => {
         this.loading = true;
-        this.sysbr10Service.updateSYSBR10PubEable({ id: row.id, pub_enable: targetStatus }).pipe(
-          finalize(() => (this.loading = false)),
-          untilDestroyed(this)
-        ).subscribe((res) => {
-          this.messageService.successBubble(res.Message || `${isEnabling ? '啟用' : '停用'}成功`);
-          this.onSubmit(this.queryForm); // 重新查詢更新列表
-          this.selectedItems = [];       // 清空選取項
-        });
+        this.sysbr10Service.updateSYSBR10PubEable({ id: row.id, pub_enable: targetStatus })
+          .pipe(
+            finalize(() => {
+              this.loading = false;
+              this.cdr.markForCheck();
+            }),
+            takeUntilDestroyed(this.destroyRef)
+          )
+          .subscribe((res) => {
+            this.messageService.successBubble(res.Message || `${isEnabling ? '啟用' : '停用'}成功`);
+            this.onSubmit(this.queryForm);
+            this.selectedItems.set([]);
+          });
       },
     });
   }
-  isRowSelectable = (rowData: QuerySYSBR10Response): boolean => {
-    return rowData.pub_enable !== 'Y';
-  };
 
-  editDisabled = (rowData: QuerySYSBR10Response): boolean => {
-    return rowData.pub_enable === 'Y';
-  };
+  isRowSelectable = (rowData: QuerySYSBR10Response): boolean => rowData.pub_enable !== 'Y';
+  editDisabled = (rowData: QuerySYSBR10Response): boolean => rowData.pub_enable === 'Y';
 }

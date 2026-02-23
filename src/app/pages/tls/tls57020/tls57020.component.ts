@@ -39,7 +39,7 @@ import { formatAmount, formatDate, ReportColumn } from './tls57020-table-report/
 export class TLS57020Component extends BasicQueryPageComponent<Tls57020TableReportData> implements OnInit {
   queryForm = this.formBuilder.group({
     VEN_No: [null],
-    ACP_YYYYMM: [new Date('2025-01-01'), [Validators.required]],
+    ACP_YYYYMM: [new Date(), [Validators.required]],
   });
   VEN_NoOptions = this.dropdown.queryPos2013TltTalent()
   data: Tls57020TableReportData | null = null;

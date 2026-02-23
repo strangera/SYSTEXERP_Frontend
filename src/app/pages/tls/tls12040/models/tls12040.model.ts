@@ -66,11 +66,11 @@ export interface TLS12040QueryRequest {
 
   /** 契約起始日範圍 */
   tlt_bdate_start_from?: Date;
-  tlt_bdate_end_to?: Date;
+  tlt_bdate_start_to?: Date;
 
   /** 契約截止日範圍 */
   tlt_edate_start_from?: Date;
-  tlt_edate_end_to?: Date;
+  tlt_edate_start_to?: Date;
 
   /** 營運起始日範圍 */
   tlt_contract_bdate_from?: Date;

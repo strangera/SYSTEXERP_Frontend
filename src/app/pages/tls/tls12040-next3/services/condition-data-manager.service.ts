@@ -452,10 +452,10 @@ export class TLS12040ConditionDataManager {
       }));
     }
 
-    // 保留原本的邏輯作為備用
-    if (!data.LimitDetails?.length || !data.LevelDetails?.length) return [];
+    // 保留原本的邏輯作為備用：LevelDetails 有資料即可（limit_amt 可能已內嵌在每筆中）
+    if (!data.LevelDetails?.length) return [];
 
-    console.log('🎯 使用舊的 LimitDetails + LevelDetails 組合邏輯');
+    console.log('🎯 使用 LevelDetails 資料映射（LimitDetails 筆數:', data.LimitDetails?.length || 0, '）');
     return data.LevelDetails.map((levelItem: any) => ({
       id: levelItem.id,
       apply_no: (levelItem.apply_no ?? '').toString(),

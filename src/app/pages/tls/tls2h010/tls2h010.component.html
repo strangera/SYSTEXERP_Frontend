@@ -1,64 +1,27 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      label="產生發票"
-      icon="pi pi-plus"
-      (click)="onCreateInvoice(queryForm)"
-      [loading]="loading"
-    ></app-button>
+    <app-button label="產生發票" icon="pi pi-plus" (click)="onCreateInvoice(queryForm)" [loading]="loading"></app-button>
     <!-- [disabled]="!hasPermission(Actions.Create)" 先不加權限，資料庫沒新增權限-->
-    <!-- <app-button
-      btnType="create"
-      (click)=""
-      label="重新列印"
-      [disabled]="selectedItems.length === 0"
-    ></app-button> -->
+    <app-button btnType="create" (click)="onReprint(queryForm)" label="重新列印" [loading]="loading"
+      [disabled]="selectedItems.length === 0"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-calendar
-            class="col-12 md:col-6 lg:col-4"
-            calendarType="dateMonthOne"
-            label="帳款年月"
-            controlName="SamYyyymm"
-            [control]="queryForm.controls.SamYyyymm"
-            [submitted]="submitted"
-          />
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="帳款年月"
+            controlName="SamYyyymm" [control]="queryForm.controls.SamYyyymm" [submitted]="submitted" />
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="專櫃編號/名稱"
-              controlName="TltNo"
-              [options]="tlt_noOptions | async"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.TltNo"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="專櫃編號/名稱" controlName="TltNo" [options]="tlt_noOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.TltNo" [submitted]="submitted"></app-dropdown>
           </div>
-          <app-input-number-range
-            class="col-12 md:col-6 lg:col-4"
-            [useGrouping]="false"
-            label="發票號碼"
-            [startControl]="queryForm.controls.GuiNoStart"
-            [endControl]="queryForm.controls.GuiNoEnd"
-            [submitted]="submitted"
-          ></app-input-number-range>
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="發票號碼"
+            [startControl]="queryForm.controls.GuiNoStart" [endControl]="queryForm.controls.GuiNoEnd"
+            [submitted]="submitted"></app-input-text-range>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -67,22 +30,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report
-    tableKey="tls2h010"
-    [data]="data"
-    [columns]="columns"
-    [totalRecords]="totalRecords"
-    [addButton]="addButton"
-    [lastQueryBody]="lastQueryBody"
-    [showDelete]="false"
-    [showReportMode]="false"
-    [showCheckBox]="true"
-    [showDetail]="false"
-    [showEdit]="false"
-    [showManage]="true"
-    [loading]="loading"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [queryFunction]="tls2h010Service.queryTLS2H010.bind(tls2h010Service)"
-  ></app-table-report>
+  <app-table-report tableKey="tls2h010" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    [addButton]="addButton" [lastQueryBody]="lastQueryBody" [showDelete]="false" [showReportMode]="false"
+    [showCheckBox]="true" [showDetail]="false" [showEdit]="false" [showManage]="true" [loading]="loading"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [queryFunction]="queryWithSort.bind(this)"></app-table-report>
 </div>

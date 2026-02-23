@@ -144,12 +144,6 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
     console.log('查詢頁request條件', this.queryConditions);
     console.log('查詢頁response點選項目', this.dataForm.value);
 
-    // // 讀取大分類選單
-    // this.dropDownListService.queryTLTBUSTYPE_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-    //   this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
-    // });
-    // console.log('大分類選單', this.bus_type_Option);
-
     // 讀取大分類選單
     this.dropDownListService.queryTLTBUSTYPE_DropDownList()
       .pipe(untilDestroyed(this))
@@ -164,13 +158,6 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
           this.messageService.errorBubble('請返回查詢頁重新操作');
         }
       });
-
-    // // 重新讀取類別資料
-    // if (this.queryConditions) {
-    //   this.queryTLS31090Detail(); // 查詢時段之業種之資料
-    // } else {
-    //   this.messageService.errorBubble('請返回查詢頁重新操作');
-    // }
   }
 
   onClearForm() {
@@ -183,21 +170,30 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
 
   queryTLS31090Detail() {
     this.loading = true;
-    // 取大分類描述，確保是 string(用名字去找對應的大分類代號)
+
+    // 原本大分類是['01','02]，假設選01，那就是 CatLNos:['01]
     const CatLNosDesc = this.dataForm.get('BusTypeName')?.value ?? '';
 
     // 使用者可能沒選，就會 matched = undefined
+    // 假設 CatLNosDesc 抓不到就停止
+    if (!CatLNosDesc) {
+      this.messageService.errorBubble('無效的大分類名稱，請重新操作');
+      this.loading = false;
+      return;
+    }
+
+    // 確認有沒又配對到的項目
     const matched = this.bus_type_Option.find(x => x.Name === CatLNosDesc);
 
-    console.log('配對項目', matched);
+    // --- 確保轉成陣列 ---
+    // 如果找到 matched.No (string)，就包成 [matched.No] (string[])
+    // 如果沒找到，就給空陣列 []
+    const CatLNosValue: string[] = matched?.No ? [matched.No] : [];
 
-    const CatLNosValue = matched?.No ?? '';
-
-    const request = {
+    const request: TLS31090Request = {
       ...this.queryConditions,
       CatLNos: CatLNosValue
     };
-
     //用Json顯示request
     console.log('時段之業種營業報表request', request);
 

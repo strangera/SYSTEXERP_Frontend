@@ -5,10 +5,10 @@ import {
   AfterViewInit,
   ChangeDetectorRef,
   Component,
-  ViewChild,
 } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { map } from 'rxjs/operators';
 
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
@@ -18,13 +18,10 @@ import { DialogModule } from 'primeng/dialog';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 import {
@@ -37,6 +34,10 @@ import {
 } from '../../../service/api/fin/fin63030.service';
 
 import { Fin26010Service, Aps1002BankDropDownRow } from '../../../service/api/fin/fin26010.service';
+
+// ✅ 改用 app-table-report
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 
 @UntilDestroy()
 @Component({
@@ -57,10 +58,10 @@ import { Fin26010Service, Aps1002BankDropDownRow } from '../../../service/api/fi
     InputTextComponent,
     DropdownComponent,
     CalendarRangeComponent,
-    // CalendarComponent,
     ButtonComponent,
 
-    TableComponent,
+    // ✅ table-report
+    TableReportComponent,
   ],
 })
 export class FIN63030Component extends BasicQueryPageComponent<any> implements AfterViewInit {
@@ -78,34 +79,31 @@ export class FIN63030Component extends BasicQueryPageComponent<any> implements A
     { field: 'CheckNo', order: 1 },
   ];
 
-  /** ✅ columns（對應 SP select 欄位） */
-columns: Column[] = [
-  { field: 'CheckNo', header: '票據號碼' },
-  { field: 'VendorNo', header: '廠客代號' },
-  { field: 'VEN_Name', header: '廠客名稱' },
+  private _currentSortBy: SortItem[] = this.defaultSort;
 
-  { field: 'CompanyAccNo', header: '公司銀行科目代號' },
-  { field: 'CompanyAccName', header: '公司銀行科目名稱' },
+  /** ✅ columns（給 app-table-report 用 ReportColumn） */
+  columns: ReportColumn[] = [
+    { field: 'CheckNo', header: '票據號碼' },
+    { field: 'VendorNo', header: '廠客代號' },
+    { field: 'VEN_Name', header: '廠客名稱' },
 
-  { field: 'IssueDate', header: '開票日' },
-  { field: 'ExpireDate', header: '到期日' },
-  { field: 'PayDate', header: '兌現日' },
+    { field: 'CompanyAccNo', header: '公司銀行科目代號' },
+    { field: 'CompanyAccName', header: '公司銀行科目名稱' },
 
-  { field: 'CheckAmount', header: '票面金額', format: (v: any) => this.moneyFormat(v) },
+    { field: 'IssueDate', header: '開票日' },
+    { field: 'ExpireDate', header: '到期日' },
+    { field: 'PayDate', header: '兌現日' },
 
-  { field: 'CheckTitle', header: '票據抬頭' },
-  { field: 'Remark', header: '備註' },
+    { field: 'CheckAmount', header: '票面金額', format: (v: any) => this.moneyFormat(v) },
 
-  // 後端註解：狀態：顯示為2=到期,3=兌現
-  { field: 'CheckStatus', header: '狀態' },
+    { field: 'CheckTitle', header: '票據抬頭' },
+    { field: 'Remark', header: '備註' },
 
-  // 後端註解：票據狀態：顯示 (1=確認, 2=拋轉)
-  { field: 'StatusFlag', header: '票據狀態' },
+    { field: 'CheckStatus', header: '狀態' },
+    { field: 'StatusFlag', header: '票據狀態' },
 
-  // 後端註解：兌現傳票號碼（你要顯示「到期傳票」也行，但語意建議照後端）
-  { field: 'VoucherNoPaid', header: '兌現傳票號碼' },
-];
-
+    { field: 'VoucherNoPaid', header: '兌現傳票號碼' },
+  ];
 
   /** 下拉 */
   CompanyAccNoOptions: any[] = [];     // 查詢：CompanyAccNo = BNK_DepositAccNo
@@ -128,12 +126,12 @@ columns: Column[] = [
     ...createPaginationConfig(this.defaultSort),
   });
 
-  /** Dialog 表單：到期拋轉（✅ 對齊後端：ExpireDate 必填；BNK_No/ChkNo 可空） */
+  /** Dialog 表單：到期拋轉 */
   transVoucherForm = this.formBuilder.group({
-    BNK_No: ['' as string],                                   // ✅ 後端非必填（你UI要必填也可以改回 required）
-    ChkNo: ['' as string],                                    // 可空
-    ExpireDateFrom: [null as Date | null, Validators.required], // 必填
-    ExpireDateTo: [null as Date | null, Validators.required],   // 必填
+    BNK_No: ['' as string],                                     // 可空（你若要必填再加 Validators.required）
+    ChkNo: ['' as string],
+    ExpireDateFrom: [null as Date | null, Validators.required],
+    ExpireDateTo: [null as Date | null, Validators.required],
   });
 
   constructor(
@@ -144,68 +142,55 @@ columns: Column[] = [
     super();
   }
 
-  ngOnInit(): void {
+  override ngOnInit(): void {
     this.initializePage('FIN63030', 'fin/fin63030cru', this.queryForm, (form) => this.onSubmit(form));
 
-    // ✅ 還原查詢條件
-    // const saved = this.queryStateService.getQueryStateValue('FIN63030');
-    // if (saved?.formValue) {
-    //   this.queryForm.patchValue(saved.formValue, { emitEvent: false });
-    //   this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
-    //   this.lastQueryBody = saved.lastQueryBody ?? null;
-
-    //   Promise.resolve().then(() => this.onSubmit(this.queryForm));
-    // }
-
     // ✅ 公司銀行科目下拉（APS1002）
-this.fin26010Service
-  .queryAPS1002DropDownList()
-  .pipe(untilDestroyed(this))
-  .subscribe({
-    next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
-      const list = Array.isArray(res?.Data) ? res.Data : [];
+    this.fin26010Service
+      .queryAPS1002DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+          const list = Array.isArray(res?.Data) ? res.Data : [];
 
-      const sorted = list.slice().sort((a: any, b: any) => {
-        const aId = String(a?.BNK_id ?? '').trim();
-        const bId = String(b?.BNK_id ?? '').trim();
+          const sorted = list.slice().sort((a: any, b: any) => {
+            const aId = String(a?.BNK_id ?? '').trim();
+            const bId = String(b?.BNK_id ?? '').trim();
 
-        const aNum = Number(aId);
-        const bNum = Number(bId);
-        const aIsNum = Number.isFinite(aNum);
-        const bIsNum = Number.isFinite(bNum);
+            const aNum = Number(aId);
+            const bNum = Number(bId);
+            const aIsNum = Number.isFinite(aNum);
+            const bIsNum = Number.isFinite(bNum);
 
-        // 兩個都是純數字：用數字大小排
-        if (aIsNum && bIsNum) return aNum - bNum;
+            if (aIsNum && bIsNum) return aNum - bNum;
+            if (aIsNum && !bIsNum) return -1;
+            if (!aIsNum && bIsNum) return 1;
 
-        // 其中一個是數字：數字排前面（你想數字排後面就反過來）
-        if (aIsNum && !bIsNum) return -1;
-        if (!aIsNum && bIsNum) return 1;
+            return aId.localeCompare(bId, 'zh-Hant', { numeric: true, sensitivity: 'base' });
+          });
 
-        // 都不是純數字：用字串排序（支援中文/數字混合）
-        return aId.localeCompare(bId, 'zh-Hant', { numeric: true, sensitivity: 'base' });
+          this.CompanyAccNoOptions = sorted.map((x: any) => ({
+            label: `${x.BNK_id}-${x.BNK_AccName}`,
+            value: x.BNK_id,
+            raw: x,
+          }));
+
+          this.CompanyBankNoOptions = sorted.map((x: any) => ({
+            label: `${x.BNK_id}-${x.BNK_AccName}`,
+            value: x.BNK_id,
+            raw: x,
+          }));
+        },
+        error: (err) => {
+          console.error('載入公司銀行下拉失敗', err);
+          this.CompanyAccNoOptions = [];
+          this.CompanyBankNoOptions = [];
+        },
       });
+  }
 
-      // 查詢下拉：用 BNK_id
-      this.CompanyAccNoOptions = sorted.map((x: any) => ({
-        label: `${x.BNK_id}-${x.BNK_AccName}`,
-        value: x.BNK_id,
-        raw: x,
-      }));
-
-      // Dialog 下拉：用 BNK_id
-      this.CompanyBankNoOptions = sorted.map((x: any) => ({
-        label: `${x.BNK_id}-${x.BNK_AccName}`,
-        value: x.BNK_id,
-        raw: x,
-      }));
-    },
-    error: (err) => {
-      console.error('載入公司銀行下拉失敗', err);
-      this.CompanyAccNoOptions = [];
-      this.CompanyBankNoOptions = [];
-    },
-  });
-
+  ngAfterViewInit(): void {
+    // ✅ table-report 會自己處理 lazy/scroll/sort，不需要再綁 dt.onLazyLoad
   }
 
   moneyFormat(value: any): string {
@@ -253,7 +238,6 @@ this.fin26010Service
       CheckStatus: (base?.CheckStatus ?? '').trim() || undefined,
     };
 
-    // 清空值移除
     Object.keys(payload).forEach((k) => {
       const v = (payload as any)[k];
       if (v === '' || v == null) delete (payload as any)[k];
@@ -291,6 +275,15 @@ this.fin26010Service
 
     return { rows: [], total: 0 };
   }
+
+  /** ✅ 給 app-table-report 用的 queryFunction（loadMore/sort 都靠它） */
+  public queryFIN63030ForReport = (body: any) =>
+    this.fin63030Service.queryFIN63030(this.buildQueryPayload(body || {})).pipe(
+      map((res: ApiResponse<any>) => {
+        const parsed = this.parseQueryResponse(res);
+        return { Data: parsed.rows, TotalCount: parsed.total, GrandTotal: null };
+      })
+    );
 
   onSubmit(frm: any) {
     this.submitted = true;
@@ -360,7 +353,7 @@ this.fin26010Service
   }
 
   /** =======================
-   *  ✅ Dialog：到期拋轉（✅ 對齊後端）
+   *  ✅ Dialog：到期拋轉（對齊後端）
    *  ======================= */
   openTransVoucherDialog(): void {
     this.transVoucherForm.reset({
@@ -393,7 +386,6 @@ this.fin26010Service
       return;
     }
 
-    /** ✅ 後端 TransVoucherFIN63030Request 只有這些欄位（不要多送 CRT_USR_No / CRT_USR_Name） */
     const body: FIN63030TransVoucherRequest = {
       ExpireDateFrom: expireFrom,
       ExpireDateTo: expireTo,
@@ -408,7 +400,6 @@ this.fin26010Service
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res: any) => {
-          // ✅ 後端成功：ReturnCode=0000；失敗：BadRequest + ReturnCode=9998
           const code = res?.ResponseBase?.ReturnCode ?? res?.ReturnCode;
           const msg = res?.ResponseBase?.ReturnMessage ?? res?.ReturnMessage;
 
@@ -420,11 +411,9 @@ this.fin26010Service
           this.messageService.successBubble(msg ?? '到期拋轉成功');
           this.transVoucherDialogVisible = false;
 
-          // ✅ 成功後重查
           this.onSubmit(this.queryForm);
         },
         error: (err: any) => {
-          // BadRequest(400) 也會到這裡（依你們 interceptor）
           const api = err?.error;
           const msg =
             api?.ResponseBase?.ReturnMessage ??
@@ -442,7 +431,7 @@ this.fin26010Service
   }
 
   /** =======================
-   *  ✅ 匯出（保留你原本）
+   *  ✅ 匯出（保留原本）
    *  ======================= */
   private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
     if (!contentDisposition) return `download${defaultExtension}`;
@@ -542,83 +531,6 @@ this.fin26010Service
           this.messageService.errorBubble('匯出失敗');
         },
         complete: () => (this.btnLoading = false),
-      });
-  }
-
-  /** =======================
-   *  ✅ lazy load + sort（沿用你原本）
-   *  ======================= */
-  @ViewChild('finTable') finTable!: TableComponent;
-
-  ngAfterViewInit(): void {
-    setTimeout(() => {
-      try {
-        (this.finTable as any).IsPrint = true;
-      } catch {}
-
-      const dt: any = (this.finTable as any).dt;
-
-      if (dt?.onLazyLoad) {
-        dt.onLazyLoad.pipe(untilDestroyed(this)).subscribe((e: any) => {
-          const pageSize = Number(e?.rows ?? 30);
-          const first = Number(e?.first ?? 0);
-          const pageIndex = Math.floor(first / pageSize) + 1;
-
-          this.fireQueryByPage(pageIndex, pageSize, e?.multiSortMeta);
-        });
-      }
-    });
-  }
-
-  private _currentSortBy: SortItem[] = this.defaultSort;
-
-  private readonly _allowSortFields = new Set(
-    this.columns.map(c => c.field).filter(Boolean) as string[]
-  );
-
-  private fireQueryByPage(pageIndex: number, pageSize: number, sortMeta?: any) {
-    const raw = this.queryForm.getRawValue();
-
-    let sortBy: SortItem[] | undefined;
-    if (Array.isArray(sortMeta) && sortMeta.length) {
-      const filtered = sortMeta
-        .filter((s: any) => this._allowSortFields.has(String(s?.field)))
-        .map((s: any) => ({ field: String(s.field), order: Number(s.order) || 1 }));
-      if (filtered.length) sortBy = filtered;
-    }
-
-    if (!sortBy || !sortBy.length) {
-      sortBy = this._currentSortBy?.length ? this._currentSortBy : this.defaultSort;
-    }
-
-    const payload = this.buildQueryPayload({
-      ...raw,
-      pageIndex,
-      pageSize,
-      SortBy: sortBy,
-    });
-
-    this._currentSortBy = payload.SortBy ?? this.defaultSort;
-
-    this.loading = true;
-    this.fin63030Service.queryFIN63030(payload)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: ApiResponse<any>) => {
-          const parsed = this.parseQueryResponse(res);
-          this.data = parsed.rows;
-          this.totalRecords = parsed.total;
-          this.lastQueryBody = { ...payload };
-          this.loading = false;
-          this.saveQueryState();
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.loading = false;
-          this.cdr.detectChanges();
-        },
       });
   }
 }

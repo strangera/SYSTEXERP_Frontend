@@ -1,7 +1,7 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 介面路徑是否正確
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
 
 /** 查詢 POS2031 資料表 (queryTLS52040) 的請求介面 */
@@ -89,6 +89,9 @@ export interface ITLS52040Detail {
   RJD_ConfirmQty_Finished?: number; // 已完成確認數量 (累計已驗收數量)
   CRN_No?: string; // 退貨單號 (關聯)
   RJM_No?: string; // 退貨驗收單號 (主檔關聯)
+  LOGO_No?: string; // 品牌代碼
+  org_id?: string; // 組織代碼
+  RJM_TaxType?: string; // 單據稅別
 }
 
 /** 新增 POS2031 資料表 (insertTLS52040) 的請求介面 */
@@ -98,7 +101,7 @@ export interface TLS52040Request {
   SYS_StoreNo?: string; // 門店編號 (系統)
   HOS_No?: string; // 倉庫代碼
   VEN_No?: string; // 廠商編號
-  // LOGO_No?: string; // 品牌代碼
+  LOGO_No?: string; // 品牌代碼
   org_id?: string; // 組織代碼
   RJM_TaxType?: string; // 單據稅別
   RJM_Status?: string; // 退貨驗收狀態 (通常為初始狀態，例如 '0' 已申請)
@@ -188,7 +191,15 @@ export class Tls52040Service {
    * @returns 包含 ITLS52040Data 陣列的 API 響應 (假設返回退貨單主檔列表)
    */
   GetPOS2031P(params: IGetPOS2031PRequest): Observable<ApiResponse<any>> {
-    return this.http.post<any>(`${this.apiUrl}/GetPOS2031P`, params);
+    return this.http.post<any>(`${this.apiUrl}/GetPOS2031P`, params).pipe(
+      map((response: ApiResponse<any>) => {
+        return {
+          ...response,
+          Data: response.Data.Data,
+          TotalCount: response.Data.TotalCount
+        };
+      })
+    );
   }
 
   /**

@@ -21,6 +21,22 @@ export function getContractInfoColumns(): ColumnDef[] {
       options: TLS13010_DROPDOWN_OPTIONS.tltTermType,
       autoWidth: true
     },
+    {
+      field: 'tlt_ctype_mtotal',
+      header: '包底類別',
+      type: 'dropdown',
+      editable: false,
+      options: TLS13010_DROPDOWN_OPTIONS.tltCtypeMtotal,
+      autoWidth: true
+    },
+    {
+      field: 'overall_status',
+      header: '超出部份處理方式',
+      type: 'dropdown',
+      editable: false,
+      options: TLS13010_DROPDOWN_OPTIONS.overallStatus,
+      autoWidth: true
+    },
     { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
     { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
     { field: 'tlt_contract_bdate', header: '營運起始日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },

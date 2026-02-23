@@ -70,6 +70,7 @@ export class Tls24010Pos5007Component implements OnChanges {
           PLU_SalePrc: item.PLU_SalePrc,
           label: item.PLU_Name ? `${item.PLU_MagNo} - ${item.PLU_Name}` : undefined
         } as POS2004Item,
+        PLU_Name: item.PLU_Name,
         tlt_id: item.tlt_id ? item.tlt_id : undefined
       }))];
       this.calculateLastYearTotal();

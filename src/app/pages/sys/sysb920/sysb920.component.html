@@ -42,8 +42,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+  <app-table tableKey="SYSB920" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
     [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'bus_sclass', order: 1 }]"
-    [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"></app-table>
+    [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
 </div>

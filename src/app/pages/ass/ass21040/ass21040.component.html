@@ -1,7 +1,7 @@
 <div class="card">
   <div class="flex justify-content-between gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button label="產生結算報表" [loading]="loading" [disabled]="!hasPermission(Actions.Print)"></app-button>
+    <app-button label="產生結算報表" [loading]="loading" (click)="onGenerateReport(queryForm)" [disabled]="!hasPermission(Actions.Print)"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
@@ -16,7 +16,7 @@
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button label="結算" [loading]="loading" (click)="onGenerateReport(queryForm)"
+          <app-button label="結算" [loading]="loading" (click)="onSubmit(queryForm)"
             [disabled]="!hasPermission(Actions.Settle)"></app-button>
           <app-button label="取消結算" [loading]="loading" (click)="onCancelClearing(queryForm)"
             [disabled]="!hasPermission(Actions.CancelSettle)"></app-button>

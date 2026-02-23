@@ -1,11 +1,10 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, forkJoin } from 'rxjs';
-import { shareReplay } from 'rxjs/operators';
-import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
-export type SortItem = { field: string; order: number };
+export interface SortItem { field: string; order: number }
 
 export interface DropDownItem {
   No: string;
@@ -20,7 +19,7 @@ export interface DropDownListResponse {
   Error?: { Code?: string; Message?: string; Details?: string };
   Meta?: { Timestamp?: string; RequestId?: string };
 }
-export type OptionItem = { value: string; label: string };
+export interface OptionItem { value: string; label: string }
 
 export interface QueryTLS25030Request {
   PageSize: number;
@@ -86,6 +85,8 @@ export interface QueryTLS25030Row {
   payment_status_Name?: string;
 
   violation_otherdesc?: string;
+
+  fine_status?: string;
 
   [key: string]: any;
 }
@@ -168,7 +169,7 @@ export class TLS25030Service {
   // ✅ dropdown endpoints 若在別的 controller，可自行調整
   private baseUrl = `${environment.ApiUrl}`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   queryTLS25030(body: QueryTLS25030Request): Observable<ApiResponse<QueryTLS25030Row[]>> {
     return this.http.post<ApiResponse<QueryTLS25030Row[]>>(`${this.apiUrl}/queryTLS25030`, body);
@@ -222,3 +223,4 @@ export class TLS25030Service {
 }
 
 export { ApiResponse };
+

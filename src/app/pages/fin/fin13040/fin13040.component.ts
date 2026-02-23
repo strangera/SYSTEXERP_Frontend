@@ -121,6 +121,7 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     AssetType: [[]],
     SAL_Type: [[]],
     ...createPaginationConfig([{ field: 'InvoiceType', order: 1 }]),
+    pageSize: [30],
   });
   data: any[] = [];
   totalRecords = 0;

@@ -186,6 +186,12 @@ export class Tls32040CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
         BusType: item.bus_type ?? '',
         BusClass: item.No ?? ''
       })),
+      // 結果範例：[["10", "01", "001"], ["10", "01", "002"]]
+      BusSClassList: this.toArray(this.queryConditions.BusSClassList).map((item: any) => ({
+        BusType: item.bus_type ?? '',
+        BusClass: item.CAT_MNo ?? '',
+        BusSClass: item.No ?? ''
+      })),
 
       TltKindList: ([] as string[]).concat(this.queryConditions.TltKindList || []).join(','),
       OrgList: ([] as string[]).concat(this.queryConditions.OrgList || []).join(','),

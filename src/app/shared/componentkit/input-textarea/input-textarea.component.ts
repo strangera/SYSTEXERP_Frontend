@@ -1,9 +1,9 @@
+import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, OnInit } from '@angular/core';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NgIf, NgClass } from '@angular/common';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 
 @Component({
   selector: 'app-input-textarea',
@@ -21,6 +21,7 @@ export class InputTextareaComponent extends BasicKitComponent implements OnInit 
   @Input() customPlaceholder: string | undefined;
   @Input() styleClass: string | undefined = 'h-5rem';
   @Input() readonly = false; // 新增：唯讀模式
+  @Input() rows = 5;
 
   ngOnInit(): void {
     if (this.customPlaceholder) {

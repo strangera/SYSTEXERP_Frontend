@@ -57,6 +57,7 @@ export interface TLS24010Data {
   type?: string; // 修正類型
   IsCanDel?: boolean; // 有發票的是否可刪除
   TXN_Ret_No?: string; // 折讓單號
+  tlt_term_type?: string;
 }
 
 export interface POS5007Data {

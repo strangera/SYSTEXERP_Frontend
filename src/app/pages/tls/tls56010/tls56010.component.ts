@@ -5,9 +5,11 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS56010Service } from '@service/api/tls/tls56010.service';
 import { DropDownListService, IDropdownItem, IPOS20032Request } from '@service/utility/dropDownList.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableModule } from 'primeng/table';
+import { Subject, firstValueFrom } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -60,8 +62,13 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
     isSafetyStock: [false],
     // 預設排序：PLU_MagNo asc
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
+  private lazyLoadTrigger$ = new Subject<any>();
+  // 在還原查詢狀態時暫時抑制分類欄位的 valueChanges 處理
+  private suppressCategoryHandlers = false;
 
   // 管理編號
   suggestions: IQueryPOS2004DetailResponse[] = [];
@@ -103,7 +110,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
     { field: 'STK_CurrentQty', header: '現有庫存量', visible: true },
     { field: 'Calc_SafeQty', header: '安全庫存量', visible: true },
     { field: 'PLU_UNITNAME', header: '單位', visible: true },
-    { field: 'PLU_SalePrc', header: '售價', visible: true },
+    { field: 'PLU_SalePrc', header: '售價', visible: true, format: formatAmount },
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
     { field: 'SaleQty_30Days', header: '30天銷售量', visible: true },
@@ -127,7 +134,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
     this.dropDownListService.queryPOS2003_DropDownList().subscribe({
       next: (res: { Data: any[]; TotalCount: number }) => {
         this.bigCategoryOptions = (res.Data ?? []).map(item => ({
-          label: item.Name,
+          label: `${item.No}-${item.Name}`,
           value: item.No,
           Name: item.Name,
           No: item.No
@@ -138,12 +145,13 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
 
     // 大 → 中
     this.queryForm.get('CAT_LNo')?.valueChanges.pipe(debounceTime(300)).subscribe((bigCode) => {
+      if (this.suppressCategoryHandlers) return;
       if (bigCode) {
         const params: IPOS20031Request = { CAT_LNo: [bigCode] };
         this.dropDownListService.queryPOS20031_DropDownList(params).subscribe({
           next: (res) => {
             this.midCategoryOptions = (res.Data ?? []).map(item => ({
-              label: item.Name,
+              label: `${item.No}-${item.Name}`,
               value: item.No,
               Name: item.Name,
               No: item.No
@@ -162,6 +170,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
 
     // 中 → 小
     this.queryForm.get('CAT_MNo')?.valueChanges.pipe(debounceTime(300)).subscribe((midCode) => {
+      if (this.suppressCategoryHandlers) return;
       const bigCode = this.queryForm.get('CAT_LNo')?.value;
       if (bigCode && midCode) {
         const params: IPOS20032Request = {
@@ -175,7 +184,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
         this.dropDownListService.queryPOS20032_DropDownList(params).subscribe({
           next: (res) => {
             this.smallCategoryOptions = (res.Data ?? []).map(item => ({
-              label: item.Name,
+              label: `${item.No}-${item.Name}`,
               value: item.No,
               Name: item.Name,
               No: item.No
@@ -195,7 +204,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
       next: (res) => {
         const data = res.Data as unknown as IPLULOGOItem[];
         this.brandCodeOptions = (data ?? []).map(item => ({
-          label: `${item.No} ${item.LOGO_EN_NAME}（${item.Name}）`,
+          label: `${item.No}-${item.LOGO_EN_NAME}（${item.Name}）`,
           value: item.No,
           No: item.No,
           Name: item.Name,
@@ -226,27 +235,155 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
         this.queryForm.patchValue({ generalCode: null }, { emitEvent: false });
       }
     });
+
+    // 合併快速的 lazyLoad 事件，避免重複送出查詢
+    this.lazyLoadTrigger$.pipe(debounceTime(50), untilDestroyed(this)).subscribe(() => {
+      this.onSubmit(this.queryForm);
+    });
+  }
+
+  // 處理 table 的 lazyLoad 事件（只綁定到 template 一個 handler，避免重複呼叫）
+  async onTableLazy(event: any) {
+    // 儲存目前使用者選擇的分類值（以便在還原流程後還原，避免被舊的 queryState 覆蓋）
+    const currentCats = {
+      CAT_LNo: this.queryForm.get('CAT_LNo')?.value,
+      CAT_MNo: this.queryForm.get('CAT_MNo')?.value,
+      CAT_SNo: this.queryForm.get('CAT_SNo')?.value,
+    };
+
+    // 在還原期間暫時抑制 valueChanges 內的自動清除行為
+    this.suppressCategoryHandlers = true;
+    // 先用 base class 處理 pageIndex/pageSize/SortBy 的 patch
+    try {
+      super.onLazyLoadData(event, this.queryForm);
+    } catch (e) {
+      // ignore
+    }
+    const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
+    const proceed = async () => {
+      // 確保中/小分類的 options 包含目前使用者選擇，若不足就主動載入
+      try {
+        if (currentCats.CAT_LNo) {
+          // 若 mid 選項不包含使用者的 mid 值，則重新載入 mid 選單
+          const hasMid = this.midCategoryOptions.some(o => o.value === currentCats.CAT_MNo);
+          if (!hasMid) {
+            const params = { CAT_LNo: [currentCats.CAT_LNo] } as IPOS20031Request;
+            const res = await firstValueFrom(this.dropDownListService.queryPOS20031_DropDownList(params).pipe(untilDestroyed(this)));
+            this.midCategoryOptions = (res.Data ?? []).map((item: any) => ({ label: `${item.No}-${item.Name}`, value: item.No, Name: item.Name, No: item.No }));
+          }
+        }
+        if (currentCats.CAT_LNo && currentCats.CAT_MNo) {
+          const hasSmall = this.smallCategoryOptions.some(o => o.value === currentCats.CAT_SNo);
+          if (!hasSmall) {
+            const params2: IPOS20032Request = { CATList: [{ CAT_LNo: currentCats.CAT_LNo, CAT_MNo: currentCats.CAT_MNo }] };
+            const res2 = await firstValueFrom(this.dropDownListService.queryPOS20032_DropDownList(params2).pipe(untilDestroyed(this)));
+            this.smallCategoryOptions = (res2.Data ?? []).map((item: any) => ({ label: `${item.No}-${item.Name}`, value: item.No, Name: item.Name, No: item.No }));
+          }
+        }
+      } catch (e) {
+        // ignore loading errors here; user selections will be restored regardless
+      }
+
+      // 還原使用者當前的分類選擇（若存在）以優先保留使用者操作
+      const restore: any = {};
+      if (currentCats.CAT_LNo !== null && currentCats.CAT_LNo !== undefined) restore.CAT_LNo = currentCats.CAT_LNo;
+      if (currentCats.CAT_MNo !== null && currentCats.CAT_MNo !== undefined) restore.CAT_MNo = currentCats.CAT_MNo;
+      if (currentCats.CAT_SNo !== null && currentCats.CAT_SNo !== undefined) restore.CAT_SNo = currentCats.CAT_SNo;
+      if (Object.keys(restore).length) {
+        this.queryForm.patchValue(restore, { emitEvent: false });
+      }
+      this.suppressCategoryHandlers = false;
+      this.lazyLoadTrigger$.next(event);
+    };
+
+    if (saved && (saved.CAT_LNo || saved.CAT_MNo || saved.CAT_SNo)) {
+      // 正規化 saved 的值（若為陣列則取首項）
+      const norm = (v: any) => Array.isArray(v) ? (v[0] ?? null) : v ?? null;
+      const big = norm(saved.CAT_LNo);
+      const mid = norm(saved.CAT_MNo);
+      const small = norm(saved.CAT_SNo);
+
+      if (big) {
+        // 先設定大分類，但不觸發 valueChanges，接著手動載中分類選項
+        this.queryForm.patchValue({ CAT_LNo: big }, { emitEvent: false });
+        const params = { CAT_LNo: [big] } as IPOS20031Request;
+        this.dropDownListService.queryPOS20031_DropDownList(params).pipe(untilDestroyed(this)).subscribe({
+          next: (res) => {
+            this.midCategoryOptions = (res.Data ?? []).map((item: any) => ({
+              label: `${item.No}-${item.Name}`,
+              value: item.No,
+              Name: item.Name,
+              No: item.No
+            }));
+            if (mid) {
+              // 設定中分類，並載入小分類
+              this.queryForm.patchValue({ CAT_MNo: mid }, { emitEvent: false });
+              const params2: IPOS20032Request = {
+                CATList: [{ CAT_LNo: big, CAT_MNo: mid }]
+              };
+              this.dropDownListService.queryPOS20032_DropDownList(params2).pipe(untilDestroyed(this)).subscribe({
+                next: (res2) => {
+                  this.smallCategoryOptions = (res2.Data ?? []).map((item: any) => ({
+                    label: `${item.No}-${item.Name}`,
+                    value: item.No,
+                    Name: item.Name,
+                    No: item.No
+                  }));
+                  if (small) {
+                    this.queryForm.patchValue({ CAT_SNo: small }, { emitEvent: false });
+                  }
+                  proceed();
+                },
+                error: () => {
+                  this.messageService.errorBubble('載入小分類選單失敗');
+                  proceed();
+                }
+              });
+            } else {
+              // 沒有中分類值，清空小分類
+              this.smallCategoryOptions = [];
+              this.queryForm.patchValue({ CAT_SNo: null }, { emitEvent: false });
+              proceed();
+            }
+          },
+          error: () => {
+            this.messageService.errorBubble('載入中分類選單失敗');
+            proceed();
+          }
+        });
+      } else {
+        // 沒有大分類，直接繼續
+        proceed();
+      }
+    } else {
+      // 沒有儲存分類，直接觸發查詢
+      proceed();
+    }
   }
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       this.loading = true;
-      const v = form.getRawValue() as any;
+      this.messageService.infoBubble('查詢中,請稍候...');
 
+      const v = form.getRawValue() as any;
       const toStr = (val: any) => Array.isArray(val) ? (val[0] ?? '') : (val ?? '');
       const toArr = (val: any) =>
         Array.isArray(val) ? val.filter((x) => x != null && x !== '') :
           (val != null && val !== '' ? [val] : []);
       const nonEmpty = (s?: string | null) => !!(s && s.trim().length);
 
-      // 依你要的顯示順序建立物件，並且對空字串「不送欄位」
+      const normalizeSortBy = (sortBy: any) => {
+        if (!Array.isArray(sortBy) || !sortBy.length) return [{ field: 'PLU_MagNo', order: 1 }];
+        return sortBy
+          .filter((s: any) => s && typeof s.field === 'string')
+          .map((s: any) => ({ field: s.field, order: s.order === -1 ? 2 : (s.order ?? 1) }));
+      };
+
       const body: any = {
         PageSize: Number(v.pageSize ?? 10),
         PageIndex: Number(v.pageIndex ?? 1),
-        SortBy: (Array.isArray(v.SortBy) && v.SortBy.length)
-          ? v.SortBy
-          : [{ field: 'PLU_MagNo', order: 1 }],
-        // 下面這些只在有值時才加入（避免空字串造成後端拋錯）
+        SortBy: normalizeSortBy(v.SortBy),
         ...(nonEmpty(toStr(v.CAT_LNo)) ? { CAT_LNo: toStr(v.CAT_LNo) } : {}),
         ...(nonEmpty(toStr(v.CAT_MNo)) ? { CAT_MNo: toStr(v.CAT_MNo) } : {}),
         ...(nonEmpty(toStr(v.CAT_SNo)) ? { CAT_SNo: toStr(v.CAT_SNo) } : {}),
@@ -260,32 +397,48 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
         LOGO_No: v.LOGO_No,
       };
 
-      // // 小防呆：若所有條件都空，避免打到後端直接噴錯
-      // if (!body.PLU_MagNo && !body.CAT_LNo && !body.CAT_MNo && !body.CAT_SNo && !body.LOGO_No) {
-      //   this.messageService.errorBubble('請至少輸入一個查詢條件（例如：管理編號或分類/品牌）');
-      //   this.loading = false;
-      //   this.messageService.unblockUi();
-      //   return;
-      // }
-
-      // console.log('payload =', JSON.stringify(body));  // 會是你要的順序
-
       this.tls56010Service.queryTLS56010(body).subscribe({
         next: (res: { Data: any[]; TotalCount: number }) => {
           this.data = res?.Data ?? [];
-          this.filteredData = [...this.data];
+          // 若後端沒有依 SortBy 排序，可在 client 端以 body.SortBy 做回退排序
+          if (Array.isArray(body.SortBy) && body.SortBy.length) {
+            this.filteredData = this.applyLocalSort([...this.data], body.SortBy);
+          } else {
+            this.filteredData = [...this.data];
+          }
           this.totalRecords = res?.TotalCount ?? this.data.length;
           this.queryStateService.setQueryState(this.ProgNo, body);
           this.loading = false;
           this.messageService.unblockUi();
         },
-        error: (err) => {
-          console.error('TLS56010 查詢失敗:', err);
-          this.messageService.errorBubble('查詢失敗，請稍後再試');
-          this.loading = false;
-          this.messageService.unblockUi();
-        }
+
       });
+    });
+  }
+
+  // 當後端無法正確排序時，於 client 端對當前 page 的資料做回退排序
+  private applyLocalSort(rows: any[], sortBy: any[]): any[] {
+    if (!Array.isArray(sortBy) || !sortBy.length) return rows;
+    const compareValue = (a: any, b: any) => {
+      if (a == null && b == null) return 0;
+      if (a == null) return -1;
+      if (b == null) return 1;
+      // numeric compare if both numeric
+      const na = Number(a);
+      const nb = Number(b);
+      if (!isNaN(na) && !isNaN(nb)) return na - nb;
+      // fallback string compare
+      return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: 'base' });
+    };
+
+    return rows.sort((r1, r2) => {
+      for (const s of sortBy) {
+        const field = s?.field;
+        const order = s?.order === -1 ? -1 : (s?.order === 2 ? -1 : 1); // support -1,1 or 2
+        const v = compareValue(r1?.[field], r2?.[field]);
+        if (v !== 0) return order === -1 ? -v : v;
+      }
+      return 0;
     });
   }
 

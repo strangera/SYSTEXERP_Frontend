@@ -17,39 +17,39 @@ export const columns1: ReportColumn[] = [
   { field: 'check_day', header: '結帳後幾日付款' }, // 結帳後幾日付款
 
   // 銷貨淨額 group
-  { field: 'sam_sales_namt', header: '應稅', isTotal: true, format: formatAmount, groupField: 'sales' },
-  { field: 'sam_sales_notaxamt', header: '免稅', isTotal: true, format: formatAmount, groupField: 'sales' },
-  { field: 'sam_sales_tax', header: '稅額', isTotal: true, format: formatAmount, groupField: 'sales' },
+  { field: 'sam_sales_namt', header: '應稅', isTotal: true, format: formatAmount, groupField: '銷貨淨額' },
+  { field: 'sam_sales_notaxamt', header: '免稅', isTotal: true, format: formatAmount, groupField: '銷貨淨額' },
+  { field: 'sam_sales_tax', header: '稅額', isTotal: true, format: formatAmount, groupField: '銷貨淨額' },
 
   // 抽成額 group
-  { field: 'sam_profit', header: '應稅', isTotal: true, format: formatAmount, groupField: 'profit' },
-  { field: 'sam_notax_profit', header: '免稅', isTotal: true, format: formatAmount, groupField: 'profit' },
-  { field: 'sam_profit_tax', header: '稅額', isTotal: true, format: formatAmount, groupField: 'profit' },
+  { field: 'sam_profit', header: '應稅', isTotal: true, format: formatAmount, groupField: '抽成額' },
+  { field: 'sam_notax_profit', header: '免稅', isTotal: true, format: formatAmount, groupField: '抽成額' },
+  { field: 'sam_profit_tax', header: '稅額', isTotal: true, format: formatAmount, groupField: '抽成額' },
 
   // 進貨 group
-  { field: 'sam_ap_namt', header: '應稅', isTotal: true, format: formatAmount, groupField: 'ap' },
-  { field: 'sam_ap_notaxamt', header: '免稅', isTotal: true, format: formatAmount, groupField: 'ap' },
+  { field: 'sam_ap_namt', header: '應稅', isTotal: true, format: formatAmount, groupField: '進貨' },
+  { field: 'sam_ap_notaxamt', header: '免稅', isTotal: true, format: formatAmount, groupField: '進貨' },
 
   { field: 'sam_ap_tax', header: '進項稅額', isTotal: true, format: formatAmount },
   { field: 'sam_ap_amt', header: '進貨總額(含稅)', isTotal: true, format: formatAmount },
 
   // 應收帳款 group
-  { field: 'sam_fare_namt', header: '代扣未稅(開立)', isTotal: true, format: formatAmount, groupField: 'receivable' },
-  { field: 'sam_fare_tax', header: '代扣稅額', isTotal: true, format: formatAmount, groupField: 'receivable' },
-  { field: 'sam_fare_notaxamt', header: '代扣金額(不開立)', isTotal: true, format: formatAmount, groupField: 'receivable' },
-  { field: 'sam_rent_namt', header: '租金未稅', isTotal: true, format: formatAmount, groupField: 'receivable' },
-  { field: 'sam_rent_tax', header: '租金稅額', isTotal: true, format: formatAmount, groupField: 'receivable' },
-  { field: 'acc_receivable', header: '應收合計', isTotal: true, format: formatAmount, groupField: 'receivable' },
+  { field: 'sam_fare_namt', header: '代扣未稅(開立)', isTotal: true, format: formatAmount, groupField: '應收帳款' },
+  { field: 'sam_fare_tax', header: '代扣稅額', isTotal: true, format: formatAmount, groupField: '應收帳款' },
+  { field: 'sam_fare_notaxamt', header: '代扣金額(不開立)', isTotal: true, format: formatAmount, groupField: '應收帳款' },
+  { field: 'sam_rent_namt', header: '租金未稅', isTotal: true, format: formatAmount, groupField: '應收帳款' },
+  { field: 'sam_rent_tax', header: '租金稅額', isTotal: true, format: formatAmount, groupField: '應收帳款' },
+  { field: 'acc_receivable', header: '應收合計', isTotal: true, format: formatAmount, groupField: '應收帳款' },
   // 最終合計
   { field: 'sam_under_limit_amt', header: '包底抽成不足(含稅)', isTotal: true, format: formatAmount },
   { field: 'acc_payable', header: '應付帳款(含稅)', isTotal: true, format: formatAmount },
 ];
 
 export const columnGroup: ColumnGroup[] = [
-  { field: 'sales', header: '銷貨淨額' },
-  { field: 'profit', header: '抽成額' },
-  { field: 'ap', header: '進貨' },
-  { field: 'receivable', header: '應收帳款' },
+  { field: '銷貨淨額', header: '銷貨淨額' },
+  { field: '抽成額', header: '抽成額' },
+  { field: '進貨', header: '進貨' },
+  { field: '應收帳款', header: '應收帳款' },
 ];
 
 // 專櫃銷貨彙總表 - 基礎欄位

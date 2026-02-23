@@ -98,7 +98,8 @@ export class SystemOptionsService {
     // 使用 map 方法將每個物件轉換為新格式
     return originalOptions.map(item => ({
       value: item.SYS_Code,
-      label: item.SYS_Name
+      label: item.SYS_Name,
+      displayText: `${item.SYS_Code} - ${item.SYS_Name}`,
     }));
   }
 
@@ -113,5 +114,10 @@ export class SystemOptionsService {
     // 使用字串比較，確保傳入的 number 或 string 都能正確對應到 SYS_Code
     const found = options.find(x => String(x.SYS_Code) === String(value));
     return found ? found.SYS_Name : value;
+  }
+
+  // 強制更新快取
+  static refreshCache() {
+    this.loadOptionsFromSession();
   }
 }

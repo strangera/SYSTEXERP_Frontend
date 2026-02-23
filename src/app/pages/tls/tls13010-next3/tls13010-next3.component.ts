@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+﻿import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
 import { catchError, firstValueFrom, Subscription } from 'rxjs';
@@ -276,7 +276,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       this.loadDataWithPriority();
     } else {
       console.warn('沒有有效的工作流程資料，重導向到前一步');
-      this.router.navigate(['account/tls/tls13010cru']);
+      this.router.navigate(['account/tls/tls13010v1cru']);
     }
   }
 
@@ -1381,7 +1381,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       const extras: NavigationExtras = {
         state: { fromRoute: this.router.url }
       };
-      this.router.navigate(['account/tls/tls13010'], extras);
+      this.router.navigate(['account/tls/tls13010v1'], extras);
     }, 3000);
   }
 
@@ -1422,41 +1422,8 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
   private validateNext2DataConsistency(): boolean {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    if (commissionType !== '2') {
-      return true; // 非底租抽成取高者不需檢查
-    }
-
-    try {
-      const cleanData = this.contractFlowService.generateCleanSubmitData();
-
-      const next2MasterCount = cleanData.commissions.masters.toInsert.length +
-        cleanData.commissions.masters.toUpdate.length;
-      const next3RentCount = cleanData.conditions.baseRentHigher.toInsert.length +
-        cleanData.conditions.baseRentHigher.toUpdate.length;
-
-      console.log('Next3: 數量一致性檢查:', {
-        next2MasterCount,
-        next3RentCount,
-        isConsistent: next2MasterCount === next3RentCount
-      });
-
-      if (next2MasterCount !== next3RentCount) {
-        this.notificationService.errorBubble(
-          `資料不一致：抽成設定有 ${next2MasterCount} 個項目，` +
-          `但條件設定有 ${next3RentCount} 個項目。請檢查資料後再送出。`
-        );
-        return false;
-      }
-
-      return true;
-
-    } catch (error) {
-      console.error('Next3: 一致性檢查失敗:', error);
-      this.notificationService.warnBubble('無法驗證資料一致性，請檢查資料完整性');
-      return true; // 允許繼續，但給出警告
-    }
+    // 移除抽成設定與條件設定數量一致性檢查，直接返回 true
+    return true;
   }
 
   // ===== 導航方法 =====
@@ -1467,10 +1434,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     // 檢視模式：根據合約類型決定導航目標
     if (contractTermType === '1') {
       console.log('🔍 檢視模式：合約類型為1，直接跳轉到 next1');
-      this.router.navigate(['account/tls/tls13010next1']);
+      this.router.navigate(['account/tls/tls13010v1next1']);
     } else {
       console.log('🔍 檢視模式：合約類型非1，跳轉到 next2');
-      this.router.navigate(['account/tls/tls13010next2']);
+      this.router.navigate(['account/tls/tls13010v1next2']);
 
     }
     this.saveConditionDataToWorkflow();
@@ -1482,7 +1449,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    this.router.navigate(['account/tls/tls13010'], extras);
+    this.router.navigate(['account/tls/tls13010v1'], extras);
     this.notificationService.infoBubble('已清空暫存資料並離開');
   }
 

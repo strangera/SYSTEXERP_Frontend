@@ -4,10 +4,12 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { Fin12010Service, IFin12010Data } from '../../../service/api/fin/fin12010.service';
+import { Fin12010Service, IFin12010Data, IQueryFin12010Request } from '../../../service/api/fin/fin12010.service';
 import { getSYS1000, getSYS1000Options } from '../../../service/system/sys1000.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -15,8 +17,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount, formatDateTime, formatYN, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { formatAmount, formatDateTime, formatYN, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
@@ -32,7 +33,7 @@ import { YearMonthComponent } from '../fin11020/query-year-month/query-year-mont
     InputTextComponent,
     InputTextRangeComponent,
     MultiSelectComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     YearMonthComponent
   ],
@@ -46,12 +47,15 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票起始號碼
     SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票結束號碼
     SAL_TypeList: [[]], // 使用別
-    ...createPaginationConfig([{ field: 'SAL_GUIYYYYMM', order: 1 }, { field: 'SAL_GUITrack', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'SAL_GUIYYYYMM', order: 1 }, { field: 'SAL_GUITrack', order: 1 }]],
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUINo_start', 'SAL_GUINo_end') });
   totalRecords = 0;
+  lastQueryBody: IQueryFin12010Request | null = null;
   data: IFin12010Data[] = [];
   selectedItems: IFin12010Data[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'SAL_GUIYYYYMM', header: '發票年月', visible: true, format: formatYYYYMM },
     { field: 'SAL_GUITrack', header: '字軌', visible: true },
     { field: 'SAL_GUIBegNo', header: '發票起始號碼', visible: true },
@@ -80,9 +84,9 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
   usageTypeOptions = getSYS1000Options('T205');
   SAL_GUIPaperOptions = getSYS1000Options('SAL_GUIPaper');
   constructor(
-    private fin12010Service: Fin12010Service,
-    private validationService: ValidationService,
-    private datePipe: DatePipe
+    public readonly fin12010Service: Fin12010Service,
+    private readonly validationService: ValidationService,
+    private readonly datePipe: DatePipe
   ) { super(); }
 
   ngOnInit(): void {
@@ -102,13 +106,8 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.fin12010Service.queryFIN12010(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data.map(item => ({
-          ...item,
-          SAL_GUIYYYYMM: item.SAL_GUIYYYYMM
-            ? new Date(+item.SAL_GUIYYYYMM.substring(0, 4), +item.SAL_GUIYYYYMM.substring(4, 6) - 1, 1)
-            : null,
-        }));
-
+        this.data = res.Data;
+        this.lastQueryBody = frm.value;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });

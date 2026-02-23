@@ -12,13 +12,13 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 
 // UI
 import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 // until-destroy
@@ -39,7 +39,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
     MultiSelectComponent,
     InputTextComponent,
     InputNumberRangeComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -47,6 +47,10 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
+  private lastQuerySig: string | null = null;
+  private lazyTimer: any = null;
+  lastQueryBody: any = null;
+queryTLS11010Fn = (body: any) => this.tls11010Service.queryData(body);
 
   // Options
   floorOptions: any[] = [];
@@ -213,12 +217,9 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     this.handleSubmit(frm, () => {
       this.loading = true;
       this.messageService.blockUi();
-
-      // 原始表單值：留給查詢還原用
-      const rawFormValue: any = frm.getRawValue();
-
-      // 給 API 的 payload：用 helper 做轉型
-      const payload = this.buildApiPayload(rawFormValue);
+      const rawFormValue = frm.getRawValue();
+const payload = this.buildApiPayload(rawFormValue);
+this.lastQueryBody = { ...payload };
 
       this.tls11010Service
         .queryData(payload)
@@ -325,46 +326,100 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   }
 
   /** 🔹 清除：回到「一開始都沒選、沒輸入」的狀態，並且更新還原用的 state */
-/** 🔹 清除：回到「一開始都沒選、沒輸入」的狀態，並且更新還原用的 state */
-onClear(): void {
-  const form = this.queryForm;
+  /** 🔹 清除：回到「一開始都沒選、沒輸入」的狀態，並且更新還原用的 state */
+  onClear(): void {
+    const form = this.queryForm;
 
-  // 保留目前的分頁設定
-  const paging = {
-    pageIndex: form.get('pageIndex')?.value ?? 1,
-    pageSize: form.get('pageSize')?.value ?? 20,
-    SortBy:
-      form.get('SortBy')?.value ?? [{ field: 'LOCATION_No', order: 1 }],
-  };
+    // 保留目前的分頁設定
+    const paging = {
+      pageIndex: form.get('pageIndex')?.value ?? 1,
+      pageSize: form.get('pageSize')?.value ?? 20,
+      SortBy:
+        form.get('SortBy')?.value ?? [{ field: 'LOCATION_No', order: 1 }],
+    };
 
-  // 先全部 reset（型別會回到控制項原本宣告的型別）
-  form.reset();
+    // 先全部 reset（型別會回到控制項原本宣告的型別）
+    form.reset();
 
-  // 🔹 Text / number 類欄位：清成「沒輸入」
-  form.get('LOCATION_No')?.setValue('');
-  form.get('GROSS_SPACE_Start')?.setValue(null);
-  form.get('GROSS_SPACE_End')?.setValue(null);
-  form.get('NET_SPACE_Start')?.setValue(null);
-  form.get('NET_SPACE_End')?.setValue(null);
+    // 🔹 Text / number 類欄位：清成「沒輸入」
+    form.get('LOCATION_No')?.setValue('');
+    form.get('GROSS_SPACE_Start')?.setValue(null);
+    form.get('GROSS_SPACE_End')?.setValue(null);
+    form.get('NET_SPACE_Start')?.setValue(null);
+    form.get('NET_SPACE_End')?.setValue(null);
 
-  // 🔹 Multi-select / 陣列欄位：設成 []（用 any 避掉 TS 推斷成 null | undefined 的問題）
-  (form.get('org_id') as any)?.setValue([]);
-  (form.get('building_no') as any)?.setValue([]);
-  (form.get('FLOOR_NO') as any)?.setValue([]);
-  (form.get('AREA_NO') as any)?.setValue([]);
-  (form.get('LOCATION_Status') as any)?.setValue([]);
-  (form.get('Purpose_no') as any)?.setValue([]);
+    // 🔹 Multi-select / 陣列欄位：設成 []（用 any 避掉 TS 推斷成 null | undefined 的問題）
+    (form.get('org_id') as any)?.setValue([]);
+    (form.get('building_no') as any)?.setValue([]);
+    (form.get('FLOOR_NO') as any)?.setValue([]);
+    (form.get('AREA_NO') as any)?.setValue([]);
+    (form.get('LOCATION_Status') as any)?.setValue([]);
+    (form.get('Purpose_no') as any)?.setValue([]);
 
-  // 🔹 把分頁設回去
-  form.patchValue(paging);
+    // 🔹 把分頁設回去
+    form.patchValue(paging);
 
-  this.submitted = false;
-  form.markAsPristine();
-  form.markAsUntouched();
+    this.submitted = false;
+    form.markAsPristine();
+    form.markAsUntouched();
 
-  // 🔥 重點：把「清空後」的條件寫回查詢還原
-  const cleared = form.getRawValue();
-  this.queryStateService.setQueryState(this.ProgNo, cleared);
-}
+    // 🔥 重點：把「清空後」的條件寫回查詢還原
+    const cleared = form.getRawValue();
+    this.queryStateService.setQueryState(this.ProgNo, cleared);
+  }
+  override onLazyLoadData(event: any, form: FormGroup): void {
+    // event 可能是你自己包的 LazyLoadEvent，也可能是 primeng 的 LazyLoadEvent
+    // 所以這裡做容錯
+    const evPageIndex =
+      Number.isFinite(event?.pageIndex) ? Number(event.pageIndex)
+        : Number.isFinite(event?.first) && Number.isFinite(event?.rows)
+          ? Math.floor(Number(event.first) / Number(event.rows)) + 1
+          : undefined;
+
+    const evPageSize =
+      Number.isFinite(event?.pageSize) ? Number(event.pageSize)
+        : Number.isFinite(event?.rows) ? Number(event.rows)
+          : undefined;
+
+    const nextSort = Array.isArray(event?.SortBy) ? event.SortBy
+      : Array.isArray(event?.multiSortMeta) ? event.multiSortMeta
+        : form.value?.SortBy ?? [];
+
+    const currSortSig = JSON.stringify(form.value?.SortBy ?? []);
+    const nextSortSig = JSON.stringify(nextSort ?? []);
+
+    // 排序改變 => 回到第 1 頁
+    const nextPageIndex =
+      currSortSig !== nextSortSig
+        ? 1
+        : (evPageIndex ?? form.value?.pageIndex ?? 1);
+
+    const nextPageSize = evPageSize ?? form.value?.pageSize ?? 30;
+
+    // 先把 paging/sort 寫回表單（避免你 onSubmit 用到舊值）
+    form.patchValue(
+      {
+        pageIndex: nextPageIndex,
+        pageSize: nextPageSize,
+        SortBy: nextSort ?? [],
+      },
+      { emitEvent: false }
+    );
+
+    // 防止同樣狀態重複查
+    const sig = JSON.stringify({
+      pageIndex: form.value?.pageIndex,
+      pageSize: form.value?.pageSize,
+      SortBy: form.value?.SortBy,
+      // 如果你想「條件變更也算」，可以把其他欄位也帶進來
+    });
+
+    if (sig === this.lastQuerySig) return;
+    this.lastQuerySig = sig;
+
+    // debounce：避免表格瞬間連續丟多次 lazy event
+    if (this.lazyTimer) clearTimeout(this.lazyTimer);
+    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
+  }
 
 }

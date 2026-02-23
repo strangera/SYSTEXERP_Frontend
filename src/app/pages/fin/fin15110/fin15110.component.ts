@@ -16,6 +16,7 @@ import {
   Column,
   createPaginationConfig,
   formatAmount,
+  formatDate,
 } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -73,6 +74,7 @@ export class FIN15110Component
     DataType: [['1', '2'] as string[]],
     displayMode: ['1'],
     ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }]),
+    pageSize: [30],
   });
 
   /** 表格資料 */
@@ -159,7 +161,7 @@ export class FIN15110Component
         format: formatAmount,
         isTotal: true,
       },
-      TXN_VoidDT: { field: 'TXN_VoidDT', header: '發票作廢日期', visible: true, showSort: true },
+      TXN_VoidDT: { field: 'TXN_VoidDT', header: '發票作廢日期', visible: true, showSort: true, format: formatDate },
       INVStatus: { field: 'INVStatus', header: '發票狀態', visible: true, showSort: true },
       GUIType: { field: 'GUIType', header: '發票類型', visible: true, showSort: true },
       PLU_TaxType: { field: 'PLU_TaxType', header: '稅別', visible: true, showSort: true },
@@ -325,22 +327,73 @@ export class FIN15110Component
     this.columns = this.getColumnsByReportType(this.queryForm.value.displayMode || '1');
 
     this.setupDisplayModeWatcher();
+    // 根據目前 displayMode 設定初始欄位狀態
+    this.updateControlsByDisplayMode(this.queryForm.value.displayMode || '1');
   }
 
   /** 監聽報表類型變化，自動調整日期範圍 */
   private setupDisplayModeWatcher(): void {
     this.queryForm.get('displayMode')?.valueChanges.subscribe(value => {
+      // 更新欄位啟用/停用狀態
+      this.updateControlsByDisplayMode(value);
+      // 當為 2/3 時自動把結束日設為起始日（UI 會把結束日停用）
       if (value === '2' || value === '3') {
-        // 發票報表一機台加總/明細：日期起訖需要自動變為一樣，依起為主
         const startDate = this.queryForm.get('TXN_DT_S')?.value;
         if (startDate) {
-          this.queryForm.patchValue({
-            TXN_DT_E: startDate
-          }, { emitEvent: false });
+          this.queryForm.patchValue({ TXN_DT_E: startDate }, { emitEvent: false });
         }
       }
+      // 同步欄位配置（表格欄位會隨報表格式切換）
+      this.columns = this.getColumnsByReportType(value || '1');
     });
-  }  /** 根據 ReportType 設置 footerData */
+  }
+
+  /** 根據 displayMode 啟用 / 停用查詢欄位 */
+  private updateControlsByDisplayMode(mode: string): void {
+    const ecrS = this.queryForm.get('ECR_No_S');
+    const ecrE = this.queryForm.get('ECR_No_E');
+    const dataType = this.queryForm.get('DataType');
+    const txnEs = this.queryForm.get('TXN_DT_E');
+
+    if (!ecrS || !ecrE || !dataType || !txnEs) return;
+
+    switch (mode) {
+      case '1': // 二電發票表: ECR 起訖、資料種類、結束日 都可用
+        ecrS.enable({ emitEvent: false });
+        ecrE.enable({ emitEvent: false });
+        dataType.enable({ emitEvent: false });
+        txnEs.enable({ emitEvent: false });
+        break;
+      case '2':
+      case '3': // 發票報表依機台加總/明細: 起始銷售日期為主要搜尋欄位，可使用收銀機號，資料種類不可用，結束日可輸入
+        ecrS.enable({ emitEvent: false });
+        ecrE.enable({ emitEvent: false });
+        dataType.disable({ emitEvent: false });
+        // 清除 DataType 值
+        dataType.patchValue([], { emitEvent: false });
+        txnEs.enable({ emitEvent: false });
+        break;
+      case '4':
+      case '5': // 跨日/跨期作廢發票報表: 收銀機號與資料種類不可使用
+        ecrS.disable({ emitEvent: false });
+        ecrE.disable({ emitEvent: false });
+        ecrS.patchValue('', { emitEvent: false });
+        ecrE.patchValue('', { emitEvent: false });
+        dataType.disable({ emitEvent: false });
+        dataType.patchValue([], { emitEvent: false });
+        txnEs.enable({ emitEvent: false });
+        break;
+      default:
+        // 預設行為，啟用所有
+        ecrS.enable({ emitEvent: false });
+        ecrE.enable({ emitEvent: false });
+        dataType.enable({ emitEvent: false });
+        txnEs.enable({ emitEvent: false });
+        break;
+    }
+  }
+
+  /** 根據 ReportType 設置 footerData */
   private setFooterDataByReportType(data: any, reportType: string): void {
     switch (reportType) {
       case '1': // 二電發票明細報表
@@ -408,7 +461,7 @@ export class FIN15110Component
       // 在查詢時更新表格欄位配置
       this.columns = this.getColumnsByReportType(v.displayMode || '1');
       const payload = {
-        PageSize: v.pageSize || 20,
+        PageSize: v.pageSize || 30,
         PageIndex: v.pageIndex ?? 1,
         OrderBy: '',
         Offset: 0,

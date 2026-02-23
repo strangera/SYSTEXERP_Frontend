@@ -27,7 +27,8 @@ import { LocationOptionsService } from '@service/api/dropdownservice/location-op
 import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '../../../../../tls13010/tls13010.dropdown';
 
 import { FareItem } from '../../../../core/models/deduction';
-import { LocationItem } from '../../../../core/models/contract';
+import { ContractInfo, LocationItem } from '../../../../core/models/contract';
+import { getContractInfoColumns } from '../../../../core/constants/commission-columns';
 import {
   FareCapType,
   FARE_CAP_TYPE_LABELS,
@@ -36,22 +37,6 @@ import {
   setColumnsReadonly
 } from '../../../../core/constants/fare-columns.config';
 import { CrudTrackingService, ChangeDetectionConfig } from '../../../../core/services/crud-tracking.service';
-
-/** 合約資訊介面 */
-interface ContractInfo {
-  id: number;
-  apply_no?: string;
-  tlt_no?: string;
-  tlt_name?: string;
-  ven_uniform?: string;
-  VEN_Name?: string;
-  contract_subno?: string;
-  tlt_term_type?: string;
-  tlt_bdate?: string;
-  tlt_edate?: string;
-  tlt_contract_bdate?: string;
-  tlt_contract_edate?: string;
-}
 
 @Component({
   selector: 'app-step2-deduction',
@@ -166,10 +151,11 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // fareItems 變更時重新處理資料
-    if (changes['fareItems'] && this.fareItems) {
+    // fareItems 僅在首次載入時處理（從 parent 接收初始資料）
+    // 之後 Step 2 內部透過 originalFareData 自行管理狀態，
+    // 避免 emitChanges → parent 回寫 → ngOnChanges 的無意義循環重建
+    if (changes['fareItems']?.firstChange && this.fareItems) {
       this.processFareItems();
-      // 確保錯誤標記能正確顯示 (觸發變更檢測)
       this.cdr.detectChanges();
     }
 
@@ -207,33 +193,14 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
       return { bdate: '', edate: '' };
     }
     return {
-      bdate: this.contractForm.get('tlt_contract_bdate')?.value || '',
-      edate: this.contractForm.get('tlt_contract_edate')?.value || ''
+      bdate: this.contractForm.get('tlt_bdate')?.value || '',
+      edate: this.contractForm.get('tlt_edate')?.value || ''
     };
   }
 
   // ========== 合約資訊 ==========
   private initContractInfoColumns(): void {
-    this.contractInfoColumns = [
-      { field: 'apply_no', header: '專櫃招募編號', type: 'text', editable: false, autoWidth: true },
-      { field: 'tlt_no', header: '專櫃編號', type: 'text', editable: false, autoWidth: true },
-      { field: 'tlt_name', header: '品牌(專櫃)名稱', type: 'text', editable: false, autoWidth: true },
-      { field: 'ven_uniform', header: '廠商統編', type: 'text', editable: false, autoWidth: true },
-      { field: 'VEN_Name', header: '廠商名稱', type: 'text', editable: false, autoWidth: true },
-      { field: 'contract_subno', header: '版本編號', type: 'text', editable: false, autoWidth: true },
-      {
-        field: 'tlt_term_type',
-        header: '抽成別',
-        type: 'dropdown',
-        editable: false,
-        options: TLS13010_DROPDOWN_OPTIONS.tltTermType,
-        autoWidth: true
-      },
-      { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-      { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-      { field: 'tlt_contract_bdate', header: '營運起始日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-      { field: 'tlt_contract_edate', header: '營運終止日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' }
-    ];
+    this.contractInfoColumns = getContractInfoColumns();
   }
 
   private setupContractInfo(): void {
@@ -245,13 +212,17 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     const formValue = this.contractForm.getRawValue();
     this.contractInfoData = [{
       id: 1,
+      talent_id: formValue.talent_id || '',
       apply_no: formValue.apply_no || '',
       tlt_no: formValue.tlt_no || '',
       tlt_name: formValue.tlt_name || '',
+      vendor_ven_no: formValue.vendor_ven_no || '',
       ven_uniform: formValue.ven_uniform || '',
       VEN_Name: formValue.VEN_Name || '',
       contract_subno: formValue.contract_subno || '',
       tlt_term_type: formValue.tlt_term_type || '',
+      tlt_ctype_mtotal: formValue.tlt_ctype_mtotal || '',
+      overall_status: formValue.overall_status || '',
       tlt_bdate: formValue.tlt_bdate || '',
       tlt_edate: formValue.tlt_edate || '',
       tlt_contract_bdate: formValue.tlt_contract_bdate || '',
@@ -476,33 +447,20 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
 
     // 如果是新勾選的項目
     if (rowData.is_selected) {
-      console.log('📅 勾選項目，檢查是否需要帶入日期:', {
-        item: rowData.cap_item,
-        tpy_bdate: rowData.tpy_bdate,
-        tpy_edate: rowData.tpy_edate,
-        contractDates: this.contractDates,
-        tpy_type: rowData.tpy_type,
-        totalLocationSpace: this.totalLocationSpace
-      });
-
       // 自動帶入契約起訖日期 (如果尚未設定)
-      // expandable-edit-table 可處理 Date 和 string
       if (!rowData.tpy_bdate && this.contractDates.bdate) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (rowData as any).tpy_bdate = this.convertToDate(this.contractDates.bdate);
-        console.log('📅 自動帶入起始日期:', rowData.tpy_bdate);
       }
       if (!rowData.tpy_edate && this.contractDates.edate) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (rowData as any).tpy_edate = this.convertToDate(this.contractDates.edate);
-        console.log('📅 自動帶入結束日期:', rowData.tpy_edate);
       }
 
       // 如果選擇坪數單位，設定預設數量為總坪數
       if (rowData.tpy_type === '01' && this.totalLocationSpace > 0) {
         if (!rowData.tpy_qty || rowData.tpy_qty === 0 || rowData.tpy_qty === 1) {
           rowData.tpy_qty = this.totalLocationSpace;
-          console.log('🏢 自動帶入坪數:', rowData.tpy_qty);
         }
       }
 
@@ -864,8 +822,6 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
         showAll: true
       }).toPromise();
 
-      console.log('📊 API 回應:', response);
-
       if (response?.Status === '0000' && response.Data?.FaresByType) {
         this.processLoadedItemsByType(response.Data.FaresByType);
       }
@@ -890,9 +846,8 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
 
     capTypes.forEach(capType => {
       const items = faresByType[capType] || [];
-      console.log(`📊 處理 ${capType} 類型，共 ${items.length} 筆`);
 
-      items.forEach((item, index) => {
+      items.forEach(item => {
         // 判斷是否為契約既有項目
         const itemIsExisting = item.data_source === 'CONTRACT_EXISTING' ||
           (item.is_selected && !item.is_new_item);
@@ -905,7 +860,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
         // 確保 cap_type 正確
         initializedItem.cap_type = capType;
 
-        // 🔥 為沒有日期的項目設定預設值 (契約起訖日期)
+        // 為沒有日期的項目設定預設值 (契約起訖日期)
         this.applyDefaultDatesToItem(initializedItem, capType);
 
         // C 類型：根據日期重新計算期數和首期金額
@@ -914,32 +869,10 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
         }
 
         this.originalFareData[capType].push(initializedItem);
-
-        if (index < 2) {
-          console.log(`  項目: ${item.cap_item}, is_commonly_used: ${item.is_commonly_used}, data_source: ${initializedItem.data_source}, is_selected: ${initializedItem.is_selected}`);
-        }
       });
     });
 
-    // 顯示各類型統計
-    console.log('📊 各類型項目數:', {
-      A: this.originalFareData['A'].length,
-      B: this.originalFareData['B'].length,
-      C: this.originalFareData['C'].length,
-      D: this.originalFareData['D'].length,
-      E: this.originalFareData['E'].length
-    });
-
     this.filterAllTypes();
-
-    // 顯示過濾後結果
-    console.log('📊 過濾後顯示項目數 (常用模式):', {
-      A: this.fareData['A'].length,
-      B: this.fareData['B'].length,
-      C: this.fareData['C'].length,
-      D: this.fareData['D'].length,
-      E: this.fareData['E'].length
-    });
 
     this.emitChanges();
     this.cdr.detectChanges();
@@ -960,18 +893,8 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private loadPayNoOptions(): void {
+    // 父組件透過 loading 控制渲染時機，確保 dropdownService 已完成初始化
     this.payNoOptions = this.dropdownService.getPayNoOptions();
-
-    if (this.payNoOptions.length === 0) {
-      // 延遲重試
-      setTimeout(() => {
-        this.payNoOptions = this.dropdownService.getPayNoOptions();
-        if (this.payNoOptions.length > 0) {
-          this.clearColumnCache();
-          this.cdr.detectChanges();
-        }
-      }, 500);
-    }
   }
 
   // ========== 變更發射 ==========

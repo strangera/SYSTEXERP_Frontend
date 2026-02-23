@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { getContractInfoColumns as getSharedContractInfoColumns } from '../../tls13010-v2/core/constants/commission-columns';
 
 /**
  * V2 共用條件設定表格配置服務
@@ -83,21 +84,10 @@ export class V2ConditionTableConfigService {
     ];
   }
 
-  // ===== 契約資訊欄位 =====
+  // ===== 契約資訊欄位（統一使用 contract-info.columns.ts） =====
 
   getContractInfoColumns(): ColumnDef[] {
-    return [
-      { field: 'apply_no', header: '專櫃招募編號', type: 'text', editable: false, autoWidth: true },
-      { field: 'tlt_no', header: '專櫃編號', type: 'text', editable: false, autoWidth: true },
-      { field: 'tlt_name', header: '品牌(專櫃)名稱', type: 'text', editable: false, autoWidth: true },
-      { field: 'ven_uniform', header: '廠商統編', type: 'text', editable: false, autoWidth: true },
-      { field: 'VEN_Name', header: '廠商名稱', type: 'text', editable: false, autoWidth: true },
-      { field: 'contract_subno', header: '版本編號', type: 'text', editable: false, autoWidth: true },
-      { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-      { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-      { field: 'tlt_contract_bdate', header: '營運起始日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-      { field: 'tlt_contract_edate', header: '營運終止日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' }
-    ];
+    return getSharedContractInfoColumns();
   }
 
   // ===== 工具方法 =====

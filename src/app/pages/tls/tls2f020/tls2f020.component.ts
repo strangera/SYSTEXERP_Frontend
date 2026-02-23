@@ -175,7 +175,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
       return;
     }
     if (sam_termno == null) {
-      this.messageService.warnBubble('請選擇 期別');
+      this.messageService.warnBubble('請選擇 帳次');
       return;
     }
 
@@ -204,6 +204,15 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
     } else {
       this.sam_termnoOptions = [];
     }
+    // 如果沒有可用的期別或目前值不在選項中，清除 sam_termno 的值（避免顯示為虛化但未清除）
+    try {
+      const ctrl: any = this.queryForm.controls.sam_termno as any;
+      const cur = ctrl?.value;
+      const availableValues = this.sam_termnoOptions.map(o => o.value);
+      if (this.sam_termnoOptions.length === 0 || (cur != null && !availableValues.includes(cur))) {
+        try { ctrl.setValue(null); } catch { ctrl.setValue(undefined); }
+      }
+    } catch { }
   }
 
 }

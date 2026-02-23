@@ -9,3 +9,58 @@
   min-width: 260px;
 }
 
+.image-container {
+  position: relative;
+  overflow: visible; /* 讓圖片呈現原始大小 */
+}
+
+.image-container {
+  cursor: crosshair;
+}
+
+.image-footer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding-top: 8px;
+  font-size: 14px;
+}
+
+.image-footer .coord {
+  min-width: 100px;
+}
+
+.coord-row {
+  display: flex;
+  align-items: center;
+}
+
+.coord-label {
+  color: #28a745; /* 綠色 label */
+  font-weight: 600;
+}
+
+.coord-value {
+  color: #003366; /* 深藍色數字 */
+  font-weight: 600;
+}
+
+.marker {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ff4d4f;
+  border: 2px solid #fff;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+:host ::ng-deep .image-container img {
+  display: block;
+  margin: 0 auto;
+  width: auto;
+  height: auto;
+  max-width: none; /* 允許顯示原始寬度 */
+}

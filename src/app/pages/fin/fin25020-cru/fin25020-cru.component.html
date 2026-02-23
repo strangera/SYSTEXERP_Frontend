@@ -41,7 +41,7 @@
         @if (!isFormReadable) {
         <app-button btnType="submit" label="確認" icon="pi pi-check" [loading]="loading" (click)="onSubmit(dataForm)" />
         }
-        <app-button btnType="cancel" (click)="onCancel()" *ngIf="!isFormReadable" />
+        <app-button btnType="cancel" [form]="dataForm" *ngIf="!isFormReadable" />
       </div>
     </form>
   </p-panel>
@@ -66,9 +66,11 @@
 
   <app-table tableKey="TransferSourceQuery" dataKey="PAM_No" [data]="transferSourceData"
     [columns]="transferSourceColumns" [showManage]="false" [showFilter]="false" [showDelete]="false"
-    [showCheckBox]="false" [showCaption]="false" (detail)="onSelectTransferSource($event)"></app-table>
+    [showCheckBox]="true" selectionMode="single" [showCaption]="false"
+    (select)="onSelectTransferSource($event)"></app-table>
 
   <ng-template pTemplate="footer">
-    <app-button btnType="cancel" (click)="showTransferSourceDialog = false"></app-button>
+    <app-button label="取消" severity="secondary" (click)="showTransferSourceDialog = false"></app-button>
+    <app-button label="確定" (click)="confirmTransferSourceSelection()"></app-button>
   </ng-template>
 </p-dialog>

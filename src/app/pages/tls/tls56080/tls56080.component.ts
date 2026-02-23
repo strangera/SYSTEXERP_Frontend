@@ -1,24 +1,24 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls52010Service } from '@service/api/tls/tls52010.service';
+import { IQueryTLS56080Request, IQueryTLS56080Response, Tls56080Service } from '@service/api/tls/tls56080.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, formatDateTime } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { CommonModule } from '@angular/common';
-import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
-import { IQueryTLS56080Response, Tls56080Service } from '@service/api/tls/tls56080.service';
-import { finalize } from 'rxjs';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
-import { ButtonModule } from 'primeng/button';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 export const enum TRDStatus {
   申請中 = '1',
@@ -33,6 +33,7 @@ export const enum TRDStatus {
   templateUrl: './tls56080.component.html',
   standalone: true,
   imports: [
+    ProductAutocompleteComponent,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -41,12 +42,11 @@ export const enum TRDStatus {
     InputTextComponent,
     DropdownComponent,
     TranslateModule,
-    TableComponent,
+    TableReportComponent,
     CommonModule,
     MultiSelectComponent,
     CalendarRangeQuickComponent,
     ButtonModule,
-    DropdownTableComponent
   ],
 })
 export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Response> implements OnInit {
@@ -63,11 +63,14 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
     APRV_USR: [null],
     APRV_Date_Start: [null],
     APRV_Date_End: [null],
-    ...createPaginationConfig([{ field: 'TRD_No', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'TRD_No', order: 1 }]],
   });
   totalRecords = 0;
   data: IQueryTLS56080Response[] = [];
   selectedItems: IQueryTLS56080Response[] = [];
+  lastQuery: IQueryTLS56080Request | null = null;
   columns: Column[] = [
     { field: 'TRD_No', header: '調撥單編號', visible: true },
     { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime },
@@ -106,8 +109,8 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
   userOptions: { label: string; value: string }[] = [];
 
   constructor(
-    private tls56080Service: Tls56080Service,
-    private dropDownListService: DropDownListService,
+    public readonly tls56080Service: Tls56080Service,
+    private readonly dropDownListService: DropDownListService,
     private readonly tls52010Service: Tls52010Service
   ) {
     super();
@@ -134,6 +137,7 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
     this.handleSubmit(frm, () => {
       this.loading = true;
       this.tls56080Service.queryTLS56080(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+        this.lastQuery = frm.value;
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -158,53 +162,6 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
   }
   checkStatus(status: string): boolean {
     return this.selectedItems.some(item => item.TRD_Status !== status);
-  }
-  // 管理編號
-  opLoading = false;
-  opForm = this.formBuilder.group({
-    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
-    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-  });
-  suggestions: IQueryPOS2004DetailResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', mainDataField: true },
-  ];
-  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
-  opColumns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-    { field: 'PLU_Name', header: '商品名稱' },
-  ];
-  opTotalRecords = 0;
-  onAutoCompleteInputChange(event: any) {
-    const body = {
-      ...event,
-      VEN_No: '',
-      LOGO_No: '',
-      queryNo: event.PLU_MagNo || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-    }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data];
-    });
-  }
-  onformValueChanged(event: IQueryPOS2004DetailRequest) {
-    this.opLoading = true;
-    const body = {
-      queryNo: event.queryNo || '',
-      PLU_Name: event.PLU_Name || '',
-      VEN_No: '',
-      LOGO_No: '',
-    };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...results.Data]; // 更新data資料
-      this.opTotalRecords = results.TotalCount;
-      this.opLoading = false;
-    });
   }
   editDisabled(rowData: IQueryTLS56080Response): boolean {
     return rowData.TRD_Status !== TRDStatus.申請中;

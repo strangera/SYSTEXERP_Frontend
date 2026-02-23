@@ -252,8 +252,8 @@ export const columns: Column[] = [
     visible: true,
     format: (value) => getSYS1000('ECR_Status', value)
   },
-  { field: 'ECR_Group', header: '群組', visible: true },
-  { field: 'ECR_SubGroup', header: '次樓別', visible: true },
+  { field: 'ECR_Group', header: '館別', visible: true },
+  { field: 'ECR_SubGroup', header: '樓層', visible: true },
   { field: 'ECR_AreaNo', header: '區域', visible: true },
   { field: 'ECR_LocNo', header: '位置編號', visible: true },
   { field: 'HOS_No', header: '倉庫編號', visible: true },

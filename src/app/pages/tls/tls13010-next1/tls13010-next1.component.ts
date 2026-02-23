@@ -1,4 +1,4 @@
-import { NgClass, NgFor, NgIf } from '@angular/common';
+﻿import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
@@ -303,7 +303,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
         this.loadFareDataWithPriority();
       } else {
-        this.router.navigate(['account/tls/tls13010cru']);
+        this.router.navigate(['account/tls/tls13010v1cru']);
       }
     } catch (error) {
       console.error('❌ loadWorkflowData 頂層異常:', error);
@@ -1354,9 +1354,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       console.log('🔍 檢視模式：跳過驗證，直接跳轉');
       const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
       if (contractTermType === '1') {
-        this.router.navigate(['account/tls/tls13010next3']);
+        this.router.navigate(['account/tls/tls13010v1next3']);
       } else {
-        this.router.navigate(['account/tls/tls13010next2']);
+        this.router.navigate(['account/tls/tls13010v1next2']);
       }
       return;
     }
@@ -1377,10 +1377,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const contractTermType = this.contractInfoData[0]?.tlt_term_type?.toString().trim();
     if (contractTermType === '1') {
       console.log('🔍 合約類型為1，直接跳轉到 next3');
-      this.router.navigate(['account/tls/tls13010next3']);
+      this.router.navigate(['account/tls/tls13010v1next3']);
     } else {
       console.log('🔍 合約類型非1，跳轉到 next2');
-      this.router.navigate(['account/tls/tls13010next2']);
+      this.router.navigate(['account/tls/tls13010v1next2']);
     }
   }
 
@@ -1389,12 +1389,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       state: { fromRoute: this.router.url },
     };
     if (this.crudstatus === CRUDStatus.Read) {
-      this.router.navigate(['account/tls/tls13010cru'], extras);
+      this.router.navigate(['account/tls/tls13010v1cru'], extras);
       return;
     }
 
     this.saveFareDataToWorkflow();
-    this.router.navigate(['account/tls/tls13010cru'], extras);
+    this.router.navigate(['account/tls/tls13010v1cru'], extras);
   }
 
   onRealCancel(): void {
@@ -1404,7 +1404,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       state: { fromRoute: this.router.url }
     };
 
-    this.router.navigate(['account/tls/tls13010'], extras);
+    this.router.navigate(['account/tls/tls13010v1'], extras);
     this.messageService.infoBubble('已離開契約編輯流程');
   }
 
@@ -1413,7 +1413,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    this.router.navigate(['account/tls/tls13010'], extras);
+    this.router.navigate(['account/tls/tls13010v1'], extras);
     this.messageService.infoBubble('已清空暫存資料並離開');
   }
 

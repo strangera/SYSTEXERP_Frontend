@@ -303,8 +303,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
         pageIndex: val?.pageIndex ?? 1,
         pageSize: 30,
-        PageIndex: val?.pageIndex ?? 1,
-        PageSize: 30,
+     
         SortBy: Array.isArray(val?.SortBy) ? val.SortBy : this.sortMeta,
       };
 

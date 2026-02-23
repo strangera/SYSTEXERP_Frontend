@@ -247,6 +247,7 @@ export interface CleanCommissionMaster {
   sst_rate?: number;
   cap_saletype1?: string;
   cap_saletype2?: string;
+  cap_saletype3?: string;
   cap_saletype5?: string;
   cag_bdate: string;
   cag_edate: string;
@@ -491,6 +492,7 @@ export interface CommissionItem {
   sst_rate: number;
   cap_saletype2: boolean | string;
   cap_saletype1: boolean | string;
+  cap_saletype3: boolean | string;
   cap_saletype5: boolean | string;
   selectedSettingOption: string;
   discountSettingItems: DiscountSettingItem[];
@@ -1008,6 +1010,7 @@ export class DataCleaner {
         sst_rate: this.parseNumber(commission.sst_rate),
         cap_saletype1: commission.cap_saletype1 === true || commission.cap_saletype1 === 'Y' ? 'Y' : 'N',
         cap_saletype2: commission.cap_saletype2 === true || commission.cap_saletype2 === 'Y' ? 'Y' : 'N',
+        cap_saletype3: commission.cap_saletype3 === true || commission.cap_saletype3 === 'Y' ? 'Y' : 'N',
         cap_saletype5: commission.cap_saletype5 === true || commission.cap_saletype5 === 'Y' ? 'Y' : 'N',
 
         // 關鍵修正：確保使用有效的合約日期
@@ -1484,6 +1487,7 @@ export interface ChargeSettingApiItem {
   sst_rate: number | null;
   cap_saletype1: string | null | boolean;
   cap_saletype2: string | null | boolean;
+  cap_saletype3: string | null | boolean;
   cap_saletype5: string | null | boolean;
   cag_remark: string | null;
   ChargeDetails: ChargeDetailApiItem[];
@@ -1546,6 +1550,7 @@ export interface CommissionMasterApiItem {
   sst_rate: number | null;
   cap_saletype1: string | null;
   cap_saletype2: string | null;
+  cap_saletype3: string | null;
   cap_saletype5: string | null;
   cag_remark: string | null;
 }
@@ -1614,6 +1619,7 @@ export interface CommissionMaster {
   sst_rate: number;
   cap_saletype1: string;
   cap_saletype2: string;
+  cap_saletype3: string;
   cap_saletype5: string;
   cag_remark: string;
 }

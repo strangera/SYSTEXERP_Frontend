@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { SortMeta } from 'primeng/api';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { SortMeta } from 'primeng/api';
 
 /**
  * 查詢採購統計表 (queryTLS57010) 的請求主體介面

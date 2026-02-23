@@ -3,6 +3,8 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -13,8 +15,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, convertYYYYMMToDate, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 import { APS2001Data, columns } from './fin11030.model';
 
@@ -31,7 +31,7 @@ import { APS2001Data, columns } from './fin11030.model';
     InputTextComponent,
     InputTextRangeComponent,
     MultiSelectComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     YearMonthComponent
   ],
@@ -45,16 +45,19 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
     SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]],
     SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]],
     SAL_GUIPaper: [null],
-    ...createPaginationConfig([{ field: 'SAL_GUIYYYYMM', order: 1 }, { field: 'SAL_GUITrack', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'SAL_GUIYYYYMM', order: 1 }, { field: 'SAL_GUITrack', order: 1 }]],
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUINo_start', 'SAL_GUINo_end') });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   SAL_GUIPaperOptions = getSYS1000Options('SAL_GUIPaper');     // 發票類別選項
   data: APS2001Data[] = [];
+  lastQueryBody: any;
   selectedRows: APS2001Data[] = [];
-  columns: Column[] = columns;
+  columns: ReportColumn[] = columns;
   constructor(
-    private fin11030Service: Fin11030Service,
-    private validationService: ValidationService
+    public readonly fin11030Service: Fin11030Service,
+    private readonly validationService: ValidationService
   ) {
     super();
   }
@@ -81,16 +84,12 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
-      this.fin11030Service.queryFIN11030(frm.value)
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe((response) => {
-          this.data = response.Data.map((item: APS2001Data) => ({
-            ...item,
-            SAL_GUIYYYYMM: convertYYYYMMToDate(item.SAL_GUIYYYYMM)
-          }));
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        });
+      this.fin11030Service.queryFIN11030(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
+        this.data = response.Data;
+        this.lastQueryBody = frm.value;
+        this.totalRecords = response.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      });
     });
   }
 

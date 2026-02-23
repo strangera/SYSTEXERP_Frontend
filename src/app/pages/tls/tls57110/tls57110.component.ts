@@ -1,23 +1,22 @@
 
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { TLS57110Service } from '@service/api/tls/tls57110.service';
-import { ButtonModule } from 'primeng/button';
 import { NgIf } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS57110Service } from '@service/api/tls/tls57110.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
-import { ChangeDetectorRef } from '@angular/core';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { Column, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 interface TLS57110Data {
   LOGO_No: string;
   LOGO_CH_NAME: string;
@@ -77,8 +76,9 @@ export class TLS57110Component extends BasicQueryPageComponent<TLS57110Response>
     HOS_NOList: [[]],
     LOGO_NoList: [[]],
     STK_YM: ['', [Validators.required]],
-    pgSize: [20, [Validators.required]],
+    pgSize: [30, [Validators.required]],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   pdfBtnLoading = false;
   excelBtnLoading = false;
@@ -197,14 +197,14 @@ export class TLS57110Component extends BasicQueryPageComponent<TLS57110Response>
 
       const rawValue = frm.value;
       const pageIndex = event?.pageIndex ?? 1;
-      const pageSize = event?.pageSize ?? rawValue.pgSize ?? 20;
+      const pageSize = event?.pageSize ?? rawValue.pgSize ?? 30;
 
       const body = {
         ...rawValue,
         STK_YM: rawValue.STK_YM ? this.formatToYearMonth(rawValue.STK_YM) : '',
         pageIndex,
         pageSize,
-         SortBy: frm.value.ShowType === 'M' ?
+        SortBy: frm.value.ShowType === 'M' ?
           [
             { field: 'LOGO_CH_NAME', order: 1 }] :
           [

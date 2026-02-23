@@ -38,6 +38,7 @@ export interface CPM11040Data {
   LoanUserName: string | null; // 出借處理人員姓名
   DeviceID: string;           // 客服設備編號
   DeviceName: string;         // 客服設備名稱
+  ServiceID: string | null;   // 服務中心編號
   ServiceName: string | null; // 服務中心名稱
   LoanStatus: string;         // 出借狀態 (1:已出借, 2:已歸還)
 }

@@ -7,6 +7,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
 import { BlockUIModule } from 'primeng/blockui';
 import { CalendarModule } from 'primeng/calendar';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -68,7 +69,8 @@ import { Tls24010TltnoComponent } from './tls24010-tltno/tls24010-tltno.componen
     Tls24010DiscodeComponent,
     CalendarModule,
     BlockUIModule,
-    ProgressSpinnerModule
+    ProgressSpinnerModule,
+    CheckboxModule
   ],
 })
 export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | unknown> implements OnInit {
@@ -112,8 +114,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_MemCard: ['', [Validators.maxLength(30), this.validationService.alphanumericValidator]], //會員編號，若有資料需要串接環友
     TXN_Uniform: ['', [Validators.maxLength(8)]], //客戶統一編號 可以為空
     TXN_Time: [null as Date | null], //銷售時段今日的時間
-    ORG_TXN_Date: [null as Date | null], //原交易日期
-    ORG_ECR_No: [null as string | null], //原收銀機台
+    isNegativeTXN: [false],
+    ORG_TXN_Date: [{ value: null as Date | null, disabled: true }], //原交易日期
+    ORG_ECR_No: [{ value: null as string | null, disabled: true }], //原收銀機台
     TXN_GUI_CarrType: [null as string | null], //電子載具種類=電子發票載具類別 悠遊載具卡=1K0001、手機條碼=3J0002、自然人憑證=CQ0001、一卡通載具=1H0001、信用卡載具=EK0002、#=取消載具
     TXN_GUIVehicle: [{ value: null, disabled: true }, [Validators.maxLength(20), guiVehicleValidator]], //電子發票載具卡號 若有值則 TXN_GUI_CarrType 固定為3J0002，TXN_GUI_CarrId與TXN_GUI_CarrIdEx內容與此欄位相同
     TXN_GUI_CarrIdEx: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID顯碼
@@ -136,13 +139,15 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     private readonly datePipe: DatePipe
   ) { super(); }
   ngOnInit(): void {
+    this.loadInitialData();
+  }
+  loadInitialData() {
+    this.renderComponent = false;
     this.initializePage('TLS24010', this.dataForm);
     const rowDataTyped = this.rowdata as TLS24010Data;
     this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper ?? this.queryData.TXN_GUIPaper;
     this.TLT_Name = rowDataTyped.TLT_Name;
     this.store_way = rowDataTyped.store_way;
-    const titleName = this.isFormCreateable ? '新增補登資訊' : FIX_TYPE_LABEL[this.type!];
-    this.formTitle = (this.store_way === STORE_WAY.專櫃 ? '(專櫃)' : '(自營)') + titleName;
     this.talent_id = rowDataTyped.talent_id;
     this.rece_yn = rowDataTyped.rece_yn;
     const TXN_Date = this.datePipe.transform(rowDataTyped.TXN_Date, 'yyyy-MM-dd');
@@ -157,15 +162,11 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         TXN_Date: this.queryData.TXN_Date,
         ECR_No: this.queryData.ECR_No,
         TLT_No: this.queryData.TLT_No,
-        ORG_ECR_No: this.queryData.ECR_No,
-        ORG_TXN_Date: this.queryData.TXN_Date,
       });
     }
-    // 編輯時候
-    if (this.isFormEditable) {
-      this.type = rowDataTyped?.type as FIX_TYPE;
-      this.dataForm.get('TXN_Remark')?.enable();
-    }
+    this.type = rowDataTyped?.type as FIX_TYPE;
+    const titleName = this.isFormCreateable ? '新增補登資訊' : FIX_TYPE_LABEL[this.type!] || '顯示補登資訊';
+    this.formTitle = (this.store_way === STORE_WAY.專櫃 ? '(專櫃)' : '(自營)') + titleName;
     // 不是新增時候
     if (!this.isFormCreateable) {
       this.dataForm.disable();
@@ -175,9 +176,15 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         ECR_No: rowDataTyped.ECR_No,
         TXN_No: Number(rowDataTyped.TXN_No),
       }
-      this.tls24010Service.queryTLS24010_Detail(body).pipe(untilDestroyed(this)).subscribe((data) => {
-        this.ProductDetailList = data.Data[0].ProductDetailList;
-        this.PaymentDetailsList = data.Data[0].PaymentDetailsList;
+      this.tls24010Service.queryTLS24010_Detail(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((data) => {
+        this.ProductDetailList = [...data.Data[0].ProductDetailList];
+        this.PaymentDetailsList = [...data.Data[0].PaymentDetailsList];
+        if (this.isFormEditable) {
+          this.dataForm.get('TXN_Remark')?.enable();
+          if (this.type === FIX_TYPE.預售交易修正) {
+            this.dataForm.get('TXN_PreOrder')?.enable();
+          }
+        }
       })
     }
     // 檢查是否開立業主發票 (rece_yn)
@@ -186,9 +193,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       this.dataForm.get('TXN_GUIRemark')?.disable();
     }
     this.listenForChanges();
-    if (this.type === FIX_TYPE.預售交易修正) {
-      this.dataForm.get('TXN_PreOrder')?.enable();
-    }
+    setTimeout(() => {
+      this.renderComponent = true;
+    });
   }
   listenForChanges() {
     const controls = this.dataForm.controls;
@@ -245,6 +252,28 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         controls.GUI_Track.setValue(val.toUpperCase(), { emitEvent: false });
       }
     });
+    // 監聽是否為負項交易
+    controls.isNegativeTXN.valueChanges.pipe(untilDestroyed(this)).subscribe(isNeg => {
+      if (isNeg) {
+        // 勾選：自動帶入當前銷售日期與機台
+        controls.ORG_TXN_Date.setValue(controls.TXN_Date.value ? new Date(controls.TXN_Date.value) : null);
+        controls.ORG_ECR_No.setValue(controls.ECR_No.value);
+        controls.ORG_TXN_Date.enable();
+        controls.ORG_ECR_No.enable();
+        controls.ORG_TXN_Date.setValidators([Validators.required]);
+        controls.ORG_ECR_No.setValidators([Validators.required]);
+      } else {
+        // 未勾選：清空
+        controls.ORG_TXN_Date.setValue(null);
+        controls.ORG_ECR_No.setValue(null);
+        controls.ORG_TXN_Date.disable();
+        controls.ORG_ECR_No.disable();
+        controls.ORG_TXN_Date.clearValidators();
+        controls.ORG_ECR_No.clearValidators();
+      }
+      controls.ORG_TXN_Date.updateValueAndValidity();
+      controls.ORG_ECR_No.updateValueAndValidity();
+    });
   }
   onSubmit(frm: FormGroup) {
     if (this.isFormEditable) {
@@ -253,81 +282,58 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     }
     this.handleSubmit(frm, () => {
       this.loading = false;
-      this.pos5007Comp?.POS5007Data.forEach(item => {
-        if (item.TXN_Qty === null || item.TXN_Qty === undefined) {
-          this.messageService.errorBubble('請輸入正確的銷售數量', '銷售數量必須有值');
-          return
-        }
-        if (item.TXN_SaleAmt === null || item.TXN_SaleAmt === undefined) {
-          this.messageService.errorBubble('請輸入正確的單價金額', '銷售數量必須有值');
-          return
-        }
-      });
-      if (this.pos5008Comp?.POS5008SelectedItems.length === 0) {
-        this.messageService.errorBubble('請至少選擇一筆支付工具', '支付工具必須選擇');
-        return
-      }
-      const childValid = this.pos5008Comp?.validate();
-      if (!childValid) {
-        this.messageService.errorBubble('支付工具資料不完整', '請檢查支付工具資料');
-        return;
-      }
-      // 計算TXN_SaleAmt總計
+      const isNeg = this.dataForm.controls.isNegativeTXN.value;
       const pos5007Data = this.pos5007Comp?.POS5007Data ?? [];
       const pos5008Data = this.pos5008Comp?.POS5008Data.map((item, i) => {
         const formGroup = this.pos5008Comp?.posFormArrayControls[i];
         return { ...item, ...formGroup?.getRawValue() };
       }).filter(item => item.selected) ?? [];
-      // === 開始支付邏輯卡控 ===
-      // 1. 計算銷售總金額 (TXN_SaleAmt 總計)
-      const totalSaleAmt = pos5007Data.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0);
-      // 支付總額與銷售總額比對
-      const totalPayAmt = pos5008Data.reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
-      // ==========================================================
-      // 【新增邏輯：檢查銷售總金額是否超過最大位數限制 (10 位)】
-      // ==========================================================
-      const MAX_SALE_AMT_INTEGER_DIGITS = 10;
-      // 步驟 A: 取得總金額的絕對值
-      const absoluteTotalSaleAmt = Math.abs(totalSaleAmt);
-      // 步驟 B: 檢查整數部分的長度
-      // 1. 取整數部分 Math.floor(absoluteTotalSaleAmt)
-      // 2. 轉換為字串 .toString()
-      // 3. 取得長度 .length
-      const integerLength = Math.floor(absoluteTotalSaleAmt).toString().length;
-      if (integerLength > MAX_SALE_AMT_INTEGER_DIGITS) {
-        this.loading = false;
-        return this.messageService.errorBubble(
-          `銷售總金額 ( ${totalSaleAmt} ) 超過系統允許的最大值 (${MAX_SALE_AMT_INTEGER_DIGITS} 位數)。`,
-          '金額超出限制'
-        );
+      // --- 1. POS5007 明細檢查 (改用 for...of 以便 return) ---
+      for (const item of pos5007Data) {
+        if (item.TXN_Qty == null || item.TXN_SaleAmt == null || item.TXN_Qty === 0 || item.TXN_SaleAmt === 0) {
+          return this.messageService.errorBubble('銷售數量或金額必須有值', '資料未填寫');
+        }
+        // 負項卡控
+        if (isNeg && Number(item.TXN_SaleAmt) >= 0) {
+          return this.messageService.errorBubble(`負項交易中，商品金額 (${item.TXN_SaleAmt}) 必須為負數`, '資料格式錯誤');
+        }
       }
-      // 2. 金額檢核
-      // 一般交易 (N) 允許溢收嗎？若不允許，則不分狀態都要檢查 totalSaleAmt === totalPayAmt
-      // 您的原本邏輯是 finalStatus !== 'N' 才檢查，
-      // 但「一般交易」通常也要求 銷售總額 == 支付總額。
-      // 修改後的邏輯
+      // --- 2. POS5008 支付工具檢查 ---
+      if (pos5008Data.length === 0) {
+        return this.messageService.errorBubble('請至少選擇一筆支付工具', '支付工具必須選擇');
+      }
+      const childValid = this.pos5008Comp?.validate();
+      if (!childValid) return; // 內部已有報錯訊息
+      // 負項卡控 (改用 for...of)
+      if (isNeg) {
+        for (const pay of pos5008Data) {
+          if (Number(pay.TXN_PayAmt) >= 0) {
+            this.loading = false;
+            return this.messageService.errorBubble(`負項交易中，支付金額 (${pay.TXN_PayAmt}) 必須為負數`, '資料格式錯誤');
+          }
+        }
+      }
+      // --- 3. 金額總計與平衡檢查 ---
+      const totalSaleAmt = pos5007Data.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0);
+      const totalPayAmt = pos5008Data.reduce((sum, item) => sum + (Number(item.TXN_PayAmt) || 0), 0);
+      const MAX_DIGITS = 10;
+      if (Math.floor(Math.abs(totalSaleAmt)).toString().length > MAX_DIGITS) {
+        return this.messageService.errorBubble(`銷售總金額 (${totalSaleAmt}) 超過系統允許的最大值`, '金額超出限制');
+      }
+      // --- 4. 金額平衡檢核 ---
       const diff = totalPayAmt - totalSaleAmt;
       if (totalSaleAmt > 0) {
-        // 一般交易：支付金額不可少於銷售金額
         if (diff < -0.001) {
-          this.loading = false;
-          return this.messageService.errorBubble(
-            `支付總額 (${totalPayAmt}) 不足，尚差 ${Math.abs(diff).toFixed(2)} 元。`,
-            '金額檢核失敗'
-          );
+          return this.messageService.errorBubble(`支付總額不足，尚差 ${Math.abs(diff).toFixed(2)} 元。`, '金額檢核失敗');
         }
       } else {
-        // 退貨或負數交易：必須完全相等
         if (Math.abs(diff) > 0.001) {
-          this.loading = false;
-          return this.messageService.errorBubble(
-            `退款總額 (${totalPayAmt}) 與原始金額 (${totalSaleAmt}) 不符。`,
-            '金額檢核失敗'
-          );
+          return this.messageService.errorBubble(`支付總額 (${totalPayAmt}) 與銷售總額 (${totalSaleAmt}) 不符。`, '金額檢核失敗');
         }
       }
-      const txnDate = this.datePipe.transform(this.dataForm.getRawValue().TXN_Date, 'yyyy-MM-dd') || null;
-      const orgTxnDate = this.datePipe.transform(this.dataForm.getRawValue().ORG_TXN_Date, 'yyyy-MM-dd') || null;
+      // --- 5. 準備送出 ---
+      const txnDate = this.datePipe.transform(this.dataForm.getRawValue().TXN_Date, 'yyyy-MM-dd');
+      const orgTxnDate = this.datePipe.transform(this.dataForm.getRawValue().ORG_TXN_Date, 'yyyy-MM-dd');
       // === 支付邏輯卡控結束，如果成功則繼續執行 confirm ===
       this.messageService.confirm({
         header: '確認',
@@ -339,30 +345,37 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             ...frm.getRawValue(),
             TXN_GUIRemark: this.rece_yn === 'Y' ? frm.getRawValue().TXN_GUIRemark : '',
             TXN_Date: txnDate,
-            ORG_TXN_Date: orgTxnDate || null,
-            ORG_ECR_No: frm.getRawValue().ORG_ECR_No ? frm.getRawValue().ORG_ECR_No : null,
+            ORG_TXN_Date: isNeg ? orgTxnDate || null : null,
+            ORG_ECR_No: isNeg ? frm.getRawValue().ORG_ECR_No ? frm.getRawValue().ORG_ECR_No : null : null,
             GUI_Track: frm.getRawValue().GUI_Track || '00',
             TXN_GUIBegNo: frm.getRawValue().TXN_GUIBegNo || '00000000',
             TXN_GUIEndNo: frm.getRawValue().TXN_GUIEndNo || '00000000',
             TXN_No: this.isFormCreateable ? undefined : frm.getRawValue().TXN_No,
             TXN_Time: frm.getRawValue().TXN_Time ? formatTimeToHHMMSS(frm.getRawValue().TXN_Time) : '00:00:00',
             TXN_Status: 'N',
-            POS5007_INFO: pos5007Data.map((item) => {
-              if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
-                return {
-                  PLU_MagNo: item.PLU_MagNo.PLU_MagNo || '',
-                  PLU_No: item.PLU_MagNo.PLU_No || '',
-                  TXN_Qty: item.TXN_Qty || 0,
-                  PLU_SalePrc: item.PLU_SalePrc || 0,
-                  TXN_Disc: item.TXN_Disc || 0,
-                  TXN_SaleAmt: item.TXN_SaleAmt || 0,
-                  tlt_id: item.tlt_id || '0',
-                  PLU_TaxType: item.PLU_TaxType || '1',
-                  TXN_DiscCode: item.TXN_DiscCode || '000'
-                };
-              }
-              return item;
-            }),
+            POS5007_INFO: pos5007Data
+              .filter(item => {
+                const price = (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null)
+                  ? item.PLU_SalePrc
+                  : item.PLU_SalePrc;
+                return Number(price) !== 0;
+              })
+              .map((item) => {
+                if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
+                  return {
+                    PLU_MagNo: item.PLU_MagNo.PLU_MagNo || '',
+                    PLU_No: item.PLU_MagNo.PLU_No || '',
+                    TXN_Qty: item.TXN_Qty || 0,
+                    PLU_SalePrc: item.PLU_SalePrc || 0,
+                    TXN_Disc: item.TXN_Disc || 0,
+                    TXN_SaleAmt: item.TXN_SaleAmt || 0,
+                    tlt_id: item.tlt_id || '0',
+                    PLU_TaxType: item.PLU_TaxType || '1',
+                    TXN_DiscCode: item.TXN_DiscCode || '000'
+                  };
+                }
+                return item;
+              }),
             POS5008_INFO: pos5008Data.map((item) => {
               return {
                 PAY_No: item.PAY_No || '',
@@ -382,9 +395,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
               this.messageService.confirm({
                 message: res.Data,
                 showRejectButton: false,
-                accept: () => {
-                  this.onCancel();
-                }
+                accept: () => this.onCancel()
               })
               return this.messageService.successBubble(res.Message)
             };
@@ -422,7 +433,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     defaultVoidDate.setHours(23, 0, 0, 0);
     this.messageService.confirm({
       header: this.type === FIX_TYPE.交易資料作廢 ? (isCross ? '開立折讓單' : '作廢交易資料') : FIX_TYPE_LABEL[this.type!],
-      message: this.type === FIX_TYPE.交易資料作廢 ? (isCross ? '此筆交易已跨期，需進行開立折讓單作業。確定要開立折讓單嗎?' : '此筆交易未跨期，確定要作廢交易資料嗎?') : `確定要${FIX_TYPE_LABEL[this.type!]}嗎?`,
+      message: this.type === FIX_TYPE.交易資料作廢 ? (isCross ? '此筆交易已跨期，確定作廢後會開立折讓單，確定作廢嗎?' : '此筆交易未跨期，確定要作廢交易資料嗎?') : `確定要${FIX_TYPE_LABEL[this.type!]}嗎?`,
       contentTemplate: this.type === FIX_TYPE.交易資料作廢 ? this.customTimeTemp : undefined, // 丟入 HTML 樣板
       templateContext: this.type === FIX_TYPE.交易資料作廢 ? { data: { selectedDate: defaultVoidDate } } : undefined,
       accept: (result) => {
@@ -437,11 +448,36 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           TXN_Remark: this.dataForm.getRawValue().TXN_Remark,
         }
         if (this.type === FIX_TYPE.專櫃編號修正) {
+          const rawDataList = this.tltnoComp?.tltIdData || [];
+          // --- 檢查 1：是否至少有一筆資料 ---
+          if (rawDataList.length === 0) {
+            this.messageService.errorBubble('無「專櫃編號修正」資料，無法修正', '專櫃編號修正失敗');
+            this.loading = false;
+            return;
+          }
+          // --- 檢查 2 & 3：檢查每一筆資料是否完整且有效 ---
+          for (const item of rawDataList) {
+            const pluMagNoObj = item.PLU_MagNo as POS2004Item;
+            // 檢查 2：是否有輸入（判斷 pluMagNoObj 是否存在且內部關鍵欄位有值）
+            const hasValue = pluMagNoObj;
+            if (!hasValue) {
+              this.messageService.errorBubble('「商品編號/專櫃編號」必填', '儲存失敗');
+              this.loading = false;
+              return;
+            }
+            // 檢查 3：是否為有效資料（判斷 PLU_Name 是否有值）
+            // 注意：在你的邏輯中，選中後應該會連動帶出 PLU_Name
+            if (!(pluMagNoObj.PLU_MagNo || pluMagNoObj.TLT_No)) {
+              this.messageService.errorBubble('無對應「商品編號/專櫃編號」，請重新輸入', '儲存失敗');
+              this.loading = false;
+              return;
+            }
+          }
           const updatePOS5007List = this.tltnoComp?.tltIdData.map(item => {
             const pluMagNo = item.PLU_MagNo as POS2004Item;
             return {
               POS5007_ID: item.ID,
-              TLT_No: item.TLT_No || '',
+              TLT_No: item.TLT_No || this.dataForm.getRawValue().TLT_No || '',
               PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? pluMagNo.TLT_No as string : pluMagNo.PLU_MagNo as string || '',
               PLU_No: this.store_way === STORE_WAY.專櫃 ? pluMagNo.TLT_No as string : item.PLU_No as string || '',
               Talent_ID: item.Talent_ID || this.talent_id || 0,
@@ -452,15 +488,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
               Contract_SubNo: this.store_way === STORE_WAY.專櫃 ? pluMagNo.Contract_SubNo as string : item.Contract_SubNo as string || ''
             }
           }) || [];
-          const invalidItem = updatePOS5007List.find(item => {
-            return !item.PLU_No || !item.TLT_No || !item.PLU_MagNo || !item.Contract_No || !item.Contract_SubNo;
-          });
-
-          if (invalidItem) {
-            this.messageService.errorBubble('無效的「商品編號/專過編號」或 資料尚未異動', '無法修正');
-            this.loading = false; // 確保 loading 狀態被關閉
-            return; // 阻止執行後續的 API 呼叫
-          }
           // 如果沒資料的話就條出錯誤訊息
           if (!updatePOS5007List.length) {
             this.messageService.errorBubble('無「專櫃編號修正」資料，無法修正', '專櫃編號修正失敗');
@@ -606,6 +633,14 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     }
     controls.ORG_TXN_Date.updateValueAndValidity();
     controls.ORG_ECR_No.updateValueAndValidity();
+  }
+
+  get currentTotalSaleAmt(): number {
+    return this.pos5007Comp?.POS5007Data.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0) || 0;
+  }
+  renderComponent = true;
+  onClear() {
+    this.loadInitialData();
   }
 }
 

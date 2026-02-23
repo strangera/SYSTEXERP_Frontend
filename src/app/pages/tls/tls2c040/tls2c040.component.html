@@ -41,10 +41,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS2C040" [data]="data" [columns]="columns" [showCheckBox]="false" [showDelete]="false"
+  <app-table-report tableKey="TLS2C040" [data]="data" [columns]="columns" [showCheckBox]="false" [showDelete]="false"
     [showEdit]="false" (detail)="onEdit($event)" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [multiSortMeta]="[]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showReportMode]="false" [addButton]="addButton">
-  </app-table>
+    (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords" [loading]="loading"
+    [showReportMode]="false" [addButton]="addButton" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls2c040Service.queryTLS2C040.bind(tls2c040Service)">
+  </app-table-report>
 </div>

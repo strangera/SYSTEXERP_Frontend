@@ -13,6 +13,7 @@ import { Button } from 'primeng/button';
 import { PrimeTemplate } from 'primeng/api';
 
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { CommissionType } from '../../../../core/constants';
 import {
@@ -175,6 +176,7 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
   // === 注入服務 ===
   private tableConfigService = inject(ConditionTableConfigService);
   private dataManagerService = inject(ConditionDataManagerService);
+  private messageService = inject(NotificationService);
   private cdr = inject(ChangeDetectorRef);
 
   // === 輸入屬性 ===
@@ -249,7 +251,9 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['conditionItems'] || changes['commissionType']) {
+    // 只在首次接收或 commissionType 變更時重新分類
+    // 避免 emit → 父組件寫回 → ngOnChanges → 重複 categorize 的浪費
+    if (changes['conditionItems']?.firstChange || changes['commissionType']) {
       this.categorizeConditionItems();
       this.initializeIfEmpty();
     }
@@ -295,13 +299,41 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     this.baseTierColumns = this.tableConfigService.getBaseTierColumns();
   }
 
+  /**
+   * 根據 commissionType 直接分配條件項目到對應的陣列
+   * 不使用 property 偵測（避免 limit_amt 等多餘欄位導致誤判）
+   */
   private categorizeConditionItems(): void {
-    const categorized = this.dataManagerService.categorizeConditionItems(this.conditionItems);
-    this.fixedRentItems = categorized.fixedRent;
-    this.baseRentHigherItems = categorized.baseRentHigher;
-    this.baseCommissionItems = categorized.baseCommission;
-    this.graduatedItems = categorized.graduated;
-    this.baseTierItems = categorized.baseTier;
+    this.fixedRentItems = [];
+    this.baseRentHigherItems = [];
+    this.baseCommissionItems = [];
+    this.graduatedItems = [];
+    this.baseTierItems = [];
+
+    if (!this.conditionItems?.length) return;
+
+    const items = this.conditionItems.map(item => ({
+      ...item,
+      _status: item._status || 'original'
+    }));
+
+    switch (this.commissionType) {
+      case CommissionType.FIXED_RENT:
+        this.fixedRentItems = items as any[];
+        break;
+      case CommissionType.BASE_RENT_HIGHER:
+        this.baseRentHigherItems = items as any[];
+        break;
+      case CommissionType.BASE_COMMISSION:
+        this.baseCommissionItems = items as any[];
+        break;
+      case CommissionType.GRADUATED:
+        this.graduatedItems = items as any[];
+        break;
+      case CommissionType.BASE_TIER:
+        this.baseTierItems = items as any[];
+        break;
+    }
   }
 
   private initializeIfEmpty(): void {
@@ -378,6 +410,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
   }
 
   // === 新增項目方法 ===
+  private readonly DATE_FULL_MSG = '已超過契約截止日，無法再新增項目';
+
   onAddFixedRentItem(): void {
     if (this.crudstatus === CRUDStatus.Read) return;
 
@@ -392,6 +426,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     if (newItem) {
       this.fixedRentItems = [...this.fixedRentItems, newItem as FixedRentCondition];
       this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
     }
   }
 
@@ -409,6 +445,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     if (newItem) {
       this.baseRentHigherItems = [...this.baseRentHigherItems, newItem as BaseRentHigherCondition];
       this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
     }
   }
 
@@ -426,6 +464,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     if (newItem) {
       this.baseCommissionItems = [...this.baseCommissionItems, newItem as BaseCommissionCondition];
       this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
     }
   }
 
@@ -443,6 +483,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     if (newItem) {
       this.graduatedItems = [...this.graduatedItems, newItem as GraduatedCommissionCondition];
       this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
     }
   }
 
@@ -460,6 +502,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     if (newItem) {
       this.baseTierItems = [...this.baseTierItems, newItem as BaseTierCondition];
       this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
     }
   }
 

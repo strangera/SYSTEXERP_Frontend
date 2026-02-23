@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { convertYYYYMMToDate } from '@shared/componentkit/table/table.model';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -17,8 +18,6 @@ export class Fin11030Service {
   queryFIN11030(params: {
     PageSize?: number;
     PageIndex?: number;
-    OrderBy?: string;
-    Offset?: number;
     SortBy?: { field: string; order: number }[];
     SAL_GUIYYYYMM_start?: string;
     SAL_GUIYYYYMM_end?: string;
@@ -27,7 +26,17 @@ export class Fin11030Service {
     SAL_GUINo_end?: string;
     SAL_GUIPaper?: string;
   }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/queryFIN11030`, params);
+    return this.http.post<any>(`${this.apiUrl}/queryFIN11030`, params).pipe(
+      map((res) => {
+        return {
+          ...res,
+          Data: res.Data.map((item: any) => ({
+            ...item,
+            SAL_GUIYYYYMM: convertYYYYMMToDate(item.SAL_GUIYYYYMM),
+          }))
+        };
+      })
+    );
   }
 
   /**

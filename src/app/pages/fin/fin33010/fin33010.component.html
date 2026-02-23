@@ -8,10 +8,9 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <label for="RCV_No" class="p-d-block p-mb-1">收款單號</label>
             <div class="flex gap-2" role="button" tabindex="0" aria-label="收款單號 選擇" (click)="rcvDialogVisible = true"
               (keydown.enter)="$event.preventDefault(); rcvDialogVisible = true">
-              <app-input-text class="flex-1" controlName="RCV_No" [control]="queryForm.controls.RCV_No"
+              <app-input-text class="flex-1" label="收款單號" controlName="RCV_No" [control]="queryForm.controls.RCV_No"
                 [submitted]="submitted" [readonly]="true"></app-input-text>
             </div>
           </div>
@@ -27,12 +26,12 @@
   </p-accordion>
 </div>
 
-<app-dialog [visible]="rcvDialogVisible" header="選擇收貨單號" (visibleChange)="rcvDialogVisible = $event"
+<app-dialog [visible]="rcvDialogVisible" header="選擇收款單號" (visibleChange)="rcvDialogVisible = $event"
   (save)="onSelectRCVNo()" [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQueryRcvNo()">
     <div class="grid p-fluid">
       <div class="col-12 md:col-6">
-        <app-input-text class="col-12" label="收貨單號" controlName="RCV_No"
+        <app-input-text class="col-12" label="收款單號" controlName="RCV_No"
           [control]="dialogQueryForm.controls.RCV_No"></app-input-text>
       </div>
     </div>

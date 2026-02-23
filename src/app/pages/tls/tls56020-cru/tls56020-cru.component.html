@@ -41,12 +41,12 @@
       <app-table-edit class="col-12" tableKey="TLS52010Detail" [columns]="editColumns" [data]="data"
         (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
         (dataChange)="data = $event;calculateTotals()" [tableRequired]="true" [rowValidate]="validateEntireRow"
-        [disabled]="isFormReadable || !(dataForm.controls.org_id.value && dataForm.controls.LOGO_No.value) ? true : false"
-        (insert)="dialogVisible = true" [showInsert]="isFormCreateable"
+        [disabled]="isFormReadable || !dataForm.controls.LOGO_No.value" (insert)="dialogVisible = true"
+        [showInsert]="!isFormReadable"
         [insertDisabled]="dataForm.controls.org_id.value && dataForm.controls.LOGO_No.value ? false : true" />
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm" />
+        <app-button btnType="cancel" (clickEvent)="onLocalCancel()" />
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>

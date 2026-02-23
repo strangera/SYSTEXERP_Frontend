@@ -1,29 +1,31 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { finalize, map } from 'rxjs/operators';
-
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
-import { FloorService } from '../../../service/basic/querySYS3900.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { forkJoin } from 'rxjs';
+import { finalize, map, take } from 'rxjs/operators';
 
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-
-import { CommonModule } from '@angular/common';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
+import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { FloorService } from '../../../service/basic/querySYS3900.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 
 @Component({
   selector: 'app-tls23080',
@@ -44,15 +46,24 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     TranslateModule,
     ButtonModule,
     TableReportComponent,
-  ]
+  ],
 })
-export class TLS23080Component extends BasicQueryPageComponent<any> {
+export class TLS23080Component extends BasicQueryPageComponent<any> implements OnInit {
   data: any[] = [];
   totalRecords = 0;
 
   // 匯出用
   btnLoading = false;
-  historyRequestBody: any | null = null;
+
+  /**
+   * ✅ 給 TableReport 的 lastQueryBody：固定 reference
+   * ⚠️ 禁止用 this.historyRequestBody = {...} 換新物件（會觸發 TableReport 反覆判斷/重打）
+   */
+  historyRequestBody: any = {};
+
+  // ✅ 防止重複查詢（同 payload、或查詢中）
+  private querying = false;
+  private lastQueryKey = '';
 
   // 總計列來源（由 query 回來的 GrandTotal 同步）
   private grandTotal: Record<string, number> = {};
@@ -74,25 +85,20 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
 
   // 後端 Total* 欄位對應到前端欄位（用於組 GrandTotal/表尾）
   private detailTotalFieldMap: Record<string, string> = {
-    // 現金
     ACT_PayAmt10: 'TotalPayAmt10',
 
-    // 聯信
     UnionGeneral: 'TotalUnionGeneral',
     UnionAE: 'TotalUnionAE',
     UnionDiner: 'TotalUnionDiner',
 
-    // 中信
     CTBCGeneral: 'TotalCTBCGeneral',
     CTBCAE: 'TotalCTBCAE',
     CTBCDiner: 'TotalCTBCDiner',
 
-    // 中信-停車場
     CTBCParkingGeneral: 'TotalCTBCParkingGeneral',
     CTBCParkingAE: 'TotalCTBCParkingAE',
     CTBCParkingDiner: 'TotalCTBCParkingDiner',
 
-    // 其他支付
     ACT_PayAmt52: 'TotalPayAmt52',
     ACT_PayAmt82: 'TotalPayAmt82',
     ACT_PayAmt20: 'TotalPayAmt20',
@@ -122,7 +128,6 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     ACT_PayAmt22: 'TotalPayAmt22',
     ACT_PayAmt23: 'TotalPayAmt23',
 
-    // 總金額
     Tot_ACT_PayAmt: 'TotalTotPayAmt',
   };
 
@@ -149,33 +154,48 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     private floorService: FloorService,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-    private tls11010Service: Tls11010Service,
+    private tls11010Service: Tls11010Service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS23080', 'tls/tls23080', this.queryForm, (form) => this.onSubmit(form));
-    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
-    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
-    this.tls11010Service.getOrgOptions().subscribe(res => {
-      this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
-        label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
-      }));
-    });
-    this.ECRNoService.getECRNo().subscribe(res => {
-      this.ECRNoOptions = (res ?? []).map((x: any) => ({
-        label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
-      }));
-    });
-    this.counterNameService.getCounters().subscribe(res => {
-      this.CounterOptions = (res ?? []).map((x: any) => ({
-        label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
-      }));
+
+    // ✅ 下拉一次性載入（避免多次訂閱重打）
+    forkJoin({
+      floors: this.floorService.getFloors().pipe(take(1)),
+      buildings: this.tls11010Service.getBuildingOptions().pipe(take(1)),
+      orgs: this.tls11010Service.getOrgOptions().pipe(take(1)),
+      ecrs: this.ECRNoService.getECRNo().pipe(take(1)),
+      counters: this.counterNameService.getCounters().pipe(take(1)),
+    }).subscribe({
+      next: ({ floors, buildings, orgs, ecrs, counters }) => {
+        this.floorOptions = floors ?? [];
+        this.BUILDING_NO_Options = buildings ?? [];
+
+        this.OrganizationCodeOptions = (orgs ?? []).map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        }));
+
+        this.ECRNoOptions = (ecrs ?? []).map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        }));
+
+        this.CounterOptions = (counters ?? []).map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        }));
+      },
     });
   }
 
-  // ===== 查詢（按鈕）— 固定 pageSize=30 =====
+  // ===== 查詢（按鈕）=====
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const val = this.queryForm.getRawValue() as any;
@@ -188,94 +208,155 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
         tlt_building: Array.isArray(val?.tlt_building) && val.tlt_building.length ? val.tlt_building : undefined,
         tlt_floor: Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
         org_id: Array.isArray(val?.org_id) && val.org_id.length ? val.org_id : undefined,
-        pageIndex: Number(val?.pageIndex) || 1,
-        pageSize: 30, // ✅ 固定 30
+        pageIndex: 1,
+        pageSize: 30,
         SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort,
       };
 
-      // 提供給 app-table-report 的 lastQueryBody
-      this.historyRequestBody = { ...payload };
+      const compactPayload = this.compactObject(payload);
+      const key = JSON.stringify(compactPayload);
+
+      // ✅ 防重：同 payload 或正在查詢中就不再打
+      if (this.querying || key === this.lastQueryKey) return;
+      this.lastQueryKey = key;
+
+      // ✅ 固定 reference：只用 assign
+      Object.assign(this.historyRequestBody, compactPayload);
 
       this.loading = true;
+      this.querying = true;
       this.messageService?.blockUi();
 
-      this.tls23080Service.queryTLS23080(payload).pipe(
-        finalize(() => {
-          this.loading = false;
-          this.messageService?.unblockUi();
-        })
-      ).subscribe({
-        next: (res: any) => {
-          const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
-          const rows = this.extractRows(wrappers);
+      this.tls23080Service
+        .queryTLS23080(compactPayload)
+        .pipe(
+          finalize(() => {
+            this.loading = false;
+            this.querying = false;
+            this.messageService?.unblockUi();
+          })
+        )
+        .subscribe({
+          next: (res: any) => {
+            const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
+            const rows = this.extractRows(wrappers);
 
-          // 同步總計列（用第一包的 Total* 欄位）
-          const first = wrappers[0] ?? {};
-          this.grandTotal = this.mapTotalsFromWrapper(first);
+            // GrandTotal（用第一包的 Total* 欄位）
+            const first = wrappers[0] ?? {};
+            this.grandTotal = this.mapTotalsFromWrapper(first);
 
-          this.data = rows;
-          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+            // ✅ 核心：判斷後端是否真的有分頁
+            const apiTotal = typeof res?.TotalCount === 'number' ? Number(res.TotalCount) : 0;
+            const hasPaging = apiTotal > rows.length;
 
-          // ★ 調整 historyRequestBody.pageSize
-          // 如果全部資料一次就拿完（totalRecords <= rows.length），
-          // 就把 pageSize 設成實際資料筆數，讓 TableReport 的 onSort 判斷通過
-          const rawPageSize = this.historyRequestBody?.pageSize || 30;
-          const effectivePageSize =
-            this.totalRecords <= rows.length
-              ? (rows.length || rawPageSize)   // 至少是 1
-              : rawPageSize;                   // 多頁情況維持原本 pageSize（30）
+            this.data = rows;
+            this.totalRecords = hasPaging ? apiTotal : rows.length;
 
-          this.historyRequestBody = {
-            ...this.historyRequestBody,
-            pageSize: effectivePageSize,
-            pageIndex: 1,
-          };
-        },
-
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.grandTotal = {};
-        }
-      });
+            /**
+             * ✅ 核心：只要「沒有分頁」，就把 pageSize 撐到很大
+             * TableReport 的 onScroll 條件：
+             *   if (data.length < totalRecords && data.length >= pageSize) { loadMoreData() }
+             * 沒分頁時：
+             *   totalRecords = rows.length  => data.length < totalRecords 為 false
+             * 再保險：
+             *   pageSize = 999999           => data.length >= pageSize 為 false
+             */
+            this.historyRequestBody.pageIndex = 1;
+            this.historyRequestBody.pageSize = hasPaging ? 30 : 999999;
+            this.historyRequestBody.SortBy = compactPayload.SortBy ?? this.defaultSort;
+          },
+          error: () => {
+            this.data = [];
+            this.totalRecords = 0;
+            this.grandTotal = {};
+            // 防止錯誤狀態下 table 還一直想 loadMore
+            this.historyRequestBody.pageIndex = 1;
+            this.historyRequestBody.pageSize = 999999;
+          },
+        });
     });
   }
 
-  // ✅ 提供給 app-table-report 的查詢函式 — 固定 pageSize=30，並帶回 GrandTotal
-  public queryTLS23080ForReport = (body: any) =>
-    this.tls23080Service
+  /**
+   * ✅ 提供給 app-table-report 的查詢函式
+   * - pageSize 固定 30（若真分頁才會用到）
+   * - 若「非分頁」，回傳 TotalCount=rows.length，且把 historyRequestBody.pageSize 撐大
+   * - 若第二頁開始拿不到資料：回傳 TotalCount = 已載入筆數，避免無限打
+   */
+  public queryTLS23080ForReport = (body: any) => {
+    const formVal = this.queryForm.getRawValue() as any;
+
+    const basePayload: any = {
+      TXN_DateStart: this.toDateOnly(formVal?.TXN_DateStart),
+      TXN_DateEnd: this.toDateOnly(formVal?.TXN_DateEnd),
+      tlt_openflag: formVal?.tlt_openflag ?? undefined,
+      ECR_No: Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length ? formVal.ECR_No : undefined,
+      tlt_building: Array.isArray(formVal?.tlt_building) && formVal.tlt_building.length ? formVal.tlt_building : undefined,
+      tlt_floor: Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length ? formVal.tlt_floor : undefined,
+      org_id: Array.isArray(formVal?.org_id) && formVal.org_id.length ? formVal.org_id : undefined,
+    };
+
+    const pageIndex = body?.pageIndex != null ? Number(body.pageIndex) : 1;
+
+    const sortBy =
+      body?.SortBy && Array.isArray(body.SortBy) && body.SortBy.length
+        ? body.SortBy
+        : Array.isArray(formVal?.SortBy) && formVal.SortBy.length
+          ? formVal.SortBy
+          : this.defaultSort;
+
+    return this.tls23080Service
       .queryTLS23080({
-        ...(body || {}),
+        ...basePayload,
+        pageIndex,
         pageSize: 30,
-        // ★ 強制 DateOnly（若 body 沒有就抓表單值）
-        TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-        TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
+        SortBy: sortBy,
       })
       .pipe(
         map((res: any) => {
-          const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+          const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
           const rows = this.extractRows(wrappers);
-          const totalCount = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
 
-          // GrandTotal
           const first = wrappers[0] ?? {};
           const grand = this.mapTotalsFromWrapper(first);
+
+          // ✅ 判斷是否真分頁
+          const apiTotal = typeof res?.TotalCount === 'number' ? Number(res.TotalCount) : 0;
+          const hasPaging = apiTotal > rows.length;
+
+          // ✅ 給 TableReport 的 TotalCount：沒分頁就用 rows.length，避免無限 loadMore
+          let totalCount = hasPaging ? apiTotal : rows.length;
+
+          // ✅ 防呆：第二頁以上如果空資料，視為到底（避免一直打下一頁）
+          if (pageIndex > 1 && rows.length === 0) {
+            totalCount = this.data.length; // 已載入的筆數（父層主資料）
+          }
+
+          // 同步頁面 footer
           this.grandTotal = { ...grand };
+
+          // ✅ 一樣用「固定 reference」更新 historyRequestBody
+          Object.assign(this.historyRequestBody, {
+            ...basePayload,
+            SortBy: sortBy,
+            pageIndex: 1,
+            pageSize: hasPaging ? 30 : 999999,
+          });
 
           return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
         })
       );
-
+  };
 
   // ========= 匯出 =========
   private buildExportBody() {
-    if (!this.historyRequestBody) return null;
-    const { pageSize, pageIndex, PageSize, PageIndex, ...rest } = this.historyRequestBody;
-    return rest; // ✅ 去除 pageSize/pageIndex（大小寫都保險處理）
+    const src = this.historyRequestBody || {};
+    const { pageSize, pageIndex, PageSize, PageIndex, ...rest } = src;
+    return rest;
   }
 
   onExportPDF() {
-    if (!this.historyRequestBody) {
+    if (!this.historyRequestBody || !Object.keys(this.historyRequestBody).length) {
       this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
       return;
     }
@@ -290,7 +371,7 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   }
 
   onExportXLSX() {
-    if (!this.historyRequestBody) {
+    if (!this.historyRequestBody || !Object.keys(this.historyRequestBody).length) {
       this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
       return;
     }
@@ -305,7 +386,6 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   }
 
   // ======= 總計列 Footer 組裝 =======
-  /** 把 wrapper 內的 Total* 欄位轉成表尾需要的 GrandTotal 結構（用 columns 的 field 名） */
   private mapTotalsFromWrapper(wrapper: any): Record<string, number> {
     const grand: Record<string, number> = {};
     Object.entries(this.detailTotalFieldMap).forEach(([field, apiKey]) => {
@@ -314,15 +394,11 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     return grand;
   }
 
-  /** 提供給 [footerData]，只吐需要的合計欄位鍵值 */
   buildFooterFromGrandTotal(): Record<string, any> | undefined {
     if (!this.grandTotal || Object.keys(this.grandTotal).length === 0) return undefined;
-    // 只回傳在欄位上標記 isTotal 的欄位，以免多餘鍵值干擾
     const footer: Record<string, any> = {};
     for (const col of this.columns) {
-      if (col?.isTotal) {
-        footer[col.field] = this.grandTotal[col.field] ?? 0;
-      }
+      if (col?.isTotal) footer[col.field] = this.grandTotal[col.field] ?? 0;
     }
     return footer;
   }
@@ -330,13 +406,6 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   // ===== 工具 =====
   moneyFormat(value: number): string {
     return value != null ? Number(value || 0).toLocaleString('en-US') : '0';
-  }
-
-  private toIso(dateLike: any): string | undefined {
-    if (!dateLike) return undefined;
-    const d = new Date(dateLike);
-    if (isNaN(d.getTime())) return undefined;
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
   }
 
   private extractRows(wrappers: any[]): any[] {
@@ -349,12 +418,10 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
       }));
   }
 
-  // 詳細（若未使用可移除）
-
   onViewTLS23080(row: any) {
     const dateOnly = this.toDateOnly(row?.TXN_Date);
     this.router.navigate(['/account/tls/tls23080cru'], {
-      state: { criteria: { TXN_Date: dateOnly } }
+      state: { criteria: { TXN_Date: dateOnly } },
     });
   }
 
@@ -384,18 +451,25 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     const filenameStarMatch = /filename\*=([^;]+)/i.exec(contentDisposition);
     if (filenameStarMatch?.[1]) {
       const encoded = filenameStarMatch[1].trim();
-      try { return decodeURIComponent(encoded.replace(/^UTF-8''/, '')); } catch { return encoded; }
+      try {
+        return decodeURIComponent(encoded.replace(/^UTF-8''/, ''));
+      } catch {
+        return encoded;
+      }
     }
 
     const filenameMatch = /filename="([^"]+)"/i.exec(contentDisposition);
     if (filenameMatch?.[1]) {
-      try { return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' ')); } catch { return filenameMatch[1]; }
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
     }
 
     return `download${defaultExtension}`;
   }
 
-  // ===== 欄位（加上 isTotal 以顯示總計列）=====
   formatDate = (val: string | Date | number): string => {
     if (!val) return '';
     const d = val instanceof Date ? val : new Date(val);
@@ -409,25 +483,20 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   columns = [
     { field: 'TXN_Date', header: '日期', visible: true, style: 'text-left', format: this.formatDate },
 
-    // 現金
     { field: 'ACT_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    // 聯信（41/42/12）
     { field: 'UnionGeneral', header: '聯信(一般)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'UnionAE', header: '聯信(AE)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'UnionDiner', header: '聯信(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    // 中信（43/44/14）
     { field: 'CTBCGeneral', header: '中信(一般)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'CTBCAE', header: '中信(AE)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'CTBCDiner', header: '中信(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    // 中信-停車場（81）
     { field: 'CTBCParkingGeneral', header: '中信-停車場(一般)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'CTBCParkingAE', header: '中信-停車場(AE)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'CTBCParkingDiner', header: '中信-停車場(Diners)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    // 其他付款別
     { field: 'ACT_PayAmt52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'ACT_PayAmt82', header: '一卡通-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'ACT_PayAmt20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
@@ -457,18 +526,29 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     { field: 'ACT_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
     { field: 'ACT_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    // 總金額
     { field: 'Tot_ACT_PayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
   ];
-  // 1) 新增這個工具函式（放在 component 裡即可）
+
+  // ===== utils =====
   private toDateOnly(x: any): string | undefined {
     if (!x) return undefined;
     const d = typeof x === 'string' ? new Date(x) : (x as Date);
     if (isNaN(d.getTime())) return undefined;
-    // 輸出 yyyy-MM-dd（只有日期、無時間/時區）
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
+  }
+
+  /** 去掉 undefined / null / 空陣列，讓 payload/key 穩定 */
+  private compactObject(obj: any): any {
+    const out: any = Array.isArray(obj) ? [] : {};
+    Object.keys(obj || {}).forEach((k) => {
+      const v = obj[k];
+      if (v === undefined || v === null) return;
+      if (Array.isArray(v) && v.length === 0) return;
+      out[k] = v;
+    });
+    return out;
   }
 }

@@ -1,20 +1,21 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
-import { TLS57170Data, TLS57170Service } from '@service/api/tls/tls57170.service';
+import { TLS57170Data, TLS57170QueryRequest, TLS57170Service } from '@service/api/tls/tls57170.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { CustomFooterTableComponent } from "@shared/componentkit/custom-footer-table/customFooterTable.component";
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { FieldsConfig, MultiselectTableComponent } from '../../../shared/componentkit/multiselect-table/multiselect-table.component';
@@ -33,7 +34,7 @@ import { FieldsConfig, MultiselectTableComponent } from '../../../shared/compone
     CalendarComponent,
     InputTextComponent,
     MultiSelectComponent,
-    CustomFooterTableComponent,
+    TableReportComponent,
     CommonModule,
     ButtonModule,
     MultiselectTableComponent
@@ -60,9 +61,11 @@ export class TLS57170Component extends BasicQueryPageComponent<TLS57170Data> imp
     ...createPaginationConfig([])
   });
 
-  data: TLS57170Data[] = [];
+  readonly tableData = signal<TLS57170Data[]>([]);
+  readonly totalRecords = signal<number>(0);
+  readonly tableLoading = signal<boolean>(false);
+  lastQueryBody?: TLS57170QueryRequest;
   selectedItems: TLS57170Data[] = [];
-  totalRecords = 0;
   exportPDFbtnLoading = false;
   exportExcelbtnLoading = false;
   subTotalData: any[] = [];
@@ -71,7 +74,7 @@ export class TLS57170Component extends BasicQueryPageComponent<TLS57170Data> imp
   HOS_NOOptions = this.dropdown.queryPos2034();
   LOGO_NoOptions = this.dropdown.queryPluLogo();
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'VEN_No', header: '廠商編號', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
     { field: 'LOGO_No', header: '品牌編號', visible: true },
@@ -90,27 +93,64 @@ export class TLS57170Component extends BasicQueryPageComponent<TLS57170Data> imp
     this.initializePage('TLS57170', 'tls/tls57170cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
+  buildQueryPayload(body?: { pageSize?: number; PageSize?: number; pageIndex?: number; PageIndex?: number; SortBy?: any }): TLS57170QueryRequest {
+    const raw = this.queryForm.getRawValue();
+    const PLU_MagNo = raw.PLU_MagNo;
+    const pageSize = body?.pageSize ?? body?.PageSize ?? raw?.pageSize ?? 30;
+    const pageIndex = body?.pageIndex ?? body?.PageIndex ?? raw?.pageIndex ?? 1;
+    return {
+      SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
+      STK_YM: this.datepipe.transform(raw.STK_YM, 'yyyyMM') ?? '',
+      HOS_No: raw.HOS_No ?? undefined,
+      LOGO_No: raw.LOGO_No ?? undefined,
+      PLU_MagNo: Array.isArray(PLU_MagNo) ? PLU_MagNo : (PLU_MagNo ? [PLU_MagNo] : []),
+      FeeRate: raw.FeeRate != null ? Number(raw.FeeRate) : undefined,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: body?.SortBy ?? raw?.SortBy,
+    };
+  }
+
+  queryFunction = (body: any) => {
+    const payload = this.buildQueryPayload(body);
+    return this.tls57170Service.queryTLS57170(payload).pipe(
+      map(res => ({
+        ...res,
+        Data: res.Data?.mainData ?? [],
+        totalData: res.Data?.totalData ?? [],
+      }))
+    );
+  };
+
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
-      const PLU_MagNo = form.value.PLU_MagNo;
-      this.tls57170Service.queryTLS57170({
-        ...form.getRawValue(),
-        SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
-        STK_YM: this.datepipe.transform(form.value.STK_YM, 'yyyyMM'),
-        PLU_MagNo: Array.isArray(PLU_MagNo) ? PLU_MagNo : (PLU_MagNo ? [PLU_MagNo] : [])
-      })
-        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-        .subscribe(response => {
-          this.data = response.Data.mainData || [];
-          this.subTotalData = response.Data.totalData
-            .map(item =>
-            ({
+      this.lastQueryBody = this.buildQueryPayload();
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: (response: { Data: TLS57170Data[]; TotalCount: number; totalData?: any[] }) => {
+            this.tableData.set(response.Data ?? []);
+            this.totalRecords.set(response.TotalCount ?? 0);
+            const totalData = response.totalData ?? [];
+            this.subTotalData = totalData.map((item: any) => ({
               LOGO_No: item.LOGO_No,
               UP_PORFIT: item.UP_PORFIT_Total,
               DOWN_COST: item.DOWN_COST_Total,
             }));
-          this.totalRecords = response.TotalCount
-          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+          },
+          error: () => {
+            this.tableData.set([]);
+            this.totalRecords.set(0);
+            this.subTotalData = [];
+          }
         });
     });
   }

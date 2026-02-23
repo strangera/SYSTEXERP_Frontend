@@ -150,7 +150,7 @@ const formatTxnNo = (val: number | string | null | undefined): string => {
 };
 
 export const columns: ReportColumn[] = [
-  { field: 'ECR_No_Display', header: '收銀機號', visible: true, type: 'html', sortField: 'ECR_No' },
+  { field: 'ECR_No_Display', header: '收銀機號', visible: true, type: 'html', sortField: 'ECR_No', width: '100px' },
   { field: 'AREA_NO', header: '區域', visible: true },
   { field: 'FLOOR_Name', header: '樓層', visible: true }, // <--- 欄位定義不變，但 ITxnData 已經更新
   { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)', visible: true, format: formatAmount, isTotal: true, align: 'right' },
@@ -183,8 +183,8 @@ export const columnscru: ReportColumn[] = [
   { field: 'TXN_TotSaleAmt_Sum', header: '銷售小計(D) = (A)', visible: true, format: formatAmount, align: 'right' },
   { field: 'TXN_TotExtraAmt', header: '代收/付金額 (L)', visible: true, format: formatAmount, align: 'right' },
   { field: 'TXN_TotHaveTax', header: '已開發票金額 (E)', visible: true, format: formatAmount, align: 'right' },
-  { field: 'TXN_ChangeHaveTax', header: '已開溢付 (K)', visible: true, format: formatAmount, align: 'right' },
-  { field: 'TXN_TotOver', header: '已匯送付 (I)', visible: true, format: formatAmount, align: 'right' },
+  { field: 'TXN_ChangeHaveTax', header: '已開找零 (K)', visible: true, format: formatAmount, align: 'right' },
+  { field: 'TXN_TotOver', header: '已開溢付 (I)', visible: true, format: formatAmount, align: 'right' },
   { field: 'TXN_TotGUI', header: '發票總金額 (F)', visible: true, format: formatAmount, align: 'right' },
   { field: 'GUI_NET', header: '發票未稅金額 (M)', visible: true, format: formatAmount, align: 'right' },
   { field: 'TXN_TotTax', header: '發票稅額 (N)', visible: true, format: formatAmount, align: 'right' },

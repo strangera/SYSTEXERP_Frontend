@@ -121,9 +121,9 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     contact_Date_to: [null as Date | null],
     paper_typeList: [[] as string[]],
     tlt_bdate_start_from: [null as Date | null],
-    tlt_bdate_end_to: [null as Date | null],
+    tlt_bdate_start_to: [null as Date | null],
     tlt_edate_start_from: [null as Date | null],
-    tlt_edate_end_to: [null as Date | null],
+    tlt_edate_start_to: [null as Date | null],
     tlt_contract_bdate_from: [null as Date | null],
     tlt_contract_bdate_to: [null as Date | null],
     tlt_contract_edate_from: [null as Date | null],
@@ -183,7 +183,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
   ngOnInit(): void {
     // 初始化頁面，導航到精靈頁面
-    this.initializePage('TLS12040', '/tls/tls12040v2cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS12040', '/tls/tls12040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
   }
 
@@ -344,6 +344,10 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       next: (response: any) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('審核成功');
+          // 審核後刷新使用者資料權限
+          this.apiService.refreshUserDataPermissions().subscribe({
+            error: () => this.messageService.warnBubble('審核成功，但權限更新失敗。請重新登入以查看更新。')
+          });
           this.onSubmit(this.queryForm);
         } else {
           this.messageService.errorBubble(`審核失敗: ${response.Message || '未知錯誤'}`);

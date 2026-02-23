@@ -3,11 +3,12 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { POS2004DetailResponse, POS2023DAMResponse, POS2024DAMResponse, Tls56070Service } from '@service/api/tls/tls56070.service';
+import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { POS2023DAMResponse, POS2024DAMResponse, Tls56070Service } from '@service/api/tls/tls56070.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -42,7 +43,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     InputTextareaComponent,
     TableComponent,
     DialogComponent,
-    DropdownTableComponent,
+    ProductAutocompleteComponent,
     AsyncPipe,
     TableEditComponent
   ]
@@ -73,6 +74,7 @@ export class TLS56070CRUComponent extends BasicCruPageComponent<POS2023DAMRespon
   warehouseOptions = this.dropdown.queryPos2034();
   constructor(
     private readonly tls56070Service: Tls56070Service,
+    private readonly tls52010Service: Tls52010Service,
     public readonly dropdown: DropdownApiService
   ) {
     super();
@@ -137,8 +139,8 @@ export class TLS56070CRUComponent extends BasicCruPageComponent<POS2023DAMRespon
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
-  dialogData: POS2004DetailResponse[] = [];
-  selectedItemsDialog: POS2004DetailResponse[] = [];
+  dialogData: IQueryPOS2004DetailResponse[] = [];
+  selectedItemsDialog: IQueryPOS2004DetailResponse[] = [];
   dialogColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_No', header: '國際條碼' },
@@ -159,7 +161,7 @@ export class TLS56070CRUComponent extends BasicCruPageComponent<POS2023DAMRespon
       HOS_No: this.dataForm.controls.HOS_No.value,
     }
     this.dialogLoading = true;
-    this.tls56070Service.queryPOS2004Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+    this.tls52010Service.queryPOS2004Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;
       this.totalRecords = response.TotalCount;
     })
@@ -176,30 +178,6 @@ export class TLS56070CRUComponent extends BasicCruPageComponent<POS2023DAMRespon
     this.dialogVisible = false;
   }
 
-  // ------------------------------------ 搜尋框邏輯 ------------------------------------
-  suggestions: POS2004DetailResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號 - 商品名稱', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    if (!this.dataForm.controls.LOGO_No.value || !this.dataForm.controls.HOS_No.value) {
-      this.suggestions = [];
-      return;
-    }
-    const body = {
-      HOS_No: this.dataForm.controls.HOS_No.value,
-      LOGO_No: this.dataForm.controls.LOGO_No.value,
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    this.tls56070Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map((item) => ({
-        ...item, label: item.PLU_No + '/' + item.PLU_MagNo + ' - ' + item.PLU_Name
-      }))];
-    });
-  }
   isRowSelectable(event: POS2024DAMResponse): boolean {
     return !this.data || !this.data.some((item: POS2024DAMResponse) => item.PLU_MagNo === event.PLU_MagNo);
   }

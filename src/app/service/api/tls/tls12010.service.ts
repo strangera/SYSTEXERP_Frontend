@@ -9,7 +9,7 @@ import { environment } from '../../../../environments/environment';
 export class Tls12010Service {
   // Potential_Customer 潛在客戶主檔
   apiUrl: string = environment.ApiUrl + '/TLS0000/TLS1000';
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // 查詢 Potential_Customer 資料表
   queryTLS12010(body: any): Observable<any> {
@@ -35,6 +35,26 @@ export class Tls12010Service {
   deleteTLS12010(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS12010`, body);
   }
+
+  // 查詢 POS2013 資料表
+  queryTLS12010_POS2013(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS12010_POS2013`, body);
+  }
+
+  //匯出 明細PDF
+  exportTLS12010_Detail(body: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS12010_Detail`, body, {
+      responseType: 'blob'
+    });
+  }
+
+  //匯出 明細Excel
+  exportTLS12010_DetailPDF(body: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS12010_DetailPDF`, body, {
+      responseType: 'blob'
+    });
+  }
+
   // --- dropDown ---
 
   // 查詢 大分類(業種)設定檔

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { NavigationExtras, Router } from '@angular/router';
 import { ContractFlowService } from '@pages/tls/tls13010/services/contract-flow.service';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
@@ -140,41 +140,22 @@ export class ContractSubmitService {
   }
 
   /**
-   * 顯示成功訊息
+   * 顯示成功訊息（比照 v2 格式）
    */
   private showSuccessMessage(response: any, isNext2Flow: boolean): void {
-    let successMessage = '契約資料提交成功！';
+    // 從 contractFlowService 取得 step1 資料
+    const step1Data = this.contractFlowService.getStep1Data();
+    const isNewContract = this.contractFlowService.isNewContractMode();
 
-    // 根據回應內容構建詳細訊息
-    const details: string[] = [];
-
-    if (response.talentId) {
-      details.push(`專櫃編號: ${response.talentId}`);
-    }
-
-    if (response.contractNo) {
-      details.push(`契約編號: ${response.contractNo}`);
-    }
-
-    if (response.totalProcessed) {
-      details.push(`處理項目數: ${response.totalProcessed}`);
-    }
-
-    if (response.processingTime) {
-      details.push(`處理時間: ${response.processingTime}`);
-    }
-
-    // 組合完整訊息
-    if (details.length > 0) {
-      successMessage += '\n\n' + details.join('\n');
-    }
-
-    // Next2 流程特別提示
-    if (isNext2Flow) {
-      successMessage += '\n\n即將跳轉到下一步...';
-    } else {
-      successMessage += '\n\n即將返回列表頁...';
-    }
+    // 組合詳細成功訊息（比照 v2 格式）
+    const successMessage = [
+      `異動訊息:${isNewContract ? '新增成功' : '修改成功'}`,
+      `招募編號為:${step1Data?.apply_no || response.talentId || ''}`,
+      `版本編號為:${step1Data?.contract_subno || ''}`,
+      `專櫃編號為:${response.contractNo || step1Data?.tlt_no || ''}`,
+      `廠商編號:${step1Data?.ven_uniform || ''}`,
+      `品牌(專櫃名稱):${step1Data?.tlt_name || ''}`
+    ].join('\n');
 
     this.notificationService.successBubble(successMessage);
 
@@ -245,17 +226,17 @@ export class ContractSubmitService {
 
       if (commissionType === '3') {
         // 一般抽成直接回列表
-        this.router.navigate(['account/tls/tls13010'], extras);
+        this.router.navigate(['account/tls/tls13010v1'], extras);
       } else {
         // 其他類型前往 next3
-        this.router.navigate(['account/tls/tls13010next3'], extras);
+        this.router.navigate(['account/tls/tls13010v1next3'], extras);
       }
     } else {
       // Next3 提交後直接回列表
       const extras: NavigationExtras = {
         state: { fromRoute: this.router.url }
       };
-      this.router.navigate(['account/tls/tls13010'], extras);
+      this.router.navigate(['account/tls/tls13010v1'], extras);
     }
   }
 
@@ -276,21 +257,7 @@ export class ContractSubmitService {
         };
       }
 
-      // Next2 與 Next3 資料一致性驗證（僅限底租抽成取高者）
-      if (commissionType === '2') {
-        const next2MasterCount = cleanData.commissions.masters.toInsert.length +
-          cleanData.commissions.masters.toUpdate.length;
-        const next3RentCount = cleanData.conditions.baseRentHigher.toInsert.length +
-          cleanData.conditions.baseRentHigher.toUpdate.length;
-
-        if (next2MasterCount !== next3RentCount) {
-          return {
-            valid: false,
-            message: `資料不一致：抽成設定有 ${next2MasterCount} 個項目，` +
-              `但條件設定有 ${next3RentCount} 個項目。請檢查資料後再送出。`
-          };
-        }
-      }
+      // 移除抽成設定與條件設定數量一致性檢查
 
       return { valid: true };
 

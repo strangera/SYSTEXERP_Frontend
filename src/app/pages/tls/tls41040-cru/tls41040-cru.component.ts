@@ -9,13 +9,13 @@ import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin, map } from 'rxjs';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { Tls41040Service } from '../../../service/api/tls/tls41040.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
 
@@ -27,6 +27,7 @@ export interface TLS41040Detail {
   NOT_SeqNo?: number;      // ← 通告序號
   TLT_No?: string;         // 專櫃編號
   ECR_Type?: string;       // 機台類型
+  ECR_No?: string;         // 收銀機號
   ECR_GrpNo?: string | null; // 機台群組編號
   BUILDING_No?: string;    // 館別
   FLOOR_No?: string;       // 樓層
@@ -38,7 +39,6 @@ export interface TLS41040Detail {
 @Component({
   selector: 'app-tls41040-cru',
   templateUrl: './tls41040-cru.component.html',
-  styleUrls: ['./tls41040-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -51,18 +51,16 @@ export interface TLS41040Detail {
     RadiobuttonComponent,
     ButtonComponent,
     CommonModule,
-    TableComponent,
     InputTextareaComponent,
     TableEditComponent,
   ]
 })
 export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   private originalSnapshot: TLS41040Detail[] = [];
-  // ===== 主檔表單 =====
   dataForm = this.formBuilder.group({
     NOT_DateTime: [new Date(), [Validators.required]],
-    NOT_BegDateTime: [new Date(), [Validators.required]],
-    NOT_EndDateTime: [new Date(), [Validators.required]],
+    NOT_BegDateTime: [new Date(new Date().setHours(0, 0, 0, 0)), [Validators.required]],
+    NOT_EndDateTime: [new Date(new Date().setHours(23, 59, 59, 999)), [Validators.required]],
     NOT_Status: ['A', [Validators.required]],
     NOT_Remark: ['', [Validators.maxLength(200)]],
     NOT_Desc: ['', [Validators.maxLength(2000)]],
@@ -79,6 +77,17 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
   SYS3700_Options: IDropdownItem[] = [];
   SYS3800_Options: IDropdownItem[] = [];
   SYS3A00_Options: IDropdownItem[] = [];
+  // 檢查是否有除機台群組/收銀機之外的欄位有值（用於決定 ECR_GrpNo / ECR_No 是否應被鎖定）
+  hasAnyNonGroupFieldSelected(rowData: any): boolean {
+    return !!(
+      (rowData.TLT_No && rowData.TLT_No.trim()) ||
+      (rowData.ECR_Type && rowData.ECR_Type.trim()) ||
+      (rowData.BUILDING_No && rowData.BUILDING_No.trim()) ||
+      (rowData.FLOOR_No && rowData.FLOOR_No.trim()) ||
+      (rowData.Area_No && rowData.Area_No.trim())
+    );
+  }
+  ECR_NoOptions: IDropdownItem[] = [];
   NOT_Status_Option: any[] = [
     { value: 'A', label: '啟用' },
     { value: 'D', label: '停用' },
@@ -92,6 +101,8 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     private locationOptionsService: LocationOptionsService,
     private dropDownListService: DropDownListService,
     private tls41040Service: Tls41040Service
+    ,
+    private ECRNoService: ECRNoService
     ,
     private cdr: ChangeDetectorRef
   ) {
@@ -115,6 +126,22 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       status: 'original'
     }));
     this.originalSnapshot = JSON.parse(JSON.stringify(this.data));
+
+    // 如果傳入的 rowdata 沒有明細 (可能是從列表直接跳轉但未帶 Details)，就向後端補抓一次
+    if (this.rowdata?.ID && (!this.rowdata.Details || this.rowdata.Details.length === 0)) {
+      this.tls41040Service.queryTLS41040({ ID: this.rowdata.ID, PageSize: 1, PageIndex: 1 })
+        .pipe()
+        .subscribe({
+          next: (res) => {
+            const item = res?.Data && res.Data.length ? res.Data[0] : null;
+            const details = (item?.Details ?? []) as TLS41040Detail[];
+            this.data = details.map(d => ({ ...d, ID: d.ID ?? 0, status: 'original' }));
+            this.originalSnapshot = JSON.parse(JSON.stringify(this.data));
+            this.cdr.detectChanges();
+          },
+          error: () => { /* 忽略錯誤，保留既有資料 */ }
+        });
+    }
   }
   private loadDropdownOptions(): void {
     forkJoin({
@@ -144,9 +171,9 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
       // ===== 專櫃 =====
       TLT: this.dropDownListService
-        .queryTLTTALENT_DropDownList()
+        .queryTLTTALENT_TLS41040_DropDownList()
         .pipe(
-          map(res => (res?.Data ?? []).map((item: any): IDropdownItem => ({
+          map((res: any) => (res?.Data ?? []).map((item: any): IDropdownItem => ({
             No: item.No,
             Name: item.Name,
             value: item.No,
@@ -183,6 +210,15 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
           label: x.Name ?? x.label,
         })))
       ),
+      // ===== 收銀機號 =====
+      ECR_No: this.ECRNoService.getECRNo().pipe(
+        map((res: any) => (res ?? []).map((x: any): IDropdownItem => ({
+          No: x.value ?? x.No ?? '',
+          Name: x.label ?? x.Name ?? '',
+          value: x.value ?? x.No ?? '',
+          label: x.label ?? x.Name ?? '',
+        })))
+      ),
     })
       .subscribe(res => {
         this.ECR_GrpNoOptions = res.ECR_GrpNo;
@@ -191,6 +227,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
         this.SYS3700_Options = res.BUILDING;
         this.SYS3800_Options = res.FLOOR;
         this.SYS3A00_Options = res.AREA;
+        this.ECR_NoOptions = res.ECR_No;
         this.loadAndSetupColumns();
         this.columns = Array.isArray(this.columns) ? [...this.columns] : this.columns;
         this.data = Array.isArray(this.data) ? [...this.data] : this.data;
@@ -201,6 +238,24 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
   private loadAndSetupColumns(): void {
     this.columns = [
+      {
+        field: 'ECR_GrpNo',
+        header: '機台群組編號',
+        type: 'dropdown',
+        options: this.ECR_GrpNoOptions,
+        optionLabel: 'label',
+        optionValue: 'value',
+        disabled: (_value, _index, row) => this.hasAnyNonGroupFieldSelected(row) || !!(row && row.ECR_No)
+      },
+      {
+        field: 'ECR_No',
+        header: '收銀機號',
+        type: 'dropdown',
+        options: this.ECR_NoOptions,
+        optionLabel: 'label',
+        optionValue: 'value',
+        disabled: (_value, _index, row) => this.hasAnyNonGroupFieldSelected(row) || !!(row && row.ECR_GrpNo)
+      },
       {
         field: 'TLT_No',
         header: '專櫃編號',
@@ -219,15 +274,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
         optionValue: 'value',
         disabled: (_value, _index, row) => this.isOtherGroupSelected(row)
       },
-      {
-        field: 'ECR_GrpNo',
-        header: '機台群組編號',
-        type: 'dropdown',
-        options: this.ECR_GrpNoOptions,
-        optionLabel: 'label',
-        optionValue: 'value',
-        disabled: (_value, _index, row) => this.isEcrGrpNoSelected(row)
-      },
+
       {
         field: 'BUILDING_No',
         header: '館別',
@@ -262,13 +309,14 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
   // 檢查其他互斥欄位是否有值
   isOtherGroupSelected(rowData: any): boolean {
-    return !!(rowData['ECR_GrpNo'] && rowData['ECR_GrpNo'] !== '');
+    return !!((rowData['ECR_GrpNo'] && rowData['ECR_GrpNo'] !== '') || (rowData['ECR_No'] && rowData['ECR_No'] !== ''));
   }
   // 檢查機台群組編號是否有值
   isEcrGrpNoSelected(rowData: any): boolean {
     return !!(
       (rowData.TLT_No && rowData.TLT_No.trim()) ||
       (rowData.ECR_Type && rowData.ECR_Type.trim()) ||
+      (rowData.ECR_No && rowData.ECR_No.trim()) ||
       (rowData.BUILDING_No && rowData.BUILDING_No.trim()) ||
       (rowData.FLOOR_No && rowData.FLOOR_No.trim()) ||
       (rowData.Area_No && rowData.Area_No.trim())
@@ -311,14 +359,25 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
           clone.BUILDING_No = '';
           clone.FLOOR_No = '';
           clone.Area_No = '';
+          clone.ECR_No = '';
+        } else if (clone.ECR_No) {
+          // 若填寫收銀機號，則其他互斥欄位必須清空
+          clone.TLT_No = '';
+          clone.ECR_Type = '';
+          clone.BUILDING_No = '';
+          clone.FLOOR_No = '';
+          clone.Area_No = '';
+          clone.ECR_GrpNo = null;
         } else {
           clone.ECR_GrpNo = null;
+          clone.ECR_No = '';
         }
         return {
           NOT_SeqNo: null,
           TLT_No: clone.TLT_No ?? '',
           ECR_Type: clone.ECR_Type ?? '',
           ECR_GrpNo: clone.ECR_GrpNo ?? null,
+          ECR_No: clone.ECR_No ?? '',
           BUILDING_No: clone.BUILDING_No ?? '',
           FLOOR_No: clone.FLOOR_No ?? '',
           Area_No: clone.Area_No ?? '',
@@ -365,6 +424,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
           TLT_No: clone.TLT_No ?? '',
           ECR_Type: clone.ECR_Type ?? '',
           ECR_GrpNo: clone.ECR_GrpNo ?? '',
+          ECR_No: clone.ECR_No ?? '',
           BUILDING_No: clone.BUILDING_No ?? '',
           FLOOR_No: clone.FLOOR_No ?? '',
           Area_No: clone.Area_No ?? '',
@@ -380,6 +440,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
     for (const d of this.data) {
       const ecrGrpNo = d.ECR_GrpNo?.trim() ?? '';
+      const ecrNo = (d as any).ECR_No?.trim() ?? '';
       const tltNo = d.TLT_No?.trim() ?? '';
       const ecrType = d.ECR_Type?.trim() ?? '';
       const building = d.BUILDING_No?.trim() ?? '';
@@ -387,13 +448,13 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       const area = d.Area_No?.trim() ?? '';
 
       // --- 群組互斥檢查 ---
-      if (ecrGrpNo && (tltNo || ecrType || building || floor || area)) {
+      if ((ecrGrpNo || ecrNo) && (tltNo || ecrType || building || floor || area)) {
         this.messageService.errorBubble('若設定了「機台群組編號」，其他欄位必須留空');
         return false;
       }
 
       // --- 至少一欄必填 ---
-      if (!ecrGrpNo && !tltNo && !ecrType && !building && !floor && !area) {
+      if (!ecrGrpNo && !ecrNo && !tltNo && !ecrType && !building && !floor && !area) {
         this.messageService.errorBubble('每筆明細至少要有一個欄位有設定值');
         return false;
       }
@@ -401,7 +462,9 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       // --- 唯一條件檢查 ---
       const key = ecrGrpNo
         ? `grp:${ecrGrpNo}`
-        : `tlt:${tltNo}|type:${ecrType}|b:${building}|f:${floor}|a:${area}`;
+        : ecrNo
+          ? `ecr:${ecrNo}`
+          : `tlt:${tltNo}|type:${ecrType}|b:${building}|f:${floor}|a:${area}`;
 
       if (uniqueSet.has(key)) {
         this.messageService.errorBubble('明細設定條件重複，請檢查');
@@ -493,7 +556,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
   validateEntireRow(rowData: any) {
-    if (!rowData.TLT_No && !rowData.ECR_Type && !rowData.ECR_GrpNo && !rowData.BUILDING_No && !rowData.FLOOR_No && !rowData.Area_No) {
+    if (!rowData.TLT_No && !rowData.ECR_Type && !rowData.ECR_GrpNo && !rowData.ECR_No && !rowData.BUILDING_No && !rowData.FLOOR_No && !rowData.Area_No) {
       return { isValid: false, errorMessage: '至少其中一個有值' };
     }
     return { isValid: true, errorMessage: '' };
@@ -514,6 +577,28 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     this.onDataChange(this.data);
     this.selectedRows = [];
     this.messageService.successBubble('已標記刪除');
+  }
+
+  /**
+   * Cancel 按鈕被按下時呼叫：還原明細資料與已選列
+   */
+  onCancelClicked(): void {
+    this.selectedRows = [];
+
+    if (this.isFormCreateable) {
+      this.data = [];
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const snapshot = Array.isArray(this.originalSnapshot) ? JSON.parse(JSON.stringify(this.originalSnapshot)) : [];
+    // 先清空再還原以強制 child 重新初始化
+    this.data = [];
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.data = snapshot;
+      this.cdr.detectChanges();
+    }, 0);
   }
 
 

@@ -23,7 +23,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 @Component({
   selector: 'app-fin28010-cru',
   templateUrl: './fin28010-cru.component.html',
-  styleUrl: './fin28010-cru.component.scss',
   standalone: true,
   imports: [
     NgIf,
@@ -74,6 +73,8 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
     { No: 'N', Name: '不補發票' }
   ];
   editData: any[] = [];
+  // 保存查詢帶入的原始明細複本，用於還原
+  private originalDetails: any[] = [];
   selectedItems: any[] = [];
   editFooterData = {
     d_amt: 0, // 借方總金額
@@ -81,8 +82,16 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   editColumns: EditColumn[] = [
-    { field: 'dc', header: '借/貸' },
+    {
+      field: 'dc', header: '借/貸',
+      format: (v: any, i?: any, r?: any) => {
+        if (v === 1 || v === '1') return '借';
+        if (v === 2 || v === '2') return '貸';
+        return v ?? '';
+      }
+    },
     { field: 'AccNo', header: '會計科目' },
+    { field: 'AccCName', header: '會計科目名稱' },
     { field: 'NoteDesc', header: '摘要', type: 'input', validate: [validateRequired], width: '250px' },
     {
       field: 'd_amt', header: '借方金額',
@@ -130,14 +139,19 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
     // 只開放「傳票摘要」欄位可編輯，其餘維持唯讀
     this.dataForm.get('Remark')?.enable({ emitEvent: false });
 
+    // // 確保傳票型態 VoucherType 為下拉可選（不要唯讀）
+    // this.dataForm.get('VoucherType')?.enable({ emitEvent: false });
+
     const details = this.queryData?.details as any[] | undefined;
     if (Array.isArray(details) && details.length) {
-      this.editData = details;
+      // 儲存原始的複本，避免之後在編輯時修改原始資料來源
+      this.originalDetails = details.map(d => ({ ...d }));
+      this.editData = this.originalDetails.map(d => ({ ...d }));
       this.editFooterData = {
-        d_amt: details.reduce((sum, r) => sum + (Number(r.d_amt) || 0), 0),
-        c_amt: details.reduce((sum, r) => sum + (Number(r.c_amt) || 0), 0),
+        d_amt: this.originalDetails.reduce((sum, r) => sum + (Number(r.d_amt) || 0), 0),
+        c_amt: this.originalDetails.reduce((sum, r) => sum + (Number(r.c_amt) || 0), 0),
       };
-      this.totalRecords = details.length;
+      this.totalRecords = this.originalDetails.length;
     }
 
     // 將查詢畫面輸入的傳票日期帶入 CRU 顯示
@@ -146,11 +160,14 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
       this.dataForm.patchValue({ VouDate: queryForm.VouDate });
     }
 
-    // 載入傳票種類
+    // 載入傳票種類，顯示為 No-Name
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'entry_type' })
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.srcSheetTypeOptions = response.Data;
+        this.srcSheetTypeOptions = (response.Data || []).map((item: any) => ({
+          ...item,
+          Name: `${item.No}-${item.Name}`,
+        }));
       });
 
   }
@@ -224,6 +241,34 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
         },
 
       });
+  }
+
+  // 取消/還原：將編輯表格還原為原始查詢帶入的明細，並回復表單欄位
+  // 還原編輯資料為查詢時的初始明細（由 originalDetails 提供）
+  onRestore(): void {
+    this.submitted = false;
+
+    if (Array.isArray(this.originalDetails) && this.originalDetails.length) {
+      this.editData = this.originalDetails.map(d => ({ ...d }));
+      this.editFooterData = {
+        d_amt: this.originalDetails.reduce((sum, r) => sum + (Number(r.d_amt) || 0), 0),
+        c_amt: this.originalDetails.reduce((sum, r) => sum + (Number(r.c_amt) || 0), 0),
+      };
+      this.totalRecords = this.originalDetails.length;
+    } else {
+      this.editData = [];
+      this.editFooterData = { d_amt: 0, c_amt: 0 };
+      this.totalRecords = 0;
+    }
+
+    // 回填查詢時帶入的表單欄位（若有）
+    const queryForm = this.queryData?.form as any | undefined;
+    if (queryForm) {
+      const restore: any = {};
+      if (queryForm.VouDate !== undefined) restore.VouDate = queryForm.VouDate;
+      if (queryForm.Remark !== undefined) restore.Remark = queryForm.Remark;
+      try { this.dataForm.patchValue(restore); } catch (e) { /* ignore */ }
+    }
   }
 
 }

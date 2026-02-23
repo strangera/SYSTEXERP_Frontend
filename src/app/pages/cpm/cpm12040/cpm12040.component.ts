@@ -15,7 +15,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { Cpm12040Data, Cpm12040Service, QueryCpm12040Request } from './../../../service/api/cpm/cpm12040.service';
 
-//5.1.2.4 顧客意見來源維護
 @Component({
   selector: 'app-cpm12040',
   templateUrl: './cpm12040.component.html',
@@ -24,16 +23,16 @@ import { Cpm12040Data, Cpm12040Service, QueryCpm12040Request } from './../../../
 })
 export class CPM12040Component extends BasicQueryPageComponent<QueryCpm12040Request> implements OnInit {
   totalRecords = 0;
-
-  // 查詢表單定義：包含 SYS_Code, SYS_Name 和分頁/排序欄位
   queryForm = this.formBuilder.nonNullable.group({
-    SYS_Code: [null], // 意見來源代碼
-    SYS_Name: [null, Validators.maxLength(60)], // 意見來源名稱
-    PageSize: [30],
-    PageIndex: [1],
+    SYS_Code: [null],
+    SYS_Name: [null, Validators.maxLength(60)],
+    pageSize: [30],
+    pageIndex: [1],
   });
   lastQueryBody: QueryCpm12040Request | null = null;
-  SUGG_SOURCE = getSYS1000Options('SUGG_SOURCE');
+  get SUGG_SOURCE() {
+    return getSYS1000Options('SUGG_SOURCE');
+  }
 
   // 資料列表
   data: Cpm12040Data[] = [];
@@ -66,11 +65,7 @@ export class CPM12040Component extends BasicQueryPageComponent<QueryCpm12040Requ
   /** 提交查詢 */
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      // 呼叫查詢服務
-      this.cpm12040Service.queryCPM12040(frm.value).pipe(
-        finalize(() => this.loading = false),
-        untilDestroyed(this)
-      ).subscribe(res => {
+      this.cpm12040Service.queryCPM12040(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.lastQueryBody = frm.value;
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
@@ -87,8 +82,10 @@ export class CPM12040Component extends BasicQueryPageComponent<QueryCpm12040Requ
         const idList = data.map(item => item.ID);
         this.cpm12040Service.deleteCPM12040({ IDList: idList }).pipe(untilDestroyed(this)).subscribe(res => {
           this.messageService.successBubble(res.Message);
-          this.selectedRows = []; // 清空選取
-          this.onSubmit(this.queryForm); // 重新查詢
+          this.systemDataService.refreshSystemCodeByType('SUGG_SOURCE').subscribe(() => {
+            this.selectedRows = []; // 清空選取
+            this.onSubmit(this.queryForm); // 重新查詢列表
+          });
         });
       }
     });

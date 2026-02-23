@@ -3,19 +3,18 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { IQueryPOS2004DetailResponse } from '@service/api/tls/tls52010.service';
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { IQueryTLS56080Response, ITLS56080Detail, Tls56080Service } from '@service/api/tls/tls56080.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column, createPaginationConfig, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
-import { TableModule } from "primeng/table";
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -38,11 +37,10 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     CalendarComponent,
     NgIf,
     TranslateModule,
-    TableModule,
     InputTextareaComponent,
-    TableComponent,
+    TableReportComponent,
+    ProductAutocompleteComponent,
     DialogComponent,
-    DropdownTableComponent,
   ]
 })
 export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Response> implements OnInit {
@@ -84,6 +82,7 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
   totalRecords = 0;
 
   constructor(
+    public readonly tls52010Service: Tls52010Service,
     private readonly tls56080Service: Tls56080Service,
     private readonly dropDownListService: DropDownListService,
   ) {
@@ -133,6 +132,7 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
   dialogData: IQueryPOS2004DetailResponse[] = [];
+  dialogLastQueryBody: IQueryPOS2004DetailRequest | null = null;
   selectedItemsDialog: IQueryPOS2004DetailResponse[] = [];
   dialogColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
@@ -147,12 +147,13 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
     this.dialogLoading = true;
     const body = {
       ...frm.getRawValue(),
-      HOS_No: this.dataForm.controls.HOS_No.value,
+      VEN_No: this.dataForm.controls.VEN_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
     }
-    this.tls56080Service.queryPOS2004Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+    this.tls52010Service.queryPOS2004Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;
       this.totalRecords = response.TotalCount;
+      this.dialogLastQueryBody = body;
     })
   }
 
@@ -179,27 +180,6 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
     this.selectedItemsDialog = [];
     this.selectedItems = [];
     this.calculateTotals();
-  }
-
-  suggestions: IQueryPOS2004DetailResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      HOS_No: this.dataForm.controls.HOS_No.value || '',
-      LOGO_No: this.dataForm.controls.LOGO_No.value || '',
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    this.tls56080Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
   }
   onRowEditSave(event: RowEditSaveEvent): void {
     const editedItem = event.newData;

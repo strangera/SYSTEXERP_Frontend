@@ -1,20 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-
-// 導入新的 SYS0730 服務和模型
-import { QuerySYS0730Request, QuerySYS0730Response, Sys0730Service } from '@service/api/sys/sys0730.service';
+import { TranslateModule } from '@ngx-translate/core';
 import { Sys0210Service } from '@service/api/sys/sys0210.service'; // 用於查詢角色下拉選單
-
+import { QuerySYS0730Request, QuerySYS0730Response, Sys0730Service } from '@service/api/sys/sys0730.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 // 假設 Role 模型是這樣定義的 (來自 sys0210.service 或 shared/models/sys/role.model)
 export interface Role {
   Role_No: string;
@@ -33,7 +30,7 @@ export interface Role {
     FormsModule,
     ReactiveFormsModule,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     DropdownComponent
   ],
@@ -44,15 +41,17 @@ export class SYS0730Component extends BasicQueryPageComponent<QuerySYS0730Respon
   queryForm = this.formBuilder.group({
     Role_No: ['', [Validators.required, Validators.maxLength(10)]], // 角色代號，必填且限制長度
     // 預設排序欄位改為後端回傳的 Prog_No (作業代碼)，排序順序為 ASC (1)
-    ...createPaginationConfig([{ field: 'Prog_No', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'Prog_No', order: 1 }]],
   });
 
   totalRecords = 0;
   data: QuerySYS0730Response[] = [];
   roleCodeOptions: Role[] = []; // 用於角色代號下拉選單
-
+  lastQueryBody: any;
   // 定義表格的欄位
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'Role_No', header: '角色代號', visible: true, showSort: true },
     { field: 'Role_Name', header: '角色名稱', visible: true, showSort: false },
     { field: 'MainSystemCode', header: '主系統代碼', visible: true, showSort: true },
@@ -66,7 +65,7 @@ export class SYS0730Component extends BasicQueryPageComponent<QuerySYS0730Respon
 
   constructor(
     private readonly sys0210Service: Sys0210Service, // 用於取得角色列表
-    private readonly sys0730Service: Sys0730Service // 用於查詢角色權限
+    public readonly sys0730Service: Sys0730Service // 用於查詢角色權限
   ) {
     super();
   }
@@ -100,6 +99,7 @@ export class SYS0730Component extends BasicQueryPageComponent<QuerySYS0730Respon
         .subscribe((response) => {
           if (response.Data) {
             this.data = response.Data;
+            this.lastQueryBody = frm.value;
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {

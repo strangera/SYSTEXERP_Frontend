@@ -116,10 +116,7 @@ export abstract class BasicCruPageComponent<T> {
     this.loading = true;
     if (frm?.invalid) {
       this.logValidationErrors(frm);
-      // 驗證失敗時要解除 UI block 並結束 loading/submitted，避免永遠停在 loading
-      this.messageService.unblockUi();
       this.loading = false;
-      this.submitted = false;
       return;
     }
 

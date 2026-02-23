@@ -7,6 +7,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { FileExportService } from '@shared/service/file-export.service';
@@ -15,12 +16,10 @@ import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
-import { IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { IQueryTLS52020Request, ITLS52020Data, Tls52020Service } from '../../../service/api/tls/tls52020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
@@ -46,7 +45,25 @@ export const enum CRNtatus {
     ])
   ],
   standalone: true,
-  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, DropdownTableComponent, DropdownComponent, CalendarRangeQuickComponent, TableReportComponent, Button, TooltipModule, NgStyle, NgIf, TranslateModule]
+  imports: [
+    ProductAutocompleteComponent,
+    AsyncPipe,
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    MultiSelectComponent,
+    DropdownComponent,
+    CalendarRangeQuickComponent,
+    TableReportComponent,
+    Button,
+    TooltipModule,
+    NgStyle,
+    NgIf,
+    TranslateModule
+  ]
 })
 export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -55,7 +72,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     HOS_NoList: [null], // 倉庫代碼 multi-select
     LOGO_NoList: [null], // 品牌代碼 multi-select
     VEN_No: [null], // 廠商編號 multi-select
-    CRN_StatusList: [null], // 採購單狀態 multi-select
+    CRN_StatusList: [null], // 退貨單狀態 multi-select
     APPLY_USR: [null], // 申請人員 multi-select
     APPLY_Date_Start: [null], // 申請日期 起 calendar-range
     APPLY_Date_End: [null], // 申請日期 迄
@@ -74,7 +91,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   selectedItems: ITLS52020Data[] = [];
   lastQueryBody: IQueryTLS52020Request | null = null;
   columns: Column[] = [
-    { field: 'CRN_No', header: '退貨單號', visible: true }, // 採購單號
+    { field: 'CRN_No', header: '退貨單號', visible: true }, // 退貨單號
     { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商編號
     { field: 'VEN_Name', header: '廠商名稱', visible: true }, // 廠商名稱
     { field: 'LOGO_No', header: '品牌代碼', visible: true }, // 品牌代碼
@@ -82,7 +99,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     { field: 'HOS_No', header: '倉庫代碼', visible: true }, // 倉庫代碼
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true }, // 倉庫名稱
     { field: 'org_id', header: '組織代碼', visible: true }, // 組織代碼
-    { field: 'CRN_Status', header: '退貨單狀態', visible: true, format: value => this.crnstatusOptions.find(x => x.value === value)?.label || value }, // 採購單狀態
+    { field: 'CRN_Status', header: '退貨單狀態', visible: true, format: value => this.crnstatusOptions.find(x => x.value === value)?.label || value }, // 退貨單狀態
     { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate }, // 申請日期 (ISO 格式字串)
     { field: 'APPLY_USR_No', header: '申請人員編號', visible: true }, // 申請人員編號
     { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true }, // 申請人員姓名
@@ -114,17 +131,16 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   warehouseOptions = this.dropdown.queryPos2034(); // 倉別
   brandOptions = this.dropdown.queryPluLogo(); // 品牌代碼
   vendorOptions = this.dropdown.queryPos2013TltTalent(); // 廠商編號
-  crnstatusOptions = getSYS1000Options('CRN_Status') // 採購單狀態 (靜態資料)
+  crnstatusOptions = getSYS1000Options('CRN_Status') // 退貨單狀態 (靜態資料)
   userOptions = this.dropdown.queryTblUser(); // 申請人員、審核人員、結案人員
   addButton: AddButton[] = [
     { label: '單據審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, CRNtatus.已審核); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== CRNtatus.已申請 || !this.hasPermission(Actions.Audit) }, // 審核
     { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, CRNtatus.已申請); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== CRNtatus.已審核 || !this.hasPermission(Actions.AntiAudit) }, // 反審核
-    { label: '作廢單據', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, CRNtatus.作廢); }, disabled: (rowData: ITLS52020Data) => rowData.CRN_Status !== CRNtatus.已審核 || !this.hasPermission(Actions.Invalidate) }, // 作廢
+    { label: '作廢單據', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS52020Data) => { this.statusChange(rowData, CRNtatus.作廢); }, disabled: (rowData: ITLS52020Data) => (rowData.CRN_Status !== CRNtatus.已申請) || !this.hasPermission(Actions.Invalidate) }, // 作廢
   ];
   constructor(
     public readonly tls52020Service: Tls52020Service,
     private readonly dropdown: DropdownApiService,
-    private readonly tls52010Service: Tls52010Service,
     private readonly fileExportService: FileExportService
   ) { super(); }
   ngOnInit(): void {
@@ -207,26 +223,5 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
 
   get selectedCount() {
     return this.selectedItems.length;
-  }
-  // 管理編號
-  suggestions: IQueryPOS2004DetailResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      VEN_No: '',
-      LOGO_No: '',
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
   }
 }
