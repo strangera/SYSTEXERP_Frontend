@@ -1,13 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpResponse } from '@angular/common/http';
 import { Component } from '@angular/core';
-import {
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
-import { finalize, map } from 'rxjs/operators';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { defer, of } from 'rxjs';
+import { finalize, map, tap } from 'rxjs/operators';
 
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23070Service } from '../../../service/api/tls/tls23070.service';
@@ -29,9 +25,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
-import {
-  createPaginationConfig,
-} from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 type SortItem = { field: string; order: 1 | -1 };
 
@@ -61,9 +55,19 @@ type SortItem = { field: string; order: 1 | -1 };
 export class TLS23070Component extends BasicQueryPageComponent<any> {
   // ===== 排序 =====
   sortMeta: SortItem[] = [];
-  readonly defaultSort: SortItem[] = [
-    { field: 'tlt_no', order: 1 },
-  ];
+  readonly defaultSort: SortItem[] = [{ field: 'tlt_no', order: 1 }];
+  // ✅ 強制重建 table-report 用
+mainTableVisible = true;
+mainRenderKey = 0;
+
+// ✅ lazy-load 防重打
+private mainInFlight = false;
+private mainLoadedPages = new Set<number>();
+
+  detailTableVisible = true;
+  detailRenderKey = 0;
+  mainLoading = false;
+  detailLoading = false;
 
   // ===== 主表資料 =====
   data: any[] = [];
@@ -102,7 +106,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
 
   // ===== 明細 Dialog 狀態 =====
   dialogVisible = false;
-  dialogLoading = false;
+
   selectedMainRow: any | null = null;
   dialogData: any[] = [];
   dialogTotalRecords = 0;
@@ -159,7 +163,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     public tls23070Service: TLS23070Service,
     private counterNameService: CounterNameService,
     private floorService: FloorService,
-    private tls11010Service: Tls11010Service,
+    private tls11010Service: Tls11010Service
   ) {
     super();
   }
@@ -174,10 +178,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
       .subscribe((d: Date | null) => {
         if (!d || isNaN(new Date(d).getTime())) return;
         const { start, end } = this.getMonthRange(d);
-        this.queryForm.patchValue(
-          { TXN_DateStart: start, TXN_DateEnd: end, pageIndex: 1 },
-          { emitEvent: false }
-        );
+        this.queryForm.patchValue({ TXN_DateStart: start, TXN_DateEnd: end, pageIndex: 1 }, { emitEvent: false });
       });
 
     // 若日期非整月 -> 清空月份
@@ -191,79 +192,173 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     // 下拉
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions = (res ?? []).map((x: any) => ({
-        label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
       }));
     });
+
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.tls11010Service.getBuildingOptions().subscribe((data) => (this.BUILDING_NO_Options = data));
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
-        label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
       }));
     });
   }
 
-  // ===== 主查詢（按鈕）— 固定 pageSize=30 =====
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const val = this.queryForm.getRawValue() as any;
+onSubmit(form: FormGroup): void {
+  this.submitted = true;
 
-      const payload: any = {
-        TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
-        TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
-        tlt_no: Array.isArray(val?.tlt_no) && val.tlt_no.length ? val.tlt_no : undefined,
-        tlt_building: val?.tlt_building ?? undefined,
-        tlt_floor: Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
-        org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
-        pageIndex: Number(val?.pageIndex) || 1,
-        pageSize: 30,
-        SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort,
-      };
-
-      this.historyRequestBody = { ...payload };
-
-      this.loading = true;
-      this.messageService?.blockUi();
-
-      this.queryTLS23070MainForReport(payload)
-        .pipe(
-          finalize(() => {
-            this.loading = false;
-            this.messageService?.unblockUi();
-          })
-        )
-        .subscribe({
-          // 這裡其實可以不用再做任何事，
-          // 因為 queryTLS23070MainForReport 裡面已經更新 this.data / totalRecords / footerData 了
-          next: () => { },
-          error: () => {
-            this.data = [];
-            this.totalRecords = 0;
-            this.footerData = {};
-          },
-        });
-    });
+  if (form.invalid) {
+    this.messageService?.warnBubble?.('請確認必填欄位');
+    return;
   }
+
+  const val = this.queryForm.getRawValue() as any;
+
+  const payload: any = {
+    TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+    TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
+    tlt_no: Array.isArray(val?.tlt_no) && val.tlt_no.length ? val.tlt_no : undefined,
+    tlt_building: val?.tlt_building ?? undefined,
+    tlt_floor: Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
+    org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
+    pageIndex: 1,
+    pageSize: 30,
+    SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort,
+    _nonce: Date.now(),
+  };
+
+  this.historyRequestBody = payload;
+
+  // ✅ reset lazy-load 防重打狀態（放這裡）
+  this.mainLoadedPages.clear();
+  this.mainInFlight = false;
+
+  // 清 UI 狀態
+  this.data = [];
+  this.totalRecords = 0;
+  this.footerData = {};
+
+  // 先重建 table（保留你原本做法）
+  this.mainTableVisible = false;
+  this.mainRenderKey++;
+
+  Promise.resolve().then(() => {
+    this.mainTableVisible = true;
+
+    this.mainLoading = true;
+
+    this.queryTLS23070MainForReport(payload)
+      .pipe(finalize(() => (this.mainLoading = false)))
+      .subscribe({
+        next: (res: any) => {
+          this.data = res?.Data ?? [];
+          this.totalRecords = Number(res?.TotalCount ?? this.data.length);
+          this.footerData = res?.GrandTotal ?? {};
+        },
+        error: (err) => {
+          console.error('[TLS23070] MAIN API error', err);
+          this.messageService?.warnBubble?.('查詢失敗');
+        },
+      });
+  });
+}
 
   // ===== 主表 → 明細 Dialog 開啟 =====
-  override onDetail(row: any): void {
-    if (!row) return;
+// ===== 主表 → 明細 Dialog 開啟 =====
+override onDetail(row: any): void {
+  this.detailLoadedPages.clear();
+this.detailInFlight = false;
+  if (!row) return;
 
-    this.selectedMainRow = row;
-    this.dialogVisible = true;
+  // ✅ 防止連點 / 雙擊 / 同步觸發造成重複打
+  if (this.detailLoading) return;
 
-    // 準備明細查詢條件：沿用主查詢條件 + 指定專櫃
-    this.dialogHistoryRequestBody = {
-      ...(this.historyRequestBody ?? {}),
-      tlt_no: row?.tlt_no ? [row.tlt_no] : undefined,
-      pageIndex: 1,
-      pageSize: 30,
-      SortBy: [{ field: 'TXN_Date', order: 1 }],
-    };
+  this.selectedMainRow = row;
+  this.dialogVisible = true;
 
-    // 第一次開 Dialog 順便載入第一頁
-    this.loadDialogPage(this.dialogHistoryRequestBody).subscribe();
-  }
+  // ✅ 組 payload：沿用主表查詢條件 + 指定專櫃 + 固定明細排序
+  const body: any = {
+    ...(this.historyRequestBody ?? {}),
+
+    // 只查該專櫃（後端若吃 array）
+    tlt_no: row?.tlt_no ? [row.tlt_no] : undefined,
+
+    pageIndex: 1,
+    pageSize: 30,
+    SortBy: [{ field: 'TXN_Date', order: 1 }],
+
+    // ✅ 避免快取（看你環境是否需要）
+    _nonce: Date.now(),
+  };
+
+  this.dialogHistoryRequestBody = body;
+
+  // ✅ 清空舊資料（避免 Dialog 先顯示舊內容）
+  this.dialogData = [];
+  this.dialogTotalRecords = 0;
+  this.dialogFooterData = null;
+
+  this.detailLoading = true;
+
+  this.tls23070Service
+    .queryTLS23070Detail(body)
+    .pipe(
+      finalize(() => {
+        this.detailLoading = false;
+      }),
+    )
+    .subscribe({
+      next: (res: any) => {
+        // ✅ 兼容 Data 可能是 object 或 [object]
+        const pack =
+          Array.isArray(res?.Data) && res.Data.length > 0
+            ? res.Data[0]
+            : (res?.Data ?? {});
+
+        const dateSubs = Array.isArray(pack?.dateSubsTotals) ? pack.dateSubsTotals : [];
+
+        // ✅ 轉成表格 rows
+        const rows = this.buildDetailRowsFromDateSubsTotals(dateSubs);
+
+        // ✅ 總筆數：優先用後端 TotalCount，其次 pack 內可能也有
+        const totalCount =
+          typeof res?.TotalCount === 'number'
+            ? res.TotalCount
+            : (typeof pack?.TotalCount === 'number'
+              ? pack.TotalCount
+              : rows.length);
+
+        // ✅ Footer：你這張明細是「每日一列」，總計可用 rows 累加
+        const grand = this.buildTotalsFromRows(rows);
+
+        this.dialogData = rows;
+        this.dialogTotalRecords = totalCount;
+        this.dialogFooterData = grand;
+
+        // ✅ 讓 TableReport 的 lastQueryBody 記住狀態（避免內部重新推算錯）
+        this.dialogHistoryRequestBody = {
+          ...body,
+          pageIndex: 1,
+          pageSize: 30,
+          SortBy: [{ field: 'TXN_Date', order: 1 }],
+        };
+      },
+      error: (err) => {
+        console.error('[TLS23070] DETAIL API error', err);
+        this.messageService?.warnBubble?.('明細查詢失敗');
+
+        // ✅ 出錯也要收斂狀態
+        this.dialogData = [];
+        this.dialogTotalRecords = 0;
+        this.dialogFooterData = null;
+      },
+    });
+}
 
   onDialogClose(v: boolean): void {
     this.dialogVisible = v;
@@ -280,38 +375,70 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   public queryTLS23070DetailForReport = (body: any) => {
     return this.loadDialogPage(body);
   };
-
+private detailInFlight = false;
+private detailLoadedPages = new Set<number>();
 private loadDialogPage(body: any) {
-  this.dialogLoading = true;
+  const normalized = this.normalizePaginationBody(body, [{ field: 'TXN_Date', order: 1 }]);
+  const pageIndex = Number(normalized.pageIndex) || 1;
+  const pageSize = Number(normalized.pageSize) || 30;
 
-  return this.tls23070Service.queryTLS23070Detail(body).pipe(
-    finalize(() => (this.dialogLoading = false)),
-    map((res: any) => {
-      const data = res?.Data ?? {};
-      const dateSubs = Array.isArray(data?.dateSubsTotals) ? data.dateSubsTotals : [];
+  // ✅ 防止同一頁被重複打
+  if (this.detailInFlight || this.detailLoadedPages.has(pageIndex)) {
+    return of({
+      Data: [],
+      TotalCount: this.dialogTotalRecords,
+      GrandTotal: this.dialogFooterData ?? {},
+      TotalPage: 0,
+    });
+  }
 
-      const rows = this.buildDetailRowsFromDateSubsTotals(dateSubs);
+  this.detailInFlight = true;
 
-      // ✅ 明細總筆數一律用實際列數
-      const totalCount = rows.length;
+  return defer(() => {
+    this.detailLoading = true;
 
-      const grand = this.buildTotalsFromRows(rows);
+    return this.tls23070Service.queryTLS23070Detail(normalized).pipe(
+      finalize(() => {
+        this.detailLoading = false;
+        this.detailInFlight = false;
+      }),
+      map((res: any) => {
+        // ✅ 注意：你這裡原本把 Data 當 object，但 onDetail 又當 pack[0]
+        // 這邊也統一成 pack
+        const pack =
+          Array.isArray(res?.Data) && res.Data.length > 0
+            ? res.Data[0]
+            : (res?.Data ?? {});
 
-      // 更新明細狀態
-      this.dialogData = rows;
-      this.dialogTotalRecords = totalCount;
-      this.dialogFooterData = grand;
+        const dateSubs = Array.isArray(pack?.dateSubsTotals) ? pack.dateSubsTotals : [];
+        const pageRows = this.buildDetailRowsFromDateSubsTotals(dateSubs);
 
-      this.dialogHistoryRequestBody = { ...body };
+        // 後端 total
+        let totalCount =
+          typeof res?.TotalCount === 'number'
+            ? res.TotalCount
+            : (typeof pack?.TotalCount === 'number' ? pack.TotalCount : pageRows.length);
 
-      return {
-        Data: rows,
-        TotalCount: totalCount,
-        GrandTotal: grand,
-      };
-    })
-  );
+        // ✅ 關鍵：空頁 -> 壓成已載入，讓它停
+        if (pageRows.length === 0) {
+          totalCount = (pageIndex - 1) * pageSize;
+        }
+
+        // footer（你目前用 pageRows 累加，OK）
+        const grand = this.buildTotalsFromRows(pageRows);
+
+        // ✅ 同步更新 component 端 input（否則 TableReport 仍覺得還有）
+        this.dialogTotalRecords = totalCount;
+        this.dialogFooterData = grand;
+
+        this.detailLoadedPages.add(pageIndex);
+
+        return { Data: pageRows, TotalCount: totalCount, GrandTotal: grand, TotalPage: res?.TotalPage };
+      })
+    );
+  });
 }
+
 
 
 
@@ -365,12 +492,20 @@ private loadDialogPage(body: any) {
     const filenameStarMatch = /filename\*=([^;]+)/i.exec(contentDisposition);
     if (filenameStarMatch?.[1]) {
       const encoded = filenameStarMatch[1].trim();
-      try { return decodeURIComponent(encoded.replace(/^UTF-8''/, '')); } catch { return encoded; }
+      try {
+        return decodeURIComponent(encoded.replace(/^UTF-8''/, ''));
+      } catch {
+        return encoded;
+      }
     }
 
     const filenameMatch = /filename="([^"]+)"/i.exec(contentDisposition);
     if (filenameMatch?.[1]) {
-      try { return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' ')); } catch { return filenameMatch[1]; }
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
     }
 
     return `download${defaultExtension}`;
@@ -457,7 +592,7 @@ private loadDialogPage(body: any) {
       const tltNo = g?.tlt_no ?? '';
 
       const row: any = {
-        _rowKey: tltNo,          // 🔑 一定要有，對應 dataKey="_rowKey"
+        _rowKey: tltNo,
         tlt_no: tltNo,
         tlt_name: g?.tlt_name ?? '',
       };
@@ -474,7 +609,6 @@ private loadDialogPage(body: any) {
       rows.push(row);
     }
 
-    // 不再在這裡排序，完全依照後端回傳順序
     return rows;
   }
 
@@ -491,7 +625,7 @@ private loadDialogPage(body: any) {
       };
 
       for (const f of fields) {
-        const apiKey = this.detailTotalFieldMap[f]; // e.g. totalPayAmt10
+        const apiKey = this.detailTotalFieldMap[f];
         let subsKey = apiKey;
         if (apiKey.startsWith('total')) {
           subsKey = 'subsTotal' + apiKey.substring('total'.length);
@@ -503,44 +637,60 @@ private loadDialogPage(body: any) {
       rows.push(row);
     }
 
-    // ❌ 不要再強制排序，完全吃後端順序
-    // rows.sort(...);
-
     return rows;
   }
 
-  public queryTLS23070MainForReport = (body: any) => {
-    return this.tls23070Service.queryTLS23070(body).pipe(
+public queryTLS23070MainForReport = (body: any) => {
+  const normalized = this.normalizePaginationBody(body, this.defaultSort);
+  const pageIndex = Number(normalized.pageIndex) || 1;
+  const pageSize = Number(normalized.pageSize) || 30;
+
+  // ✅ 防止同一頁被重複打（TableReport 有時會抖動）
+  if (this.mainInFlight || this.mainLoadedPages.has(pageIndex)) {
+    // 直接回空資料，避免重複 call
+    return of({ Data: [], TotalCount: this.totalRecords, GrandTotal: this.footerData, TotalPage: 0 });
+  }
+
+  this.mainInFlight = true;
+
+  return defer(() =>
+    this.tls23070Service.queryTLS23070(normalized).pipe(
+      finalize(() => (this.mainInFlight = false)),
       map((res: any) => {
-        const wrapper = res?.Data ?? {};
+        const pack =
+          Array.isArray(res?.Data) && res.Data.length > 0
+            ? res.Data[0]
+            : (res?.Data ?? {});
 
-        // 1. 從 tltNoSubTotals 轉成 rows
-        const mainRows = this.buildMainRowsFromSubTotals(wrapper?.tltNoSubTotals);
+        const tltNoSubTotals = Array.isArray(pack?.tltNoSubTotals) ? pack.tltNoSubTotals : [];
+        const pageRows = this.buildMainRowsFromSubTotals(tltNoSubTotals);
 
-        // 2. TotalCount
-        const totalCount = typeof res?.TotalCount === 'number'
-          ? res.TotalCount
-          : mainRows.length;
-
-        // 3. Grand Total
-        const totalSummary = wrapper?.totalSummary ?? {};
+        const totalSummary = pack?.totalSummary ?? {};
         const grand = this.buildGrandTotalFromSummary(totalSummary);
 
-        // 4. 同步 component 內部狀態（如果你希望畫面一起更新）
-        this.data = mainRows;
+        // 後端 total
+        let totalCount =
+          typeof res?.TotalCount === 'number'
+            ? res.TotalCount
+            : (typeof pack?.TotalCount === 'number' ? pack.TotalCount : pageRows.length);
+
+        // ✅ 關鍵：如果這一頁回空，代表其實沒更多資料了
+        // 把 TotalCount 壓成已載入筆數，讓 TableReport 停止再要下一頁
+        if (pageRows.length === 0) {
+          totalCount = (pageIndex - 1) * pageSize;
+        }
+
+        // ✅ 同步更新 component 端 input（否則會無限打）
         this.totalRecords = totalCount;
         this.footerData = grand;
-        this.historyRequestBody = { ...body };
 
-        // 5. 回給 app-table-report 用的標準格式
-        return {
-          Data: mainRows,
-          TotalCount: totalCount,
-          GrandTotal: grand,
-        };
+        this.mainLoadedPages.add(pageIndex);
+
+        return { Data: pageRows, TotalCount: totalCount, GrandTotal: grand, TotalPage: res?.TotalPage };
       })
-    );
-  };
+    )
+  );
+};
 
   private buildTotalsFromRows(rows: any[]): Record<string, number> {
     const fields = this.numericFields();
@@ -552,9 +702,34 @@ private loadDialogPage(body: any) {
     return out;
   }
 
+  private normalizePaginationBody(raw: any, fallbackSort: SortItem[]) {
+    const pageSize = Number(raw?.pageSize ?? raw?.rows ?? 30) || 30;
+
+    let pageIndex = Number(raw?.pageIndex);
+    if (!pageIndex || pageIndex < 1) {
+      const first = Number(raw?.first ?? 0) || 0;
+      pageIndex = Math.floor(first / pageSize) + 1;
+    }
+
+    let sortBy: SortItem[] | undefined = raw?.SortBy;
+    if (!Array.isArray(sortBy) || !sortBy.length) {
+      const msm = raw?.multiSortMeta;
+      if (Array.isArray(msm) && msm.length) {
+        sortBy = msm.map((x: any) => ({ field: x.field, order: x.order }));
+      }
+    }
+    if (!Array.isArray(sortBy) || !sortBy.length) sortBy = fallbackSort;
+
+    return {
+      ...raw,
+      pageSize,
+      pageIndex,
+      SortBy: sortBy,
+    };
+  }
+
   // ===== 欄位 =====
   private buildMainColumns() {
-    // 主表：一列一個專櫃
     return [
       { field: 'tlt_no', header: '專櫃編號', visible: true },
       { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
