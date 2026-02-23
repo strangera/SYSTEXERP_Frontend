@@ -7,8 +7,10 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
-import { QueryTLS2F030Data, Tls2f030Service } from '../../../service/api/tls/tls2f030.service';
+import { QueryTLS2F030Data, QueryTLS2F030Request, Tls2f030Service } from '../../../service/api/tls/tls2f030.service';
+import { FileExportService } from '../../../shared/service/file-export.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -34,7 +36,8 @@ import { Column, formatAmount, formatYYYYMM } from '../../../shared/componentkit
     ButtonComponent,
     TableComponent,
     TranslateModule,
-    AsyncPipe
+    AsyncPipe,
+    ButtonModule
   ]
 })
 export class TLS2F030Component extends BasicQueryPageComponent<QueryTLS2F030Data> implements OnInit {
@@ -82,9 +85,13 @@ export class TLS2F030Component extends BasicQueryPageComponent<QueryTLS2F030Data
     '30': [1]
   };
 
+  btnLoadingPDF = false;
+  btnLoadingExcel = false;
+
   constructor(
     private readonly tls2f030Service: Tls2f030Service,
     private readonly dropdown: DropdownApiService,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }
@@ -129,19 +136,22 @@ export class TLS2F030Component extends BasicQueryPageComponent<QueryTLS2F030Data
     return `${year}${month}`;
   }
 
+  private buildPayload(rawValue?: ReturnType<typeof this.queryForm.getRawValue>): QueryTLS2F030Request {
+    const raw = rawValue ?? this.queryForm.getRawValue();
+    return {
+      PageSize: raw.pageSize ?? 0,
+      PageIndex: raw.pageIndex ?? 1,
+      SortBy: raw.SortBy ?? [{ field: 'tlt_no', order: 1 }],
+      sam_yyymm: this.formatYearMonth(raw.sam_yyymm),
+      money_type: raw.money_type,
+      sam_termno: raw.sam_termno,
+      floor_no: raw.floor_no || [],
+    };
+  }
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const rawValue = frm.getRawValue();
-
-      const payload = {
-        PageSize: rawValue.pageSize,
-        PageIndex: rawValue.pageIndex,
-        SortBy: rawValue.SortBy,
-        sam_yyymm: this.formatYearMonth(rawValue.sam_yyymm),
-        money_type: rawValue.money_type,
-        sam_termno: rawValue.sam_termno,
-        floor_no: rawValue.floor_no || [],
-      };
+      const payload = this.buildPayload(frm.getRawValue());
 
       this.tls2f030Service.queryTLS2F030(payload)
         .pipe(
@@ -164,6 +174,26 @@ export class TLS2F030Component extends BasicQueryPageComponent<QueryTLS2F030Data
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
+  }
+
+  onExportExcel(): void {
+    if (this.btnLoadingExcel) return;
+    const params = this.buildPayload();
+    this.fileExportService.executeFileExport(
+      this.tls2f030Service.exportTLS2F030(params),
+      '.xlsx',
+      (loading) => this.btnLoadingExcel = loading
+    ).pipe(untilDestroyed(this)).subscribe();
+  }
+
+  onExportPDF(): void {
+    if (this.btnLoadingPDF) return;
+    const params = this.buildPayload();
+    this.fileExportService.executeFileExport(
+      this.tls2f030Service.exportTLS2F030PDF(params),
+      '.pdf',
+      (loading) => this.btnLoadingPDF = loading
+    ).pipe(untilDestroyed(this)).subscribe();
   }
 
 }
