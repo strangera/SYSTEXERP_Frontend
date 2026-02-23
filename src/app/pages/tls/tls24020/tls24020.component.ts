@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS24080ResultData, Tls24080Service } from '@service/api/tls/tls24080.service';
+import { TLS24020ResultData, Tls24020Service } from '@service/api/tls/tls24020.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -16,11 +16,11 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { addDaysToDate, Column, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
-import { DiscCodeEditColumn, PayNoEditColumn, PreOrderEditColumn, TLTIdEditColumn, TLTNoEditColumn, VoidEditColumn } from './tls24080.model';
+import { DiscCodeEditColumn, PayNoEditColumn, PreOrderEditColumn, TLTIdEditColumn, TLTNoEditColumn, VoidEditColumn } from './tls24020.model';
 
 @Component({
-  selector: 'app-tls24080',
-  templateUrl: './tls24080.component.html',
+  selector: 'app-tls24020',
+  templateUrl: './tls24020.component.html',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -36,7 +36,7 @@ import { DiscCodeEditColumn, PayNoEditColumn, PreOrderEditColumn, TLTIdEditColum
     TableReportComponent
   ],
 })
-export class TLS24080Component extends BasicQueryPageComponent<TLS24080ResultData> implements OnInit {
+export class TLS24020Component extends BasicQueryPageComponent<TLS24020ResultData> implements OnInit {
   queryForm = this.formBuilder.group({
     TXN_Date_Start: [yesterday, [Validators.required]], // 銷售日期起 // 預設昨天
     TXN_Date_End: [yesterday, [Validators.required]],   // 銷售日期迄 // 預設昨天
@@ -61,15 +61,15 @@ export class TLS24080Component extends BasicQueryPageComponent<TLS24080ResultDat
     { label: '是否為預售交易修正', value: 'PreOrderEdit' },
     { label: '交易資料作廢', value: 'VoidEdit' },
   ];
-  data: TLS24080ResultData[] = [];
+  data: TLS24020ResultData[] = [];
   columns: Column[] = TLTNoEditColumn;
   DataKeyName = 'TLTNoEdit';
   constructor(
     private readonly dropDownList: DropDownListService,
-    public readonly tls24080Service: Tls24080Service,
+    public readonly tls24020Service: Tls24020Service,
   ) { super(); }
   ngOnInit(): void {
-    this.initializePage('TLS24080');
+    this.initializePage('TLS24020');
     this.dropDownList.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       this.ECR_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
@@ -107,7 +107,7 @@ export class TLS24080Component extends BasicQueryPageComponent<TLS24080ResultDat
         TXN_Date_End: formatDateToYYYY_MM_DD(frm.value.TXN_Date_End),
         UPD_Date_End: frm.value.UPD_Date_End ? addDaysToDate(frm.value.UPD_Date_End, 1) : null,
       }
-      this.tls24080Service.queryTLS24080(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      this.tls24020Service.queryTLS24020(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data
         this.lastQueryBody = body;
         this.totalRecords = res.TotalCount;
