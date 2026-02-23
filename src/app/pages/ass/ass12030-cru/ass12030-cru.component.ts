@@ -92,8 +92,6 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   // TODO: 未實作下拉選項
   /** 品項編號下拉選項 */
   goodsIdOptions: { value: string; label: string }[] = [];
-  /** 需求單號下拉選項 */
-  needIdOptions: { value: string; label: string }[] = [];
   /** 供應商：queryPOS2013_DropDownList(VEN_Flag: '1') */
   supplierIdOptions: { value: string; label: string }[] = [];
   /** 倉別下拉選項 */
@@ -112,10 +110,8 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
     {
       field: 'NEED_ID',
       header: '需求單號',
-      type: 'dropdown',
-      optionLabel: 'label',
-      optionValue: 'value',
-      options: () => this.needIdOptions,
+      type: 'input',
+      placeholder: '輸入需求單號',
       validate: [validateRequired],
     },
     {
