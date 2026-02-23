@@ -139,7 +139,7 @@
                 <div class="flex align-items-center justify-content-between gap-2">
                   <i class="pi pi-file text-blue-600 text-xl flex-shrink-0"></i>
                   <div class="flex-1 overflow-hidden" style="text-overflow:ellipsis; white-space:nowrap;">
-                    <a *ngIf="!formFile1 && existingFile1" (click)="downloadExistingFile(1)" class="text-blue-600"
+                    <a *ngIf="!formFile1 && existingFile1" (click)="openGalleriaFromSlot(1)" class="text-blue-600"
                       role="button">{{ existingFile1 }}</a>
                     <span *ngIf="formFile1">{{ formFile1.name }}</span>
                     <span *ngIf="!formFile1 && !existingFile1">尚未選擇檔案</span>
@@ -155,6 +155,7 @@
               </ng-template>
               <ng-template pTemplate="file"></ng-template>
             </p-fileUpload>
+            <!-- <img [src]="getImageUrl()" alt="Image" style="width: 100%; display: block;" /> -->
           </div>
 
           <div class="col-12 md:col-4">
@@ -166,7 +167,7 @@
                 <div class="flex align-items-center justify-content-between gap-2">
                   <i class="pi pi-file text-blue-600 text-xl flex-shrink-0"></i>
                   <div class="flex-1 overflow-hidden" style="text-overflow:ellipsis; white-space:nowrap;">
-                    <a *ngIf="!formFile2 && existingFile2" (click)="downloadExistingFile(2)" class="text-blue-600"
+                    <a *ngIf="!formFile2 && existingFile2" (click)="openGalleriaFromSlot(2)" class="text-blue-600"
                       role="button">{{ existingFile2 }}</a>
                     <span *ngIf="formFile2">{{ formFile2.name }}</span>
                     <span *ngIf="!formFile2 && !existingFile2">尚未選擇檔案</span>
@@ -193,7 +194,7 @@
                 <div class="flex align-items-center justify-content-between gap-2">
                   <i class="pi pi-file text-blue-600 text-xl flex-shrink-0"></i>
                   <div class="flex-1 overflow-hidden" style="text-overflow:ellipsis; white-space:nowrap;">
-                    <a *ngIf="!formFile3 && existingFile3" (click)="downloadExistingFile(3)" class="text-blue-600"
+                    <a *ngIf="!formFile3 && existingFile3" (click)="openGalleriaFromSlot(3)" class="text-blue-600"
                       role="button">{{ existingFile3 }}</a>
                     <span *ngIf="formFile3">{{ formFile3.name }}</span>
                     <span *ngIf="!formFile3 && !existingFile3">尚未選擇檔案</span>
@@ -226,11 +227,14 @@
     </form>
   </p-panel>
 </div>
-<p-galleria #galleria [value]="mediaItems" [(visible)]="visible" [containerStyle]="{ 'max-width': '850px' }"
-  [circular]="true" [fullScreen]="true" [showThumbnails]="false" [autoPlay]="true">
+<p-galleria #galleria [value]="galleriaItems" [(visible)]="visible" [containerStyle]="{ 'max-width': '850px' }"
+  [circular]="true" [fullScreen]="true" [showThumbnails]="false" [autoPlay]="true"
+  [(activeIndex)]="galleriaActiveIndex">
   <ng-template pTemplate="item" let-item>
     <ng-container *ngIf="item.type === 'image'">
-      <img [src]="item.url" alt="Image" style="width: 100%; display: block;" />
+      <!-- 點擊圖片開啟新分頁（會處理授權或直接開啟） -->
+      <img [src]="item.url" alt="Image" style="width: 100%; display: block; cursor: zoom-in;"
+        (click)="openInGalleria(item.url)" />
     </ng-container>
     <ng-container *ngIf="item.type === 'video'">
       <video [src]="item.url" controls style="width: 100%; display: block;">您的瀏覽器不支援影片標籤。</video>
