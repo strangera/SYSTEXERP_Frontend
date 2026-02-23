@@ -32,7 +32,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
     VouDate_From: [null],
     VouDate_To: [null],
     Trans_Status: [null as string | null],
-    PostFlag: [null],
+    PostFlag: [null as string | null],
     VouNo: [null, [Validators.maxLength(12)]],
     Remark: [null, [Validators.maxLength(200)]],
     AccNo: [null, [Validators.maxLength(14)]],
@@ -95,6 +95,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
     this.queryForm.patchValue({
       SrcSheetType: item.SrcSheetType,
       Trans_Status: '0',
+      PostFlag: '1',
       VouNo: null,
       NoteDesc: null
     });

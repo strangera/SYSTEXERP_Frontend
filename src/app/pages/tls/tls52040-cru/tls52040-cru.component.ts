@@ -168,7 +168,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
       }
       const formData = frm.getRawValue();
       console.log(this.data);
-
+      const firstDetail = this.data[0];
       const details: ITLS52040Detail[] = this.data.map((item) => ({
         id: item.id,
         RJM_No: formData.RJM_No,
@@ -202,7 +202,6 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
         VEN_No: formData.VEN_No,
         // LOGO_No: formData.LOGO_No,
         HOS_No: formData.HOS_No,
-        org_id: this.rowdata?.org_id,
         APRV_Date: formData.APRV_Date,
         APPLY_Date: formData.APPLY_Date,
         APPLY_USR_No: this.authService.currentUserValue?.user_No || '',
@@ -214,7 +213,9 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
         RJM_TotalSaleTax: totalSaleTax,
         RJM_TotalSaleAmt: formData.RJM_TotalSaleAmt, // 總金額
         RJM_Status: this.isFormCreateable ? POStatus.已確認 : this.rowdata?.RJM_Status,
-        RJM_TaxType: this.rowdata?.RJM_TaxType || '1', // 預設應稅
+        LOGO_No: firstDetail.LOGO_No || this.rowdata?.LOGO_No || '',      // 品牌
+        org_id: firstDetail.org_id || this.rowdata?.org_id || '',        // 組織
+        RJM_TaxType: firstDetail.RJM_TaxType || this.rowdata?.RJM_TaxType || '1', // 稅額類別
         RJM_Remark: formData.RJM_Remark || '',
         Details: details, // 帶入轉換後的明細資料陣列
       };
@@ -267,6 +268,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     const body = {
       CRN_NoList: this.selectedItemsDialog.map(item => item.CRN_No).filter(crnNo => crnNo != null)
     };
+    const firstSelected = this.selectedItemsDialog[0];
     this.dialogLoading = true; // 設置讀取狀態
     this.tls52040Service.GetPOS2032PAndPOS2032(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.data = [
@@ -306,15 +308,19 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
           return {
             ...item,
             // 賦予正確的單價 (以防 API 傳 $0)
-            RJD_BuyPrc: buyPrice,
+            RJD_BuyPrc: buyPrice || 0,
             // 設定退回數量
-            RJD_ConfirmQty: confirmQty,
+            RJD_ConfirmQty: confirmQty || 0,
             // 賦予計算後的金額
-            RJD_BuyNet: buyNet,
-            RJD_BuyTax: buyTax,
-            RJD_BuyAmt: buyAmt,
-            RJD_SaleTax: saleTax,
-            RJD_SaleAmt: saleAmt,
+            RJD_BuyNet: buyNet || 0,
+            RJD_BuyTax: buyTax || 0,
+            RJD_BuyAmt: buyAmt || 0,
+            RJD_SaleTax: saleTax || 0,
+            RJD_SaleAmt: saleAmt || 0,
+            LOGO_No: firstSelected.LOGO_No,
+            org_id: firstSelected.org_id,
+            RJM_TaxType: firstSelected.RJM_TaxType || '1',
+            RJD_ConfirmQty_Finished: item.RJD_ConfirmQty_Finished || 0,
           };
         })
       ];

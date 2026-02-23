@@ -1,8 +1,10 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { BaseQueryRequest } from '../../../shared/models/api/base-api.interface';
+
+export type ExportFileResponse = HttpResponse<Blob>;
 
 export interface QueryTLS2F030Request extends BaseQueryRequest {
   sam_yyymm: string | null;
@@ -54,5 +56,19 @@ export class Tls2f030Service {
 
   queryTLS2F030(params: QueryTLS2F030Request): Observable<QueryTLS2F030Response> {
     return this.http.post<QueryTLS2F030Response>(`${this.apiUrl}/queryTLS2F030`, params);
+  }
+
+  exportTLS2F030(params: QueryTLS2F030Request): Observable<ExportFileResponse> {
+    return this.http.post(`${this.apiUrl}/exportTLS2F030`, params, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
+
+  exportTLS2F030PDF(params: QueryTLS2F030Request): Observable<ExportFileResponse> {
+    return this.http.post(`${this.apiUrl}/exportTLS2F030PDF`, params, {
+      observe: 'response',
+      responseType: 'blob'
+    });
   }
 }

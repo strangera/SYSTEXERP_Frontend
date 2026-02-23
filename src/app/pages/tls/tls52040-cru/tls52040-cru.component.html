@@ -59,7 +59,7 @@
           (dataChange)="data = $event;calculateTotals()" [tableRequired]="true" [disabled]="isFormReadable"
           [showDelete]="false" (insert)="onShowDialog()" [showInsert]="isFormCreateable || rowdata?.RJM_Status === '1'"
           [canInsert]="false" [insertDisabled]="!(dataForm.controls.VEN_No.value && dataForm.controls.HOS_No.value)"
-          [multiSortMeta]="[{ field: 'ODM_No', order: 1 }]" />
+          [multiSortMeta]="[{ field: 'ODM_No', order: 1 }]" [showCheckBox]="false" />
       </div>
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-4 border-top-1 surface-border pt-3">

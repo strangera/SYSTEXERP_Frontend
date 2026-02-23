@@ -285,22 +285,24 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     return true;
   }
   updateItems(): void {
+    const row = this.selectedRowData;
+    const isFixedTerm = row?.tlt_term_type?.toString().trim() === '1';
     this.items = [
       {
         label: '專櫃編號修正',
         icon: 'pi pi-id-card',
-        disabled: !this.hasPermission(Actions.CounterNoCorrection),
+        disabled: isFixedTerm || !this.hasPermission(Actions.CounterNoCorrection),
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.專櫃編號修正),
       },
       {
         label: '折數修正',
         icon: 'pi pi-percentage',
-        disabled: this.selectedRowData?.store_way === STORE_WAY.自營 || !this.hasPermission(Actions.DiscountCorrection),
+        disabled: isFixedTerm || this.selectedRowData?.store_way === STORE_WAY.自營 || !this.hasPermission(Actions.DiscountCorrection),
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.折扣別修正)
       },
       {
         label: '抽成類別修正', icon: 'pi pi-tags',
-        disabled: this.selectedRowData?.store_way === STORE_WAY.自營 || !this.hasPermission(Actions.CommissionTypeCorrection),
+        disabled: isFixedTerm || this.selectedRowData?.store_way === STORE_WAY.自營 || !this.hasPermission(Actions.CommissionTypeCorrection),
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.抽成類別修正)
       },
       {
@@ -326,8 +328,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         icon: 'pi pi-trash',
         disabled: (() => {
           if (!this.hasPermission(Actions.Delete)) return true;// 1. 沒有權限，直接禁用
-          const row = this.selectedRowData;
           if (!row) return true; // 2. 如果沒有選中任何列 (row 為空)，應預設為禁用
+          if (isFixedTerm) return true;
           if (row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') return false; // 3. 無發票狀態：可以刪除 (disable = false)
           return !row?.IsCanDel;// 4. 有發票或其他狀態：依據 IsCanDel 欄位決定
         })(),

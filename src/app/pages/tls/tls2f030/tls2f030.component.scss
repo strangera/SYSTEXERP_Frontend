@@ -1,0 +1,14 @@
+:host ::ng-deep {
+  .p-datatable-footer-row {
+    td.text-right {
+      text-align: right !important;
+    }
+  }
+  // 或者直接針對總計列的數字儲存格
+  .p-datatable-tfoot > tr > td {
+    &.text-center {
+      // 如果通用元件寫死 text-center，這邊可以強制修正
+      text-align: right !important;
+    }
+  }
+}
