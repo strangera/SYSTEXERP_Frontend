@@ -14,8 +14,8 @@ export const assRoutes: Routes = [
   { path: 'ass11060cru', loadComponent: () => import('./ass11060-cru/ass11060-cru.component').then(m => m.ASS11060CRUComponent), data: { progNo: 'ASS11060' } },
   // { path: 'ass11060', loadComponent: () => import('./ass11060/ass11060.component').then(m => m.ASS11060Component),data: {progNo:'ASS11060'} }, // 供應商資料維護作業
   // { path: 'ass11060cru', loadComponent: () => import('./ass11060-cru/ass11060-cru.component').then(m => m.ASS11060CRUComponent),data: {progNo:'ASS11060'} },
-  // { path: 'ass11070', loadComponent: () => import('./ass11070/ass11070.component').then(m => m.ASS11070Component),data: {progNo:'ASS11070'} }, // 備用供應商資料維護作業
-  // { path: 'ass11070cru', loadComponent: () => import('./ass11070-cru/ass11070-cru.component').then(m => m.ASS11070CRUComponent),data: {progNo:'ASS11070'} },
+  { path: 'ass11070', loadComponent: () => import('./ass11070/ass11070.component').then(m => m.ASS11070Component), data: { progNo: 'ASS11070' } }, // 備用供應商資料維護作業
+  { path: 'ass11070cru', loadComponent: () => import('./ass11070-cru/ass11070-cru.component').then(m => m.ASS11070CRUComponent), data: { progNo: 'ASS11070' } },
   { path: 'ass11080', loadComponent: () => import('./ass11080/ass11080.component').then(m => m.ASS11080Component), data: { progNo: 'ASS11080' } }, // 處分資產基本設定
   { path: 'ass11090', loadComponent: () => import('./ass11090/ass11090.component').then(m => m.ASS11090Component), data: { progNo: 'ASS11090' } }, // 資材中分類會計科目維護作業
   { path: 'ass11090cru', loadComponent: () => import('./ass11090-cru/ass11090-cru.component').then(m => m.ASS11090CRUComponent), data: { progNo: 'ASS11090' } },

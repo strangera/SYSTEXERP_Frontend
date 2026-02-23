@@ -1,182 +1,193 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+import { Component, computed, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11070Service } from '@service/api/ass/ass11070.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatDate } from '@shared/componentkit/table-report/table-report.model';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
+import { finalize, Observable } from 'rxjs';
+import { ASS11070Data, ASS11070QueryRequest } from './ass11070.model';
 
-//3.1.1.7 備用供應商資料維護作業
+// 3.1.1.7 備用供應商資料維護作業
 @Component({
   selector: 'app-ass11070',
   templateUrl: './ass11070.component.html',
   styleUrl: './ass11070.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, InputTextComponent, InputNumberComponent, InputNumberRangeComponent, EditorTextComponent, TableComponent, TranslateModule]
+  imports: [
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    ButtonComponent,
+    CalendarRangeComponent,
+    InputTextComponent,
+    InputTextRangeComponent,
+    MenubarComponent,
+    RadiobuttonComponent,
+    TableReportComponent,
+  ],
 })
-export class ASS11070Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    startdate: [], // 建檔日期
-    enddate: [], // 建檔日期
-    receptionPerson: [[] as number[]], // 接洽人員
-    vendorUID: [[] as number[]], // 廠商統一編號
-    bussinessModel: [1, []], // 營運模式
-    vendorCName: ['', [Validators.maxLength(60)]], // 廠商名稱(中文)
-    vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
-    //
-    contactPerson: ['', [Validators.maxLength(60)]], // 聯絡人
-    contactPhone: [, [Validators.maxLength(15)]], // 聯絡人電話(O)
-    contactTitle: ['', [Validators.maxLength(60)]], // 聯絡人職稱
-    contactFax: [, [Validators.maxLength(60)]], // 聯絡人傳真
-    contactCellphone: [, [Validators.maxLength(10)]], // 聯絡人行動電話
-    contactEmail: ['', [Validators.maxLength(100)]], // 聯絡人電子郵件
-    //
-    companyAddress: ['', [Validators.maxLength(100)]], // 公司地址
-    companyResponsibility: ['', [Validators.maxLength(60)]], // 公司負責人
-    //
-    paymentMethod: [1, []], // 付款方式
-    startserialticket: [, [this.validationService.numberValidator]], // 票期
-    endserialticket: [, [this.validationService.numberValidator]], // 票期
-    services: ['', [Validators.maxLength(100)]], // 服務項目
-    //
-    remark: [,], // 備註
+export class ASS11070Component extends BasicQueryPageComponent<ASS11070Data> implements OnInit {
+  public readonly queryForm = this.formBuilder.group({
+    startdate: new FormControl<Date | null>(null),
+    enddate: new FormControl<Date | null>(null),
+    receptionPerson: new FormControl<string | null>(null),
+    vendorUID: new FormControl<string | null>(null),
+    bussinessModel: new FormControl<number | null>(null),
+    vendorCName: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    vendorEName: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    contactPerson: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    contactPhone: new FormControl<string | null>(null, [Validators.maxLength(15)]),
+    contactTitle: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    contactFax: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    contactCellphone: new FormControl<string | null>(null, [Validators.maxLength(10)]),
+    contactEmail: new FormControl<string | null>(null, [Validators.maxLength(100)]),
+    companyAddress: new FormControl<string | null>(null, [Validators.maxLength(100)]),
+    companyResponsibility: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    paymentMethod: new FormControl<number | null>(null),
+    ticketPeriodStart: new FormControl<string | null>(null),
+    ticketPeriodEnd: new FormControl<string | null>(null),
+    services: new FormControl<string | null>(null, [Validators.maxLength(100)]),
+    remark: new FormControl<string | null>(null, [Validators.maxLength(100)]),
+    pageSize: new FormControl<number>(30),
+    pageIndex: new FormControl<number>(1),
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  public readonly qf = computed(() => this.queryForm.controls);
+
+  public readonly tableData = signal<ASS11070Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
+  public readonly tableLoading = signal<boolean>(false);
+  public lastQueryBody?: ASS11070QueryRequest;
+
+  public readonly columns: ReportColumn[] = [
+    { field: 'CreateDate', header: '建檔日期', format: formatDate },
+    { field: 'VendorUID', header: '廠商統一編號' },
+    { field: 'VendorName', header: '廠商名稱' },
+    { field: 'ContactPerson', header: '聯絡人' },
+    { field: 'ContactPhone', header: '聯絡人電話(O)' },
+    { field: 'ContactCellphone', header: '聯絡人行動電話' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      'startdate': '2024/01/01', 'receptionPerson': 1, 'vendorUID': 1, 'vendorCName': 'A廠商', 'vendorEName': 'A manufactory',
-      'contactPerson': 'B先生', 'contactTitle': 'B職稱', 'contactPhone': '062000000', 'contactCellphone': '0911111111', 'contactEmail': 'abc@gmail.com',
-      'contactFax': '111111111', 'companyResponsibility': 'C負責人', 'companyAddress': 'C地址', 'paymentMethod': 2, 'bussinessModel': 2,
-      'startserialticket': 100, 'remark': 'G',
-    },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'startdate', header: '建檔日期', visible: true },
-    { field: 'receptionPerson', header: '接洽人員', visible: false },
-    { field: 'vendorUID', header: '廠商統一編號', visible: true },
-    { field: 'vendorCName', header: '廠商名稱', visible: true },
-    { field: 'vendorEName', header: '廠商名稱(英文)', visible: false },
 
-    { field: 'contactPerson', header: '聯絡人', visible: true },
-    { field: 'contactTitle', header: '聯絡人職稱', visible: false },
-    { field: 'contactPhone', header: '聯絡人電話(O)', visible: true },
-    { field: 'contactCellphone', header: '聯絡人行動電話', visible: true },
-    { field: 'contactEmail', header: '聯絡人電子郵件', visible: false },
-    { field: 'contactFax', header: '聯絡人傳真', visible: false },
-
-    { field: 'companyResponsibility', header: '公司負責人', visible: false },
-    { field: 'companyAddress', header: '公司地址', visible: false },
-
-    { field: 'paymentMethod', header: '付款方式', visible: false },
-    { field: 'bussinessModel', header: '營運模式', visible: false },
-
-    { field: 'startserialticket', header: '票期', visible: false },
-    { field: 'remark', header: '備註', visible: false },
-    // { field: 'col18', header: '訂貨傳真', visible: true },
-
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  receptionPersonOptions: any[] = [];
-  vendorUIDOptions: any[] = [];
-  bussinessOptions: any[] = [
+  public readonly bussinessOptions: { value: number; label: string }[] = [
     { value: 1, label: '工廠直銷' },
     { value: 2, label: '代理商' },
     { value: 3, label: '經銷商' },
     { value: 4, label: '零售連鎖' },
     { value: 5, label: '零售一般' },
   ];
-  paymentMethodOptions: any[] = [];
-  //
+  public readonly paymentMethodOptions: { value: number; label: string }[] = [
+    { value: 1, label: '電匯' },
+    { value: 2, label: '開票' },
+    { value: 3, label: '現金' },
+  ];
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
+    public readonly service: ASS11070Service,
+    private readonly logger: NGXLogger,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // ----------------------------------------------------------------
+    this.initializePage('ASS11070', '/ASS/ASS11070CRU', this.queryForm, this.onSubmit.bind(this));
+    this.logger.debug('ASS11070 init:', [this.queryForm]);
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+  private toDateString(d: Date | null): string | undefined {
+    if (!d || !(d instanceof Date) || isNaN(d.getTime())) return undefined;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
+  public queryFunction = (body: ASS11070QueryRequest): Observable<ApiResponse<ASS11070Data[]>> => {
+    const raw = this.queryForm.getRawValue();
+    const payload: ASS11070QueryRequest = {
+      CreateDate_S: this.toDateString(raw.startdate ?? null),
+      CreateDate_E: this.toDateString(raw.enddate ?? null),
+      ReceptionPerson: raw.receptionPerson ?? undefined,
+      VendorUID: raw.vendorUID ?? undefined,
+      BussinessModel: raw.bussinessModel ?? undefined,
+      VendorCName: raw.vendorCName ?? undefined,
+      VendorEName: raw.vendorEName ?? undefined,
+      ContactPerson: raw.contactPerson ?? undefined,
+      ContactPhone: raw.contactPhone ?? undefined,
+      ContactTitle: raw.contactTitle ?? undefined,
+      ContactFax: raw.contactFax ?? undefined,
+      ContactCellphone: raw.contactCellphone ?? undefined,
+      ContactEmail: raw.contactEmail ?? undefined,
+      CompanyAddress: raw.companyAddress ?? undefined,
+      CompanyResponsibility: raw.companyResponsibility ?? undefined,
+      PaymentMethod: raw.paymentMethod ?? undefined,
+      TicketPeriod_S: raw.ticketPeriodStart ?? undefined,
+      TicketPeriod_E: raw.ticketPeriodEnd ?? undefined,
+      Services: raw.services ?? undefined,
+      Remark: raw.remark ?? undefined,
+      PageSize: body.PageSize ?? raw.pageSize ?? 30,
+      PageIndex: body.PageIndex ?? raw.pageIndex ?? 1,
+      SortBy: body.SortBy,
+    };
+    const clean = removeEmptyValues(payload) as ASS11070QueryRequest;
+    return this.service.queryASS11070(clean);
+  };
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
+  public onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const raw = this.queryForm.getRawValue();
+      this.lastQueryBody = {
+        CreateDate_S: this.toDateString(raw.startdate ?? null),
+        CreateDate_E: this.toDateString(raw.enddate ?? null),
+        ReceptionPerson: raw.receptionPerson ?? undefined,
+        VendorUID: raw.vendorUID ?? undefined,
+        BussinessModel: raw.bussinessModel ?? undefined,
+        VendorCName: raw.vendorCName ?? undefined,
+        VendorEName: raw.vendorEName ?? undefined,
+        ContactPerson: raw.contactPerson ?? undefined,
+        ContactPhone: raw.contactPhone ?? undefined,
+        ContactTitle: raw.contactTitle ?? undefined,
+        ContactFax: raw.contactFax ?? undefined,
+        ContactCellphone: raw.contactCellphone ?? undefined,
+        ContactEmail: raw.contactEmail ?? undefined,
+        CompanyAddress: raw.companyAddress ?? undefined,
+        CompanyResponsibility: raw.companyResponsibility ?? undefined,
+        PaymentMethod: raw.paymentMethod ?? undefined,
+        TicketPeriod_S: raw.ticketPeriodStart ?? undefined,
+        TicketPeriod_E: raw.ticketPeriodEnd ?? undefined,
+        Services: raw.services ?? undefined,
+        Remark: raw.remark ?? undefined,
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1,
+      } as ASS11070QueryRequest;
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.logger.debug('ASS11070 onSubmit:', [this.lastQueryBody]);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.tableData.set(res.Data ?? []);
+            this.totalRecords.set(res.TotalCount ?? 0);
+          },
+        });
+    });
   }
 }
