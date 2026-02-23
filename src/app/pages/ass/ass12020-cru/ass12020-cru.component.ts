@@ -3,12 +3,20 @@ import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import {
+  ASS12010DetailItem,
+  ASS12010DetailResponse,
+  ASS12010QueryRequest,
+} from '@pages/ass/ass12010/ass12010.model';
+import {
+  ApplyPurchaseRequestRow,
   ASS12020Detail,
   ASS12020DetailItem,
   ASS12020InsertRequest,
-  ASS12020Service,
-  ApplyPurchaseRequestRow,
-} from '@service/api/ass/ass12020.service';
+} from '@pages/ass/ass12020/ass12020.model';
+import { ASS11100Service } from '@service/api/ass/ass11100.service';
+import { ASS12010Service } from '@service/api/ass/ass12010.service';
+import { ASS12020Service } from '@service/api/ass/ass12020.service';
+import { Fin11040Service } from '@service/api/fin/fin11040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -20,9 +28,9 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMaxLength, validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, formatDate, formatDateToYYYY_MM_DD, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
@@ -59,10 +67,10 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
   /** 明細資料（table-edit 綁定） */
   data: ASS12020DetailItem[] = [];
 
-  /** 品項編號下拉 (QueryFASITEM_DropDownList 未實作前為空) */
+  /** 品項編號下拉：queryFIN11040 */
   itemCodeOptions: { value: string; label: string }[] = [];
   itemUnitOptions = getSYS1000Options('UNIT');
-  /** 倉別下拉 (預留) */
+  /** 倉別下拉：queryASS11100 */
   whIdOptions: { value: string; label: string }[] = [];
 
   /** table-edit 欄位設定 */
@@ -86,7 +94,14 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
     },
     { field: 'PURCHASE_QTY', header: '請購數量', type: 'inputNumber', placeholder: '輸入數字' },
     { field: 'QTY', header: '數量', type: 'inputNumber', placeholder: '輸入數字', validate: [validateRequired, validateMinNumber(0)] },
-    { field: 'GOODS_UNIT', header: '品項單位', type: 'input', maxLength: 8, validate: [validateRequired, validateMaxLength(8)] },
+    {
+      field: 'GOODS_UNIT',
+      header: '品項單位',
+      type: 'dropdown',
+      optionLabel: 'label',
+      optionValue: 'value',
+      options: () => this.itemUnitOptions,
+    },
     { field: 'TOTAL_AMT', header: '總金額', type: 'inputNumber', placeholder: '輸入數字', validate: [validateRequired] },
     { field: 'EXPIRE_LIMIT', header: '保存期限(月)', type: 'inputNumber', placeholder: '輸入數字' },
     {
@@ -104,6 +119,8 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
   displayApplyDialog = false;
   /** 套用請購申請單清單資料 */
   applyListData: ApplyPurchaseRequestRow[] = [];
+  /** 套用請購申請單：總筆數（供分頁器） */
+  applyTotalRecords = 0;
   /** 套用請購申請單：已選一筆 */
   selectedApplyRow: ApplyPurchaseRequestRow | null = null;
   applyListLoading = false;
@@ -112,12 +129,15 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
     { field: 'NEED_ID', header: '需求編號' },
     { field: 'APPLICANT', header: '申請人' },
     { field: 'DEPT', header: '申請部門' },
-    { field: 'REQ_DATE', header: '日期' },
+    { field: 'REQ_DATE', header: '日期', format: formatDate },
     { field: 'ROW_COUNT', header: '筆數' },
   ];
 
   constructor(
     private readonly ass12020Service: ASS12020Service,
+    private readonly ass12010Service: ASS12010Service,
+    private readonly fin11040Service: Fin11040Service,
+    private readonly ass11100Service: ASS11100Service,
     private readonly dropDownListService: DropDownListService,
   ) {
     super();
@@ -125,10 +145,12 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
 
   ngOnInit(): void {
     this.initializePage('ASS12020', this.dataForm);
-    if (!this.isFormCreateable && this.rowdata?.id != null) {
+    this.loadOptions();
+    const id = this.getRowdataId();
+    if (!this.isFormCreateable && id != null) {
       this.loading = true;
       this.ass12020Service
-        .getASS12020Detail(this.rowdata.id)
+        .getASS12020Detail(id)
         .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
         .subscribe({
           next: res => {
@@ -145,18 +167,93 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
     }
   }
 
+  /** 取得列資料主鍵 (FAQuotationM_ID 或 id)，供 detail/update/export 使用 */
+  private getRowdataId(): number | undefined {
+    const r = this.rowdata
+    return r?.FAQuotationM_ID;
+  }
+
+  /** 載入品項編號 (queryFIN11040)、倉別 (queryASS11100) 下拉選項 */
+  private loadOptions(): void {
+    forkJoin({
+      items: this.fin11040Service.queryFIN11040({ PageSize: 1000, PageIndex: 1 }),
+      wh: this.ass11100Service.queryASS11100({ PageSize: 100, PageIndex: 1 }),
+    })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: ({ items, wh }) => {
+          if (items.Status === '0000' && Array.isArray(items.Data)) {
+            this.itemCodeOptions = items.Data.map(item => ({
+              value: item.INV_ItemNo,
+              label: `${item.INV_ItemNo} - ${item.INV_ItemName}`,
+            }));
+          }
+          if (wh.Status === '0000' && Array.isArray(wh.Data)) {
+            this.whIdOptions = wh.Data.map(item => ({
+              value: item.WH_ID ?? '',
+              label: `${item.WH_ID ?? ''} - ${item.WH_NAME ?? ''}`,
+            }));
+          }
+        },
+      });
+  }
+
   /** 開啟套用請購申請單 dialog */
   openApplyDialog(): void {
     this.applyListLoading = true;
     this.selectedApplyRow = null;
-    this.ass12020Service
-      .getApplyPurchaseRequestList()
+    const payload: ASS12010QueryRequest = {
+      PageSize: 30,
+      PageIndex: 1,
+    };
+    this.ass12010Service
+      .queryASS12010(payload)
       .pipe(finalize(() => (this.applyListLoading = false)), untilDestroyed(this))
       .subscribe({
         next: res => {
           if (res.Status !== '0000') return;
-          this.applyListData = res.Data ?? [];
+          const list = res.Data ?? [];
+          this.applyListData = list.map(row => ({
+            NEED_ID: row.NEED_ID ?? null,
+            APPLICANT: row.EMP_NAME ?? null,
+            DEPT: row.ORG_NAME ?? null,
+            REQ_DATE: row.APPLY_DATE != null ? String(row.APPLY_DATE) : null,
+            ROW_COUNT: row.Detail_CNT ?? null,
+          }));
+          this.applyTotalRecords = res.TotalCount ?? this.applyListData.length;
           this.displayApplyDialog = true;
+        },
+      });
+  }
+
+  /** 套用請購 dialog 內表格 lazy 換頁／排序時呼叫 */
+  onApplyLazyLoad(event: LazyLoadEvent): void {
+    const pageSize = event.pageSize ?? 30;
+    const pageIndex = event.pageIndex ?? 1;
+    const sortBy = event.SortBy;
+
+    this.applyListLoading = true;
+    const payload: ASS12010QueryRequest = {
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: sortBy,
+    };
+
+    this.ass12010Service
+      .queryASS12010(payload)
+      .pipe(finalize(() => (this.applyListLoading = false)), untilDestroyed(this))
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          const list = res.Data ?? [];
+          this.applyListData = list.map(row => ({
+            NEED_ID: row.NEED_ID ?? null,
+            APPLICANT: row.EMP_NAME ?? null,
+            DEPT: row.ORG_NAME ?? null,
+            REQ_DATE: row.APPLY_DATE != null ? String(row.APPLY_DATE) : null,
+            ROW_COUNT: row.Detail_CNT ?? null,
+          }));
+          this.applyTotalRecords = res.TotalCount ?? this.applyListData.length;
         },
       });
   }
@@ -173,19 +270,37 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
       return;
     }
     this.applyListLoading = true;
-    this.ass12020Service
-      .getApplyPurchaseRequestDetail(row.NEED_ID)
+    this.ass12010Service
+      .detailASS12010({ NEED_ID: row.NEED_ID })
       .pipe(finalize(() => (this.applyListLoading = false)), untilDestroyed(this))
       .subscribe({
         next: res => {
           if (res.Status !== '0000') return;
-          const d = res.Data;
+          const data = res.Data as ASS12010DetailResponse | undefined;
+          if (!data?.Header || !data?.Details) {
+            this.displayApplyDialog = false;
+            return;
+          }
+          const header = data.Header;
+          const needId = header.NEED_ID ?? row.NEED_ID ?? '';
+          const whId = header.WH_ID ?? null;
+          const currentNotes = header.NOTE ?? '';
           this.dataForm.patchValue({
-            SUPPLIER_ID: d?.SUPPLIER_ID ?? this.dataForm.get('SUPPLIER_ID')?.value ?? '',
-            EXPDATE: d?.EXPDATE ? new Date(d.EXPDATE) : this.dataForm.get('EXPDATE')?.value,
-            NOTES: d?.NOTES ?? this.dataForm.get('NOTES')?.value ?? '',
+            NOTES: currentNotes,
           });
-          this.data = d?.Details ?? [];
+          // 明細：ASS12010DetailItem[] → ASS12020DetailItem[]
+          this.data = (data.Details ?? []).map((detail: ASS12010DetailItem) => ({
+            NEED_ID: needId || null,
+            GOODS_ID: detail.GOODS_ID ?? null,
+            GOODS_PRICE: null,
+            PURCHASE_QTY: detail.PURCHASE_QTY ?? null,
+            QTY: detail.QTY ?? null,
+            GOODS_UNIT: null,
+            TOTAL_AMT: null,
+            EXPIRE_LIMIT: null,
+            WH_ID: whId ?? null,
+            NOTES: detail.NOTES ?? null,
+          }));
           this.displayApplyDialog = false;
           this.messageService.successBubble('套用成功');
         },
@@ -238,19 +353,26 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
       }
       const raw = this.dataForm.getRawValue();
       const details = this.toDetails(this.data as Record<string, unknown>[]);
-      const payload: ASS12020InsertRequest = {
+      const basePayload: ASS12020InsertRequest = {
         SUPPLIER_ID: raw.SUPPLIER_ID,
-        EXPDATE: raw.EXPDATE instanceof Date ? raw.EXPDATE.toISOString().slice(0, 10) : String(raw.EXPDATE ?? ''),
-        NOTES: raw.NOTES || undefined,
+        EXPDATE: raw.EXPDATE ? formatDateToYYYY_MM_DD(raw.EXPDATE) ?? "" : "",
+        NOTES: raw.NOTES ?? undefined,
         Details: details,
       };
+      if (this.crudstatus !== CRUDStatus.Create) {
+        const id = this.getRowdataId();
+        if (id == null || typeof id !== 'number') {
+          this.messageService.errorBubble('無法更新：缺少主鍵');
+          return;
+        }
+      }
       this.loading = true;
       const req =
         this.crudstatus === CRUDStatus.Create
-          ? this.ass12020Service.insertASS12020(payload)
-          : this.ass12020Service.updateASS12020((this.rowdata as ASS12020Detail)?.id as number | string, {
-            ...payload,
-            id: (this.rowdata as ASS12020Detail)?.id as number | string,
+          ? this.ass12020Service.insertASS12020(basePayload)
+          : this.ass12020Service.updateASS12020({
+            ...basePayload,
+            FAQuotationM_ID: this.getRowdataId() as number,
           });
       req
         .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
@@ -260,7 +382,9 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
               this.messageService.errorBubble('操作失敗：' + (res.Message ?? ''));
               return;
             }
-            this.messageService.successBubble(this.crudstatus === CRUDStatus.Create ? '新增成功' : '編輯成功');
+            this.messageService.successBubble(
+              this.crudstatus === CRUDStatus.Create ? '新增成功' : '編輯成功'
+            );
             this.onCancel();
           },
         });
