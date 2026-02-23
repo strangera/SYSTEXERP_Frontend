@@ -78,11 +78,11 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="支出類型"
-            controlName="EXPEND_TYPE"
-            [options]="expendTypeOptions"
+            controlName="SUB_PAY_TYPE"
+            [options]="subPayTypeOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="dataForm.controls.EXPEND_TYPE"
+            [control]="dataForm.controls.SUB_PAY_TYPE"
             [submitted]="submitted"
             [disabled]="isFormReadable"
           ></app-dropdown>
@@ -139,7 +139,7 @@
         [showDelete]="false"
         [showCheckBox]="true"
         [selectionMode]="'single'"
-        dataKey="id"
+        dataKey="NEED_ID"
         [data]="applyQuotedData"
         [columns]="applyQuotedColumns"
         [selectedItems]="selectedQuotedRow ? [selectedQuotedRow] : []"
@@ -154,7 +154,7 @@
         [showDelete]="false"
         [showCheckBox]="true"
         [selectionMode]="'single'"
-        dataKey="NEED_ID"
+        dataKey="BATCH_NO"
         [data]="applyPurchaseData"
         [columns]="applyPurchaseColumns"
         [selectedItems]="selectedPurchaseRow ? [selectedPurchaseRow] : []"

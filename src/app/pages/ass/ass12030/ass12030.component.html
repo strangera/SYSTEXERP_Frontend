@@ -28,8 +28,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="採購單號"
-              controlName="poNo"
-              [control]="queryForm.controls.poNo"
+              controlName="subpoenaId"
+              [control]="queryForm.controls.subpoenaId"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -67,6 +67,28 @@
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="供應商編號"
+              controlName="supplierId"
+              [options]="supplierIdOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.supplierId"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="採購單狀態"
+              controlName="subpoenaStatus"
+              [options]="subpoenaStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.subpoenaStatus"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick
               calendarType="dateRange"
               label="申請日期"
@@ -77,14 +99,32 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="供應商編號"
-              controlName="supplierId"
-              [options]="supplierIdOptions"
+              label="審核人編號"
+              controlName="aprvEmpId"
+              [options]="aprvEmpIdOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.supplierId"
+              [control]="queryForm.controls.aprvEmpId"
               [submitted]="submitted"
             ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range-quick
+              calendarType="dateRange"
+              label="審核日期"
+              [startControl]="queryForm.controls.aprvDateFrom"
+              [endControl]="queryForm.controls.aprvDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range-quick>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range-quick
+              calendarType="dateRange"
+              label="結帳日"
+              [startControl]="queryForm.controls.payDateFrom"
+              [endControl]="queryForm.controls.payDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
@@ -99,8 +139,8 @@
             <app-input-number-range
               label="未稅總金額"
               descLabel=""
-              [startControl]="queryForm.controls.noTaxAmtFrom"
-              [endControl]="queryForm.controls.noTaxAmtTo"
+              [startControl]="queryForm.controls.ntaxAmtFrom"
+              [endControl]="queryForm.controls.ntaxAmtTo"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
@@ -108,50 +148,10 @@
             <app-input-number-range
               label="含稅總金額"
               descLabel=""
-              [startControl]="queryForm.controls.totalTaxAmtFrom"
-              [endControl]="queryForm.controls.totalTaxAmtTo"
+              [startControl]="queryForm.controls.amtFrom"
+              [endControl]="queryForm.controls.amtTo"
               [submitted]="submitted"
             ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="採購單狀態"
-              controlName="poStatus"
-              [options]="poStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.poStatus"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="審核人編號"
-              controlName="reviewerId"
-              [options]="reviewerIdOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.reviewerId"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              calendarType="dateRange"
-              label="審核日期"
-              [startControl]="queryForm.controls.reviewDateFrom"
-              [endControl]="queryForm.controls.reviewDateTo"
-              [submitted]="submitted"
-            ></app-calendar-range-quick>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              calendarType="dateRange"
-              label="結帳日起"
-              [startControl]="queryForm.controls.checkoutDateFrom"
-              [endControl]="queryForm.controls.checkoutDateTo"
-              [submitted]="submitted"
-            ></app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -177,7 +177,7 @@
 </div>
 <div class="card">
   <app-table-report
-    dataKey="id"
+    dataKey="FAPurchaseM_ID"
     [data]="data"
     [columns]="columns"
     [totalRecords]="totalRecords"

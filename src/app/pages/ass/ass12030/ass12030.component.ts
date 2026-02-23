@@ -3,7 +3,10 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS12030QueryRow, QueryASS12030Request } from '@pages/ass/ass12030/ass12030.model';
+import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12030Service } from '@service/api/ass/ass12030.service';
+import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -13,11 +16,12 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { Actions } from '@shared/service/permission-guard.service';
 
 /** 3.1.2.3 採購申請作業 */
 @UntilDestroy()
@@ -42,25 +46,25 @@ import { Actions } from '@shared/service/permission-guard.service';
 })
 export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    poNo: [null as string | null],
+    subpoenaId: [null as string | null],
     goodsId: [null as string | null],
     empId: [null as string | null],
     orgId: [null as string | null],
+    supplierId: [null as string | null],
+    subpoenaStatus: [null as string | null],
     applyDateFrom: [null as Date | null],
     applyDateTo: [null as Date | null],
-    supplierId: [null as string | null],
+    aprvEmpId: [null as string | null],
+    aprvDateFrom: [null as Date | null],
+    aprvDateTo: [null as Date | null],
+    payDateFrom: [null as Date | null],
+    payDateTo: [null as Date | null],
     taxAmtFrom: [null as number | null],
     taxAmtTo: [null as number | null],
-    noTaxAmtFrom: [null as number | null],
-    noTaxAmtTo: [null as number | null],
-    totalTaxAmtFrom: [null as number | null],
-    totalTaxAmtTo: [null as number | null],
-    poStatus: [null as string | null],
-    reviewerId: [null as string | null],
-    reviewDateFrom: [null as Date | null],
-    reviewDateTo: [null as Date | null],
-    checkoutDateFrom: [null as Date | null],
-    checkoutDateTo: [null as Date | null],
+    ntaxAmtFrom: [null as number | null],
+    ntaxAmtTo: [null as number | null],
+    amtFrom: [null as number | null],
+    amtTo: [null as number | null],
     whId: [null as string | null],
     PageSize: [30],
     PageIndex: [1],
@@ -68,32 +72,37 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
 
   /** 申請人、審核人：queryTBLUSER_DropDownList */
   empIdOptions: { value: string; label: string }[] = [];
-  reviewerIdOptions: { value: string; label: string }[] = [];
+  aprvEmpIdOptions: { value: string; label: string }[] = [];
   /** 部門：queryPOS2013_DropDownList */
   orgIdOptions: { value: string; label: string }[] = [];
-  /** 未實作下拉 */
+  /** 品項：queryFIN11040 */
   goodsIdOptions: { value: string; label: string }[] = [];
-  supplierIdOptions: { value: string; label: string }[] = [];
-  poStatusOptions: { value: string; label: string }[] = [];
+  /** 倉別：queryASS11100 */
   whIdOptions: { value: string; label: string }[] = [];
+  /** 採購單狀態：getSYS1000Options('NEEDS_STATUS') */
+  subpoenaStatusOptions: { value: string; label: string }[] = [];
+  /** 未實作下拉 */
+  supplierIdOptions: { value: string; label: string }[] = [];
 
   data: ASS12030QueryRow[] = [];
   selectedRows: ASS12030QueryRow[] = [];
   totalRecords = 0;
   lastQueryBody: QueryASS12030Request | null = null;
   columns: ReportColumn[] = [
-    { field: 'PO_NO', header: '採購單號', visible: true },
-    { field: 'EMP_ID', header: '申請人編號', visible: true },
+    { field: 'SUBPOENA_ID', header: '採購單號', visible: true },
+    { field: 'EMP_NAME', header: '申請人編號', visible: true },
     { field: 'ORG_ID', header: '部門代號', visible: true },
-    { field: 'APPLY_DATE', header: '申請日期', visible: true },
+    { field: 'ORG_NAME', header: '部門名稱', visible: true },
     { field: 'SUPPLIER_ID', header: '供應商編號', visible: true },
+    { field: 'SUPPLIER_NAME', header: '供應商名稱', visible: true },
+    { field: 'APPLY_DATE', header: '申請日期', visible: true, format: formatDate },
     { field: 'TAX_AMT', header: '稅額', visible: true },
-    { field: 'NO_TAX_AMT', header: '未稅總金額', visible: true },
-    { field: 'TOTAL_TAX_AMT', header: '含稅總金額', visible: true },
-    { field: 'PO_STATUS', header: '採購單狀態', visible: true },
-    { field: 'REVIEWER_ID', header: '審核人編號', visible: true },
-    { field: 'REVIEW_DATE', header: '審核日期', visible: true },
-    { field: 'CHECKOUT_DATE', header: '結帳日期', visible: true },
+    { field: 'NTAX_AMT', header: '未稅總金額', visible: true },
+    { field: 'AMT', header: '含稅總金額', visible: true },
+    { field: 'SUBPOENA_STATUS_NAME', header: '傳票狀態', visible: true },
+    { field: 'APRV_EMP_ID', header: '審核人編號', visible: true },
+    { field: 'APRV_DATE', header: '審核日期', visible: true, format: formatDate },
+    { field: 'PAY_DATE', header: '結帳日期', visible: true, format: formatDate },
     { field: 'NOTES', header: '說明', visible: true },
   ];
 
@@ -121,6 +130,8 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
   constructor(
     public readonly ass12030Service: ASS12030Service,
     private readonly dropDownListService: DropDownListService,
+    private readonly fin11040Service: Fin11040Service,
+    private readonly ass11100Service: ASS11100Service
   ) {
     super();
   }
@@ -170,7 +181,7 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
           label: `${item.No ?? ''} - ${item.Name ?? ''}`,
         }));
         this.empIdOptions = options;
-        this.reviewerIdOptions = options;
+        this.aprvEmpIdOptions = options;
       });
     this.dropDownListService
       .queryPOS2013_DropDownList({})
@@ -182,6 +193,33 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
           label: `${item.No ?? ''} - ${item.Name ?? ''}`,
         }));
       });
+    this.subpoenaStatusOptions = getSYS1000Options('NEEDS_STATUS');
+    this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const data: TDS1008Data[] = res.Data ?? [];
+        const options = data
+          .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
+          .map(item => ({
+            label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
+            value: item.INV_ItemNo,
+          }));
+        this.goodsIdOptions = options;
+      },
+    });
+    this.ass11100Service.queryASS11100({ PageSize: 9999, PageIndex: 1 }).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data ?? [])
+          .filter(item => item.WH_ID != null && item.WH_ID !== '')
+          .map(item => ({
+            label: `${item.WH_ID} - ${item.WH_NAME ?? ''}`,
+            value: item.WH_ID!,
+          }));
+        this.whIdOptions = options;
+      },
+    })
+
   }
 
   private formatDate(d: Date | null): string {
@@ -196,25 +234,25 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
   queryFunction = (body: unknown): ReturnType<ASS12030Service['queryASS12030']> => {
     const raw = this.queryForm.getRawValue();
     const payload: QueryASS12030Request = {
-      PO_NO: raw.poNo ?? undefined,
+      SUBPOENA_ID: raw.subpoenaId ?? undefined,
       GOODS_ID: raw.goodsId ?? undefined,
       EMP_ID: raw.empId ?? undefined,
       ORG_ID: raw.orgId ?? undefined,
-      APPLY_DATE_FROM: raw.applyDateFrom ? this.formatDate(raw.applyDateFrom) : undefined,
-      APPLY_DATE_TO: raw.applyDateTo ? this.formatDate(raw.applyDateTo) : undefined,
       SUPPLIER_ID: raw.supplierId ?? undefined,
-      TAX_AMT_FROM: raw.taxAmtFrom ?? undefined,
-      TAX_AMT_TO: raw.taxAmtTo ?? undefined,
-      NO_TAX_AMT_FROM: raw.noTaxAmtFrom ?? undefined,
-      NO_TAX_AMT_TO: raw.noTaxAmtTo ?? undefined,
-      TOTAL_TAX_AMT_FROM: raw.totalTaxAmtFrom ?? undefined,
-      TOTAL_TAX_AMT_TO: raw.totalTaxAmtTo ?? undefined,
-      PO_STATUS: raw.poStatus ?? undefined,
-      REVIEWER_ID: raw.reviewerId ?? undefined,
-      REVIEW_DATE_FROM: raw.reviewDateFrom ? this.formatDate(raw.reviewDateFrom) : undefined,
-      REVIEW_DATE_TO: raw.reviewDateTo ? this.formatDate(raw.reviewDateTo) : undefined,
-      CHECKOUT_DATE_FROM: raw.checkoutDateFrom ? this.formatDate(raw.checkoutDateFrom) : undefined,
-      CHECKOUT_DATE_TO: raw.checkoutDateTo ? this.formatDate(raw.checkoutDateTo) : undefined,
+      SUBPOENA_STATUS: raw.subpoenaStatus ?? undefined,
+      APPLY_DATE_S: raw.applyDateFrom ? this.formatDate(raw.applyDateFrom) : undefined,
+      APPLY_DATE_E: raw.applyDateTo ? this.formatDate(raw.applyDateTo) : undefined,
+      APRV_EMP_ID: raw.aprvEmpId ?? undefined,
+      APRV_DATE_S: raw.aprvDateFrom ? this.formatDate(raw.aprvDateFrom) : undefined,
+      APRV_DATE_E: raw.aprvDateTo ? this.formatDate(raw.aprvDateTo) : undefined,
+      PAY_DATE_S: raw.payDateFrom ? this.formatDate(raw.payDateFrom) : undefined,
+      PAY_DATE_E: raw.payDateTo ? this.formatDate(raw.payDateTo) : undefined,
+      TAX_AMT_S: raw.taxAmtFrom ?? undefined,
+      TAX_AMT_E: raw.taxAmtTo ?? undefined,
+      NTAX_AMT_S: raw.ntaxAmtFrom ?? undefined,
+      NTAX_AMT_E: raw.ntaxAmtTo ?? undefined,
+      AMT_S: raw.amtFrom ?? undefined,
+      AMT_E: raw.amtTo ?? undefined,
       WH_ID: raw.whId ?? undefined,
       ...(body as object),
     };
@@ -244,8 +282,8 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
   }
 
   onDeleteRow(row: ASS12030QueryRow): void {
-    const id = row.id;
-    if (id == null) {
+    const subpoenaId = row.SUBPOENA_ID;
+    if (!subpoenaId) {
       this.messageService.warnBubble('無可刪除的資料');
       return;
     }
@@ -255,7 +293,7 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
       accept: () => {
         this.loading = true;
         this.ass12030Service
-          .deleteASS12030([typeof id === 'number' ? id : Number(id)])
+          .deleteASS12030({ SUBPOENA_ID: subpoenaId })
           .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
           .subscribe({
             next: res => {
@@ -272,8 +310,8 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
   }
 
   onVoid(row: ASS12030QueryRow): void {
-    const id = row.id;
-    if (id == null) {
+    const subpoenaId = row.SUBPOENA_ID;
+    if (!subpoenaId) {
       this.messageService.warnBubble('無可作廢的資料');
       return;
     }
@@ -283,7 +321,7 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
       accept: () => {
         this.loading = true;
         this.ass12030Service
-          .voidASS12030([typeof id === 'number' ? id : Number(id)])
+          .voidASS12030({ SUBPOENA_ID: subpoenaId })
           .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
           .subscribe({
             next: res => {
@@ -300,20 +338,29 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
   }
 
   onDownloadReport(row: ASS12030QueryRow): void {
-    const id = row.id;
-    if (id == null) return;
+    const subpoenaId = row.SUBPOENA_ID;
+    if (!subpoenaId) return;
     this.loading = true;
     this.ass12030Service
-      .reportASS12030({ id })
+      .exportPDFASS12030({ SUBPOENA_ID: subpoenaId })
       .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
       .subscribe({
         next: res => {
-          if (res.Status !== '0000') {
-            this.messageService.errorBubble('報表下載失敗：' + (res.Message ?? ''));
+          const blob = res.body;
+          if (!blob) {
+            this.messageService.errorBubble('報表下載失敗');
             return;
           }
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `ASS12030_${subpoenaId}.pdf`;
+          a.click();
+          window.URL.revokeObjectURL(url);
           this.messageService.successBubble('報表下載成功');
-          // TODO: 實際下載 blob 若後端回傳檔案
+        },
+        error: () => {
+          this.messageService.errorBubble('報表下載失敗');
         },
       });
   }

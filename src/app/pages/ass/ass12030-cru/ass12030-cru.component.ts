@@ -2,14 +2,18 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS12010Data, ASS12010DetailResponse } from '@pages/ass/ass12010/ass12010.model';
 import {
-  ApplyPurchaseListRow,
-  ApplyQuotedListRow,
   ASS12030Detail,
   ASS12030DetailItem,
   ASS12030InsertRequest,
+  ASS12030UpdateRequest,
 } from '@pages/ass/ass12030/ass12030.model';
+import { ASS11100Service } from '@service/api/ass/ass11100.service';
+import { ASS12010Service } from '@service/api/ass/ass12010.service';
+import { ASS12020Detail, ASS12020QueryRow, ASS12020Service } from '@service/api/ass/ass12020.service';
 import { ASS12030Service } from '@service/api/ass/ass12030.service';
+import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -25,7 +29,7 @@ import {
   validateRequired,
 } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, formatDate } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -65,7 +69,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
     ORG_ID: [null as string | null, [Validators.required]],
     APPLY_DATE: [null as Date | null, [Validators.required]],
     SUPPLIER_ID: [null as string | null, [Validators.required]],
-    EXPEND_TYPE: [null as string | null, [Validators.required]],
+    SUB_PAY_TYPE: [null as string | null, [Validators.required]],
   });
 
   /** 明細資料（table-edit 綁定） */
@@ -79,9 +83,11 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   /** 委託部門下拉選項 */
   orgIdOptions: { value: string; label: string }[] = [];
   /** 稅別下拉選項 */
-  taxTypeOptions: { value: string; label: string }[] = [];
+  taxCodeOptions: { value: string; label: string }[] = [];
   /** 支出類型下拉選項 */
-  expendTypeOptions: { value: string; label: string }[] = getSYS1000Options('SUB_PAY_TYPE');
+  subPayTypeOptions: { value: string; label: string }[] = getSYS1000Options('SUB_PAY_TYPE');
+  /** 商品類型下拉選項 */
+  prodTypeOptions: { value: string; label: string }[] = getSYS1000Options('PROD_TYPE');
 
   // TODO: 未實作下拉選項
   /** 品項編號下拉選項 */
@@ -92,8 +98,6 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   supplierIdOptions: { value: string; label: string }[] = [];
   /** 倉別下拉選項 */
   whIdOptions: { value: string; label: string }[] = [];
-  /** 商品類型下拉選項 */
-  goodsTypeOptions: { value: string; label: string }[] = getSYS1000Options('PROD_TYPE');
 
   editColumns: EditColumn[] = [
     {
@@ -115,12 +119,12 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       validate: [validateRequired],
     },
     {
-      field: 'TAX_TYPE',
+      field: 'TAX_CODE',
       header: '稅別',
       type: 'dropdown',
       optionLabel: 'label',
       optionValue: 'value',
-      options: () => this.taxTypeOptions,
+      options: () => this.taxCodeOptions,
       validate: [validateRequired],
     },
     {
@@ -131,7 +135,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       validate: [validateRequired, validateMinNumber(0)],
     },
     {
-      field: 'UNIT_PRICE',
+      field: 'GOODS_PRICE',
       header: '單價(未稅)',
       type: 'inputNumber',
       placeholder: '輸入數字',
@@ -156,12 +160,12 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       validate: [validateRequired],
     },
     {
-      field: 'GOODS_TYPE',
+      field: 'PROD_TYPE',
       header: '商品類型',
       type: 'dropdown',
       optionLabel: 'label',
       optionValue: 'value',
-      options: () => this.goodsTypeOptions,
+      options: () => this.prodTypeOptions,
       validate: [validateRequired],
     },
     { field: 'NOTES', header: '說明', type: 'input' },
@@ -170,29 +174,37 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   /** 套用清單 dialog */
   displayApplyDialog = false;
   applyDialogMode: 'quoted' | 'unquoted' = 'quoted';
-  applyQuotedData: ApplyQuotedListRow[] = [];
-  applyPurchaseData: ApplyPurchaseListRow[] = [];
-  selectedQuotedRow: ApplyQuotedListRow | null = null;
-  selectedPurchaseRow: ApplyPurchaseListRow | null = null;
+  applyQuotedData: ASS12010Data[] = [];
+  applyPurchaseData: ASS12020QueryRow[] = [];
+  selectedQuotedRow: ASS12010Data | null = null;
+  selectedPurchaseRow: ASS12020QueryRow | null = null;
   applyListLoading = false;
   applyQuotedColumns: Column[] = [
-    { field: 'id', header: '編號' },
-    { field: 'BATCH_NO', header: '批號' },
-    { field: 'SUPPLIER_ID', header: '供應商' },
-    { field: 'LOG_DATE', header: '日期' },
-    { field: 'ROW_COUNT', header: '筆數' },
+    { field: 'NEED_ID', header: '需求單號' },
+    { field: 'EMP_NAME', header: '申請人' },
+    { field: 'ORG_NAME', header: '部門' },
+    { field: 'APPLY_DATE', header: '需求日期', format: formatDate },
+    { field: 'NEEDS_STATUS_NAME', header: '狀態' },
+    { field: 'Detail_CNT', header: '明細筆數' },
   ];
   applyPurchaseColumns: Column[] = [
-    { field: 'NEED_ID', header: '需求編號' },
-    { field: 'APPLICANT', header: '申請人' },
-    { field: 'DEPT', header: '申請部門' },
-    { field: 'REQ_DATE', header: '日期' },
-    { field: 'ROW_COUNT', header: '筆數' },
+    { field: 'BATCH_NO', header: '登錄批號' },
+    { field: 'SUPPLIER_ID', header: '供應商' },
+    { field: 'LOG_DATE', header: '登錄日期', format: formatDate },
+    { field: 'EXPDATE', header: '報價期限' },
+    { field: 'NOTES', header: '說明' },
   ];
+
+  /** 編輯/明細時保留的傳票號碼 */
+  private subpoenaId: string | null = null;
 
   constructor(
     private readonly ass12030Service: ASS12030Service,
     private readonly dropDownListService: DropDownListService,
+    private readonly fin11040Service: Fin11040Service,
+    private readonly ass11100Service: ASS11100Service,
+    private readonly ass12010Service: ASS12010Service,
+    private readonly ass12020Service: ASS12020Service
   ) {
     super();
   }
@@ -204,24 +216,38 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       this.createMode = state['createMode'] as CreateMode;
     }
     this.loadDropdownOptions();
-    if (!this.isFormCreateable && this.rowdata?.id != null) {
+
+    const rowSubpoenaId = (this.rowdata as Record<string, unknown> | null)?.['SUBPOENA_ID'] as string | undefined;
+    if (!this.isFormCreateable && rowSubpoenaId) {
+      this.subpoenaId = rowSubpoenaId;
       this.loading = true;
       this.ass12030Service
-        .getASS12030Detail((this.rowdata as ASS12030Detail).id!)
+        .detailASS12030({ SUBPOENA_ID: rowSubpoenaId })
         .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
         .subscribe({
           next: res => {
             if (res.Status !== '0000') return;
             const d = res.Data;
+            this.subpoenaId = d?.SUBPOENA_ID ?? rowSubpoenaId;
             this.dataForm.patchValue({
               NOTES: d?.NOTES ?? '',
               EMP_ID: d?.EMP_ID ?? '',
               ORG_ID: d?.ORG_ID ?? '',
               APPLY_DATE: d?.APPLY_DATE ? new Date(d.APPLY_DATE) : null,
               SUPPLIER_ID: d?.SUPPLIER_ID ?? '',
-              EXPEND_TYPE: d?.EXPEND_TYPE ?? '',
+              SUB_PAY_TYPE: d?.SUB_PAY_TYPE ?? '',
             });
-            this.data = d?.Details ?? [];
+            this.data = (d?.Details ?? []).map(item => ({
+              GOODS_ID: item.GOODS_ID,
+              TAX_CODE: item.TAX_CODE,
+              QTY: item.QTY,
+              GOODS_PRICE: item.GOODS_PRICE,
+              NOTES: item.NOTES,
+              ORG_ID: item.ORG_ID,
+              WH_ID: item.WH_ID,
+              NEED_ID: item.NEED_ID,
+              PROD_TYPE: item.PROD_TYPE,
+            }));
           },
         });
     }
@@ -249,21 +275,45 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
         }));
       });
 
-    this.taxTypeOptions = [
+    this.taxCodeOptions = [
       { value: '1', label: '應稅' },
       { value: '2', label: '免稅' },
-    ]
+    ];
 
-    // TODO: 未實作下拉選項
+    this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const data: TDS1008Data[] = res.Data ?? [];
+        const options = data
+          .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
+          .map(item => ({
+            label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
+            value: item.INV_ItemNo,
+          }));
+        this.goodsIdOptions = options;
+      },
+    });
+    this.ass11100Service.queryASS11100({ PageSize: 9999, PageIndex: 1 }).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data ?? [])
+          .filter(item => item.WH_ID != null && item.WH_ID !== '')
+          .map(item => ({
+            label: `${item.WH_ID} - ${item.WH_NAME ?? ''}`,
+            value: item.WH_ID!,
+          }));
+        this.whIdOptions = options;
+      },
+    })
   }
 
-  /** 開啟套用請購清單 dialog（取得詢價清單） */
+  /** 開啟套用請購清單 dialog（取得請購申請清單 ASS12010） */
   openApplyQuotedDialog(): void {
     this.applyDialogMode = 'quoted';
     this.applyListLoading = true;
     this.selectedQuotedRow = null;
-    this.ass12030Service
-      .getQuotedList()
+    this.ass12010Service
+      .queryASS12010({ PageSize: 9999, PageIndex: 1 })
       .pipe(finalize(() => (this.applyListLoading = false)), untilDestroyed(this))
       .subscribe({
         next: res => {
@@ -274,13 +324,13 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       });
   }
 
-  /** 開啟套用詢價清單 dialog（取得請購清單） */
+  /** 開啟套用詢價清單 dialog（取得詢價登錄清單 ASS12020） */
   openApplyUnquotedDialog(): void {
     this.applyDialogMode = 'unquoted';
     this.applyListLoading = true;
     this.selectedPurchaseRow = null;
-    this.ass12030Service
-      .getPurchaseRequestList()
+    this.ass12020Service
+      .queryASS12020({ PageSize: 9999, PageIndex: 1 })
       .pipe(finalize(() => (this.applyListLoading = false)), untilDestroyed(this))
       .subscribe({
         next: res => {
@@ -291,11 +341,11 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       });
   }
 
-  onQuotedSelectionChange(rows: ApplyQuotedListRow[]): void {
+  onQuotedSelectionChange(rows: ASS12010Data[]): void {
     this.selectedQuotedRow = rows?.[0] ?? null;
   }
 
-  onPurchaseSelectionChange(rows: ApplyPurchaseListRow[]): void {
+  onPurchaseSelectionChange(rows: ASS12020QueryRow[]): void {
     this.selectedPurchaseRow = rows?.[0] ?? null;
   }
 
@@ -303,28 +353,29 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   onApplyConfirm(): void {
     if (this.applyDialogMode === 'quoted') {
       const row = this.selectedQuotedRow;
-      const id = row?.id ?? row?.BATCH_NO;
-      if (!id) {
-        this.messageService.warnBubble('請選擇一筆詢價清單');
+      if (!row?.NEED_ID) {
+        this.messageService.warnBubble('請選擇一筆請購清單');
         return;
       }
       this.applyListLoading = true;
-      this.ass12030Service
-        .getQuotedDetail(String(id))
+      this.ass12010Service
+        .detailASS12010({ NEED_ID: row.NEED_ID })
         .pipe(finalize(() => (this.applyListLoading = false)), untilDestroyed(this))
         .subscribe({
           next: res => {
             if (res.Status !== '0000') return;
-            const d = res.Data;
+            const d: ASS12010DetailResponse = res.Data;
             this.dataForm.patchValue({
-              NOTES: d?.NOTES ?? this.dataForm.get('NOTES')?.value ?? '',
-              EMP_ID: d?.EMP_ID ?? this.dataForm.get('EMP_ID')?.value ?? '',
-              ORG_ID: d?.ORG_ID ?? this.dataForm.get('ORG_ID')?.value ?? '',
-              APPLY_DATE: d?.APPLY_DATE ? new Date(d.APPLY_DATE) : this.dataForm.get('APPLY_DATE')?.value,
-              SUPPLIER_ID: d?.SUPPLIER_ID ?? this.dataForm.get('SUPPLIER_ID')?.value ?? '',
-              EXPEND_TYPE: d?.EXPEND_TYPE ?? this.dataForm.get('EXPEND_TYPE')?.value ?? '',
+              EMP_ID: d?.Header?.EMP_ID ?? this.dataForm.get('EMP_ID')?.value ?? '',
+              ORG_ID: d?.Header?.ORG_ID ?? this.dataForm.get('ORG_ID')?.value ?? '',
+              APPLY_DATE: d?.Header?.APPLY_DATE ? new Date(String(d.Header.APPLY_DATE)) : this.dataForm.get('APPLY_DATE')?.value,
+              NOTES: d?.Header?.NOTE ?? this.dataForm.get('NOTES')?.value ?? '',
             });
-            this.data = d?.Details ?? [];
+            this.data = (d?.Details ?? []).map(item => ({
+              GOODS_ID: item.GOODS_ID,
+              QTY: item.QTY,
+              NOTES: item.NOTES,
+            }));
             this.displayApplyDialog = false;
             this.messageService.successBubble('套用成功');
           },
@@ -332,27 +383,31 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       return;
     }
     const row = this.selectedPurchaseRow;
-    if (!row?.NEED_ID) {
-      this.messageService.warnBubble('請選擇一筆請購清單');
+    const id = row?.id ?? row?.BATCH_NO;
+    if (!id) {
+      this.messageService.warnBubble('請選擇一筆詢價清單');
       return;
     }
     this.applyListLoading = true;
-    this.ass12030Service
-      .getPurchaseRequestDetail(row.NEED_ID)
+    this.ass12020Service
+      .getASS12020Detail(id)
       .pipe(finalize(() => (this.applyListLoading = false)), untilDestroyed(this))
       .subscribe({
         next: res => {
           if (res.Status !== '0000') return;
-          const d = res.Data;
+          const d: ASS12020Detail = res.Data;
           this.dataForm.patchValue({
-            NOTES: d?.NOTES ?? this.dataForm.get('NOTES')?.value ?? '',
-            EMP_ID: d?.EMP_ID ?? this.dataForm.get('EMP_ID')?.value ?? '',
-            ORG_ID: d?.ORG_ID ?? this.dataForm.get('ORG_ID')?.value ?? '',
-            APPLY_DATE: d?.APPLY_DATE ? new Date(d.APPLY_DATE) : this.dataForm.get('APPLY_DATE')?.value,
             SUPPLIER_ID: d?.SUPPLIER_ID ?? this.dataForm.get('SUPPLIER_ID')?.value ?? '',
-            EXPEND_TYPE: d?.EXPEND_TYPE ?? this.dataForm.get('EXPEND_TYPE')?.value ?? '',
+            NOTES: d?.NOTES ?? this.dataForm.get('NOTES')?.value ?? '',
           });
-          this.data = d?.Details ?? [];
+          this.data = (d?.Details ?? []).map(item => ({
+            GOODS_ID: item.GOODS_ID,
+            GOODS_PRICE: item.GOODS_PRICE,
+            QTY: item.QTY,
+            WH_ID: item.WH_ID,
+            NEED_ID: item.NEED_ID,
+            NOTES: item.NOTES,
+          }));
           this.displayApplyDialog = false;
           this.messageService.successBubble('套用成功');
         },
@@ -360,7 +415,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   }
 
   get applyDialogTitle(): string {
-    return this.applyDialogMode === 'quoted' ? '選擇詢價清單（套用請購清單）' : '選擇請購清單（套用詢價清單）';
+    return this.applyDialogMode === 'quoted' ? '選擇請購清單（套用請購清單）' : '選擇詢價清單（套用詢價清單）';
   }
 
   get canConfirmApply(): boolean {
@@ -376,12 +431,12 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
     return {
       GOODS_ID: null,
       NEED_ID: null,
-      TAX_TYPE: null,
+      TAX_CODE: null,
       QTY: null,
-      UNIT_PRICE: null,
+      GOODS_PRICE: null,
       ORG_ID: null,
       WH_ID: null,
-      GOODS_TYPE: null,
+      PROD_TYPE: null,
       NOTES: null,
     };
   }
@@ -389,14 +444,14 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   private toDetails(rows: Record<string, unknown>[]): ASS12030DetailItem[] {
     return rows.map(row => ({
       GOODS_ID: (row['GOODS_ID'] as string) || undefined,
-      NEED_ID: (row['NEED_ID'] as string) || undefined,
-      TAX_TYPE: (row['TAX_TYPE'] as string) || undefined,
+      TAX_CODE: (row['TAX_CODE'] as string) || undefined,
       QTY: (row['QTY'] as number | undefined) ?? undefined,
-      UNIT_PRICE: (row['UNIT_PRICE'] as number | undefined) ?? undefined,
+      GOODS_PRICE: (row['GOODS_PRICE'] as number | undefined) ?? undefined,
+      NOTES: (row['NOTES'] as string) || undefined,
       ORG_ID: (row['ORG_ID'] as string) || undefined,
       WH_ID: (row['WH_ID'] as string) || undefined,
-      GOODS_TYPE: (row['GOODS_TYPE'] as string) || undefined,
-      NOTES: (row['NOTES'] as string) || undefined,
+      NEED_ID: (row['NEED_ID'] as string) || undefined,
+      PROD_TYPE: (row['PROD_TYPE'] as string) || undefined,
     }));
   }
 
@@ -406,35 +461,61 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       if (valid === false) return;
       const raw = this.dataForm.getRawValue();
       const details = this.toDetails(this.data as Record<string, unknown>[]);
-      const payload: ASS12030InsertRequest = {
-        NOTES: raw.NOTES ?? undefined,
-        EMP_ID: raw.EMP_ID ?? '',
-        ORG_ID: raw.ORG_ID ?? '',
-        APPLY_DATE: raw.APPLY_DATE instanceof Date ? raw.APPLY_DATE.toISOString().slice(0, 10) : String(raw.APPLY_DATE ?? ''),
-        SUPPLIER_ID: raw.SUPPLIER_ID ?? '',
-        EXPEND_TYPE: raw.EXPEND_TYPE ?? '',
-        Details: details,
-      };
+      const applyDate = raw.APPLY_DATE instanceof Date
+        ? raw.APPLY_DATE.toISOString().slice(0, 10)
+        : String(raw.APPLY_DATE ?? '');
+
       this.loading = true;
-      const req =
-        this.crudstatus === CRUDStatus.Create
-          ? this.ass12030Service.insertASS12030(payload)
-          : this.ass12030Service.updateASS12030((this.rowdata as ASS12030Detail)?.id as number | string, {
-            ...payload,
-            id: (this.rowdata as ASS12030Detail)?.id as number | string,
+
+      if (this.crudstatus === CRUDStatus.Create) {
+        const payload: ASS12030InsertRequest = {
+          EMP_ID: raw.EMP_ID ?? '',
+          ORG_ID: raw.ORG_ID ?? '',
+          APPLY_DATE: applyDate,
+          SUPPLIER_ID: raw.SUPPLIER_ID ?? '',
+          SUB_PAY_TYPE: raw.SUB_PAY_TYPE ?? '',
+          NOTES: raw.NOTES ?? undefined,
+          SUBPOENA_TYPE: this.createMode === 'quoted' ? 'Q' : 'R',
+          Details: details,
+        };
+        this.ass12030Service
+          .insertASS12030(payload)
+          .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+          .subscribe({
+            next: res => {
+              if (res.Status !== '0000') {
+                this.messageService.errorBubble('操作失敗：' + (res.Message ?? ''));
+                return;
+              }
+              this.messageService.successBubble('新增成功');
+              this.onCancel();
+            },
           });
-      req
-        .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
-        .subscribe({
-          next: res => {
-            if (res.Status !== '0000') {
-              this.messageService.errorBubble('操作失敗：' + (res.Message ?? ''));
-              return;
-            }
-            this.messageService.successBubble(this.crudstatus === CRUDStatus.Create ? '新增成功' : '編輯成功');
-            this.onCancel();
-          },
-        });
+      } else {
+        const payload: ASS12030UpdateRequest = {
+          SUBPOENA_ID: this.subpoenaId ?? '',
+          EMP_ID: raw.EMP_ID ?? '',
+          ORG_ID: raw.ORG_ID ?? '',
+          APPLY_DATE: applyDate,
+          SUPPLIER_ID: raw.SUPPLIER_ID ?? '',
+          SUB_PAY_TYPE: raw.SUB_PAY_TYPE ?? '',
+          NOTES: raw.NOTES ?? undefined,
+          Details: details,
+        };
+        this.ass12030Service
+          .updateASS12030(payload)
+          .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+          .subscribe({
+            next: res => {
+              if (res.Status !== '0000') {
+                this.messageService.errorBubble('操作失敗：' + (res.Message ?? ''));
+                return;
+              }
+              this.messageService.successBubble('編輯成功');
+              this.onCancel();
+            },
+          });
+      }
     });
   }
 }
