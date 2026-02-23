@@ -11,6 +11,8 @@ import { ProductAutocompleteComponent } from '@shared/biz-components/product-aut
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column, createPaginationConfig, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table/validate-field.model';
@@ -41,6 +43,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     TableReportComponent,
     ProductAutocompleteComponent,
     DialogComponent,
+    TableEditComponent
   ]
 })
 export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Response> implements OnInit {
@@ -62,18 +65,38 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
   data: ITLS56080Detail[] = [];
   originalData: ITLS56080Detail[] = [];
   selectedItems: ITLS56080Detail[] = [];
-  columns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
-    { field: 'PLU_Name', header: '商品名稱', visible: true },
-    { field: 'PLU_Unit', header: '商品單位', visible: true },
-    { field: 'PLU_BoxQty', header: '包裝入數', visible: true },
-    { field: 'TRD_Type', header: '調出/調入', visible: true, type: 'dropdown', options: [{ label: '調出', value: '0' }, { label: '調入', value: '1' }], validate: [validateRequired], required: true },
-    { field: 'TRD_Qty', header: '數量', visible: true, type: 'inputNumber', validate: [validateRequired, validateMinNumber(1)], required: true },
-    { field: 'PLU_SalePrc', header: '單價', visible: true, format: formatAmount },
-    { field: 'TRD_Amt', header: '小計', visible: true, format: formatAmount },
-    { field: 'TRD_Remark', header: '單項備註', visible: true, type: 'input' },
+  editColumns: EditColumn[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_Unit', header: '商品單位' },
+    { field: 'PLU_BoxQty', header: '包裝入數' },
+    {
+      field: 'TRD_Type', header: '調出/調入', type: 'dropdown',
+      options: [{ label: '調出', value: '0' }, { label: '調入', value: '1' }],
+      optionLabel: 'label', optionValue: 'value',
+      showClear: false, validate: [validateRequired],
+      calculate: (rowData, value) => {
+        const amt = Math.round(Number(rowData.TRD_Qty ?? 0) * Number(rowData.PLU_SalePrc ?? 0));
+        this.calculateTotals(); // 觸發主檔加總
+        return { 'TRD_Amt': amt };
+      }
+    },
+    {
+      field: 'TRD_Qty', header: '數量', type: 'inputNumber',
+      validate: [validateRequired, validateMinNumber(1)],
+      calculate: (rowData, value) => {
+        const amt = Math.round(Number(value ?? 0) * Number(rowData.PLU_SalePrc ?? 0));
+        // 由於 calculate 在賦值前執行，我們手動更新 rowData 模擬最新狀態給總計用
+        rowData.TRD_Qty = value;
+        rowData.TRD_Amt = amt;
+        this.calculateTotals();
+        return { 'TRD_Amt': amt };
+      }
+    },
+    { field: 'PLU_SalePrc', header: '單價', format: formatAmount },
+    { field: 'TRD_Amt', header: '小計', format: formatAmount },
+    { field: 'TRD_Remark', header: '單項備註', type: 'input' },
   ];
-
   brandOptions: { label: string; value: string }[] = [];
   warehouseOptions: { label: string; value: string }[] = [];
   vendorOptions: { label: string; value: string }[] = [];
@@ -96,10 +119,11 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
       this.dataForm.get('HOS_No')?.disable();
       this.dataForm.get('VEN_No')?.disable();
       this.dataForm.get('LOGO_No')?.disable();
+      this.loading = true;
       this.tls56080Service.querySTORETRADED({
         TRD_No: this.rowdata?.TRD_No,
         OUT_HOS_No: this.rowdata?.HOS_No
-      }).pipe(untilDestroyed(this)).subscribe(response => {
+      }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data
         this.originalData = response.Data;
       });
@@ -208,11 +232,6 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
       OUT_TotBuyAmt: outTotal,
       DIFF_TotBuyAmt: diffTotal,
     });
-  }
-
-  onDelete(selectedRows: ITLS56080Detail[]): void {
-    this.data = this.data.filter(row => !selectedRows.includes(row));
-    this.calculateTotals();
   }
 
   onSubmit(frm: FormGroup): void {

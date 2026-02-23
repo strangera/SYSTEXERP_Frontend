@@ -52,15 +52,12 @@
         </div>
       </div>
       <hr />
-      <!-- <app-table-report dataKey="PLU_MagNo" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
-        [showCheckBox]="!isFormReadable" (selectionChange)="selectedItems = $event" [showEdit]="false"
-        [showDetail]="false" [showInsert]="true" [showDelete]="!isFormReadable"
-        (insert)="dialogVisible = true;selectedItemsDialog = [];dialogData = []" [showRowEdit]="true"
-        (delete)="onDelete($event)" [showManage]="!isFormReadable" [showReportMode]="false" (dataChange)="data = $event"
-        [insertDisabled]="dataForm.controls.HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"
-        [showInsert]="!isFormReadable" (rowEditSave)="onRowEditSave($event)" [showCaption]="!isFormReadable"
-        (dataChange)="data = $event">
-      </app-table-report> -->
+
+      <app-table-edit [columns]="editColumns" [data]="data" [disabled]="isFormReadable" [canInsert]="false"
+        (insert)="dialogVisible = true;selectedItemsDialog = [];dialogData = []" [tableRequired]="true"
+        (dataChange)="data = $event;this.calculateTotals()" [loading]="loading" [showInsert]="true"
+        [insertDisabled]="dataForm.controls.HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"></app-table-edit>
+
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" (click)="data = originalData" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />
@@ -84,7 +81,7 @@
     </div>
   </form>
   <hr />
-  <app-table-report tableKey="tls56080CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
+  <app-table-report tableKey="tls56080CruDialogTable" [showReportMode]="false" [data]="dialogData"
     [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
     (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
     [queryFunction]="tls52010Service.queryPOS2004Detail.bind(tls52010Service)" [lastQueryBody]="dialogLastQueryBody"
