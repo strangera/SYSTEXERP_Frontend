@@ -19,8 +19,10 @@ export const tlsRoutes: Routes = [
   { path: 'tls24010', loadComponent: () => import('./tls24010/tls24010.component').then(m => m.TLS24010Component), data: { progNo: 'TLS24010' } },
   // 交易補登作業 CRU
   { path: 'tls24010cru', loadComponent: () => import('./tls24010-cru/tls24010-cru.component').then(m => m.TLS24010CRUComponent), data: { progNo: 'TLS24010' } },
-  // 交易補登作業
+  // 交易明細查詢
   { path: 'tls24030', loadComponent: () => import('./tls24030/tls24030.component').then(m => m.TLS24030Component), data: { progNo: 'TLS24030' } },
+  // 交易明細查詢 CRU
+  { path: 'tls24030cru', loadComponent: () => import('./tls24030/tls24030-cru/tls24030-cru.component').then(m => m.TLS24030CRUComponent), data: { progNo: 'TLS24030' } },
   // 交易資料修正報表
   { path: 'tls24020', loadComponent: () => import('./tls24020/tls24020.component').then(m => m.TLS24020Component), data: { progNo: 'TLS24020' } },
   // 保全現金資料轉入作業

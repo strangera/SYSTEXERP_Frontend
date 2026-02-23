@@ -30,9 +30,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report apiUrl="queryTLS24030" tableKey="tls24030" dataKey="ID" [data]="data" [columns]="columns"
-    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [showDelete]="false"
-    [queryFunction]="tls24030Service.queryTLS24030.bind(this.tls24030Service)" [showManage]="false" [showManage]="false"
+  <app-table-report apiUrl="queryTLS24030" tableKey="tls24030" [data]="data" [columns]="columns"
+    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [showDelete]="false" [showEdit]="false"
+    (detail)="onDetail($event)" [queryFunction]="tls24030Service.queryTLS24030.bind(this.tls24030Service)"
     [loading]="loading">
   </app-table-report>
 </div>
