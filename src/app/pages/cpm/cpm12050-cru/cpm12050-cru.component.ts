@@ -1,4 +1,5 @@
 import { NgIf } from '@angular/common';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -189,9 +190,39 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     private cpm12050Service: CPM12050Service,
     private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
-    private imageService: ImageService
+    private imageService: ImageService,
+    private http: HttpClient
   ) {
     super();
+  }
+
+  private openProtectedUrl(url: string) {
+    const token = this.authService.getUserInfo()?.AccessToken;
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+    this.http.get(url, { responseType: 'blob', headers: headers as any })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (blob: Blob) => {
+          const objectUrl = window.URL.createObjectURL(blob);
+          window.open(objectUrl, '_blank');
+          // release after a while
+          setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+        },
+
+      });
+  }
+
+  private openUrlWithAuthIfNeeded(url: string) {
+    try {
+      const apiBase = (environment.ApiUrl || '').replace(/\/$/, '');
+      if (apiBase && url.startsWith(apiBase)) {
+        this.openProtectedUrl(url);
+      } else {
+        window.open(url, '_blank');
+      }
+    } catch (e) {
+      window.open(url, '_blank');
+    }
   }
 
   private setupAlertDateValidation(): void {
@@ -466,7 +497,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             };
 
             // 只呼叫主檔新增（新增模式無明細資料）
-            const hasFiles = !!(this.formFile1 || this.formFile2 || this.formFile3);
+            const hasFilesCreate = !!(this.formFile1 || this.formFile2 || this.formFile3);
 
             const performInsert = (payload: any) => {
               this.cpm12050Service.insertCPM12050(payload)
@@ -504,7 +535,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
                 });
             };
 
-            if (hasFiles) {
+            if (hasFilesCreate) {
               const formData = new FormData();
               Object.keys(insertRequest || {}).forEach(k => {
                 const v = (insertRequest as any)[k];
@@ -524,11 +555,6 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               console.log('DEBUG insertCPM12050 payload', insertRequest);
               performInsert(insertRequest);
             }
-
-          }
-          break;
-        case CRUDStatus.Edit:
-          if (this.canEdit()) {
             // 修改主檔request
             const updateRequest: UpdateCPM12050Request = {
               ID: this.rowdata?.ID || 0,
@@ -596,9 +622,9 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
               return normalize(formValue[f]) !== normalize(row[f]);
             });
 
-            const hasFiles = !!(this.formFile1 || this.formFile2 || this.formFile3);
+            const hasFilesEdit = !!(this.formFile1 || this.formFile2 || this.formFile3);
 
-            if (hasFiles || mainChanged) {
+            if (hasFilesEdit || mainChanged) {
               const formData = new FormData();
               Object.keys(payload || {}).forEach(k => {
                 const v = payload[k];
@@ -824,11 +850,9 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     if (rawFromRow) {
       try {
         const s = String(rawFromRow);
-        // 如果已經是完整的可用 URL，直接使用
+        // 如果已經是完整的可用 URL，直接在新分頁開啟
         if (/^https?:\/\//i.test(s)) {
-          const baseName = s.split('\\').pop()?.split('/').pop() ?? fileName;
-          this.mediaItems = [{ url: s, type: 'image', name: baseName }];
-          this.visible = true;
+          this.openUrlWithAuthIfNeeded(s);
           return;
         }
 
@@ -837,9 +861,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
         if (m && m[1]) {
           const rel = m[1].replace(/\\/g, '/'); // 將反斜線轉為正斜線
           const url = `${environment.ApiUrl.replace(/\/$/, '')}/${rel.replace(/^\/+/, '')}`;
-          const baseName = rel.split('/').pop() ?? fileName;
-          this.mediaItems = [{ url, type: 'image', name: baseName }];
-          this.visible = true;
+          this.openUrlWithAuthIfNeeded(url);
           return;
         }
       } catch (e) {
@@ -874,8 +896,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       if (found) {
         if (found.IMG_Path) {
           const url = `${environment.ApiUrl}/${String(found.IMG_Path).replace('~', '')}/${found.IMG_File}`;
-          this.mediaItems = [{ url, type: 'image', name: found.IMG_File }];
-          this.visible = true;
+          this.openUrlWithAuthIfNeeded(url);
           return;
         }
         const rawFile = String(found.IMG_File || '');
@@ -885,8 +906,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
           const rel = uploadsMatch[0].replace(/\\/g, '/');
           const relDir = rel.split('/').slice(0, -1).join('/');
           const url = `${environment.ApiUrl}/${relDir}/${baseName}`;
-          this.mediaItems = [{ url, type: 'image', name: baseName }];
-          this.visible = true;
+          this.openUrlWithAuthIfNeeded(url);
           return;
         }
       }
