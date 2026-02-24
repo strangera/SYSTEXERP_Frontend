@@ -30,7 +30,10 @@
           <app-dropdown label="申請人編號" controlName="APPLY_USR_No" [options]="userOptions" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.APPLY_USR_No" [submitted]="submitted"></app-dropdown>
         </div>
-
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
+            [submitted]="submitted"></app-calendar>
+        </div>
 
       </div>
       <div class="grid p-fluid mt-2 surface-50 border-round p-2">
@@ -54,10 +57,7 @@
           [control]="dataForm.controls.SPM_TotSaleAmt" [useGrouping]="true" [submitted]="submitted" />
       </div>
       <div class="grid p-fluid mt-2">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
-            [submitted]="submitted"></app-calendar>
-        </div>
+
         <div class="col-12 md:col-6 lg:col-8">
           <app-input-textarea class="col-12" label="領用單說明" controlName="SPM_remark"
             [control]="dataForm.controls.SPM_remark" [submitted]="submitted" />
