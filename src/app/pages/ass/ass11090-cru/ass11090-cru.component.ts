@@ -11,7 +11,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ASS11090Data, ASS11090UpdateRequest, ASS11090DetailRequest, ASS11090DetailItem, PurchaseAccountDetail, ExpenseTransferDetail, DepreciationDetail } from '../ass11090/ass11090.model';
+import { ASS11090Data, ASS11090UpdateRequest, ASS11090DetailRequest, ASS11090DetailItem, PurchaseAccountDetail, ExpenseTransferDetail, DepreciationDetail, VouAccDetail } from '../ass11090/ass11090.model';
 import { ASS11090Service } from '../../../service/api/ass/ass11090.service';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
@@ -516,95 +516,102 @@ export class ASS11090CRUComponent extends BasicCruPageComponent<ASS11090Data> im
     const details: ASS11090DetailItem[] = [];
     const orig = this.originalData;
 
-    // 所屬會計科目(借)
-    if (formValue.AccountingDebitCode !== (orig?.STYPE_ACCNO ?? null)) {
-      details.push({
-        AccKind: 'STYPE_ACCNO',
-        OLD_ORG_ID: '',
-        OLD_AccNo: orig?.STYPE_ACCNO ?? '',
-        NEW_ORG_ID: '',
-        NEW_AccNo: formValue.AccountingDebitCode ?? '',
-      });
-    }
-
-    // 所屬會計科目(貸)
-    if (formValue.AccountingCreditCode !== (orig?.STYPE_ACCNO2 ?? null)) {
-      details.push({
-        AccKind: 'STYPE_ACCNO2',
-        OLD_ORG_ID: '',
-        OLD_AccNo: orig?.STYPE_ACCNO2 ?? '',
-        NEW_ORG_ID: '',
-        NEW_AccNo: formValue.AccountingCreditCode ?? '',
-      });
-    }
-
-    // 進項稅額科目(借)
-    if (formValue.InputTaxDebitCode !== (orig?.STYPE_TAX_ACCNO ?? null)) {
-      details.push({
-        AccKind: 'STYPE_TAX_ACCNO',
-        OLD_ORG_ID: '',
-        OLD_AccNo: orig?.STYPE_TAX_ACCNO ?? '',
-        NEW_ORG_ID: '',
-        NEW_AccNo: formValue.InputTaxDebitCode ?? '',
-      });
-    }
-
-    // 費用科目
-    if (formValue.ExpenseAccountCode !== (orig?.FEES_STYPE_ID_ACCNO ?? null)) {
-      details.push({
-        AccKind: 'FEES_STYPE_ID_ACCNO',
-        OLD_ORG_ID: '',
-        OLD_AccNo: orig?.FEES_STYPE_ID_ACCNO ?? '',
-        NEW_ORG_ID: '',
-        NEW_AccNo: formValue.ExpenseAccountCode ?? '',
-      });
-    }
-
-    // 折舊科目(借)
-    if (formValue.DepreciationDebitCode !== (orig?.DEPRE_STYPE_ACCNO ?? null)) {
-      details.push({
-        AccKind: 'DEPRE_STYPE_ACCNO',
-        OLD_ORG_ID: '',
-        OLD_AccNo: orig?.DEPRE_STYPE_ACCNO ?? '',
-        NEW_ORG_ID: '',
-        NEW_AccNo: formValue.DepreciationDebitCode ?? '',
-      });
-    }
-
-    // 累計折舊科目(貸)
-    if (formValue.AccumulatedDepreciationCreditCode2 !== (orig?.DEPRE_STYPE_ACCNO2 ?? null)) {
-      details.push({
-        AccKind: 'DEPRE_STYPE_ACCNO2',
-        OLD_ORG_ID: '',
-        OLD_AccNo: orig?.DEPRE_STYPE_ACCNO2 ?? '',
-        NEW_ORG_ID: '',
-        NEW_AccNo: formValue.AccumulatedDepreciationCreditCode2 ?? '',
-      });
-    }
-
-    // 折舊年限
-    if (formValue.DepreciationLife !== (orig?.EXP_YEAR ?? null)) {
-      details.push({
-        AccKind: 'EXP_YEAR',
-        OLD_ORG_ID: '',
-        OLD_AccNo: String(orig?.EXP_YEAR ?? ''),
-        NEW_ORG_ID: '',
-        NEW_AccNo: String(formValue.DepreciationLife ?? ''),
-      });
-    }
-
-    // 備注
-    if (formValue.Description !== (orig?.NOTES ?? null)) {
-      details.push({
-        AccKind: 'NOTES',
-        OLD_ORG_ID: '',
-        OLD_AccNo: orig?.NOTES ?? '',
-        NEW_ORG_ID: '',
-        NEW_AccNo: formValue.Description ?? '',
-      });
-    }
+    // 明細三表：採買入帳(STYPE)、費用結轉(FEES)、折舊攤提(DEPRE) — 依索引比對新增/更新/刪除
+    const vouAccDetails = orig?.VouAccDetails ?? [];
+    details.push(
+      ...this.buildDetailItemsForTable(
+        'STYPE',
+        vouAccDetails.filter((d): d is VouAccDetail => d.AccKind === 'STYPE'),
+        this.purchaseAccountDetails().filter((row: PurchaseAccountDetail & { _isAutoInsertCandidate?: boolean }) => !row._isAutoInsertCandidate),
+        'AccountingCode'
+      )
+    );
+    details.push(
+      ...this.buildDetailItemsForTable(
+        'FEES',
+        vouAccDetails.filter((d): d is VouAccDetail => d.AccKind === 'FEES'),
+        this.expenseTransferDetails().filter((row: ExpenseTransferDetail & { _isAutoInsertCandidate?: boolean }) => !row._isAutoInsertCandidate),
+        'ExpenseCode'
+      )
+    );
+    details.push(
+      ...this.buildDetailItemsForTable(
+        'DEPRE',
+        vouAccDetails.filter((d): d is VouAccDetail => d.AccKind === 'DEPRE'),
+        this.depreciationDetails().filter((row: DepreciationDetail & { _isAutoInsertCandidate?: boolean }) => !row._isAutoInsertCandidate),
+        'ExpenseCode'
+      )
+    );
 
     return details;
+  }
+
+  /**
+   * 明細表單一表格的 OLD/NEW 比對：依索引產出新增(OLD 空/NEW 有)、更新(OLD+NEW 皆有)、刪除(OLD 有/NEW 空)。
+   */
+  private buildDetailItemsForTable(
+    accKind: 'STYPE' | 'FEES' | 'DEPRE',
+    origList: VouAccDetail[],
+    currList: Array<PurchaseAccountDetail | ExpenseTransferDetail | DepreciationDetail>,
+    accNoField: string
+  ): ASS11090DetailItem[] {
+    const items: ASS11090DetailItem[] = [];
+    const origLen = origList.length;
+    const currLen = currList.length;
+    const minLen = Math.min(origLen, currLen);
+
+    for (let i = 0; i < minLen; i++) {
+      const orig = origList[i];
+      const curr = currList[i];
+      const oldOrg = orig?.ORG_ID ?? '';
+      const oldAcc = orig?.AccNo ?? '';
+      const newOrg = (curr?.OrganizationCode as string) ?? '';
+      const newAcc = (curr as Record<string, unknown>)?.[accNoField] as string ?? '';
+      const same = oldOrg === newOrg && oldAcc === newAcc;
+      if (same) continue;
+      if (newOrg || newAcc) {
+        items.push({
+          AccKind: accKind,
+          OLD_ORG_ID: oldOrg,
+          OLD_AccNo: oldAcc,
+          NEW_ORG_ID: newOrg,
+          NEW_AccNo: newAcc,
+        });
+      } else {
+        items.push({
+          AccKind: accKind,
+          OLD_ORG_ID: oldOrg,
+          OLD_AccNo: oldAcc,
+          NEW_ORG_ID: '',
+          NEW_AccNo: '',
+        });
+      }
+    }
+    for (let i = minLen; i < currLen; i++) {
+      const curr = currList[i];
+      const newOrg = (curr?.OrganizationCode as string) ?? '';
+      const newAcc = (curr as Record<string, unknown>)?.[accNoField] as string ?? '';
+      if (newOrg && newAcc) {
+        items.push({
+          AccKind: accKind,
+          OLD_ORG_ID: '',
+          OLD_AccNo: '',
+          NEW_ORG_ID: newOrg,
+          NEW_AccNo: newAcc,
+        });
+      }
+    }
+    for (let i = minLen; i < origLen; i++) {
+      const orig = origList[i];
+      items.push({
+        AccKind: accKind,
+        OLD_ORG_ID: orig?.ORG_ID ?? '',
+        OLD_AccNo: orig?.AccNo ?? '',
+        NEW_ORG_ID: '',
+        NEW_AccNo: '',
+      });
+    }
+    return items;
   }
 
   // 編輯模式（此方法現已被 loadDetailData 取代，保留以維持相容性）
