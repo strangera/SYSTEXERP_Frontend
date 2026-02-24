@@ -454,12 +454,8 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
       '結算金額'
     ];
 
-    const exampleData = [
-      ['1', '202507', 'W1219', 'G01', '2025/07/25', '1000', '1000']
-    ];
-
     // 建立工作表
-    const ws = XLSX.utils.aoa_to_sheet([header, ...exampleData]);
+    const ws = XLSX.utils.aoa_to_sheet([header]);
 
     // 3. 設定欄寬 (根據內容長度微調)
     ws['!cols'] = [
@@ -495,7 +491,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
     // 5. 將工作表加入工作簿並下載
     XLSX.utils.book_append_sheet(wb, ws, '能源結算範本');
 
-    const fileName = `能源結算範本_${new Date().toISOString().split('T')[0]}.xlsx`;
+    const fileName = `EnergyUploadSample.xlsx`;
     XLSX.writeFile(wb, fileName);
   }
 }

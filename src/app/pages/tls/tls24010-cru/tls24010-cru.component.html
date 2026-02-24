@@ -57,9 +57,6 @@
         </div>
         <app-input-text class="col-12 md:col-6 lg:col-3" label="免稅卡零稅卡號" [control]="dataForm.controls.TXN_TaxFreeCertNo"
           [submitted]="submitted" controlName="TXN_TaxFreeCertNo" />
-        <!-- <app-dropdown class=" col-12 md:col-6 lg:col-3" label="交易型態" [control]="dataForm.controls.TXN_Status"
-          [submitted]="submitted" [options]="txnStatusOptions" optionLabel="label" optionValue="value"
-          controlName="TXN_Status" /> -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="發票字軌" [control]="dataForm.controls.GUI_Track"
           [submitted]="submitted" controlName="GUI_Track" />
         <app-input-text class="col-12 md:col-6 lg:col-3" label="發票號碼" [control]="dataForm.controls.TXN_GUIBegNo"
@@ -73,9 +70,15 @@
           [submitted]="submitted" controlName="TXN_Uniform" />
         <app-calendar class="col-12 md:col-6 lg:col-3" label="銷售時段" [control]="dataForm.controls.TXN_Time"
           [submitted]="submitted" calendarType="timeOne" controlName="TXN_Time" customPlaceholder="HH:MM" />
-
+        <div class="col-12 md:col-6 lg:col-3 flex align-items-center">
+          <p-checkbox [binary]="true" label="是否為負項交易" [formControl]="dataForm.controls.isNegativeTXN"
+            inputId="isNegativeTXN">
+          </p-checkbox>
+        </div>
         <app-calendar class="col-12 md:col-6 lg:col-3" label="原交易日期" [control]="dataForm.controls.ORG_TXN_Date"
-          [submitted]="submitted" controlName="ORG_TXN_Date"></app-calendar>
+          [submitted]="submitted" controlName="ORG_TXN_Date">
+        </app-calendar>
+
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="原收銀機台" [control]="dataForm.controls.ORG_ECR_No"
           [submitted]="submitted" [options]="ECR_NoOptions | async" optionLabel="label" optionValue="value"
           controlName="ORG_ECR_No" />
@@ -92,9 +95,9 @@
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="紙本發票列印狀態" [control]="dataForm.controls.TXN_PrintTimes"
           [submitted]="submitted" [options]="[{label:'是',value:1},{label:'否',value:0}]" optionLabel="label"
           optionValue="value" controlName="TXN_PrintTimes" />
-        <app-dropdown class="col-12 md:col-6 lg:col-3" label="發票捐贈狀態" [control]="dataForm.controls.TXN_GUI_Donate"
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="發票捐贈狀態" [control]="dataForm.controls.IsHaveGUILoveCode"
           [submitted]="submitted" [options]="[{label:'是',value:'Y'},{label:'否',value:'N'}]" optionLabel="label"
-          optionValue="value" controlName="TXN_GUI_Donate" />
+          optionValue="value" controlName="IsHaveGUILoveCode" />
         <app-input-text class="col-12 md:col-6 lg:col-3" label="捐贈社福團體代碼" [control]="dataForm.controls.TXN_GUILoveCode"
           [submitted]="submitted" controlName="TXN_GUILoveCode" />
       </div>

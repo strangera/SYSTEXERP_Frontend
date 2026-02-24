@@ -88,6 +88,9 @@ export interface IODDetail {
   ODD_Remark: string | null; // 明細備註
   PO_No: string | null; // 採購單號 (可能來自採購單)
   id?: number; // 更新時可能包含的明細ID (Swagger update範例有)
+  LOGO_No?: string; // 品牌代碼
+  org_id?: string; // 組織代碼/組織名稱
+  ODM_TaxType?: string; // 單據稅別
 }
 
 /** 新增 POS2018 資料表 (insertTLS52030) 的請求介面 */
@@ -96,7 +99,7 @@ export interface ITLS52030Request {
   ODM_No?: string; // 進貨單號
   SYS_StoreNo: string; // 公司編號/店號
   VEN_No: string; // 廠商編號
-  // LOGO_No: string; // 品牌代碼
+  LOGO_No: string; // 品牌代碼
   HOS_No: string; // 倉庫代碼
   org_id: string | null; // 組織代碼/組織名稱
   ODM_Date: string | Date; // 申請日期

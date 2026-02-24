@@ -70,7 +70,7 @@
         <app-table-edit class="col-12" tableKey="TLS53010Detail" [columns]="editColumns" [columnGroup]="columnGroup"
           [data]="data" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
           [rowValidate]="validateEntireRow" errorMessage="請至少選擇一個變價項目！" (dataChange)="data = $event"
-          [tableRequired]="true"
+          [tableRequired]="true" [showCheckBox]="false"
           [disabled]="isFormReadable || !(dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value)"
           (insert)="dialogVisible = true" [showInsert]="isFormCreateable || rowdata?.MAM_Status === '0'"
           [insertDisabled]="!(dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value)" />

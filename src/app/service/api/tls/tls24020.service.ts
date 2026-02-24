@@ -4,7 +4,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
 
-export interface TLS24080Request {
+export interface TLS24020Request {
   TXN_Date_Start: string; // e.g. '2025-08-06T09:32:54.534Z'
   TXN_Date_End: string;
   UPD_Date_Start: string;
@@ -14,7 +14,7 @@ export interface TLS24080Request {
   TXN_No_End: number;
   EditType: string;
 }
-export interface TLS24080Data {
+export interface TLS24020Data {
   TLTNoEdit: TLTNoEditItem[];
   DiscCodeEdit: DiscCodeEditItem[];
   TLTIdEdit: TLTIdEditItem[];
@@ -121,12 +121,12 @@ export interface VoidEditItem {
   TXN_Status: string;
 }
 
-export type TLS24080ResultData = TLTNoEditItem | DiscCodeEditItem | TLTIdEditItem | PayNoEditItem | PreOrderEditItem | VoidEditItem;
+export type TLS24020ResultData = TLTNoEditItem | DiscCodeEditItem | TLTIdEditItem | PayNoEditItem | PreOrderEditItem | VoidEditItem;
 
 @Injectable({
   providedIn: 'root',
 })
-export class Tls24080Service {
+export class Tls24020Service {
   private apiUrl = environment.ApiUrl + '/TLS0000/TLS2000';
 
   constructor(private http: HttpClient) { }
@@ -136,8 +136,8 @@ export class Tls24080Service {
    * @param params 查詢條件
    * @returns 包含特定 EditType 資料陣列的 Observable
    */
-  queryTLS24080(params: TLS24080Request): Observable<ApiResponse<TLS24080ResultData[]>> {
-    return this.http.post<ApiResponse<TLS24080Data[]>>(`${this.apiUrl}/queryTLS24080`, params).pipe(
+  queryTLS24020(params: TLS24020Request): Observable<ApiResponse<TLS24020ResultData[]>> {
+    return this.http.post<ApiResponse<TLS24020Data[]>>(`${this.apiUrl}/queryTLS24020`, params).pipe(
       map(res => {
         // 檢查 Data 陣列是否存在且非空
         if (!res.Data || res.Data.length === 0) {
@@ -145,7 +145,7 @@ export class Tls24080Service {
         }
 
         const dataContainer = res.Data[0];
-        let filteredData: TLS24080ResultData[] = [];
+        let filteredData: TLS24020ResultData[] = [];
 
         // 根據 EditType 提取對應的資料陣列
         switch (params.EditType) {
@@ -175,7 +175,7 @@ export class Tls24080Service {
         // 回傳修改後的 ApiResponse 結構，Data 欄位現在是我們需要的陣列
         return {
           ...res,
-          Data: filteredData as TLS24080ResultData[],
+          Data: filteredData as TLS24020ResultData[],
           TotalCount: filteredData.length > 0 ? res.TotalCount : 0 // 總數保持不變，或如果沒有資料則設為 0
         };
       })

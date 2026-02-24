@@ -1,0 +1,95 @@
+:host {
+  /* 確保三個 fileUpload 欄位高度一致並避免內容跑版 */
+  .p-fileupload {
+    min-height: 72px;
+    .p-fileupload-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.5rem 0.25rem;
+    }
+
+    .flex.align-items-center {
+      min-height: 72px;
+      align-items: center;
+    }
+
+    /* 內容區塊（檔名）防溢出 */
+    .flex-1 {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: block;
+    }
+
+    /* 連結檔名固定樣式 */
+    a {
+      color: var(--primary-color, #0ea5a1);
+      display: inline-block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+
+    /* 小螢幕下允許垂直堆疊但保留間距 */
+    @media (max-width: 640px) {
+      min-height: auto;
+      .p-fileupload-content {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+      }
+      .flex-1 {
+        white-space: normal;
+      }
+    }
+  }
+
+  /* 調整按鈕間距，避免推擠檔名 */
+  .p-button.p-button-text.p-button-danger {
+    margin-left: 0.5rem;
+  }
+}
+
+/* 讓每個 .col-12 md:col-4 的欄位等高，並讓 p-fileupload 內容可填滿高度 */
+:host {
+  .grid {
+    align-items: stretch;
+  }
+
+  .grid > .col-12.md\:col-4 {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .grid > .col-12.md\:col-4 .p-fileupload {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .grid > .col-12.md\:col-4 .p-fileupload .p-fileupload-content {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  /* 確保選擇按鈕區塊不會撐高其他欄位 */
+  .p-fileupload .p-fileupload-choose {
+    margin: 0 0 0.5rem 0;
+  }
+
+  @media (max-width: 640px) {
+    .grid > .col-12.md\:col-4 {
+      display: block;
+    }
+    .grid > .col-12.md\:col-4 .p-fileupload {
+      flex: none;
+    }
+  }
+}

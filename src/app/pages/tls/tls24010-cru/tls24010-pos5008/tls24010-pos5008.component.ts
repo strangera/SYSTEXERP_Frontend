@@ -227,9 +227,8 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
     // --- 新增自動帶入金額邏輯 ---
     // 剩餘應付 = 總金額 - 目前已填寫的支付總額 (此時這筆剛勾選，金額還是 null 或 0)
     const remaining = this.totalSaleAmt - this.currentTotalPaid;
-
-    // 只有在金額欄位沒有值或為 0 的時候才自動帶入，且剩餘金額大於 0 才帶入
-    if (!txnPayAmtControl?.value && remaining > 0) {
+    const currentVal = txnPayAmtControl?.value;
+    if ((currentVal === null || currentVal === undefined || currentVal === 0) && Math.abs(remaining) > 0.001) {
       txnPayAmtControl?.setValue(remaining, { emitEvent: false });
     }
     // -------------------------

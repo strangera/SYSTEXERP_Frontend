@@ -196,8 +196,11 @@ export class CPM12050Service {
     return this.http.post<BaseQueryResponse<CPM12050DetailData>>(`${this.apiUrl}/queryCPM12050Detail`, req);
   }
 
-  // 主檔新增
-  insertCPM12050(req: InsertCPM12050Request): Observable<any> {
+  // 主檔新增（支援 JSON 或 FormData（含檔案））
+  insertCPM12050(req: InsertCPM12050Request | FormData): Observable<any> {
+    if (req instanceof FormData) {
+      return this.http.post(`${this.apiUrl}/insertCPM12050`, req);
+    }
     return this.http.post(`${this.apiUrl}/insertCPM12050`, req);
   }
 

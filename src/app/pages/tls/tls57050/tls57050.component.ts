@@ -3,7 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DetailData, DetailFooter, QueryTLS57050Request, SummaryData, SummaryFooter, Tls57050Service } from '@service/api/tls/tls57050.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
@@ -69,7 +68,6 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
 
   constructor(
     public readonly tls57050Service: Tls57050Service,
-    private readonly tls52010Service: Tls52010Service,
     private readonly dropdown: DropdownApiService,
     private readonly fileExportService: FileExportService,
     private readonly datePipe: DatePipe

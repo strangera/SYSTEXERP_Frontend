@@ -38,24 +38,24 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              label="品項進價"
-              descLabel="(報價金額)"
-              [startControl]="queryForm.controls.purchaseFrom"
-              [endControl]="queryForm.controls.purchaseTo"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
-              label="品項單價"
-              descLabel=""
-              [startControl]="queryForm.controls.singlePriceFrom"
-              [endControl]="queryForm.controls.singlePriceTo"
+              label="品項進價"
+              [startControl]="queryForm.controls.goodsPriceFrom"
+              [endControl]="queryForm.controls.goodsPriceTo"
               [submitted]="submitted"
+              [useGrouping]="false"
+            ></app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              label="品項單價"
+              [startControl]="queryForm.controls.salePriceFrom"
+              [endControl]="queryForm.controls.salePriceTo"
+              [submitted]="submitted"
+              [useGrouping]="false"
             ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -69,22 +69,22 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+        </div>
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick
               calendarType="dateRange"
               label="報價期限"
-              [startControl]="queryForm.controls.reportFrom"
-              [endControl]="queryForm.controls.reportTo"
+              [startControl]="queryForm.controls.expDateFrom"
+              [endControl]="queryForm.controls.expDateTo"
               [submitted]="submitted"
             ></app-calendar-range-quick>
           </div>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="登錄批號"
-              controlName="loginBatches"
-              [control]="queryForm.controls.loginBatches"
+              controlName="batchId"
+              [control]="queryForm.controls.batchId"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -101,13 +101,15 @@
 </div>
 <div class="card">
   <app-table-report
-    dataKey="id"
+    dataKey="FAQuotationM_ID"
     [data]="data"
     [columns]="columns"
     [totalRecords]="totalRecords"
     [loading]="loading"
     [lastQueryBody]="lastQueryBody"
     [queryFunction]="queryFunction"
+    [addButton]="addButton"
+    [showCheckBox]="true"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     (delete)="onDelete($event)"

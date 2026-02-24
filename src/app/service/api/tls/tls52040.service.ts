@@ -89,6 +89,9 @@ export interface ITLS52040Detail {
   RJD_ConfirmQty_Finished?: number; // 已完成確認數量 (累計已驗收數量)
   CRN_No?: string; // 退貨單號 (關聯)
   RJM_No?: string; // 退貨驗收單號 (主檔關聯)
+  LOGO_No?: string; // 品牌代碼
+  org_id?: string; // 組織代碼
+  RJM_TaxType?: string; // 單據稅別
 }
 
 /** 新增 POS2031 資料表 (insertTLS52040) 的請求介面 */
@@ -98,7 +101,7 @@ export interface TLS52040Request {
   SYS_StoreNo?: string; // 門店編號 (系統)
   HOS_No?: string; // 倉庫代碼
   VEN_No?: string; // 廠商編號
-  // LOGO_No?: string; // 品牌代碼
+  LOGO_No?: string; // 品牌代碼
   org_id?: string; // 組織代碼
   RJM_TaxType?: string; // 單據稅別
   RJM_Status?: string; // 退貨驗收狀態 (通常為初始狀態，例如 '0' 已申請)
