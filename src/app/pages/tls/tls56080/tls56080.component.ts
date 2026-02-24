@@ -1,17 +1,17 @@
-import { CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls52010Service } from '@service/api/tls/tls52010.service';
 import { IQueryTLS56080Request, IQueryTLS56080Response, Tls56080Service } from '@service/api/tls/tls56080.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, formatDateTime } from '@shared/componentkit/table/table.model';
+import { formatDate } from '@shared/componentkit/table-report/table-report.model';
+import { Column } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -47,6 +47,7 @@ export const enum TRDStatus {
     MultiSelectComponent,
     CalendarRangeQuickComponent,
     ButtonModule,
+    AsyncPipe
   ],
 })
 export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Response> implements OnInit {
@@ -65,7 +66,7 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
     APRV_Date_End: [null],
     pageSize: [30],
     pageIndex: [1],
-    SortBy: [[{ field: 'TRD_No', order: 1 }]],
+    SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'TRD_No', order: -1 }]],
   });
   totalRecords = 0;
   data: IQueryTLS56080Response[] = [];
@@ -73,7 +74,7 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
   lastQuery: IQueryTLS56080Request | null = null;
   columns: Column[] = [
     { field: 'TRD_No', header: '調撥單編號', visible: true },
-    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime },
+    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate },
     { field: 'VEN_No', header: '廠商編號', visible: true },
     { field: 'HOS_No', header: '倉別', visible: true },
     { field: 'IN_TotBuyAmt', header: '調入金額', visible: true },
@@ -82,7 +83,7 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
     { field: 'TRD_Reason', header: '調撥原因', visible: true, format: (value) => this.reasonOptions.find((item) => item.value === value)?.label || value },
     { field: 'APPLY_USR_No', header: '申請人', visible: true },
     { field: 'Confim_USR_No', header: '確認人', visible: true },
-    { field: 'Confim_Date', header: '確認日期', visible: true, format: formatDateTime },
+    { field: 'Confim_Date', header: '確認日期', visible: true, format: formatDate },
     { field: 'TRD_Remark', header: '說明', visible: true },
     { field: 'TRD_Status', header: '單據狀態', visible: true, format: (value) => this.transferStatusOptions.find((item) => item.value === value)?.label || value },
   ];
@@ -103,34 +104,19 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
     { label: '特殊', value: '5' },
   ];
 
-  brandOptions: { label: string; value: string }[] = [];
-  warehouseOptions: { label: string; value: string }[] = [];
-  vendorOptions: { label: string; value: string }[] = [];
-  userOptions: { label: string; value: string }[] = [];
+  brandOptions = this.dropdown.queryPluLogo();
+  warehouseOptions = this.dropdown.queryPos2034();
+  userOptions = this.dropdown.queryTblUser();
 
   constructor(
     public readonly tls56080Service: Tls56080Service,
-    private readonly dropDownListService: DropDownListService,
-    private readonly tls52010Service: Tls52010Service
+    private readonly dropdown: DropdownApiService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS56080', '/TLS/TLS56080CRU', this.queryForm, (form) => this.onSubmit(form));
-    this.loadDropdownOptions();
-  }
-
-  loadDropdownOptions(): void {
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.brandOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(options => {
-      this.warehouseOptions = options.Data.map(item => ({ label: item.Name, value: item.No }));
-    });
-    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
   }
 
   onSubmit(frm: FormGroup): void {
