@@ -5,10 +5,10 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { LogoAccorHosItem, Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { formatAmount } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, finalize, forkJoin, map } from 'rxjs';
 import { IPODetail, IPOS2004DetailData, IQueryPOS2004DetailRequest, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
@@ -26,6 +26,7 @@ import { InputTextareaComponent } from '../../../shared/componentkit/input-texta
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { mapPagingToBackend } from '../tls56020/tls56020.model';
+import { formatAmount } from './../tls55070/tls55070-table/tls55070-table.model';
 
 // 2.5.2.1  採購單維護作業 CRU
 @Component({
@@ -47,7 +48,8 @@ import { mapPagingToBackend } from '../tls56020/tls56020.model';
     DialogComponent,
     DropdownTableComponent,
     TranslateModule,
-    TableEditComponent
+    TableEditComponent,
+    InputNumberComponent
   ],
 })
 export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> implements OnInit {
@@ -61,13 +63,19 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     PO_TotalBuyTax: [{ value: 0, disabled: true }], //稅額
     PO_TotalBuyAmt: [{ value: 0, disabled: true }], // 合計金額
     PO_TotalSaleAmt: [{ value: 0, disabled: true }], //售價總計
+    SPM_TotQty: [{ value: 0, disabled: true }], // 領用數量合計
+    SPM_TotBuyNet: [{ value: 0, disabled: true }], // 領用未稅進價小計
+    SPM_TotBuyTax: [{ value: 0, disabled: true }], // 領用進價稅額小計
+    SPM_TotBuyAmt: [{ value: 0, disabled: true }], // 領用進價合計
+    SPM_TotSaleNet: [{ value: 0, disabled: true }], // 領用未稅售價小計
+    SPM_TotSaleTax: [{ value: 0, disabled: true }], // 領用售價稅額小計
+    SPM_TotSaleAmt: [{ value: 0, disabled: true }], // 領用售價合計
     APPLY_USR_No: [''], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_USR_Name: [''], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_Date: [new Date() as Date | null, [Validators.required]], // 申請日期 (移除 disabled: true)**
     PO_Remark: [null as string | null, [Validators.maxLength(200)]], // 採購單備註 (對應 POS2016.PO_Remark)
     SPM_Type: [null as string | null], // 領用類別
     SPM_remark: [''],
-
 
   });
   issuanceTypeOptions: { label: string; value: string }[] = [
@@ -102,6 +110,17 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     { field: 'NowHaveQty', header: '目前庫存' },
     { field: 'PLU_SalePrc', header: '商品售價', type: 'inputNumber' },
     { field: 'PLU_SalePrc_UNI', header: '商品進價', type: 'inputNumber' },
+    {
+      field: 'SPD_ConfirmQty', header: '領用量', type: 'inputNumber', width: '50px',
+      onBlur: (rowData: IPOS2004DetailData, value: number, col: EditColumn, index: number) => this.onSPDConfirmQtyChange(rowData, value, col, index)
+    },
+    { field: 'SPD_BuyPrc', header: '進單價(未稅)', format: formatAmount },
+    { field: 'SPD_BuyTax', header: '進價稅額', format: formatAmount },
+    { field: 'SPD_BuyAmt', header: '進價小計', format: formatAmount },
+    { field: 'SPD_BuyNet', header: '進價小計(未稅)', format: formatAmount },
+    // { field: 'PLU_TaxType', header: '售價稅別' },
+    { field: 'SPD_SaleTax', header: '售價稅額', format: formatAmount },
+    { field: 'SPD_SaleAmt', header: '售價小計', format: formatAmount },
     { field: 'POD_Remark', header: '備註', type: 'input' },
   ];
   originalData: IPOS2004DetailData[] = [];
@@ -127,7 +146,7 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       PageSize: 1,
       PageIndex: 1,
       SortBy: [],
-      PLU_MagNo: value,
+      queryNo: value,
       PLU_Name: '',
       VEN_No: '',
       LOGO_No: logoNo || '',
@@ -171,6 +190,15 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
             POD_SaleTax: saleTax, // 新增 (確保明細資料結構包含此欄位)
             POD_Remark: ''
           };
+          // 同步設定顯示用 SPD_* 欄位（runtime 屬性）
+          (updatedRow as any).SPD_ConfirmQty = updatedRow.POD_SubQty || 0;
+          (updatedRow as any).SPD_BuyPrc = updatedRow.PLU_SalePrc_UNI || 0;
+          (updatedRow as any).SPD_BuyNet = updatedRow.POD_BuyNet || updatedRow.POD_BuyNet === 0 ? updatedRow.POD_BuyNet : Math.round((updatedRow.PLU_SalePrc_UNI || 0) * (updatedRow.POD_SubQty || 0));
+          (updatedRow as any).SPD_BuyTax = updatedRow.POD_BuyTax || (updatedRow.PLU_StockTaxType === '1' ? Math.round(((updatedRow.POD_BuyNet || 0)) * 0.05) : 0);
+          (updatedRow as any).SPD_BuyAmt = (updatedRow as any).SPD_BuyNet + (updatedRow as any).SPD_BuyTax;
+          (updatedRow as any).SPD_SalePrc = updatedRow.PLU_SalePrc || 0;
+          (updatedRow as any).SPD_SaleAmt = updatedRow.POD_SaleAmt || Math.round((updatedRow.PLU_SalePrc || 0) * (updatedRow.POD_SubQty || 0));
+          (updatedRow as any).SPD_SaleTax = updatedRow.POD_SaleTax ?? (updatedRow.PLU_TaxType === '1' ? Math.round(((updatedRow.PLU_SalePrc || 0) * (updatedRow.POD_SubQty || 0)) / 21) : 0);
           const currentRow = this.data[index];
           if (currentRow) {
             Object.assign(currentRow, updatedRow);
@@ -205,6 +233,44 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       });
     }, 50);
   }
+  onSPDConfirmQtyChange(rowData: IPOS2004DetailData, value: any, col: EditColumn, index: number) {
+    const qty = Number(value) || 0;
+    // 同步 POD_SubQty
+    (rowData as any).POD_SubQty = qty;
+
+    const buyPrc = Number((rowData as any).PLU_SalePrc_UNI ?? (rowData as any).POD_BuyPrc ?? 0) || 0;
+    const buyNet = Math.round(buyPrc * qty);
+    const buyTax = (rowData as any).PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;
+    const buyAmt = buyNet + buyTax;
+
+    const salePrc = Number((rowData as any).PLU_SalePrc ?? 0) || 0;
+    const saleAmt = Math.round(salePrc * qty);
+    const saleTax = (rowData as any).PLU_TaxType === '1' ? Math.round(saleAmt / 21) : 0;
+    const saleNet = saleAmt - saleTax;
+
+    // 更新 POD_* 實際欄位（後端送出使用）
+    (rowData as any).POD_BuyNet = buyNet;
+    (rowData as any).POD_BuyTax = buyTax;
+    (rowData as any).POD_BuyAmt = buyAmt;
+    (rowData as any).POD_SaleAmt = saleAmt;
+    (rowData as any).POD_SaleTax = saleTax;
+
+    // 更新顯示用 SPD_* 屬性
+    (rowData as any).SPD_ConfirmQty = qty;
+    (rowData as any).SPD_BuyPrc = buyPrc;
+    (rowData as any).SPD_BuyNet = buyNet;
+    (rowData as any).SPD_BuyTax = buyTax;
+    (rowData as any).SPD_BuyAmt = buyAmt;
+    (rowData as any).SPD_SalePrc = salePrc;
+    (rowData as any).SPD_SaleAmt = saleAmt;
+    (rowData as any).SPD_SaleTax = saleTax;
+    (rowData as any).SPD_SaleNet = saleNet;
+
+    // trigger update
+    this.data = [...this.data];
+    this.calculateTotals();
+    this.cdr.detectChanges();
+  }
   loadDetailData() {
     if (!this.rowdata) { return; }
     const payload = {
@@ -218,33 +284,44 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     };
     this.tls56020Service.queryPOS2024(payload).pipe(untilDestroyed(this)).subscribe((res: any) => {
       const rows = res?.Data || [];
-      this.data = rows.map((d: any, idx: number) => ({
-        PO_No: d.PO_No ?? (this.rowdata as any).SPM_No ?? '',
-        HOS_No: d.HOS_No ?? payload.HOS_No ?? '',
-        id: d.id || d.POS2017_ID || 0,
-        POD_SeqNo: d.POD_SeqNo ?? (idx + 1),
-        PLU_MagNo: d.PLU_MagNo,
-        PLU_Name: d.PLU_Name,
-        PLU_No: d.PLU_No,
-        PLU_Unit: d.PLU_Unit,
-        UNIT_NAME: d.UNIT_NAME ?? d.PLU_Unit,
-        PLU_BoxQty: d.PLU_BoxQty ?? 0,
-        PLU_StockTaxType: d.PLU_StockTaxType ?? '',
-        PLU_TaxType: d.PLU_TaxType ?? '',
-        // 進價/售價欄位優先取原欄位，若後端回的是 SPD_ 前綴則也要支援
-        PLU_SalePrc_UNI: d.PLU_SalePrc_UNI ?? d.POD_BuyPrc ?? d.SPD_BuyPrc ?? 0,
-        PLU_SalePrc: d.PLU_SalePrc ?? d.POD_SalePrc ?? d.SPD_SalePrc ?? 0,
-        // 庫存/數量與金額
-        NowHaveQty: d.NowHaveQty ?? d.NowHaveQty ?? 0,
-        POD_SubQty: d.POD_SubQty ?? d.SPD_ConfirmQty ?? 0,
-        POD_BuyNet: d.POD_BuyNet ?? d.SPD_BuyNet ?? 0,
-        POD_BuyTax: d.POD_BuyTax ?? d.SPD_BuyTax ?? 0,
-        POD_BuyAmt: d.POD_BuyAmt ?? d.SPD_BuyAmt ?? 0,
-        POD_SaleAmt: d.POD_SaleAmt ?? d.SPD_SaleAmt ?? 0,
-        POD_Remark: d.POD_Remark ?? d.SPD_Remark ?? '',
-        PLU_OrgPLUNo: d.PLU_OrgPLUNo ?? '',
-        _TABLE_KEY: d._TABLE_KEY ?? `r${idx}`
-      } as IPOS2004DetailData));
+      this.data = rows.map((d: any, idx: number) => {
+        const row: any = {
+          PO_No: d.PO_No ?? (this.rowdata as any).SPM_No ?? '',
+          HOS_No: d.HOS_No ?? payload.HOS_No ?? '',
+          id: d.id || d.POS2017_ID || 0,
+          POD_SeqNo: d.POD_SeqNo ?? (idx + 1),
+          PLU_MagNo: d.PLU_MagNo,
+          PLU_Name: d.PLU_Name,
+          PLU_No: d.PLU_No,
+          PLU_Unit: d.PLU_Unit,
+          UNIT_NAME: d.UNIT_NAME ?? d.PLU_Unit,
+          PLU_BoxQty: d.PLU_BoxQty ?? 0,
+          PLU_StockTaxType: d.PLU_StockTaxType ?? '',
+          PLU_TaxType: d.PLU_TaxType ?? '',
+          // 進價/售價欄位優先取原欄位，若後端回的是 SPD_ 前綴則也要支援
+          PLU_SalePrc_UNI: d.PLU_SalePrc_UNI ?? d.POD_BuyPrc ?? d.SPD_BuyPrc ?? 0,
+          PLU_SalePrc: d.PLU_SalePrc ?? d.POD_SalePrc ?? d.SPD_SalePrc ?? 0,
+          // 庫存/數量與金額
+          NowHaveQty: d.NowHaveQty ?? d.NowHaveQty ?? 0,
+          POD_SubQty: d.POD_SubQty ?? d.SPD_ConfirmQty ?? 0,
+          POD_BuyNet: d.POD_BuyNet ?? d.SPD_BuyNet ?? 0,
+          POD_BuyTax: d.POD_BuyTax ?? d.SPD_BuyTax ?? 0,
+          POD_SaleAmt: d.POD_SaleAmt ?? d.SPD_SaleAmt ?? 0,
+          POD_Remark: d.POD_Remark ?? d.SPD_Remark ?? '',
+          PLU_OrgPLUNo: d.PLU_OrgPLUNo ?? '',
+          _TABLE_KEY: d._TABLE_KEY ?? `r${idx}`
+        };
+        // 設定顯示用的 SPD_* 欄位（runtime 屬性，避開型別錯誤）
+        (row as any).SPD_ConfirmQty = row.POD_SubQty || 0;
+        (row as any).SPD_BuyPrc = row.PLU_SalePrc_UNI || 0;
+        (row as any).SPD_BuyNet = row.POD_BuyNet || Math.round((row.PLU_SalePrc_UNI || 0) * (row.POD_SubQty || 0));
+        (row as any).SPD_BuyTax = row.POD_BuyTax || (row.PLU_StockTaxType === '1' ? Math.round(((row.POD_BuyNet || 0)) * 0.05) : 0);
+        (row as any).SPD_BuyAmt = (row as any).SPD_BuyNet + (row as any).SPD_BuyTax;
+        (row as any).SPD_SalePrc = row.PLU_SalePrc || 0;
+        (row as any).SPD_SaleAmt = row.POD_SaleAmt || Math.round((row.PLU_SalePrc || 0) * (row.POD_SubQty || 0));
+        (row as any).SPD_SaleTax = row.POD_SaleTax ?? (row.PLU_TaxType === '1' ? Math.round(((row.PLU_SalePrc || 0) * (row.POD_SubQty || 0)) / 21) : 0);
+        return row as IPOS2004DetailData;
+      });
       this.originalData = JSON.parse(JSON.stringify(this.data));
       this.calculateTotals();
       this.cdr.detectChanges();
@@ -515,7 +592,7 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
 
     const body: any = {
       ...pagingMapped,
-      PLU_MagNo: raw.PLU_MagNo || raw.queryNo || '',
+      queryNo: raw.PLU_MagNo || raw.queryNo || '',
       PLU_Name: raw.PLU_Name ?? '',
       CAT_LNo: raw.CAT_LNo ?? '',
       CAT_MNo: raw.CAT_MNo ?? '',
@@ -533,7 +610,19 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
   saveDialog() {
     this.dialogVisible = false;
-    const newItems = this.selectedItemsDialog.map(item => ({ ...item, id: 0 }));
+    const newItems = this.selectedItemsDialog.map(item => {
+      const copy: any = { ...item, id: 0 };
+      // 設定顯示用 SPD_* 欄位
+      copy.SPD_ConfirmQty = copy.POD_SubQty ?? copy.SPD_ConfirmQty ?? 0;
+      copy.SPD_BuyPrc = copy.PLU_SalePrc_UNI ?? copy.POD_BuyPrc ?? 0;
+      copy.SPD_BuyNet = copy.POD_BuyNet ?? Math.round((copy.SPD_BuyPrc || 0) * (copy.SPD_ConfirmQty || 0));
+      copy.SPD_BuyTax = copy.POD_BuyTax ?? (copy.PLU_StockTaxType === '1' ? Math.round(((copy.SPD_BuyNet || 0)) * 0.05) : 0);
+      copy.SPD_BuyAmt = (copy.SPD_BuyNet || 0) + (copy.SPD_BuyTax || 0);
+      copy.SPD_SalePrc = copy.PLU_SalePrc ?? 0;
+      copy.SPD_SaleAmt = copy.POD_SaleAmt ?? Math.round((copy.SPD_SalePrc || 0) * (copy.SPD_ConfirmQty || 0));
+      copy.SPD_SaleTax = copy.POD_SaleTax ?? (copy.PLU_TaxType === '1' ? Math.round(((copy.SPD_SalePrc || 0) * (copy.SPD_ConfirmQty || 0)) / 21) : 0);
+      return copy as IPOS2004DetailData;
+    });
     this.data = [
       ...this.data,
       ...newItems
@@ -549,27 +638,51 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
 
   // 總計計算邏輯
   calculateTotals(): void {
-    let totalBuyNet = 0; // 採購金額(即所有明細的「小計」加總)
-    let totalBuyTax = 0; // 稅額
-    let totalSaleAmt = 0; // 售價總計(即所有明細的「售價小計」加總)
+    let totalBuyNet = 0;
+    let totalBuyTax = 0;
+    let totalBuyAmt = 0;
+    let totalSaleAmt = 0;
+    let totalSaleTax = 0;
+    let totalSaleNet = 0;
+    let totalQty = 0;
     try {
       this.data.forEach(item => {
-        const buyNet = Number(item.POD_BuyNet) || 0;
-        const buyTax = Number(item.POD_BuyTax) || 0; // 從明細項中取得已計算的稅額
-        const saleAmt = Number(item.POD_SaleAmt) || 0;
+        const qty = Number(item.POD_SubQty ?? (item as any).SPD_ConfirmQty ?? 0) || 0;
+        const buyPrc = Number(item.PLU_SalePrc_UNI ?? (item as any).SPD_BuyPrc ?? 0) || 0;
+        const buyNet = Number(item.POD_BuyNet ?? Math.round(buyPrc * qty)) || 0;
+        const buyTax = Number(item.POD_BuyTax ?? (item.PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0)) || 0;
+        const buyAmt = buyNet + buyTax;
+
+        const salePrc = Number(item.PLU_SalePrc ?? (item as any).SPD_SalePrc ?? 0) || 0;
+        const saleAmt = Number(item.POD_SaleAmt ?? Math.round(salePrc * qty)) || 0;
+        const saleTax = Number(item.POD_SaleTax ?? (item.PLU_TaxType === '1' ? Math.round(saleAmt / 21) : 0)) || 0;
+        const saleNet = saleAmt - saleTax;
+
+        totalQty += qty;
         totalBuyNet += buyNet;
-        totalBuyTax += buyTax; // 簡單加總明細稅額
+        totalBuyTax += buyTax;
+        totalBuyAmt += buyAmt;
         totalSaleAmt += saleAmt;
+        totalSaleTax += saleTax;
+        totalSaleNet += saleNet;
       });
     } catch (e) {
-      totalBuyNet = totalBuyTax = totalSaleAmt = 0;
+      totalBuyNet = totalBuyTax = totalBuyAmt = totalSaleAmt = totalSaleTax = totalSaleNet = totalQty = 0;
     }
-    const totalBuyAmt = totalBuyNet + totalBuyTax; // 採購合計
-    // ... 後續的 setValue 保持不變
+
     this.dataForm.controls.PO_TotalBuyNet.setValue(Math.round(totalBuyNet));
     this.dataForm.controls.PO_TotalBuyTax.setValue(Math.round(totalBuyTax));
     this.dataForm.controls.PO_TotalBuyAmt.setValue(Math.round(totalBuyAmt));
     this.dataForm.controls.PO_TotalSaleAmt.setValue(Math.round(totalSaleAmt));
+
+    // 更新 SPM totals (readonly controls)
+    this.dataForm.controls.SPM_TotQty.setValue(Math.round(totalQty));
+    this.dataForm.controls.SPM_TotBuyNet.setValue(Math.round(totalBuyNet));
+    this.dataForm.controls.SPM_TotBuyTax.setValue(Math.round(totalBuyTax));
+    this.dataForm.controls.SPM_TotBuyAmt.setValue(Math.round(totalBuyAmt));
+    this.dataForm.controls.SPM_TotSaleNet.setValue(Math.round(totalSaleNet));
+    this.dataForm.controls.SPM_TotSaleTax.setValue(Math.round(totalSaleTax));
+    this.dataForm.controls.SPM_TotSaleAmt.setValue(Math.round(totalSaleAmt));
     this.cdr.detectChanges();
   }
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
@@ -616,6 +729,9 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         APPLY_Date: formData.APPLY_Date ? new Date(formData.APPLY_Date).toISOString() : null,
         APPLY_USR_No: this.authService.currentUserValue?.user_No || '',
         APPLY_USR_Name: this.authService.currentUserValue?.user_Name || '',
+        id: 0,
+        SPM_No: formData.SPM_No || '',
+        SPM_Status: '',
         SPM_TotQty: totalSubQty,
         SPM_TotBuyNet: formData.PO_TotalBuyNet || 0,
         SPM_TotBuyTax: formData.PO_TotalBuyTax || 0,
@@ -668,7 +784,7 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       PageSize: 30,
       PageIndex: 1,
       SortBy: [{ field: 'PLU_No', order: 1 }],
-      PLU_MagNo: event.label || '',
+      queryNo: event.label || '',
       PLU_Name: '',
       VEN_No: '',
       LOGO_No: this.dataForm.controls.LOGO_No.value || '',
