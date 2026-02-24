@@ -1,9 +1,8 @@
-<p-table #dt [value]="virtualData" [scrollable]="true" [dataKey]="dataKey" scrollHeight="1200px" [rows]="30"
-  sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true" [reorderableColumns]="true"
-  [loading]="isLoading" [totalRecords]="totalRecords"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" [virtualScrollItemSize]="40"
-  [lazy]="totalRecords < 30 ? false : true" [virtualScrollOptions]="{
+<p-table #dt [value]="virtualData.length > 0 ? virtualData : data" [scrollable]="true" [dataKey]="dataKey"
+  scrollHeight="1200px" [rows]="30" sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true"
+  [reorderableColumns]="true" [loading]="isLoading" [totalRecords]="totalRecords"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [virtualScroll]="false" [loading]="loading"
+  [virtualScrollItemSize]="40" [lazy]="true" [virtualScrollOptions]="{
       delay: 50,
       inline: true,
       trackBy: trackByFn,
@@ -31,7 +30,7 @@
       <th class="break-word text-center" [attr.colspan]="(aps1003_D | async)?.length">比率分攤</th>
 
       <th class="break-word text-center" rowspan="3">結帳後幾天匯款</th>
-      <th class="w-10rem break-word text-center" rowspan="3">備註</th>
+      <!-- <th class="w-17rem break-word text-center" rowspan="3">備註</th> -->
     </tr>
     <tr>
       <!-- 店櫃資料 -->
@@ -200,9 +199,9 @@
       </ng-container>
 
       <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.check_day}}</td>
-      <td class="break-word text-center" [ngStyle]="{'min-width': '150px'}" [attr.rowspan]="rowData.rowspanCount"
+      <!-- <td class="break-word text-center" [ngStyle]="{'min-width': '150px'}" [attr.rowspan]="rowData.rowspanCount"
         *ngIf="rowData.isMainRow">
-        {{rowData.tlt_remark}}</td>
+        {{rowData.tlt_remark}}</td> -->
     </tr>
   </ng-template>
   <ng-template pTemplate="summary">
