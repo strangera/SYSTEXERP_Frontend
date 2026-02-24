@@ -70,7 +70,7 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     SPM_TotSaleNet: [{ value: 0, disabled: true }], // 領用未稅售價小計
     SPM_TotSaleTax: [{ value: 0, disabled: true }], // 領用售價稅額小計
     SPM_TotSaleAmt: [{ value: 0, disabled: true }], // 領用售價合計
-    APPLY_USR_No: [''], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
+    APPLY_USR_No: [this.authService.currentUserValue?.user_No ?? ''],
     APPLY_USR_Name: [''], // 申請人員姓名 (對應 POS2016.APPLY_USR_Name)
     APPLY_Date: [new Date() as Date | null, [Validators.required]], // 申請日期 (移除 disabled: true)**
     PO_Remark: [null as string | null, [Validators.maxLength(200)]], // 採購單備註 (對應 POS2016.PO_Remark)
