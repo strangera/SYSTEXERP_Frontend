@@ -161,8 +161,8 @@ export class TLS56060CRUComponent extends BasicCruPageComponent<ITLS56060Respons
       });
 
       this.calculateTotals();
-      this.initComponent = true;
     });
+    this.initComponent = true;
   }
 
   loadDropdownOptions(): void {

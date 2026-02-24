@@ -143,9 +143,9 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
         });
         this.data = [...data]
         this.calculateTotals();
-        this.initComponent = true;
       });
     }
+    this.initComponent = true;
   }
   /** 抽取單一 Row 的計算邏輯 */
   private calculateRowFinancials(rowData: any, qty: number) {
