@@ -1,11 +1,10 @@
-import { CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls52010Service } from '@service/api/tls/tls52010.service';
 import { IQueryTLS56060Request, ITLS56060Response, Tls56060Service } from '@service/api/tls/tls56060.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -36,12 +35,13 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     TableReportComponent,
     CommonModule,
     MultiSelectComponent,
-    CalendarRangeQuickComponent
+    CalendarRangeQuickComponent,
+    AsyncPipe
   ],
 })
 export class TLS56060Component extends BasicQueryPageComponent<ITLS56060Response> implements OnInit {
   queryForm = this.formBuilder.group({
-    MVM_No: [null, [Validators.maxLength(12)]],               // varchar(12)
+    MVM_No: [null, [Validators.maxLength(14)]],               // varchar(12)
     queryNo: [null, [Validators.maxLength(20)]],          // 非 POS2021 欄位，保留不設驗證
     IN_HOS_NoList: [null],          // varchar(6)
     LOGO_NoList: [null],                                        // 非 POS2021 欄位，保留不設驗證
@@ -60,8 +60,8 @@ export class TLS56060Component extends BasicQueryPageComponent<ITLS56060Response
   columns: Column[] = [
     { field: 'MVM_No', header: '調撥單編號', visible: true },
     { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime },
-    { field: 'IN_HOS_NAME', header: '調入倉別', visible: true },
-    { field: 'OUT_HOS_NAME', header: '調出倉別', visible: true },
+    { field: 'IN_HOS_No_NAME', header: '調入倉別', visible: true },
+    { field: 'OUT_HOS_No_NAME', header: '調出倉別', visible: true },
     { field: 'LOGO_No', header: '品牌', visible: true },
     { field: 'MVM_Remark', header: '說明', visible: true },
     { field: 'APPLY_USR_No', header: '申請人編號', visible: true },
@@ -76,30 +76,17 @@ export class TLS56060Component extends BasicQueryPageComponent<ITLS56060Response
     { label: '已發貨', value: '3' },
     { label: '已收貨確認', value: '4' },
   ];
-  brandOptions: { label: string; value: string }[] = [];// 品牌
-  warehouseOptions: { label: string; value: string }[] = []; // 倉別
-  userOptions: { label: string; value: string }[] = [];
+  brandOptions = this.dropDown.queryPluLogo(); // 品牌選項
+  warehouseOptions = this.dropDown.queryPos2034(); // 倉別
+  userOptions = this.dropDown.queryTblUser(); // 人員選項
   DEP_NoOptions: { label: string; value: string }[] = [];// 部門編號
   constructor(
-    private readonly tls52010Service: Tls52010Service,
     public readonly tls56060Service: Tls56060Service,
-    private readonly dropDownListService: DropDownListService,
+    private readonly dropDown: DropdownApiService,
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS56060', '/TLS/TLS56060CRU', this.queryForm, (form) => this.onSubmit(form));
-    // 倉別 (HOS_No)
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(options => {
-      this.warehouseOptions = options.Data.map(item => ({ label: item.Name, value: item.No }));
-    });
-    // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.brandOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
-    // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
   }
 
   onSubmit(frm: FormGroup) {

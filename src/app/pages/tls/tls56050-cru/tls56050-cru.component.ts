@@ -1,10 +1,10 @@
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ITLS56050Detail, ITLS56050Request, ITLS56050Response, Tls56050Service } from '@service/api/tls/tls56050.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
@@ -35,7 +35,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     NgIf,
     TranslateModule,
     InputTextareaComponent,
-    TableEditComponent
+    TableEditComponent,
+    AsyncPipe
   ],
   providers: [MessageService]
 })
@@ -73,52 +74,33 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
       header: '發貨量',
       type: 'inputNumber',
       min: 0,
-      // 當發貨量改變時觸發計算
-      calculate: (rowData: any, value: number) => {
-        const outgodsQty = value || 0;
-        const buyPrice = rowData.MVD_BuyPrc || 0;
-        const salePrice = rowData.MVD_SalePrc || 0;
-        // 1. 計算未稅進價小計
-        const buyNet = buyPrice * outgodsQty;
-        // 2. 計算稅額 (應稅 '1' 算 5%)
-        let buyTax = 0;
-        if (rowData.PLU_StockTaxType === '1') {
-          buyTax = Math.floor(buyNet * 0.05);
-        }
-        // 3. 計算含稅總額與售價總額
-        const buyAmt = buyNet + buyTax;
-        const saleAmt = salePrice * outgodsQty;
-        return {
-          OUTGODS_BuyNet: buyNet,
-          OUTGODS_BuyTax: buyTax,
-          OUTGODS_BuyAmt: buyAmt,
-          OUTGODS_SaleAmt: saleAmt
-        };
-      }, validate: [validateRequired]
+      calculate: (rowData: any, value: number) => this.calculateRowFinancials(rowData, value),
+      validate: [validateRequired]
     },
     { field: 'OUTGODS_BuyNet', header: '發貨未稅進價小計' },
     { field: 'MVD_Remark', header: '單項說明', type: 'input' },
   ];
 
-  brandOptions: { label: string; value: string }[] = [];
-  warehouseOptions: { label: string; value: string }[] = [];
-  userOptions: { label: string; value: string }[] = [];
+  brandOptions = this.dropDown.queryPluLogo(); // 品牌選項
+  warehouseOptions = this.dropDown.queryPos2034(); // 倉別
+  userOptions = this.dropDown.queryTblUser(); // 人員選項
   dataChanged = false;
+  initComponent = true;
 
   constructor(
     private readonly tls56050Service: Tls56050Service,
-    private readonly dropDownListService: DropDownListService,
+    private readonly dropDown: DropdownApiService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS56050', this.dataForm);
-    this.loadDropdownOptions();
     this.loadData();
   }
 
   loadData(): void {
+    this.initComponent = false;
     const mvmNo = this.rowdata?.MVM_No;
     if (mvmNo) {
       this.loading = true;
@@ -144,29 +126,50 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
           OUTGODS_TotBuyAmt: masterData.OUTGODS_TotBuyAmt,
           OUTGODS_TotSaleAmt: masterData.OUTGODS_TotSaleAmt,
         });
+        const data = detailsData.map(item => {
+          // 決定基礎數量 (若無發貨量則帶入申請量)
+          const baseQty = (item.OUTGODS_QTY !== null && item.OUTGODS_QTY !== undefined && item.OUTGODS_QTY !== 0)
+            ? item.OUTGODS_QTY
+            : item.APPLY_Qty;
 
-        this.data = detailsData.map(item => ({
-          ...item,
-          OUTGODS_QTY: item.OUTGODS_QTY !== null && item.OUTGODS_QTY !== undefined && item.OUTGODS_QTY !== 0 ?
-            item.OUTGODS_QTY : item.APPLY_Qty,
+          // 重點：呼叫同一個計算邏輯，確保初始資料的金額也是對的
+          const calculatedFields = this.calculateRowFinancials(item, baseQty);
 
-        }));
+          return {
+            ...item,
+            OUTGODS_QTY: baseQty,
+            ...calculatedFields // 將算出的小計、稅額、總額覆蓋進去
+          };
+        });
+        this.data = [...data]
+        this.calculateTotals();
+        this.initComponent = true;
       });
     }
   }
+  /** 抽取單一 Row 的計算邏輯 */
+  private calculateRowFinancials(rowData: any, qty: number) {
+    const outgodsQty = qty || 0;
+    const buyPrice = rowData.MVD_BuyPrc || 0;
+    const salePrice = rowData.MVD_SalePrc || 0;
 
-  loadDropdownOptions(): void {
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(options => {
-      this.warehouseOptions = options.Data.map(item => ({ label: item.Name, value: item.No }));
-    });
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.brandOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
-    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
+    // 1. 計算未稅進價小計
+    const buyNet = buyPrice * outgodsQty;
+
+    // 2. 計算稅額 (應稅 '1' 算 5%)
+    let buyTax = 0;
+    if (rowData.PLU_StockTaxType === '1') {
+      buyTax = Math.floor(buyNet * 0.05);
+    }
+
+    // 3. 計算各項總額
+    return {
+      OUTGODS_BuyNet: buyNet,
+      OUTGODS_BuyTax: buyTax,
+      OUTGODS_BuyAmt: buyNet + buyTax,
+      OUTGODS_SaleAmt: salePrice * outgodsQty
+    };
   }
-
   calculateTotals(): void {
     const totalQty = this.data.reduce((sum, item) => sum + (item.OUTGODS_QTY || 0), 0);
     const totalBuyNet = this.data.reduce((sum, item) => sum + (item.OUTGODS_BuyNet || 0), 0);
@@ -183,15 +186,6 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
     });
   }
 
-  isComponentReady = true; // 預設為 true，讓元件一開始就顯示
-  // 重新初始化元件的方法
-  reinitializeComponent(): void {
-    this.isComponentReady = false; // 隱藏元件，觸發銷毀
-    // 使用 setTimeout 確保 Angular 完成銷毀操作，然後再重建
-    setTimeout(() => {
-      this.isComponentReady = true; // 顯示元件，觸發重建和 ngOnInit
-    }, 0);
-  }
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
@@ -206,7 +200,7 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
         MVM_No: rawFormValue.MVM_No,
         OUTGODS_Date: rawFormValue.OUTGODS_Date,
         OUTGODS_USR_No: rawFormValue.OUTGODS_USR_No,
-        OUTGODS_USR_Name: this.userOptions.find(u => u.value === rawFormValue.OUTGODS_USR_No)?.label?.split(' - ')[1] || '',
+        OUTGODS_USR_Name: rawFormValue.OUTGODS_USR_Name,
         OUTGODS_TotQty: rawFormValue.OUTGODS_TotQty,
         OUTGODS_TotBuyNet: rawFormValue.OUTGODS_TotBuyNet,
         OUTGODS_TotBuyTax: rawFormValue.OUTGODS_TotBuyTax,
@@ -225,12 +219,8 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
           MVD_Remark: item.MVD_Remark,
         }))
       };
-      this.tls56050Service.updateTLS56050(payload).pipe(
-        finalize(() => this.loading = false),
-        untilDestroyed(this)
-      ).subscribe(response => {
+      this.tls56050Service.updateTLS56050(payload).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
         this.messageService.successBubble(response.Message);
-        this.reinitializeComponent();
         this.dataChanged = false;
       });
     });
@@ -250,10 +240,7 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
       ]
     }
     this.loading = true;
-    this.tls56050Service.updateStatusTLS56050(body).pipe(
-      finalize(() => this.loading = false),
-      untilDestroyed(this)
-    ).subscribe(response => {
+    this.tls56050Service.updateStatusTLS56050(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onCancel();
     });

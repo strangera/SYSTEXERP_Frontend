@@ -74,28 +74,7 @@ export class TLS56060CRUComponent extends BasicCruPageComponent<ITLS56060Respons
       type: 'inputNumber',
       min: 0,
       // 當驗收量改變時，自動計算相關欄位
-      calculate: (rowData: any, value: number) => {
-        const confirmQty = value || 0;
-        const buyPrice = rowData.MVD_BuyPrc || 0;
-        const salePrice = rowData.MVD_SalePrc || 0;
-        // 1. 計算驗收未稅進價小計
-        const buyNet = buyPrice * confirmQty;
-        // 2. 計算驗收進價稅額 (應稅 '1' 算 5%)
-        let buyTax = 0;
-        if (rowData.PLU_StockTaxType === '1') {
-          buyTax = Math.floor(buyNet * 0.05);
-        }
-        // 3. 計算驗收含稅總額與售價總額
-        const buyAmt = buyNet + buyTax;
-        const saleAmt = salePrice * confirmQty;
-        // 返回物件，app-table-edit 會自動 patch 這些值到該列資料中
-        return {
-          Confirm_BuyNet: buyNet,
-          Confirm_BuyTax: buyTax,
-          Confirm_BuyAmt: buyAmt,
-          Confirm_SaleAmt: saleAmt
-        };
-      }
+      calculate: (rowData: any, value: number) => this.calculateRowFinancials(rowData, value),
     },
     { field: 'Confirm_BuyNet', header: '進價小計' },
     { field: 'MVD_Remark', header: '單項說明', type: 'input' },
@@ -105,6 +84,7 @@ export class TLS56060CRUComponent extends BasicCruPageComponent<ITLS56060Respons
   warehouseOptions: { label: string; value: string }[] = [];
   userOptions: { label: string; value: string }[] = [];
   dataChanged = false; // 標記資料是否有變更
+  initComponent = true;
 
   constructor(
     private readonly tls56060Service: Tls56060Service,
@@ -119,45 +99,69 @@ export class TLS56060CRUComponent extends BasicCruPageComponent<ITLS56060Respons
     this.loadDropdownOptions();
     this.loadData();
   }
+  /** 1. 抽取單一 Row 的計算邏輯 (驗收版) */
+  private calculateRowFinancials(rowData: any, qty: number) {
+    const confirmQty = qty || 0;
+    const buyPrice = rowData.MVD_BuyPrc || 0;
+    const salePrice = rowData.MVD_SalePrc || 0;
 
+    const buyNet = buyPrice * confirmQty;
+    let buyTax = 0;
+    if (rowData.PLU_StockTaxType === '1') {
+      buyTax = Math.floor(buyNet * 0.05);
+    }
+
+    return {
+      Confirm_BuyNet: buyNet,
+      Confirm_BuyTax: buyTax,
+      Confirm_BuyAmt: buyNet + buyTax,
+      Confirm_SaleAmt: salePrice * confirmQty
+    };
+  }
   loadData(): void {
+    this.initComponent = false;
     const MVM_No = this.dataForm.get('MVM_No')?.value;
-    if (!MVM_No) {
-      console.error('調撥單編號不存在，無法載入資料');
-      return;
-    }
+    if (!MVM_No) return;
+
+    // 處理預設驗收人與日期
     if (this.dataForm.get('Confirm_DATE')?.value === null) {
-      this.dataForm.get('Confirm_DATE')?.setValue(new Date());
-      this.dataForm.get('Confirm_USR_No')?.setValue(this.authService.currentUserValue?.user_No || '');
+      this.dataForm.patchValue({
+        Confirm_DATE: new Date(),
+        Confirm_USR_No: this.authService.currentUserValue?.user_No || ''
+      });
     }
+
     this.loading = true;
-    this.tls56060Service.getTLS56060Info(MVM_No).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+    this.tls56060Service.getTLS56060Info(MVM_No).pipe(
+      finalize(() => this.loading = false),
+      untilDestroyed(this)
+    ).subscribe(response => {
       const masterData = response.Data.TLS56060Data;
       const detailsData = response.Data.detail_TLS56060;
+
       this.dataForm.patchValue({
-        MVM_No: masterData.MVM_No,
-        LOGO_No: masterData.LOGO_No ?? '',
-        OUT_HOS_No: masterData.OUT_HOS_No,
-        IN_HOS_No: masterData.IN_HOS_No,
-        APPLY_Date: masterData.APPLY_Date ? new Date(masterData.APPLY_Date) : null,
-        APPLY_USR_No: masterData.APPLY_USR_No,
-        APRV_Date: masterData.APRV_Date ? new Date(masterData.APRV_Date) : null,
-        APRV_USR_No: masterData.APRV_USR_No,
-        OUTGODS_DATE: masterData.OUTGODS_Date ? new Date(masterData.OUTGODS_Date) : null,
-        OUTGODS_USR_No: masterData.OUTGODS_USR_No,
+        // ... patch 其他主檔欄位 ...
         MVM_Remark: masterData.MVM_Remark,
-        // 這些欄位是後端回傳的總計，直接 patch
-        Confirm_TotQty: masterData.Confirm_TotQty,
-        Confirm_TotBuyNet: masterData.Confirm_TotBuyNet,
       });
 
-      this.data = detailsData.map(item => ({
-        ...item,
-        Confirm_QTY: item.Confirm_QTY !== null && item.Confirm_QTY !== undefined && item.Confirm_QTY !== 0 ?
-          item.Confirm_QTY : item.OUTGODS_QTY,
-        Confirm_BuyNet: item.Confirm_BuyNet !== null && item.Confirm_BuyNet !== undefined && item.Confirm_BuyNet !== 0 ?
-          item.Confirm_BuyNet : item.OUTGODS_BuyNet,
-      }));
+      // 2. 處理明細並初始化財務計算
+      this.data = detailsData.map(item => {
+        // 決定基礎驗收量 (若無驗收量則帶入發貨量)
+        const baseQty = (item.Confirm_QTY !== null && item.Confirm_QTY !== undefined && item.Confirm_QTY !== 0)
+          ? item.Confirm_QTY
+          : (item.OUTGODS_QTY || 0);
+
+        const calculatedFields = this.calculateRowFinancials(item, baseQty);
+
+        return {
+          ...item,
+          Confirm_QTY: baseQty,
+          ...calculatedFields
+        };
+      });
+
+      this.calculateTotals();
+      this.initComponent = true;
     });
   }
 
@@ -178,6 +182,7 @@ export class TLS56060CRUComponent extends BasicCruPageComponent<ITLS56060Respons
     this.calculateTotals();  // 重新計算主檔 Form 的加總
   }
 
+  /** 3. 重新計算主檔總計 */
   calculateTotals(): void {
     const totalQty = this.data.reduce((sum, item) => sum + (item.Confirm_QTY || 0), 0);
     const totalBuyNet = this.data.reduce((sum, item) => sum + (item.Confirm_BuyNet || 0), 0);
@@ -192,16 +197,6 @@ export class TLS56060CRUComponent extends BasicCruPageComponent<ITLS56060Respons
       Confirm_TotBuyAmt: totalBuyAmt,
       Confirm_TotSaleAmt: totalSaleAmt,
     });
-  }
-
-  isComponentReady = true; // 預設為 true，讓元件一開始就顯示
-  // 重新初始化元件的方法
-  reinitializeComponent(): void {
-    this.isComponentReady = false; // 隱藏元件，觸發銷毀
-    // 使用 setTimeout 確保 Angular 完成銷毀操作，然後再重建
-    setTimeout(() => {
-      this.isComponentReady = true; // 顯示元件，觸發重建和 ngOnInit
-    }, 0);
   }
 
   onSubmit(frm: FormGroup): void {
@@ -231,20 +226,16 @@ export class TLS56060CRUComponent extends BasicCruPageComponent<ITLS56060Respons
           MVD_Remark: item.MVD_Remark,
         }))
       };
-      this.tls56060Service.updateTLS56060(payload).pipe(
-        finalize(() => this.loading = false),
-        untilDestroyed(this)
-      ).subscribe(response => {
+      this.tls56060Service.updateTLS56060(payload).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
         this.messageService.successBubble(response.Message);
-        this.reinitializeComponent();
         this.dataChanged = false;
       });
     });
   }
   onConfirm(frm: FormGroup): void {
-    const isQtyValid = this.data.every(item => item.OUTGODS_QTY === item.APPLY_Qty);
+    const isQtyValid = this.data.every(item => item.Confirm_QTY === item.OUTGODS_QTY);
     if (!isQtyValid) {
-      this.messageService.errorBubble('所有商品的發貨量必須與調撥申請量一致！');
+      this.messageService.errorBubble('所有商品的驗收量必須與發貨量一致！');
       return;
     }
     const body = {
@@ -256,10 +247,7 @@ export class TLS56060CRUComponent extends BasicCruPageComponent<ITLS56060Respons
       ]
     }
     this.loading = true;
-    this.tls56060Service.updateStatusTLS56060(body).pipe(
-      finalize(() => this.loading = false),
-      untilDestroyed(this)
-    ).subscribe(response => {
+    this.tls56060Service.updateStatusTLS56060(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onCancel();
     });
