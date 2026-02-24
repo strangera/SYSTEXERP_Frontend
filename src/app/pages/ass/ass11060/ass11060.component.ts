@@ -1,20 +1,24 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
-import { ASS11060Service, QueryASS11060Response } from '../../../service/api/ass/ass11060.service';
+import { finalize, Observable } from 'rxjs';
+import { QueryASS11060Request, QueryASS11060Response } from '../../../service/api/ass/ass11060.model';
+import { ASS11060Service } from '../../../service/api/ass/ass11060.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
 
 //3.1.1.6 供應商資料維護作業
 @Component({
@@ -28,88 +32,103 @@ import { Column } from '../../../shared/componentkit/table/table.model';
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
+    InputNumberComponent,
     DropdownComponent,
-    CalendarRangeComponent,
     EditorTextComponent,
     ButtonComponent,
     ButtonModule,
-    TableComponent,
-    TranslateModule
+    TableReportComponent,
+    TranslateModule,
+    InputTextareaComponent,
   ]
 })
 export class ASS11060Component extends BasicQueryPageComponent<QueryASS11060Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    VENDOR_ID: ['', [Validators.maxLength(12)]], // 廠商編號
-    GUI_ID: ['', [Validators.maxLength(10)]], // 廠商統一編號
-    VENDOR_NAME: ['', [Validators.maxLength(60)]], // 廠商名稱(中文)
-    VENDOR_NAME_E: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
-    VENDOR_NAME_S: ['', [Validators.maxLength(10)]], // 廠商簡稱
-    VENDOR_REG_ADDR: ['', [Validators.maxLength(60)]], // 發票地址
-    // 負責人相關
-    CHARGE_STAFF: ['', [Validators.maxLength(12)]], // 負責人
-    CHARGE_TITLE: ['', [Validators.maxLength(16)]], // 負責人職稱
-    CHARGE_PID: ['', [Validators.maxLength(10)]], // 負責人身份証字號
-    CHARGE_TEL: ['', [Validators.maxLength(15)]], // 負責人電話
-    CHARGE_ADDR: ['', [Validators.maxLength(100)]], // 負責人聯絡地址
-    CHARGE_EMAIL: ['', [Validators.maxLength(60)]], // 負責人電子郵件
-    // 公司相關
-    companyAddress: ['', [Validators.maxLength(100)]], // 公司登記地址(中文)
-    VENDOR_REG_TEL: ['', [Validators.maxLength(15)]], // 公司登記電話
-    VENDOR_FAX: ['', [Validators.maxLength(15)]], // 公司傳真
-    // 訂貨相關
-    ORDER_ADDR: ['', [Validators.maxLength(100)]], // 訂貨地址
-    ORDER_TEL: ['', [Validators.maxLength(12)]], // 訂貨電話
-    ORDER_FAX: ['', [Validators.maxLength(12)]], // 訂貨傳真
-    // 工廠相關
-    FACTO_ADDR: ['', [Validators.maxLength(100)]], // 工廠地址
-    FACTO_TEL: ['', [Validators.maxLength(12)]], // 工廠電話
-    FACTO_FAX: ['', [Validators.maxLength(12)]], // 工廠傳真
-    // 其他
-    DELIVERY: [null as string | null], // 送貨方式
-    RETURN_ORDER: [null as string | null], // 退貨處理方式
-    DELIVERY_LIMIT_FROM: [null as number | null], // 廠商送貨期限起
-    DELIVERY_LIMIT_TO: [null as number | null], // 廠商送貨期限迄
-    NOTES: [''], // 附註
-    // 分頁排序
-    pageSize: [20],
+    /** 廠商編號 */
+    VEN_No: ['', [Validators.maxLength(12)]],
+    /** 廠商統一編號 */
+    VEN_Uniform: ['', [Validators.maxLength(10)]],
+    /** 廠商名稱(中文) */
+    VEN_Name: ['', [Validators.maxLength(60)]],
+    /** 廠商名稱(英文) */
+    VEN_EngName: ['', [Validators.maxLength(60)]],
+    /** 廠商簡稱 */
+    VEN_ShortName: ['', [Validators.maxLength(10)]],
+    /** 公司登記地址 */
+    VEN_Address: ['', [Validators.maxLength(60)]],
+    /** 負責人 */
+    CHARGE_STAFF: ['', [Validators.maxLength(12)]],
+    /** 負責人職稱 */
+    CHARGE_TITLE: ['', [Validators.maxLength(16)]],
+    /** 負責人身分證 */
+    CHARGE_PID: ['', [Validators.maxLength(10)]],
+    /** 負責人電話 */
+    CHARGE_TEL: ['', [Validators.maxLength(15)]],
+    /** 負責人地址 */
+    CHARGE_ADDR: ['', [Validators.maxLength(100)]],
+    /** 負責人電子郵件 */
+    CHARGE_EMAIL: ['', [Validators.maxLength(60)]],
+    /** 公司登記電話 */
+    VEN_Tel: ['', [Validators.maxLength(15)]],
+    /** 公司傳真 */
+    VEN_Fax: ['', [Validators.maxLength(15)]],
+    /** 訂貨地址 */
+    ORDER_ADDR: ['', [Validators.maxLength(100)]],
+    /** 訂貨電話 */
+    ORDER_TEL: ['', [Validators.maxLength(12)]],
+    /** 訂貨傳真 */
+    ORDER_FAX: ['', [Validators.maxLength(12)]],
+    /** 工廠地址 */
+    FACTO_ADDR: ['', [Validators.maxLength(100)]],
+    /** 工廠電話 */
+    FACTO_TEL: ['', [Validators.maxLength(12)]],
+    /** 工廠傳真 */
+    FACTO_FAX: ['', [Validators.maxLength(12)]],
+    /** 送貨方式 */
+    DELIVERY: [null as string | null],
+    /** 退貨處理方式 */
+    RETURN_ORDER: [null as string | null],
+    /** 廠商送貨期限 */
+    DELIVERY_LIMIT: [null as number | null],
+    /** 附註 */
+    VEN_Remark: [''],
+    pageSize: [30],
     pageIndex: [1],
-    SortBy: [[{ field: 'VENDOR_ID', order: 1 }]],
   });
 
-  // 表格資料
-  data: QueryASS11060Response[] = [];
-  totalRecords = 0;
+  readonly tableData = signal<QueryASS11060Response[]>([]);
+  readonly totalRecords = signal<number>(0);
+  readonly tableLoading = signal<boolean>(false);
+  lastQueryBody?: QueryASS11060Request;
 
-  // 匯出按鈕 loading 狀態
   btnPDFLoading = false;
-  btnExcelLoading = false;
 
-  // 下拉選項
+  /** 送貨方式下拉選項 */
   deliveryMethodOptions = [
     { value: '1', label: '貨運' },
     { value: '2', label: '自取' },
     { value: '3', label: '其他' },
   ];
+  /** 退貨處理方式下拉選項 */
   returnMethodOptions = [
     { value: '1', label: '貨運' },
     { value: '2', label: '自取' },
     { value: '3', label: '其他' },
   ];
 
-  // 表格欄位定義
-  columns: Column[] = [
-    { field: 'VENDOR_ID', header: '廠商編號', visible: true },
-    { field: 'GUI_ID', header: '廠商統一編號', visible: true },
-    { field: 'VENDOR_NAME', header: '廠商名稱(中文)', visible: true },
-    { field: 'VENDOR_NAME_E', header: '廠商名稱(英文)', visible: true },
-    { field: 'VENDOR_NAME_S', header: '廠商簡稱', visible: true },
-    { field: 'VENDOR_REG_ADDR', header: '發票地址', visible: true },
-    { field: 'CHARGE_STAFF', header: '負責人', visible: true },
-    { field: 'CHARGE_TITLE', header: '負責人職稱', visible: true },
-    { field: 'CHARGE_PID', header: '負責人身份証字號', visible: true },
-    { field: 'CHARGE_TEL', header: '負責人電話', visible: true },
-    { field: 'CHARGE_ADDR', header: '負責人聯絡地址', visible: true },
-    { field: 'CHARGE_EMAIL', header: '負責人電子郵件', visible: true },
+  readonly columns: ReportColumn[] = [
+    { field: 'VEN_No', header: '廠商編號' },
+    { field: 'VEN_Uniform', header: '廠商統一編號' },
+    { field: 'VEN_Name', header: '廠商名稱(中文)' },
+    { field: 'VEN_EngName', header: '廠商名稱(英文)' },
+    { field: 'VEN_ShortName', header: '廠商簡稱' },
+    { field: 'VEN_Address', header: '公司地址' },
+    { field: 'CHARGE_STAFF', header: '負責人' },
+    { field: 'CHARGE_TITLE', header: '負責人職稱' },
+    { field: 'CHARGE_PID', header: '負責人身份証字號' },
+    { field: 'CHARGE_TEL', header: '負責人電話' },
+    { field: 'CHARGE_ADDR', header: '負責人聯絡地址' },
+    { field: 'CHARGE_EMAIL', header: '負責人電子郵件' },
   ];
 
   constructor(
@@ -119,97 +138,132 @@ export class ASS11060Component extends BasicQueryPageComponent<QueryASS11060Resp
   }
 
   ngOnInit(): void {
-    this.initializePage('ASS11060', 'ass/ass11060cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('ASS11060', 'ass/ass11060cru', this.queryForm, () => this.onSubmit());
   }
 
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      const rawValue = frm.getRawValue();
+  queryFunction = (body: QueryASS11060Request): Observable<ApiResponse<QueryASS11060Response[]>> => {
+    const rawValue = this.queryForm.getRawValue();
 
-      const payload = {
-        PageSize: rawValue.pageSize,
-        PageIndex: rawValue.pageIndex,
-        SortBy: rawValue.SortBy,
-        VENDOR_ID: rawValue.VENDOR_ID || null,
-        GUI_ID: rawValue.GUI_ID || null,
-        VENDOR_NAME: rawValue.VENDOR_NAME || null,
-        VENDOR_NAME_E: rawValue.VENDOR_NAME_E || null,
-        VENDOR_NAME_S: rawValue.VENDOR_NAME_S || null,
-        VENDOR_REG_ADDR: rawValue.VENDOR_REG_ADDR || null,
-        CHARGE_STAFF: rawValue.CHARGE_STAFF || null,
-        CHARGE_TITLE: rawValue.CHARGE_TITLE || null,
-        CHARGE_PID: rawValue.CHARGE_PID || null,
-        CHARGE_TEL: rawValue.CHARGE_TEL || null,
-        CHARGE_ADDR: rawValue.CHARGE_ADDR || null,
-        CHARGE_EMAIL: rawValue.CHARGE_EMAIL || null,
-        VENDOR_REG_TEL: rawValue.VENDOR_REG_TEL || null,
-        VENDOR_FAX: rawValue.VENDOR_FAX || null,
-        ORDER_ADDR: rawValue.ORDER_ADDR || null,
-        ORDER_TEL: rawValue.ORDER_TEL || null,
-        ORDER_FAX: rawValue.ORDER_FAX || null,
-        FACTO_ADDR: rawValue.FACTO_ADDR || null,
-        FACTO_TEL: rawValue.FACTO_TEL || null,
-        FACTO_FAX: rawValue.FACTO_FAX || null,
-        DELIVERY: rawValue.DELIVERY || null,
-        RETURN_ORDER: rawValue.RETURN_ORDER || null,
-        DELIVERY_LIMIT: rawValue.DELIVERY_LIMIT_FROM || null,
-        NOTES: rawValue.NOTES || null,
-      };
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const payload: QueryASS11060Request = {
+      VEN_No: rawValue.VEN_No || undefined,
+      VEN_Uniform: rawValue.VEN_Uniform || undefined,
+      VEN_Name: rawValue.VEN_Name || undefined,
+      VEN_EngName: rawValue.VEN_EngName || undefined,
+      VEN_ShortName: rawValue.VEN_ShortName || undefined,
+      VEN_Address: rawValue.VEN_Address || undefined,
+      CHARGE_STAFF: rawValue.CHARGE_STAFF || undefined,
+      CHARGE_TITLE: rawValue.CHARGE_TITLE || undefined,
+      CHARGE_PID: rawValue.CHARGE_PID || undefined,
+      CHARGE_TEL: rawValue.CHARGE_TEL || undefined,
+      CHARGE_ADDR: rawValue.CHARGE_ADDR || undefined,
+      CHARGE_EMAIL: rawValue.CHARGE_EMAIL || undefined,
+      VEN_Tel: rawValue.VEN_Tel || undefined,
+      VEN_Fax: rawValue.VEN_Fax || undefined,
+      ORDER_ADDR: rawValue.ORDER_ADDR || undefined,
+      ORDER_TEL: rawValue.ORDER_TEL || undefined,
+      ORDER_FAX: rawValue.ORDER_FAX || undefined,
+      FACTO_ADDR: rawValue.FACTO_ADDR || undefined,
+      FACTO_TEL: rawValue.FACTO_TEL || undefined,
+      FACTO_FAX: rawValue.FACTO_FAX || undefined,
+      DELIVERY: rawValue.DELIVERY || undefined,
+      RETURN_ORDER: rawValue.RETURN_ORDER || undefined,
+      DELIVERY_LIMIT: rawValue.DELIVERY_LIMIT ?? undefined,
+      VEN_Remark: rawValue.VEN_Remark || undefined,
+      PageSize: (body as any).pageSize ?? body.PageSize,
+      PageIndex: (body as any).pageIndex ?? body.PageIndex,
+      SortBy: body.SortBy,
+    };
+    /* eslint-enable @typescript-eslint/no-explicit-any */
 
-      this.ass11060Service.queryASS11060(payload)
-        .pipe(
-          finalize(() => this.loading = false),
-          untilDestroyed(this)
-        )
-        .subscribe(res => {
-          this.data = res.Data.Data || [];
-          this.totalRecords = res.Data.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-        });
+    return this.ass11060Service.queryASS11060(removeEmptyValues(payload) as QueryASS11060Request);
+  };
+
+  onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const rawValue = this.queryForm.getRawValue();
+
+      this.lastQueryBody = {
+        VEN_No: rawValue.VEN_No || undefined,
+        VEN_Uniform: rawValue.VEN_Uniform || undefined,
+        VEN_Name: rawValue.VEN_Name || undefined,
+        VEN_EngName: rawValue.VEN_EngName || undefined,
+        VEN_ShortName: rawValue.VEN_ShortName || undefined,
+        VEN_Address: rawValue.VEN_Address || undefined,
+        CHARGE_STAFF: rawValue.CHARGE_STAFF || undefined,
+        CHARGE_TITLE: rawValue.CHARGE_TITLE || undefined,
+        CHARGE_PID: rawValue.CHARGE_PID || undefined,
+        CHARGE_TEL: rawValue.CHARGE_TEL || undefined,
+        CHARGE_ADDR: rawValue.CHARGE_ADDR || undefined,
+        CHARGE_EMAIL: rawValue.CHARGE_EMAIL || undefined,
+        VEN_Tel: rawValue.VEN_Tel || undefined,
+        VEN_Fax: rawValue.VEN_Fax || undefined,
+        ORDER_ADDR: rawValue.ORDER_ADDR || undefined,
+        ORDER_TEL: rawValue.ORDER_TEL || undefined,
+        ORDER_FAX: rawValue.ORDER_FAX || undefined,
+        FACTO_ADDR: rawValue.FACTO_ADDR || undefined,
+        FACTO_TEL: rawValue.FACTO_TEL || undefined,
+        FACTO_FAX: rawValue.FACTO_FAX || undefined,
+        DELIVERY: rawValue.DELIVERY || undefined,
+        RETURN_ORDER: rawValue.RETURN_ORDER || undefined,
+        DELIVERY_LIMIT: rawValue.DELIVERY_LIMIT ?? undefined,
+        VEN_Remark: rawValue.VEN_Remark || undefined,
+        PageSize: rawValue.pageSize || 30,
+        PageIndex: rawValue.pageIndex || 1,
+      } as QueryASS11060Request;
+
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, rawValue);
+      this.queryFunction(this.lastQueryBody).pipe(
+        finalize(() => {
+          this.tableLoading.set(false);
+          this.loading = false;
+        }),
+        untilDestroyed(this),
+      ).subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          this.tableData.set(res.Data);
+          this.totalRecords.set(res.TotalCount || 0);
+        },
+      });
     });
   }
 
-  onClearForm() {
-    this.queryForm.reset();
-  }
-
-  // 建立匯出用的 payload
-  private buildExportPayload(frm: FormGroup) {
-    const rawValue = frm.getRawValue();
-    return {
+  private buildExportPayload() {
+    const rawValue = this.queryForm.getRawValue();
+    return removeEmptyValues({
       PageSize: rawValue.pageSize,
       PageIndex: rawValue.pageIndex,
-      SortBy: rawValue.SortBy,
-      VENDOR_ID: rawValue.VENDOR_ID || null,
-      GUI_ID: rawValue.GUI_ID || null,
-      VENDOR_NAME: rawValue.VENDOR_NAME || null,
-      VENDOR_NAME_E: rawValue.VENDOR_NAME_E || null,
-      VENDOR_NAME_S: rawValue.VENDOR_NAME_S || null,
-      VENDOR_REG_ADDR: rawValue.VENDOR_REG_ADDR || null,
-      CHARGE_STAFF: rawValue.CHARGE_STAFF || null,
-      CHARGE_TITLE: rawValue.CHARGE_TITLE || null,
-      CHARGE_PID: rawValue.CHARGE_PID || null,
-      CHARGE_TEL: rawValue.CHARGE_TEL || null,
-      CHARGE_ADDR: rawValue.CHARGE_ADDR || null,
-      CHARGE_EMAIL: rawValue.CHARGE_EMAIL || null,
-      VENDOR_REG_TEL: rawValue.VENDOR_REG_TEL || null,
-      VENDOR_FAX: rawValue.VENDOR_FAX || null,
-      ORDER_ADDR: rawValue.ORDER_ADDR || null,
-      ORDER_TEL: rawValue.ORDER_TEL || null,
-      ORDER_FAX: rawValue.ORDER_FAX || null,
-      FACTO_ADDR: rawValue.FACTO_ADDR || null,
-      FACTO_TEL: rawValue.FACTO_TEL || null,
-      FACTO_FAX: rawValue.FACTO_FAX || null,
-      DELIVERY: rawValue.DELIVERY || null,
-      RETURN_ORDER: rawValue.RETURN_ORDER || null,
-      DELIVERY_LIMIT: rawValue.DELIVERY_LIMIT_FROM || null,
-      NOTES: rawValue.NOTES || null,
-    };
+      VEN_No: rawValue.VEN_No || undefined,
+      VEN_Uniform: rawValue.VEN_Uniform || undefined,
+      VEN_Name: rawValue.VEN_Name || undefined,
+      VEN_EngName: rawValue.VEN_EngName || undefined,
+      VEN_ShortName: rawValue.VEN_ShortName || undefined,
+      VEN_Address: rawValue.VEN_Address || undefined,
+      CHARGE_STAFF: rawValue.CHARGE_STAFF || undefined,
+      CHARGE_TITLE: rawValue.CHARGE_TITLE || undefined,
+      CHARGE_PID: rawValue.CHARGE_PID || undefined,
+      CHARGE_TEL: rawValue.CHARGE_TEL || undefined,
+      CHARGE_ADDR: rawValue.CHARGE_ADDR || undefined,
+      CHARGE_EMAIL: rawValue.CHARGE_EMAIL || undefined,
+      VEN_Tel: rawValue.VEN_Tel || undefined,
+      VEN_Fax: rawValue.VEN_Fax || undefined,
+      ORDER_ADDR: rawValue.ORDER_ADDR || undefined,
+      ORDER_TEL: rawValue.ORDER_TEL || undefined,
+      ORDER_FAX: rawValue.ORDER_FAX || undefined,
+      FACTO_ADDR: rawValue.FACTO_ADDR || undefined,
+      FACTO_TEL: rawValue.FACTO_TEL || undefined,
+      FACTO_FAX: rawValue.FACTO_FAX || undefined,
+      DELIVERY: rawValue.DELIVERY || undefined,
+      RETURN_ORDER: rawValue.RETURN_ORDER || undefined,
+      DELIVERY_LIMIT: rawValue.DELIVERY_LIMIT ?? undefined,
+      VEN_Remark: rawValue.VEN_Remark || undefined,
+    }) as QueryASS11060Request;
   }
 
-  // 匯出 PDF
-  onExportPDF(frm: FormGroup) {
-    const payload = this.buildExportPayload(frm);
+  onExportPDF() {
+    const payload = this.buildExportPayload();
 
     this.btnPDFLoading = true;
     this.ass11060Service.exportASS11060PDF(payload)
@@ -235,31 +289,4 @@ export class ASS11060Component extends BasicQueryPageComponent<QueryASS11060Resp
       });
   }
 
-  // 匯出 Excel
-  onExportExcel(frm: FormGroup) {
-    const payload = this.buildExportPayload(frm);
-
-    this.btnExcelLoading = true;
-    this.ass11060Service.exportASS11060(payload)
-      .pipe(finalize(() => this.btnExcelLoading = false), untilDestroyed(this))
-      .subscribe(blob => {
-        if (blob) {
-          const now = new Date();
-          const timestamp = now.getFullYear().toString() +
-            (now.getMonth() + 1).toString().padStart(2, '0') +
-            now.getDate().toString().padStart(2, '0') +
-            now.getHours().toString().padStart(2, '0') +
-            now.getMinutes().toString().padStart(2, '0') +
-            now.getSeconds().toString().padStart(2, '0');
-          const fileName = `供應商資料${timestamp}.xlsx`;
-
-          const blobUrl = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = blobUrl;
-          a.download = fileName;
-          a.click();
-          URL.revokeObjectURL(blobUrl);
-        }
-      });
-  }
 }
