@@ -20,23 +20,24 @@
           <!-- 國際條碼/商品管理編號/廠商貨號 -->
           <app-product-autocomplete class="col-12" [control]="queryForm.controls.queryNo" [submitted]="submitted" />
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="品牌代碼/名稱" controlName="LOGO_NoList" [options]="brandOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.LOGO_NoList" [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="調出倉別" controlName="OUT_HOS_NoList" [options]="warehouseOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.OUT_HOS_NoList"
+            <app-multi-select label="品牌代碼/名稱" controlName="LOGO_NoList" [options]="brandOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_NoList"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="調入倉別" controlName="IN_HOS_NoList" [options]="warehouseOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.IN_HOS_NoList"
+            <app-multi-select label="調出倉別" controlName="OUT_HOS_NoList" [options]="warehouseOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.OUT_HOS_NoList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="調入倉別" controlName="IN_HOS_NoList" [options]="warehouseOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.IN_HOS_NoList"
               [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="申請人編號/名稱" controlName="APPLY_USR" [options]="userOptions" optionLabel="label"
+            <app-dropdown label="申請人編號/名稱" controlName="APPLY_USR" [options]="userOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.APPLY_USR" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -47,7 +48,7 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="審核人編號/名稱" controlName="APRV_USR" [options]="userOptions" optionLabel="label"
+            <app-dropdown label="審核人編號/名稱" controlName="APRV_USR" [options]="userOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.APRV_USR" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
