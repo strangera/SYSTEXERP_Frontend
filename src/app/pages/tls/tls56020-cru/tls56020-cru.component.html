@@ -31,12 +31,37 @@
             optionValue="value" [control]="dataForm.controls.APPLY_USR_No" [submitted]="submitted"></app-dropdown>
         </div>
 
+
+      </div>
+      <div class="grid p-fluid mt-2 surface-50 border-round p-2">
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領用數量合計" controlName="SPM_TotQty"
+          [control]="dataForm.controls.SPM_TotQty" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領用未稅進價小計" controlName="SPM_TotBuyNet"
+          [control]="dataForm.controls.SPM_TotBuyNet" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領用進價稅額小計" controlName="SPM_TotBuyTax"
+          [control]="dataForm.controls.SPM_TotBuyTax" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="合計金額" controlName="SPM_TotBuyAmt"
+          [control]="dataForm.controls.SPM_TotBuyAmt" [useGrouping]="true" [submitted]="submitted" />
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領用未稅售價小計" controlName="SPM_TotSaleNet"
+          [control]="dataForm.controls.SPM_TotSaleNet" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領用售價稅額小計" controlName="SPM_TotSaleTax"
+          [control]="dataForm.controls.SPM_TotSaleTax" [useGrouping]="true" [submitted]="submitted" />
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領用售價合計" controlName="SPM_TotSaleAmt"
+          [control]="dataForm.controls.SPM_TotSaleAmt" [useGrouping]="true" [submitted]="submitted" />
+      </div>
+      <div class="grid p-fluid mt-2">
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
             [submitted]="submitted"></app-calendar>
         </div>
-        <app-input-textarea class="col-12" label="領用單說明" controlName="SPM_remark"
-          [control]="dataForm.controls.SPM_remark" [submitted]="submitted" />
+        <div class="col-12 md:col-6 lg:col-8">
+          <app-input-textarea class="col-12" label="領用單說明" controlName="SPM_remark"
+            [control]="dataForm.controls.SPM_remark" [submitted]="submitted" />
+        </div>
       </div>
       <app-table-edit class="col-12" tableKey="TLS52010Detail" [columns]="editColumns" [data]="data"
         (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
