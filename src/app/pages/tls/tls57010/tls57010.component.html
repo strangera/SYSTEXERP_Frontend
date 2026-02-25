@@ -8,9 +8,9 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick startLabel="採購日期(起)" endLabel="採購日期(迄)" startControlName="APPLY_Date_Start"
-              endControlName="APPLY_Date_End" [startControl]="queryForm.controls.APPLY_Date_Start"
-              [endControl]="queryForm.controls.APPLY_Date_End" [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range-quick label="採購日期" startControlName="APPLY_Date_Start" endControlName="APPLY_Date_End"
+              [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
+              [submitted]="submitted"></app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="採購單號" controlName="PO_NO" [control]="queryForm.controls.PO_NO"

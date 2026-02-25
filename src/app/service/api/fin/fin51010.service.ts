@@ -31,6 +31,8 @@ export interface QueryFIN51010Request {
 
 /** 查詢主表 Response */
 export interface QueryFIN51010Response {
+  PostFlag: string;
+  Trans_Status: string;
   id: number;
   SrcSheetType: string;
   Voucher_Name: string;

@@ -152,7 +152,26 @@ export class TLS56070Component extends BasicQueryPageComponent<POS2023DAMRespons
     return rowData.DAM_Status !== SCRPStatus.已申請;
   }
 
-  checkStatus(status: string): boolean {
-    return this.selectedItems.some(item => item.DAM_Status !== status);
+  canExecuteAction(targetRequiredStatus: string): boolean {
+    if (this.selectedItems.length === 0) return false;
+    return this.selectedItems[0].DAM_Status === targetRequiredStatus;
+  }
+  isRowSelectable = (rowData: POS2023DAMResponse): boolean => {
+    // 1. 基本條件：已報廢(3)或已作廢(9)永遠不能選
+    if (rowData.DAM_Status !== '1' && rowData.DAM_Status !== '2') {
+      return false;
+    }
+
+    // 2. 如果目前沒有選取任何東西，只要是 1 或 2 都可以選
+    if (this.selectedItems.length === 0) {
+      return true;
+    }
+
+    // 3. 動態互斥判斷
+    const firstSelectedStatus = this.selectedItems[0].DAM_Status;
+
+    // 如果目前選的是「已申請」，則只有「已申請」的可以繼續勾選
+    // 如果目前選的是「已審核」，則只有「已審核」的可以繼續勾選
+    return rowData.DAM_Status === firstSelectedStatus;
   }
 }

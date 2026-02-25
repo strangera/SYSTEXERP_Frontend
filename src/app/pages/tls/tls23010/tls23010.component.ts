@@ -71,6 +71,7 @@ import { InputTextRange2Component } from './input-text-range2/input-text-range2.
   ],
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> implements OnInit {
+  private _syncingSortMeta = false;
   private _obsCache = new Map<string, any>();
   private once<T>(key: string, factory: () => import('rxjs').Observable<T>) {
     if (!this._obsCache.has(key)) {
@@ -686,10 +687,10 @@ payload.TXN_No_End   = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined;
       const totalAmt = this.getSum('TXN_TotSaleAmt');
       const totalTxn = this.getSum('TotalTxn');
       this.pdfSummary = [
-        `總金額合計 = ${Number(totalAmt || 0).toLocaleString()}`,
-        `總交易筆數合計 = ${Number(totalTxn || 0).toLocaleString()}`,
-        '=============================',
-        `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`,
+        // `總金額合計 = ${Number(totalAmt || 0).toLocaleString()}`,
+        // `總交易筆數合計 = ${Number(totalTxn || 0).toLocaleString()}`,
+        // '=============================',
+        // `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`,
       ];
       return;
     }
@@ -884,4 +885,7 @@ private padTxnNo(v: any): string {
     });
     return out;
   }
+  get isSummaryMode(): boolean {
+  return !!this.queryForm.get('showSummary')?.value;
+}
 }

@@ -123,8 +123,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_GUI_CarrId: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID隱碼
     TXN_GUIRemark: ['', [Validators.maxLength(4), this.validationService.alphanumericValidator]], //電子發票防偽隨機碼 由系統依據自訂公式計算取得
     TXN_PrintTimes: [0], //紙本發票列印狀態(若列印電子發票紙本證明連則為1，其他則為0) 顯示 是/否
-    TXN_GUI_Donate: ['N'], //發票捐贈狀態，Y=是、N=否
-    TXN_GUILoveCode: [{ value: null, disabled: true }], //捐贈社福團體代碼，若TXN_GUI_Donate為Y，則必須輸入此欄位
+    IsHaveGUILoveCode: ['N'], //發票捐贈狀態，Y=是、N=否
+    TXN_GUILoveCode: [{ value: null, disabled: true }], //捐贈社福團體代碼，若IsHaveGUILoveCode為Y，則必須輸入此欄位
   });
   ECR_NoOptions = this.dropDown.queryPos1002();     //dropdown 下拉選單 收銀機號
   USR_NoOptions = this.dropDown.queryPos2001();     //dropdown 下拉選單 收銀員
@@ -187,6 +187,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         }
       })
     }
+    if (rowDataTyped.ORG_TXN_Date) {
+      this.dataForm.get('isNegativeTXN')?.setValue(true);
+    }
     // 檢查是否開立業主發票 (rece_yn)
     if (this.rece_yn !== 'Y') {
       this.dataForm.get('TXN_TaxFreeCertNo')?.disable();
@@ -242,8 +245,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         controls.TXN_GUIVehicle.setValue(val, { emitEvent: false });
       }
     });
-    // 4. 監聽 發票捐贈狀態 (TXN_GUI_Donate)
-    controls.TXN_GUI_Donate.valueChanges.pipe(untilDestroyed(this)).subscribe(val => {
+    // 4. 監聽 發票捐贈狀態 (IsHaveGUILoveCode)
+    controls.IsHaveGUILoveCode.valueChanges.pipe(untilDestroyed(this)).subscribe(val => {
       toggleRequired(controls.TXN_GUILoveCode, val === 'Y', 20);
     });
     // 5. 監聽 發票字軌 (GUI_Track) -> 自動轉大寫

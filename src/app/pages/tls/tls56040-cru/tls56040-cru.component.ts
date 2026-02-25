@@ -98,6 +98,8 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
   warehouseOptions = this.dropdown.queryPos2034();
   userOptions = this.dropdown.queryTblUser();
 
+  initComponent = true;
+
   constructor(
     private readonly tls56040Service: Tls56040Service,
     public readonly tls52010Service: Tls52010Service,
@@ -108,13 +110,7 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS56040', this.dataForm);
-    if (!this.isFormCreateable) {
-      this.loading = true;
-      this.tls56040Service.queryPOS2022({ MVM_No: this.rowdata?.MVM_No || '', OUT_HOS_No: this.rowdata?.OUT_HOS_No || '' }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.data = response.Data || [];
-      });
-    }
+    this.initaializeData();
     this.dataForm.controls['OUT_HOS_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.validateWarehouseMismatch();
       [this.data, this.dialogData] = [[], []];
@@ -127,6 +123,17 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
       [this.data, this.dialogData] = [[], []];
       this.calculateTotals()
     });
+  }
+  initaializeData() {
+    this.initializePage('TLS56040', this.dataForm);
+    if (!this.isFormCreateable) {
+      this.initComponent = false;
+      this.loading = true;
+      this.tls56040Service.queryPOS2022({ MVM_No: this.rowdata?.MVM_No || '', OUT_HOS_No: this.rowdata?.OUT_HOS_No || '' }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.data = response.Data || [];
+        this.initComponent = true;
+      });
+    }
   }
   private validateWarehouseMismatch(): void {
     const outHosNo = this.dataForm.controls['OUT_HOS_No'].value;
@@ -194,8 +201,8 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
           Confirm_BuyTax: item.Confirm_BuyTax || 0,
           Confirm_BuyAmt: item.Confirm_BuyAmt || 0,
           Confirm_SaleAmt: item.Confirm_SaleAmt || 0,
-          id: this.isFormCreateable ? undefined : item.id,
-          MVM_No: this.isFormCreateable ? undefined : item.MVM_No
+          id: this.isFormCreateable ? undefined : item._dataStatus === 'new' ? 0 : item.id,
+          MVM_No: this.isFormCreateable ? undefined : this.rowdata?.MVM_No,
         } as IMVDetail))
       };
       const request$ = this.isFormCreateable ? this.tls56040Service.insertTLS56040(payload) : this.tls56040Service.updateTLS56040(payload);
@@ -236,6 +243,7 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
             APPLY_BuyAmt: newData.PLU_SalePrc_UNI + (newData.PLU_StockTaxType === '1' ? Math.floor(newData.PLU_SalePrc_UNI * 0.05) : 0),
             APPLY_BuyTax: newData.PLU_StockTaxType === '1' ? Math.floor(newData.PLU_SalePrc_UNI * 0.05) : 0,
             APPLY_SaleAmt: newData.PLU_SalePrc * 1,
+            _dataStatus: 'new'
           } as IPOS2022Data;
           if (this.data[index]) { Object.assign(this.data[index], updatedRow); }
           this.data = [...this.data];
@@ -341,6 +349,8 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
         APPLY_BuyAmt: item.PLU_SalePrc_UNI + (item.PLU_StockTaxType === '1' ? Math.floor(item.PLU_SalePrc_UNI * 0.05) : 0),
         APPLY_BuyTax: item.PLU_StockTaxType === '1' ? Math.floor(item.PLU_SalePrc_UNI * 0.05) : 0,
         APPLY_SaleAmt: item.PLU_SalePrc * 1,
+        PLU_BoxQty: item.PLU_BoxQty || 0,
+        _dataStatus: 'new',
       } as IPOS2022Data;
     });
     this.data = [
@@ -358,7 +368,7 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
 // 調撥數量不能大於目前庫存
 export function validateTransferQty(value: string, rowData: IPOS2022Data): { isValid: boolean; errorMessage: string[] } {
   return {
-    isValid: (rowData.APPLY_Qty || 0) <= (rowData.STK_CurrentQty || 0),
+    isValid: (Number(rowData.APPLY_Qty) || 0) <= (Number(rowData.NowHaveQty) || 0),
     errorMessage: [`調撥數量不能大於目前庫存`, '資料錯誤'],
   };
 }

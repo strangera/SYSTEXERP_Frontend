@@ -10,15 +10,6 @@
           <app-input-text label="領用退回單編號" controlName="RPM_No" [control]="dataForm.controls.RPM_No"
             [submitted]="submitted"></app-input-text>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
-            [submitted]="submitted"></app-calendar>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="申請人編號" controlName="APPLY_USR_No" [options]="userOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.APPLY_USR_No" [submitted]="submitted"></app-dropdown>
-        </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
@@ -26,16 +17,45 @@
             optionValue="value" [control]="dataForm.controls.org_id" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="品牌代碼" controlName="LOGO_No" [options]="brandOptions" optionLabel="Name" optionValue="No"
-            [control]="dataForm.controls.LOGO_No" [submitted]="submitted" />
+          <app-dropdown label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandOptions" optionLabel="Name"
+            optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted" />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="倉別" controlName="HOS_No" [options]="warehouseOptions" optionLabel="Name" optionValue="No"
-            [control]="dataForm.controls.HOS_No" [submitted]="submitted" />
+          <app-dropdown label="倉庫代碼/名稱" controlName="HOS_No" [options]="warehouseOptions" optionLabel="Name"
+            optionValue="No" [control]="dataForm.controls.HOS_No" [submitted]="submitted" />
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
+            [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="申請人編號" controlName="APPLY_USR_No" [options]="userOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.APPLY_USR_No" [submitted]="submitted"></app-dropdown>
         </div>
       </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
+      <div class="grid p-fluid mt-2 surface-50 border-round p-2">
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領退數量合計" controlName="RPM_TotQty"
+          [control]="dataForm.controls.RPM_TotQty" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領退未稅進價小計" controlName="RPM_TotBuyNet"
+          [control]="dataForm.controls.RPM_TotBuyNet" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領退進價稅額小計" controlName="RPM_TotBuyTax"
+          [control]="dataForm.controls.RPM_TotBuyTax" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領退進價合計" controlName="RPM_TotBuyAmt"
+          [control]="dataForm.controls.RPM_TotBuyAmt" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領退未稅售價小計" controlName="RPM_TotSaleNet"
+          [control]="dataForm.controls.RPM_TotSaleNet" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領退售價稅額小計" controlName="RPM_TotSaleTax"
+          [control]="dataForm.controls.RPM_TotSaleTax" [useGrouping]="true" [submitted]="submitted" />
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領退售價合計" controlName="RPM_TotSaleAmt"
+          [control]="dataForm.controls.RPM_TotSaleAmt" [useGrouping]="true" [submitted]="submitted" />
+      </div>
+      <div class="grid p-fluid mt-2">
+        <div class="col-12 md:col-6 lg:col-8">
           <app-input-textarea label="領用單說明" controlName="RPM_Remark" [control]="dataForm.controls.RPM_Remark"
             [submitted]="submitted"></app-input-textarea>
         </div>
@@ -79,7 +99,7 @@
     </div>
   </form>
   <hr />
-  <app-table tableKey="tls52010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
+  <app-table tableKey="tls52010CruDialogTable" dataKey="_TABLE_KEY" [showReportMode]="false" [data]="dialogData"
     [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
     (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
     [isRowSelectable]="isRowSelectable.bind(this)" [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
