@@ -145,25 +145,30 @@ export class TLS51020Component extends BasicQueryPageComponent<CategoryItem> imp
       return;
     }
 
-    this.apiService.deleteTLS51020({ idList }).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-        }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm); // 刷新資料
-      },
+    this.messageService.confirm({
+      message: '是否確認刪除所選中分類資料?',
+      header: '確認刪除',
+      accept: () => {
+        this.loading = true;
+        this.apiService.deleteTLS51020({ idList }).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+              this.selectedItems = [];
+              this.onSubmit(this.queryForm);
+            } else {
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: () => {
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.loading = false;
+          },
+        });
+      }
     });
-
-    this.selectedItems = [];
   }
 
   isRowSelectable(rowData: CategoryItem): boolean {

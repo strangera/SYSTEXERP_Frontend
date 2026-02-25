@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -8,7 +8,7 @@ import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { convertDateToYYYYMM, formatAmount, formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatYN, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -55,17 +55,24 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
 
   constructor(
     private readonly dropdown: DropdownApiService,
-    public readonly tls2d020Service: Tls2d020Service
+    public readonly tls2d020Service: Tls2d020Service,
+    private readonly datePipe: DatePipe
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS2D020');
   }
   onSubmit(frm: FormGroup) {
+    // 查詢時移除必填驗證
+    ['money_type', 'sam_yyymm'].forEach(key => {
+      const control = this.queryForm.get(key);
+      control?.clearValidators();
+      control?.updateValueAndValidity({ emitEvent: false });
+    });
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM') as string
       }
       this.tls2d020Service.queryTLS2D020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         this.totalRecords = res.TotalCount;
@@ -75,9 +82,14 @@ export class TLS2D020Component extends BasicQueryPageComponent<QueryDataItem> im
     })
   }
   onSam(frm: FormGroup) {
+    // 試算時加回必填驗證
+    this.queryForm.controls.money_type.setValidators([Validators.required]);
+    this.queryForm.controls.sam_yyymm.setValidators([Validators.required]);
+    this.queryForm.controls.money_type.updateValueAndValidity();
+    this.queryForm.controls.sam_yyymm.updateValueAndValidity();
     this.handleSubmit(frm, () => {
       const body = {
-        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM') as string,
         money_type: frm.value.money_type,
         tlt_no: frm.value.tlt_no,
         tlt_floor: frm.value.tlt_floor

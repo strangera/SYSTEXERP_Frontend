@@ -449,19 +449,26 @@ export class TLS53010CRUComponent extends BasicCruPageComponent<TLS53010Data> im
           },
           ...this.editData.slice(index + 1)
         ]
+        // 找到資料，移除查無標記
+        if (this.editData[index]) {
+          (this.editData[index] as any).NotFound = false;
+        }
       } else {
         this.messageService.errorBubble('查無該商品資訊');
-        this.editData[index] = {
-          ...this.editData[index],
-          PLU_MagNo: '',
-        };
-        this.editData = [...this.editData];
+        // 查無資料：移除該新增列（完整清空），避免留下空的驗證框
+        if (index >= 0 && index < this.editData.length) {
+          this.editData.splice(index, 1);
+          this.editData = [...this.editData];
+        }
       }
     });
   }
 
   // 編輯表單整列驗證
   validateEntireRow = (rowData: POS2004Info): { isValid: boolean, errorMessage: string } => {
+    if (!rowData.PLU_MagNo) {
+      return { isValid: false, errorMessage: '查無該商品資訊' };
+    }
     const hasDuplicatePLU_MagNo = this.editData.filter(item => item.PLU_MagNo === rowData.PLU_MagNo).length > 1;
     const existsInData = this.data.some(item => item.PLU_MagNo === rowData.PLU_MagNo);
     if (existsInData) {

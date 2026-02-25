@@ -46,7 +46,9 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
     APPLY_Date_Start: [null],                  // 申請日期 起
     APPLY_Date_End: [null],                    // 申請日期 迄
     ...createPaginationConfig([{ field: 'RPM_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
 
   // Dropdown options
@@ -86,25 +88,26 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS56030', '/TLS/TLS56030CRU', this.queryForm, (form) => this.onSubmit(form));
     // 倉別 (HOS_No)
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this),
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+      map(response => (response?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
     ).subscribe(options => { this.warehouseOptions = options; });
     // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this),
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).subscribe(options => { this.brandOptions = options.map(item => ({ label: `${item.value} - ${item.label}`, value: item.value })); });
+    this.dropDownListService.queryPLULOGO_DropDownList().pipe(
+      untilDestroyed(this),
+      map(res => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
+    ).subscribe(options => this.brandOptions = options);
 
     // 申請人員、審核人員、結案人員 (共用人員下拉選單)
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this),
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+      map(res => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
     ).subscribe(options => {
       this.userOptions = options;
     });
     this.dropDownListService.querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.departmentOptions = (response.Data || []).map(item => ({
-          label: item.Name,
-          value: item.No
+        this.departmentOptions = (response.Data || []).map((x: any) => ({
+          label: `${x.No}-${x.Name}`,
+          value: x.No
         }));
       });
     this.issuanceNoteStatusOptions = [
@@ -132,11 +135,14 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
           this.totalRecords = res?.TotalCount ?? this.data.length;
           this.loading = false;
         },
-        error: (err) => {
-          console.error('查詢失敗', err);
-          this.loading = false;
-        }
+
       });
+  }
+  // 當列的 RPM_Status 為 3 (已領退) 或 9 (已作廢) 時，讓 edit 按鈕呈現唯讀/禁用
+  isEditDisabled(row: any): boolean {
+    const status = row?.RPM_Status ?? row?.RPM_Status;
+    const s = String(status ?? '').trim();
+    return s === '3' || s === '9' || Number(s) === 3 || Number(s) === 9;
   }
   insertRecord(payload: any) {
     this.tls56030Service.insertTLS56030(payload).pipe(untilDestroyed(this))
@@ -155,7 +161,6 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
           console.log('更新成功', res);
           this.onSubmit(this.queryForm);
         },
-        error: (err) => console.error('更新失敗', err)
       });
   }
   updateStatus(payload: any) {
@@ -165,7 +170,6 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
           console.log('狀態更新成功', res);
           this.onSubmit(this.queryForm);
         },
-        error: (err) => console.error('狀態更新失敗', err)
       });
   }
   queryPOS2004Detail(body: any) {
@@ -174,55 +178,8 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
         next: (res) => {
           console.log('商品明細', res.Data);
         },
-        error: (err) => console.error('明細查詢失敗', err)
       });
   }
 
-  // // 管理編號
-  // opLoading = false;
-  // opForm = this.formBuilder.group({
-  //   queryNo: ['', [Validators.maxLength(20)]], // 管理編號
-  //   PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
-  //   ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-  // });
-  // suggestions: IQueryPOS2004DetailResponse[] = [];
-  // fieldsConfig: FieldsConfig[] = [
-  //   { field: 'PLU_MagNo', header: '國際條碼/國際條碼/廠商貨號', mainDataField: true },
-  // ];
-  // opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
-  // opColumns: Column[] = [
-  //   { field: 'PLU_MagNo', header: '商品管理編號' },
-  //   { field: 'PLU_No', header: '國際條碼' },
-  //   { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
-  //   { field: 'PLU_Name', header: '商品名稱' },
-  // ];
-  // opTotalRecords = 0;
-  // onAutoCompleteInputChange(event: any) {
-  //   const body = {
-  //     ...event,
-  //     VEN_No: '',
-  //     LOGO_No: '',
-  //     queryNo: event.PLU_MagNo || '',
-  //     pageSize: 30,
-  //     pageIndex: 1,
-  //     SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-  //   }
-  //   this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-  //     this.suggestions = [...results.Data];
-  //   });
-  // }
-  // onFormValueChanged(event: IQueryPOS2004DetailRequest) {
-  //   this.opLoading = true;
-  //   const body = {
-  //     queryNo: event.queryNo || '',
-  //     PLU_Name: event.PLU_Name || '',
-  //     VEN_No: '',
-  //     LOGO_No: '',
-  //   };
-  //   this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-  //     this.opData = [...results.Data]; // 更新data資料
-  //     this.opTotalRecords = results.TotalCount;
-  //     this.opLoading = false;
-  //   });
-  // }
+
 }

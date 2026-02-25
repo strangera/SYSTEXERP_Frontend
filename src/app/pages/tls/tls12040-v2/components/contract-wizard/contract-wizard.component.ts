@@ -13,6 +13,7 @@ import { CommonModule, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 
 // PrimeNG
 import { MenuItem } from 'primeng/api';
@@ -28,17 +29,21 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 
 // V2 服務
-import { TLS12040Service } from '@service/api/tls/tls12040.service';
+import { RenewalQueryResponse, TLS12040Service } from '@service/api/tls/tls12040.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
 import { CrudTrackingService } from '../../../tls13010-v2/core/services/crud-tracking.service';
 
+// V2 服務
+import { ContractValidatorService } from '../../services/validation/contract-validator.service';
+import { SubmitDataService } from '../../services/submit/submit-data.service';
+
 // V2 類型
+import { CommissionItem as V2CommissionItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
 import {
   CommissionType,
   DataStatus
 } from '../../core';
-import { CommissionItem as V2CommissionItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
 import { ConditionItem } from '../../core/models/condition';
 import { ContractInfo, LocationItem } from '../../core/models/contract';
 import { FareItem } from '../../core/models/deduction';
@@ -111,7 +116,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     { label: '合約基本資料' },
     { label: '代扣款設定' },
     { label: '抽成設定' },
-    { label: '條件設定' }
+    { label: '租金設定' }
   ];
 
   /**
@@ -121,6 +126,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    * - 其他: 全部 4 個步驟
    */
   get steps(): MenuItem[] {
+    // 意向書：只顯示 Step 1（合約基本資料）
+    if (this.dataForm?.get('contract_type')?.value === '2') {
+      return [this.allSteps[0]];
+    }
+
     const commissionType = this.currentCommissionType as CommissionType;
 
     switch (commissionType) {
@@ -139,6 +149,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    * 取得實際步驟索引對應表
    */
   get stepIndexMap(): number[] {
+    // 意向書：只有 Step 0
+    if (this.dataForm?.get('contract_type')?.value === '2') {
+      return [0];
+    }
+
     const commissionType = this.currentCommissionType as CommissionType;
 
     switch (commissionType) {
@@ -193,6 +208,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   // 折扣選項 (Step 3 專用)
   discountOptions: any[] = [];
 
+  // 上次同步的契約日期（smart sync 用）
+  private lastSyncedStartDate: unknown = null;
+  private lastSyncedEndDate: unknown = null;
+
   // 子組件參考
   @ViewChild(Step1ContractInfoComponent) step1Component?: Step1ContractInfoComponent;
   @ViewChild(Step2DeductionComponent) step2Component?: Step2DeductionComponent;
@@ -203,7 +222,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     public override router: Router,
     private apiService: TLS12040Service,
     private tlsBaseService: TlsContractBaseService,
-    public sharedDropdownService: SharedDropdownService
+    public sharedDropdownService: SharedDropdownService,
+    private validatorService: ContractValidatorService,
+    private submitDataService: SubmitDataService
   ) {
     super();
     this.initializeForm();
@@ -352,6 +373,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // ========== 動態驗證器 ==========
   private setupDynamicValidators(): void {
+    // 監聽契約類型變更（意向書時只顯示 Step 1）
+    this.dataForm.get('contract_type')?.valueChanges.subscribe(() => {
+      this.currentStep = 0;
+    });
+
     // 監聽抽成別變更
     this.dataForm.get('tlt_term_type')?.valueChanges.subscribe((value) => {
       this.updateDynamicValidators();
@@ -374,11 +400,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   private updateDynamicValidators(): void {
     const tltTermType = this.dataForm.get('tlt_term_type')?.value || '';
 
-    // 包底類別驗證
+    // 包底類別驗證 (抽成別 4, 6 需要)
     const baodiControl = this.dataForm.get('tlt_ctype_mtotal');
     if (baodiControl) {
       baodiControl.clearValidators();
-      if (['2', '4', '6'].includes(tltTermType)) {
+      if (['4', '6'].includes(tltTermType)) {
         baodiControl.setValidators([Validators.required]);
       }
       baodiControl.updateValueAndValidity();
@@ -440,19 +466,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // ========== 路由狀態處理 ==========
   private async handleRouterState(): Promise<void> {
-    const state = history.state;
-
-    // 處理續約模式
-    if (state?.mode === 'renewal' && state?.rowData) {
-      this.isRenewalMode = true;
-      await this.loadRenewalData(state.rowData.ven_no);
-      return;
-    }
-
-    // 新增模式 - 初始化空表單
+    // 新增模式 - 初始化空表單 + 載入可用代扣款項目
     if (this.isFormCreateable) {
       this.tlsBaseService.initializeEmptyForm(this.dataForm, 'TLS12040');
       this.tlsBaseService.setCurrentUserAsNegotiator(this.dataForm);
+      await this.loadFareData('');
       return;
     }
 
@@ -471,17 +489,25 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       if (response?.Status === '0000' && response.Data) {
         const data = response.Data;
 
-        // 處理抽成別 trim
+        // 處理字串欄位 trim（資料庫固定長度欄位會帶空白）
         if (data.tlt_term_type) {
           data.tlt_term_type = String(data.tlt_term_type).trim();
           this.originalCommissionType = data.tlt_term_type;
+        }
+        if (data.apply_type) {
+          data.apply_type = String(data.apply_type).trim();
         }
 
         // 資料預處理（與 v1 CRU populateForm 一致）
         const processedData = this.preprocessApiData(data);
 
-        // 填充表單
+        // 填充表單（emitEvent:false 避免 valueChanges 監聽器在載入時連鎖觸發）
         this.dataForm.patchValue(processedData, { emitEvent: false });
+
+        // apply_type 下拉在 emitEvent:false 時可能不會同步 UI，顯式重設強制更新
+        if (processedData.apply_type) {
+          this.dataForm.get('apply_type')?.setValue(processedData.apply_type);
+        }
 
         // 更新驗證器
         this.updateDynamicValidators();
@@ -636,35 +662,32 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           discountSummary: item.discountSummary || '',
           sst_amount: item.sst_amount || 0,
           sst_rate: item.sst_rate || 0,
-          cap_saletype2: item.cap_saletype2 || false,
-          cap_saletype1: item.cap_saletype1 || false,
-          cap_saletype5: item.cap_saletype5 || false,
+          cap_saletype1: item.cap_saletype1 === 'Y' || item.cap_saletype1 === true,
+          cap_saletype2: item.cap_saletype2 === 'Y' || item.cap_saletype2 === true,
+          cap_saletype3: item.cap_saletype3 === 'Y' || item.cap_saletype3 === true,
+          cap_saletype5: item.cap_saletype5 === 'Y' || item.cap_saletype5 === true,
           selectedSettingOption: item.selectedSettingOption || '',
           charge_rate: item.charge_rate || 0,
           cag_bdate: item.cag_bdate || '',
           cag_edate: item.cag_edate || '',
           cag_remark: item.cag_remark || '',
           remark: item.cag_remark || '',
-          mainStartDate: item.cag_bdate || '',
-          mainEndDate: item.cag_edate || '',
-          // 明細映射：ChargeDetails → discountSettingItems
-          discountSettingItems: (item.ChargeDetails || []).map((d: Record<string, unknown>) => ({
-            ...d,
-            selected: (d['is_selected'] ?? d['selected'] ?? false) as boolean,
-            is_configured: (d['is_configured'] ?? true) as boolean,
-            is_enabled: (d['is_enabled'] ?? true) as boolean,
-            _status: 'original' as DataStatus
-          })),
+          mainStartDate: this.dataForm.get('tlt_bdate')?.value || item.cag_bdate || '',
+          mainEndDate: this.dataForm.get('tlt_edate')?.value || item.cag_edate || '',
+          // 使用 buildCompleteDiscountItems 建立完整的折扣設定列表
+          discountSettingItems: this.buildCompleteDiscountItems(item.ChargeDetails || []),
           // 明細映射：YearChargeDetails → annualPerformanceItems
           annualPerformanceItems: (item.YearChargeDetails || []).map((d: Record<string, unknown>) => ({
             ...d,
+            extra_rate: this.convertRateToPercentage(Number(d['extra_rate'] || d['EXTRA_RATE'] || 0)),
             selected: (d['is_selected'] ?? d['selected'] ?? false) as boolean,
             _status: 'original' as DataStatus
           })),
           // 明細映射：LevelChargeDetails → discountLevelItems
           discountLevelItems: (item.LevelChargeDetails || []).map((d: Record<string, unknown>) => ({
             ...d,
-            selected: (d['is_selected'] ?? d['selected'] ?? false) as boolean,
+            level_charge_rate: this.convertRateToPercentage(Number(d['level_charge_rate'] || d['LEVEL_CHARGE_RATE'] || 0)),
+            selected: (d['is_selected'] ?? d['selected'] ?? d['is_enabled'] ?? false) as boolean,
             is_configured: (d['is_configured'] ?? true) as boolean,
             is_enabled: (d['is_enabled'] ?? true) as boolean,
             _status: 'original' as DataStatus
@@ -690,17 +713,102 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       const request = { apply_no: applyNo, CurrentTltTermType: commissionType };
       const response = await this.apiService.queryTLS12040Commission(request).toPromise();
 
-      if (response?.Status === '0000' && response.Data) {
-        const existingData = response.Data.ExistingData || [];
+      if (response?.Status === '0000' && response.Data?.ExistingData) {
+        // ExistingData 是物件，需根據抽成類型取出對應陣列
+        const items = this.extractConditionItems(response.Data.ExistingData, commissionType);
 
-        this.wizardState.conditionItems = existingData.map((item: any) => ({
+        this.wizardState.conditionItems = items.map((item: any) => ({
           ...item,
+          cag_bdate: this.formatDateToString(item.cag_bdate),
+          cag_edate: this.formatDateToString(item.cag_edate),
           _status: 'original' as DataStatus
         }));
       }
     } catch (error) {
       console.error('載入條件資料失敗:', error);
     }
+  }
+
+  /**
+   * 從 ExistingData 物件中提取對應抽成類型的條件項目陣列
+   * 必須明確 map 每種類型所需的欄位，避免多餘欄位（如 limit_amt）
+   * 導致 categorizeConditionItems 的類型判斷錯誤
+   */
+  private extractConditionItems(existingData: any, commissionType: string): any[] {
+    switch (commissionType) {
+      case '1': // 固定租金
+        return (existingData.RentDetails || []).map((item: any) => ({
+          id: item.id || item.ID,
+          tlt_id: item.tlt_id || item.TLT_ID || '',
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          base_rent: Number(item.base_rent || item.BASE_RENT || 0)
+        }));
+
+      case '2': // 底租抽成取高者
+        return (existingData.RentDetails || []).map((item: any, index: number) => ({
+          id: item.id || item.ID,
+          tlt_id: item.tlt_id || item.TLT_ID || '',
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          base_rent: Number(item.base_rent || item.BASE_RENT || 0),
+          cag_charge_rate: Number(existingData.ChargedDetails?.[index]?.cag_charge_rate || item.cag_charge_rate || 0)
+        }));
+
+      case '4': // 包底抽成
+        return (existingData.LimitDetails || []).map((item: any) => ({
+          id: item.id || item.ID,
+          tlt_id: item.tlt_id || item.TLT_ID || '',
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          limit_amt: Number(item.limit_amt || item.LIMIT_AMT || 0),
+          limit_charge_rate: Number(item.limit_charge_rate || item.LIMIT_CHARGE_RATE || 0)
+        }));
+
+      case '5': // 層級抽成 — 不可包含 limit_amt，否則會被誤判為包底加層級
+        return (existingData.LevelDetails || []).map((item: any) => ({
+          id: item.id || item.ID,
+          seq_no: Number(item.seq_no || item.SEQ_NO || 0),
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          start_number: Number(item.start_number || item.START_NUMBER || 0),
+          end_number: Number(item.end_number || item.END_NUMBER || 0),
+          charge_rate: Number(item.charge_rate || item.CHARGE_RATE || 0)
+        }));
+
+      case '6': // 包底加層級
+        return (existingData.BottomTierDetails || existingData.LevelDetails || []).map((item: any) => ({
+          id: item.id || item.ID,
+          seq_no: Number(item.seq_no || item.SEQ_NO || 0),
+          tlt_id: item.tlt_id || item.TLT_ID || '',
+          cag_bdate: item.cag_bdate || item.CAG_BDATE,
+          cag_edate: item.cag_edate || item.CAG_EDATE,
+          limit_amt: Number(item.limit_amt || item.LIMIT_AMT || 0),
+          start_number: Number(item.start_number || item.START_NUMBER || 0),
+          end_number: Number(item.end_number || item.END_NUMBER || 0),
+          charge_rate: Number(item.charge_rate || item.CHARGE_RATE || 0)
+        }));
+
+      default:
+        return [];
+    }
+  }
+
+  /**
+   * 將日期值格式化為 YYYY-MM-DD 字串
+   */
+  private formatDateToString(value: any): string {
+    if (!value) return '';
+    if (typeof value === 'string') {
+      return value.split('T')[0].replace(/\//g, '-');
+    }
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      const y = value.getFullYear();
+      const m = String(value.getMonth() + 1).padStart(2, '0');
+      const d = String(value.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    return String(value);
   }
 
   private async loadDiscountOptions(): Promise<void> {
@@ -713,146 +821,167 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     }
   }
 
-  private async loadRenewalData(venNo: string): Promise<void> {
-    try {
-      const response = await this.apiService.queryContractForRenewal(venNo).toPromise();
+  // ========== 續約資料處理 ==========
 
-      if (response) {
-        // 保存續約資訊
-        this.wizardState.renewalData = {
-          sourceContractId: response.source_talent_id,
-          sourceApplyNo: response.source_apply_no,
-          sourceContractSubno: response.source_contract_subno,
-          nextContractSubno: response.next_contract_subno
-        };
-
-        // 填充基本資料
-        if (response.BasicInfo) {
-          // 清除 ID 相關欄位
-          const basicInfo = { ...response.BasicInfo };
-          this.dataForm.patchValue({
-            ...basicInfo,
-            apply_no: '',  // 清除，由後端產生
-            talent_id: '',  // 清除
-            contract_subno: response.next_contract_subno,
-            apply_type: '2'  // 續約
-          });
-        }
-
-        // 載入位置資料
-        if (response.Locations && Array.isArray(response.Locations)) {
-          this.wizardState.locationData = response.Locations.map((loc: any) => ({
-            ...loc,
-            id: undefined,  // 清除 ID
-            _status: 'new' as DataStatus
-          }));
-        }
-
-        // 載入代扣款資料
-        if (response.FareData) {
-          const faresByType = response.FareData.FaresByType || {};
-          const allItems: FareItem[] = [];
-
-          ['A', 'B', 'C', 'D', 'E'].forEach(type => {
-            const items = faresByType[type] || [];
-            items.forEach((item: any) => {
-              allItems.push({
-                ...item,
-                id: undefined,
-                apply_no: undefined,
-                talent_id: undefined,
-                cap_type: type as any,
-                _status: 'new' as DataStatus
-              });
-            });
-          });
-
-          this.wizardState.fareItems = allItems;
-        }
-
-        // 載入抽成資料（映射為 TLS13010-v2 格式）
-        if (response.ChargeData) {
-          const chargeSettings = response.ChargeData.ChargeSettings || [];
-
-          this.wizardState.commissionItems = chargeSettings.map((item: Record<string, unknown>) => ({
-            id: '',
-            tlt_id: (item['tlt_id'] as string) || '',
-            tlt_id_desc: (item['tlt_id_desc'] as string) || '',
-            cag_taxtype: item['cag_taxtype'] ?? '',
-            discountSummary: (item['discountSummary'] as string) || '',
-            sst_amount: (item['sst_amount'] as number) || 0,
-            sst_rate: (item['sst_rate'] as number) || 0,
-            cap_saletype2: item['cap_saletype2'] || false,
-            cap_saletype1: item['cap_saletype1'] || false,
-            cap_saletype5: item['cap_saletype5'] || false,
-            selectedSettingOption: (item['selectedSettingOption'] as string) || '',
-            charge_rate: (item['charge_rate'] as number) || 0,
-            cag_bdate: item['cag_bdate'] || '',
-            cag_edate: item['cag_edate'] || '',
-            cag_remark: item['cag_remark'] || '',
-            remark: item['cag_remark'] || '',
-            mainStartDate: item['cag_bdate'] || '',
-            mainEndDate: item['cag_edate'] || '',
-            discountSettingItems: ((item['ChargeDetails'] as unknown[]) || []).map((d: unknown) => {
-              const detail = d as Record<string, unknown>;
-              return {
-                ...detail,
-                selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
-                is_configured: (detail['is_configured'] ?? true) as boolean,
-                is_enabled: (detail['is_enabled'] ?? true) as boolean,
-                _status: 'new' as DataStatus
-              };
-            }),
-            annualPerformanceItems: ((item['YearChargeDetails'] as unknown[]) || []).map((d: unknown) => {
-              const detail = d as Record<string, unknown>;
-              return {
-                ...detail,
-                selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
-                _status: 'new' as DataStatus
-              };
-            }),
-            discountLevelItems: ((item['LevelChargeDetails'] as unknown[]) || []).map((d: unknown) => {
-              const detail = d as Record<string, unknown>;
-              return {
-                ...detail,
-                selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
-                is_configured: (detail['is_configured'] ?? true) as boolean,
-                is_enabled: (detail['is_enabled'] ?? true) as boolean,
-                _status: 'new' as DataStatus
-              };
-            }),
-            detailItems: [],
-            currentTab: 'discount',
-            _status: 'new' as DataStatus
-          } as unknown as V2CommissionItem));
-        }
-
-        // 載入條件資料
-        if (response.CommissionData) {
-          const existingData = response.CommissionData.ExistingData || [];
-
-          this.wizardState.conditionItems = existingData.map((item: any) => ({
-            ...item,
-            id: undefined,
-            apply_no: undefined,
-            talent_id: undefined,
-            _status: 'new' as DataStatus
-          }));
-        }
-
-        // 更新驗證器
-        this.updateDynamicValidators();
-        this.updatePaymentValidators();
-
-        // 同步 contractInfo
-        this.wizardState.contractInfo = this.dataForm.getRawValue() as ContractInfo;
-
-        this.messageService.successBubble('續約資料載入成功');
-      }
-    } catch (error) {
-      console.error('載入續約資料失敗:', error);
-      this.messageService.errorBubble('載入續約資料失敗');
+  /**
+   * 處理續約代扣款資料 (Step 2)
+   * 將 API 回傳的 FaresByType 映射為 FareItem[]，全部標記為 'new'
+   */
+  private processRenewalFareData(fareData: any): void {
+    if (!fareData) {
+      this.wizardState.fareItems = [];
+      return;
     }
+
+    const faresByType = fareData.FaresByType || {};
+    const allItems: FareItem[] = [];
+
+    // 續約模式：日期統一用 Step 1 填的契約起訖，讓 user 自行調整
+    const formStartDate = this.dataForm.get('tlt_bdate')?.value || new Date();
+    const formEndDate = this.dataForm.get('tlt_edate')?.value || new Date();
+
+    ['A', 'B', 'C', 'D', 'E'].forEach(type => {
+      const items = faresByType[type] || [];
+      items.forEach((item: any) => {
+        allItems.push({
+          ...item,
+          id: undefined,
+          apply_no: undefined,
+          talent_id: undefined,
+          cap_type: type as any,
+          tpy_bdate: formStartDate,
+          tpy_edate: formEndDate,
+          _status: 'new' as DataStatus
+        });
+      });
+    });
+
+    this.wizardState.fareItems = allItems;
+  }
+
+  /**
+   * 處理續約抽成資料 (Step 3)
+   * 將 API 回傳的 ChargeSettings 映射為 TLS13010-v2 CommissionItem 格式，全部標記為 'new'
+   */
+  private processRenewalChargeData(chargeData: any): void {
+    if (!chargeData) {
+      this.wizardState.commissionItems = [];
+      return;
+    }
+
+    const chargeSettings = chargeData.ChargeSettings || [];
+
+    // 續約模式：日期統一用 Step 1 填的契約起訖
+    const formStartDate = this.dataForm.get('tlt_bdate')?.value || new Date();
+    const formEndDate = this.dataForm.get('tlt_edate')?.value || new Date();
+
+    this.wizardState.commissionItems = chargeSettings.map((item: Record<string, unknown>) => {
+      // 1. 先建立折扣設定項目（此時仍保留 TLTTENT 的舊 ID）
+      const discountItems = this.buildCompleteDiscountItems(
+        (item['ChargeDetails'] as Record<string, unknown>[]) || [],
+        true  // forRenewal = true
+      );
+
+      // 2. 續約模式：將 TLTTENT 舊 ID 替換為臨時 ID，建立 oldId → newTempId 映射
+      //    這樣 levelSettings 的 charged_id 可以正確對應到新的折扣設定
+      const idMapping = new Map<string, string | number>();
+      discountItems.forEach(di => {
+        const oldId = String(di.id || '');
+        if (oldId && !oldId.startsWith('temp_') && !oldId.startsWith('new_')) {
+          const newId = this.generateTempId();
+          idMapping.set(oldId, newId);
+          di.id = newId;
+        }
+      });
+
+      return {
+        id: '',
+        tlt_id: (item['tlt_id'] as string) || '',
+        tlt_id_desc: (item['tlt_id_desc'] as string) || '',
+        cag_taxtype: item['cag_taxtype'] ?? '',
+        discountSummary: (item['discountSummary'] as string) || '',
+        sst_amount: (item['sst_amount'] as number) || 0,
+        sst_rate: (item['sst_rate'] as number) || 0,
+        cap_saletype1: item['cap_saletype1'] === 'Y' || item['cap_saletype1'] === true,
+        cap_saletype2: item['cap_saletype2'] === 'Y' || item['cap_saletype2'] === true,
+        cap_saletype3: item['cap_saletype3'] === 'Y' || item['cap_saletype3'] === true,
+        cap_saletype5: item['cap_saletype5'] === 'Y' || item['cap_saletype5'] === true,
+        selectedSettingOption: (item['selectedSettingOption'] as string) || '',
+        charge_rate: (item['charge_rate'] as number) || 0,
+        cag_bdate: formStartDate || item['cag_bdate'] || '',
+        cag_edate: formEndDate || item['cag_edate'] || '',
+        cag_remark: item['cag_remark'] || '',
+        remark: item['cag_remark'] || '',
+        mainStartDate: formStartDate || item['cag_bdate'] || '',
+        mainEndDate: formEndDate || item['cag_edate'] || '',
+        discountSettingItems: discountItems,
+        annualPerformanceItems: ((item['YearChargeDetails'] as unknown[]) || []).map((d: unknown) => {
+          const detail = d as Record<string, unknown>;
+          // 續約模式：移除 TLTTENT 的 id，避免送出舊合約 ID 給 TLTAPPLY
+          const { id: _id, ID: _ID, ...rest } = detail;
+          return {
+            ...rest,
+            extra_rate: this.convertRateToPercentage(Number(detail['extra_rate'] || detail['EXTRA_RATE'] || 0)),
+            selected: (detail['is_selected'] ?? detail['selected'] ?? false) as boolean,
+            _status: 'new' as DataStatus
+          };
+        }),
+        discountLevelItems: ((item['LevelChargeDetails'] as unknown[]) || []).map((d: unknown) => {
+          const detail = d as Record<string, unknown>;
+          // 續約模式：移除 TLTTENT 的 id，charged_id 映射為新的臨時 ID
+          const { id: _id, ID: _ID, ...rest } = detail;
+          const oldChargedId = String(detail['charged_id'] || '');
+          return {
+            ...rest,
+            charged_id: idMapping.get(oldChargedId) || oldChargedId,
+            level_charge_rate: this.convertRateToPercentage(Number(detail['level_charge_rate'] || detail['LEVEL_CHARGE_RATE'] || 0)),
+            selected: (detail['is_selected'] ?? detail['selected'] ?? detail['is_enabled'] ?? false) as boolean,
+            is_configured: (detail['is_configured'] ?? true) as boolean,
+            is_enabled: (detail['is_enabled'] ?? true) as boolean,
+            _status: 'new' as DataStatus
+          };
+        }),
+        detailItems: [],
+        currentTab: 'discount',
+        _status: 'new' as DataStatus
+      } as unknown as V2CommissionItem;
+    });
+  }
+
+  /**
+   * 處理續約條件資料 (Step 4)
+   * 使用 extractConditionItems 正確映射不同抽成類型的條件資料
+   */
+  private processRenewalConditionData(commissionData: any): void {
+    if (!commissionData?.ExistingData) {
+      this.wizardState.conditionItems = [];
+      return;
+    }
+
+    const commissionType = this.currentCommissionType;
+
+    // 一般抽成不需要條件資料
+    if (commissionType === '3') {
+      this.wizardState.conditionItems = [];
+      return;
+    }
+
+    // 使用與編輯模式相同的 extractConditionItems 正確映射
+    const items = this.extractConditionItems(commissionData.ExistingData, commissionType);
+
+    // 續約模式：日期統一用 Step 1 填的契約起訖
+    const formStartDate = this.dataForm.get('tlt_bdate')?.value || new Date();
+    const formEndDate = this.dataForm.get('tlt_edate')?.value || new Date();
+
+    this.wizardState.conditionItems = items.map((item: any) => ({
+      ...item,
+      id: undefined,
+      apply_no: undefined,
+      talent_id: undefined,
+      cag_bdate: this.formatDateToString(formStartDate),
+      cag_edate: this.formatDateToString(formEndDate),
+      _status: 'new' as DataStatus
+    }));
   }
 
   // ========== 步驟導航 ==========
@@ -860,7 +989,12 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     const actualStep = this.stepIndexMap[visualIndex];
     if (actualStep === undefined) return;
 
+    // 往前跳需驗證；往回跳不需驗證
     if (actualStep > this.currentStep && !this.validateCurrentStep()) {
+      // 強制重設 p-steps 的視覺狀態（避免 header 與實際步驟不同步）
+      const saved = this.currentStep;
+      this.currentStep = -1;
+      Promise.resolve().then(() => { this.currentStep = saved; });
       return;
     }
 
@@ -891,68 +1025,167 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // ========== 驗證 ==========
   private validateCurrentStep(): boolean {
-    switch (this.currentStep) {
-      case 0:
-        return this.validateStep1();
-      case 1:
-        return this.validateStep2();
-      case 2:
-        return this.validateStep3();
-      case 3:
-        return this.validateStep4();
-      default:
-        return true;
+    try {
+      switch (this.currentStep) {
+        case 0:
+          return this.validateStep1();
+        case 1:
+          return this.validateStep2();
+        case 2:
+          return this.validateStep3();
+        case 3:
+          return this.validateStep4();
+        default:
+          return true;
+      }
+    } catch (error) {
+      console.error('[Wizard] 驗證錯誤:', error);
+      this.messageService.errorBubble('驗證程序發生錯誤，請聯繫系統管理員');
+      return false;
     }
   }
 
   private validateStep1(): boolean {
     this.wizardState.contractInfo = this.dataForm.getRawValue() as ContractInfo;
 
-    const requiredFields = [
-      { field: 'tlt_name', label: '專櫃名稱' },
-      { field: 'bus_type', label: '大分類' },
-      { field: 'bus_class', label: '中分類' },
-      { field: 'tlt_bdate', label: '契約起始日' },
-      { field: 'tlt_edate', label: '契約截止日' },
-      { field: 'org_id', label: '營運單位' },
-      { field: 'tlt_contract_bdate', label: '營運起始日' },
-      { field: 'tlt_contract_edate', label: '營運截止日' },
-      { field: 'tlt_term_type', label: '抽成別' }
-    ];
-
-    const missingFields: string[] = [];
-    for (const { field, label } of requiredFields) {
-      const control = this.dataForm.get(field);
-      if (!control?.value || (typeof control.value === 'string' && !control.value.trim())) {
-        missingFields.push(label);
-        control?.markAsTouched();
-      }
-    }
-
-    if (missingFields.length > 0) {
+    const result = this.validatorService.validateStep1(this.dataForm, this.wizardState.locationData);
+    if (!result.isValid) {
+      this.submitted = true;
       if (this.step1Component) {
         this.step1Component.submitted = true;
       }
-      this.messageService.warnBubble(`請填寫必填欄位：${missingFields.slice(0, 3).join('、')}${missingFields.length > 3 ? ' 等' : ''}`);
+      const firstErrors = result.errors.slice(0, 3).map(e => e.message);
+      const suffix = result.errors.length > 3 ? `...等 ${result.errors.length} 項` : '';
+      this.messageService.warnBubble(`請修正：${firstErrors.join('、')}${suffix}`);
       return false;
     }
+
+    // 警告（不阻擋流程）
+    if (result.warnings.length > 0) {
+      this.messageService.warnBubble(result.warnings.map(w => w.message).join('、'));
+    }
+
+    // 離開 Step 1 時，同步契約起訖日到 Steps 2-4
+    this.syncContractDatesToSteps();
 
     return true;
   }
 
   private validateStep2(): boolean {
-    // 代扣款驗證邏輯
+    if (this.isViewMode) return true;
+
+    const contractRange = {
+      tlt_bdate: this.dataForm.get('tlt_bdate')?.value,
+      tlt_edate: this.dataForm.get('tlt_edate')?.value
+    };
+    const result = this.validatorService.validateStep2(this.wizardState.fareItems, contractRange);
+
+    if (!result.isValid) {
+      // 觸發 Step2 重新渲染以顯示錯誤標記
+      this.wizardState.fareItems = [...this.wizardState.fareItems];
+      this.messageService.warnBubble(result.errorMessages.join('\n'));
+      return false;
+    }
     return true;
   }
 
   private validateStep3(): boolean {
-    // 抽成設定驗證邏輯
+    if (this.isViewMode) return true;
+
+    const result = this.validatorService.validateStep3(
+      this.wizardState.commissionItems,
+      this.currentCommissionType,
+      this.dataForm.get('tlt_bdate')?.value,
+      this.dataForm.get('tlt_edate')?.value
+    );
+
+    if (!result.isValid) {
+      this.wizardState.commissionItems = [...this.wizardState.commissionItems];
+      this.messageService.warnBubble(result.errorMessages.join('\n'));
+      return false;
+    }
     return true;
   }
 
   private validateStep4(): boolean {
-    // 條件設定驗證邏輯
+    if (this.isViewMode) return true;
+
+    const result = this.validatorService.validateStep4(
+      this.wizardState.conditionItems,
+      this.currentCommissionType
+    );
+
+    if (!result.isValid) {
+      this.wizardState.conditionItems = [...this.wizardState.conditionItems];
+      this.messageService.warnBubble(result.errorMessages.join('\n'));
+      return false;
+    }
     return true;
+  }
+
+  /**
+   * Smart Sync: 同步 Step 1 的契約起訖日到 Steps 2-4
+   * - 日期沒變就跳過（避免無效覆蓋）
+   * - 跳過 _status === 'original' 的項目（保護使用者手動調整的既有資料）
+   */
+  private syncContractDatesToSteps(): void {
+    const startDate = this.dataForm.get('tlt_bdate')?.value;
+    const endDate = this.dataForm.get('tlt_edate')?.value;
+    if (!startDate || !endDate) return;
+
+    // 日期沒有變更就跳過同步
+    if (this.areDatesEqual(startDate, this.lastSyncedStartDate) &&
+        this.areDatesEqual(endDate, this.lastSyncedEndDate)) {
+      return;
+    }
+
+    // Step 2: 代扣款（跳過既有項目）
+    this.wizardState.fareItems = this.wizardState.fareItems.map(item =>
+      item._status === 'original' ? item : { ...item, tpy_bdate: startDate, tpy_edate: endDate }
+    );
+
+    // Step 3: 抽成設定
+    // mainStartDate/mainEndDate 永遠同步（作為複製功能的合約日期上限參考）
+    // 折扣/年度/層級子項目：跳過既有已勾選項目（保護使用者手動調整的資料）
+    this.wizardState.commissionItems = this.wizardState.commissionItems.map(item => {
+      const updatedItem = {
+        ...item,
+        mainStartDate: startDate,
+        mainEndDate: endDate,
+      } as typeof item;
+
+      if (item._status !== 'original') {
+        updatedItem.cag_bdate = startDate;
+        updatedItem.cag_edate = endDate;
+        updatedItem.discountSettingItems = (item.discountSettingItems || []).map(d =>
+          d._status === 'original' ? d : { ...d, tlt_bdate: startDate, tlt_edate: endDate }
+        );
+      }
+
+      return updatedItem;
+    });
+
+    // Step 4: 條件設定（跳過既有項目）
+    this.wizardState.conditionItems = this.wizardState.conditionItems.map(item =>
+      item._status === 'original' ? item : {
+        ...item,
+        cag_bdate: this.formatDateToString(startDate),
+        cag_edate: this.formatDateToString(endDate)
+      }
+    );
+
+    // 更新追蹤日期
+    this.lastSyncedStartDate = startDate;
+    this.lastSyncedEndDate = endDate;
+  }
+
+  private areDatesEqual(date1: unknown, date2: unknown): boolean {
+    if (date1 === date2) return true;
+    if (!date1 || !date2) return false;
+    if (date1 instanceof Date && date2 instanceof Date) {
+      return date1.getTime() === date2.getTime();
+    }
+    return String(date1) === String(date2);
   }
 
   // ========== 儲存 ==========
@@ -972,63 +1205,62 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       const response = await this.apiService.submitFinalTLS12040(submitData).toPromise();
 
       if (response?.success) {
-        this.messageService.successBubble('儲存成功');
-        this.router.navigate(['/tls/tls12040v2']);
+        // 組合詳細成功訊息（與 TLS13010-v2 一致）
+        const formData = this.dataForm.getRawValue();
+        const isInsert = this.isFormCreateable || this.isRenewalMode;
+
+        const successMessage = [
+          `異動訊息:${isInsert ? '新增成功' : '修改成功'}`,
+          `招募編號為:${formData.apply_no || response.talentId || ''}`,
+          `版本編號為:${formData.contract_subno || ''}`,
+          `專櫃編號為:${response.contractNo || formData.tlt_no || ''}`,
+          `廠商編號:${formData.ven_uniform || ''}`,
+          `品牌(專櫃名稱):${formData.tlt_name || ''}`
+        ].join('\n');
+
+        this.messageService.successBubble(successMessage);
+
+        // 新增契約時刷新使用者資料權限，否則看不到剛新增的資料
+        if (isInsert) {
+          try {
+            await firstValueFrom(this.apiService.refreshUserDataPermissions());
+          } catch {
+            this.messageService.warnBubble('契約已成功建立，但權限更新失敗。請重新登入以查看新專櫃。');
+          }
+        }
+
+        // 延遲返回查詢頁，讓使用者看到成功訊息
+        setTimeout(() => {
+          this.router.navigate(['account/tls/tls12040'], {
+            state: { fromRoute: 'account/tls/tls12040cru' }
+          });
+        }, 2000);
       } else {
-        this.messageService.errorBubble(response?.message || '儲存失敗');
+        this.messageService.errorBubble(response?.message || '要約書資料提交失敗');
       }
     } catch (error: any) {
-      console.error('儲存失敗:', error);
-      this.messageService.errorBubble(error.message || '儲存失敗');
+      console.error('要約書資料提交失敗:', error);
+      this.messageService.errorBubble(error.message || '要約書資料提交失敗');
     } finally {
       this.isSaving = false;
       this.messageService.unblockUi();
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private assembleSubmitData(): any {
-    const formValue = this.dataForm.getRawValue();
-    const isNewContract = this.isFormCreateable || this.isRenewalMode;
+    const isIntentionLetter = this.dataForm?.get('contract_type')?.value === '2';
 
-    return {
-      contractInfo: {
-        operation: isNewContract ? 'INSERT' : 'UPDATE',
-        data: {
-          ...formValue,
-          locationInfo: this.wizardState.locationData
-        }
-      },
-      deductions: this.categorizeItems(this.wizardState.fareItems),
-      commissions: {
-        masters: this.categorizeItems(this.wizardState.commissionItems),
-        discountSettings: { toInsert: [], toUpdate: [], toDelete: [] },
-        annualSettings: { toInsert: [], toUpdate: [], toDelete: [] },
-        levelSettings: { toInsert: [], toUpdate: [], toDelete: [] }
-      },
-      conditions: {
-        fixedRents: { toInsert: [], toUpdate: [], toDelete: [] },
-        baseRentHigher: { toInsert: [], toUpdate: [], toDelete: [] },
-        baseCommissions: { toInsert: [], toUpdate: [], toDelete: [] },
-        graduated: { toInsert: [], toUpdate: [], toDelete: [] },
-        baseTier: { toInsert: [], toUpdate: [], toDelete: [] }
-      },
-      metadata: {
-        apply_no: formValue.apply_no || '',
-        contractId: formValue.talent_id || '',
-        commissionType: formValue.tlt_term_type,
-        isNewContract,
-        submittedAt: new Date().toISOString(),
-        totalOperations: 0
-      }
-    };
-  }
-
-  private categorizeItems(items: any[]): { toInsert: any[]; toUpdate: any[]; toDelete: any[] } {
-    return {
-      toInsert: items.filter(i => i._status === 'new'),
-      toUpdate: items.filter(i => i._status === 'modified'),
-      toDelete: items.filter(i => i._status === 'deleted')
-    };
+    return this.submitDataService.assembleSubmitData(
+      this.dataForm.getRawValue(),
+      this.wizardState.locationData,
+      isIntentionLetter ? [] : this.wizardState.fareItems,
+      isIntentionLetter ? [] : this.wizardState.commissionItems,
+      isIntentionLetter ? [] : this.wizardState.conditionItems,
+      this.isFormCreateable || this.isRenewalMode,
+      this.isRenewalMode,
+      this.currentCommissionType
+    );
   }
 
   // ========== 事件處理 ==========
@@ -1037,14 +1269,40 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     this.wizardState.contractInfo = data.formValue as ContractInfo;
   }
 
-  onRenewalDataLoaded(renewalData: any): void {
+  /**
+   * 續約資料載入完成事件處理
+   * Step1 呼叫 API 後 emit 完整的續約回應，在此處理 Step 2/3/4 的資料載入
+   * Step1 的 BasicInfo + Locations 已由 Step1 自行處理
+   */
+  onRenewalDataLoaded(renewalData: RenewalQueryResponse): void {
     this.isRenewalMode = true;
+
+    // 1. 保存續約 metadata
     this.wizardState.renewalData = {
       sourceContractId: renewalData.source_talent_id,
       sourceApplyNo: renewalData.source_apply_no,
       sourceContractSubno: renewalData.source_contract_subno,
       nextContractSubno: renewalData.next_contract_subno
     };
+
+    // 2. 同步 contractInfo（Step1 已 patch 完表單）
+    this.wizardState.contractInfo = this.dataForm.getRawValue() as ContractInfo;
+
+    // 3. 處理 Step 2: 代扣款資料
+    this.processRenewalFareData(renewalData.FareData);
+
+    // 4. 處理 Step 3: 抽成資料
+    this.processRenewalChargeData(renewalData.ChargeData);
+
+    // 5. 處理 Step 4: 條件資料
+    this.processRenewalConditionData(renewalData.CommissionData);
+
+    // 6. 觸發 step1DataReady（讓中/小分類下拉載入）
+    this.step1DataReady = true;
+
+    // 7. 更新驗證器
+    this.updateDynamicValidators();
+    this.updatePaymentValidators();
   }
 
   onStep2DataChange(fareItems: FareItem[]): void {
@@ -1078,6 +1336,29 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   }
 
   /**
+   * Step 4 用的專櫃契約書資訊陣列
+   */
+  get contractInfoDataForStep4(): Record<string, unknown>[] {
+    const formData = this.dataForm.getRawValue();
+    return [{
+      id: formData.talent_id || 'new',
+      apply_no: formData.apply_no || '',
+      tlt_no: formData.tlt_no || '',
+      tlt_name: formData.tlt_name || '',
+      ven_uniform: formData.ven_uniform || '',
+      VEN_Name: formData.VEN_Name || '',
+      contract_subno: formData.contract_subno || '',
+      tlt_term_type: (formData.tlt_term_type || '').toString().trim(),
+      tlt_ctype_mtotal: formData.tlt_ctype_mtotal || '',
+      overall_status: formData.overall_status || '',
+      tlt_bdate: formData.tlt_bdate || '',
+      tlt_edate: formData.tlt_edate || '',
+      tlt_contract_bdate: formData.tlt_contract_bdate || '',
+      tlt_contract_edate: formData.tlt_contract_edate || ''
+    }];
+  }
+
+  /**
    * 取得「下一步」按鈕的動態標籤
    * 依照下一步的步驟名稱顯示，例如「下一步(代扣款設定)」
    */
@@ -1092,7 +1373,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    * 離開（回到列表頁）
    */
   onClearAndExit(): void {
-    this.router.navigate(['account/tls/tls12040v2']);
+    this.router.navigate(['account/tls/tls12040'], {
+      state: { fromRoute: '/tls/tls12040cru' }
+    });
   }
 
   /**
@@ -1100,9 +1383,105 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
    */
   override onCancel(): void {
     if (this.isFirstStep) {
-      this.router.navigate(['account/tls/tls12040v2']);
+      this.router.navigate(['account/tls/tls12040'], {
+        state: { fromRoute: '/tls/tls12040cru' }
+      });
     } else {
       this.goToPreviousStep();
     }
+  }
+
+  /**
+   * 將 API 小數費率轉換為百分比顯示值
+   * 例：0.165 → 16.5，若已大於 1 則視為已轉換直接回傳
+   */
+  private convertRateToPercentage(rate: number): number {
+    if (rate === null || rate === undefined) return 0;
+    if (rate > 1) return rate;
+    return rate * 100;
+  }
+
+  /**
+   * 生成臨時 ID
+   */
+  private generateTempId(): string {
+    return `temp_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
+  }
+
+  /**
+   * 建立完整的折扣設定列表（包含所有折扣選項）
+   * API 資料中存在的會被標記為 selected，不存在的則為未選取狀態
+   * @param existingDetails 既有的折扣設定資料
+   * @param forRenewal 是否為續約模式（續約模式會將所有項目標記為 'new'）
+   */
+  private buildCompleteDiscountItems(
+    existingDetails: Record<string, unknown>[],
+    forRenewal = false
+  ): V2CommissionItem['discountSettingItems'] {
+    // 日期預設：表單有值用表單，否則用今天
+    const contractStartDate = this.dataForm.get('tlt_bdate')?.value || new Date();
+    const contractEndDate = this.dataForm.get('tlt_edate')?.value || new Date();
+    const result: V2CommissionItem['discountSettingItems'] = [];
+
+    // 輔助函數：取得字串值
+    const getString = (obj: Record<string, unknown>, key1: string, key2: string, defaultVal = ''): string => {
+      return (obj[key1] || obj[key2] || defaultVal) as string;
+    };
+
+    // 續約模式下的狀態
+    const existingStatus: DataStatus = forRenewal ? 'new' : 'original';
+
+    // 為所有折扣選項建立項目
+    this.discountOptions.forEach((option) => {
+      // 找出此折扣別的既有資料
+      const existingItems = existingDetails.filter(
+        (detail) => getString(detail, 'cag_barcode', 'CAG_BARCODE', '') === option.value
+      );
+
+      if (existingItems.length > 0) {
+        // 有既有資料：為每筆既有資料建立項目（已勾選）
+        existingItems.forEach((existingItem) => {
+          result.push({
+            id: existingItem['id'] as number | string || this.generateTempId(),
+            selected: (existingItem['is_selected'] ?? existingItem['selected'] ?? true) as boolean,
+            cag_barcode: getString(existingItem, 'cag_barcode', 'CAG_BARCODE', ''),
+            tlt_bdate: forRenewal ? contractStartDate : ((existingItem['tlt_bdate'] || existingItem['TLT_BDATE'] || contractStartDate) as Date | string),
+            tlt_edate: forRenewal ? contractEndDate : ((existingItem['tlt_edate'] || existingItem['TLT_EDATE'] || contractEndDate) as Date | string),
+            cag_charge_rate: this.convertRateToPercentage(Number(existingItem['cag_charge_rate'] || existingItem['CAG_CHARGE_RATE'] || 0)),
+            _status: existingStatus,
+            is_configured: true,
+            is_enabled: true
+          });
+        });
+      } else {
+        // 沒有既有資料：建立未勾選的項目（編輯模式不預設勾選）
+        result.push({
+          id: this.generateTempId(),
+          selected: false,
+          cag_barcode: option.value,
+          tlt_bdate: contractStartDate,
+          tlt_edate: contractEndDate,
+          cag_charge_rate: 0,
+          _status: 'new' as DataStatus,
+          is_configured: false,
+          is_enabled: false
+        });
+      }
+    });
+
+    // 排序：selected 為 true 的排在前面
+    return result.sort((a, b) => {
+      const aSelected = a.selected ? 1 : 0;
+      const bSelected = b.selected ? 1 : 0;
+
+      if (aSelected !== bSelected) {
+        return bSelected - aSelected;
+      }
+
+      // 相同 selected 狀態，按照 discountOptions 順序
+      const aIndex = this.discountOptions.findIndex(opt => opt.value === a.cag_barcode);
+      const bIndex = this.discountOptions.findIndex(opt => opt.value === b.cag_barcode);
+      return aIndex - bIndex;
+    });
   }
 }

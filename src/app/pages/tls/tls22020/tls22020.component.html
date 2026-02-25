@@ -38,9 +38,10 @@
   <div class="col-12">
     <app-customFooter-table tableKey="TLS22010" [data]="data" [columns]="selectedColumns" [columnGroup]="columnGroup"
       [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
       [showManage]="false" [showDelete]="false" [showReportMode]="false" [showTotal]="true" [footerData]="footerData"
-      [rows]="100">
+      [rows]="30">
       <header>
         <p-button pButton tooltipPosition="top" pTooltip="匯出Excel" [style.width]="'35px'" [style.height]="'35px'"
           class="p-button-rounded p-button-text p-button-info" icon="fa fa-file-lines" [disabled]="!hasPermission('70')"

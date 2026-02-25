@@ -168,7 +168,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       this.contact_USR_Option = response.Data.map((item: any) => ({
         No: item.No, // 接待人員 代碼
         Name: item.Name, // 接待人員 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       console.log('接待人員代號:', this.contact_USR_Option);
     });
@@ -186,7 +186,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       this.floor_Option = response.Data.map((item: any) => ({
         No: item.No, // 樓層 號
         Name: item.Name, // 樓層 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       console.log('大分類代號:', this.floor_Option);
     });
@@ -195,7 +195,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       this.location_Option = response.Data.map((item: any) => ({
         No: item.No, // 位置編號
         Name: item.Name, // 位置 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       console.log('location_Option:', this.location_Option);
     });
@@ -204,7 +204,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       this.area_Option = response.Data.map((item: any) => ({
         No: item.No, // 區域代碼
         Name: item.Name, // 區域 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       console.log('area_Option:', this.area_Option);
     });
@@ -213,7 +213,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       this.TLTTalent_Option = response.Data.map((item: any) => ({
         No: item.No, // 櫃編 代碼
         Name: item.Name, // 櫃編 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       console.log('area_Option:', this.TLTTalent_Option);
     });
@@ -235,7 +235,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
         ShortName: item.ShortName,
         VEN_No: item.VEN_No,
         VEN_EngName: item.VEN_EngName,
-        Label: item.No + '/' + item.Name,
+        Label: item.No + '-' + item.Name,
       }));
 
       console.log('統編代號(去重):', this.cus_uniform_Option);

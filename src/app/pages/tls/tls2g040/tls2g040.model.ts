@@ -1,4 +1,3 @@
-import { InputGroupColumn } from "@shared/componentkit/input-group/input-group.component";
 import { ReportColumn, formatAmount } from "@shared/componentkit/table-report/table-report.model";
 
 export const bus_typeColumns: ReportColumn[] = [
@@ -51,25 +50,25 @@ export const tlt_noColumns: ReportColumn[] = [
   { field: 'total_budget', header: '月預算', format: formatAmount },
 
 ]
-// 欄位配置
-export const bus_typeFieldColumns: InputGroupColumn[] = [
-  { field: 'No', header: '大分類代碼', visible: true },
-  { field: 'Name', header: '大分類名稱', visible: true }
-];
-export const bus_classFieldColumns: InputGroupColumn[] = [
-  { field: 'bus_type', header: '大分類代碼', visible: true },
-  { field: 'bus_type_name', header: '大分類名稱', visible: true },
-  { field: 'No', header: '小分類代碼', visible: true },
-  { field: 'Name', header: '小分類名稱', visible: true }
-];
-export const bus_sclassFieldColumns: InputGroupColumn[] = [
-  { field: 'bus_type', header: '大分類代碼', visible: true },
-  { field: 'bus_type_name', header: '大分類名稱', visible: true },
-  { field: 'bus_class', header: '中分類名稱', visible: true },
-  { field: 'bus_class_name', header: '中分類名稱', visible: true },
-  { field: 'No', header: '小分類代碼', visible: true },
-  { field: 'Name', header: '小分類名稱', visible: true }
-]
+// // 欄位配置
+// export const bus_typeFieldColumns: InputGroupColumn[] = [
+//   { field: 'No', header: '大分類代碼', visible: true },
+//   { field: 'Name', header: '大分類名稱', visible: true }
+// ];
+// export const bus_classFieldColumns: InputGroupColumn[] = [
+//   { field: 'bus_type', header: '大分類代碼', visible: true },
+//   { field: 'bus_type_name', header: '大分類名稱', visible: true },
+//   { field: 'No', header: '小分類代碼', visible: true },
+//   { field: 'Name', header: '小分類名稱', visible: true }
+// ];
+// export const bus_sclassFieldColumns: InputGroupColumn[] = [
+//   { field: 'bus_type', header: '大分類代碼', visible: true },
+//   { field: 'bus_type_name', header: '大分類名稱', visible: true },
+//   { field: 'bus_class', header: '中分類名稱', visible: true },
+//   { field: 'bus_class_name', header: '中分類名稱', visible: true },
+//   { field: 'No', header: '小分類代碼', visible: true },
+//   { field: 'Name', header: '小分類名稱', visible: true }
+// ]
 export const report_typeOptions = [
   { label: '依大分類統計', value: 'bus_type' },
   { label: '依中分類統計', value: 'bus_class' },

@@ -194,4 +194,7 @@ export class TLS42020Service {
   dropdownTLS42020(data: TLS42020DropdownRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/dropdownTLS42020`, data);
   }
+  QueryPLU_No(data: { TLT_No?: string; PLU_No?: string; PLU_Name?: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/QueryPLU_No`, data);
+  }
 }

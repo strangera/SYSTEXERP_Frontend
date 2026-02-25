@@ -6,9 +6,12 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { LogoAccorHosItem, Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
+import { IQueryPOS2004DetailRequest } from '@shared/biz-components/product-autocomplete/product-autocomplete.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, finalize, forkJoin, map, withLatestFrom } from 'rxjs';
@@ -19,12 +22,10 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
-import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatAmount } from '../../../shared/componentkit/table/table.model';
 
 // 2.5.2.1  採購單維護作業 CRU
@@ -44,9 +45,9 @@ import { Column, formatAmount } from '../../../shared/componentkit/table/table.m
     InputNumberComponent,
     CalendarComponent,
     InputTextareaComponent,
-    TableComponent,
+    TableReportComponent,
     DialogComponent,
-    DropdownTableComponent,
+    ProductAutocompleteComponent,
     TranslateModule,
     AsyncPipe,
     TableEditComponent
@@ -57,7 +58,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   dataForm = this.formBuilder.nonNullable.group({
     PO_No: [{ value: '系統自動產生', disabled: true }], // 採購單號 (與 POS2016.PO_No 對應)
     VEN_No: [null as string | null, [Validators.required]], // 廠商編號 (與 POS2016.VEN_No 對應)
-    vendorShortName: [{ value: '' as string | undefined, disabled: true }], // 廠商簡稱 (前端專用，不對應資料庫欄位，顯示在 VEN_No 下一欄)
     LOGO_No: [null as string | null, [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
     remainingBudgetAmount: [{ value: 0, disabled: true }], // 剩餘預算金額 (前端顯示用，不對應資料庫欄位)
     HOS_No: [null as string | null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
@@ -101,21 +101,18 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       validate: [validateRequired, validateMinNumber(1)],
       width: '100px',
       calculate: (row) => {
-        const subQty = Number(row.POD_SubQty ?? 0);
-        const buyPrc = Number(row.PLU_SalePrc_UNI ?? 0); // 採購單價
-        const salePrc = Number(row.PLU_SalePrc ?? 0); // 售價
-        const taxType = row.PLU_StockTaxType; // 採購稅別
-
         // 採購金額計算
-        const buyNet = Math.round(subQty * buyPrc); // 採購淨額 (未稅小計)
-        const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0; // 採購稅額
+        const buyNet = Math.round(Number(row.POD_SubQty ?? 0) * Number(row.PLU_SalePrc_UNI ?? 0)); // 採購淨額 (未稅小計)
+        const buyTax = row.PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0; // 採購稅額
         const buyAmt = buyNet + buyTax; // 採購合計 (含稅小計)
 
         // 售價小計計算 (PLU_SalePrc 是含稅售價，假設無需再次計算稅額)
-        const saleAmt = Math.round(subQty * salePrc);
+        const saleAmt = Math.round(Number(row.POD_SubQty ?? 0) * Number(row.PLU_SalePrc ?? 0));
         // 銷售稅額 (雖然欄位沒有顯示，但提交時需要，先算出來)
-        const saleTax = row.PLU_TaxType === '1' ? Math.round((saleAmt || 0) / 21) : 0; // 假設銷售稅率 5%
-
+        // 依照公式：(含稅售價 * 數量) / 21
+        const saleTax = row.PLU_TaxType === '1'
+          ? Math.round((Number(row.PLU_SalePrc ?? 0) * Number(row.POD_SubQty ?? 0)) / 21)
+          : 0;
         return {
           'POD_BuyNet': buyNet,
           'POD_BuyTax': buyTax, // 新增：明細採購稅額
@@ -134,11 +131,21 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   data: IPOS2004DetailData[] = [];
   selectedItems: IPOS2004DetailData[] = [];
 
-  validateEntireRow = (rowData: IPOS2004DetailData): { isValid: boolean, errorMessage: string } => {
-    const hasDuplicatePLU_MagNo = this.data.some((item: IPOS2004DetailData) =>
-      item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY);
+  validateEntireRow = (rowData: IPOS2004DetailData): { isValid: boolean, errorMessage: string; } => {
+    // 1. 如果商品編號還沒填入，先不檢查重複（交給 validateRequired 處理）
+    if (!rowData.PLU_MagNo) {
+      return { isValid: true, errorMessage: '' };
+    }
+
+    // 2. 檢查重複時，排除掉 key 為空的狀況，並確保比對的是「其他」行
+    const hasDuplicatePLU_MagNo = this.data.some((item) =>
+      item.PLU_MagNo === rowData.PLU_MagNo &&
+      item._TABLE_KEY !== rowData._TABLE_KEY &&
+      rowData._TABLE_KEY !== undefined // 確保目前的行有 key
+    );
+
     if (hasDuplicatePLU_MagNo) {
-      return { isValid: false, errorMessage: '商品管理編號重複' };
+      return { isValid: false, errorMessage: '商品已重複' };
     }
 
     return { isValid: true, errorMessage: '' };
@@ -171,7 +178,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;
           const buyAmt = buyNet + buyTax;
           const saleAmt = Math.round(subQty * salePrc);
-          const saleTax = newData.PLU_TaxType === '1' ? Math.round((saleAmt || 0) / 21) : 0;
+          const saleTax = newData.PLU_TaxType === '1' ? Math.round((salePrc * subQty) / 21) : 0;
           const updatedRow: IQueryPOS2004DetailResponse = {
             ...newData,
             id: 0,
@@ -232,7 +239,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly dropdown: DropdownApiService,
-    private readonly tls52010Service: Tls52010Service,
+    public readonly tls52010Service: Tls52010Service,
     private readonly cdr: ChangeDetectorRef
   ) { super(); }
 
@@ -252,13 +259,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           PLU_SalePrc: item.POD_SalePrc
         }));
         this.originalData = [...this.data];
-      });
-      this.vendorOptions.subscribe(options => {
-        const shortName = options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'];
-        this.dataForm.controls.vendorShortName.setValue(
-          shortName ? `廠商簡稱: ${shortName}` : ''
-        );
-        this.ShortName = options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'] ?? '';
       });
       this.GetBudgetAmount();
       this.loadDropdownOptions();
@@ -313,11 +313,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
 
     // 2. 監聽表單欄位變化
     // 監聽廠商編號變化 (邏輯不變)
-    VEN_No.valueChanges.pipe(withLatestFrom(this.vendorOptions), untilDestroyed(this)).subscribe(([vendorNo, options]) => {
-      const shortName = options?.find(opt => opt.value === this.dataForm.controls.VEN_No.value)?.['ShortName'];
-      this.dataForm.controls.vendorShortName.setValue(
-        shortName ? `廠商簡稱: ${shortName}` : ''
-      );
+    VEN_No.valueChanges.pipe(withLatestFrom(this.vendorOptions), untilDestroyed(this)).subscribe(() => {
       this.calculateTotals();
       [this.data, this.selectedItems, this.dialogData] = [[], [], []];
     });
@@ -474,21 +470,22 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   // 選擇商品相關
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
-    PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理編號
+    queryNo: ['', [Validators.maxLength(20)]], // 商品管理編號
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
     CAT_LNo: [null], // 大分類代碼
     CAT_MNo: [{ value: null, disabled: true }], // 中分類代碼
     CAT_SNo: [{ value: null, disabled: true }], // 小分類代碼
-    pageSize: [20],
+    pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'PLU_MagNo', order: 1 }]],
+    SortBy: [[{ field: 'PLU_No', order: 1 }]],
   });
   totalRecords = 0;
   CAT_LNoOptions: IDropdownItem[] = [];
   CAT_MNoOptions: IDropdownItem[] = [];
   CAT_SNoOptions: IDropdownItem[] = [];
-  dialogData: IPOS2004DetailData[] = [];
-  selectedItemsDialog: IPOS2004DetailData[] = [];
+  dialogData: IQueryPOS2004DetailResponse[] = [];
+  dialogLastQueryBody: IQueryPOS2004DetailRequest | null = null;
+  selectedItemsDialog: IQueryPOS2004DetailResponse[] = [];
   dialogColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
@@ -506,17 +503,32 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       this.CAT_LNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     });
     // 監聽大分類變化
-    this.dialogQueryForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
+    this.dialogQueryForm.controls.CAT_LNo.valueChanges.pipe(
+      debounceTime(300),
+      untilDestroyed(this)
+    ).subscribe((value) => {
+      // 1. 先重置後續分類的選項與值
+      this.CAT_MNoOptions = [];
+      this.CAT_SNoOptions = [];
+      this.dialogQueryForm.controls.CAT_MNo.setValue(null);
+      this.dialogQueryForm.controls.CAT_SNo.setValue(null);
+
       if (value) {
-        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
-          this.CAT_MNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
-          this.dialogQueryForm.controls.CAT_MNo.enable();
-        });
+        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [value] })
+          .pipe(untilDestroyed(this))
+          .subscribe(response => {
+            this.CAT_MNoOptions = response.Data.map(item => ({
+              ...item,
+              label: `${item.No} - ${item.Name}`
+            }));
+            // 2. 先 Enable 才能確保 UI 選項能被選取
+            this.dialogQueryForm.controls.CAT_MNo.enable();
+            // 3. 強制變更偵測，讓 PrimeNG 渲染新的 Options
+            this.cdr.detectChanges();
+          });
       } else {
         this.dialogQueryForm.controls.CAT_MNo.disable();
       }
-      this.dialogQueryForm.controls.CAT_MNo.setValue(null); // 清空中分類選擇
-      this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
     });
     // 監聽中分類變化
     this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
@@ -545,9 +557,10 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       VEN_No: this.dataForm.controls.VEN_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
     }
-    this.tls52010Service.queryPOS2004DetailByVenNo(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+    this.tls52010Service.queryPOS2004Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;
       this.totalRecords = response.TotalCount;
+      this.dialogLastQueryBody = body;
     })
   }
   saveDialog() {
@@ -562,8 +575,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;
       const buyAmt = buyNet + buyTax;
       const saleAmt = Math.round(subQty * salePrc);
-      const saleTax = item.PLU_TaxType === '1' ? Math.round((saleAmt || 0) / 21) : 0;
-
+      const saleTax = item.PLU_TaxType === '1' ? Math.round((salePrc * subQty) / 21) : 0;
       return {
         ...item,
         id: 0,
@@ -579,7 +591,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     });
     this.data = [
       ...this.data,
-      ...newItems
+      ...newItems as any
     ];
     this.calculateTotals();
     this.selectedItemsDialog = [];
@@ -645,7 +657,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         PLU_Unit: item.PLU_Unit,
         PLU_BoxQty: item.PLU_BoxQty || 0,
         PLU_StockTaxType: item.PLU_StockTaxType,
-        POD_SaleTax: item.PLU_TaxType === '1' ? Math.round((item.POD_SaleAmt || 0) * 0.05) : 0,
+        POD_SaleTax: item.POD_SaleTax || 0,
         PLU_TaxType: item.PLU_TaxType,
         POD_SubQty: item.POD_SubQty || 0, // 確保有值，使用之前計算好的 POD_SubQty
         POD_BuyPrc: item.PLU_SalePrc_UNI || 0, // 採購單價 (未稅進價)
@@ -691,35 +703,10 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       });
     });
   }
-  suggestions: IQueryPOS2004DetailResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號 - 商品名稱', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      VEN_No: this.dataForm.controls.VEN_No.value,
-      LOGO_No: this.dataForm.controls.LOGO_No.value,
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item, label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
-  }
-  ShortName? = '';
   remainingBudgetAmount = 0;
   onReset() {
-    // 加上「廠商簡稱: 」前綴，並處理 null/undefined 的情況
-    const displayShortName = this.ShortName ? `廠商簡稱: ${this.ShortName}` : '';
-    this.dataForm.controls.vendorShortName.setValue(displayShortName, { emitEvent: false });
-
     // 如果剩餘預算也需要格式化（例如加上 $ 符號或「金額: 」），也可以比照辦理
     this.dataForm.controls.remainingBudgetAmount.setValue(this.remainingBudgetAmount, { emitEvent: false });
-
     // 還原資料列表
     this.data = [...this.originalData];
   }

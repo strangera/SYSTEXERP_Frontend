@@ -78,15 +78,15 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-              <app-multi-select
-                label="用途代碼/名稱"
-                controlName="Location_Purpose"
-                [options]="usageOptions"
-                optionLabel="formLabel"
-                optionValue="value"
-                [control]="queryForm.controls.Purpose_no"
-                [submitted]="submitted"
-              ></app-multi-select>
+            <app-multi-select
+              label="用途代碼/名稱"
+              controlName="Location_Purpose"
+              [options]="usageOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.Purpose_no"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -129,11 +129,11 @@
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
-<app-button
-  btnType="clear"
-  [form]="queryForm"
-  (onClick)="onClear()"
-></app-button>
+          <app-button
+            btnType="clear"
+            [form]="queryForm"
+            (onClick)="onClear()"
+          ></app-button>
           <app-button
             btnType="query"
             (onClick)="onSubmit(queryForm)"
@@ -146,10 +146,15 @@
 </div>
 
 <div class="card">
-  <app-table
+  <app-table-report
     tableKey="TLS11010"
     [data]="data"
     [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [lazy]="true"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryTLS11010Fn"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     [selectedItems]="selectedItems"
@@ -157,10 +162,7 @@
     (delete)="onDelete($event)"
     [showCheckBox]="true"
     dataKey="id"
-    [multiSortMeta]="[{ field: 'LOCATION_No', order: 1 }]"
-    [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true"
-    [loading]="loading"
-  ></app-table>
+    (lazyLoadData)="onLazyLoadData($event, queryForm)"
+    (dataChange)="data = $event"
+  ></app-table-report>
 </div>

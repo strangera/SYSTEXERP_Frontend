@@ -224,6 +224,8 @@ export const finRoutes: Routes = [
   // 資材系統
   { path: 'fin51010', loadComponent: () => import('./fin51010/fin51010.component').then(m => m.FIN51010Component), data: { progNo: 'FIN51010' } },
   { path: 'fin51010cru', loadComponent: () => import('./fin51010-cru/fin51010-cru.component').then(m => m.FIN51010CRUComponent), data: { progNo: 'FIN51010' } },
+  { path: 'fin51011', loadComponent: () => import('./fin51011/fin51011.component').then(m => m.FIN51011Component), data: { progNo: 'FIN51011' } },
+
   // 基本資料作業-總帳參數維護
   { path: 'fin52010', loadComponent: () => import('./fin52010/fin52010.component').then(m => m.FIN52010Component), data: { progNo: 'FIN52010' } },
   // 基本資料作業-傳票型態設定維護
@@ -341,14 +343,12 @@ export const finRoutes: Routes = [
   { path: 'fin64010', loadComponent: () => import('./fin64010/fin64010.component').then(m => m.FIN64010Component), data: { progNo: 'FIN64010' } },
   { path: 'fin64010cru', loadComponent: () => import('./fin64010-cru/fin64010-cru.component').then(m => m.FIN64010CRUComponent), data: { progNo: 'FIN64010' } },
   // 應收票據託收作業
-  // { path: 'fin64020', loadComponent: () => import('./fin64020/fin64020.component').then(m => m.FIN64020Component),data:{progNo:'FIN64020'} },
-  // { path: 'fin64020cru', loadComponent: () => import('./fin64020-cru/fin64020-cru.component').then(m => m.FIN64020CRUComponent),data: { progNo: 'FIN64020'} },
+  { path: 'fin64020', loadComponent: () => import('./fin64020/fin64020.component').then(m => m.FIN64020Component), data: { progNo: 'FIN64020' } },
   // 應收票據兌現作業
-  // { path: 'fin64030', loadComponent: () => import('./fin64030/fin64030.component').then(m => m.FIN64030Component),data:{progNo:'FIN64030'} },
-  // { path: 'fin64030cru', loadComponent: () => import('./fin64030-cru/fin64030-cru.component').then(m => m.FIN64030CRUComponent),data: { progNo: 'FIN64030'} },
+  { path: 'fin64030', loadComponent: () => import('./fin64030/fin64030.component').then(m => m.FIN64030Component), data: { progNo: 'FIN64030' } },
   // 應收票據退票作業
-  // { path: 'fin64050', loadComponent: () => import('./fin64050/fin64050.component').then(m => m.FIN64050Component),data:{progNo:'FIN64050'} },
-  // { path: 'fin64050cru', loadComponent: () => import('./fin64050-cru/fin64050-cru.component').then(m => m.FIN64050CRUComponent),data: { progNo: 'FIN64050'} },
+  { path: 'fin64050', loadComponent: () => import('./fin64050/fin64050.component').then(m => m.FIN64050Component), data: { progNo: 'FIN64050' } },
+  { path: 'fin64050cru', loadComponent: () => import('./fin64050-cru/fin64050-cru.component').then(m => m.FIN64050CRUComponent), data: { progNo: 'FIN64050' } },
   // 應付票據簽回單
   // { path: 'fin65010', loadComponent: () => import('./fin65010/fin65010.component').then(m => m.FIN65010Component),data:{progNo:'FIN65010'} },
   // { path: 'fin65010cru', loadComponent: () => import('./fin65010-cru/fin65010-cru.component').then(m => m.FIN65010CRUComponent),data: { progNo: 'FIN65010'} },

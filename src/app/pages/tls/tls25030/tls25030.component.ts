@@ -10,20 +10,20 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 
 import {
   ApiResponse,
@@ -31,15 +31,17 @@ import {
   QueryTLS25030Request,
   QueryTLS25030Row,
   TLS25030Service,
+  UpdateTLS25030StatusRequest,
 } from '../../../service/api/tls/tls25030.service';
 
-import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
-import { FloorService } from '@service/basic/querySYS3900.service';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { DeductionService } from '@service/basic/queryAPS1003.service';
+import { FloorService } from '@service/basic/querySYS3900.service';
+import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { Actions } from '@shared/service/permission-guard.service';
 
-type SortItem = { field: string; order: number };
+interface SortItem { field: string; order: number }
 
 @UntilDestroy()
 @Component({
@@ -83,6 +85,10 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
   readonly defaultSort: SortItem[] = [{ field: 'UPD_Date', order: -1 }];
   private _currentSortBy: SortItem[] = this.defaultSort;
 
+  isEditDisabled = (row: QueryTLS25030Row): boolean => {
+    return Number(row.fine_status) === 0;
+  };
+
   columns: ReportColumn[] = [
     { field: 'fine_no', header: '單據編號' },
     { field: 'tlt_no', header: '專櫃編號' },
@@ -98,6 +104,8 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
     { field: 'fine_status_Name', header: '狀態' },
     { field: 'violation_otherdesc', header: '備註' },
   ];
+
+
 
   /** ✅ 下拉 options */
   violationTypeOptions: OptionItem[] = getSYS1000Options('Violation_type') as any;
@@ -266,11 +274,55 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
         return { Data: rows, TotalCount: totalCount, GrandTotal: null };
       })
     );
+  private resetToDefault(): void {
+    this.queryForm.reset(
+      {
+        tlt_no: '',
+        tlt_name: '',
+        fine_no: '',
+
+        fine_date_s: null,
+        fine_date_e: null,
+        deduct_date_s: null,
+        deduct_date_e: null,
+
+        amount_s: null,
+        amount_e: null,
+
+        violation_type: '',
+        cap_item: '',
+        org_id: '',
+        fine_status: '',
+        pay_type: '',
+        floors: [],
+        crt_usr_no: '',
+
+        // ✅ 這三個要給「值」不是給 control config
+        pageIndex: 1,
+        pageSize: 30,
+        SortBy: this.defaultSort as any, // 或下面那個 cast 寫法
+      },
+      { emitEvent: false }
+    );
+
+    this.submitted = false;
+    this.data = [];
+    this.totalRecords = 0;
+    this.viewTotalRecords = 0;
+    this.footerData = undefined;
+    this.lastQueryBody = null;
+    this._currentSortBy = this.defaultSort;
+
+    this.tableVer++;
+  }
+
 
   ngOnInit(): void {
     this.initializePage('TLS25030', '/tls/tls25030cru', this.queryForm, (form) => this.onSubmit(form));
 
-    // ✅ 先載入下拉，再做「還原 + 自動查詢」，避免多選 options 尚未就緒時顯示怪怪的
+    const fromCru = !!history.state?.fromCru;
+
+    // ✅ 先載入下拉 options，再決定是否 restore
     this.loading = true;
 
     const floors$ = this.floorService.getFloors().pipe(
@@ -319,10 +371,19 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
           label: `${x.value} - ${x.label}`,
         }));
 
-        // ✅ 下拉完成後再還原 & 自動查詢（比照 FIN64010）
-        this.restoreQueryStateAndAutoQuery();
+        // ✅ 下拉完成後：只有從 CRU 回來才 restore + auto query
+        if (fromCru) {
+          this.restoreQueryStateAndAutoQuery();
+        } else {
+          // ✅ 其他頁回來：回預設 + 清掉保存狀態（避免下次誤還原）
+          this.resetToDefault();
+          try {
+            this.queryStateService.clearQueryState('TLS25030');
+          } catch { }
+        }
       });
   }
+
 
   onSubmit(_frm: any) {
     this.submitted = true;
@@ -509,4 +570,132 @@ export class TLS25030Component extends BasicQueryPageComponent<any> {
     // ✅ 清掉保存的狀態（可選；如果你希望清除後回來也清空，就保留）
     this.saveQueryState();
   }
+
+
+// =========================
+// ✅ 作廢按鈕（含 confirm）
+// =========================
+
+// ⚠️ 請改成你們系統「作廢」實際的權限碼（跟 TableReport 的 '10'/'30' 同格式）
+private readonly INVALIDATE_PERMISSION = '40'; // <== 例：請自行改成正確代碼
+
+private canInvalidate(): boolean {
+  return this.hasPermission(this.INVALIDATE_PERMISSION);
+}
+
+private isVoided(row: QueryTLS25030Row): boolean {
+  const s: any = (row as any)?.fine_status;
+  // fine_status 可能是 '0' / 0
+  return String(s ?? '').trim() === '0';
+}
+
+addButton: AddButton[] = [
+  {
+    label: '作廢',
+    icon: 'pi pi-ban', // ✅ 不用垃圾桶，改禁止符號
+
+    action: (rowData: QueryTLS25030Row, _event?: any) => {
+      const fineNo = String((rowData as any)?.fine_no ?? '').trim();
+      if (!fineNo) return;
+
+      // 已作廢不允許再作廢
+      if (this.isVoided(rowData)) return;
+
+      // 權限不足
+      if (!this.canInvalidate()) {
+        this.messageService.warnBubble('您沒有作廢權限');
+        return;
+      }
+
+      this.messageService.confirm({
+        header: '作廢確認',
+        message: `確定要作廢單據【${fineNo}】嗎？`,
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: '確定',
+        rejectLabel: '取消',
+        accept: () => {
+          const req: UpdateTLS25030StatusRequest = {
+            fine_status: '0',
+            fine_noList: [fineNo],
+          };
+          this.statusChange(req);
+        },
+      });
+    },
+
+    disabled: (rowData: QueryTLS25030Row) => {
+      // ✅ 已作廢 or 沒權限 => disable
+      return this.isVoided(rowData) || !this.canInvalidate();
+    },
+  },
+];
+
+// =========================
+// ✅ 作廢 API 呼叫 + 作廢後刷新列表（維持原查詢條件）
+// =========================
+private statusChange(req: UpdateTLS25030StatusRequest): void {
+  if (!req?.fine_noList?.length) return;
+
+  this.btnLoading = true;
+  this.loading = true;
+
+  this.tls25030Service
+    .updateTLS25030Status(req)
+    .pipe(
+      untilDestroyed(this),
+      finalize(() => {
+        this.btnLoading = false;
+        this.loading = false;
+        this.cdr.detectChanges();
+      })
+    )
+    .subscribe({
+      next: (res: any) => {
+        this.messageService.successBubble(res?.Message ?? '作廢成功');
+
+        // ✅ 作廢後刷新：維持原條件/頁碼/排序
+        const payload = this.buildQueryPayload({
+          ...(this.lastQueryBody || this.queryForm.getRawValue()),
+          SortBy: this._currentSortBy?.length ? this._currentSortBy : this.defaultSort,
+        });
+
+        this.tls25030Service
+          .queryTLS25030(payload)
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => this.cdr.detectChanges())
+          )
+          .subscribe({
+            next: (response: ApiResponse<QueryTLS25030Row[]>) => {
+              const rows: QueryTLS25030Row[] = Array.isArray(response?.Data) ? response.Data : [];
+
+              rows.forEach((r, idx) => {
+                (r as any)._rowKey = idx + 1;
+              });
+
+              this.data = rows;
+
+              const realTotal = Number((response as any)?.TotalCount ?? rows.length) || rows.length;
+              this.totalRecords = realTotal;
+              this.viewTotalRecords = realTotal;
+
+              this.lastQueryBody = { ...payload };
+              this._currentSortBy = payload.SortBy ?? this.defaultSort;
+
+              this.saveQueryState();
+              this.tableVer++;
+            },
+            error: (err) => {
+              console.error('TLS25030 refresh after invalidate error:', err);
+            },
+          });
+      },
+      error: (err: any) => {
+        console.error('updateTLS25030Status error:', err);
+        this.messageService.errorBubble('作廢失敗，請稍後再試');
+      },
+    });
+}
+
+
 }

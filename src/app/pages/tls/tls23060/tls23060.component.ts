@@ -114,7 +114,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23060', 'tls/tls23060cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23060', 'tls/tls/tls23060cru', this.queryForm, (form) => this.onSubmit(form));
     this.sortMeta = this.defaultSort.map((s) => ({ ...s }));
 
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
@@ -160,8 +160,9 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
         tlt_floor: Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
         org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
 
+        // 後端若需要可保留，但前端不做真正分頁（避免 TableReport 無限 loadMore）
         pageSize: 30,
-        pageIndex: Number(val?.pageIndex) || 1,
+        pageIndex: 1,
         SortBy: Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort,
       };
 
@@ -180,28 +181,30 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
         )
         .subscribe({
           next: (res: any) => {
-            const wrapper = this.pickWrapper(res?.Data);
+const wrapper = this.pickWrapper(res?.Data);
+const details = this.pickDetails(wrapper);
+this.data = details.map((r: any, i: number) => ({
+  ...r,
+  _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+}));
 
-            const details = this.pickDetails(wrapper);
-            this.data = details.map((r: any, i: number) => ({
-              ...r,
-              _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-            }));
+const apiTotal =
+  typeof res?.TotalCount === 'number' ? Number(res.TotalCount) : 0;
 
-            this.totalRecords =
-              typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+const hasPaging = apiTotal > this.data.length; // ✅ 是否真的有下一頁
 
-            this.footerData = this.buildFooterFromPack(wrapper);
+this.totalRecords = hasPaging ? apiTotal : this.data.length;
+this.footerData = this.buildFooterFromPack(wrapper);
 
-            // ⭐ 調整 historyRequestBody.pageSize：讓 TableReport 的排序/虛擬捲動判斷用「實際筆數」
-            if (this.historyRequestBody) {
-              const realPageSize =
-                this.data.length || this.historyRequestBody.pageSize || 30;
-              this.historyRequestBody = {
-                ...this.historyRequestBody,
-                pageSize: realPageSize,
-              };
-            }
+// ✅ 關鍵：只有「不是分頁」才把 pageSize 撐大，避免無限 loadMore
+if (this.historyRequestBody) {
+  this.historyRequestBody = {
+    ...this.historyRequestBody,
+    pageIndex: 1,
+    pageSize: hasPaging ? 30 : 999999,
+  };
+}
+
           },
           error: () => {
             this.data = [];
@@ -213,82 +216,88 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   }
 
   // ===== 主表：提供給 app-table-report 的查詢函式 =====
-  public queryTLS23060ForReport = (body: any) => {
-    const formVal = this.queryForm.getRawValue() as any;
+// ===== 主表：提供給 app-table-report 的查詢函式（修正：避免不斷打 API；但若後端真的有分頁仍可往下滾載入下一頁）=====
+public queryTLS23060ForReport = (body: any) => {
+  const formVal = this.queryForm.getRawValue() as any;
 
-    // 1. 固定從表單取查詢條件（避免 body 裡殘留舊條件）
-    const basePayload: any = {
-      TXN_DateStart: this.toDateOnly(formVal?.TXN_DateStart),
-      TXN_DateEnd: this.toDateOnly(formVal?.TXN_DateEnd),
-      rece_yn: formVal?.rece_yn ?? undefined,
-      ECR_No:
-        Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length
-          ? formVal.ECR_No
-          : undefined,
-      tlt_no:
-        Array.isArray(formVal?.tlt_no) && formVal.tlt_no.length
-          ? formVal.tlt_no
-          : undefined,
-      tlt_building: formVal?.tlt_building ?? undefined,
-      tlt_floor:
-        Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length
-          ? formVal.tlt_floor
-          : undefined,
-      org_id:
-        Array.isArray(formVal?.org_id) && formVal.org_id.length
-          ? formVal.org_id
-          : undefined,
-    };
-
-    // 2. pageIndex / SortBy（優先 body，其次 form，再來 default）
-    const formPageIndex = Number(formVal?.pageIndex) || 1;
-    const pageIndex =
-      body?.pageIndex != null ? Number(body.pageIndex) : formPageIndex;
-
-    const sortBy =
-      body?.SortBy && body.SortBy.length
-        ? body.SortBy
-        : Array.isArray(formVal?.SortBy) && formVal.SortBy.length
-          ? formVal.SortBy
-          : this.defaultSort;
-
-    const pagingAndSort = {
-      pageSize: 30,
-      pageIndex,
-      SortBy: sortBy,
-    };
-
-    return this.tls23060Service
-      .queryTLS23060({
-        ...basePayload,
-        ...pagingAndSort,
-      })
-      .pipe(
-        map((res: any) => {
-          const wrapper = this.pickWrapper(res?.Data);
-          const details = this.pickDetails(wrapper);
-
-          const rows = details.map((r: any, i: number) => ({
-            ...r,
-            _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
-          }));
-
-          let totalCount =
-            typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-          // ⭐ 如果是第二頁以上，但這一頁一筆都沒有，視為「到底了」
-          //   把 totalCount 壓成目前已載入的筆數，避免一直打 pageIndex=2
-          if (pageIndex > 1 && rows.length === 0) {
-            totalCount = this.data.length;
-          }
-
-          const grand = this.buildFooterFromPack(wrapper);
-          this.footerData = grand;
-
-          return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
-        }),
-      );
+  // 1) 固定從表單取查詢條件（避免 body 殘留舊條件）
+  const basePayload: any = {
+    TXN_DateStart: this.toDateOnly(formVal?.TXN_DateStart),
+    TXN_DateEnd: this.toDateOnly(formVal?.TXN_DateEnd),
+    rece_yn: formVal?.rece_yn ?? undefined,
+    ECR_No: Array.isArray(formVal?.ECR_No) && formVal.ECR_No.length ? formVal.ECR_No : undefined,
+    tlt_no: Array.isArray(formVal?.tlt_no) && formVal.tlt_no.length ? formVal.tlt_no : undefined,
+    tlt_building: formVal?.tlt_building ?? undefined,
+    tlt_floor: Array.isArray(formVal?.tlt_floor) && formVal.tlt_floor.length ? formVal.tlt_floor : undefined,
+    org_id: Array.isArray(formVal?.org_id) && formVal.org_id.length ? formVal.org_id : undefined,
   };
+
+  // 2) pageIndex / SortBy（優先 body，其次 form，再來 default）
+  const formPageIndex = Number(formVal?.pageIndex) || 1;
+  const pageIndex = body?.pageIndex != null ? Number(body.pageIndex) : formPageIndex;
+
+  const sortBy =
+    body?.SortBy && Array.isArray(body.SortBy) && body.SortBy.length
+      ? body.SortBy
+      : Array.isArray(formVal?.SortBy) && formVal.SortBy.length
+        ? formVal.SortBy
+        : this.defaultSort;
+
+  // 3) 固定 pageSize = 30（TableReport 內部用這個判斷要不要 loadMore）
+  const pagingAndSort = {
+    pageSize: 30,
+    pageIndex,
+    SortBy: sortBy,
+  };
+
+  return this.tls23060Service
+    .queryTLS23060({
+      ...basePayload,
+      ...pagingAndSort,
+    })
+    .pipe(
+      map((res: any) => {
+        const wrapper = this.pickWrapper(res?.Data);
+        const details = this.pickDetails(wrapper);
+
+        const rows = (details ?? []).map((r: any, i: number) => ({
+          ...r,
+          _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+        }));
+
+        // 4) ✅ 判斷後端是否真的在分頁：TotalCount > 本次 rows.length 才算有下一頁
+        const apiTotal = typeof res?.TotalCount === 'number' ? Number(res.TotalCount) : 0;
+        const hasPaging = apiTotal > rows.length;
+
+        // 5) ✅ TotalCount 給 TableReport：有分頁就用 apiTotal，沒分頁就用 rows.length（避免無限 loadMore）
+        let totalCount = hasPaging ? apiTotal : rows.length;
+
+        // 6) ⭐ 防呆：第二頁以上若拿到空資料，視為到底，避免一直打 pageIndex=2
+        if (pageIndex > 1 && rows.length === 0) {
+          totalCount = this.data.length; // 已載入的筆數
+        }
+
+        // 7) footer（總計）
+        const grand = this.buildFooterFromPack(wrapper);
+        this.footerData = grand;
+
+        // 8) ✅ 同步 historyRequestBody：只有「沒有分頁」才把 pageSize 撐大，讓 TableReport 覺得資料不足以啟動 loadMore
+        //    （有分頁就維持 30，確保往下滾會打下一頁）
+        if (this.historyRequestBody) {
+          this.historyRequestBody = {
+            ...this.historyRequestBody,
+            ...basePayload,
+            SortBy: sortBy,
+            pageIndex: 1,
+            pageSize: hasPaging ? 30 : 999999,
+          };
+        }
+
+        return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
+      }),
+    );
+};
+
 
   // ===== 點主表「明細」→ 組明細查詢 body，打 /queryTLS23060_Detail =====
   override onDetail(row: any): void {
@@ -319,12 +328,16 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       org_id: Array.isArray(formVal?.org_id) ? formVal.org_id : [],
     };
 
-    // 給 app-table-report 的 lastQueryBody 用
-    this.dialogHistoryRequestBody = body;
+    // 給明細 app-table-report 的 lastQueryBody 用
+    this.dialogHistoryRequestBody = {
+      ...body,
+      pageIndex: 1,
+      pageSize: 999999, // ✅ 避免 dialog 也無限 loadMore
+    };
 
     // 先查一次明細，開 Dialog 就有資料
     this.dialogLoading = true;
-    this.queryTLS23060DetailForReport(body)
+    this.queryTLS23060DetailForReport({ ...body, pageIndex: 1, pageSize: 30 })
       .pipe(finalize(() => (this.dialogLoading = false)))
       .subscribe({
         error: () => {
@@ -335,25 +348,18 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  // ===== 明細：提供給 Dialog 內 app-table-report 的查詢函式 → 打 /queryTLS23060_Detail，以日期為主 =====
+  // ===== 明細：提供給 Dialog 內 app-table-report 的查詢函式 =====
   public queryTLS23060DetailForReport = (body: any) =>
     this.tls23060Service
       .queryTLS23060Detail({
         ...(this.dialogHistoryRequestBody ?? {}),
         ...body,
         // 保底 pageIndex / pageSize / SortBy
-        pageSize: Number(body?.pageSize) || 30,
-        pageIndex: Number(body?.pageIndex) || 1,
-        SortBy:
-          Array.isArray(body?.SortBy) && body.SortBy.length
-            ? body.SortBy
-            : [{ field: 'TXN_Date', order: 1 as 1 }],
-        TXN_DateStart: this.toDateOnly(
-          body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart,
-        ),
-        TXN_DateEnd: this.toDateOnly(
-          body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd,
-        ),
+        pageSize: 30,
+        pageIndex: 1,
+        SortBy: Array.isArray(body?.SortBy) && body.SortBy.length ? body.SortBy : [{ field: 'TXN_Date', order: 1 as 1 }],
+        TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+        TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
       })
       .pipe(
         map((res: any) => {
@@ -372,14 +378,22 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
             return ad > bd ? 1 : ad < bd ? -1 : 0;
           });
 
-          const totalCount =
-            typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+          // ✅ 同主表：TotalCount 固定 rows.length，避免 TableReport 無限 loadMore
+          const totalCount = rows.length;
           const grand = this.buildFooterFromPack(wrapper);
 
-          // 給 dialog 綁定用
           this.dialogFooterData = grand;
           this.dialogTotalRecords = totalCount;
           this.dialogData = rows;
+
+          // ✅ dialog lastQueryBody 也鎖住
+          if (this.dialogHistoryRequestBody) {
+            this.dialogHistoryRequestBody = {
+              ...this.dialogHistoryRequestBody,
+              pageIndex: 1,
+              pageSize: 999999,
+            };
+          }
 
           return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
         }),
@@ -399,7 +413,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   // ===== 匯出：主表 PDF =====
   private buildExportBody() {
     if (!this.historyRequestBody) return null;
-    const { pageSize, pageIndex, ...rest } = this.historyRequestBody;
+    const { pageSize, pageIndex, PageSize, PageIndex, ...rest } = this.historyRequestBody;
     return rest;
   }
 
@@ -425,7 +439,11 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       return;
     }
     this.btnLoading = true;
-    const body = this.dialogHistoryRequestBody;
+
+    // 明細匯出通常不需要 pageSize/pageIndex
+    const { pageSize, pageIndex, PageSize, PageIndex, ...rest } = this.dialogHistoryRequestBody;
+    const body = rest;
+
     this.tls23060Service
       .exportTLS23060DetailPDF(body)
       .pipe(finalize(() => (this.btnLoading = false)))
@@ -485,12 +503,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   }
 
   private pickDetails(wrapper: any): any[] {
-    return (
-      wrapper?.tLS23060Details ??
-      wrapper?.TLS23060Details ??
-      wrapper?.tls23060Details ??
-      []
-    ) as any[];
+    return (wrapper?.tLS23060Details ?? wrapper?.TLS23060Details ?? wrapper?.tls23060Details ?? []) as any[];
   }
 
   /** 建立表尾總計（把後端 total* 映射到欄位名） */
@@ -574,8 +587,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     if (val instanceof Date && !isNaN(val.getTime())) {
       const y = val.getFullYear();
       const m = String(val.getMonth() + 1).padStart(2, '0');
-      const d = String(val.getDate()).
-        padStart(2, '0');
+      const d = String(val.getDate()).padStart(2, '0');
       return `${y}/${m}/${d}`;
     }
     const s = String(val);
@@ -592,8 +604,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   }
 
   // 金額格式
-  moneyFormat = (value: number): string =>
-    value != null ? Number(value || 0).toLocaleString('en-US') : '0';
+  moneyFormat = (value: number): string => (value != null ? Number(value || 0).toLocaleString('en-US') : '0');
 
   // 主表欄位
   columns = [

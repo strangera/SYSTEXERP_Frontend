@@ -10,6 +10,8 @@ import { finalize, forkJoin } from 'rxjs';
 import {
   FIN32030Service,
   InsertFIN32030CompleteRequest,
+  QueryAbatAcctResponse,
+  QueryCapItemDropdownResponse,
   QueryFIN32030ARResponse,
   QueryFIN32030Response
 } from '../../../service/api/fin/fin32030.service';
@@ -21,7 +23,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { EditColumn } from '../../../shared/componentkit/table-edit/table-edit.model';
+import { EditColumn } from './table-edit/table-edit.model';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatAmountWithFraction, formatDate } from '../../../shared/componentkit/table/table.model';
 import { TableEditComponent } from './table-edit/table-edit.component';
@@ -136,7 +138,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     VEN_No: [null as string | null],
     DateFrom: [null as Date | null],
     DateTo: [null as Date | null],
-    pageSize: [20],
+    pageSize: [30],
     pageIndex: [1],
     SortBy: [[{ field: 'VEN_No', order: 1 }]],
   });
@@ -158,18 +160,28 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   step2Columns: EditColumn[] = [
     {
       field: 'CAP_Item',
-      header: '收款項目',
-      type: 'dropdown',
-      options: () => this.recvItemOptions,
-      optionLabel: 'label', // 顯示格式: CAP_Item - CAP_Name
-      optionValue: 'value', // 值為 CAP_Item
-      showClear: true,
+      header: '收款代號',
+      type: 'input',
+      maxLength: 50,
+      placeholder: '點擊選擇...',
+      onFocus: (_rowData: any, _value: string | null, _col: EditColumn, index: number) => {
+        if (!this.isFormReadable) {
+          this.openCapItemDialogForRow(index);
+        }
+      },
+      disabled: () => this.isFormReadable,
       validate: [
         (value: string) => ({
           isValid: !!value,
           errorMessage: ['收款項目為必填']
         })
       ]
+    },
+    {
+      field: 'CAP_Name',
+      header: '收款名稱',
+      type: 'input',
+      disabled: () => true
     },
     {
       field: 'ARS_Amt',
@@ -194,13 +206,23 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       type: 'input',
       maxLength: 100
     },
-    // {
-    //   field: 'TEST_Field',
-    //   header: '沖帳代號',
-    //   type: 'dropdown',
-    //   maxLength: 100,
-    //   hidden: true
-    // }
+    {
+      field: 'AbatAcct',
+      header: '沖帳代號',
+      type: 'input',
+      maxLength: 50,
+      placeholder: '點擊選擇...',
+      onFocus: (_rowData: any, _value: string | null, _col: EditColumn, index: number) => {
+        if (!this.isFormReadable) {
+          this.openAbatAcctDialogForRow(index);
+        }
+      },
+      disabled: (_value: any, _index?: number, rowData?: any) => {
+        if (this.isFormReadable) return true;
+        // 沒有選擇收款項目時不可點擊
+        return !rowData?.AccNo;
+      }
+    },
   ];
 
   // 步驟3: 票據資訊表格資料
@@ -366,6 +388,51 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     }
   ];
 
+  // 收款項目查詢對話框
+  @ViewChild('capItemDialogTable') capItemDialogTable!: TableComponent;
+  showCapItemDialog = false;
+  capItemDialogLoading = false;
+  capItemDialogSelectedItem: QueryCapItemDropdownResponse | null = null;
+  currentEditingCapItemRowIndex: number | null = null;
+  capItemAllData: QueryCapItemDropdownResponse[] = [];
+  capItemDialogData: QueryCapItemDropdownResponse[] = [];
+  capItemFilterForm = this.formBuilder.group({
+    CAP_ItemFilter: [null as string | null],
+    AccNoFilter: [null as string | null],
+  });
+  capItemFilterOptions: { label: string; value: string }[] = [];
+  accNoFilterOptions: { label: string; value: string }[] = [];
+  capItemDialogColumns: Column[] = [
+    { field: 'CAP_Item', header: '收款代號', visible: true },
+    { field: 'CAP_Name', header: '收款名稱', visible: true },
+    { field: 'AccNo', header: '會計科目代號', visible: true },
+    { field: 'AccCName', header: '會計科目名稱', visible: true },
+  ];
+
+  // 沖帳代號查詢對話框
+  @ViewChild('abatAcctDialogTable') abatAcctDialogTable!: TableComponent;
+  showAbatAcctDialog = false;
+  abatAcctDialogLoading = false;
+  abatAcctDialogSelectedItem: QueryAbatAcctResponse | null = null;
+  currentEditingAbatAcctRowIndex: number | null = null;
+  abatAcctDialogData: QueryAbatAcctResponse[] = [];
+  abatAcctFilterForm = this.formBuilder.group({
+    VouNo: [''],
+    PTA: [''],
+    VEN_Uniform: [null as string | null],
+  });
+  abatAcctVendorOptions: { label: string; value: string }[] = [];
+  abatAcctDialogColumns: Column[] = [
+    { field: 'VouNo', header: '傳票號碼', visible: true },
+    { field: 'NoteDesc', header: '摘要', visible: true },
+    { field: 'DebitAmt', header: '借方(餘額)', visible: true, format: formatAmountWithFraction, align: 'right' },
+    { field: 'CreditAmt', header: '貸方(餘額)', visible: true, format: formatAmountWithFraction, align: 'right' },
+    { field: 'PTA', header: '立沖代號', visible: true },
+    { field: 'VEN_Uniform', header: '廠商代號', visible: true },
+    { field: 'VEN_ShortName', header: '廠商簡稱', visible: true },
+  ];
+  private abatAcctAllData: QueryAbatAcctResponse[] = []; // API 回傳的完整資料（供 client-side 篩選）
+
   // 收款項目下拉選項 (格式: CAP_Item - CAP_Name)
   recvItemOptions: { label: string; value: string; Voucher_Type?: string | null }[] = [];
 
@@ -413,8 +480,11 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     if (this.isFormCreateable) {
       this.step2TableData = [{
         CAP_Item: null,
+        CAP_Name: '',
+        AccNo: '',
         ARS_Amt: null,
-        NoteDesc: ''
+        NoteDesc: '',
+        AbatAcct: ''
       }];
     }
 
@@ -518,7 +588,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       VEN_No: null,
       DateFrom: null,
       DateTo: null,
-      pageSize: 20,
+      pageSize: 30,
       pageIndex: 1,
       SortBy: [{ field: 'VEN_No', order: 1 }],
     });
@@ -526,8 +596,9 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     this.arDialogData = [];
     this.arDialogTotalRecords = 0;
     this.arDialogSelectedItem = null;
-    // 預設顯示全部資料
-    this.onQueryAR();
+    // 預設顯示全部資料，並傳入當前值供預選
+    const currentARS_ID = this.step4TableData[rowIndex]?.ARS_ID;
+    this.onQueryAR(currentARS_ID || undefined);
   }
 
   /** 打開應收未收查詢對話框 (舊方法，保留相容性) */
@@ -550,7 +621,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   }
 
   /** 查詢應收未收 */
-  onQueryAR(): void {
+  onQueryAR(preSelectARS_ID?: string): void {
     const formValue = this.arQueryForm.value;
 
     // 有效的排序欄位列表（對應後端 queryFIN32030ARResponse 的欄位）
@@ -573,7 +644,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       DateFrom: formValue.DateFrom ? (formValue.DateFrom as Date).toISOString() : undefined,
       DateTo: formValue.DateTo ? (formValue.DateTo as Date).toISOString() : undefined,
       PageIndex: formValue.pageIndex ?? 1,
-      PageSize: formValue.pageSize ?? 20,
+      PageSize: formValue.pageSize ?? 30,
       SortBy: sortBy,
     };
 
@@ -584,10 +655,26 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         untilDestroyed(this)
       )
       .subscribe(response => {
-        // 過濾掉已選擇的應收帳款 (不可重複選擇)
-        const selectedIds = this.step4TableData.map(item => item.ARS_ID);
+        // 過濾掉已選擇的應收帳款 (不可重複選擇，但排除當前編輯列)
+        const selectedIds = this.step4TableData
+          .filter((_, idx) => idx !== this.currentEditingRowIndex)
+          .map(item => item.ARS_ID);
         this.arDialogData = response.Data.filter(ar => !selectedIds.includes(ar.ARS_ID));
         this.arDialogTotalRecords = response.TotalCount;
+
+        // 預選已選擇的應收帳款
+        if (preSelectARS_ID) {
+          const match = this.arDialogData.find(item => item.ARS_ID === preSelectARS_ID);
+          if (match) {
+            this.arDialogSelectedItem = match;
+            setTimeout(() => {
+              if (this.arDialogTable?.dt) {
+                this.arDialogTable.selectedItems = match;
+                this.arDialogTable.dt.selection = match;
+              }
+            }, 100);
+          }
+        }
       });
   }
 
@@ -684,6 +771,256 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     this.calculateBillTotalAmount();
   }
 
+  // ----------------------------------------------------------------
+  // 收款項目對話框相關
+  // ----------------------------------------------------------------
+
+  /** 打開收款項目查詢對話框 (針對特定列) */
+  openCapItemDialogForRow(rowIndex: number): void {
+    this.currentEditingCapItemRowIndex = rowIndex;
+    this.showCapItemDialog = true;
+    this.capItemFilterForm.reset();
+    this.capItemDialogSelectedItem = null;
+    this.capItemDialogData = [];
+    // 預設查詢全部，並傳入當前值供預選
+    const currentCapItem = this.step2TableData[rowIndex]?.CAP_Item;
+    this.onQueryCapItems(currentCapItem || undefined);
+  }
+
+  /** 關閉收款項目查詢對話框 */
+  closeCapItemDialog(): void {
+    this.showCapItemDialog = false;
+    this.capItemDialogSelectedItem = null;
+  }
+
+  /** 查詢收款項目 (呼叫 API) */
+  onQueryCapItems(preSelectCapItem?: string): void {
+    const filters = this.capItemFilterForm.value;
+    const params: { CAP_Item?: string; AccNo?: string } = {};
+
+    if (filters.CAP_ItemFilter) {
+      params.CAP_Item = filters.CAP_ItemFilter;
+    }
+    if (filters.AccNoFilter) {
+      params.AccNo = filters.AccNoFilter;
+    }
+
+    this.capItemDialogLoading = true;
+    this.fin32030Service.queryCapItemDropdown(params)
+      .pipe(
+        finalize(() => this.capItemDialogLoading = false),
+        untilDestroyed(this)
+      )
+      .subscribe(response => {
+        this.capItemDialogData = response.Data || [];
+
+        // 預選已選擇的項目
+        if (preSelectCapItem) {
+          const match = this.capItemDialogData.find(item => item.CAP_Item === preSelectCapItem);
+          if (match) {
+            this.capItemDialogSelectedItem = match;
+            setTimeout(() => {
+              if (this.capItemDialogTable?.dt) {
+                this.capItemDialogTable.selectedItems = match;
+                this.capItemDialogTable.dt.selection = match;
+              }
+            }, 100);
+          }
+        }
+      });
+  }
+
+  /** 收款項目選擇事件 */
+  onCapItemRowSelect(event: { data?: QueryCapItemDropdownResponse }): void {
+    if (event.data) {
+      this.capItemDialogSelectedItem = event.data;
+    }
+  }
+
+  /** 確認選擇收款項目 */
+  confirmCapItemSelection(): void {
+    let selected: QueryCapItemDropdownResponse | null = this.capItemDialogSelectedItem;
+
+    if (!selected) {
+      const rawSelected = this.capItemDialogTable?.selectedItems;
+      if (Array.isArray(rawSelected)) {
+        selected = rawSelected.length > 0 ? rawSelected[0] : null;
+      } else if (rawSelected) {
+        selected = rawSelected as QueryCapItemDropdownResponse;
+      }
+    }
+
+    if (!selected) {
+      this.messageService.errorBubble('請選擇一個收款項目');
+      return;
+    }
+
+    const rowIndex = this.currentEditingCapItemRowIndex;
+
+    // 檢查是否為有效的現有列索引（排除候選列）
+    const isValidEditIndex = rowIndex !== null &&
+      rowIndex >= 0 &&
+      rowIndex < this.step2TableData.length &&
+      !this.step2TableData[rowIndex]?._isAutoInsertCandidate;
+
+    if (isValidEditIndex) {
+      // 替換現有列資料（同時清空沖帳代號，因為收款項目變更了）
+      this.step2TableData[rowIndex!] = {
+        ...this.step2TableData[rowIndex!],
+        CAP_Item: selected.CAP_Item || '',
+        CAP_Name: selected.CAP_Name || '',
+        AccNo: selected.AccNo || '',
+        AbatAcct: '', // 清空沖帳代號
+      };
+      this.step2TableData = [...this.step2TableData];
+    } else {
+      // 新增一筆資料（來自候選列或新增模式）
+      const newData = {
+        CAP_Item: selected.CAP_Item || '',
+        CAP_Name: selected.CAP_Name || '',
+        AccNo: selected.AccNo || '',
+        ARS_Amt: null,
+        NoteDesc: '',
+        AbatAcct: ''
+      };
+      this.step2TableData = [...this.step2TableData, newData];
+    }
+
+    // 重新計算票據總金額
+    this.calculateBillTotalAmount();
+
+    this.showCapItemDialog = false;
+    this.currentEditingCapItemRowIndex = null;
+    this.capItemDialogSelectedItem = null;
+  }
+
+  // ----------------------------------------------------------------
+  // 沖帳代號對話框相關
+  // ----------------------------------------------------------------
+
+  /** 打開沖帳代號查詢對話框 (針對特定列) */
+  openAbatAcctDialogForRow(rowIndex: number): void {
+    // 取得當前列的 AccNo
+    const rowData = this.step2TableData[rowIndex];
+    if (!rowData?.AccNo) {
+      this.messageService.errorBubble('請先選擇收款項目');
+      return;
+    }
+
+    this.currentEditingAbatAcctRowIndex = rowIndex;
+    this.showAbatAcctDialog = true;
+    this.abatAcctFilterForm.reset();
+    this.abatAcctDialogSelectedItem = null;
+    this.abatAcctDialogData = [];
+    this.abatAcctAllData = [];
+    this.abatAcctVendorOptions = [];
+
+    const currentAbatAcct = rowData.AbatAcct;
+
+    // 查詢沖帳代號
+    this.abatAcctDialogLoading = true;
+    this.fin32030Service.queryAbatAcct({ AccNo: rowData.AccNo })
+      .pipe(
+        finalize(() => this.abatAcctDialogLoading = false),
+        untilDestroyed(this)
+      )
+      .subscribe(response => {
+        this.abatAcctAllData = response.Data || [];
+        this.abatAcctDialogData = [...this.abatAcctAllData];
+
+        // 建立廠商代號篩選選項 (去重)
+        const vendorMap = new Map<string, string>();
+        this.abatAcctAllData.forEach(item => {
+          if (item.VEN_Uniform) {
+            vendorMap.set(item.VEN_Uniform, item.VEN_ShortName || '');
+          }
+        });
+        this.abatAcctVendorOptions = Array.from(vendorMap.entries()).map(([venUniform, venShortName]) => ({
+          label: `${venUniform} - ${venShortName}`,
+          value: venUniform
+        }));
+
+        // 預選已選擇的沖帳代號
+        if (currentAbatAcct) {
+          const match = this.abatAcctDialogData.find(item => item.PTA === currentAbatAcct);
+          if (match) {
+            this.abatAcctDialogSelectedItem = match;
+            setTimeout(() => {
+              if (this.abatAcctDialogTable?.dt) {
+                this.abatAcctDialogTable.selectedItems = match;
+                this.abatAcctDialogTable.dt.selection = match;
+              }
+            }, 100);
+          }
+        }
+      });
+  }
+
+  /** 關閉沖帳代號查詢對話框 */
+  closeAbatAcctDialog(): void {
+    this.showAbatAcctDialog = false;
+    this.abatAcctDialogSelectedItem = null;
+  }
+
+  /** 沖帳代號篩選 (client-side) */
+  filterAbatAcct(): void {
+    const filters = this.abatAcctFilterForm.value;
+    let filtered = [...this.abatAcctAllData];
+
+    if (filters.VouNo) {
+      const keyword = filters.VouNo.toLowerCase();
+      filtered = filtered.filter(item => item.VouNo?.toLowerCase().includes(keyword));
+    }
+    if (filters.PTA) {
+      const keyword = filters.PTA.toLowerCase();
+      filtered = filtered.filter(item => item.PTA?.toLowerCase().includes(keyword));
+    }
+    if (filters.VEN_Uniform) {
+      filtered = filtered.filter(item => item.VEN_Uniform === filters.VEN_Uniform);
+    }
+
+    this.abatAcctDialogData = filtered;
+  }
+
+  /** 沖帳代號選擇事件 */
+  onAbatAcctRowSelect(event: { data?: QueryAbatAcctResponse }): void {
+    if (event.data) {
+      this.abatAcctDialogSelectedItem = event.data;
+    }
+  }
+
+  /** 確認選擇沖帳代號 */
+  confirmAbatAcctSelection(): void {
+    let selected: QueryAbatAcctResponse | null = this.abatAcctDialogSelectedItem;
+
+    if (!selected) {
+      const rawSelected = this.abatAcctDialogTable?.selectedItems;
+      if (Array.isArray(rawSelected)) {
+        selected = rawSelected.length > 0 ? rawSelected[0] : null;
+      } else if (rawSelected) {
+        selected = rawSelected as QueryAbatAcctResponse;
+      }
+    }
+
+    if (!selected) {
+      this.messageService.errorBubble('請選擇一筆沖帳代號');
+      return;
+    }
+
+    const rowIndex = this.currentEditingAbatAcctRowIndex;
+    if (rowIndex !== null && rowIndex >= 0 && rowIndex < this.step2TableData.length) {
+      this.step2TableData[rowIndex] = {
+        ...this.step2TableData[rowIndex],
+        AbatAcct: selected.PTA || '',
+      };
+      this.step2TableData = [...this.step2TableData];
+    }
+
+    this.showAbatAcctDialog = false;
+    this.currentEditingAbatAcctRowIndex = null;
+    this.abatAcctDialogSelectedItem = null;
+  }
+
   /** 計算票據總金額 */
   private calculateBillTotalAmount(): void {
     let totalAmount = 0;
@@ -743,6 +1080,28 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
             value: item.CAP_Item || '',
             Voucher_Type: item.Voucher_Type
           }));
+
+          // 儲存完整資料供對話框使用
+          this.capItemAllData = results.recvItems.Data;
+
+          // 建立收款代號/名稱篩選選項
+          this.capItemFilterOptions = results.recvItems.Data.map(item => ({
+            label: `${item.CAP_Item || ''} - ${item.CAP_Name || ''}`,
+            value: item.CAP_Item || ''
+          }));
+
+          // 建立會計科目篩選選項 (去重)
+          const accNoMap = new Map<string, string>();
+          results.recvItems.Data.forEach(item => {
+            if (item.AccNo) {
+              accNoMap.set(item.AccNo, item.AccCName || '');
+            }
+          });
+          this.accNoFilterOptions = Array.from(accNoMap.entries()).map(([accNo, accCName]) => ({
+            label: `${accNo} - ${accCName}`,
+            value: accNo
+          }));
+
           console.log('收款項目下拉選單載入完成:', this.recvItemOptions.length, '筆');
         }
 
@@ -814,11 +1173,17 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
           // 載入收款項目明細 (步驟2)
           if (recvData.RecvItems && recvData.RecvItems.length > 0) {
             // API 回傳的欄位: RCV_Amt (不是 ARS_Amt), CAP_Name (不是 CAP_ItemName)
-            this.step2TableData = (recvData.RecvItems as any[]).map((item: any) => ({
-              CAP_Item: item.CAP_Item || '',
-              ARS_Amt: item.RCV_Amt || 0, // API 使用 RCV_Amt
-              NoteDesc: item.NoteDesc || ''
-            }));
+            this.step2TableData = (recvData.RecvItems as any[]).map((item: any) => {
+              const capItemData = this.capItemAllData.find(opt => opt.CAP_Item === item.CAP_Item);
+              return {
+                CAP_Item: item.CAP_Item || '',
+                CAP_Name: capItemData?.CAP_Name || item.CAP_Name || '',
+                AccNo: capItemData?.AccNo || item.AccNo || '',
+                ARS_Amt: item.RCV_Amt || 0, // API 使用 RCV_Amt
+                NoteDesc: item.NoteDesc || '',
+                AbatAcct: item.AbatAcct || ''
+              };
+            });
             console.log('收款項目明細載入完成:', this.step2TableData);
             // 計算票據總金額
             this.calculateBillTotalAmount();

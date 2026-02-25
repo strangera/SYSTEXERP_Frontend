@@ -20,6 +20,7 @@ import {
   formatYN
 } from '@shared/componentkit/table/table.model';
 import { Actions } from '@shared/service/permission-guard.service';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // PrimeNG
 import { AccordionModule } from 'primeng/accordion';
@@ -143,9 +144,9 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
     // 專櫃日期範圍
     tlt_bdate_start_from: [],
-    tlt_bdate_end_to: [],
+    tlt_bdate_start_to: [],
     tlt_edate_start_from: [],
-    tlt_edate_end_to: [],
+    tlt_edate_start_to: [],
 
     // 合約日期範圍
     tlt_contract_bdate_from: [],
@@ -267,7 +268,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
   ngOnInit(): void {
     // 初始化頁面 - 使用 V2 精靈路由
-    this.initializePage('TLS13010', '/tls/tls13010v2cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS13010', '/tls/tls13010cru', this.queryForm, (form) => this.onSubmit(form));
     this.initializeDropdowns();
   }
 
@@ -317,7 +318,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   // ========== 新增功能 ==========
   override onCreate(): void {
     // 導航到精靈頁面 (新增模式)
-    this.router.navigate(['account/tls/tls13010v2cru'], {
+    this.router.navigate(['account/tls/tls13010cru'], {
       state: { mode: 'create' }
     });
     this.messageService.infoBubble('開始新增契約資料');
@@ -333,8 +334,20 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   }
 
   private startEditWorkflow(rowData: ContractItem, isViewMode: boolean): void {
-    // 導航到精靈頁面，透過 state 傳遞資料和模式
-    this.router.navigate(['account/tls/tls13010v2cru'], {
+    // 要約書 → TLS12040-v2
+    if (rowData.contract_type === '要約書') {
+      this.router.navigate(['account/tls/tls12040cru'], {
+        state: {
+          crudstatus: isViewMode ? CRUDStatus.Read : CRUDStatus.Edit,
+          rowdata: rowData
+        }
+      });
+      this.messageService.infoBubble(isViewMode ? '進入要約書檢視模式' : '進入要約書編輯模式');
+      return;
+    }
+
+    // 契約書 → TLS13010-v2
+    this.router.navigate(['account/tls/tls13010cru'], {
       state: {
         mode: isViewMode ? 'view' : 'edit',
         data: {
@@ -447,10 +460,10 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   /**
    * 判斷資料列是否可選取
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  isRowSelectable(_rowData: ContractItem): boolean {
-    return true;
-  }
+  isRowSelectable = (rowData: ContractItem): boolean => {
+    // 要約書不可選取（下傳僅支援契約書）
+    return rowData.source_type !== '要約書';
+  };
 
   /**
    * 判斷合約是否可編輯

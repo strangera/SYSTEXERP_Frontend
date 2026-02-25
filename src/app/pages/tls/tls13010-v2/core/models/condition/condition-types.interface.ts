@@ -13,6 +13,9 @@ export interface BaseConditionItem {
   _isNew?: boolean;
   _fromNext2?: boolean;
   _readonly?: boolean;
+  _hasValidationError?: boolean;
+  _hasDateOverlapError?: boolean;
+  _errorFields?: string[];
 }
 
 /**
@@ -107,27 +110,6 @@ export interface CategorizedConditions {
   baseCommission: BaseCommissionCondition[];
   graduated: GraduatedCommissionCondition[];
   baseTier: BaseTierCondition[];
-}
-
-/**
- * 條件驗證結果
- */
-export interface ConditionValidationResult {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-}
-
-/**
- * 條件項目統計
- */
-export interface ConditionItemCounts {
-  total: number;
-  display: number;
-  new: number;
-  modified: number;
-  deleted: number;
-  original: number;
 }
 
 /**

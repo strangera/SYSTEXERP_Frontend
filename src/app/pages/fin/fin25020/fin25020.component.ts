@@ -1,19 +1,17 @@
 import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { FIN25020Service } from '../../../service/api/fin/fin25020.service';
+import { FIN25020Service, QueryBankAccountResponse } from '../../../service/api/fin/fin25020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { AddButton, Column, formatDate } from '../../../shared/componentkit/table/table.model';
 
@@ -44,9 +42,7 @@ export interface FIN25020Data {
     ReactiveFormsModule,
     DropdownComponent,
     CalendarRangeComponent,
-    InputNumberComponent,
     InputTextComponent,
-    MultiSelectComponent,
     TableComponent,
     TranslateModule,
     AsyncPipe
@@ -59,8 +55,7 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
     D_Date_End: [null], // 建立日期迄
     RMT_Date_Start: [null], // 匯款日期起
     RMT_Date_End: [null], // 匯款日期迄
-    BNK_id: [''], // 銀行ID
-    BNK_AccName: ['', [Validators.maxLength(40)]], // 銀行帳戶名稱
+    BNK_id: [null as number | null], // 銀行帳戶
     VouStatus: [''], // 轉傳票狀態
     pageSize: [20], // 每頁筆數 (小寫,配合 onLazyLoadData)
     pageIndex: [1], // 頁碼 (小寫,配合 onLazyLoadData)
@@ -71,8 +66,8 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
   data: FIN25020Data[] = [];
   selectedItems: FIN25020Data[] = [];
 
-  // 匯款來源單號下拉選項 (後續可從 API 載入)
-  transferNoOptions: { label: string; value: string }[] = [];
+  // 銀行帳戶下拉選項
+  bankOptions: (QueryBankAccountResponse & { displayLabel: string })[] = [];
 
   // 轉傳票狀態選項
   vouStatusOptions: { label: string; value: string }[] = [
@@ -117,6 +112,16 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
 
   ngOnInit(): void {
     this.initializePage('FIN25020', 'fin/fin25020cru', this.queryForm, (form) => this.onSubmit(form));
+
+    // 載入銀行帳戶選項
+    this.fin25020Service.queryBankAccount({})
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.bankOptions = response.Data.map(item => ({
+          ...item,
+          displayLabel: `${item.BNK_id || item.id} - ${item.BNK_AccName}`
+        }));
+      });
   }
 
   onSubmit(frm: FormGroup) {
@@ -131,7 +136,6 @@ export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> imp
         RMT_Date_End: formValue.RMT_Date_End,
         WSLIP_NO: formValue.WSLIP_NO,
         BNK_id: formValue.BNK_id,
-        BNK_AccName: formValue.BNK_AccName,
         VouStatus: formValue.VouStatus,
         // 分頁和排序參數 (轉換為大寫給後端)
         PageIndex: formValue.pageIndex,

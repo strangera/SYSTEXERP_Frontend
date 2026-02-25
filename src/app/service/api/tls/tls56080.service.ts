@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 /**
@@ -44,7 +44,7 @@ export interface IQueryTLS56080Response {
   TRD_Status_Name: string; // 交易狀態名稱
   TRD_Reason: string; // 交易原因代碼
   TRD_Reason_Name: string; // 交易原因名稱
-  APPLY_Date: string; // 申請日期
+  APPLY_Date: string | null; // 申請日期
   APPLY_USR_No: string; // 申請人員編號
   APPLY_USR_Name: string; // 申請人員名稱
   IN_TotBuyAmt: number; // 調入總進價
@@ -59,9 +59,9 @@ export interface IQueryTLS56080Response {
   CLOS_Date: string; // 結案日期
   CLOS_USR_No: string; // 結案人員編號
   CLOS_USR_Name: string; // 結案人員名稱
-  Confirm_Date: string; // 確認日期
-  Confirm_USR_No: string; // 確認人員編號
-  Confirm_USR_Name: string; // 確認人員名稱
+  Confim_Date: string; // 確認日期
+  Confim_USR_No: string; // 確認人員編號
+  Confim_USR_Name: string; // 確認人員名稱
   TRD_Remark: string; // 備註
   CRT_Date: string;
   CRT_USR_No: string;
@@ -69,40 +69,6 @@ export interface IQueryTLS56080Response {
   UPD_Date: string;
   UPD_USR_No: string;
   UPD_USR_Name: string;
-}
-
-/**
- * POS2004 商品查詢條件介面
- * 對應 Swagger: POST /TLS0000/TLS5000/queryPOS2004Detail_TLS56080 的 Request Body
- */
-export interface IQueryPOS2004DetailRequest {
-  PageSize?: number;
-  PageIndex?: number;
-  SortBy?: { field: string; order: number }[];
-  queryNo?: string; // 查詢編號 (國際條碼/商品管理編號/廠商貨號)
-  PLU_Name?: string; // 商品名稱
-  LOGO_No?: string; // 廠商貨號
-  HOS_No?: string; // 品牌編號
-}
-
-/**
- * POS2004 商品查詢回應資料介面
- * 對應 Swagger: POST /TLS0000/TLS5000/queryPOS2004Detail_TLS56080 的 Response Data
- */
-export interface IQueryPOS2004DetailResponse {
-  id: number;
-  PLU_MagNo: string; // 商品管理編號
-  PLU_Name: string; // 商品名稱
-  PLU_No: string; // 國際條碼
-  PLU_OrgPLUNo: string;
-  PLU_Unit: string; // 單位代碼
-  UNIT_NAME: string; // 單位名稱
-  PLU_BoxQty: number; // 箱入數
-  PLU_StockTaxType: string; // 庫存稅別
-  PLU_SalePrc_UNI: number; // 未稅價
-  PLU_SalePrc: number; // 含稅價
-  PLU_TaxType: string; // 稅別
-  NowHaveQty: number; // 目前庫存量
 }
 
 /**
@@ -218,21 +184,17 @@ export class Tls56080Service {
     return this.http.post<ApiResponse<IQueryTLS56080Response[]>>(
       `${this.apiUrl}/queryTLS56080`,
       params,
-    );
-  }
-
-  /**
-   * 透過商品管理編號、國際條碼或廠商貨號查詢商品資訊。
-   * @param params 查詢條件。
-   * @returns 包含 IQueryPOS2004DetailResponse 陣列的 API 響應。
-   */
-  queryPOS2004Detail(
-    params: IQueryPOS2004DetailRequest,
-  ): Observable<ApiResponse<IQueryPOS2004DetailResponse[]>> {
-    return this.http.post<ApiResponse<IQueryPOS2004DetailResponse[]>>(
-      `${this.apiUrl}/queryPOS2004Detail_TLS56080`,
-      params,
-    );
+    ).pipe(
+      map(response => {
+        return {
+          ...response,
+          Data: response.Data.map(item => ({
+            ...item,
+            APPLY_Date: item.APPLY_Date ? new Date(item.APPLY_Date).toISOString() : null,
+          }))
+        };
+      })
+    )
   }
 
   /**

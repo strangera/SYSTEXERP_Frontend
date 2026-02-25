@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+﻿import { NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { NavigationExtras } from '@angular/router';
@@ -155,7 +155,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     const workflowData = this.contractFlowService.getCurrentData();
 
     if (!workflowData.contractId && !this.contractFlowService.isNewContractMode()) {
-      this.router.navigate(['account/tls/tls13010cru']);
+      this.router.navigate(['account/tls/tls13010v1cru']);
       return;
     }
 
@@ -631,7 +631,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       fieldName,
       newValue,
       itemId: rowData.id,
-      是否為cap_saletype: fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2'
+      是否為cap_saletype: fieldName === 'cap_saletype1' || fieldName === 'cap_saletype2' || fieldName === 'cap_saletype3' || fieldName === 'cap_saletype5'
     });
     rowData[fieldName] = newValue;
     // 更新狀態
@@ -1497,7 +1497,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       state: { fromRoute: this.router.url }
     };
 
-    this.router.navigate(['account/tls/tls13010next1'], extras);
+    this.router.navigate(['account/tls/tls13010v1next1'], extras);
   }
 
   onClearAndExit(): void {
@@ -1507,7 +1507,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       state: { fromRoute: this.router.url }
     };
 
-    this.router.navigate(['account/tls/tls13010'], extras);
+    this.router.navigate(['account/tls/tls13010v1'], extras);
     this.notificationService.infoBubble('已清空暫存資料並離開');
   }
 
@@ -2166,7 +2166,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     this.saveToWorkflow();
 
     // 直接導航到 Next3
-    this.router.navigate(['account/tls/tls13010next3']);
+    this.router.navigate(['account/tls/tls13010v1next3']);
 
     // 提示訊息
     // this.notificationService.infoBubble('抽成資料已暫存，請繼續設定條件');

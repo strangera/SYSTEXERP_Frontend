@@ -39,6 +39,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { InputTextRange2Component } from './input-text-range2/input-text-range2.component';
 
 @UntilDestroy()
 // 型態別報表
@@ -66,10 +67,11 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     ButtonModule,
     CheckboxModule,
     TableReportComponent,
-    InputTextRangeComponent,
+    InputTextRange2Component,
   ],
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> implements OnInit {
+  private _syncingSortMeta = false;
   private _obsCache = new Map<string, any>();
   private once<T>(key: string, factory: () => import('rxjs').Observable<T>) {
     if (!this._obsCache.has(key)) {
@@ -179,6 +181,20 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   ) {
     super();
   }
+  private normalizeTxnNo(v: any, maxLen = 6): string {
+  // 1) 轉字串 + trim
+  const s = String(v ?? '').trim();
+  if (!s) return '';
+
+  // 2) 只保留數字（把空白、-、字母等全去掉）
+  const digits = s.replace(/\D+/g, '');
+  if (!digits) return '';
+
+  // 3) 規格：你原本顯示用 6 碼（不足補 0）
+  //    若你想保留原長度就把 padStart 拿掉
+  return digits.padStart(maxLen, '0');
+}
+
 
   ngOnInit(): void {
     this.initializePage('TLS23010', 'tls/tls23010', this.queryForm, (form) => this.onSubmit(form));
@@ -222,7 +238,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     ecrs: any[]; cashiers: any[];
   }>;
 
-  // ========= 查詢（明細 / 彙總） =========
+
   // ========= 查詢（明細 / 彙總） =========
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -242,7 +258,10 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
         ...val,
         TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
         TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
+        
       };
+      payload.TXN_No_Start = this.normalizeTxnNo(payload.TXN_No_Start, 6) || undefined;
+payload.TXN_No_End   = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined; 
 
       // ✅ UI 狀態欄位不送後端
       delete payload.showSummary;
@@ -668,10 +687,10 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
       const totalAmt = this.getSum('TXN_TotSaleAmt');
       const totalTxn = this.getSum('TotalTxn');
       this.pdfSummary = [
-        `總金額合計 = ${Number(totalAmt || 0).toLocaleString()}`,
-        `總交易筆數合計 = ${Number(totalTxn || 0).toLocaleString()}`,
-        '=============================',
-        `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`,
+        // `總金額合計 = ${Number(totalAmt || 0).toLocaleString()}`,
+        // `總交易筆數合計 = ${Number(totalTxn || 0).toLocaleString()}`,
+        // '=============================',
+        // `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`,
       ];
       return;
     }
@@ -738,10 +757,10 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     };
   }
 
-  private padTxnNo(v: any): string {
-    const s = String(v ?? '').trim();
-    return s ? s.padStart(6, '0') : '';
-  }
+private padTxnNo(v: any): string {
+  return this.normalizeTxnNo(v, 6);
+}
+
 
   // ========= 欄位 =========
   columns = [
@@ -866,4 +885,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     });
     return out;
   }
+  get isSummaryMode(): boolean {
+  return !!this.queryForm.get('showSummary')?.value;
+}
 }

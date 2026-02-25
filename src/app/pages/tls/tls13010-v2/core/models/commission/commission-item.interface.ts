@@ -14,8 +14,9 @@ export interface CommissionItem {
   discountSummary: string;
   sst_amount: number;
   sst_rate: number;
-  cap_saletype2: boolean | string;
   cap_saletype1: boolean | string;
+  cap_saletype2: boolean | string;
+  cap_saletype3: boolean | string;
   cap_saletype5: boolean | string;
   selectedSettingOption: string;
   discountSettingItems: DiscountSettingItem[];
@@ -29,6 +30,7 @@ export interface CommissionItem {
   remark?: string;
   _hasError?: boolean;
   _hasValidationError?: boolean;
+  _errorFields?: string[];
   // 額外欄位 (用於表單綁定)
   charge_rate?: number;
   cag_bdate?: Date | string;
@@ -54,6 +56,7 @@ export interface DiscountSettingItem {
   _hasError?: boolean;
   _hasValidationError?: boolean;
   _hasDateOverlapError?: boolean;
+  _errorFields?: string[];
 }
 
 /**
@@ -70,6 +73,7 @@ export interface AnnualPerformanceItem {
   _hasError?: boolean;
   _hasValidationError?: boolean;
   _hasDateOverlapError?: boolean;
+  _errorFields?: string[];
 }
 
 /**
@@ -93,6 +97,7 @@ export interface DiscountLevelItem {
   is_enabled: boolean;
   _hasError?: boolean;
   _hasValidationError?: boolean;
+  _errorFields?: string[];
   _canDelete?: boolean;  // 是否可刪除（每個折扣至少保留一個層級）
 }
 
@@ -108,6 +113,7 @@ export interface CleanCommissionMaster {
   sst_rate?: number;
   cap_saletype1?: string;
   cap_saletype2?: string;
+  cap_saletype3?: string;
   cap_saletype5?: string;
   cag_bdate: string;
   cag_edate: string;

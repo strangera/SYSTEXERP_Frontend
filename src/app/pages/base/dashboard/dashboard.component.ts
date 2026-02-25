@@ -1,18 +1,33 @@
-import { Component, OnInit } from '@angular/core';
-import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { CommonModule, NgFor, NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Base64 } from 'js-base64';
+import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 // 引入 PrimeNG 相關元件
-import { CardModule } from 'primeng/card';
-import { BadgeModule } from 'primeng/badge';
-import { DividerModule } from 'primeng/divider';
-import { ButtonModule } from 'primeng/button'; // 如果未來需要按鈕，可以先引入
 import { SystemDataService } from '@service/system/system-data.service';
+import { BadgeModule } from 'primeng/badge';
+import { ButtonModule } from 'primeng/button'; // 如果未來需要按鈕，可以先引入
+import { CardModule } from 'primeng/card';
+import { DividerModule } from 'primeng/divider';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
+  styles: [`
+    :host ::ng-deep {
+  .p-text-word-break-all {
+    /* 針對內容中的所有圖片進行控制 */
+    img {
+      max-width: 300px;  /* 強制最大寬度為 300px */
+      width: 100%;       /* 在小螢幕下會自動縮小 */
+      height: auto !important; /* 維持比例，防止變形 */
+      display: block;    /* 防止圖片與文字排版錯亂 */
+      margin: 1rem 0;    /* 增加一點上下間距，讓排版更美觀 */
+      border-radius: 8px; /* 可選：讓公告圖片有一點圓角感 */
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* 可選：增加一點陰影 */
+    }
+  }
+}`],
   standalone: true,
   imports: [
     NgIf,

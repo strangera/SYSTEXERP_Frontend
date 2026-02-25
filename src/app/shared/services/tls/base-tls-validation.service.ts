@@ -42,7 +42,8 @@ export abstract class BaseTLSValidationService {
   updateAllValidators(form: FormGroup): void {
     this.updateFieldValidators(form);
     this.updatePaymentValidators(form);
-    this.updateDepositValidators(form);
+    // [暫時註解] 保證金驗證
+    // this.updateDepositValidators(form);
   }
 
   /**
@@ -60,7 +61,7 @@ export abstract class BaseTLSValidationService {
   }
 
   /**
-   * 包底類別驗證
+   * 包底類別驗證 (抽成別 4, 6 需要)
    */
   private updateBaodiValidators(form: FormGroup, tltTermType: string): void {
     const baodiControl = form.get('tlt_ctype_mtotal');
@@ -68,7 +69,7 @@ export abstract class BaseTLSValidationService {
 
     baodiControl.clearValidators();
 
-    if (['2', '4', '6'].includes(tltTermType)) {
+    if (['4', '6'].includes(tltTermType)) {
       baodiControl.setValidators([Validators.required]);
     }
 

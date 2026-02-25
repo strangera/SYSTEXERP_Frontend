@@ -168,6 +168,18 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS2D040', 'tls/tls2d040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
     this.setColumns('detail');
+
+    //當勾選「只顯示負值」時，自動設定狀況與類型
+    this.queryForm.get('ShowNeg1')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((checked) => {
+        if (checked) {
+          this.queryForm.patchValue({
+            status: '1',      // 彙總
+            report_type: '0'  // 依專櫃
+          }, { emitEvent: false });
+        }
+      });
   }
 
   loadOptions() {
@@ -243,10 +255,10 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           .subscribe(response => {
             this.setColumns('detail');
             this.data = response.Data.mainData;
-            this.footerData = [{
-              group_name: '合計',
-              tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
-            }];
+            this.footerData = response.Data.totalData.map((item: any) => ({
+              group_name: item.group_name,
+              tpy_namt: item.total_Amt
+            }));
             this.totalRecords = response.TotalCount;
             this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
           });
@@ -261,10 +273,10 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
               .subscribe(response => {
                 this.setColumns('0');
                 this.data = response.Data.mainData;
-                this.footerData = [{
-                  group_name: '合計',
-                  tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
-                }];
+                this.footerData = response.Data.totalData.map((item: any) => ({
+                  group_name: item.group_name,
+                  tpy_amt: item.total_Amt
+                }));
                 this.totalRecords = response.TotalCount;
                 this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
               });
@@ -276,10 +288,10 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
               .subscribe(response => {
                 this.setColumns('1');
                 this.data = response.Data.mainData;
-                this.footerData = [{
-                  group_name: '合計',
-                  tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
-                }];
+                this.footerData = response.Data.totalData.map((item: any) => ({
+                  group_name: item.group_name,
+                  tpy_amt: item.total_Amt
+                }));
                 this.totalRecords = response.TotalCount;
                 this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
               });
@@ -291,10 +303,10 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
               .subscribe(response => {
                 this.setColumns('2');
                 this.data = response.Data.mainData;
-                this.footerData = [{
-                  group_name: '合計',
-                  tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
-                }];
+                this.footerData = response.Data.totalData.map((item: any) => ({
+                  group_name: item.group_name,
+                  tpy_amt: item.total_Amt
+                }));
                 this.totalRecords = response.TotalCount;
                 this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
               }
@@ -307,10 +319,10 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
               .subscribe(response => {
                 this.setColumns('3');
                 this.data = response.Data.mainData;
-                this.footerData = [{
-                  group_name: '合計',
-                  tpy_namt: response.Data.totalData[0].tpy_namt_PayAmt
-                }];
+                this.footerData = response.Data.totalData.map((item: any) => ({
+                  group_name: item.group_name,
+                  tpy_amt: item.total_Amt
+                }));
                 this.totalRecords = response.TotalCount;
                 this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
               });
@@ -327,11 +339,12 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
         this.columns = [
           { field: 'tlt_no', header: '專櫃編號' },
           { field: 'tlt_name', header: '專櫃名稱' },
+          { field: 'contract_subno', header: '版次' },
           { field: 'ven_no', header: '廠商編號' },
           { field: 'VEN_Name', header: '廠商名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
           { field: 'GUI_FLAG', header: '是否開立發票' },
-          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
+          { field: 'tpy_amt', header: '扣款金額(含稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case '1': // 依扣款項目
@@ -340,7 +353,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'CAP_Name', header: '扣款名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
           { field: 'GUI_FLAG', header: '是否開立發票' },
-          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
+          { field: 'tpy_amt', header: '扣款金額(含稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case '2': // 依部門
@@ -351,7 +364,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'Org_Name', header: '組織名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
           { field: 'GUI_FLAG', header: '是否開立發票' },
-          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
+          { field: 'tpy_amt', header: '扣款金額(含稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case '3': // 依會計科目
@@ -362,13 +375,14 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'AccCName', header: '科目中文名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
           { field: 'GUI_FLAG', header: '是否開立發票' },
-          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
+          { field: 'tpy_amt', header: '扣款金額(含稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case 'detail': // 明細
         this.columns = [
           { field: 'tlt_no', header: '專櫃編號' },
           { field: 'tlt_name', header: '專櫃名稱' },
+          { field: 'contract_subno', header: '版次' },
           { field: 'source_type', header: '扣款來源', format: (value: any) => this.sourceTypeOptions.find(item => item.No === value)?.Name || value },
           { field: 'CAP_Item', header: '扣款代碼' },
           { field: 'CAP_Name', header: '扣款名稱' },
@@ -391,7 +405,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
       Array.isArray(val) ? val.filter(v => v !== '') : [];
 
     return {
-      PageSize: 0,
+      PageSize: 999999,
       PageIndex: 0,
       OrderBy: '',
       Offset: 0,

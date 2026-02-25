@@ -21,12 +21,10 @@
   </p-accordionTab>
 </p-accordion>
 <div class="card">
-  <app-table [tableKey]="'sysbr00'" dataKey="CITY_ID" [multiSortMeta]="[{ field: 'CITY_No', order: 1}]"
-    [columns]="columns" [data]="data" [loading]="loading" [showCheckBox]="true" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [showCheckBox]="true" (delete)="deleteRow($event)">
-    <header>
-
-    </header>
-  </app-table>
+  <app-table-report [tableKey]="'sysbr00'" dataKey="CITY_ID" [columns]="columns" [data]="data" [loading]="loading"
+    [showCheckBox]="true" (edit)="onEdit($event)" (detail)="onDetail($event)" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [showCheckBox]="true" (delete)="deleteRow($event)"
+    [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [lazy]="false" apiUrl="GetCity"
+    [queryFunction]="sysbr00Service.queryCitiesByCondition.bind(sysbr00Service)">
+  </app-table-report>
 </div>

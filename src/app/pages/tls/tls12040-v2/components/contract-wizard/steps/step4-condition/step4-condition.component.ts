@@ -1,14 +1,18 @@
-import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output, OnDestroy } from '@angular/core';
-import { TranslateModule } from '@ngx-translate/core';
+/**
+ * TLS12040-V2 Step 4: 條件設定
+ * 複用 TLS13010-V2 的服務
+ */
+import { NgIf, NgFor } from '@angular/common';
+import { Component, EventEmitter, Input, OnInit, Output, OnChanges, SimpleChanges, inject, ChangeDetectorRef } from '@angular/core';
 import { AccordionModule } from 'primeng/accordion';
-import { DialogModule } from 'primeng/dialog';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { ButtonModule } from 'primeng/button';
 
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { ExpandableEditTableComponent, ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 
+// 使用 TLS13010-V2 的常數、模型、服務
+import { CommissionType, CommissionTypeLabels } from '../../../../../tls13010-v2/core/constants';
 import {
   ConditionItem,
   FixedRentCondition,
@@ -16,35 +20,79 @@ import {
   BaseCommissionCondition,
   GraduatedCommissionCondition,
   BaseTierCondition
-} from '../../../../core/models/condition/condition-types.interface';
-import { ContractInfo } from '../../../../core/models/contract/contract-info.interface';
-import { CommissionType } from '../../../../core';
-import { Subscription } from 'rxjs';
+} from '../../../../../tls13010-v2/core/models/condition';
+import { ConditionTableConfigService } from '../../../../../tls13010-v2/services/condition/condition-table-config.service';
+import { ConditionDataManagerService } from '../../../../../tls13010-v2/services/condition/condition-data-manager.service';
 
-interface TableConfiguration {
+/**
+ * 表格配置介面
+ */
+export interface TableConfiguration {
   commissionType: string;
   title: string;
-  dataProperty: keyof ConditionData;
-  columnsProperty: keyof ColumnData;
+  dataProperty: string;
+  displayDataProperty: string;
+  columnsProperty: string;
+  addMethod: string;
   emptyMessage: string;
   visible: boolean;
 }
 
-interface ConditionData {
-  fixedRentItems: FixedRentCondition[];
-  baseRentHigherItems: BaseRentHigherCondition[];
-  baseCommissionItems: BaseCommissionCondition[];
-  graduatedItems: GraduatedCommissionCondition[];
-  baseTierItems: BaseTierCondition[];
-}
-
-interface ColumnData {
-  fixedRentColumns: ColumnDef[];
-  baseRentHigherColumns: ColumnDef[];
-  baseCommissionColumns: ColumnDef[];
-  graduatedColumns: ColumnDef[];
-  baseTierColumns: ColumnDef[];
-}
+/**
+ * 表格配置常數
+ */
+export const TABLE_CONFIGURATIONS: TableConfiguration[] = [
+  {
+    commissionType: '1',
+    title: '固定租金',
+    dataProperty: 'fixedRentItems',
+    displayDataProperty: 'displayFixedRentItems',
+    columnsProperty: 'fixedRentColumns',
+    addMethod: 'onAddFixedRentItem',
+    emptyMessage: '尚未設定固定租金項目',
+    visible: true
+  },
+  {
+    commissionType: '2',
+    title: '底租抽成取高者',
+    dataProperty: 'baseRentHigherItems',
+    displayDataProperty: 'displayBaseRentHigherItems',
+    columnsProperty: 'baseRentHigherColumns',
+    addMethod: 'onAddBaseRentHigherItem',
+    emptyMessage: '尚未設定底租抽成取高者項目',
+    visible: true
+  },
+  {
+    commissionType: '4',
+    title: '包底抽成',
+    dataProperty: 'baseCommissionItems',
+    displayDataProperty: 'displayBaseCommissionItems',
+    columnsProperty: 'baseCommissionColumns',
+    addMethod: 'onAddBaseCommissionItem',
+    emptyMessage: '尚未設定包底抽成項目',
+    visible: true
+  },
+  {
+    commissionType: '5',
+    title: '層級抽成',
+    dataProperty: 'graduatedItems',
+    displayDataProperty: 'displayGraduatedItems',
+    columnsProperty: 'graduatedColumns',
+    addMethod: 'onAddGraduatedItem',
+    emptyMessage: '尚未設定層級抽成項目',
+    visible: true
+  },
+  {
+    commissionType: '6',
+    title: '包底加層級',
+    dataProperty: 'baseTierItems',
+    displayDataProperty: 'displayBaseTierItems',
+    columnsProperty: 'baseTierColumns',
+    addMethod: 'onAddBaseTierItem',
+    emptyMessage: '尚未設定包底加層級項目',
+    visible: true
+  }
+];
 
 @Component({
   selector: 'app-step4-condition',
@@ -52,424 +100,424 @@ interface ColumnData {
   styleUrls: ['./step4-condition.component.scss'],
   standalone: true,
   imports: [
-    CommonModule,
-    TranslateModule,
+    NgIf, NgFor,
     AccordionModule,
-    DialogModule,
     ProgressSpinnerModule,
-    ButtonModule,
-    ButtonComponent,
     ExpandableEditTableComponent
   ]
 })
-export class Step4ConditionComponent implements OnInit, OnDestroy {
+export class Step4ConditionComponent implements OnInit, OnChanges {
+  // === 服務注入 ===
+  private tableConfigService = inject(ConditionTableConfigService);
+  private dataManagerService = inject(ConditionDataManagerService);
+  private messageService = inject(NotificationService);
+  private cdr = inject(ChangeDetectorRef);
+
+  // === 輸入屬性 ===
   @Input() conditionItems: ConditionItem[] = [];
-  @Input() contractInfo: ContractInfo | null = null;
   @Input() commissionType: string = '';
-  @Input() isViewMode = false;
+  @Input() crudstatus: CRUDStatus = CRUDStatus.Create;
+  @Input() talentId: string = '';
+  @Input() contractStartDate: string = '';
+  @Input() contractEndDate: string = '';
+  @Input() contractInfoData: any[] = [];
+  @Input() isViewMode = false;  // 保留向後相容
+  @Input() loading = false;
 
-  @Output() dataChange = new EventEmitter<ConditionItem[]>();
+  // === 輸出事件 ===
+  @Output() conditionItemsChange = new EventEmitter<ConditionItem[]>();
+  @Output() dataChange = new EventEmitter<ConditionItem[]>();  // 保留向後相容
 
-  private subscriptions: Subscription[] = [];
+  // === 常數 ===
+  readonly CRUDStatus = CRUDStatus;
+  readonly CommissionType = CommissionType;
 
-  // 表格配置
-  tableConfigurations: TableConfiguration[] = [
-    {
-      commissionType: '1',
-      title: '固定租金',
-      dataProperty: 'fixedRentItems',
-      columnsProperty: 'fixedRentColumns',
-      emptyMessage: '尚未設定固定租金項目',
-      visible: false
-    },
-    {
-      commissionType: '2',
-      title: '底租抽成取高者',
-      dataProperty: 'baseRentHigherItems',
-      columnsProperty: 'baseRentHigherColumns',
-      emptyMessage: '尚未設定底租抽成取高者項目',
-      visible: false
-    },
-    {
-      commissionType: '4',
-      title: '包底抽成',
-      dataProperty: 'baseCommissionItems',
-      columnsProperty: 'baseCommissionColumns',
-      emptyMessage: '尚未設定包底抽成項目',
-      visible: false
-    },
-    {
-      commissionType: '5',
-      title: '層級抽成',
-      dataProperty: 'graduatedItems',
-      columnsProperty: 'graduatedColumns',
-      emptyMessage: '尚未設定層級抽成項目',
-      visible: false
-    },
-    {
-      commissionType: '6',
-      title: '包底加層級',
-      dataProperty: 'baseTierItems',
-      columnsProperty: 'baseTierColumns',
-      emptyMessage: '尚未設定包底加層級項目',
-      visible: false
-    }
-  ];
+  // === 表格配置 ===
+  tableConfigurations: TableConfiguration[] = TABLE_CONFIGURATIONS;
 
-  // 條件資料
-  conditionData: ConditionData = {
-    fixedRentItems: [],
-    baseRentHigherItems: [],
-    baseCommissionItems: [],
-    graduatedItems: [],
-    baseTierItems: []
-  };
+  // === 條件數據 ===
+  fixedRentItems: FixedRentCondition[] = [];
+  baseRentHigherItems: BaseRentHigherCondition[] = [];
+  baseCommissionItems: BaseCommissionCondition[] = [];
+  graduatedItems: GraduatedCommissionCondition[] = [];
+  baseTierItems: BaseTierCondition[] = [];
 
-  // 欄位定義
-  columnData: ColumnData = {
-    fixedRentColumns: [],
-    baseRentHigherColumns: [],
-    baseCommissionColumns: [],
-    graduatedColumns: [],
-    baseTierColumns: []
-  };
+  // === 表格欄位配置 ===
+  contractInfoColumns: ColumnDef[] = [];
+  fixedRentColumns: ColumnDef[] = [];
+  baseRentHigherColumns: ColumnDef[] = [];
+  baseCommissionColumns: ColumnDef[] = [];
+  graduatedColumns: ColumnDef[] = [];
+  baseTierColumns: ColumnDef[] = [];
 
-  // 合約資訊顯示
-  contractInfoData: any[] = [];
-  contractInfoColumns: ColumnDef[] = [
-    { field: 'apply_no', header: '專櫃招募編號', type: 'text', editable: false },
-    { field: 'tlt_no', header: '專櫃編號', type: 'text', editable: false },
-    { field: 'tlt_name', header: '櫃位名稱', type: 'text', editable: false },
-    { field: 'VEN_Name', header: '廠商名稱', type: 'text', editable: false },
-    { field: 'tlt_term_type_desc', header: '抽成別', type: 'text', editable: false },
-    { field: 'tlt_bdate', header: '契約起始日', type: 'text', editable: false },
-    { field: 'tlt_edate', header: '契約截止日', type: 'text', editable: false }
-  ];
-
-  // 狀態
-  loading = false;
-  showConfirmDialog = false;
-
-  constructor() {
-    this.initializeColumnDefinitions();
+  // === Getters: 顯示用資料（過濾已刪除項目）===
+  get displayFixedRentItems(): FixedRentCondition[] {
+    return this.dataManagerService.filterDisplayItems(this.fixedRentItems);
   }
 
+  get displayBaseRentHigherItems(): BaseRentHigherCondition[] {
+    return this.dataManagerService.filterDisplayItems(this.baseRentHigherItems);
+  }
+
+  get displayBaseCommissionItems(): BaseCommissionCondition[] {
+    return this.dataManagerService.filterDisplayItems(this.baseCommissionItems);
+  }
+
+  get displayGraduatedItems(): GraduatedCommissionCondition[] {
+    return this.dataManagerService.filterDisplayItems(this.graduatedItems);
+  }
+
+  get displayBaseTierItems(): BaseTierCondition[] {
+    return this.dataManagerService.filterDisplayItems(this.baseTierItems);
+  }
+
+  get isFormReadonly(): boolean {
+    return this.crudstatus === CRUDStatus.Read || this.isViewMode;
+  }
+
+  // === 生命週期 ===
   ngOnInit(): void {
-    this.updateVisibleTables();
-    this.updateContractInfoDisplay();
-    this.groupConditionItems();
+    this.initializeTableConfigs();
+    this.categorizeConditionItems();
+    this.initializeIfEmpty();
   }
 
-  ngOnDestroy(): void {
-    this.subscriptions.forEach(sub => sub.unsubscribe());
-  }
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['conditionItems']?.firstChange || changes['commissionType']) {
+      this.categorizeConditionItems();
+      this.initializeIfEmpty();
+    }
 
-  /**
-   * 初始化欄位定義
-   */
-  private initializeColumnDefinitions(): void {
-    // 固定租金欄位
-    this.columnData.fixedRentColumns = [
-      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true, style: 'width: 25%' },
-      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true, style: 'width: 25%' },
-      { field: 'rent_amount', header: '租金金額', type: 'number', editable: true, style: 'width: 25%' },
-      { field: 'cag_remark', header: '備註', type: 'text', editable: true, style: 'width: 25%' }
-    ];
-
-    // 底租抽成取高者欄位
-    this.columnData.baseRentHigherColumns = [
-      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true, style: 'width: 20%' },
-      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true, style: 'width: 20%' },
-      { field: 'base_rent', header: '底租金額', type: 'number', editable: true, style: 'width: 20%' },
-      { field: 'comm_rate', header: '抽成比例(%)', type: 'number', editable: true, style: 'width: 20%' },
-      { field: 'cag_remark', header: '備註', type: 'text', editable: true, style: 'width: 20%' }
-    ];
-
-    // 包底抽成欄位
-    this.columnData.baseCommissionColumns = [
-      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true, style: 'width: 20%' },
-      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true, style: 'width: 20%' },
-      { field: 'base_amount', header: '包底金額', type: 'number', editable: true, style: 'width: 20%' },
-      { field: 'comm_rate', header: '抽成比例(%)', type: 'number', editable: true, style: 'width: 20%' },
-      { field: 'cag_remark', header: '備註', type: 'text', editable: true, style: 'width: 20%' }
-    ];
-
-    // 層級抽成欄位
-    this.columnData.graduatedColumns = [
-      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true, style: 'width: 14%' },
-      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true, style: 'width: 14%' },
-      { field: 'level_no', header: '層級', type: 'number', editable: false, style: 'width: 14%' },
-      { field: 'level_bamt', header: '起始金額', type: 'number', editable: true, style: 'width: 14%' },
-      { field: 'level_eamt', header: '結束金額', type: 'number', editable: true, style: 'width: 14%' },
-      { field: 'comm_rate', header: '抽成比例(%)', type: 'number', editable: true, style: 'width: 14%' },
-      { field: 'cag_remark', header: '備註', type: 'text', editable: true, style: 'width: 14%' }
-    ];
-
-    // 包底加層級欄位
-    this.columnData.baseTierColumns = [
-      { field: 'cag_bdate', header: '開始日期', type: 'date', editable: true, style: 'width: 12%' },
-      { field: 'cag_edate', header: '結束日期', type: 'date', editable: true, style: 'width: 12%' },
-      { field: 'base_amount', header: '包底金額', type: 'number', editable: true, style: 'width: 12%' },
-      { field: 'level_no', header: '層級', type: 'number', editable: false, style: 'width: 12%' },
-      { field: 'level_bamt', header: '起始金額', type: 'number', editable: true, style: 'width: 12%' },
-      { field: 'level_eamt', header: '結束金額', type: 'number', editable: true, style: 'width: 12%' },
-      { field: 'comm_rate', header: '抽成比例(%)', type: 'number', editable: true, style: 'width: 12%' },
-      { field: 'cag_remark', header: '備註', type: 'text', editable: true, style: 'width: 12%' }
-    ];
-  }
-
-  /**
-   * 更新顯示的表格
-   */
-  private updateVisibleTables(): void {
-    this.tableConfigurations.forEach(config => {
-      config.visible = config.commissionType === this.commissionType;
-    });
-  }
-
-  /**
-   * 更新合約資訊顯示
-   */
-  private updateContractInfoDisplay(): void {
-    if (this.contractInfo) {
-      this.contractInfoData = [{
-        ...this.contractInfo,
-        tlt_term_type_desc: this.getCommissionTypeDesc(this.contractInfo.tlt_term_type || '')
-      }];
+    if (changes['contractStartDate'] || changes['contractEndDate']) {
+      this.syncNewItemsDates();
     }
   }
 
-  /**
-   * 取得抽成別描述
-   */
-  private getCommissionTypeDesc(type: string): string {
-    const typeMap: { [key: string]: string } = {
-      '1': '固定租金',
-      '2': '底抽取高',
-      '3': '一般抽成',
-      '4': '底抽',
-      '5': '級距抽成',
-      '6': '底抽加層級'
-    };
-    return typeMap[type] || type;
+  // === 初始化方法 ===
+  private initializeTableConfigs(): void {
+    this.contractInfoColumns = this.tableConfigService.getContractInfoColumns();
+    this.fixedRentColumns = this.tableConfigService.getFixedRentColumns();
+    this.baseRentHigherColumns = this.tableConfigService.getBaseRentHigherColumns();
+    this.baseCommissionColumns = this.tableConfigService.getBaseCommissionColumns();
+    this.graduatedColumns = this.tableConfigService.getGraduatedColumns();
+    this.baseTierColumns = this.tableConfigService.getBaseTierColumns();
   }
 
   /**
-   * 取得當前抽成類型名稱
+   * 根據 commissionType 直接分配條件項目到對應的陣列
+   * 不使用 property 偵測（避免 limit_amt 等多餘欄位導致誤判）
    */
-  getCurrentCommissionTypeName(): string {
-    return this.getCommissionTypeDesc(this.commissionType);
-  }
+  private categorizeConditionItems(): void {
+    // 先清空所有陣列
+    this.fixedRentItems = [];
+    this.baseRentHigherItems = [];
+    this.baseCommissionItems = [];
+    this.graduatedItems = [];
+    this.baseTierItems = [];
 
-  /**
-   * 依抽成類型分組條件項目
-   */
-  private groupConditionItems(): void {
-    // 清空資料
-    this.conditionData = {
-      fixedRentItems: [],
-      baseRentHigherItems: [],
-      baseCommissionItems: [],
-      graduatedItems: [],
-      baseTierItems: []
-    };
+    if (!this.conditionItems?.length) return;
 
-    // 根據抽成類型分組
-    this.conditionItems.forEach(item => {
-      const conditionType = item.condition_type || this.commissionType;
+    // 補上 _status 預設值
+    const items = this.conditionItems.map(item => ({
+      ...item,
+      _status: item._status || 'original'
+    }));
 
-      switch (conditionType) {
-        case '1':
-          this.conditionData.fixedRentItems.push(item as FixedRentCondition);
-          break;
-        case '2':
-          this.conditionData.baseRentHigherItems.push(item as BaseRentHigherCondition);
-          break;
-        case '4':
-          this.conditionData.baseCommissionItems.push(item as BaseCommissionCondition);
-          break;
-        case '5':
-          this.conditionData.graduatedItems.push(item as GraduatedCommissionCondition);
-          break;
-        case '6':
-          this.conditionData.baseTierItems.push(item as BaseTierCondition);
-          break;
-      }
-    });
-  }
-
-  /**
-   * 取得可見的表格配置
-   */
-  getVisibleTableConfigurations(): TableConfiguration[] {
-    return this.tableConfigurations.filter(config => config.visible);
-  }
-
-  /**
-   * 取得表格資料
-   */
-  getTableData(tableConfig: TableConfiguration): any[] {
-    const data = this.conditionData[tableConfig.dataProperty] as any[];
-    return data.filter(item => item._status !== 'deleted');
-  }
-
-  /**
-   * 取得表格欄位
-   */
-  getTableColumns(tableConfig: TableConfiguration): ColumnDef[] {
-    return this.columnData[tableConfig.columnsProperty];
-  }
-
-  /**
-   * 取得表格設定
-   */
-  getTableSetting(tableConfig: TableConfiguration, settingName: string): boolean {
-    if (settingName === 'readonly') {
-      return this.isViewMode;
-    }
-    if (settingName === 'forceEditMode') {
-      return !this.isViewMode;
-    }
-    return true;
-  }
-
-  /**
-   * 是否顯示不支援類型訊息
-   */
-  shouldShowUnsupportedTypeMessage(): boolean {
-    // 抽成別 '3' (一般抽成) 不需要條件設定
-    if (this.commissionType === CommissionType.GeneralCommission) {
-      return false;
-    }
-
-    const supportedTypes = ['1', '2', '4', '5', '6'];
-    return !supportedTypes.includes(this.commissionType);
-  }
-
-  /**
-   * 新增項目
-   */
-  onAddItem(tableConfig: TableConfiguration): void {
-    const newItem: ConditionItem = {
-      id: `temp_${Date.now()}`,
-      apply_no: this.contractInfo?.apply_no || '',
-      condition_type: tableConfig.commissionType,
-      cag_bdate: this.contractInfo?.tlt_contract_bdate || '',
-      cag_edate: this.contractInfo?.tlt_contract_edate || '',
-      _status: 'new'
-    };
-
-    // 根據類型添加額外欄位
-    switch (tableConfig.commissionType) {
-      case '1':
-        (newItem as FixedRentCondition).base_rent = 0;
-        this.conditionData.fixedRentItems.push(newItem as FixedRentCondition);
+    switch (this.commissionType) {
+      case CommissionType.FIXED_RENT:       // '1'
+        this.fixedRentItems = items as any[];
         break;
-      case '2':
-        (newItem as BaseRentHigherCondition).base_rent = 0;
-        (newItem as BaseRentHigherCondition).cag_charge_rate = 0;
-        this.conditionData.baseRentHigherItems.push(newItem as BaseRentHigherCondition);
+      case CommissionType.BASE_RENT_HIGHER: // '2'
+        this.baseRentHigherItems = items as any[];
         break;
-      case '4':
-        (newItem as BaseCommissionCondition).limit_amt = 0;
-        (newItem as BaseCommissionCondition).limit_charge_rate = 0;
-        this.conditionData.baseCommissionItems.push(newItem as BaseCommissionCondition);
+      case CommissionType.BASE_COMMISSION:  // '4'
+        this.baseCommissionItems = items as any[];
         break;
-      case '5':
-        (newItem as GraduatedCommissionCondition).seq_no = this.conditionData.graduatedItems.length + 1;
-        (newItem as GraduatedCommissionCondition).start_number = 0;
-        (newItem as GraduatedCommissionCondition).end_number = 0;
-        (newItem as GraduatedCommissionCondition).charge_rate = 0;
-        this.conditionData.graduatedItems.push(newItem as GraduatedCommissionCondition);
+      case CommissionType.GRADUATED:        // '5'
+        this.graduatedItems = items as any[];
         break;
-      case '6':
-        (newItem as BaseTierCondition).limit_amt = 0;
-        (newItem as BaseTierCondition).seq_no = this.conditionData.baseTierItems.length + 1;
-        (newItem as BaseTierCondition).start_number = 0;
-        (newItem as BaseTierCondition).end_number = 0;
-        (newItem as BaseTierCondition).charge_rate = 0;
-        this.conditionData.baseTierItems.push(newItem as BaseTierCondition);
+      case CommissionType.BASE_TIER:        // '6'
+        this.baseTierItems = items as any[];
         break;
     }
-
-    this.conditionItems.push(newItem);
-    this.emitDataChange();
   }
 
-  /**
-   * 表格欄位變更
-   */
-  onTableFieldChange(event: any, commissionType: string): void {
-    const { fieldName, newValue, rowData } = event;
-    const item = this.conditionItems.find(i => i.id === rowData.id);
-    if (item) {
-      (item as any)[fieldName] = newValue;
-      if (item._status !== 'new') {
-        item._status = 'modified';
-      }
-      this.emitDataChange();
+  private initializeIfEmpty(): void {
+    if (this.isFormReadonly) return;
+
+    const hasData = this.getCurrentTypeItemCount() > 0;
+    if (!hasData && this.requiresCondition()) {
+      this.addInitialItem();
     }
   }
 
-  /**
-   * 表格儲存
-   */
-  onTableSave(event: any, commissionType: string): void {
-    const { row } = event;
-    const item = this.conditionItems.find(i => i.id === row.id);
-    if (item && item._status !== 'new') {
-      item._status = 'modified';
+  private requiresCondition(): boolean {
+    return this.commissionType !== '' &&
+           this.commissionType !== CommissionType.GENERAL_COMMISSION;
+  }
+
+  private getCurrentTypeItemCount(): number {
+    switch (this.commissionType) {
+      case CommissionType.FIXED_RENT: return this.displayFixedRentItems.length;
+      case CommissionType.BASE_RENT_HIGHER: return this.displayBaseRentHigherItems.length;
+      case CommissionType.BASE_COMMISSION: return this.displayBaseCommissionItems.length;
+      case CommissionType.GRADUATED: return this.displayGraduatedItems.length;
+      case CommissionType.BASE_TIER: return this.displayBaseTierItems.length;
+      default: return 0;
     }
-    this.emitDataChange();
   }
 
-  /**
-   * 表格編輯
-   */
-  onTableEdit(event: any, commissionType: string): void {
-    // 編輯模式進入
+  private addInitialItem(): void {
+    switch (this.commissionType) {
+      case CommissionType.FIXED_RENT: this.onAddFixedRentItem(); break;
+      case CommissionType.BASE_RENT_HIGHER: this.onAddBaseRentHigherItem(); break;
+      case CommissionType.BASE_COMMISSION: this.onAddBaseCommissionItem(); break;
+      case CommissionType.GRADUATED: this.onAddGraduatedItem(); break;
+      case CommissionType.BASE_TIER: this.onAddBaseTierItem(); break;
+    }
   }
 
-  /**
-   * 表格取消
-   */
-  onTableCancel(event: any, commissionType: string): void {
-    this.groupConditionItems();
-  }
+  private syncNewItemsDates(): void {
+    if (!this.contractStartDate || !this.contractEndDate) return;
 
-  /**
-   * 批次刪除
-   */
-  onBatchDelete(items: any[], commissionType: string): void {
-    items.forEach(item => {
-      const conditionItem = this.conditionItems.find(i => i.id === item.id);
-      if (conditionItem) {
-        if (conditionItem._status === 'new') {
-          const index = this.conditionItems.indexOf(conditionItem);
-          this.conditionItems.splice(index, 1);
-        } else {
-          conditionItem._status = 'deleted';
+    const syncItems = (items: ConditionItem[]) => {
+      items.forEach(item => {
+        if (item._status === 'new') {
+          item.cag_bdate = this.contractStartDate;
+          item.cag_edate = this.contractEndDate;
         }
-      }
-    });
-    this.groupConditionItems();
-    this.emitDataChange();
+      });
+    };
+
+    syncItems(this.fixedRentItems);
+    syncItems(this.baseRentHigherItems);
+    syncItems(this.baseCommissionItems);
+    syncItems(this.graduatedItems);
+    syncItems(this.baseTierItems);
+
+    this.emitConditionItemsChange();
   }
 
-  /**
-   * 呼叫表格方法（用於動態呼叫）
-   */
+  // === 表格配置方法 ===
+  getVisibleTableConfigurations(): TableConfiguration[] {
+    return this.tableConfigurations.filter(config =>
+      config.commissionType === this.commissionType && config.visible
+    );
+  }
+
+  getTableData(tableConfig: TableConfiguration): any[] {
+    return this[tableConfig.displayDataProperty as keyof this] as any[];
+  }
+
+  getTableColumns(tableConfig: TableConfiguration): ColumnDef[] {
+    return this[tableConfig.columnsProperty as keyof this] as ColumnDef[];
+  }
+
   callTableMethod(methodName: string): void {
-    const config = this.getVisibleTableConfigurations()[0];
-    if (config) {
-      this.onAddItem(config);
+    if (typeof this[methodName as keyof this] === 'function') {
+      (this[methodName as keyof this] as Function)();
     }
   }
 
-  /**
-   * 發送資料變更事件
-   */
-  private emitDataChange(): void {
-    this.dataChange.emit([...this.conditionItems]);
+  // === 新增項目方法 ===
+  private readonly DATE_FULL_MSG = '已超過契約截止日，無法再新增項目';
+
+  onAddFixedRentItem(): void {
+    if (this.isFormReadonly) return;
+
+    const newItem = this.dataManagerService.createConditionItem(
+      CommissionType.FIXED_RENT,
+      this.talentId,
+      this.contractStartDate,
+      this.contractEndDate,
+      this.fixedRentItems
+    );
+
+    if (newItem) {
+      this.fixedRentItems = [...this.fixedRentItems, newItem as FixedRentCondition];
+      this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
+    }
+  }
+
+  onAddBaseRentHigherItem(): void {
+    if (this.isFormReadonly) return;
+
+    const newItem = this.dataManagerService.createConditionItem(
+      CommissionType.BASE_RENT_HIGHER,
+      this.talentId,
+      this.contractStartDate,
+      this.contractEndDate,
+      this.baseRentHigherItems
+    );
+
+    if (newItem) {
+      this.baseRentHigherItems = [...this.baseRentHigherItems, newItem as BaseRentHigherCondition];
+      this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
+    }
+  }
+
+  onAddBaseCommissionItem(): void {
+    if (this.isFormReadonly) return;
+
+    const newItem = this.dataManagerService.createConditionItem(
+      CommissionType.BASE_COMMISSION,
+      this.talentId,
+      this.contractStartDate,
+      this.contractEndDate,
+      this.baseCommissionItems
+    );
+
+    if (newItem) {
+      this.baseCommissionItems = [...this.baseCommissionItems, newItem as BaseCommissionCondition];
+      this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
+    }
+  }
+
+  onAddGraduatedItem(): void {
+    if (this.isFormReadonly) return;
+
+    const newItem = this.dataManagerService.createConditionItem(
+      CommissionType.GRADUATED,
+      this.talentId,
+      this.contractStartDate,
+      this.contractEndDate,
+      this.graduatedItems
+    );
+
+    if (newItem) {
+      this.graduatedItems = [...this.graduatedItems, newItem as GraduatedCommissionCondition];
+      this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
+    }
+  }
+
+  onAddBaseTierItem(): void {
+    if (this.isFormReadonly) return;
+
+    const newItem = this.dataManagerService.createConditionItem(
+      CommissionType.BASE_TIER,
+      this.talentId,
+      this.contractStartDate,
+      this.contractEndDate,
+      this.baseTierItems
+    );
+
+    if (newItem) {
+      this.baseTierItems = [...this.baseTierItems, newItem as BaseTierCondition];
+      this.emitConditionItemsChange();
+    } else {
+      this.messageService.warnBubble(this.DATE_FULL_MSG);
+    }
+  }
+
+  // === 表格事件處理 ===
+  onTableSave(event: any, commissionType: string): void {
+    if (this.isFormReadonly) return;
+
+    const { newData } = event;
+    if (newData) {
+      if (newData._status !== 'new' && newData._status !== 'deleted') {
+        newData._status = 'modified';
+      }
+      this.updateLocalDataArray(commissionType, newData);
+      this.emitConditionItemsChange();
+    }
+  }
+
+  onTableEdit(event: any, commissionType: string): boolean {
+    return !this.isFormReadonly;
+  }
+
+  onTableCancel(event: any, commissionType: string): void {
+    // 取消編輯，不需要特別處理
+  }
+
+  onBatchDelete(selectedItems: any[], commissionType: string): void {
+    if (this.isFormReadonly) return;
+
+    selectedItems.forEach(item => {
+      if (item._status === 'new') {
+        this.removeItemFromArray(item, commissionType);
+      } else {
+        item._status = 'deleted';
+      }
+    });
+
+    this.emitConditionItemsChange();
+    this.cdr.detectChanges();
+  }
+
+  onTableFieldChange(event: any, commissionType: string): void {
+    const { rowData } = event;
+
+    if (rowData) {
+      if (rowData._status !== 'new' && rowData._status !== 'deleted') {
+        rowData._status = 'modified';
+      }
+      this.updateLocalDataArray(commissionType, rowData);
+      this.emitConditionItemsChange();
+    }
+  }
+
+  // === 輔助方法 ===
+  private updateLocalDataArray(commissionType: string, modifiedData: any): void {
+    const dataId = modifiedData.id;
+
+    switch (commissionType) {
+      case '1': this.updateItemInArray(this.fixedRentItems, dataId, modifiedData); break;
+      case '2': this.updateItemInArray(this.baseRentHigherItems, dataId, modifiedData); break;
+      case '4': this.updateItemInArray(this.baseCommissionItems, dataId, modifiedData); break;
+      case '5': this.updateItemInArray(this.graduatedItems, dataId, modifiedData); break;
+      case '6': this.updateItemInArray(this.baseTierItems, dataId, modifiedData); break;
+    }
+  }
+
+  private updateItemInArray(array: any[], itemId: string, newData: any): void {
+    const index = array.findIndex(item => item.id === itemId);
+    if (index > -1) {
+      array[index] = { ...newData };
+    }
+  }
+
+  private removeItemFromArray(item: any, commissionType: string): void {
+    switch (commissionType) {
+      case '1': this.fixedRentItems = this.fixedRentItems.filter(x => x.id !== item.id); break;
+      case '2': this.baseRentHigherItems = this.baseRentHigherItems.filter(x => x.id !== item.id); break;
+      case '4': this.baseCommissionItems = this.baseCommissionItems.filter(x => x.id !== item.id); break;
+      case '5': this.graduatedItems = this.graduatedItems.filter(x => x.id !== item.id); break;
+      case '6': this.baseTierItems = this.baseTierItems.filter(x => x.id !== item.id); break;
+    }
+  }
+
+  private emitConditionItemsChange(): void {
+    const allItems: ConditionItem[] = [
+      ...this.fixedRentItems,
+      ...this.baseRentHigherItems,
+      ...this.baseCommissionItems,
+      ...this.graduatedItems,
+      ...this.baseTierItems
+    ];
+
+    this.conditionItemsChange.emit(allItems);
+    this.dataChange.emit(allItems);  // 向後相容
+  }
+
+  // === 輔助 getter ===
+  shouldShowUnsupportedTypeMessage(): boolean {
+    if (!this.commissionType) return false;
+    if (this.commissionType === CommissionType.GENERAL_COMMISSION) return false;
+    const visibleConfigs = this.getVisibleTableConfigurations();
+    return visibleConfigs.length === 0 && !!this.commissionType;
+  }
+
+  getCurrentCommissionTypeName(): string {
+    return this.tableConfigService.getCommissionTypeName(this.commissionType);
   }
 }

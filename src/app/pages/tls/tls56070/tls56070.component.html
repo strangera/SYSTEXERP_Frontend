@@ -55,20 +55,21 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="DAM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords" [showCheckBox]="true"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [editDisabled]="editDisabled">
+  <app-table-report dataKey="DAM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    [lastQueryBody]="lastQuery" [queryFunction]="tls56070Service.queryTLS56070.bind(tls56070Service)"
+    (detail)="onDetail($event)" [totalRecords]="totalRecords" [showCheckBox]="true" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [showDelete]="false" [loading]="loading" [editDisabled]="editDisabled"
+    [isRowSelectable]="isRowSelectable">
     <header>
       <div class="flex justify-content-end gap-2">
-        <p-button styleClass="p-2 p-button-success" label="審核" [loading]="btnLoading()"
-          icon="fa-regular fa-square-check" (click)="batchUpdateStatus('2')"
-          [disabled]="selectedItems.length === 0 || checkStatus('1')" [loading]="btnLoading()"></p-button>
-        <p-button styleClass="p-2 p-button-danger" label="報廢" [loading]="btnLoading()" icon="pi pi-trash"
-          (click)="batchUpdateStatus('3')" [disabled]="selectedItems.length === 0 || checkStatus('2')"
-          [loading]="btnLoading()"></p-button>
+        <p-button styleClass="p-2 p-button-success" label="審核" icon="fa-regular fa-square-check"
+          (click)="batchUpdateStatus('2')" [disabled]="!canExecuteAction('1')" [loading]="btnLoading()">
+        </p-button>
+
+        <p-button styleClass="p-2 p-button-danger" label="報廢" icon="pi pi-trash" (click)="batchUpdateStatus('3')"
+          [disabled]="!canExecuteAction('2')" [loading]="btnLoading()">
+        </p-button>
       </div>
     </header>
-  </app-table>
+  </app-table-report>
 </div>

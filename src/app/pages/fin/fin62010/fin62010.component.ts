@@ -73,13 +73,19 @@ export class FIN62010Component extends BasicQueryPageComponent<QueryFIN62010Resp
     });
   }
   onDelete(selectedRows: QueryFIN62010Response[]) {
-    const idList = selectedRows.map(row => row.ID);
-    this.loading = true;
-    this.fin62010Service.deleteFIN62010({ IdList: idList }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-      this.onSubmit(this.queryForm);
-      this.selectedItems = [];
-      this.messageService.successBubble(res.Message);
-    });
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: `是否刪除${selectedRows.length}筆已選擇項目?`,
+      accept: () => {
+        const idList = selectedRows.map(row => row.ID);
+        this.loading = true;
+        this.fin62010Service.deleteFIN62010({ IdList: idList }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+          this.onSubmit(this.queryForm);
+          this.selectedItems = [];
+          this.messageService.successBubble(res.Message);
+        });
+      }
+    })
   }
   isRowSelectable(row: QueryFIN62010Response): boolean {
     return row.Tran_Status !== '2';

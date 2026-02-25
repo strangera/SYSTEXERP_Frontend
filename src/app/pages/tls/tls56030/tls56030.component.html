@@ -56,5 +56,6 @@
   <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords"
     [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
-    [loading]="loading" [showDelete]="false"></app-table>
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
+    [rows]="30" [loading]="loading" [showDelete]="false" [editDisabled]="isEditDisabled.bind(this)"></app-table>
 </div>

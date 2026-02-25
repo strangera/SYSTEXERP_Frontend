@@ -70,14 +70,7 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
     if (this.timeUnit) {
       this.filterTimeRanges();
     }
-    this.endControl.valueChanges.subscribe((val) => {
-      if (val instanceof Date) {
-        const endOfDay = new Date(val);
-        endOfDay.setHours(23, 59, 59, 999);
-        if (val.getTime() !== endOfDay.getTime()) {
-          this.endControl.setValue(endOfDay, { emitEvent: false });
-        }
-      }
+    this.endControl.valueChanges.subscribe(() => {
       this.validateRange();
     });
 
@@ -86,7 +79,14 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
       this.validateRange();
     });
   }
-
+  fixEndOfDay() {
+    const val = this.endControl.value;
+    if (val instanceof Date) {
+      const endOfDay = new Date(val);
+      endOfDay.setHours(23, 59, 59, 999);
+      this.endControl.setValue(endOfDay, { emitEvent: false });
+    }
+  }
   validateRange() {
     const startVal = this.startControl.value;
     const endVal = this.endControl.value;

@@ -29,7 +29,7 @@
               label="收銀機號"
               controlName="ECR_No"
               [options]="ECRNoOptions"
-              optionLabel="value"
+              optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.ECR_No"
               [submitted]="submitted"
@@ -37,12 +37,14 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
+            <app-input-text-range2
               label="交易序號"
               [startControl]="queryForm.controls.TXN_No_Start"
               [endControl]="queryForm.controls.TXN_No_End"
               [submitted]="submitted"
-            ></app-input-text-range>
+              [digitsOnly]="true"
+              [rangeMaxLength]="10"
+            ></app-input-text-range2>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -304,15 +306,15 @@
     <app-table-report
       *ngIf="queryForm.get('showSummary')?.value"
       tableKey="TLS23010summary"
-      [lastQueryBody]="historyRequestBody"
       [data]="summaryData"
       [columns]="summaryColumns"
       [totalRecords]="summaryData.length || 0"
       [showDelete]="false"
       [showManage]="false"
+      [lazy]="false"
+      [showSort]="true"
       [showReportMode]="false"
       [footerData]="buildFooterFromSummaryTotals()"
-      [queryFunction]="queryTLS23010SummaryForReport"
     >
       <header>
         <div class="flex justify-content-between align-items-center w-full">

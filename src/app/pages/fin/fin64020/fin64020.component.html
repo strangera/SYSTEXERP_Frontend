@@ -1,92 +1,96 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+          <!-- 第1列：公司銀行科目代號(多選) / 到期日(起迄) / 票據號碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="公司銀行科目代號"
-              controlName="Accountcode"
-              [options]="AccountcodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Accountcode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-multi-select label="公司銀行科目代號" controlName="CompanyAccNoList" [options]="companyAccOptions$ | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.CompanyAccNoList"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="到期日"
-              controlName="generalCode"
-              [startControl]="queryForm.controls.startdate"
-              [endControl]="queryForm.controls.enddate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range-quick label="到期日" [startControl]="queryForm.controls.ExpireDateFrom"
+              [endControl]="queryForm.controls.ExpireDateTo" [submitted]="submitted"></app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="票據號碼"
-              controlName="Ticketnumber"
-              [control]="queryForm.controls.Ticketnumber"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="票據號碼" controlName="ChkNo" [control]="queryForm.controls.ChkNo"
+              [submitted]="submitted"></app-input-text>
           </div>
+          <!-- 第2列：到期傳票編號 / 狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="到期傳票號碼"
-              controlName="Duesummonsnumber"
-              [control]="queryForm.controls.Duesummonsnumber"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="到期傳票編號" controlName="VouNoExpire" [control]="queryForm.controls.VouNoExpire"
+              [submitted]="submitted"></app-input-text>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="狀態"
-              controlName="status"
-              [options]="statusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.status"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="狀態" controlName="ChkStatus" [options]="chkStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ChkStatus" [submitted]="submitted"></app-dropdown>
           </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report [tableKey]="'FIN64020_TABLE'" dataKey="CHK_No" [columns]="columns" [data]="data"
+    [totalRecords]="totalRecords" [loading]="loading" [showCheckBox]="true" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [isRowSelectable]="isRowSelectable" [showManage]="false"
+    [showDelete]="false">
+    <header>
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button styleClass="p-2" label="支票託收" icon="pi pi-send" (click)="dialogVisible = true"
+          [disabled]="data.length === 0 || selectedItems.length === 0" [loading]="loading">
+        </p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>
+
+<app-dialog [visible]="dialogVisible" header="支票託收" (visibleChange)="dialogVisible = $event" [showFooter]="false"
+  [width]="'600px'">
+
+  <form [formGroup]="dialogQueryForm" (ngSubmit)="saveDialog(dialogQueryForm)">
+    <div class="p-3">
+      <div class="mb-4">
+        <label for="selectedItems" class="block mb-2 text-600 font-medium">已勾選票據號碼（僅非兌現）</label>
+        <div class="flex flex-wrap gap-2 p-3 surface-100 border-round border-1 surface-border"
+          style="min-height: 50px;">
+          <ng-container *ngFor="let item of selectedItems">
+            <span class="px-3 py-1 bg-white border-round-2xl border-1 surface-border text-sm shadow-1">
+              {{ item.CHK_No }}
+            </span>
+          </ng-container>
+          <div *ngIf="selectedItems.length === 0" class="text-400">尚未選擇任何票據</div>
+        </div>
+        <small class="text-secondary mt-1 block">已兌現的列不可勾選，因此不會出現在清單。</small>
+      </div>
+
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6">
+          <app-calendar label="託收日期" controlName="CollectDate" [control]="dialogQueryForm.controls.CollectDate" />
+        </div>
+        <div class="col-12 md:col-6">
+          <app-dropdown label="託收銀行" controlName="CollectBankNo" [control]="dialogQueryForm.controls.CollectBankNo"
+            [options]="companyAccOptions2$ | async" optionLabel="label" optionValue="value" />
+        </div>
+      </div>
+
+      <div class="flex justify-content-end gap-2 mt-4 pt-3 border-top-1 surface-border">
+        <p-button label="取消" icon="pi pi-times" styleClass="p-button-text p-button-secondary"
+          (click)="dialogVisible = false"></p-button>
+        <p-button label="確認託收" icon="pi pi-check" type="submit" [loading]="dialogLoading"
+          [disabled]="dialogQueryForm.invalid || selectedItems.length === 0"></p-button>
+      </div>
+    </div>
+  </form>
+</app-dialog>

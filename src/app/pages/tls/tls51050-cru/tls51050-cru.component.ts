@@ -1,17 +1,17 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { PluUnit } from '../../../shared/models/tls/tls000.model';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { option } from '../../../shared/models/sys/sysb000.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { PanelModule } from 'primeng/panel';
 import { Tls51050Service } from '../../../service/api/tls/tls51050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { option } from '../../../shared/models/sys/sysb000.model';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { PluUnit } from '../../../shared/models/tls/tls000.model';
 //
 
 // 2.5.1.5 商品單位設定  CRU
@@ -62,48 +62,28 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    //--檢查--
-    // 新增時
-    // 單位屬性：預設1 基本單位，目前只有基本單位沒有包裝單位
-    //--------
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          const formValue = frm.getRawValue();
-          console.log('insert', JSON.stringify(formValue, null, 2));
-          this.tls51050Service.insertTLS51050(formValue).subscribe(() => {
-            this.messageService.successBubble('新增成功');
-            // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-            this.dataForm.reset(); // 重置表單
-          });
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          const formValue = frm.getRawValue();
-          console.log('update', JSON.stringify(formValue, null, 2));
-          this.tls51050Service.updateTLS51050(formValue).subscribe(() => {
-            // this.messageService.successBubble('更新成功');
-            this.onCancel(); // 儲存後，會返回列表
-          });
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
+    // 使用父類別的 handleSubmit 來處理驗證與泡泡訊息
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            const formValue = frm.getRawValue();
+            this.tls51050Service.insertTLS51050(formValue).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.dataForm.reset();
+            });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            const formValue = frm.getRawValue();
+            this.tls51050Service.updateTLS51050(formValue).subscribe(() => {
+              this.onCancel();
+            });
+          }
+          break;
+      }
+    });
   }
 
   onClearForm() {

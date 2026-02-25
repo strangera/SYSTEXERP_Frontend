@@ -201,9 +201,20 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   ngOnInit(): void {
     this.initializePage('TLS31020', 'TLS/TLS31020cru', this.queryForm, (frm) => this.onSubmit(frm));
 
-    // 日期表單控制
+    // 1. 先處理下拉選單與唯讀設定
     this.onReportTypeChange('1');
     this.setReadOnlyFields();
+
+    // 2. 從 State 讀取資料並「還原」值，而不是替換整個物件
+    const savedDateState = this.queryStateService.getQueryStateValue('tls31020_Date');
+    if (savedDateState) {
+      // 注意：如果是存整個 FormGroup 物件，這裡建議存取它的 .value
+      // 如果你之前存的是 FormGroup，請確保這裡拿到的是純資料
+      const stateValue = savedDateState.value ? savedDateState.value : savedDateState;
+      this.dateForm.patchValue(stateValue, { emitEvent: false });
+      // 強制執行一次同步，確保 queryForm 的日期跟上
+      this.syncDateToQueryForm();
+    }
 
     // 監聽 dateForm 的變化，套用日期到 queryForm
     this.dateForm.valueChanges.subscribe(() => {
@@ -374,6 +385,10 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
 
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+
+        // ---同步儲存比較表單的query資訊---
+        this.queryStateService.setQueryState('tls31020_Date', this.dateForm);
+        // ------
       })
     })
   }
@@ -562,6 +577,19 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
     if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
   }
+
+  //清除日期查詢條件
+  onClearDate() {
+    //dateForm設定為日營業報，日期今天
+    this.dateForm.reset({
+      reportType: '1',
+      onedatedd: yesterday,
+    });
+
+    this.setReadOnlyFields();
+    this.syncDateToQueryForm();
+  }
+
 
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);

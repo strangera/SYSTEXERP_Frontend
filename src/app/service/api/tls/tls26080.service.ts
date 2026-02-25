@@ -1,11 +1,13 @@
+import { formatDate } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { CampaignData, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080EditTable, TLS26080InsertPayload, TLS26080KeyInTable, TLS26080Query, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
-import { Option } from '@service/utility/dropdown-api.model';
+import { CampaignData, QueryTLS26080TLTTALENT_D16_D17Request, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080EditTable, TLS26080InsertPayload, TLS26080Query, TLS26080TLTTALENT_D16_D17Row, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
+import { Option, TalentOpenFlagItem, TalentOpenFlagQuery } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
 import { filter, finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -21,21 +23,21 @@ export class TLS26080Service {
   public readonly dateS: Date = this.d.start;
   public readonly dateE: Date = this.d.end;
 
-  // 儲存資料
-  public readonly tltTalentOptions = signal<Option[]>([]);
+  // 儲存資料（專櫃選項含 talent_id，供 saveDialog / executeFieldChange 使用）
+  public readonly tltTalentOptions = signal<(Option & { talent_id: number })[]>([]);
   public readonly tltTalentChargeOptions = signal<Option[]>([]);
 
   public readonly tltTalentMap = computed(() => {
-    return new Map<string, Option>(this.tltTalentOptions().map(item => [item.value, item]));
+    return new Map<string, Option & { talent_id: number }>(this.tltTalentOptions().map(item => [item.value, item]));
   });
   public readonly tltTalentChargeMap = computed(() => {
     return new Map<string, Option>(this.tltTalentChargeOptions().map(item => [item.value, item]));
   });
 
   // 共享資料讀取狀態
-  public readonly capItemsLoading = signal<boolean>(!1);
-  public readonly tltTalentOptionsLoading = signal<boolean>(!1);
-  public readonly tltTalentChargeOptionsLoading = signal<boolean>(!1);
+  public readonly capItemsLoading = signal<boolean>(false);
+  public readonly tltTalentOptionsLoading = signal<boolean>(false);
+  public readonly tltTalentChargeOptionsLoading = signal<boolean>(false);
 
   // 下拉選單資料
   public departmentItems = signal<Option[]>([]);
@@ -75,20 +77,23 @@ export class TLS26080Service {
   ) { }
 
   public loadAPS1003(cap_typeList: string[]): void {
-    if (this.capItemsLoading()) return void (this.capItemsLoading.set(!1));
-    this.capItemsLoading.set(!0);
+    if (this.capItemsLoading()) {
+      this.capItemsLoading.set(false);
+      return;
+    }
+    this.capItemsLoading.set(true);
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryAPS1003_DropDownList`, { cap_typeList }).pipe(
       take(1),
       tap(res => {
         this.capItems.set(res.Data?.map(item => ({ value: item.No, label: item.Name })) || []);
         this.logger.debug(`APS1003查詢結果:`, [res]);
       }),
-      finalize(() => this.capItemsLoading.set(!1))
+      finalize(() => this.capItemsLoading.set(false))
     ).subscribe();
   }
 
   public queryTltTalentCharge(talent_id: number): Observable<Option[]> {
-    this.tltTalentChargeOptionsLoading.set(!0);
+    this.tltTalentChargeOptionsLoading.set(true);
     return this.dropdown.queryTltTalentCharge({ talent_id }).pipe(
       take(1),
       tap(res => this.logger.debug(`queryTltTalentCharge:`, [res])),
@@ -98,7 +103,7 @@ export class TLS26080Service {
         value: item.tlt_id,
       }) as unknown as Option) || []),
       tap(res => this.tltTalentChargeOptions.set(res)),
-      finalize(() => this.tltTalentChargeOptionsLoading.set(!1)),
+      finalize(() => this.tltTalentChargeOptionsLoading.set(false)),
     );
   }
 
@@ -145,7 +150,15 @@ export class TLS26080Service {
       take(1),
       tap(res => this.logger.debug(`專櫃活動細節查詢結果:`, [res]))
     );
-  };
+  }
+
+  /** 查詢專櫃 D16/D17 費用比率 (cap_item、tpy_rate) */
+  public queryTLS26080TLTTALENT_D16_D17(req: QueryTLS26080TLTTALENT_D16_D17Request): Observable<ApiResponse<TLS26080TLTTALENT_D16_D17Row>> {
+    return this.http.post<ApiResponse<TLS26080TLTTALENT_D16_D17Row>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080TLTTALENT_D16_D17`, req).pipe(
+      take(1),
+      tap(res => this.logger.debug(`queryTLS26080TLTTALENT_D16_D17:`, [res]))
+    );
+  }
 
   /** 核准或反核准專櫃活動 */
   public loadApproval(data: TLS26080EditTable): Observable<{ newStatus: ApprovalStatus; }> {
@@ -170,11 +183,11 @@ export class TLS26080Service {
         const { queryTLS26080_DetailResponses, ...rest } = res.Data;
         return {
           ...rest,
-          queryTLS26080_DetailResponses: queryTLS26080_DetailResponses.map(v => (<TLS26080DetailResult>{
+          queryTLS26080_DetailResponses: queryTLS26080_DetailResponses.map(v => ({
             ...v,
             tpy_rate_D16: Number(v.tpy_rate_D16.replace('%', '')).toFixed(2),
             tpy_rate_D17: Number(v.tpy_rate_D17.replace('%', '')).toFixed(2),
-          })),
+          } as TLS26080DetailResult)),
         };
       })
     );
@@ -203,29 +216,36 @@ export class TLS26080Service {
     );
   }
 
-  public getTLTTalentOptions(): Observable<Option[]> {
-    this.tltTalentOptionsLoading.set(!0);
-    return this.dropdown.queryTltTalent().pipe(
-      take(1),
-      map(res => res?.map(item => ({
-        ...item,
-        label: `${item['No']} - ${item['Name']}`,
-      })) ?? []),
-      tap(res => {
-        this.tltTalentOptions.set(res ?? []);
-        this.logger.debug(`getTLTTalentOptions:`, [res]);
-      }),
-      finalize(() => this.tltTalentOptionsLoading.set(!1))
-    );
+  private formatQueryDate(value?: Date | string | null): string | undefined {
+    if (!value) return undefined;
+    const date = typeof value === 'string' ? new Date(value) : value;
+    if (isNaN(date.getTime())) return undefined;
+    return formatDate(date, 'yyyy-MM-dd', 'en-US');
   }
 
-  public keyInTLS26080(data: TLS26080KeyInTable, currentTableData: TLS26080KeyInTable[]): Observable<TLS26080UploadResponse> {
-    return this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/keyInTLS26080`, {
-      queryTLS26080_DetailResponses: currentTableData,
-      keyiInTLS26080: data,
-    }).pipe(
+  public getTLTTalentOptions(query: { ven_no: string }): Observable<(Option & { talent_id: number })[] | null> {
+    this.tltTalentOptionsLoading.set(true);
+    const payload: TalentOpenFlagQuery = {
+      VEN_No: query.ven_no,
+    };
+
+    return this.dropdown.queryTltTalentOpenFlag(payload).pipe(
       take(1),
-      finalize(() => this.logger.debug(`單筆鍵入檢查:`, [data]))
+      map(res => res?.map((item: TalentOpenFlagItem) => {
+        const raw = item as unknown as Record<string, unknown>;
+        const talentId = typeof item.talent_id === 'number' ? item.talent_id : Number(raw['Talent_ID']) || 0;
+        return {
+          ...item,
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+          talent_id: talentId,
+        } as Option & { talent_id: number };
+      }) ?? []),
+      tap(res => {
+        this.tltTalentOptions.set(res ?? []);
+        this.logger.debug(`getTLTTalentOptions:`, [payload, res]);
+      }),
+      finalize(() => this.tltTalentOptionsLoading.set(false))
     );
   }
 

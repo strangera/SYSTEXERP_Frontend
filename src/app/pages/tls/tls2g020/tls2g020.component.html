@@ -8,9 +8,9 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 查詢年月 -->
+          <!-- 查詢年份 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="查詢年月" calendarType="dateYearOne" [control]="queryForm.controls.budget_yy"
+            <app-calendar label="查詢年份" calendarType="dateYearOne" [control]="queryForm.controls.budget_yy"
               [submitted]="submitted"></app-calendar>
           </div>
           <!-- 專櫃編號 -->
@@ -34,6 +34,8 @@
       [showDetail]="false" [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" dataKey="talent_id"
       [data]="data" [columns]="columns" (rowExpand)="onRowExpand($event)" (edit)="onEdit($event)"
-      (detail)="onDetail($event)" expansionDataKey="Mdeatil" [expansionColumns]="expansionColumns"></app-table>
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
+      [rows]="30" (detail)="onDetail($event)" expansionDataKey="Mdeatil"
+      [expansionColumns]="expansionColumns"></app-table>
   </div>
 </div>

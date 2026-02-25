@@ -29,13 +29,27 @@
 
 <app-dialog [visible]="dialogVisible" header="選擇收銀機" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0">
-  <form [formGroup]="dialogQueryForm" class="flex pb-2 align-items-end gap-2">
-    <app-dropdown class="flex-grow-1" label="館別" controlName="building_no" [options]="buildingOptions$ | async"
-      optionLabel="Name" optionValue="No" [control]="dialogQueryForm.controls.building_no" />
-    <app-dropdown class="flex-grow-1" label="樓層" controlName="floor_no" [control]="dialogQueryForm.controls.floor_no"
-      [options]="floorOptions$ | async" optionLabel="Name" optionValue="No" />
-    <app-dropdown class="flex-grow-1" label="區域" controlName="area_no" [control]="dialogQueryForm.controls.area_no"
-      [options]="areaOptions$ | async" optionLabel="Name" optionValue="No" />
+  <form [formGroup]="dialogQueryForm" class="flex flex-column pb-2 gap-2">
+
+    <div class="flex gap-2">
+      <div class="col-12 md:col-6 lg:col-4 p-0"> <app-dropdown-table class="w-full" [showOverlay]="false"
+          [control]="dialogQueryForm.controls.ecr_no" [submitted]="submitted" optionLabel="label" optionValue="ECR_No"
+          [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+          (inputValueChanged)="onAutoCompleteInputChange($event)">
+        </app-dropdown-table>
+      </div>
+    </div>
+
+    <div class="flex gap-2">
+      <app-dropdown class="flex-grow-1" label="館別" controlName="building_no" [options]="buildingOptions$ | async"
+        optionLabel="Name" optionValue="No" [control]="dialogQueryForm.controls.building_no" />
+
+      <app-dropdown class="flex-grow-1" label="樓層" controlName="floor_no" [control]="dialogQueryForm.controls.floor_no"
+        [options]="floorOptions$ | async" optionLabel="Name" optionValue="No" />
+
+      <app-dropdown class="flex-grow-1" label="區域" controlName="area_no" [control]="dialogQueryForm.controls.area_no"
+        [options]="areaOptions$ | async" optionLabel="Name" optionValue="No" />
+    </div>
   </form>
   <app-table-report tableKey="tls51140DialogTable" dataKey="ECR_No" [data]="dialogData" [columns]="dialogColumns"
     [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event" [showManage]="false"

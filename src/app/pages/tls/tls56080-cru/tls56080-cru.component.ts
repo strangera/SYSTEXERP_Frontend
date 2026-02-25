@@ -1,21 +1,22 @@
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { IQueryPOS2004DetailResponse } from '@service/api/tls/tls52010.service';
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { IQueryTLS56080Response, ITLS56080Detail, Tls56080Service } from '@service/api/tls/tls56080.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column, createPaginationConfig, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
-import { TableModule } from "primeng/table";
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -38,11 +39,12 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     CalendarComponent,
     NgIf,
     TranslateModule,
-    TableModule,
     InputTextareaComponent,
-    TableComponent,
+    TableReportComponent,
+    ProductAutocompleteComponent,
     DialogComponent,
-    DropdownTableComponent,
+    TableEditComponent,
+    AsyncPipe
   ]
 })
 export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Response> implements OnInit {
@@ -62,70 +64,78 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
     TRD_Remark: [null, [Validators.maxLength(200)]], // 備註
   });
   data: ITLS56080Detail[] = [];
-  originalData: ITLS56080Detail[] = [];
   selectedItems: ITLS56080Detail[] = [];
-  columns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
-    { field: 'PLU_Name', header: '商品名稱', visible: true },
-    { field: 'PLU_Unit', header: '商品單位', visible: true },
-    { field: 'PLU_BoxQty', header: '包裝入數', visible: true },
-    { field: 'TRD_Type', header: '調出/調入', visible: true, type: 'dropdown', options: [{ label: '調出', value: '0' }, { label: '調入', value: '1' }], validate: [validateRequired], required: true },
-    { field: 'TRD_Qty', header: '數量', visible: true, type: 'inputNumber', validate: [validateRequired, validateMinNumber(1)], required: true },
-    { field: 'PLU_SalePrc', header: '單價', visible: true, format: formatAmount },
-    { field: 'TRD_Amt', header: '小計', visible: true, format: formatAmount },
-    { field: 'TRD_Remark', header: '單項備註', visible: true, type: 'input' },
+  editColumns: EditColumn[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_Unit', header: '商品單位' },
+    { field: 'PLU_BoxQty', header: '包裝入數' },
+    {
+      field: 'TRD_Type', header: '調出/調入', type: 'dropdown',
+      options: [{ label: '調出', value: '0' }, { label: '調入', value: '1' }],
+      optionLabel: 'label', optionValue: 'value',
+      showClear: false, validate: [validateRequired],
+      calculate: (rowData, value) => {
+        const amt = Math.round(Number(rowData.TRD_Qty ?? 0) * Number(rowData.PLU_SalePrc ?? 0));
+        this.calculateTotals(); // 觸發主檔加總
+        return { 'TRD_Amt': amt };
+      }
+    },
+    {
+      field: 'TRD_Qty', header: '數量', type: 'inputNumber',
+      validate: [validateRequired, validateMinNumber(1)],
+      calculate: (rowData, value) => {
+        const amt = Math.round(Number(value ?? 0) * Number(rowData.PLU_SalePrc ?? 0));
+        // 由於 calculate 在賦值前執行，我們手動更新 rowData 模擬最新狀態給總計用
+        rowData.TRD_Qty = value;
+        rowData.TRD_Amt = amt;
+        this.calculateTotals();
+        return { 'TRD_Amt': amt };
+      }
+    },
+    { field: 'PLU_SalePrc', header: '單價', format: formatAmount },
+    { field: 'TRD_Amt', header: '小計', format: formatAmount },
+    { field: 'TRD_Remark', header: '單項備註', type: 'input' },
   ];
-
-  brandOptions: { label: string; value: string }[] = [];
-  warehouseOptions: { label: string; value: string }[] = [];
-  vendorOptions: { label: string; value: string }[] = [];
+  brandOptions = this.dropdown.queryPluLogo();
+  warehouseOptions = this.dropdown.queryPos2034();
+  userOptions = this.dropdown.queryTblUser();
+  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   reasonOptions = getSYS1000Options('TRD_Reason');
-  userOptions: { label: string; value: string }[] = [];
   totalRecords = 0;
+  initComponent = true;
 
   constructor(
+    public readonly tls52010Service: Tls52010Service,
     private readonly tls56080Service: Tls56080Service,
-    private readonly dropDownListService: DropDownListService,
+    private readonly dropdown: DropdownApiService,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS56080', this.dataForm);
-    this.loadDropdownOptions();
-    if (!this.isFormCreateable && this.rowdata && this.rowdata.TRD_No) {
-      this.dataForm.get('HOS_No')?.disable();
-      this.dataForm.get('VEN_No')?.disable();
-      this.dataForm.get('LOGO_No')?.disable();
-      this.tls56080Service.querySTORETRADED({
-        TRD_No: this.rowdata?.TRD_No,
-        OUT_HOS_No: this.rowdata?.HOS_No
-      }).pipe(untilDestroyed(this)).subscribe(response => {
-        this.data = response.Data
-        this.originalData = response.Data;
-      });
-    }
+    this.loadData();
     // 監聽品牌、倉別、廠商變動，清空明細資料
     this.dataForm.controls['LOGO_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => { this.data = []; this.calculateTotals(); });
     this.dataForm.controls['HOS_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => { this.data = []; this.calculateTotals(); });
   }
-
-  loadDropdownOptions(): void {
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(options => {
-      this.warehouseOptions = options.Data.map(item => ({ label: item.Name, value: item.No }));
-    });
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.brandOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.vendorOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
-    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
+  loadData() {
+    this.initComponent = false;
+    this.initializePage('TLS56080', this.dataForm);
+    if (!this.isFormCreateable && this.rowdata && this.rowdata.TRD_No) {
+      this.dataForm.get('HOS_No')?.disable();
+      this.dataForm.get('VEN_No')?.disable();
+      this.dataForm.get('LOGO_No')?.disable();
+      this.loading = true;
+      this.tls56080Service.querySTORETRADED({
+        TRD_No: this.rowdata?.TRD_No,
+        OUT_HOS_No: this.rowdata?.HOS_No
+      }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.data = response.Data
+      });
+    }
+    this.initComponent = true;
   }
-
-
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
     queryNo: ['', [Validators.maxLength(20)]], // 商品管理編號
@@ -133,6 +143,7 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
   dialogData: IQueryPOS2004DetailResponse[] = [];
+  dialogLastQueryBody: IQueryPOS2004DetailRequest | null = null;
   selectedItemsDialog: IQueryPOS2004DetailResponse[] = [];
   dialogColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
@@ -147,12 +158,13 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
     this.dialogLoading = true;
     const body = {
       ...frm.getRawValue(),
-      HOS_No: this.dataForm.controls.HOS_No.value,
+      VEN_No: this.dataForm.controls.VEN_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
     }
-    this.tls56080Service.queryPOS2004Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+    this.tls52010Service.queryPOS2004Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;
       this.totalRecords = response.TotalCount;
+      this.dialogLastQueryBody = body;
     })
   }
 
@@ -179,27 +191,6 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
     this.selectedItemsDialog = [];
     this.selectedItems = [];
     this.calculateTotals();
-  }
-
-  suggestions: IQueryPOS2004DetailResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      HOS_No: this.dataForm.controls.HOS_No.value || '',
-      LOGO_No: this.dataForm.controls.LOGO_No.value || '',
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    this.tls56080Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
   }
   onRowEditSave(event: RowEditSaveEvent): void {
     const editedItem = event.newData;
@@ -228,11 +219,6 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
       OUT_TotBuyAmt: outTotal,
       DIFF_TotBuyAmt: diffTotal,
     });
-  }
-
-  onDelete(selectedRows: ITLS56080Detail[]): void {
-    this.data = this.data.filter(row => !selectedRows.includes(row));
-    this.calculateTotals();
   }
 
   onSubmit(frm: FormGroup): void {
@@ -274,6 +260,8 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
         APPLY_USR_No: frm.getRawValue().APPLY_USR_No,
         TRD_Remark: frm.getRawValue().TRD_Remark,
         Details: this.data.map((item: ITLS56080Detail) => ({
+          TRD_No: this.isFormCreateable ? undefined : this.rowdata?.TRD_No,
+          id: this.isFormCreateable ? undefined : item.id || 0,
           SYS_StoreNo: item.SYS_StoreNo,
           HOS_No: item.HOS_No,
           PLU_MagNo: item.PLU_MagNo,
@@ -286,8 +274,6 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
           TRD_Qty: item.TRD_Qty,
           TRD_Amt: item.TRD_Amt,
           TRD_Remark: item.TRD_Remark,
-          id: this.isFormCreateable ? undefined : item.id,
-          TRD_No: this.isFormCreateable ? undefined : item.TRD_No,
         })),
       }
       const request$ = this.isFormCreateable

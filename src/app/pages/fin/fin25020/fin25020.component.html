@@ -41,20 +41,18 @@
           ></app-calendar-range>
         </div>
         <div class="grid p-fluid">
-          <app-input-text
+          <app-dropdown
             class="col-12 md:col-6 lg:col-4"
-            label="銀行ID"
+            label="銀行帳戶"
             controlName="BNK_id"
+            [options]="bankOptions"
+            optionLabel="displayLabel"
+            optionValue="BNK_id"
             [control]="queryForm.controls.BNK_id"
             [submitted]="submitted"
-          ></app-input-text>
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="銀行帳戶名稱"
-            controlName="BNK_AccName"
-            [control]="queryForm.controls.BNK_AccName"
-            [submitted]="submitted"
-          ></app-input-text>
+            [showClear]="true"
+            [filter]="true"
+          ></app-dropdown>
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="轉傳票狀態"
@@ -101,5 +99,7 @@
     [selectedItems]="selectedItems"
     [isRowSelectable]="isRowSelectable"
     (selectionChange)="selectedItems = $event"
+    [rows]="30"
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
   ></app-table>
 </div>

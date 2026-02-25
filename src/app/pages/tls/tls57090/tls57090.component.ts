@@ -111,8 +111,10 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
   updateTableColumns(displayMode: number | null) {
     if (displayMode === 1) { // 彙總模式
       this.columns = [
-        { field: 'HOS_NAME', header: '倉別', visible: true, showSort: true },
-        { field: 'LOGO_CH_NAME', header: '品牌', visible: true, showSort: true },
+        { field: 'HOS_No', header: '倉別代號', visible: true, showSort: true },
+        { field: 'HOS_NAME', header: '倉別名稱', visible: true, showSort: true },
+        { field: 'LOGO_No', header: '品牌代號', visible: true, showSort: true },
+        { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true, showSort: true },
         { field: 'ODM_Date', header: '申請日期', visible: true, showSort: true, format: formatDate },
         { field: 'APRV_Date', header: '審核日期', visible: true, showSort: true, format: formatDate },
         { field: 'ODM_No', header: '單號', visible: true, showSort: true },

@@ -1,0 +1,955 @@
+<fieldset style="border: none; padding: 0; margin: 0">
+  <p-accordion [multiple]="true">
+    <!-- 基本資訊 -->
+    <p-accordionTab
+      header="基本資訊"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="專櫃招募編號"
+            controlName="apply_no"
+            [control]="$any(form.controls['apply_no'])"
+            [customPlaceholder]="'系統自動產生'"
+            [alwaysShowPlaceholder]="true"
+            [readonly]="true"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="專櫃編號"
+            controlName="tlt_no"
+            [control]="$any(form.controls['tlt_no'])"
+            [submitted]="submitted"
+            [customPlaceholder]="'審核過系統自動產生'"
+            [alwaysShowPlaceholder]="true"
+            [readonly]="true"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="廠商統一編號"
+            controlName="vendor_ven_no"
+            [options]="vendorOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['vendor_ven_no'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+            (valueChange)="onVendorChange($event)"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商編號"
+            controlName="ven_no"
+            [control]="$any(form.controls['ven_no'])"
+            [submitted]="submitted"
+            [readonly]="true"
+            [customPlaceholder]="'選擇廠商統一編號自動帶入'"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商名稱"
+            controlName="VEN_Name"
+            [control]="$any(form.controls['VEN_Name'])"
+            [submitted]="submitted"
+            [customPlaceholder]="'選擇廠商統一編號自動帶入'"
+            [readonly]="true"
+            [alwaysShowPlaceholder]="true"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="櫃位名稱"
+            controlName="tlt_name"
+            [control]="$any(form.controls['tlt_name'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="版次"
+            controlName="contract_subno"
+            [control]="$any(form.controls['contract_subno'])"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="審核狀態"
+            controlName="approve_status"
+            [options]="approveStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['approve_status'])"
+            [submitted]="submitted"
+            [readonly]="true"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="申請案件內容"
+            controlName="apply_type"
+            [options]="applyTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['apply_type'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode || !isCreateMode"
+            (valueChange)="onApplyTypeChange($event)"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="申請案件狀態"
+            controlName="apply_status"
+            [options]="applyStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['apply_status'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="申請日期"
+            controlName="apply_date"
+            [control]="$any(form.controls['apply_date'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="申請案件型態"
+            controlName="contract_type"
+            [options]="contractTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['contract_type'])"
+            [submitted]="submitted"
+            [readonly]="true"
+            (valueChange)="onContractTypeChange($event)"
+          ></app-dropdown>
+        </div>
+      </div>
+    </p-accordionTab>
+
+    <!-- 洽談階段資訊 -->
+    <p-accordionTab
+      header="洽談階段資訊"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="營業型態"
+            controlName="paper_type"
+            [options]="paperTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['paper_type'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="組織代碼"
+            controlName="org_id"
+            [options]="orgOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['org_id'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="大分類"
+            controlName="bus_type"
+            [options]="bustypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['bus_type'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+            (valueChange)="onBusTypeChange($event)"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="中分類"
+            controlName="bus_class"
+            [options]="busClassOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['bus_class'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+            (valueChange)="onBusClassChange($event)"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="小分類"
+            controlName="bus_sclass"
+            [options]="busSClassOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['bus_sclass'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+            (valueChange)="onBusSClassChange($event)"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="契約起始日"
+            controlName="tlt_bdate"
+            [control]="$any(form.controls['tlt_bdate'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="契約截止日"
+            controlName="tlt_edate"
+            [control]="$any(form.controls['tlt_edate'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="營運起始日"
+            controlName="tlt_contract_bdate"
+            [control]="$any(form.controls['tlt_contract_bdate'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="營運截止日"
+            controlName="tlt_contract_edate"
+            [control]="$any(form.controls['tlt_contract_edate'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="回函日期"
+            controlName="feedback_date"
+            [control]="$any(form.controls['feedback_date'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="回函截止日"
+            controlName="due_date"
+            [control]="$any(form.controls['due_date'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="洽談日期"
+            controlName="contact_Date"
+            [control]="$any(form.controls['contact_Date'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="洽談者"
+            controlName="contact_USR_No"
+            [options]="negotiatorOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['contact_USR_No'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+      </div>
+    </p-accordionTab>
+
+    <!-- 櫃位地點資訊 -->
+    <p-accordionTab
+      header="櫃位地點資訊"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <div class="col-12">
+        <app-expandable-edit-table
+          [data]="getDisplayLocationData()"
+          [mainColumns]="locationColumns"
+          [showCheckBox]="!isViewMode"
+          [autoEditOnAdd]="true"
+          [forceEditMode]="!isViewMode"
+          [showActionColumn]="false"
+          [loading]="loading"
+          dataKey="id"
+          [readonly]="false"
+          detailKey=""
+          emptyMessage="尚未設定位置資訊，請點擊新增按鈕開始設定"
+          (addMainItem)="onAddLocationItem()"
+          (batchDelete)="onBatchDeleteLocation($event)"
+          (save)="onLocationTableSave($event)"
+          (edit)="onLocationTableEdit($event)"
+          (cancel)="onLocationTableCancel($event)"
+          [showPaginator]="false"
+          [showAddButton]="!isViewMode"
+          [showBatchDelete]="!isViewMode"
+          (dropdownChange)="onLocationDropdownChange($event)"
+        ></app-expandable-edit-table>
+      </div>
+    </p-accordionTab>
+
+    <!-- 商務條件 -->
+    <p-accordionTab
+      header="商務條件"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="櫃別"
+            controlName="tlt_kind"
+            [options]="tltKindOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['tlt_kind'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="裝潢方式"
+            controlName="deco_type"
+            [options]="decorationOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['deco_type'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="抽成別"
+            controlName="tlt_term_type"
+            [options]="tltTermTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['tlt_term_type'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="抽成額計算方式"
+            controlName="comm_comp_type"
+            [options]="commCompTypeDropdown"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['comm_comp_type'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="是否使用業主商店代號"
+            controlName="edc_yn"
+            [options]="yesNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['edc_yn'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="包底類別"
+            controlName="tlt_ctype_mtotal"
+            [options]="tltctypemtotalOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['tlt_ctype_mtotal'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="超出部份處理方式"
+            controlName="overall_status"
+            [options]="overallStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['overall_status'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="預收租金"
+            controlName="rent_ahead"
+            [options]="yesNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['rent_ahead'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="預收租金期數"
+            controlName="rent_period"
+            [control]="$any(form.controls['rent_period'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="固定租金"
+            controlName="base_rent"
+            [control]="$any(form.controls['base_rent'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="押金"
+            controlName="deposit"
+            [control]="$any(form.controls['deposit'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="是否開立業主發票"
+            controlName="rece_yn"
+            [options]="yesNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['rece_yn'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="是否使用業主收銀機"
+            controlName="pos_yn"
+            [options]="yesNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['pos_yn'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="是否為業主收現"
+            controlName="cash_yn"
+            [options]="yesNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['cash_yn'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="是否為抽成"
+            controlName="comm_yn"
+            [options]="yesNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['comm_yn'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="結帳方式"
+            controlName="money_type"
+            [options]="moneyTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['money_type'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="配合方式"
+            controlName="store_way"
+            [options]="storeWayOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['store_way'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select
+            label="對帳方式"
+            controlName="check_typeList"
+            [options]="checkTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['check_typeList'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-multi-select>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="付款方式"
+            controlName="paytype"
+            [options]="paytypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['paytype'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="是否配合聯名卡"
+            controlName="vip_yn"
+            [options]="yesNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['vip_yn'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="聯名卡折數"
+            controlName="credit_card"
+            [control]="$any(form.controls['credit_card'])"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-number>
+          <small
+            class="block mt-1 text-blue-600 text-base"
+            *ngIf="form.get('vip_yn')?.value === 'Y'"
+          >
+            配合聯名卡時必填 (例：0.95 為 95折)
+          </small>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="目標營業額(業主)"
+            controlName="total_amt"
+            [control]="$any(form.controls['total_amt'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="目標營業額單位(業主)"
+            controlName="total_amt_unit"
+            [options]="totalAmtVendorOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['total_amt_unit'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="預估營業額(廠商)"
+            controlName="total_amt_vendor"
+            [control]="$any(form.controls['total_amt_vendor'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="目標營業額單位(廠商)"
+            controlName="total_amt_vendor_unit"
+            [options]="totalAmtOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['total_amt_vendor_unit'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="準時開業保證金付款方式"
+            controlName="open_deposit"
+            [options]="depositPaymentOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['open_deposit'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="履約保證金"
+            controlName="open_fees"
+            [control]="$any(form.controls['open_fees'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="施工保證金付款方式"
+            controlName="construct_deposit"
+            [options]="depositPaymentOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['construct_deposit'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="施工保證金"
+            controlName="construct_fees"
+            [control]="$any(form.controls['construct_fees'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="契約屆滿保證金付款方式"
+            controlName="expiration_deposit"
+            [options]="depositPaymentOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['expiration_deposit'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="契約屆滿保證金"
+            controlName="expiration_fees"
+            [control]="$any(form.controls['expiration_fees'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-radiobutton
+            label="水錶抄錶"
+            groupname="waterFlag"
+            [control]="$any(form.controls['water_flag'])"
+            [options]="yesNoOptions"
+            [submitted]="submitted"
+          ></app-radiobutton>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-radiobutton
+            label="電錶抄錶"
+            groupname="electricFlag"
+            [control]="$any(form.controls['electric_flag'])"
+            [options]="yesNoOptions"
+            [submitted]="submitted"
+          ></app-radiobutton>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-radiobutton
+            label="瓦斯錶抄錶"
+            groupname="gasFlag"
+            [control]="$any(form.controls['gas_flag'])"
+            [options]="yesNoOptions"
+            [submitted]="submitted"
+          ></app-radiobutton>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="保證金備註"
+            controlName="ticket_remarks"
+            [control]="$any(form.controls['ticket_remarks'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="結帳後幾日付款"
+            controlName="check_day"
+            [control]="$any(form.controls['check_day'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="請款單據別"
+            controlName="invoice_type"
+            [options]="invoiceTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['invoice_type'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-dropdown>
+        </div>
+      </div>
+    </p-accordionTab>
+
+    <!-- 參加資訊 -->
+    <p-accordionTab
+      header="參加資訊"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <fieldset class="mt-3">
+        <div class="grid">
+          <div class="col-12 md:col-6">
+            <div class="field-checkbox">
+              <p-checkbox
+                inputId="cap_saletype2"
+                name="cap_saletype2"
+                [formControl]="$any(form.controls['cap_saletype2'])"
+                [binary]="true"
+                trueValue="Y"
+                falseValue="N"
+              ></p-checkbox>
+              <label for="cap_saletype2">會員卡集點</label>
+            </div>
+          </div>
+          <div class="col-12 md:col-6">
+            <div class="field-checkbox">
+              <p-checkbox
+                inputId="cap_saletype1"
+                name="cap_saletype1"
+                [formControl]="$any(form.controls['cap_saletype1'])"
+                [binary]="true"
+                trueValue="Y"
+                falseValue="N"
+              ></p-checkbox>
+              <label for="cap_saletype1">滿仟送佰</label>
+            </div>
+          </div>
+          <div class="col-12 md:col-6">
+            <div class="field-checkbox">
+              <p-checkbox
+                inputId="cap_saletype3"
+                name="cap_saletype3"
+                [formControl]="$any(form.controls['cap_saletype3'])"
+                [binary]="true"
+                trueValue="Y"
+                falseValue="N"
+              ></p-checkbox>
+              <label for="cap_saletype3">收取禮卷</label>
+            </div>
+          </div>
+          <div class="col-12 md:col-6 no-bottom-padding">
+            <div class="field-checkbox">
+              <p-checkbox
+                inputId="cap_saletype5"
+                name="cap_saletype5"
+                [formControl]="$any(form.controls['cap_saletype5'])"
+                [binary]="true"
+                trueValue="Y"
+                falseValue="N"
+              ></p-checkbox>
+              <label for="cap_saletype5">收取商品提貨單</label>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+    </p-accordionTab>
+
+    <!-- 聯絡資訊 -->
+    <p-accordionTab
+      header="聯絡資訊"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="電子信箱"
+            controlName="email"
+            [control]="$any(form.controls['email'])"
+            (blurEvent)="formatEmailField('email', $event)"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+          <small class="block mt-1 text-blue-600 text-base">
+            多個信箱請用分號(；)分隔
+          </small>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="發票電子郵件"
+            controlName="invoice_email"
+            [control]="$any(form.controls['invoice_email'])"
+            (blurEvent)="formatEmailField('invoice_email', $event)"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+          <small class="block mt-1 text-blue-600 text-base">
+            多個信箱請用分號(；)分隔
+          </small>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="票據抬頭"
+            controlName="CHECK_TITLE"
+            [control]="$any(form.controls['CHECK_TITLE'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="專櫃電話號碼"
+            controlName="store_tel"
+            [control]="$any(form.controls['store_tel'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="廠商匯款銀行代號"
+            controlName="bank_id"
+            [options]="bankDropdownOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="$any(form.controls['bank_id'])"
+            [readonly]="isViewMode"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商帳戶名稱"
+            controlName="vendor_acct_name"
+            [control]="$any(form.controls['vendor_acct_name'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="廠商銀行帳號"
+            controlName="vendor_acct_no"
+            [control]="$any(form.controls['vendor_acct_no'])"
+            [submitted]="submitted"
+            [autoPadZero]="true"
+            [padLength]="16"
+            [padOnBlur]="true"
+            [readonly]="isViewMode"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="公司電話號碼(O)"
+            controlName="contact_tel"
+            [control]="$any(form.controls['contact_tel'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="公司傳真號碼(F)"
+            controlName="contact_fax"
+            [control]="$any(form.controls['contact_fax'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-6 flex flex-column gap-3">
+          <app-input-text
+            label="公司營登地址"
+            controlName="VEN_Address"
+            [control]="$any(form.controls['VEN_Address'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+          <app-input-text
+            label="郵寄地址"
+            controlName="contact_addr"
+            [control]="$any(form.controls['contact_addr'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-6"></div>
+        <div class="col-12">
+          <app-input-textarea
+            label="備註"
+            controlName="tlt_remark"
+            [control]="$any(form.controls['tlt_remark'])"
+            [submitted]="submitted"
+            [readonly]="isViewMode"
+          ></app-input-textarea>
+        </div>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</fieldset>

@@ -4,35 +4,89 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <!-- 發票年月 -->
-          <app-year-month class="col-12 md:col-6 lg:col-4" label="發票年月(起)" [control]="queryForm.controls.GUI_YYMM_start"
-            [submitted]="submitted"></app-year-month>
-          <app-year-month class="col-12 md:col-6 lg:col-4" label="發票年月(迄)" [control]="queryForm.controls.GUI_YYMM_end"
-            [submitted]="submitted"></app-year-month>
+          <app-year-month
+            class="col-12 md:col-6 lg:col-4"
+            label="發票年月(起)"
+            [control]="queryForm.controls.GUI_YYMM_start"
+            [submitted]="submitted"
+          ></app-year-month>
+          <app-year-month
+            class="col-12 md:col-6 lg:col-4"
+            label="發票年月(迄)"
+            [control]="queryForm.controls.GUI_YYMM_end"
+            [submitted]="submitted"
+          ></app-year-month>
 
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票類別" controlName="GUIPaperList"
-            [options]="invoiceTypeOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.GUIPaperList" [submitted]="submitted"></app-multi-select>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="GUI_TRACK"
-            [control]="queryForm.controls.GUI_TRACK" [submitted]="submitted"></app-input-text>
-          <app-input-text-range class="col-12 md:col-6 lg:col-4" startLabel="發票起始號碼" endLabel="發票結束號碼"
-            [startControl]="queryForm.controls.GUINo_start" [endControl]="queryForm.controls.GUINo_end"
-            [submitted]="submitted" [errorForGroup]="true"></app-input-text-range>
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_NOList"
-            [options]="cashierNoOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.ECR_NOList" [submitted]="submitted"></app-multi-select>
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票狀態" controlName="GUI_StatusList"
-            [options]="invoiceStatusOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.GUI_StatusList" [submitted]="submitted"></app-multi-select>
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SAL_TypeList"
-            [options]="usageTypeOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.SAL_TypeList" [submitted]="submitted"></app-multi-select>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="發票類別"
+            controlName="GUIPaperList"
+            [options]="invoiceTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.GUIPaperList"
+            [submitted]="submitted"
+          ></app-multi-select>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="字軌"
+            controlName="GUI_TRACK"
+            [control]="queryForm.controls.GUI_TRACK"
+            [submitted]="submitted"
+          ></app-input-text>
+          <app-input-text-range
+            class="col-12 md:col-6 lg:col-4"
+            startLabel="發票起始號碼"
+            endLabel="發票結束號碼"
+            [startControl]="queryForm.controls.GUINo_start"
+            [endControl]="queryForm.controls.GUINo_end"
+            [submitted]="submitted"
+            [errorForGroup]="true"
+          ></app-input-text-range>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="收銀機號"
+            controlName="ECR_NOList"
+            [options]="cashierNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.ECR_NOList"
+            [submitted]="submitted"
+          ></app-multi-select>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="發票狀態"
+            controlName="GUI_StatusList"
+            [options]="invoiceStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.GUI_StatusList"
+            [submitted]="submitted"
+          ></app-multi-select>
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="使用別"
+            controlName="SAL_TypeList"
+            [options]="usageTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.SAL_TypeList"
+            [submitted]="submitted"
+          ></app-multi-select>
         </div>
-        <div class="justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" style="display: flex;">
+        <div
+          class="justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+          style="display: flex"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -42,9 +96,21 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="FIN12020" [data]="data" [columns]="columns" [multiSortMeta]="[]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [showManage]="false">
-  </app-table>
+  <div class="col-12">
+    <app-table-report
+      [data]="tableData()"
+      tableKey="FIN12020"
+      [columns]="columns"
+      [totalRecords]="totalRecords()"
+      [loading]="tableLoading()"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFunction"
+      [showCheckBox]="false"
+      [showManage]="false"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [showDelete]="false"
+      [isRowSelectable]="isRowSelectable"
+    ></app-table-report>
+  </div>
 </div>

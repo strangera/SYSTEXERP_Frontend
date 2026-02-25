@@ -281,93 +281,94 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   //-------------
   // 刪除項目
   onDelete(data: POS2004 | POS2004[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
+    this.messageService.confirm({
+      message: `是否確認刪除選中的商品基本資料?`,
+      header: `確認刪除`,
+      accept: () => {
+        console.log('Delete data:', JSON.stringify(data, null, 2));
 
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-    //確認是否全部都可以刪除
-    const canDelete = items.every((item) => item.CanDel);
-
-    if (!canDelete) {
-      console.error('Some items cannot be deleted');
-      this.messageService.errorBubble('無法刪除：組織階層互相關連');
-      return;
-    }
-
-    const deleteBody = {
-      idList: idList, // 符合 API 的 idList 格式
-    };
-    this.tls51070Service.deleteTLS51070(deleteBody).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        const items = Array.isArray(data) ? data : [data];
+        if (items.length === 0) {
+          console.error('No items to delete');
+          this.messageService.errorBubble('無法刪除：沒有選中的項目');
+          return;
         }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm);
+
+        // 收集所有有效的 ID
+        const idList = items
+          .filter((item) => item && item.id != null && item.id !== undefined)
+          .map((item) => item.id);
+
+        if (idList.length === 0) {
+          console.error('No valid IDs to delete');
+          this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+          return;
+        }
+
+        //確認是否全部都可以刪除
+        const canDelete = items.every((item) => item.CanDel);
+
+        if (!canDelete) {
+          console.error('Some items cannot be deleted');
+          this.messageService.errorBubble('無法刪除：組織階層互相關連');
+          return;
+        }
+
+        const deleteBody = {
+          idList: idList, // 符合 API 的 idList 格式
+        };
+        this.tls51070Service.deleteTLS51070(deleteBody).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+            } else {
+              console.error('API error:', response.Status, response.Message);
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.onSubmit(this.queryForm);
+          },
+        });
+
+        this.selectedItems = [];
       },
     });
-
-    this.selectedItems = [];
   }
 
   loadOptions() {
     //查詢 商品單位
     this.tls51070Service
-      .queryPLUUNIT_DropDownList({})
+      .queryPLUUNIT_DropDownList({}).pipe(untilDestroyed(this))
       .subscribe((response) => {
         this.unitOptions = response.Data.map((item: apiOption) => ({
           No: item.No,
           Name: item.Name,
           Label: item.No + '-' + item.Name,
         }));
-
-        // console.log('商品單位:', this.unitOptions);
       });
 
     // 查詢 品牌代碼
     this.tls51070Service
-      .queryPLULOGO_DropDownList({})
+      .queryPLULOGO_DropDownList({}).pipe(untilDestroyed(this))
       .subscribe((response) => {
         this.brandOption = response.Data.map((item: apiOption) => ({
           No: item.No,
           Name: item.Name,
           Label: item.No + '-' + item.Name,
         }));
-
-        // console.log('品牌代碼:', this.brandOption);
       });
 
     // 查詢 專櫃編號
-    this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).subscribe((response) => {
+    this.tls51070Service.queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
       this.TLT_NO_Option = response.Data.map((item: any) => ({
         No: item.No, // 專櫃編號代碼
         Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
-      // console.log('專櫃編號代碼:', response.Data);
     });
   }
 
@@ -376,15 +377,13 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     {
       //查詢 大分類
       this.tls51070Service
-        .queryCAT_LNo_DropDownList({})
+        .queryCAT_LNo_DropDownList({}).pipe(untilDestroyed(this))
         .subscribe((response) => {
           this.largeOption = response.Data.map((item: apiOption) => ({
             No: item.No,
             Name: item.Name,
             Label: item.No + '-' + item.Name,
           }));
-
-          // console.log('大分類:', this.largeOption);
         });
 
       // 禁用中分類、小分類

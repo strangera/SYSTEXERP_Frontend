@@ -13,10 +13,8 @@
               [endControl]="queryForm.controls.EndDate" [submitted]="submitted"></app-calendar-range-quick>
           </div>
           <!-- 國際條碼/商品管理編號/廠商貨號 -->
-          <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryForm.controls.PLU_MagNo"
-            [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
-            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
-          </app-dropdown-table>
+          <app-product-autocomplete class="col-12" optionValue="PLU_MagNo" [control]="queryForm.controls.PLU_MagNo"
+            [submitted]="submitted" />
           <!-- 國際條碼 -->
           <!-- <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.PLU_No"
             templateLabel="label" [submitted]="submitted" optionLabel="PLU_No" optionValue="PLU_No"

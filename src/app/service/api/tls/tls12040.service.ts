@@ -354,4 +354,14 @@ export class TLS12040Service {
       })
     );
   }
+
+  /**
+   * 刷新使用者資料權限範圍
+   */
+  refreshUserDataPermissions(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/User/RefreshUserDataPermissions`, {}).pipe(
+      tap((res) => console.log('刷新權限結果:', res)),
+      catchError(this.errorHandler.handleError)
+    );
+  }
 }

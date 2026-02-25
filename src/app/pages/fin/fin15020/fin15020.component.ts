@@ -1,16 +1,19 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN15020Data, FIN15020PrintRequest, FIN15020QueryRequest, FIN15020Service } from '@service/api/fin/fin15020.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatAmount, formatDate } from '@shared/componentkit/table-report/table-report.model';
 import { ValidationService } from '@shared/service/validation.service';
+import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -19,7 +22,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 export interface Option {
@@ -45,7 +48,7 @@ export interface Option {
     CalendarComponent,
     MultiSelectComponent,
     CommonModule,
-    CustomFooterTableComponent,
+    TableReportComponent,
     YearMonthComponent
   ]
 })
@@ -76,14 +79,17 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     IsExcel: ['0']   // 預設為 '0' (PDF)
   });
 
-  totalRecords = 0;
-  data: FIN15020Data[] = [];
+  readonly tableData = signal<FIN15020Data[]>([]);
+  readonly totalRecords = signal<number>(0);
+  readonly tableLoading = signal<boolean>(false);
+  lastQueryBody?: FIN15020QueryRequest;
+  footerRow: Record<string, unknown> | null = null;
+
   selectedItems: FIN15020Data[] = [];
   btnLoading = false;
-  footerData: any[] = [];
 
-  columns: Column[] = [
-    { field: 'No', header: '序號', hidden: true },
+  // 不包含 No 欄，使 footer 合計與表頭 14 欄對齊（與 tls23010 用法一致）
+  columns: ReportColumn[] = [
     { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
     { field: 'PUR_VoucherType', header: '發票格式', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'GUI_Track', header: '字軌', visible: true },
@@ -142,29 +148,75 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     this.queryForm.get('PUR_RepYYYYMM')?.setValue(this.datePipe.transform((currentDate), 'yyyyMM'));
   }
 
+  private buildRequest(body?: { pageSize?: number; PageSize?: number; pageIndex?: number; PageIndex?: number; SortBy?: unknown }): FIN15020QueryRequest {
+    const frm = this.queryForm;
+    const pageSize = body?.pageSize ?? body?.PageSize ?? frm.get('pageSize')?.value ?? 30;
+    const pageIndex = body?.pageIndex ?? body?.PageIndex ?? frm.get('pageIndex')?.value ?? 1;
+    const sortBy = body?.SortBy ?? frm.get('SortBy')?.value;
+    const raw = {
+      MID: 0,
+      STO_No: '10',
+      ...frm.getRawValue(),
+      PUR_GUIDate_S: this.datePipe.transform(frm.get('PUR_GUIDate_S')?.value, 'yyyy-MM-dd') ?? '',
+      PUR_GUIDate_E: this.datePipe.transform(frm.get('PUR_GUIDate_E')?.value, 'yyyy-MM-dd') ?? '',
+      PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM') ?? '',
+      PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM') ?? '',
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: Array.isArray(sortBy) ? sortBy : undefined,
+    };
+    return removeEmptyValues(raw) as FIN15020QueryRequest;
+  }
+
+  queryFunction = (body: any) => {
+    const request = this.buildRequest(body);
+    return this.fin15020Service.queryFIN15020(request).pipe(
+      tap((response) => {
+        const d = response?.Data;
+        if (d && (d.TotalNet !== undefined || d.TotalTax !== undefined)) {
+          this.footerRow = {
+            group_name: '合計',
+            PUR_Net: d.TotalNet,
+            PUR_Tax: d.TotalTax,
+          };
+        }
+      }),
+      map((response) => ({
+        Data: response.Data?.APS2002_FIN15020s ?? [],
+        TotalCount: response.Data?.TotalCount ?? 0,
+      }))
+    );
+  };
+
+  isRowSelectable = (_rowData: FIN15020Data): boolean => true;
+
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const requestData: FIN15020QueryRequest = {
-        MID: 0,
-        STO_No: '10',
-        ...frm.value,
-        TXN_Date_S: this.datePipe.transform(frm.get('TXN_Date_S')?.value, 'yyyy-MM-dd') ?? '',
-        TXN_Date_E: this.datePipe.transform(frm.get('TXN_Date_E')?.value, 'yyyy-MM-dd') ?? '',
-        PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM') ?? '',
-        PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM') ?? '',
-      };
+      this.lastQueryBody = this.buildRequest({
+        pageSize: frm.get('pageSize')?.value ?? 30,
+        pageIndex: frm.get('pageIndex')?.value ?? 1,
+        SortBy: frm.get('SortBy')?.value,
+      });
 
-      this.fin15020Service.queryFIN15020(requestData)
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe((res) => {
-          this.data = res.Data.APS2002_FIN15020s;
-          this.footerData = [{
-            group_name: '合計',
-            PUR_Net: res.Data.TotalNet,
-            PUR_Tax: res.Data.TotalTax,
-          }];
-          this.totalRecords = res.Data.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: (res) => {
+            this.tableData.set(res.Data);
+            this.totalRecords.set(res.TotalCount);
+          },
+          error: () => {
+            this.tableData.set([]);
+            this.totalRecords.set(0);
+          },
         });
     });
   }

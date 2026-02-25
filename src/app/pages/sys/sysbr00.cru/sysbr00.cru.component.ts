@@ -1,56 +1,49 @@
+import { NgClass, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
-import { v4 as uuidv4 } from 'uuid';
-import { ChangeDetectorRef } from '@angular/core';
-import { SYSBR00Service } from '../../../service/api/sys/sysbr00.service';
-
-
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { forkJoin } from 'rxjs';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgIf, NgClass } from '@angular/common';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AbstractControl, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { validateDuplicate, validateMaxLength, validateRequired } from '@shared/componentkit/table/validate-field.model';
+import { ValidationService } from '@shared/service/validation.service';
+import { ButtonDirective } from 'primeng/button';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputTextModule } from 'primeng/inputtext';
-import { ButtonDirective } from 'primeng/button';
-import { validateDuplicate, validateMaxLength, validateRequired } from '@shared/componentkit/table/validate-field.model';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { PanelModule } from 'primeng/panel';
+import { forkJoin } from 'rxjs';
+import { v4 as uuidv4 } from 'uuid';
+import { SYSBR00Service } from '../../../service/api/sys/sysbr00.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
-    selector: 'app-sysbr00-cru',
-    templateUrl: './sysbr00.cru.component.html',
-    styleUrls: ['./sysbr00.cru.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        NgIf,
-        TableComponent,
-        InputGroupModule,
-        InputTextModule,
-        NgClass,
-        ButtonDirective,
-        TranslateModule
-    ],
+  selector: 'app-sysbr00-cru',
+  templateUrl: './sysbr00.cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    NgIf,
+    TableComponent,
+    InputGroupModule,
+    InputTextModule,
+    NgClass,
+    ButtonDirective,
+    TranslateModule
+  ],
 })
-
-
-
 export class SYSBR00CRUComponent extends BasicCruPageComponent<any> implements OnInit {
- // 表單定義
+  // 表單定義
   dataForm = this.formBuilder.nonNullable.group({
     CITY_ID: [0], // 縣市ID
-    CITY_No: ['', [Validators.required, Validators.maxLength(4)]], // 縣市代號
-    CITY_Name: ['', [Validators.required, Validators.maxLength(8)]], // 縣市名稱
-    CITY_Group: ['', [Validators.maxLength(6)]], // 縣市群組
+    CITY_No: [null, [Validators.required, Validators.maxLength(4), this.validation.alphanumericValidator]], // 縣市代號
+    CITY_Name: [null, [Validators.required, Validators.maxLength(8)]], // 縣市名稱
+    CITY_Group: [null, [Validators.maxLength(6)]], // 縣市群組
   });
   data: any = []; // 取得的資料
   selectedItems: any = []; // 選取的資料
@@ -67,19 +60,16 @@ export class SYSBR00CRUComponent extends BasicCruPageComponent<any> implements O
     POST_No: ['', [Validators.required, Validators.maxLength(6)]], // 郵遞區號
   });
 
-  constructor(private sysbr0Service: SYSBR00Service, private cdr: ChangeDetectorRef) {
+  constructor(
+    private readonly sysbr0Service: SYSBR00Service,
+    private readonly validation: ValidationService
+  ) {
     super();
   }
   ngOnInit(): void {
     this.initializePage('SYSBR00', this.dataForm);
-    this.sysbr0Service.queryCities().subscribe({
-      next: (response) => {
-        this.city = response.Data;
-      },
-      error: (error) => {
-        console.error('❌ 取得資料時發生錯誤:', error);
-        this.messageService.errorBubble('取得資料時發生錯誤，請稍後再試');
-      },
+    this.sysbr0Service.queryCities().subscribe(response => {
+      this.city = response.Data;
     });
     if (!this.isFormCreateable) {
       this.initDistrict();
@@ -87,23 +77,16 @@ export class SYSBR00CRUComponent extends BasicCruPageComponent<any> implements O
   }
 
   initDistrict() {
-    this.sysbr0Service.queryDistricts().subscribe({
-      next: (response) => {
-        this.district = response.Data;
-        this.data = this.district.filter((item: any) => item.CITY_No === this.dataForm.value.CITY_No);
-        this.data = this.data.map((item: any) => {
-          return { ...item, id: uuidv4() };// 為每個項目生成唯一的ID
-        });
-        this.cdr.detectChanges(); // 強制檢測變更
-        this.districtForm.controls['AREA_No'].setValidators([Validators.required, Validators.maxLength(4), this.duplicateCpnNoValidator(this.data.map((item: any) => item.AREA_No))]);
-        this.districtForm.controls['AREA_Name'].setValidators([Validators.required, Validators.maxLength(12), this.duplicateCpnNoValidator(this.data.map((item: any) => item.AREA_Name))]);
-        this.districtForm.controls['POST_No'].setValidators([Validators.required, Validators.maxLength(6), this.duplicateCpnNoValidator(this.data.map((item: any) => item.POST_No))]);
-        this.districtForm.updateValueAndValidity(); // 確保驗證器生效
-      },
-      error: (error) => {
-        console.error('❌ 取得資料時發生錯誤:', error);
-        this.messageService.errorBubble('取得資料時發生錯誤，請稍後再試');
-      },
+    this.sysbr0Service.queryDistricts().subscribe(response => {
+      this.district = response.Data;
+      this.data = this.district.filter((item: any) => item.CITY_No === this.dataForm.value.CITY_No);
+      this.data = this.data.map((item: any) => {
+        return { ...item, id: uuidv4() };// 為每個項目生成唯一的ID
+      });
+      this.districtForm.controls['AREA_No'].setValidators([Validators.required, Validators.maxLength(4), this.duplicateCpnNoValidator(this.data.map((item: any) => item.AREA_No))]);
+      this.districtForm.controls['AREA_Name'].setValidators([Validators.required, Validators.maxLength(12), this.duplicateCpnNoValidator(this.data.map((item: any) => item.AREA_Name))]);
+      this.districtForm.controls['POST_No'].setValidators([Validators.required, Validators.maxLength(6), this.duplicateCpnNoValidator(this.data.map((item: any) => item.POST_No))]);
+      this.districtForm.updateValueAndValidity(); // 確保驗證器生效
     });
   }
 
@@ -111,12 +94,10 @@ export class SYSBR00CRUComponent extends BasicCruPageComponent<any> implements O
     districtForm.markAllAsTouched();
     const { AREA_No, AREA_Name, POST_No } = districtForm.value;
     if (AREA_No && AREA_Name && POST_No && districtForm.valid) {
-      this.sysbr0Service.insertArea(this.rowdata.CITY_No, districtForm.value).subscribe({
-        next: () => {
-          this.messageService.successBubble('地區新增成功', '新增成功');
-          this.initDistrict();
-          districtForm.reset();
-        }
+      this.sysbr0Service.insertArea(this.rowdata.CITY_No, districtForm.value).subscribe(() => {
+        this.messageService.successBubble('地區新增成功', '新增成功');
+        this.initDistrict();
+        districtForm.reset();
       })
     }
   }
@@ -131,19 +112,12 @@ export class SYSBR00CRUComponent extends BasicCruPageComponent<any> implements O
   }
   onDelete(data: any): void {
     const deleteObservables = data.map((item: any) => this.sysbr0Service.deleteArea(item.AREA_ID));
-    forkJoin(deleteObservables).subscribe({
-      next: () => {
-        this.messageService.successBubble('地區刪除成功', '刪除成功');
-        this.initDistrict();
-      },
-      error: (error) => {
-        console.error('❌ 刪除資料時發生錯誤:', error);
-        this.messageService.errorBubble('刪除資料時發生錯誤，請稍後再試');
-      },
+    forkJoin(deleteObservables).subscribe(() => {
+      this.messageService.successBubble('地區刪除成功', '刪除成功');
+      this.initDistrict();
     });
   }
   onRowEditSave(data: any): void {
-    console.log(data.newData);
     const body = {
       AREA_ID: data.newData.AREA_ID,
       AREA_No: data.newData.AREA_No,
@@ -151,15 +125,9 @@ export class SYSBR00CRUComponent extends BasicCruPageComponent<any> implements O
       POST_No: data.newData.POST_No,
       CITY_No: this.rowdata.CITY_No,
     }
-    this.sysbr0Service.updateArea(body).subscribe({
-      next: () => {
-        this.messageService.successBubble('地區更新成功', '更新成功');
-        this.initDistrict();
-      },
-      error: (error) => {
-        console.error('❌ 更新資料時發生錯誤:', error);
-        this.messageService.errorBubble('更新資料時發生錯誤，請稍後再試');
-      },
+    this.sysbr0Service.updateArea(body).subscribe(res => {
+      this.messageService.successBubble('地區更新成功', '更新成功');
+      this.initDistrict();
     });
   }
   onSubmit(frm: FormGroup): void {
@@ -167,16 +135,9 @@ export class SYSBR00CRUComponent extends BasicCruPageComponent<any> implements O
       const cityNo = frm.value.CITY_No;
       const isDuplicate = this.city.some((item: any) => item.CITY_No === cityNo);
       if (!isDuplicate) {
-        this.sysbr0Service.insertCity(frm.value).subscribe({
-          next: () => {
-            this.messageService.successBubble('縣市新增成功', '新增成功');
-             frm.reset();
-            
-          },
-          error: (error) => {
-            console.error('❌ 提交表單時發生錯誤:', error);
-            this.messageService.errorBubble('提交表單時發生錯誤，請稍後再試');
-          },
+        this.sysbr0Service.insertCity(frm.value).subscribe(() => {
+          this.messageService.successBubble('縣市新增成功', '新增成功');
+          frm.reset();
         });
       } else {
         this.messageService.errorBubble('縣市代號已存在，請重新輸入', '新增失敗');
@@ -190,15 +151,8 @@ export class SYSBR00CRUComponent extends BasicCruPageComponent<any> implements O
         return item.CITY_No === cityNo;
       });
       if (!isDuplicate) {
-        this.sysbr0Service.updateCity(frm.value).subscribe({
-          next: () => {
-            this.messageService.successBubble('縣市修改成功', '修改成功');
-          
-          },
-          error: (error) => {
-            console.error('❌ 提交表單時發生錯誤:', error);
-            this.messageService.errorBubble('提交表單時發生錯誤，請稍後再試');
-          },
+        this.sysbr0Service.updateCity(frm.value).subscribe(() => {
+          this.messageService.successBubble('縣市修改成功', '修改成功');
         });
       } else {
         this.messageService.errorBubble('縣市代號已存在，請重新輸入', '新增失敗');

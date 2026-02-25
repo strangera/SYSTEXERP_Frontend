@@ -199,4 +199,5 @@ export interface ContractItem {
   total_amt_vendor_unit: string;
   approve_status: string;
   CanEdit?: boolean;
+  row_id: string;
 }

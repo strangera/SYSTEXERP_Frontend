@@ -169,37 +169,43 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   }
   // 刪除項目
   onDelete(data: Garantee_Ticket | Garantee_Ticket[]): void {
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) return;
+    this.messageService.confirm({
+      message: `是否確認刪除選中的保證票?`,
+      header: `確認刪除`,
+      accept: () => {
+        const items = Array.isArray(data) ? data : [data];
+        if (items.length === 0) return;
 
-    const idList = items
-      .filter(item => item && item.id != null)
-      .map(item => item.id);
+        const idList = items
+          .filter(item => item && item.id != null)
+          .map(item => item.id);
 
-    if (idList.length === 0) {
-      this.messageService.warnBubble('未找到有效的刪除項目');
-      return;
-    }
-
-    this.tls14030Service.deleteTLS14030({ idList }).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        if (idList.length === 0) {
+          this.messageService.warnBubble('未找到有效的刪除項目');
+          return;
         }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm); // 刷新資料
+
+        this.tls14030Service.deleteTLS14030({ idList }).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+            } else {
+              console.error('API error:', response.Status, response.Message);
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.onSubmit(this.queryForm); // 刷新資料
+          },
+        });
+
+        this.selectedItems = [];
       },
     });
-
-    this.selectedItems = [];
   }
 
 

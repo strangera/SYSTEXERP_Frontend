@@ -30,23 +30,48 @@
           <app-dropdown label="申請人編號" controlName="APPLY_USR_No" [options]="userOptions" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.APPLY_USR_No" [submitted]="submitted"></app-dropdown>
         </div>
-
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
             [submitted]="submitted"></app-calendar>
         </div>
-        <app-input-textarea class="col-12" label="領用單說明" controlName="SPM_remark"
-          [control]="dataForm.controls.SPM_remark" [submitted]="submitted" />
+
+      </div>
+      <div class="grid p-fluid mt-2 surface-50 border-round p-2">
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領用數量合計" controlName="SPM_TotQty"
+          [control]="dataForm.controls.SPM_TotQty" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領用未稅進價小計" controlName="SPM_TotBuyNet"
+          [control]="dataForm.controls.SPM_TotBuyNet" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領用進價稅額小計" controlName="SPM_TotBuyTax"
+          [control]="dataForm.controls.SPM_TotBuyTax" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="合計金額" controlName="SPM_TotBuyAmt"
+          [control]="dataForm.controls.SPM_TotBuyAmt" [useGrouping]="true" [submitted]="submitted" />
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領用未稅售價小計" controlName="SPM_TotSaleNet"
+          [control]="dataForm.controls.SPM_TotSaleNet" [useGrouping]="true" [submitted]="submitted" />
+
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領用售價稅額小計" controlName="SPM_TotSaleTax"
+          [control]="dataForm.controls.SPM_TotSaleTax" [useGrouping]="true" [submitted]="submitted" />
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="領用售價合計" controlName="SPM_TotSaleAmt"
+          [control]="dataForm.controls.SPM_TotSaleAmt" [useGrouping]="true" [submitted]="submitted" />
+      </div>
+      <div class="grid p-fluid mt-2">
+
+        <div class="col-12 md:col-6 lg:col-8">
+          <app-input-textarea class="col-12" label="領用單說明" controlName="SPM_remark"
+            [control]="dataForm.controls.SPM_remark" [submitted]="submitted" />
+        </div>
       </div>
       <app-table-edit class="col-12" tableKey="TLS52010Detail" [columns]="editColumns" [data]="data"
         (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
         (dataChange)="data = $event;calculateTotals()" [tableRequired]="true" [rowValidate]="validateEntireRow"
-        [disabled]="isFormReadable || !(dataForm.controls.org_id.value && dataForm.controls.LOGO_No.value) ? true : false"
-        (insert)="dialogVisible = true" [showInsert]="isFormCreateable"
+        [disabled]="isFormReadable || !dataForm.controls.LOGO_No.value" (insert)="dialogVisible = true"
+        [showInsert]="!isFormReadable"
         [insertDisabled]="dataForm.controls.org_id.value && dataForm.controls.LOGO_No.value ? false : true" />
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm" />
+        <app-button btnType="cancel" (clickEvent)="onLocalCancel()" />
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>

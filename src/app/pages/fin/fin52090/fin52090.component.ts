@@ -9,8 +9,9 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -31,10 +32,10 @@ import { FIN52090Data, FIN52090DeleteRequest, FIN52090Query } from './fin52090.m
     MultiSelectComponent,
     InputTextComponent,
     MenubarComponent,
-    TableComponent,
+    TableReportComponent,
   ],
 })
-export class FIN52090Component extends BasicQueryPageComponent<unknown> implements OnInit {
+export class FIN52090Component extends BasicQueryPageComponent<FIN52090Data> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
     id: new FormControl<number | void>(void 0),
@@ -63,13 +64,15 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
     this.loading = this.tableLoading()
   }, { allowSignalWrites: true });
 
-  public readonly columns: (Omit<Column, 'field'> & { field: keyof FIN52090Data; })[] = [
+  public readonly columns: ReportColumn[] = [
     { field: 'AccNo', header: '科目代號' },
     { field: 'AccCName', header: '科目名稱' },
     { field: 'NoteDesc', header: '科目摘要' },
   ];
 
-  selectedRows: any[] = [];
+  lastQueryBody?: FIN52090Query;
+  selectedItems: FIN52090Data[] = [];
+  isRowSelectable = (_row: FIN52090Data): boolean => true;
 
   constructor(
     public readonly service: FIN52090Service,
@@ -88,15 +91,43 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
 
   }
 
-  onDelete(selectedRows: any[]) {
-    const ids = selectedRows.map(row => row.id);
-    const payload: FIN52090DeleteRequest = { Ids: ids };
-    this.service.deleteFIN52090(payload).subscribe({
-      next: () => {
-        this.onSubmit();
-        this.selectedRows = [];
+  queryFunction = (body: any) => {
+    const rawValue = this.queryForm.getRawValue();
+    const pageSize = body.pageSize ?? body.PageSize ?? rawValue.pageSize;
+    const pageIndex = body.pageIndex ?? body.PageIndex ?? rawValue.pageIndex;
+    const raw = {
+      ...rawValue,
+      AccNo: this.qf().AccNo.value?.length ? this.qf().AccNo.value : void 0,
+      NoteDesc: this.qf().NoteDesc.value ?? void 0,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: body.SortBy ?? rawValue.SortBy,
+    } as FIN52090Query;
+    const filtered = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
+      v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+    ));
+    delete (filtered as any).pageSize;
+    delete (filtered as any).pageIndex;
+    return this.service.loadFIN52090(filtered as FIN52090Query);
+  };
+
+  onDelete(data: FIN52090Data | FIN52090Data[]) {
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) return;
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '確定要刪除選取的資料嗎？',
+      accept: () => {
+        const ids = items.map(row => row.id).filter((id): id is number => id != null);
+        const payload: FIN52090DeleteRequest = { Ids: ids };
+        this.service.deleteFIN52090(payload).subscribe({
+          next: () => {
+            this.onSubmit();
+            this.selectedItems = [];
+          },
+          error: () => { this.loading = false; },
+        });
       },
-      error: () => { this.loading = false; },
     });
   }
 
@@ -126,6 +157,7 @@ export class FIN52090Component extends BasicQueryPageComponent<unknown> implemen
       delete (filtered as any).pageIndex;
 
       const payload = filtered as unknown as FIN52090Query;
+      this.lastQueryBody = payload;
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());

@@ -61,6 +61,7 @@
   <app-table tableKey="FIN24020" dataKey="ACP_No" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
     [loading]="loading" [showDelete]="false" [editDisabled]="editDisabledByVouNo" [showDetail]="true"
     expansionDataKey="Details" [expansionColumns]="detailColumns" (edit)="onEdit($event, queryForm.getRawValue())"
-    (detail)="onDetail($event, queryForm.getRawValue())" [lazy]="true"
+    (detail)="onDetail($event, queryForm.getRawValue())" [lazy]="true" [rows]="30"
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
     (lazyLoadData)="handleLazyLoad($event)"></app-table>
 </div>

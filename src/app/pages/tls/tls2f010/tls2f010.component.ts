@@ -1,8 +1,9 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { YearMonthComponent } from '@pages/fin/fin11020/query-year-month/query-year-month.component';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -33,7 +34,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
   selector: 'app-tls2f010',
   templateUrl: './tls2f010.component.html',
   standalone: true,
-  imports: [ButtonModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
+  imports: [NgIf, ButtonModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule, YearMonthComponent]
 })
 export class TLS2F010Component extends BasicQueryPageComponent<any> implements OnInit {
   // 完整的期別選項映射（參考 tls2e020 的寫法）
@@ -92,21 +93,22 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     { field: 'COMM_YM', header: '請款付款年月', visible: true, format: formatYYYYMM },
     { field: 'sam_yyymm', header: '帳款年月', visible: true, format: formatYYYYMM },
     { field: 'MONEY_TYPE_DESC', header: '結帳方式', visible: true },
-    // { field: 'col9', header: '帳次', visible: true },
+    { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'DEC_YM', header: '申報年月', visible: true, format: formatYYYYMM },
     { field: 'ven_uniform', header: '廠商統一編號', visible: true },
     { field: 'TAX_TYPE', header: '課稅別', visible: true },
     { field: 'ACP_GUIAmt', header: '發票總額', visible: true, format: formatAmount, align: 'right' },
     { field: 'ACP_GUINet', header: '未稅金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'ACP_GUITax', header: '稅額', visible: true, format: formatAmount, align: 'right' },
-    // { field: 'PUR_GUIPaper', header: '格式', visible: true },
+    { field: 'PUR_GUIPaper', header: '格式', visible: true },
+    { field: 'StatusName', header: '狀況', visible: true },
     { field: 'CRT_USR_No', header: '建立者', visible: true },
     { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
   ];
   invoiceFormatOptions = [
-    { value: '21', label: '21/進項三聯式、電子計算機統一發票' },
-    { value: '25', label: '25-進項三聯式收銀機統一發票' },
-    { value: '27', label: '27/彙總登陸每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
+    { value: '21', label: '21-進項三聯式、電子計算機統一發票' },
+    { value: '22', label: '22-進項二聯式收銀機統一發票、載有稅額之其他憑證' },
+    { value: '25', label: '25-進項三聯式收銀機統一發票及一般稅額計算之電子發票' },
   ];
 
   statusOptions = [
@@ -117,6 +119,15 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   taxTypeOptions = getSYS1000Options('PLU_TaxType');
   money_typeOptions = getSYS1000Options('money_type');
   sam_termnoOptions: { value: number, label: string }[] = []; // 期別選項
+  // 統一的 UI 提示文字
+  samTermnoHint = '請先選擇「結帳方式」';
+
+  onSamTermnoOverlayClick(evt?: MouseEvent): void {
+    if (!this.sam_termnoOptions || this.sam_termnoOptions.length === 0) {
+      this.messageService.warnBubble(this.samTermnoHint);
+    }
+    try { evt?.stopPropagation(); evt?.preventDefault(); } catch (e) { /* ignore */ }
+  }
   totalRecords = 0;
   data: any[] = [];
   lastQueryBody: any = null;
@@ -155,6 +166,17 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
+  }
+
+  // Robust normalizer for YYYYMM payloads: accept Date, YYYYMM, or YYYYMMDD (trim to first 6 digits)
+  private normalizeYearMonth(value: any): string {
+    let ym = this.formatYearMonth(value);
+    if (!ym && value !== undefined && value !== null) {
+      const s = String(value).trim();
+      const m = s.match(/^(\d{6})/);
+      ym = m ? m[1] : '';
+    }
+    return ym;
   }
 
   // Normalize payload: convert empty strings and empty arrays to null recursively
@@ -217,7 +239,6 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     }
   }
 
-
   getCurrentQueryFunction() {
     // 返回一個 wrapper，將後端回應標準化為 TableReport 預期的 { Data: rows[], TotalCount } 結構
     return (body: any) => this.tls2f010Service.queryTLS2F010(body).pipe(map((res: any) => {
@@ -246,6 +267,8 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const raw = frm.getRawValue() as any;
+      // Page-local normalization: compute normalized DEC_YM (YYYYMM) for payload and query-state
+      const decYm = this.normalizeYearMonth(raw?.DEC_YM);
 
       const pageSize = Number(raw.pageSize ?? 30);
       const pageIndex = Number(raw.pageIndex ?? 1);
@@ -271,7 +294,8 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       payload.PUR_GUIDate_To = this.formatDateOnly(purTo);
       payload.COMM_MONEY_TYPE = Array.isArray(raw.COMM_MONEY_TYPE) ? raw.COMM_MONEY_TYPE.join(',') : (raw.COMM_MONEY_TYPE || '');
       payload.COMM_YM = this.formatYearMonth(raw.COMM_YM);
-      payload.DEC_YM = this.formatYearMonth(raw.DEC_YM);
+      // Ensure DEC_YM is normalized to YYYYMM for payload.
+      payload.DEC_YM = decYm;
       payload.ven_uniform = raw.ven_uniform || '';
       payload.PUR_TaxType = Array.isArray(raw.PUR_TaxType) ? raw.PUR_TaxType.join(',') : (raw.PUR_TaxType || '');
       payload.ACP_GUIAmt_From = raw.ACP_GUIAmt_From ?? null;
@@ -329,7 +353,13 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
 
           this.totalRecords = res?.TotalCount ?? this.data.length;
           this.lastQueryBody = body;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          // 儲存給 queryState 時，使用已正規化的 DEC_YM（6位），避免下次還原時出現 8 位
+          try {
+            const rawForState = { ...frm.getRawValue(), DEC_YM: decYm || null };
+            this.queryStateService.setQueryState(this.ProgNo, rawForState);
+          } catch (e) {
+            this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          }
         });
     });
   }
@@ -471,7 +501,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     payload.PUR_GUIDate_To = this.formatDateOnly(purTo);
     payload.COMM_MONEY_TYPE = Array.isArray(raw.COMM_MONEY_TYPE) ? raw.COMM_MONEY_TYPE.join(',') : (raw.COMM_MONEY_TYPE || '');
     payload.COMM_YM = this.formatYearMonth(raw.COMM_YM);
-    payload.DEC_YM = this.formatYearMonth(raw.DEC_YM);
+    payload.DEC_YM = this.normalizeYearMonth(raw.DEC_YM);
     payload.ven_uniform = raw.ven_uniform || '';
     payload.PUR_TaxType = Array.isArray(raw.PUR_TaxType) ? raw.PUR_TaxType.join(',') : (raw.PUR_TaxType || '');
     payload.ACP_GUIAmt_From = raw.ACP_GUIAmt_From ?? null;

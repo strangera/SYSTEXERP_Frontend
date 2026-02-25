@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 
 export const cpmRoutes: Routes = [
+  { path: 'cpm11030', loadComponent: () => import('./cpm11030/cpm11030.component').then(m => m.CPM11030Component), data: { progNo: 'CPM11030' } }, // 設備出借作業
+  { path: 'cpm11030cru', loadComponent: () => import('./cpm11030-cru/cpm11030-cru.component').then(m => m.CPM11030CRUComponent), data: { progNo: 'CPM11030' } },
   { path: 'cpm11090', loadComponent: () => import('./cpm11090/cpm11090.component').then(m => m.Cpm11090Component), data: { progNo: 'Cpm11090' } }, // 尋人登錄作業
   { path: 'cpm11090cru', loadComponent: () => import('./cpm11090cru/cpm11090cru.component').then(m => m.CPM11090CRUComponent), data: { progNo: 'Cpm11090' } }, // 尋人登錄作業
   { path: 'cpm12010', loadComponent: () => import('./cpm12010/cpm12010.component').then(m => m.CPM12010Component), data: { progNo: 'CPM12010' } }, // 顧客意見類別維護

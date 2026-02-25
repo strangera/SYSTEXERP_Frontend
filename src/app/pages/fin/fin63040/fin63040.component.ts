@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { AfterViewInit, ChangeDetectorRef, Component, ViewChild } from '@angular/core';
-import { Router, NavigationStart } from '@angular/router';
+import { AfterViewInit, ChangeDetectorRef, Component } from '@angular/core';
+import { NavigationStart } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { filter } from 'rxjs/operators';
+import { filter, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
@@ -22,14 +23,11 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 import { Aps1002BankDropDownRow, Fin26010Service } from '../../../service/api/fin/fin26010.service';
-
 import {
   ApiResponse,
   Fin63040Service,
@@ -37,6 +35,10 @@ import {
   QueryFIN63040Row,
   SortItem,
 } from '../../../service/api/fin/fin63040.service';
+
+// ✅ app-table-report
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 
 @UntilDestroy()
 @Component({
@@ -58,7 +60,8 @@ import {
     CalendarComponent,
     InputTextComponent,
     ButtonComponent,
-    TableComponent,
+    // ✅ table-report
+    TableReportComponent,
   ],
 })
 export class FIN63040Component extends BasicQueryPageComponent<any> implements AfterViewInit {
@@ -66,7 +69,10 @@ export class FIN63040Component extends BasicQueryPageComponent<any> implements A
 
   data: QueryFIN63040Row[] = [];
   totalRecords = 0;
+
+  /** ✅ table-report selection（改成手動接 event） */
   selectedItems: QueryFIN63040Row[] = [];
+
   lastQueryBody: any = null;
 
   btnLoading = false;
@@ -83,9 +89,11 @@ export class FIN63040Component extends BasicQueryPageComponent<any> implements A
     PayDate: [new Date() as Date | null, Validators.required],
   });
 
+  /** ✅ 只有 CanPickupYn=Y 可勾選 */
   isRowSelectable = (row: QueryFIN63040Row) => String(row?.CanPickupYn ?? '').toUpperCase() === 'Y';
 
-  columns: Column[] = [
+  /** ✅ columns 改成 ReportColumn（table-report 用） */
+  columns: ReportColumn[] = [
     { field: 'CheckNo', header: '票據號碼' },
     { field: 'VendorNo', header: '廠客代號' },
     { field: 'VEN_Name', header: '廠商名稱' },
@@ -123,11 +131,96 @@ export class FIN63040Component extends BasicQueryPageComponent<any> implements A
     private fin26010Service: Fin26010Service,
     private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
-
   ) {
     super();
   }
 
+  ngOnInit(): void {
+    this.initializePage('FIN63040', 'fin/fin63040cru', this.queryForm, (form) => this.onSubmit(form));
+
+    this._allowSortFields = new Set(this.columns.map((c) => c.field).filter(Boolean) as string[]);
+
+    // ✅ 離開本頁就清 state（你原本邏輯）
+    this.router.events
+      .pipe(
+        filter((e) => e instanceof NavigationStart),
+        untilDestroyed(this)
+      )
+      .subscribe((e: any) => {
+        const url = String(e?.url ?? '');
+        if (!url.includes('fin63040')) {
+          this.queryStateService.clearQueryState(this.ProgNo);
+        }
+      });
+
+    // ✅ 銀行下拉
+    this.fin26010Service
+      .queryAPS1002DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+          const list = Array.isArray(res?.Data) ? res.Data : [];
+          this.BankCodeOptions = list
+            .slice()
+            .sort((a, b) => String(a.BNK_id).localeCompare(String(b.BNK_id)))
+            .map((x) => ({
+              label: `${x.BNK_id}-${x.BNK_AccName}`,
+              value: x.BNK_id,
+              raw: x,
+            }));
+        },
+        error: () => {
+          this.BankCodeOptions = [];
+        },
+      });
+
+    // ✅ 從 CRU 回來：還原查詢
+    const state = history.state as any;
+    if (state?.fromCru === true) {
+      const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
+      if (saved?.formValue) {
+        this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+        this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+        this.lastQueryBody = saved.lastQueryBody ?? null;
+        Promise.resolve().then(() => this.onSubmit(this.queryForm));
+      }
+    }
+  }
+
+  ngAfterViewInit(): void {
+    // ✅ table-report 自己處理 lazy/sort/scroll，不需要你去訂閱 dt.onLazyLoad
+  }
+
+  /** =======================
+   * ✅ table-report 需要的 queryFunction
+   * - 它會送 pageIndex/pageSize/SortBy（小寫）
+   * - 我們轉成後端要的 PageIndex/PageSize/SortBy
+   * - 回傳格式保證有 Data/TotalCount
+   * ======================= */
+  public queryFIN63040ForReport = (body: any): Observable<any> => {
+    const payload = this.buildQueryPayload(body || {});
+    return this.fin63040Service.queryFIN63040(payload).pipe(
+      map((res: ApiResponse<any>) => {
+        const parsed = this.parseQueryResponse(res);
+        // ✅ table-report 內部是看 res.Data / res.TotalCount
+        return { Data: parsed.rows, TotalCount: parsed.total };
+      })
+    );
+  };
+
+  /** =======================
+   * ✅ selection event（取代 [(selectedItems)])
+   * ======================= */
+  onSelectionChange(list: QueryFIN63040Row[]) {
+    this.selectedItems = Array.isArray(list) ? list : [];
+  }
+  onSelectAllChange(_checked: boolean) {
+    // table-report 內部已處理可勾選條件，你這邊不必做事
+  }
+
+  /** =======================
+   * ✅ display helpers
+   * ======================= */
   private yesNoText(v: any): string {
     const s = String(v ?? '').toUpperCase();
     if (s === 'Y') return '是';
@@ -192,75 +285,9 @@ export class FIN63040Component extends BasicQueryPageComponent<any> implements A
     });
   }
 
-  ngOnInit(): void {
-    this.initializePage('FIN63040', 'fin/fin63040cru', this.queryForm, (form) => this.onSubmit(form));
-
-    this._allowSortFields = new Set(this.columns.map((c) => c.field).filter(Boolean) as string[]);
-
-    this.router.events
-      .pipe(
-        filter((e) => e instanceof NavigationStart),
-        untilDestroyed(this)
-      )
-      .subscribe((e: any) => {
-        const url = String(e?.url ?? '');
-        if (!url.includes('fin63040')) {
-          this.queryStateService.clearQueryState(this.ProgNo);
-        }
-      });
-
-this.fin26010Service
-  .queryAPS1002DropDownList()
-  .pipe(untilDestroyed(this))
-  .subscribe({
-    next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
-      const list = Array.isArray(res?.Data) ? res.Data : [];
-      this.BankCodeOptions = list
-        .slice()
-        .sort((a, b) => String(a.BNK_id).localeCompare(String(b.BNK_id)))
-        .map((x) => ({
-          label: `${x.BNK_id}-${x.BNK_AccName}`,
-          value: x.BNK_id,
-          raw: x,
-        }));
-    },
-    error: () => {
-      this.BankCodeOptions = [];
-    },
-  });
-
-    const state = history.state as any;
-    if (state?.fromCru === true) {
-      const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
-      if (saved?.formValue) {
-        this.queryForm.patchValue(saved.formValue, { emitEvent: false });
-        this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
-        this.lastQueryBody = saved.lastQueryBody ?? null;
-        Promise.resolve().then(() => this.onSubmit(this.queryForm));
-      }
-    }
-  }
-
-  @ViewChild('finTable') finTable!: TableComponent;
-
-  ngAfterViewInit(): void {
-    setTimeout(() => {
-      try {
-        (this.finTable as any).IsPrint = true;
-      } catch {}
-
-      const dt: any = (this.finTable as any).dt;
-      if (dt?.onLazyLoad) {
-        dt.onLazyLoad.pipe(untilDestroyed(this)).subscribe((e: any) => {
-          const pageSize = Number(e?.rows ?? 30);
-          const first = Number(e?.first ?? 0);
-          const pageIndex = Math.floor(first / pageSize) + 1;
-          this.fireQueryByPage(pageIndex, pageSize, e?.multiSortMeta);
-        });
-      }
-    });
-  }
-
+  /** =======================
+   * ✅ query payload
+   * ======================= */
   private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
     const asArr = Array.isArray(input) ? input : [];
     const cleaned = asArr
@@ -268,36 +295,20 @@ this.fin26010Service
       .map((x) => ({ field: String(x.field), order: x.order as number }));
     return cleaned.length ? cleaned : fallback;
   }
-private canCashByExpireDate(payDate: string, rows: QueryFIN63040Row[]): boolean {
-  const pay = new Date(payDate);
-  if (isNaN(pay.getTime())) return false;
-
-  const invalid = rows.filter((r) => {
-    const exp = r?.ExpireDate ? new Date(r.ExpireDate as any) : null;
-    if (!exp || isNaN(exp.getTime())) return true;
-    return exp.getTime() > pay.getTime();
-  });
-
-  if (invalid.length) {
-    const msg = invalid
-      .map((r) => `${String(r?.CheckNo ?? '').trim()}(到期日:${this.formatDate(r?.ExpireDate) || '空'})`)
-      .join('、');
-    this.messageService.errorBubble(`兌現日要大於等於到期日：${msg}`);
-    return false;
-  }
-
-  return true;
-}
 
   private buildQueryPayload(base: any): QueryFIN63040Request {
+    // table-report 送的是 pageIndex/pageSize/SortBy（小寫）
     const pageIndex = Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
     const pageSize = Number.isFinite(base?.pageSize) && base?.pageSize > 0 ? base.pageSize : 30;
+
+    // SortBy 可能是 PrimeNG multiSortMeta（field/order）
     const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
 
     const payload: QueryFIN63040Request = {
       PageIndex: pageIndex,
       PageSize: pageSize,
       SortBy: sort,
+
       CompanyAccNo: String(base?.CompanyAccNo ?? '').trim() || undefined,
       ChkNo: String(base?.ChkNo ?? '').trim() || undefined,
       PayDateFrom: this.toYmd(base?.PayDateFrom),
@@ -310,6 +321,21 @@ private canCashByExpireDate(payDate: string, rows: QueryFIN63040Row[]): boolean 
       const v = (payload as any)[k];
       if (v === '' || v == null) delete (payload as any)[k];
     });
+
+    // ✅ keep lastQueryBody 給 table-report 用（它會用 pageSize）
+    this.lastQueryBody = {
+      ...base,
+      pageIndex,
+      pageSize,
+      SortBy: sort,
+      // 同步查詢條件
+      CompanyAccNo: payload.CompanyAccNo,
+      ChkNo: payload.ChkNo,
+      PayDateFrom: base?.PayDateFrom ?? null,
+      PayDateTo: base?.PayDateTo ?? null,
+      ExpireDateFrom: base?.ExpireDateFrom ?? null,
+      ExpireDateTo: base?.ExpireDateTo ?? null,
+    };
 
     return payload;
   }
@@ -341,63 +367,14 @@ private canCashByExpireDate(payDate: string, rows: QueryFIN63040Row[]): boolean 
     return { rows: [], total: 0 };
   }
 
-  private fireQueryByPage(pageIndex: number, pageSize: number, sortMeta?: SortMeta[] | any) {
-    const raw = this.queryForm.getRawValue();
-
-    let sortBy: SortItem[] | undefined;
-
-    if (Array.isArray(sortMeta) && sortMeta.length) {
-      const filtered = sortMeta
-        .filter((s: any) => this._allowSortFields.has(String(s?.field)))
-        .map((s: any) => ({
-          field: String(s.field),
-          order: Number(s.order) || 1,
-        }));
-
-      if (filtered.length) sortBy = filtered;
-    }
-
-    if (!sortBy || !sortBy.length) {
-      sortBy = this._currentSortBy?.length ? this._currentSortBy : this.defaultSort;
-    }
-
-    const payload = this.buildQueryPayload({
-      ...raw,
-      pageIndex,
-      pageSize,
-      SortBy: sortBy,
-    });
-
-    this._currentSortBy = payload.SortBy ?? this.defaultSort;
-
-    this.loading = true;
-    this.fin63040Service
-      .queryFIN63040(payload)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: ApiResponse<any>) => {
-          const parsed = this.parseQueryResponse(res);
-          this.data = parsed.rows;
-          this.totalRecords = parsed.total;
-          this.lastQueryBody = { ...payload };
-          this.loading = false;
-          this.saveQueryState();
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.loading = false;
-          this.cdr.detectChanges();
-        },
-      });
-  }
-
+  /** =======================
+   * ✅ submit / clear
+   * ======================= */
   onSubmit(frm: any) {
     this.submitted = true;
 
     const raw = this.queryForm.getRawValue();
-    const payload = this.buildQueryPayload(raw);
+    const payload = this.buildQueryPayload({ ...raw, pageIndex: 1, pageSize: 30, SortBy: this._currentSortBy });
     payload.PageIndex = 1;
 
     this.loading = true;
@@ -413,8 +390,16 @@ private canCashByExpireDate(payDate: string, rows: QueryFIN63040Row[]): boolean 
           const parsed = this.parseQueryResponse(res);
           this.data = parsed.rows;
           this.totalRecords = parsed.total;
-          this.lastQueryBody = { ...payload };
           this._currentSortBy = payload.SortBy ?? this.defaultSort;
+
+          // ✅ 給 table-report 用
+          this.lastQueryBody = {
+            ...this.queryForm.getRawValue(),
+            pageIndex: 1,
+            pageSize: payload.PageSize ?? 30,
+            SortBy: this._currentSortBy,
+          };
+
           this.saveQueryState();
           this.loading = false;
           this.cdr.detectChanges();
@@ -449,6 +434,9 @@ private canCashByExpireDate(payDate: string, rows: QueryFIN63040Row[]): boolean 
     this.queryStateService.clearQueryState(this.ProgNo);
   }
 
+  /** =======================
+   * ✅ detail / edit（沿用）
+   * ======================= */
   override onDetail(row: QueryFIN63040Row) {
     const chkNo = String(row?.CheckNo ?? '').trim();
     if (!chkNo) return;
@@ -469,6 +457,9 @@ private canCashByExpireDate(payDate: string, rows: QueryFIN63040Row[]): boolean 
     });
   }
 
+  /** =======================
+   * ✅ cash flow（沿用）
+   * ======================= */
   onCash(): void {
     const chkNoList = this.getSelectedChkNoList();
     if (!chkNoList.length) {
@@ -479,6 +470,27 @@ private canCashByExpireDate(payDate: string, rows: QueryFIN63040Row[]): boolean 
     this.cashForm.reset({ PayDate: new Date() });
     this.cashDialogVisible = true;
     this.cdr.detectChanges();
+  }
+
+  private canCashByExpireDate(payDate: string, rows: QueryFIN63040Row[]): boolean {
+    const pay = new Date(payDate);
+    if (isNaN(pay.getTime())) return false;
+
+    const invalid = rows.filter((r) => {
+      const exp = r?.ExpireDate ? new Date(r.ExpireDate as any) : null;
+      if (!exp || isNaN(exp.getTime())) return true;
+      return exp.getTime() > pay.getTime();
+    });
+
+    if (invalid.length) {
+      const msg = invalid
+        .map((r) => `${String(r?.CheckNo ?? '').trim()}(到期日:${this.formatDate(r?.ExpireDate) || '空'})`)
+        .join('、');
+      this.messageService.errorBubble(`兌現日要大於等於到期日：${msg}`);
+      return false;
+    }
+
+    return true;
   }
 
   isCashConfirmDisabled(): boolean {
@@ -503,51 +515,49 @@ private canCashByExpireDate(payDate: string, rows: QueryFIN63040Row[]): boolean 
     });
   }
 
-onCashConfirm(): void {
-  this.cashForm.markAllAsTouched();
-  if (this.cashForm.invalid) return;
+  onCashConfirm(): void {
+    this.cashForm.markAllAsTouched();
+    if (this.cashForm.invalid) return;
 
-  const chkNoList = this.getSelectedChkNoList();
-  if (!chkNoList.length) {
-    this.messageService.errorBubble('請先勾選「可兌現=Y」的資料');
-    return;
+    const chkNoList = this.getSelectedChkNoList();
+    if (!chkNoList.length) {
+      this.messageService.errorBubble('請先勾選「可兌現=Y」的資料');
+      return;
+    }
+
+    const payDate = this.toYmd(this.cashForm.value.PayDate as any);
+    if (!payDate) {
+      this.messageService.errorBubble('請輸入兌現日');
+      return;
+    }
+
+    const selected = (Array.isArray(this.selectedItems) ? this.selectedItems : []).filter((r) => this.isRowSelectable(r));
+    if (!this.canCashByExpireDate(payDate, selected)) return;
+
+    this.btnLoading = true;
+
+    this.fin63040Service
+      .updateFIN63040Detail({ PayDate: payDate, ChkNoList: chkNoList } as any)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: any) => {
+          if (res?.IsSuccess === false) {
+            this.messageService.errorBubble(res?.Message ?? '票據兌現失敗');
+            return;
+          }
+          this.messageService.successBubble('票據兌現成功');
+          this.cashDialogVisible = false;
+          this.selectedItems = [];
+          this.cdr.detectChanges();
+        },
+        error: () => this.messageService.errorBubble('票據兌現失敗'),
+        complete: () => {
+          this.btnLoading = false;
+          this.cdr.detectChanges();
+          this.onSubmit(this.queryForm);
+        },
+      });
   }
-
-  const payDate = this.toYmd(this.cashForm.value.PayDate as any);
-  if (!payDate) {
-    this.messageService.errorBubble('請輸入兌現日');
-    return;
-  }
-
-  const selected = (Array.isArray(this.selectedItems) ? this.selectedItems : [])
-    .filter((r) => this.isRowSelectable(r));
-
-  if (!this.canCashByExpireDate(payDate, selected)) return;
-
-  this.btnLoading = true;
-
-  this.fin63040Service
-    .updateFIN63040Detail({ PayDate: payDate, ChkNoList: chkNoList } as any)
-    .pipe(untilDestroyed(this))
-    .subscribe({
-      next: (res: any) => {
-        if (res?.IsSuccess === false) {
-          this.messageService.errorBubble(res?.Message ?? '票據兌現失敗');
-          return;
-        }
-        this.messageService.successBubble('票據兌現成功');
-        this.cashDialogVisible = false;
-        this.selectedItems = [];
-        this.cdr.detectChanges();
-      },
-      error: () => this.messageService.errorBubble('票據兌現失敗'),
-      complete: () => {
-        this.btnLoading = false;
-        this.cdr.detectChanges();
-        this.onSubmit(this.queryForm);
-      },
-    });
-}
 
   onCashCancel(): void {
     this.cashDialogVisible = false;
@@ -561,6 +571,9 @@ onCashConfirm(): void {
       .filter(Boolean);
   }
 
+  /** =======================
+   * ✅ export（沿用）
+   * ======================= */
   private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
     if (!contentDisposition) return `download${defaultExtension}`;
 
@@ -657,4 +670,16 @@ onCashConfirm(): void {
         complete: () => (this.btnLoading = false),
       });
   }
+editDisabled = (row: QueryFIN63040Row): boolean => {
+  const status = String(row?.CheckStatus ?? '').trim();
+
+  // 禁止編輯狀態
+  return (
+    status === '3' ||   // 兌現(代碼)
+    status === '2' ||   // 到期(代碼)
+    status === '兌現' || 
+    status === '到期'
+  );
+};
+
 }

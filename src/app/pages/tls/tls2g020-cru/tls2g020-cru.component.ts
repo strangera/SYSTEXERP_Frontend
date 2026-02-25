@@ -53,6 +53,8 @@ interface DayData {
 export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   editMode: 'month' | 'day' = 'month';
   currentMonthData: any = null;
+  // 儲存當前月份日明細的原始複本，用於還原
+  private originalMonthDays: Record<number, any> | null = null;
   daysInMonth: number[] = [];
   weeks: (number | null)[][] = [];
 
@@ -194,6 +196,8 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
 
         this.generateCalendar(year, month);
         this.updateMonthTotals();
+        // 儲存原始複本
+        this.originalMonthDays = JSON.parse(JSON.stringify(this.currentMonthData.days || {}));
       },
     });
   }
@@ -255,6 +259,19 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   onBackToMonthTable() {
     this.editMode = 'month';
     this.currentMonthData = null;
+  }
+
+  // 還原當前月份的 day 明細為原始查詢值
+  onRestore(): void {
+    if (!this.currentMonthData) return;
+    if (this.originalMonthDays) {
+      this.currentMonthData.days = JSON.parse(JSON.stringify(this.originalMonthDays));
+    } else {
+      // 沒有原始資料就清空
+      this.currentMonthData.days = {};
+    }
+    this.updateMonthTotals();
+    this.cdr.detectChanges();
   }
 
   onBudgetChange(day: number) {

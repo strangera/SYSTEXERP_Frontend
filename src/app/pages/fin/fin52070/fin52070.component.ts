@@ -60,7 +60,7 @@ export interface ClassAttr {
 export class FIN52070Component extends BasicQueryPageComponent<GLS1005> implements OnInit {
   queryForm = this.formBuilder.group({
     // 科目三碼代號維護
-    ClassNo: ['', [Validators.maxLength(14)]], //  三碼代號
+    ClassNo: ['', [Validators.maxLength(3)]], //  三碼代號
     ClassCName: ['', [Validators.maxLength(100)]], // 三碼名稱
     ClassEname: ['', [Validators.maxLength(100)]], // 三碼英文名稱 (非必填)
     ParentClass: ['', [Validators.maxLength(3)]], //  中類代碼
@@ -125,13 +125,19 @@ export class FIN52070Component extends BasicQueryPageComponent<GLS1005> implemen
   // GLS6002 GLS3002若有對象別編號不可刪除
   // 9/9 SA註明: 該作業不可修改/刪除
   onDelete(selectedRows: GLS1005[]) {
-    const ids = selectedRows.map(row => row.ClassNo);
-    this.fin52070Service.deleteFIN52070({ ids }).pipe(untilDestroyed(this)).subscribe({
-      next: () => {
-        this.onSubmit(this.queryForm);
-        this.selectedRows = [];
+    this.messageService.confirm({
+      message: `是否確認刪除選中的科目三碼?`,
+      header: `確認刪除`,
+      accept: () => {
+        const ids = selectedRows.map(row => row.ClassNo);
+        this.fin52070Service.deleteFIN52070({ ids }).pipe(untilDestroyed(this)).subscribe({
+          next: () => {
+            this.onSubmit(this.queryForm);
+            this.selectedRows = [];
+          },
+          error: () => { this.loading = false; },
+        });
       },
-      error: () => { this.loading = false; },
     });
   }
 

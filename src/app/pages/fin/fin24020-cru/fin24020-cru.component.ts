@@ -122,6 +122,10 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
   }
   private lastAcpSelectTime = 0;
   private lastAcpNo = '';
+  // 暫存上一次送出的明細 key 順序（用於在後端未儲存 SortIndex 時還原順序）
+  private lastSentDetailKeyOrder: string[] = [];
+  // 讀取時的原始明細快照（用於 local cancel 還原）
+  private originalTableDataSnapshot: any[] = [];
 
   ngOnInit(): void {
     this.initializePage('FIN24020', this.dataForm, { useReadonly: true });
@@ -239,7 +243,7 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
           // no-op
         }))
         .subscribe(res => {
-          const items = (res?.Data ?? []) as any[];
+          let items = (res?.Data ?? []) as any[];
           // 支援兩種回傳：1) 直接明細陣列 2) wrapper 格式 { Data:{...}, Details:[...] }
           if (items && items.length) {
             const first = items[0];
@@ -256,7 +260,37 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
                 }, { emitEvent: false });
               } catch (e) { /* ignore */ }
               // 將 Details 展成 tableData
-              const details = (first.Details || []);
+              let details = (first.Details || []);
+              // 排序優先順序：1) SortIndex 2) SeqNo（後端常回傳）3) 不變（維持回傳順序）
+              try {
+                if (details && details.length) {
+                  if (details.some((d: any) => d.SortIndex !== undefined && d.SortIndex !== null)) {
+                    details = details.slice().sort((a: any, b: any) => (Number(a.SortIndex) || 0) - (Number(b.SortIndex) || 0));
+                  } else if (details.some((d: any) => d.SeqNo !== undefined && d.SeqNo !== null)) {
+                    details = details.slice().sort((a: any, b: any) => (Number(a.SeqNo) || 0) - (Number(b.SeqNo) || 0));
+                  }
+                }
+              } catch (e) { /* ignore */ }
+              // 若後端未回傳 SortIndex，嘗試以最近一次送出的明細 key 還原原本順序（best-effort）
+              try {
+                if ((!details.some((d: any) => d.SortIndex !== undefined && d.SortIndex !== null))
+                  && this.lastSentDetailKeyOrder && this.lastSentDetailKeyOrder.length) {
+                  const keyed = details.map((d: any) => ({
+                    d,
+                    key: `${d.RET_Date ? new Date(d.RET_Date + 'T00:00:00').toISOString().split('T')[0] : ''}|${Number(d.RET_Amt) || 0}|${(d.STATUS || '').toString().trim()}|${(d.NoteDesc || '').toString().trim()}`
+                  }));
+                  keyed.sort((a: any, b: any) => {
+                    const ai = this.lastSentDetailKeyOrder.indexOf(a.key);
+                    const bi = this.lastSentDetailKeyOrder.indexOf(b.key);
+                    if (ai === -1 && bi === -1) return 0;
+                    if (ai === -1) return 1;
+                    if (bi === -1) return -1;
+                    return ai - bi;
+                  });
+                  details = keyed.map((k: any) => k.d);
+                }
+              } catch (e) { /* ignore */ }
+
               this.tableData = details.map((d: any) => ({
                 RET_Date: d.RET_Date ? new Date(d.RET_Date + 'T00:00:00') : null,
                 RET_Amt: Number(d.RET_Amt ?? d.ACP_ReserveAmt ?? 0),
@@ -264,7 +298,10 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
                 STATUS: this.toStatusCode(d.STATUS),
                 ACP_Amt: d.ACP_Amt,
                 ACP_BalanceAmt: d.ACP_BalanceAmt
+                , _sortIndex: d.SortIndex
               }));
+              // 儲存原始快照以便 local cancel 還原
+              try { this.originalTableDataSnapshot = JSON.parse(JSON.stringify(this.tableData || [])); } catch (e) { this.originalTableDataSnapshot = [...(this.tableData || [])]; }
               // 如果 header 沒有金額，嘗試從第一筆明細帶入
               const firstDetail = details[0];
               const totalRet = details.reduce((s: number, it: any) => s + (Number(it.RET_Amt) || 0), 0);
@@ -278,12 +315,45 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
               } catch (e) { /* ignore */ }
             } else {
               // 非 wrapper，items 為明細列
+              // 如果回傳的明細包含 SortIndex，依 SortIndex 排序
+              try {
+                if (items && items.length) {
+                  if (items.some((it: any) => it.SortIndex !== undefined && it.SortIndex !== null)) {
+                    items = items.slice().sort((a: any, b: any) => (Number(a.SortIndex) || 0) - (Number(b.SortIndex) || 0));
+                  } else if (items.some((it: any) => it.SeqNo !== undefined && it.SeqNo !== null)) {
+                    items = items.slice().sort((a: any, b: any) => (Number(a.SeqNo) || 0) - (Number(b.SeqNo) || 0));
+                  }
+                }
+              } catch (e) { /* ignore */ }
+
+              // 嘗試以 lastSentDetailKeyOrder 還原順序（若沒有 SortIndex）
+              try {
+                if ((!items.some((it: any) => it.SortIndex !== undefined && it.SortIndex !== null))
+                  && this.lastSentDetailKeyOrder && this.lastSentDetailKeyOrder.length) {
+                  const keyed = items.map((it: any) => ({
+                    it,
+                    key: `${it.RET_Date ? new Date(it.RET_Date + 'T00:00:00').toISOString().split('T')[0] : ''}|${Number(it.RET_Amt) || 0}|${(it.STATUS || '').toString().trim()}|${(it.NoteDesc || '').toString().trim()}`
+                  }));
+                  keyed.sort((a: any, b: any) => {
+                    const ai = this.lastSentDetailKeyOrder.indexOf(a.key);
+                    const bi = this.lastSentDetailKeyOrder.indexOf(b.key);
+                    if (ai === -1 && bi === -1) return 0;
+                    if (ai === -1) return 1;
+                    if (bi === -1) return -1;
+                    return ai - bi;
+                  });
+                  items = keyed.map((k: any) => k.it);
+                }
+              } catch (e) { /* ignore */ }
+
               this.tableData = items.map(it => ({
                 RET_Date: it.RET_Date ? new Date(it.RET_Date + 'T00:00:00') : null,
                 RET_Amt: Number(it.RET_Amt ?? it.ACP_ReserveAmt ?? 0),
                 Remark: it.NoteDesc ?? '',
                 STATUS: this.toStatusCode(it.STATUS)
+                , _sortIndex: it.SortIndex
               }));
+              try { this.originalTableDataSnapshot = JSON.parse(JSON.stringify(this.tableData || [])); } catch (e) { this.originalTableDataSnapshot = [...(this.tableData || [])]; }
             }
           } else {
             this.tableData = [{
@@ -292,6 +362,7 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
               Remark: row.NoteDesc ?? '',
               STATUS: statusCode,
             }];
+            try { this.originalTableDataSnapshot = JSON.parse(JSON.stringify(this.tableData || [])); } catch (e) { this.originalTableDataSnapshot = [...(this.tableData || [])]; }
           }
         }, () => {
           this.tableData = [{
@@ -315,6 +386,14 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const detailRows = (this.tableData || []).filter(r => !r._isAutoInsertCandidate);
+      // 建立本次送出的明細 key 順序，用以在回傳中嘗試還原使用者順序（best-effort）
+      try {
+        this.lastSentDetailKeyOrder = detailRows.map(r => {
+          const d = r.RET_Date ? new Date(r.RET_Date) : null;
+          const dateKey = d && !isNaN(d.getTime()) ? this.datePipe.transform(d, 'yyyy-MM-dd') : '';
+          return `${dateKey}|${Number(r.RET_Amt) || 0}|${(r.STATUS || '').toString().trim()}|${(r.Remark || '').toString().trim()}`;
+        });
+      } catch (e) { this.lastSentDetailKeyOrder = []; }
       if (!detailRows.length) {
         this.loading = false;
         try { this.messageService.unblockUi(); } catch (e) { }
@@ -405,7 +484,7 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
         ACP_Amt: frm.value.ACP_Amt ?? 0,
         ACP_Date: acpDate,
         ACP_ReserveAmt: frm.value.ACP_ReserveAmt ?? 0,
-        Items: detailRows.map(row => {
+        Items: detailRows.map((row, idx) => {
           const rawRetDate = row.RET_Date;
           let retDate: string | null = null;
           if (rawRetDate) {
@@ -421,7 +500,9 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
             RET_Date: retDate,
             RET_Amt: row.RET_Amt ?? 0,
             STATUS: this.toStatusCode(row.STATUS),
-            Remark: row.Remark ?? ''
+            Remark: row.Remark ?? '',
+            // 附加 SortIndex 以便後端儲存並在讀取時回傳保持順序（若後端支援）
+            SortIndex: idx
           };
         })
       };
@@ -469,6 +550,24 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
       this.loading = false;
       try { this.messageService.unblockUi(); } catch (e) { /* ignore */ }
     }
+  }
+
+  // 當使用者按下 local Cancel 時，恢復成讀取時的原始明細與計算值
+  onLocalCancel(): void {
+    try {
+      // 恢復 tableData
+      this.tableData = JSON.parse(JSON.stringify(this.originalTableDataSnapshot || []));
+    } catch (e) {
+      this.tableData = [...(this.originalTableDataSnapshot || [])];
+    }
+    // 觸發 table change 處理（更新 sam 等值）
+    this.onTableDataChange(this.tableData);
+    // 恢復 form 欄位（若有初始 rowdata，可重置部分欄位）
+    try {
+      if (this.rowdata) {
+        this.initializeFormFromRowData();
+      }
+    } catch (e) { /* ignore */ }
   }
 
   override onCancel(returnValue?: any) {

@@ -297,8 +297,8 @@ export class TableEditComponent implements OnChanges {
     this.delete.emit(fullData); // 傳遞包含 Deleted 狀態的完整資料
     this.selectedItems = [];
 
-    // 2. 【關鍵檢查點 A】: 刪除後，如果內部資料為空，插入一筆新增行
-    if (this._tableData.length === 0 && this.canInsert) {
+    // 2. 【關鍵檢查點 A】: 刪除後若無「新增一列」且可新增，則插入一筆（空表或刪除後都需保留候選列）
+    if (this.canInsert && !this._tableData.some((item: any) => item._isAutoInsertCandidate)) {
       this.insertRow();
     }
     this._calculatedFooterData = this.calculateFooterData();

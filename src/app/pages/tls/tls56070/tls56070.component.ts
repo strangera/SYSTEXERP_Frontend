@@ -1,23 +1,23 @@
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AsyncPipe, CommonModule } from '@angular/common';
-import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
-import { POS2023DAMResponse, Tls56070Service } from '@service/api/tls/tls56070.service';
-import { finalize } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
+import { POS2023DAMResponse, QueryTLS56070Request, Tls56070Service } from '@service/api/tls/tls56070.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, formatAmount, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 export const enum SCRPStatus {
   已申請 = '1',
@@ -38,7 +38,7 @@ export const enum SCRPStatus {
     InputTextComponent,
     DropdownComponent,
     TranslateModule,
-    TableComponent,
+    TableReportComponent,
     CommonModule,
     MultiSelectComponent,
     CalendarRangeQuickComponent,
@@ -58,11 +58,14 @@ export class TLS56070Component extends BasicQueryPageComponent<POS2023DAMRespons
     APRV_Date_Start: [null],
     APRV_Date_End: [null],
     APRV_USR: [null],
-    ...createPaginationConfig([{ field: 'DAM_No', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'DAM_No', order: 1 }]],
   });
   totalRecords = 0;
   data: POS2023DAMResponse[] = [];
   selectedItems: POS2023DAMResponse[] = [];
+  lastQuery: QueryTLS56070Request | null = null;
   columns: Column[] = [
     { field: 'DAM_No', header: '報廢單編號', visible: true },
     { field: 'LOGO_No', header: '品牌', visible: true },
@@ -107,8 +110,8 @@ export class TLS56070Component extends BasicQueryPageComponent<POS2023DAMRespons
   userOptions = this.dropdown.queryTblUser();
 
   constructor(
-    private tls56070Service: Tls56070Service,
-    private dropdown: DropdownApiService,
+    public readonly tls56070Service: Tls56070Service,
+    private readonly dropdown: DropdownApiService,
   ) {
     super();
   }
@@ -121,6 +124,7 @@ export class TLS56070Component extends BasicQueryPageComponent<POS2023DAMRespons
     this.handleSubmit(frm, () => {
       this.tls56070Service.queryTLS56070(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
         this.data = response.Data;
+        this.lastQuery = frm.value;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
@@ -148,7 +152,26 @@ export class TLS56070Component extends BasicQueryPageComponent<POS2023DAMRespons
     return rowData.DAM_Status !== SCRPStatus.已申請;
   }
 
-  checkStatus(status: string): boolean {
-    return this.selectedItems.some(item => item.DAM_Status !== status);
+  canExecuteAction(targetRequiredStatus: string): boolean {
+    if (this.selectedItems.length === 0) return false;
+    return this.selectedItems[0].DAM_Status === targetRequiredStatus;
+  }
+  isRowSelectable = (rowData: POS2023DAMResponse): boolean => {
+    // 1. 基本條件：已報廢(3)或已作廢(9)永遠不能選
+    if (rowData.DAM_Status !== '1' && rowData.DAM_Status !== '2') {
+      return false;
+    }
+
+    // 2. 如果目前沒有選取任何東西，只要是 1 或 2 都可以選
+    if (this.selectedItems.length === 0) {
+      return true;
+    }
+
+    // 3. 動態互斥判斷
+    const firstSelectedStatus = this.selectedItems[0].DAM_Status;
+
+    // 如果目前選的是「已申請」，則只有「已申請」的可以繼續勾選
+    // 如果目前選的是「已審核」，則只有「已審核」的可以繼續勾選
+    return rowData.DAM_Status === firstSelectedStatus;
   }
 }

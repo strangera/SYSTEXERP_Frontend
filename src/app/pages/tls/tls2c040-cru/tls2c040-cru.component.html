@@ -70,7 +70,7 @@
         <app-table-edit tableKey="TLS2C040Edit" [columns]="editColumns" [data]="editData"
           (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
           [disabled]="isFormReadable" [showInsert]="false" [canInsert]="false" [showCheckBox]="false"
-          [showDelete]="false" [footerData]="editFooterData" />
+          [showDelete]="false" [footerData]="editFooterData" [showSort]="false" />
       </div>
       <!-- 應收/應付明細 table -->
       <div class="col-12" *ngIf="crudstatus === 'Read'">

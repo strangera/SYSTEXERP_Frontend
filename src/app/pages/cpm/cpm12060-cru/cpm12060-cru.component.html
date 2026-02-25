@@ -70,28 +70,41 @@
         />
       </div>
       <div class="grid p-fluid">
-        <app-dropdown
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="客戶意見類別"
           controlName="KIND_ID"
-          [options]="kindOption"
-          optionLabel="label"
-          optionValue="value"
           [control]="mainForm.controls.KIND_ID"
           [submitted]="submitted"
           [readonly]="true"
-        ></app-dropdown>
-        <app-dropdown
+        />
+
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="客戶意見類別名稱"
+          controlName="KIND_Name"
+          [control]="mainForm.controls.KIND_Name"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+      </div>
+      <div class="grid p-fluid">
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="客戶意見子類別"
-          [options]="KIND_SubIDOptions$ | async"
-          optionLabel="label"
-          optionValue="value"
           controlName="KIND_ID_SUB"
           [control]="mainForm.controls.KIND_ID_SUB"
           [submitted]="submitted"
           [readonly]="true"
-        ></app-dropdown>
+        />
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="客戶意見子類別名稱"
+          controlName="KIND_SubName"
+          [control]="mainForm.controls.KIND_SubName"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
       </div>
 
       <div class="grid p-fluid">
@@ -100,6 +113,14 @@
           label="客戶意見來源別"
           controlName="SUGG_SOURCE"
           [control]="mainForm.controls.SUGG_SOURCE"
+          [submitted]="submitted"
+          [readonly]="true"
+        />
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="客戶意見來源別(中文)"
+          controlName="SUGG_SOURCE_NAME"
+          [control]="mainForm.controls.SUGG_SOURCE_NAME"
           [submitted]="submitted"
           [readonly]="true"
         />

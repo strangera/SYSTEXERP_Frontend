@@ -1,7 +1,8 @@
 // 必填
-export function validateRequired(value: string | number): { isValid: boolean; errorMessage: string[] } {
+export function validateRequired(value: any): { isValid: boolean; errorMessage: string[] } {
+  const val = (value === null || value === undefined) ? '' : value.toString().trim();
   return {
-    isValid: value !== null && value !== '' && value !== undefined,
+    isValid: val !== '',
     errorMessage: ['必填'],
   };
 }
@@ -22,13 +23,12 @@ export function validateNumber(value: string): { isValid: boolean; errorMessage:
   return { isValid: false, errorMessage: ['只能輸入數字'] };
 }
 // 只能輸入英文與數字
-export function validateAlphanumeric(value: string): { isValid: boolean; errorMessage: string[] } {
+export function validateAlphanumeric(value: string) {
+  const val = value ?? '';
+  if (val === '') return { isValid: true, errorMessage: [] }; // 沒填就不檢查
   const regex = /^[a-zA-Z0-9]+$/;
-  if (regex.test(value)) {
-    return { isValid: true, errorMessage: [] };
-  } else {
-    return { isValid: false, errorMessage: ['只能輸入英文與數字'] };
-  }
+  const isValid = regex.test(val.toString());
+  return { isValid, errorMessage: isValid ? [] : ['只能輸入英文與數字'] };
 }
 // 只能輸入英文、數字與特殊符號
 export function validateAlphanumericSpecial(value: string): { isValid: boolean; errorMessage: string[] } {
@@ -71,25 +71,35 @@ export function validateMaxNumber(max: number): (value: string, rowData: any, da
   };
 }
 // 長度不能超過 ${maxLength} 個字
-export function validateMaxLength(maxLength: number): (value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean; errorMessage: string[] } {
+export function validateMaxLength(maxLength: number) {
   return (value: string): { isValid: boolean; errorMessage: string[] } => {
+    const val = value ?? ''; // 如果是 null/undefined 變為空字串
     return {
-      isValid: value.length <= maxLength,
+      isValid: val.toString().length <= maxLength,
       errorMessage: [`長度不能超過 ${maxLength} 個字`],
     };
   };
 }
 // 長度不能小於 ${minLength} 個字
-export function validateMinLength(minLength: number): (value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean; errorMessage: string[] } {
+export function validateMinLength(minLength: number) {
   return (value: string): { isValid: boolean; errorMessage: string[] } => {
+    const val = value ?? '';
+    // 如果沒填值，則不觸發長度不足的錯誤 (必填交給 validateRequired)
+    if (val.toString().length === 0) return { isValid: true, errorMessage: [] };
+
     return {
-      isValid: value.length >= minLength,
+      isValid: val.toString().length >= minLength,
       errorMessage: [`長度不能小於 ${minLength} 個字`],
     };
   };
 }
 // ${header}」已重複
-export function validateDuplicate(value: string, rowData: any, data: any[], field: string, header: string): { isValid: boolean; errorMessage: string[] } {
-  const duplicate = data.some(item => item[field] === value && item !== rowData);
-  return { isValid: !duplicate, errorMessage: [`「${header}」已重複`], };
+export function validateDuplicate(value: string, rowData: any, data: any[], field: string, header: string) {
+  if (!data || !Array.isArray(data)) return { isValid: true, errorMessage: [] };
+
+  const val = value ?? '';
+  if (val === '') return { isValid: true, errorMessage: [] }; // 空值不檢查重複
+
+  const duplicate = data.some(item => item[field] === val && item !== rowData);
+  return { isValid: !duplicate, errorMessage: [`「${header}」已重複`] };
 }

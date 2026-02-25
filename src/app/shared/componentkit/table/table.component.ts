@@ -247,12 +247,12 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() showPaginator = true;
   /** 記錄總數 @default 0 */
   @Input() totalRecords = 0;
-  /** 分頁選項 @default [20, 40, 60, 80, 100] */
-  @Input() rowsPerPageOptions: any[] | undefined = [20, 40, 60, 80, 100];
+  /** 分頁選項 @default [30, 60, 90, 120, 150] */
+  @Input() rowsPerPageOptions: any[] | undefined = [30, 60, 90, 120, 150];
   /** 共幾頁數 @default 0 */
   totalPages = 0;
   /** 每頁顯示的行數 @default 20 */
-  @Input() rows = 20;
+  @Input() rows = 30;
   /** 當前表格的起始索引 @default 0 */
   first = 0;
   /** (右上)下拉選單 頁數選項 @default [] */

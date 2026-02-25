@@ -3,16 +3,17 @@ import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { IMVDetail, IPOS2022Data, IQueryPOS2004DetailForTLS56040Request, IQueryPOS2004DetailForTLS56040Response, ITLS56040Data, ITLS56040Request, Tls56040Service } from '@service/api/tls/tls56040.service';
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { IMVDetail, IPOS2022Data, ITLS56040Data, ITLS56040Request, Tls56040Service } from '@service/api/tls/tls56040.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateDuplicate } from '@shared/componentkit/table-edit/validate-field.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
@@ -41,11 +42,11 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     TranslateModule,
     TableModule,
     InputTextareaComponent,
-    TableComponent,
+    TableReportComponent,
     DialogComponent,
-    DropdownTableComponent,
     AsyncPipe,
-    TableEditComponent
+    TableEditComponent,
+    ProductAutocompleteComponent
   ]
 })
 export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> implements OnInit {
@@ -97,8 +98,11 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
   warehouseOptions = this.dropdown.queryPos2034();
   userOptions = this.dropdown.queryTblUser();
 
+  initComponent = true;
+
   constructor(
     private readonly tls56040Service: Tls56040Service,
+    public readonly tls52010Service: Tls52010Service,
     private readonly dropdown: DropdownApiService,
     private readonly cdr: ChangeDetectorRef,
   ) {
@@ -106,13 +110,7 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS56040', this.dataForm);
-    if (!this.isFormCreateable) {
-      this.loading = true;
-      this.tls56040Service.queryPOS2022({ MVM_No: this.rowdata?.MVM_No || '', OUT_HOS_No: this.rowdata?.OUT_HOS_No || '' }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.data = response.Data || [];
-      });
-    }
+    this.initaializeData();
     this.dataForm.controls['OUT_HOS_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.validateWarehouseMismatch();
       [this.data, this.dialogData] = [[], []];
@@ -125,6 +123,17 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
       [this.data, this.dialogData] = [[], []];
       this.calculateTotals()
     });
+  }
+  initaializeData() {
+    this.initializePage('TLS56040', this.dataForm);
+    if (!this.isFormCreateable) {
+      this.initComponent = false;
+      this.loading = true;
+      this.tls56040Service.queryPOS2022({ MVM_No: this.rowdata?.MVM_No || '', OUT_HOS_No: this.rowdata?.OUT_HOS_No || '' }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.data = response.Data || [];
+        this.initComponent = true;
+      });
+    }
   }
   private validateWarehouseMismatch(): void {
     const outHosNo = this.dataForm.controls['OUT_HOS_No'].value;
@@ -192,8 +201,8 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
           Confirm_BuyTax: item.Confirm_BuyTax || 0,
           Confirm_BuyAmt: item.Confirm_BuyAmt || 0,
           Confirm_SaleAmt: item.Confirm_SaleAmt || 0,
-          id: this.isFormCreateable ? undefined : item.id,
-          MVM_No: this.isFormCreateable ? undefined : item.MVM_No
+          id: this.isFormCreateable ? undefined : item._dataStatus === 'new' ? 0 : item.id,
+          MVM_No: this.isFormCreateable ? undefined : this.rowdata?.MVM_No,
         } as IMVDetail))
       };
       const request$ = this.isFormCreateable ? this.tls56040Service.insertTLS56040(payload) : this.tls56040Service.updateTLS56040(payload);
@@ -210,15 +219,16 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
       return;
     }
     const body = {
+      VEN_No: '',
       queryNo: value,
       LOGO_No: logoNo,
       HOS_No: outHosNo,
-      PLU_Name: null,
+      PLU_Name: '',
       PageSize: 30,
       PageIndex: 1
     };
     setTimeout(() => {
-      this.tls56040Service.queryPOS2004DetailForTLS56040(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
         if (results.Data && results.Data.length > 0) {
           const newData = results.Data[0];
           const updatedRow: IPOS2022Data = {
@@ -233,6 +243,7 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
             APPLY_BuyAmt: newData.PLU_SalePrc_UNI + (newData.PLU_StockTaxType === '1' ? Math.floor(newData.PLU_SalePrc_UNI * 0.05) : 0),
             APPLY_BuyTax: newData.PLU_StockTaxType === '1' ? Math.floor(newData.PLU_SalePrc_UNI * 0.05) : 0,
             APPLY_SaleAmt: newData.PLU_SalePrc * 1,
+            _dataStatus: 'new'
           } as IPOS2022Data;
           if (this.data[index]) { Object.assign(this.data[index], updatedRow); }
           this.data = [...this.data];
@@ -281,11 +292,12 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
   dialogQueryForm = this.formBuilder.group({
     queryNo: ['', [Validators.maxLength(20)]], // 商品管理編號
     PLU_Name: ['', [Validators.maxLength(100)]], // 商品名稱
-    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
+    ...createPaginationConfig([{ field: 'PLU_No', order: 1 }]),
   });
   totalRecords = 0;
-  dialogData: IQueryPOS2004DetailForTLS56040Response[] = [];
-  selectedItemsDialog: IQueryPOS2004DetailForTLS56040Response[] = [];
+  dialogData: IQueryPOS2004DetailResponse[] = [];
+  dialogLastQueryBody: IQueryPOS2004DetailRequest | null = null;
+  selectedItemsDialog: IQueryPOS2004DetailResponse[] = [];
   dialogColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
@@ -301,19 +313,21 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
       return;
     }
     this.dialogLoading = true;
-    const body: IQueryPOS2004DetailForTLS56040Request = {
-      PageSize: frm.getRawValue().pageSize,
-      PageIndex: frm.getRawValue().pageIndex,
+    const body: IQueryPOS2004DetailRequest = {
+      pageSize: frm.getRawValue().pageSize,
+      pageIndex: frm.getRawValue().pageIndex,
       SortBy: frm.getRawValue().SortBy,
       queryNo: frm.getRawValue().queryNo,
       PLU_Name: frm.getRawValue().PLU_Name,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
-      HOS_No: this.dataForm.controls.OUT_HOS_No.value
+      HOS_No: this.dataForm.controls.OUT_HOS_No.value,
+      VEN_No: ''
     };
-    this.tls56040Service.queryPOS2004DetailForTLS56040(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+    this.tls52010Service.queryPOS2004Detail(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
       this.dialogData = response.Data;
       this.totalRecords = response.TotalCount;
-    });
+      this.dialogLastQueryBody = body;
+    })
   }
 
   saveDialog() {
@@ -335,6 +349,8 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
         APPLY_BuyAmt: item.PLU_SalePrc_UNI + (item.PLU_StockTaxType === '1' ? Math.floor(item.PLU_SalePrc_UNI * 0.05) : 0),
         APPLY_BuyTax: item.PLU_StockTaxType === '1' ? Math.floor(item.PLU_SalePrc_UNI * 0.05) : 0,
         APPLY_SaleAmt: item.PLU_SalePrc * 1,
+        PLU_BoxQty: item.PLU_BoxQty || 0,
+        _dataStatus: 'new',
       } as IPOS2022Data;
     });
     this.data = [
@@ -345,30 +361,6 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
     this.selectedItems = [];
     this.calculateTotals();
   }
-  suggestions: IQueryPOS2004DetailForTLS56040Response[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號 - 商品名稱', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    if (!this.dataForm.controls.LOGO_No.value || !this.dataForm.controls.OUT_HOS_No.value) {
-      this.suggestions = [];
-      return;
-    }
-    const body: IQueryPOS2004DetailForTLS56040Request = {
-      PageSize: 30,
-      PageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-      queryNo: event.label || '',
-      PLU_Name: '',
-      LOGO_No: this.dataForm.controls.LOGO_No.value,
-      HOS_No: this.dataForm.controls.OUT_HOS_No.value
-    };
-    this.tls56040Service.queryPOS2004DetailForTLS56040(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item, label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
-  }
   isRowSelectable(event: IPOS2022Data): boolean {
     return !this.data || !this.data.some((item: IPOS2022Data) => item.PLU_MagNo === event.PLU_MagNo);
   }
@@ -376,7 +368,7 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
 // 調撥數量不能大於目前庫存
 export function validateTransferQty(value: string, rowData: IPOS2022Data): { isValid: boolean; errorMessage: string[] } {
   return {
-    isValid: (rowData.APPLY_Qty || 0) <= (rowData.STK_CurrentQty || 0),
+    isValid: (Number(rowData.APPLY_Qty) || 0) <= (Number(rowData.NowHaveQty) || 0),
     errorMessage: [`調撥數量不能大於目前庫存`, '資料錯誤'],
   };
 }

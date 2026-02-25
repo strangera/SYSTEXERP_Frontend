@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { TLS32040ChartRequest, TLS32040Request, TLS32040Response, TLS32040Service } from '@service/api/tls/tls32040.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
@@ -17,18 +17,18 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { ChartModule } from 'primeng/chart';
 import { TableModule } from 'primeng/table';
-import { debounceTime, finalize } from 'rxjs';
+import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TLS32040ChartResponse } from './../../../service/api/tls/tls32040.service';
 
 const today = new Date();
+const yesterday = new Date(today);
 
 @Component({
   selector: 'app-tls32040',
@@ -70,6 +70,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     AreaList: [[]],// 區域
     BusTypeList: [[] as string[]],//大分類
     BusClassList: [[] as IDropdownItem[]],//中分類
+    BusSClassList: [[] as IDropdownItem[]],//小分類
     TltKindList: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
     OrgList: [[]],  // 組織
     TltNoList: [[]], //專櫃編號 (queryTLTTALENT_DropDownList)
@@ -219,6 +220,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   area_no_Option: IDropdownItem[] = []; // 區域
   bus_type_Option: IDropdownItem[] = []; // 大分類
   bus_class_Option: IDropdownItem[] = []; // 中分類
+  bus_sclass_Option: IDropdownItem[] = []; // 小分類
   org_id_Option: IDropdownItem[] = []; // 組織
   tlt_no_id_Option: IDropdownItem[] = []; // 專櫃編號
 
@@ -236,17 +238,37 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
 
   ngOnInit(): void {
     this.initializePage('TLS32040', 'TLS/TLS32040cru', this.queryForm, (frm) => this.onSubmit(frm));
-
-    // 日期表單控制
+    // 1. 初始化 UI 狀態與驗證器
     this.onReportTypeChange('DAY');
     this.setReadOnlyFields();
 
-    // 監聽 dateForm 的變化，套用日期到 queryForm(比較日是基準日帶入結果，不進行自行控制)
-    this.dateForm.valueChanges.subscribe(() => {
-      this.syncDateToQueryForm();
-    });
+    // 2. 【關鍵】先從 State 還原資料（純資料 patchValue）
+    // 處理基準日期表單
+    const savedDate = this.queryStateService.getQueryStateValue('tls32040_Date');
+    if (savedDate) {
+      // 如果 savedDate 是整個 FormGroup 物件，則取 .value；如果是 rawValue 則直接用
+      const dateVal = savedDate.value ? savedDate.value : savedDate;
+      this.dateForm.patchValue(dateVal, { emitEvent: false });
+    }
 
-    //同步自定義比較表單
+    // 處理自定義比較表單
+    const savedCDate = this.queryStateService.getQueryStateValue('tls32040_CDate');
+    if (savedCDate) {
+      const cDateVal = savedCDate.value ? savedCDate.value : savedCDate;
+      this.c_dateForm.patchValue(cDateVal, { emitEvent: false });
+    }
+
+    // 3. 【關鍵】還原後手動執行同步，確保 queryForm 拿到正確的初始日期
+    this.syncDateToQueryForm();
+    this.syncCDateToQueryForm();
+
+    // 4. 最後才啟動監聽 (這時後的監聽才會持續有效且不會被覆蓋)
+    this.dateForm.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.syncDateToQueryForm();
+      });
+
     this.c_dateForm.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(() => {
@@ -298,25 +320,82 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         this.queryForm.controls.BusTypeList.setValue([]);
       }
     });
+    // 監聽中分類變化，獲取小分類並分組
+    this.queryForm.controls.BusClassList.valueChanges.pipe(
+      debounceTime(300),
+      untilDestroyed(this),
+      map(selectedMValues => selectedMValues || []),
+
+      // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
+      switchMap((selectedMValues: IDropdownItem[]) => {
+        if (selectedMValues.length === 0) {
+          this.bus_sclass_Option = [];
+          this.queryForm.controls.BusSClassList.setValue([]);
+          //  統一回傳型別，避免 TypeScript 推斷成 never[]
+          return of({ selectedMValues: [], data: [] });
+        }
+
+        //  組成符合新 API 的請求格式
+        const queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[] = selectedMValues
+          .filter(v => v && v.bus_type) // 過濾 undefined
+          .map(v => ({
+            bus_type: v.bus_type!,   // 非空斷言
+            bus_class: v.No
+          }));
+
+        //  呼叫新 API（一次呼整包）
+        return this.dropDownListService.queryTLTBUSSCLASS_DropDownList_new({ queryTLTBUSSCLASSInfos }).pipe(
+          map(res => ({ selectedMValues, data: res.Data }))
+        );
+      }),
+
+      tap(result => {
+        console.log('所有 API 呼叫結果：', result);
+      })
+    ).subscribe(result => {
+
+      const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
+        const groupKey = `${mValue.bus_type}_${mValue.No}`;
+        const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
+
+        //  過濾小分類資料對應到當前中分類
+        const items = result.data
+          .filter(item => item.bus_type === mValue.bus_type && item.bus_class === mValue.No)
+          .map(item => ({
+            ...item,
+            label: `${item.No} - ${item.Name}`,
+            bus_type: mValue.bus_type,
+            bus_type_name: mValue.bus_type_name,
+            CAT_MNo: mValue.No,
+            CAT_MName: mValue.Name
+          }));
+
+        //  去重
+        const uniqueItemsMap = new Map<string, typeof items[0]>();
+        items.forEach(item => {
+          if (!uniqueItemsMap.has(item.No)) {
+            uniqueItemsMap.set(item.No, item);
+          }
+        });
+
+
+        accumulator[groupKey] = {
+          label: groupLabel,
+          items: Array.from(uniqueItemsMap.values())
+        };
+
+        return accumulator;
+      }, {} as Record<string, any>);
+
+      this.bus_sclass_Option = Object.values(groupedData);
+      console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
+    });
 
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
   }
   onSubmit(frm: FormGroup) {
-    // if (this.dateForm.invalid) {
-    //   this.messageService.errorBubble('基準資料為必填');
-    //   console.log('基準資料為必填', this.dateForm);
-    //   return
-    // }
-    // if (this.c_dateForm.invalid) {
-    //   this.messageService.errorBubble('比較資料為必填');
-    //   console.log('比較資料為必填', this.c_dateForm);
-    //   return
-    // }
-
-    // console.log('大類表單', frm.getRawValue().BusTypeList);
-
     this.handleSubmit(frm, () => {
       const formValue = {
         ...frm.getRawValue(),
@@ -333,6 +412,11 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         BusClassList: (frm.getRawValue().BusClassList || []).map((item: any) => ({
           BusType: item.bus_type ?? '',
           BusClass: item.No ?? ''
+        })),
+        BusSClassList: (frm.getRawValue().BusSClassList || []).map((item: any) => ({
+          BusType: item.bus_type ?? '',
+          BusClass: item.CAT_MNo ?? '',
+          BusSClass: item.No ?? ''
         })),
 
         TltKindList: (frm.getRawValue().TltKindList || []).join(','),
@@ -352,19 +436,14 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         this.totalRecords = res.Data.length;              // 等候端
         console.log('主查詢結果', res.Data);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        // ---同步儲存比較表單的query資訊---
+        this.queryStateService.setQueryState('tls32040_Date', this.dateForm);
+        this.queryStateService.setQueryState('tls32040_CDate', this.c_dateForm);
+        // ------
       })
     })
   }
   onReport(frm: FormGroup, isExcel: boolean) {
-    // if (this.dateForm.invalid) {
-    //   this.messageService.errorBubble('基準資料為必填');
-    //   return
-    // }
-    // if (this.c_dateForm.invalid) {
-    //   this.messageService.errorBubble('比較資料為必填');
-    //   return
-    // }
-
     if (isExcel == false) {
       const formValue = {
         ...frm.getRawValue(),
@@ -381,6 +460,11 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         BusClassList: (frm.getRawValue().BusClassList || []).map((item: any) => ({
           BusType: item.bus_type ?? '',
           BusClass: item.No ?? ''
+        })),
+        BusSClassList: (frm.getRawValue().BusSClassList || []).map((item: any) => ({
+          BusType: item.bus_type ?? '',
+          BusClass: item.CAT_MNo ?? '',
+          BusSClass: item.No ?? ''
         })),
 
         TltKindList: (frm.getRawValue().TltKindList || []).join(','),
@@ -415,6 +499,11 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         BusClassList: (frm.getRawValue().BusClassList || []).map((item: any) => ({
           BusType: item.bus_type ?? '',
           BusClass: item.No ?? ''
+        })),
+        BusSClassList: (frm.getRawValue().BusSClassList || []).map((item: any) => ({
+          BusType: item.bus_type ?? '',
+          BusClass: item.CAT_MNo ?? '',
+          BusSClass: item.No ?? ''
         })),
 
         TltKindList: (frm.getRawValue().TltKindList || []).join(','),
@@ -841,6 +930,28 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     // console.log('比較日期(起)', compareStart);
     // console.log('比較日期(迄)', compareEnd);
   }
+
+  //清除日期查詢條件
+  onClearDate() {
+    //dateForm設定為日營業報，日期今天
+    this.dateForm.reset({
+      reportType: 'DAY',
+      onedatedd: today,
+    });
+
+    //c_dateForm設定為日營業報，日期昨天
+    this.c_dateForm.reset({
+      reportType: 'DAY',
+      onedatedd: yesterday,
+    });
+
+    // 2. 手動觸發一次驗證與同步，確保畫面與 queryForm 狀態正確
+    this.onReportTypeChange('DAY');
+    this.setReadOnlyFields();
+    this.syncDateToQueryForm();
+  }
+
+  //能否顯示明細的row控制項
 
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);

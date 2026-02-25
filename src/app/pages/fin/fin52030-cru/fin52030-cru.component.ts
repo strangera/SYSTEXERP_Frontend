@@ -10,7 +10,6 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
@@ -22,7 +21,7 @@ import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { finalize, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailTable, FIN52030InsertPayload, FIN52030UpdatePayload, VendorList } from '../fin52030/fin52030.model';
 import { TableEditComponent } from './table-edit/table-edit.component';
-import { EditColumnExtend } from './table-edit/table-edit.model';
+import { EditColumn, EditColumnExtend } from './table-edit/table-edit.model';
 
 @Component({
   selector: 'app-fin52030-cru',
@@ -400,19 +399,28 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
   public onDelete(event: (FIN52030DetailTable & Partial<EditColumnExtend>)[]): void {
     const data = this.tableData();
+    const ev = event ?? [];
+    // 用 event 陣列索引判斷刪除列（row 沒有 .index；刪除「新增」列時該列會從 fullData 移除，event 筆數會變少）
     const deletedIndexes = new Set<number>(
-      (event ?? [])
-        .filter(e => e?._dataStatus === 'deleted')
-        .map(e => e.index!)
-        .filter(i => typeof i === 'number')
+      ev.length < data.length
+        ? [] // 筆數變少：下方用「以 event 為剩餘資料」處理，不依 deletedIndexes
+        : ev.map((e, i) => (e?._dataStatus === 'deleted' ? i : -1)).filter(i => i >= 0)
     );
 
     this.logger.debug(`onDelete:`, [event, data, deletedIndexes]);
-    if (!deletedIndexes.size) return;
 
-    this.tableData.update(current =>
-      current.filter((_, index) => !deletedIndexes.has(index))
-    );
+    if (ev.length < data.length) {
+      // 刪除的是「新增」列，table-edit 已從 fullData 移除，event 即剩餘列
+      this.tableData.set(
+        ev.map((item, index) => ({ ...item, index, SerNo: (index + 1) * 10 }))
+      );
+    } else if (deletedIndexes.size > 0) {
+      this.tableData.update(current =>
+        current
+          .filter((_, index) => !deletedIndexes.has(index))
+          .map((item, index) => ({ ...item, index, SerNo: (index + 1) * 10 }))
+      );
+    }
     this.logger.debug(`onDelete - table updated:`, [this.tableData()]);
   }
 

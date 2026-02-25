@@ -137,20 +137,25 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
   }
 
   public onDelete(data: ASS21010Data[]): void {
-    this.logger.debug(`Deleting ASS21010:`, [data, this.user, this.queryForm.getRawValue(), this.usrData()]);
-    this.tableLoading.set(!0);
-    for (let i = 0; i < data.length; i++) {
-      this.service.deleteASS21010({ ...data[i], ...this.usrData() }).pipe(
-      ).subscribe({
-        next: res => {
-          if (res.Status !== '0000') return;
-          this.tableData.update(table =>
-            table.filter(value => data.some(item => value.ID !== item.ID)));
-          this.messageService.successBubble('刪除成功');
-        },
-      });
-      if (i === data.length - 1) this.onSubmit();
-    }
+    this.messageService.confirm({
+      header: `是否確認刪除 ${data.length} 筆資料?`,
+      accept: () => {
+        this.logger.debug(`Deleting ASS21010:`, [data, this.user, this.queryForm.getRawValue(), this.usrData()]);
+        this.tableLoading.set(!0);
+        for (let i = 0; i < data.length; i++) {
+          this.service.deleteASS21010({ ...data[i], ...this.usrData() }).pipe(
+          ).subscribe({
+            next: res => {
+              if (res.Status !== '0000') return;
+              this.tableData.update(table =>
+                table.filter(value => data.some(item => value.ID !== item.ID)));
+              this.messageService.successBubble('刪除成功');
+            },
+          });
+          if (i === data.length - 1) this.onSubmit();
+        }
+      }
+    });
   }
 
   public onExport(type: string): void {

@@ -59,5 +59,22 @@ export class TLS23090Service {
     } = input as any;
     return rest as any;
   }
+  // 匯出 EXCEL（信用卡明細）
+exporttls23090CreditExcel(body: any): Observable<HttpResponse<Blob>> {
+  const clean = this.stripPaging(body || {});
+  return this.http.post(`${this.apiUrl}/TLS0000/TLS2000/exportTLS23090_CreditCard`, clean, {
+    observe: 'response',
+    responseType: 'blob',
+  });
+}
+
+// 匯出 EXCEL（專櫃卡別分析）
+exporttls23090CounterExcel(body: any): Observable<HttpResponse<Blob>> {
+  const clean = this.stripPaging(body || {});
+  return this.http.post(`${this.apiUrl}/TLS0000/TLS2000/exportTLS23090_CounterCard`, clean, {
+    observe: 'response',
+    responseType: 'blob',
+  });
+}
 }
 

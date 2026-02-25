@@ -245,28 +245,34 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
 
   /** 刪除選中的活動 */
   public onDelete(data: TLS26010Data[]): void {
-    this.logger.debug(`刪除活動:`, data);
-    let completedCount = 0;
-    const totalCount = data.length;
+    this.messageService.confirm({
+      message: `是否確認刪除選中的預購活動檔期?`,
+      header: `確認刪除`,
+      accept: () => {
+        this.logger.debug(`刪除活動:`, data);
+        let completedCount = 0;
+        const totalCount = data.length;
 
-    for (const item of data) {
-      this.service.deleteTLS26010(item).subscribe({
-        next: () => {
-          completedCount++;
-          // 當所有刪除操作完成後，重新查詢
-          if (completedCount === totalCount) {
-            this.onSubmit(this.queryForm);
-          }
-        },
-        error: () => {
-          completedCount++;
-          // 即使有錯誤，也要檢查是否所有操作都已完成
-          if (completedCount === totalCount) {
-            this.onSubmit(this.queryForm);
-          }
+        for (const item of data) {
+          this.service.deleteTLS26010(item).subscribe({
+            next: () => {
+              completedCount++;
+              // 當所有刪除操作完成後，重新查詢
+              if (completedCount === totalCount) {
+                this.onSubmit(this.queryForm);
+              }
+            },
+            error: () => {
+              completedCount++;
+              // 即使有錯誤，也要檢查是否所有操作都已完成
+              if (completedCount === totalCount) {
+                this.onSubmit(this.queryForm);
+              }
+            }
+          });
         }
-      });
-    }
+      },
+    });
   }
 
 }

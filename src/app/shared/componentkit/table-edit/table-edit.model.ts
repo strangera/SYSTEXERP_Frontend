@@ -8,7 +8,7 @@ export interface EditColumn {
   disabled?: (value: any, index?: number, rowData?: any) => boolean;  // 是否禁用 (是否為禁用欄位)
   hidden?: boolean | ((rowData: any, index?: number) => boolean); // 是否隱藏 (是否為隱藏欄位)
   validate?: ((value: any, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[];
-  type?: 'input' | 'inputNumber' | 'percent' | 'dropdown' | 'date' | 'template' | 'checkbox'; // 欄位類型
+  type?: 'input' | 'inputNumber' | 'percent' | 'dropdown' | 'autoComplete' | 'date' | 'template' | 'checkbox' | 'dropdownTable';
   groupField?: string;
   width?: string;
   textAlign?: 'left' | 'right' | 'center' | 'justify' | 'match-parent' | 'initial' | 'inherit' | 'unset' | 'revert' | 'revert-layer' | 'unset';
@@ -20,6 +20,9 @@ export interface EditColumn {
    * 'count': 計數 (如果是非數值欄位可能有用)
    */
   aggregate?: 'sum' | 'avg' | 'count';
+  // AutoComplete
+  forceSelection?: boolean; // AutoComplete 是否強制選取建議項
+  onFilterComplete?: (event: any, rowData: any, col: EditColumn, index: number) => void; // AutoComplete 搜尋完成事件
   // inputNumber
   min?: number; // 最小值
   max?: number; // 最大值
