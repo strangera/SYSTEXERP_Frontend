@@ -168,6 +168,43 @@ export class TLS2C030Component extends BasicQueryPageComponent<TLS2C030Data> imp
       });
   }
 
+  /** 本日重算（呼叫後端 reCalculateTLS2C030） */
+  recalculateToday() {
+    if (this.queryForm.invalid) {
+      this.submitted = true;
+      return;
+    }
+
+    const payload = {
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: this.lastQueryBody?.SortBy ?? [],
+      onedatedd: this.datePipe.transform(this.queryForm.get('onedatedd')?.value, 'yyyy-MM-ddTHH:mm:ss') || ''
+    };
+
+    this.tableLoading.set(true);
+    this.messageService.blockUi();
+
+    this.tls2c030Service.reCalculateTLS2C030(payload)
+      .pipe(finalize(() => {
+        this.tableLoading.set(false);
+        this.messageService.unblockUi();
+      }), untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          this.messageService.successBubble(res?.Message || '重算完成');
+          // 重新查詢以更新畫面
+          this.onSubmit(this.queryForm);
+        },
+        error: (err) => {
+          console.error('reCalculateTLS2C030 failed', err);
+          this.messageService.errorBubble('重算失敗');
+        }
+      });
+  }
+
   get params() {
     return {
       onedatedd: this.datePipe.transform(this.queryForm.get('onedatedd')?.value, 'yyyy-MM-ddTHH:mm:ss') || ''
