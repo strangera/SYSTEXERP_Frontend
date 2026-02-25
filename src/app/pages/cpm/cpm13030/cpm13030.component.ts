@@ -235,7 +235,8 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
           if (blob) {
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
-            link.download = 'CPM13030_非業主POS停車費折抵補登報表.xlsx';
+            const filename = this.getFilenameFromResponse(res, 'CPM13030_POS停車抵扣報表.xlsx');
+            link.download = filename;
             link.click();
           }
         },
@@ -276,11 +277,35 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
           if (blob) {
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
-            link.download = 'CPM13030_非業主POS停車費折抵補登報表.pdf';
+            const filename = this.getFilenameFromResponse(res, 'CPM13030_POS停車抵扣報表.pdf');
+            link.download = filename;
             link.click();
           }
         },
       });
+  }
+  private getFilenameFromResponse(response: any, defaultName: string): string {
+    try {
+      const cd = response?.headers?.get?.('content-disposition') || response?.headers?.get?.('Content-Disposition');
+      if (!cd) return defaultName;
+      // filename*=UTF-8''encoded-name or filename="name"
+      const fnStarMatch = cd.match(/filename\*=(?:UTF-8'')?([^;\n\r]+)/i);
+      if (fnStarMatch && fnStarMatch[1]) {
+        let name = fnStarMatch[1].trim();
+        // remove surrounding quotes
+        if (name.startsWith("\"") && name.endsWith("\"")) {
+          name = name.substring(1, name.length - 1);
+        }
+        try { return decodeURIComponent(name); } catch { return name; }
+      }
+      const fnMatch = cd.match(/filename="?([^";]+)"?/i);
+      if (fnMatch && fnMatch[1]) {
+        return fnMatch[1];
+      }
+      return defaultName;
+    } catch (e) {
+      return defaultName;
+    }
   }
   private downloadFile(blob: Blob, filename: string): void {
     if (!blob || blob.size === 0) {
