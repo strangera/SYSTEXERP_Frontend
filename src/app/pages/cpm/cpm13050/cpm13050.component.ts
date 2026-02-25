@@ -39,7 +39,7 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
     TXN_EDATE: [new Date(), [Validators.required]],
     PKG_disc_shop_name: [''],
     PKG_disc_rule_name: [''],
-    displayMode: ['M'],
+    displayMode: ['M', [Validators.required]],
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
   });
 
