@@ -3,6 +3,7 @@ import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS12010Data, ASS12010DetailResponse } from '@pages/ass/ass12010/ass12010.model';
+import { ASS12020Detail, ASS12020QueryRow } from '@pages/ass/ass12020/ass12020.model';
 import {
   ASS12030Detail,
   ASS12030DetailItem,
@@ -11,7 +12,7 @@ import {
 } from '@pages/ass/ass12030/ass12030.model';
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12010Service } from '@service/api/ass/ass12010.service';
-import { ASS12020Detail, ASS12020QueryRow, ASS12020Service } from '@service/api/ass/ass12020.service';
+import { ASS12020Service } from '@service/api/ass/ass12020.service';
 import { ASS12030Service } from '@service/api/ass/ass12030.service';
 import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
@@ -389,7 +390,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       return;
     }
     const row = this.selectedPurchaseRow;
-    const id = row?.id ?? row?.BATCH_NO;
+    const id = row?.FAQuotationM_ID;
     if (!id) {
       this.messageService.warnBubble('請選擇一筆詢價清單');
       return;
