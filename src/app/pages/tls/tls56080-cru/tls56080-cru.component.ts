@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { IQueryTLS56080Response, ITLS56080Detail, Tls56080Service } from '@service/api/tls/tls56080.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
@@ -43,7 +43,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     TableReportComponent,
     ProductAutocompleteComponent,
     DialogComponent,
-    TableEditComponent
+    TableEditComponent,
+    AsyncPipe
   ]
 })
 export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Response> implements OnInit {
@@ -63,7 +64,6 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
     TRD_Remark: [null, [Validators.maxLength(200)]], // 備註
   });
   data: ITLS56080Detail[] = [];
-  originalData: ITLS56080Detail[] = [];
   selectedItems: ITLS56080Detail[] = [];
   editColumns: EditColumn[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
@@ -97,24 +97,31 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
     { field: 'TRD_Amt', header: '小計', format: formatAmount },
     { field: 'TRD_Remark', header: '單項備註', type: 'input' },
   ];
-  brandOptions: { label: string; value: string }[] = [];
-  warehouseOptions: { label: string; value: string }[] = [];
-  vendorOptions: { label: string; value: string }[] = [];
+  brandOptions = this.dropdown.queryPluLogo();
+  warehouseOptions = this.dropdown.queryPos2034();
+  userOptions = this.dropdown.queryTblUser();
+  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   reasonOptions = getSYS1000Options('TRD_Reason');
-  userOptions: { label: string; value: string }[] = [];
   totalRecords = 0;
+  initComponent = true;
 
   constructor(
     public readonly tls52010Service: Tls52010Service,
     private readonly tls56080Service: Tls56080Service,
-    private readonly dropDownListService: DropDownListService,
+    private readonly dropdown: DropdownApiService,
   ) {
     super();
   }
 
   ngOnInit(): void {
+    this.loadData();
+    // 監聽品牌、倉別、廠商變動，清空明細資料
+    this.dataForm.controls['LOGO_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => { this.data = []; this.calculateTotals(); });
+    this.dataForm.controls['HOS_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => { this.data = []; this.calculateTotals(); });
+  }
+  loadData() {
+    this.initComponent = false;
     this.initializePage('TLS56080', this.dataForm);
-    this.loadDropdownOptions();
     if (!this.isFormCreateable && this.rowdata && this.rowdata.TRD_No) {
       this.dataForm.get('HOS_No')?.disable();
       this.dataForm.get('VEN_No')?.disable();
@@ -125,30 +132,10 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
         OUT_HOS_No: this.rowdata?.HOS_No
       }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data
-        this.originalData = response.Data;
       });
     }
-    // 監聽品牌、倉別、廠商變動，清空明細資料
-    this.dataForm.controls['LOGO_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => { this.data = []; this.calculateTotals(); });
-    this.dataForm.controls['HOS_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => { this.data = []; this.calculateTotals(); });
+    this.initComponent = true;
   }
-
-  loadDropdownOptions(): void {
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(options => {
-      this.warehouseOptions = options.Data.map(item => ({ label: item.Name, value: item.No }));
-    });
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.brandOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.vendorOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
-    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
-  }
-
-
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
     queryNo: ['', [Validators.maxLength(20)]], // 商品管理編號
@@ -273,6 +260,8 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
         APPLY_USR_No: frm.getRawValue().APPLY_USR_No,
         TRD_Remark: frm.getRawValue().TRD_Remark,
         Details: this.data.map((item: ITLS56080Detail) => ({
+          TRD_No: this.isFormCreateable ? undefined : this.rowdata?.TRD_No,
+          id: this.isFormCreateable ? undefined : item.id || 0,
           SYS_StoreNo: item.SYS_StoreNo,
           HOS_No: item.HOS_No,
           PLU_MagNo: item.PLU_MagNo,
@@ -285,8 +274,6 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
           TRD_Qty: item.TRD_Qty,
           TRD_Amt: item.TRD_Amt,
           TRD_Remark: item.TRD_Remark,
-          id: this.isFormCreateable ? undefined : item.id,
-          TRD_No: this.isFormCreateable ? undefined : item.TRD_No,
         })),
       }
       const request$ = this.isFormCreateable

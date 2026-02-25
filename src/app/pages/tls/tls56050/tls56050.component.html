@@ -22,26 +22,26 @@
           <app-product-autocomplete class="col-12" [control]="queryForm.controls.queryNo" [submitted]="submitted" />
           <!-- 品牌代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌代碼/名稱" controlName="LOGO_NoList" [options]="brandOptions" optionLabel="label"
+            <app-dropdown label="品牌代碼/名稱" controlName="LOGO_NoList" [options]="brandOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.LOGO_NoList" [submitted]="submitted"></app-dropdown>
           </div>
           <!-- 調出倉別 (對應SYS_StoreNo) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="調出倉別" controlName="OUT_HOS_NoList" [options]="warehouseOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.OUT_HOS_NoList"
+            <app-multi-select label="調出倉別" controlName="OUT_HOS_NoList" [options]="warehouseOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.OUT_HOS_NoList"
               [submitted]="submitted"></app-multi-select>
           </div>
           <!-- 調入倉別 (對應MVM_MoveStoreNo) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="調入倉別" controlName="IN_HOS_NoList" [options]="warehouseOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.IN_HOS_NoList"
+            <app-multi-select label="調入倉別" controlName="IN_HOS_NoList" [options]="warehouseOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.IN_HOS_NoList"
               [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
           <!-- 申請人員 (對應CRT_USR_No) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="申請人編號/名稱" controlName="APPLY_USR" [options]="userOptions" optionLabel="label"
+            <app-dropdown label="申請人編號/名稱" controlName="APPLY_USR" [options]="userOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.APPLY_USR" [submitted]="submitted"></app-dropdown>
           </div>
           <!-- 移轉日期 (申請日期) -->
@@ -54,7 +54,7 @@
         <div class="grid p-fluid">
           <!-- 審核人員 (對應UPD_USR_No) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="審核人編號/名稱" controlName="APRV_USR" [options]="userOptions" optionLabel="label"
+            <app-dropdown label="審核人編號/名稱" controlName="APRV_USR" [options]="userOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.APRV_USR" [submitted]="submitted"></app-dropdown>
           </div>
           <!-- 移入驗收日期/移出確認日期 (審核日期) -->
@@ -67,7 +67,7 @@
         <div class="grid p-fluid">
           <!-- 發貨人 (對應MVM_SenderNo) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="發貨人編號/名稱" controlName="OUTGODS_USR" [options]="userOptions" optionLabel="label"
+            <app-dropdown label="發貨人編號/名稱" controlName="OUTGODS_USR" [options]="userOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.OUTGODS_USR" [submitted]="submitted"></app-dropdown>
           </div>
           <!-- (發貨日期) -->
@@ -89,5 +89,5 @@
   <app-table-report dataKey="MVM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
     (detail)="onDetail($event)" [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false"
     [editDisabled]="editDisabled" [lastQueryBody]="lastQuery"
-    [queryFunction]="tls52010Service.queryTLS52010.bind(tls52010Service)"></app-table-report>
+    [queryFunction]="tls56050Service.queryTLS56050.bind(tls56050Service)"></app-table-report>
 </div>

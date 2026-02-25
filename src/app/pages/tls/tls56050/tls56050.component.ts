@@ -1,11 +1,10 @@
-import { CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls52010Service } from '@service/api/tls/tls52010.service';
 import { IQueryTLS56050Request, ITLS56050Response, Tls56050Service } from '@service/api/tls/tls56050.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -37,12 +36,13 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     CommonModule,
     MultiSelectComponent,
     CalendarRangeQuickComponent,
-    ProductAutocompleteComponent
+    ProductAutocompleteComponent,
+    AsyncPipe
   ],
 })
 export class TLS56050Component extends BasicQueryPageComponent<ITLS56050Response> implements OnInit {
   queryForm = this.formBuilder.group({
-    MVM_No: [null, [Validators.maxLength(12)]],               // varchar(12)
+    MVM_No: [null, [Validators.maxLength(14)]],               // varchar(12)
     queryNo: [null, [Validators.maxLength(20)]],          // 非 POS2021 欄位，保留不設驗證
     OUT_HOS_NoList: [null],          // varchar(6)
     IN_HOS_NoList: [null],          // varchar(6)
@@ -82,7 +82,7 @@ export class TLS56050Component extends BasicQueryPageComponent<ITLS56050Response
     { label: '已審核', value: '2' },
     { label: '已發貨', value: '3' },
     { label: '已收貨確認', value: '4' },
-    { label: '已作廢', value: '9' },
+    // { label: '已作廢', value: '9' },
   ];
 
   // 倉別調撥單狀態選項
@@ -94,29 +94,15 @@ export class TLS56050Component extends BasicQueryPageComponent<ITLS56050Response
     { label: '已作廢', value: '9' },
   ];
 
-  brandOptions: { label: string; value: string }[] = [];// 品牌
-  warehouseOptions: { label: string; value: string }[] = []; // 倉別
-  userOptions: { label: string; value: string }[] = [];
-
+  brandOptions = this.dropDown.queryPluLogo(); // 品牌選項
+  warehouseOptions = this.dropDown.queryPos2034(); // 倉別
+  userOptions = this.dropDown.queryTblUser(); // 人員選項
   constructor(
-    public readonly tls52010Service: Tls52010Service,
-    private readonly dropDownListService: DropDownListService,
-    private readonly tls56050Service: Tls56050Service
+    public readonly tls56050Service: Tls56050Service,
+    private readonly dropDown: DropdownApiService,
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS56050', '/TLS/TLS56050CRU', this.queryForm, (form) => this.onSubmit(form));
-    // 倉別 (HOS_No)
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(options => {
-      this.warehouseOptions = options.Data.map(item => ({ label: item.Name, value: item.No }));
-    });
-    // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.brandOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
-    // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
-    });
   }
 
   onSubmit(frm: FormGroup) {
