@@ -2,10 +2,12 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11070Service } from '@service/api/ass/ass11070.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -16,7 +18,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
-import { ASS11070Data, ASS11070QueryRequest } from './ass11070.model';
+import { QueryASS11070Request, QueryASS11070Response } from './ass11070.model';
 
 // 3.1.1.7 備用供應商資料維護作業
 @Component({
@@ -31,70 +33,73 @@ import { ASS11070Data, ASS11070QueryRequest } from './ass11070.model';
     TranslateModule,
     ButtonComponent,
     CalendarRangeComponent,
+    DropdownComponent,
     InputTextComponent,
     InputTextRangeComponent,
-    MenubarComponent,
     RadiobuttonComponent,
+    MenubarComponent,
     TableReportComponent,
   ],
 })
-export class ASS11070Component extends BasicQueryPageComponent<ASS11070Data> implements OnInit {
+export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Response> implements OnInit {
   public readonly queryForm = this.formBuilder.group({
-    startdate: new FormControl<Date | null>(null),
-    enddate: new FormControl<Date | null>(null),
-    receptionPerson: new FormControl<string | null>(null),
-    vendorUID: new FormControl<string | null>(null),
-    bussinessModel: new FormControl<number | null>(null),
-    vendorCName: new FormControl<string | null>(null, [Validators.maxLength(60)]),
-    vendorEName: new FormControl<string | null>(null, [Validators.maxLength(60)]),
-    contactPerson: new FormControl<string | null>(null, [Validators.maxLength(60)]),
-    contactPhone: new FormControl<string | null>(null, [Validators.maxLength(15)]),
+    crtDateS: new FormControl<Date | null>(null),
+    crtDateE: new FormControl<Date | null>(null),
+    prStaffId: new FormControl<string | null>(null, [Validators.maxLength(20)]),
+    vendorId: new FormControl<string | null>(null, [Validators.maxLength(20)]),
+    mangerType: new FormControl<string | null>(null, [Validators.maxLength(20)]),
+    vendorName: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    vendorNameE: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    contactStaff: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    contactTel: new FormControl<string | null>(null, [Validators.maxLength(15)]),
     contactTitle: new FormControl<string | null>(null, [Validators.maxLength(60)]),
     contactFax: new FormControl<string | null>(null, [Validators.maxLength(60)]),
-    contactCellphone: new FormControl<string | null>(null, [Validators.maxLength(10)]),
+    contactMobilePhone: new FormControl<string | null>(null, [Validators.maxLength(10)]),
     contactEmail: new FormControl<string | null>(null, [Validators.maxLength(100)]),
     companyAddress: new FormControl<string | null>(null, [Validators.maxLength(100)]),
-    companyResponsibility: new FormControl<string | null>(null, [Validators.maxLength(60)]),
-    paymentMethod: new FormControl<number | null>(null),
-    ticketPeriodStart: new FormControl<string | null>(null),
-    ticketPeriodEnd: new FormControl<string | null>(null),
-    services: new FormControl<string | null>(null, [Validators.maxLength(100)]),
-    remark: new FormControl<string | null>(null, [Validators.maxLength(100)]),
+    chargeStaff: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    payType: new FormControl<string | null>(null, [Validators.maxLength(20)]),
+    ticketPeriodS: new FormControl<string | null>(null, [Validators.maxLength(30)]),
+    ticketPeriodE: new FormControl<string | null>(null, [Validators.maxLength(30)]),
+    serviceItem: new FormControl<string | null>(null, [Validators.maxLength(100)]),
+    notes: new FormControl<string | null>(null, [Validators.maxLength(100)]),
     pageSize: new FormControl<number>(30),
     pageIndex: new FormControl<number>(1),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  public readonly tableData = signal<ASS11070Data[]>([]);
+  public readonly tableData = signal<QueryASS11070Response[]>([]);
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(false);
-  public lastQueryBody?: ASS11070QueryRequest;
+  public readonly staffOptions = signal<{ label: string; value: string; name: string }[]>([]);
+  public readonly vendorOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly mangerTypeOptions = [
+    { value: '1', label: '工廠直銷' },
+    { value: '2', label: '代理商' },
+    { value: '3', label: '經銷商' },
+    { value: '4', label: '零售連鎖' },
+    { value: '5', label: '零售一般' },
+  ];
+  public readonly payTypeOptions = [
+    { value: '1', label: '電匯' },
+    { value: '2', label: '支票' },
+    { value: '3', label: '現金' },
+  ];
+  public lastQueryBody?: QueryASS11070Request;
 
   public readonly columns: ReportColumn[] = [
-    { field: 'CreateDate', header: '建檔日期', format: formatDate },
-    { field: 'VendorUID', header: '廠商統一編號' },
-    { field: 'VendorName', header: '廠商名稱' },
-    { field: 'ContactPerson', header: '聯絡人' },
-    { field: 'ContactPhone', header: '聯絡人電話(O)' },
-    { field: 'ContactCellphone', header: '聯絡人行動電話' },
-  ];
-
-  public readonly bussinessOptions: { value: number; label: string }[] = [
-    { value: 1, label: '工廠直銷' },
-    { value: 2, label: '代理商' },
-    { value: 3, label: '經銷商' },
-    { value: 4, label: '零售連鎖' },
-    { value: 5, label: '零售一般' },
-  ];
-  public readonly paymentMethodOptions: { value: number; label: string }[] = [
-    { value: 1, label: '電匯' },
-    { value: 2, label: '開票' },
-    { value: 3, label: '現金' },
+    { field: 'CRT_Date', header: '建立日期', format: formatDate },
+    { field: 'VENDOR_ID', header: '統一編號' },
+    { field: 'VENDOR_NAME', header: '廠商名稱' },
+    { field: 'CONTACT_STAFF', header: '聯絡人' },
+    { field: 'CONTACT_TEL', header: '聯絡人電話' },
+    { field: 'CONTACT_MOBILE_PHONE', header: '聯絡人手機' },
   ];
 
   constructor(
     public readonly service: ASS11070Service,
-    private readonly logger: NGXLogger,
+    private readonly dropDownListService: DropDownListService,
+    private readonly logger: NGXLogger
   ) {
     super();
   }
@@ -102,6 +107,37 @@ export class ASS11070Component extends BasicQueryPageComponent<ASS11070Data> imp
   ngOnInit(): void {
     this.initializePage('ASS11070', '/ASS/ASS11070CRU', this.queryForm, this.onSubmit.bind(this));
     this.logger.debug('ASS11070 init:', [this.queryForm]);
+    this.loadDropdownOptions();
+  }
+
+  private loadDropdownOptions(): void {
+    this.dropDownListService.queryTBLUSER_DropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data ?? []).map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+          name: item.Name,
+        }));
+        this.staffOptions.set(options);
+      },
+    });
+
+    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data ?? []).map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+        this.vendorOptions.set(options);
+      },
+    });
+  }
+
+  private resolveStaffName(staffId: string | null): string | undefined {
+    if (!staffId) return undefined;
+    return this.staffOptions().find(option => option.value === staffId)?.name;
   }
 
   private toDateString(d: Date | null): string | undefined {
@@ -112,64 +148,44 @@ export class ASS11070Component extends BasicQueryPageComponent<ASS11070Data> imp
     return `${y}-${m}-${day}`;
   }
 
-  public queryFunction = (body: ASS11070QueryRequest): Observable<ApiResponse<ASS11070Data[]>> => {
+  private buildQueryPayload(body: QueryASS11070Request = {}): QueryASS11070Request {
+    const pagingBody = body as QueryASS11070Request & { pageSize?: number; pageIndex?: number };
     const raw = this.queryForm.getRawValue();
-    const payload: ASS11070QueryRequest = {
-      CreateDate_S: this.toDateString(raw.startdate ?? null),
-      CreateDate_E: this.toDateString(raw.enddate ?? null),
-      ReceptionPerson: raw.receptionPerson ?? undefined,
-      VendorUID: raw.vendorUID ?? undefined,
-      BussinessModel: raw.bussinessModel ?? undefined,
-      VendorCName: raw.vendorCName ?? undefined,
-      VendorEName: raw.vendorEName ?? undefined,
-      ContactPerson: raw.contactPerson ?? undefined,
-      ContactPhone: raw.contactPhone ?? undefined,
-      ContactTitle: raw.contactTitle ?? undefined,
-      ContactFax: raw.contactFax ?? undefined,
-      ContactCellphone: raw.contactCellphone ?? undefined,
-      ContactEmail: raw.contactEmail ?? undefined,
-      CompanyAddress: raw.companyAddress ?? undefined,
-      CompanyResponsibility: raw.companyResponsibility ?? undefined,
-      PaymentMethod: raw.paymentMethod ?? undefined,
-      TicketPeriod_S: raw.ticketPeriodStart ?? undefined,
-      TicketPeriod_E: raw.ticketPeriodEnd ?? undefined,
-      Services: raw.services ?? undefined,
-      Remark: raw.remark ?? undefined,
-      PageSize: body.PageSize ?? raw.pageSize ?? 30,
-      PageIndex: body.PageIndex ?? raw.pageIndex ?? 1,
-      SortBy: body.SortBy,
+    const hasLoadMorePaging = pagingBody.pageIndex !== undefined || pagingBody.pageSize !== undefined;
+    const pageSize = pagingBody.pageSize ?? pagingBody.PageSize ?? raw.pageSize ?? 30;
+    const pageIndex = pagingBody.pageIndex ?? pagingBody.PageIndex ?? raw.pageIndex ?? 1;
+    const payload: QueryASS11070Request = {
+      CRT_Date_S: this.toDateString(raw.crtDateS ?? null),
+      CRT_Date_E: this.toDateString(raw.crtDateE ?? null),
+      PR_STAFF_ID: raw.prStaffId ?? undefined,
+      PR_STAFF_NAME: this.resolveStaffName(raw.prStaffId ?? null),
+      VENDOR_ID: raw.vendorId ?? undefined,
+      MANGER_TYPE: raw.mangerType ?? undefined,
+      VENDOR_NAME: raw.vendorName ?? undefined,
+      CONTACT_STAFF: raw.contactStaff ?? undefined,
+      CONTACT_TEL: raw.contactTel ?? undefined,
+      CONTACT_MOBILE_PHONE: raw.contactMobilePhone ?? undefined,
+      OrderBy: pagingBody.OrderBy,
+      Offset: hasLoadMorePaging ? (pageIndex - 1) * pageSize : (pagingBody.Offset ?? (pageIndex - 1) * pageSize),
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: pagingBody.SortBy,
     };
-    const clean = removeEmptyValues(payload) as ASS11070QueryRequest;
+    return removeEmptyValues(payload) as QueryASS11070Request;
+  }
+
+  public queryFunction = (body: QueryASS11070Request): Observable<ApiResponse<QueryASS11070Response[]>> => {
+    const clean = this.buildQueryPayload(body);
     return this.service.queryASS11070(clean);
   };
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       const raw = this.queryForm.getRawValue();
-      this.lastQueryBody = {
-        CreateDate_S: this.toDateString(raw.startdate ?? null),
-        CreateDate_E: this.toDateString(raw.enddate ?? null),
-        ReceptionPerson: raw.receptionPerson ?? undefined,
-        VendorUID: raw.vendorUID ?? undefined,
-        BussinessModel: raw.bussinessModel ?? undefined,
-        VendorCName: raw.vendorCName ?? undefined,
-        VendorEName: raw.vendorEName ?? undefined,
-        ContactPerson: raw.contactPerson ?? undefined,
-        ContactPhone: raw.contactPhone ?? undefined,
-        ContactTitle: raw.contactTitle ?? undefined,
-        ContactFax: raw.contactFax ?? undefined,
-        ContactCellphone: raw.contactCellphone ?? undefined,
-        ContactEmail: raw.contactEmail ?? undefined,
-        CompanyAddress: raw.companyAddress ?? undefined,
-        CompanyResponsibility: raw.companyResponsibility ?? undefined,
-        PaymentMethod: raw.paymentMethod ?? undefined,
-        TicketPeriod_S: raw.ticketPeriodStart ?? undefined,
-        TicketPeriod_E: raw.ticketPeriodEnd ?? undefined,
-        Services: raw.services ?? undefined,
-        Remark: raw.remark ?? undefined,
+      this.lastQueryBody = this.buildQueryPayload({
         PageSize: raw.pageSize ?? 30,
         PageIndex: raw.pageIndex ?? 1,
-      } as ASS11070QueryRequest;
+      });
 
       this.tableLoading.set(true);
       this.queryStateService.setQueryState(this.ProgNo, raw);

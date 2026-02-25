@@ -2,17 +2,23 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11070Service } from '@service/api/ass/ass11070.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { ASS11070Data, ASS11070InsertRequest, ASS11070UpdateRequest } from '../ass11070/ass11070.model';
+import {
+  DetailASS11070Response,
+  InsertASS11070Request,
+  QueryASS11070Response,
+  UpdateASS11070Request,
+} from '../ass11070/ass11070.model';
 
 // 3.1.1.7 備用供應商資料維護作業 CRU
 @Component({
@@ -27,144 +33,252 @@ import { ASS11070Data, ASS11070InsertRequest, ASS11070UpdateRequest } from '../a
     TranslateModule,
     MenubarComponent,
     ButtonComponent,
-    CalendarComponent,
+    DropdownComponent,
     InputTextComponent,
     InputTextRangeComponent,
     RadiobuttonComponent,
   ],
 })
-export class ASS11070CRUComponent extends BasicCruPageComponent<ASS11070Data> implements OnInit {
+export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Response> implements OnInit {
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    buildDate: new FormControl<Date | null>(null, [Validators.required]),
-    receptionPerson: new FormControl<string>('', [Validators.required]),
-    vendorUID: new FormControl<string>('', [Validators.required]),
-    bussinessModel: new FormControl<number | null>(null),
-    vendorCName: new FormControl<string>('', [Validators.required, Validators.maxLength(60)]),
-    vendorEName: new FormControl<string>('', [Validators.maxLength(60)]),
-    contactPerson: new FormControl<string>('', [Validators.required, Validators.maxLength(60)]),
-    contactPhone: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
+    prStaffId: new FormControl<string>('', [Validators.required, Validators.maxLength(20)]),
+    vendorId: new FormControl<string>('', [Validators.required, Validators.maxLength(20)]),
+    crtDate: new FormControl<string>('', [Validators.required, Validators.maxLength(10)]),
+    mangerType: new FormControl<string>('', [Validators.maxLength(20)]),
+    vendorName: new FormControl<string>('', [Validators.required, Validators.maxLength(60)]),
+    vendorNameE: new FormControl<string>('', [Validators.maxLength(60)]),
+    contactStaff: new FormControl<string>('', [Validators.required, Validators.maxLength(60)]),
+    contactTel: new FormControl<string>('', [Validators.required, Validators.maxLength(15)]),
     contactTitle: new FormControl<string>('', [Validators.maxLength(60)]),
     contactFax: new FormControl<string>('', [Validators.maxLength(60)]),
-    contactCellphone: new FormControl<string>('', [Validators.maxLength(10)]),
+    contactMobilePhone: new FormControl<string>('', [Validators.maxLength(10)]),
     contactEmail: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
     companyAddress: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
-    companyResponsibility: new FormControl<string>('', [Validators.maxLength(60)]),
-    paymentMethod: new FormControl<number | null>(null),
-    ticketPeriodStart: new FormControl<string | null>(null),
-    ticketPeriodEnd: new FormControl<string | null>(null),
-    services: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
-    remark: new FormControl<string>('', [Validators.maxLength(100)]),
+    chargeStaff: new FormControl<string>('', [Validators.maxLength(60)]),
+    payType: new FormControl<string>('', [Validators.maxLength(20)]),
+    ticketPeriodS: new FormControl<string>('', [Validators.maxLength(30)]),
+    ticketPeriodE: new FormControl<string>('', [Validators.maxLength(30)]),
+    serviceItem: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
+    notes: new FormControl<string>('', [Validators.maxLength(100)]),
+    // Key fields are kept internally for detail/update payload.
+    stoNo: new FormControl<string>('', [Validators.maxLength(20)]),
   });
   public readonly df = computed(() => this.dataForm.controls);
   public readonly tableLoading = signal<boolean>(false);
-
-  public readonly bussinessOptions: { value: number; label: string }[] = [
-    { value: 1, label: '工廠直銷' },
-    { value: 2, label: '代理商' },
-    { value: 3, label: '經銷商' },
-    { value: 4, label: '零售連鎖' },
-    { value: 5, label: '零售一般' },
+  public readonly staffOptions = signal<{ label: string; value: string; name: string }[]>([]);
+  public readonly vendorOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly mangerTypeOptions = [
+    { value: '1', label: '工廠直銷' },
+    { value: '2', label: '代理商' },
+    { value: '3', label: '經銷商' },
+    { value: '4', label: '零售連鎖' },
+    { value: '5', label: '零售一般' },
   ];
-  public readonly paymentMethodOptions: { value: number; label: string }[] = [
-    { value: 1, label: '電匯' },
-    { value: 2, label: '開票' },
-    { value: 3, label: '現金' },
+  public readonly payTypeOptions = [
+    { value: '1', label: '電匯' },
+    { value: '2', label: '支票' },
+    { value: '3', label: '現金' },
   ];
 
   constructor(
     public readonly service: ASS11070Service,
-    private readonly notification: NotificationService,
+    private readonly dropDownListService: DropDownListService,
+    private readonly notification: NotificationService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('ASS11070', this.dataForm);
+    this.loadDropdownOptions();
+    if (this.isFormCreateable) {
+      this.dataForm.patchValue({ crtDate: this.getTodayDateString() });
+    }
+    if (!this.isFormCreateable && this.rowdata) {
+      const row = this.rowdata as QueryASS11070Response;
+      if (row.VENDOR_ID) {
+        this.loadDetail(row.VENDOR_ID);
+      }
+    }
   }
 
-  private toDateString(d: Date | null): string | undefined {
-    if (!d || !(d instanceof Date) || isNaN(d.getTime())) return undefined;
+  private loadDropdownOptions(): void {
+    this.dropDownListService.queryTBLUSER_DropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data ?? []).map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+          name: item.Name,
+        }));
+        this.staffOptions.set(options);
+      },
+    });
+
+    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data ?? []).map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+        this.vendorOptions.set(options);
+      },
+    });
+  }
+
+  private resolveStaffName(staffId: string | null): string | undefined {
+    if (!staffId) return undefined;
+    return this.staffOptions().find(option => option.value === staffId)?.name;
+  }
+
+  private parseTicketPeriod(ticketPeriod?: string): { start: string; end: string } {
+    if (!ticketPeriod) return { start: '', end: '' };
+    const normalized = ticketPeriod.replace(/~/g, '-');
+    const [start = '', end = ''] = normalized.split('-', 2).map(item => item.trim());
+    return { start, end };
+  }
+
+  private buildTicketPeriod(start?: string | null, end?: string | null): string | undefined {
+    if (!start && !end) return undefined;
+    return `${start ?? ''}-${end ?? ''}`;
+  }
+
+  private getTodayDateString(): string {
+    const now = new Date();
+    return this.toDateString(now);
+  }
+
+  private toDateString(d: Date): string {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   }
 
+  private normalizeDateString(dateText?: string): string {
+    if (!dateText) return '';
+    const normalized = dateText.trim().replace(/\//g, '-');
+    const matchedDate = normalized.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
+    if (matchedDate) return matchedDate;
+
+    const parsed = new Date(dateText);
+    if (!isNaN(parsed.getTime())) {
+      return this.toDateString(parsed);
+    }
+    return normalized;
+  }
+
+  private buildDetailLikePayload(): DetailASS11070Response {
+    const raw = this.dataForm.getRawValue();
+    return {
+      STO_NO: raw.stoNo ?? '',
+      CRT_Date: raw.crtDate || undefined,
+      VENDOR_ID: raw.vendorId ?? '',
+      VENDOR_NAME: raw.vendorName || undefined,
+      VENDOR_NAME_E: raw.vendorNameE || undefined,
+      PR_STAFF_ID: raw.prStaffId || undefined,
+      PR_STAFF_NAME: this.resolveStaffName(raw.prStaffId ?? null),
+      CONTACT_STAFF: raw.contactStaff || undefined,
+      CONTACT_TITLE: raw.contactTitle || undefined,
+      CONTACT_TEL: raw.contactTel || undefined,
+      CONTACT_MOBILE_PHONE: raw.contactMobilePhone || undefined,
+      CONTACT_EMAIL: raw.contactEmail || undefined,
+      CONTACT_FAX: raw.contactFax || undefined,
+      CHARGE_STAFF: raw.chargeStaff || undefined,
+      COMPANY_ADDRESS: raw.companyAddress || undefined,
+      PAY_TYPE: raw.payType || undefined,
+      MANGER_TYPE: raw.mangerType || undefined,
+      TICKET_PERIOD: this.buildTicketPeriod(raw.ticketPeriodS, raw.ticketPeriodE),
+      SERVICE_ITEM: raw.serviceItem || undefined,
+      NOTES: raw.notes || undefined,
+    };
+  }
+
+  private patchFormWithDetail(detail: DetailASS11070Response): void {
+    const ticketPeriod = this.parseTicketPeriod(detail.TICKET_PERIOD);
+    this.dataForm.patchValue({
+      stoNo: detail.STO_NO ?? '',
+      crtDate: this.normalizeDateString(detail.CRT_Date),
+      vendorId: detail.VENDOR_ID ?? '',
+      vendorName: detail.VENDOR_NAME ?? '',
+      vendorNameE: detail.VENDOR_NAME_E ?? '',
+      prStaffId: detail.PR_STAFF_ID ?? '',
+      contactStaff: detail.CONTACT_STAFF ?? '',
+      contactTitle: detail.CONTACT_TITLE ?? '',
+      contactTel: detail.CONTACT_TEL ?? '',
+      contactMobilePhone: detail.CONTACT_MOBILE_PHONE ?? '',
+      contactEmail: detail.CONTACT_EMAIL ?? '',
+      contactFax: detail.CONTACT_FAX ?? '',
+      chargeStaff: detail.CHARGE_STAFF ?? '',
+      companyAddress: detail.COMPANY_ADDRESS ?? detail.VENDOR_REG_ADDR ?? detail.TAX_ADDR ?? '',
+      payType: detail.PAY_TYPE ?? '',
+      mangerType: detail.MANGER_TYPE ?? '',
+      ticketPeriodS: ticketPeriod.start,
+      ticketPeriodE: ticketPeriod.end,
+      serviceItem: detail.SERVICE_ITEM ?? '',
+      notes: detail.NOTES ?? '',
+    });
+  }
+
+  private loadDetail(vendorId: string): void {
+    this.tableLoading.set(true);
+    this.service
+      .detailASS11070({
+        VENDOR_ID: vendorId,
+      })
+      .pipe(
+        finalize(() => {
+          this.tableLoading.set(false);
+        })
+      )
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000' || !res.Data) return;
+          this.patchFormWithDetail(res.Data);
+        },
+      });
+  }
+
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const raw = this.dataForm.getRawValue();
+      const payload = this.buildDetailLikePayload();
       this.tableLoading.set(true);
 
       if (this.isFormCreateable) {
-        const insertPayload: ASS11070InsertRequest = {
-          BuildDate: this.toDateString(raw.buildDate ?? null),
-          ReceptionPerson: raw.receptionPerson ?? undefined,
-          VendorUID: raw.vendorUID ?? undefined,
-          BussinessModel: raw.bussinessModel ?? undefined,
-          VendorCName: raw.vendorCName ?? undefined,
-          VendorEName: raw.vendorEName || undefined,
-          ContactPerson: raw.contactPerson ?? undefined,
-          ContactPhone: raw.contactPhone ?? undefined,
-          ContactTitle: raw.contactTitle || undefined,
-          ContactFax: raw.contactFax || undefined,
-          ContactCellphone: raw.contactCellphone || undefined,
-          ContactEmail: raw.contactEmail ?? undefined,
-          CompanyAddress: raw.companyAddress ?? undefined,
-          CompanyResponsibility: raw.companyResponsibility || undefined,
-          PaymentMethod: raw.paymentMethod ?? undefined,
-          TicketPeriodStart: raw.ticketPeriodStart ?? undefined,
-          TicketPeriodEnd: raw.ticketPeriodEnd ?? undefined,
-          Services: raw.services ?? undefined,
-          Remark: raw.remark || undefined,
-        };
-        this.service.insertASS11070(insertPayload).pipe(
+        this.service
+          .insertASS11070(payload as InsertASS11070Request)
+          .pipe(
+            finalize(() => {
+              this.tableLoading.set(false);
+              this.loading = false;
+            })
+          )
+          .subscribe({
+            next: res => {
+              if (res.Status !== '0000') return;
+              this.notification.successBubble('新增成功');
+              this.onCancel();
+            },
+          });
+        return;
+      }
+
+      this.service
+        .updateASS11070(payload as UpdateASS11070Request)
+        .pipe(
           finalize(() => {
             this.tableLoading.set(false);
             this.loading = false;
-          }),
-        ).subscribe({
-          next: res => {
-            if (res.Status !== '0000') return;
-            this.notification.successBubble('新增成功');
-            this.onCancel();
-          },
-        });
-      } else {
-        const updatePayload: ASS11070UpdateRequest = {
-          VendorID: this.rowdata?.VendorID,
-          BuildDate: this.toDateString(raw.buildDate ?? null),
-          ReceptionPerson: raw.receptionPerson ?? undefined,
-          VendorUID: raw.vendorUID ?? undefined,
-          BussinessModel: raw.bussinessModel ?? undefined,
-          VendorCName: raw.vendorCName ?? undefined,
-          VendorEName: raw.vendorEName || undefined,
-          ContactPerson: raw.contactPerson ?? undefined,
-          ContactPhone: raw.contactPhone ?? undefined,
-          ContactTitle: raw.contactTitle || undefined,
-          ContactFax: raw.contactFax || undefined,
-          ContactCellphone: raw.contactCellphone || undefined,
-          ContactEmail: raw.contactEmail ?? undefined,
-          CompanyAddress: raw.companyAddress ?? undefined,
-          CompanyResponsibility: raw.companyResponsibility || undefined,
-          PaymentMethod: raw.paymentMethod ?? undefined,
-          TicketPeriodStart: raw.ticketPeriodStart ?? undefined,
-          TicketPeriodEnd: raw.ticketPeriodEnd ?? undefined,
-          Services: raw.services ?? undefined,
-          Remark: raw.remark || undefined,
-        };
-        this.service.updateASS11070(updatePayload).pipe(
-          finalize(() => {
-            this.tableLoading.set(false);
-            this.loading = false;
-          }),
-        ).subscribe({
+          })
+        )
+        .subscribe({
           next: res => {
             if (res.Status !== '0000') return;
             this.notification.successBubble('更新成功');
             this.onCancel();
           },
         });
-      }
     });
   }
 

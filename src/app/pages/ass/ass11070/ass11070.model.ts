@@ -1,79 +1,98 @@
 /**
- * ASS11070 備用供應商資料維護作業 - 資料模型
+ * ASS11070 查詢 Request
  */
-export interface ASS11070Data {
-  RowNum?: number;
-  /** 主鍵，供 table-report dataKey 使用 */
-  VendorID?: string | number;
-  CreateDate?: string;
-  VendorUID?: string;
-  VendorName?: string;
-  ContactPerson?: string;
-  ContactPhone?: string;
-  ContactCellphone?: string;
-  [key: string]: string | number | undefined;
+export interface QueryASS11070Request {
+  PageSize?: number;
+  PageIndex?: number;
+  OrderBy?: string;
+  Offset?: number;
+  SortBy?: { field: string; order: number }[];
+  STO_NO?: string;
+  CRT_Date_S?: string;
+  CRT_Date_E?: string;
+  PR_STAFF_ID?: string;
+  PR_STAFF_NAME?: string;
+  VENDOR_ID?: string;
+  MANGER_TYPE?: string;
+  VENDOR_NAME?: string;
+  CONTACT_STAFF?: string;
+  CONTACT_TEL?: string;
+  CONTACT_MOBILE_PHONE?: string;
 }
 
 /**
- * ASS11070 查詢請求參數
+ * ASS11070 查詢 Response
  */
-export interface ASS11070QueryRequest {
-  CreateDate_S?: string;
-  CreateDate_E?: string;
-  ReceptionPerson?: string;
-  VendorUID?: string;
-  BussinessModel?: number;
-  VendorCName?: string;
-  VendorEName?: string;
-  ContactPerson?: string;
-  ContactPhone?: string;
-  ContactTitle?: string;
-  ContactFax?: string;
-  ContactCellphone?: string;
-  ContactEmail?: string;
-  CompanyAddress?: string;
-  CompanyResponsibility?: string;
-  PaymentMethod?: number;
-  TicketPeriod_S?: string;
-  TicketPeriod_E?: string;
-  Services?: string;
-  Remark?: string;
-  PageSize?: number;
-  PageIndex?: number;
-  SortBy?: { field: string; order: number }[];
+export interface QueryASS11070Response {
+  ID?: number;
+  STO_NO?: string;
+  CRT_Date?: string;
+  VENDOR_ID?: string;
+  VENDOR_NAME?: string;
+  CONTACT_STAFF?: string;
+  CONTACT_TEL?: string;
+  CONTACT_MOBILE_PHONE?: string;
 }
 
-/** 查詢回應資料結構（後端若回傳包裝物件時使用） */
-export interface ASS11070QueryDataWrapper {
-  TotalCount: number;
-  QueryData?: ASS11070Data[];
-  Data?: ASS11070Data[];
+/**
+ * ASS11070 查詢回應包裝（後端可能回傳 QueryData/Data）
+ */
+export interface QueryASS11070DataWrapper {
+  TotalCount?: number;
+  QueryData?: QueryASS11070Response[];
+  Data?: QueryASS11070Response[];
 }
 
-/** 新增請求參數（與表單欄位對應） */
-export interface ASS11070InsertRequest {
-  BuildDate?: string;
-  ReceptionPerson?: string;
-  VendorUID?: string;
-  BussinessModel?: number;
-  VendorCName?: string;
-  VendorEName?: string;
-  ContactPerson?: string;
-  ContactPhone?: string;
-  ContactTitle?: string;
-  ContactFax?: string;
-  ContactCellphone?: string;
-  ContactEmail?: string;
-  CompanyAddress?: string;
-  CompanyResponsibility?: string;
-  PaymentMethod?: number;
-  TicketPeriodStart?: string;
-  TicketPeriodEnd?: string;
-  Services?: string;
-  Remark?: string;
+/**
+ * ASS11070 明細 Request
+ */
+export interface DetailASS11070Request {
+  VENDOR_ID: string;
 }
 
-/** 更新請求參數（含主鍵，與表單欄位對應） */
-export interface ASS11070UpdateRequest extends ASS11070InsertRequest {
-  VendorID?: string | number;
+/**
+ * ASS11070 明細 Response
+ * Update request 需與此型別一致
+ */
+export interface DetailASS11070Response {
+  STO_NO?: string;
+  CRT_Date?: string;
+  VENDOR_ID?: string;
+  VENDOR_NAME?: string;
+  VENDOR_NAME_E?: string;
+  PR_STAFF_ID?: string;
+  PR_STAFF_NAME?: string;
+  TAX_ADDR?: string;
+  CONTACT_STAFF?: string;
+  CONTACT_TITLE?: string;
+  CONTACT_TEL?: string;
+  CONTACT_TEL_EXTENSION?: string;
+  CONTACT_MOBILE_PHONE?: string;
+  CONTACT_EMAIL?: string;
+  CONTACT_FAX?: string;
+  CHARGE_STAFF?: string;
+  COMPANY_ADDRESS?: string;
+  VENDOR_REG_ADDR?: string;
+  PAY_TYPE?: string;
+  MANGER_TYPE?: string;
+  TICKET_PERIOD?: string;
+  SERVICE_ITEM?: string;
+  NOTES?: string;
 }
+
+/**
+ * ASS11070 新增 Request（align-all-new）
+ */
+export type InsertASS11070Request = DetailASS11070Response;
+
+/**
+ * ASS11070 更新 Request（與 Detail response 同型）
+ */
+export type UpdateASS11070Request = DetailASS11070Response;
+
+// 相容既有命名，避免其他引用爆掉
+export type ASS11070Data = QueryASS11070Response;
+export type ASS11070QueryRequest = QueryASS11070Request;
+export type ASS11070QueryDataWrapper = QueryASS11070DataWrapper;
+export type ASS11070InsertRequest = InsertASS11070Request;
+export type ASS11070UpdateRequest = UpdateASS11070Request;

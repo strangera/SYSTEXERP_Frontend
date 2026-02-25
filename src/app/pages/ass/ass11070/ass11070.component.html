@@ -10,39 +10,39 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="建檔日期" [startControl]="qf().startdate"
-              [endControl]="qf().enddate" [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="建檔日期(起訖)" [startControl]="qf().crtDateS"
+              [endControl]="qf().crtDateE" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="接洽人員" controlName="receptionPerson" [control]="qf().receptionPerson"
+            <app-dropdown label="接洽人員" controlName="prStaffId" [options]="staffOptions()" optionLabel="label"
+              optionValue="value" [control]="qf().prStaffId" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="廠商統一編號" controlName="vendorId" [options]="vendorOptions()" optionLabel="label"
+              optionValue="value" [control]="qf().vendorId" [submitted]="submitted"></app-dropdown>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="營運模式" groupname="mangerType" [control]="qf().mangerType"
+              [options]="mangerTypeOptions" [submitted]="submitted"></app-radiobutton>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="廠商名稱(中文)/簡稱" controlName="vendorName" [control]="qf().vendorName"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商統一編號" controlName="vendorUID" [control]="qf().vendorUID"
+            <app-input-text label="廠商名稱(英文)/簡稱" controlName="vendorNameE" [control]="qf().vendorNameE"
               [submitted]="submitted"></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="營運模式" groupname="bussinessModel" [control]="qf().bussinessModel"
-              [options]="bussinessOptions" [submitted]="submitted"></app-radiobutton>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商名稱(中文)/簡稱" controlName="vendorCName" [control]="qf().vendorCName"
+            <app-input-text label="聯絡人" controlName="contactStaff" [control]="qf().contactStaff"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商名稱(英文)/簡稱" controlName="vendorEName" [control]="qf().vendorEName"
-              [submitted]="submitted"></app-input-text>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="聯絡人" controlName="contactPerson" [control]="qf().contactPerson"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="聯絡人電話" controlName="contactPhone" [control]="qf().contactPhone"
+            <app-input-text label="聯絡人電話" controlName="contactTel" [control]="qf().contactTel"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -56,7 +56,7 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="聯絡人行動電話" controlName="contactCellphone" [control]="qf().contactCellphone"
+            <app-input-text label="聯絡人行動電話" controlName="contactMobilePhone" [control]="qf().contactMobilePhone"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -70,26 +70,26 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="公司負責人" controlName="companyResponsibility" [control]="qf().companyResponsibility"
+            <app-input-text label="公司負責人" controlName="chargeStaff" [control]="qf().chargeStaff"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="付款方式" groupname="paymentMethod" [control]="qf().paymentMethod"
-              [options]="paymentMethodOptions" [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton label="付款方式" groupname="payType" [control]="qf().payType" [options]="payTypeOptions"
+              [submitted]="submitted"></app-radiobutton>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range label="票期" startControlName="ticketPeriodStart" endControlName="ticketPeriodEnd"
-              [startControl]="qf().ticketPeriodStart" [endControl]="qf().ticketPeriodEnd"
+            <app-input-text-range label="票期" startControlName="ticketPeriodS" endControlName="ticketPeriodE"
+              [startControl]="qf().ticketPeriodS" [endControl]="qf().ticketPeriodE"
               [submitted]="submitted"></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="服務項目" controlName="services" [control]="qf().services"
+            <app-input-text label="服務項目" controlName="serviceItem" [control]="qf().serviceItem"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="備註" controlName="remark" [control]="qf().remark"
+            <app-input-text label="備註" controlName="notes" [control]="qf().notes"
               [submitted]="submitted"></app-input-text>
           </div>
         </div>
@@ -104,7 +104,7 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table-report [data]="tableData()" [dataKey]="'VendorID'" [tableKey]="'ASS11070_Data'" [columns]="columns"
+    <app-table-report [data]="tableData()" [dataKey]="'ID'" [tableKey]="'ASS11070_Data'" [columns]="columns"
       [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
       [queryFunction]="queryFunction" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-table-report>
   </div>
