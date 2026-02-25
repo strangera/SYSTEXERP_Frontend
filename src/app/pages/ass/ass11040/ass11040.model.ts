@@ -43,6 +43,7 @@ export interface CreateASS11040Request {
   M_CLASS_ID?: string | null;
   S_CLASS_ID?: string | null;
   GOODS_NAME?: string | null;
+  ORG_ID?: string | null;
   BAR_CODE?: string | null;
   PHOTO_URL?: string | null;
   LENGTH_CM?: number | null;
@@ -52,8 +53,6 @@ export interface CreateASS11040Request {
   UNIT?: string | null;
   PACK_UNIT?: string | null;
   PACK_NUM?: number | null;
-  COST_PRICE?: number | null;
-  TAX_CODE?: string | null;
   MT_MODE?: string | null;
   MT_SUPP?: string | null;
   MT_YEAR?: number | null;
@@ -69,13 +68,6 @@ export interface CreateASS11040Request {
   ADD_EXP_YEAR?: number | null;
   ADD_EXP_MONTH?: number | null;
   NOTES?: string | null;
-  STATUS?: string | null;
-  MT_PERIOD?: number | null;
-  IVN_PERIOD?: number | null;
-  SAFE_QTY?: number | null;
-  HIGH_STOCK_QTY?: number | null;
-  STORE_SALES_AMT?: number | null;
-  RESI_STATUS?: string | null;
 }
 
 /** createASS11040 API 的 Data 欄位 */
@@ -108,7 +100,6 @@ export interface UpdateASS11040Request {
   UNIT?: string | null;
   PACK_UNIT?: string | null;
   PACK_NUM?: number | null;
-  COST_PRICE?: number | null;
   TAX_CODE?: string | null;
   MT_MODE?: string | null;
   MT_SUPP?: string | null;
@@ -253,8 +244,6 @@ export interface QueryASS11040Response {
   PACK_UNIT_NAME?: string | null;
   /** 包裝數量 */
   PACK_NUM?: number | null;
-  /** 成本定價 */
-  COST_PRICE?: number | null;
   /** 稅別代碼 */
   TAX_CODE?: string | null;
   /** 保固方式代碼 */

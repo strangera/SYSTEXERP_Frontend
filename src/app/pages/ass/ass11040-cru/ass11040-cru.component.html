@@ -20,25 +20,25 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="大分類代碼" controlName="bigCategoryCode" [options]="bigCategoryCodeOptions"
             optionLabel="label" optionValue="value" [control]="dataForm.controls.bigCategoryCode"
-            [submitted]="submitted" [disabled]="isFormEditable">
+            [submitted]="submitted" [disabled]="isFormEditable || isFormReadable">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="中分類代碼" controlName="midCategoryCode" [options]="midCategoryCodeOptions"
             optionLabel="label" optionValue="value" [control]="dataForm.controls.midCategoryCode"
-            [submitted]="submitted" [disabled]="isFormEditable">
+            [submitted]="submitted" [disabled]="isFormEditable || isFormReadable">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="小分類代碼" controlName="smlCategoryCode" [options]="smlCategoryCodeOptions"
             optionLabel="label" optionValue="value" [control]="dataForm.controls.smlCategoryCode"
-            [submitted]="submitted" [disabled]="isFormEditable">
+            [submitted]="submitted" [disabled]="isFormEditable || isFormReadable">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="品項類別區分" controlName="itemCategory" [options]="itemCategoryOptions" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.itemCategory" [submitted]="submitted"
-            [disabled]="isFormEditable">
+            [disabled]="isFormEditable || isFormReadable">
           </app-dropdown>
         </div>
       </div>
@@ -125,12 +125,12 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="基本單位" controlName="itemUnit" [options]="itemUnitOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.itemUnit" [submitted]="submitted">
+                optionValue="value" [control]="dataForm.controls.itemUnit" [submitted]="submitted" [disabled]="isFormReadable">
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="包裝單位" controlName="packageUnit" [options]="packageUnitOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.packageUnit" [submitted]="submitted">
+                optionValue="value" [control]="dataForm.controls.packageUnit" [submitted]="submitted" [disabled]="isFormReadable">
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -145,12 +145,12 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="税別" controlName="taxCode" [options]="taxCodeOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.taxCode" [submitted]="submitted">
+                optionValue="value" [control]="dataForm.controls.taxCode" [submitted]="submitted" [disabled]="isFormReadable">
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="責任單位" controlName="deptCode" [options]="deptCodeOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.deptCode" [submitted]="submitted">
+                optionValue="value" [control]="dataForm.controls.deptCode" [submitted]="submitted" [disabled]="isFormReadable">
               </app-dropdown>
             </div>
           </div>
@@ -164,12 +164,12 @@
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="保固方式" controlName="warrantyMethod" [options]="warrantyMethodOptions"
                 optionLabel="label" optionValue="value" [control]="dataForm.controls.warrantyMethod"
-                [submitted]="submitted">
+                [submitted]="submitted" [disabled]="isFormReadable">
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="維保廠商" controlName="mtSupp" [options]="mtSuppOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.mtSupp" [submitted]="submitted">
+                optionValue="value" [control]="dataForm.controls.mtSupp" [submitted]="submitted" [disabled]="isFormReadable">
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -185,12 +185,12 @@
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="保養方式" controlName="maintenanceMethod" [options]="maintenanceMethodOptions"
                 optionLabel="label" optionValue="value" [control]="dataForm.controls.maintenanceMethod"
-                [submitted]="submitted">
+                [submitted]="submitted" [disabled]="isFormReadable">
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="續保廠商" controlName="ivnSupp" [options]="ivnSuppOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.ivnSupp" [submitted]="submitted">
+                optionValue="value" [control]="dataForm.controls.ivnSupp" [submitted]="submitted" [disabled]="isFormReadable">
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">

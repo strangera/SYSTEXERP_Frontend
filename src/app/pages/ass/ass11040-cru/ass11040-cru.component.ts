@@ -100,15 +100,15 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
     // 區塊三
     warrantyMethod: [null as string | null],
     mtSupp: [null as string | null],
-    mtYear: [null as number | null, [Validators.required]],
+    mtYear: [null as number | null],
     mtMonth: [null as number | null],
-    mtDay: [null as number | null],
+    mtDay: [null as number | null, [Validators.required]],
     mtPeriod: [null as number | null, [Validators.required]],
     maintenanceMethod: [null as string | null],
     ivnSupp: [null as string | null],
-    ivnYear: [null as number | null, [Validators.required]],
+    ivnYear: [null as number | null],
     ivnMonth: [null as number | null],
-    ivnDay: [null as number | null],
+    ivnDay: [null as number | null, [Validators.required]],
     expYear: [null as number | null, [Validators.required]],
     expMonth: [null as number | null],
     addExpYear: [null as number | null, [Validators.required]],
@@ -162,7 +162,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
     this.loadBigCategoryOptions();
     this.loadMidCategoryOptions('');
     this.loadSmlCategoryOptions('');
-    this.setupCategoryListeners(); //大中小分類欄位連動監聽
+    // this.setupCategoryListeners(); //大中小分類欄位連動監聽
     if (!this.isFormCreateable && this.rowdata) {
       this.patchFormFromRow(this.rowdata);
     }
@@ -189,7 +189,6 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
       itemUnit: row.UNIT ?? null,
       packageUnit: row.PACK_UNIT ?? null,
       packNum: row.PACK_NUM ?? null,
-      costPrice: row.COST_PRICE ?? null,
       taxCode: row.TAX_CODE ?? null,
       deptCode: (row as Record<string, unknown>)['DEPT_CODE'] as string | undefined ?? null,
       warrantyMethod: row.MT_MODE ?? null,
@@ -246,7 +245,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
     });
   }
 
-  /** 載入中分類選項 */
+  // /** 載入中分類選項 */
   loadMidCategoryOptions(bigCategoryCode: string): void {
     this.ass11040Service.queryFACLASS1_DropDownList({ B_CLASS_ID: bigCategoryCode }).pipe(untilDestroyed(this)).subscribe((res: ApiResponse<{ Data: FACLASS1Data[] }>) => {
       if (res.Status !== '0000') return;
@@ -311,6 +310,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
           M_CLASS_ID: raw.midCategoryCode ?? null,
           S_CLASS_ID: raw.smlCategoryCode ?? null,
           GOODS_NAME: raw.itemName ?? null,
+          ORG_ID: raw.deptCode ?? null,
           BAR_CODE: raw.barCode ?? null,
           PHOTO_URL: null,
           LENGTH_CM: raw.lengthCm ?? null,
@@ -320,8 +320,6 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
           UNIT: raw.itemUnit ?? null,
           PACK_UNIT: raw.packageUnit ?? null,
           PACK_NUM: raw.packNum ?? null,
-          COST_PRICE: raw.costPrice ?? null,
-          TAX_CODE: raw.taxCode ?? null,
           MT_MODE: raw.warrantyMethod ?? null,
           MT_SUPP: raw.mtSupp ?? null,
           MT_YEAR: raw.mtYear ?? null,
@@ -337,13 +335,6 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
           ADD_EXP_YEAR: raw.addExpYear ?? null,
           ADD_EXP_MONTH: raw.addExpMonth ?? null,
           NOTES: raw.illustrate ?? null,
-          STATUS: null,
-          MT_PERIOD: raw.mtPeriod ?? null,
-          IVN_PERIOD: raw.ivnPeriod ?? null,
-          SAFE_QTY: raw.safeQty ?? null,
-          HIGH_STOCK_QTY: raw.highStockQty ?? null,
-          STORE_SALES_AMT: null,
-          RESI_STATUS: raw.resiStatus ?? null,
         };
         this.ass11040Service
           .createASS11040(createPayload)
@@ -363,8 +354,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
               }
               if (this.uploadedFiles.length === 0) {
                 this.messageService.successBubble(res.Message ?? '新增成功');
-                this.dataForm.reset();
-                this.clearUploadedFile();
+                this.onCancel();
                 return EMPTY;
               }
               return this.imageService.uploadImages({
@@ -393,7 +383,6 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
                     UNIT: raw.itemUnit ?? null,
                     PACK_UNIT: raw.packageUnit ?? null,
                     PACK_NUM: raw.packNum ?? null,
-                    COST_PRICE: raw.costPrice ?? null,
                     TAX_CODE: raw.taxCode ?? null,
                     MT_MODE: raw.warrantyMethod ?? null,
                     MT_SUPP: raw.mtSupp ?? null,
@@ -436,8 +425,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
                 return;
               }
               this.messageService.successBubble(updateRes.Message ?? '新增成功');
-              this.dataForm.reset();
-              this.clearUploadedFile();
+              this.onCancel();
             },
           });
       } else {
@@ -459,7 +447,6 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
           UNIT: raw.itemUnit ?? null,
           PACK_UNIT: raw.packageUnit ?? null,
           PACK_NUM: raw.packNum ?? null,
-          COST_PRICE: raw.costPrice ?? null,
           TAX_CODE: raw.taxCode ?? null,
           MT_MODE: raw.warrantyMethod ?? null,
           MT_SUPP: raw.mtSupp ?? null,
