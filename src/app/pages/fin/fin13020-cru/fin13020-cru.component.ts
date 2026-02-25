@@ -165,6 +165,7 @@ ngOnInit(): void {
       PLU_SalePrc: d.PLU_SalePrc,
       TXN_SaleAmt: d.TXN_SaleAmt,
     }));
+    this.syncPurAmtFromDetails();
   }
 
   // 狀態控制（Create / Edit / Read）
@@ -767,16 +768,26 @@ override onCancel(): void {
     },
   ];
 
-  onFieldChange(event: { rowData: any; field: string; value: any }) {
-    const { rowData, field, value } = event;
-    rowData[field] = value;
+onFieldChange(event: { rowData: any; field: string; value: any }) {
+  const { rowData, field, value } = event;
+  rowData[field] = value;
 
-    if (field === 'TXN_Qty' || field === 'PLU_SalePrc') {
-      const TXN_Qty = parseFloat(rowData.TXN_Qty) || 0;
-      const PLU_SalePrc = parseFloat(rowData.PLU_SalePrc) || 0;
-      rowData.TXN_SaleAmt = TXN_Qty * PLU_SalePrc;
-    }
+  if (field === 'TXN_Qty' || field === 'PLU_SalePrc') {
+    const TXN_Qty = parseFloat(rowData.TXN_Qty) || 0;
+    const PLU_SalePrc = parseFloat(rowData.PLU_SalePrc) || 0;
+
+    // 你要整數就 roundToInt，不然就保持小數
+    rowData.TXN_SaleAmt = this.roundToInt(TXN_Qty * PLU_SalePrc);
+
+    // ✅ 每次明細金額變更 → 回寫 PUR_Amt
+    this.syncPurAmtFromDetails();
   }
+
+  // 如果你允許直接編輯 TXN_SaleAmt（目前欄位 editable: false，但以防萬一）
+  if (field === 'TXN_SaleAmt') {
+    this.syncPurAmtFromDetails();
+  }
+}
 
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
@@ -875,4 +886,21 @@ private normalizeYYYYMMForControl(raw: any): string | null {
   get columnsForView() {
     return this.isRead ? this.columnsRead : this.columns;
   }
+  private syncPurAmtFromDetails(): void {
+  // Read 模式不需要同步（可留可不留）
+  if (this.isRead) return;
+
+  const sumRaw = (this.detailRows ?? []).reduce((sum, r) => {
+    const v = Number(r?.TXN_SaleAmt);
+    return sum + (isNaN(v) ? 0 : v);
+  }, 0);
+
+  const sum = this.roundToInt(sumRaw);
+
+  // ✅ 回寫「退回/折讓總金額」：emitEvent 要 true，才能觸發 setupAmountRelations() 的 amtControl.valueChanges
+  this.dataForm.get('PUR_Amt')?.setValue(
+    this.detailRows?.length ? sum : null,
+    { emitEvent: true }
+  );
+}
 }
