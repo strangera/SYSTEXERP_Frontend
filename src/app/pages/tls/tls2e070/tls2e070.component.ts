@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls2e070Data, Tls2e070QueryBody, Tls2e070QueryRecEstBody, Tls2e070Service } from '@service/api/tls/tls2e070.service';
+import { Tls2e070Data, Tls2e070QueryBody, Tls2e070QueryRecEstBody, Tls2e070Service, Tls2e070UpdateBody } from '@service/api/tls/tls2e070.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -226,16 +226,31 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
         this.loading = false;
         return;
       }
-      const body = {
-        ...frm.value,
+
+      this.loading = true; // 開啟讀取中狀態
+
+      const body: Tls2e070UpdateBody = {
         sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
         sam_termno: frm.value.sam_termno as number,
-        money_type: frm.value.money_type
-      }
-      this.tls2e070Service.updateTLS2E070(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-        this.messageService.successBubble(res.Message);
-        this.onSubmit(this.queryForm);
-      });
-    })
+        money_type: frm.value.money_type,
+        tlt_no: frm.value.tlt_no
+      };
+
+      this.tls2e070Service.updateTLS2E070(body)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
+        .subscribe(res => {
+          // 根據後端回傳的 ReturnCode 判斷
+          if (res.Status === '0000') {
+            this.messageService.successBubble(res.Message || '鎖定完成');
+            this.onSubmit(this.queryForm); // 鎖定後重新查詢，刷新列表狀態
+          } else {
+            // 處理 SP 回傳的錯誤訊息 (例如：資料已鎖定、查無結算資料)
+            this.messageService.errorBubble(res.Message || '鎖定失敗');
+          }
+        });
+    });
   }
 }
