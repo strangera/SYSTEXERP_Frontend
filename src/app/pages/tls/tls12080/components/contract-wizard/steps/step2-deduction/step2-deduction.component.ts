@@ -439,10 +439,11 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    this.totalLocationSpace = this.locationData.reduce((sum, loc) => {
+    const raw = this.locationData.reduce((sum, loc) => {
       const space = parseFloat(String(loc.tlt_space || 0));
       return sum + (isNaN(space) ? 0 : space);
     }, 0);
+    this.totalLocationSpace = parseFloat(raw.toFixed(2));
   }
 
   // ========== 選項載入 ==========

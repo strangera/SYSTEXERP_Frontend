@@ -119,7 +119,7 @@ export const TLS_COMMON_FORM_DEFAULTS = {
   // ========== 活動參與 ==========
   cap_saletype1: '',                 // 滿仟送佰（會被 SPECIFIC_DEFAULTS 覆蓋）
   cap_saletype2: '',                 // 會員卡集點（會被 SPECIFIC_DEFAULTS 覆蓋）
-  cap_saletype3: '',                 // 收取禮卷（會被 SPECIFIC_DEFAULTS 覆蓋）
+  cap_saletype3: '',                 // 收取禮劵（會被 SPECIFIC_DEFAULTS 覆蓋）
   cap_saletype4: '',                 // 會員卡（會被 SPECIFIC_DEFAULTS 覆蓋）
   cap_saletype5: '',                 // 參加提貨單（會被 SPECIFIC_DEFAULTS 覆蓋）
 
@@ -192,7 +192,7 @@ export const TLS13010_SPECIFIC_DEFAULTS = {
   credit_card: '',                   // 會員卡折數：空字串
   cap_saletype1: '',                 // 滿仟送佰：空字串
   cap_saletype2: '',                 // 會員卡集點：空字串
-  cap_saletype3: '',                 // 收取禮卷：空字串
+  cap_saletype3: '',                 // 收取禮劵：空字串
   cap_saletype4: '',                 // 會員卡：空字串
   cap_saletype5: '',                 // 參加提貨單：空字串
 } as const;
@@ -214,7 +214,7 @@ export const TLS12040_SPECIFIC_DEFAULTS = {
   credit_card: 0,                    // 會員卡折數：0
   cap_saletype1: 'N',                // 滿仟送佰：否
   cap_saletype2: 'N',                // 會員卡集點：否
-  cap_saletype3: 'N',                // 收取禮卷：否
+  cap_saletype3: 'N',                // 收取禮劵：否
   cap_saletype4: 'N',                // 會員卡：否
   cap_saletype5: 'N',                // 參加提貨單：否
 } as const;
