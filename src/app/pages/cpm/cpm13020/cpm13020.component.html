@@ -78,7 +78,7 @@
   [showDelete]="false"
   [showManage]="false"
   [showReportMode]="true"
-  [queryFunction]="cpm13020Service.queryAllForReport.bind(cpm13020Service)"
+   [apiUrl]="apiUrl"
 >
 </app-table-report>
 
@@ -96,6 +96,7 @@
       [showReportMode]="true"
       [showCaption]="true"
       [queryFunction]="queryPosForReport"
+      [apiUrl]="apiUrlPOS"
     >
     </app-table-report>
   </div>
