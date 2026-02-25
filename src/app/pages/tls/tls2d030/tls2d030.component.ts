@@ -26,7 +26,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030DataItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     sam_yyymm: [null, [Validators.required]], // 結算年月
-    money_type: [{ value: '30', disabled: true }], // 結帳方式 (對應API的 sam_termno)
+    money_type: [null, [Validators.required]], // 結帳方式 (對應API的 sam_termno)
     tlt_no: [null], // 專櫃編號
     tlt_floor: [null], // 樓層 (對應API的 tlt_floor)
     pageSize: [30],
@@ -71,10 +71,10 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
 
     this.handleSubmit(frm, () => {
       const body: ExecuteTls2d030Request = {
-        sam_yyymm: this.datePipe.transform(frm.getRawValue().sam_yyymm, 'yyyyMM') as string,
-        money_type: frm.getRawValue().money_type,
-        tlt_no: frm.getRawValue().tlt_no,
-        tlt_floor: frm.getRawValue().tlt_floor,
+        sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM') as string,
+        money_type: frm.value.money_type,
+        tlt_no: frm.value.tlt_no,
+        tlt_floor: frm.value.tlt_floor,
       };
       this.messageService.clearBubble();
       this.messageService.infoBubble('結算中,請稍候...');
@@ -106,8 +106,8 @@ export class TLS2D030Component extends BasicQueryPageComponent<QueryTls2d030Data
 
     this.loading = true;
     const body: QueryTls2d030Request = {
-      ...frm.getRawValue(),
-      sam_yyymm: this.datePipe.transform(frm.getRawValue().sam_yyymm, 'yyyyMM') as string
+      ...frm.value,
+      sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM') as string
     };
     this.tls2d030Service.queryTLS2D030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
       this.totalRecords = res.TotalCount;
