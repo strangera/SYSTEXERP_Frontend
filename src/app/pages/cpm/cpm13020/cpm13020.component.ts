@@ -47,7 +47,7 @@ import { Cpm13020Service, QueryCPM13020Request } from '../../../service/api/cpm/
 export class CPM13020Component extends BasicQueryPageComponent<any> implements OnInit {
   /** ALL=全館彙總 / POS=機台彙總 */
   reportMode: 'ALL' | 'POS' = 'ALL';
-
+apiUrl = 'queryCPM13020_All';
   reportModeOptions = [
     { label: '全館彙總', value: 'ALL' },
     { label: '機台彙總', value: 'POS' },

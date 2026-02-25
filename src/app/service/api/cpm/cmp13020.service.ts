@@ -32,7 +32,7 @@ export class Cpm13020Service {
   queryPos(body: QueryCPM13020Request): Observable<any> {
     return this.http.post<any>(this.posUrl, body);
   }
-  queryAllForReport(body: QueryCPM13020Request): Observable<{ Data: any[]; TotalCount: number; GrandTotal: any }> {
+  queryCPM13020(body: QueryCPM13020Request): Observable<{ Data: any[]; TotalCount: number; GrandTotal: any }> {
   return this.queryAll(body).pipe(
     map((res: any) => ({
       Data: Array.isArray(res?.Data?.mainData) ? res.Data.mainData : (Array.isArray(res?.Data) ? res.Data : []),
