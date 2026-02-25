@@ -74,9 +74,17 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
         this.virtualData = Array(flatData.length).fill(null);
         setTimeout(() => {
           this.virtualData.splice(0, flatData.length, ...flatData);
+          if (this.dt) {
+            this.dt.scrollHeight = '450px';
+            this.dt.virtualScroll = true;
+          }
         });
       } else {
         this.virtualData = flatData;
+        if (this.dt) {
+          this.dt.scrollHeight = 'flex';
+          this.dt.virtualScroll = false;
+        }
       }
     } else if (changes['data'] && this.data.length === 0) {
       this.virtualData = Array(0).fill(null);
@@ -163,7 +171,7 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
         this.virtualData = Array(flatData.length).fill(null);
         setTimeout(() => {
           this.virtualData.splice(0, flatData.length, ...flatData);
-          this.dt.scrollHeight = '700px';
+          this.dt.scrollHeight = '450px';
         });
       }
     });

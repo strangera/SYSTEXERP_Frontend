@@ -107,13 +107,14 @@ export class TableValidationService {
     }
 
     // 確定要驗證的資料集 (使用 data，因為它的索引與 _tableData 相同，如果 data 傳入的是 _tableData)
-    let rowsToValidate: any[];
-    if (validateOnlySelected && selectedItems.length > 0) {
-      rowsToValidate = selectedItems;
-    } else if (validateOnlySelected && selectedItems.length === 0) {
-      return { isValid: true, isTableEmpty: tableDataEmpty, firstErrorIndex: undefined };
+    let rowsToValidate: any[] = [];
+    if (validateOnlySelected) {
+      rowsToValidate = selectedItems || [];
     } else {
-      rowsToValidate = data; // 這裡使用完整的 data (即 _tableData)
+      rowsToValidate = data || [];
+    }
+    if (rowsToValidate.length === 0 && !tableRequired) {
+      return { isValid: true, isTableEmpty: false, firstErrorIndex: undefined };
     }
 
     // 遍歷需要驗證的行 (欄位和行驗證)

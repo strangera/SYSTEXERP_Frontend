@@ -160,6 +160,9 @@ export interface IPOS2022Data {
   Confirm_SaleAmt?: number; // 確認銷售金額
   MVD_Remark?: string | null; // 明細備註
   UNIT_NAME?: string; // 單位名稱
+  NowHaveQty?: number;
+
+  _dataStatus: 'original' | 'new' | 'modified' | 'deleted';
 }
 
 /** 更新 POS2021 資料狀態 (updateStatusTLS56040) 的請求介面 */

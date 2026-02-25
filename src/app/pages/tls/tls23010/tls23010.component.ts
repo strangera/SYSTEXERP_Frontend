@@ -71,6 +71,7 @@ import { InputTextRange2Component } from './input-text-range2/input-text-range2.
   ],
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> implements OnInit {
+  private _syncingSortMeta = false;
   private _obsCache = new Map<string, any>();
   private once<T>(key: string, factory: () => import('rxjs').Observable<T>) {
     if (!this._obsCache.has(key)) {
@@ -884,4 +885,7 @@ private padTxnNo(v: any): string {
     });
     return out;
   }
+  get isSummaryMode(): boolean {
+  return !!this.queryForm.get('showSummary')?.value;
+}
 }

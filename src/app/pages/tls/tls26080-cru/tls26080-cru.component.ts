@@ -284,8 +284,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
           this.tableData.set(data.map(v => ({
             ...v,
-            tpy_rate_D16: Number(v.tpy_rate_D16),
-            tpy_rate_D17: Number(v.tpy_rate_D17),
+            tpy_rate_D16: Number(v.tpy_rate_D16) * 100,
+            tpy_rate_D17: Number(v.tpy_rate_D17) * 100,
             approval_action: v.pod_status === '1' ? '1' : '0',
           })));
           this.totalRecords.set(res.TotalCount || 0);
@@ -603,6 +603,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
           calc_date_type: item.calc_date_type ?? 'Y',
           cap_item_D16: item.cap_item_D16 ?? 'D16',
           cap_item_D17: item.cap_item_D17 ?? 'D17',
+          tpy_rate_D16: item.tpy_rate_D16 / 100,
+          tpy_rate_D17: item.tpy_rate_D17 / 100,
           approved_date: item.approved_date ? new Date(item.approved_date).toISOString() : null,
           pod_status: item.pod_status ?? '0',
         })),
