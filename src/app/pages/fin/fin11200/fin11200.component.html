@@ -32,12 +32,11 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="fin11200" dataKey="ID" [data]="data" [columns]="columns" [showEdit]="false" [showDetail]="false"
-    [showCheckBox]="true" [showDelete]="false"
-    [multiSortMeta]="[{ field: 'GUI_YYMM', order: 1 }, { field: 'GUI_TRACK', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+  <app-table-report tableKey="fin11200" dataKey="ID" [data]="data" [columns]="columns" [showEdit]="false"
+    [showDetail]="false" [showCheckBox]="true" [showDelete]="false" [totalRecords]="totalRecords" [loading]="loading"
     [addButton]="addButton" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
-    [buttonsLoading]="manageLoading">
+    [buttonsLoading]="manageLoading" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="fin11200Service.queryFIN11200.bind(fin11200Service)">
     <header>
       <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="下傳"
         tooltipPosition="top" pButton icon="pi pi-upload rotate-180" severity="success"
@@ -45,5 +44,5 @@
         [disabled]="selectedRows.length === 0 || !hasPermission(Actions.Download)" (click)="onUpload()"
         [loading]="btnLoading" />
     </header>
-  </app-table>
+  </app-table-report>
 </div>

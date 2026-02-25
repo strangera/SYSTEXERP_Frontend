@@ -29,11 +29,12 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { formatAmount, formatYYYYMM, ReportColumn } from './../../../shared/componentkit/table-report/table-report.model';
+import { TLS2F010TableReportComponent } from './tls2f010-table-report.component';
 @Component({
   selector: 'app-tls2f010-cru',
   templateUrl: './tls2f010-cru.component.html',
   standalone: true,
-  imports: [TableEditComponent, NgIf, PanelModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
+  imports: [TableEditComponent, NgIf, PanelModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TLS2F010TableReportComponent, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
 
@@ -69,6 +70,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_DiscNo: [''],
   });
 
+
   taxTypeOptions = getSYS1000Options('PLU_TaxType');
   money_typeOptions = getSYS1000Options('money_type');
   // 完整的期別選項映射（可依 money type 產生不同期數）
@@ -94,6 +96,9 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     )
   ).pipe(shareReplay(1));
   vendorTLS2F010Options: { label: string; value: string }[] = [];
+  tltOptionsList: { label: string; value: string }[] = [];
+  // 當頁面顯示 "no - name" 時，保留原始的 tlt_no（送出時使用）
+  private selectedTltNoRaw: string | null = null;
 
 
   // tlt options depend on selected sam_yyymm — call API with sam_yyymm and share the result
@@ -146,9 +151,9 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   bus_classOptions: IDropdownItem[] = [];
   invoiceTypeOptions = getSYS1000Options('invoice_type');
   invoiceFormatOptions = [
-    { value: '21', label: '21/進項三聯式、電子計算機統一發票' },
-    { value: '25', label: '25-進項三聯式收銀機統一發票' },
-    { value: '27', label: '27/彙總登陸每張稅額五百元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
+    { value: '21', label: '21-進項三聯式、電子計算機統一發票' },
+    { value: '22', label: '22-進項二聯式收銀機統一發票、載有稅額之其他憑證' },
+    { value: '25', label: '25-進項三聯式收銀機統一發票及一般稅額計算之電子發票' },
   ];
   queryLoading = false;
 
@@ -201,6 +206,8 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
   detailEditData: any[] = [];
   detailDefaultInsert: any = {};
+  // snapshot 用於按下 Cancel 時還原 table-edit 的資料
+  private originalDetailSnapshot: any[] | null = null;
   columns3: EditColumn[] = [
     { field: 'GUIType', header: '單據別', type: 'dropdown', width: '120px', options: this.invoiceTypeOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
     { field: 'VEN_No', header: '廠商編號', type: 'dropdown', width: '200px', options: () => this.vendorTLS2F010Options, optionLabel: 'label', optionValue: 'value', showClear: true },
@@ -232,11 +239,25 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         return (guiLabel ?? String(row?.GUIType ?? '')).includes('收據');
       }
     },
-    { field: 'GUINet', header: '未稅金額', type: 'inputNumber', width: '120px', textAlign: 'right' },
-    { field: 'GUITax', header: '稅額', type: 'inputNumber', width: '120px', textAlign: 'right', disabled: () => true },
-    { field: 'GUIAmt', header: '應稅金額', type: 'inputNumber', width: '120px', textAlign: 'right', disabled: () => true },
+    { field: 'GUINet', header: '未稅金額', type: 'inputNumber', width: '12rem', textAlign: 'right' },
+    { field: 'GUITax', header: '稅額', type: 'inputNumber', width: '12rem', textAlign: 'right', minFractionDigits: 0, maxFractionDigits: 0, max: 999999999999, maxLength: 12 },
+    { field: 'GUIAmt', header: '應稅金額', type: 'inputNumber', width: '14rem', textAlign: 'right', disabled: () => true, minFractionDigits: 0, maxFractionDigits: 0, max: 999999999999, maxLength: 12 },
     { field: 'PUR_GUIPaper', header: '發票格式', type: 'dropdown', width: '180px', options: this.invoiceFormatOptions, optionLabel: 'label', optionValue: 'value', showClear: true },
-    { field: 'INV_UseType', header: '發票用途', type: 'input', width: '120px' },
+    {
+      field: 'INV_UseType',
+      header: '發票用途',
+      type: 'input',
+      width: '120px',
+      maxLength: 1,
+      placeholder: '',
+      validate: [
+        (value: any, _row: any, _data: any[], _field: string, header: string) => {
+          const s = value == null ? '' : String(value);
+          const ok = s.length <= 1;
+          return { isValid: ok, errorMessage: ok ? [] : [`${header} 只能輸入 1 個字元`] };
+        }
+      ]
+    },
   ];
 
   constructor(
@@ -272,6 +293,29 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         COMM_MONEY_TYPE: this.mapLabelToValue(this.money_typeOptions, row.COMM_MONEY_TYPE),
         PUR_DiscNo: this.mapLabelToValue(this.discountOptions, row.PUR_DiscNo),
       });
+      // 若後端在 rowdata 中帶入明細（Details / details），將其載入為 table-edit 的初始資料，並建立快照
+      const backendDetails = row.Details ?? row.details ?? [];
+      try {
+        this.detailEditData = JSON.parse(JSON.stringify(backendDetails || []));
+      } catch (e) {
+        this.detailEditData = (backendDetails || []).slice();
+      }
+      // 若後端帶入 tlt_no 與 tlt_name，先保留原始 no，並把 control 顯示為 "no - name"
+      try {
+        if (row.tlt_no) {
+          this.selectedTltNoRaw = row.tlt_no;
+          const display = row.tlt_name ? `${row.tlt_no} - ${row.tlt_name}` : row.tlt_no;
+          const ctrl = this.dataForm.controls.tlt_no;
+          if (ctrl) ctrl.setValue(display, { emitEvent: false });
+        }
+      } catch (e) {
+        // ignore
+      }
+      try {
+        this.originalDetailSnapshot = JSON.parse(JSON.stringify(this.detailEditData || []));
+      } catch (e) {
+        this.originalDetailSnapshot = (this.detailEditData || []).slice();
+      }
     }
 
 
@@ -282,7 +326,27 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         label: `${item.ven_no}${item.VEN_Name ? ' - ' + item.VEN_Name : ''}`,
         value: item.ven_no,
       }));
+      // 同步建立 tlt options list 用於顯示 tlt_no 的 label
+      this.tltOptionsList = (data ?? []).map((item: any) => ({
+        label: `${item.tlt_no}${item.tlt_name ? ' - ' + item.tlt_name : ''}`,
+        value: item.tlt_no,
+      }));
+      // 如果先前從 rowdata 設定了原始 tlt_no，當選項載入時把顯示值更新為包含中文名稱
+      try {
+        const row = this.rowdata as any;
+        if (row && row.tlt_no) {
+          const found = (data ?? []).find((it: any) => it.tlt_no === row.tlt_no);
+          const display = found ? `${found.tlt_no}${found.tlt_name ? ' - ' + found.tlt_name : ''}` : `${row.tlt_no}${row.tlt_name ? ' - ' + row.tlt_name : ''}`;
+          const ctrl = this.dataForm.controls.tlt_no;
+          if (ctrl) ctrl.setValue(display, { emitEvent: false });
+          this.selectedTltNoRaw = row.tlt_no;
+        }
+      } catch (e) {
+        // ignore
+      }
     });
+
+
 
     // 綁定 COMM_MONEY_TYPE 變化以更新 sam_termnoOptions
     const commCtrl = this.dataForm.controls.COMM_MONEY_TYPE as any;
@@ -308,6 +372,13 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       this.showEditArea = false;
     }
 
+    // 保存初始的 detailEditData snapshot（如果未來需還原）
+    try {
+      this.originalDetailSnapshot = JSON.parse(JSON.stringify(this.detailEditData || []));
+    } catch (e) {
+      this.originalDetailSnapshot = (this.detailEditData || []).slice();
+    }
+
     // 編輯模式下：只允許特定欄位可編輯，其餘鎖定
     if (this.isFormEditable) {
       this.applyEditModeReadonly();
@@ -316,19 +387,57 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     // 若在編輯/新增模式時允許在主表輸入未稅金額，當未稅金額變化時自動計算稅額與發票總額
     try {
       const guinetCtrl = this.dataForm.controls.ACP_GUINet as any;
+      const taxCtrl = this.dataForm.controls.ACP_GUITax as any;
+      const amtCtrl = this.dataForm.controls.ACP_GUIAmt as any;
+      const taxTypeCtrl = this.dataForm.controls.PUR_TaxType as any;
+
+      const isCurrentlyTaxable = () => {
+        const raw = taxTypeCtrl && taxTypeCtrl.value != null ? taxTypeCtrl.value : null;
+        const label = this.mapValueToLabel(this.taxTypeOptions, raw) ?? String(raw ?? '');
+        return String(label).includes('應稅');
+      };
+
       if (guinetCtrl && guinetCtrl.valueChanges) {
         guinetCtrl.valueChanges.pipe(untilDestroyed(this)).subscribe((v: any) => {
           const net = Number(v ?? 0);
           if (!isNaN(net)) {
-            const tax = Math.round(net * 0.05);
+            const tax = isCurrentlyTaxable() ? Math.round(net * 0.05) : 0;
             try {
-              const taxCtrl = this.dataForm.controls.ACP_GUITax as any;
-              const amtCtrl = this.dataForm.controls.ACP_GUIAmt as any;
               if (taxCtrl) taxCtrl.setValue(tax, { emitEvent: false });
               if (amtCtrl) amtCtrl.setValue(net + tax, { emitEvent: false });
             } catch (e) {
               // ignore
             }
+          }
+        });
+      }
+
+      // 當使用者修改稅額時更新發票總額（免稅時強制 0）
+      if (taxCtrl && taxCtrl.valueChanges) {
+        taxCtrl.valueChanges.pipe(untilDestroyed(this)).subscribe((tv: any) => {
+          const taxVal = Number(tv ?? 0);
+          const netVal = Number(guinetCtrl && guinetCtrl.value ? guinetCtrl.value : 0);
+          if (!isNaN(taxVal) && !isNaN(netVal)) {
+            if (!isCurrentlyTaxable()) {
+              try { taxCtrl.setValue(0, { emitEvent: false }); } catch (e) { }
+              if (amtCtrl) amtCtrl.setValue(netVal, { emitEvent: false });
+            } else {
+              if (amtCtrl) amtCtrl.setValue(netVal + taxVal, { emitEvent: false });
+            }
+          }
+        });
+      }
+
+      // 課稅別變更時重新計算
+      if (taxTypeCtrl && taxTypeCtrl.valueChanges) {
+        taxTypeCtrl.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+          try {
+            const netVal = Number(guinetCtrl && guinetCtrl.value ? guinetCtrl.value : 0);
+            const tax = isCurrentlyTaxable() ? Math.round(netVal * 0.05) : 0;
+            if (taxCtrl) taxCtrl.setValue(tax, { emitEvent: false });
+            if (amtCtrl) amtCtrl.setValue(netVal + tax, { emitEvent: false });
+          } catch (e) {
+            // ignore
           }
         });
       }
@@ -370,8 +479,9 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       'PUR_DiscNo'
     ]);
 
-    // 允許在編輯時輸入明細未稅金額（ACP_GUINet），其餘如 ACP_GUITax/ACP_GUIAmt 為系統計算
+    // 允許在編輯時輸入明細未稅金額（ACP_GUINet），並允許直接修改稅額欄位
     editableFields.add('ACP_GUINet');
+    editableFields.add('ACP_GUITax');
 
     Object.keys(this.dataForm.controls).forEach(key => {
       const control = this.dataForm.get(key);
@@ -429,7 +539,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     this.queryLoading = true;
     const formValue = this.dataForm.getRawValue();
     const params = {
-      tlt_no: formValue.tlt_no,
+      tlt_no: this.getRawTltNo(formValue.tlt_no),
       sam_yyymm: this.formatYearMonth(formValue.sam_yyymm),
       money_type: formValue.COMM_MONEY_TYPE,
       sam_termno: formValue.sam_termno,
@@ -452,17 +562,21 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
             // TAX_TYPE 與 Deduct (Deduct_Code) 要找對應的 option value
             const taxVal = (this.taxTypeOptions ?? []).find((o: any) => String(o.label ?? '').includes('應稅'))?.value ?? '';
             const deductVal = (this.discountOptions ?? []).find((o: any) => String(o.label ?? '').includes('代表進項可扣抵'))?.value ?? '';
+            // 優先取出 Details 中第一個有 ven_uniform 的值，若無則看 firstDetail，再 fallback 到 firstMain
+            const defaultVenUniform = (details.find((d: any) => d?.ven_uniform) ?? firstDetail)?.ven_uniform ?? firstMain?.ven_uniform ?? '';
 
             this.detailDefaultInsert = {
               // 從 Mains 帶入 VEN_No
-              VEN_No: firstMain?.ven_no ?? '',
-              // 從 Details 帶入 ven_uniform
-              ven_uniform: firstDetail?.ven_uniform ?? '',
+              VEN_No: firstMain?.ven_no != null ? String(firstMain?.ven_no) : (this.detailDefaultInsert?.VEN_No ?? ''),
+              // 從後端 Details 或 Mains 帶入 ven_uniform
+              ven_uniform: defaultVenUniform,
               // 不預設 PUR_GUINO
               PUR_GUINO: '',
               // 預設發票日期/申報年月（若後端有提供）
               PUR_GUIDate: new Date(),
               DEC_YM: this.dataForm.controls.COMM_YM.value || null,
+              // 預設單據別：若主表 (firstMain) 有 tlttalent.invoice_type 或 invoice_type，帶入該值
+              GUIType: String(firstMain?.tlttalent?.invoice_type ?? firstMain?.invoice_type ?? ''),
               // 預設課稅別為「應稅」
               TAX_TYPE: taxVal,
               // 預設扣抵代號為「代表進項可扣抵之進貨及費用」
@@ -492,6 +606,12 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
           if (mains.length === 1 && !this.selectedMain) {
             this.selectedMain = mains[0];
             this.selectedMainItems = [mains[0]];
+          }
+          // 載入完成後儲存 detailEditData 快照，用於 Cancel 還原
+          try {
+            this.originalDetailSnapshot = JSON.parse(JSON.stringify(this.detailEditData || []));
+          } catch (e) {
+            this.originalDetailSnapshot = (this.detailEditData || []).slice();
           }
         },
         error: (err: any) => {
@@ -630,11 +750,40 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       return;
     }
 
+    // 驗證：發票金額不得超過應付貨款，且若有應付貨款(免稅)則需包含免稅發票
+    const mainForValidation = this.selectedMain ?? (this.changeEditData && this.changeEditData.length ? this.changeEditData[0] : null);
+    if (mainForValidation) {
+      const payableTotal = Number(mainForValidation.sam_ap_amt ?? mainForValidation.sam_ap_namt ?? 0);
+      const totalInvoiceAmt = details.reduce((s: number, d: any) => s + (Number(d.ACP_GUIAmt ?? 0)), 0);
+      if (payableTotal > 0 && totalInvoiceAmt > payableTotal) {
+        this.messageService.errorBubble('發票總額不可超過應付貨款總額');
+        this.messageService.unblockUi();
+        this.loading = false;
+        this.submitted = false;
+        return;
+      }
+
+      const noTaxPayable = Number(mainForValidation.sam_ap_notaxamt ?? 0);
+      if (noTaxPayable > 0) {
+        const hasNoTaxInvoice = details.some((d: any) => {
+          const label = this.mapValueToLabel(this.taxTypeOptions, d.PUR_TaxType);
+          return (label ?? '').includes('免稅');
+        });
+        if (!hasNoTaxInvoice) {
+          this.messageService.errorBubble('應付貨款(免稅)金額大於 0 時，需包含至少一筆免稅發票');
+          this.messageService.unblockUi();
+          this.loading = false;
+          this.submitted = false;
+          return;
+        }
+      }
+    }
+
     const body = {
       sam_yyymm: this.formatYearMonth(formValue.sam_yyymm ?? formValue.COMM_YM),
       money_type: formValue.COMM_MONEY_TYPE ?? formValue.money_type ?? '',
       sam_termno: Number(formValue.sam_termno ?? 0),
-      tlt_no: formValue.tlt_no ?? '',
+      tlt_no: this.getRawTltNo(formValue.tlt_no) ?? '',
       // 優先使用選取的主資料的 talent_id，若無則 fallback 到 rowdata
       talent_id: (this.selectedMain && this.selectedMain.talent_id) ? this.selectedMain.talent_id : ((this.rowdata as any)?.talent_id ?? 0),
       COMM_YM: this.formatYearMonth(formValue.COMM_YM),
@@ -666,13 +815,47 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   // 第一張表（主區）選取變更
-  onChangeEditSelection(items: any[]): void {
-    this.selectedMainItems = items ?? [];
+  onChangeEditSelection(items: any): void {
+    this.selectedMainItems = Array.isArray(items) ? items : (items ? [items] : []);
     this.selectedMain = (this.selectedMainItems && this.selectedMainItems.length) ? this.selectedMainItems[0] : null;
+    // 當使用者選取主表時，同步 selectedMain 的一些欄位到新增單據的預設 insert 值
+    try {
+      if (this.selectedMain) {
+        const m = this.selectedMain as any;
+        this.detailDefaultInsert = {
+          ...this.detailDefaultInsert,
+          VEN_No: m?.ven_no != null ? String(m?.ven_no) : (this.detailDefaultInsert?.VEN_No ?? ''),
+          ven_uniform: m?.ven_uniform ?? this.detailDefaultInsert?.ven_uniform ?? '',
+          GUIType: String(m?.tlttalent?.invoice_type ?? m?.invoice_type ?? this.detailDefaultInsert?.GUIType ?? ''),
+          DEC_YM: this.dataForm.controls.COMM_YM.value || null,
+        };
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   onDetailEditDataChange(data: any[]): void {
     this.detailEditData = data;
+  }
+
+  // 當點選 Cancel 時，由頁面層負責還原 table-edit 的資料快照，然後返回上一頁
+  onLocalCancel(): void {
+    // 先還原 table-edit 資料
+    if (this.originalDetailSnapshot != null) {
+      try {
+        this.detailEditData = JSON.parse(JSON.stringify(this.originalDetailSnapshot));
+      } catch (e) {
+        this.detailEditData = (this.originalDetailSnapshot || []).slice();
+      }
+    } else {
+      // 沒有快照則清空
+      this.detailEditData = [];
+    }
+    // 若有選取主表也還原為空
+    this.selectedMain = null;
+    this.selectedMainItems = [];
+    // 留在當前頁面（不顯示提示）
   }
 
 
@@ -701,6 +884,10 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         // 設定欄位值（若 table-edit 使用的是同一物件則畫面會自動更新）
         row.TAX_TYPE = taxVal ?? row.TAX_TYPE;
         row.Deduct_Code = deductVal ?? row.Deduct_Code;
+        // 收據沒有稅額
+        const netVal = Number(row.GUINet ?? 0);
+        row.GUITax = 0;
+        row.GUIAmt = (isNaN(netVal) ? 0 : netVal);
       }
     }
     // 當未稅金額 (GUINet) 變更時，自動計算稅額與發票總額
@@ -708,7 +895,12 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       const row = ev.rowData ?? {};
       const net = Number(ev.value ?? 0);
       if (!isNaN(net)) {
-        const tax = Math.round(net * 0.05);
+        // 只有在單據別為發票且課稅別為「應稅」時才計稅
+        const guiLabel = this.mapValueToLabel(this.invoiceTypeOptions, row?.GUIType);
+        const isReceipt = (guiLabel ?? '').includes('收據');
+        const taxLabel = this.mapValueToLabel(this.taxTypeOptions, row?.TAX_TYPE ?? row?.PUR_TaxType);
+        const isTaxable = (taxLabel ?? '').includes('應稅');
+        const tax = (!isReceipt && isTaxable) ? Math.round(net * 0.05) : 0;
         row.GUITax = tax;
         row.GUIAmt = net + tax;
       }
@@ -721,6 +913,27 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     const list = Array.isArray(options) ? options : (typeof options === 'function' ? options(null) : []);
     const hit = (list ?? []).find((o: any) => o?.value === raw || o?.label === raw);
     return hit?.label;
+  }
+
+  getTltLabel(value: any): string {
+    if (!value) return '';
+    const hit = (this.tltOptionsList ?? []).find(t => t.value === value);
+    return hit ? hit.label : String(value);
+  }
+
+  // 由顯示值或緩存回推原始 tlt_no
+  private getRawTltNo(displayOrValue: any): string | null {
+    // 若已儲存原始值，優先回傳
+    if (this.selectedTltNoRaw) return this.selectedTltNoRaw;
+    if (displayOrValue == null) return null;
+    const s = String(displayOrValue);
+    // 若為 "no - name" 格式，取第一段為 no
+    const m = s.match(/^([^\s-]+)\s*-\s*/);
+    if (m && m[1]) return m[1];
+    // 否則嘗試從 tltOptionsList 找對應 label
+    const hit = (this.tltOptionsList ?? []).find(t => t.label === s || t.value === s);
+    if (hit) return hit.value;
+    return s;
   }
 }
 

@@ -815,6 +815,7 @@ export class TLS12040FlowService {
         sst_rate: this.parseNumber(commission.sst_rate),
         cap_saletype1: commission.cap_saletype1 === true || commission.cap_saletype1 === 'Y' ? 'Y' : 'N',
         cap_saletype2: commission.cap_saletype2 === true || commission.cap_saletype2 === 'Y' ? 'Y' : 'N',
+        cap_saletype3: commission.cap_saletype3 === true || commission.cap_saletype3 === 'Y' ? 'Y' : 'N',
         cap_saletype5: commission.cap_saletype5 === true || commission.cap_saletype5 === 'Y' ? 'Y' : 'N',
         cag_bdate: this.formatDate(commission.cag_bdate),
         cag_edate: this.formatDate(commission.cag_edate)

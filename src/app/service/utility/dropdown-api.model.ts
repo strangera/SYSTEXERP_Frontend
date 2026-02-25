@@ -173,6 +173,36 @@ export interface Aps1001Item extends IDropdownItem {
 }
 
 /**
+ * 查詢 APS1001_DropDownList 時的請求 body
+ */
+export interface Aps1001Query {
+  SearchKeyword: string;
+}
+
+/**
+ * 查詢 APS1001_DropDownList 回傳的項目型別
+ */
+export interface Aps1001Item extends IDropdownItem {
+  DisplayText: string;
+}
+
+/**
+ * 查詢 APS1001_DropDownList (Combo型態) 回傳的項目型別
+ */
+export interface Aps1001ComboItem {
+  No: string;
+  Name: string;
+  DisplayText: string;
+}
+
+/**
+ * 查詢 APS1001_DropDownList (Combo型態) 時的請求 body
+ */
+export interface Aps1001ComboQuery {
+  SearchKeyword: string;
+}
+
+/**
  * 查詢 TBLUSER_Orgid_DropDownList 回傳的項目型別
  */
 export interface TblUserOrgidItem {
@@ -218,6 +248,21 @@ export interface Pos2004Item {
  * 查詢 TLTTALENT_CHARGE_DropDownList 時的請求 body
  */
 export interface TalentChargeQuery {
+  talent_id: number;
+}
+
+/**
+ * 查詢 TLTTALENT_tlt_openflag_DropDownList 時的請求 body
+ */
+export interface TalentOpenFlagQuery {
+  /** 廠商編號 */
+  VEN_No: string;
+}
+
+/**
+ * 查詢 TLTTALENT_tlt_openflag_DropDownList 回傳的項目型別（含 talent_id）
+ */
+export interface TalentOpenFlagItem extends IDropdownItem {
   talent_id: number;
 }
 
@@ -320,6 +365,8 @@ export interface TalentQuery {
   tlt_no?: string;
   tlt_name?: string;
   ven_no?: string;
+  tlt_bdate?: string | null;
+  tlt_edate?: string | null;
 }
 
 /**
@@ -482,4 +529,22 @@ export interface Css1005Query {
 export interface CssDropDownItem {
   No: string;
   Name: string;
+}
+
+/**
+ * 查詢 APS1002_DropDownList 回傳的項目型別 (公司銀行科目)
+ */
+export interface Aps1002Item {
+  BNK_DepositAccNo: string; // 科目帳號/代碼
+  ACCCNAME: string;         // 科目名稱
+  BNK_No: string;           // 銀行代碼
+  BNK_BRANCHNAME: string;   // 分行名稱
+  BNK_AccType: string;      // 帳戶類型 (例如: 1-支存, 2-活存...)
+}
+
+/**
+ * 查詢會計科目設定檔(GLS1005)下拉式選單(只顯示 GLS1005.ledger_MD=1)
+ */
+export interface IGLS1005LedgerMDItem extends IDropdownItem {
+  ABAT_YN: string; // 應收廠商
 }

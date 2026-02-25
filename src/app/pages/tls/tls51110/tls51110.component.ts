@@ -1,27 +1,27 @@
-import { Tls51110Service } from '../../../service/api/tls/tls51110.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { saveAs } from 'file-saver';
+import { AccordionModule } from 'primeng/accordion';
+import { FileSelectEvent } from 'primeng/fileupload';
+import { finalize } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
+import { Tls51110Service } from '../../../service/api/tls/tls51110.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import {
   AddButton,
   Column,
   createPaginationConfig,
   formatAmount,
 } from '../../../shared/componentkit/table/table.model';
-import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
-import { FileSelectEvent } from 'primeng/fileupload';
-import { saveAs } from 'file-saver';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { finalize } from 'rxjs';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { environment } from 'src/environments/environment';
 
 interface LogoOption {
   No: string;
@@ -64,7 +64,9 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
     YYYYMM2: [new Date(), Validators.required],
 
     ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }]),
+    pageSize: [30], // 本頁預設送後端每頁 30 筆
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   BUD_StatusOptions = getSYS1000Options('BUD_Status');
 

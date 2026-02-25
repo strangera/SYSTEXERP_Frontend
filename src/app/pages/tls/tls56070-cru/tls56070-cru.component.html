@@ -7,7 +7,7 @@
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="商品報廢單" controlName="SCRP_No" [control]="dataForm.controls.DAM_No"
+          <app-input-text label="報廢單編號" controlName="DAM_No" [control]="dataForm.controls.DAM_No"
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -31,13 +31,15 @@
             [submitted]="submitted"></app-calendar>
         </div>
         <app-table-edit class="col-12" tableKey="TLS56070Detail" [columns]="editColumns" [data]="data"
-          (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" (insert)="dialogVisible = true"
-          [tableRequired]="true" [canInsert]="false" [showInsert]="isFormCreateable || rowdata?.DAM_Status === '1'"
-          [insertDisabled]="dataForm.controls.HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"
-          (dataChange)="data = $event" [disabled]="isFormReadable"></app-table-edit>
+          (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
+          (insert)="dialogVisible = true;selectedItemsDialog = [];dialogData = []" [tableRequired]="true"
+          [canInsert]="false" [showInsert]="isFormCreateable || rowdata?.DAM_Status === '1'"
+          [insertDisabled]="!(dataForm.controls.HOS_No.value && dataForm.controls.LOGO_No.value)"
+          [rowValidate]="validateRow" (dataChange)="onTableDataChange($event)"
+          [disabled]="isFormReadable"></app-table-edit>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button *ngIf="isFormCreateable" btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="cancel" [form]="dataForm" (click)="loadData()"></app-button>
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
@@ -48,10 +50,8 @@
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
-      <app-dropdown-table class="col-12 md:col-6" [showOverlay]="false" [control]="dialogQueryForm.controls.queryNo"
-        [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
-        [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
-      </app-dropdown-table>
+      <app-product-autocomplete class="col-12" [control]="dialogQueryForm.controls.queryNo" [submitted]="submitted"
+        [extraFilters]="{ VEN_No: dataForm.controls.HOS_No.value, LOGO_No: dataForm.controls.LOGO_No.value}" />
       <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
         [control]="dialogQueryForm.controls.PLU_Name" />
     </div>
@@ -61,11 +61,11 @@
     </div>
   </form>
   <hr />
-  <app-table tableKey="tls56070CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
-    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
-    (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
-    [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)" [lazy]="true"
-    [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)">
-  </app-table>
+  <app-table-report dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData" [columns]="dialogColumns"
+    [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
+    [lastQueryBody]="lastDialogQueryParams" (selectionChange)="selectedItemsDialog = $event" [showManage]="false"
+    [showCheckBox]="true" [totalRecords]="totalRecords" [loading]="dialogLoading"
+    [isRowSelectable]="isRowSelectable.bind(this)"
+    [queryFunction]="tls52010Service.queryPOS2004Detail.bind(this.tls52010Service)">
+  </app-table-report>
 </app-dialog>

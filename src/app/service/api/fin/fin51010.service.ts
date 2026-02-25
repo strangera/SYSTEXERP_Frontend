@@ -31,6 +31,8 @@ export interface QueryFIN51010Request {
 
 /** 查詢主表 Response */
 export interface QueryFIN51010Response {
+  PostFlag: string;
+  Trans_Status: string;
   id: number;
   SrcSheetType: string;
   Voucher_Name: string;
@@ -131,6 +133,14 @@ export class Fin51010Service {
   transferFIN51010(body: { GLS6001_IDList: string }): Observable<ApiResponse<TransferFIN51010Response>> {
     return this.http.post<ApiResponse<TransferFIN51010Response>>(
       `${this.apiUrl}/FIN0000/GLS1000/transferFIN51010`,
+      body
+    );
+  }
+
+  // 作廢
+  voidFIN51010(body: { GLS6001_IDList: string }): Observable<ApiResponse<TransferFIN51010Response>> {
+    return this.http.post<ApiResponse<TransferFIN51010Response>>(
+      `${this.apiUrl}/FIN0000/GLS1000/voidFIN51010`,
       body
     );
   }

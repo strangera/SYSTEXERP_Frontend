@@ -108,4 +108,8 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
       })
     })
   }
+  onClear() {
+    this.dataForm.reset();
+    this.data = [];
+  }
 }

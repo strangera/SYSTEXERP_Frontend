@@ -1,0 +1,20 @@
+// Step 1 - Contract Info Component Styles
+
+:host {
+  display: block;
+}
+
+.field-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  label {
+    margin-bottom: 0;
+    cursor: pointer;
+  }
+}
+
+.no-bottom-padding {
+  padding-bottom: 0;
+}

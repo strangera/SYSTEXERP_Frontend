@@ -15,7 +15,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
@@ -54,7 +54,7 @@ export class FIN15060Component extends BasicQueryPageComponent<FIN15060Data> imp
 
   columns: Column[] = [
     { field: 'INV_DeclareYM', header: '所屬年月份', visible: true },
-    { field: 'INV_GUIDate', header: '開立發票日期', visible: true },
+    { field: 'INV_GUIDate', header: '開立發票日期', visible: true, format: formatDate },
     { field: 'INV_GUINo', header: '字軌號碼', visible: true },
     { field: 'INV_Name', header: '買受人名稱', visible: true },
     { field: 'TXN_Uniform', header: '買受人統一編號', visible: true },
@@ -67,7 +67,7 @@ export class FIN15060Component extends BasicQueryPageComponent<FIN15060Data> imp
     { field: 'INV_ExportType', header: '出口報單類別', visible: true },
     { field: 'INV_ExportNo', header: '出口報單號碼', visible: true },
     { field: 'CustomsExportAmt', header: '經海關出口金額', visible: true },
-    { field: 'ExportDate', header: '輸出或結匯日期', visible: true }
+    { field: 'ExportDate', header: '輸出或結匯日期', visible: true, format: formatDate }
   ];
 
   constructor(

@@ -15,8 +15,8 @@ export interface TLS2A010Data {
   check_Remark: string;     // 備註
 }
 export interface TLS2A010Query {
-  PageSize: number;
-  PageIndex: number;
+  pageSize: number;
+  pageIndex: number;
   SortBy?: any;
   TXN_Date?: string;
   Floor_No?: string;

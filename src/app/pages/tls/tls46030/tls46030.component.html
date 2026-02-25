@@ -49,5 +49,7 @@
     [multiSortMeta]="[{ field: 'ECR_SchNo', order: 1 }]"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [totalRecords]="totalRecords" [lazy]="true"
     [loading]="loading" [showPaginator]="true" [selectedItems]="selectedItems" [showReportMode]="false"
-    [showDelete]="false" [showDetail]="false" [showEdit]="true" [showManage]="true" (edit)="onEdit($event)"></app-table>
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
+    [rows]="30" [showDelete]="false" [showDetail]="false" [showEdit]="true" [showManage]="true"
+    (edit)="onEdit($event)"></app-table>
 </div>

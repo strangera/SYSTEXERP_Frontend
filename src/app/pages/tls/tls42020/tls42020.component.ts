@@ -57,7 +57,7 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
 
   //#region 匯入菜單 dialog
   queryForm2 = this.fb.group({
-    uploadType: ['0', Validators.required],  // 異動方式                         
+    uploadType: ['0', Validators.required],  // 異動方式
   });
 
   dialogVisible = false;
@@ -105,7 +105,7 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
   expansionColumns: Column[] = [
     { field: 'SBM_SeqNo', header: '序號', hidden: true },
     { field: 'SBM_BtnNo', header: '菜單按鍵序號', visible: true },
-    { field: 'PLU_MagNo', header: '商品貨號', visible: true },
+    { field: 'PLU_MagNo', header: '商品管理碼', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'PLU_PrnName', header: '商品列印名稱', visible: true },

@@ -97,4 +97,13 @@ export class Cpm13010Service {
   deleteCPM13010(body: DeleteCPM13010Request): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/deleteCPM13010`, body); // API 後端方法名是 DeleteCPM13010
   }
+  // 在 Cpm13010Service 類別中新增此方法
+  /**
+   * 恢復停車折抵時數設定的 API 呼叫 (將狀態由 D 改回 A)
+   * @param body 恢復請求物件 (與刪除共用格式，傳入 IDs)
+   * @returns 恢復是否成功的 API 回傳結果
+   */
+  recoverCPM13010(body: DeleteCPM13010Request): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/recoverCPM13010`, body);
+  }
 }

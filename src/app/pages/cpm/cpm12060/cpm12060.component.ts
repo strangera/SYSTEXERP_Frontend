@@ -12,7 +12,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 //
 
 //5.1.2.6  顧客意見處理狀況表
@@ -54,6 +54,12 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
     { label: '結案', value: 'Z' },
   ]
 
+  ANSWER_YNOptions: option[] = [
+    { label: '已回', value: 'Y' },
+    { label: '未回', value: 'N' },
+    { label: '已通知未回覆', value: 'S' },
+  ]
+
   SEXOptions: option[] = [
     { label: '男', value: 'M' },
     { label: '女', value: 'F' },
@@ -67,15 +73,16 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
         this.SEXOptions.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'COMPLAIN_DATE', header: '提供日期', visible: true, format: formatDateTime },
-    { field: 'ALERT_DATE', header: '通知日期', visible: true, format: formatDateTime },
+    { field: 'COMPLAIN_DATE', header: '提供日期', visible: true, format: formatDate },
+    { field: 'ALERT_DATE', header: '通知日期', visible: true, format: formatDate },
     { field: 'ANSWER_NAME', header: '處理者', visible: true },
-    { field: 'ANSWER_YN', header: '處理狀況', visible: true },
+    {
+      field: 'ANSWER_YN', header: '處理狀況', visible: true,
+      format: (value: string) => this.ANSWER_YNOptions.find(option => option.value === value)?.label || value
+    }, // Y-已回 N-未回 S-已通知未回覆
     { field: 'STATUS', header: '是否結案', visible: true },
-    { field: 'CLASS_ID', header: '處理單位', visible: true },
-    // 暫時先用下面的過
-    // { field: 'CLASS_ID', header: '處理單位', visible: true },
-    // { field: 'STATUS', header: '處理狀態', visible: true },
+    { field: 'CLASS_ID', header: '處理單位代碼', visible: true },
+    { field: 'CLASS_NAME', header: '處理單位', visible: true },
   ];
 
   constructor(

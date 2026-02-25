@@ -65,23 +65,32 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
    * 設定 money_type 與 sam_termno 的聯動邏輯
    */
   private setupFormLinkage(): void {
-    this.queryForm.controls.money_type.valueChanges.pipe(untilDestroyed(this)).subscribe(moneyType => {
-      this.updateSamTermnoOptions(moneyType);
-
-      // 修正：只有當 moneyType 有值時，才設定預設期數為 1
-      // 如果 moneyType 被清空，則將 sam_termno 也設為 null
-      if (moneyType) {
-        this.queryForm.controls.sam_termno.setValue(1);
-      } else {
-        this.queryForm.controls.sam_termno.setValue(null as any);
-      }
-    });
-
-    // 初始載入時，如果 money_type 有預設值，也要更新 sam_termno 選項
+    // 1. 取得初始值並立即更新下拉選單內容
     const initialMoneyType = this.queryForm.controls.money_type.value;
     if (initialMoneyType) {
       this.updateSamTermnoOptions(initialMoneyType);
     }
+
+    // 2. 監聽後續變更
+    this.queryForm.controls.money_type.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(moneyType => {
+        const oldTermno = this.queryForm.controls.sam_termno.value;
+        this.updateSamTermnoOptions(moneyType);
+
+        if (moneyType) {
+          // 檢查原本選的期數是否還在「新」的選項中
+          const isStillValid = this.sam_termnoOptions.some(opt => opt.value === oldTermno);
+
+          // 只有當原本的值失效時，才強制重置為 1
+          // 這樣你在手動選 2 的時候，就不會因為 updateValueAndValidity 而被重置回 1
+          if (!isStillValid) {
+            this.queryForm.controls.sam_termno.setValue(1, { emitEvent: false });
+          }
+        } else {
+          this.queryForm.controls.sam_termno.setValue(null as any, { emitEvent: false });
+        }
+      });
   }
 
   private updateSamTermnoOptions(moneyType: string | null): void {
@@ -100,13 +109,10 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
   }
 
   onSubmit(frm: FormGroup) {
-    // 移除必填驗證
-    ['money_type', 'sam_termno'].forEach(key => {
-      const control = this.queryForm.get(key);
-      control?.clearValidators();
-      control?.updateValueAndValidity();
-    });
-
+    this.queryForm.controls.money_type.clearValidators();
+    this.queryForm.controls.sam_termno.clearValidators();
+    this.queryForm.controls.money_type.updateValueAndValidity();
+    this.queryForm.controls.sam_termno.updateValueAndValidity();
     this.handleSubmit(frm, () => {
       const val = frm.value;
       const body = {
@@ -143,13 +149,13 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
       sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
       sam_termno: frm.value.sam_termno as number,
       money_type: frm.value.money_type as number,
-      tlt_no: ''
     }
 
     this.tls2e020Service.executeTls2e020(body).pipe(finalize(() => this.settleLoding = false), untilDestroyed(this)).subscribe(res => {
       this.messageService.successBubble(`${res.Data.ErrMsg}`);
     });
   }
+  // -----鎖定拿掉-----
   // lockLoding = false;
   // onLock(frm: FormGroup) {
   //   this.submitted = true;

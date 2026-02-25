@@ -130,7 +130,11 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   OrganizationCodeOptions: any[] = [];
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
-  WhetherOptions: any[] = [];
+    WhetherOptions: any[] = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' },
+    { value: null, label: '全部' },
+  ];
   installmentPeriodOptions = getSYS1000Options('T109');
   acquiringBankOptions = getSYS1000Options('T113');
   connectionStatusOptions: any[] = [
@@ -735,4 +739,49 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
   }
+onExportCreditExcel(): void {
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
+  }
+
+  this.btnLoading = true;
+
+  // ✅ 匯出一樣要把 SortBy 欄位轉 alias（避免 Others_Amount / Total_Amount 這些欄位後端不認得）
+  const body = {
+    ...this.historyRequestBody,
+    SortBy: this.mapSortFields(this.historyRequestBody?.SortBy),
+  };
+
+  this.tls23090Service
+    .exporttls23090CreditExcel(body)
+    .pipe(finalize(() => (this.btnLoading = false)))
+    .subscribe({
+      next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.xlsx'),
+      error: () => this.messageService?.warnBubble?.('EXCEL 匯出失敗（信用卡明細）。'),
+    });
+}
+
+onExportCounterExcel(): void {
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
+  }
+
+  this.btnLoading = true;
+
+  const body = {
+    ...this.historyRequestBody,
+    SortBy: this.mapSortFields(this.historyRequestBody?.SortBy),
+  };
+
+  this.tls23090Service
+    .exporttls23090CounterExcel(body)
+    .pipe(finalize(() => (this.btnLoading = false)))
+    .subscribe({
+      next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.xlsx'),
+      error: () => this.messageService?.warnBubble?.('EXCEL 匯出失敗（專櫃卡別分析）。'),
+    });
+}
+
 }

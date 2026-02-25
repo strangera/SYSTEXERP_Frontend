@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BehaviorSubject,finalize } from 'rxjs';
+import { finalize } from 'rxjs';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -14,9 +14,9 @@ import { TLS2J040Request, TLS2j040Service } from '@service/api/tls/tls2j040.serv
 import { environment } from 'src/environments/environment';
 import { DomSanitizer } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
-
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDateTime,formatAmount } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls2j040',
@@ -26,7 +26,7 @@ import { Column, createPaginationConfig, formatDateTime,formatAmount } from '../
   imports: [
     MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
     InputTextComponent, TranslateModule, CalendarComponent, CommonModule,
-    TableComponent
+    TableReportComponent
   ]
 })
 export class TLS2J040Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -41,6 +41,11 @@ export class TLS2J040Component extends BasicQueryPageComponent<any> implements O
 
   pdfUrl: import('@angular/platform-browser').SafeResourceUrl | null = null;
 
+  readonly tableData = signal<any[]>([]);
+  readonly totalRecords = signal<number>(0);
+  readonly tableLoading = signal<boolean>(false);
+  lastQueryBody?: any;
+
   constructor(
     private readonly service: TLS2j040Service,
     private readonly validationService: ValidationService,
@@ -49,12 +54,8 @@ export class TLS2J040Component extends BasicQueryPageComponent<any> implements O
   ) {
     super();
   }
-   totalRecords = 0;// 分頁和排序參數 // 排序需要
-    data: any[] = [];
-    selectedRows: any[] = [];
 
-
-  columns: Column[] = [
+  columns: ReportColumn[] = [
       { field: 'InvoiceCreateDate', header: '換開日期', visible: true, format: this.formatDateOnly },  
 
 
@@ -78,15 +79,23 @@ formatDateOnly(value: any): string {
   const dd = String(date.getDate()).padStart(2, '0');
   return `${yyyy}/${mm}/${dd}`;
 }
-  selectedRows$ = new BehaviorSubject<any[]>([]);
 
-setSelectedRows(rows: any[]) {
-  this.selectedRows$.next(rows);
-  this.selectedRows = rows; 
-}
-// 點 row 事件
-onRowClick(row: any) {
-   this.setSelectedRows([row]);
+  queryFunction = (body: any) => {
+    const raw = this.queryForm.getRawValue();
+    const pageSize = body?.pageSize ?? body?.PageSize ?? raw?.pageSize ?? 30;
+    const pageIndex = body?.pageIndex ?? body?.PageIndex ?? raw?.pageIndex ?? 1;
+    const payload = {
+      TxnDate: raw.TxnDate,
+      TxnGUINo: raw.TxnGUINo || undefined,
+      TxnUniform: raw.TxnUniform || undefined,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: body?.SortBy ?? raw?.SortBy,
+    };
+    return this.service.queryTLS2J040(payload);
+  };
+
+  onRowClick(row: any) {
 
   const payload: TLS2J040Request = {
     TxnDate: row.InvoiceCreateDate,  // 換開日期
@@ -115,29 +124,38 @@ onRowClick(row: any) {
 
   ngOnInit(): void {
     this.initializePage('TLS2J040', '/TLS/TLS2J040', this.queryForm, (form) => this.onSubmit(form));
-
-
-    this.selectedRows$.subscribe(rows => {
-    if (rows.length > 0) {
-      const row = rows[0];
-
-      //this.print(row);  // 自動觸發
-    }
-    
-  });
   }
 
-   onSubmit(form: FormGroup) {
-     
+  onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-      this.loading = true;
-      this.service.queryTLS2J040(form.value)
-        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
-        .subscribe(res => {
-          this.data = res.Data;
-          this.totalRecords = res.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, form.value);
-        });
+      const raw = form.getRawValue();
+      this.lastQueryBody = {
+        TxnDate: raw.TxnDate,
+        TxnGUINo: raw.TxnGUINo || undefined,
+        TxnUniform: raw.TxnUniform || undefined,
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1,
+        SortBy: raw.SortBy,
+      };
+
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody).pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.tableLoading.set(false);
+          this.loading = false;
+        })
+      ).subscribe({
+        next: res => {
+          if (res?.Status && res.Status !== '0000') {
+            this.messageService.errorBubble(res.Message ?? '查詢失敗');
+          } else {
+            this.tableData.set(res?.Data ?? []);
+            this.totalRecords.set(res?.TotalCount ?? 0);
+          }
+        }
+      });
     });
   }
 

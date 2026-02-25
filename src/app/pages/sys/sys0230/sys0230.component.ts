@@ -1,24 +1,21 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-// Shared
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { tblRole } from '../../../shared/models/sys/sysb000.model';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-// 4-2-2-2角色之使用者設定維護
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { tblRole } from '../../../shared/models/sys/sysb000.model';
 @Component({
   selector: 'app-sys0230',
   templateUrl: './sys0230.component.html',
-  styleUrls: ['./sys0230.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -27,7 +24,7 @@ import { finalize } from 'rxjs';
     ReactiveFormsModule,
     InputTextComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -38,18 +35,19 @@ export class SYS0230Component extends BasicQueryPageComponent<tblRole>
   queryForm = this.formBuilder.group({
     Role_No: ['', [Validators.maxLength(10), this.validationService.alphanumericValidator]], // 角色代號
     Role_Name: ['', [Validators.maxLength(30)]], // 角色名稱
-
-    //分頁查詢
-    ...createPaginationConfig([{ field: 'Role_No', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'Role_No', order: 1 }]],
   });
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: tblRole[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'Role_No', header: '角色代號', visible: true },
     { field: 'Role_Name', header: '角色名稱', visible: true },
     { field: 'Description', header: '角色註記', visible: true },
   ];
+  lastQueryBody: any;
   // 多選項目
   selectedItems: tblRole[] = [];
 
@@ -57,7 +55,7 @@ export class SYS0230Component extends BasicQueryPageComponent<tblRole>
   roleCodeOptions: any[] = [];
 
   constructor(
-    private readonly sys0210Service: Sys0210Service,
+    public readonly sys0210Service: Sys0210Service,
     private readonly validationService: ValidationService
   ) {
     super();
@@ -69,59 +67,17 @@ export class SYS0230Component extends BasicQueryPageComponent<tblRole>
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      console.log('query condition', frm.value);
       this.sys0210Service.queryRole(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         if (response.Data) {
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
+          this.lastQueryBody = frm.value;
         } else {
           this.data = [];
           this.totalRecords = 0;
         }
       });
     });
-  }
-
-  // 刪除項目
-  onDelete(data: tblRole | tblRole[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
-
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    const deleteBody = {
-      ids: idList, // 符合 API 的 idList 格式
-    };
-
-    console.log('Delete body:', JSON.stringify(deleteBody, null, 2));
-    // this.sys0210Service.deleteRole(deleteBody).subscribe({
-    //   next: (response) => {
-    //     if (response.Status === '0000') {
-    //       this.messageService.successBubble('選中項目刪除成功');
-    //     } else {
-    //       console.error('API error:', response.Status, response.Message);
-    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-    //     }
-    //   },
-    //   error: (err: string) => {
-    //     console.error('API error:', err);
-    //     this.messageService.errorBubble('刪除失敗');
-    //   },
-    //   complete: () => {
-    //     this.onSubmit(this.queryForm);
-    //   },
-    // });
-
-    this.selectedItems = [];
   }
 }

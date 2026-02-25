@@ -130,33 +130,27 @@
             'text-blue-500': rowData._isAutoInsertCandidate,
           }"></span>
       </td>
-      <td class="text-center w-1rem" [attr.colspan]="
-          rowData._isAutoInsertCandidate && data.length && showCheckBox
-            ? 2
-            : rowData._isAutoInsertCandidate
-              ? 1
-              : 1
-        " [pTooltip]="
-          rowData._rowValidationError?.errorMessage
-            ? rowData._rowValidationError.errorMessage
-            : ''
-        " tooltipPosition="bottom">
-        <span [ngClass]="{
-            'pi pi-exclamation-circle':
-              rowData._rowValidationError?.isValid === false &&
-              !rowData._isAutoInsertCandidate,
-            'text-blue-500': rowData._isAutoInsertCandidate,
-          }" class="w-1rem text-center">
-          {{
-          rowData._isAutoInsertCandidate
-          ? disabled
-          ? ""
-          : "新增資料"
-          : rowData._rowValidationError?.isValid === false
-          ? ""
-          : rowIndex + 1
-          }}
-        </span>
+      <td class="text-center w-1rem"
+        [attr.colspan]="rowData._isAutoInsertCandidate && data.length && showCheckBox ? 2 : 1"
+        (click)="rowData._isAutoInsertCandidate ? focusFirstInput(rowIndex) : null"
+        [pTooltip]="rowData._rowValidationError?.errorMessage || ''" tooltipPosition="bottom">
+
+        <div class="flex align-items-center justify-content-center gap-1">
+          <i [ngClass]="{
+    'pi': true,
+    'pi-exclamation-circle text-red-500': rowData._rowValidationError?.isValid === false && !rowData._isAutoInsertCandidate,
+    'pi-pencil text-400': rowData._isAutoInsertCandidate && !disabled
+  }">
+          </i>
+
+          <span [ngClass]="{'text-400 italic': rowData._isAutoInsertCandidate}">
+            {{
+            rowData._isAutoInsertCandidate
+            ? (disabled ? "" : "點此填寫...")
+            : (rowData._rowValidationError?.isValid === false ? "" : rowIndex + 1)
+            }}
+          </span>
+        </div>
       </td>
       <td *ngIf="showCheckBox && !disabled && !rowData._isAutoInsertCandidate" class="w-1rem text-center">
         <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData" [disabled]="

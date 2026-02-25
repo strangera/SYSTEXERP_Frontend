@@ -79,6 +79,19 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
     }
     console.log('CRU data details:', this.data);
   }
+  override onCancel(returnValue?: any) {
+    const queryPageRoute = `/account/${this.ProgNo.toLowerCase().slice(0, 3)}/${this.ProgNo.toLowerCase()}`;
+
+    const extras = {
+      state: {
+        fromRoute: this.router.url,
+        data: returnValue,
+        queryConditions: this.queryData ?? null
+      }
+    };
+
+    this.router.navigate([queryPageRoute], extras as any);
+  }
   onReview(rows: any[]): void {
     if (!rows || rows.length === 0) {
       this.messageService.warnBubble('沒有資料可重送');
@@ -100,11 +113,7 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
         this.messageService.successBubble('重送成功');
         this.loading = false;
       },
-      error: (err) => {
-        console.error('重送失敗:', err);
-        this.messageService.errorBubble('重送失敗');
-        this.loading = false;
-      },
+
     });
   }
 

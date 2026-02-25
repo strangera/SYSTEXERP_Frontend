@@ -117,6 +117,13 @@ export interface ITLTBUSSCLASSRequest_new {
   queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[];
 }
 
+// GLS1005 ledgerMD 下拉選單項目
+export interface IGLS1005LedgerMDItem {
+  No: string;
+  Name: string;
+  ABAT_YN: string;
+}
+
 export interface ISYS3100TreeRequest {
   org_id: string;
   stop_flag: string;
@@ -346,6 +353,11 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1005For1103_DropDownList`, {});
   }
 
+  // 查詢會計科目設定檔(GLS1005) ledgerMD 下拉式選單 (含 ABAT_YN 欄位)
+  queryGLS1005_ledgerMD_DropDownList(): Observable<ApiResponse<IGLS1005LedgerMDItem[]>> {
+    return this.http.post<ApiResponse<IGLS1005LedgerMDItem[]>>(`${this.apiUrl}/queryGLS1005_ledgerMD_DropDownList`, {});
+  }
+
   // 查詢扣款代碼檔(APS1003)資料表
   queryAPS1003_DropDownList(params: IAPS1003Request): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryAPS1003_DropDownList`, params);
@@ -386,7 +398,7 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002ECR_TypeDropDownList`, body);
   }
 
-  queryPOS1002Group_SubGroup_AreaNo_DropDownList(body: { building_no: string, floor_no: string, area_no: string }): Observable<ApiResponse<POS1002Item[]>> {
+  queryPOS1002Group_SubGroup_AreaNo_DropDownList(body: { building_no?: string, floor_no?: string, area_no?: string, ecr_no?: string }): Observable<ApiResponse<POS1002Item[]>> {
     return this.http.post<ApiResponse<POS1002Item[]>>(`${this.apiUrl}/queryPOS1002Group_SubGroup_AreaNo_DropDownList`, body);
   }
 
@@ -527,6 +539,10 @@ export class DropDownListService {
   // 查詢專櫃主檔(TLTTALENT)資料表下拉選單(依照契約日期取得合約資料)
   queryTLTTALENT_ByContractDate_DropDownList(tlt_contract_date: string | null): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_ByContractDate_DropDownList`, { tlt_contract_date });
+  }
+  // 專為 TLS41040 使用的專櫃下拉（保留原始回傳 ApiResponse 結構）
+  queryTLTTALENT_TLS41040_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_TLS41040_DropDownList`, {});
   }
   // 查詢付款別(POS1006)資料表下拉選單
   queryPOS1006_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {

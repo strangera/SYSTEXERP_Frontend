@@ -81,7 +81,7 @@ export class WorkflowNavigationService {
    */
   goToQueryPage(): void {
     this.stateService.reset();
-    this.router.navigate(['/account/tls', 'tls13010v2']);
+    this.router.navigate(['/account/tls', 'tls13010']);
   }
 
   /**

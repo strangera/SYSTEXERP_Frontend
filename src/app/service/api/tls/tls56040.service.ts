@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 介面路徑是否正確
-import { SortMeta } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
 
@@ -73,37 +72,6 @@ export interface ITLS56040Data {
   UPD_Date: string; // 變更日期
   UPD_USR_No: string; // 變更人員編號
   UPD_USR_Name: string; // 變更人員姓名
-}
-
-/** 查詢商品 (queryPOS2004Detail_TLS56040) 的請求介面 */
-export interface IQueryPOS2004DetailForTLS56040Request {
-  PageSize: number | null;
-  PageIndex: number | null;
-  SortBy?: SortMeta[] | null;
-  queryNo: string | null; // 查詢編號 (國際條碼/商品管理編號/廠商貨號)
-  PLU_Name: string | null; // 商品名稱 (查詢條件，可選)
-  LOGO_No: string | null; // LOGO代碼
-  HOS_No: string; // 醫院代號 (用來查詢庫存)
-}
-
-/** 查詢商品 (queryPOS2004Detail_TLS56040) 的單筆響應資料介面 */
-export interface IQueryPOS2004DetailForTLS56040Response {
-  id: number;
-  PLU_MagNo: string; // 商品管理編號
-  PLU_Name: string; // 商品名稱
-  PLU_No: string; // 國際條碼
-  PLU_OrgPLUNo: string; // 廠商貨號
-  PLU_Unit: string; // 商品單位
-  UNIT_NAME: string; // 單位名稱
-  PLU_BoxQty: number; // 包裝入數
-  PLU_StockTaxType: string; // 進貨稅別
-  PLU_SalePrc_UNI: number; // 單價
-  PLU_SalePrc: number; // 售價
-  PLU_TaxType: string; // 售價稅別
-  NowHaveQty: number; // 目前庫存量
-  APPLY_BuyAmt: number; // 調撥申請進價合計
-  APPLY_BuyTax: number; // 調撥申請進價稅額
-  APPLY_SaleAmt: number; // 調撥申請售價小計
 }
 
 /** 調撥單明細資料介面 (用於 insert/update TLS56040 的 Details 陣列) */
@@ -192,6 +160,9 @@ export interface IPOS2022Data {
   Confirm_SaleAmt?: number; // 確認銷售金額
   MVD_Remark?: string | null; // 明細備註
   UNIT_NAME?: string; // 單位名稱
+  NowHaveQty?: number;
+
+  _dataStatus: 'original' | 'new' | 'modified' | 'deleted';
 }
 
 /** 更新 POS2021 資料狀態 (updateStatusTLS56040) 的請求介面 */
@@ -218,15 +189,6 @@ export class Tls56040Service {
    */
   queryTLS56040(params: IQueryTLS56040Request): Observable<ApiResponse<ITLS56040Data[]>> {
     return this.http.post<ApiResponse<ITLS56040Data[]>>(`${this.apiUrl}/queryTLS56040`, params);
-  }
-
-  /**
-   * 根據商品管理編號、國際條碼或廠商貨號查詢商品，並包含庫存資訊
-   * @param params 查詢條件 (queryNo, PLU_Name, LOGO_No, HOS_No)
-   * @returns 包含 IQueryPOS2004DetailForTLS56040Response 陣列的 API 響應
-   */
-  queryPOS2004DetailForTLS56040(params: IQueryPOS2004DetailForTLS56040Request): Observable<ApiResponse<IQueryPOS2004DetailForTLS56040Response[]>> {
-    return this.http.post<ApiResponse<IQueryPOS2004DetailForTLS56040Response[]>>(`${this.apiUrl}/queryPOS2004Detail_TLS56040`, params);
   }
 
   /**

@@ -3,16 +3,15 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DetailData, DetailFooter, QueryTLS57050Request, SummaryData, SummaryFooter, Tls57050Service } from '@service/api/tls/tls57050.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDate } from '@shared/componentkit/table-report/table-report.model';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -36,12 +35,12 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     InputTextComponent,
     ButtonComponent,
     TranslateModule,
-    DropdownTableComponent,
     ButtonModule,
     InputNumberComponent,
     TableReportComponent,
     CalendarRangeQuickComponent,
-    AsyncPipe
+    AsyncPipe,
+    ProductAutocompleteComponent
   ],
 })
 export class TLS57050Component extends BasicQueryPageComponent<DetailData | SummaryData> implements OnInit {
@@ -64,23 +63,18 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
   vendorOptions = this.dropdown.queryPos2013TltTalent();// 廠商
   data: (DetailData[] | SummaryData[]) = [];
   footerData: (DetailFooter[] | SummaryFooter[]) = [];
-  columns: Column[] = [];
+  columns: ReportColumn[] = [];
   historyRequestBody: QueryTLS57050Request | null = null;
 
   constructor(
     public readonly tls57050Service: Tls57050Service,
-    private readonly tls52010Service: Tls52010Service,
     private readonly dropdown: DropdownApiService,
     private readonly fileExportService: FileExportService,
-    private datePipe: DatePipe
+    private readonly datePipe: DatePipe
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS57050');
-    this.updateTableColumns(this.queryForm.controls.ReportType.value);
-    this.queryForm.controls.ReportType.valueChanges.pipe(untilDestroyed(this)).subscribe(mode => {
-      this.updateTableColumns(mode);
-    });
   }
   updateTableColumns(displayMode: number | null) {
     if (displayMode === 1) { // 彙總模式
@@ -98,7 +92,6 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         { field: 'TotRebate', header: '整張折讓', format: formatAmount },
         { field: 'TotDisc', header: '整張折扣', format: formatAmount },
       ];
-      this.data = [];
     } else if (displayMode === 2) { // 明細模式
       this.columns = [
         { field: 'TXN_SaleNoteNo', header: '銷貨單號' },
@@ -112,12 +105,11 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         { field: 'PLU_No', header: '國際條碼' },
         { field: 'PLU_Name', header: '商品名稱' },
         { field: 'TXN_Qty', header: '數量' },
-        { field: 'PLU_SalePrc', header: '銷售定價', format: formatAmount },
-        { field: 'TXN_SaleAmt', header: '銷售金額', format: formatAmount },
-        { field: 'TotRebate', header: '整張折讓', format: formatAmount },
-        { field: 'TotDisc', header: '整張折扣', format: formatAmount },
+        { field: 'PLU_SalePrc', header: '銷售定價', format: formatAmount, isSubTotal: true },
+        { field: 'TXN_SaleAmt', header: '銷售金額', format: formatAmount, isSubTotal: true },
+        { field: 'TotRebate', header: '整張折讓', format: formatAmount, isSubTotal: true },
+        { field: 'TotDisc', header: '整張折扣', format: formatAmount, isSubTotal: true },
       ];
-      this.data = [];
     } else {
       this.columns = [];
       this.data = [];
@@ -150,6 +142,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
           this.data = response.Data;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.footerData = response.FooterData
+          this.updateTableColumns(displayMode);
         } else {
           this.data = [];
           this.totalRecords = 0;
@@ -157,28 +150,6 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         }
       });
     })
-  }
-  // 管理編號
-  suggestions: IQueryPOS2004DetailResponse[] = [];
-
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      VEN_No: '',
-      LOGO_No: '',
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
   }
   btnLoading = false;
   onExportPDF() {

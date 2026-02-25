@@ -5,7 +5,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { FileExportService } from '@shared/service/file-export.service';
@@ -14,12 +15,11 @@ import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs'; // 只需要 map 運算符，因為我們將直接訂閱
-import { IQueryPOS2004DetailResponse, IQueryTLS52010Request, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
+import { IQueryTLS52010Request, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { ExportLabelService, IExportLabelRequest } from '../../../service/utility/exportLabel.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
@@ -47,7 +47,25 @@ export const enum POStatus {
     ])
   ],
   standalone: true,
-  imports: [AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, DropdownTableComponent, DropdownComponent, CalendarRangeQuickComponent, TableReportComponent, Button, TooltipModule, NgStyle, NgIf, TranslateModule]
+  imports: [
+    ProductAutocompleteComponent,
+    AsyncPipe,
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    MultiSelectComponent,
+    DropdownComponent,
+    CalendarRangeQuickComponent,
+    TableReportComponent,
+    Button,
+    TooltipModule,
+    NgStyle,
+    NgIf,
+    TranslateModule
+  ]
 })
 export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -90,7 +108,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'HOS_No', header: '倉庫代碼', visible: true }, // 倉庫代碼
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true }, // 倉庫名稱
     { field: 'org_id', header: '組織代碼', visible: true }, // 組織代碼
-    { field: 'ODM_TaxType', header: '稅別', visible: true, format: value => value === '1' ? '應稅' : '免稅' }, // 稅別
+    { field: 'ODM_TaxType', header: '稅別', visible: true, format: v => getSYS1000('ODM_TaxType', v) }, // 稅別
     { field: 'PO_Status', header: '採購單狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value }, // 採購單狀態
     { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate }, // 申請日期 (ISO 格式字串)
     { field: 'APPLY_USR_No', header: '申請人員編號', visible: true }, // 申請人員編號
@@ -213,27 +231,5 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
 
   get selectedCount() {
     return this.selectedItems.length;
-  }
-  //!!! 國際條碼/商品管理編號/廠商貨號
-  suggestions: IQueryPOS2004DetailResponse[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      VEN_No: '',
-      LOGO_No: '',
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    // !!! 若有自己這隻的API請改成自己的
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
   }
 }

@@ -1,25 +1,25 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 
-import { AddButton, createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { AsyncPipe } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
-import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 import { QuerySYSB200Request, Sysb200Service } from '../../../service/api/sys/sysb200.service';
+import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 
 export interface VendorData {
   id?: number;             // 後端若回傳 id
@@ -71,7 +71,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     VEN_Uniform: ['', [Validators.maxLength(10)]],
     VEN_Name: ['', [Validators.maxLength(60)]],
     VEN_EName: ['', [Validators.maxLength(60)]],
-    VEN_SName: ['', [Validators.maxLength(10)]],
+    VEN_SName: [null, [Validators.maxLength(10)]],
     VEN_BNK_No: ['', [this.validationService.numberValidator, Validators.maxLength(10)]],
     VEN_GUIAddr: ['', [Validators.maxLength(100)]],
     VEN_Address: ['', [Validators.maxLength(100)]],
@@ -86,7 +86,9 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     VEN_Remark: ['', [Validators.maxLength(160)]],
     VEN_PayConditionDay: ['', [this.validationService.numberValidator]],
     ...createPaginationConfig([{ field: 'VEN_No', order: 1 }]),
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   // ====== Table / Options ======
   approvalOptions: { label: string; value: string }[] = [
@@ -201,7 +203,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
 
     this.bankOptions$ = this.sysbc00Service.querySYSBC00({}).pipe(
       map(res => (res.Data ?? []).map((item: any) => ({
-        label: `${item.BNK_No} ${item.BNK_Name}`,
+        label: `${item.BNK_No} - ${item.BNK_Name}`,
         value: item.BNK_No,
       })))
     );

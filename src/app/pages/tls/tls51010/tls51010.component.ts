@@ -1,15 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { TLS5000Service } from '../../../service/api/tls/tls5000.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { ValidationService } from '../../../shared/service/validation.service';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -26,19 +28,19 @@ interface CategoryItem {
   CanDel: boolean;
 }
 @Component({
-    selector: 'app-tls51010',
-    templateUrl: './tls51010.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls51010',
+  templateUrl: './tls51010.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TranslateModule,
+    TableReportComponent
+  ],
 })
 export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> implements OnInit {
   // 查詢表單：包含大分類代碼和名稱
@@ -48,7 +50,7 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
     ...createPaginationConfig([{ field: 'CAT_LNo', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
-
+  lastQueryBody: any = null;// 上次查詢的表單數據
   data: CategoryItem[] = [];// 表格數據和篩選數據
   columns: Column[] = [// 表格欄位定義
     { field: 'CAT_LNo', header: '大分類代碼', visible: true },
@@ -58,8 +60,8 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   selectedItems: CategoryItem[] = [];// 多選項目
 
   constructor(
-    private validationService: ValidationService,
-    private apiService: TLS5000Service,
+    private readonly validationService: ValidationService,
+    public readonly apiService: TLS5000Service,
   ) { super(); }
 
   ngOnInit(): void {
@@ -68,20 +70,13 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      this.apiService.queryTLS51010(frm.value).subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.data = response.Data || [];
-            this.totalRecords = response.TotalCount || response.Data.length; // 排序需要
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
+      this.apiService.queryTLS51010(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        if (response.Status === '0000') {
+          this.lastQueryBody = frm.value;
+          this.data = response.Data || [];
+          this.totalRecords = response.TotalCount || response.Data.length; // 排序需要
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        }
       });
     });
   }
@@ -99,25 +94,30 @@ export class TLS51010Component extends BasicQueryPageComponent<CategoryItem> imp
       return;
     }
 
-    this.apiService.deleteTLS51010({ idList }).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-        }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm); // 刷新資料
-      },
+    this.messageService.confirm({
+      message: '是否確認刪除所選大分類資料?',
+      header: '確認刪除',
+      accept: () => {
+        this.loading = true;
+        this.apiService.deleteTLS51010({ idList }).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+              this.selectedItems = [];
+              this.onSubmit(this.queryForm);
+            } else {
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: () => {
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.loading = false;
+          },
+        });
+      }
     });
-
-    this.selectedItems = [];
   }
 
 

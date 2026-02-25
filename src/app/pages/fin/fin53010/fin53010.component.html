@@ -53,7 +53,7 @@
           <app-input-text
             class="col-12 md:col-6 lg:col-4"
             label="傳票摘要"
-            controlName="remark"
+            controlName="Remark"
             [control]="qf().Remark"
             [submitted]="submitted"
           ></app-input-text>
@@ -131,20 +131,19 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table
-      [showCheckBox]="false"
-      [showDelete]="false"
+    <app-table-report
+      [tableKey]="'FIN53010'"
+      dataKey="id"
       [data]="tableData()"
       [columns]="columns"
       [totalRecords]="totalRecords()"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-      [lazy]="true"
+      [loading]="loading"
+      [showDelete]="false"
+      [showManage]="true"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFIN53010.bind(this)"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
-      [multiSortMeta]="multiSortMeta"
-      [loading]="tableLoading()"
-      [dataKey]="'id'"
-      [tableKey]="'FIN53010'"
-    ></app-table>
+    ></app-table-report>
   </div>
 </div>

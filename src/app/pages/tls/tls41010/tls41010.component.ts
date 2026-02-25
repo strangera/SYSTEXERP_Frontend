@@ -150,6 +150,16 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     this.tls11010Service.queryData(payload).pipe(finalize(() => this.loading = false)).subscribe({
       next: (res) => {
         console.log('查詢 TLS11010 成功', res.Data);
+
+        // 如果有資料，自動帶入館別、樓層、區域
+        if (res?.Data && res.Data.length > 0) {
+          const locationData = res.Data[0];
+          this.queryForm.patchValue({
+            ECR_Group: locationData.building_no ?? '',      // 館別
+            ECR_SubGroup: locationData.FLOOR_NO ?? '',      // 樓層
+            ECR_AreaNo: locationData.AREA_NO?.trim() ?? ''  // 區域（去除空白）
+          }, { emitEvent: false });
+        }
       },
     });
   }
@@ -323,9 +333,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         .pipe(finalize(() => this.loading = false), untilDestroyed(this))
         .subscribe((res) => {
           this.lastQueryForm = body;
-          this.totalRecords = res.TotalCount;
+          this.totalRecords = res?.TotalCount || 0;
           this.footerTotal = null;
-          this.data = res.Data.map(item => {
+          const resData = Array.isArray(res?.Data) ? res.Data : [];
+          this.data = resData.map(item => {
             let dateValue: Date | null = null;
             if (typeof item.ECR_SettleHHNN === 'string' && item.ECR_SettleHHNN.length === 4) {
               dateValue = new Date(`1970-01-01T${item.ECR_SettleHHNN.substring(0, 2)}:${item.ECR_SettleHHNN.substring(2, 4)}:00`);
@@ -358,10 +369,21 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       };
       // 判斷是否為新增或更新，假設「new」是新增
       // 更新
-      this.tls41010Service.updateTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
-        console.log('更新成功', res);
-        this.dialogVisible = false;
-        this.onSubmit(this.queryForm);
+      this.tls41010Service.updateTLS41010(body).pipe(untilDestroyed(this)).subscribe({
+        next: (res) => {
+          console.log('更新成功', res);
+          if (res?.Status === '0000') {
+            this.messageService.successBubble('複製設定成功');
+            this.dialogVisible = false;
+            this.onSubmit(this.queryForm);
+          } else {
+            this.messageService.errorBubble(`複製失敗: ${res?.Message ?? '未知錯誤'}`);
+          }
+        },
+        error: (err) => {
+          console.error('更新失敗', err);
+          this.messageService.errorBubble('複製失敗');
+        }
       });
     });
   }
@@ -414,18 +436,26 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       this.messageService.warnBubble('無有效的 ID 可供刪除');
       return;
     }
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '是否刪除所選項目?',
+      accept: () => {
+        this.tls41010Service.deleteTLS41010(idList)
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble('選中項目刪除成功');
+                this.selectedItems = []; // 清空選中項目
+                this.onSubmit(this.queryForm); // 重新查詢刷新列表
+              } else {
+                console.error('API error:', res.Status, res.Message);
+                this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
+              }
+            },
 
-    this.tls41010Service.deleteTLS41010(idList).subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-          this.selectedItems = [];          // 清空選中項目
-          this.onSubmit(this.queryForm);    // 重新查詢刷新列表
-        } else {
-          console.error('API error:', res.Status, res.Message);
-          this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
-        }
-      },
+          });
+      }
     });
   }
 }

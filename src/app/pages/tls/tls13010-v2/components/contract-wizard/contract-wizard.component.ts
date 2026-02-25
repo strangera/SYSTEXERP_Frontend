@@ -44,14 +44,6 @@ import { ConditionItem } from '../../core/models/condition';
 import { ContractInfo, LocationItem } from '../../core/models/contract';
 import { FareItem } from '../../core/models/deduction';
 import { CommissionType } from '../../core/constants';
-import {
-  isFixedRentCondition,
-  isBaseRentHigherCondition,
-  isBaseCommissionCondition,
-  isGraduatedCommissionCondition,
-  isBaseTierCondition
-} from '../../core/type-guards/condition.guard';
-
 // 子組件
 import { Step1ContractInfoComponent } from './steps/step1-contract-info/step1-contract-info.component';
 import { Step2DeductionComponent } from './steps/step2-deduction/step2-deduction.component';
@@ -97,7 +89,7 @@ const DATE_FIELDS = [
 ];
 
 @Component({
-  selector: 'app-tls13010v2-contract-wizard',
+  selector: 'app-tls13010-contract-wizard',
   templateUrl: './contract-wizard.component.html',
   styleUrls: ['./contract-wizard.component.scss'],
   standalone: true,
@@ -297,11 +289,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
   private updateDynamicValidators(): void {
     const tltTermType = this.step1Form.get('tlt_term_type')?.value || '';
 
-    // 包底類別驗證 (抽成別 2, 4, 6 需要)
+    // 包底類別驗證 (抽成別 4, 6 需要)
     const baodiControl = this.step1Form.get('tlt_ctype_mtotal');
     if (baodiControl) {
       baodiControl.clearValidators();
-      if (['2', '4', '6'].includes(tltTermType)) {
+      if (['4', '6'].includes(tltTermType)) {
         baodiControl.setValidators([Validators.required]);
       }
       baodiControl.updateValueAndValidity();
@@ -868,7 +860,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
           }
 
           case '6': { // 包底加層級 - 有 limit_amt 和 seq_no
-            const levelDetails6 = data.LevelDetails || data.levelDetails || [];
+            // 優先從 BottomTierDetails 讀取，若無則從 LevelDetails 讀取
+            const levelDetails6 = data.BottomTierDetails || data.bottomTierDetails || data.LevelDetails || data.levelDetails || [];
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             conditionItems = levelDetails6.map((item: any) => ({
               id: item.id || item.ID,
@@ -1005,8 +998,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
     // 動態驗證：根據抽成別驗證相關欄位
     const tltTermType = this.step1Form.get('tlt_term_type')?.value || '';
 
-    // 包底類別 (抽成別 2, 4, 6 需要)
-    if (['2', '4', '6'].includes(tltTermType)) {
+    // 包底類別 (抽成別 4, 6 需要)
+    if (['4', '6'].includes(tltTermType)) {
       const baodiValue = this.step1Form.get('tlt_ctype_mtotal')?.value;
       if (!baodiValue) {
         this.messageService.warnBubble('當前抽成別需要選擇包底類別');
@@ -1438,24 +1431,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       return true;
     }
 
-    // 只取得符合當前抽成別的未刪除條件資料
-    const activeItems = this.wizardState.conditionItems.filter(item => {
-      if (item._status === 'deleted') return false;
-      switch (commissionType) {
-        case CommissionType.FIXED_RENT:
-          return isFixedRentCondition(item);
-        case CommissionType.BASE_RENT_HIGHER:
-          return isBaseRentHigherCondition(item);
-        case CommissionType.BASE_COMMISSION:
-          return isBaseCommissionCondition(item);
-        case CommissionType.GRADUATED:
-          return isGraduatedCommissionCondition(item);
-        case CommissionType.BASE_TIER:
-          return isBaseTierCondition(item);
-        default:
-          return true;
-      }
-    });
+    // 過濾未刪除的條件（commissionType 已明確知道類型，不需要 type guard）
+    const activeItems = this.wizardState.conditionItems.filter(item => item._status !== 'deleted');
 
     // 清除所有錯誤標記
     this.clearStep4ErrorFlags(activeItems);
@@ -1472,45 +1449,45 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
     for (const item of activeItems) {
       const errorFields: string[] = [];
 
-      // 通用驗證：帳務起迄日期必填
-      if (!item.cag_bdate) {
-        errorCount++;
-        errorTypes.add('必填欄位未填');
-        errorFields.push('cag_bdate');
-      }
-      if (!item.cag_edate) {
-        errorCount++;
-        errorTypes.add('必填欄位未填');
-        errorFields.push('cag_edate');
-      }
+      // [暫時註解] 通用驗證：帳務起迄日期必填
+      // if (!item.cag_bdate) {
+      //   errorCount++;
+      //   errorTypes.add('必填欄位未填');
+      //   errorFields.push('cag_bdate');
+      // }
+      // if (!item.cag_edate) {
+      //   errorCount++;
+      //   errorTypes.add('必填欄位未填');
+      //   errorFields.push('cag_edate');
+      // }
 
-      // 驗證日期順序
-      const condStart = this.parseDate(item.cag_bdate);
-      const condEnd = this.parseDate(item.cag_edate);
-      if (condStart && condEnd && condStart > condEnd) {
-        errorCount++;
-        errorTypes.add('日期順序錯誤');
-        errorFields.push('cag_bdate', 'cag_edate');
-      }
+      // [暫時註解] 驗證日期順序
+      // const condStart = this.parseDate(item.cag_bdate);
+      // const condEnd = this.parseDate(item.cag_edate);
+      // if (condStart && condEnd && condStart > condEnd) {
+      //   errorCount++;
+      //   errorTypes.add('日期順序錯誤');
+      //   errorFields.push('cag_bdate', 'cag_edate');
+      // }
 
-      // 驗證日期在契約期間內
-      const contractStartDate = this.step1Form.get('tlt_bdate')?.value;
-      const contractEndDate = this.step1Form.get('tlt_edate')?.value;
-      if (contractStartDate && contractEndDate) {
-        const contractStart = this.parseDate(contractStartDate);
-        const contractEnd = this.parseDate(contractEndDate);
+      // [暫時註解] 驗證日期在契約期間內
+      // const contractStartDate = this.step1Form.get('tlt_bdate')?.value;
+      // const contractEndDate = this.step1Form.get('tlt_edate')?.value;
+      // if (contractStartDate && contractEndDate) {
+      //   const contractStart = this.parseDate(contractStartDate);
+      //   const contractEnd = this.parseDate(contractEndDate);
 
-        if (condStart && contractStart && condStart < contractStart) {
-          errorCount++;
-          errorTypes.add('日期超出契約期間');
-          if (!errorFields.includes('cag_bdate')) errorFields.push('cag_bdate');
-        }
-        if (condEnd && contractEnd && condEnd > contractEnd) {
-          errorCount++;
-          errorTypes.add('日期超出契約期間');
-          if (!errorFields.includes('cag_edate')) errorFields.push('cag_edate');
-        }
-      }
+      //   if (condStart && contractStart && condStart < contractStart) {
+      //     errorCount++;
+      //     errorTypes.add('日期超出契約期間');
+      //     if (!errorFields.includes('cag_bdate')) errorFields.push('cag_bdate');
+      //   }
+      //   if (condEnd && contractEnd && condEnd > contractEnd) {
+      //     errorCount++;
+      //     errorTypes.add('日期超出契約期間');
+      //     if (!errorFields.includes('cag_edate')) errorFields.push('cag_edate');
+      //   }
+      // }
 
       // 根據抽成別驗證特定欄位
       const data = item as unknown as Record<string, unknown>;
@@ -1581,16 +1558,16 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       }
     }
 
-    // 日期區間重疊驗證
-    const overlapCount = this.checkDateOverlap(
-      activeItems as unknown as Record<string, unknown>[],
-      'cag_bdate',
-      'cag_edate'
-    );
-    if (overlapCount > 0) {
-      errorCount += overlapCount;
-      errorTypes.add('日期區間重疊');
-    }
+    // [暫時註解] 日期區間重疊驗證
+    // const overlapCount = this.checkDateOverlap(
+    //   activeItems as unknown as Record<string, unknown>[],
+    //   'cag_bdate',
+    //   'cag_edate'
+    // );
+    // if (overlapCount > 0) {
+    //   errorCount += overlapCount;
+    //   errorTypes.add('日期區間重疊');
+    // }
 
     if (errorCount > 0) {
       // 觸發變更檢測
@@ -1689,22 +1666,26 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
         // 延遲返回查詢頁，讓使用者看到成功訊息
         setTimeout(() => {
-          this.router.navigate(['account/tls/tls13010v2']);
+          this.router.navigate(['account/tls/tls13010'], {
+            state: { fromRoute: '/tls/tls13010cru' }
+          });
         }, 2000);
       } else {
-        throw new Error(response?.message || '儲存失敗');
+        throw new Error(response?.message || '契約書資料提交失敗');
       }
     } catch (error: unknown) {
-      console.error('儲存失敗:', error);
+      console.error('契約書資料提交失敗:', error);
       const errorMessage = error instanceof Error ? error.message : '未知錯誤';
-      this.messageService.errorBubble(`儲存失敗: ${errorMessage}`);
+      this.messageService.errorBubble(`契約書資料提交失敗: ${errorMessage}`);
     } finally {
       this.isSaving = false;
     }
   }
 
   override onCancel(): void {
-    this.router.navigate(['account/tls/tls13010v2']);
+    this.router.navigate(['account/tls/tls13010'], {
+      state: { fromRoute: '/tls/tls13010cru' }
+    });
   }
 
   /**
@@ -1902,6 +1883,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       VEN_Name: formData.VEN_Name || '',
       contract_subno: formData.contract_subno || '',
       tlt_term_type: (formData.tlt_term_type || '').toString().trim(),
+      tlt_ctype_mtotal: formData.tlt_ctype_mtotal || '',
+      overall_status: formData.overall_status || '',
       tlt_bdate: formData.tlt_bdate || '',
       tlt_edate: formData.tlt_edate || '',
       tlt_contract_bdate: formData.tlt_contract_bdate || '',

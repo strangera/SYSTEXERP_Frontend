@@ -1,85 +1,76 @@
-import { HttpClient, HttpHeaders, HttpResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { SortMeta } from 'primeng/api';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 
-export type SortItem = { field: string; order: number };
+/** ========== 1.6.4 應收票據兌現作業 (FIN64030) ========== */
 
+/** 查詢 Request */
 export interface QueryFIN64030Request {
   PageSize?: number | null;
   PageIndex?: number | null;
-  SortBy?: SortItem[] | null;
-
-  CompanyAccNoList?: string | null; // 多選：逗號分隔（同 FIN64020）
+  SortBy?: SortMeta[] | null;
+  CompanyAccNoList?: string[] | null;
   ExpireDateFrom?: string | null;
   ExpireDateTo?: string | null;
-
-  ChkNo?: string | null;        // 票據號碼(模糊)
-  VouNoPaid?: string | null;    // 兌現傳票號(模糊) - 若你後端定義
-  ChkStatus?: string | null;    // 0~5
-
-  // 兼容小寫
-  pageSize?: number | null;
-  pageIndex?: number | null;
-  orderBy?: string | null;
-  offset?: number | null;
-
-  OrderBy?: string | null;
-  Offset?: number | null;
-
-  [key: string]: any;
+  ChkNo?: string | null;
+  // --- 根據 SP 補上缺失的查詢欄位 ---
+  VouNoExpire?: string | null; // 到期傳票編號(模糊)
+  ChkStatus?: string | null;   // 狀態(0~5)
 }
 
+/** 查詢結果 Row (完整對應 SP_FIN64030Query 欄位) */
 export interface QueryFIN64030Row {
   SEQ_NO: number;
   ID: number;
-
   CHK_No: string;
-
-  VEN_No: string | null;
-  VEN_Name: string | null;
-
-  BNK_No: string | null;
-  BNK_Name: string | null;
-
-  CHK_ExpireDate: string | null;
-  CHK_Amt: number | null;
-
-  CHK_BNK_No: string | null; // 託收銀行(含分行) - 若查得到
-
-  CHK_Status: string | null;      // 0~5
-  CHK_Status_Name: string | null; // 中文
-
-  VouNo_Paid?: string | null;     // 兌現傳票號（若你後端回）
-  PayDate?: string | null;        // 兌現日（若你後端回）
-
-  IsSelectable?: 'Y' | 'N'; // 若你後端也輸出，可直接用；沒有就前端判斷
-
-  [key: string]: any;
+  VEN_No: string;
+  VEN_Name: string;
+  BNK_No: string;
+  BNK_Name: string;
+  CHK_ExpireDate: string;
+  CHK_Amt: number;
+  CHK_BNK_No: string;
+  VouNo_Expire: string;    // 對應 SP 的 A4.VouNo_received
+  CHK_Status: string;
+  CHK_Status_Name: string;
+  IsSelectable: string;
+  // --- 補上 SP 新增的託收檔 (ARS4006) 資訊 ---
+  ARS4006_ID?: number;
+  Colle_BNK_No?: string;
+  Colle_BNK_BranchNo?: string;
+  Colle_BNK_AccNo?: string;
+  ColleDate?: string;      // 託收日
+  Colle_Tran_Status?: string;
+  Colle_Comment?: string;
 }
 
-/** 兌現更新 */
-export interface Fin64030CashRequest {
-  ChkNoList: string[];
+/** 兌現更新 Request */
+export interface Fin64030UpdateRequest {
+  IdList: number[];    // 勾選的資料 ID 清單
+  CashDate: string;    // 兌現日期
+}
 
-  PayDate: string;         // 兌現日
-  CashBankNo: string;      // 兌現銀行（如需要）
-  VouNoPaid?: string;      // 兌現傳票號（如需要）
-
-  UPD_USRNo?: string;
-  UPD_USRName?: string;
-
-  [key: string]: any;
+/** 兌現更新成功回傳結果 (包含傳票資訊) */
+export interface Fin64030UpdateResponse {
+  CashUpdatedCount: number;
+  VouNo: string;
+  GLS3001_ID: number;
+  VoucherProcessedCount: number;
+  VoucherTotalAmt: number;
 }
 
 @Injectable({ providedIn: 'root' })
 export class Fin64030Service {
-  /** 目前還沒後端：先 placeholder */
-  private apiUrl = `${environment.ApiUrl}/FIN0000/ARS4000`;
+  // API 路徑比照 64020
+  private apiUrl = `${environment.ApiUrl}/FIN0000/NTS1000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
+  /** * 1.6.4 應收票據兌現作業 - 查詢清單
+   */
   queryFIN64030(body: QueryFIN64030Request): Observable<ApiResponse<QueryFIN64030Row[]>> {
     return this.http.post<ApiResponse<QueryFIN64030Row[]>>(
       `${this.apiUrl}/queryFIN64030`,
@@ -87,49 +78,12 @@ export class Fin64030Service {
     );
   }
 
-  /** 兌現 */
-  cashFIN64030(body: Fin64030CashRequest): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/cashFIN64030`, body);
-  }
-
-  exportFIN64030Excel(body: QueryFIN64030Request): Observable<HttpResponse<Blob>> {
-    const url = `${this.apiUrl}/exportFIN64030`;
-    const payload = this.stripPaging(body);
-
-    return this.http.post(url, payload, {
-      observe: 'response',
-      responseType: 'blob' as 'json',
-    }) as Observable<HttpResponse<Blob>>;
-  }
-
-  exportFIN64030PDF(body: QueryFIN64030Request): Observable<HttpResponse<Blob>> {
-    const url = `${this.apiUrl}/exportFIN64030PDF`;
-    const payload = this.stripPaging(body);
-
-    return this.http.post(url, payload, {
-      observe: 'response',
-      responseType: 'blob' as 'json',
-      headers: new HttpHeaders({ Accept: 'application/pdf' }),
-    }) as Observable<HttpResponse<Blob>>;
-  }
-
-  private stripPaging<T extends Record<string, any>>(
-    input: T
-  ): Omit<
-    T,
-    | 'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset'
-    | 'pageSize' | 'pageIndex' | 'orderBy' | 'offset'
-  > {
-    if (!input) return input as any;
-
-    const {
-      PageSize, PageIndex, OrderBy, Offset,
-      pageSize, pageIndex, orderBy, offset,
-      ...rest
-    } = input as any;
-
-    return rest as any;
+  /** * 1.6.4 應收票據兌現更新 - 執行兌現 (含自動拋轉傳票)
+   */
+  updateFIN64030(body: Fin64030UpdateRequest): Observable<ApiResponse<Fin64030UpdateResponse>> {
+    return this.http.post<ApiResponse<Fin64030UpdateResponse>>(
+      `${this.apiUrl}/updateFIN64030`,
+      body
+    );
   }
 }
-
-export { ApiResponse };

@@ -202,15 +202,21 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
       { field: 'TABTYPE', header: '單據別', format: v => getSYS1000('TABTYPE', v), width: '85px' },
       {
         field: 'PUR_GUINo', header: '發票/收據編號', type: 'input', validate: [validateDuplicate, validateRequired, validateMaxLength(10), AA00000000], maxLength: 10,
-        onBlur: (rowData) => this.toUpperCase(rowData), width: '230px'
+        onBlur: (rowData) => this.toUpperCase(rowData), width: '100px'
       },
       {
-        field: 'PUR_GUIDate', header: '發票/收據日期', type: 'date', calculate: (rowData, dateValue) => {
+        field: 'PUR_GUIDate',
+        header: '發票/收據日期',
+        type: 'date',
+        calculate: (rowData, dateValue) => {
           const repYYYYMM = this.calculateRepYYYYMM(dateValue);
+          rowData.PUR_RepYYYYMM = repYYYYMM;
           return {
             'PUR_RepYYYYMM': repYYYYMM,
           };
-        }, validate: [validateRequired], width: '145px'
+        },
+        validate: [validateRequired],
+        width: '145px'
       },
       { field: 'PUR_RepYYYYMM', header: '申報年月', format: this.formatRepYYYYMM, width: '110px' },
       {
@@ -412,10 +418,14 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
           ...item,
           EVENT_DATE: this.datePipe.transform(item.EVENT_DATE, 'yyyy-MM-dd')
         })),
-        APS3018List: this.APS3018Data.map(item => ({
-          ...item,
-          PUR_GUIDate: this.datePipe.transform(item.PUR_GUIDate, 'yyyy-MM-dd')
-        }))
+        APS3018List: this.APS3018Data.map(item => {
+          const repYYYYMM = this.calculateRepYYYYMM(item.PUR_GUIDate);
+          return {
+            ...item,
+            PUR_RepYYYYMM: repYYYYMM, // 補上這個欄位
+            PUR_GUIDate: this.datePipe.transform(item.PUR_GUIDate, 'yyyy-MM-dd')
+          };
+        })
       };
       const $req = this.isFormCreateable ? this.tls55040Service.insertTLS55040(body) : this.tls55040Service.updateTLS55040(body);
       $req.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {

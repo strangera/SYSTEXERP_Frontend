@@ -11,15 +11,15 @@
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandOptions" optionLabel="label"
+          <app-dropdown label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandOptions | async" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="倉別" controlName="HOS_No" [options]="warehouseOptions" optionLabel="label"
+          <app-dropdown label="倉別" controlName="HOS_No" [options]="warehouseOptions| async" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.HOS_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions" optionLabel="label"
+          <app-dropdown label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions| async" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -44,7 +44,8 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="申請人" controlName="APPLY_USR_No" [control]="dataForm.controls.APPLY_USR_No"
-            [submitted]="submitted" [options]="userOptions" optionLabel="label" optionValue="value"></app-dropdown>
+            [submitted]="submitted" [options]="userOptions | async" optionLabel="label"
+            optionValue="value"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
@@ -52,17 +53,14 @@
         </div>
       </div>
       <hr />
-      <app-table dataKey="PLU_MagNo" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
-        [showCheckBox]="!isFormReadable" (selectionChange)="selectedItems = $event" [showEdit]="false"
-        [showDetail]="false" [showInsert]="true" [showDelete]="!isFormReadable"
-        (insert)="dialogVisible = true;selectedItemsDialog = [];dialogData = []" [showRowEdit]="true"
-        (delete)="onDelete($event)" [showManage]="!isFormReadable" [showReportMode]="false" (dataChange)="data = $event"
-        [insertDisabled]="dataForm.controls.HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"
-        [showInsert]="!isFormReadable" (rowEditSave)="onRowEditSave($event)" [showCaption]="!isFormReadable"
-        (dataChange)="data = $event">
-      </app-table>
+
+      <app-table-edit [columns]="editColumns" [data]="data" [disabled]="isFormReadable" [canInsert]="false"
+        (insert)="dialogVisible = true;selectedItemsDialog = [];dialogData = []" [tableRequired]="true"
+        (dataChange)="data = $event;this.calculateTotals()" [loading]="loading" [showInsert]="true"
+        [insertDisabled]="dataForm.controls.HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"></app-table-edit>
+
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" (click)="data = originalData" [form]="dataForm"></app-button>
+        <app-button btnType="cancel" (click)="loadData()" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
@@ -72,10 +70,9 @@
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
-      <app-dropdown-table class="col-12" [showOverlay]="false" [control]="dialogQueryForm.controls.queryNo"
-        [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
-        [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
-      </app-dropdown-table>
+      <app-product-autocomplete class="col-12" [control]="dialogQueryForm.controls.queryNo" [submitted]="submitted"
+        [extraFilters]="{ VEN_No: dataForm.controls.VEN_No.value, LOGO_No: dataForm.controls.LOGO_No.value}" />
+
       <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
         [control]="dialogQueryForm.controls.PLU_Name" />
     </div>
@@ -85,11 +82,10 @@
     </div>
   </form>
   <hr />
-  <app-table tableKey="tls56080CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
+  <app-table-report tableKey="tls56080CruDialogTable" [showReportMode]="false" [data]="dialogData"
     [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
-    (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
-    [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)" [lazy]="true"
-    [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)">
-  </app-table>
+    (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
+    [queryFunction]="tls52010Service.queryPOS2004Detail.bind(tls52010Service)" [lastQueryBody]="dialogLastQueryBody"
+    [totalRecords]="totalRecords" [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)">
+  </app-table-report>
 </app-dialog>

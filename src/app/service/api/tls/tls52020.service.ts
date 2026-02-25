@@ -61,30 +61,6 @@ export interface ITLS52020Data {
   UPD_USR_Name: string; // 變更人員姓名
   CanClos: boolean; // 是否可結案
 }
-/** 查詢廠商所有商品 (queryPOS2004Detail_VEN_No_TLS52020) 的請求介面 */
-export interface IQueryPOS2004DetailVENNoTLS52020Request {
-  VEN_No?: string; // 廠商編號
-  LOGO_No?: string; // 品牌代碼
-  PLU_MagNo?: string; // 商品管理編號
-  PLU_Name?: string; // 商品名稱
-  CAT_LNo?: string; // 大分類代碼
-  CAT_MNo?: string; // 中分類代碼
-  CAT_SNo?: string; // 小分類代碼
-}
-/** POS2004 商品資料的響應介面 (用於多個查詢) */
-export interface IPOS2004DetailData {
-  id: number;
-  PLU_MagNo: string; // 商品管理編號
-  PLU_Name: string; // 商品名稱
-  PLU_No: string; // 國際條碼
-  PLU_Unit: string; // 單位編號
-  UNIT_NAME: string; // 單位名稱
-  PLU_BoxQty: number; // 包裝入數
-  PLU_StockTaxType: string; // 進貨稅別 (0免稅, 1應稅)
-  PLU_SalePrc_UNI: number; // 未稅進價
-  PLU_SalePrc: number; // 含稅售價
-  _TABLE_KEY?: string;
-}
 /** 新增更新 請求 */
 export interface TLS52020Request {
   id?: number; // 主檔 ID (用於更新時識別)
@@ -197,14 +173,6 @@ export class Tls52020Service {
    */
   queryPOS2032P(params: { CRN_No?: string; }): Observable<ApiResponse<IPOS2032PData[]>> {
     return this.http.post<ApiResponse<IPOS2032PData[]>>(`${this.apiUrl}/queryPOS2032P`, params);
-  }
-  /**
-   * 查詢廠商所有商品 (POS2004 資料)
-   * @param params 查詢條件
-   * @returns 包含 IPOS2004DetailData 陣列的 API 響應
-   */
-  queryPOS2004DetailVENNoTLS52020(params: IQueryPOS2004DetailVENNoTLS52020Request): Observable<ApiResponse<IPOS2004DetailData[]>> {
-    return this.http.post<ApiResponse<IPOS2004DetailData[]>>(`${this.apiUrl}/queryPOS2004Detail_VEN_No_TLS52020`, params);
   }
   /**
    * 取得標籤檔資料

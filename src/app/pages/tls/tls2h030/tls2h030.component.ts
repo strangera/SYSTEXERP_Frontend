@@ -57,7 +57,7 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
     { field: 'TltNo', header: '專櫃編號', visible: true },
     { field: 'TltName', header: '櫃位名稱', visible: true },
     { field: 'ContractNo', header: '契約編號', visible: true },
-    { field: 'ContractSubNo', header: '契約子號', visible: true },
+    { field: 'ContractSubNo', header: '版本編號', visible: true },
     { field: 'GuiAmt', header: '代扣款發票金額', visible: true, format: formatAmount, align: 'right' },
     //  { field: 'GuiAmt', header: '發票金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'GuiNo', header: '發票號碼', visible: true },

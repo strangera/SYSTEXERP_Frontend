@@ -94,6 +94,11 @@
       [columns]="applyListColumns"
       [selectedItems]="selectedApplyRow ? [selectedApplyRow] : []"
       (selectionChange)="onApplySelectionChange($event)"
+      [totalRecords]="applyTotalRecords"
+      [lazy]="true"
+      (lazyLoadData)="onApplyLazyLoad($event)"
+      [loading]="applyListLoading"
+      [rows]="30"
     ></app-table>
   </div>
 </app-dialog>

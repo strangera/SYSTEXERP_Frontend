@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { IPOS2004DetailData, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
@@ -22,7 +23,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
-import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -51,10 +51,10 @@ import { columnGroup } from './tls52050-cru.model';
     TableComponent,
     NgIf,
     DialogComponent,
-    DropdownTableComponent,
     TranslateModule,
     AsyncPipe,
-    TableEditComponent
+    TableEditComponent,
+    ProductAutocompleteComponent
   ],
 })
 export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> implements OnInit {
@@ -469,25 +469,6 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   }
   isRowSelectable(event: IInsertTLS52050Detail): boolean {
     return !this.data || !this.data.some((item: IInsertTLS52050Detail) => item.PLU_MagNo === event.PLU_MagNo);
-  }
-  suggestions: { PLU_MagNo: string, PLU_No: string, PLU_OrgPLUNo: string, PLU_Name: string; }[] = [];
-  fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_No', header: '國際條碼/商品管理編號/廠商貨號 - 商品名稱', mainDataField: true },
-  ];
-  onAutoCompleteInputChange(event: Record<'label', string>) {
-    const body = {
-      VEN_No: this.dataForm.controls.VEN_No.value,
-      LOGO_No: this.dataForm.controls.LOGO_No.value,
-      queryNo: event.label || '',
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'PLU_No', order: 1 }],
-    }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item, label: item.PLU_No + '/' + item.PLU_MagNo + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
-      }))];
-    });
   }
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   // onShowDialog

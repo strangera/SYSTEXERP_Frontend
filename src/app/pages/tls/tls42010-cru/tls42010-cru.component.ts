@@ -46,6 +46,8 @@ export interface KeyItem {
   mergeRight?: number;
   mergeDown?: number;
   KB_Merge?: string;
+  // internal flag to force treat this key as configured when pasted
+  __isCopied?: boolean;
 }
 
 @Component({
@@ -78,6 +80,11 @@ export interface KeyItem {
   ]
 })
 export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  // store original state for cancel/restore
+  private originalPagesSnapshot: KeyItem[][] | null = null;
+  private originalPageOriginalNos: number[] | null = null;
+  private originalPageSavedFlags: boolean[] | null = null;
+  private originalSelectedCode: string | null = null;
   activeIndex = 0;
   copiedAttributes: Partial<KeyItem> | null = null;
   multiSelectMode = false;
@@ -206,6 +213,10 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       KB_FontColor, KB_Style, KB_Font, KB_Size,
       KB_Fonttyped, KB_Switch, KB_Arg1, KB_Arg2, KB_Arg3
     };
+    // also capture merge-related and KB_Merge if present (button shape)
+    (this.copiedAttributes as any).KB_Merge = this.selected.KB_Merge;
+    (this.copiedAttributes as any).mergeRight = this.selected.mergeRight;
+    (this.copiedAttributes as any).mergeDown = this.selected.mergeDown;
     console.log('已複製屬性:', this.copiedAttributes);
   }
   pasteKeyAttributes(event: MouseEvent) {
@@ -215,16 +226,64 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     targets.forEach(key => {
       if (!key) return;
       const originalId = key.ID;
+      // apply copied attrs but keep identity fields
       Object.assign(key, {
         ...this.copiedAttributes,
         ID: originalId,              // 保留原 ID
         KB_ScanCode: key.code,       // 保留原掃描碼
         code: key.code               // 不可覆蓋
       });
+      // ensure merge/count properties copied if present
+      const ca: any = this.copiedAttributes as any;
+      if (ca.mergeRight !== undefined) key.mergeRight = ca.mergeRight;
+      if (ca.mergeDown !== undefined) key.mergeDown = ca.mergeDown;
+      if (ca.KB_Merge !== undefined) key.KB_Merge = ca.KB_Merge;
+
+      // mark as pasted so buildDetailList will include even default-equal values
+      (key as any).__isCopied = true;
     });
 
     if (!isMulti && this.selected) {
-      this.selectedKeyForm.patchValue(this.selected, { emitEvent: true });
+      // Force-update individual controls so color pickers and other derived controls
+      // react even when pasted values equal the current defaults.
+      const val = this.selected;
+      this.selectedKeyForm.patchValue({
+        KB_Func: val.KB_Func ?? '',
+        KB_Switch: val.KB_Switch ?? 'Y',
+        KB_Display1: val.KB_Display1 ?? '',
+        KB_Display2: val.KB_Display2 ?? '',
+        KB_Color: val.KB_Color ?? 'RGB:255,255,255',
+        KB_Style: val.KB_Style ?? '1',
+        KB_Font: val.KB_Font ?? 'Microsoft JhengHei',
+        KB_Size: val.KB_Size ?? 12,
+        KB_FontColor: val.KB_FontColor ?? 'RGB:0,0,0',
+        KB_Fonttyped: val.KB_Fonttyped ?? 'NNN',
+        KB_Arg1: val.KB_Arg1 ?? '',
+        KB_Arg2: val.KB_Arg2 ?? '',
+        KB_Arg3: val.KB_Arg3 ?? '',
+        KB_Merge: val.KB_Merge ?? ''
+      }, { emitEvent: true });
+
+      // Also update color picker objects so they display correctly
+      try {
+        const kc = val.KB_Color ?? '';
+        if (typeof kc === 'string' && kc.startsWith('RGB:')) {
+          const parts = kc.replace('RGB:', '').split(',').map((n: string) => Number(n));
+          if (parts.length === 3) this.selectedKeyForm.controls['color'].setValue({ r: parts[0], g: parts[1], b: parts[2] }, { emitEvent: true });
+        } else {
+          this.selectedKeyForm.controls['color'].setValue(null, { emitEvent: true });
+        }
+      } catch (err) { /* ignore */ }
+
+      try {
+        const fc = val.KB_FontColor ?? '';
+        if (typeof fc === 'string' && fc.startsWith('RGB:')) {
+          const parts = fc.replace('RGB:', '').split(',').map((n: string) => Number(n));
+          if (parts.length === 3) this.selectedKeyForm.controls['FontColor'].setValue({ r: parts[0], g: parts[1], b: parts[2] }, { emitEvent: true });
+        } else {
+          this.selectedKeyForm.controls['FontColor'].setValue(null, { emitEvent: true });
+        }
+      } catch (err) { /* ignore */ }
     }
 
     console.log(' 屬性貼上到:', targets);
@@ -255,6 +314,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         KB_Color: 'RGB:255,255,255',
         KB_FontColor: 'RGB:0,0,0'
       });
+      // clear pasted flag
+      if ((key as any).__isCopied) delete (key as any).__isCopied;
     });
 
     if (!isMulti && this.selected) {
@@ -295,6 +356,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('TLS42010', this.dataForm);
     this.pages = [this.buildGrid(0)];
+    // capture initial snapshot so cancel can restore
+    this.captureOriginalSnapshot();
     // 初始化原始頁碼映射（第一頁原始為 1）
     this.pageOriginalNos = [1];
     this.pageSavedFlags = [false];
@@ -466,7 +529,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     });
 
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ECR_KBType' }).subscribe(res => {
-      this.ECR_KBTypeOptions = res?.Data ?? [];
+      // 過濾掉 No 為空字串的選項（例如 { No: "", Name: "無" }）
+      this.ECR_KBTypeOptions = (res?.Data ?? []).filter((item: any) => (item?.No ?? '') !== '');
     });
 
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'KB_Style' }).subscribe(res => {
@@ -703,6 +767,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         KB_Arg3: first.KB_Arg3 ?? ''
       });
     }
+    // save snapshot after loading details
+    this.captureOriginalSnapshot();
     console.table(detailList.map(d => ({
       id: d.id,
       ID: d.ID,
@@ -715,7 +781,20 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   selectKey(k: KeyItem, event?: MouseEvent) {
     // 切換前，先把目前表單內容寫回目前選中的按鍵（編輯模式限定）
     if (this.crudstatus !== CRUDStatus.Read && this.selected) {
-      Object.assign(this.selected, this.selectedKeyForm.getRawValue());
+      // 只將使用者實際修改過的欄位回寫（避免把表單的預設值覆蓋按鍵原始設定）
+      const raw = this.selectedKeyForm.getRawValue();
+      const sel = this.selected; // local reference to satisfy TS narrowing in callbacks
+      Object.keys(this.selectedKeyForm.controls).forEach(ctrlName => {
+        const control = this.selectedKeyForm.controls[ctrlName];
+        if (control && control.dirty && sel) {
+          // 只回寫存在於 selected 的對應欄位
+          if (ctrlName in sel) {
+            (sel as any)[ctrlName] = raw[ctrlName];
+          }
+        }
+      });
+      // 重置表單 dirty 狀態（已寫回）
+      this.selectedKeyForm.markAsPristine();
     }
 
     // Shift 多選模式（只有在非 Read 模式才允許）
@@ -777,7 +856,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     return this.pages.flatMap((page, pageIndex) =>
       page.map(k => {
         const hasConfig =
-          !!(k.KB_Func ||
+          !!((k as any).__isCopied ||
+            k.KB_Func ||
             k.KB_Display1 ||
             k.KB_Display2 ||
             k.KB_Color !== 'RGB:255,255,255' ||
@@ -789,6 +869,11 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         const mergeRight = k.mergeRight || 0;
         const mergeDown = k.mergeDown || 0;
         const mergeValue = mergeRight > 0 || mergeDown > 0 ? `${mergeRight},${mergeDown}` : '';
+        // 判斷此按鍵是否為被隱藏（即屬於某個已合併的主鍵範圍內）
+        const isHidden = this.isKeyHidden(k, page);
+        // 如果不是被隱藏的主鍵，且有合併設定，則把寬高放大為合併後的尺寸
+        const kbWidth = !isHidden ? (pos1008.width * (mergeRight + 1)) : pos1008.width;
+        const kbHeight = !isHidden ? (pos1008.height * (mergeDown + 1)) : pos1008.height;
         const keyId =
           this.crudstatus === CRUDStatus.Create
             ? 0
@@ -813,8 +898,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           KB_Fonttyped: hasConfig ? k.KB_Fonttyped || 'NNN' : 'NNN',
           KB_Style: hasConfig ? k.KB_Style || '1' : '1',
           KB_Switch: hasConfig ? k.KB_Switch || 'Y' : 'Y',
-          KB_Width: pos1008.width,
-          KB_Height: pos1008.height,
+          KB_Width: kbWidth,
+          KB_Height: kbHeight,
           KB_Merge: mergeValue,
           KB_Color: hasConfig ? k.KB_Color || 'RGB:255,255,255' : 'RGB:255,255,255',
           KB_FontColor: hasConfig ? k.KB_FontColor || 'RGB:0,0,0' : 'RGB:0,0,0',
@@ -987,6 +1072,73 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       style['grid-row'] = `span ${mergeDown + 1}`;
     }
     return style;
+  }
+  // capture deep copy snapshot of current pages and related arrays
+  private captureOriginalSnapshot(): void {
+    try {
+      this.originalPagesSnapshot = JSON.parse(JSON.stringify(this.pages || []));
+      this.originalPageOriginalNos = this.pageOriginalNos ? [...this.pageOriginalNos] : null;
+      this.originalPageSavedFlags = this.pageSavedFlags ? [...this.pageSavedFlags] : null;
+      this.originalSelectedCode = this.selected?.code ?? null;
+    } catch (err) {
+      this.originalPagesSnapshot = null;
+      this.originalPageOriginalNos = null;
+      this.originalPageSavedFlags = null;
+      this.originalSelectedCode = null;
+    }
+  }
+
+  // restore pages/selection back to captured snapshot (used by cancel)
+  onCancelClicked(): void {
+    if (this.originalPagesSnapshot) {
+      // deep copy to avoid reference sharing
+      this.pages = JSON.parse(JSON.stringify(this.originalPagesSnapshot));
+      this.pageOriginalNos = this.originalPageOriginalNos ? [...this.originalPageOriginalNos] : this.pageOriginalNos;
+      this.pageSavedFlags = this.originalPageSavedFlags ? [...this.originalPageSavedFlags] : this.pageSavedFlags;
+
+      // clear any internal pasted flags
+      this.pages.forEach(page => page.forEach(k => { if ((k as any).__isCopied) delete (k as any).__isCopied; }));
+
+      // restore selected key if possible
+      let sel: KeyItem | undefined;
+      if (this.originalSelectedCode) {
+        sel = this.pages.flat().find(p => p.code === this.originalSelectedCode);
+      }
+      if (!sel) {
+        sel = this.pages?.[0]?.[0];
+      }
+      this.selected = sel;
+      if (this.selected) {
+        this.selectedKeys = [this.selected];
+        this.selectedKeyForm.patchValue({
+          KB_Func: this.selected.KB_Func ?? '',
+          KB_Switch: this.selected.KB_Switch ?? 'Y',
+          KB_Display1: this.selected.KB_Display1 ?? '',
+          KB_Display2: this.selected.KB_Display2 ?? '',
+          KB_Color: this.selected.KB_Color ?? 'RGB:255,255,255',
+          KB_Style: this.selected.KB_Style ?? '1',
+          KB_Font: this.selected.KB_Font ?? 'Microsoft JhengHei',
+          KB_Size: this.selected.KB_Size ?? 12,
+          KB_FontColor: this.selected.KB_FontColor ?? 'RGB:0,0,0',
+          KB_Fonttyped: this.selected.KB_Fonttyped ?? 'NNN',
+          KB_Arg1: this.selected.KB_Arg1 ?? '',
+          KB_Arg2: this.selected.KB_Arg2 ?? '',
+          KB_Arg3: this.selected.KB_Arg3 ?? ''
+        }, { emitEvent: true });
+        this.updateMergeDisplay();
+      }
+      // ensure UI updated
+      this.dataForm.markAsPristine();
+      this.selectedKeyForm.markAsPristine();
+    } else {
+      // fallback: reset forms only
+      if (this.dataForm) {
+        try { this.dataForm.reset(); } catch { }
+      }
+      if (this.selectedKeyForm) {
+        try { this.selectedKeyForm.reset(); } catch { }
+      }
+    }
   }
   /**
    * Delphi TColor ($00BBGGRR) → RGB:r,g,b

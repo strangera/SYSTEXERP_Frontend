@@ -54,20 +54,12 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   ngOnInit(): void {
     this.updateControlState(this.control);
     if (this.formGroup) {
-      this.formGroup.valueChanges.pipe(
-        debounceTime(300),
-        takeUntil(this.destroy$)
-      ).subscribe(value => {
+      this.formGroup.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(value => {
         this.formValueChanged.emit(value);
       });
     }
-
-    // 訂閱 inputChangeSubject，並應用 debounceTime
-    this.inputChangeSubject.pipe(
-      debounceTime(300), // 設定 300 毫秒的延遲
-      takeUntil(this.destroy$) // 確保組件銷毀時取消訂閱
-    ).subscribe(value => {
-      this.inputValueChanged.emit(value); // 延遲後才觸發 EventEmitter
+    this.inputChangeSubject.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(value => {
+      this.inputValueChanged.emit(value);
     });
   }
 
@@ -78,22 +70,14 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
 
   onInputChange() {
     const inputValue = this.control.value || '';
-    // 使用 optionLabel 作為 key，傳遞輸入的字串
     this.inputChangeSubject.next({ [this.optionLabel]: inputValue });
-    // 只有當 showOverlay 為 true 時，才隱藏 Overlay Panel
-    if (this.showOverlay) {
-      this.op?.hide();
-    }
+    if (this.showOverlay) this.op?.hide();
   }
 
   getFieldValue(field: FieldsConfig): string {
     // 新增空值檢查
-    if (this.control.value === null || this.control.value === undefined) {
-      return '';
-    }
-
+    if (this.control.value === null || this.control.value === undefined) return '';
     let selectedData: any;
-
     if (typeof this.control.value === 'object' && this.control.value !== null) {
       // 情況一：如果 optionValue 未傳入（為空字串），control.value 就是選取的完整物件。
       if (!this.optionValue) {
@@ -139,9 +123,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   // 直接點整列（itemClick）時觸發
   onRowClick(rowData: any) {
     console.log('dropdown-table rowClick rowData =', rowData);
-    if (!rowData) {
-      return;
-    }
+    if (!rowData) return;
     this.handleRowSelected(rowData);
   }
 
@@ -150,10 +132,8 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     this.selectedItems = rowData;
     this.select.emit(rowData);
     this.suggestions = [...this.dialogData];
-
     // 當 optionValue 為空時，設定完整的物件
     this.control.setValue(this.optionValue ? rowData[this.optionValue] : rowData);
-
     this.op?.hide();
     this.selectedItems = [];
     this.formGroup?.reset();

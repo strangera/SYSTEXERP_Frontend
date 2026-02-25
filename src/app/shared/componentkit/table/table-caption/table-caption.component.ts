@@ -8,6 +8,7 @@ import { ButtonModule } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { MultiSelectChangeEvent, MultiSelectModule } from 'primeng/multiselect';
+import { ProgressBarModule } from 'primeng/progressbar';
 import { TooltipModule } from 'primeng/tooltip';
 import { Observable } from 'rxjs';
 import { TableExportComponent } from '../table-export/table-export.component';
@@ -27,7 +28,8 @@ import { toggleButtons } from './table-caption.model';
     TooltipModule,
     FileUploadModule,
     DropdownModule,
-    TableExportComponent
+    TableExportComponent,
+    ProgressBarModule
   ],
   templateUrl: './table-caption.component.html',
 })
@@ -66,6 +68,13 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() deleteData = false;                // 預先刪除資料 (關聯：需要加入dataKey, dataChange)
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   @Input() showDelete = true;                    // 是否顯示刪除按鈕
+  @Input() deleteDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止刪除條件
+  checkBatchDeleteDisabled(): boolean {
+    if (!this.selectedItems || this.selectedItems.length === 0) return true;
+    if (!this.deleteDisabled) return false;
+    // 只要選中的資料中，有任何一筆符合「禁止刪除條件」，就禁用整批刪除按鈕
+    return this.selectedItems.some((item: any) => this.deleteDisabled(item));
+  }
   @Input() deleteIcon = 'pi pi-trash';          // 刪除按鈕圖示
   @Input() deletepTooltip = '刪除';              // 刪除按鈕提示
   // Header(右) 相關

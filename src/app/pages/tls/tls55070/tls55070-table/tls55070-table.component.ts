@@ -256,6 +256,18 @@ export class TLS55070TableComponent
     if (changes['data']) {
       this.rebuildGroupMeta();
       this.cdr.detectChanges?.();
+      if (this.data.length > 0 && this.dt) {
+        if (this.data.length > 30) {
+          this.dt.scrollHeight = '500px';
+          this.dt.virtualScroll = true;
+        } else {
+          this.dt.scrollHeight = 'flex';
+          this.dt.virtualScroll = false;
+        }
+      } else {
+        this.dt!.scrollHeight = 'flex';
+        this.dt!.virtualScroll = false;
+      }
     }
   }
 
@@ -507,14 +519,14 @@ export class TLS55070TableComponent
     if (rowData.__isSubRow && (rowData.SumTXN_SaleAmt !== undefined && rowData.SumTXN_SaleAmt !== null)) {
       const raw = rowData.SumTXN_SaleAmt;
       let n: number;
-      
+
       if (typeof raw === 'string') {
         const cleaned = raw.replace(/,/g, '');
         n = Number(cleaned);
       } else {
         n = Number(raw ?? 0);
       }
-      
+
       return isFinite(n) ? n : 0;
     }
 

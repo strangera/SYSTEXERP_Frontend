@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+﻿import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
 import { Actions } from '../../../shared/service/permission-guard.service';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 // 格式化函數
 import {
@@ -242,7 +243,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS13010', '/tls/tls13010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS13010', '/tls/tls13010v1cru', this.queryForm, (form) => this.onSubmit(form));
     this.checkExistingWorkflow();
     this.initializeDropdownOptions();
   }
@@ -337,7 +338,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     console.log('✅ 已初始化新的工作流程');
 
     // 3. 導向 CRU 頁面
-    this.router.navigate(['account/tls/tls13010cru']);
+    this.router.navigate(['account/tls/tls13010v1cru']);
     this.messageService.infoBubble('開始新增契約資料');
   }
 
@@ -397,10 +398,15 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
 
     // 根據 contract_type 決定導向哪個頁面
     if (rowData.contract_type === '要約書') {
-      this.router.navigate(['account/tls/tls12040cru']);
+      this.router.navigate(['account/tls/tls12040v1cru'], {
+        state: {
+          crudstatus: CRUDStatus.Edit,
+          rowdata: rowData
+        }
+      });
       this.messageService.infoBubble('進入要約書編輯模式');
     } else {
-      this.router.navigate(['account/tls/tls13010cru']);
+      this.router.navigate(['account/tls/tls13010v1cru']);
       this.messageService.infoBubble('進入契約書編輯模式');
     }
   }
@@ -413,10 +419,15 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
 
     // 根據 contract_type 決定導向哪個頁面
     if (rowData.contract_type === '要約書') {
-      this.router.navigate(['account/tls/tls12040cru']);
+      this.router.navigate(['account/tls/tls12040v1cru'], {
+        state: {
+          crudstatus: CRUDStatus.Read,
+          rowdata: rowData
+        }
+      });
       this.messageService.infoBubble('進入要約書檢視模式');
     } else {
-      this.router.navigate(['account/tls/tls13010cru']);
+      this.router.navigate(['account/tls/tls13010v1cru']);
       this.messageService.infoBubble('進入契約書檢視模式');
     }
   }

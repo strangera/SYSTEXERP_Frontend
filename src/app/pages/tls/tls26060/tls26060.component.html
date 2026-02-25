@@ -483,22 +483,22 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-customFooter-table
+  <app-table-report
     tableKey="TLS26060"
     dataKey="talent_id"
     [data]="data"
     [columns]="columns"
-    [showCheckBox]="false"
-    [showDelete]="false"
-    [showManage]="false"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[{ field: 'team_name', order: -1 }]"
     [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction"
     [lazy]="true"
     [loading]="loading"
+    [showCheckBox]="false"
+    [showManage]="false"
+    [showDelete]="false"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
     [footerData]="footerData"
-    [showTotal]="true"
-  ></app-customFooter-table>
+    [footerLabelField]="'group_name'"
+  ></app-table-report>
 </div>

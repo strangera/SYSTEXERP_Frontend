@@ -81,4 +81,12 @@ export class TableReportComponent implements OnChanges {
   getGroupInvoiceDetails(venNo: string): any[] {
     return this.InvoiceDetails.filter(inv => inv.VEN_NO === venNo);
   }
+  /**
+ * 取得特定廠商的 Header 資訊 (包含付款日)
+ */
+  getHeaderInfo(venNo: string) {
+    if (!this.Header) return null;
+    // 找該廠商的第一筆 Header (通常只有一筆，除非 SQL 那邊有多出)
+    return this.Header.find(h => h.VEN_No === venNo);
+  }
 }

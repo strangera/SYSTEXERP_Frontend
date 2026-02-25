@@ -10,6 +10,7 @@ import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { finalize, Observable, of } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import * as XLSX from 'xlsx';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -149,6 +150,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
 
   btnPDFLoading = false; // PDF 讀取進度條
   btnExcelLoading = false; // Excel 讀取進度條
+  btnTemplateLoading = false;
 
   // 展開詳細資料的欄位定義 (分攤設定)
   expansionColumns: Column[] = [
@@ -239,51 +241,57 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
 
   // 刪除項目
   onDelete(data: ENG2001[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
+    this.messageService.confirm({
+      message: `是否確認刪除選中的能源抄錶資料?`,
+      header: `確認刪除`,
+      accept: () => {
+        console.log('Delete data:', JSON.stringify(data, null, 2));
 
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.ID != null && item.ID !== undefined)
-      .map((item) => item.ID);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-    const deleteBody = {
-      idList: idList, // 符合 API 的 idList 格式
-    };
-
-    console.log('deleteBody', deleteBody);
-
-    this.ass21030Service.deleteASS21030(deleteBody).pipe(untilDestroyed(this)).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        const items = Array.isArray(data) ? data : [data];
+        if (items.length === 0) {
+          console.error('No items to delete');
+          this.messageService.errorBubble('無法刪除：沒有選中的項目');
+          return;
         }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm);
+
+        // 收集所有有效的 ID
+        const idList = items
+          .filter((item) => item && item.ID != null && item.ID !== undefined)
+          .map((item) => item.ID);
+
+        if (idList.length === 0) {
+          console.error('No valid IDs to delete');
+          this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+          return;
+        }
+
+        const deleteBody = {
+          idList: idList, // 符合 API 的 idList 格式
+        };
+
+        console.log('deleteBody', deleteBody);
+
+        this.ass21030Service.deleteASS21030(deleteBody).pipe(untilDestroyed(this)).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+            } else {
+              console.error('API error:', response.Status, response.Message);
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.onSubmit(this.queryForm);
+          },
+        });
+
+        this.selectedItems = [];
       },
     });
-
-    this.selectedItems = [];
   }
 
 
@@ -427,4 +435,63 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
     return of({ Data: [] });
   };
 
+  /**
+  * 匯出Excel範本
+  */
+  onExportTemplate(): void {
+    // 建立工作簿
+    const wb = XLSX.utils.book_new();
+
+    // 2. 定義標題列與範例資料
+    // 標題包含：項次, 結算年月(yyyymm), 能源錶號(5碼), 能源類型(G01:水 G02:電 G03:瓦斯), 本次抄錶日(yyyy/mm/dd), 本次抄錶度, 結算金額
+    const header = [
+      '項次',
+      '結算年月\n(yyyymm)',
+      '能源錶號\n(5碼)',
+      '能源類型\n(G01:水 G02:電 G03:瓦斯)',
+      '本次抄錶日\n(yyyy/mm/dd)',
+      '本次抄錶度',
+      '結算金額'
+    ];
+
+    // 建立工作表
+    const ws = XLSX.utils.aoa_to_sheet([header]);
+
+    // 3. 設定欄寬 (根據內容長度微調)
+    ws['!cols'] = [
+      { wch: 8 },  // 項次
+      { wch: 15 }, // 結算年月
+      { wch: 15 }, // 能源錶號
+      { wch: 35 }, // 能源類型 (欄位較長)
+      { wch: 20 }, // 本次抄錶日
+      { wch: 15 }, // 本次抄錶度
+      { wch: 15 }  // 結算金額
+    ];
+
+    // 4. 🔑 設定儲存格格式
+    // 我們將 B, C, D 欄（索引 1, 2, 3）設定為文字格式，防止前導零消失
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+
+    // 遍歷每一列（從第 2 列開始，並預留 100 列空列供使用者填寫）
+    for (let row = 1; row <= range.e.r + 100; row++) {
+      [1, 2, 3].forEach(colIdx => { // 針對 結算年月、能源錶號、能源類型
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIdx });
+
+        if (!ws[cellAddress]) {
+          ws[cellAddress] = { t: 's', v: '' };
+        }
+
+        ws[cellAddress].t = 's'; // 設定為 String
+        ws[cellAddress].z = '@'; // 強制 Excel 識別為文字格式
+      });
+    }
+
+    console.log('📤 匯出能源結算 Excel 範本:', [wb, ws]);
+
+    // 5. 將工作表加入工作簿並下載
+    XLSX.utils.book_append_sheet(wb, ws, '能源結算範本');
+
+    const fileName = `EnergyUploadSample.xlsx`;
+    XLSX.writeFile(wb, fileName);
+  }
 }

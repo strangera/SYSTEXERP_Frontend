@@ -19,6 +19,10 @@ interface BaseCondition {
   condition_type?: string;
   /** 資料狀態 */
   _status?: DataStatus;
+  /** 驗證錯誤標記 */
+  _hasValidationError?: boolean;
+  _hasDateOverlapError?: boolean;
+  _errorFields?: string[];
 }
 
 /**

@@ -22,7 +22,6 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 @Component({
   selector: 'app-fin21030',
   templateUrl: './fin21030.component.html',
-  styleUrl: './fin21030.component.scss',
   standalone: true,
   imports: [MenubarComponent, DropdownComponent,
     AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
@@ -50,8 +49,10 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     VEN_CheckTitle: [''],                      // 票據抬頭
     VEN_Status: [[]],                          // 審核狀態 (dropdown)
     ...createPaginationConfig([{ field: 'VEN_No', order: 1 }]),
-
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
+
   VEN_FLAG_MAP: Record<string, string> = {
     '1': '廠商統一編號',
     '2': '個人身分證字號',
@@ -82,8 +83,8 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
   // ----------------------------------------------------------------
   venderOptions: any[] = [];
   remitFeeOptions = [
-    { value: '1', label: '廠商負擔' },
-    { value: '2', label: '公司負擔' }
+    { value: '0', label: '廠商負擔' },
+    { value: '1', label: '公司負擔' }
   ];
   // ====== Table / Options ======
   approvalOptions: { label: string; value: string }[] = [
