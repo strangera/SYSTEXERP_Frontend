@@ -687,10 +687,10 @@ payload.TXN_No_End   = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined;
       const totalAmt = this.getSum('TXN_TotSaleAmt');
       const totalTxn = this.getSum('TotalTxn');
       this.pdfSummary = [
-        `總金額合計 = ${Number(totalAmt || 0).toLocaleString()}`,
-        `總交易筆數合計 = ${Number(totalTxn || 0).toLocaleString()}`,
-        '=============================',
-        `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`,
+        // `總金額合計 = ${Number(totalAmt || 0).toLocaleString()}`,
+        // `總交易筆數合計 = ${Number(totalTxn || 0).toLocaleString()}`,
+        // '=============================',
+        // `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`,
       ];
       return;
     }
