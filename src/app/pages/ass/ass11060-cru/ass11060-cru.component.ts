@@ -5,7 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { QueryASS11060Response, UpdateASS11060Request } from '../../../service/api/ass/ass11060.model';
+import { DetailASS11060Response, QueryASS11060Response, UpdateASS11060Request } from '../../../service/api/ass/ass11060.model';
 import { ASS11060Service } from '../../../service/api/ass/ass11060.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -34,6 +34,8 @@ import { InputTextareaComponent } from '../../../shared/componentkit/input-texta
   ]
 })
 export class ASS11060CRUComponent extends BasicCruPageComponent<QueryASS11060Response> implements OnInit {
+  detailData: DetailASS11060Response | null = null;
+
   dataForm = this.formBuilder.nonNullable.group({
     /** 訂貨地址 */
     ORDER_ADDR: ['', [Validators.maxLength(100)]],
@@ -78,6 +80,38 @@ export class ASS11060CRUComponent extends BasicCruPageComponent<QueryASS11060Res
 
   ngOnInit(): void {
     this.initializePage('ASS11060', this.dataForm);
+    this.loadDetail();
+  }
+
+  private loadDetail(): void {
+    const venNo = this.rowdata?.VEN_No;
+    const venUniform = (this.rowdata as DetailASS11060Response)?.VEN_Uniform;
+    if (!venNo || !venUniform) return;
+
+    this.loading = true;
+    this.ass11060Service.detailASS11060({ VEN_No: venNo, VEN_Uniform: venUniform })
+      .pipe(
+        finalize(() => this.loading = false),
+        untilDestroyed(this),
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.Status !== '0000' || !res.Data) return;
+          this.detailData = res.Data;
+          this.dataForm.patchValue({
+            ORDER_ADDR: res.Data.ORDER_ADDR ?? '',
+            ORDER_TEL: res.Data.ORDER_TEL ?? '',
+            ORDER_FAX: res.Data.ORDER_FAX ?? '',
+            FACTO_ADDR: res.Data.FACTO_ADDR ?? '',
+            FACTO_TEL: res.Data.FACTO_TEL ?? '',
+            FACTO_FAX: res.Data.FACTO_FAX ?? '',
+            DELIVERY: res.Data.DELIVERY ?? null,
+            DELIVERY_LIMIT: res.Data.DELIVERY_LIMIT ?? null,
+            RETURN_ORDER: res.Data.RETURN_ORDER ?? null,
+            VEN_Remark: res.Data.VEN_Remark ?? '',
+          });
+        },
+      });
   }
 
   onSubmit(): void {

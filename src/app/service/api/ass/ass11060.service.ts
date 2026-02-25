@@ -4,6 +4,8 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import {
+  DetailASS11060Request,
+  DetailASS11060Response,
   QueryASS11060DataWrapper,
   QueryASS11060Request,
   QueryASS11060Response,
@@ -31,6 +33,13 @@ export class ASS11060Service {
           TotalCount: (res.TotalCount ?? 0),
         }))
       );
+  }
+
+  /**
+   * 取得廠商詳細/編輯頁資料
+   */
+  detailASS11060(payload: DetailASS11060Request): Observable<ApiResponse<DetailASS11060Response>> {
+    return this.http.post<ApiResponse<DetailASS11060Response>>(`${this.apiUrl}/detailASS11060`, payload);
   }
 
   /**
