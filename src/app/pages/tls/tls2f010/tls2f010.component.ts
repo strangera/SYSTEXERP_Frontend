@@ -101,7 +101,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     { field: 'ACP_GUINet', header: '未稅金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'ACP_GUITax', header: '稅額', visible: true, format: formatAmount, align: 'right' },
     { field: 'PUR_GUIPaper', header: '格式', visible: true },
-    { field: 'Status', header: '狀況', visible: true },
+    { field: 'StatusName', header: '狀況', visible: true },
     { field: 'CRT_USR_No', header: '建立者', visible: true },
     { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
   ];

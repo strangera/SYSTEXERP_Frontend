@@ -11,15 +11,15 @@
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandOptions" optionLabel="label"
+          <app-dropdown label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandOptions | async" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="倉別" controlName="HOS_No" [options]="warehouseOptions" optionLabel="label"
+          <app-dropdown label="倉別" controlName="HOS_No" [options]="warehouseOptions| async" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.HOS_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions" optionLabel="label"
+          <app-dropdown label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions| async" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -44,7 +44,8 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="申請人" controlName="APPLY_USR_No" [control]="dataForm.controls.APPLY_USR_No"
-            [submitted]="submitted" [options]="userOptions" optionLabel="label" optionValue="value"></app-dropdown>
+            [submitted]="submitted" [options]="userOptions | async" optionLabel="label"
+            optionValue="value"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
@@ -59,7 +60,7 @@
         [insertDisabled]="dataForm.controls.HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"></app-table-edit>
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" (click)="data = originalData" [form]="dataForm"></app-button>
+        <app-button btnType="cancel" (click)="loadData()" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>

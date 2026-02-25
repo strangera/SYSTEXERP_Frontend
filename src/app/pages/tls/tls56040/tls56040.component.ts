@@ -6,7 +6,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { IQueryTLS56040Request, ITLS56040Data, Tls56040Service } from '@service/api/tls/tls56040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
@@ -100,7 +99,6 @@ export class TLS56040Component extends BasicQueryPageComponent<ITLS56040Data> im
 
   constructor(
     public readonly tls56040Service: Tls56040Service,
-    private readonly dropDownListService: DropDownListService,
     private readonly dropDown: DropdownApiService,
   ) {
     super();
