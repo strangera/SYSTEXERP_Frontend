@@ -256,7 +256,10 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
         );
 
         // ✅ 如果你要從 CRU 回來自動查，解除註解
-        // Promise.resolve().then(() => this.onSubmit(this.queryForm));
+        Promise.resolve().then(() => this.onSubmit(this.queryForm));
+            // ✅ 讓 table-report 回來就有「可沿用的查詢 body」
+    const payload = this.buildPayload(this.queryForm);
+    this.lastQueryBody = { ...payload };
       }
     } else {
       this.queryStateService.clearQueryState(this.ProgNo);

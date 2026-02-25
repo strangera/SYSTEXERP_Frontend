@@ -204,13 +204,13 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     this.updateDisabledState();
 
     // ✅ Create：預設 ZZZ（但可改，因為 Create 不 disable）
-    if (this.crudstatus === CRUDStatus.Create) {
-      const curEcr = this.dataForm.controls.ECR_No.value;
-      const curTxn = this.dataForm.controls.TXN_No.value;
-      if (!curEcr) this.dataForm.controls.ECR_No.setValue('ZZZ', { emitEvent: false });
-      if (!curTxn) this.dataForm.controls.TXN_No.setValue('1000', { emitEvent: false });
-    }
+if (this.crudstatus === CRUDStatus.Create) {
+  const curEcr = this.dataForm.controls.ECR_No.value;
+  const curTxn = this.dataForm.controls.TXN_No.value;
 
+  if (!curEcr) this.dataForm.controls.ECR_No.setValue('ZZZ', { emitEvent: false });
+  if (!curTxn) this.dataForm.controls.TXN_No.setValue('1', { emitEvent: false });
+}
     // ✅ 連動：格式代號 -> 發票種類
     this.dataForm.controls.INV_GUIType.valueChanges.subscribe((v) => {
       this.applyGuiTypeToPaper(v);
@@ -354,9 +354,9 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
         mid: Number(raw.mid ?? 0),
         SYS_StoreNo: this.normalize(raw.SYS_StoreNo),
 
-        // ✅ ZZZ 視為空值
-        ECR_No: this.normalizeOrNullIfZZZ(raw.ECR_No),
-        TXN_No: this.normalizeOrNullIfZZZ(raw.TXN_No),
+        // ✅ ZZZ 就照傳 ZZZ
+ECR_No: this.normalize(raw.ECR_No),
+TXN_No: this.normalize(raw.TXN_No),
 
         TXN_GUIPaper: this.normalize(raw.TXN_GUIPaper),
         INV_NoneTax: this.normalize(raw.INV_NoneTax),
@@ -394,7 +394,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
           this.updateDisabledState();
 
           // ✅ Create reset 後：再次預設 ZZZ（但仍可修改）
-          this.dataForm.patchValue({ ECR_No: 'ZZZ', TXN_No: 'ZZZ' }, { emitEvent: false });
+          this.dataForm.patchValue({ ECR_No: 'ZZZ', TXN_No: '1' }, { emitEvent: false });
         });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
         this.fin13060Service.updateFIN13060(payload).subscribe(() => {
@@ -650,11 +650,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     return s === '' ? null : s;
   }
 
-  private normalizeOrNullIfZZZ(v: any): string | null {
-    const s = this.normalize(v);
-    if (!s) return null;
-    return s.toUpperCase() === 'ZZZ' ? null : s;
-  }
+
 
   /**
    * ✅ 狀態控制（你要的規則）
