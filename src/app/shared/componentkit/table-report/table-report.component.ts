@@ -47,6 +47,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() showReorder = true;
   // Checkbox 相關
   @Input() showCheckBox = false;
+  @Input() tableHeaderCheckboxLabel?: string;
   @Input() selectedItems: any = [];
   @Output() selectionChange = new EventEmitter<any>();
   @Output() selectAllChange = new EventEmitter<boolean>();
@@ -72,6 +73,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Output() exportEvent = new EventEmitter<string>(); // 自訂報表 事件
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   @Input() showDelete = true;     // 是否顯示刪除按鈕
+  @Input() deleteDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止刪除條件
   // Header(右) 相關
   @Input() showExcel = false;      // 是否顯示 匯出Excel
   @Input() showExcelExport = true;     // 是否顯示 匯出Excel按鈕

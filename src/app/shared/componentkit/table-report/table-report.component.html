@@ -20,9 +20,10 @@
       [expansionColumns]="expansionColumns" [expandedRows]="expandedRows" [showExcelExport]="showExcelExport"
       [showExcelImport]="showExcelImport" [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting"
       [showCustomExcelImport]="showCustomExcelImport" [exportExcelLoading]="exportExcelLoading" [showPage]="false"
-      (delete)="delete.emit($event)" (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)"
-      [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark"
-      [customReport]="customReport" (exportEvent)="exportEvent.emit($event)" [Conditions]="Conditions">
+      (delete)="delete.emit($event)" [deleteDisabled]="deleteDisabled" (exportExcel)="exportExcel.emit()"
+      (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl"
+      [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark" [customReport]="customReport"
+      (exportEvent)="exportEvent.emit($event)" [Conditions]="Conditions">
       <header>
         <ng-content select="header"></ng-content>
       </header>
@@ -33,7 +34,8 @@
       <tr>
         <th *ngIf="showReorder" class="w-1rem text-center" rowspan="2" pFrozenColumn>序號</th>
         <th class="w-1rem group-header text-center" rowspan="2" *ngIf="showCheckBox">
-          <p-tableHeaderCheckbox />
+          <p-tableHeaderCheckbox *ngIf="!tableHeaderCheckboxLabel" />
+          <span *ngIf="tableHeaderCheckboxLabel">{{ tableHeaderCheckboxLabel }}</span>
         </th>
         <th class="w-1rem group-header" rowspan="2" *ngIf="expansionColumns.length">
           收合/展開
@@ -81,7 +83,8 @@
       <tr>
         <th *ngIf="showReorder" class="w-1rem text-center" pFrozenColumn>序號</th>
         <th class="w-1rem text-center" *ngIf="showCheckBox">
-          <p-tableHeaderCheckbox />
+          <p-tableHeaderCheckbox *ngIf="!tableHeaderCheckboxLabel" />
+          <span *ngIf="tableHeaderCheckboxLabel">{{ tableHeaderCheckboxLabel }}</span>
         </th>
         <th class="w-1rem" *ngIf="expansionColumns.length">收合/展開</th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
@@ -221,7 +224,8 @@
     <tr *ngFor="let row of footerRows" class="font-bold text-center text-sm text-primary">
       <td class="text-center"
         [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0) + tableUtility.getFirstFooterIndex(columns, row)">
-        <span class="font-bold">{{ footerLabelField && row[footerLabelField] != null ? row[footerLabelField] : footerLabel }}</span>
+        <span class="font-bold">{{ footerLabelField && row[footerLabelField] != null ? row[footerLabelField] :
+          footerLabel }}</span>
       </td>
       <ng-container *ngFor="let col of columns; let i = index">
         <td *ngIf="i >= tableUtility.getFirstFooterIndex(columns, row)"
