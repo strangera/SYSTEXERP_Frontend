@@ -80,6 +80,7 @@ export interface ASS12030QueryRow {
   APRV_EMP_ID?: string | null;
   APRV_DATE?: string | null;
   PAY_DATE?: string | null;
+  NOTES?: string | null;
 }
 
 // ==================== 新增/更新 Request ====================
