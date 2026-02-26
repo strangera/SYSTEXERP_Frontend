@@ -15,7 +15,7 @@ export class ASS11010Service {
    * 查詢大分類資料
    */
   queryASS11010(payload: ASS11010QueryRequest): Observable<ApiResponse<ASS11010Data[]>> {
-    return this.http.post<ApiResponse<ASS11010QueryDataWrapper>>(`${this.apiUrl}/QueryASS11010`, payload)
+    return this.http.post<ApiResponse<ASS11010QueryDataWrapper>>(`${this.apiUrl}/queryASS11010`, payload)
       .pipe(
         map(res => {
           return {
