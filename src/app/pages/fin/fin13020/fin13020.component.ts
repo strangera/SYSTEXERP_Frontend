@@ -63,7 +63,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     Voucher_NoStart: [null, [Validators.maxLength(16)]],
     Voucher_NoEnd: [null, [Validators.maxLength(16)]],
 
-    ...createPaginationConfig([{ field: 'id', order: 1 }]),
+    ...createPaginationConfig([{ field: 'ID', order: 1 }]),
   });
 
   data: any[] = [];
@@ -76,14 +76,19 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   /** ✅ 給 table-report 用：由它內部 loadMore / sort 時呼叫 */
   queryFIN13020Fn = (body: any) => this.fin13020Service.queryFIN13020(body);
 
+  /**
+   * ✅ 完全照後端回傳欄位（不做 mapping）
+   * 後端回傳欄位範例：
+   *  - ID, InvoiceTrack, InvoiceNumber, InvoiceType, InvoiceDate, Credit_Type, INV_DeclareYM, PUR_Net, PUR_Tax, TXN_Ret_No, Source_Doc_No, Voucher_No, Details...
+   */
   columns: any[] = [
     { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
-    { field: 'GUI_Track', header: '字軌', visible: true },
-    { field: 'PUR_GUINo', header: '發票號碼', visible: true },
-    { field: 'PUR_GUIDate', header: '退出/折讓日期', visible: true, format: (v: any) => this.formatDateFromBackend(v) },
-    { field: 'PUR_VoucherType', header: '發票格式', visible: true },
+    { field: 'InvoiceTrack', header: '字軌', visible: true },
+    { field: 'InvoiceNumber', header: '發票號碼', visible: true },
+    { field: 'InvoiceDate', header: '退出/折讓日期', visible: true, format: (v: any) => this.formatDateFromBackend(v) },
+    { field: 'InvoiceType', header: '發票格式', visible: true },
     { field: 'Credit_Type', header: '區別', visible: true, format: (v: any) => this.formatCreditType(v) },
-    { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true, format: (v: any) => this.formatRepYYYYMM(v) },
+    { field: 'INV_DeclareYM', header: '申報年月', visible: true, format: (v: any) => this.formatRepYYYYMM(v) },
     { field: 'PUR_Net', header: '退回/折讓金額', visible: true, format: (v: number) => this.money(v), exportFormat: 'number:comma2' },
     { field: 'PUR_Tax', header: '退回/折讓稅額', visible: true, format: (v: number) => this.money(v), exportFormat: 'number:comma2' },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
@@ -125,9 +130,12 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
 
   formatCreditType(value: string): string {
     switch (value) {
-      case 'C': return '折讓';
-      case 'R': return '退出';
-      default: return value;
+      case 'C':
+        return '折讓';
+      case 'R':
+        return '退出';
+      default:
+        return value;
     }
   }
 
@@ -139,8 +147,10 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   }
 
   formatRepYYYYMM(value: string): string {
-    if (!value || value.length !== 6) return value;
-    return `${value.substring(0, 4)}/${value.substring(4, 6)}`;
+    if (!value) return '';
+    const only = String(value).replace(/\D/g, '');
+    if (only.length < 6) return String(value);
+    return `${only.substring(0, 4)}/${only.substring(4, 6)}`;
   }
 
   money(v: number): string {
@@ -175,7 +185,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     // ✅ table-report 需要：確保分頁/排序存在
     payload.pageIndex = payload.pageIndex ?? 1;
     payload.pageSize = payload.pageSize ?? 30;
-    payload.SortBy = payload.SortBy ?? [{ field: 'id', order: 1 }];
+    payload.SortBy = payload.SortBy ?? [{ field: 'ID', order: 1 }];
 
     // ✅ table-report 用來 loadMore / sort 時的基底條件
     this.lastQueryBody = { ...payload };
@@ -185,27 +195,9 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
 
     this.fin13020Service.queryFIN13020(payload).subscribe({
       next: (res: any) => {
-        const rawRows = res?.Data || [];
-
-        // 你原本的 mapping 保留（CRU 欄位一致）
-        this.data = rawRows.map((row: any) => ({
-          ...row,
-          id: row.ID,
-          GUI_Track: row.InvoiceTrack,
-          PUR_GUINo: row.InvoiceNumber,
-          PUR_GUIDate: row.InvoiceDate,
-          PUR_VoucherType: row.InvoiceType,
-          PUR_RepYYYYMM: row.INV_DeclareYM,
-          APS40235List: (row.Details || []).map((d: any) => ({
-            ID: d.ID,
-            PLU_Name: d.PLU_Name,
-            TXN_Qty: d.TXN_Qty,
-            PLU_SalePrc: d.PLU_SalePrc,
-            TXN_SaleAmt: d.TXN_SaleAmt,
-          })),
-        }));
-
-        this.totalRecords = res?.TotalCount || this.data.length;
+        // ✅ 完全照後端回傳：不 mapping
+        this.data = Array.isArray(res?.Data) ? res.Data : [];
+        this.totalRecords = res?.TotalCount ?? this.data.length;
 
         // ✅ 建議存 raw，還原 UI 最準
         this.queryStateService.setQueryState(this.ProgNo, raw);
@@ -229,7 +221,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       {
         pageIndex: 1,
         pageSize: 30,
-        SortBy: [{ field: 'id', order: 1 }],
+        SortBy: [{ field: 'ID', order: 1 }],
       },
       { emitEvent: false }
     );
@@ -276,11 +268,11 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     }
 
     const idList = deletableRows
-      .map((r) => Number(r.id ?? r.ID ?? r.Id))
+      .map((r) => Number(r.ID ?? r.id ?? r.Id))
       .filter((id) => Number.isFinite(id) && id > 0);
 
     if (!idList.length) {
-      this.messageService.warnBubble('找不到可刪除的資料主鍵（id）。');
+      this.messageService.warnBubble('找不到可刪除的資料主鍵（ID）。');
       return;
     }
 
