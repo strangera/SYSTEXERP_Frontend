@@ -120,18 +120,27 @@
   [footerData]="footerData"
   [showReportMode]="false"
 >
-  <header>
-    <div class="flex justify-content-end gap-2">
-      <p-button
-        styleClass="p-2"
-        label="匯出專櫃收銀機月報表.PDF"
-        icon="pi pi-file"
-        [loading]="btnLoading"
-        [disabled]="!totalRecords || totalRecords === 0"
-        (click)="onExportPDF()"
-      ></p-button>
-    </div>
-  </header>
+<header>
+  <div class="flex justify-content-end gap-2">
+    <p-button
+      styleClass="p-2"
+      label="匯出專櫃收銀機月報表.XLSX"
+      icon="pi pi-file-excel"
+      [loading]="btnLoading"
+      [disabled]="!totalRecords || totalRecords === 0"
+      (click)="onExportExcel()"
+    ></p-button>
+
+    <p-button
+      styleClass="p-2"
+      label="匯出專櫃收銀機月報表.PDF"
+      icon="pi pi-file"
+      [loading]="btnLoading"
+      [disabled]="!totalRecords || totalRecords === 0"
+      (click)="onExportPDF()"
+    ></p-button>
+  </div>
+</header>
 </app-table-report>
 </div>
 
