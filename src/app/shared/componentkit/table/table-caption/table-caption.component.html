@@ -32,13 +32,13 @@
     <div *ngIf="showExcel" class="flex gap-2 align-items-center">
       <p-button *ngIf="showExcelExport" label="匯出excel範本" severity="success" [icon]="
             exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'" (click)="onExportExcel()"
-        [disabled]="!hasPermission('320')" />
+        [disabled]="!hasPermission('320')" styleClass="p-2" />
       <p-fileUpload *ngIf="showExcelImport" #fileUpload styleClass="p-button-info" mode="basic" [chooseIcon]="
-            exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-import'"
+            exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-import'" styleClass="p-2"
         accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" severity="info"
         (onSelect)="onImportExcel($event)" [auto]="true" chooseLabel="Excel匯入" [disabled]="!hasPermission('130')" />
       <p-button *ngIf="showCustomExcelImport" severity="info" label="Excel匯入" [icon]="'pi pi-file-import'"
-        (click)="onImportExcel()" [disabled]="!hasPermission('130')" />
+        (click)="onImportExcel()" [disabled]="!hasPermission('130')" styleClass="p-2" />
     </div>
     <p-dropdown *ngIf="showPage && IsPrint && data && data.length" [options]="pages" [ngModel]="selectedPage"
       optionValue="value" (onChange)="pageChange.emit($event.value)" appendTo="body" [virtualScroll]="true"
