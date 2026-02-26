@@ -177,7 +177,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this._loading || !this.queryFunction || !this.lastQueryBody) {
       return; // 如果正在載入、沒有查詢函式、沒有查詢條件或已載入全部資料，則退出
     }
-    const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
+    this.lastQueryBody = this.normalizeQueryBody(this.lastQueryBody);
+    const { pageSize } = this.lastQueryBody;
     const currentSort = this.dt?.multiSortMeta;
     if (currentSort) {
       this.lastQueryBody.SortBy = currentSort;
@@ -210,12 +211,13 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       return;
     }
     if (this._loading) return;
+
     if (event.multiSortMeta && event.multiSortMeta.length > 0) {
       const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
       this.dt.multiSortMeta = [lastSort];
     }
-    // 取得 pageSize，支援 pageSize / PageSize，若不存在則預設為 30
-    const pageSize = this.lastQueryBody?.pageSize || this.lastQueryBody?.PageSize || 30;
+    this.lastQueryBody = this.normalizeQueryBody(this.lastQueryBody);
+    const { pageSize } = this.lastQueryBody;
 
     // 判斷是否需要重新查詢
     if (!this.queryFunction || !this.lastQueryBody || !this.showSort) {
@@ -223,6 +225,8 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     }
     this.lastQueryBody = {
       ...this.lastQueryBody,
+      pageIndex: 1,
+      pageSize,
       SortBy: this.dt.multiSortMeta
     };
     const body = {
@@ -306,7 +310,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this._loading) return;
     if (this.lazy) {
       const target = event.originalEvent.target;
-      const pageSize = this.lastQueryBody?.pageSize || 30;
+      const pageSize = this.lastQueryBody?.pageSize ?? this.lastQueryBody?.PageSize ?? 30;
       if (this.data.length < this.totalRecords && this.data.length >= pageSize) {
         if (target.scrollHeight - target.scrollTop - target.clientHeight <= 2) {
           this.loadMoreData();
@@ -501,5 +505,15 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       this.dt.tableService.onSort(this.dt.multiSortMeta || []);
       this.cdr.detectChanges();
     }, 0);
+  }
+  /** 確保分頁參數統一為小寫，避免 PascalCase 導致重複查詢或參數丟失 */
+  private normalizeQueryBody(body: any) {
+    if (!body) return body;
+    const pageSize = body.pageSize ?? body.PageSize ?? 30;
+    const pageIndex = body.pageIndex ?? body.PageIndex ?? 1;
+
+    // 移除可能干擾的小寫/大寫重複項，並統一回傳小寫
+    const { PageSize, PageIndex, ...rest } = body;
+    return { ...rest, pageSize, pageIndex };
   }
 }
