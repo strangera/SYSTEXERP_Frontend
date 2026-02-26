@@ -1,5 +1,5 @@
 // shared/utils/tls-form-utils.ts
-import { FormGroup, AbstractControl } from '@angular/forms';
+import { FormGroup } from '@angular/forms';
 
 /**
  * TLS 模組共用表單工具類別
@@ -27,7 +27,7 @@ export class TLSFormUtils {
    * TLSFormUtils.getTodayDate(-7);   // "2025-12-01"
    * ```
    */
-  static getTodayDate(daysToAdd: number = 0): string {
+  static getTodayDate(daysToAdd = 0): string {
     const date = new Date();
     if (daysToAdd !== 0) {
       date.setDate(date.getDate() + daysToAdd);
@@ -143,8 +143,8 @@ export class TLSFormUtils {
       'vendor_acct_no': '銀行帳號',
 
       // 保證金
-      'open_deposit': '履約保證金付款方式',
-      'open_fees': '履約保證金',
+      'open_deposit': '準時開業保證金付款方式',
+      'open_fees': '準時開業保證金',
       'construct_deposit': '施工保證金付款方式',
       'construct_fees': '施工保證金',
       'expiration_deposit': '合約屆滿保證金付款方式',
@@ -275,7 +275,7 @@ export class TLSFormUtils {
   static clearFormFields(
     form: FormGroup,
     fieldNames: string[],
-    emitEvent: boolean = false
+    emitEvent = false
   ): void {
     const patchValue: Record<string, any> = {};
 

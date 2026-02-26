@@ -88,6 +88,7 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'NoteDesc', header: '摘要', type: 'input', validate: [validateRequired], width: '250px' },
     {
       field: 'debitAmount', header: '借方金額',
+      textAlign: 'right',
       format: (v, i, r) => {
         if (r?.AccDC) {
           // 一般資料行
@@ -100,6 +101,7 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     },
     {
       field: 'creditAmount', header: '貸方金額',
+      textAlign: 'right',
       format: (v, i, r) => {
         if (r?.AccDC) {
           // 一般資料行

@@ -2,11 +2,7 @@
   <!-- 頂部操作按鈕 -->
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="back"
-      label="上一步"
-      (click)="onCancel()"
-    ></app-button>
+    <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
     <!-- 非最後一步：顯示下一步 -->
     <app-button
       *ngIf="!isLastStep"
@@ -36,11 +32,12 @@
   </div>
 
   <!-- Commission Type Change Warning -->
-  <div *ngIf="hasCommissionTypeChanged()" class="p-3 mb-3 border-round surface-200">
+  <div
+    *ngIf="hasCommissionTypeChanged()"
+    class="p-3 mb-3 border-round surface-200"
+  >
     <i class="pi pi-exclamation-triangle text-orange-500 mr-2"></i>
-    <span class="text-orange-700">
-      抽成別已變更，部分設定可能需要重新調整
-    </span>
+    <span class="text-orange-700">抽成別已變更，部分設定可能需要重新調整</span>
   </div>
 
   <!-- Step Content -->
@@ -106,11 +103,7 @@
   <div
     class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
   >
-    <app-button
-      btnType="back"
-      label="上一步"
-      (click)="onCancel()"
-    ></app-button>
+    <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
     <!-- 非最後一步：顯示下一步 -->
     <app-button
       *ngIf="!isLastStep"
@@ -129,3 +122,40 @@
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
   </div>
 </div>
+
+<!-- 成功確認對話框 -->
+<app-dialog
+  [visible]="showSuccessDialog"
+  (visibleChange)="onSuccessDialogClose($event)"
+  (save)="onSuccessConfirm()"
+  header="儲存成功"
+  width="420px"
+>
+  <ng-container *ngIf="successDialogItems.length > 0">
+    <div class="flex flex-column gap-3">
+      <!-- 成功 banner -->
+      <div
+        class="flex align-items-center gap-3 p-3 border-round"
+        style="background: #f0fdf4"
+      >
+        <i class="pi pi-check-circle text-3xl" style="color: #16a34a"></i>
+        <span class="font-bold text-lg" style="color: #15803d">
+          {{ successDialogItems[0].value }}
+        </span>
+      </div>
+      <!-- 詳細資料 -->
+      <div class="flex flex-column">
+        <div
+          *ngFor="let item of successDialogItems.slice(1); let last = last"
+          class="flex align-items-center py-2 px-1"
+          [style.border-bottom]="last ? 'none' : '1px solid #e5e7eb'"
+        >
+          <span class="text-500 text-sm" style="min-width: 120px">
+            {{ item.label }}
+          </span>
+          <span class="font-semibold text-sm">{{ item.value }}</span>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</app-dialog>

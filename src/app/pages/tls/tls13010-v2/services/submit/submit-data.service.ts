@@ -444,6 +444,7 @@ export class SubmitDataService {
     };
 
     // 根據抽成別分類處理條件項目
+    // 注意：不對 seq_no 做重排，新增項目使用 max+1 策略，避免唯一索引衝突
     for (const item of conditionItems) {
       this.categorizeConditionItem(item, conditions, talentId, commissionType);
     }
