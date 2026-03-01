@@ -8,21 +8,21 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
-import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls55010',
   templateUrl: './tls55010.component.html',
   standalone: true,
-  imports: [DropdownComponent, PanelModule, TableModule, TableComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, InputTextComponent]
+  imports: [DropdownComponent, PanelModule, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, InputTextComponent]
 })
 export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -125,6 +125,12 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
           DAccAmt: item.AccDC === 'D' ? item.AccAmt : 0,
           CAccAmt: item.AccDC === 'C' ? item.AccAmt : 0,
         }));
+        this.footerData2 = [
+          {
+            DAccAmt: this.data2.reduce((sum, item) => sum + (item.DAccAmt || 0), 0),
+            CAccAmt: this.data2.reduce((sum, item) => sum + (item.CAccAmt || 0), 0),
+          },
+        ]
       });
     });
   }
@@ -147,6 +153,14 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
           DAccAmt: item.AccDC === 'D' ? item.AccAmt : 0,
           CAccAmt: item.AccDC === 'C' ? item.AccAmt : 0,
         }));
+        // 將資料轉成 footerData2 = [{DAccAmt: 100, CAccAmt: 200}]=而不是 footerData2 = {field: 'DAccAmt', value: 100, field: 'CAccAmt', value: 200}
+        this.footerData2 = [
+          {
+            DAccAmt: this.data2.reduce((sum, item) => sum + (item.DAccAmt || 0), 0),
+            CAccAmt: this.data2.reduce((sum, item) => sum + (item.CAccAmt || 0), 0),
+          },
+        ]
+        console.log(this.footerData2);
       });
     });
   }
@@ -168,20 +182,21 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   });
   VouTypeOptions = getSYS1000Options('VouType');
   PostFlagOptions = getSYS1000Options('PostFlag');
-  columns2: Column[] = [
-    { field: 'SerNo', header: '序號', style: 'text-left' },
-    { field: 'AccNo', header: '科目代號', style: 'text-left' },
-    { field: 'ACCCNAME', header: '科目名稱', style: 'text-left' },
-    { field: 'NoteDesc', header: '摘要', style: 'text-left' },
-    { field: 'DAccAmt', header: '借方金額', format: formatAmount, isTotal: true, style: 'text-right' },
-    { field: 'CAccAmt', header: '貸方金額', format: formatAmount, isTotal: true, style: 'text-right' },
-    { field: 'ORG_ID', header: '組織編號', style: 'text-left' },
-    { field: 'VEN_NO', header: '廠商編號', style: 'text-left' },
-    { field: 'VEN_NAME', header: '廠商名稱', style: 'text-left' },
-    { field: 'ProjectNo', header: '活動代號', style: 'text-left' },
+  columns2: ReportColumn[] = [
+    { field: 'SerNo', header: '序號', align: 'left' },
+    { field: 'AccNo', header: '科目代號', align: 'left' },
+    { field: 'ACCCNAME', header: '科目名稱', align: 'left' },
+    { field: 'NoteDesc', header: '摘要', align: 'left' },
+    { field: 'DAccAmt', header: '借方金額', format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'CAccAmt', header: '貸方金額', format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'ORG_ID', header: '組織編號', align: 'left' },
+    { field: 'VEN_NO', header: '廠商編號', align: 'left' },
+    { field: 'VEN_NAME', header: '廠商名稱', align: 'left' },
+    { field: 'ProjectNo', header: '活動代號', align: 'left' },
     { field: 'PTA', header: '立沖代號' },
   ]
   data2: any[] = []
+  footerData2: any = {};
   reverseLoading = false;
   showReverseBtn = false;
   // 反日節方法
