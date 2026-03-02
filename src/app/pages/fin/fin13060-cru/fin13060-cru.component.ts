@@ -228,7 +228,11 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
         if (hasG) this.dataForm.controls.SYS_ORIGIN.setValue('G', { emitEvent: false });
       }
     });
-
+const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(type as any);
+    sys1000('SYS_ORIGIN').subscribe((res: any) => {
+      const list = res?.Data ?? [];
+      this.System_IDOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
+    });
     // 專櫃清單
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =

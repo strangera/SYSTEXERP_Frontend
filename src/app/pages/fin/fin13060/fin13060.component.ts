@@ -358,6 +358,7 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
     { field: 'Voucher_No', header: '傳票編號', visible: true },
     { field: 'AssetType', header: '資產註記', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true },
+    { field: 'SYS_ORIGINDesc', header: '系統別名稱', visible: true },
   ];
 
   // ──────────────────────────────────────────────────────────
