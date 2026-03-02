@@ -245,7 +245,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
 
   /** ✅ 你要「有傳票編號也不能編輯/明細」→ 直接共用同條件 */
   editDisabled = (row: any): boolean => !this.isRowSelectable(row);
-  detailDisabled = (row: any): boolean => !this.isRowSelectable(row);
+  // detailDisabled = (row: any): boolean => !this.isRowSelectable(row);
 
   /* ---------- 刪除 ---------- */
 
