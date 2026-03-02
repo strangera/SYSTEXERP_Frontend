@@ -25,6 +25,8 @@ export interface UpdateTLS2C040Request {
   GLS6002List: {
     id: number;
     NoteDesc: string;
+    AccNo?: string;
+    ORG_ID?: string;
   }[];
 }
 
@@ -124,5 +126,9 @@ export class TLS2C040Service {
       const accNoB = b.AccNo || '';
       return accNoA.localeCompare(accNoB);
     });
+  }
+  // 查詢應付明細
+  queryTLS2C040_GLS6005(req: QueryTLS2C040_GLS6004Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2C040_GLS6005`, req);
   }
 }
