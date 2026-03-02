@@ -57,6 +57,10 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
       label: '應付',
       action: (rowData: any) => { this.onDetail(rowData, '應付') },
     },
+    {
+      label: '拋轉',
+      action: (rowData: any) => { this.onDetail(rowData, '拋轉') },
+    },
   ];
 
   //#region 下拉選單選項
