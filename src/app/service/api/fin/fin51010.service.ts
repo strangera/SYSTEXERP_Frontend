@@ -98,10 +98,10 @@ export class Fin51010Service {
   constructor(private http: HttpClient) { }
 
   /** 1. 查詢暫存傳票審核作業憑證種類筆數 */
-  queryFIN51010Count(): Observable<ApiResponse<QueryFIN51010CountResponse[]>> {
+  queryFIN51010Count(PostFlag: string | null): Observable<ApiResponse<QueryFIN51010CountResponse[]>> {
     return this.http.post<ApiResponse<QueryFIN51010CountResponse[]>>(
       `${this.apiUrl}/FIN0000/GLS1000/queryFIN51010Count`,
-      {}
+      { PostFlag }
     );
   }
 
