@@ -57,6 +57,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     ECR_No_End: [''],
     PAY_NO: ['', Validators.required],
     Building_No: [''],
+    invoice: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
     pageSize: [30],
     pageIndex: [1],
@@ -68,6 +69,10 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   paymentToolOptions: IDropdownItem[] = [];
   contact_USR_NameOptions: IDropdownItem[] = [];
   buildingNoOptions: IDropdownItem[] = [];
+  invoiceOptions: any[] = [
+    { label: '電子發票', value: '35' },
+    { label: '折讓單', value: '33' }
+  ];
   payNoToTypeMap = new Map<string, string>();
   selectedItems: any[] = [];
   data: any[] = [];

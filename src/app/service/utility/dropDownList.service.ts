@@ -12,6 +12,7 @@ export interface IDropdownItem {
   area_no?: string;
   No: string; // 唯一值
   Name: string; // 用於顯示的名稱
+  Display?: string; // 額外顯示欄位，例如 "No-Name"
   ShortName?: string; // 用於顯示的簡稱
   VEN_No?: string;  // 廠商編號
   HOS_No?: string; // 品牌編號

@@ -338,44 +338,116 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
    *   2) 把資料回填到父層 state（data/total/footer/loading）
    * - 讓你 HTML 的 [loading]="loading" 不會卡住
    */
-  public queryTLS2B030ForReport = (body: any): Observable<any> => {
-    const req = this.buildPayload({
-      ...(body || {}),
-      pageSize: body?.pageSize ?? 30,
-    });
+private _lastReqKey = '';
 
-    // ✅ 用同一個 loading，避免 onSubmit 跟 table-report 互卡
-    this.loading = true;
+public queryTLS2B030ForReport = (body: any): Observable<any> => {
+  const base: any = { ...(this.lastQueryBody || {}) };
 
-    return this.tls2b030Service.queryTLS2B030(req).pipe(
-      map((res: any) => {
-        const dataAny = res?.Data as any;
-        const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
-        const sumRaw = dataAny?.SumPayDiffs ?? null;
+  const pageSize =
+    (Number.isFinite(body?.pageSize) && Number(body.pageSize) > 0
+      ? Number(body.pageSize)
+      : Number.isFinite(base?.pageSize) && Number(base.pageSize) > 0
+        ? Number(base.pageSize)
+        : 30);
 
-        const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => {
-          const flat: any = { ...r };
+  const loaded = Array.isArray(this.data) ? this.data.length : 0;
 
-          if (r?.PayDiffs) {
-            Object.entries(r.PayDiffs as Record<string, unknown>).forEach(([k, v]) => {
-              flat[k] = this.toNumberLoose(v);
-            });
-          }
-          if (flat.PPay_Dif_sum != null) {
-            flat.PPay_Dif_sum = this.toNumberLoose(flat.PPay_Dif_sum as unknown);
-          }
+  const incomingPageIndex =
+    (Number.isFinite(body?.pageIndex) && Number(body.pageIndex) >= 1
+      ? Number(body.pageIndex)
+      : Number.isFinite(base?.pageIndex) && Number(base.pageIndex) >= 1
+        ? Number(base.pageIndex)
+        : 1);
 
-          this.formatMoneyFieldsInRow(flat);
-          flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
-          return flat;
-        });
+  const knownTotal = Number(this.viewTotalRecords || this.totalRecords || 0);
 
-        const totalCount =
-          Number(res?.TotalCount ?? dataAny?.TotalCount ?? rows.length) || rows.length;
+  // A) 已載滿就不再打
+  if (knownTotal > 0 && loaded >= knownTotal) {
+    return of({ Data: [], TotalCount: knownTotal, GrandTotal: null });
+  }
 
-        // ✅ footer（只在第一頁算）
-        const isFirstPage = !req?.pageIndex || Number(req.pageIndex) === 1;
-        if (isFirstPage && sumRaw) {
+  // B) 同一頁重覆叫（page=2 常見）
+  if (incomingPageIndex > 1) {
+    const pageStartIndex = (incomingPageIndex - 1) * pageSize;
+    if (loaded > pageStartIndex) {
+      return of({ Data: [], TotalCount: knownTotal || loaded, GrandTotal: null });
+    }
+  }
+
+  const req: any = {
+    ...base,
+    ...body,
+    pageIndex: incomingPageIndex,
+    pageSize,
+    SortBy: this.normalizeSort(body?.SortBy, base?.SortBy ?? this.defaultSort),
+  };
+
+  const hasRange = !!req?.TXN_Date_Start && !!req?.TXN_Date_End;
+  const hasYM = !!req?.TXN_YearMonth;
+  if (!hasRange && !hasYM) {
+    return of({ Data: [], TotalCount: 0, GrandTotal: null });
+  }
+
+  const reqKey = JSON.stringify({
+    TXN_Date_Start: req.TXN_Date_Start,
+    TXN_Date_End: req.TXN_Date_End,
+    TLT_No_List: req.TLT_No_List,
+    ECR_No_List: req.ECR_No_List,
+    tlt_floor: req.tlt_floor,
+    area_no: req.area_no,
+    ECR_Type: req.ECR_Type,
+    tlt_building: req.tlt_building,
+    OnlyShowOverAmount: req.OnlyShowOverAmount,
+    pageIndex: req.pageIndex,
+    pageSize: req.pageSize,
+    SortBy: req.SortBy,
+  });
+
+  if (reqKey === this._lastReqKey) {
+    return of({ Data: [], TotalCount: knownTotal || loaded, GrandTotal: null });
+  }
+  this._lastReqKey = reqKey;
+
+  this.loading = true;
+
+  return this.tls2b030Service.queryTLS2B030(req).pipe(
+    map((res: any) => {
+      const dataAny = res?.Data as any;
+      const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
+      const sumRaw = dataAny?.SumPayDiffs ?? null;
+
+      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => {
+        const flat: any = { ...r };
+
+        if (r?.PayDiffs) {
+          Object.entries(r.PayDiffs as Record<string, unknown>).forEach(([k, v]) => {
+            flat[k] = this.toNumberLoose(v);
+          });
+        }
+
+        if (flat.PPay_Dif_sum != null) {
+          flat.PPay_Dif_sum = this.toNumberLoose(flat.PPay_Dif_sum as unknown);
+        }
+
+        this.formatMoneyFieldsInRow(flat);
+        flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
+        return flat;
+      });
+
+      const totalCount =
+        Number(res?.TotalCount ?? dataAny?.TotalCount ?? 0) ||
+        (knownTotal > 0 ? knownTotal : (loaded + rows.length));
+
+      // ✅ 永遠更新（下一次 loadMore 還有條件）
+      this.lastQueryBody = { ...req };
+
+      // ✅ 第一頁：回填畫面資料（因為你 onSubmit 是手動呼叫，不會走 TableReport append）
+      if (Number(req.pageIndex) === 1) {
+        this.data = rows as any;              // ⭐⭐⭐ 你缺的就是這行
+        this.totalRecords = totalCount;
+        this.viewTotalRecords = totalCount;
+
+        if (sumRaw) {
           const footer: any = {};
           Object.keys(sumRaw).forEach((k) => {
             const raw = (sumRaw as any)[k] ?? 0;
@@ -386,37 +458,32 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
             if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = safe;
           });
           this.footerData = this.formatMoneyFieldsInFooter(footer);
-        } else if (isFirstPage && !sumRaw) {
+        } else {
           this.footerData = undefined;
         }
+      }
 
-        // ✅ 回填父層 state（TableReport 只是顯示，父層要更新）
-        this.data = rows as any;
-        this.totalRecords = totalCount;
-        this.viewTotalRecords = totalCount;
+      // ✅ 回傳給 TableReport 做 append（後續捲動會用到）
+      return { Data: rows, TotalCount: totalCount, GrandTotal: sumRaw ?? null };
+    }),
+    catchError((err) => {
+      console.error('TLS2B030 query error:', err);
 
-        // ✅ 保存最後查詢條件（讓 table-report scroll / sort 用）
-        this.lastQueryBody = { ...req };
-
-        return { Data: rows, TotalCount: totalCount, GrandTotal: sumRaw ?? null };
-      }),
-      catchError((err) => {
-        console.error('TLS2B030 query error:', err);
-
-        // ✅ 失敗也要把 loading 收掉 + 清狀態，避免卡住
+      if (Number(req?.pageIndex) === 1) {
         this.data = [];
         this.totalRecords = 0;
         this.viewTotalRecords = 0;
         this.footerData = undefined;
+      }
 
-        return of({ Data: [], TotalCount: 0, GrandTotal: null });
-      }),
-      finalize(() => {
-        this.loading = false;
-        this.cdr.detectChanges();
-      })
-    );
-  };
+      return of({ Data: [], TotalCount: knownTotal || loaded, GrandTotal: null });
+    }),
+    finalize(() => {
+      this.loading = false;
+      this.cdr.detectChanges();
+    }),
+  );
+};
 
   /* ----------------- Init ----------------- */
   ngOnInit(): void {
@@ -494,7 +561,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     this.footerData = undefined;
     this.totalRecords = 0;
     this.viewTotalRecords = 0;
-
+this._lastReqKey = '';   // ✅ 加這行
     // ✅ 先把 lastQueryBody 設好（給 table-report 後續捲動/排序用）
     this.lastQueryBody = { ...payload };
     this.tableVer++;
@@ -529,7 +596,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
 
     this.submitted = false;
     this.loading = false;
-
+ this._lastReqKey = '';   // ✅ 加這行
     this.data = [];
     this.selectedItems = [];
     this.footerData = undefined;
