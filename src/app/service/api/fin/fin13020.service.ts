@@ -61,8 +61,9 @@ export class FIN13020Service {
 
   // ✅ 新增成功後列印
   // 如果後端回傳 PDF，這樣寫最保險；若只是回 Status，也一樣可用
-  printFIN13020(payload: any): Observable<Blob> {
+  printFIN13020(payload: any): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/FIN0000/INV1000/printFIN13020`, payload, {
+      observe: 'response',
       responseType: 'blob',
     });
   }

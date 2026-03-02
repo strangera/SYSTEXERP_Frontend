@@ -17,6 +17,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-fin13020-cru',
@@ -566,15 +567,10 @@ next: () => {
     InvoiceNumberE: formValue.PUR_GUINo,
   };
 
-  this.fin13020Service.printFIN13020(printPayload).subscribe({
-    next: (blob) => {
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-    },
-    error: () => {
-      this.messageService.warnBubble?.('列印失敗（已新增成功）');
-    },
-  });
+ this.fin13020Service.printFIN13020(printPayload).subscribe({
+  next: (resp) => this.openPrintResponse(resp),
+  error: () => this.messageService.warnBubble?.('列印失敗（已新增成功）'),
+});
 
   this.dataForm.reset();
   this.detailRows = [];
@@ -590,7 +586,43 @@ next: () => {
     }
   });
 }
+private openPrintResponse(resp: import('@angular/common/http').HttpResponse<Blob>) {
+  const ct = resp.headers.get('content-type') || '';
 
+  // ✅ 情況 1：後端直接回 PDF
+  if (ct.includes('application/pdf')) {
+    const url = URL.createObjectURL(resp.body!);
+    window.open(url, '_blank');
+    return;
+  }
+
+  // ✅ 情況 2：後端回 JSON（裡面有 Print_URL）
+  // 因為我們用 responseType:'blob'，所以 JSON 會變成 blob，要轉成文字再 parse
+  resp.body!.text().then((text) => {
+    let json: any;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      // 不像 JSON 就直接開 blob（避免完全沒反應）
+      const url = URL.createObjectURL(resp.body!);
+      window.open(url, '_blank');
+      return;
+    }
+
+    const printUrl = json?.Print_URL ?? json?.Data?.Print_URL ?? json?.Data?.[0]?.Print_URL;
+    if (!printUrl) {
+      this.messageService.warnBubble?.('列印回應未包含 Print_URL');
+      return;
+    }
+
+    // ✅ 用後端的 host 開啟（不是前端 4200）
+    // printUrl 是 "/temp/xxx.pdf" 這種相對路徑
+    const base = environment.ApiUrl; // 例如 http://localhost:5142
+    const fullUrl = `${base}${printUrl}`;
+
+    window.open(fullUrl, '_blank');
+  });
+}
   // fin13020-cru.component.ts
   override onCancel(): void {
     this.router.navigate(['/account/fin', 'fin13020'], {
