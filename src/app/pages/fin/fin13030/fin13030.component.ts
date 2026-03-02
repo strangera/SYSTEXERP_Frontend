@@ -106,6 +106,7 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
   columns: Column[] = [
     { field: 'ID', header: '資料識別碼', visible: false },
     { field: 'INV_GUINo', header: '發票號碼', visible: true, format: (_v: unknown, _i?: number, row?: FIN13030Data) => `${row?.INV_GUITrack ?? ''}${row?.INV_GUINo ?? ''}` },
+    { field: 'INV_GUITrack', header: '發票字軌', visible: false },
     { field: 'INV_GUIDate', header: '發票日期', visible: true, format: formatDate },
     { field: 'INV_YM', header: '資料所屬年月', visible: true, format: formatYYYYMM },
     { field: 'INV_DeclareYM', header: '申報年月', visible: true, format: formatYYYYMM },
@@ -155,12 +156,14 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
     // 外銷方式選項（SYS1000 API）
     this.fin13050Service.querySYS1000DropDownList('ExportMethod').subscribe((res) => {
       const list: { No: string; Name: string }[] = res?.Data ?? [];
+      list.sort((a, b) => Number(a.No) - Number(b.No));
       this.exportMethodOptions = list.map((x) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
 
     // 出口報單類別選項（SYS1000 API）
     this.fin13050Service.querySYS1000DropDownList('INV_ExportType').subscribe((res) => {
       const list: { No: string; Name: string }[] = res?.Data ?? [];
+      list.sort((a, b) => Number(a.No) - Number(b.No));
       this.exportTypeOptions = list.map((x) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
   }

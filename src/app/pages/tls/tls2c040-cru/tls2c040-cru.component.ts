@@ -8,7 +8,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -124,17 +124,17 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
   detailFooterData: any[] = [];
 
   detailColumns: Column[] = [
-    { field: 'VOUNO', header: '應收帳款代號', visible: true },
-    { field: 'SrcSheetType', header: '專案代號', visible: true },
+    // { field: 'VOUNO', header: '應收帳款代號', visible: true },
+    // { field: 'SrcSheetType', header: '專案代號', visible: true },
     { field: 'org_id', header: '組織代碼', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
-    { field: 'CustomerNo', header: '客戶代碼', visible: true },
+    // { field: 'CustomerNo', header: '客戶代碼', visible: true },
     { field: 'DetailNo', header: '廠商代碼', visible: true },
-    { field: 'VouType', header: '傳票類型', visible: true },
+    // { field: 'VouType', header: '傳票類型', visible: true },
     { field: 'sam_yyymm', header: '年月', visible: true },
     { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'ar_amt', header: '應收帳款金額', visible: true, isTotal: true, format: formatAmount },
-    { field: 'pta_amt', header: '沖帳金額', visible: true, format: formatAmount },
+    // { field: 'pta_amt', header: '沖帳金額', visible: true, format: formatAmount },
     { field: 'accno', header: '會計科目', visible: true },
     { field: 'ent_date', header: '立帳日期', visible: true },
     { field: 'perget_date', header: '預計收款日期', visible: true },
@@ -193,6 +193,33 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
         // TODO: 待實作應付查詢
       }
     }
+  }
+
+  // 處理 table lazy load（分頁/排序）事件
+  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
+    // 更新表單的分頁/排序欄位，方便其他邏輯使用（若有）
+    form.patchValue({
+      pageIndex: event.pageIndex,
+      pageSize: event.pageSize,
+      SortBy: event.SortBy
+    });
+
+    // 由後端查詢指定頁面的應收/應付明細
+    const raw = form.getRawValue();
+    const req = {
+      id: this.rowdata.id,
+      PageSize: raw.pageSize ?? event.pageSize ?? 20,
+      PageIndex: raw.pageIndex ?? event.pageIndex ?? 1,
+      SortBy: raw.SortBy ?? event.SortBy ?? []
+    };
+    this.loading = true;
+    this.tls2c040Service.queryTLS2C040_GLS6004(req)
+      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+      .subscribe(response => {
+        this.detailData = response.Data?._GLS6004List ?? [];
+        this.totalRecords = response.TotalCount ?? (this.detailData.length || 0);
+        this.detailFooterData = [{ group_name: '總計', ar_amt: response.Data?.Total_ar_amt }];
+      });
   }
 
   onSubmit(form: FormGroup): void {
