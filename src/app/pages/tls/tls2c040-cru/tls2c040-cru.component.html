@@ -65,8 +65,8 @@
             [submitted]="submitted"></app-calendar>
         </div>
       </div>
-      <!-- 編輯資料 table -->
-      <div class="col-12" *ngIf="crudstatus === 'Edit'">
+      <!-- 編輯資料 table (若為 應付 則不於 Edit 模式顯示) -->
+      <div class="col-12" *ngIf="crudstatus === 'Edit' && queryData !== '應付'">
         <app-table-edit tableKey="TLS2C040Edit" [columns]="editColumns" [data]="editData"
           (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
           [disabled]="isFormReadable" [showInsert]="false" [canInsert]="false" [showCheckBox]="false"
@@ -74,12 +74,23 @@
       </div>
       <!-- 應收/應付明細 table -->
       <div class="col-12" *ngIf="crudstatus === 'Read'">
-        <app-customFooter-table tableKey="TLS2C040Detail" [data]="detailData" [columns]="detailColumns"
-          [showCheckBox]="false" [showManage]="false" [multiSortMeta]="[]" [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dataForm);
-          onSubmit(dataForm)" [loading]="loading" [lazy]="true" [showReportMode]="false" [showDelete]="false"
-          [footerData]="detailFooterData" />
+        <ng-container *ngIf="queryData === '應付'; else showDetailTable">
+          <app-table-edit tableKey="TLS2C040_AP_Edit" [columns]="editColumns" [data]="editData"
+            (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="false"
+            [disabled]="false" [showInsert]="false" [canInsert]="false" [showCheckBox]="false" [showDelete]="false"
+            [footerData]="detailFooterData" [showSort]="false">
+          </app-table-edit>
+        </ng-container>
+        <ng-template #showDetailTable>
+          <app-customFooter-table tableKey="TLS2C040Detail" [data]="detailData" [columns]="detailColumns"
+            [showCheckBox]="false" [showManage]="false" [multiSortMeta]="[]" [totalRecords]="totalRecords"
+            (lazyLoadData)="onLazyLoadData($event, dataForm);
+            onSubmit(dataForm)" [loading]="loading" [lazy]="true" [showReportMode]="false" [showDelete]="false"
+            [footerData]="detailFooterData" />
+        </ng-template>
       </div>
-      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <div *ngIf="crudstatus === 'Edit' && queryData !== '應付'"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
