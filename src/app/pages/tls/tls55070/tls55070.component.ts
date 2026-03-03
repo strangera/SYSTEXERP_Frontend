@@ -1,29 +1,37 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators, } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import {
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { CashierService } from '@service/basic/queryPOS2001.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { FileExportService } from '@shared/service/file-export.service';
-import { ValidationService } from '@shared/service/validation.service';
+import { catchError, finalize, map, of, timeout } from 'rxjs';
+
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
+
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
-import { catchError, finalize, map, of, timeout } from 'rxjs';
-import { TLS55070Service } from '../../../service/api/tls/tls55070.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+
+import { CashierService } from '@service/basic/queryPOS2001.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { ValidationService } from '@shared/service/validation.service';
+import { TLS55070Service } from '../../../service/api/tls/tls55070.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { tls2b010tableComponent } from '../tls2b010/tls2-b010-table/tls2b010table.component';
 import { TLS55070TableComponent } from './tls55070-table/tls55070-table.component';
-import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from './tls55070-table/tls55070-table.model';
 
 const TOTAL_FIELD_MAP = { TXN_SaleAmt: 'Total_TXN_SaleAmt' } as const;
 type TotalFieldMap = typeof TOTAL_FIELD_MAP;
@@ -42,6 +50,7 @@ type SubtotalFieldMap = typeof SUBTOTAL_FIELD_MAP;
     MenubarComponent,
     AccordionModule,
     CalendarRangeQuickComponent,
+    InputNumberRangeComponent,
     InputTextComponent,
     DropdownComponent,
     ButtonComponent,
@@ -57,7 +66,9 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
   readonly groupByField = '_grp'; // 內部群組鍵
   /** 讓 rowspan 依銷售單號合併（在 ngAfterViewInit 指定給子元件的 groupKey） */
   @ViewChild('saleTable', { static: false }) saleTable?: tls2b010tableComponent;
+
   enableCrossPageSubtotalPeek = false;
+
   readonly defaultSort: any[] = [
     { field: this.groupByField, order: 1 },     // 代表 TXN_SaleNoteNo
     { field: 'TXN_SaleNoteNo', order: 1 },      // 明確放前面，確保同單號連在一起
@@ -65,9 +76,11 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
     { field: 'ECR_No', order: 1 },
   ];
   sortMeta: any[] = [];
+
   // 匯出 loading 分離
   btnLoadingExcel = false;
   btnLoadingPDF = false;
+
   data: any[] = [];
   totalRecords = 0;
   activated = false; // 尚未按查詢前，不處理任何 lazy 事件
@@ -79,29 +92,42 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
 
   historyRequestBody: any | null = null;
   private readonly includePagingAndSorting = true;
+
+  readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
+
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [yesterday, [Validators.required]],
-    TXN_DateEnd: [yesterday, [Validators.required]],
-    TXN_SaleNoteNo: [null],
-    ECR_No: [null],
+    TXN_DateStart: [this.yesterday, [Validators.required]],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
+    TXN_SaleNoteNo: [''],
+    ECR_No: [''],
     TXN_GUIBegNoStart: [null],
     TXN_GUIBegNoEnd: [null],
     TXN_NoStart: [null, [this.validationService.numberValidator, Validators.maxLength(6)]],
     TXN_NoEnd: [null, [this.validationService.numberValidator, Validators.maxLength(6)]],
-    LOGO_No: [null],
-    TLT_No: [null],
-    HOS_NO: [null],
-    USR_No: [null],
-    TXN_Status: [null],
+    LOGO_No: [''],
+    TLT_No: [''],
+    HOS_NO: [''],
+    USR_No: [''],
+    TXN_Status: [''],
     IsShowStatus: ['0'],
     ...createPaginationConfig(this.defaultSort),
   });
 
   /** 欄位設定：把「銷售單號」設為置中，並做為 merged column */
-  columns: Column[] = [
+  columns: any[] = [
     { field: 'TXN_SaleNoteNo', header: '銷售單號', visible: true, style: 'text-center' },
     { field: this.groupByField, header: 'grp', visible: false, hidden: true }, // 群組鍵
-    { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
+    {
+      field: 'TXN_Date',
+      header: '銷售日期',
+      visible: true,
+      format: (v: string) => this.formatDate(v),
+    },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'HOS_NO', header: '倉別', visible: true },
@@ -124,11 +150,12 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
       header: '單項小計',
       visible: true,
       style: 'text-right',
-      format: formatAmount,
+      format: (n: number) => this.money(n),
       isTotal: true,
       isSubTotal: true,
     },
   ];
+
   ECRNoOptions: any[] = [];
   txnStatusOptions = [
     { value: '1', label: '一般交易' },
@@ -147,12 +174,11 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
   cashierOptions: any[] = [];
 
   constructor(
-    private readonly tls55070Service: TLS55070Service,
-    private readonly ECRNoService: ECRNoService,
-    private readonly cashierService: CashierService,
-    private readonly validationService: ValidationService,
-    private readonly dropDownListService: DropDownListService,
-    private readonly fileExportService: FileExportService
+    private tls55070Service: TLS55070Service,
+    private ECRNoService: ECRNoService,
+    private cashierService: CashierService,
+    private validationService: ValidationService,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
@@ -218,29 +244,39 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
   percent(val: any): string {
     // 空值（null/undefined/''）→ 直接顯示空白，不轉百分比
     if (val === null || val === undefined || val === '') return '';
+
     // 若你之前用 'nopercent' 當禁用標記，也一起回傳空白
     if (val === 'nopercent') return '';
+
     const n = this.parsePercent(val);
     return (n / 100).toLocaleString('en-US', {
       style: 'percent',
       maximumFractionDigits: 2,
     });
   }
+
+  /** Lazy 取數（提供給子元件） */
   /** Lazy 取數（提供給子元件） */
   fetchTLS55070 = (evt: LazyLoadEvent) => {
     const raw: any = this.queryForm.getRawValue();
+
     // 事件可能給 pageSize 或 rows（PrimeNG）
     const evtPageSize = Number.isFinite((evt as any)?.pageSize)
       ? Number((evt as any).pageSize)
       : Number.isFinite((evt as any)?.rows)
         ? Number((evt as any).rows)
         : undefined;
+
     // 改成（加上分組）
     const pageSize = (evtPageSize ?? Number(raw?.pageSize)) || 20;
+
     // 事件可能沒有 pageIndex（PrimeNG 常見），用 first/rows 推回 pageIndex
     const evtHasPageIndex = Number.isFinite((evt as any)?.pageIndex);
     const evtFirst = Number.isFinite((evt as any)?.first) ? Number((evt as any).first) : 0;
-    const pageIndex = evtHasPageIndex ? Number((evt as any).pageIndex) : Math.floor(evtFirst / pageSize) + 1;
+    const pageIndex = evtHasPageIndex
+      ? Number((evt as any).pageIndex)
+      : Math.floor(evtFirst / pageSize) + 1;
+
     // 排序：evt.SortBy > raw.SortBy > defaultSort，並確保 group 欄位優先
     const uiSort = this.ensureGroupFirst(
       Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
@@ -250,14 +286,17 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
           : this.defaultSort,
     );
     const apiSort = this.toApiSort(uiSort);
+
     const payload = this.buildPayload({
       ...raw,
       pageSize,
       pageIndex,
       SortBy: apiSort,
     });
+
     // 同步表單（匯出或續載時可拿到正確的頁碼/筆數/排序）
     this.queryForm.patchValue({ pageSize, pageIndex, SortBy: uiSort }, { emitEvent: false });
+
     return this.tls55070Service.queryTLS55070(payload).pipe(
       map((res: any) => {
         const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
@@ -330,46 +369,49 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
     });
     this.historyRequestBody = { ...payload };
 
-    this.tls55070Service.queryTLS55070(payload).pipe(
-      timeout(60_000),
-      finalize(() => (this.loading = false)),
-      catchError(() => of({ Data: [], TotalCount: 0, TotalPage: 0 })),
-    ).subscribe((res: any) => {
-      const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
-      const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
-        this.unpackResponse(wrappers);
+    this.tls55070Service
+      .queryTLS55070(payload)
+      .pipe(
+        timeout(60_000),
+        finalize(() => (this.loading = false)),
+        catchError(() => of({ Data: [], TotalCount: 0, TotalPage: 0 })),
+      )
+      .subscribe((res: any) => {
+        const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
+        const { rows, allSubtotals, externalTotals, totalRecords: computedRowsCount } =
+          this.unpackResponse(wrappers);
 
-      const apiTotal = Number(res?.TotalCount);
-      const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
+        const apiTotal = Number(res?.TotalCount);
+        const totalRecords = Number.isFinite(apiTotal) ? apiTotal : computedRowsCount;
 
-      const ended = new Set<string>();
-      for (let i = 0; i < rows.length - 1; i++) {
-        const g1 = rows[i][this.groupByField];
-        const g2 = rows[i + 1][this.groupByField];
-        if (g1 !== g2) ended.add(g1);
-      }
-      const totalPage =
-        Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
-      const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
-      const lastKey = rows[rows.length - 1]?.[this.groupByField];
-      if (!hasNext && lastKey) ended.add(lastKey);
+        const ended = new Set<string>();
+        for (let i = 0; i < rows.length - 1; i++) {
+          const g1 = rows[i][this.groupByField];
+          const g2 = rows[i + 1][this.groupByField];
+          if (g1 !== g2) ended.add(g1);
+        }
+        const totalPage =
+          Number(res?.TotalPage ?? Math.ceil((totalRecords || 0) / (pageSize || 1))) || 0;
+        const hasNext = totalPage ? pageIndex < totalPage : pageIndex * pageSize < totalRecords;
+        const lastKey = rows[rows.length - 1]?.[this.groupByField];
+        if (!hasNext && lastKey) ended.add(lastKey);
 
-      const vis: Record<string, Record<string, number>> = {};
-      ended.forEach((k) => {
-        if (allSubtotals[k]) vis[k] = allSubtotals[k];
+        const vis: Record<string, Record<string, number>> = {};
+        ended.forEach((k) => {
+          if (allSubtotals[k]) vis[k] = allSubtotals[k];
+        });
+
+        this.data = rows;
+        this.totalRecords = totalRecords;
+        this.allSubtotals = allSubtotals;
+        this.visibleSubtotals = vis;
+        this.detailTotals = externalTotals;
+
+        // 確保子表格群組鍵
+        queueMicrotask(() => {
+          if (this.saleTable) this.saleTable.groupKey = this.groupByField;
+        });
       });
-
-      this.data = rows;
-      this.totalRecords = totalRecords;
-      this.allSubtotals = allSubtotals;
-      this.visibleSubtotals = vis;
-      this.detailTotals = externalTotals;
-
-      // 確保子表格群組鍵
-      queueMicrotask(() => {
-        if (this.saleTable) this.saleTable.groupKey = this.groupByField;
-      });
-    });
   }
 
 
@@ -380,8 +422,12 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
       return;
     }
     this.btnLoadingExcel = true;
-    const export$ = this.tls55070Service.exportTLS55070Excel(this.historyRequestBody);
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoadingExcel = isLoading).subscribe();
+    this.tls55070Service
+      .exportTLS55070Excel(this.historyRequestBody)
+      .pipe(finalize(() => (this.btnLoadingExcel = false)))
+      .subscribe({
+        next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.xlsx'),
+      });
   }
 
   // === 匯出 PDF ===
@@ -391,8 +437,12 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
       return;
     }
     this.btnLoadingPDF = true;
-    const export$ = this.tls55070Service.exportTLS55070PDF(this.historyRequestBody);
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoadingExcel = isLoading).subscribe();
+    this.tls55070Service
+      .exportTLS55070PDF(this.historyRequestBody)
+      .pipe(finalize(() => (this.btnLoadingPDF = false)))
+      .subscribe({
+        next: (r: HttpResponse<Blob>) => this.handleFileExport(r, '.pdf'),
+      });
   }
 
   // ==== helpers ====
@@ -556,6 +606,7 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
     if (!injectedSaleNo) {
       out.unshift({ field: 'TXN_SaleNoteNo', order: 1 });
     }
+
     // 去掉重複欄位
     const seen = new Set<string>();
     return out.filter((s) => {
@@ -564,15 +615,61 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
       return true;
     });
   }
+
   private emptyToNull(v: any) {
     return v === '' ? null : v;
   }
+  private formatDate(val: string): string {
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return val;
+    return `${d.getFullYear()}/${(d.getMonth() + 1 + '').padStart(2, '0')}/${(d.getDate() + '').padStart(2, '0')}`;
+  }
+  money(val: number): string {
+    return Number(val ?? 0).toLocaleString('en-US');
+  }
+
+  private handleFileExport(response: HttpResponse<Blob>, defExt: string): void {
+    const cd = response.headers.get('Content-Disposition');
+    const name = this.getFilenameFromHeader(cd, defExt);
+    const blob = response.body;
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = name;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+  private getFilenameFromHeader(cd: string | null, defExt: string): string {
+    const def = `download${defExt}`;
+    if (!cd) return def;
+    const star = /filename\*=([^;]+)/.exec(cd);
+    if (star?.[1]) {
+      try { return decodeURIComponent(star[1].replace(/^UTF-8''/, '')); }
+      catch { return star[1]; }
+    }
+    const m = /filename="([^"]+)"/.exec(cd);
+    if (m?.[1]) {
+      try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); }
+      catch { return m[1]; }
+    }
+    return def;
+  }
+
   /** 提供給外層 lazy slot（TLS2B010 用法） */
   override onLazyLoadData = (evt: LazyLoadEvent | Event, _form: FormGroup) => {
     if (!this.activated) return; // 未按查詢前，不要自動打 API
+
     // 如果上一筆 lazy 還在 loading，就先不再打，避免同時多發
     if (this.loading) return;
+
     const e = evt as any as LazyLoadEvent;
+
     // 事件可能給 pageSize 或 rows（PrimeNG）
     const evtPageSize = Number.isFinite((e as any)?.pageSize)
       ? Number((e as any).pageSize)
@@ -580,72 +677,92 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
         ? Number((e as any).rows)
         : undefined;
     const pageSize = (evtPageSize ?? Number(this.queryForm.value?.pageSize)) || 20;
+
     // 事件可能沒有 pageIndex（PrimeNG 常見）：用 first/rows 推回 pageIndex
     const evtHasPageIndex = Number.isFinite((e as any)?.pageIndex);
     const first = Number.isFinite((e as any)?.first) ? Number((e as any).first) : 0;
     const pageIndex = evtHasPageIndex
       ? Number((e as any).pageIndex)
       : Math.floor(first / pageSize) + 1;
+
     // 同步回表單
     this.queryForm.patchValue({ pageIndex, pageSize }, { emitEvent: false });
+
     // ===== 真正打 API =====
     this.loading = true;
-    this.fetchTLS55070(e).pipe(finalize(() => (this.loading = false))).subscribe(({ rows, totalRecords, externalTotals, externalSubtotals }) => {
-      // 沒資料直接收
-      if (!rows || !rows.length) {
-        this.totalRecords = totalRecords;
-        this.detailTotals = externalTotals;
-        this.visibleSubtotals = {
-          ...this.visibleSubtotals,
-          ...externalSubtotals,
-        };
-        return;
-      }
-      // 第一次或 pageIndex = 1：直接覆蓋
-      if (!this.data || !this.data.length || pageIndex === 1) {
-        this.data = rows;
-      } else {
-        // 後續頁：要接在前一頁後面，並處理「跨頁同單號」的情況
-        let merged = [...this.data];
 
-        // 找「前一頁最後一個一般明細列」的銷售單號
-        const revPrev = [...merged].reverse();
-        const lastDetailIdxFromEnd = revPrev.findIndex(r => !r?.__isSubRow);
-        const lastDetail =
-          lastDetailIdxFromEnd >= 0
-            ? merged[merged.length - 1 - lastDetailIdxFromEnd]
-            : null;
-        const lastSaleNo: string | null =
-          lastDetail?.TXN_SaleNoteNo ?? null;
-
-        // 找「新頁第一個一般明細列」的銷售單號
-        const firstDetailIdx = rows.findIndex(r => !r?.__isSubRow);
-        const firstDetail =
-          firstDetailIdx >= 0 ? rows[firstDetailIdx] : null;
-        const firstSaleNo: string | null =
-          firstDetail?.TXN_SaleNoteNo ?? null;
-        // ✅ 兩頁交界的 TXN_SaleNoteNo 一樣：
-        //    代表同一張銷售單被拆成兩頁，我們要把前一頁的小計列拿掉，
-        //    然後讓明細無縫接在一起，最後由「最新一頁」的小計作為整張的總小計。
-        if (lastSaleNo && firstSaleNo && lastSaleNo === firstSaleNo) {
-          if (merged.length && merged[merged.length - 1]?.__isSubRow) {
-            // 最後一列是小計列 -> 砍掉它
-            merged = merged.slice(0, -1);
+    this.fetchTLS55070(e)
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe({
+        next: ({ rows, totalRecords, externalTotals, externalSubtotals }) => {
+          // 沒資料直接收
+          if (!rows || !rows.length) {
+            this.totalRecords = totalRecords;
+            this.detailTotals = externalTotals;
+            this.visibleSubtotals = {
+              ...this.visibleSubtotals,
+              ...externalSubtotals,
+            };
+            return;
           }
-        }
-        // 把新的 rows 接在後面
-        this.data = [...merged, ...rows];
-      }
-      this.totalRecords = totalRecords;
-      this.detailTotals = externalTotals;
-      this.visibleSubtotals = {
-        ...this.visibleSubtotals,
-        ...externalSubtotals,
-      };
-      // 確保子表格的 groupKey 還是用 _grp（銷售單號群組）
-      queueMicrotask(() => {
-        if (this.saleTable) this.saleTable.groupKey = this.groupByField;
+
+          // 第一次或 pageIndex = 1：直接覆蓋
+          if (!this.data || !this.data.length || pageIndex === 1) {
+            this.data = rows;
+          } else {
+            // 後續頁：要接在前一頁後面，並處理「跨頁同單號」的情況
+            let merged = [...this.data];
+
+            // 找「前一頁最後一個一般明細列」的銷售單號
+            const revPrev = [...merged].reverse();
+            const lastDetailIdxFromEnd = revPrev.findIndex(r => !r?.__isSubRow);
+            const lastDetail =
+              lastDetailIdxFromEnd >= 0
+                ? merged[merged.length - 1 - lastDetailIdxFromEnd]
+                : null;
+            const lastSaleNo: string | null =
+              lastDetail?.TXN_SaleNoteNo ?? null;
+
+            // 找「新頁第一個一般明細列」的銷售單號
+            const firstDetailIdx = rows.findIndex(r => !r?.__isSubRow);
+            const firstDetail =
+              firstDetailIdx >= 0 ? rows[firstDetailIdx] : null;
+            const firstSaleNo: string | null =
+              firstDetail?.TXN_SaleNoteNo ?? null;
+
+            // ✅ 兩頁交界的 TXN_SaleNoteNo 一樣：
+            //    代表同一張銷售單被拆成兩頁，我們要把前一頁的小計列拿掉，
+            //    然後讓明細無縫接在一起，最後由「最新一頁」的小計作為整張的總小計。
+            if (lastSaleNo && firstSaleNo && lastSaleNo === firstSaleNo) {
+              if (merged.length && merged[merged.length - 1]?.__isSubRow) {
+                // 最後一列是小計列 -> 砍掉它
+                merged = merged.slice(0, -1);
+              }
+            }
+
+            // 把新的 rows 接在後面
+            this.data = [...merged, ...rows];
+          }
+
+          this.totalRecords = totalRecords;
+          this.detailTotals = externalTotals;
+          this.visibleSubtotals = {
+            ...this.visibleSubtotals,
+            ...externalSubtotals,
+          };
+
+          // 確保子表格的 groupKey 還是用 _grp（銷售單號群組）
+          queueMicrotask(() => {
+            if (this.saleTable) this.saleTable.groupKey = this.groupByField;
+          });
+        },
+        error: _ => {
+          // lazy 失敗就維持原本的 data，不清空
+          this.data = this.data || [];
+          this.totalRecords = this.totalRecords || 0;
+        },
       });
-    });
   };
+
+
 }
