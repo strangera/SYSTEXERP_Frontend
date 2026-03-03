@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -6,6 +6,7 @@ import { TLS21040Data, TLS21040QueryRequest, Tls21040Service } from '@service/ap
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatYYYYMMDD, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
@@ -16,7 +17,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { formatDateTime } from './../../../shared/componentkit/table/table.model';
-
 
 @Component({
   selector: 'app-tls21040',
@@ -35,6 +35,8 @@ import { formatDateTime } from './../../../shared/componentkit/table/table.model
   ],
 })
 export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> implements OnInit {
+  @ViewChild(TableReportComponent) tableReport?: TableReportComponent;
+  // public readonly Actions = Actions;
   queryForm = this.formBuilder.group({
     CRD_BinCode: ['', [Validators.maxLength(16)]],
     BNK_No: ['', [Validators.maxLength(3)]],
@@ -65,7 +67,8 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
   cardTypeOptions = getSYS1000Options('CRD_Type');
   cardCategoryOptions = getSYS1000Options('CRD_Kind');
   constructor(
-    public readonly tls21040Service: Tls21040Service
+    public readonly tls21040Service: Tls21040Service,
+    private readonly fileExportService: FileExportService,
   ) { super(); }
 
   ngOnInit(): void {
@@ -78,6 +81,8 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
         this.data = res.Data;
         this.lastQueryBody = frm.getRawValue();
         this.totalRecords = res.TotalCount;
+        // 若查詢有資料，自動切換至報表模式以顯示匯出/匯入按鈕
+        try { if (this.data && this.data.length > 0) (this.tableReport as any).IsPrint = true; } catch { }
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     });
@@ -123,5 +128,17 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
         }
       }
     })
+  }
+  btnLoading = false;
+  excelLoading = false;
+  downloadTemplate() {
+    const export$ = this.tls21040Service.downloadTLS21040Template().pipe(
+    );
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
+  }
+
+  /** 自動下載錯誤檔 */
+  downloadErrorFile(filePath: string) {
+    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 }
