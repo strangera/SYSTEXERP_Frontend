@@ -74,8 +74,8 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     PageIndex: [1],
     sam_yyymm: [new Date(), Validators.required],
     // 結算
-    money_type: [this.money_typeOptions[2]?.value || null as string | null],
-    sam_termno: [1],
+    money_type: [null as string | null],
+    sam_termno: [null as number | null],
     tlt_no: [null],
   });
   totalRecords = 0;
