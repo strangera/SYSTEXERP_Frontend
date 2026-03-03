@@ -9,6 +9,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
@@ -16,7 +17,6 @@ import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls55010',
@@ -30,7 +30,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   });
   lastDate?: Tls55010DateRequest;
   data: any = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'check_content', header: '檢查內容' },
     { field: 'isPassed', header: '是否通過' },
   ];
@@ -61,43 +61,49 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
       const body = {
         TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
       }
-      this.columns = this.columns.map(c => c.field === 'isPassed' ? {
-        ...c,
-        htmlFormat: true,
-        format: () => '<i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>'
-      } : c);
-      this.messageService.infoBubble('日結檢查中,請稍候...');
-      this.tls55010Service.checkTLS55010(body).pipe(untilDestroyed(this), finalize(() => {
-        this.loading = false
-        this.columns = this.columns.map(c => c.field === 'isPassed' ? {
-          ...c, htmlFormat: false, format: undefined
-        } : c);
-      })).subscribe((res) => {
-        this.messageService.successBubble(res.Message);
-        this.isConfirmDate = false;
-        this.data.forEach((item: any) => {
-          item.isPassed = 'OK';
-          item.details = [];
-        });
-        const checkItemMap = new Map<string, any>();
-        this.data.forEach((item: any) => {
-          checkItemMap.set(item.value, item);
-        });
-        res.Data.forEach((error: any) => {
-          const stepCode = String(error.step_num);
-          const targetItem = checkItemMap.get(stepCode);
-          if (targetItem) {
-            targetItem.isPassed = '有問題';
-            const newDetail = {
-              cls_date: error.cls_date,
-              check_result: error.check_result,
-              mid: error.mid,
-              master_key: error.master_key
-            };
-            targetItem.details.push(newDetail);
-          }
-        });
+      // 1. 先將 Column 類型切換為 html，這樣元件才會走 [innerHTML] 路徑
+      this.columns = this.columns.map(c =>
+        c.field === 'isPassed' ? { ...c, type: 'html' } : c
+      );
+
+      // 2. 直接修改資料內容為 Spinner HTML
+      // 因為 Template 讀取的是 rowData['isPassed']
+      this.data.forEach((item: any) => {
+        item.isPassed = `<i class="pi pi-spin pi-spinner text-primary" style="font-size: 1.2rem"></i>`;
       });
+      this.messageService.infoBubble('日結檢查中,請稍候...');
+      this.tls55010Service.checkTLS55010(body).pipe(untilDestroyed(this),
+        finalize(() => {
+          this.loading = false
+          this.columns = this.columns.map(c =>
+            c.field === 'isPassed' ? { ...c, type: undefined } : c
+          );
+        })).subscribe((res) => {
+          this.messageService.successBubble(res.Message);
+          this.isConfirmDate = false;
+          this.data.forEach((item: any) => {
+            item.isPassed = 'OK';
+            item.details = [];
+          });
+          const checkItemMap = new Map<string, any>();
+          this.data.forEach((item: any) => {
+            checkItemMap.set(item.value, item);
+          });
+          res.Data.forEach((error: any) => {
+            const stepCode = String(error.step_num);
+            const targetItem = checkItemMap.get(stepCode);
+            if (targetItem) {
+              targetItem.isPassed = '有問題';
+              const newDetail = {
+                cls_date: error.cls_date,
+                check_result: error.check_result,
+                mid: error.mid,
+                master_key: error.master_key
+              };
+              targetItem.details.push(newDetail);
+            }
+          });
+        });
     });
   }
   insertLoading = false;
