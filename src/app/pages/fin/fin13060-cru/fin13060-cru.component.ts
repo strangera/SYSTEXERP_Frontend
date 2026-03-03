@@ -18,11 +18,11 @@ import { PanelModule } from 'primeng/panel';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
 import { FIN13050Service } from '@service/api/fin/fin13050.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { ValidationService } from '@shared/service/validation.service';
+import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -38,9 +38,8 @@ interface Fin13060CruForm {
   mid: FormControl<number | null>;
   SYS_StoreNo: FormControl<string | null>;
 
-  // ✅ Create(新增)：可輸入（預設 ZZZ 但可改）
-  // ✅ Edit/Read：唯讀
-  // ✅ 送出：ZZZ 視為空值(null)
+  // ✅ 所有模式：唯讀（不可修改）
+  // ✅ Create 預設值：ECR_No='ZZZ', TXN_No='1'
   ECR_No: FormControl<string | null>;
   TXN_No: FormControl<string | null>;
 
@@ -66,7 +65,7 @@ interface Fin13060CruForm {
 
   Source_Doc_No: FormControl<string | null>;
   Voucher_No: FormControl<string | null>;
-  SAL_Type: FormControl<string | null>;
+  SYS_ORIGIN: FormControl<string | null>;
   AssetType: FormControl<string | null>;
   INV_Remark: FormControl<string | null>;
   Tlt_No: FormControl<string | null>;
@@ -179,7 +178,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
       ],
     }),
     Voucher_No: new FormControl<string | null>(null),
-    SAL_Type: new FormControl<string | null>('G'),
+    SYS_ORIGIN: new FormControl<string | null>(null),
     AssetType: new FormControl<string | null>(null),
     INV_Remark: new FormControl<string | null>(null),
     Tlt_No: new FormControl<string | null>(null),
@@ -203,33 +202,37 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     // ✅ 先依狀態套 enable/disable（Create 可輸入；Edit/Read 唯讀）
     this.updateDisabledState();
 
-    // ✅ Create：預設 ZZZ（但可改，因為 Create 不 disable）
+    // ✅ Create：預設 ZZZ / 1（唯讀，不可改）
     if (this.crudstatus === CRUDStatus.Create) {
       const curEcr = this.dataForm.controls.ECR_No.value;
       const curTxn = this.dataForm.controls.TXN_No.value;
-      if (!curEcr) this.dataForm.controls.ECR_No.setValue('ZZZ', { emitEvent: false });
-      if (!curTxn) this.dataForm.controls.TXN_No.setValue('1000', { emitEvent: false });
-    }
 
+      if (!curEcr) this.dataForm.controls.ECR_No.setValue('ZZZ', { emitEvent: false });
+      if (!curTxn) this.dataForm.controls.TXN_No.setValue('1', { emitEvent: false });
+    }
     // ✅ 連動：格式代號 -> 發票種類
     this.dataForm.controls.INV_GUIType.valueChanges.subscribe((v) => {
       this.applyGuiTypeToPaper(v);
     });
 
-    // 系統別（SYS_ORIGIN）
-    this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res) => {
+    // 系統別（SAL_Type）
+    this.fin13050Service.querySYS1000DropDownList('SAL_Type').subscribe((res) => {
       const list = res?.Data ?? [];
       this.SAL_TypeOptions = list.map((x: any) => ({
         value: String(x.No),
         label: `${x.No}-${x.Name}`,
       }));
 
-      if (this.crudstatus === CRUDStatus.Create && !this.dataForm.controls.SAL_Type.value) {
+      if (this.crudstatus === CRUDStatus.Create && !this.dataForm.controls.SYS_ORIGIN.value) {
         const hasG = this.SAL_TypeOptions.some((o) => o.value === 'G');
-        if (hasG) this.dataForm.controls.SAL_Type.setValue('G', { emitEvent: false });
+        if (hasG) this.dataForm.controls.SYS_ORIGIN.setValue('G', { emitEvent: false });
       }
     });
-
+const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(type as any);
+    sys1000('SYS_ORIGIN').subscribe((res: any) => {
+      const list = res?.Data ?? [];
+      this.System_IDOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
+    });
     // 專櫃清單
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
@@ -341,7 +344,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
       INV_NoneTax: '零稅銷售註記',
       INV_Cancel: '是否作廢',
       INV_GUIType: '格式代號',
-      SAL_Type: '系統別',
+      SYS_ORIGIN: '系統別',
     };
 
     if (this.showErrorsIfInvalid(form, LABELS)) return;
@@ -354,9 +357,9 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
         mid: Number(raw.mid ?? 0),
         SYS_StoreNo: this.normalize(raw.SYS_StoreNo),
 
-        // ✅ ZZZ 視為空值
-        ECR_No: this.normalizeOrNullIfZZZ(raw.ECR_No),
-        TXN_No: this.normalizeOrNullIfZZZ(raw.TXN_No),
+        // ✅ ZZZ 就照傳 ZZZ
+        ECR_No: this.normalize(raw.ECR_No),
+        TXN_No: this.normalize(raw.TXN_No),
 
         TXN_GUIPaper: this.normalize(raw.TXN_GUIPaper),
         INV_NoneTax: this.normalize(raw.INV_NoneTax),
@@ -376,8 +379,9 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
         PLU_TaxType: this.normalize(raw.PLU_TaxType),
         Source_Doc_No: this.normalize(raw.Source_Doc_No),
         Voucher_No: this.normalize(raw.Voucher_No),
-        SAL_Type: this.normalize(raw.SAL_Type),
+        SYS_ORIGIN: this.normalize(raw.SYS_ORIGIN),
         AssetType: this.normalize(raw.AssetType),
+        INV_TXNType: 1,
         INV_Remark: this.normalize(raw.INV_Remark),
         Tlt_No: this.normalize(raw.Tlt_No),
         Ven_No: this.normalize(raw.Ven_No),
@@ -393,8 +397,8 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
           this.hydrateStoreInfoFromLocalStorage();
           this.updateDisabledState();
 
-          // ✅ Create reset 後：再次預設 ZZZ（但仍可修改）
-          this.dataForm.patchValue({ ECR_No: 'ZZZ', TXN_No: 'ZZZ' }, { emitEvent: false });
+          // ✅ Create reset 後：再次預設 ZZZ / 1（唯讀）
+          this.dataForm.patchValue({ ECR_No: 'ZZZ', TXN_No: '1' }, { emitEvent: false });
         });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
         this.fin13060Service.updateFIN13060(payload).subscribe(() => {
@@ -650,11 +654,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     return s === '' ? null : s;
   }
 
-  private normalizeOrNullIfZZZ(v: any): string | null {
-    const s = this.normalize(v);
-    if (!s) return null;
-    return s.toUpperCase() === 'ZZZ' ? null : s;
-  }
+
 
   /**
    * ✅ 狀態控制（你要的規則）
@@ -671,15 +671,10 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.enable();
     this.dataForm.controls.mid.disable({ emitEvent: false });
     this.dataForm.controls.SYS_StoreNo.disable({ emitEvent: false });
-
-    if (this.crudstatus === CRUDStatus.Edit) {
-      this.dataForm.controls.ECR_No.disable({ emitEvent: false });
-      this.dataForm.controls.TXN_No.disable({ emitEvent: false });
-    } else {
-      // Create：可輸入
-      this.dataForm.controls.ECR_No.enable({ emitEvent: false });
-      this.dataForm.controls.TXN_No.enable({ emitEvent: false });
-    }
+    // 所有模式（Create/Edit）皆唯讀
+    this.dataForm.controls.ECR_No.disable({ emitEvent: false });
+    this.dataForm.controls.TXN_No.disable({ emitEvent: false });
+    this.dataForm.controls.TXN_GUIPaper.disable({ emitEvent: false });
   }
 
   private showErrorsIfInvalid(form: FormGroup, labelMap: Record<string, string>): boolean {

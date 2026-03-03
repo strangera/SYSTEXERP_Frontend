@@ -217,7 +217,7 @@
                     [isRowSelectable]="isRowSelectable.bind(this)"
                     [totalRecords]="dialogTotalRecords()"
                     [loading]="dialogLoading()"
-                    [lastQueryBody]="{}"
+                    [lastQueryBody]="getDialogQueryBody()"
                     [queryFunction]="fetchTltTalentOptions.bind(this)">
   </app-table-report>
 </app-dialog>

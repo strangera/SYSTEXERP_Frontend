@@ -59,7 +59,7 @@ export interface ChargeSettingAPIModel {
   sst_rate?: number | null;
   cap_saletype1: string; // 'Y' | 'N'
   cap_saletype2: string; // 'Y' | 'N'
-  cap_saletype3: string; // 'Y' | 'N' - 收取禮卷
+  cap_saletype3: string; // 'Y' | 'N' - 收取禮劵
   cap_saletype5: string; // 'Y' | 'N'
   cag_remark: string;
 
@@ -183,7 +183,7 @@ export interface ChargeSettingFormData {
   sst_rate?: number | null;
   cap_saletype1: boolean;
   cap_saletype2: boolean;
-  cap_saletype3: boolean; // 收取禮卷
+  cap_saletype3: boolean; // 收取禮劵
   cap_saletype5: boolean;
 
   cag_remark: string;
@@ -292,7 +292,7 @@ export interface CleanChargeSettingData {
   sst_rate?: number | null;
   cap_saletype1: string; // 'Y' | 'N'
   cap_saletype2: string; // 'Y' | 'N'
-  cap_saletype3: string; // 'Y' | 'N' - 收取禮卷
+  cap_saletype3: string; // 'Y' | 'N' - 收取禮劵
   cap_saletype5: string;
 
   cag_remark: string;

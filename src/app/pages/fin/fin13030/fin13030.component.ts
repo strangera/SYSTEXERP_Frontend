@@ -6,6 +6,7 @@ import { finalize } from 'rxjs';
 // Service imports
 import { formatAmount, formatDate, formatYYYYMM } from '@shared/componentkit/table/table.model';
 import { FIN13030Data, FIN13030GetZeroTaxGUIRequest, FIN13030QueryRequest, FIN13030Service } from '../../../service/api/fin/fin13030.service';
+import { FIN13050Service } from '../../../service/api/fin/fin13050.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 
 // Component imports
@@ -22,10 +23,10 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 // PrimeNG imports
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 
 // Model imports
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { getSYS1000Options } from '@service/system/sys1000.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
@@ -64,7 +65,8 @@ export const invoiceDate = invoiceYear.toString() + invoiceMonth.toString().padS
     TableComponent,
     TranslateModule,
     MultiSelectComponent,
-    YearMonthComponent
+    YearMonthComponent,
+    ButtonModule
   ]
 })
 export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> implements OnInit {
@@ -98,10 +100,13 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
 
   totalRecords = 0;
   data: FIN13030Data[] = [];
+  exportExcelLoading = false;
+  exportPdfLoading = false;
   selectedItems: FIN13030Data[] = [];
   columns: Column[] = [
     { field: 'ID', header: '資料識別碼', visible: false },
-    { field: 'INV_GUINo', header: '發票號碼', visible: true },
+    { field: 'INV_GUINo', header: '發票號碼', visible: true, format: (_v: unknown, _i?: number, row?: FIN13030Data) => `${row?.INV_GUITrack ?? ''}${row?.INV_GUINo ?? ''}` },
+    { field: 'INV_GUITrack', header: '發票字軌', visible: false },
     { field: 'INV_GUIDate', header: '發票日期', visible: true, format: formatDate },
     { field: 'INV_YM', header: '資料所屬年月', visible: true, format: formatYYYYMM },
     { field: 'INV_DeclareYM', header: '申報年月', visible: true, format: formatYYYYMM },
@@ -111,11 +116,11 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
     { field: 'GoodsOrServicesName', header: '貨物或勞務名稱', visible: true },
     { field: 'GoodsQty', header: '貨物或勞務數量', visible: true },
     { field: 'INV_PassType', header: '通關方式註記', visible: false },
-    { field: 'ExportMethod', header: '外銷方式', visible: true },
+    { field: 'ExportMethod', header: '外銷方式', visible: true, format: (value: unknown) => { const opt = this.exportMethodOptions.find(o => o.value === String(value ?? '')); return opt ? opt.label : String(value ?? ''); } },
     { field: 'INV_DocName', header: '證明文件名稱', visible: true },
     { field: 'INV_DocNo', header: '證明文件號碼', visible: true },
     { field: 'NonCustomsExportAmt', header: '非經海關出口金額', visible: true, format: formatAmount, align: 'right' },
-    { field: 'INV_ExportType', header: '出口報單類別', visible: true },
+    { field: 'INV_ExportType', header: '出口報單類別', visible: true, format: (value: unknown) => { const opt = this.exportTypeOptions.find(o => o.value === String(value ?? '')); return opt ? opt.label : String(value ?? ''); } },
     { field: 'INV_ExportNo', header: '出口報單號碼', visible: true },
     { field: 'CustomsExportAmt', header: '經海關出口金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'ExportDate', header: '輸出或結匯日期', visible: true, format: formatDate },
@@ -131,13 +136,14 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
   ];
 
 
-  // 外銷方式選項
-  exportMethodOptions = getSYS1000Options('ExportMethod');
-  // 出口報單類別選項
-  exportTypeOptions = getSYS1000Options('INV_ExportType');
+  // 外銷方式選項（由 SYS1000 API 載入）
+  exportMethodOptions: { value: string; label: string }[] = [];
+  // 出口報單類別選項（由 SYS1000 API 載入）
+  exportTypeOptions: { value: string; label: string }[] = [];
 
   constructor(
     private fin13030Service: FIN13030Service,
+    private fin13050Service: FIN13050Service,
     private validationService: ValidationService,
     private datePipe: DatePipe,
   ) {
@@ -146,6 +152,20 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
 
   ngOnInit(): void {
     this.initializePage('FIN13030', 'fin/fin13030cru', this.queryForm, (form) => this.onSubmit(form));
+
+    // 外銷方式選項（SYS1000 API）
+    this.fin13050Service.querySYS1000DropDownList('ExportMethod').subscribe((res) => {
+      const list: { No: string; Name: string }[] = res?.Data ?? [];
+      list.sort((a, b) => Number(a.No) - Number(b.No));
+      this.exportMethodOptions = list.map((x) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
+    });
+
+    // 出口報單類別選項（SYS1000 API）
+    this.fin13050Service.querySYS1000DropDownList('INV_ExportType').subscribe((res) => {
+      const list: { No: string; Name: string }[] = res?.Data ?? [];
+      list.sort((a, b) => Number(a.No) - Number(b.No));
+      this.exportTypeOptions = list.map((x) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
+    });
   }
 
   onSubmit(frm: FormGroup) {
@@ -184,6 +204,57 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
         });
       }
     });
+  }
+
+  private buildExportPayload(): FIN13030QueryRequest {
+    const frm = this.queryForm;
+    return {
+      ...frm.value,
+      INV_YM_B: this.datePipe.transform(frm.get('INV_YM_B')?.value, 'yyyyMM') ?? undefined,
+      INV_YM_E: this.datePipe.transform(frm.get('INV_YM_E')?.value, 'yyyyMM') ?? undefined,
+    } as FIN13030QueryRequest;
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(blobUrl);
+  }
+
+  private getTimestamp(): string {
+    const now = new Date();
+    return now.getFullYear().toString() +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') + '_' +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0');
+  }
+
+  onExportExcel(): void {
+    const payload = this.buildExportPayload();
+    this.exportExcelLoading = true;
+    this.fin13030Service.exportExcelFIN13030(payload)
+      .pipe(finalize(() => this.exportExcelLoading = false), untilDestroyed(this))
+      .subscribe(blob => {
+        if (blob) {
+          this.downloadBlob(blob, `零稅率清單維護_${this.getTimestamp()}.xlsx`);
+        }
+      });
+  }
+
+  onExportPdf(): void {
+    const payload = this.buildExportPayload();
+    this.exportPdfLoading = true;
+    this.fin13030Service.exportPDFFIN13030(payload)
+      .pipe(finalize(() => this.exportPdfLoading = false), untilDestroyed(this))
+      .subscribe(blob => {
+        if (blob) {
+          this.downloadBlob(blob, `零稅率清單維護_${this.getTimestamp()}.pdf`);
+        }
+      });
   }
 
   // 移動路由

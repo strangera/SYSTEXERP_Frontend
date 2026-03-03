@@ -15,10 +15,10 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { finalize, map } from 'rxjs/operators';
-
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import type { SortMeta as PSortMeta, SortMeta } from 'primeng/api';
 import { Cpm13020Service, QueryCPM13020Request } from '../../../service/api/cpm/cmp13020.service';
@@ -40,13 +40,15 @@ import { Cpm13020Service, QueryCPM13020Request } from '../../../service/api/cpm/
     RadioButtonModule,
     TranslateModule,
     ButtonModule,
+    MultiSelectComponent,
     TableReportComponent,
   ],
 })
 export class CPM13020Component extends BasicQueryPageComponent<any> implements OnInit {
   /** ALL=全館彙總 / POS=機台彙總 */
   reportMode: 'ALL' | 'POS' = 'ALL';
-
+apiUrl = 'queryCPM13020_All';
+apiUrlPOS = 'queryCPM13020_Pos';
   reportModeOptions = [
     { label: '全館彙總', value: 'ALL' },
     { label: '機台彙總', value: 'POS' },
@@ -61,13 +63,13 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
   btnLoading = false;
   historyRequestBody: QueryCPM13020Request | null = null;
 
-  paymentTypeOptions: {
-    label: string;
-    value: string;
-    Name: string;
-    No: string;
-    PAY_Type: string;
-  }[] = [];
+  // paymentTypeOptions: {
+  //   label: string;
+  //   value: string;
+  //   Name: string;
+  //   No: string;
+  //   PAY_Type: string;
+  // }[] = [];
 
   // ✅ 預設排序
   readonly defaultSort: SortMeta[] = [{ field: 'PAY_No', order: 1 }];
@@ -126,8 +128,12 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_CustCnt', header: '交易筆數', visible: true, style: 'text-right', isTotal: true },
   ];
 
+paymentTypeOptions = getSYS1000Options('PK_PAY_Type');
+
+
   constructor(
-    private cpm13020Service: Cpm13020Service,
+     public cpm13020Service: Cpm13020Service,
+     
     private dropDownListService: DropDownListService
   ) {
     super();
@@ -136,20 +142,20 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('CPM13020', 'cpm/cpm13020', this.queryForm, (form) => this.onSubmit(form));
 
-    // 支付別下拉
-    this.dropDownListService
-      .queryPOS1006_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe((res) => {
-        const rows = Array.isArray(res?.Data) ? res.Data : [];
-        this.paymentTypeOptions = rows.map((x: any) => ({
-          label: `${x.No ?? ''}-${x.Name ?? ''}`,
-          value: x.No ?? '',
-          Name: x.Name ?? '',
-          No: x.No ?? '',
-          PAY_Type: x.PAY_Type ?? '',
-        }));
-      });
+    // // 支付別下拉
+    // this.dropDownListService
+    //   .queryPOS1006_DropDownList()
+    //   .pipe(untilDestroyed(this))
+    //   .subscribe((res) => {
+    //     const rows = Array.isArray(res?.Data) ? res.Data : [];
+    //     this.paymentTypeOptions = rows.map((x: any) => ({
+    //       label: `${x.No ?? ''}-${x.Name ?? ''}`,
+    //       value: x.No ?? '',
+    //       Name: x.Name ?? '',
+    //       No: x.No ?? '',
+    //       PAY_Type: x.PAY_Type ?? '',
+    //     }));
+    //   });
 
     // 檢視模式切換：清空總計 + 清空列表
     this.queryForm.controls.reportMode.valueChanges
@@ -350,4 +356,5 @@ export class CPM13020Component extends BasicQueryPageComponent<any> implements O
     const n = Number(v ?? 0);
     return isFinite(n) ? n.toFixed(2) : '0.00';
   }
+  
 }

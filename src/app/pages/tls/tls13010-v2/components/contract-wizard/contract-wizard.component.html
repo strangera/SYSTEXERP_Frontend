@@ -153,3 +153,33 @@
     </div>
   </div>
 </div>
+
+<!-- 成功確認對話框 -->
+<app-dialog
+  [visible]="showSuccessDialog"
+  (visibleChange)="onSuccessDialogClose($event)"
+  (save)="onSuccessConfirm()"
+  header="儲存成功"
+  width="420px"
+>
+  <ng-container *ngIf="successDialogItems.length > 0">
+    <div class="flex flex-column gap-3">
+      <!-- 成功 banner -->
+      <div class="flex align-items-center gap-3 p-3 border-round" style="background:#f0fdf4">
+        <i class="pi pi-check-circle text-3xl" style="color:#16a34a"></i>
+        <span class="font-bold text-lg" style="color:#15803d">{{ successDialogItems[0].value }}</span>
+      </div>
+      <!-- 詳細資料 -->
+      <div class="flex flex-column">
+        <div
+          *ngFor="let item of successDialogItems.slice(1); let last = last"
+          class="flex align-items-center py-2 px-1"
+          [style.border-bottom]="last ? 'none' : '1px solid #e5e7eb'"
+        >
+          <span class="text-500 text-sm" style="min-width:120px">{{ item.label }}</span>
+          <span class="font-semibold text-sm">{{ item.value }}</span>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</app-dialog>

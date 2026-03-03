@@ -1,15 +1,15 @@
-import { Injectable } from '@angular/core';
-import { environment } from '../../../../environments/environment';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { ErrorHandlerService } from '../../../core/services/error-handler.service';
+import { Injectable } from '@angular/core';
 import { catchError, Observable, tap } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class TLS5000Service {
   // API 主網址會被自動加上環境變數前綴
-  apiUrl: string = `${environment.ApiUrl}/TLS0000/TLS5000`;
+  apiUrl = `${environment.ApiUrl}/TLS0000/TLS5000`;
 
   constructor(
     private http: HttpClient,

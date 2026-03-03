@@ -26,10 +26,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS51010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-    [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'CAT_LNo', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [isRowSelectable]="isRowSelectable" [loading]="loading"
-    [rows]="30" [rowsPerPageOptions]="[30, 60, 90, 120, 150]"></app-table>
+  <app-table-report tableKey="TLS51010" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id" [totalRecords]="totalRecords"
+    [isRowSelectable]="isRowSelectable" [loading]="loading" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="apiService.queryTLS51010.bind(apiService)"></app-table-report>
 </div>

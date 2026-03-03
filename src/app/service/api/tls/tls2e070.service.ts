@@ -52,7 +52,10 @@ export interface Tls2e070Data {
 
 // updateTLS2E070 (更新鎖定狀態) 的 Request Body
 export interface Tls2e070UpdateBody {
-  idList: number[];
+  sam_yyymm: string;   // 結帳年月
+  money_type: string;  // 結帳方式
+  sam_termno: number;  // 帳次
+  tlt_no?: string;     // 專櫃編號 (選填)
 }
 
 // updateTLS2E070 的 Response Data
@@ -105,6 +108,7 @@ export class Tls2e070Service {
    */
   updateTLS2E070(updateBody: Tls2e070UpdateBody): Observable<ApiResponse<Tls2e070UpdateData>> {
     const url = `${API_BASE_URL}/updateTLS2E070`;
+    // 確保這裡傳送的是符合後端 Request 結構的物件
     return this.http.post<ApiResponse<Tls2e070UpdateData>>(url, updateBody);
   }
 }

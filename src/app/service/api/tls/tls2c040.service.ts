@@ -25,6 +25,8 @@ export interface UpdateTLS2C040Request {
   GLS6002List: {
     id: number;
     NoteDesc: string;
+    AccNo?: string;
+    ORG_ID?: string;
   }[];
 }
 
@@ -61,12 +63,43 @@ export class TLS2C040Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2C040_GLS6004`, req).pipe(
       map(response => {
         if (response.Data?._GLS6004List && Array.isArray(response.Data._GLS6004List)) {
-          // 應收明細依據 accno 遞增排序
-          response.Data._GLS6004List.sort((a: any, b: any) => {
-            const accA = a.accno || '';
-            const accB = b.accno || '';
-            return accA.localeCompare(accB);
-          });
+          // 如果前端有傳入 SortBy，則依 SortBy 做排序（支援多欄位；order: -1 為遞減）
+          const sortBy = Array.isArray(req?.SortBy) ? req.SortBy : [];
+          if (sortBy.length) {
+            response.Data._GLS6004List.sort((a: any, b: any) => {
+              for (const s of sortBy) {
+                const field = s.field;
+                const order = Number(s.order) === -1 ? -1 : 1;
+                const va = a[field];
+                const vb = b[field];
+
+                // null / undefined 處理
+                if (va == null && vb == null) continue;
+                if (va == null) return -1 * order;
+                if (vb == null) return 1 * order;
+
+                // 數值比較優先（若可轉為數字）
+                const na = Number(va);
+                const nb = Number(vb);
+                let cmp = 0;
+                if (!isNaN(na) && !isNaN(nb)) {
+                  cmp = na - nb;
+                } else {
+                  cmp = String(va).localeCompare(String(vb));
+                }
+
+                if (cmp !== 0) return cmp * order;
+              }
+              return 0;
+            });
+          } else {
+            // fallback：若無 SortBy 則依 accno 遞增排序
+            response.Data._GLS6004List.sort((a: any, b: any) => {
+              const accA = a.accno || '';
+              const accB = b.accno || '';
+              return accA.localeCompare(accB);
+            });
+          }
         }
         return response;
       })
@@ -93,5 +126,9 @@ export class TLS2C040Service {
       const accNoB = b.AccNo || '';
       return accNoA.localeCompare(accNoB);
     });
+  }
+  // 查詢應付明細
+  queryTLS2C040_GLS6005(req: QueryTLS2C040_GLS6004Request): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS2C040_GLS6005`, req);
   }
 }
