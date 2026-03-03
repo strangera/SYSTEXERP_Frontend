@@ -258,7 +258,7 @@ export function convertDateToYYYYMM(date: Date): string {
 
 export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   return {
-    pageSize: [20],
+    pageSize: [30],
     pageIndex: [1],
     SortBy: [defaultSortBy ?? []],
   };

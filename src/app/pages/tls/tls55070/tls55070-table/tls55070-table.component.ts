@@ -11,16 +11,13 @@ import {
   ViewChild,
 } from '@angular/core';
 
-import { SortMeta } from 'primeng/api';
 import {
   Table,
   TableModule,
 } from 'primeng/table';
 
 import {
-  AddButton,
   Column,
-  FieldChangeEvent,
   LazyLoadEvent
 } from './tls55070-table.model';
 
@@ -84,38 +81,26 @@ export interface RowButton {
     DecimalPipe
   ],
 })
-export class TLS55070TableComponent
-  extends BasicPrintData2Component
-  implements OnInit, OnChanges, OnDestroy {
-
+export class TLS55070TableComponent extends BasicPrintData2Component implements OnInit, OnChanges, OnDestroy {
   /** ===== Utilities ===== */
   trackByCol = (_: number, col: any) => col.key ?? col.__uid ?? col.field;
   trackByRow = (_: number, item: any) => (item as any)?.[this.dataKey] ?? _;
-
   @ViewChild('dt', { static: false }) dt?: Table;
-
   @ViewChild('fileUpload') fileUpload!: FileUpload;
-
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;
-
-  constructor(
-  ) {
+  constructor() {
     super();
     this.onScroll = this.onScroll.bind(this);
   }
-
   /* ======================= Inputs / Outputs ======================= */
-
   /** 基本 */
   @Input() dataKey = 'ID';
   @Input() tableKey?: string;
   @Input() apiUrl?: string;
   @Input() title?: string;
-
-  /** 一次後端回傳的筆數（pageSize），預設 20 */
-  @Input() pageSize = 20;
-
+  /** 一次後端回傳的筆數（pageSize），預設 30 */
+  @Input() pageSize = 30;
   /** 欄位 / 資料 */
   private _columns: Column[] = [];
   @Input() set columns(v: Column[]) {
@@ -127,55 +112,30 @@ export class TLS55070TableComponent
   get columns(): Column[] {
     return this._columns;
   }
-
   originalColumns!: Column[];
   selectedColumns: Column[] = [];
-
   private _data: any[] = [];
   @Input() set data(v: any[]) {
     this._data = Array.isArray(v) ? v : [];
     this.rebuildGroupMeta();
   }
   get data(): any[] { return this._data; }
-
   @Input() loading = false;
   @Input() disabled = false;
-
   /** 總筆數（第一次查詢後，從父層塞進來） */
   @Input() totalRecords = 0;
-
   /** 群組（僅序號 + rowspan） */
   @Input() groupKey = 'TXN_SaleNoteNo';           // 父層可以改成 '_grp' 或任何欄位
   @Input() groupRowsBy: string | string[] = '';           // 排序優先的群組欄位（可不使用）
-
   /** 需要直向合併的欄位 */
   @Input() mergedColumns: string[] = [];
   get hasRowSpan(): boolean {
     return Array.isArray(this.mergedColumns) && this.mergedColumns.length > 0;
   }
-
-  // 勾選與選取
-  @Input() showCheckBox = false;
-  @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';
-  @Input() selectedItems: any[] = [];
-  get hasNoSelection(): boolean { return this.selectedItems.length === 0; }
-  @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
-  @Output() selectionChange = new EventEmitter<any[]>();
-  @Output() selectedItemsChange = new EventEmitter<any[]>();
-  @Output() select = new EventEmitter<any>();
-  @Output() unSelect = new EventEmitter<any>();
-  @Output() itemClick = new EventEmitter<any>();
-
-  // 排序
-  @Input() showSort = true;
-  @Input() multiSortMeta: SortMeta[] = [];
-
   // Header 顯示
   @Input() showCaption = true;
   @Input() showHeader = true;
   @Input() showReportMode = true;
-  @Input() showFilter = true;
-
   // Excel / 匯出（範本、匯入）
   @Input() showExcel = false;
   @Input() showExcelExport = true;
@@ -184,41 +144,20 @@ export class TLS55070TableComponent
   @Output() exportExcel = new EventEmitter<any>();
   @Input() exportExcelLoading = false;
   @Output() importExcel = new EventEmitter<FileSelectEvent>();
-
   // 🔹 外層「匯出銷售明細」兩顆主按鈕
   @Input() showMainExportButtons = false;
   @Input() mainExcelLoading = false;
   @Input() mainPdfLoading = false;
   @Output() mainExcelExport = new EventEmitter<void>();
   @Output() mainPdfExport = new EventEmitter<void>();
-
-  // 管理欄
-  @Input() showManage = false;
-  @Input() showDetail = true;
-  @Input() showEdit = true;
-  @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;
-  @Input() addButton: AddButton[] = [];
-  @Input() buttonsLoading = false;
-  @Output() detail = new EventEmitter<any>();
-  @Output() edit = new EventEmitter<any>();
-  @Output() selectButton = new EventEmitter<any>();
-
-  // 欄位事件（若未用可忽略）
-  @Output() fieldChange = new EventEmitter<FieldChangeEvent>();
-  @Output() filterChange = new EventEmitter<{ rowData: any; value: string }>();
-
   // Footer / 其他
   @Input() showTotal = false;
-  @Input() emptyMessage = '查無資料';
   /** 後端回來的總計：{ 欄位名稱: 數值 } */
   @Input() totals: Record<string, number> = {};
-
   /** Lazy 取數：改成「往下捲時」丟給父層（父層自行打 API + append） */
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>();
   /** 兼容父層原本的綁定，不實際使用 */
   @Input() lazy = false;
-  @Input() showDelete = false;
-
   /** 取得 footer 總計：優先吃 this.totals[col.field]；沒有就用前端加總（排除 __isTotal / __isSubRow） */
   getFooterTotal(field: string): number {
     if (this.totals && Object.prototype.hasOwnProperty.call(this.totals, field)) {
@@ -243,12 +182,9 @@ export class TLS55070TableComponent
 
   ngOnInit(): void {
     // 權限（原本 BasicPrintData2 有 currentPage / systemDataService）
-    this.currentPage.currentPageProgNo$
-      .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe(progNo => {
-        this.funInfo = progNo ? this.systemDataService.getUserPermissions(progNo) : undefined;
-      });
-
+    this.currentPage.currentPageProgNo$.pipe(takeUntil(this.ngUnsubscribe)).subscribe(progNo => {
+      this.funInfo = progNo ? this.systemDataService.getUserPermissions(progNo) : undefined;
+    });
     this.rebuildGroupMeta();
   }
 
@@ -298,7 +234,7 @@ export class TLS55070TableComponent
     let groupIndex = 0;
 
     rows.forEach((row, i) => {
-      // 🚫 小計列直接略過，不參與群組序號與 rowspan 計算
+      // 小計列直接略過，不參與群組序號與 rowspan 計算
       if (row && row.__isSubRow) {
         return;
       }
@@ -346,68 +282,22 @@ export class TLS55070TableComponent
     const globalIndex = this.getGlobalIndex(rowIndex);
     return m ? m.index : (globalIndex + 1);
   }
-
-
-  /* ======================= Header / Filter ======================= */
-
-  onHeaderFilterChange(event: any) {
-    this.columns = this.columns.map((col) => ({
-      ...col,
-      visible: event.value.some((ev: any) => ev.field === col.field),
-    }));
-    this.selectedColumns = this.columns.filter((col) => col.visible !== false && col.hidden !== true);
-  }
-
   /* ======================= 匯出 ======================= */
-
   onExportExcel() {
     this.exportExcel.emit();
   }
-
   onImportExcel(event?: FileSelectEvent) {
     this.importExcel.emit(event);
     if (event) this.fileUpload?.clear();
   }
-
   export(type: 'PDF' | 'Excel'): void {
     this.exportStatus = type;
     this.exportDialog = true;
   }
-
   hasPermission(action: string): boolean {
     return this.funInfo?.PrivilegeBehavior?.some(b => b.function_code === action) || false;
   }
-
-  /* ======================= Row / Selection ======================= */
-
-  rowSelectableWrapper = ({ data }: { data: any; index: number }) =>
-    this.isRowSelectable(data);
-
-  onSelectionChangeInternal(event: any) {
-    const selected = Array.isArray(event) ? event : (event ? [event] : []);
-    this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
-    this.selectionChange.emit(this.selectedItems);
-    this.selectedItemsChange.emit(this.selectedItems);
-  }
-
-  getOptions(rowData: any, col: Column) {
-    return typeof col.options === 'function'
-      ? col.options(rowData) || undefined
-      : col.options || undefined;
-  }
-
-  onFieldChange(rowData: any, field: string, value: any) {
-    this.fieldChange.emit({ rowData, field, value } as FieldChangeEvent);
-  }
-
-  editRow(rowData: any) { this.edit.emit(rowData); }
-  detailRow(rowData: any) { this.detail.emit(rowData); }
-  onSelectButton(rowData: any, button: AddButton) {
-    this.selectButton.emit({ rowData, button });
-  }
-
   /* ======================= Infinite Scroll：往下捲打 API ======================= */
-
   onScroll(event: any) {
     if (!event || !event.originalEvent || !event.originalEvent.target) return;
     if (this.loading) return;
@@ -429,24 +319,14 @@ export class TLS55070TableComponent
   private loadMoreData() {
     const pageSize = this.pageSize || 20;
     const currentLength = this.data.length;
-
     if (!pageSize || currentLength >= this.totalRecords) return;
-
     const nextPageIndex = Math.floor(currentLength / pageSize) + 1;
-
-    let sort: SortMeta[] = [];
-    if (this.multiSortMeta && this.multiSortMeta.length) {
-      sort = this.multiSortMeta;
-    } else {
-      sort = [{ field: this.dataKey, order: 1 }];
-    }
-
+    const sort = [{ field: this.dataKey, order: 1 }];
     const payload: LazyLoadEvent = {
       pageIndex: nextPageIndex,
       pageSize,
       SortBy: sort,
     };
-
     this.lazyLoadData.emit(payload);
   }
 
@@ -489,15 +369,8 @@ export class TLS55070TableComponent
 
   /** 小計列 debug：log 一路看值變成什麼 */
   debugSubtotal(rowData: any): number {
-    console.log('==== [TLS55070Table] subtotal rowData ====');
-    console.log('rowData =', rowData);
-    console.log('SumTXN_SaleAmt =', rowData?.SumTXN_SaleAmt, 'type =', typeof rowData?.SumTXN_SaleAmt);
-    console.log('TXN_SaleAmt =', rowData?.TXN_SaleAmt, 'type =', typeof rowData?.TXN_SaleAmt);
-    console.log('_grp =', rowData?._grp, '_grpBase =', rowData?._grpBase);
-
     // 你想用哪個當小計，先挑一個回來
     let v = rowData?.SumTXN_SaleAmt ?? rowData?.TXN_SaleAmt ?? 0;
-
     // 如果可能有 "1,350" 這種字串，可以加這段再轉一次
     if (typeof v === 'string') {
       const pure = v.replace(/,/g, '');
@@ -505,10 +378,6 @@ export class TLS55070TableComponent
       console.log('string value -> pure =', pure, 'number =', n);
       v = isNaN(n) ? 0 : n;
     }
-
-    console.log('=> subtotal value used =', v);
-    console.log('=========================================');
-
     return Number(v ?? 0);
   }
   /** 小計顯示：同一張銷售單號的 TXN_SaleAmt 加總 */
