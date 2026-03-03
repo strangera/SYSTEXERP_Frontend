@@ -1,15 +1,7 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -25,13 +17,12 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="商品報廢單編號"
               controlName="scrapCode"
               [control]="queryForm.controls.scrapCode"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -55,6 +46,15 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="報廢申請日期"
+              [startControl]="queryForm.controls.scrapDateFrom"
+              [endControl]="queryForm.controls.scrapDateTo"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
@@ -69,16 +69,7 @@
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="報廢申請日期"
-              [startControl]="queryForm.controls.scrapDateFrom"
-              [endControl]="queryForm.controls.scrapDateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="商品報廢單狀態"
               controlName="scrapStatus"
               [options]="scrapStatusOptions"
@@ -86,30 +77,32 @@
               optionValue="value"
               [control]="queryForm.controls.scrapStatus"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report
+    dataKey="SCRAP_FORM_NO"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction"
+    [showCheckBox]="true"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    (selectionChange)="selectedRows = $event"
+    [selectedItems]="selectedRows"
+  ></app-table-report>
 </div>

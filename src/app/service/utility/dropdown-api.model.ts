@@ -17,6 +17,11 @@ export interface IDropdownItem {
 }
 
 /**
+ * 查詢 FASITEM_DropDownList 回傳的項目型別
+ */
+export interface FasitemDropdownItem extends IDropdownItem { }
+
+/**
  * 查詢 TLTBUSCLASS 時的請求 body
  */
 export interface BusClassQuery {

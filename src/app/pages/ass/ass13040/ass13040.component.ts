@@ -1,157 +1,180 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS13040Service } from '@service/api/ass/ass13040.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
+import { finalize, forkJoin } from 'rxjs';
+import { ASS13040QueryRequest, ASS13040QueryRow } from './ass13040.model';
 
-//3.1.3.4  批次報廢作業
+/** 3.1.3.4 批次報廢作業 */
+@UntilDestroy()
 @Component({
   selector: 'app-ass13040',
   templateUrl: './ass13040.component.html',
   styleUrl: './ass13040.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarRangeComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarRangeComponent,
+    TableReportComponent,
+    TranslateModule,
+  ],
 })
-export class ASS13040Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    scrapCode: [, [Validators.maxLength(10)]], // 商品報廢單編號
-    manageCode: [], // 	商品管理編號
-    userCode: [], // 	報廢人員編號
-    departmentCode: [], // 	部門代號
-    scrapDateFrom: [], // 報廢申請日期
-    scrapDateTo: [], // 報廢申請日期
-    scrapStatus: [[] as number[]], // 商品報廢單狀態
+export class ASS13040Component extends BasicQueryPageComponent<ASS13040QueryRow> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    scrapCode: [null as string | null, [Validators.maxLength(20)]], // 商品報廢單編號
+    manageCode: [null as string | null], // 商品管理編號
+    userCode: [null as string | null], // 報廢人員編號
+    departmentCode: [null as string | null], // 部門代號
+    scrapDateFrom: [null as Date | null], // 報廢申請日起
+    scrapDateTo: [null as Date | null], // 報廢申請日訖
+    scrapStatus: [null as string | null], // 商品報廢單狀態
+    PageSize: [30],
+    PageIndex: [1],
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  manageCodeOptions: Option[] = [];
+  userCodeOptions: Option[] = [];
+  departmentCodeOptions: Option[] = [];
+  scrapStatusOptions: Option[] = [];
+
+  data: ASS13040QueryRow[] = [];
+  selectedRows: ASS13040QueryRow[] = [];
+  totalRecords = 0;
+  lastQueryBody: ASS13040QueryRequest | null = null;
+
+  columns: ReportColumn[] = [
+    { field: 'SCRAP_FORM_NO', header: '商品報廢單編號', visible: true },
+    { field: 'ITEM_NO', header: '商品管理編號', visible: true },
+    { field: 'SCRAP_USER_NO', header: '報廢人員編號', visible: true },
+    { field: 'ORG_ID', header: '部門代號', visible: true },
+    { field: 'APPLY_DATE', header: '報廢申請日期', visible: true },
+    { field: 'SCRAP_STATUS', header: '商品報廢單狀態', visible: true },
+    { field: 'REMARK', header: '說明', visible: true },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '商品報廢單編號', visible: true },
-    { field: 'col2', header: '商品管理編號', visible: true },
-    { field: 'col3', header: '報廢人員編號', visible: true },
-    { field: 'col4', header: '部門代號', visible: true },
-    { field: 'col5', header: '報廢申請日期', visible: true },
-    { field: 'col6', header: '商品報廢單狀態', visible: true },
 
-    { field: 'col7', header: '說明', visible: true },
-    // { field: 'col8', header: '保管單位', visible: true },
-    // { field: 'col9', header: '使用人', visible: true },
-    // { field: 'col10', header: '使用單位', visible: true },
-    // { field: 'col11', header: '會計科目代號', visible: true },
-    // { field: 'col12', header: '供應商編號', visible: true },
-    // { field: 'col13', header: '購入金額', visible: true },
-    // { field: 'col14', header: '驗收單號', visible: true },
-
-    // { field: 'col15', header: '報廢資產日期', visible: true },
-    // { field: 'col16', header: '報廢日期前已提列折舊', visible: true },
-    // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
-    // { field: 'col18', header: '報廢損失', visible: true },
-
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  manageCodeOptions: any[] = [];
-  userCodeOptions: any[] = [];
-  departmentCodeOptions: any[] = [];
-  scrapStatusOptions: any[] = [
-    { value: 1, label: '已作廢' },
-    { value: 2, label: '已審核' },
-    { value: 3, label: '已申請' },];
-
-  //
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
+    private readonly ass13040Service: ASS13040Service,
+    private readonly dropdownApiService: DropdownApiService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310019';
-    this.cruPage = '/ASS1000/ASS13040CRU';
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('ASS13040', 'ass/ass13040cru', this.queryForm, () =>
+      this.onSubmit(this.queryForm),
+    );
+    this.loadDropdowns();
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+  queryFunction = (body: unknown): ReturnType<ASS13040Service['queryASS13040']> => {
+    const raw = this.queryForm.getRawValue();
+    const b = body as Record<string, unknown>;
+    const payload: ASS13040QueryRequest = {
+      SCRAP_FORM_NO: raw.scrapCode ?? undefined,
+      ITEM_NO: raw.manageCode ?? undefined,
+      SCRAP_USER_NO: raw.userCode ?? undefined,
+      ORG_ID: raw.departmentCode ?? undefined,
+      APPLY_DATE_S: raw.scrapDateFrom ? this.formatDate(raw.scrapDateFrom) : undefined,
+      APPLY_DATE_E: raw.scrapDateTo ? this.formatDate(raw.scrapDateTo) : undefined,
+      SCRAP_STATUS: raw.scrapStatus ?? undefined,
+      PageSize: (b['PageSize'] ?? b['pageSize'] ?? 30) as number,
+      PageIndex: (b['PageIndex'] ?? b['pageIndex'] ?? 1) as number,
+      SortBy: b['SortBy'] as ASS13040QueryRequest['SortBy'],
+    };
+    return this.ass13040Service.queryASS13040(payload);
+  };
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
+      this.lastQueryBody = {
+        SCRAP_FORM_NO: raw.scrapCode ?? undefined,
+        ITEM_NO: raw.manageCode ?? undefined,
+        SCRAP_USER_NO: raw.userCode ?? undefined,
+        ORG_ID: raw.departmentCode ?? undefined,
+        APPLY_DATE_S: raw.scrapDateFrom ? this.formatDate(raw.scrapDateFrom) : undefined,
+        APPLY_DATE_E: raw.scrapDateTo ? this.formatDate(raw.scrapDateTo) : undefined,
+        SCRAP_STATUS: raw.scrapStatus ?? undefined,
+        PageSize: 30,
+        PageIndex: 1,
+      };
+      this.loading = true;
+      this.queryFunction(this.lastQueryBody)
+        .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.data = res.Data ?? [];
+            this.totalRecords = res.TotalCount ?? 0;
+            this.selectedRows = [];
+            this.queryStateService.setQueryState(this.ProgNo, raw);
+          },
+        });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  onClearForm(): void {
+    this.queryForm.reset({
+      scrapCode: null,
+      manageCode: null,
+      userCode: null,
+      departmentCode: null,
+      scrapDateFrom: null,
+      scrapDateTo: null,
+      scrapStatus: null,
+      PageSize: 30,
+      PageIndex: 1,
+    });
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
+  private loadDropdowns(): void {
+    forkJoin({
+      manageCodes: this.dropdownApiService.queryFasitem(),
+      users: this.dropdownApiService.queryTblUser(),
+      departments: this.dropdownApiService.querySys3100(),
+      statuses: this.dropdownApiService.querySys1000({ SYS_Type: 'AM_DAMAGEM_STATUS' }),
+    })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: ({ manageCodes, users, departments, statuses }) => {
+          this.manageCodeOptions = manageCodes ?? [];
+          this.userCodeOptions = users ?? [];
+          this.departmentCodeOptions = departments ?? [];
+          this.scrapStatusOptions = this.mapToOptions(statuses ?? []);
+        },
+      });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
+  private mapToOptions(items: Array<{ No: string; Name: string }>): Option[] {
+    return items.map(item => ({
+      value: item.No,
+      label: `${item.No} - ${item.Name}`,
+    }));
   }
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  private formatDate(date: Date): string {
+    const d = new Date(date);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 }

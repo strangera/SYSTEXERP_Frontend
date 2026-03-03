@@ -23,6 +23,7 @@ import {
   EcrItem,
   EcrQuery,
   ENG1001Item,
+  FasitemDropdownItem,
   IDropdownItem,
   IGLS1005LedgerMDItem,
   LogoAccorHosItem,
@@ -223,6 +224,13 @@ export class DropdownApiService {
   querySys3100(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>('/querySYS3100_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢商品管理編號(FASITEM)資料表下拉選單 */
+  queryFasitem(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FasitemDropdownItem>('/ASS0000/ASS1000/queryFASITEM_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
   /** 查詢組織階層樹狀圖(SYS3100)下拉選單 */
