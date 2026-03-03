@@ -95,9 +95,9 @@
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="紙本發票列印狀態" [control]="dataForm.controls.TXN_PrintTimes"
           [submitted]="submitted" [options]="[{label:'是',value:1},{label:'否',value:0}]" optionLabel="label"
           optionValue="value" controlName="TXN_PrintTimes" />
-        <app-dropdown class="col-12 md:col-6 lg:col-3" label="發票捐贈狀態" [control]="dataForm.controls.TXN_GUI_Donate"
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="發票捐贈狀態" [control]="dataForm.controls.IsHaveGUILoveCode"
           [submitted]="submitted" [options]="[{label:'是',value:'Y'},{label:'否',value:'N'}]" optionLabel="label"
-          optionValue="value" controlName="TXN_GUI_Donate" />
+          optionValue="value" controlName="IsHaveGUILoveCode" />
         <app-input-text class="col-12 md:col-6 lg:col-3" label="捐贈社福團體代碼" [control]="dataForm.controls.TXN_GUILoveCode"
           [submitted]="submitted" controlName="TXN_GUILoveCode" />
       </div>

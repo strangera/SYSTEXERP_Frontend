@@ -223,6 +223,8 @@ export const finRoutes: Routes = [
   // 資材系統
   { path: 'fin51010', loadComponent: () => import('./fin51010/fin51010.component').then(m => m.FIN51010Component), data: { progNo: 'FIN51010' } },
   { path: 'fin51010cru', loadComponent: () => import('./fin51010-cru/fin51010-cru.component').then(m => m.FIN51010CRUComponent), data: { progNo: 'FIN51010' } },
+  { path: 'fin51011', loadComponent: () => import('./fin51011/fin51011.component').then(m => m.FIN51011Component), data: { progNo: 'FIN51011' } },
+
   // 基本資料作業-總帳參數維護
   { path: 'fin52010', loadComponent: () => import('./fin52010/fin52010.component').then(m => m.FIN52010Component), data: { progNo: 'FIN52010' } },
   // 基本資料作業-傳票型態設定維護

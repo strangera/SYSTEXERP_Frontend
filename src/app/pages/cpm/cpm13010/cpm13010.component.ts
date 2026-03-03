@@ -28,7 +28,8 @@ import { formatDateTime } from '../../../shared/componentkit/table/table.model';
     TranslateModule,
     InputNumberComponent,
     ButtonModule,
-    TableReportComponent
+    TableReportComponent,
+    ButtonModule
   ],
 })
 // 5.11.7 專櫃停車費折抵設定作業
@@ -143,10 +144,65 @@ export class CPM13010Component extends BasicQueryPageComponent<QueryCPM13010Resp
     return this.selectedRows.some(row => row.PKNG_Status === 'D');
   }
 
-  isRowSelectable(row: QueryCPM13010Response): boolean {
-    return row.PKNG_Status !== 'D';
+  isRowSelectable = (row: QueryCPM13010Response): boolean => {
+    // 1. 如果資料不存在，不給選
+    if (!row) return false;
+
+    // 2. 如果目前沒有選取任何資料，全部都可以選
+    if (!this.selectedRows || this.selectedRows.length === 0) {
+      return true;
+    }
+
+    // 3. 互斥邏輯判斷
+    // 拿目前已選的第一筆作為基準
+    const firstSelectedStatus = this.selectedRows[0].PKNG_Status;
+
+    // 如果第一筆是「已刪除 (D)」，後續就只能選「已刪除」的
+    // 如果第一筆是「正常」，後續就只能選「正常」的
+    return row.PKNG_Status === firstSelectedStatus;
   }
   editDisabled(row: QueryCPM13010Response): boolean {
     return row.PKNG_Status === 'D';
+  }
+
+  deleteDisabled = (row: QueryCPM13010Response): boolean => {
+    return row?.PKNG_Status === 'D';
+  }
+
+  get isRecoverDisabled(): boolean {
+    if (!this.selectedRows || this.selectedRows.length === 0) {
+      return true;
+    }
+    // 如果選中的資料中有任何一筆不是 'D'，就不能點恢復
+    return this.selectedRows.some(row => row.PKNG_Status !== 'D');
+  }
+
+  // 實作恢復折抵邏輯
+  onRecoverDiscount() {
+    if (this.selectedRows.length === 0) return;
+
+    this.messageService.confirm({
+      header: `是否確認恢復 ${this.selectedRows.length} 筆資料?`,
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        const IDs = this.selectedRows.map(row => row.ID);
+        this.btnLoading = true; // 按鈕進入讀取狀態
+
+        this.cpm13010Service.recoverCPM13010({ IDs })
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => this.btnLoading = false)
+          )
+          .subscribe(res => {
+            if (res.Status === '0000') {
+              this.messageService.successBubble('資料已成功恢復');
+              this.onSubmit(this.queryForm); // 重新查詢更新列表
+              this.selectedRows = [];        // 清空選取項
+            } else {
+              this.messageService.errorBubble(res.Message || '恢復失敗');
+            }
+          });
+      }
+    });
   }
 }

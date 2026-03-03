@@ -58,6 +58,8 @@ export interface TLS24010Data {
   IsCanDel?: boolean; // 有發票的是否可刪除
   TXN_Ret_No?: string; // 折讓單號
   tlt_term_type?: string;
+  ORG_TXN_Date?: string;
+  ORG_ECR_No?: string;
 }
 
 export interface POS5007Data {

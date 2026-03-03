@@ -266,7 +266,9 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Item> imp
 
     this.btnLoading = true;
 
-    this.tls41040Service.posTLS41040({ idList })
+    const payload = { idList };
+
+    this.tls41040Service.posTLS41040(payload)
       .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
       .subscribe({
         next: () => {

@@ -228,12 +228,19 @@
   /* 可排序欄位 → 手指游標 */
   .p-datatable .p-datatable-thead > tr > th.p-sortable-column,
   .p-datatable .p-datatable-thead > tr > th.p-sortable-column .p-column-title,
-  .p-datatable .p-datatable-thead > tr > th.p-sortable-column .p-sortable-column-icon {
+  .p-datatable
+    .p-datatable-thead
+    > tr
+    > th.p-sortable-column
+    .p-sortable-column-icon {
     cursor: pointer !important;
   }
 
   /* 同時「可排序 + 可拖曳」時，優先用 pointer（覆蓋 move） */
-  .p-datatable .p-datatable-thead > tr > th.p-sortable-column.p-reorderable-column {
+  .p-datatable
+    .p-datatable-thead
+    > tr
+    > th.p-sortable-column.p-reorderable-column {
     cursor: pointer !important;
   }
 
@@ -261,10 +268,10 @@
      ========================================================= */
   .p-datatable .subtotal-row,
   .p-datatable .p-datatable-tbody > tr.subtotal-row {
-    background-color: #e5e7eb !important;   /* bg-gray-200 */
-    color: var(--primary-color) !important;  /* text-primary */
-    font-weight: 700 !important;             /* font-bold */
-    font-size: .875rem !important;           /* text-sm */
+    background-color: #e5e7eb !important; /* bg-gray-200 */
+    color: var(--primary-color) !important; /* text-primary */
+    font-weight: 700 !important; /* font-bold */
+    font-size: 0.875rem !important; /* text-sm */
     text-align: center !important;
   }
   .p-datatable .subtotal-row td {
@@ -309,8 +316,20 @@
   font-size: inherit !important;
   line-height: inherit !important;
 }
-:host ::ng-deep .p-datatable.table-font-md .p-datatable-thead > tr > th .p-column-title,
-:host ::ng-deep .p-datatable.table-font-md .p-datatable-thead > tr > th .p-sortable-column-icon {
+:host
+  ::ng-deep
+  .p-datatable.table-font-md
+  .p-datatable-thead
+  > tr
+  > th
+  .p-column-title,
+:host
+  ::ng-deep
+  .p-datatable.table-font-md
+  .p-datatable-thead
+  > tr
+  > th
+  .p-sortable-column-icon {
   font-size: inherit !important;
   line-height: inherit !important;
 }

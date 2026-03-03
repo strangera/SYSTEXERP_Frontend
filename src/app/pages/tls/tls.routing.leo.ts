@@ -19,8 +19,12 @@ export const tlsRoutes: Routes = [
   { path: 'tls24010', loadComponent: () => import('./tls24010/tls24010.component').then(m => m.TLS24010Component), data: { progNo: 'TLS24010' } },
   // 交易補登作業 CRU
   { path: 'tls24010cru', loadComponent: () => import('./tls24010-cru/tls24010-cru.component').then(m => m.TLS24010CRUComponent), data: { progNo: 'TLS24010' } },
+  // 交易明細查詢
+  { path: 'tls24030', loadComponent: () => import('./tls24030/tls24030.component').then(m => m.TLS24030Component), data: { progNo: 'TLS24030' } },
+  // 交易明細查詢 CRU
+  { path: 'tls24030cru', loadComponent: () => import('./tls24030/tls24030-cru/tls24030-cru.component').then(m => m.TLS24030CRUComponent), data: { progNo: 'TLS24030' } },
   // 交易資料修正報表
-  { path: 'tls24080', loadComponent: () => import('./tls24080/tls24080.component').then(m => m.TLS24080Component), data: { progNo: 'TLS24080' } },
+  { path: 'tls24020', loadComponent: () => import('./tls24020/tls24020.component').then(m => m.TLS24020Component), data: { progNo: 'TLS24020' } },
   // 保全現金資料轉入作業
   { path: 'tls27010', loadComponent: () => import('./tls27010/tls27010.component').then(m => m.TLS27010Component), data: { progNo: 'TLS27010' } },
   // 保全實收現金調整作業
@@ -135,6 +139,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls55050', loadComponent: () => import('./tls55050/tls55050.component').then(m => m.TLS55050Component), data: { progNo: 'TLS55050' } },
   // 月結帳作業 CRU
   { path: 'tls55050cru', loadComponent: () => import('./tls55050-cru/tls55050-cru.component').then(m => m.TLS55050CRUComponent), data: { progNo: 'TLS55050' } },
+  // 銷貨日報查詢列印
+  { path: 'tls55070', loadComponent: () => import('./tls55070/tls55070.component').then(m => m.TLS55070Component), data: { progNo: 'TLS55070' } },
   // 倉別調撥申請維護
   { path: 'tls56040', loadComponent: () => import('./tls56040/tls56040.component').then(m => m.TLS56040Component), data: { progNo: 'TLS56040' } },
   // 倉別調撥發貨作業

@@ -4,7 +4,7 @@
     <app-button btnType="back" (click)="onCancel()" />
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form *ngIf="initComponent" [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="調撥單編號" controlName="MVM_No" [control]="dataForm.controls.MVM_No"
@@ -52,7 +52,7 @@
         [insertDisabled]="dataForm.controls.OUT_HOS_No.value && dataForm.controls.LOGO_No.value ? false : true" />
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="cancel" [form]="dataForm" (click)="initaializeData()"></app-button>
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>

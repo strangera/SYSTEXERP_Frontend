@@ -8,11 +8,11 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
-import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -22,7 +22,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
   selector: 'app-tls55010',
   templateUrl: './tls55010.component.html',
   standalone: true,
-  imports: [DropdownComponent, PanelModule, TableModule, TableComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, InputTextComponent]
+  imports: [DropdownComponent, PanelModule, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, InputTextComponent]
 })
 export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -30,7 +30,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   });
   lastDate?: Tls55010DateRequest;
   data: any = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'check_content', header: '檢查內容' },
     { field: 'isPassed', header: '是否通過' },
   ];
@@ -61,43 +61,49 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
       const body = {
         TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
       }
-      this.columns = this.columns.map(c => c.field === 'isPassed' ? {
-        ...c,
-        htmlFormat: true,
-        format: () => '<i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>'
-      } : c);
-      this.messageService.infoBubble('日結檢查中,請稍候...');
-      this.tls55010Service.checkTLS55010(body).pipe(untilDestroyed(this), finalize(() => {
-        this.loading = false
-        this.columns = this.columns.map(c => c.field === 'isPassed' ? {
-          ...c, htmlFormat: false, format: undefined
-        } : c);
-      })).subscribe((res) => {
-        this.messageService.successBubble(res.Message);
-        this.isConfirmDate = false;
-        this.data.forEach((item: any) => {
-          item.isPassed = 'OK';
-          item.details = [];
-        });
-        const checkItemMap = new Map<string, any>();
-        this.data.forEach((item: any) => {
-          checkItemMap.set(item.value, item);
-        });
-        res.Data.forEach((error: any) => {
-          const stepCode = String(error.step_num);
-          const targetItem = checkItemMap.get(stepCode);
-          if (targetItem) {
-            targetItem.isPassed = '有問題';
-            const newDetail = {
-              cls_date: error.cls_date,
-              check_result: error.check_result,
-              mid: error.mid,
-              master_key: error.master_key
-            };
-            targetItem.details.push(newDetail);
-          }
-        });
+      // 1. 先將 Column 類型切換為 html，這樣元件才會走 [innerHTML] 路徑
+      this.columns = this.columns.map(c =>
+        c.field === 'isPassed' ? { ...c, type: 'html' } : c
+      );
+
+      // 2. 直接修改資料內容為 Spinner HTML
+      // 因為 Template 讀取的是 rowData['isPassed']
+      this.data.forEach((item: any) => {
+        item.isPassed = `<i class="pi pi-spin pi-spinner text-primary" style="font-size: 1.2rem"></i>`;
       });
+      this.messageService.infoBubble('日結檢查中,請稍候...');
+      this.tls55010Service.checkTLS55010(body).pipe(untilDestroyed(this),
+        finalize(() => {
+          this.loading = false
+          this.columns = this.columns.map(c =>
+            c.field === 'isPassed' ? { ...c, type: undefined } : c
+          );
+        })).subscribe((res) => {
+          this.messageService.successBubble(res.Message);
+          this.isConfirmDate = false;
+          this.data.forEach((item: any) => {
+            item.isPassed = 'OK';
+            item.details = [];
+          });
+          const checkItemMap = new Map<string, any>();
+          this.data.forEach((item: any) => {
+            checkItemMap.set(item.value, item);
+          });
+          res.Data.forEach((error: any) => {
+            const stepCode = String(error.step_num);
+            const targetItem = checkItemMap.get(stepCode);
+            if (targetItem) {
+              targetItem.isPassed = '有問題';
+              const newDetail = {
+                cls_date: error.cls_date,
+                check_result: error.check_result,
+                mid: error.mid,
+                master_key: error.master_key
+              };
+              targetItem.details.push(newDetail);
+            }
+          });
+        });
     });
   }
   insertLoading = false;
@@ -125,6 +131,12 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
           DAccAmt: item.AccDC === 'D' ? item.AccAmt : 0,
           CAccAmt: item.AccDC === 'C' ? item.AccAmt : 0,
         }));
+        this.footerData2 = [
+          {
+            DAccAmt: this.data2.reduce((sum, item) => sum + (item.DAccAmt || 0), 0),
+            CAccAmt: this.data2.reduce((sum, item) => sum + (item.CAccAmt || 0), 0),
+          },
+        ]
       });
     });
   }
@@ -147,6 +159,14 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
           DAccAmt: item.AccDC === 'D' ? item.AccAmt : 0,
           CAccAmt: item.AccDC === 'C' ? item.AccAmt : 0,
         }));
+        // 將資料轉成 footerData2 = [{DAccAmt: 100, CAccAmt: 200}]=而不是 footerData2 = {field: 'DAccAmt', value: 100, field: 'CAccAmt', value: 200}
+        this.footerData2 = [
+          {
+            DAccAmt: this.data2.reduce((sum, item) => sum + (item.DAccAmt || 0), 0),
+            CAccAmt: this.data2.reduce((sum, item) => sum + (item.CAccAmt || 0), 0),
+          },
+        ]
+        console.log(this.footerData2);
       });
     });
   }
@@ -168,20 +188,21 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   });
   VouTypeOptions = getSYS1000Options('VouType');
   PostFlagOptions = getSYS1000Options('PostFlag');
-  columns2: Column[] = [
-    { field: 'SerNo', header: '序號', style: 'text-left' },
-    { field: 'AccNo', header: '科目代號', style: 'text-left' },
-    { field: 'ACCCNAME', header: '科目名稱', style: 'text-left' },
-    { field: 'NoteDesc', header: '摘要', style: 'text-left' },
-    { field: 'DAccAmt', header: '借方金額', format: formatAmount, isTotal: true, style: 'text-right' },
-    { field: 'CAccAmt', header: '貸方金額', format: formatAmount, isTotal: true, style: 'text-right' },
-    { field: 'ORG_ID', header: '組織編號', style: 'text-left' },
-    { field: 'VEN_NO', header: '廠商編號', style: 'text-left' },
-    { field: 'VEN_NAME', header: '廠商名稱', style: 'text-left' },
-    { field: 'ProjectNo', header: '活動代號', style: 'text-left' },
+  columns2: ReportColumn[] = [
+    { field: 'SerNo', header: '序號', align: 'left' },
+    { field: 'AccNo', header: '科目代號', align: 'left' },
+    { field: 'ACCCNAME', header: '科目名稱', align: 'left' },
+    { field: 'NoteDesc', header: '摘要', align: 'left' },
+    { field: 'DAccAmt', header: '借方金額', format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'CAccAmt', header: '貸方金額', format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'ORG_ID', header: '組織編號', align: 'left' },
+    { field: 'VEN_NO', header: '廠商編號', align: 'left' },
+    { field: 'VEN_NAME', header: '廠商名稱', align: 'left' },
+    { field: 'ProjectNo', header: '活動代號', align: 'left' },
     { field: 'PTA', header: '立沖代號' },
   ]
   data2: any[] = []
+  footerData2: any = {};
   reverseLoading = false;
   showReverseBtn = false;
   // 反日節方法

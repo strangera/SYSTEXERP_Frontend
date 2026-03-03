@@ -134,8 +134,12 @@ export const tlsRoutes: Routes = [
   { path: 'tls23130', loadComponent: () => import('./tls23130/tls23130.component').then(m => m.TLS23130Component), data: { progNo: 'TLS23130' } },
   // 交易補登作業
   { path: 'tls24010', loadComponent: () => import('./tls24010/tls24010.component').then(m => m.TLS24010Component), data: { progNo: 'TLS24010' } },
+  // 交易明細查詢
+  { path: 'tls24030', loadComponent: () => import('./tls24030/tls24030.component').then(m => m.TLS24030Component), data: { progNo: 'TLS24030' } },
+  // 交易明細查詢 CRU
+  { path: 'tls24030cru', loadComponent: () => import('./tls24030/tls24030-cru/tls24030-cru.component').then(m => m.TLS24030CRUComponent), data: { progNo: 'TLS24030' } },
   // 交易資料修正報表
-  { path: 'tls24080', loadComponent: () => import('./tls24080/tls24080.component').then(m => m.TLS24080Component), data: { progNo: 'TLS24080' } },
+  { path: 'tls24020', loadComponent: () => import('./tls24020/tls24020.component').then(m => m.TLS24020Component), data: { progNo: 'TLS24020' } },
   // 商場違規扣款維護作業
   { path: 'tls25030', loadComponent: () => import('./tls25030/tls25030.component').then(m => m.TLS25030Component), data: { progNo: 'TLS25030' } },
   // 預購活動檔期設定
@@ -176,6 +180,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls2a040', loadComponent: () => import('./tls2a040/tls2a040.component').then(m => m.TLS2A040Component), data: { progNo: 'TLS2A040' } },
   // 第三方支付帳差報表
   { path: 'tls2a050', loadComponent: () => import('./tls2a050/tls2a050.component').then(m => m.TLS2A050Component), data: { progNo: 'TLS2A050' } },
+  // 作廢發票審核作業
+  { path: 'tls2a060', loadComponent: () => import('./tls2a060/tls2a060.component').then(m => m.TLS2A060Component), data: { progNo: 'TLS2A060' } },
   // 收銀員溢欠表(日)
   { path: 'tls2b010', loadComponent: () => import('./tls2b010/tls2b010.component').then(m => m.TLS2B010Component), data: { progNo: 'TLS2B010' } },
   // 收銀員溢欠表(月)

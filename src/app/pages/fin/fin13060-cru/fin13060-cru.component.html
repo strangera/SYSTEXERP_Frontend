@@ -85,17 +85,6 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
-
-        <!-- 金額/稅別 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="發票總金額"
-            controlName="TXN_SaleAmt"
-            [control]="dataForm.controls.TXN_SaleAmt"
-            [submitted]="submitted"
-          ></app-input-number>
-        </div>
-
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="課稅別"
@@ -107,6 +96,17 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+        <!-- 金額/稅別 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="發票總金額"
+            controlName="TXN_SaleAmt"
+            [control]="dataForm.controls.TXN_SaleAmt"
+            [submitted]="submitted"
+          ></app-input-number>
+        </div>
+
+
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
@@ -221,8 +221,8 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="系統別"
-            [control]="dataForm.controls.SAL_Type"
-            [options]="SAL_TypeOptions"
+            [control]="dataForm.controls.SYS_ORIGIN"
+            [options]="System_IDOptions"
             optionLabel="label"
             optionValue="value"
             [submitted]="submitted"

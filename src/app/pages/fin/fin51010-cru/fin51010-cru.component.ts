@@ -5,6 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin51010Service, QueryFIN51010DetailLine, QueryFIN51010Response, UpdateFIN51010Request } from '@service/api/fin/fin51010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
@@ -44,12 +45,55 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   data: QueryFIN51010DetailLine[] = [];
   columns: EditColumn[] = [
     { field: 'SerNo', header: '序號', width: '60px', textAlign: 'left' },
-    { field: 'AccNo', header: '科目代號', width: '120px', textAlign: 'left' },
+    {
+      field: 'AccNo', header: '科目代號', width: '120px', type: 'dropdown', textAlign: 'left',
+      optionsAsync: true,
+      options: () => this.dropdown.queryGls1005(), // 使用科目代號 API
+      optionLabel: 'value',                        // 顯示選中的代碼
+      optionValue: 'value',                        // 綁定的值
+      templateLabel: 'label',                      // 下拉清單顯示 "代碼 - 名稱"
+      showClear: false,
+      onChange: (value: any, rowData: any, col: EditColumn, index: number) => {
+        if (value) {
+          this.dropdown.queryGls1005().subscribe(options => {
+            const selected = options?.find(opt => opt.value === value);
+            if (selected) {
+              rowData.AccCName = selected['Name'];
+              rowData._dataStatus = 'modified';
+            }
+          });
+        } else {
+          rowData.AccCName = null;
+        }
+      }
+    },
     { field: 'AccCName', header: '科目名稱', width: '180px', textAlign: 'left' },
     { field: 'NoteDesc', header: '摘要', type: 'input', textAlign: 'left' },
     { field: 'Debit_Amt', header: '借方金額', width: '120px', format: formatAmount, textAlign: 'right', aggregate: 'sum' },
     { field: 'Credit_Amt', header: '貸方金額', width: '120px', format: formatAmount, textAlign: 'right', aggregate: 'sum' },
-    { field: 'ORG_ID', header: '組織代號', width: '120px', textAlign: 'left' },
+    {
+      field: 'ORG_ID', header: '組織代號', width: '120px', type: 'dropdown', textAlign: 'left',
+      optionsAsync: true,
+      options: () => this.dropdown.querySys3100(),
+      optionLabel: 'No',       // 對應您 Option 介面的 label (No - Name)
+      optionValue: 'value',       // 對應您 Option 介面的 value (No)
+      templateLabel: 'label',
+      showClear: false,
+      onChange: (value: any, rowData: any, col: EditColumn, index: number) => {
+        if (value) {
+          this.dropdown.querySys3100().subscribe(options => {
+            const selected = options?.find(opt => opt.value === value);
+            if (selected) {
+              rowData.Org_Name = selected['Name'];
+              rowData._dataStatus = 'modified';
+            }
+          });
+        } else {
+          rowData.Org_Name = null;
+        }
+      }
+    },
+    { field: 'Org_Name', header: '組織名稱', width: '120px', textAlign: 'left' },
     { field: 'ProjectNo', header: '活動代號', width: '120px', textAlign: 'left' },
     { field: 'PTA', header: '立沖代號', width: '120px', textAlign: 'left' },
     { field: 'DetailNo', header: '廠商編號', width: '120px', textAlign: 'left' },
@@ -58,7 +102,10 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   PostFlagOptions = getSYS1000Options('PostFlag');
   Trans_StatusOptions = getSYS1000Options('Trans_Status');
 
-  constructor(private readonly fin51010Service: Fin51010Service) {
+  constructor(
+    private readonly fin51010Service: Fin51010Service,
+    private readonly dropdown: DropdownApiService,
+  ) {
     super();
   }
 
@@ -86,7 +133,9 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
           accept: () => {
             const modifiedDetails = this.data.filter((d: any) => d._dataStatus === 'modified').map((d: any) => ({
               GLS6002_ID: d.id,
-              NoteDesc: d.NoteDesc
+              AccNo: d.AccNo,
+              NoteDesc: d.NoteDesc,
+              ORG_ID: d.ORG_ID
             }));
             const body: UpdateFIN51010Request = {
               GLS6001_ID: mainId,

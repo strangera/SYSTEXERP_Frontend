@@ -8,6 +8,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -34,15 +35,17 @@ import { formatDate } from './../../../shared/componentkit/table-report/table-re
     TranslateModule,
     CustomFooterTableComponent,
     TableComponent,
+    MultiSelectComponent
   ]
 })
 export class CPM13040Component extends BasicQueryPageComponent<any> implements OnInit {
+  multiSortMeta = [{ field: 'TXN_Date', order: 1 }];
   queryForm = this.formBuilder.group({
     TXN_Date_Start: [new Date(), [Validators.required]],
     TXN_Date_End: [new Date(), [Validators.required]],
-    CRD_Kind: [''],
-    Org_ID: [''],
-    TLT_No: [''],
+    CRD_Kind: [[]],
+    Org_ID: [[]],
+    TLT_No: [[]],
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
     pageSize: [30],
   });
@@ -74,7 +77,10 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_Date', header: '日期', visible: true, format: formatDate },
     { field: 'CardType', header: '卡別', visible: true },
     { field: 'TXN_PayDesc', header: '聯名卡號', visible: true },
-    { field: 'Org_ID', header: '組織名稱', visible: true },
+    {
+      field: 'Org_ID', header: '組織名稱', visible: true, format: (value, _i, row) =>
+        row?.Org_Name ?? row?.OrgName ?? this.org_id_Options.find(o => String(o.value) === String(value))?.label ?? value
+    },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
@@ -87,6 +93,25 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     private readonly datePipe: DatePipe
   ) {
     super();
+  }
+
+  private formatMulti(val: any): string {
+    try {
+      if (Array.isArray(val)) return (val as any).join(',');
+      return val ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  private formatMultiArray(val: any): string[] {
+    try {
+      if (!val) return [];
+      if (Array.isArray(val)) return val as string[];
+      return [String(val)];
+    } catch {
+      return [];
+    }
   }
 
   ngOnInit(): void {
@@ -124,9 +149,9 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     const payload = {
       TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
       TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
-      CRD_Kind: v.CRD_Kind || '',
-      Org_ID: v.Org_ID || '',
-      TLT_No: v.TLT_No || '',
+      CRD_Kind: this.formatMultiArray(v.CRD_Kind),
+      Org_ID: this.formatMultiArray(v.Org_ID),
+      TLT_No: this.formatMultiArray(v.TLT_No),
     };
 
     this.loading = true;
@@ -149,10 +174,21 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
       });
 
     // 第二個 API: 卡別明細表（columns）- 初始載入第一頁
+    const pageSize = v.pageSize || 20;
+    const pageIndex = v.pageIndex || 1;
+    const offset = (pageIndex - 1) * pageSize;
+
     const detailPayload = {
-      pageSize: v.pageSize || 20,
-      pageIndex: v.pageIndex || 1,
-      ...payload
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      OrderBy: v.SortBy?.[0]?.field ?? undefined,
+      Offset: offset,
+      SortBy: v.SortBy ?? undefined,
+      TXN_Date_Start: payload.TXN_Date_Start,
+      TXN_Date_End: payload.TXN_Date_End,
+      CRD_Kind: payload.CRD_Kind,
+      Org_ID: payload.Org_ID,
+      TLT_No: payload.TLT_No,
     };
 
     this.cpm13040Service.queryCPM13040Detail(detailPayload)
@@ -210,6 +246,8 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
           console.log('處理後總筆數:', this.totalRecords);
 
           // 儲存查詢狀態，以便後續操作能恢復
+          // 更新排序狀態並儲存查詢狀態
+          this.multiSortMeta = frm.value.SortBy ?? this.multiSortMeta;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         },
       });
@@ -219,15 +257,25 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
   override onLazyLoadData(event: LazyLoadEvent, frm: FormGroup) {
     if (!frm.valid) return;
 
-    const v = frm.value;
+    // 先讓父類更新 form 的 pageIndex/pageSize/SortBy 等
+    super.onLazyLoadData(event, frm);
+
+    const formValue = frm.value;
+    const pageSize = formValue.pageSize ?? event.pageSize ?? 20;
+    const pageIndex = formValue.pageIndex ?? event.pageIndex ?? 1;
+    const offset = (pageIndex - 1) * pageSize;
+
     const payload = {
-      TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
-      TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
-      CRD_Kind: v.CRD_Kind || '',
-      Org_ID: v.Org_ID || '',
-      TLT_No: v.TLT_No || '',
-      pageSize: event.pageSize,
-      pageIndex: event.pageIndex,
+      TXN_Date_Start: this.datePipe.transform(formValue.TXN_Date_Start, 'yyyy-MM-dd'),
+      TXN_Date_End: this.datePipe.transform(formValue.TXN_Date_End, 'yyyy-MM-dd'),
+      CRD_Kind: this.formatMultiArray(formValue.CRD_Kind),
+      Org_ID: this.formatMultiArray(formValue.Org_ID),
+      TLT_No: this.formatMultiArray(formValue.TLT_No),
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      OrderBy: formValue.SortBy?.[0]?.field ?? undefined,
+      SortBy: formValue.SortBy ?? undefined,
+      Offset: offset,
     };
 
     this.loading = true;
@@ -281,6 +329,10 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
 
           this.totalRecords = res?.TotalCount || res?.Data?.TotalCount || this.data.length || 0;
 
+          // 更新排序狀態與查詢快照
+          this.multiSortMeta = frm.value.SortBy ?? this.multiSortMeta;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+
           console.log('分頁處理後 Detail 資料:', this.data, '長度:', this.data.length);
           console.log('分頁處理後 Footer 資料:', this.footerData);
           console.log('分頁處理後總筆數:', this.totalRecords);
@@ -295,9 +347,9 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     const payload = {
       TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
       TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
-      CRD_Kind: v.CRD_Kind || '',
-      Org_ID: v.Org_ID || '',
-      TLT_No: v.TLT_No || '',
+      CRD_Kind: this.formatMultiArray(v.CRD_Kind),
+      Org_ID: this.formatMultiArray(v.Org_ID),
+      TLT_No: this.formatMultiArray(v.TLT_No),
     };
 
     this.btnLoading = true;
@@ -314,10 +366,11 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
             const blob = new Blob([res.body], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
 
-            // 建立 <a> 元素以觸發下載
+            // 建立 <a> 元素以觸發下載，檔名使用後端回傳的 Content-Disposition（若無則回退至預設）
             const a = document.createElement('a');
             a.href = url;
-            a.download = `阜爾APS停車抵扣表_${this.datePipe.transform(new Date(), 'yyyyMMdd_HHmmss')}.pdf`;
+            const filenamePdf = this.getFilenameFromResponse(res, `POS聯名卡停車優惠明細_${this.datePipe.transform(new Date(), 'yyyyMMdd_HHmmss')}.pdf`);
+            a.download = filenamePdf;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -335,9 +388,9 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     const payload = {
       TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
       TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
-      CRD_Kind: v.CRD_Kind || '',
-      Org_ID: v.Org_ID || '',
-      TLT_No: v.TLT_No || '',
+      CRD_Kind: this.formatMultiArray(v.CRD_Kind),
+      Org_ID: this.formatMultiArray(v.Org_ID),
+      TLT_No: this.formatMultiArray(v.TLT_No),
     };
 
     this.btnLoading2 = true;
@@ -356,10 +409,11 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
             });
             const url = window.URL.createObjectURL(blob);
 
-            // 建立 <a> 元素以觸發下載
+            // 建立 <a> 元素以觸發下載，檔名使用後端回傳的 Content-Disposition（若無則回退至預設）
             const a = document.createElement('a');
             a.href = url;
-            a.download = `阜爾APS停車抵扣表_${this.datePipe.transform(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+            const filenameXlsx = this.getFilenameFromResponse(res, `POS聯名卡停車優惠明細_${this.datePipe.transform(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`);
+            a.download = filenameXlsx;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -368,6 +422,28 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
         },
 
       });
+  }
+
+  private getFilenameFromResponse(response: any, defaultName: string): string {
+    try {
+      const cd = response?.headers?.get?.('content-disposition') || response?.headers?.get?.('Content-Disposition');
+      if (!cd) return defaultName;
+      const fnStarMatch = cd.match(/filename\*=(?:UTF-8'')?([^;\n\r]+)/i);
+      if (fnStarMatch && fnStarMatch[1]) {
+        let name = fnStarMatch[1].trim();
+        if (name.startsWith('"') && name.endsWith('"')) {
+          name = name.substring(1, name.length - 1);
+        }
+        try { return decodeURIComponent(name); } catch { return name; }
+      }
+      const fnMatch = cd.match(/filename="?([^";]+)"?/i);
+      if (fnMatch && fnMatch[1]) {
+        return fnMatch[1];
+      }
+      return defaultName;
+    } catch (e) {
+      return defaultName;
+    }
   }
 
 }

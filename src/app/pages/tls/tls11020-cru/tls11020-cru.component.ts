@@ -67,7 +67,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     CAP_TaxType: ['1', [Validators.required]],
     IsCommonlyUsed: ['Y', [Validators.required]],
     // ✅ 合約列印區分
-    Print_Area: ['', [Validators.maxLength(10)]],
+    Print_Area: ['', [Validators.maxLength(100)]],
     CAP_BaseRate: ['', [Validators.maxLength(5), Validators.required]],
     CAP_Remark: ['', [Validators.maxLength(160)]],
   });

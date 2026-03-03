@@ -31,7 +31,7 @@
   <app-table-report dataKey="CRD_BinCode" [data]="data" [columns]="columns" (edit)="onEdit($event)"
     (detail)="onDetail($event)" [totalRecords]="totalRecords" [showCheckBox]="true" (delete)="onDelete($event)"
     (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [isRowSelectable]="isRowSelectable"
-    [loading]="loading" [showExcel]="true" [showExcelExport]="false" [lastQueryBody]="lastQueryBody"
-    [queryFunction]="tls21040Service.queryTLS21040.bind(tls21040Service)"
-    (importExcel)="onImportExcel($event)"></app-table-report>
+    [loading]="loading" [showExcel]="true" [showExcelExport]="true" [lastQueryBody]="lastQueryBody"
+    (exportExcel)="downloadTemplate()" [queryFunction]="tls21040Service.queryTLS21040.bind(tls21040Service)"
+    [exportExcelLoading]="excelLoading" (importExcel)="onImportExcel($event)"></app-table-report>
 </div>

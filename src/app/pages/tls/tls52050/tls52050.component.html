@@ -73,3 +73,10 @@
     [loading]="loading" [addButton]="addButton" [buttonsLoading]="btnLoading()" [editDisabled]="editDisabled">
   </app-table-report>
 </div>
+<app-dialog [visible]="dialogVisible()" header="選擇商品明細" (visibleChange)="dialogVisible.set($event)"
+  (save)="saveDialog()">
+  <app-table-edit class="col" tableKey="tls52050CruDialogTable" dataKey="PLU_MagNo" [data]="dialogData"
+    [columns]="dialogColumns" [multiSortMeta]="[{ field: 'PLU_MagNO', order: 1 }]" [canInsert]="false"
+    [showDelete]="false" [showCheckBox]="false">
+  </app-table-edit>
+</app-dialog>

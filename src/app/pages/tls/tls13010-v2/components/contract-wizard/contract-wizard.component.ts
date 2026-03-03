@@ -9,7 +9,7 @@
  *
  * 資料統一在此組件管理，不需要 Session Storage
  */
-import { NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import { NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -27,6 +27,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 // 共用組件
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 // V2 服務
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
@@ -94,6 +95,7 @@ const DATE_FIELDS = [
   styleUrls: ['./contract-wizard.component.scss'],
   standalone: true,
   imports: [
+    NgFor,
     NgIf,
     NgSwitch,
     NgSwitchCase,
@@ -103,6 +105,7 @@ const DATE_FIELDS = [
     ButtonModule,
     MenubarComponent,
     ButtonComponent,
+    DialogComponent,
     Step1ContractInfoComponent,
     Step2DeductionComponent,
     Step3CommissionComponent,
@@ -197,6 +200,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
   // 儲存狀態
   isSaving = false;
+
+  // 成功確認對話框
+  showSuccessDialog = false;
+  successDialogItems: { label: string; value: string }[] = [];
 
   // Step 3 專用：折扣選項
   discountOptions: DropdownOption[] = [];
@@ -1653,8 +1660,6 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
           `品牌(專櫃名稱):${formData.tlt_name || ''}`
         ].join('\n');
 
-        this.messageService.successBubble(successMessage);
-
         // 新增契約時刷新使用者資料權限，否則看不到剛新增的資料
         if (isInsert) {
           try {
@@ -1664,12 +1669,14 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
           }
         }
 
-        // 延遲返回查詢頁，讓使用者看到成功訊息
-        setTimeout(() => {
-          this.router.navigate(['account/tls/tls13010'], {
-            state: { fromRoute: '/tls/tls13010cru' }
-          });
-        }, 2000);
+        // 顯示成功確認對話框（讓使用者抄資料後再跳頁）
+        this.successDialogItems = successMessage.split('\n').map(line => {
+          const idx = line.indexOf(':');
+          return idx !== -1
+            ? { label: line.substring(0, idx), value: line.substring(idx + 1) }
+            : { label: '', value: line };
+        });
+        this.showSuccessDialog = true;
       } else {
         throw new Error(response?.message || '契約書資料提交失敗');
       }
@@ -2094,5 +2101,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
     }
 
     return processed;
+  }
+
+  // ========== 成功對話框 ==========
+  onSuccessConfirm(): void {
+    this.showSuccessDialog = false;
+    this.router.navigate(['account/tls/tls13010'], { state: { fromRoute: '/tls/tls13010cru' } });
+  }
+
+  onSuccessDialogClose(visible: boolean): void {
+    if (!visible) this.onSuccessConfirm();
   }
 }

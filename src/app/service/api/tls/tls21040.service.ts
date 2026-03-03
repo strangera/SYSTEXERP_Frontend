@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
@@ -83,5 +83,11 @@ export class Tls21040Service {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/uploadTLS21040`, formData);
+  }
+  downloadTLS21040Template(): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.apiUrl}/downloadTLS21040Template`, {
+      observe: 'response',
+      responseType: 'blob'
+    });
   }
 }
