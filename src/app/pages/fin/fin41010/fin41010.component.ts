@@ -71,15 +71,23 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   onDownloadTemplate(): void {
-    this.loading = true;
-    this.messageService.infoBubble('範本下載中，請稍候...');
-    this.fileExportService
-      .executeFileExport(
-        this.fin41010Service.downloadTemplate().pipe(untilDestroyed(this)),
-        '.csv',
-        (isLoading) => (this.loading = isLoading),
-      )
-      .subscribe();
+    this.handleSubmit(this.queryForm, () => {
+      const { year, version, orgId } = this.queryForm.getRawValue();
+      this.loading = true;
+      this.fileExportService
+        .executeFileExport(
+          this.fin41010Service
+            .exportYearBudget({
+              BudgetYear: year!,
+              BudgetVersion: version!,
+              OrgId: orgId!,
+            })
+            .pipe(untilDestroyed(this)),
+          '.csv',
+          (isLoading) => (this.loading = isLoading),
+        )
+        .subscribe();
+    });
   }
 
   onConvert(): void {
@@ -90,15 +98,29 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
     }
     this.handleSubmit(this.queryForm, () => {
       const { year, version, orgId } = this.queryForm.getRawValue();
-      this.messageService.infoBubble('轉檔中，請稍候...');
+      this.loading = true;
       this.fin41010Service
-        .convertFile(currentFiles[0], { year: year!, version: version!, orgId: orgId! })
+        .importYearBudget(currentFiles[0], {
+          BudgetYear: year!,
+          BudgetVersion: version!,
+          OrgId: orgId!,
+        })
         .pipe(
           finalize(() => (this.loading = false)),
           untilDestroyed(this),
         )
-        .subscribe((res) => {
-          this.messageService.successBubble(res.Message);
+        .subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.messageService.successBubble(
+                res.Message ?? '匯入成功',
+              );
+            } else {
+              this.messageService.errorBubble(
+                res.Message ?? '匯入失敗',
+              );
+            }
+          },
         });
     });
   }
@@ -106,15 +128,30 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
   onApprove(): void {
     this.handleSubmit(this.queryForm, () => {
       const { year, version, orgId } = this.queryForm.getRawValue();
-      this.messageService.infoBubble('審核中，請稍候...');
+      this.loading = true;
       this.fin41010Service
-        .approve({ year: year!, version: version!, orgId: orgId! })
+        .approveYearBudget({
+          Action: 'A',
+          BudgetYear: year!,
+          BudgetVersion: version!,
+          OrgId: orgId!,
+        })
         .pipe(
           finalize(() => (this.loading = false)),
           untilDestroyed(this),
         )
-        .subscribe((res) => {
-          this.messageService.successBubble(res.Message);
+        .subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.messageService.successBubble(
+                res.Message ?? '審核成功',
+              );
+            } else {
+              this.messageService.errorBubble(
+                res.Message ?? '審核失敗',
+              );
+            }
+          },
         });
     });
   }
@@ -122,15 +159,30 @@ export class FIN41010Component extends BasicQueryPageComponent<unknown> implemen
   onAntiApprove(): void {
     this.handleSubmit(this.queryForm, () => {
       const { year, version, orgId } = this.queryForm.getRawValue();
-      this.messageService.infoBubble('反審核中，請稍候...');
+      this.loading = true;
       this.fin41010Service
-        .antiApprove({ year: year!, version: version!, orgId: orgId! })
+        .approveYearBudget({
+          Action: 'U',
+          BudgetYear: year!,
+          BudgetVersion: version!,
+          OrgId: orgId!,
+        })
         .pipe(
           finalize(() => (this.loading = false)),
           untilDestroyed(this),
         )
-        .subscribe((res) => {
-          this.messageService.successBubble(res.Message);
+        .subscribe({
+          next: (res) => {
+            if (res.Status === '0000') {
+              this.messageService.successBubble(
+                res.Message ?? '反審核成功',
+              );
+            } else {
+              this.messageService.errorBubble(
+                res.Message ?? '反審核失敗',
+              );
+            }
+          },
         });
     });
   }
