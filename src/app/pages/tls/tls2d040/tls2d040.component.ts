@@ -78,7 +78,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
     pod_no: [null],             // 活動代碼/名稱
     GUI_FLAG: [null],           // 開立發票
     org_id: [[]],             // 組織代碼
-    close_flag: ['N'],         // 類型
+    close_flag: ['Y'],         // 類型 (統一都預設給後端 'Y'【結算】)
     bus_type: [[]],           // 大分類代碼
     store_way: [null],          // 專櫃/自營櫃
     building_no: [[]],        // 館別
