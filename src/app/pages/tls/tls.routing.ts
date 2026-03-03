@@ -180,6 +180,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls2a040', loadComponent: () => import('./tls2a040/tls2a040.component').then(m => m.TLS2A040Component), data: { progNo: 'TLS2A040' } },
   // 第三方支付帳差報表
   { path: 'tls2a050', loadComponent: () => import('./tls2a050/tls2a050.component').then(m => m.TLS2A050Component), data: { progNo: 'TLS2A050' } },
+  // 作廢發票審核作業
+  { path: 'tls2a060', loadComponent: () => import('./tls2a060/tls2a060.component').then(m => m.TLS2A060Component), data: { progNo: 'TLS2A060' } },
   // 收銀員溢欠表(日)
   { path: 'tls2b010', loadComponent: () => import('./tls2b010/tls2b010.component').then(m => m.TLS2B010Component), data: { progNo: 'TLS2B010' } },
   // 收銀員溢欠表(月)
