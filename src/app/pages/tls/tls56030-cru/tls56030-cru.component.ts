@@ -55,7 +55,6 @@ import { Tls56030Service } from './../../../service/api/tls/TLS56030.service';
 @Component({
   selector: 'app-tls56030-cru',
   templateUrl: './tls56030-cru.component.html',
-  styleUrl: './tls56030-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

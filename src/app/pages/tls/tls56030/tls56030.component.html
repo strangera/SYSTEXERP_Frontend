@@ -27,16 +27,16 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="領用單退回狀態" controlName="issuanceNoteStatus" [options]="issuanceNoteStatusOptions"
+            <app-multi-select label="領用單退回狀態" controlName="issuanceNoteStatus" [options]="issuanceNoteStatusOptions"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.RPM_StatusList"
-              [submitted]="submitted"></app-dropdown>
+              [submitted]="submitted"></app-multi-select>
           </div>
           <hr />
         </div>
         <div class="grid p-fluid">
           <!-- 申請人員 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人編號" controlName="APPLY_USR" [options]="userOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.APPLY_USRList"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="申請人編號" controlName="APPLY_USR"
+            [options]="userOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.APPLY_USRList"
             [submitted]="submitted" />
           <!-- 申請日期 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"

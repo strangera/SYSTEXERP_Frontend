@@ -12,7 +12,6 @@ import { map } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Tls56030Service } from './../../../service/api/tls/TLS56030.service';
 @Component({
@@ -25,7 +24,6 @@ import { Tls56030Service } from './../../../service/api/tls/TLS56030.service';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
     CalendarRangeComponent,
     TranslateModule,
     TableComponent,
@@ -37,12 +35,12 @@ import { Tls56030Service } from './../../../service/api/tls/TLS56030.service';
 })
 export class TLS56030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    RPM_No: ['', [Validators.maxLength(20)]],   // 單號
-    HOS_NoList: [[]],                          // 倉別
-    org_idList: [[]],                          // 機構/單位
-    LOGO_NoList: [[]],                         // 品牌代碼 multi-select
-    RPM_StatusList: [[]],                      // 狀態
-    APPLY_USRList: [[]],                       // 申請人
+    RPM_No: [null, [Validators.maxLength(20)]],   // 單號
+    HOS_NoList: [null],                          // 倉別
+    org_idList: [null],                          // 機構/單位
+    LOGO_NoList: [null],                         // 品牌代碼 multi-select
+    RPM_StatusList: [null],                      // 狀態
+    APPLY_USRList: [null],                       // 申請人
     APPLY_Date_Start: [null],                  // 申請日期 起
     APPLY_Date_End: [null],                    // 申請日期 迄
     ...createPaginationConfig([{ field: 'RPM_No', order: 1 }]), // 分頁和排序參數
@@ -113,7 +111,7 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
     this.issuanceNoteStatusOptions = [
       { label: '已申請', value: '1' },
       { label: '已審核', value: '2' },
-      { label: '已領用', value: '3' },
+      { label: '已領退', value: '3' },
       { label: '已作廢', value: '9' },
     ];
     this.issuanceTypeOptions = [
