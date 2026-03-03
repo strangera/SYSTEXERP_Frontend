@@ -162,10 +162,41 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
     this.loadBigCategoryOptions();
     this.loadMidCategoryOptions('');
     this.loadSmlCategoryOptions('');
-    // this.setupCategoryListeners(); //大中小分類欄位連動監聽
+    this.setupCategoryListeners(); //大中小分類欄位連動監聽
     if (!this.isFormCreateable && this.rowdata) {
       this.patchFormFromRow(this.rowdata);
     }
+  }
+
+  private initializeMediaFromPhotoUrl(photoUrl?: string | null): void {
+    if (!photoUrl) {
+      this.mediaItems.set([]);
+      return;
+    }
+    const normalizedUrl = this.toAbsolutePhotoUrl(photoUrl);
+    const mediaType = this.detectMediaType(normalizedUrl);
+    const fileName = this.extractFileName(normalizedUrl);
+    this.mediaItems.set([{ url: normalizedUrl, type: mediaType, name: fileName }]);
+  }
+
+  private toAbsolutePhotoUrl(rawUrl: string): string {
+    const trimmed = rawUrl.trim();
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    const withoutTilde = trimmed.replace(/^~+/, '');
+    const path = withoutTilde.replace(/^\/+/, '');
+    return `${environment.ApiUrl}/${path}`.replace(/([^:]\/)\/+/g, '$1');
+  }
+
+  private detectMediaType(url: string): 'image' | 'video' {
+    const ext = (url.split('?')[0].split('.').pop() ?? '').toLowerCase();
+    if (['mp4', 'webm', 'ogg', 'avi', 'wmv', 'mpeg'].includes(ext)) return 'video';
+    return 'image';
+  }
+
+  private extractFileName(url: string): string {
+    const noQuery = url.split('?')[0];
+    const name = noQuery.substring(noQuery.lastIndexOf('/') + 1);
+    return name || '已上傳檔案';
   }
 
   /** 編輯時由 rowdata 寫入表單 */
@@ -209,6 +240,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
       ivnPeriod: row.IVN_PERIOD ?? null,
       illustrate: row.NOTES ?? null,
     });
+    this.initializeMediaFromPhotoUrl(row.PHOTO_URL ?? null);
     // if (row.B_CLASS_ID) this.loadMidCategoryOptions(row.B_CLASS_ID);
     // if (row.M_CLASS_ID) this.loadSmlCategoryOptions(row.M_CLASS_ID);
     this.patchInProgress = false;

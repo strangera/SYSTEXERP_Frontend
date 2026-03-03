@@ -125,12 +125,14 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="基本單位" controlName="itemUnit" [options]="itemUnitOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.itemUnit" [submitted]="submitted" [disabled]="isFormReadable">
+                optionValue="value" [control]="dataForm.controls.itemUnit" [submitted]="submitted"
+                [disabled]="isFormReadable">
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="包裝單位" controlName="packageUnit" [options]="packageUnitOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.packageUnit" [submitted]="submitted" [disabled]="isFormReadable">
+                optionValue="value" [control]="dataForm.controls.packageUnit" [submitted]="submitted"
+                [disabled]="isFormReadable">
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -145,12 +147,14 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="税別" controlName="taxCode" [options]="taxCodeOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.taxCode" [submitted]="submitted" [disabled]="isFormReadable">
+                optionValue="value" [control]="dataForm.controls.taxCode" [submitted]="submitted"
+                [disabled]="isFormReadable">
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="責任單位" controlName="deptCode" [options]="deptCodeOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.deptCode" [submitted]="submitted" [disabled]="isFormReadable">
+                optionValue="value" [control]="dataForm.controls.deptCode" [submitted]="submitted"
+                [disabled]="isFormReadable">
               </app-dropdown>
             </div>
           </div>
@@ -169,12 +173,13 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="維保廠商" controlName="mtSupp" [options]="mtSuppOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.mtSupp" [submitted]="submitted" [disabled]="isFormReadable">
+                optionValue="value" [control]="dataForm.controls.mtSupp" [submitted]="submitted"
+                [disabled]="isFormReadable">
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-number [useGrouping]="false" label="維保期限（日）" controlName="mtYear"
-                [control]="dataForm.controls.mtYear" [submitted]="submitted">
+              <app-input-number [useGrouping]="false" label="維保期限（日）" controlName="mtDay"
+                [control]="dataForm.controls.mtDay" [submitted]="submitted">
               </app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
@@ -190,12 +195,13 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="續保廠商" controlName="ivnSupp" [options]="ivnSuppOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.ivnSupp" [submitted]="submitted" [disabled]="isFormReadable">
+                optionValue="value" [control]="dataForm.controls.ivnSupp" [submitted]="submitted"
+                [disabled]="isFormReadable">
               </app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-number [useGrouping]="false" label="可維修期限（日）" controlName="ivnYear"
-                [control]="dataForm.controls.ivnYear" [submitted]="submitted">
+              <app-input-number [useGrouping]="false" label="可維修期限（日）" controlName="ivnDay"
+                [control]="dataForm.controls.ivnDay" [submitted]="submitted">
               </app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
