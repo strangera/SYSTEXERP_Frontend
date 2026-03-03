@@ -142,7 +142,6 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
         const month = inputDate.getMonth();
         // 計算該月最後一天
         const lastDay = new Date(year, month + 1, 0);
-
         // 更新預設值物件 (確保欄位名稱與 columns 中的 field 一致)
         this.defaultInsertData = {
           ...this.defaultInsertData,
@@ -311,14 +310,15 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       // 確保輸入的折讓金額在計算前已經處理過（或在此處強制取整）
       const rebateNew = Math.round(item.Rebate_Amt_New || 0);
 
-      totalInvoiceAmt += item.PUR_Amt;
-      totalRemainingRebateAmt += item.PUR_Amt - item.Rebate_Amt;
-      positiveTotalRebateAmt += rebateNew;
+      totalInvoiceAmt += item.PUR_Amt; // 發票總金額累加
+      totalRemainingRebateAmt += item.PUR_Amt - item.Rebate_Amt; // 發票剩餘可折金額累加 (發票金額 - 已折金額)
+      positiveTotalRebateAmt += rebateNew; // 折讓總金額累加 (只計算使用者輸入的折讓金額，且確保是正數)
     });
 
     // 全部取整數
-    const finalPositiveAmt = Math.round(positiveTotalRebateAmt);
-    const negativeTotalRebateAmt = finalPositiveAmt !== 0 ? -finalPositiveAmt : 0;
+    const finalPositiveAmt = Math.round(positiveTotalRebateAmt); // 折讓總金額
+    const negativeTotalRebateAmt = finalPositiveAmt !== 0 ? -finalPositiveAmt : 0; // 轉為負數表示扣除的金額 (如果有折讓金額才轉負數，沒有則保持0)
+    // 總餘額 = 退貨總金額 - 折讓總金額 (注意：折讓總金額是正數，但在計算餘額時應該扣除，所以用負數表示)
     const balance = Math.round(totalInvoiceAmt - totalRemainingRebateAmt + negativeTotalRebateAmt);
 
     // 更新 FormControls
@@ -331,14 +331,10 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
   // 彙總退貨明細相關欄位 (主要是 RJM_TotalBuyAmt)
   updateReturnSummaryAmounts(newData2?: IReturnDetailData[]): void {
     // 如果是 dataChange 觸發，則更新 data2
-    if (newData2) {
-      this.data2 = newData2;
-    }
-
+    if (newData2) this.data2 = newData2;
     // 重新計算退貨總金額
     const totalBuyAmt = this.data2.reduce((total, item) => total + item.RJM_TotalBuyAmt, 0);
     this.dataForm.controls.RJM_TotalBuyAmt.setValue(totalBuyAmt);
-
     // 同步處理表單的 disable/enable 狀態
     this.updateFormDisableState();
   }
