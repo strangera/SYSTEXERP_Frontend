@@ -79,7 +79,9 @@ export interface UpdateFIN51010Request {
   Remark: string;
   DetailList: {
     GLS6002_ID: number;
+    AccNo: string;      // 新增
     NoteDesc: string;
+    ORG_ID: string;     // 新增
   }[];
 }
 
