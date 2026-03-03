@@ -33,7 +33,7 @@ export interface CommissionMaster {
   cap_saletype1?: string;
   /** 會員卡集點 (Y/N) */
   cap_saletype2?: string;
-  /** 收取禮卷 (Y/N) */
+  /** 收取禮劵 (Y/N) */
   cap_saletype3?: string;
   /** (Y/N) */
   cap_saletype5?: string;

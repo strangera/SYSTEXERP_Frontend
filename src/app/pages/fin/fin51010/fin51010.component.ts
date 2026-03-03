@@ -83,7 +83,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
 
   /** 載入憑證種類與儀表板 */
   loadSheetTypeCount() {
-    this.fin51010Service.queryFIN51010Count().pipe(untilDestroyed(this)).subscribe(res => {
+    this.fin51010Service.queryFIN51010Count('1').pipe(untilDestroyed(this)).subscribe(res => {
       if (res.Data) {
         this.countData = res.Data; // 儲存原始統計資料供頂部儀表板使用
       }
@@ -195,5 +195,24 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
         });
       }
     });
+  }
+  /** 判斷是否「拋轉傳票」按鈕應禁用 */
+  get isTransferDisabled(): boolean {
+    // 1. 沒資料時禁用
+    if (this.data.length === 0 || this.selectedItems.length === 0) {
+      return true;
+    }
+    // 2. 選中的項目中，若包含「已拋轉」(Trans_Status === '1') 則禁用
+    return this.selectedItems.some(item => item.Trans_Status === '1');
+  }
+
+  /** 判斷是否「作廢」按鈕應禁用 */
+  get isVoidDisabled(): boolean {
+    // 1. 沒資料時禁用
+    if (this.data.length === 0 || this.selectedItems.length === 0) {
+      return true;
+    }
+    // 2. 選中的項目中，若包含「未過帳」(PostFlag === '0') 則禁用 (依據您的邏輯)
+    return this.selectedItems.some(item => item.PostFlag === '0');
   }
 }

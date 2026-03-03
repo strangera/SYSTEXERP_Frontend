@@ -107,9 +107,9 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   ];
 
   payTypeOptions = [
-    { value: '1', label: '電匯' },
-    { value: '2', label: '發票' },
-    { value: '3', label: '現金' }
+    { value: '1', label: '1-電匯' },
+    { value: '2', label: '2-發票' },
+    { value: '3', label: '3-現金' }
   ];
 
   statusOptions = [

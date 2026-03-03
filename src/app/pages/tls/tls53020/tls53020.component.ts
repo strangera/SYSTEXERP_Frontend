@@ -1,33 +1,28 @@
-import { Component, ViewChild } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
-
-// Component Kit
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { AccordionModule } from 'primeng/accordion';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
+import { finalize } from 'rxjs';
+import { TLS53020Data, TLS53020Service } from '../../../service/api/tls/tls53020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-
-// Services
-import { DatePipe } from '@angular/common';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { finalize } from 'rxjs';
-import { TLS53020Data, TLS53020Service } from '../../../service/api/tls/tls53020.service';
+import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls53020',
   templateUrl: './tls53020.component.html',
-  styleUrl: './tls53020.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -45,7 +40,7 @@ import { TLS53020Data, TLS53020Service } from '../../../service/api/tls/tls53020
     FileUploadComponent
   ],
 })
-export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
+export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> implements OnInit {
   queryForm = this.formBuilder.group({
     PST_No: ['', [Validators.maxLength(20)]], // 盤點單編號
     HOS_No: [[]], // 倉別代碼
@@ -84,6 +79,9 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
     { label: '抽盤', value: '3' },
     { label: '尚未盤點', value: '0' },
   ];
+
+  // 用於匯入視窗的盤點類型選項（排除尚未盤點）
+  PSTTypeOptionsForImport: any[] = [];
 
   columns: Column[] = [
     { field: 'PST_No', header: '盤點單編號', visible: true },
@@ -129,7 +127,9 @@ export class TLS53020Component extends BasicQueryPageComponent<TLS53020Data> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS53020', '/tls/tls53020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS53020', '/tls/tls53020cru', this.queryForm, (form: FormGroup) => this.onSubmit(form));
+    // 準備匯入視窗用的盤點類型選項（移除 value='0'）
+    this.PSTTypeOptionsForImport = this.PSTTypeOptions.filter(item => String(item.value) !== '0');
     this.loadOptions();
   }
 

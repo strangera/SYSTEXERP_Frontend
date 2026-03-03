@@ -12,56 +12,48 @@
       <form
         [formGroup]="queryForm"
         id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
+        (ngSubmit)="onSubmit()"
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="廠商編號"
-              controlName="VENDOR_ID"
-              [control]="queryForm.controls.VENDOR_ID"
+              controlName="VEN_No"
+              [control]="queryForm.controls.VEN_No"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="廠商統一編號"
-              controlName="GUI_ID"
-              [control]="queryForm.controls.GUI_ID"
+              controlName="VEN_Uniform"
+              [control]="queryForm.controls.VEN_Uniform"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="廠商名稱(中文)"
-              controlName="VENDOR_NAME"
-              [control]="queryForm.controls.VENDOR_NAME"
+              controlName="VEN_Name"
+              [control]="queryForm.controls.VEN_Name"
               [submitted]="submitted"
             ></app-input-text>
           </div>
         </div>
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-6">
-            <app-input-text
-              label="發票地址"
-              controlName="VENDOR_REG_ADDR"
-              [control]="queryForm.controls.VENDOR_REG_ADDR"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
           <div class="col-12 md:col-6 lg:col-3">
             <app-input-text
               label="廠商名稱(英文)"
-              controlName="VENDOR_NAME_E"
-              [control]="queryForm.controls.VENDOR_NAME_E"
+              controlName="VEN_EngName"
+              [control]="queryForm.controls.VEN_EngName"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
             <app-input-text
               label="廠商簡稱"
-              controlName="VENDOR_NAME_S"
-              [control]="queryForm.controls.VENDOR_NAME_S"
+              controlName="VEN_ShortName"
+              [control]="queryForm.controls.VEN_ShortName"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -124,24 +116,24 @@
           <div class="col-12 md:col-6 lg:col-6">
             <app-input-text
               label="公司登記地址(中文)"
-              controlName="companyAddress"
-              [control]="queryForm.controls.companyAddress"
+              controlName="VEN_Address"
+              [control]="queryForm.controls.VEN_Address"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
             <app-input-text
               label="公司登記電話"
-              controlName="VENDOR_REG_TEL"
-              [control]="queryForm.controls.VENDOR_REG_TEL"
+              controlName="VEN_Tel"
+              [control]="queryForm.controls.VEN_Tel"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-3">
             <app-input-text
               label="公司傳真"
-              controlName="VENDOR_FAX"
-              [control]="queryForm.controls.VENDOR_FAX"
+              controlName="VEN_Fax"
+              [control]="queryForm.controls.VEN_Fax"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -225,23 +217,24 @@
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="廠商送貨期限(批號)"
-              [startControl]="queryForm.controls.DELIVERY_LIMIT_FROM"
-              [endControl]="queryForm.controls.DELIVERY_LIMIT_TO"
+            <app-input-number
+              [useGrouping]="false"
+              label="廠商送貨期限"
+              controlName="DELIVERY_LIMIT"
+              [control]="queryForm.controls.DELIVERY_LIMIT"
               [submitted]="submitted"
-            ></app-calendar-range>
+            ></app-input-number>
           </div>
         </div>
         <hr />
-        <app-editor-text
-          label="附註"
-          controlName="NOTES"
-          [control]="queryForm.controls.NOTES"
-          [style]="{ height: '100px' }"
-          [submitted]="submitted"
-        ></app-editor-text>
+        <div class="grid p-fluid">
+          <app-input-textarea
+            class="col-12"
+            label="附註"
+            controlName="VEN_Remark"
+            [control]="queryForm.controls.VEN_Remark"
+            [submitted]="submitted" />
+        </div>
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
@@ -253,38 +246,30 @@
   </p-accordion>
 </div>
 <div class="card">
-  <div class="flex justify-content-end align-items-center gap-2 mb-2">
-    <p-button
-      styleClass="p-2"
-      label="供應商資料.PDF"
-      icon="pi pi-file-pdf"
-      (click)="onExportPDF(queryForm)"
-      [disabled]="data.length === 0"
-      [loading]="btnPDFLoading"
-    ></p-button>
-    <p-button
-      styleClass="p-2"
-      label="供應商資料.XLSX"
-      icon="pi pi-file-excel"
-      (click)="onExportExcel(queryForm)"
-      [disabled]="data.length === 0"
-      [loading]="btnExcelLoading"
-    ></p-button>
-  </div>
-  <app-table
+  <app-table-report
     tableKey="ASS11060"
-    dataKey="VENDOR_ID"
-    [data]="data"
+    dataKey="VEN_No"
+    [data]="tableData()"
     [columns]="columns"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    [showTotal]="false"
-    [showManage]="true"
-    [showCheckBox]="false"
+    [totalRecords]="totalRecords()"
+    [loading]="tableLoading()"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction"
     [showDelete]="false"
-    [lazy]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
-  ></app-table>
+  >
+    <header>
+      <div class="flex justify-content-end gap-2">
+        <p-button
+          styleClass="p-2"
+          label="匯出 PDF"
+          icon="pi pi-file-pdf"
+          [loading]="btnPDFLoading"
+          (click)="onExportPDF()"
+          [disabled]="tableData().length === 0"
+        ></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

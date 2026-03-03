@@ -21,7 +21,6 @@ import { AddButton, Column, createPaginationConfig, formatDate } from '../../../
 @Component({
   selector: 'app-tls53010',
   templateUrl: './tls53010.component.html',
-  styleUrl: './tls53010.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -86,7 +85,7 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
     { field: 'PST_Remark', header: '盤點備註', visible: false },
   ];
 
-  loadingStates: Map<number, { print: boolean; export: boolean }> = new Map();
+  loadingStates = new Map<number, { print: boolean; export: boolean }>();
   addButton: AddButton[] = [
     {
       label: '列印',

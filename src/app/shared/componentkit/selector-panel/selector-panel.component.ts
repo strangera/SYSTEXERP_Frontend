@@ -157,12 +157,9 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
 
   // 處理分頁載入事件
   onPaginationLoad(event: LazyLoadEvent, searchFormGroup: FormGroup) {
-    console.log('📄 SelectorPanel 收到分頁事件:', event);
-    console.log('🚨 DEBUG - event:', event);
-    console.log('🚨 DEBUG - 當前表單值:', searchFormGroup.value);
-
-    // 修正：將 1-based 轉為 0-based，並正確處理 SortBy
-    const pageIndex = Math.max(0, (event.pageIndex || 1) - 1);
+    // table.component.ts 的 loadDataLazy 已將 pageIndex 計算為 1-based
+    // 後端 API 同樣使用 1-based PageIndex，直接傳遞即可
+    const pageIndex = event.pageIndex;
 
     searchFormGroup.patchValue({
       pageSize: event.pageSize || 10,

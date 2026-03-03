@@ -505,7 +505,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         },
       });
 
-    this.fetchTltTalentOptions("").subscribe(res => {
+    this.fetchTltTalentOptions({ ven_no: '', tlt_bdate: this.df().pod_sdate.value, tlt_edate: this.df().pod_edate.value }).subscribe(res => {
       if (res == null) return;
       const options = res.map(item => ({
         ...item,
@@ -1016,11 +1016,18 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     return isNaN(parsed) ? fallback : parsed * 100;
   }
 
+  public getDialogQueryBody(): Record<string, unknown> {
+    return {
+      tlt_bdate: this.df().pod_sdate.value,
+      tlt_edate: this.df().pod_edate.value,
+    };
+  }
+
   public fetchTltTalentOptions(venNoOrBody: string | Record<string, unknown>): Observable<(Option & { talent_id: number })[]> {
-    const ven_no = typeof venNoOrBody === 'string'
-      ? venNoOrBody
-      : (venNoOrBody?.['ven_no'] as string) ?? '';
-    return this.service.getTLTTalentOptions({ ven_no }).pipe(
+    const ven_no = typeof venNoOrBody === 'string' ? venNoOrBody : (venNoOrBody?.['ven_no'] as string) ?? '';
+    const tlt_bdate = this.df().pod_sdate.value;
+    const tlt_edate = this.df().pod_edate.value;
+    return this.service.getTLTTalentOptions({ ven_no, tlt_bdate, tlt_edate }).pipe(
       map(res => res ?? []),
       tap(res => {
         const options = res.map(item => ({

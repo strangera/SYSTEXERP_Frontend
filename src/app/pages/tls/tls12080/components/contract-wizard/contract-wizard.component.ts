@@ -27,6 +27,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 // 共用組件
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 // V2 服務
 import { RenewalQueryResponse, TLS12080Service } from '@service/api/tls/tls12080.service';
@@ -96,6 +97,7 @@ interface WizardState {
     ButtonModule,
     MenubarComponent,
     ButtonComponent,
+    DialogComponent,
     Step1ContractInfoComponent,
     Step2DeductionComponent,
     Step3CommissionComponent,
@@ -198,6 +200,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // 儲存狀態
   isSaving = false;
+
+  // 成功確認對話框
+  showSuccessDialog = false;
+  successDialogItems: { label: string; value: string }[] = [];
 
   // 原始抽成別（編輯模式用）
   originalCommissionType?: string;
@@ -1225,8 +1231,6 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           `品牌(專櫃名稱):${formData.tlt_name || ''}`
         ].join('\n');
 
-        this.messageService.successBubble(successMessage);
-
         // 新增契約時刷新使用者資料權限，否則看不到剛新增的資料
         if (isInsert) {
           try {
@@ -1236,12 +1240,14 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           }
         }
 
-        // 延遲返回查詢頁，讓使用者看到成功訊息
-        setTimeout(() => {
-          this.router.navigate(['account/tls/tls12080'], {
-            state: { fromRoute: 'account/tls/tls12080cru' }
-          });
-        }, 2000);
+        // 顯示成功確認對話框（讓使用者抄資料後再跳頁）
+        this.successDialogItems = successMessage.split('\n').map(line => {
+          const idx = line.indexOf(':');
+          return idx !== -1
+            ? { label: line.substring(0, idx), value: line.substring(idx + 1) }
+            : { label: '', value: line };
+        });
+        this.showSuccessDialog = true;
       } else {
         this.messageService.errorBubble(response?.message || '意向書資料提交失敗');
       }
@@ -1490,5 +1496,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       const bIndex = this.discountOptions.findIndex(opt => opt.value === b.cag_barcode);
       return aIndex - bIndex;
     });
+  }
+
+  // ========== 成功對話框 ==========
+  onSuccessConfirm(): void {
+    this.showSuccessDialog = false;
+    this.router.navigate(['account/tls/tls12080'], { state: { fromRoute: 'account/tls/tls12080cru' } });
+  }
+
+  onSuccessDialogClose(visible: boolean): void {
+    if (!visible) this.onSuccessConfirm();
   }
 }

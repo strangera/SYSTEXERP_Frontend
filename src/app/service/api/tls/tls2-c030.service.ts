@@ -1,8 +1,8 @@
-import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { environment } from 'src/environments/environment';
+import { Injectable } from '@angular/core';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 // --- TLS2C030 查詢參數 Model 定義 ---
 export interface TLS2C030QueryRequest extends BaseQueryRequest {
@@ -41,5 +41,10 @@ export class TLS2C030Service {
   // 反日結
   undefinedatecheckoutTLS2C030(params: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/undefinedatecheckoutTLS2C030`, params);
+  }
+
+  // 重新計算
+  reCalculateTLS2C030(params: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/reCalculateTLS2C030`, params);
   }
 }
