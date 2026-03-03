@@ -10,7 +10,7 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="建檔日期(起訖)" [startControl]="qf().crtDateS"
+            <app-calendar-range calendarType="dateRange" label="建檔日期" [startControl]="qf().crtDateS"
               [endControl]="qf().crtDateE" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -85,7 +85,7 @@
               [submitted]="submitted"></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="服務項目" controlName="serviceItem" [control]="qf().serviceItem"
+            <app-input-text label="服務項目" controlName="serviceItems" [control]="qf().serviceItems"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -103,9 +103,14 @@
 </div>
 
 <div class="card">
+  <div class="flex justify-content-end align-items-center gap-2 mb-2">
+    <p-button styleClass="p-2" label="備用供應商資料.PDF" icon="pi pi-file-pdf" (click)="onExportPDF()"
+      [disabled]="tableData().length === 0" [loading]="btnPDFLoading"></p-button>
+  </div>
   <div class="col-12">
     <app-table-report [data]="tableData()" [dataKey]="'ID'" [tableKey]="'ASS11070_Data'" [columns]="columns"
-      [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
-      [queryFunction]="queryFunction" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-table-report>
+      [totalRecords]="totalRecords()" [showCheckBox]="false" [showDelete]="false" [showReportMode]="false" [lazy]="true"
+      [loading]="tableLoading()" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction" (edit)="onEdit($event)"
+      (detail)="onDetail($event)"></app-table-report>
   </div>
 </div>

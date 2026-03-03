@@ -15,9 +15,19 @@ export interface QueryASS11070Request {
   VENDOR_ID?: string;
   MANGER_TYPE?: string;
   VENDOR_NAME?: string;
+  VENDOR_NAME_E?: string;
   CONTACT_STAFF?: string;
   CONTACT_TEL?: string;
   CONTACT_MOBILE_PHONE?: string;
+  CONTACT_EMAIL?: string;
+  CONTACT_FAX?: string;
+  CHARGE_STAFF?: string;
+  VENDOR_REG_ADDR?: string;
+  PAY_TYPE?: string;
+  TICKET_PERIOD_S?: string;
+  TICKET_PERIOD_E?: string;
+  Service_Items?: string;
+  NOTES?: string;
 }
 
 /**
@@ -71,12 +81,11 @@ export interface DetailASS11070Response {
   CONTACT_EMAIL?: string;
   CONTACT_FAX?: string;
   CHARGE_STAFF?: string;
-  COMPANY_ADDRESS?: string;
   VENDOR_REG_ADDR?: string;
   PAY_TYPE?: string;
   MANGER_TYPE?: string;
   TICKET_PERIOD?: string;
-  SERVICE_ITEM?: string;
+  Service_Items?: string;
   NOTES?: string;
 }
 

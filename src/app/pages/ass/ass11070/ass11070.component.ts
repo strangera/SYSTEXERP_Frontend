@@ -17,6 +17,7 @@ import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize, Observable } from 'rxjs';
 import { QueryASS11070Request, QueryASS11070Response } from './ass11070.model';
 
@@ -39,6 +40,7 @@ import { QueryASS11070Request, QueryASS11070Response } from './ass11070.model';
     RadiobuttonComponent,
     MenubarComponent,
     TableReportComponent,
+    ButtonModule,
   ],
 })
 export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Response> implements OnInit {
@@ -61,7 +63,7 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
     payType: new FormControl<string | null>(null, [Validators.maxLength(20)]),
     ticketPeriodS: new FormControl<string | null>(null, [Validators.maxLength(30)]),
     ticketPeriodE: new FormControl<string | null>(null, [Validators.maxLength(30)]),
-    serviceItem: new FormControl<string | null>(null, [Validators.maxLength(100)]),
+    serviceItems: new FormControl<string | null>(null, [Validators.maxLength(100)]),
     notes: new FormControl<string | null>(null, [Validators.maxLength(100)]),
     pageSize: new FormControl<number>(30),
     pageIndex: new FormControl<number>(1),
@@ -85,6 +87,7 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
     { value: '2', label: '支票' },
     { value: '3', label: '現金' },
   ];
+  public btnPDFLoading = false;
   public lastQueryBody?: QueryASS11070Request;
 
   public readonly columns: ReportColumn[] = [
@@ -162,9 +165,19 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
       VENDOR_ID: raw.vendorId ?? undefined,
       MANGER_TYPE: raw.mangerType ?? undefined,
       VENDOR_NAME: raw.vendorName ?? undefined,
+      VENDOR_NAME_E: raw.vendorNameE ?? undefined,
       CONTACT_STAFF: raw.contactStaff ?? undefined,
       CONTACT_TEL: raw.contactTel ?? undefined,
       CONTACT_MOBILE_PHONE: raw.contactMobilePhone ?? undefined,
+      CONTACT_EMAIL: raw.contactEmail ?? undefined,
+      CONTACT_FAX: raw.contactFax ?? undefined,
+      CHARGE_STAFF: raw.chargeStaff ?? undefined,
+      VENDOR_REG_ADDR: raw.companyAddress ?? undefined,
+      PAY_TYPE: raw.payType ?? undefined,
+      TICKET_PERIOD_S: raw.ticketPeriodS ?? undefined,
+      TICKET_PERIOD_E: raw.ticketPeriodE ?? undefined,
+      Service_Items: raw.serviceItems ?? undefined,
+      NOTES: raw.notes ?? undefined,
       OrderBy: pagingBody.OrderBy,
       Offset: hasLoadMorePaging ? (pageIndex - 1) * pageSize : (pagingBody.Offset ?? (pageIndex - 1) * pageSize),
       PageSize: pageSize,
@@ -205,5 +218,34 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
           },
         });
     });
+  }
+
+  public onExportPDF(): void {
+    const payload = this.buildQueryPayload();
+    this.btnPDFLoading = true;
+    this.service
+      .exportPDFASS11070(payload)
+      .pipe(
+        finalize(() => {
+          this.btnPDFLoading = false;
+        })
+      )
+      .subscribe(blob => {
+        if (!blob) return;
+        const now = new Date();
+        const timestamp = now.getFullYear().toString()
+          + (now.getMonth() + 1).toString().padStart(2, '0')
+          + now.getDate().toString().padStart(2, '0')
+          + now.getHours().toString().padStart(2, '0')
+          + now.getMinutes().toString().padStart(2, '0')
+          + now.getSeconds().toString().padStart(2, '0');
+        const fileName = `備用供應商資料${timestamp}.pdf`;
+        const blobUrl = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = blobUrl;
+        anchor.download = fileName;
+        anchor.click();
+        URL.revokeObjectURL(blobUrl);
+      });
   }
 }

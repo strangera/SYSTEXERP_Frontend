@@ -61,4 +61,11 @@ export class ASS11070Service {
   updateASS11070(payload: UpdateASS11070Request): Observable<ApiResponse<null>> {
     return this.http.post<ApiResponse<null>>(`${this.apiUrl}/updateASS11070`, payload);
   }
+
+  /**
+   * 匯出備用供應商資料 PDF
+   */
+  exportPDFASS11070(payload: QueryASS11070Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportPDFASS11070`, payload, { responseType: 'blob' });
+  }
 }

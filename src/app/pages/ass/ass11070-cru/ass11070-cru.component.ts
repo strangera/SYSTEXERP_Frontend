@@ -58,13 +58,12 @@ export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Res
     payType: new FormControl<string>('', [Validators.maxLength(20)]),
     ticketPeriodS: new FormControl<string>('', [Validators.maxLength(30)]),
     ticketPeriodE: new FormControl<string>('', [Validators.maxLength(30)]),
-    serviceItem: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
+    serviceItems: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
     notes: new FormControl<string>('', [Validators.maxLength(100)]),
     // Key fields are kept internally for detail/update payload.
     stoNo: new FormControl<string>('', [Validators.maxLength(20)]),
   });
   public readonly df = computed(() => this.dataForm.controls);
-  public readonly tableLoading = signal<boolean>(false);
   public readonly staffOptions = signal<{ label: string; value: string; name: string }[]>([]);
   public readonly vendorOptions = signal<{ label: string; value: string }[]>([]);
   public readonly mangerTypeOptions = [
@@ -156,16 +155,19 @@ export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Res
     return `${y}-${m}-${day}`;
   }
 
-  private normalizeDateString(dateText?: string): string {
-    if (!dateText) return '';
-    const normalized = dateText.trim().replace(/\//g, '-');
+  private normalizeDateString(dateText?: unknown): string {
+    if (dateText == null) return '';
+    if (dateText instanceof Date) return isNaN(dateText.getTime()) ? '' : this.toDateString(dateText);
+
+    const rawText = typeof dateText === 'string' ? dateText : String(dateText);
+    const normalized = rawText.trim().replace(/\//g, '-');
+    if (!normalized) return '';
+
     const matchedDate = normalized.match(/^\d{4}-\d{2}-\d{2}/)?.[0];
     if (matchedDate) return matchedDate;
 
-    const parsed = new Date(dateText);
-    if (!isNaN(parsed.getTime())) {
-      return this.toDateString(parsed);
-    }
+    const parsed = new Date(normalized);
+    if (!isNaN(parsed.getTime())) return this.toDateString(parsed);
     return normalized;
   }
 
@@ -186,11 +188,11 @@ export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Res
       CONTACT_EMAIL: raw.contactEmail || undefined,
       CONTACT_FAX: raw.contactFax || undefined,
       CHARGE_STAFF: raw.chargeStaff || undefined,
-      COMPANY_ADDRESS: raw.companyAddress || undefined,
+      VENDOR_REG_ADDR: raw.companyAddress || undefined,
       PAY_TYPE: raw.payType || undefined,
       MANGER_TYPE: raw.mangerType || undefined,
       TICKET_PERIOD: this.buildTicketPeriod(raw.ticketPeriodS, raw.ticketPeriodE),
-      SERVICE_ITEM: raw.serviceItem || undefined,
+      Service_Items: raw.serviceItems || undefined,
       NOTES: raw.notes || undefined,
     };
   }
@@ -211,25 +213,25 @@ export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Res
       contactEmail: detail.CONTACT_EMAIL ?? '',
       contactFax: detail.CONTACT_FAX ?? '',
       chargeStaff: detail.CHARGE_STAFF ?? '',
-      companyAddress: detail.COMPANY_ADDRESS ?? detail.VENDOR_REG_ADDR ?? detail.TAX_ADDR ?? '',
+      companyAddress: detail.VENDOR_REG_ADDR ?? '',
       payType: detail.PAY_TYPE ?? '',
       mangerType: detail.MANGER_TYPE ?? '',
       ticketPeriodS: ticketPeriod.start,
       ticketPeriodE: ticketPeriod.end,
-      serviceItem: detail.SERVICE_ITEM ?? '',
+      serviceItems: detail.Service_Items ?? '',
       notes: detail.NOTES ?? '',
     });
   }
 
   private loadDetail(vendorId: string): void {
-    this.tableLoading.set(true);
+    this.loading = true;
     this.service
       .detailASS11070({
         VENDOR_ID: vendorId,
       })
       .pipe(
         finalize(() => {
-          this.tableLoading.set(false);
+          this.loading = false;
         })
       )
       .subscribe({
@@ -243,14 +245,12 @@ export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Res
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const payload = this.buildDetailLikePayload();
-      this.tableLoading.set(true);
 
       if (this.isFormCreateable) {
         this.service
           .insertASS11070(payload as InsertASS11070Request)
           .pipe(
             finalize(() => {
-              this.tableLoading.set(false);
               this.loading = false;
             })
           )
@@ -268,7 +268,6 @@ export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Res
         .updateASS11070(payload as UpdateASS11070Request)
         .pipe(
           finalize(() => {
-            this.tableLoading.set(false);
             this.loading = false;
           })
         )
