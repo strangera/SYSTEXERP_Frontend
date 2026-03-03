@@ -82,10 +82,13 @@ export class TableEditDataService {
 
     // 步驟 3: 初始化新傳入的資料，並計算欄位/驗證行
     this._fullData = data.filter(item => item != null).map((item: any, index) => {
-      // 初始化狀態和 UUID
+      // 1. 強制確保有 Key (不管狀態是什麼)
+      if (!item[dataKey]) {
+        item[dataKey] = `temp-${uuidv4()}`;
+      }
+      // 2. 如果沒有狀態才設定為 Original
       if (item[dataStatusField] === undefined) {
         item[dataStatusField] = dataStatusValue.Original;
-        item[dataKey] = item[dataKey] ?? `temp-${uuidv4()}`;
       }
       this.calculateRow(item, columns);
       if (rowValidate) {
