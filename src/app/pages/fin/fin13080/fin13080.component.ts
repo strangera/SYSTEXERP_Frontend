@@ -6,7 +6,6 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -41,7 +40,7 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
   }
   queryForm = this.formBuilder.group({
     No: [null, Validators.maxLength(16)],
-    Date: [yesterday],
+    Date: [new Date(), Validators.required],
     INV_DeclareYM: [null],
     Invoice_No_Start: ['', Validators.maxLength(10)],
     Invoice_No_End: ['', Validators.maxLength(10)],

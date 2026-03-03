@@ -35,7 +35,7 @@ export function getCommissionMainColumns(): ColumnDef[] {
     },
     { field: 'cap_saletype2', header: '會員卡集點', editable: true, type: 'checkbox' },
     { field: 'cap_saletype1', header: '滿仟送佰', editable: true, type: 'checkbox' },
-    { field: 'cap_saletype3', header: '收取禮卷', editable: true, type: 'checkbox' },
+    { field: 'cap_saletype3', header: '收取禮劵', editable: true, type: 'checkbox' },
     { field: 'cap_saletype5', header: '收取商品提貨單', editable: true, type: 'checkbox' }
   ];
 }

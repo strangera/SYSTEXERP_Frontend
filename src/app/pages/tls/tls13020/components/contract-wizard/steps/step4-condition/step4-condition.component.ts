@@ -150,25 +150,19 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
   graduatedColumns: ColumnDef[] = [];
   baseTierColumns: ColumnDef[] = [];
 
-  // === Getters: 顯示用資料（過濾已刪除項目）===
-  get displayFixedRentItems(): FixedRentCondition[] {
-    return this.dataManagerService.filterDisplayItems(this.fixedRentItems);
-  }
+  // === 顯示用資料（快取穩定引用，避免每次 CD 回傳新陣列導致 ngOnChanges 連鎖觸發）===
+  displayFixedRentItems: FixedRentCondition[] = [];
+  displayBaseRentHigherItems: BaseRentHigherCondition[] = [];
+  displayBaseCommissionItems: BaseCommissionCondition[] = [];
+  displayGraduatedItems: GraduatedCommissionCondition[] = [];
+  displayBaseTierItems: BaseTierCondition[] = [];
 
-  get displayBaseRentHigherItems(): BaseRentHigherCondition[] {
-    return this.dataManagerService.filterDisplayItems(this.baseRentHigherItems);
-  }
-
-  get displayBaseCommissionItems(): BaseCommissionCondition[] {
-    return this.dataManagerService.filterDisplayItems(this.baseCommissionItems);
-  }
-
-  get displayGraduatedItems(): GraduatedCommissionCondition[] {
-    return this.dataManagerService.filterDisplayItems(this.graduatedItems);
-  }
-
-  get displayBaseTierItems(): BaseTierCondition[] {
-    return this.dataManagerService.filterDisplayItems(this.baseTierItems);
+  private refreshDisplayItems(): void {
+    this.displayFixedRentItems = this.dataManagerService.filterDisplayItems(this.fixedRentItems);
+    this.displayBaseRentHigherItems = this.dataManagerService.filterDisplayItems(this.baseRentHigherItems);
+    this.displayBaseCommissionItems = this.dataManagerService.filterDisplayItems(this.baseCommissionItems);
+    this.displayGraduatedItems = this.dataManagerService.filterDisplayItems(this.graduatedItems);
+    this.displayBaseTierItems = this.dataManagerService.filterDisplayItems(this.baseTierItems);
   }
 
   get isFormReadonly(): boolean {
@@ -180,12 +174,14 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     this.initializeTableConfigs();
     this.categorizeConditionItems();
     this.initializeIfEmpty();
+    this.refreshDisplayItems();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['conditionItems']?.firstChange || changes['commissionType']) {
       this.categorizeConditionItems();
       this.initializeIfEmpty();
+      this.refreshDisplayItems();
     }
 
     if (changes['contractStartDate'] || changes['contractEndDate']) {
@@ -380,6 +376,24 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
   onAddGraduatedItem(): void {
     if (this.isFormReadonly) return;
 
+    const activeItems = this.graduatedItems.filter(i => i._status !== 'deleted');
+    if (this.dataManagerService.shouldAddPair(activeItems)) {
+      const dates = this.dataManagerService.getNextDatesForTieredItem(
+        this.graduatedItems, this.contractStartDate, this.contractEndDate
+      );
+      const count = this.dataManagerService.getLastGroupCount(activeItems);
+      const row1 = this.dataManagerService.createGraduatedItem(
+        this.talentId, dates.bdate, dates.edate, activeItems
+      ) as GraduatedCommissionCondition;
+      const newRows: GraduatedCommissionCondition[] = [row1];
+      for (let i = 1; i < count; i++) {
+        newRows.push({ ...row1, id: this.dataManagerService.generateTempId(), seq_no: row1.seq_no + i, start_number: 0, end_number: 0, charge_rate: 0 });
+      }
+      this.graduatedItems = [...this.graduatedItems, ...newRows];
+      this.emitConditionItemsChange();
+      return;
+    }
+
     const newItem = this.dataManagerService.createConditionItem(
       CommissionType.GRADUATED,
       this.talentId,
@@ -391,13 +405,30 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     if (newItem) {
       this.graduatedItems = [...this.graduatedItems, newItem as GraduatedCommissionCondition];
       this.emitConditionItemsChange();
-    } else {
-      this.messageService.warnBubble(this.DATE_FULL_MSG);
     }
   }
 
   onAddBaseTierItem(): void {
     if (this.isFormReadonly) return;
+
+    const activeItems = this.baseTierItems.filter(i => i._status !== 'deleted');
+    if (this.dataManagerService.shouldAddPair(activeItems)) {
+      const dates = this.dataManagerService.getNextDatesForTieredItem(
+        this.baseTierItems, this.contractStartDate, this.contractEndDate
+      );
+      const count = this.dataManagerService.getLastGroupCount(activeItems);
+      const limitAmt = this.dataManagerService.getFirstLimitAmt(activeItems);
+      const row1 = this.dataManagerService.createBaseTierItem(
+        this.talentId, dates.bdate, dates.edate, activeItems, limitAmt
+      ) as BaseTierCondition;
+      const newRows: BaseTierCondition[] = [row1];
+      for (let i = 1; i < count; i++) {
+        newRows.push({ ...row1, id: this.dataManagerService.generateTempId(), seq_no: row1.seq_no + i, start_number: 0, end_number: 0, charge_rate: 0, limit_amt: limitAmt });
+      }
+      this.baseTierItems = [...this.baseTierItems, ...newRows];
+      this.emitConditionItemsChange();
+      return;
+    }
 
     const newItem = this.dataManagerService.createConditionItem(
       CommissionType.BASE_TIER,
@@ -410,8 +441,6 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     if (newItem) {
       this.baseTierItems = [...this.baseTierItems, newItem as BaseTierCondition];
       this.emitConditionItemsChange();
-    } else {
-      this.messageService.warnBubble(this.DATE_FULL_MSG);
     }
   }
 
@@ -503,6 +532,7 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
       ...this.baseTierItems
     ];
 
+    this.refreshDisplayItems();
     this.conditionItemsChange.emit(allItems);
     this.dataChange.emit(allItems);  // 向後相容
   }

@@ -83,7 +83,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
 
   /** 載入憑證種類與儀表板 */
   loadSheetTypeCount() {
-    this.fin51010Service.queryFIN51010Count().pipe(untilDestroyed(this)).subscribe(res => {
+    this.fin51010Service.queryFIN51010Count('1').pipe(untilDestroyed(this)).subscribe(res => {
       if (res.Data) {
         this.countData = res.Data; // 儲存原始統計資料供頂部儀表板使用
       }

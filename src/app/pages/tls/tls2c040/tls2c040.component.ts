@@ -57,6 +57,10 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
       label: '應付',
       action: (rowData: any) => { this.onDetail(rowData, '應付') },
     },
+    {
+      label: '拋轉',
+      action: (rowData: any) => { this.onDetail(rowData, '拋轉') },
+    },
   ];
 
   //#region 下拉選單選項
@@ -73,7 +77,12 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
 
   columns: ReportColumn[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },
-    { field: 'SrcSheetType', header: '傳票種類', visible: true, format: (value: string) => this.srcSheetTypeOptions.find(item => item.No === value)?.Name || value },
+    {
+      field: 'SrcSheetType', header: '傳票種類', visible: true, format: (value: string) => {
+        const it = this.srcSheetTypeOptions.find(item => item.No === value);
+        return it ? (it.Display ?? `${it.No}-${it.Name}`) : value;
+      }
+    },
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
     { field: 'PostFlag', header: '傳票狀態', visible: true, format: (value: string) => this.postFlagOptions.find(item => item.No === value)?.Name || value },
     { field: 'Remark', header: '傳票摘要', visible: true },
@@ -91,7 +100,11 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS2C040', 'tls/tls2c040cru', this.queryForm, (form) => this.onSubmit(form));
     // 載入傳票種類
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'entry_type' }).pipe(untilDestroyed(this)).subscribe(response => {
-      this.srcSheetTypeOptions = response.Data;
+      // 加入 Display 欄位以顯示 "No-Name" 格式
+      this.srcSheetTypeOptions = response.Data.map((item: any) => ({
+        ...item,
+        Display: `${item.No}-${item.Name}`
+      }));
     });
   }
 

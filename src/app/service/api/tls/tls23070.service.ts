@@ -45,7 +45,14 @@ export class TLS23070Service {
       responseType: 'blob' as 'json',
     }) as Observable<HttpResponse<Blob>>;
   }
-
+exportTLS23070Excel(body: any): Observable<HttpResponse<Blob>> {
+  const url = `${this.apiUrl}/TLS0000/TLS2000/exportTLS23070`;
+  const payload = this.stripPaging(body);
+  return this.http.post(url, payload, {
+    observe: 'response',
+    responseType: 'blob' as 'json',
+  }) as Observable<HttpResponse<Blob>>;
+}
   /**
    * 匯出用：移除分頁相關欄位（大小寫都處理），保留 SortBy（若後端會依排序輸出）
    */

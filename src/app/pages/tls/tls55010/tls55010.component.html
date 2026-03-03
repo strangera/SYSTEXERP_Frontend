@@ -29,9 +29,9 @@
 </div>
 <div class=" card">
   @if (!isConfirmDate) {
-  <app-table dataKey="value" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="details" [showPaginator]="false"
-    [showManage]="false" [showCaption]="false" [showSort]="false"></app-table>
+  <app-table-report dataKey="value" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="details"
+    [showManage]="false" [showCaption]="false" [showSort]="false" [totalRecords]="0"></app-table-report>
   } @else {
   <form [formGroup]="dataForm" id="dataForm" class="flex flex-column gap-3" (ngSubmit)="onReverse(dataForm)">
     @if (showReverseBtn) {
@@ -88,9 +88,9 @@
       </div>
     </p-panel>
     <p-panel header="傳票明細">
-      <app-table [data]="data2" [columns]="columns2" [showManage]="false" [showDelete]="false" [showPaginator]="false"
-        [showCaption]="false">
-      </app-table>
+      <app-table-report [data]="data2" [columns]="columns2" [showManage]="false" [showDelete]="false"
+        [showCaption]="false" [totalRecords]="0" [footerData]="footerData2" [showSummary]="false">
+      </app-table-report>
     </p-panel>
   </form>
   }

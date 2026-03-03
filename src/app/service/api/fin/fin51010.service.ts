@@ -79,7 +79,9 @@ export interface UpdateFIN51010Request {
   Remark: string;
   DetailList: {
     GLS6002_ID: number;
+    AccNo: string;      // 新增
     NoteDesc: string;
+    ORG_ID: string;     // 新增
   }[];
 }
 
@@ -98,10 +100,10 @@ export class Fin51010Service {
   constructor(private http: HttpClient) { }
 
   /** 1. 查詢暫存傳票審核作業憑證種類筆數 */
-  queryFIN51010Count(): Observable<ApiResponse<QueryFIN51010CountResponse[]>> {
+  queryFIN51010Count(PostFlag: string | null): Observable<ApiResponse<QueryFIN51010CountResponse[]>> {
     return this.http.post<ApiResponse<QueryFIN51010CountResponse[]>>(
       `${this.apiUrl}/FIN0000/GLS1000/queryFIN51010Count`,
-      {}
+      { PostFlag }
     );
   }
 

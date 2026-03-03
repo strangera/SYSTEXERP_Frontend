@@ -15,7 +15,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
@@ -59,14 +59,14 @@ export class FIN15060Component extends BasicQueryPageComponent<FIN15060Data> imp
     { field: 'INV_Name', header: '買受人名稱', visible: true },
     { field: 'TXN_Uniform', header: '買受人統一編號', visible: true },
     { field: 'GoodsOrServicesName', header: '貨物或勞務名稱', visible: true },
-    { field: 'GoodsQty', header: '數量', visible: true },
+    { field: 'GoodsQty', header: '數量', visible: true, format: formatAmount },
     { field: 'ExportMethod', header: '外銷方式', visible: true },
     { field: 'INV_DocName', header: '證明文件名稱', visible: true },
     { field: 'INV_DocNo', header: '證明文件號碼', visible: true },
-    { field: 'NonCustomsExportAmt', header: '非經海關出口金額', visible: true },
+    { field: 'NonCustomsExportAmt', header: '非經海關出口金額', visible: true, format: formatAmount },
     { field: 'INV_ExportType', header: '出口報單類別', visible: true },
     { field: 'INV_ExportNo', header: '出口報單號碼', visible: true },
-    { field: 'CustomsExportAmt', header: '經海關出口金額', visible: true },
+    { field: 'CustomsExportAmt', header: '經海關出口金額', visible: true, format: formatAmount },
     { field: 'ExportDate', header: '輸出或結匯日期', visible: true, format: formatDate }
   ];
 
@@ -98,6 +98,15 @@ export class FIN15060Component extends BasicQueryPageComponent<FIN15060Data> imp
     this.fin15080Service.getStoTaxNoOptions({ mid, STO_No: storeNo }).subscribe({
       next: (opts) => {
         this.stoTaxNoOptions = opts.filter(x => x.STO_Status === '1');
+
+        // console.log('稅籍編號 options', this.stoTaxNoOptions);
+
+        // 預設第一筆 作為表單內容
+        if (this.stoTaxNoOptions.length > 0) {
+          this.queryForm.patchValue({
+            STO_TaxNo: this.stoTaxNoOptions[0].STO_TaxNo,
+          });
+        }
       },
       error: (err) => {
         console.error('取得稅籍下拉失敗：', err);

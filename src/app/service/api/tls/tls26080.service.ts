@@ -223,10 +223,12 @@ export class TLS26080Service {
     return formatDate(date, 'yyyy-MM-dd', 'en-US');
   }
 
-  public getTLTTalentOptions(query: { ven_no: string }): Observable<(Option & { talent_id: number })[] | null> {
+  public getTLTTalentOptions(query: { ven_no: string; tlt_bdate?: Date | null; tlt_edate?: Date | null }): Observable<(Option & { talent_id: number })[] | null> {
     this.tltTalentOptionsLoading.set(true);
     const payload: TalentOpenFlagQuery = {
       VEN_No: query.ven_no,
+      ...(query.tlt_bdate != null && { tlt_sdate: this.formatQueryDate(query.tlt_bdate) }),
+      ...(query.tlt_edate != null && { tlt_edate: this.formatQueryDate(query.tlt_edate) }),
     };
 
     return this.dropdown.queryTltTalentOpenFlag(payload).pipe(

@@ -357,16 +357,30 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
   }
 }
 // 預設0，(驗收數量+已驗數量)不可大於 應驗數量
-export function validateConfirmQtySumNotExceedSubQty(): (value: string | number, rowData: IODDetail, data: IODDetail[], field: string, header: string) => {
-  isValid: boolean;
-  errorMessage: string[];
-} {
-  return (value: string | number, rowData: IODDetail): { isValid: boolean; errorMessage: string[] } => {
-    const confirmQty = Number(value); // ODD_ConfirmQty 當下輸入值
+// 預設 0，(本次驗收數量 + 已驗收數量) 不可大於 應驗數量
+export function validateConfirmQtySumNotExceedSubQty(): (
+  value: string | number,
+  rowData: any,
+  data: any[],
+  field: string,
+  header: string
+) => { isValid: boolean; errorMessage: string[] } {
+  return (value: string | number, rowData: any, data: any[], field: string, header: string): { isValid: boolean; errorMessage: string[] } => {
+
+    // 1. 取得當下輸入值，若為空或非數字則視為 0
+    const confirmQty = isNaN(Number(value)) ? 0 : Number(value);
+
+    // 2. 取得已完成數量與應領數量 (確保從 rowData 取出時有預設值)
     const finishedQty = Number(rowData.ODD_ConfirmQty_Finished ?? 0);
     const subQty = Number(rowData.POD_SubQty ?? 0);
+
+    // 3. 計算總和並驗證
     const total = confirmQty + finishedQty;
-    const isValid = !isNaN(total) && total <= subQty;
-    return { isValid, errorMessage: isValid ? [] : [`+「已驗收數量」不能大於 應驗數量(${subQty})`, '驗證錯誤'], };
+    const isValid = total <= subQty;
+
+    return {
+      isValid,
+      errorMessage: isValid ? [] : [`「${header} + 已驗收數量」不可大於應驗數量 (${subQty})`],
+    };
   };
 }

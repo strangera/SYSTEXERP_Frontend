@@ -3,7 +3,7 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button label="確定日結" icon="pi pi-check" (click)="defineDateCheckout()"></app-button>
     <app-button label="反日結" icon="pi pi-undo" (click)="undefineDateCheckout()"></app-button>
-    <app-button label="本日重算" icon="pi pi-refresh" (click)="undefineDateCheckout()"></app-button>
+    <app-button label="本日重算" icon="pi pi-refresh" (click)="recalculateToday()"></app-button>
   </div>
 
   <p-accordion>
