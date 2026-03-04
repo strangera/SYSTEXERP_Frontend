@@ -77,6 +77,16 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS22040', 'TLS/TLS22040cru', this.queryForm, (form) => this.onSubmit(form));
+
+    // 若有已存在的查詢狀態，優先還原完整狀態（包含 pageIndex）
+    const saved = this.queryStateService.getQueryStateValue('TLS22040');
+    if (saved) {
+      this.formStatusService.waitForReady(this.ProgNo).subscribe(() => {
+        this.queryForm.patchValue(saved);
+        // 重新送出查詢以確保畫面與資料一致
+        this.onSubmit(this.queryForm);
+      });
+    }
   }
 
   private formatDate(d: any): string {
