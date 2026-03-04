@@ -9,6 +9,20 @@
         (click)="openTransferDialog()"
       ></app-button>
     }
+    @if (isFormEditable) {
+      <app-button
+        btnType="default"
+        icon="pi pi-file-check"
+        label="驗收"
+        [loading]="loading"
+      ></app-button>
+      <app-button
+        btnType="default"
+        icon="pi pi-verified"
+        label="審核"
+        [loading]="loading"
+      ></app-button>
+    }
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel header="採購主檔資料" class="line-height-3 m-0">
@@ -134,7 +148,11 @@
     @if (isFormCreateable) {
       <div class="col pt-4">
         <div class="grid justify-content-end gap-2">
-          <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onCancelButtonClick()"></app-button>
+          <app-button
+            btnType="cancel"
+            [form]="dataForm"
+            (clickEvent)="onCancelButtonClick()"
+          ></app-button>
           <app-button
             btnType="submit"
             label="儲存"
@@ -148,23 +166,13 @@
       <div class="col pt-4">
         <div class="grid justify-content-end gap-2">
           <app-button
-            severity="danger"
-            icon="pi pi-lock"
-            label="強制結案"
-            [loading]="loading"
-            (click)="onForceClose()"
+            btnType="cancel"
+            [form]="dataForm"
+            (clickEvent)="onCancelButtonClick()"
           ></app-button>
-          <app-button
-            severity="danger"
-            icon="pi pi-ban"
-            label="作廢"
-            [loading]="loading"
-            (click)="onVoid()"
-          ></app-button>
-          <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onCancelButtonClick()"></app-button>
           <app-button
             btnType="submit"
-            label="驗收確認"
+            label="儲存"
             [loading]="loading"
             (click)="onConfirm()"
           ></app-button>

@@ -17,6 +17,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatDate } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { Actions } from '@shared/service/permission-guard.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
@@ -129,16 +130,20 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
   }
 
   ngOnInit(): void {
-    this.initializePage('ASS12050', 'ass/ass12050cru', this.queryForm, () =>
+    this.initializePage('ASS12050', 'ass/ass12050master', this.queryForm, () =>
       this.onSubmit(),
     );
     this.loadDropdownOptions();
   }
 
-  /** 新增驗收單 */
   onCreateReceiving(): void {
     if (!this.hasPermission(Actions.Create)) return;
-    this.onCreate();
+    this.router.navigate(['account/ass/ass12050cru'], {
+      state: {
+        crudstatus: CRUDStatus.Create,
+        fromRoute: this.router.url,
+      },
+    });
   }
 
   private loadDropdownOptions(): void {

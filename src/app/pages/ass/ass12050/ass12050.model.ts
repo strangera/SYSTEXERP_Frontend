@@ -195,6 +195,10 @@ export interface ASS12050Detail {
   ORG_ID?: string | null;
   /** 部門名稱 */
   ORG_NAME?: string | null;
+  /** 驗收人 */
+  APPLY_USER_ID?: string | null;
+  /** 驗收人名稱 */
+  APPLY_USER_NAME?: string | null;
   /** 申請日期 */
   APPLY_DATE?: string | null;
   /** 供應商代號 */

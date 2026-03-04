@@ -249,6 +249,22 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
     }
   }
 
+  /** 覆寫：從編輯主檔進入時，返回編輯主檔而非查詢頁 */
+  override onCancel(returnValue?: unknown): void {
+    const fromRoute = (this.router.lastSuccessfulNavigation?.extras?.state as { fromRoute?: string } | undefined)?.fromRoute;
+    if (fromRoute?.includes('ass12050master') && this.subcheckId) {
+      this.router.navigate(['account/ass/ass12050master'], {
+        state: {
+          rowdata: { SUBCHECK_ID: this.subcheckId },
+          fromRoute: this.router.url,
+          data: returnValue,
+        },
+      });
+      return;
+    }
+    super.onCancel(returnValue);
+  }
+
   /** 取消按鈕：還原表單與明細表格至原始狀態 */
   onCancelButtonClick(): void {
     this.data = this.originalData.map(item => ({ ...item }));

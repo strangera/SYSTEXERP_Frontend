@@ -1,0 +1,36 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      icon="pi pi-print"
+      label="列印採購驗收單"
+      [loading]="loading"
+      (click)="onPrint()"
+    ></app-button>
+    <app-button
+      severity="danger"
+      icon="pi pi-lock"
+      label="強制結案"
+      [loading]="loading"
+      (click)="onForceClose()"
+    ></app-button>
+    <app-button btnType="back" (click)="onBack()"></app-button>
+  </div>
+  <p-panel header="採購主檔資料" class="line-height-3 m-0">
+    <app-table
+      [data]="masterTableData"
+      [columns]="masterColumns"
+      dataKey="_masterKey"
+      [showDetail]="false"
+      [showEdit]="true"
+      [showCheckBox]="true"
+      [selectionMode]="'multiple'"
+      [showCaption]="false"
+      [showHeader]="true"
+      [loading]="loading"
+      [selectedItems]="selectedMasterRows"
+      (selectionChange)="selectedMasterRows = $event"
+      (edit)="onEditDetail()"
+    ></app-table>
+  </p-panel>
+</div>
