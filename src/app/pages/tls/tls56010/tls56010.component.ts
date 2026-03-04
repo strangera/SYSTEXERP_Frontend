@@ -60,16 +60,12 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
     tltCode: [null],
     PLU_Name: [null],
     isSafetyStock: [false],
-    // 預設排序：PLU_MagNo asc
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
-    pageSize: [30],
   });
   expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
-
   private lazyLoadTrigger$ = new Subject<any>();
   // 在還原查詢狀態時暫時抑制分類欄位的 valueChanges 處理
   private suppressCategoryHandlers = false;
-
   // 管理編號
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
@@ -96,11 +92,9 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
   smallCategoryOptions: IDropdownItem[] = [];
   managementIdOptions: IDropdownItem[] = [];
   brandCodeOptions: IDropdownItem[] = [];
-
   totalRecords = 0;
   data: any[] = [];
   filteredData: any[] = [...this.data];
-
   columns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
@@ -441,6 +435,4 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
       return 0;
     });
   }
-
-
 }

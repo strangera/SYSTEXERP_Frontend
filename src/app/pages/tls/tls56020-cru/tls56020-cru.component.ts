@@ -27,8 +27,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { mapPagingToBackend } from '../tls56020/tls56020.model';
 import { formatAmount } from './../tls55070/tls55070-table/tls55070-table.model';
-
-// 2.5.2.1  採購單維護作業 CRU
 @Component({
   selector: 'app-tls56020-cru',
   templateUrl: './tls56020-cru.component.html',
@@ -53,7 +51,6 @@ import { formatAmount } from './../tls55070/tls55070-table/tls55070-table.model'
   ],
 })
 export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> implements OnInit {
-  // === 表單群組 (與 POS2016 欄位對應) ===
   dataForm = this.formBuilder.nonNullable.group({
     SPM_No: [{ value: '系統自動產生', disabled: true }], // 領用單號 (與 POS2016.SPM_No 對應)
     LOGO_No: [null as string | null, [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
@@ -76,7 +73,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     PO_Remark: [null as string | null, [Validators.maxLength(200)]], // 採購單備註 (對應 POS2016.PO_Remark)
     SPM_Type: [null as string | null], // 領用類別
     SPM_remark: [''],
-
   });
   issuanceTypeOptions: { label: string; value: string }[] = [
     { label: '贈品領用', value: '1' },
@@ -84,7 +80,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   ];
   userOptions: { label: string; value: string }[] = [];
   departmentOptions: { label: string, value: string }[] = [];
-
   fullLogoAccorHosData: LogoAccorHosItem[] = [];
   fullLogoOptions: Option[] = [];
   filteredLogoOptions: Option[] | null = null;
@@ -118,7 +113,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     { field: 'SPD_BuyTax', header: '進價稅額', format: formatAmount },
     { field: 'SPD_BuyAmt', header: '進價小計', format: formatAmount },
     { field: 'SPD_BuyNet', header: '進價小計(未稅)', format: formatAmount },
-    // { field: 'PLU_TaxType', header: '售價稅別' },
     { field: 'SPD_SaleTax', header: '售價稅額', format: formatAmount },
     { field: 'SPD_SaleAmt', header: '售價小計', format: formatAmount },
     { field: 'POD_Remark', header: '備註', type: 'input' },
@@ -126,7 +120,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   originalData: IPOS2004DetailData[] = [];
   data: IPOS2004DetailData[] = [];
   selectedItems: IPOS2004DetailData[] = [];
-
   validateEntireRow = (rowData: IPOS2004DetailData): { isValid: boolean, errorMessage: string } => {
     const hasDuplicatePLU_MagNo = this.data.some((item: IPOS2004DetailData) =>
       item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY);
@@ -136,7 +129,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
 
     return { isValid: true, errorMessage: '' };
   };
-
   onPLU_MagNoBlur(rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) {
     const logoNo = this.dataForm.controls.LOGO_No.value;
     if (!logoNo || !value) {
@@ -163,7 +155,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           const salePrc = newData.PLU_SalePrc || 0;
           const taxType = newData.PLU_StockTaxType;
           const subQty = 1; // 預設數量為 1
-
           const buyNet = Math.round(subQty * buyPrc);
           const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;
           const buyAmt = buyNet + buyTax;
@@ -204,7 +195,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
             Object.assign(currentRow, updatedRow);
           }
           this.data = [...this.data];
-
           this.calculateTotals();
           this.cdr.detectChanges();
         } else {
@@ -237,24 +227,20 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     const qty = Number(value) || 0;
     // 同步 POD_SubQty
     (rowData as any).POD_SubQty = qty;
-
     const buyPrc = Number((rowData as any).PLU_SalePrc_UNI ?? (rowData as any).POD_BuyPrc ?? 0) || 0;
     const buyNet = Math.round(buyPrc * qty);
     const buyTax = (rowData as any).PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;
     const buyAmt = buyNet + buyTax;
-
     const salePrc = Number((rowData as any).PLU_SalePrc ?? 0) || 0;
     const saleAmt = Math.round(salePrc * qty);
     const saleTax = (rowData as any).PLU_TaxType === '1' ? Math.round(saleAmt / 21) : 0;
     const saleNet = saleAmt - saleTax;
-
     // 更新 POD_* 實際欄位（後端送出使用）
     (rowData as any).POD_BuyNet = buyNet;
     (rowData as any).POD_BuyTax = buyTax;
     (rowData as any).POD_BuyAmt = buyAmt;
     (rowData as any).POD_SaleAmt = saleAmt;
     (rowData as any).POD_SaleTax = saleTax;
-
     // 更新顯示用 SPD_* 屬性
     (rowData as any).SPD_ConfirmQty = qty;
     (rowData as any).SPD_BuyPrc = buyPrc;
@@ -265,8 +251,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     (rowData as any).SPD_SaleAmt = saleAmt;
     (rowData as any).SPD_SaleTax = saleTax;
     (rowData as any).SPD_SaleNet = saleNet;
-
-    // trigger update
     this.data = [...this.data];
     this.calculateTotals();
     this.cdr.detectChanges();
@@ -298,10 +282,8 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           PLU_BoxQty: d.PLU_BoxQty ?? 0,
           PLU_StockTaxType: d.PLU_StockTaxType ?? '',
           PLU_TaxType: d.PLU_TaxType ?? '',
-          // 進價/售價欄位優先取原欄位，若後端回的是 SPD_ 前綴則也要支援
           PLU_SalePrc_UNI: d.PLU_SalePrc_UNI ?? d.POD_BuyPrc ?? d.SPD_BuyPrc ?? 0,
           PLU_SalePrc: d.PLU_SalePrc ?? d.POD_SalePrc ?? d.SPD_SalePrc ?? 0,
-          // 庫存/數量與金額
           NowHaveQty: d.NowHaveQty ?? d.NowHaveQty ?? 0,
           POD_SubQty: d.POD_SubQty ?? d.SPD_ConfirmQty ?? 0,
           POD_BuyNet: d.POD_BuyNet ?? d.SPD_BuyNet ?? 0,
@@ -327,7 +309,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       this.cdr.detectChanges();
     });
   }
-
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly dropdown: DropdownApiService,
@@ -426,14 +407,10 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       this.calculateTotals();
       [this.data, this.selectedItems, this.dialogData] = [[], [], []];
     });
-
     HOS_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((hosNo) => {
       this.filterLogoOptions(hosNo);
-      const associatedLOGONos = this.fullLogoAccorHosData
-        .filter(item => item.HOS_No === hosNo)
-        .map(item => item.LOGO_No);
+      const associatedLOGONos = this.fullLogoAccorHosData.filter(item => item.HOS_No === hosNo).map(item => item.LOGO_No);
       const uniqueAssociatedLOGONos = [...new Set(associatedLOGONos)];
-
       if (uniqueAssociatedLOGONos.length === 1 && LOGO_No.value !== uniqueAssociatedLOGONos[0]) {
         LOGO_No.setValue(uniqueAssociatedLOGONos[0], { emitEvent: false });
         this.filterWarehouseOptions(LOGO_No.value);
@@ -441,14 +418,8 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         // 當使用者清除 HOS_No 時，不要自動清除已選的 LOGO_No，僅重置可選的倉庫列表
         this.filterWarehouseOptions(null);
       }
-
       this.cdr.detectChanges(); // 觸發畫面更新
     });
-
-    APPLY_Date.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(() => {
-      // 目前不再自動取得剩餘預算金額
-    });
-
   }
   /**
  * 根據選定的品牌代碼 (LOGO_No) 過濾倉別 (HOS_No) 選項
@@ -457,18 +428,13 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
  */
   private filterWarehouseOptions(logoNo: string | null, options?: { initialLoad?: boolean }): void {
     if (!this.fullLogoAccorHosData || !this.fullWarehouseOptions) return;
-
     if (!logoNo) {
       this.filteredWarehouseOptions = this.fullWarehouseOptions;
       return;
     }
-
     const associatedHOSNos = new Set(
-      this.fullLogoAccorHosData
-        .filter(item => item.LOGO_No === logoNo)
-        .map(item => item.HOS_No)
+      this.fullLogoAccorHosData.filter(item => item.LOGO_No === logoNo).map(item => item.HOS_No)
     );
-
     if (associatedHOSNos.size > 0) {
       this.filteredWarehouseOptions = this.fullWarehouseOptions.filter(warehouse =>
         associatedHOSNos.has(warehouse.value)
@@ -476,7 +442,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     } else {
       this.filteredWarehouseOptions = [];
     }
-
     const currentHOSNo = this.dataForm.controls.HOS_No.value;
     if (currentHOSNo && !associatedHOSNos.has(currentHOSNo) && !options?.initialLoad) {
       this.dataForm.controls.HOS_No.setValue(null, { emitEvent: false });
@@ -496,11 +461,8 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       return;
     }
     const associatedLOGONos = new Set(
-      this.fullLogoAccorHosData
-        .filter(item => item.HOS_No === hosNo)
-        .map(item => item.LOGO_No)
+      this.fullLogoAccorHosData.filter(item => item.HOS_No === hosNo).map(item => item.LOGO_No)
     );
-
     if (associatedLOGONos.size > 0) {
       this.filteredLogoOptions = this.fullLogoOptions.filter(brand =>
         associatedLOGONos.has(brand.value)
@@ -508,7 +470,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     } else {
       this.filteredLogoOptions = [];
     }
-
     const currentLOGONo = this.dataForm.controls.LOGO_No.value;
     if (currentLOGONo && !associatedLOGONos.has(currentLOGONo) && !options?.initialLoad) {
       this.dataForm.controls.LOGO_No.setValue(null, { emitEvent: false });
@@ -525,7 +486,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'PLU_MagNo', order: 1 }]],
   });
-
   totalRecords = 0;
   CAT_LNoOptions: IDropdownItem[] = [];
   CAT_MNoOptions: IDropdownItem[] = [];
@@ -586,10 +546,8 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     const sortVal = raw.SortBy ?? raw.sortBy ?? [{ field: 'PLU_MagNo', order: 1 }];
     const pageSizeVal = raw.PageSize ?? raw.pageSize ?? 30;
     const pageIndexVal = raw.PageIndex ?? raw.pageIndex ?? 1;
-
     // 先把分頁排序映射為後端需要的鍵
     const pagingMapped = mapPagingToBackend({ PageSize: pageSizeVal, PageIndex: pageIndexVal, SortBy: sortVal });
-
     const body: any = {
       ...pagingMapped,
       queryNo: raw.PLU_MagNo || raw.queryNo || '',
@@ -631,11 +589,9 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     this.selectedItems = [];
     this.cdr.detectChanges();
   }
-
   isRowSelectable(event: IPOS2004DetailData): boolean {
     return !this.data || !this.data.some((item: IPOS2004DetailData) => item.PLU_MagNo === event.PLU_MagNo);
   }
-
   // 總計計算邏輯
   calculateTotals(): void {
     let totalBuyNet = 0;
@@ -796,10 +752,6 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       }))];
     });
   }
-  onReset() {
-    this.data = [...this.originalData];
-  }
-
   onLocalCancel() {
     // 還原成初始化時的明細（使用深複製以避免 reference 導致尚未還原的值）
     this.data = JSON.parse(JSON.stringify(this.originalData || []));

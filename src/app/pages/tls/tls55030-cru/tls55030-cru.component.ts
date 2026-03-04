@@ -38,7 +38,7 @@ export interface IRebateDetailForCRU extends IInvoiceDetail {
   Rebate_Net?: number;    // 計算後的折讓淨額
   Rebate_Tax?: number;    // 計算後的折讓稅額
   Rebate_Name: string | null;    // 新增/輸入的折讓名稱
-  Rebate_GUIDate: string;  // 新增/輸入的折讓日期
+  Rebate_GUIDate: Date;  // 新增/輸入的折讓日期
 }
 
 @Component({
@@ -159,13 +159,14 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     // 1. 查詢發票/收據明細 (Rebate Detail)
     const loadRebate$ = this.tls55030Service.queryTLS55030RebateDetailByDisNo({ DIS_No: disNo }).pipe(map(res => {
       const rebateDetails: IInvoiceDetailByDisNo[] = res.Data || [];
+      console.log('原始發票明細資料:', rebateDetails);
       const convertedData: IRebateDetailForCRU[] = rebateDetails.map(item => ({
         ...item,
         Rebate_Amt: item.Rebate_Amt_Existed, // 將已折讓金額視為本次輸入
         Rebate_Amt_New: item.Rebate_Amt, // 先給0
         Rebate_Net: item.Rebate_Net, // 需從 Rebate_Amt 計算或後端提供
         Rebate_Tax: item.Rebate_Tax,  // 需從 Rebate_Amt 計算或後端提供
-        Rebate_GUIDate: item.Rebate_GUIDate
+        Rebate_GUIDate: new Date(item.Rebate_GUIDate), // 預設為今天
       }));
       this.data = convertedData;
 
