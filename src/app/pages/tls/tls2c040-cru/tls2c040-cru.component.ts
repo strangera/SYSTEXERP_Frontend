@@ -8,7 +8,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { Column, formatAmount, formatDate, formatYYYYMM, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -102,8 +102,8 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     // { field: 'CustomerNo', header: '客戶代碼' },
     { field: 'DetailNo', header: '廠商代碼' },
     // { field: 'VouType', header: '傳票類型' },
-    { field: 'sam_yyymm', header: '年月', format: formatYYYYMM },
-    { field: 'sam_termno', header: '帳次' },
+    // { field: 'sam_yyymm', header: '年月', format: formatYYYYMM },
+    // { field: 'sam_termno', header: '帳次' },
     { field: 'ap_amt', header: '應付帳款金額', textAlign: 'right', format: formatAmount },
     // { field: 'pta_amt', header: '沖帳金額', textAlign: 'right', format: formatAmount },
     { field: 'AccNo', header: '會計科目', type: 'dropdown', options: this.accnoOptions, optionLabel: 'Display', optionValue: 'No' },
@@ -132,8 +132,8 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     // { field: 'CustomerNo', header: '客戶代碼', visible: true },
     { field: 'DetailNo', header: '廠商代碼', visible: true },
     // { field: 'VouType', header: '傳票類型', visible: true },
-    { field: 'sam_yyymm', header: '年月', visible: true, format: formatYYYYMM },
-    { field: 'sam_termno', header: '帳次', visible: true },
+    // { field: 'sam_yyymm', header: '年月', visible: true, format: formatYYYYMM },
+    // { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'ar_amt', header: '應收帳款金額', visible: true, isTotal: true, format: formatAmount },
     // { field: 'pta_amt', header: '沖帳金額', visible: true, format: formatAmount },
     { field: 'accno', header: '會計科目', visible: true },
@@ -233,7 +233,8 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
             const main = (response.Data && response.Data.length) ? response.Data[0] : null;
             if (main) {
               this.rowdata = main as any;
-              try { if (this.dataForm.disabled) this.dataForm.enable();
+              try {
+                if (this.dataForm.disabled) this.dataForm.enable();
                 this.dataForm.patchValue({
                   VouNo: main.VouNo,
                   VouType: main.VouType,
@@ -246,7 +247,8 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
                   CRT_Date: main.CRT_Date,
                   UPD_USR_No: main.UPD_USR_No,
                   UPD_Date: main.UPD_Date
-                }); } finally { if (!this.useReadonlyInsteadOfDisable) this.dataForm.disable(); }
+                });
+              } finally { if (!this.useReadonlyInsteadOfDisable) this.dataForm.disable(); }
 
               const mainDetails = main._GLS6002List ?? [];
               const details = (mainDetails || []).map((d: any) => ({
@@ -285,7 +287,8 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
             const main = (response.Data && response.Data.length) ? response.Data[0] : null;
             if (main) {
               this.rowdata = main as any;
-              try { if (this.dataForm.disabled) this.dataForm.enable();
+              try {
+                if (this.dataForm.disabled) this.dataForm.enable();
                 this.dataForm.patchValue({
                   VouNo: main.VouNo,
                   VouType: main.VouType,
@@ -298,7 +301,8 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
                   CRT_Date: main.CRT_Date,
                   UPD_USR_No: main.UPD_USR_No,
                   UPD_Date: main.UPD_Date
-                }); } finally { if (!this.useReadonlyInsteadOfDisable) this.dataForm.disable(); }
+                });
+              } finally { if (!this.useReadonlyInsteadOfDisable) this.dataForm.disable(); }
             }
           });
       }
