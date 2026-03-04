@@ -12,7 +12,6 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 import { ExportLabelService } from './../../../service/utility/exportLabel.service';
@@ -31,9 +30,8 @@ export interface Label {
 @Component({
   selector: 'app-tls51070-os',
   templateUrl: './tls51070-os.component.html',
-  styleUrl: './tls51070-os.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, NgIf, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberComponent, ExpandableEditTableComponent, TableComponent, DropdownTableComponent]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, NgIf, FormsModule, ReactiveFormsModule, InputNumberComponent, ExpandableEditTableComponent, TableComponent, DropdownTableComponent]
 })
 //處理 變價歷史紀錄/產生標籤檔
 export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implements OnInit {
