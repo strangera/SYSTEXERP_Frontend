@@ -88,6 +88,8 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
     { value: '3', label: '現金' },
   ];
   public btnPDFLoading = false;
+  public btnImportLoading = false;
+  public selectedItems: QueryASS11070Response[] = [];
   public lastQueryBody?: QueryASS11070Request;
 
   public readonly columns: ReportColumn[] = [
@@ -218,6 +220,36 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
           },
         });
     });
+  }
+
+  public onImportFinancialVendors(): void {
+    if (this.selectedItems.length === 0) {
+      this.messageService.warnBox('請勾選要轉入的廠商');
+      return;
+    }
+    const vendorIds = this.selectedItems
+      .map(r => r.VENDOR_ID)
+      .filter((id): id is string => !!id);
+    const VendorIDList = vendorIds.join(',');
+    if (!VendorIDList) {
+      this.messageService.warnBox('勾選的廠商無有效統一編號');
+      return;
+    }
+    this.btnImportLoading = true;
+    this.service
+      .transferToPOS2013ASS11070({ VendorIDList })
+      .pipe(
+        finalize(() => {
+          this.btnImportLoading = false;
+        })
+      )
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          this.messageService.successBubble(res.Message ?? '轉入成功');
+          this.selectedItems = [];
+        },
+      });
   }
 
   public onExportPDF(): void {

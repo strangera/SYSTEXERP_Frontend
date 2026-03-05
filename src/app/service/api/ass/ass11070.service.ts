@@ -7,6 +7,7 @@ import {
   QueryASS11070DataWrapper,
   QueryASS11070Request,
   QueryASS11070Response,
+  TransferToPOS2013ASS11070Request,
   UpdateASS11070Request,
 } from '@pages/ass/ass11070/ass11070.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
@@ -67,5 +68,12 @@ export class ASS11070Service {
    */
   exportPDFASS11070(payload: QueryASS11070Request): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/exportPDFASS11070`, payload, { responseType: 'blob' });
+  }
+
+  /**
+   * 轉入財資廠商
+   */
+  transferToPOS2013ASS11070(payload: TransferToPOS2013ASS11070Request): Observable<ApiResponse<null>> {
+    return this.http.post<ApiResponse<null>>(`${this.apiUrl}/transferToPOS2013ASS11070`, payload);
   }
 }

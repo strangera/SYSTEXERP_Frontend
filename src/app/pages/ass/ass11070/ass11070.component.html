@@ -1,6 +1,9 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="default" label="轉入財資廠商" icon="pi pi-download"
+      (click)="onImportFinancialVendors()" [disabled]="selectedItems.length === 0"
+      [loading]="btnImportLoading"></app-button>
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
 
@@ -105,7 +108,8 @@
 <div class="card">
   <div class="col-12">
     <app-table-report [data]="tableData()" [dataKey]="'ID'" [tableKey]="'ASS11070_Data'" [columns]="columns"
-      [totalRecords]="totalRecords()" [showCheckBox]="false" [showDelete]="false" [lazy]="true"
+      [totalRecords]="totalRecords()" [showCheckBox]="true" [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event" [showDelete]="false" [lazy]="true"
       [loading]="tableLoading()" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction" (edit)="onEdit($event)"
       (detail)="onDetail($event)">
       <header>

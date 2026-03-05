@@ -90,6 +90,13 @@ export interface DetailASS11070Response {
 }
 
 /**
+ * 轉入財資廠商 Request
+ */
+export interface TransferToPOS2013ASS11070Request {
+  VendorIDList: string; // 必填，逗號分隔的 VENDOR_ID
+}
+
+/**
  * ASS11070 新增 Request（align-all-new）
  */
 export type InsertASS11070Request = DetailASS11070Response;
