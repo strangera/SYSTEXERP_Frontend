@@ -222,6 +222,7 @@
   [showPaginator]="false"
   [disabled]="isRead"
   [(data)]="detailRows"
+   (dataChange)="onDetailRowsChange($event)"
   (fieldChange)="onFieldChange($event)">
 </app-table>
 
