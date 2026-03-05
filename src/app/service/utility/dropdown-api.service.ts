@@ -262,11 +262,13 @@ export class DropdownApiService {
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
-  /** 查詢商品管理編號(FASITEM)資料表下拉選單 */
-  queryFasitem(): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<IDropdownItem>('/queryFASITEM_DropDownList', 'No', 'Name').pipe(
-      shareReplay({ bufferSize: 1, refCount: true }),
-    );
+  /** 查詢商品管理編號(ASS11040)下拉選單 */
+  queryAss11040Dropdown(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>(
+      '/ASS0000/ASS1000/queryASS11040_DropDownList',
+      'No',
+      'Name',
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
   /** 查詢組織階層樹狀圖(SYS3100)下拉選單 */
   querySys3100Tree(body: OrgTreeQuery): Observable<OrgTreeItem[] | null> {

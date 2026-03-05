@@ -147,7 +147,7 @@ export class ASS13040Component extends BasicQueryPageComponent<ASS13040QueryRow>
 
   private loadDropdowns(): void {
     forkJoin({
-      manageCodes: this.dropdownApiService.queryFasitem(),
+      manageCodes: this.dropdownApiService.queryAss11040Dropdown(),
       users: this.dropdownApiService.queryTblUser(),
       departments: this.dropdownApiService.querySys3100(),
       statuses: this.dropdownApiService.querySys1000({ SYS_Type: 'AM_DAMAGEM_STATUS' }),
