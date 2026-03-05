@@ -111,10 +111,8 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'building_desc', header: '館別' },
     { field: 'Org_Name', header: '組織' },
     { field: 'SYS_Name', header: '櫃別' },
-    { field: 'counterNumber', header: '櫃別' },
     { field: 'TltNo', header: '專櫃編號' },
     { field: 'TltName', header: '專櫃名稱' },
-
     { field: 'Base_LocationNo', header: '位置編號', groupField: 'Base' },
     { field: 'Base_Space', header: '坪數', groupField: 'Base' },
     { field: 'Base_SaleAmt', header: '銷售金額', groupField: 'Base' },
@@ -123,7 +121,6 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'Base_DaySpaceEff', header: '日坪效', groupField: 'Base' },
     { field: 'Base_AchieveRate', header: '達成率', groupField: 'Base' },
     { field: 'Base_AvgTicket', header: '客單價', groupField: 'Base' },
-
     { field: 'Comp_LocationNo', header: '位置編號', groupField: 'Comp' },
     { field: 'Comp_Space', header: '坪數', groupField: 'Comp' },
     { field: 'Comp_SaleAmt', header: '銷售金額', groupField: 'Comp' },

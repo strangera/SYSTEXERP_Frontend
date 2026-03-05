@@ -71,7 +71,10 @@ export class Tls21040Service {
   updateTLS21040(data: TLS21040UpdateRequest): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS21040`, data);
   }
-
+  /// 檢查 BIN 碼是否存在
+  checkTLS21040_BIN(data: { CRD_BinCode: string, id?: number }): Observable<ApiResponse<{ exists: boolean }>> {
+    return this.http.post<ApiResponse<{ exists: boolean }>>(`${this.apiUrl}/checkTLS21040_BIN`, data);
+  }
   /** 刪除 */
   deleteTLS21040(ids: number[]): Observable<ApiResponse<any>> {
     const body: TLS21040DeleteRequest = { idList: ids };
@@ -90,4 +93,5 @@ export class Tls21040Service {
       responseType: 'blob'
     });
   }
+
 }

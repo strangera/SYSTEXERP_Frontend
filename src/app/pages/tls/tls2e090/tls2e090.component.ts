@@ -16,6 +16,7 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
 import { ColumnGroup } from '@shared/componentkit/table/table.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SelectButtonModule } from 'primeng/selectbutton';
 import { debounceTime, finalize, Observable } from 'rxjs';
@@ -26,7 +27,6 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { columnGroup, columns1, columns2, columns3 } from './tls2e090.model';
-
 type ReportType = '1' | '2' | '3';
 type QueryApiFn = (body: Tls2e090QueryBody) => Observable<ApiResponse<any, any>>;
 
@@ -34,7 +34,7 @@ type QueryApiFn = (body: Tls2e090QueryBody) => Observable<ApiResponse<any, any>>
   selector: 'app-tls2e090',
   templateUrl: './tls2e090.component.html',
   standalone: true,
-  imports: [RadiobuttonComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
+  imports: [ButtonModule, RadiobuttonComponent, SelectButtonModule, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -95,7 +95,8 @@ export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> imp
   bus_classOptions: IDropdownItem[] = [];
   invoiceTypeOptions = getSYS1000Options('invoice_type');
   apiUrl = 'queryTLS2E090';
-
+  btnLoading = false;
+  btnLoading2 = false;
   constructor(
     public readonly tls2e090Service: Tls2e090Service,
     private readonly dropdown: DropdownApiService,
@@ -223,5 +224,70 @@ export class TLS2E090Component extends BasicQueryPageComponent<Tls2e090Data> imp
         this.loading2 = false;
       }
     });
+  }
+
+  onExportPDF() {
+    this.btnLoading = true;
+    const bodies: { body: Tls2e090QueryBody; storeLabel: string }[] = [];
+    if (this.lastQueryBody1) bodies.push({ body: this.lastQueryBody1, storeLabel: '專櫃' });
+    if (this.lastQueryBody2) bodies.push({ body: this.lastQueryBody2, storeLabel: '自營' });
+    if (bodies.length === 0) { this.btnLoading = false; return; }
+
+    let pending = bodies.length;
+    bodies.forEach(item => {
+      const call$ = this.reportType === '1'
+        ? this.tls2e090Service.exportTLS2E090PDF(item.body)
+        : this.reportType === '2'
+          ? this.tls2e090Service.exportTLS2E090SalChargePDF(item.body)
+          : this.tls2e090Service.exportTLS2E090SalChargeCategoryPDF(item.body);
+
+      call$.pipe(finalize(() => {
+        pending -= 1;
+        if (pending === 0) this.btnLoading = false;
+      }), untilDestroyed(this)).subscribe(blob => {
+        const stamp = this.datePipe.transform(new Date(), 'yyyyMMdd_HHmmss');
+        const typeLabel = this.typeOptions.find(t => t.value === this.reportType)?.label || 'report';
+        const filename = `${typeLabel}_${item.storeLabel}_${stamp}.pdf`;
+        this.downloadBlob(blob, filename);
+      });
+    });
+  }
+
+  onExportExcel() {
+    this.btnLoading2 = true;
+    const bodies: { body: Tls2e090QueryBody; storeLabel: string }[] = [];
+    if (this.lastQueryBody1) bodies.push({ body: this.lastQueryBody1, storeLabel: '專櫃' });
+    if (this.lastQueryBody2) bodies.push({ body: this.lastQueryBody2, storeLabel: '自營' });
+    if (bodies.length === 0) { this.btnLoading2 = false; return; }
+
+    let pending = bodies.length;
+    bodies.forEach(item => {
+      const call$ = this.reportType === '1'
+        ? this.tls2e090Service.exportTLS2E090(item.body)
+        : this.reportType === '2'
+          ? this.tls2e090Service.exportTLS2E090SalCharge(item.body)
+          : this.tls2e090Service.exportTLS2E090SalChargeCategory(item.body);
+
+      call$.pipe(finalize(() => {
+        pending -= 1;
+        if (pending === 0) this.btnLoading2 = false;
+      }), untilDestroyed(this)).subscribe(blob => {
+        const stamp = this.datePipe.transform(new Date(), 'yyyyMMdd_HHmmss');
+        const typeLabel = this.typeOptions.find(t => t.value === this.reportType)?.label || 'report';
+        const filename = `${typeLabel}_${item.storeLabel}_${stamp}.xlsx`;
+        this.downloadBlob(blob, filename);
+      });
+    });
+  }
+
+  private downloadBlob(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
   }
 }
