@@ -685,7 +685,7 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         APPLY_Date: formData.APPLY_Date ? new Date(formData.APPLY_Date).toISOString() : null,
         APPLY_USR_No: this.authService.currentUserValue?.user_No || '',
         APPLY_USR_Name: this.authService.currentUserValue?.user_Name || '',
-        id: 0,
+        id: this.isFormCreateable ? 0 : this.rowdata?.id || 0,
         SPM_No: formData.SPM_No || '',
         SPM_Status: '',
         SPM_TotQty: totalSubQty,

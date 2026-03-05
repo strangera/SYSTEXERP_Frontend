@@ -98,7 +98,6 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
     });
   }
   onDelete(event: Tls55030ListData[]) {
-    // "DIS_Nos":string[]
     const DIS_Nos = event.map(v => v.DIS_No);
     this.tls55030Service.deleteTLS55030({ DIS_Nos }).subscribe(() => {
       this.messageService.successBubble('刪除成功');

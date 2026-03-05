@@ -320,7 +320,7 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     const finalPositiveAmt = Math.round(positiveTotalRebateAmt); // 折讓總金額
     const negativeTotalRebateAmt = finalPositiveAmt !== 0 ? -finalPositiveAmt : 0; // 轉為負數表示扣除的金額 (如果有折讓金額才轉負數，沒有則保持0)
     // 總餘額 = 退貨總金額 - 折讓總金額 (注意：折讓總金額是正數，但在計算餘額時應該扣除，所以用負數表示)
-    const balance = Math.round(totalInvoiceAmt - totalRemainingRebateAmt + negativeTotalRebateAmt);
+    const balance = Math.round(totalRemainingRebateAmt + negativeTotalRebateAmt);
 
     // 更新 FormControls
     this.dataForm.controls.invoiceTotalAmount.setValue(Math.round(totalInvoiceAmt));
@@ -341,6 +341,11 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if ((frm.getRawValue().totalRebateAmount * -1) !== (frm.getRawValue().RJM_TotalBuyAmt || 0)) {
+        this.messageService.errorBubble('【退貨總金額】與【折讓總金額】不相符');
+        this.loading = false;
+        return;
+      }
       const formValue = frm.getRawValue();
       const paramBody = {
         DIS_No: this.isFormCreateable ? undefined : formValue.DIS_No,

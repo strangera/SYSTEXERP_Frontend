@@ -244,8 +244,7 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
 
   // 編輯按鈕唯讀控制：若 SPM_Status 為 3 (已領用) 或 9 (已作廢) 則禁用編輯
   isEditDisabled(row: TLS56020Item): boolean {
-    const s = String(row?.SPM_Status ?? '').trim();
-    return s === '3' || s === '9' || Number(s) === 3 || Number(s) === 9;
+    return row.SPM_Status !== '1';
   }
 
   batchStatusChange(targetStatus: POStatus) {
