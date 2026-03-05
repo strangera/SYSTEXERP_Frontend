@@ -103,8 +103,8 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       header: '稅別',
     },
     { field: 'NowHaveQty', header: '目前庫存' },
-    { field: 'PLU_SalePrc', header: '商品售價', type: 'inputNumber' },
-    { field: 'PLU_SalePrc_UNI', header: '商品進價', type: 'inputNumber' },
+    { field: 'PLU_SalePrc', header: '商品售價', format: formatAmount },
+    { field: 'PLU_SalePrc_UNI', header: '商品進價', format: formatAmount },
     {
       field: 'SPD_ConfirmQty', header: '領用量', type: 'inputNumber', width: '50px',
       onBlur: (rowData: IPOS2004DetailData, value: number, col: EditColumn, index: number) => this.onSPDConfirmQtyChange(rowData, value, col, index)
@@ -125,6 +125,10 @@ export class TLS56020CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       item.PLU_MagNo === rowData.PLU_MagNo && item._TABLE_KEY !== rowData._TABLE_KEY);
     if (hasDuplicatePLU_MagNo) {
       return { isValid: false, errorMessage: '商品管理編號重複' };
+    }
+    // 領用量不能大於目前庫存
+    if ((rowData.SPD_ConfirmQty || 0) > (rowData.NowHaveQty || 0)) {
+      return { isValid: false, errorMessage: '領用量不能大於目前庫存' };
     }
 
     return { isValid: true, errorMessage: '' };

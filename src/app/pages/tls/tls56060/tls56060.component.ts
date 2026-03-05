@@ -112,7 +112,7 @@ export class TLS56060Component extends BasicQueryPageComponent<ITLS56060Response
     });
   }
   editDisabled(rowData: ITLS56060Response): boolean {
-    // 如果狀態不是 '已審核'，則禁用行編輯
+    // 如果狀態不是 '已發貨'，則禁用行編輯
     return rowData.MVM_Status !== '3';
   }
 }
