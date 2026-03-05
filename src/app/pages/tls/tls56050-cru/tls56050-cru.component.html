@@ -83,7 +83,7 @@
           <app-button btnType="cancel" [form]="dataForm" (click)="loadData()"></app-button>
           <app-button btnType="submit" [loading]="loading" label="儲存"></app-button>
           <app-button [loading]="loading" label="確認發貨" (click)="onConfirm(dataForm)"
-            [disabled]="dataChanged"></app-button>
+            [disabled]="dataChanged || initOutgodsQtyIsNull"></app-button>
         </div>
       </form>
     </p-panel>

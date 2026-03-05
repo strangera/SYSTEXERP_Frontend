@@ -314,6 +314,14 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
     if (!this.currentMonthData) return;
 
     const formVal = frm.getRawValue();
+
+    // 驗證：預估營業額 (budget) 必須等於 本月預算營業額合計 (BUDGET_Mbudget)
+    const expectedBudget = Number(formVal.budget ?? this.currentMonthData?.budget ?? 0);
+    const totalBudget = Number(formVal.BUDGET_Mbudget ?? 0);
+    if (Math.abs(expectedBudget - totalBudget) > 0.0001) {
+      this.messageService.errorBubble('預估營業額與本月預算營業額合計不相同，請確認後再儲存');
+      return; // 中止儲存，並確保不會停留在 loading
+    }
     const monthID = this.currentMonthData.MonthID ?? 0;
     const budget_yymm = formVal.budget_yymm ?? `${formVal.budget_yy}${formVal.budget_mm}`;
 

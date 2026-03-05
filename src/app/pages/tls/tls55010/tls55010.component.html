@@ -17,9 +17,10 @@
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button icon="pi pi-search-plus" btnType="query" label="日結前檢查" [loading]="loading"></app-button>
-          <app-button icon="pi pi-check" type="button" label="確定日結" (clickEvent)="onSubmit(queryForm)"
-            [loading]="insertLoading"></app-button>
+          <app-button severity="info" icon="pi pi-search-plus" btnType="query" label="日結前檢查"
+            [loading]="loading"></app-button>
+          <app-button severity="success" icon="pi pi-check" type="button" label="確定日結"
+            (clickEvent)="onSubmit(queryForm)" [loading]="insertLoading"></app-button>
           <app-button icon="pi pi-search" type="button" label="查詢" (clickEvent)="onQueryVou(queryForm)"
             [loading]="queryLoading"></app-button>
         </div>
@@ -29,14 +30,15 @@
 </div>
 <div class=" card">
   @if (!isConfirmDate) {
-  <app-table-report dataKey="value" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+  <app-table-report dataKey="value" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showSummary]="false"
     (detail)="onDetail($event)" [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="details"
     [showManage]="false" [showCaption]="false" [showSort]="false" [totalRecords]="0"></app-table-report>
   } @else {
   <form [formGroup]="dataForm" id="dataForm" class="flex flex-column gap-3" (ngSubmit)="onReverse(dataForm)">
     @if (showReverseBtn) {
     <div class="grid justify-content-end m-0 mt-2">
-      <app-button type="button" label="反日結" (clickEvent)="onReverse(dataForm)" [loading]="reverseLoading"></app-button>
+      <app-button severity="danger" type="button" label="反日結" (clickEvent)="onReverse(dataForm)"
+        [loading]="reverseLoading"></app-button>
     </div>
     }
     <p-panel header="傳票資料">

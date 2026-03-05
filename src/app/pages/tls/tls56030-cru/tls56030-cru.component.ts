@@ -55,7 +55,6 @@ import { Tls56030Service } from './../../../service/api/tls/TLS56030.service';
 @Component({
   selector: 'app-tls56030-cru',
   templateUrl: './tls56030-cru.component.html',
-  styleUrl: './tls56030-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -135,7 +134,7 @@ export class TLS56030CRUComponent
     { field: 'RPD_BuyAmt', header: '進價小計', format: formatAmount },
     { field: 'RPD_BuyNet', header: '進價小計(未稅)', format: formatAmount },
     // { field: 'PLU_TaxType', header: '售價稅別' },
-    { field: 'RPD_SalePrc', header: '商品售價', type: 'inputNumber' },
+    { field: 'RPD_SalePrc', header: '商品售價', format: formatAmount },
     { field: 'RPD_SaleTax', header: '售價稅額', format: formatAmount },
     { field: 'RPD_SaleAmt', header: '售價小計', format: formatAmount },
     { field: 'RPD_Remark', header: '備註', type: 'input' },
@@ -167,7 +166,7 @@ export class TLS56030CRUComponent
       header: '稅別',
       format: (v) => (v === '0' ? '免稅' : '應稅'),
     },
-    { field: 'RPD_SaleTax', header: '單價', showSort: false },
+    { field: 'PLU_SalePrc_UNI', header: '單價' },
     { field: 'PLU_SalePrc', header: '售價' },
   ];
 

@@ -18,7 +18,6 @@ import { PluUnit } from '../../../shared/models/tls/tls000.model';
 @Component({
   selector: 'app-tls51050-cru',
   templateUrl: './tls51050-cru.component.html',
-  styleUrl: './tls51050-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf, TranslateModule]
 })

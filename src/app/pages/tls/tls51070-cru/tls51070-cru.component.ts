@@ -17,7 +17,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { ImgUploadComponent } from '../../../shared/componentkit/img-upload/img-upload.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -86,7 +85,6 @@ export const fieldSectionMap: FieldSectionMap = {
 @Component({
   selector: 'app-tls51070-cru',
   templateUrl: './tls51070-cru.component.html',
-  styleUrl: './tls51070-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -100,7 +98,6 @@ export const fieldSectionMap: FieldSectionMap = {
     ImgUploadComponent,
     DropdownComponent,
     DividerModule,
-    ExpandableEditTableComponent,
     TranslateModule,
     TableEditComponent]
 })
