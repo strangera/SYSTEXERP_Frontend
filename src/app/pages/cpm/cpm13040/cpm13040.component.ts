@@ -76,7 +76,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
   columns: Column[] = [
     { field: 'TXN_Date', header: '日期', visible: true, format: formatDate },
     { field: 'CardType', header: '卡別', visible: true },
-    { field: 'TXN_PayDesc', header: '聯名卡號', visible: true },
+    { field: 'CRD_No', header: '聯名卡號', visible: true },
     {
       field: 'Org_ID', header: '組織名稱', visible: true, format: (value, _i, row) =>
         row?.Org_Name ?? row?.OrgName ?? this.org_id_Options.find(o => String(o.value) === String(value))?.label ?? value
