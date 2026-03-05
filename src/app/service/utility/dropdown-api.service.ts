@@ -23,7 +23,9 @@ import {
   EcrItem,
   EcrQuery,
   ENG1001Item,
-  FasitemDropdownItem,
+  FaClass1Query,
+  FaClass2Query,
+  FaClassMQuery,
   IDropdownItem,
   IGLS1005LedgerMDItem,
   LogoAccorHosItem,
@@ -227,10 +229,40 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢資產大分類(FACLASSM)資料表下拉選單 */
+  queryFaClassM(body: FaClassMQuery = {}): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, FaClassMQuery>(
+      '/queryFACLASSM_DropDownList',
+      'No',
+      'Name',
+      body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢資產中分類(FACLASS1)資料表下拉選單 */
+  queryFaClass1(body: FaClass1Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, FaClass1Query>(
+      '/queryFACLASS1_DropDownList',
+      'No',
+      'Name',
+      body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢資產小分類(FACLASS2)資料表下拉選單 */
+  queryFaClass2(body: FaClass2Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, FaClass2Query>(
+      '/queryFACLASS2_DropDownList',
+      'No',
+      'Name',
+      body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
   /** 查詢商品管理編號(FASITEM)資料表下拉選單 */
   queryFasitem(): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<FasitemDropdownItem>('/ASS0000/ASS1000/queryFASITEM_DropDownList', 'No', 'Name').pipe(
-      shareReplay({ bufferSize: 1, refCount: true })
+    return this.queryAndMapDropdown<IDropdownItem>('/queryFASITEM_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }),
     );
   }
   /** 查詢組織階層樹狀圖(SYS3100)下拉選單 */

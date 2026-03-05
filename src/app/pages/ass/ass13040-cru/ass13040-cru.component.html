@@ -1,99 +1,212 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (clickEvent)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="報廢單編號"
+            controlName="scrapCode"
+            [control]="dataForm.controls.scrapCode"
+            [submitted]="submitted"
+            [disabled]="true"
+          ></app-input-text>
         </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <h5>報廢主檔資料</h5>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="商品報廢單編號" controlName="scrapCode"
-                        [control]="dataForm.controls.scrapCode" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="報廢人員編號" controlName="userCode" [options]="userCodeOptions" optionLabel="label"
-                        optionValue="value" [control]="dataForm.controls.userCode" [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="部門代號" controlName="departmentCode" [options]="departmentCodeOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.departmentCode"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="報廢廠商" controlName="scrapVendor" [options]="scrapVendorOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.scrapVendor"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="報廢申請日期" [control]="dataForm.controls.scrapDate"
-                        [submitted]="submitted">
-                    </app-calendar>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="資產類型" controlName="assetsType" [options]="assetsTypeOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.assetsType"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <hr />
-            <app-editor-text label="報廢案件說明" controlName="remark" [control]="dataForm.controls.remark"
-                [style]="{ height: '100px' }" [submitted]="submitted">
-            </app-editor-text>
-            <hr />
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1">
-                            <h5>商品 {{ i + 1 }}</h5>
-                        </div>
-                        <div>
-
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-dropdown label="商品管理編號" controlName="manageCode" [options]="manageCodeOptions"
-                                optionLabel="label" optionValue="value" [control]="getFormControl(i, 'manageCode')"
-                                [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="商品單位" controlName="unit" [control]="getFormControl(i, 'unit')"
-                                [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="數量" controlName="amount" [control]="getFormControl(i, 'amount')"
-                                [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <hr />
-                    <app-editor-text label="單項說明 " controlName="singleRemark"
-                        [control]="getFormControl(i, 'singleRemark')" [style]="{ height: '100px' }"
-                        [submitted]="submitted">
-                    </app-editor-text>
-                    <hr />
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
-
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
-            </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="報廢人員編號"
+            controlName="userCode"
+            [options]="userCodeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.userCode"
+            [submitted]="submitted"
+            [disabled]="isFormReadable"
+          ></app-dropdown>
         </div>
-    </p-panel>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="部門代號"
+            controlName="departmentCode"
+            [options]="departmentCodeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.departmentCode"
+            [submitted]="submitted"
+            [disabled]="isFormReadable"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="報廢廠商"
+            controlName="scrapVendor"
+            [options]="scrapVendorOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.scrapVendor"
+            [submitted]="submitted"
+            [disabled]="isFormReadable"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="報廢申請日期"
+            [control]="dataForm.controls.scrapDate"
+            [submitted]="submitted"
+            [disabled]="isFormReadable"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="資產類型"
+            controlName="assetsType"
+            [options]="assetsTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.assetsType"
+            [submitted]="submitted"
+            [disabled]="isFormReadable"
+          ></app-dropdown>
+        </div>
+        <div class="col-12">
+          <app-input-textarea
+            label="報廢案件說明"
+            controlName="remark"
+            [control]="dataForm.controls.remark"
+            [submitted]="submitted"
+            [readonly]="isFormReadable"
+          ></app-input-textarea>
+        </div>
+      </div>
+
+      <hr />
+      <h5>報廢商品 List</h5>
+      <app-table-edit
+        class="col-12"
+        tableKey="ASS13040Detail"
+        [columns]="editColumns"
+        [data]="data"
+        (dataChange)="data = $event"
+        (insert)="onTableInsert()"
+        [insertText]="'選取資產'"
+        [tableRequired]="true"
+        [disabled]="isFormReadable"
+        [showInsert]="!isFormReadable"
+        [showDelete]="!isFormReadable"
+        [canInsert]="false"
+      ></app-table-edit>
+
+      <hr />
+      <div class="col-12 p-0">
+        <label>報廢照片（最多 3 張）</label>
+        <div class="grid">
+          <div class="col-12 md:col-4">
+            <p-fileUpload
+              #fileUpload1
+              [multiple]="false"
+              accept=".bmp,.jpg,.jpeg,.png"
+              maxFileSize="100000000"
+              mode="advanced"
+              [showUploadButton]="false"
+              [disabled]="isFormReadable"
+              chooseLabel="選擇檔案"
+              (onSelect)="onSelectFile1($event)"
+              [showCancelButton]="false"
+            >
+              <ng-template pTemplate="content">
+                <div class="flex align-items-center justify-content-between gap-2">
+                  <span class="flex-1">{{ formFile1?.name || existingFile1 || '尚未選擇檔案' }}</span>
+                  <button
+                    *ngIf="formFile1 && !isFormReadable"
+                    type="button"
+                    class="p-button p-button-text p-button-danger p-button-sm w-auto"
+                    (click)="removeFile1()"
+                  >
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              </ng-template>
+              <ng-template pTemplate="file"></ng-template>
+            </p-fileUpload>
+          </div>
+          <div class="col-12 md:col-4">
+            <p-fileUpload
+              #fileUpload2
+              [multiple]="false"
+              accept=".bmp,.jpg,.jpeg,.png"
+              maxFileSize="100000000"
+              mode="advanced"
+              [showUploadButton]="false"
+              [disabled]="isFormReadable"
+              chooseLabel="選擇檔案"
+              (onSelect)="onSelectFile2($event)"
+              [showCancelButton]="false"
+            >
+              <ng-template pTemplate="content">
+                <div class="flex align-items-center justify-content-between gap-2">
+                  <span class="flex-1">{{ formFile2?.name || existingFile2 || '尚未選擇檔案' }}</span>
+                  <button
+                    *ngIf="formFile2 && !isFormReadable"
+                    type="button"
+                    class="p-button p-button-text p-button-danger p-button-sm w-auto"
+                    (click)="removeFile2()"
+                  >
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              </ng-template>
+              <ng-template pTemplate="file"></ng-template>
+            </p-fileUpload>
+          </div>
+          <div class="col-12 md:col-4">
+            <p-fileUpload
+              #fileUpload3
+              [multiple]="false"
+              accept=".bmp,.jpg,.jpeg,.png"
+              maxFileSize="100000000"
+              mode="advanced"
+              [showUploadButton]="false"
+              [disabled]="isFormReadable"
+              chooseLabel="選擇檔案"
+              (onSelect)="onSelectFile3($event)"
+              [showCancelButton]="false"
+            >
+              <ng-template pTemplate="content">
+                <div class="flex align-items-center justify-content-between gap-2">
+                  <span class="flex-1">{{ formFile3?.name || existingFile3 || '尚未選擇檔案' }}</span>
+                  <button
+                    *ngIf="formFile3 && !isFormReadable"
+                    type="button"
+                    class="p-button p-button-text p-button-danger p-button-sm w-auto"
+                    (click)="removeFile3()"
+                  >
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              </ng-template>
+              <ng-template pTemplate="file"></ng-template>
+            </p-fileUpload>
+          </div>
+        </div>
+      </div>
+
+      <div
+        *ngIf="!isFormReadable"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-panel>
 </div>
+
+<app-ass13040-asset-dialog
+  [(visible)]="dialogVisible"
+  [existingAssetNos]="existingAssetNos"
+  (assetsSelected)="onAssetsSelected($event)"
+></app-ass13040-asset-dialog>
