@@ -58,7 +58,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
   @ViewChild('fileUpload3') fileUpload3!: FileUpload;
 
   dataForm = this.formBuilder.nonNullable.group({
-    scrapCode: [{ value: '系統自動產生', disabled: true }, [Validators.required, Validators.maxLength(20)]],
+    scrapCode: [{ value: '系統自動產生', disabled: true }],
     userCode: [null as string | null, [Validators.required]],
     departmentCode: [null as string | null, [Validators.required]],
     scrapVendor: [null as string | null],
@@ -145,14 +145,10 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
     this.initializePage('ASS13040', this.dataForm);
     this.loadDropdowns();
 
-    if (this.isFormCreateable) {
-      this.dataForm.controls.scrapCode.setValue(this.generateDraftScrapNo());
-      return;
+    if (!this.isFormCreateable) {
+      const scrapNo = this.getScrapNoFromState();
+      if (scrapNo) this.loadDetail(scrapNo);
     }
-
-    const scrapNo = this.getScrapNoFromState();
-    if (!scrapNo) return;
-    this.loadDetail(scrapNo);
   }
 
   get existingAssetNos(): string[] {
@@ -198,7 +194,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
 
       const raw = this.dataForm.getRawValue();
       const header: ASS13040Header = {
-        SCRAP_FORM_NO: raw.scrapCode ?? undefined,
+        SCRAP_FORM_NO: this.crudstatus === CRUDStatus.Create ? undefined : (raw.scrapCode ?? undefined),
         SCRAP_USER_NO: raw.userCode ?? undefined,
         ORG_ID: raw.departmentCode ?? undefined,
         VENDOR_NO: raw.scrapVendor ?? undefined,

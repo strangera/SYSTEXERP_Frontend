@@ -40,8 +40,8 @@ export class ASS13040AssetDialogComponent implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     assetNo: [null as string | null],
     bClassId: [null as string | null],
-    mClassId: [{ value: null as string | null, disabled: true }],
-    sClassId: [{ value: null as string | null, disabled: true }],
+    mClassId: [null as string | null],
+    sClassId: [null as string | null],
     custodianNo: [null as string | null],
     custodyOrgId: [null as string | null],
     itemName: [null as string | null],
@@ -73,7 +73,7 @@ export class ASS13040AssetDialogComponent implements OnInit {
     private readonly formBuilder: FormBuilder,
     private readonly ass13040CruService: ASS13040CRUService,
     private readonly dropdownApiService: DropdownApiService,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadBaseOptions();
@@ -165,12 +165,7 @@ export class ASS13040AssetDialogComponent implements OnInit {
         this.sClassOptions = [];
         this.queryForm.controls.mClassId.setValue(null);
         this.queryForm.controls.sClassId.setValue(null);
-        this.queryForm.controls.sClassId.disable();
-        if (!value) {
-          this.queryForm.controls.mClassId.disable();
-          return;
-        }
-        this.queryForm.controls.mClassId.enable();
+        if (!value) return;
         this.dropdownApiService
           .queryFaClass1({ B_CLASS_ID: value })
           .pipe(untilDestroyed(this))
@@ -184,11 +179,7 @@ export class ASS13040AssetDialogComponent implements OnInit {
       .subscribe((value: string | null) => {
         this.sClassOptions = [];
         this.queryForm.controls.sClassId.setValue(null);
-        if (!value) {
-          this.queryForm.controls.sClassId.disable();
-          return;
-        }
-        this.queryForm.controls.sClassId.enable();
+        if (!value) return;
         this.dropdownApiService
           .queryFaClass2({ M_CLASS_ID: value })
           .pipe(untilDestroyed(this))

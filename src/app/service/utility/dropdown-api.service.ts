@@ -23,8 +23,11 @@ import {
   EcrItem,
   EcrQuery,
   ENG1001Item,
+  FaClass1Item,
   FaClass1Query,
+  FaClass2Item,
   FaClass2Query,
+  FaClassMItem,
   FaClassMQuery,
   IDropdownItem,
   IGLS1005LedgerMDItem,
@@ -229,32 +232,32 @@ export class DropdownApiService {
     );
   }
 
-  /** 查詢資產大分類(FACLASSM)資料表下拉選單 */
+  /** 查詢資產大分類(FACLASSM)資料表下拉選單 - 回傳 B_CLASS_ID / B_CLASS_NAME */
   queryFaClassM(body: FaClassMQuery = {}): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<IDropdownItem, FaClassMQuery>(
+    return this.queryAndMapDropdown<FaClassMItem, FaClassMQuery>(
       '/queryFACLASSM_DropDownList',
-      'No',
-      'Name',
+      'B_CLASS_ID',
+      'B_CLASS_NAME',
       body,
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
-  /** 查詢資產中分類(FACLASS1)資料表下拉選單 */
+  /** 查詢資產中分類(FACLASS1)資料表下拉選單 - 回傳 M_CLASS_ID / M_CLASS_NAME */
   queryFaClass1(body: FaClass1Query): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<IDropdownItem, FaClass1Query>(
+    return this.queryAndMapDropdown<FaClass1Item, FaClass1Query>(
       '/queryFACLASS1_DropDownList',
-      'No',
-      'Name',
+      'M_CLASS_ID',
+      'M_CLASS_NAME',
       body,
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
-  /** 查詢資產小分類(FACLASS2)資料表下拉選單 */
+  /** 查詢資產小分類(FACLASS2)資料表下拉選單 - 回傳 S_CLASS_ID / S_CLASS_NAME */
   queryFaClass2(body: FaClass2Query): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<IDropdownItem, FaClass2Query>(
+    return this.queryAndMapDropdown<FaClass2Item, FaClass2Query>(
       '/queryFACLASS2_DropDownList',
-      'No',
-      'Name',
+      'S_CLASS_ID',
+      'S_CLASS_NAME',
       body,
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }

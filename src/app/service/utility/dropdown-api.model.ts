@@ -25,6 +25,18 @@ export interface FaClassMQuery {
 }
 
 /**
+ * queryFACLASSM_DropDownList 回傳的項目型別
+ */
+export interface FaClassMItem {
+  RowNum?: string;
+  M_CLASS_ID: string;
+  M_CLASS_NAME: string;
+  B_CLASS_ID: string;
+  B_CLASS_NAME: string;
+  NOTES?: string | null;
+}
+
+/**
  * 查詢 FACLASS1_DropDownList 時的請求 body
  */
 export interface FaClass1Query {
@@ -33,6 +45,18 @@ export interface FaClass1Query {
   B_CLASS_ID?: string | null;
   B_CLASS_NAME?: string | null;
   NOTES_KEYWORD?: string | null;
+}
+
+/**
+ * queryFACLASS1_DropDownList 回傳的項目型別
+ */
+export interface FaClass1Item {
+  RowNum?: string;
+  M_CLASS_ID: string;
+  M_CLASS_NAME: string;
+  B_CLASS_ID: string;
+  B_CLASS_NAME: string;
+  NOTES?: string | null;
 }
 
 /**
@@ -46,6 +70,20 @@ export interface FaClass2Query {
   B_CLASS_ID?: string | null;
   B_CLASS_NAME?: string | null;
   NOTES_KEYWORD?: string | null;
+}
+
+/**
+ * queryFACLASS2_DropDownList 回傳的項目型別
+ */
+export interface FaClass2Item {
+  RowNum?: string;
+  S_CLASS_ID: string;
+  S_CLASS_NAME: string;
+  M_CLASS_ID: string;
+  M_CLASS_NAME: string;
+  B_CLASS_ID: string;
+  B_CLASS_NAME: string;
+  NOTES?: string | null;
 }
 
 /**

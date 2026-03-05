@@ -25,3 +25,9 @@ export interface ASS13040QueryRow {
   SCRAP_STATUS: string;
   REMARK?: string;
 }
+
+export interface ASS13040QueryDataWrapper {
+  QueryData?: ASS13040QueryRow[];
+  TotalRows?: number;
+  TotalCount?: number;
+}
