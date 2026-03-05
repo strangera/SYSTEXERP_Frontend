@@ -204,24 +204,18 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
   /* ----------------- 依目前 GUI_Track + PUR_GUINo 撈對應資料 ----------------- */
 
 private loadInvoiceInfoByCurrentGUINo(): void {
-  const trackRaw = this.dataForm.get('GUI_Track')?.value as string | null;
-  const guiNoRaw = this.dataForm.get('PUR_GUINo')?.value as string | null;
+  const track = (this.dataForm.get('GUI_Track')?.value as string | null)?.trim();
+  const no = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
+  if (!track || !no) return;
 
-  const track = trackRaw?.trim();
-  const guiNo = guiNoRaw?.trim();
-  if (!track || !guiNo) return;
-
-  const full = `${track}${guiNo}`;
-  this.dataForm.patchValue({ InvoiceNumber_Correspond: full }, { emitEvent: false });
+  // 只是顯示用（你想留就留）
+  this.dataForm.patchValue({ InvoiceNumber_Correspond: `${track}${no}` }, { emitEvent: false });
 
   this.fin13020Service
-    .queryCorrespondByGUINoCorrespond({
-      InvoiceNumber_Correspond: full,
-      Source: 'APS', // ✅ 預設 APS
-    })
-    .subscribe((res) => {
-      const detail = res?.Data?.[0];
-      if (!detail) {
+    .queryFIN13020ByTrackNo({ InvoiceTrack: track, InvoiceNumber: no })
+    .subscribe((res: any) => {
+      const dto = res?.Data?.[0];
+      if (!dto) {
         this.originalRemainingAmt = null;
         this.detailRows = [];
         this.dataForm.patchValue(
@@ -243,17 +237,17 @@ private loadInvoiceInfoByCurrentGUINo(): void {
         return;
       }
 
-      const invoiceType = (detail.InvoiceType as string | undefined) ?? '';
-      let voucherType = '';
+      // ✅ 發票格式 mapping：31/35 -> 33，32 -> 34（保留你原邏輯）
+      const invoiceType = String(dto.InvoiceType ?? '');
+      let voucherType = invoiceType;
       if (invoiceType === '31' || invoiceType === '35') voucherType = '33';
       else if (invoiceType === '32') voucherType = '34';
-      else voucherType = invoiceType || '';
 
-      // ✅ 原始剩餘（後端回 Total_Amt / 或 PUR_Amount 等你原本容錯）
+      // ✅ 原始剩餘（你之前用 Total_Amt / PUR_Amount 容錯）
       const rawOriginal =
-        (detail as any).PUR_Amount ??
-        (detail as any).PUR_Amt ??
-        (detail as any).Total_Amt ??
+        (dto as any).PUR_Amount ??
+        (dto as any).PUR_Amt ??
+        (dto as any).Total_Amt ??
         null;
 
       const original =
@@ -262,10 +256,9 @@ private loadInvoiceInfoByCurrentGUINo(): void {
       this.originalRemainingAmt =
         original !== null && !isNaN(original) ? this.roundToInt(original) : null;
 
-      // ✅ 先把明細帶進來（新增頁面要直接出現）
-      const details = (detail.Details ?? []) as any[];
+      // ✅ 明細：queryFIN13020 回來通常是 Details
+      const details = (dto.Details ?? []) as any[];
       this.detailRows = details.map((d) => ({
-        // 新增模式：後端通常不會給明細 ID，就先不帶
         ID: d.ID ?? null,
         PLU_Name: d.PLU_Name ?? '',
         TXN_Qty: d.TXN_Qty ?? null,
@@ -273,24 +266,25 @@ private loadInvoiceInfoByCurrentGUINo(): void {
         TXN_SaleAmt: d.TXN_SaleAmt ?? null,
       }));
 
-      // ✅ 主檔欄位帶入
+      // ✅ 主檔帶入（注意：這裡 dto 的字軌/號碼欄位名是 InvoiceTrack/InvoiceNumber）
       this.dataForm.patchValue(
         {
-          Inv_Date: detail.InvoiceDate,
+          // 讓畫面跟 queryFIN13020 一致
+          GUI_Track: dto.InvoiceTrack ?? track,
+          PUR_GUINo: dto.InvoiceNumber ?? no,
+
+          Inv_Date: dto.InvoiceDate,
           PUR_VoucherType: voucherType,
-          PUR_TaxType: detail.PUR_TaxType,
-          Inv_Net: detail.PUR_Net,
-          Inv_Tax: detail.PUR_Tax,
-          Total_hitory_PUR_Amt: detail.Total_hitory_PUR_Amt,
+          PUR_TaxType: dto.PUR_TaxType,
+          Inv_Net: dto.PUR_Net,
+          Inv_Tax: dto.PUR_Tax,
+          Total_hitory_PUR_Amt: dto.Total_hitory_PUR_Amt,
         },
         { emitEvent: false }
       );
 
-      // ✅ 用明細金額回寫 PUR_Amt（會觸發 setupAmountRelations 連動計算稅、剩餘、Credit_Type）
+      // ✅ 回寫 PUR_Amt 觸發連動（Edit 模式會算稅/剩餘/區別）
       this.syncPurAmtFromDetails();
-
-      // 如果明細沒東西，你也可以選擇把 PUR_Amt 清空
-      // this.dataForm.get('PUR_Amt')?.setValue(this.detailRows.length ? ... : null, { emitEvent: true });
     });
 }
 
@@ -325,13 +319,12 @@ private setupGuiNoAndCorrespondWatcher(): void {
 }
 private reloadByInvoiceCorrespond(): void {
   const track = (this.dataForm.get('GUI_Track')?.value as string | null)?.trim();
-  const guiNo = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
-  if (!track || !guiNo) return;
+  const no = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
+  if (!track || !no) return;
 
-  const full = `${track}${guiNo}`;
-  this.dataForm.patchValue({ InvoiceNumber_Correspond: full }, { emitEvent: false });
+  this.dataForm.patchValue({ InvoiceNumber_Correspond: `${track}${no}` }, { emitEvent: false });
 
-  // ✅ 先清掉舊資料，避免殘留
+  // ✅ 清舊資料
   this.detailRows = [];
   this.originalRemainingAmt = null;
 
@@ -353,40 +346,38 @@ private reloadByInvoiceCorrespond(): void {
   );
 
   this.fin13020Service
-    .queryCorrespondByGUINoCorrespond({
-      InvoiceNumber_Correspond: full,
-      Source: 'APS', // ✅ 預設 APS
-    })
-    .subscribe((res) => {
+    .queryFIN13020ByTrackNo({ InvoiceTrack: track, InvoiceNumber: no })
+    .subscribe((res: any) => {
       const dto = res?.Data?.[0];
       if (!dto) return;
 
-      // ✅ 發票格式 mapping：31/35 -> 33，32 -> 34
       const invoiceType = String(dto.InvoiceType ?? '');
       let voucherType = invoiceType;
       if (invoiceType === '31' || invoiceType === '35') voucherType = '33';
       else if (invoiceType === '32') voucherType = '34';
 
-      // ✅ 原始剩餘總金額（你的 API 回 Total_Amt）
-      const original = dto.Total_Amt !== null && dto.Total_Amt !== undefined ? Number(dto.Total_Amt) : null;
+      const original =
+        dto.Total_Amt !== null && dto.Total_Amt !== undefined ? Number(dto.Total_Amt) : null;
+
       this.originalRemainingAmt =
         original !== null && !isNaN(original) ? this.roundToInt(original) : null;
 
-      // ✅ 主檔欄位一次帶入（emitEvent:false，避免觸發金額互算兩次）
       this.dataForm.patchValue(
         {
-          Inv_Date: dto.InvoiceDate,          // 發票日期（顯示）
-          PUR_VoucherType: voucherType,       // 發票格式（顯示/送出）
-          PUR_TaxType: dto.PUR_TaxType,       // 課稅別（顯示）
-          Inv_Net: dto.PUR_Net,               // 銷售額（顯示）
-          Inv_Tax: dto.PUR_Tax,               // 稅額（顯示）
+          GUI_Track: dto.InvoiceTrack ?? track,
+          PUR_GUINo: dto.InvoiceNumber ?? no,
+
+          Inv_Date: dto.InvoiceDate,
+          PUR_VoucherType: voucherType,
+          PUR_TaxType: dto.PUR_TaxType,
+          Inv_Net: dto.PUR_Net,
+          Inv_Tax: dto.PUR_Tax,
           Total_hitory_PUR_Amt: dto.Total_hitory_PUR_Amt,
-          Total_Amt: this.originalRemainingAmt, // 先放原始剩餘，後面會被 amtControl 連動改成剩餘
+          Total_Amt: this.originalRemainingAmt,
         },
         { emitEvent: false }
       );
 
-      // ✅ 明細表帶入
       const details = Array.isArray(dto.Details) ? dto.Details : [];
       this.detailRows = details.map((d: any) => ({
         ID: d.ID ?? null,
@@ -396,37 +387,45 @@ private reloadByInvoiceCorrespond(): void {
         TXN_SaleAmt: d.TXN_SaleAmt ?? null,
       }));
 
-      // ✅ 用明細加總回寫 PUR_Amt（emitEvent:true 才會觸發 setupAmountRelations 連動算 PUR_Net/PUR_Tax/Total_Amt/Credit_Type）
       this.syncPurAmtFromDetails();
     });
 }
-  private updateDisabledState(): void {
-    if (this.crudstatus === CRUDStatus.Edit) {
-      const editableFields = ['PUR_GUIDate', 'PUR_RepYYYYMM', 'Source_Doc_No', 'PUR_Net', 'PUR_Amt', 'Voucher_No'];
-      Object.keys(this.dataForm.controls).forEach((key) => {
-        const control = this.dataForm.get(key);
-        if (editableFields.includes(key)) control?.enable();
-        else control?.disable();
-      });
-    } else if (this.crudstatus === CRUDStatus.Read) {
-      this.dataForm.disable();
-    } else {
-      this.dataForm.enable(); // Create 模式
-    }
-
-    // 不論狀態一律禁止的欄位
-    this.dataForm.get('PUR_Tax')?.disable();
-    this.dataForm.get('TXN_Ret_No')?.disable();
-    this.dataForm.get('PUR_TaxType')?.disable();
-    this.dataForm.get('Inv_Tax')?.disable();
-    this.dataForm.get('Inv_Net')?.disable();
-    this.dataForm.get('Inv_Date')?.disable();
-    this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
-    this.dataForm.get('Total_Amt')?.disable();
-    this.dataForm.get('Credit_Type')?.disable();
-    this.dataForm.get('PUR_VoucherType')?.disable();
-    this.dataForm.get('Voucher_No')?.disable();
+onDetailRowsChange(rows: any[]): void {
+  this.detailRows = Array.isArray(rows) ? rows : [];
+  // ✅ 刪除/新增/貼上/批次改都會進來
+  this.syncPurAmtFromDetails();
+}
+private updateDisabledState(): void {
+  if (this.crudstatus === CRUDStatus.Edit) {
+    const editableFields = ['PUR_GUIDate', 'PUR_RepYYYYMM', 'Source_Doc_No'];
+    Object.keys(this.dataForm.controls).forEach((key) => {
+      const control = this.dataForm.get(key);
+      if (editableFields.includes(key)) control?.enable();
+      else control?.disable();
+    });
+  } else if (this.crudstatus === CRUDStatus.Read) {
+    this.dataForm.disable();
+  } else {
+    this.dataForm.enable(); // Create
   }
+
+  // ✅ 不論 Create/Edit/Read 都禁用（你指定新增編輯 disable）
+  this.dataForm.get('PUR_Net')?.disable();
+  this.dataForm.get('PUR_Amt')?.disable();
+
+  // 原本就禁用的維持
+  this.dataForm.get('PUR_Tax')?.disable();
+  this.dataForm.get('TXN_Ret_No')?.disable();
+  this.dataForm.get('PUR_TaxType')?.disable();
+  this.dataForm.get('Inv_Tax')?.disable();
+  this.dataForm.get('Inv_Net')?.disable();
+  this.dataForm.get('Inv_Date')?.disable();
+  this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
+  this.dataForm.get('Total_Amt')?.disable();
+  this.dataForm.get('Credit_Type')?.disable();
+  this.dataForm.get('PUR_VoucherType')?.disable();
+  this.dataForm.get('Voucher_No')?.disable();
+}
 
 
 onSubmit(form: FormGroup): void {

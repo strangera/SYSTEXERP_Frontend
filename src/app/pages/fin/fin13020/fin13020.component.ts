@@ -18,7 +18,8 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
-
+import type { AddButton } from '@shared/componentkit/table-report/table-report.model';
+import { environment } from 'src/environments/environment';
 @Component({
   selector: 'app-fin13020',
   templateUrl: './fin13020.component.html',
@@ -93,6 +94,18 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     { field: 'PUR_Tax', header: '退回/折讓稅額', visible: true, format: (v: number) => this.money(v), exportFormat: 'number:comma2' },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
+  ];
+
+  buttonsLoading = false;
+
+  addButtons: AddButton[] = [
+    {
+      label: '列印',
+      icon: 'pi pi-print',
+      action: (rowData: any) => this.onPrintOne(rowData),
+      // 你要限制就留，不限制就拿掉 disabled
+      disabled: (rowData: any) => this.editDisabled(rowData),
+    },
   ];
 
   constructor(
@@ -328,4 +341,85 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     }
     return null;
   }
+    private onPrintOne(row: any): void {
+    // row 來源就是 queryFIN13020 回傳的那筆
+    const invYM = String(row?.INV_DeclareYM ?? '').trim();
+    const txn = String(row?.TXN_Ret_No ?? '').trim();
+    const track = String(row?.InvoiceTrack ?? '').trim();
+    const invNo = String(row?.InvoiceNumber ?? '').trim();
+
+    if (!invYM || !txn) {
+      this.messageService.warnBubble('此筆資料缺少申報年月或退出/折讓單號，無法列印');
+      return;
+    }
+
+    const { mid, SYS_StoreNo } = this.getUserInfoFromLocal();
+
+    const payload = {
+      INV_DeclareYM: invYM,
+      TXN_Ret_NoS: txn,
+      TXN_Ret_NoE: txn,
+      InvoiceTrack: track || '',
+      InvoiceNumberS: invNo || '',
+      InvoiceNumberE: invNo || '',
+      Mid: mid,
+      STO_No: SYS_StoreNo,
+    };
+
+    // this.buttonsLoading = true;
+
+    this.fin13020Service.printFIN15100(payload).subscribe({
+      next: (res) => {
+        const rawUrl: string | undefined =
+          res?.Data?.Print_URL ?? res?.Data?.[0]?.Print_URL;
+
+        if (!rawUrl) {
+          this.messageService.warnBubble('取得列印網址失敗（Print_URL 為空）');
+          console.error('API 回傳無 Print_URL：', res);
+          return;
+        }
+
+        const finalUrl = rawUrl.startsWith('http')
+          ? rawUrl
+          : this.joinUrlNoEncode(environment.ApiUrl, rawUrl);
+
+        window.open(finalUrl, '_blank', 'noopener');
+      },
+   error: (err) => {
+  const msg = err?.error?.Message || err?.message || '列印失敗';
+  if (String(msg).includes("Value cannot be null") || String(msg).includes("Parameter 's'")) {
+    this.messageService.errorBubble('列印失敗：後端資料的「原始發票日期」為空（ORG_INV_Date），請找後端或確認該筆資料來源。');
+  } else {
+    this.messageService.errorBubble(msg);
+  }
+  console.error('PrintFIN15100 error:', err);
+},
+      complete: () => {
+        this.buttonsLoading = false;
+      },
+    });
+  }
+
+  private joinUrlNoEncode(base: string, path: string): string {
+    const cleanBase = base.replace(/\/+$/, '');
+    const cleanPath = String(path).replace(/^\/+/, '');
+    return `${cleanBase}/${cleanPath}`;
+  }
+
+  private getUserInfoFromLocal(): { mid: number; SYS_StoreNo: string } {
+    let mid = 0;
+    let SYS_StoreNo = '';
+    try {
+      const raw = localStorage.getItem('UserInfo');
+      if (raw) {
+        const obj = JSON.parse(raw);
+        mid = Number(obj?.mid ?? 0);
+        SYS_StoreNo = String(obj?.SYS_StoreNo ?? '');
+      }
+    } catch (e) {
+      console.error('解析 localStorage.UserInfo 失敗：', e);
+    }
+    return { mid, SYS_StoreNo };
+  }
 }
+
