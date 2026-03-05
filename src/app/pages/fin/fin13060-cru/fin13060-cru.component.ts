@@ -228,19 +228,29 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
         if (hasG) this.dataForm.controls.SYS_ORIGIN.setValue('G', { emitEvent: false });
       }
     });
-const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(type as any);
+    const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(type as any);
+
     sys1000('SYS_ORIGIN').subscribe((res: any) => {
       const list = res?.Data ?? [];
-      this.System_IDOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
-    });
-    // 專櫃清單
-    this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) ?? [];
+
+      this.System_IDOptions = list.map((x: any) => ({
+        value: String(x.No ?? ''),
+        label: `${x.No ?? ''}-${x.Name ?? ''}`,
+      }));
+
+      // ✅ Create 時預設 SYS_ORIGIN = 'G'（發票暨媒體申報系統）
+      if (this.crudstatus === CRUDStatus.Create) {
+        const ctrl = this.dataForm.controls.SYS_ORIGIN;
+        const cur = String(ctrl.value ?? '').trim();
+
+        const hasG = this.System_IDOptions.some((o) => o.value === 'G');
+
+        // 只有在：目前沒值、且選單真的有 G 才設
+        if (!cur && hasG) {
+          ctrl.setValue('G', { emitEvent: false });
+          // 若你 dropdown 需要立刻刷新畫面，可改成 emitEvent: true
+        }
+      }
     });
 
     // 資產註記
@@ -696,5 +706,19 @@ const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(
     });
 
     return true;
+  }
+  /** 後端若回偶數月(02/04/06/...)，YearMonth(奇數月起始) 顯示要往前推一個月 */
+  private fixInvYmForYearMonthDisplay(invYm: any): string | null {
+    const yyyymm = this.toYYYYMM(invYm);
+    if (!yyyymm) return null;
+
+    const year = yyyymm.substring(0, 4);
+    let month = parseInt(yyyymm.substring(4, 6), 10);
+    if (isNaN(month) || month < 1 || month > 12) return null;
+
+    // YearMonthComponent months = 01/03/05/07/09/11（期別起始月）
+    if (month % 2 === 0) month -= 1;
+
+    return `${year}${String(month).padStart(2, '0')}`;
   }
 }
