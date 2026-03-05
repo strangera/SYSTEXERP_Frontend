@@ -9,6 +9,7 @@ import {
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Column } from '@shared/componentkit/table/table.model';
+import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { Tls22040Service } from '../../../service/api/tls/tls22040.service';
@@ -57,7 +58,8 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
 
   constructor(
     private fb: FormBuilder,
-    private tls22040Service: Tls22040Service
+    private tls22040Service: Tls22040Service,
+    private queryStateService: QueryStateService
   ) {
     super();
   }
@@ -81,6 +83,11 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
   }
   override onCancel(returnValue?: any) {
     const queryPageRoute = `/account/${this.ProgNo.toLowerCase().slice(0, 3)}/${this.ProgNo.toLowerCase()}`;
+
+    // 在返回查詢頁前，若有儲存的查詢條件，先寫入 QueryStateService（保持共通邏輯不變）
+    if (this.queryData) {
+      this.queryStateService.setQueryState(this.ProgNo, this.queryData);
+    }
 
     const extras = {
       state: {

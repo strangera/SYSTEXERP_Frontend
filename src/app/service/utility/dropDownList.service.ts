@@ -635,5 +635,9 @@ export class DropDownListService {
       {}
     );
   }
+  //銀行資料表下拉選單 APS1001
+  queryAPS1001NoBranch_DropDownList(params: IBankRequest): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryAPS1001NoBranch_DropDownList`, params);
+  }
 
 }

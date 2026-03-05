@@ -1,19 +1,21 @@
-import { ValidationService } from './../../../shared/service/validation.service';
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS21040Data, Tls21040Service } from '@service/api/tls/tls21040.service';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { PanelModule } from 'primeng/panel';
+import { catchError, debounceTime, distinctUntilChanged, finalize, of, switchMap, tap } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ValidationService } from './../../../shared/service/validation.service';
 
 @Component({
   selector: 'app-tls21040-cru',
@@ -41,7 +43,7 @@ export class TLS21040CRUComponent extends BasicCruPageComponent<TLS21040Data> im
     Active_Date: [null],
     Disable_Date: [null]
   });
-
+  BNK_NoOptions: IDropdownItem[] = [];
   cardTypeOptions: { value: string, label: string }[] = [
     { value: 'V', label: 'VISA' },
     { value: 'M', label: 'MASTER' },
@@ -64,14 +66,65 @@ export class TLS21040CRUComponent extends BasicCruPageComponent<TLS21040Data> im
   ];
   constructor(
     private readonly tls21040Service: Tls21040Service,
-    private readonly validationService: ValidationService
+    private readonly validationService: ValidationService,
+    private readonly dropDown: DropDownListService,
   ) { super(); }
+
 
   ngOnInit(): void {
     this.initializePage('TLS21040', this.dataForm);
     if (this.isFormEditable) {
       this.dataForm.controls.CRD_BinCode.disable();
     }
+    // 當為建立模式時，監聽 CRD_BinCode 的變更並即時檢查是否重複
+    if (this.isFormCreateable) {
+      this.dataForm.controls.CRD_BinCode.valueChanges.pipe(
+        debounceTime(400),
+        distinctUntilChanged(),
+        tap(val => {
+          // 如果為空，清除自訂錯誤
+          if (!val) {
+            const ctrl = this.dataForm.controls.CRD_BinCode;
+            const errs = ctrl.errors;
+            if (errs && errs['binExists']) {
+              delete errs['binExists'];
+              if (Object.keys(errs).length === 0) ctrl.setErrors(null); else ctrl.setErrors(errs);
+            }
+          }
+        }),
+        switchMap((val: string) => {
+          if (!val) return of({ Data: { exists: false } } as any);
+          return this.tls21040Service.checkTLS21040_BIN({ CRD_BinCode: val }).pipe(
+            catchError(err => {
+              console.error('checkTLS21040_BIN error', err);
+              return of({ Data: { exists: false } } as any);
+            })
+          );
+        }),
+        untilDestroyed(this)
+      ).subscribe((res: any) => {
+        const exists = res?.Data?.exists;
+        const ctrl = this.dataForm.controls.CRD_BinCode;
+        if (exists) {
+          ctrl.setErrors({ ...(ctrl.errors || {}), binExists: true });
+          this.messageService.errorBubble('BIN 碼已存在，請輸入其他 BIN');
+        } else {
+          const errs = ctrl.errors;
+          if (errs && errs['binExists']) {
+            delete errs['binExists'];
+            if (Object.keys(errs).length === 0) ctrl.setErrors(null); else ctrl.setErrors(errs);
+          }
+        }
+      });
+    }
+    // 取得發卡銀行下拉 (APS1001, 不含分行)
+    this.dropDown.queryAPS1001NoBranch_DropDownList({ SearchKeyword: '' }).pipe(untilDestroyed(this)).subscribe({
+      next: (res: ApiResponse<IDropdownItem[]>) => {
+        if (res && res.Data) {
+          this.BNK_NoOptions = res.Data.map((item: IDropdownItem) => ({ No: item.No, Name: item.Name, label: `${item.No}-${item.Name}`, value: item.No }));
+        }
+      },
+    });
   }
 
   onSubmit(frm: FormGroup) {

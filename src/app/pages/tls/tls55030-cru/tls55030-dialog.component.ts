@@ -112,8 +112,26 @@ export class TLS55030DialogComponent {
   /** 儲存選取的折讓單明細並發送事件給父元件 */
   saveInvoiceDialog() {
     this.dialogVisible = false;
+    const acpDateValue = this.acpYyyyMm;
+    let lastDay: string | number | Date;
+    if (acpDateValue) {
+      const inputDate = acpDateValue instanceof Date ? acpDateValue : new Date(acpDateValue);
+      if (!isNaN(inputDate.getTime())) {
+        const year = inputDate.getFullYear();
+        const month = inputDate.getMonth();
+        // 計算該月最後一天
+        lastDay = new Date(year, month + 1, 0);
+      }
+    }
     // 確保只發送當前選中的項目
-    const selectedItems = [...this.selectedItemsDialog];
+    const selectedItems = [
+      ...this.selectedItemsDialog.map(item => ({
+        ...item,
+        // <-- 新增：將結帳年月的最後一天作為 PUR_GUIDate 發票日期 -->
+        Rebate_GUIDate: lastDay || item.Rebate_GUIDate
+      } as IInvoiceDetail))
+    ];
+    console.log(selectedItems);
     this.invoicesSelected.emit(selectedItems);
     this.selectedItemsDialog = [];
   }

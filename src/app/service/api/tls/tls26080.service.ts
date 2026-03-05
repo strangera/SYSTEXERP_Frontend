@@ -1,5 +1,5 @@
 import { formatDate } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { CampaignData, QueryTLS26080TLTTALENT_D16_D17Request, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080EditTable, TLS26080InsertPayload, TLS26080Query, TLS26080TLTTALENT_D16_D17Row, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
 import { Option, TalentOpenFlagItem, TalentOpenFlagQuery } from '@service/utility/dropdown-api.model';
@@ -199,7 +199,14 @@ export class TLS26080Service {
   }
 
   public downloadXLSXExample(): Observable<Blob> {
-    return this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080Template`, { responseType: 'blob' }).pipe(
+    let params = new HttpParams();
+    params = params.set('tlt_bdate', this.formatQueryDate(this.dateS) || '');
+    params = params.set('tlt_edate', this.formatQueryDate(this.dateE) || '');
+
+    return this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080Template`, {
+      params,
+      responseType: 'blob'
+    }).pipe(
       take(1),
       tap(res => {
         // 建立下載連結

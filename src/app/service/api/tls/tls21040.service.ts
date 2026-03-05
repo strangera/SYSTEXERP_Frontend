@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
@@ -71,7 +71,10 @@ export class Tls21040Service {
   updateTLS21040(data: TLS21040UpdateRequest): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateTLS21040`, data);
   }
-
+  /// 檢查 BIN 碼是否存在
+  checkTLS21040_BIN(data: { CRD_BinCode: string, id?: number }): Observable<ApiResponse<{ exists: boolean }>> {
+    return this.http.post<ApiResponse<{ exists: boolean }>>(`${this.apiUrl}/checkTLS21040_BIN`, data);
+  }
   /** 刪除 */
   deleteTLS21040(ids: number[]): Observable<ApiResponse<any>> {
     const body: TLS21040DeleteRequest = { idList: ids };
@@ -84,4 +87,11 @@ export class Tls21040Service {
     formData.append('file', file);
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/uploadTLS21040`, formData);
   }
+  downloadTLS21040Template(): Observable<HttpResponse<Blob>> {
+    return this.http.get(`${this.apiUrl}/downloadTLS21040Template`, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
+
 }

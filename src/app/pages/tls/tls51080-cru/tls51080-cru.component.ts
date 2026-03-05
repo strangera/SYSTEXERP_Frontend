@@ -20,7 +20,6 @@ import { POS2034 } from '../../../shared/models/tls/tls000.model';
 @Component({
   selector: 'app-tls51080-cru',
   templateUrl: './tls51080-cru.component.html',
-  styleUrl: './tls51080-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf, TranslateModule]
 })

@@ -8,8 +8,10 @@
       <div class="grid p-fluid">
         <app-input-text class="col-12 md:col-6 lg:col-4" label="信用卡 BIN 碼" controlName="CRD_BinCode"
           [control]="dataForm.controls.CRD_BinCode" [submitted]="submitted"></app-input-text>
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="發卡銀行代號" controlName="BNK_No"
-          [control]="dataForm.controls.BNK_No" [submitted]="submitted"></app-input-text>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="發卡銀行代號" controlName="BNK_No" [options]="BNK_NoOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.BNK_No" [submitted]="submitted"></app-dropdown>
+        </div>
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="信用卡卡別" controlName="CRD_Type" [options]="cardTypeOptions"
           optionLabel="label" optionValue="value" [control]="dataForm.controls.CRD_Type"
           [submitted]="submitted"></app-dropdown>

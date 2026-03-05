@@ -41,19 +41,33 @@ export class Tls12010Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS12010_POS2013`, body);
   }
 
-  //匯出 明細PDF
-  exportTLS12010_Detail(body: any): Observable<Blob> {
-    return this.http.post(`${this.apiUrl}/exportTLS12010_Detail`, body, {
+  //匯出主表 Excel
+  exportTLS12010(body: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS12010`, body, {
       responseType: 'blob'
     });
   }
 
-  //匯出 明細Excel
-  exportTLS12010_DetailPDF(body: any): Observable<Blob> {
-    return this.http.post(`${this.apiUrl}/exportTLS12010_DetailPDF`, body, {
+  //匯出主表 PDF
+  exportTLS12010PDF(body: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportTLS12010PDF`, body, {
       responseType: 'blob'
     });
   }
+
+  // 匯出 明細PDF(主表和明細一起一起匯出，改用exportTLS12010)
+  // exportTLS12010_Detail(body: any): Observable<Blob> {
+  //   return this.http.post(`${this.apiUrl}/exportTLS12010_Detail`, body, {
+  //     responseType: 'blob'
+  //   });
+  // }
+
+  //匯出 明細Excel(主表和明細一起一起匯出，改用exportTLS12010PDF)
+  // exportTLS12010_DetailPDF(body: any): Observable<Blob> {
+  //   return this.http.post(`${this.apiUrl}/exportTLS12010_DetailPDF`, body, {
+  //     responseType: 'blob'
+  //   });
+  // }
 
   // --- dropDown ---
 
