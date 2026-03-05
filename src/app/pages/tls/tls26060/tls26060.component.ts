@@ -192,8 +192,16 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.setColumns(frm.value.tax);
-          this.data = response.Data.QueryData;
-          this.footerData = response.Data.AllData;
+          this.data = (response.Data.QueryData ?? []).map((item: TLS26060Data & { team_no?: string; division_no?: string }) => ({
+            ...item,
+            team_name: `${item.team_no ?? ''}-${item.team_name ?? ''}`,
+            division_name: `${item.division_no ?? ''}-${item.division_name ?? ''}`
+          }));
+          this.footerData = (response.Data.AllData ?? []).map((item: TLS26060Data & { team_no?: string; division_no?: string }) => ({
+            ...item,
+            team_name: `${item.team_no ?? ''}-${item.team_name ?? ''}`,
+            division_name: `${item.division_no ?? ''}-${item.division_name ?? ''}`
+          }));
           this.totalRecords = response.TotalCount;
           this.lastQueryBody = payload;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
@@ -205,10 +213,18 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
   queryFunction = (body: TLS26060QueryRequest): Observable<{ Data: TLS26060Data[]; TotalCount: number }> => {
     return this.tls26060Service.queryTLS26060(body).pipe(
       tap(res => {
-        this.footerData = res.Data.AllData;
+        this.footerData = (res.Data.AllData ?? []).map((item: TLS26060Data & { team_no?: string; division_no?: string }) => ({
+          ...item,
+          team_name: `${item.team_no ?? ''}-${item.team_name ?? ''}`,
+          division_name: `${item.division_no ?? ''}-${item.division_name ?? ''}`
+        }));
       }),
       map(res => ({
-        Data: res.Data?.QueryData ?? [],
+        Data: (res.Data?.QueryData ?? []).map((item: TLS26060Data & { team_no?: string; division_no?: string }) => ({
+          ...item,
+          team_name: `${item.team_no ?? ''}-${item.team_name ?? ''}`,
+          division_name: `${item.division_no ?? ''}-${item.division_name ?? ''}`
+        })),
         TotalCount: res.TotalCount ?? 0
       }))
     );
