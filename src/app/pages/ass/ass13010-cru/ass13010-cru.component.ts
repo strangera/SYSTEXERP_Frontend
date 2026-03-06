@@ -1,12 +1,14 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { Component, inject, OnInit } from '@angular/core';
+import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ValidationService } from '@shared/service/validation.service';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -16,6 +18,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 //3.1.3.1 資產維護作業 CRU
+@UntilDestroy()
 @Component({
   selector: 'app-ass13010-cru',
   templateUrl: './ass13010-cru.component.html',
@@ -23,18 +26,18 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class ASS13010CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
+export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  private validationService = inject(ValidationService);
+  private translate = inject(TranslateService);
+  private dropdownApiService = inject(DropdownApiService);
+  accordionTabCss = '';
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     // ----------------------------------------------------------------
     assetsCode: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(10)]], // 資產代號
     itemCode: [, [Validators.required]], // 品項編號
-    assetsStatus: [[Validators.required]], // 品項編號
+    assetsStatus: [, [Validators.required]], // 資產狀態
     assetsType: ['', [Validators.required, Validators.maxLength(10)]], // 資產類型
     original_assetsCode: [, [this.validationService.numberValidator, Validators.maxLength(20)]], // 原資產編號
 
@@ -75,6 +78,8 @@ export class ASS13010CRUComponent implements OnInit {
     dispose_Manufacturers: [], // 處份廠商
     dispose_Manufacturers_Summons: [, [Validators.maxLength(12)]], // 處份傳票編號
     soldAmount: [, [Validators.maxLength(8)]], // 變賣金額
+    warrantyDays: [, [Validators.maxLength(8)]], // 保固年限(日)
+    amortizationYearMonth: [, [Validators.maxLength(6)]], // 攤提年月 YYYYMM
     //---
     //其他
     //---
@@ -86,65 +91,103 @@ export class ASS13010CRUComponent implements OnInit {
     ]),
   });
   // ----------------------------------------------------------------
-  itemCodeOptions: any[] = [];
-  assetsStatusOptions: any[] = [];
-  assetsTypeOptions: any[] = [];
+  // 下拉選單（來源同 ass13010，見註解）
+  itemCodeOptions: Option[] = []; // 待確認
+  assetsStatusOptions: Option[] = [
+    { value: '1', label: '使用中' },
+    { value: '3', label: '維修中' },
+    { value: '4', label: '報廢' },
+    { value: '5', label: '變賣' },
+    { value: '7', label: '庫存中未使用' }
+  ];
+  assetsTypeOptions: Option[] = [
+    { value: '1', label: '資產' },
+    { value: '2', label: '列管品' }
+  ];
   orderNumberOptions: any[] = [
     { value: 1, label: '201410300001' },
     { value: 2, label: '201410300002' },
     { value: 3, label: '201410300003' },
   ];
-  supplierCodeOptions: any[] = [];
+  supplierCodeOptions: Option[] = []; // queryPOS2013_DropDownList
+  depreciationOptions: Option[] = []; // queryGLS1005_ledgerMD_DropDownList
+  /** 所有人員（含 Org_ID），供依單位篩選 */
+  allUserOptionsWithOrg: Option[] = [];
+  /** 保管人下拉：依 保管單位 篩選該單位人員 */
+  keepingPersonOptions: Option[] = [];
+  /** 使用人下拉：依 使用單位 篩選該單位人員 */
+  userOptions: Option[] = [];
+  orgUnitOptions: Option[] = []; // querySYS3100_DropDownList
+  locationCodeOptions: Option[] = []; // queryPOS2002_DropDownList
 
-  depreciationOptions: any[] = [];
-  applicantCodeOptions: any[] = [];
-  locationCodeOptions: any[] = [];
-
-  //
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-  ) {
-    super();  // 呼叫父類建構子
+  constructor() {
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310016';
-    //
+    this.initializePage('ASS13010', this.dataForm);
+    this.accordionTabCss = this.crudstatus === CRUDStatus.Create ? 'create-accordionTab' : 'edit-accordionTab';
+    this.loadDropdownOptions();
+    this.dataForm.controls.keepingUnit.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.updateKeepingPersonOptions();
+      const unitVal = this.dataForm.controls.keepingUnit.value;
+      const allowed = this.keepingPersonOptions.some(o => o.value === this.dataForm.controls.keepingPerson.value);
+      if (unitVal != null && unitVal !== '' && !allowed) {
+        this.dataForm.patchValue({ keepingPerson: undefined }, { emitEvent: false });
+        this.dataForm.controls.keepingPerson.markAsPristine({ onlySelf: true });
+      }
+    });
+    this.dataForm.controls.userUnit.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.updateUserOptions();
+      const unitVal = this.dataForm.controls.userUnit.value;
+      const allowed = this.userOptions.some(o => o.value === this.dataForm.controls.user.value);
+      if (unitVal != null && unitVal !== '' && !allowed) {
+        this.dataForm.patchValue({ user: undefined }, { emitEvent: false });
+        this.dataForm.controls.user.markAsPristine({ onlySelf: true });
+      }
+    });
+  }
 
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
+  private updateKeepingPersonOptions(): void {
+    const unitVal = this.dataForm.controls.keepingUnit.value;
+    if (unitVal == null || unitVal === '') {
+      this.keepingPersonOptions = [...this.allUserOptionsWithOrg];
+    } else {
+      this.keepingPersonOptions = this.allUserOptionsWithOrg.filter(
+        (o: Option) => (o as Option & { Org_ID?: string }).Org_ID === unitVal
+      );
     }
+  }
 
-    console.log(this.accordionTabCss);
+  private updateUserOptions(): void {
+    const unitVal = this.dataForm.controls.userUnit.value;
+    if (unitVal == null || unitVal === '') {
+      this.userOptions = [...this.allUserOptionsWithOrg];
+    } else {
+      this.userOptions = this.allUserOptionsWithOrg.filter(
+        (o: Option) => (o as Option & { Org_ID?: string }).Org_ID === unitVal
+      );
+    }
+  }
+
+  private loadDropdownOptions(): void {
+    this.dropdownApiService.queryPos2013({ VEN_Flag: '' }).pipe(untilDestroyed(this)).subscribe(res => {
+      this.supplierCodeOptions = res ?? [];
+    });
+    this.dropdownApiService.queryGls1005_ledgerMD().pipe(untilDestroyed(this)).subscribe(res => {
+      this.depreciationOptions = res ?? [];
+    });
+    this.dropdownApiService.queryTblUserOrgid().pipe(untilDestroyed(this)).subscribe(res => {
+      this.allUserOptionsWithOrg = res ?? [];
+      this.updateKeepingPersonOptions();
+      this.updateUserOptions();
+    });
+    this.dropdownApiService.querySys3100().pipe(untilDestroyed(this)).subscribe(res => {
+      this.orgUnitOptions = res ?? [];
+    });
+    this.dropdownApiService.queryPos2002().pipe(untilDestroyed(this)).subscribe(res => {
+      this.locationCodeOptions = res ?? [];
+    });
   }
 
   // ----------------------------------------------------------------
@@ -177,11 +220,11 @@ export class ASS13010CRUComponent implements OnInit {
     this.items.removeAt(index);
   }
   // ----------------------------------------------------------------
-  Edit(rowdata: any) {
+  Edit(rowdata: any): void {
     this.dataForm.patchValue(rowdata);
   }
 
-  Read(rowdata: any) {
+  Read(rowdata: any): void {
     this.dataForm.patchValue(rowdata);
     this.dataForm.disable();
   }
@@ -190,41 +233,30 @@ export class ASS13010CRUComponent implements OnInit {
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            // TODO: this.storeService.addMachine(frm.value).subscribe(...)
+            this.messageService.successBubble(this.translate.instant('success_message'));
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            // TODO: this.storeService.updateMachine(frm.value).subscribe(...)
+            this.messageService.successBubble(this.translate.instant('updated-successfully'));
+          }
+          break;
+      }
+    });
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
+  submitForm(frm: FormGroup): void {
     this.onSubmit(frm);
-  }//CRU
+  }
 
-  onCancel() {
+  override onCancel(): void {
     this.router.navigate(['/ASS1000/ASS13010']);
   }
 }
