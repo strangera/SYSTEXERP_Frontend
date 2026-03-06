@@ -67,7 +67,6 @@
           </app-dropdown>
         </div>
 
-        <!-- 申報年月 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-year-month
             label="申報年月"
@@ -119,7 +118,6 @@
           </app-input-number>
         </div>
 
-        <!-- 退出/折讓金額 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="退出/折讓金額"
@@ -129,7 +127,6 @@
           </app-input-number>
         </div>
 
-        <!-- 退出/折讓稅額（自動計算，不可手動） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="退出/折讓稅額"
@@ -139,7 +136,6 @@
           </app-input-number>
         </div>
 
-        <!-- 退回/折讓總金額（可單獨輸入，會反算金額+稅額） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="退回/折讓總金額"
@@ -186,7 +182,6 @@
         </div>
       </div>
 
-      <!-- 按鈕列 -->
       <div
         class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable">
@@ -198,32 +193,27 @@
 </div>
 
 <div class="card">
-<app-table
-  tableKey="FIN13020CRU"
-  [columns]="columnsForView"
-  dataKey="ID"
-  [multiSortMeta]="[{ field: 'ID', order: 1 }]"
-  [lazy]="false"
- 
-  [insertRowData]="!isRead"
-  [defaultInsertData]="{ PLU_Name: '', TXN_Qty: null, PLU_SalePrc: null, TXN_SaleAmt: null }"
-  [showInsert]="!isRead"
-  [showRowEdit]="!isRead"
-  [showManage]="!isRead"
-  [showEdit]="false"
-  [showDetail]="false"
-  [showReportMode]="false"
-
-
-  [showDelete]="!isRead"
-  [showCheckBox]="!isRead"
-  [deleteData]="!isRead"
-
-  [showPaginator]="false"
-  [disabled]="isRead"
-  [(data)]="detailRows"
-   (dataChange)="onDetailRowsChange($event)"
-  (fieldChange)="onFieldChange($event)">
-</app-table>
-
+  <app-table
+    tableKey="FIN13020CRU"
+    [columns]="columnsForView"
+    dataKey="ID"
+    [multiSortMeta]="[{ field: 'ID', order: 1 }]"
+    [lazy]="false"
+    [insertRowData]="!isRead"
+    [defaultInsertData]="{ PLU_Name: '', TXN_Qty: null, PLU_SalePrc: null, TXN_SaleAmt: null }"
+    [showInsert]="!isRead"
+    [showRowEdit]="!isRead"
+    [showManage]="!isRead"
+    [showEdit]="false"
+    [showDetail]="false"
+    [showReportMode]="false"
+    [showDelete]="!isRead"
+    [showCheckBox]="!isRead"
+    [deleteData]="!isRead"
+    [showPaginator]="false"
+    [disabled]="isRead"
+    [(data)]="detailRows"
+    (dataChange)="onDetailRowsChange($event)"
+    (fieldChange)="onFieldChange($event)">
+  </app-table>
 </div>
