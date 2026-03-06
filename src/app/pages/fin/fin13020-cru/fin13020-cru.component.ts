@@ -1,23 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, OnInit, EventEmitter, Output } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
-import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { NgIf } from '@angular/common';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { HttpResponse } from '@angular/common/http';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { PanelModule } from 'primeng/panel';
 import { environment } from 'src/environments/environment';
+import { finalize, map, switchMap, throwError } from 'rxjs';
+
+import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
+import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
   selector: 'app-fin13020-cru',
@@ -62,8 +65,14 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
   /**
    * 原始剩餘總金額
+   * = 銷售額 + 稅額 - 已退出/折讓歷史總金額
    */
   private originalRemainingAmt: number | null = null;
+
+  /**
+   * 避免同一組字軌+發票號碼重複打 API
+   */
+  private lastLoadedInvoiceKey = '';
 
   dataForm = this.formBuilder.nonNullable.group({
     id: [null as number | null],
@@ -118,7 +127,10 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
           TXN_Ret_No: row.TXN_Ret_No ?? this.dataForm.get('TXN_Ret_No')?.value,
 
           GUI_Track: row.GUI_Track ?? row.InvoiceTrack ?? this.dataForm.get('GUI_Track')?.value,
-          PUR_GUINo: row.PUR_GUINo ?? row.InvoiceNumber ?? this.dataForm.get('PUR_GUINo')?.value,
+          PUR_GUINo: this.normalizeInvoiceNumber(
+            row.PUR_GUINo ?? row.InvoiceNumber ?? this.dataForm.get('PUR_GUINo')?.value,
+            row.GUI_Track ?? row.InvoiceTrack ?? this.dataForm.get('GUI_Track')?.value
+          ),
           PUR_GUIDate: row.PUR_GUIDate ?? row.InvoiceDate ?? this.dataForm.get('PUR_GUIDate')?.value,
           PUR_VoucherType: row.PUR_VoucherType ?? row.InvoiceType ?? this.dataForm.get('PUR_VoucherType')?.value,
 
@@ -149,10 +161,6 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     this.updateDisabledState();
-
-    // 只監聽：
-    // 1. 字軌改變 -> 重新載入發票號碼下拉
-    // 2. 發票號碼改變 -> 真正查資料一次
     this.setupTrackNoWatcher();
     this.setupGuiNoChangeWatcher();
     this.setupAmountRelations();
@@ -187,7 +195,6 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
       );
     }
 
-    // 編輯 / 檢視才用 queryFIN13020 載既有資料
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       this.loadInvoiceInfoByCurrentGUINo();
     }
@@ -197,15 +204,21 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
   private loadInvoiceInfoByCurrentGUINo(): void {
     const track = (this.dataForm.get('GUI_Track')?.value as string | null)?.trim();
-    const no = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
+    const noRaw = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
+    const no = this.normalizeInvoiceNumber(noRaw, track);
+
     if (!track || !no) return;
+
+    const key = `EDIT|${track}|${no}`;
+    if (this.lastLoadedInvoiceKey === key) return;
+    this.lastLoadedInvoiceKey = key;
 
     this.dataForm.patchValue(
       { InvoiceNumber_Correspond: `${track}${no}` },
       { emitEvent: false }
     );
 
-    this.clearLoadedInvoiceFields();
+    this.clearLoadedInvoiceFields(false);
 
     this.fin13020Service
       .queryFIN13020ByTrackNo({ InvoiceTrack: track, InvoiceNumber: no })
@@ -213,51 +226,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         const dto = res?.Data?.[0];
         if (!dto) return;
 
-        const invoiceType = String(dto.InvoiceType ?? '');
-        let voucherType = invoiceType;
-        if (invoiceType === '31' || invoiceType === '35') voucherType = '33';
-        else if (invoiceType === '32') voucherType = '34';
-
-        const rawOriginal =
-          (dto as any).PUR_Amount ??
-          (dto as any).PUR_Amt ??
-          (dto as any).Total_Amt ??
-          null;
-
-        const original =
-          rawOriginal !== null && rawOriginal !== undefined ? Number(rawOriginal) : null;
-
-        this.originalRemainingAmt =
-          original !== null && !isNaN(original) ? this.roundToInt(original) : null;
-
-        this.dataForm.patchValue(
-          {
-            GUI_Track: dto.InvoiceTrack ?? track,
-            PUR_GUINo: dto.InvoiceNumber ?? no,
-            Inv_Date: dto.InvoiceDate ?? null,
-            PUR_VoucherType: voucherType,
-            PUR_TaxType: dto.PUR_TaxType ?? '',
-            Inv_Net: dto.PUR_Net ?? null,
-            Inv_Tax: dto.PUR_Tax ?? null,
-            Total_hitory_PUR_Amt: dto.Total_hitory_PUR_Amt ?? null,
-            Total_Amt: this.originalRemainingAmt,
-            Credit_Type: dto.Credit_Type ?? '',
-            Source_Doc_No: dto.Source_Doc_No ?? '',
-            Voucher_No: dto.Voucher_No ?? '',
-          },
-          { emitEvent: false }
-        );
-
-        const details = Array.isArray(dto.Details) ? dto.Details : [];
-        this.detailRows = details.map((d: any) => ({
-          ID: d.ID ?? null,
-          PLU_Name: d.PLU_Name ?? '',
-          TXN_Qty: d.TXN_Qty ?? null,
-          PLU_SalePrc: d.PLU_SalePrc ?? null,
-          TXN_SaleAmt: d.TXN_SaleAmt ?? null,
-        }));
-
-        this.syncPurAmtFromDetails();
+        this.applyInvoiceDto(dto, track, no);
       });
   }
 
@@ -265,16 +234,25 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
   private loadCorrespondInvoiceInfo(): void {
     const track = (this.dataForm.get('GUI_Track')?.value as string | null)?.trim();
-    const no = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
+    const noRaw = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
+    const no = this.normalizeInvoiceNumber(noRaw, track);
+
     if (!track || !no) return;
+
+    const key = `CREATE|${track}|${no}`;
+    if (this.lastLoadedInvoiceKey === key) return;
+    this.lastLoadedInvoiceKey = key;
 
     const full = `${track}${no}`;
     this.dataForm.patchValue(
-      { InvoiceNumber_Correspond: full },
+      {
+        PUR_GUINo: no,
+        InvoiceNumber_Correspond: full,
+      },
       { emitEvent: false }
     );
 
-    this.clearLoadedInvoiceFields();
+    this.clearLoadedInvoiceFields(false);
 
     this.fin13020Service
       .queryCorrespondByGUINoCorrespond({
@@ -285,50 +263,94 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         const dto = res?.Data?.[0];
         if (!dto) return;
 
-        const invoiceType = String(dto.InvoiceType ?? '');
-        let voucherType = invoiceType;
-        if (invoiceType === '31' || invoiceType === '35') voucherType = '33';
-        else if (invoiceType === '32') voucherType = '34';
-
-        const rawOriginal =
-          (dto as any).PUR_Amount ??
-          (dto as any).PUR_Amt ??
-          (dto as any).Total_Amt ??
-          null;
-
-        const original =
-          rawOriginal !== null && rawOriginal !== undefined ? Number(rawOriginal) : null;
-
-        this.originalRemainingAmt =
-          original !== null && !isNaN(original) ? this.roundToInt(original) : null;
-
-        this.dataForm.patchValue(
-          {
-            Inv_Date: dto.InvoiceDate ?? null,
-            PUR_VoucherType: voucherType,
-            PUR_TaxType: dto.PUR_TaxType ?? '',
-            Inv_Net: dto.PUR_Net ?? null,
-            Inv_Tax: dto.PUR_Tax ?? null,
-            Total_hitory_PUR_Amt: dto.Total_hitory_PUR_Amt ?? null,
-            Total_Amt: this.originalRemainingAmt,
-            Credit_Type: dto.Credit_Type ?? '',
-            Source_Doc_No: dto.Source_Doc_No ?? '',
-            Voucher_No: dto.Voucher_No ?? '',
-          },
-          { emitEvent: false }
-        );
-
-        const details = Array.isArray(dto.Details) ? dto.Details : [];
-        this.detailRows = details.map((d: any) => ({
-          ID: d.ID ?? null,
-          PLU_Name: d.PLU_Name ?? '',
-          TXN_Qty: d.TXN_Qty ?? null,
-          PLU_SalePrc: d.PLU_SalePrc ?? null,
-          TXN_SaleAmt: d.TXN_SaleAmt ?? null,
-        }));
-
-        this.syncPurAmtFromDetails();
+        this.applyInvoiceDto(dto, track, no);
       });
+  }
+
+  /**
+   * 共用：把 API 回來的資料套進畫面
+   */
+  private applyInvoiceDto(dto: any, track: string, no: string): void {
+    const invoiceType = String(dto.InvoiceType ?? '');
+    let voucherType = invoiceType;
+    if (invoiceType === '31' || invoiceType === '35') voucherType = '33';
+    else if (invoiceType === '32') voucherType = '34';
+
+    this.originalRemainingAmt = this.buildOriginalRemainingAmt(dto);
+
+    this.dataForm.patchValue(
+      {
+        GUI_Track: dto.InvoiceTrack ?? track,
+        PUR_GUINo: this.normalizeInvoiceNumber(dto.InvoiceNumber ?? no, dto.InvoiceTrack ?? track),
+        Inv_Date: dto.InvoiceDate ?? null,
+        PUR_VoucherType: voucherType,
+        PUR_TaxType: dto.PUR_TaxType ?? '',
+        Inv_Net: dto.PUR_Net ?? null,
+        Inv_Tax: dto.PUR_Tax ?? null,
+        Total_hitory_PUR_Amt: dto.Total_hitory_PUR_Amt ?? null,
+        Total_Amt: this.originalRemainingAmt,
+        Credit_Type: dto.Credit_Type ?? '',
+        Source_Doc_No: dto.Source_Doc_No ?? '',
+        Voucher_No: dto.Voucher_No ?? '',
+      },
+      { emitEvent: false }
+    );
+
+    const details = Array.isArray(dto.Details) ? dto.Details : [];
+    this.detailRows = details.map((d: any) => ({
+      ID: d.ID ?? null,
+      PLU_Name: d.PLU_Name ?? '',
+      TXN_Qty: d.TXN_Qty ?? null,
+      PLU_SalePrc: d.PLU_SalePrc ?? null,
+      TXN_SaleAmt: d.TXN_SaleAmt ?? null,
+    }));
+
+    this.syncPurAmtFromDetails();
+
+    if (
+      this.crudstatus === CRUDStatus.Create &&
+      this.originalRemainingAmt !== null &&
+      this.originalRemainingAmt <= 0
+    ) {
+      this.messageService.errorBubble('此發票已無可退出/折讓金額，不可新增');
+    }
+
+    if (!this.detailRows.length) {
+      const purAmt = this.toIntOrNull(dto.PUR_Amt);
+      const purNet = this.toIntOrNull(dto.PUR_Net);
+      const purTax = this.toIntOrNull(dto.PUR_Tax);
+
+      this.dataForm.patchValue(
+        {
+          PUR_Net: purNet,
+          PUR_Tax: purTax,
+          PUR_Amt: purAmt,
+        },
+        { emitEvent: false }
+      );
+    }
+  }
+
+  /**
+   * 剩餘總金額優先自己算，不直接相信 API Total_Amt
+   * 公式：銷售額 + 稅額 - 已退出/折讓歷史總金額
+   */
+  private buildOriginalRemainingAmt(dto: any): number | null {
+    const invNet = this.toIntOrNull(dto?.PUR_Net);
+    const invTax = this.toIntOrNull(dto?.PUR_Tax);
+    const historyAmt = this.toIntOrNull(dto?.Total_hitory_PUR_Amt) ?? 0;
+    const apiTotalAmt = this.toIntOrNull(dto?.Total_Amt);
+
+    const calcAmt =
+      invNet !== null && invTax !== null
+        ? this.roundToInt(invNet + invTax - historyAmt)
+        : null;
+
+    if (calcAmt !== null) {
+      return calcAmt;
+    }
+
+    return apiTotalAmt;
   }
 
   /* ----------------- 字軌 / 發票號碼 ----------------- */
@@ -338,14 +360,20 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     if (!trackControl) return;
 
     trackControl.valueChanges.subscribe((trackNo) => {
-      if (typeof trackNo === 'string' && trackNo.trim().length >= 2) {
-        this.fin13020Service.queryINV1000List({ GUI_Track: trackNo.trim() }).subscribe((res) => {
-          this.guiNumberOptions = (res.Data || []).map((item: any) => ({
-            label: item.InvoiceNumber,
-            value: item.InvoiceNumber,
-          }));
+      const track = typeof trackNo === 'string' ? trackNo.trim() : '';
 
-          // 字軌改變時，不自動查資料，只清掉已選發票號碼與已帶入資料
+      this.lastLoadedInvoiceKey = '';
+
+      if (track.length >= 2) {
+        this.fin13020Service.queryINV1000List({ GUI_Track: track }).subscribe((res) => {
+          this.guiNumberOptions = (res.Data || []).map((item: any) => {
+            const pureNo = this.normalizeInvoiceNumber(item.InvoiceNumber, track);
+            return {
+              label: pureNo,
+              value: pureNo,
+            };
+          });
+
           this.dataForm.patchValue(
             {
               PUR_GUINo: '',
@@ -353,6 +381,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
             },
             { emitEvent: false }
           );
+
           this.clearLoadedInvoiceFields();
         });
       } else {
@@ -374,8 +403,18 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     if (!noControl) return;
 
     noControl.valueChanges.subscribe((value) => {
-      const no = typeof value === 'string' ? value.trim() : '';
-      if (!no) return;
+      const track = (this.dataForm.get('GUI_Track')?.value as string | null)?.trim();
+      const no = this.normalizeInvoiceNumber(value, track);
+
+      if (!track || !no) return;
+
+      if (!this.isValidSelectedGuiNo(no)) {
+        return;
+      }
+
+      if (String(value ?? '') !== no) {
+        this.dataForm.patchValue({ PUR_GUINo: no }, { emitEvent: false });
+      }
 
       if (this.crudstatus === CRUDStatus.Create) {
         this.loadCorrespondInvoiceInfo();
@@ -385,8 +424,18 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  private clearLoadedInvoiceFields(): void {
-    this.detailRows = [];
+  private isValidSelectedGuiNo(no: string): boolean {
+    const pureNo = this.normalizeInvoiceNumber(no, this.dataForm.get('GUI_Track')?.value);
+    return this.guiNumberOptions.some(
+      (opt) => this.normalizeInvoiceNumber(opt.value, this.dataForm.get('GUI_Track')?.value) === pureNo
+    );
+  }
+
+  private clearLoadedInvoiceFields(clearDetailRows = true): void {
+    if (clearDetailRows) {
+      this.detailRows = [];
+    }
+
     this.originalRemainingAmt = null;
 
     this.dataForm.patchValue(
@@ -430,7 +479,6 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
     this.dataForm.get('PUR_Net')?.disable();
     this.dataForm.get('PUR_Amt')?.disable();
-
     this.dataForm.get('PUR_Tax')?.disable();
     this.dataForm.get('TXN_Ret_No')?.disable();
     this.dataForm.get('PUR_TaxType')?.disable();
@@ -462,18 +510,26 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
       const detailTotal = this.roundToInt(detailTotalRaw);
 
       const purAmtInt = this.toIntOrNull(formValue.PUR_Amt);
-      if (purAmtInt !== null && purAmtInt !== detailTotal) {
+      if (this.detailRows.length > 0 && purAmtInt !== null && purAmtInt !== detailTotal) {
         this.messageService.errorBubble('明細的金額加總必須等於「退回/折讓總金額」');
         return;
       }
 
-      const invNetInt = this.toIntOrNull(formValue.Inv_Net);
-      if (invNetInt !== null && purAmtInt !== null && purAmtInt > invNetInt) {
-        this.messageService.errorBubble('退回/折讓總金額不可大於銷售額');
+      const remainingAmt = this.toIntOrNull(formValue.Total_Amt);
+      if (remainingAmt !== null && purAmtInt !== null && purAmtInt > remainingAmt) {
+        this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
         return;
       }
 
-      const creditType = this.calcCreditTypeByInvNet(formValue.PUR_Amt, invNetInt);
+      if (this.crudstatus === CRUDStatus.Create) {
+        if (remainingAmt !== null && remainingAmt <= 0) {
+          this.messageService.errorBubble('此發票已無可退出/折讓金額，不可新增');
+          return;
+        }
+      }
+
+      const invAmtForCreditType = this.toIntOrNull(formValue.Inv_Net);
+      const creditType = this.calcCreditTypeByInvNet(formValue.PUR_Amt, invAmtForCreditType);
 
       const intNet = this.toIntOrNull(formValue.PUR_Net);
       const intTax = this.toIntOrNull(formValue.PUR_Tax);
@@ -481,15 +537,17 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
       const invoiceDate = formValue.PUR_GUIDate ? new Date(formValue.PUR_GUIDate) : null;
       const invDeclareYM = this.toYYYYMM(formValue.PUR_RepYYYYMM);
+      const pureInvoiceNumber = this.normalizeInvoiceNumber(formValue.PUR_GUINo, formValue.GUI_Track);
 
       this.loading = true;
+      this.messageService.blockUi();
 
       if (this.crudstatus === CRUDStatus.Edit) {
         const payload: any = {
           id: formValue.id,
           TXN_Ret_No: formValue.TXN_Ret_No,
           GUI_Track: formValue.GUI_Track,
-          InvoiceNumber: formValue.PUR_GUINo,
+          InvoiceNumber: pureInvoiceNumber,
           InvoiceDate: invoiceDate,
           InvoiceType: formValue.PUR_VoucherType,
           INV_DeclareYM: invDeclareYM,
@@ -509,27 +567,29 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         };
 
         if (this.canEdit()) {
-          this.fin13020Service.updateFIN13020(payload).subscribe({
+          this.fin13020Service.updateFIN13020(payload).pipe(
+            finalize(() => {
+              this.loading = false;
+              this.messageService.unblockUi();
+            })
+          ).subscribe({
             next: () => {
               this.messageService.successBubble('更新成功');
               this.onCancel();
             },
             error: (err) => {
-              this.loading = false;
               this.messageService.errorBubble(err?.error?.Message || '更新失敗，請聯絡系統管理員');
-            },
-            complete: () => {
-              this.loading = false;
             },
           });
         } else {
           this.loading = false;
+          this.messageService.unblockUi();
         }
       } else {
-        const payload: any = {
+        const insertPayload: any = {
           Source: 'APS',
           GUI_Track: formValue.GUI_Track,
-          InvoiceNumber: formValue.PUR_GUINo,
+          InvoiceNumber: pureInvoiceNumber,
           InvoiceDate: invoiceDate,
           InvoiceType: formValue.PUR_VoucherType,
           INV_DeclareYM: invDeclareYM,
@@ -548,72 +608,176 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         };
 
         if (this.canAdd()) {
-          this.fin13020Service.insertFIN13020(payload).subscribe({
+          this.fin13020Service.insertFIN13020(insertPayload).pipe(
+            switchMap(() => {
+              return this.queryInsertedRecordAndPrint(
+                formValue.GUI_Track,
+                pureInvoiceNumber,
+                invDeclareYM
+              );
+            }),
+            finalize(() => {
+              this.loading = false;
+              this.messageService.unblockUi();
+            })
+          ).subscribe({
             next: () => {
-              this.messageService.successBubble('新增成功');
-
-              const formValue = this.dataForm.getRawValue();
-              const repYM = this.toYYYYMM(formValue.PUR_RepYYYYMM);
-
-              const printPayload = {
-                INV_DeclareYM: repYM,
-                TXN_Ret_NoS: formValue.PUR_GUINo,
-                TXN_Ret_NoE: formValue.PUR_GUINo,
-                InvoiceTrack: formValue.GUI_Track,
-                InvoiceNumberS: formValue.PUR_GUINo,
-                InvoiceNumberE: formValue.PUR_GUINo,
-              };
-
-              this.fin13020Service.printFIN13020(printPayload).subscribe({
-                next: (resp) => this.openPrintResponse(resp),
-                error: () => this.messageService.warnBubble?.('列印失敗（已新增成功）'),
-              });
+              this.messageService.successBubble('新增成功並列印完成');
 
               this.dataForm.reset();
               this.detailRows = [];
               this.originalRemainingAmt = null;
+              this.lastLoadedInvoiceKey = '';
+
+              const today = new Date();
+              const year = today.getFullYear();
+              const month = today.getMonth() + 1;
+              let evenMonth = month % 2 === 0 ? month : month + 1;
+              if (evenMonth > 12) evenMonth = 12;
+
+              this.dataForm.patchValue(
+                {
+                  PUR_GUIDate: today,
+                  PUR_RepYYYYMM: `${year}${String(evenMonth).padStart(2, '0')}`,
+                  TXN_Ret_No: '系統自動帶入',
+                },
+                { emitEvent: false }
+              );
+
+              this.updateDisabledState();
             },
-            complete: () => {
-              this.loading = false;
+            error: (err) => {
+              this.messageService.errorBubble(
+                err?.error?.Message || err?.message || '新增或列印失敗，請聯絡系統管理員'
+              );
             },
           });
         } else {
           this.loading = false;
+          this.messageService.unblockUi();
         }
       }
     });
   }
 
-  private openPrintResponse(resp: import('@angular/common/http').HttpResponse<Blob>) {
-    const ct = resp.headers.get('content-type') || '';
+  /**
+   * 新增成功後：
+   * 1. 先查 queryFIN13020 抓到 TXN_Ret_No
+   * 2. 再用 TXN_Ret_No 去列印
+   */
+  private queryInsertedRecordAndPrint(
+    guiTrack: string,
+    pureInvoiceNumber: string,
+    invDeclareYM: string | null
+  ) {
+    const queryPayload = {
+      TXN_Ret_NoStart: null,
+      TXN_Ret_NoEnd: null,
+      GUI_Track: guiTrack,
+      InvoiceNumberStart: pureInvoiceNumber,
+      InvoiceNumberEnd: pureInvoiceNumber,
+      InvoiceDateStart: null,
+      InvoiceDateEnd: null,
+      InvoiceType: null,
+      INV_DeclareYM: invDeclareYM,
+      Source_Doc_NoStart: null,
+      Source_Doc_NoEnd: null,
+      Voucher_NoStart: null,
+      Voucher_NoEnd: null,
+      pageIndex: 1,
+      pageSize: 30,
+      SortBy: [{ field: 'ID', order: -1 }],
+    };
 
-    if (ct.includes('application/pdf')) {
-      const url = URL.createObjectURL(resp.body!);
-      window.open(url, '_blank');
-      return;
-    }
+    return this.fin13020Service.queryFIN13020(queryPayload).pipe(
+      map((res: any) => {
+        const list = Array.isArray(res?.Data) ? res.Data : [];
+        if (!list.length) {
+          throw new Error('新增成功，但查不到剛新增的折讓單資料');
+        }
 
-    resp.body!.text().then((text) => {
-      let json: any;
-      try {
-        json = JSON.parse(text);
-      } catch {
-        const url = URL.createObjectURL(resp.body!);
-        window.open(url, '_blank');
+        const hit =
+          list.find((x: any) =>
+            String(x?.InvoiceTrack ?? '').trim() === String(guiTrack ?? '').trim() &&
+            this.normalizeInvoiceNumber(x?.InvoiceNumber, x?.InvoiceTrack) === pureInvoiceNumber
+          ) ?? list[0];
+
+        const txnRetNo = String(hit?.TXN_Ret_No ?? '').trim();
+        const invYM = String(hit?.INV_DeclareYM ?? invDeclareYM ?? '').trim();
+        const track = String(hit?.InvoiceTrack ?? guiTrack ?? '').trim();
+        const invNo = this.normalizeInvoiceNumber(hit?.InvoiceNumber ?? pureInvoiceNumber, track);
+
+        if (!txnRetNo) {
+          throw new Error('新增成功，但查到的資料沒有退出/折讓單號（TXN_Ret_No）');
+        }
+
+        this.dataForm.patchValue(
+          {
+            TXN_Ret_No: txnRetNo,
+          },
+          { emitEvent: false }
+        );
+
+        return {
+          INV_DeclareYM: invYM,
+          TXN_Ret_NoS: txnRetNo,
+          TXN_Ret_NoE: txnRetNo,
+          InvoiceTrack: track,
+          InvoiceNumberS: invNo,
+          InvoiceNumberE: invNo,
+        };
+      }),
+      switchMap((printPayload) => this.fin13020Service.printFIN13020(printPayload)),
+      switchMap((resp: HttpResponse<Blob>) => this.openPrintResponse$(resp))
+    );
+  }
+
+  /**
+   * 改成 Observable 版本，讓外面可以串接 loading 到真正開啟列印完成為止
+   */
+  private openPrintResponse$(resp: HttpResponse<Blob>) {
+    return new Promise<void>((resolve, reject) => {
+      const ct = resp.headers.get('content-type') || '';
+
+      if (ct.includes('application/pdf')) {
+        try {
+          const url = URL.createObjectURL(resp.body!);
+          window.open(url, '_blank');
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
         return;
       }
 
-      const printUrl = json?.Print_URL ?? json?.Data?.Print_URL ?? json?.Data?.[0]?.Print_URL;
-      if (!printUrl) {
-        this.messageService.warnBubble?.('列印回應未包含 Print_URL');
-        return;
-      }
+      resp.body!.text().then((text) => {
+        let json: any;
+        try {
+          json = JSON.parse(text);
+        } catch {
+          try {
+            const url = URL.createObjectURL(resp.body!);
+            window.open(url, '_blank');
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+          return;
+        }
 
-      const base = environment.ApiUrl;
-      const fullUrl = `${base}${printUrl}`;
+        const printUrl = json?.Print_URL ?? json?.Data?.Print_URL ?? json?.Data?.[0]?.Print_URL;
+        if (!printUrl) {
+          reject(new Error('列印回應未包含 Print_URL'));
+          return;
+        }
 
-      window.open(fullUrl, '_blank');
-    });
+        const base = environment.ApiUrl;
+        const fullUrl = `${base}${printUrl}`;
+
+        window.open(fullUrl, '_blank');
+        resolve();
+      }).catch((err) => reject(err));
+    }).then(() => void 0);
   }
 
   override onCancel(): void {
@@ -629,7 +793,6 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     const taxControl = this.dataForm.get('PUR_Tax');
     const amtControl = this.dataForm.get('PUR_Amt');
     const remainingControl = this.dataForm.get('Total_Amt');
-    const invNetControl = this.dataForm.get('Inv_Net');
 
     if (!netControl || !taxControl || !amtControl || !remainingControl) return;
 
@@ -655,21 +818,13 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         return;
       }
 
-      const invNetRaw = invNetControl?.value;
-      const invNet =
-        invNetRaw === null || invNetRaw === undefined || invNetRaw === '' ? null : Number(invNetRaw);
-
-      if (invNet !== null && !isNaN(invNet) && netInt > invNet) {
-        this.messageService.errorBubble('退出/折讓金額不可大於銷售額');
-        netInt = this.roundToInt(invNet);
-      }
-
       let taxInt = this.roundToInt(netInt * 0.05);
       let totalInt = this.roundToInt(netInt + taxInt);
 
       if (
         this.originalRemainingAmt !== null &&
         !isNaN(this.originalRemainingAmt) &&
+        this.originalRemainingAmt > 0 &&
         totalInt > this.originalRemainingAmt
       ) {
         this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
@@ -685,7 +840,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
       const remaining =
         this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
-          ? this.roundToInt(this.originalRemainingAmt - totalInt)
+          ? this.roundToInt(this.originalRemainingAmt)
           : null;
       remainingControl.setValue(remaining, { emitEvent: false });
 
@@ -715,37 +870,16 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
       if (
         this.originalRemainingAmt !== null &&
         !isNaN(this.originalRemainingAmt) &&
+        this.originalRemainingAmt > 0 &&
         totalInt > this.originalRemainingAmt
       ) {
         this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
         totalInt = this.roundToInt(this.originalRemainingAmt);
       }
 
-      let approxNet = totalInt / 1.05;
-      let netInt = this.roundToInt(approxNet);
-      let taxInt = totalInt - netInt;
-
-      const invNetRaw = invNetControl?.value;
-      const invNet =
-        invNetRaw === null || invNetRaw === undefined || invNetRaw === '' ? null : Number(invNetRaw);
-
-      if (invNet !== null && !isNaN(invNet) && netInt > invNet) {
-        this.messageService.errorBubble('退出/折讓金額不可大於銷售額');
-        netInt = this.roundToInt(invNet);
-        taxInt = this.roundToInt(netInt * 0.05);
-        totalInt = this.roundToInt(netInt + taxInt);
-
-        if (
-          this.originalRemainingAmt !== null &&
-          !isNaN(this.originalRemainingAmt) &&
-          totalInt > this.originalRemainingAmt
-        ) {
-          totalInt = this.roundToInt(this.originalRemainingAmt);
-          approxNet = totalInt / 1.05;
-          netInt = this.roundToInt(approxNet);
-          taxInt = totalInt - netInt;
-        }
-      }
+      const approxNet = totalInt / 1.05;
+      const netInt = this.roundToInt(approxNet);
+      const taxInt = totalInt - netInt;
 
       amtControl.setValue(totalInt, { emitEvent: false });
       netControl.setValue(netInt, { emitEvent: false });
@@ -753,7 +887,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
       const remaining =
         this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
-          ? this.roundToInt(this.originalRemainingAmt - totalInt)
+          ? this.roundToInt(this.originalRemainingAmt)
           : null;
       remainingControl.setValue(remaining, { emitEvent: false });
 
@@ -814,6 +948,18 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     return this.roundToInt(n);
   }
 
+  private normalizeInvoiceNumber(value: any, track?: any): string {
+    if (value === null || value === undefined) return '';
+    let str = String(value).trim();
+    const trackStr = track ? String(track).trim() : '';
+
+    if (trackStr && str.toUpperCase().startsWith(trackStr.toUpperCase())) {
+      str = str.slice(trackStr.length);
+    }
+
+    return str.trim();
+  }
+
   clearFormExcept(): void {
     const keepValues = ['PUR_GUINo'];
     const patch: any = {};
@@ -824,6 +970,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.reset();
     this.dataForm.patchValue(patch);
     this.originalRemainingAmt = null;
+    this.lastLoadedInvoiceKey = '';
     this.updateDisabledState();
   }
 
@@ -966,22 +1113,41 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     }, 0);
 
     const sum = this.roundToInt(sumRaw);
+    const hasDetails = (this.detailRows ?? []).length > 0;
 
-    const emit = !this.isRead;
-    this.dataForm.get('PUR_Amt')?.setValue(this.detailRows?.length ? sum : null, { emitEvent: emit });
+    this.dataForm.get('PUR_Amt')?.setValue(hasDetails ? sum : null, { emitEvent: true });
 
-    if (this.isRead) {
-      const remaining =
-        this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
-          ? this.roundToInt(this.originalRemainingAmt - sum)
-          : null;
+    if (hasDetails) {
+      const approxNet = this.roundToInt(sum / 1.05);
+      const tax = sum - approxNet;
+
       this.dataForm.patchValue(
         {
-          Total_Amt: remaining,
+          PUR_Net: approxNet,
+          PUR_Tax: tax,
+          Total_Amt:
+            this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
+              ? this.roundToInt(this.originalRemainingAmt)
+              : null,
         },
         { emitEvent: false }
       );
+
       this.updateCreditTypeByInvNet(sum);
+    } else {
+      this.dataForm.patchValue(
+        {
+          PUR_Net: null,
+          PUR_Tax: null,
+          Total_Amt:
+            this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
+              ? this.roundToInt(this.originalRemainingAmt)
+              : null,
+        },
+        { emitEvent: false }
+      );
+
+      this.updateCreditTypeByInvNet(null);
     }
   }
 }
