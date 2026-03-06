@@ -228,17 +228,38 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
   onDelete(selectedItems: any[]) {
     if (!selectedItems?.length) return;
 
-    const confirm = window.confirm('是否確定刪除選取項目？');
-    if (!confirm) return;
+    const idList = selectedItems
+      .filter(item => item && item.id != null)
+      .map(item => item.id);
 
-    const idList = selectedItems.map((item) => item.id);
+    if (idList.length === 0) {
+      this.messageService.warnBubble('未找到有效的刪除項目');
+      return;
+    }
 
-    this.tls11020Service.deleteTLS11020(idList).subscribe({
-      next: () => {
-        this.messageService.successBubble('刪除成功');
-        this.onSubmit(this.queryForm);
-      },
-      error: () => this.messageService.errorBubble('刪除失敗'),
+    this.messageService.confirm({
+      message: '是否確認刪除所選扣款項目資料?',
+      header: '確認刪除',
+      accept: () => {
+        this.loading = true;
+        this.tls11020Service.deleteTLS11020(idList).subscribe({
+          next: (response: any) => {
+            if (response?.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+              this.selectedItems = [];
+              this.onSubmit(this.queryForm);
+            } else {
+              this.messageService.errorBubble(`刪除失敗: ${response?.Message}`);
+            }
+          },
+          error: () => {
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.loading = false;
+          },
+        });
+      }
     });
   }
 

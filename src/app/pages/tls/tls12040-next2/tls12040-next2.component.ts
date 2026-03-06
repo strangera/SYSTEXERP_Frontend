@@ -1766,6 +1766,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
       if (originalType === 'discount' && isDateField) {
         this.syncDiscountDateToLevel(rowData);
       }
+
     }
 
     // 找到父項目並同步數據
@@ -1773,6 +1774,13 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     if (parentItem) {
       this.syncDetailToParentArray(rowData, parentItem);
       this.updateItemStatus(parentItem);
+
+      // 🆕 如果是 discount 項目的任何欄位變更，同步完成後重新產生折扣摘要
+      const originalType = rowData._originalType || this.selectedSettingTab;
+      if (originalType === 'discount') {
+        parentItem.remark = this.formatRemarkText(parentItem);
+      }
+
       this.updateMainArray(parentItem);
     }
 
@@ -2034,6 +2042,10 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
 
 
   private isDetailItem(rowData: any): boolean {
+    // _originalType is always set on detail items by processedCommissionData getter
+    if (rowData._originalType) {
+      return true;
+    }
     return !this.commissionData.some(item => item.id === rowData.id);
   }
 
@@ -2139,7 +2151,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
           console.log('  → Discount 中已勾選的 ID:', selectedDiscountIds);
 
           //  🔥 修正：只顯示 charged_id 對應到已勾選 discount 的 level 項目
-          processedItem.detailItems = processedItem.LevelChargeDetails
+          processedItem.detailItems = this.sortDiscountItems(processedItem.LevelChargeDetails
             .filter(detail => {
               // 過濾條件: 1) 未刪除 2) charged_id 對應到已勾選的 discount
               const isNotDeleted = detail._status !== 'deleted';
@@ -2187,7 +2199,7 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
               }
 
               return mappedDetail;
-            });
+            }));
 
           console.log('📋 Level 最終顯示項目數:', processedItem.detailItems.length);
           break;
@@ -2210,6 +2222,9 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
         default:
           processedItem.detailItems = [];
       }
+
+      // 🆕 每次 getter 執行時重新計算折扣摘要，確保即時反映最新的折扣設定
+      processedItem.remark = this.formatRemarkText(processedItem);
 
       return processedItem;
     });
@@ -2309,17 +2324,22 @@ export class TLS12040Next2Component extends BasicCruPageComponent<CategoryItem> 
     switch (originalType) {
       case 'discount': {
         console.log('  → 更新 ChargeDetails, 陣列長度:', parentItem.ChargeDetails?.length);
-        this.updateItemInArray(parentItem.ChargeDetails, detailId, detailData);
-        // 驗證更新結果
-        const discountItem = parentItem.ChargeDetails?.find((item: ChargeDetailBusinessModel) => String(item.id) === String(detailId));
-        if (discountItem) {
-          console.log('  ✓ ChargeDetails 更新後狀態:', {
-            id: discountItem.id,
-            is_selected: discountItem.is_selected,
-            cag_barcode: discountItem.cag_barcode
-          });
+        // 🔑 修正：id 為 null 的新項目，改用 cag_barcode 作為唯一識別，避免第一個 null id 被錯誤更新
+        if (detailId == null && detailData.cag_barcode) {
+          const discountIdx = parentItem.ChargeDetails?.findIndex(
+            (item: ChargeDetailBusinessModel) => item.cag_barcode === detailData.cag_barcode
+          ) ?? -1;
+          if (discountIdx > -1) {
+            parentItem.ChargeDetails[discountIdx] = {
+              ...parentItem.ChargeDetails[discountIdx],
+              ...detailData
+            } as ChargeDetailBusinessModel;
+            console.log('  ✓ ChargeDetails 用 cag_barcode 更新 [', discountIdx, ']:', detailData.cag_barcode);
+          } else {
+            console.warn('  ⚠️ 在 ChargeDetails 中找不到 cag_barcode:', detailData.cag_barcode);
+          }
         } else {
-          console.warn('  ⚠️ 在 ChargeDetails 中找不到項目:', detailId);
+          this.updateItemInArray(parentItem.ChargeDetails, detailId, detailData);
         }
         break;
       }
