@@ -104,7 +104,6 @@ export class TLS56030CRUComponent
   });
 
   // -------------------- Options --------------------
-  issuanceTypeOptions: { label: string; value: string }[] = [];
   userOptions: { label: string; value: string }[] = [];
   brandOptions: IDropdownItem[] = [];
   warehouseOptions: IDropdownItem[] = [];
@@ -250,11 +249,6 @@ export class TLS56030CRUComponent
       )
       .subscribe((opts) => (this.userOptions = opts));
 
-    // 類別
-    this.issuanceTypeOptions = [
-      { label: '贈品領用', value: '1' },
-      { label: '公關活動', value: '2' },
-    ];
 
     this.dropDownListService.queryPLULOGO_HOS_No_DropDownList()
       .pipe(untilDestroyed(this))

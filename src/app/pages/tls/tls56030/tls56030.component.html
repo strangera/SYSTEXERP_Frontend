@@ -62,7 +62,7 @@
       <div class="flex align-items-center gap-2">
         <p-button label="單據審核" [style]="{ height: '35px' }" pTooltip="僅限【已申請】單據" tooltipPosition="top" [rounded]="true"
           severity="help" [loading]="auditLoading" (click)="onAuditClick()" [disabled]="!canAuditSelected()" />
-        <p-button label="領用" [style]="{ height: '35px' }" pTooltip="僅限【已審核】單據" tooltipPosition="top" [rounded]="true"
+        <p-button label="領退" [style]="{ height: '35px' }" pTooltip="僅限【已審核】單據" tooltipPosition="top" [rounded]="true"
           severity="success" [loading]="issueLoading" (click)="onIssueClick()" [disabled]="!canIssueSelected()" />
       </div>
     </header>
