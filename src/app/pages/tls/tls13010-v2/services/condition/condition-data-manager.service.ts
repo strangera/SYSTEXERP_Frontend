@@ -1,17 +1,17 @@
 /**
- * 條件設定資料管理服務
+ * 租金設定資料管理服務
  * 負責條件資料的建立、分類、驗證等操作
  */
 import { Injectable } from '@angular/core';
 import { CommissionType } from '../../core/constants';
 import {
+  BaseCommissionCondition,
+  BaseRentHigherCondition,
+  BaseTierCondition,
+  CategorizedConditions,
   ConditionItem,
   FixedRentCondition,
-  BaseRentHigherCondition,
-  BaseCommissionCondition,
-  GraduatedCommissionCondition,
-  BaseTierCondition,
-  CategorizedConditions
+  GraduatedCommissionCondition
 } from '../../core/models/condition';
 
 @Injectable({

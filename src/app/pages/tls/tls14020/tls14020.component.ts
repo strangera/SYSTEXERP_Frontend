@@ -25,8 +25,8 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatStoreWay, formatTltTermType } from '../tls13010/tls13010.constants';
-import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
+import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatStoreWay, formatTltTermType } from '@pages/tls/shared/constants/tls13010.constants';
+import { TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 
 //專櫃契約書列印
 @Component({

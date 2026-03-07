@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
-import { CleanSubmitData } from '../../../pages/tls/tls13010/tls13010.model';
+import { CleanSubmitData } from '@pages/tls/tls13010-v2/core/models/workflow/clean-submit.interface';
 
 interface TLS13010FareRequest {
   talentId: string;

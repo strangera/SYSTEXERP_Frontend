@@ -22,7 +22,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { DropdownOption } from '../tls13010/tls13010.dropdown';
+import { DropdownOption } from '@pages/tls/shared/constants/tls13010.dropdown';
 
 @Component({
   selector: 'app-tls26070',

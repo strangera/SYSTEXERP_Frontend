@@ -27,12 +27,12 @@ import {
   CALC_TYPE_OPTIONS,
   CAP_SALE_TYPE_OPTIONS_E
 } from './tls13010.constants';
-import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { Sysb900DropdownService } from '../../../service/api/sys/sysb900-dropdown.service';
-import { BussclassDropdownService } from '../../../service/api/dropdownservice/tltbussclass-options.service';
-import { VendorCategoryOptionsService } from './../../../service/api/dropdownservice/vendor-category-options.service';
-import { NegotiatorOptionsService } from '../../../service/api/dropdownservice/negotiator-options.service';
+import { Sysb800DropdownService } from '@service/api/sys/sysb800-dropdown.service';
+import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
+import { Sysb900DropdownService } from '@service/api/sys/sysb900-dropdown.service';
+import { BussclassDropdownService } from '@service/api/dropdownservice/tltbussclass-options.service';
+import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
+import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 
 // ========== 介面定義 ==========

@@ -10,7 +10,7 @@ import { ExpandableEditTableComponent, ColumnDef } from '@shared/componentkit/ex
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
-import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '../../../../../tls13010/tls13010.dropdown';
+import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 
 import { FareItem, FaresByType } from '../../../../core/models/deduction/fare-item.interface';
 import { LocationItem } from '../../../../core/models/contract/location-item.interface';

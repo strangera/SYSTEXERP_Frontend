@@ -1,5 +1,5 @@
 /**
- * 條件設定表格配置服務
+ * 租金設定表格配置服務
  * 委派給共用 V2ConditionTableConfigService
  */
 import { Injectable } from '@angular/core';
@@ -12,9 +12,9 @@ import { CommissionType, CommissionTypeLabels } from '../../core/constants';
 })
 export class ConditionTableConfigService {
 
-  constructor(private sharedConfig: V2ConditionTableConfigService) {}
+  constructor(private sharedConfig: V2ConditionTableConfigService) { }
 
-  // ===== 條件設定欄位（全部委派給共用服務） =====
+  // ===== 租金設定欄位（全部委派給共用服務） =====
 
   getContractInfoColumns(): ColumnDef[] { return this.sharedConfig.getContractInfoColumns(); }
   getFixedRentColumns(): ColumnDef[] { return this.sharedConfig.getFixedRentColumns(); }

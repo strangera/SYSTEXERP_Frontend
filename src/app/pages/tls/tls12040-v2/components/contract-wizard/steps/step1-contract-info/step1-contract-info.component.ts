@@ -25,9 +25,9 @@ import { SharedDropdownService } from '@shared/services/shared-dropdown.service'
 
 
 
-import { BusinessClassificationService } from '@pages/tls/tls12040-cru/services/business-classification.service';
-import { TLS12040ValidationService } from '@pages/tls/tls12040-cru/validation/tls12040-validation.service';
-import { DateValidationService } from '@pages/tls/tls13010-cru/validation/date-validation.service';
+import { BusinessClassificationService } from '@pages/tls/shared/services/business-classification.service';
+import { TLS12040ValidationService } from '@pages/tls/shared/services/tls12040-validation.service';
+import { DateValidationService } from '@pages/tls/shared/services/date-validation.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
 import { debounceTime, distinctUntilChanged, forkJoin, Observable, Subscription } from 'rxjs';
 import { LocationItem } from '../../../../core/models/contract/location-item.interface';

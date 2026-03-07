@@ -1,7 +1,7 @@
 /**
  * 抽成項目主欄位定義
  */
-import { TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/tls13010/tls13010.dropdown';
+import { TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 
 
