@@ -31,7 +31,7 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
     ACT_PayAmt: [null, [Validators.max(99999999)]],
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'TXN_Date', order: 1 }]],
+    SortBy: [[{ field: 'TXN_Date, ECR_No', order: 1 }]],
   });
   lastQueryBody: queryParams | null = null;
   totalRecords = 0;
