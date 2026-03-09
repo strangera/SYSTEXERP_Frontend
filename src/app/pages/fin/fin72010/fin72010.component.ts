@@ -59,18 +59,18 @@ export class FIN72010Component extends BasicQueryPageComponent<sample72010> impl
     //  POS2064 收支明細檔(I/O) 
     //  tblUser 使用者資料檔(O)
 
-    KeepQuota_No: ['', [Validators.maxLength(20)]], // 零用金單號
+    KeepQuota_No: [null, [Validators.maxLength(20)]], // 零用金單號
     applyDateFrom: [null], // 申請日期起
     applyDateTo: [null], // 申請日期迄
     startKeepQuota: [null, Validators.max(9999999999)], // 起始零用金金額
     endKeepQuota: [null, Validators.max(9999999999)], // 結束零用金金額
-    Pettycashapplicant: [''], // 申請人
-    Pettycashcustodian: [''], // 保管人
-    status: [''], // 狀態
-    keepingUnit: [''], // 保管單位
+    Pettycashapplicant: [null], // 申請人
+    Pettycashcustodian: [null], // 保管人
+    status: [null], // 狀態
+    keepingUnit: [null], // 保管單位
 
     //分頁查詢
-    ...createPaginationConfig([{ field: 'HOS_No', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'KeepQuota_No', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------
@@ -143,12 +143,13 @@ export class FIN72010Component extends BasicQueryPageComponent<sample72010> impl
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN72010', 'FIN/FIN72010', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN72010', 'FIN/FIN72010cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log('零用金維護request:', JSON.stringify(frm.value, null, 2));
+      this.loading = false;
       // this.tls51080Service.queryTLS51080(frm.value).subscribe({
       //   next: (response) => {
       //     if (response.Status === '0000') {
