@@ -25,7 +25,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 })
 export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    TXN_Date: ['', [Validators.required]],  // 銷售日期
+    TXN_Date: [null as string | null],  // 銷售日期
     TLT_NOList: [null], // 專櫃編號
     ECR_NoList: [null],       // 收銀機號
     ACT_PayAmt: [null, [Validators.max(99999999)]],
