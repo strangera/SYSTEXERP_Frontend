@@ -54,7 +54,7 @@ export class TLS21020Service {
   public getEntryTypes(): Option[] {
     return [
       { value: EntryType['SD銷售日傳票'], label: EntryType.SD },
-      { value: EntryType['WD自營日結傳票'], label: EntryType.WD },
+      // { value: EntryType['WD自營日結傳票'], label: EntryType.WD },
       { value: EntryType['MR租金傳票'], label: EntryType.MR },
       { value: EntryType['MD代扣傳票'], label: EntryType.MD },
       { value: EntryType['PR抽成傳票'], label: EntryType.PR },
