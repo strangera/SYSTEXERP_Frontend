@@ -2,14 +2,14 @@ import { Injectable } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 
 import { ContractDateRange } from '@shared/utils/contract-date-validator.util';
-import { FareValidationService } from '../../../tls13010-next1/Services/fare-validation.service';
-import { CommissionItem, AnnualPerformanceItem, DiscountLevelItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
+import { FareValidationService } from '@pages/tls/shared/services/fare-validation.service';
 import { DiscountSettingItem } from '../../../tls13010-v2/core/models';
+import { AnnualPerformanceItem, CommissionItem, DiscountLevelItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
 import { CommissionCrudService } from '../../../tls13010-v2/services/commission/commission-crud.service';
 
+import { ConditionItem } from '../../core/models/condition/condition-types.interface';
 import { LocationItem } from '../../core/models/contract/location-item.interface';
 import { FareItem } from '../../core/models/deduction/fare-item.interface';
-import { ConditionItem } from '../../core/models/condition/condition-types.interface';
 
 // ========== 介面 ==========
 
@@ -91,7 +91,7 @@ export class ContractValidatorService {
   constructor(
     private fareValidationService: FareValidationService,
     private commissionCrudService: CommissionCrudService
-  ) {}
+  ) { }
 
   // ========== Step 1: 合約基本資料 ==========
 
@@ -405,7 +405,7 @@ export class ContractValidatorService {
     });
   }
 
-  // ========== Step 4: 條件設定 ==========
+  // ========== Step 4: 租金設定 ==========
 
   validateStep4(
     conditionItems: ConditionItem[],
@@ -491,7 +491,7 @@ export class ContractValidatorService {
       const typeList = [...errorTypes].join('、');
       return {
         isValid: false,
-        errorMessages: [`條件設定共 ${errorCount} 項錯誤：${typeList}，請修正紅框欄位`]
+        errorMessages: [`租金設定共 ${errorCount} 項錯誤：${typeList}，請修正紅框欄位`]
       };
     }
 

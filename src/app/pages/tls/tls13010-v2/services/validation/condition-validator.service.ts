@@ -1,21 +1,21 @@
 /**
- * 條件設定驗證服務
+ * 租金設定驗證服務
  */
 import { Injectable } from '@angular/core';
 import { CommissionType, CommissionTypeLabels } from '../../core/constants';
 import { ConditionItem } from '../../core/models/condition';
 import {
+  isBaseCommissionCondition,
   isBaseRentHigherCondition,
   isBaseTierCondition,
   isFixedRentCondition,
-  isGraduatedCommissionCondition,
-  isBaseCommissionCondition
+  isGraduatedCommissionCondition
 } from '../../core/type-guards';
+import { ConditionDataManagerService } from '../condition/condition-data-manager.service';
 import {
   createEmptyResult,
   DetailedValidationResult
 } from './validation-result.interface';
-import { ConditionDataManagerService } from '../condition/condition-data-manager.service';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +23,7 @@ import { ConditionDataManagerService } from '../condition/condition-data-manager
 export class ConditionValidatorService {
 
   /**
-   * 驗證條件設定資料
+   * 驗證租金設定資料
    */
   validate(
     items: ConditionItem[] | null,
@@ -31,13 +31,13 @@ export class ConditionValidatorService {
   ): DetailedValidationResult {
     const result = createEmptyResult();
 
-    // 一般抽成類型不需要條件設定
+    // 一般抽成類型不需要租金設定
     if (commissionType === CommissionType.GENERAL_COMMISSION) {
       return result;
     }
 
     if (!items || items.length === 0) {
-      // 非一般抽成類型應該要有條件設定
+      // 非一般抽成類型應該要有租金設定
       const typeName = CommissionTypeLabels[commissionType as CommissionType] || commissionType;
       result.warnings.push(`抽成類型「${typeName}」建議設定對應的條件`);
       return result;
@@ -228,7 +228,7 @@ export class ConditionValidatorService {
   }
 
   /**
-   * 根據抽成類型檢查是否需要條件設定
+   * 根據抽成類型檢查是否需要租金設定
    */
   requiresConditionSetup(commissionType: CommissionType | string): boolean {
     return commissionType !== CommissionType.GENERAL_COMMISSION;

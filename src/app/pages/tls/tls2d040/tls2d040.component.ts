@@ -275,6 +275,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
                 this.data = response.Data.mainData;
                 this.footerData = response.Data.totalData.map((item: any) => ({
                   group_name: item.group_name,
+                  tpy_namt: item.tpy_namt,
                   tpy_amt: item.total_Amt
                 }));
                 this.totalRecords = response.TotalCount;
@@ -290,6 +291,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
                 this.data = response.Data.mainData;
                 this.footerData = response.Data.totalData.map((item: any) => ({
                   group_name: item.group_name,
+                  tpy_namt: item.tpy_namt,
                   tpy_amt: item.total_Amt
                 }));
                 this.totalRecords = response.TotalCount;
@@ -305,6 +307,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
                 this.data = response.Data.mainData;
                 this.footerData = response.Data.totalData.map((item: any) => ({
                   group_name: item.group_name,
+                  tpy_namt: item.tpy_namt,
                   tpy_amt: item.total_Amt
                 }));
                 this.totalRecords = response.TotalCount;
@@ -321,6 +324,7 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
                 this.data = response.Data.mainData;
                 this.footerData = response.Data.totalData.map((item: any) => ({
                   group_name: item.group_name,
+                  tpy_namt: item.tpy_namt,
                   tpy_amt: item.total_Amt
                 }));
                 this.totalRecords = response.TotalCount;
@@ -343,7 +347,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'ven_no', header: '廠商編號' },
           { field: 'VEN_Name', header: '廠商名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
-          { field: 'GUI_FLAG', header: '是否開立發票' },
+          { field: 'GUI_FLAG_Name', header: '是否開立發票' },
+          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true },
           { field: 'tpy_amt', header: '扣款金額(含稅)', format: formatAmount, isTotal: true }
         ];
         break;
@@ -352,8 +357,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'CAP_Item', header: '扣款代碼' },
           { field: 'CAP_Name', header: '扣款名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
-          { field: 'GUI_FLAG', header: '是否開立發票' },
-          { field: 'tpy_amt', header: '扣款金額(含稅)', format: formatAmount, isTotal: true }
+          { field: 'GUI_FLAG_Name', header: '是否開立發票' },
+          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case '2': // 依部門
@@ -363,8 +368,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'org_id', header: '組織代碼' },
           { field: 'Org_Name', header: '組織名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
-          { field: 'GUI_FLAG', header: '是否開立發票' },
-          { field: 'tpy_amt', header: '扣款金額(含稅)', format: formatAmount, isTotal: true }
+          { field: 'GUI_FLAG_Name', header: '是否開立發票' },
+          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case '3': // 依會計科目
@@ -374,8 +379,8 @@ export class TLS2D040Component extends BasicQueryPageComponent<any> implements O
           { field: 'AccNo', header: '會計科目' },
           { field: 'AccCName', header: '科目中文名稱' },
           { field: 'sam_yyymm', header: '扣款年月' },
-          { field: 'GUI_FLAG', header: '是否開立發票' },
-          { field: 'tpy_amt', header: '扣款金額(含稅)', format: formatAmount, isTotal: true }
+          { field: 'GUI_FLAG_Name', header: '是否開立發票' },
+          { field: 'tpy_namt', header: '扣款金額(未稅)', format: formatAmount, isTotal: true }
         ];
         break;
       case 'detail': // 明細

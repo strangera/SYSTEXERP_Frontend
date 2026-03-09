@@ -3,7 +3,7 @@ import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable
 import { getContractInfoColumns as getSharedContractInfoColumns } from '../../tls13010-v2/core/constants/commission-columns';
 
 /**
- * V2 共用條件設定表格配置服務
+ * V2 共用租金設定表格配置服務
  * 供 tls13010-v2、tls12040-v2 共用
  */
 @Injectable({
@@ -11,7 +11,7 @@ import { getContractInfoColumns as getSharedContractInfoColumns } from '../../tl
 })
 export class V2ConditionTableConfigService {
 
-  // ===== 條件設定表格欄位 =====
+  // ===== 租金設定表格欄位 =====
 
   getFixedRentColumns(): ColumnDef[] {
     return [

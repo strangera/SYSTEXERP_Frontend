@@ -2,7 +2,7 @@
   <!-- 載入中指示器 -->
   <div *ngIf="loading" class="flex justify-content-center align-items-center p-4">
     <p-progressSpinner></p-progressSpinner>
-    <span class="ml-2">載入條件設定資料中...</span>
+    <span class="ml-2">載入租金設定資料中...</span>
   </div>
 
   <!-- 主要內容 -->
@@ -74,7 +74,7 @@
     <!-- 不支援類型提示 -->
     <div *ngIf="shouldShowUnsupportedTypeMessage()" class="text-center p-5">
       <i class="pi pi-info-circle text-4xl text-gray-400 mb-3"></i>
-      <h5 class="text-gray-600 mb-2">此抽成類型暫不支援條件設定</h5>
+      <h5 class="text-gray-600 mb-2">此抽成類型暫不支援租金設定</h5>
       <p class="text-gray-500 mb-3">
         當前抽成類型代碼：<strong>{{ getCurrentCommissionTypeName() }}</strong>
       </p>

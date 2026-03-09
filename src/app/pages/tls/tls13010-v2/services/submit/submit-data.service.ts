@@ -9,20 +9,20 @@ import { FormGroup } from '@angular/forms';
 // 類型定義
 import { CommissionType } from '../../core/constants';
 import {
-  CommissionItem,
-  CleanCommissions,
+  CleanCommissionDetails,
   CleanCommissionMaster,
   CleanCommissionMasters,
-  CleanCommissionDetails
+  CleanCommissions,
+  CommissionItem
 } from '../../core/models/commission';
 import { CleanConditions, ConditionItem } from '../../core/models/condition';
-import { LocationItem, CleanLocationInfo } from '../../core/models/contract';
-import { FareItem, CleanFareItem, CleanDeductions } from '../../core/models/deduction';
+import { CleanLocationInfo, LocationItem } from '../../core/models/contract';
+import { CleanDeductions, CleanFareItem, FareItem } from '../../core/models/deduction';
 import {
-  CleanSubmitData,
-  CleanContractInfo,
   CleanContractData,
+  CleanContractInfo,
   CleanMetadata,
+  CleanSubmitData,
   CommissionTypeChangeInfo
 } from '../../core/models/workflow';
 
@@ -428,7 +428,7 @@ export class SubmitDataService {
     return { toInsert, toUpdate, toDelete };
   }
 
-  // ========== Step 4: 條件設定 ==========
+  // ========== Step 4: 租金設定 ==========
 
   private buildConditions(
     conditionItems: ConditionItem[],
@@ -483,7 +483,7 @@ export class SubmitDataService {
         this.addToLevelOperations(item, conditions.baseTier, talentId, status);
         break;
 
-      // '3' 一般抽成 不需要 Step 4 條件設定
+      // '3' 一般抽成 不需要 Step 4 租金設定
     }
   }
 
@@ -657,7 +657,7 @@ export class SubmitDataService {
       CommissionType.BASE_TIER
     ];
     return commissionTypes.includes(oldType as CommissionType) &&
-           (newType === CommissionType.FIXED_RENT);
+      (newType === CommissionType.FIXED_RENT);
   }
 
   private needsClearLimit(oldType: string, newType: string): boolean {

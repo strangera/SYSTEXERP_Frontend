@@ -46,7 +46,7 @@ import { ContractItem } from '../../core/models/contract';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { ExecSpFuncService } from '@service/utility/execSpFunc.service';
-import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '../../../tls13010/tls13010.dropdown';
+import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { concatMap, finalize, from } from 'rxjs';
 
 // 格式化函數
@@ -57,7 +57,7 @@ import {
   formatMoneyType,
   formatOpenflagStatus,
   formatStoreWay
-} from '../../../tls13010/tls13010.constants';
+} from '@pages/tls/shared/constants/tls13010.constants';
 
 @Component({
   selector: 'app-tls13010v2-query',

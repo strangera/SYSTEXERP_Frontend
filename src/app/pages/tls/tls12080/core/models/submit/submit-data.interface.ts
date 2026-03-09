@@ -3,10 +3,10 @@
  * 對應現有 tls12080/models/tls12080submit.model.ts
  */
 
+import { ChargeDetail, CommissionMaster, LevelChargeDetail, YearChargeDetail } from '../commission';
+import { ConditionItem } from '../condition';
 import { ContractInfo, LocationItem } from '../contract';
 import { FareItem } from '../deduction';
-import { CommissionMaster, ChargeDetail, YearChargeDetail, LevelChargeDetail } from '../commission';
-import { ConditionItem } from '../condition';
 
 /**
  * CRUD 操作類型
@@ -43,7 +43,7 @@ export interface CommissionOperations {
 }
 
 /**
- * 條件設定操作
+ * 租金設定操作
  */
 export interface ConditionOperations {
   fixedRents: CrudOperations<ConditionItem>;
@@ -99,7 +99,7 @@ export interface SubmitData {
   deductions: DeductionOperations;
   /** 抽成設定 */
   commissions: CommissionOperations;
-  /** 條件設定 */
+  /** 租金設定 */
   conditions: ConditionOperations;
   /** 元資料 */
   metadata: SubmitMetadata;
