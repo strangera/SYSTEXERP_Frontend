@@ -434,6 +434,7 @@ export const tlsRoutes: Routes = [
   { path: 'tls51130', loadComponent: () => import('./tls51130/tls51130.component').then(m => m.TLS51130Component), data: { progNo: 'TLS51130' } },
   // 自營專櫃收銀扣庫維護作業
   { path: 'tls51140', loadComponent: () => import('./tls51140/tls51140.component').then(m => m.Tls51140Component), data: { progNo: 'Tls51140' } },
+  { path: 'tls51150', loadComponent: () => import('./tls51150/tls51150.component').then(m => m.Tls51150Component), data: { progNo: 'Tls51150' } },
   // 採購單維護作業
   { path: 'tls52010', loadComponent: () => import('./tls52010/tls52010.component').then(m => m.TLS52010Component), data: { progNo: 'TLS52010' } },
   // 退貨單維護作業
