@@ -56,6 +56,7 @@ import { tls2b010tableComponent } from './tls2-b010-table/tls2b010table.componen
   ],
 })
 export class TLS2B010Component extends BasicQueryPageComponent<any> implements OnInit {
+  readonly defaultPageSize = 20;
   readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -103,20 +104,19 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
   printedAt = '';
   simpleData: any[] = [];
 
-  queryForm = this.formBuilder.group({
-    TXN_Date: [this.yesterday, [Validators.required]],
-    // TXN_Date: [new Date('2025-08-01'), [Validators.required]],
-    ECR_No_List: [[]],
-    TLT_No_List: [[]],
-    tlt_building: [null],
-    tlt_floor: [[]],
-    area_no: [null],
-    ECR_Type: [null],
-    cashShowUp: [1],                    // ← 單一值，搭配 radio
-    reimbursementType: [[1], Validators.nullValidator],
-    reporttype: [1],                    // ← 單一值，搭配 radio
-    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
-  });
+queryForm = this.formBuilder.group({
+  TXN_Date: [this.yesterday, [Validators.required]],
+  ECR_No_List: [[]],
+  TLT_No_List: [[]],
+  tlt_building: [null],
+  tlt_floor: [[]],
+  area_no: [null],
+  ECR_Type: [null],
+  cashShowUp: [1],
+  reimbursementType: [[1], Validators.nullValidator],
+  reporttype: [1],
+  ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
+});
 
   constructor(
     private tls2B010Service: TLS2B010Service,
@@ -135,6 +135,16 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
+      this.queryForm.patchValue(
+    {
+      pageIndex: 1,
+      pageSize: this.defaultPageSize,
+    },
+    { emitEvent: false }
+  );
+
+console.log('ngOnInit pageIndex =', this.queryForm.value.pageIndex);
+console.log('ngOnInit pageSize =', this.queryForm.value.pageSize);
     this.initializePage(
       'TLS2B010',
       '/tls2000/tls2B010cru',
@@ -248,8 +258,13 @@ this.queryForm.get('reporttype')?.valueChanges.subscribe((val) => {
 
     // 組 payload（含 TXN_Date -> yyyy-MM-dd）
     const payload: any = { ...form.value };
-    payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
-
+payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
+payload.pageSize = this.defaultPageSize;
+payload.pageIndex = payload.pageIndex || 1;
+console.log('onSubmit form.pageIndex =', form.value.pageIndex);
+console.log('onSubmit form.pageSize =', form.value.pageSize);
+console.log('onSubmit payload.pageIndex =', payload.pageIndex);
+console.log('onSubmit payload.pageSize =', payload.pageSize);
     // 帶入店號
     const userInfo = localStorage.getItem('UserInfo');
     if (userInfo) {
@@ -397,10 +412,14 @@ this.queryForm.get('reporttype')?.valueChanges.subscribe((val) => {
       this.lastSimpleLazyKey = key;
     }
 
-    form.patchValue(
-      { pageIndex: e.pageIndex, pageSize: e.pageSize, SortBy: sortBy },
-      { emitEvent: false }
-    );
+   form.patchValue(
+  {
+    pageIndex: e.pageIndex,
+    pageSize: this.defaultPageSize,
+    SortBy: sortBy
+  },
+  { emitEvent: false }
+);
 
     this.onSubmit(form);
   }
