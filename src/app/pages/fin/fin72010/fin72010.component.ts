@@ -1,207 +1,236 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-// Shared
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { apiOption } from '../../../shared/models/sys/sysb000.model';
 
+export interface sample72010 {
+  'id': string;
+  'STO_No': string; // 公司編號/店號
+  'HOS_No': string; // 倉庫代碼 STO_NO+HOS_NO唯一值 STO_NO+HOS_NO唯一值
+  'HOS_NAME': string; // 倉庫名稱
+  'org_id': string; // 組織代碼/組織名稱
+  'org_name': string; // 部門名稱
+  'building_no': string; // 館別代碼
+  'HOS_Remark'?: string; // 備註說明
+
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+
+  'CanDel': boolean; //能否刪除(僅顯示)
+}
 @Component({
   selector: 'app-fin72010',
   templateUrl: './fin72010.component.html',
   styleUrl: './fin72010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    CalendarRangeQuickComponent,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    InputNumberRangeComponent,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule]
 })
-export class FIN72010Component extends BasicQpageComponent implements OnInit {
+export class FIN72010Component extends BasicQueryPageComponent<sample72010> implements OnInit {
+  // 查詢
   queryForm = this.formBuilder.group({
-    counterCode: [],  // 專櫃編號
-    counterName: [],  // 櫃位名稱
-    violationCategory: [],  // 違規類別編號
-    deductionItem: [],  // 扣款項目
-    amountStart: [],  // 金額開始
-    amountEnd: [],  // 金額結束
-    deductionDateStart: [],  // 扣款日期起
-    deductionDateEnd: [],  // 扣款日期迄
-    violationDateStart: [],  // 違規日期起
-    violationDateEnd: [],  // 違規日期迄
-    documentNumber: [],  // 單據編號
-    issuingUnit: [],  // 開立單位
-    createdBy: [],  // 建立者(輸入代號)
-    floor: [],  // 樓層
-    Applicationdate: [],  // 維護日
-    status: [],  // 狀態
-    PettyCashOrderNumber: [],
-    Pettycashapplicant: [],
-    Pettycashcustodian: [],
-    sApplicationdate: [],
-    eApplicationdate: [],
-    sPetty: [],
-    ePetty: [],
+    // 檔案說明:
+    //  POS2064M 收支主檔(I/O)
+    //  POS2064 收支明細檔(I/O) 
+    //  tblUser 使用者資料檔(O)
+
+    KeepQuota_No: [null, [Validators.maxLength(20)]], // 零用金單號
+    applyDateFrom: [null], // 申請日期起
+    applyDateTo: [null], // 申請日期迄
+    startKeepQuota: [null, Validators.max(9999999999)], // 起始零用金金額
+    endKeepQuota: [null, Validators.max(9999999999)], // 結束零用金金額
+    Pettycashapplicant: [null], // 申請人
+    Pettycashcustodian: [null], // 保管人
+    status: [null], // 狀態
+    keepingUnit: [null], // 保管單位
+
+    //分頁查詢
+    ...createPaginationConfig([{ field: 'KeepQuota_No', order: 1 }]), // 分頁和排序參數
   });
-  // Table data
-  data: any[] = [
-    { pettyCashNumber: 'C201407170001', applicant: '2014000044-王小明', applicantOrg: '104200-營運部', custodian: '2014000044-王小明', custodianOrg: '101300-營企Team(停用)', status: '撥補', isdelete: false },
-    { pettyCashNumber: 'C201407170002', applicant: '2014000055-李佳佳', applicantOrg: '104200-營運部', custodian: '2014000055-李佳佳', custodianOrg: '101100-行政Team(停用)', status: '撥補', isdelete: false },
-    { pettyCashNumber: 'C201407170003', applicant: '2014000011-張志明', applicantOrg: '104200-營運部', custodian: '2014000011-張志明', custodianOrg: '105200-行政Team', status: '撥補', isdelete: false },
-    { pettyCashNumber: 'C201407170004', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false },
-    { pettyCashNumber: 'C201407210001', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false },
-    { pettyCashNumber: 'C201407210002', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false },
-    { pettyCashNumber: 'C201407280001', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false },
-    { pettyCashNumber: 'C201407280003', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false },
-    { pettyCashNumber: 'C201407290002', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false },
-    { pettyCashNumber: 'C201407290003', applicant: '2014000016-林美玉', applicantOrg: '104200-營運部', custodian: '2014000016-林美玉', custodianOrg: '102000-營運部', status: '撥補', isdelete: false },
-    { pettyCashNumber: 'C201408140001', applicant: '2014000011-張志明', applicantOrg: '105200-行政Team', custodian: '2014000011-張志明', custodianOrg: '105200-行政Team', status: '撥補', isdelete: false },
-    { pettyCashNumber: 'C201408140002', applicant: '2014000055-李佳佳', applicantOrg: '104200-營運部', custodian: '2014000055-李佳佳', custodianOrg: '101100-行政Team(停用)', status: '撥補', isdelete: false },
-    { pettyCashNumber: 'C201410150002', applicant: '2014000017-蔡依林', applicantOrg: '104200-營運部', custodian: '2014000017-蔡依林', custodianOrg: '105200-行政Team', status: '撥補', isdelete: false }
+  // 表格
+  // ----------------------------------------------------------------
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+
+  KeepQuota_Options: apiOption[] = [
+    { No: 'KQ001', Name: '零用金單1', Label: 'KQ001 - 零用金單1' },
+    { No: 'KQ002', Name: '零用金單2', Label: 'KQ002 - 零用金單2' },
+    { No: 'KQ003', Name: '零用金單3', Label: 'KQ003 - 零用金單3' },
+  ];
+  Pettycashapplicant_Options: apiOption[] = [
+    { No: 'PA001', Name: '申請人1', Label: 'PA001 - 申請人1' },
+    { No: 'PA002', Name: '申請人2', Label: 'PA002 - 申請人2' },
+    { No: 'PA003', Name: '申請人3', Label: 'PA003 - 申請人3' },
+  ];
+  Pettycashcustodian_Options: apiOption[] = [
+    { No: 'PC001', Name: '保管人1', Label: 'PC001 - 保管人1' },
+    { No: 'PC002', Name: '保管人2', Label: 'PC002 - 保管人2' },
+    { No: 'PC003', Name: '保管人3', Label: 'PC003 - 保管人3' },
+  ];
+  status_Options: apiOption[] = [
+    { No: 'S001', Name: '狀態1', Label: 'S001 - 狀態1' },
+    { No: 'S002', Name: '狀態2', Label: 'S002 - 狀態2' },
+    { No: 'S003', Name: '狀態3', Label: 'S003 - 狀態3' },
+  ];
+  keepingUnit_Options: apiOption[] = [
+    { No: 'KU001', Name: '保管單位1', Label: 'KU001 - 保管單位1' },
+    { No: 'KU002', Name: '保管單位2', Label: 'KU002 - 保管單位2' },
+    { No: 'KU003', Name: '保管單位3', Label: 'KU003 - 保管單位3' },
   ];
 
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'pettyCashNumber', header: '零用金單號', visible: true },
-    { field: 'applicant', header: '零用金申請人', visible: true },
-    { field: 'applicantOrg', header: '申請人組織', visible: true },
-    { field: 'custodian', header: '零用金保管人', visible: true },
-    { field: 'custodianOrg', header: '保管人組織名', visible: true },
-    { field: 'status', header: '狀態', visible: true }
+  data: sample72010[] = [];
+  columns: Column[] = [
+    { field: 'STO_No', header: '零用金單號', visible: false },
+    { field: 'HOS_No', header: '申請日期', visible: true },
+    { field: 'HOS_NAME', header: '零用金申請人', visible: true },
+    // {
+    //   field: 'org_id', header: '部門編號', visible: true
+    //   , format: (value: string) =>
+    //     this.SYS3100_Options.find((option) => option.No === value)?.No ||
+    //     value,
+    // },
+    // {
+    //   field: 'org_name', header: '部門名稱', visible: true
+    //   , format: (value: string) =>
+    //     this.SYS3100_Options.find((option) => option.No === value)?.Name ||
+    //     value,
+    // },
+    // {
+    //   field: 'building_no', header: '館別', visible: true, format: (value: string) => // 館別只顯示名稱(不用編碼)
+    //     this.building_noOptions.find((option) => option.No === value)?.Name ||
+    //     value,
+    // },
+
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
+    { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
+    { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
   ];
 
-  // Dropdown options
-  PettyCashOrderNumber: any[] = [{ value: 201407170001, label: 'C201407170001' },
-  { value: 201407170002, label: 'C201407170002' },
-  { value: 201407170003, label: 'C201407170003' },
-  { value: 201407170004, label: 'C201407170004' },
-  { value: 201407210001, label: 'C201407210001' },
-  { value: 201407210002, label: 'C201407210002' },
-  { value: 201407280001, label: 'C201407280001' },
-  { value: 201407280002, label: 'C201407280002' },
-  { value: 201407280003, label: 'C201407280003' },
-  { value: 201407290002, label: 'C201407290002' },];
-  usercode: any[] = [];
-  Feespayable: any[] = [
-    { value: 210101, label: '銀行短期借款' },
-    { value: 210201, label: '應付商業本票-中華' },
-    { value: 210202, label: '應付商業本票-合庫' },
-    { value: 210203, label: '應付商業本票-聯邦' },
-    { value: 210301, label: '應付商業本票折價' },
-    { value: 210401, label: '一年或一年營業週期內到期長期負債' },
-    { value: 2111, label: '應付票據' },
-    { value: 211101, label: '應付票據-專櫃' },
-    { value: 211102, label: '應付票據-自營' },
-    { value: 211103, label: '應付票據-固資及費用' },
-  ];
-  Inputtax: any[] = [
-    { value: 1, label: '1101_庫存現金' },
-    { value: 2, label: '110101_庫存現金-營收及正負差' },
-    { value: 3, label: '110102_庫存現金-其他收入' },
-    { value: 4, label: '110103_庫存現金-財務部' },
-    { value: 5, label: '110111_庫存現金-外幣' },
-    { value: 6, label: '110112_庫存現金-人民幣' },
-    { value: 7, label: '110199_庫存現金-其他' },
-    { value: 8, label: '1102_零用金' },
-    { value: 9, label: '110200_零用金-總經理室' },
-    { value: 10, label: '110201_零用金-採購組' }
-  ];
-  statusOptions: any[] = [
-    { value: 1, label: '建立' },
-    { value: 2, label: '請款' },
-    { value: 3, label: '拋轉' },
-    { value: 4, label: '撥補' },
-  ];
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  displayOptions: any[] = [];
-  displayOptions2: any[] = [];
-  Billingordernumber: any[] = [
-    { value: 1, label: 'B20150208001' },
-    { value: 2, label: 'B20150208002' },
-    { value: 3, label: 'B20150410001' },
-  ];
+  selectedItems: sample72010[] = [];// 多選項目
 
-
-
-
-  vendorOptions: any[] = [];
-  counterCodeOptions: any[] = [];
-  violationCategoryOptions: any[] = [];
-  floorOptions: any[] = [];
-  deductionItemOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
-
-
+  // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
+    private readonly dropDownListService: DropDownListService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
+    this.initializePage('FIN72010', 'FIN/FIN72010cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
+    this.handleSubmit(frm, () => {
+      console.log('零用金維護request:', JSON.stringify(frm.value, null, 2));
+      this.loading = false;
+      // this.tls51080Service.queryTLS51080(frm.value).subscribe({
+      //   next: (response) => {
+      //     if (response.Status === '0000') {
+      //       this.data = response.Data || [];
+      //       console.log('Result', this.data);
+      //       this.totalRecords = response.TotalCount || response.Data.length;
+      //       this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      //     } else {
+      //       console.error('API error:', response.Status, response.Message);
+      //     }
+      //     this.loading = false;
+      //     this.messageService.unblockUi();
+      //   },
+      //   error: (err: string) => {
+      //     console.error('API error:', err);
+      //     this.loading = false;
+      //     this.messageService.unblockUi();
+      //   },
+      // });
+    });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+  //---刪除檢查---
+  // 到處都有倉別的資料，先不允許刪除
+  //-------------
+  // 刪除項目(到處都有倉別的資料，先不允許刪除)
+  onDelete(data: sample72010 | sample72010[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
+
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
     }
 
-    this.loading = false;
-  }
+    // 收集所有有效的 ID
+    const idList = items
+      .filter((item) => item && item.id != null && item.id !== undefined)
+      .map((item) => item.id);
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN7000/FIN72010CRU'], extras);
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
+    //確認是否全部都可以刪除
+    const canDelete = items.every((item) => item.CanDel);
+
+    if (!canDelete) {
+      console.error('Some items cannot be deleted');
+      this.messageService.errorBubble('無法刪除：組織階層互相關連');
+      return;
     }
+
+    // const deleteBody = {
+    //   idList: idList, // 符合 API 的 idList 格式
+    // };
+    // this.tls51080Service.deleteTLS51080(deleteBody).subscribe({
+    //   next: (response) => {
+    //     if (response.Status === '0000') {
+    //       this.messageService.successBubble('選中項目刪除成功');
+    //     } else {
+    //       console.error('API error:', response.Status, response.Message);
+    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+    //     }
+    //   },
+    //   error: (err: string) => {
+    //     console.error('API error:', err);
+    //     this.messageService.errorBubble('刪除失敗');
+    //   },
+    //   complete: () => {
+    //     this.onSubmit(this.queryForm);
+    //   },
+    // });
+
+    this.selectedItems = [];
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+  isRowSelectable(rowData: sample72010): boolean {
+    return rowData.CanDel
   }
 }
