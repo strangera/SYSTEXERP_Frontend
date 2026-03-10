@@ -91,7 +91,6 @@ export interface POS2064 {
     ButtonModule]
 })
 export class FIN72010CRUComponent extends BasicCruPageComponent<sample72010> implements OnInit {
-  //目前標籤列
   isRefreshing = false; // 是否是重製表單狀態(預設為false)
   orgdataForm: any;
   dataForm = this.formBuilder.group({
@@ -194,16 +193,6 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<sample72010> imp
 
   ngOnInit(): void {
     this.initializePage('FIN72010', this.dataForm);
-
-    // 進價類的都不可編輯
-    if (this.crudstatus == CRUDStatus.Create) {
-      this.dataForm.get('PLU_SalePrc')?.enable();  // 售價 (只有新增可編輯)
-    } else {
-      this.dataForm.get('PLU_SalePrc')?.disable();
-      // 複製原始表單
-      this.orgdataForm = this.dataForm.getRawValue();
-    }
-
     //導入下拉清單
     this.loadOptions();
 

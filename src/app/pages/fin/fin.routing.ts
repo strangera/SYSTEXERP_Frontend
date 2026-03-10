@@ -366,11 +366,11 @@ export const finRoutes: Routes = [
   { path: 'fin72030', loadComponent: () => import('./fin72030/fin72030.component').then(m => m.FIN72030Component), data: { progNo: 'FIN72030' } },
   // { path: 'fin72030cru', loadComponent: () => import('./fin72030-cru/fin72030-cru.component').then(m => m.FIN72030CRUComponent),data: { progNo: 'FIN72030'} },
   // 零用金撥補作業
-  // { path: 'fin72040', loadComponent: () => import('./fin72040/fin72040.component').then(m => m.FIN72040Component),data:{progNo:'FIN72040'} },
+  { path: 'fin72040', loadComponent: () => import('./fin72040/fin72040.component').then(m => m.FIN72040Component), data: { progNo: 'FIN72040' } },
   // { path: 'fin72040cru', loadComponent: () => import('./fin72040-cru/fin72040-cru.component').then(m => m.FIN72040CRUComponent),data: { progNo: 'FIN72040'} },
   // 零用金盤點作業
-  // { path: 'fin72050', loadComponent: () => import('./fin72050/fin72050.component').then(m => m.FIN72050Component),data:{progNo:'FIN72050'} },
-  // { path: 'fin72050cru', loadComponent: () => import('./fin72050-cru/fin72050-cru.component').then(m => m.FIN72050CRUComponent),data: { progNo: 'FIN72050'} },
+  { path: 'fin72050', loadComponent: () => import('./fin72050/fin72050.component').then(m => m.FIN72050Component), data: { progNo: 'FIN72050' } },
+  { path: 'fin72050cru', loadComponent: () => import('./fin72050-cru/fin72050-cru.component').then(m => m.FIN72050CRUComponent), data: { progNo: 'FIN72050' } },
   // 零用金支付表
   // { path: 'fin73010', loadComponent: () => import('./fin73010/fin73010.component').then(m => m.FIN73010Component),data:{progNo:'FIN73010'} },
   // 支出請款單表
