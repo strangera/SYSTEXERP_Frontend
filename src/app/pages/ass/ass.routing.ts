@@ -37,7 +37,7 @@ export const assRoutes: Routes = [
   // { path: 'ass13020cru', loadComponent: () => import('./ass13020-cru/ass13020-cru.component').then(m => m.ASS13020CRUComponent),data: {progNo:'ASS13020'} },
   // { path: 'ass13040', loadComponent: () => import('./ass13040/ass13040.component').then(m => m.ASS13040Component),data: {progNo:'ASS13040'} }, // 批次報廢作業
   // { path: 'ass13040cru', loadComponent: () => import('./ass13040-cru/ass13040-cru.component').then(m => m.ASS13040CRUComponent),data: {progNo:'ASS13040'} },
-  // { path: 'ass13050', loadComponent: () => import('./ass13050/ass13050.component').then(m => m.ASS13050Component),data: {progNo:'ASS13050'} }, // 移轉交接表
+  { path: 'ass13050', loadComponent: () => import('./ass13050/ass13050.component').then(m => m.ASS13050Component),data: {progNo:'ASS13050'} }, // 移轉交接表
   // { path: 'ass13060', loadComponent: () => import('./ass13060/ass13060.component').then(m => m.ASS13060Component),data: {progNo:'ASS13060'} }, // 固定資產重估作業
   // { path: 'ass13060cru', loadComponent: () => import('./ass13060-cru/ass13060-cru.component').then(m => m.ASS13060CRUComponent),data: {progNo:'ASS13060'} },
   // { path: 'ass13070', loadComponent: () => import('./ass13070/ass13070.component').then(m => m.ASS13070Component),data: {progNo:'ASS13070'} }, // 財產保管單位設定作業
