@@ -30,6 +30,7 @@
 </div>
 <div class="card">
   <app-table-report [data]="data" [columns]="columns" [showDelete]="false" [totalRecords]="totalRecords"
-    [lastQueryBody]="lastQueryBody" [queryFunction]="tls55020Service.queryTLS55020.bind(tls55020Service)">
+    [lastQueryBody]="lastQueryBody" [queryFunction]="tls55020Service.queryTLS55020.bind(tls55020Service)"
+    (detail)="onDetail($event)" (edit)="onEdit($event)" [loading]="loading">
   </app-table-report>
 </div>

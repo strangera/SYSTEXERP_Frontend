@@ -245,6 +245,14 @@ export interface Pos2004Item {
 }
 
 /**
+ * 查詢 POS2004_ByTalentDropDownList 回傳的擴充項目型別
+ */
+export interface Pos2004WithBrandItem extends Pos2004Item {
+  PLU_OrgPLUNo: string; // 廠商貨號
+  LOGO_No: string;      // 品牌代碼
+}
+
+/**
  * 查詢 TLTTALENT_CHARGE_DropDownList 時的請求 body
  */
 export interface TalentChargeQuery {

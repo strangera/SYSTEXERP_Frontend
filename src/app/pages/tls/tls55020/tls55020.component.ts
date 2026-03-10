@@ -53,23 +53,23 @@ export class TLS55020Component extends BasicQueryPageComponent<Tls55020MasterDat
   TLT_NoOptions$ = this.dropDown.queryTltTalent();
   data: Tls55020MasterData[] = [];
   columns: ReportColumn[] = [
-    { field: 'TXN_Date', header: '交易日期', width: '120px', format: formatDate },
-    { field: 'ECR_No', header: '機號', width: '80px', align: 'center' },
-    { field: 'TXN_No', header: '序號', width: '80px', align: 'right' },
-    { field: 'TLT_No', header: '專櫃編號', width: '100px' },
-    { field: 'TLT_Name', header: '專櫃名稱', width: '150px' },
-    { field: 'TXN_Status', header: '狀態', width: '100px', align: 'center', format: (val) => getSYS1000('TXN_Status', val), cellClass: (row) => row.TXN_Status === 'N' ? 'text-success' : 'text-danger' },
-    { field: 'TXN_Uniform', header: '統編', width: '100px' },
-    { field: 'GUI_Track', header: '字軌', width: '60px', align: 'center' },
-    { field: 'TXN_GUIBegNo', header: '發票號碼', width: '120px' },
-    { field: 'TXN_TaxType', header: '稅別', width: '80px', format: (val) => getSYS1000('TXN_TaxType', val) },
-    { field: 'TXN_CustCnt', header: '來客數', width: '80px', align: 'right' },
-    { field: 'TXN_MemCard', header: '會員卡號', width: '120px' },
-    { field: 'TXN_Time', header: '交易時間', width: '100px' },
-    { field: 'TXN_GUI_CarrType', header: '載具類別', width: '120px', format: (val) => getSYS1000('TXN_GUI_CarrType', val) },
-    { field: 'TXN_GUIVehicle', header: '載具編號', width: '150px' },
-    { field: 'tlt_term_type', header: '抽成別', width: '150px', format: (val) => getSYS1000('tlt_term_type', val) },
-    { field: 'TXN_Remark', header: '備註', width: '200px' }
+    { field: 'TXN_Date', header: '交易日期', format: formatDate },
+    { field: 'ECR_No', header: '機號' },
+    { field: 'TXN_No', header: '序號' },
+    { field: 'TLT_No', header: '專櫃編號' },
+    { field: 'TLT_Name', header: '專櫃名稱' },
+    { field: 'TXN_Status', header: '狀態', format: (val) => getSYS1000('TXN_Status', val) },
+    { field: 'TXN_Uniform', header: '統編' },
+    { field: 'GUI_Track', header: '字軌' },
+    { field: 'TXN_GUIBegNo', header: '發票號碼' },
+    { field: 'TXN_TaxType', header: '稅別', format: (val) => getSYS1000('TXN_TaxType', val) },
+    { field: 'TXN_CustCnt', header: '來客數' },
+    { field: 'TXN_MemCard', header: '會員卡號' },
+    { field: 'TXN_Time', header: '交易時間' },
+    { field: 'TXN_GUI_CarrType', header: '載具類別', format: (val) => getSYS1000('TXN_GUI_CarrType', val) },
+    { field: 'TXN_GUIVehicle', header: '載具編號' },
+    { field: 'tlt_term_type', header: '抽成別', format: (val) => getSYS1000('tlt_term_type', val) },
+    { field: 'TXN_Remark', header: '備註' }
   ];
   totalRecords = 0;
   lastQueryBody: Tls55020QueryRequest | null = null;

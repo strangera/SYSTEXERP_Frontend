@@ -1,7 +1,8 @@
+import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 // --- Request Interfaces ---
@@ -96,6 +97,8 @@ export interface ProductDetail {
   TXN_DiscName: string;
   Contract_No: string;
   Contract_SubNo: string;
+
+  isEditable?: boolean; // 新增這行，用來標記是否允許修改
 }
 
 /** 支付明細資料 */
@@ -129,7 +132,10 @@ export interface Tls55020DetailData {
 export class Tls55020Service {
   private readonly apiUrl = `${environment.ApiUrl}/TLS0000/TLS5000`;
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private datePipe: DatePipe
+  ) { }
 
   /**
    * 2.5.5.1 查詢自營交易修正作業 (主檔列表)
@@ -139,7 +145,20 @@ export class Tls55020Service {
     return this.http.post<ApiResponse<Tls55020MasterData[]>>(
       `${this.apiUrl}/queryTLS55020`,
       params
-    );
+    ).pipe(
+      map(res => {
+        console.log(res.Data);
+
+        return {
+          ...res,
+          Data: res.Data.map(item => ({
+            ...item,
+            tlt_term_type: item.tlt_term_type?.trim(),
+            TXN_Time: this.datePipe.transform(item.TXN_Time, 'HH:mm') || '',
+          }))
+        }
+      })
+    )
   }
 
   /**

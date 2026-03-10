@@ -46,6 +46,7 @@ import {
   Pos2004LogoItem,
   Pos2004LogoQuery,
   Pos2004Query,
+  Pos2004WithBrandItem,
   Pos2013Item,
   Pos2013LogoRequest,
   Pos2013Query,
@@ -567,6 +568,19 @@ export class DropdownApiService {
   queryPos2004(body: Pos2004Query): Observable<Pos2004Item[] | null> {
     return this.queryDropdownWithParams<Pos2004Item, Pos2004Query>('/queryPOS2004_DropDownList', body).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** * 查詢商品資料(POS2004 By Talent)
+ * 依照專櫃編號連動品牌，查詢該品牌下的所有商品
+ */
+  queryPos2004ByTalent(body: Pos2004Query): Observable<Pos2004WithBrandItem[] | null> {
+    // 注意：路徑改為後端新開的 /queryPOS2004_ByTalentDropDownList
+    return this.queryDropdownWithParams<Pos2004WithBrandItem, Pos2004Query>(
+      '/queryPOS2004_ByTalentDropDownList',
+      body
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 
