@@ -4,6 +4,14 @@ import { convertYYYYMMToDate } from '@shared/componentkit/table/table.model';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
+export interface FIN11030DeleteItem {
+  SAL_GUIYYYYMM: string;
+  SAL_GUITrack: string;
+  SAL_GUIBegNo: string;
+  SAL_GUIEndNo: string;
+  SAL_GUIPaper: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -30,8 +38,9 @@ export class Fin11030Service {
       map((res) => {
         return {
           ...res,
-          Data: res.Data.map((item: any) => ({
+          Data: (res.Data ?? []).map((item: any) => ({
             ...item,
+            rowKey: this.buildRowKey(item),
             SAL_GUIYYYYMM: convertYYYYMMToDate(item.SAL_GUIYYYYMM),
           }))
         };
@@ -69,7 +78,17 @@ export class Fin11030Service {
   /**
    * 刪除 APS2001 資料
    */
-  deleteFIN11030(idList: number[]): Observable<any> {
-    return this.http.post(`${this.apiUrl}/deleteFIN11030`, { idList });
+  deleteFIN11030(deleteList: FIN11030DeleteItem[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/deleteFIN11030`, { deleteList });
+  }
+
+  private buildRowKey(item: Partial<FIN11030DeleteItem>): string {
+    return [
+      item.SAL_GUIYYYYMM ?? '',
+      item.SAL_GUITrack ?? '',
+      item.SAL_GUIBegNo ?? '',
+      item.SAL_GUIEndNo ?? '',
+      item.SAL_GUIPaper ?? '',
+    ].join('|');
   }
 }

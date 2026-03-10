@@ -29,9 +29,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showCheckBox]="true"
-    (delete)="onDelete($event)" [showDetail]="false" (selectionChange)="selectedRows = $event"
+  <app-table-report dataKey="rowKey" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showCheckBox]="true"
+    (delete)="onDelete($event)" [showDetail]="false" (selectionChange)="onSelectionChange($event)" [showManage]="false"
     [lastQueryBody]="lastQueryBody" [queryFunction]="fin11030Service.queryFIN11030.bind(fin11030Service)"
-    [selectedItems]="selectedRows" [editDisabled]="editDisabled" [totalRecords]="totalRecords" [loading]="loading">
+    [selectedItems]="selectedRows" [editDisabled]="editDisabled" [isRowSelectable]="isRowSelectable"
+    [totalRecords]="totalRecords" [loading]="loading">
   </app-table-report>
 </div>
