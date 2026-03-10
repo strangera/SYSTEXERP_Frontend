@@ -266,7 +266,7 @@ export class Tls51150Component extends BasicQueryPageComponent<any> implements O
   }
 
   public ngOnInit(): void {
-    this.initializePage('TLS55150', void 0, this.queryForm, this.onSubmit.bind(this));
+    this.initializePage('TLS51150', void 0, this.queryForm, this.onSubmit.bind(this));
 
     this.service.getGLS1005s();
     this.service.getPOS2013s('1');
