@@ -363,7 +363,7 @@ export const finRoutes: Routes = [
   { path: 'fin72020', loadComponent: () => import('./fin72020/fin72020.component').then(m => m.FIN72020Component), data: { progNo: 'FIN72020' } },
   { path: 'fin72020cru', loadComponent: () => import('./fin72020-cru/fin72020-cru.component').then(m => m.FIN72020CRUComponent), data: { progNo: 'FIN72020' } },
   // 零用金拋轉作業
-  // { path: 'fin72030', loadComponent: () => import('./fin72030/fin72030.component').then(m => m.FIN72030Component),data:{progNo:'FIN72030'} },
+  { path: 'fin72030', loadComponent: () => import('./fin72030/fin72030.component').then(m => m.FIN72030Component), data: { progNo: 'FIN72030' } },
   // { path: 'fin72030cru', loadComponent: () => import('./fin72030-cru/fin72030-cru.component').then(m => m.FIN72030CRUComponent),data: { progNo: 'FIN72030'} },
   // 零用金撥補作業
   // { path: 'fin72040', loadComponent: () => import('./fin72040/fin72040.component').then(m => m.FIN72040Component),data:{progNo:'FIN72040'} },
