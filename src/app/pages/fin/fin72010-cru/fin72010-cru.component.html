@@ -83,21 +83,21 @@
         <!-- 明細 POS2064 -->
         <app-table-edit
           title="收支明細"
-          tableKey="VEN_No"
-          [data]="POS2020Data"
+          tableKey="type01"
+          [data]="POS2064Data"
           class="col-12"
-          [columns]="POS2020DataColumn"
-          (selectionChange)="selectedPOS2020Items = $event"
-          [selectedItems]="selectedPOS2020Items"
+          [columns]="POS2064DataColumn"
+          (selectionChange)="selectedPOS2064Items = $event"
+          [selectedItems]="selectedPOS2064Items"
           [dataStatusValue]="{
             Original: 'old',
             New: 'new',
             Modified: 'modified',
             Deleted: 'deleted',
           }"
-          [rowValidate]="validate2020Row"
-          [defaultInsertData]="defaultNew2020"
-          (dataChange)="POS2020Data = $event"
+          [rowValidate]="validate2064Row"
+          [defaultInsertData]="defaultNew2064"
+          (dataChange)="POS2064Data = $event"
           dataStatusField="status"
           [loading]="loading"
         ></app-table-edit>

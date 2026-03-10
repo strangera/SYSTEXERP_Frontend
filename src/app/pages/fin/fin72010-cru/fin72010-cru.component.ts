@@ -3,7 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { POS2020Detail } from '@pages/tls/tls51070-cru/tls51070-cru.module';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { EditorTextComponent } from '@shared/componentkit/editor-text/editor-text.component';
 import { ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
@@ -20,8 +19,50 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { POS2004 } from '../../../shared/models/tls/tls000.model';
 import { CRUDStatus } from './../../../shared/models/system/CRUDstatus';
+
+// POS2064M 收支主檔
+export interface sample72010 {
+  'id': string;
+  'STO_No': string; // 公司編號/店號
+  'HOS_No': string; // 倉庫代碼 STO_NO+HOS_NO唯一值 STO_NO+HOS_NO唯一值
+  'HOS_NAME': string; // 倉庫名稱
+  'org_id': string; // 組織代碼/組織名稱
+  'org_name': string; // 部門名稱
+  'building_no': string; // 館別代碼
+  'HOS_Remark'?: string; // 備註說明
+
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+
+  'CanDel': boolean; //能否刪除(僅顯示)
+}
+
+// POS2064 收支明細檔
+export interface POS2064 {
+  id: number | null; // 明細ID，新增時為null
+  type01: string; // 會計費用科目
+  type02: string; // 項目摘要
+  type03: string; // 組織代號
+  type04: string; // 明細類別
+  type05: string; // 發票格式
+  type06: string; // 發票/收據號碼
+  type07: string; // 發票日期
+  type08: string; // 申報年月
+  type09: string; // 廠商統一編號
+  type10: string; // 發票用途
+  type11: string; // 發票總金額
+  type12: string; // 課稅別
+  type13: string; // 發票未稅金額
+  type14: string; // 發票稅額
+  type15: string; // 扣抵代號
+  type16: string; // 彙總張數
+  status: string; // 狀態 (原始: 'orginal', 新增: 'new', 編輯: 'modified', 刪除: 'deleted')
+}
 
 @Component({
   selector: 'app-fin72010-cru',
@@ -49,7 +90,7 @@ import { CRUDStatus } from './../../../shared/models/system/CRUDstatus';
     TableEditComponent,
     ButtonModule]
 })
-export class FIN72010CRUComponent extends BasicCruPageComponent<POS2004> implements OnInit {
+export class FIN72010CRUComponent extends BasicCruPageComponent<sample72010> implements OnInit {
   //目前標籤列
   isRefreshing = false; // 是否是重製表單狀態(預設為false)
   orgdataForm: any;
@@ -86,51 +127,60 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<POS2004> impleme
     { No: 'KU003', Name: '保管單位3', Label: 'KU003 - 保管單位3' },
   ];
 
-
   vendorOptions: option[] = [];  //廠商編號: 資料讀 POS2013
-  // ---POS2020 -------------
-  pos2020Detail: POS2020Detail[] = [];
-  //---暫存品牌資料---
-  cachedBrand: any = null;
-  // ---------明細 (POS2020) 編輯表格 至少要一筆-------------------------------------------------------
-  // #region POS2020定義
+  // ---POS2064 -------------
+  POS2064Detail: POS2064[] = [];
+  // ---------明細 (POS2064) 編輯表格 至少要一筆-------------------------------------------------------
+  // #region POS2064定義
   // 廠商編號	下拉
-  POS2020Data: POS2020Detail[] = [];
-  orgPOS2020Data: POS2020Detail[] = []; // pos2020(備分)
-  selectedPOS2020Items: POS2020Detail[] = [];
+  POS2064Data: POS2064[] = [];
+  orgPOS2064Data: POS2064[] = []; // POS2064(備分)
+  selectedPOS2064Items: POS2064[] = [];
   // 預設新項目模板
-  defaultNew2020 = {
+  defaultNew2064 = {
     id: 0, //新增
-    PLU_MagNo: '',
-    VEN_No: '',
-    STO_No: this.authService.getUserInfo()?.SYS_StoreNo ?? '',
-    PLU_OrderPrc: 0,
-
-    PLU_Purchase: '1',
-    PLU_TransType: '4',
-    PLU_TransDay: null,
-    Remark: null,
-    VDP_LastStockDate: null,
+    type01: 'item.type01',
+    type02: 'item.type02',
+    type03: 'item.type03',
+    type04: 'item.type04',
+    type05: 'item.type05',
+    type06: 'item.type06',
+    type07: 'item.type07',
+    type08: 'item.type08',
+    type09: 'item.type09',
+    type10: 'item.type10',
+    type11: 'item.type11',
+    type12: 'item.type12',
+    type13: 'item.type13',
+    type14: 'item.type14',
+    type15: 'item.type15',
+    type16: 'item.type16',
 
     status: 'new'
   };
 
-  // POS2020 展開式表格的欄位定義
-  POS2020DataColumn: EditColumn[] = []; // 等廠商編號好了再寫入POS2020欄位(廠商下拉)
-  // 預設 POS2020 新項目模板 (最後進價=POS2004的標準進價PLU_OrderPrc)
-  createDefaultNew2020(pLU_MagNo: string, pLU_OrderPrc: number, ven_no?: string) {
-    this.defaultNew2020 = {
+  // POS2064 展開式表格的欄位定義
+  POS2064DataColumn: EditColumn[] = []; // 等廠商編號好了再寫入POS2064欄位(廠商下拉)
+  // 預設 POS2064 新項目模板 (最後進價=POS2004的標準進價PLU_OrderPrc)
+  createDefaultNew2064() {
+    this.defaultNew2064 = {
       id: 0,
-      PLU_MagNo: pLU_MagNo,
-      VEN_No: ven_no || '',
-      STO_No: this.authService.getUserInfo()?.SYS_StoreNo ?? '',
-      PLU_OrderPrc: pLU_OrderPrc,
-
-      PLU_Purchase: '1',
-      PLU_TransType: '1',
-      PLU_TransDay: null,
-      Remark: null,
-      VDP_LastStockDate: null,
+      type01: 'item.type01',
+      type02: 'item.type02',
+      type03: 'item.type03',
+      type04: 'item.type04',
+      type05: 'item.type05',
+      type06: 'item.type06',
+      type07: 'item.type07',
+      type08: 'item.type08',
+      type09: 'item.type09',
+      type10: 'item.type10',
+      type11: 'item.type11',
+      type12: 'item.type12',
+      type13: 'item.type13',
+      type14: 'item.type14',
+      type15: 'item.type15',
+      type16: 'item.type16',
 
       status: 'new'
     };
@@ -157,14 +207,13 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<POS2004> impleme
     //導入下拉清單
     this.loadOptions();
 
-    // #region 讀取明細檔
     if (this.crudstatus == CRUDStatus.Edit || this.crudstatus == CRUDStatus.Read) {
       //查詢明細檔案 (編輯模式)
       console.log('編輯模式，明細檔讀取中', this.dataForm.value);
 
       //讀取明細檔 並載入預設值 (商品管理編號、目前進價)
       this.isRefreshing = true;
-      this.loadDetail(this.dataForm.get('PLU_MagNo')?.value || '', this.dataForm.get('PLU_OrderPrc')?.value || 0)
+      this.loadDetail(this.dataForm.get('PLU_MagNo')?.value || '')
         .then(() => {
           this.isRefreshing = false; // ✅ 等 loadDetail 完成後再關
         })
@@ -216,7 +265,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.dataForm.reset(); // 重置表單
   }
 
-  // #region dopropdown
+  // #region 明細檔 下拉選項
   loadOptions() {
     this.tls51070Service
       .queryPOS2013_DropDownList({ "VEN_Flag": '1' }).pipe(untilDestroyed(this)).subscribe((response) => {
@@ -226,8 +275,8 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<POS2004> impleme
         }));
 
         // 等廠商編號好了再寫入POS2064欄位(廠商下拉)
-        this.POS2020DataColumn = [
-          { field: 'VEN_No', header: '會計費用科目', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: this.vendorOptions },
+        this.POS2064DataColumn = [
+          { field: 'type01', header: '會計費用科目', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: this.vendorOptions },
           { field: 'type02', header: '項目摘要', type: 'input', width: '12rem' },
           { field: 'type03', header: '組織代號', type: 'input', width: '12rem' },
           { field: 'type04', header: '明細類別', type: 'input', width: '12rem' },
@@ -247,57 +296,62 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<POS2004> impleme
       });
   }
 
-  // #region 讀取明細檔案
-  async loadDetail(pLU_MagNo: string, pLU_OrderPrc: number): Promise<void> {
+  // #region 明細檔 讀取
+  async loadDetail(pLU_MagNo: string): Promise<void> {
     if (pLU_MagNo == '') {
-      console.log('讀取pLU_MagNo', this.dataForm.value)
+      console.log('讀取key', this.dataForm.value)
       if (this.crudstatus !== CRUDStatus.Create) {
-        this.messageService.infoBubble('商品管理碼為空，不載入明細檔'); //編輯、查看模式如果沒有明細檔就跳出提示
+        this.messageService.infoBubble('key為空，不載入明細檔'); //編輯、查看模式如果沒有明細檔就跳出提示
       }
     } else {
       this.tls51070Service.queryTLS51070_Detail({ 'PLU_MagNo': pLU_MagNo }).pipe(untilDestroyed(this)).subscribe(async (response) => {
-        this.pos2020Detail = response.Data[0].POS2020Detail;
+        this.POS2064Detail = response.Data[0].POS2064Detail;
 
-        this.POS2020Data = this.pos2020Detail.map(item => ({
+        this.POS2064Data = this.POS2064Detail.map(item => ({
           id: item.id,
-          PLU_MagNo: item.PLU_MagNo,
-          PLU_OrderPrc: item.PLU_OrderPrc,
-
-          VEN_No: item.VEN_No,
-          STO_No: item.STO_No,
-          PLU_Purchase: item.PLU_Purchase,
-          PLU_TransType: item.PLU_TransType,
-          PLU_TransDay: item.PLU_TransDay,
-          Remark: item.Remark,
-          VDP_LastStockDate: item.VDP_LastStockDate,
+          type01: item.type01,
+          type02: item.type02,
+          type03: item.type03,
+          type04: item.type04,
+          type05: item.type05,
+          type06: item.type06,
+          type07: item.type07,
+          type08: item.type08,
+          type09: item.type09,
+          type10: item.type10,
+          type11: item.type11,
+          type12: item.type12,
+          type13: item.type13,
+          type14: item.type14,
+          type15: item.type15,
+          type16: item.type16,
           status: 'old'
         }));
 
         //建立項目模板
-        this.createDefaultNew2020(pLU_MagNo, pLU_OrderPrc);
+        this.createDefaultNew2064();
 
-        console.log('明細 POS2020Data', this.POS2020Data);
+        console.log('明細 POS2064Data', this.POS2064Data);
 
-        this.orgPOS2020Data = this.POS2020Data;
+        this.orgPOS2064Data = this.POS2064Data;
       });
     }
   }
 
-  // #region 重製明細檔
+  // #region 明細檔 重製
   reset51070() {
     // 將明細檔重新刷新
     if (this.crudstatus == CRUDStatus.Create) {
       this.isRefreshing = true
-      this.POS2020Data = [];
+      this.POS2064Data = [];
       this.isRefreshing = false
     } else if (this.crudstatus == CRUDStatus.Edit) {
       if (this.orgdataForm) {
         this.isRefreshing = true;
 
         const magno = this.dataForm.get('PLU_MagNo')?.value;
-        const orderPrc = this.dataForm.get('PLU_OrderPrc')?.value;
 
-        this.loadDetail(magno || '', orderPrc ?? 0)
+        this.loadDetail(magno || '')
           .then(() => {
             console.log('編輯模式重製完成', this.dataForm.value);
             this.isRefreshing = false;
@@ -306,17 +360,16 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<POS2004> impleme
             this.isRefreshing = false;
           });
 
-        this.POS2020Data = this.orgPOS2020Data;
+        this.POS2064Data = this.orgPOS2064Data;
       }
     } else {
       console.log('查看模式無須重製');
     }
   }
 
-  // ---明細檔操作---
-  // #region POS2020
-  validate2020Row = (rowData: POS2020Detail): { isValid: boolean; errorMessage: string } => {
-    const venNo = rowData?.VEN_No?.trim();
+  // #region 明細檔 驗證
+  validate2064Row = (rowData: POS2064): { isValid: boolean; errorMessage: string } => {
+    const venNo = rowData?.type01?.trim();
     const currentId = rowData?.id;
 
     //  檢查廠商編號是否為空
@@ -325,8 +378,8 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<POS2004> impleme
     }
 
     // 檢查重複（包含新增中未有 id 的情況）
-    const isDuplicate = this.POS2020Data.some((item, _index, array) => {
-      if (!item.VEN_No) return false;
+    const isDuplicate = this.POS2064Data.some((item, _index, array) => {
+      if (!item.type01) return false;
 
       // 編輯同筆資料不用比對
       if (item.id && currentId && item.id === currentId) return false;
@@ -334,11 +387,11 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<POS2004> impleme
       // 新增中沒有 id，用索引判斷是不是自己
       if (!item.id && !currentId) {
         const currentIndex = array.indexOf(rowData);
-        return item.VEN_No === venNo && array.indexOf(item) !== currentIndex;
+        return item.type01 === venNo && array.indexOf(item) !== currentIndex;
       }
 
       // 其他一般情況
-      return item.VEN_No === venNo && item.id !== currentId;
+      return item.type01 === venNo && item.id !== currentId;
     });
 
     if (isDuplicate) {
