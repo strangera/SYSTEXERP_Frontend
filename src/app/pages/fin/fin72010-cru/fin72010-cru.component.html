@@ -5,116 +5,111 @@
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <div class="grid p-fluid">
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-                <app-date-one
-                  label="起用日"
-                  controlName="accountsummary"
-                  [control]="dataForm.controls.Subpoenadate"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div> -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="零用金單號"
-            controlName="KeepQuota_No"
-            [options]="KeepQuota_No_Options"
-            optionLabel="Label"
-            optionValue="No"
-            [control]="dataForm.controls.KeepQuota_No"
-            [submitted]="submitted"
-          ></app-dropdown>
+      <!-- 基本資料 顯示畫面 -->
+      <ng-container>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="零用金單號"
+              controlName="KeepQuota_No"
+              [options]="KeepQuota_No_Options"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="dataForm.controls.KeepQuota_No"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              calendarType="dateOne"
+              label="申請日期"
+              [control]="dataForm.controls.applyDate"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="零用金申請人"
+              controlName="Pettycashapplicant"
+              [options]="Pettycashapplicant_Options"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="dataForm.controls.Pettycashapplicant"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="零用金保管人"
+              controlName="Pettycashcustodian"
+              [options]="Pettycashcustodian_Options"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="dataForm.controls.Pettycashcustodian"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="申請人組織代號"
+              controlName="keepingUnit"
+              [control]="dataForm.controls.keepingUnit"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="保管人組織代號"
+              controlName="custodianUnit"
+              [control]="dataForm.controls.custodianUnit"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="保管單位"
+              controlName="keepingUnit"
+              [options]="keepingUnit_Options"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="dataForm.controls.keepingUnit"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateOne"
-            label="申請日期"
-            [control]="dataForm.controls.applyDate"
-            [submitted]="submitted"
-          ></app-calendar>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="零用金申請人"
-            controlName="Pettycashapplicant"
-            [options]="Pettycashapplicant_Options"
-            optionLabel="Label"
-            optionValue="No"
-            [control]="dataForm.controls.Pettycashapplicant"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="零用金保管人"
-            controlName="Pettycashcustodian"
-            [options]="Pettycashcustodian_Options"
-            optionLabel="Label"
-            optionValue="No"
-            [control]="dataForm.controls.Pettycashcustodian"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="申請人組織代號"
-            controlName="keepingUnit"
-            [control]="dataForm.controls.keepingUnit"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="保管人組織代號"
-            controlName="custodianUnit"
-            [control]="dataForm.controls.custodianUnit"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="保管單位"
-            controlName="keepingUnit"
-            [options]="keepingUnit_Options"
-            optionLabel="Label"
-            optionValue="No"
-            [control]="dataForm.controls.keepingUnit"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-      </div>
-      <hr />
+      </ng-container>
 
-      <!-- 明細key: type01 -->
-      <app-table-edit
-        title="收支明細檔"
-        tableKey="type01"
-        [data]="POS2064"
-        class="col-12"
-        [columns]="POS2064Column"
-        (selectionChange)="selectedPOS2064Items = $event"
-        [selectedItems]="selectedPOS2064Items"
-        [dataStatusValue]="{
-          Original: 'old',
-          New: 'new',
-          Modified: 'modified',
-          Deleted: 'deleted',
-        }"
-        [defaultInsertData]="defaultPOS2064"
-        (dataChange)="POS2064 = $event"
-        dataStatusField="status"
-        [rowValidate]="validate2064Row"
-        [loading]="POS2064loading"
-      ></app-table-edit>
-
+      <ng-container>
+        <!-- 明細 POS2064 -->
+        <app-table-edit
+          title="收支明細"
+          tableKey="type01"
+          [data]="POS2064Data"
+          class="col-12"
+          [columns]="POS2064DataColumn"
+          (selectionChange)="selectedPOS2064Items = $event"
+          [selectedItems]="selectedPOS2064Items"
+          [dataStatusValue]="{
+            Original: 'old',
+            New: 'new',
+            Modified: 'modified',
+            Deleted: 'deleted',
+          }"
+          [rowValidate]="validate2064Row"
+          [defaultInsertData]="defaultNew2064"
+          (dataChange)="POS2064Data = $event"
+          dataStatusField="status"
+          [loading]="loading"
+        ></app-table-edit>
+      </ng-container>
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
       >
         <app-button
-          btnType="clear"
+          btnType="cancel"
           [form]="dataForm"
-          (click)="onClearForm()"
+          (click)="reset51070()"
         ></app-button>
         <app-button btnType="submit"></app-button>
       </div>

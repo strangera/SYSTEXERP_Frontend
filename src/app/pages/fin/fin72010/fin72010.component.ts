@@ -11,7 +11,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 
 export interface sample72010 {
@@ -104,33 +104,23 @@ export class FIN72010Component extends BasicQueryPageComponent<sample72010> impl
 
   data: sample72010[] = [];
   columns: Column[] = [
-    { field: 'STO_No', header: '零用金單號', visible: false },
-    { field: 'HOS_No', header: '申請日期', visible: true },
-    { field: 'HOS_NAME', header: '零用金申請人', visible: true },
-    // {
-    //   field: 'org_id', header: '部門編號', visible: true
-    //   , format: (value: string) =>
-    //     this.SYS3100_Options.find((option) => option.No === value)?.No ||
-    //     value,
-    // },
-    // {
-    //   field: 'org_name', header: '部門名稱', visible: true
-    //   , format: (value: string) =>
-    //     this.SYS3100_Options.find((option) => option.No === value)?.Name ||
-    //     value,
-    // },
-    // {
-    //   field: 'building_no', header: '館別', visible: true, format: (value: string) => // 館別只顯示名稱(不用編碼)
-    //     this.building_noOptions.find((option) => option.No === value)?.Name ||
-    //     value,
-    // },
-
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
-    { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
-    { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
-    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
+    { field: 'type01', header: '零用金單號', visible: false },
+    { field: 'type02', header: '申請日期', visible: true },
+    { field: 'type03', header: '零用金申請人', visible: true },
+    { field: 'type04', header: '申請人組織', visible: true },
+    { field: 'type05', header: '零用金保管人', visible: true },
+    { field: 'type06', header: '保管單位', visible: true },
+    { field: 'type07', header: '狀態', visible: true },
+    { field: 'type08', header: '費用會計科目', visible: true },
+    { field: 'type09', header: '費用科目組織', visible: true },
+    { field: 'type10', header: '項目摘要', visible: true },
+    { field: 'type11', header: '明細類別', visible: true },
+    { field: 'type12', header: '項目摘要', visible: true },
+    { field: 'type13', header: '發票/收據號碼', visible: true },
+    { field: 'type14', header: '日期', visible: true },
+    { field: 'type15', header: '未稅金額', visible: true },
+    { field: 'type16', header: '稅額', visible: true },
+    { field: 'type17', header: '總額', visible: true },
   ];
 
   selectedItems: sample72010[] = [];// 多選項目
@@ -173,9 +163,6 @@ export class FIN72010Component extends BasicQueryPageComponent<sample72010> impl
   }
 
   //---刪除檢查---
-  // 到處都有倉別的資料，先不允許刪除
-  //-------------
-  // 刪除項目(到處都有倉別的資料，先不允許刪除)
   onDelete(data: sample72010 | sample72010[]): void {
     console.log('Delete data:', JSON.stringify(data, null, 2));
 
