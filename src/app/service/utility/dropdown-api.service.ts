@@ -47,6 +47,7 @@ import {
   Pos2004LogoQuery,
   Pos2004Query,
   Pos2013Item,
+  Pos2013LogoRequest,
   Pos2013Query,
   Sys1000Query,
   TalentByContractDateItem,
@@ -402,10 +403,44 @@ export class DropdownApiService {
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }
-  /** 查詢廠商資料表(POS2013依照品牌) */
-  queryPos2013LOGO_No(body: { LOGO_No: string }): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<Pos2013Item, { LOGO_No: string }>('/queryPOS2013LOGO_NoDropDownList', 'VEN_No', 'Name', body).pipe(
-      shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
+  /**
+ * 查詢品牌與廠商關聯表 (通用基礎方法)
+ */
+  private queryPos2013LogoBase(body: Pos2013LogoRequest = {}): Observable<Pos2013Item[] | null> {
+    // 這裡不使用 queryAndMapDropdown，改用更底層的 post 取得原始陣列，
+    // 因為同一個 API 資料要給兩個不同的 Dropdown (一個要 VEN_No, 一個要 LOGO_No)
+    return this.http.post<ApiResponse<Pos2013Item[]>>(
+      `${this.apiUrl}/queryPOS2013LOGO_NoDropDownList`,
+      body
+    ).pipe(
+      map(res => res.Data || []),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  /** * [雙向 - 向下] 給品牌，查廠商選單
+   * Value: VEN_No, Label: Name
+   */
+  queryVenByLogo(logoNo: string): Observable<Option[] | null> {
+    return this.queryPos2013LogoBase({ LOGO_No: logoNo }).pipe(
+      map(data => data?.map(item => ({
+        label: `${item.VEN_No} - ${item.Name}`,
+        value: item.VEN_No,
+        ...item // 保留原始物件供後續使用
+      })) || [])
+    );
+  }
+
+  /** * [雙向 - 向上] 給廠商，查品牌選單
+   * Value: LOGO_No, Label: LOGO_Name
+   */
+  queryLogoByVen(venNo: string): Observable<Option[] | null> {
+    return this.queryPos2013LogoBase({ VEN_No: venNo }).pipe(
+      map(data => data?.map(item => ({
+        label: `${item.LOGO_No} - ${item.LOGO_CH_NAME}`,
+        value: item.LOGO_No,
+        ...item
+      })) || [])
     );
   }
   /** * 查詢廠商資料表(POS2013)下拉選單 */

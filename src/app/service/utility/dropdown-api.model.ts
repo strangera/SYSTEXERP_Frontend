@@ -417,14 +417,28 @@ export interface Pos2013Query {
   VEN_Flag: string;
 }
 
+/** 廠商資料表查詢參數介面 */
+export interface Pos2013LogoRequest {
+  LOGO_No?: string; // 改為可選
+  VEN_No?: string;  // 新增可選的廠商編號
+}
 /**
  * 查詢 POS2013_DropDownList 回傳的項目型別
  */
 export interface Pos2013Item extends IDropdownItem {
-  ShortName: string;
+  // --- 廠商欄位 ---
   VEN_No: string;
-  VEN_EngName: string;
-  VEN_Address: string;
+  Name: string;      // 廠商全名
+  ShortName: string; // 廠商簡稱
+  No: string;        // 廠商統編 (VEN_Uniform)
+
+  // --- 新增：品牌欄位 (與後端 Response DTO 一致) ---
+  LOGO_No: string;
+  LOGO_CH_NAME: string;
+
+  // 原有但後端 SQL 若沒抓會是空的欄位
+  VEN_EngName?: string;
+  VEN_Address?: string;
 }
 
 /**

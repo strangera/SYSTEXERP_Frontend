@@ -272,11 +272,25 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     this.setupDialogLogic();
   }
   private setupFormLogic(): void {
-    this.dataForm.controls.LOGO_No.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
-      if (value) {
-        this.vendorOptions = this.dropdown.queryPos2013LOGO_No({ LOGO_No: value });
+    // 1. 品牌變動 -> 更新廠商清單
+    this.dataForm.controls.LOGO_No.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(logoNo => {
+      if (logoNo) {
+        // 調用新的「由品牌查廠商」方法
+        this.vendorOptions = this.dropdown.queryVenByLogo(logoNo);
       } else {
-        this.vendorOptions = of([]);
+        // 若品牌被清空，還原廠商清單為預設(全部)
+        this.vendorOptions = this.dropdown.queryPos2013TltTalent();
+      }
+    });
+
+    // 2. 廠商變動 -> 更新品牌清單
+    this.dataForm.controls.VEN_No.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(venNo => {
+      if (venNo) {
+        // 調用新的「由廠商查品牌」方法
+        this.brandOptions = this.dropdown.queryLogoByVen(venNo);
+      } else {
+        // 若廠商被清空，還原品牌清單為預設(全部)
+        this.brandOptions = this.dropdown.queryPluLogo();
       }
     });
     this.dataForm.controls.MAM_Method.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
