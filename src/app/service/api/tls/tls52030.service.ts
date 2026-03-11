@@ -62,6 +62,7 @@ export interface ITLS52030Data {
   UPD_Date: string; // 變更日期
   UPD_USR_No: string; // 變更人員
   UPD_USR_Name: string; // 變更人員姓名
+  CanAPRV: boolean; // 可否審核
 }
 
 /** 進貨單明細資料介面 (用於 insert/update TLS52030 的 Details 陣列) */
