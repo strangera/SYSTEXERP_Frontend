@@ -22,8 +22,8 @@
           <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-4" label="結帳年月"
             controlName="ACP_YYYYMM" [control]="queryForm.controls.ACP_YYYYMM" [submitted]="submitted" />
           <!-- 申報年月 -->
-          <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-4" label="申報年月"
-            controlName="PUR_RepYYYYMM" [control]="queryForm.controls.PUR_RepYYYYMM" [submitted]="submitted" />
+          <app-year-month class="col-12 md:col-6 lg:col-4" label="申報年月" controlName="PUR_RepYYYYMM"
+            [control]="queryForm.controls.PUR_RepYYYYMM" [evenMonth]="true" [submitted]="submitted"></app-year-month>
           <!-- 廠商統一編號 -->
           <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商統一編號" controlName="VEN_Uniform"
             [control]="queryForm.controls.VEN_Uniform" [submitted]="submitted"></app-input-text>
