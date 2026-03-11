@@ -9,7 +9,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { AddButton, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { TLS2C040Service } from '../../../service/api/tls/tls2c040.service';
+import { TLS55060Service } from '../../../service/api/tls/tls55060.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -97,7 +97,7 @@ export class TLS55060Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    public readonly tls2c040Service: TLS2C040Service,
+    public readonly tls55060Service: TLS55060Service,
     private readonly dropDownListService: DropDownListService
   ) {
     super();
@@ -110,7 +110,7 @@ export class TLS55060Component extends BasicQueryPageComponent<any> implements O
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
       // Service 已經處理好 map 了，這裡直接賦值
-      this.tls2c040Service.queryTLS2C040(form.getRawValue()).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+      this.tls55060Service.queryTLS55060(form.getRawValue()).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data; // 直接等於 response.Data
         this.totalRecords = response.TotalCount;
         this.lastQueryBody = form.getRawValue();
