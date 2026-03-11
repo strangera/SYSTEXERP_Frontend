@@ -9,9 +9,18 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="契約起始日"
-              [startControl]="queryForm.controls.tlt_bdate_start" [endControl]="queryForm.controls.tlt_bdate_end"
+            <app-calendar-range calendarType="dateRange" label="包底起始日期"
+              [startControl]="queryForm.controls.cag_bdate_start" [endControl]="queryForm.controls.cag_bdate_end"
               [submitted]="submitted"></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="包底截止日期"
+              [startControl]="queryForm.controls.cag_edate_start" [endControl]="queryForm.controls.cag_edate_end"
+              [submitted]="submitted"></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="契約日期" [startControl]="queryForm.controls.tlt_bdate"
+              [endControl]="queryForm.controls.tlt_edate" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
@@ -20,13 +29,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="館別" controlName="Building_No" [options]="buildingNoOptions" optionLaue="value"
               [control]="queryForm.controls.Building_No" [submitted]="submitted"></app-multi-select>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="契約截止日"
-              [startControl]="queryForm.controls.tlt_edate_start" [endControl]="queryForm.controls.tlt_edate_end"
-              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range label="月結天數" controlName="check_day"
@@ -39,6 +41,7 @@
               [submitted]="submitted"></app-multi-select>
           </div>
         </div>
+
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
