@@ -89,7 +89,7 @@ export const CONDITIONAL_DEFAULTS: Record<string, Partial<typeof FORM_DEFAULTS>>
 export const BAODI_TYPE_OPTIONS = [
   { label: '年包', value: '1' },
   { label: '月包', value: '2' },
-  { label: '期間包', value: '0' }
+  { label: '區間包', value: '0' }
 ];
 
 /** 超出部份處理方式選項 */
