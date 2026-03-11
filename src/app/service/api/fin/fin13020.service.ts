@@ -67,4 +67,33 @@ export class FIN13020Service {
       responseType: 'blob',
     });
   }
+  // ✅ 依字軌+號碼，用 queryFIN13020 撈單筆（編輯/檢視共用）
+queryFIN13020ByTrackNo(param: { InvoiceTrack: string; InvoiceNumber: string }) {
+  const body: any = {
+    GUI_Track: param.InvoiceTrack,
+    InvoiceNumberStart: param.InvoiceNumber,
+    InvoiceNumberEnd: param.InvoiceNumber,
+
+    // ✅ 保險：補齊分頁排序，撈最新一筆
+    pageIndex: 1,
+    pageSize: 1,
+    SortBy: [{ field: 'ID', order: -1 }],
+  };
+
+  return this.queryFIN13020(body);
+}
+// fin13020.service.ts
+printFIN15100(data: {
+  INV_DeclareYM: string;
+  TXN_Ret_NoS: string;
+  TXN_Ret_NoE: string;
+  InvoiceTrack?: string | null;
+  InvoiceNumberS?: string | null;
+  InvoiceNumberE?: string | null;
+  Mid: number;
+  STO_No: string;
+}): Observable<any> {
+  const url = `${this.apiUrl}/FIN0000/INV1000/PrintFIN15100`;
+  return this.http.post<any>(url, data);
+}
 }

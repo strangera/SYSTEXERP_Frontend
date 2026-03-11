@@ -5,7 +5,7 @@
  * - Step 1: 合約基本資料
  * - Step 2: 代扣款設定
  * - Step 3: 抽成設定
- * - Step 4: 條件設定
+ * - Step 4: 租金設定
  *
  * 資料統一在此組件管理，不需要 Session Storage
  */
@@ -36,8 +36,8 @@ import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.s
 import { CrudTrackingService } from '../../../tls13010-v2/core/services/crud-tracking.service';
 
 // V2 服務
-import { ContractValidatorService } from '../../services/validation/contract-validator.service';
 import { SubmitDataService } from '../../services/submit/submit-data.service';
+import { ContractValidatorService } from '../../services/validation/contract-validator.service';
 
 // V2 類型
 import { CommissionItem as V2CommissionItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
@@ -124,7 +124,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   /**
    * 根據抽成別動態計算應顯示的步驟
    * - 固定租金 (1): Step 0, 1, 3 (跳過 Step 2 抽成設定)
-   * - 一般抽成 (3): Step 0, 1, 2 (跳過 Step 3 條件設定)
+   * - 一般抽成 (3): Step 0, 1, 2 (跳過 Step 3 租金設定)
    * - 其他: 全部 4 個步驟
    */
   get steps(): MenuItem[] {
@@ -1145,7 +1145,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
     // 日期沒有變更就跳過同步
     if (this.areDatesEqual(startDate, this.lastSyncedStartDate) &&
-        this.areDatesEqual(endDate, this.lastSyncedEndDate)) {
+      this.areDatesEqual(endDate, this.lastSyncedEndDate)) {
       return;
     }
 
@@ -1175,7 +1175,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       return updatedItem;
     });
 
-    // Step 4: 條件設定（跳過既有項目）
+    // Step 4: 租金設定（跳過既有項目）
     this.wizardState.conditionItems = this.wizardState.conditionItems.map(item =>
       item._status === 'original' ? item : {
         ...item,

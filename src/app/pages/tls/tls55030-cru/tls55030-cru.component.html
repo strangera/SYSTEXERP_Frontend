@@ -55,8 +55,16 @@
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.ACP_YYYYMM.value ? false : true">
         <header>
           <div class="flex flex-wrap align-items-end justify-content-between">
-            <app-input-number class="col-12 md:col-6 lg:col-3 p-0 pl-2" label="退貨總金額" controlName="RJM_TotalBuyAmt"
-              [control]="dataForm.controls.RJM_TotalBuyAmt" [submitted]="submitted" [disabled]="true" />
+            <div class="flex flex-wrap align-items-end">
+              <app-input-number class="col-12 md:col-6 lg:col-3 p-0 pl-2" label="退貨總金額" controlName="RJM_TotalBuyAmt"
+                [control]="dataForm.controls.RJM_TotalBuyAmt" [submitted]="submitted" [disabled]="true" />
+
+              <app-input-number class="col-12 md:col-6 lg:col-3 p-0 pl-2" label="退貨總未稅金額" controlName="RJM_TotalBuyNet"
+                [control]="dataForm.controls.RJM_TotalBuyNet" [submitted]="submitted" [disabled]="true" />
+
+              <app-input-number class="col-12 md:col-6 lg:col-3 p-0 pl-2" label="退貨總稅額" controlName="RJM_TotalBuyTax"
+                [control]="dataForm.controls.RJM_TotalBuyTax" [submitted]="submitted" [disabled]="true" />
+            </div>
             <p-button styleClass="p-2" label="查詢已退貨未開立折讓" icon="pi pi-search" (click)="dialogVisible = true"></p-button>
           </div>
         </header>

@@ -1,28 +1,28 @@
 /**
- * TLS12080-V2 Step 4: 條件設定
+ * TLS12080-V2 Step 4: 租金設定
  * 複用 TLS13010-V2 的服務
  */
-import { NgIf, NgFor } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output, OnChanges, SimpleChanges, inject, ChangeDetectorRef } from '@angular/core';
+import { NgFor, NgIf } from '@angular/common';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { ExpandableEditTableComponent, ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 使用 TLS13010-V2 的常數、模型、服務
-import { CommissionType, CommissionTypeLabels } from '../../../../../tls13010-v2/core/constants';
+import { CommissionType } from '../../../../../tls13010-v2/core/constants';
 import {
+  BaseCommissionCondition,
+  BaseRentHigherCondition,
+  BaseTierCondition,
   ConditionItem,
   FixedRentCondition,
-  BaseRentHigherCondition,
-  BaseCommissionCondition,
-  GraduatedCommissionCondition,
-  BaseTierCondition
+  GraduatedCommissionCondition
 } from '../../../../../tls13010-v2/core/models/condition';
-import { ConditionTableConfigService } from '../../../../../tls13010-v2/services/condition/condition-table-config.service';
 import { ConditionDataManagerService } from '../../../../../tls13010-v2/services/condition/condition-data-manager.service';
+import { ConditionTableConfigService } from '../../../../../tls13010-v2/services/condition/condition-table-config.service';
 
 /**
  * 表格配置介面
@@ -247,7 +247,7 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
 
   private requiresCondition(): boolean {
     return this.commissionType !== '' &&
-           this.commissionType !== CommissionType.GENERAL_COMMISSION;
+      this.commissionType !== CommissionType.GENERAL_COMMISSION;
   }
 
   private getCurrentTypeItemCount(): number {

@@ -24,7 +24,7 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 
 // V2 類型
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { DropdownOption, TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '../../../../../tls13010/tls13010.dropdown';
+import { DropdownOption, TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { LocationItem } from '../../../../core/models/contract';
 
 // 服務

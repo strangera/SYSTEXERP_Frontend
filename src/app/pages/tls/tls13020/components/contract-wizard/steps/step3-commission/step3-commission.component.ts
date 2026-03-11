@@ -201,7 +201,6 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
     // 同步 discount 日期到 level
     if ((fieldName === 'tlt_bdate' || fieldName === 'tlt_edate') && originalType === 'discount') {
       this.syncService.syncDiscountDateToLevel(sourceItem as DiscountSettingItem, parentData);
-      parentData.remark = this.remarkService.formatRemarkText(parentData);
     }
 
     // 更新狀態
@@ -210,6 +209,12 @@ export class Step3CommissionComponent implements OnInit, OnChanges {
 
     // 重新產生 detailItems（單向流：來源→顯示）
     this.crudService.updateDetailItems(parentData);
+
+    // discount 任何欄位變更都需要更新折扣摘要（cag_charge_rate、日期等）
+    if (originalType === 'discount') {
+      parentData.remark = this.remarkService.formatRemarkText(parentData);
+    }
+
     this.emitChanges();
   }
 

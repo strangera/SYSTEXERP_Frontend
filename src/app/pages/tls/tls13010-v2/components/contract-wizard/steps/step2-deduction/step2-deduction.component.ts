@@ -24,7 +24,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
-import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '../../../../../tls13010/tls13010.dropdown';
+import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 
 import { FareItem } from '../../../../core/models/deduction';
 import { ContractInfo, LocationItem } from '../../../../core/models/contract';

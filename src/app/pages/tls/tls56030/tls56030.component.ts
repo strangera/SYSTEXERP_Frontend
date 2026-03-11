@@ -49,7 +49,6 @@ export class TLS56030Component extends BasicQueryPageComponent<POS2023RTN_Data> 
   // Dropdown options
   warehouseOptions: { label: string, value: string }[] = []; // 倉別
   brandOptions: { label: string, value: string }[] = []; // 品牌代碼
-  issuanceTypeOptions: { label: string, value: string }[] = [];
   issuanceNoteStatusOptions: { label: string, value: string }[] = [];
   userOptions: { label: string, value: string }[] = [];
   departmentOptions: { label: string, value: string }[] = []; // 部門下拉選單選項
@@ -59,9 +58,8 @@ export class TLS56030Component extends BasicQueryPageComponent<POS2023RTN_Data> 
   selectedItems: POS2023RTN_Data[] = [];
   lastQueryBody: QueryTLS56030Req | null = null;
   columns: Column[] = [
-    { field: 'RPM_No', header: '領用單編號', visible: true },
+    { field: 'RPM_No', header: '領退單編號', visible: true },
     { field: 'APPLY_Date', header: '申請日期', visible: true },
-    { field: 'RPM_Type_Name', header: '領用類別', visible: true },
     { field: 'HOS_NAME', header: '倉別', visible: true },
     { field: 'LOGO_No', header: '品牌', visible: true },
     { field: 'Org_Name', header: '部門', visible: true },
@@ -109,10 +107,6 @@ export class TLS56030Component extends BasicQueryPageComponent<POS2023RTN_Data> 
       { label: '已審核', value: '2' },
       { label: '已領退', value: '3' },
       { label: '已作廢', value: '9' },
-    ];
-    this.issuanceTypeOptions = [
-      { label: '贈品領用', value: '1' },
-      { label: '公關活動', value: '2' },
     ];
   }
 

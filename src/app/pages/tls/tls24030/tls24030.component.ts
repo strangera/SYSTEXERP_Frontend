@@ -63,7 +63,7 @@ export class TLS24030Component extends BasicQueryPageComponent<TLS24030Item> imp
     { field: 'TXN_No', header: '交易序號' },
     { field: 'TLT_No', header: '專櫃編號' },
     { field: 'TLT_Name', header: '專櫃名稱' },
-    { field: 'TXN_GUIPaper', header: '發票狀態' },
+    { field: 'TXN_GUIPaperDesc', header: '發票狀態' },
     { field: 'TXN_Status', header: '交易狀態', format: (value) => getSYS1000('TXN_Status', value) },
   ];
 
