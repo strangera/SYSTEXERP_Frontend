@@ -10,7 +10,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -56,7 +56,40 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
       ...item, check_content: item.label, details: []
     }));
   }
+  /**
+   * 查詢日結紀錄方法 (等待後端 API)
+   */
+  historyLoading = false;
+  showHistory = false;
+  historyData: any[] = []; // 存放歷史紀錄資料
+  // 歷史紀錄的欄位定義
+  historyColumns: ReportColumn[] = [
+    { field: 'id', header: 'ID', visible: false },
+    { field: 'mid', header: 'MID', visible: false },
+    { field: 'cls_date', header: '關帳日期', visible: true, format: formatDate },
+    { field: 'day_lock_date', header: '日關帳鎖定日期', visible: true, format: formatDate },
+    { field: 'day_USR_No', header: '日關帳鎖定人員', visible: true },
+    { field: 'day_USR_Name', header: '日關帳鎖定人員姓名', visible: true },
+  ];
+  onQueryHistory() {
+    const txnDate = this.datePipe.transform(this.queryForm.value.TXN_Date, 'yyyy-MM-dd');
+    if (!txnDate) {
+      this.messageService.warnBubble('請先選擇結帳日期');
+      return;
+    }
+
+    this.showHistory = true; // 切換到歷史
+    this.historyLoading = true;
+
+    // TODO: 等待 API 串接
+    // this.tls55010Service.queryCloseHistory(txnDate).pipe(...).subscribe(...)
+
+    this.messageService.infoBubble('日結紀錄查詢功能開發中...');
+    this.historyLoading = false;
+  }
   onQuery(frm: FormGroup) {
+    this.showHistory = false; // 關閉歷史
+    this.isConfirmDate = false; // 切換回檢查表格
     this.handleSubmit(frm, () => {
       const body = {
         TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
@@ -110,6 +143,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   // 宣告是否確定日期變數
   isConfirmDate = false;
   onSubmit(frm: FormGroup) {
+    this.showHistory = false; // 關閉歷史
     this.handleSubmit(frm, () => {
       this.loading = false;
       this.insertLoading = true;
@@ -142,6 +176,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   }
   queryLoading = false;
   onQueryVou(frm: FormGroup) {
+    this.showHistory = false; // 關閉歷史
     this.handleSubmit(frm, () => {
       this.loading = false;
       this.queryLoading = true;
