@@ -36,12 +36,12 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
     PUR_RepYYYYMM: [null], // 申報年月
     VEN_Uniform: [null, [Validators.maxLength(16)]], // 廠商統一編號
     PUR_TaxType: [null], // 課稅別 稅別 0=免稅 1=應稅 2=零稅 宏誌課稅別(1:應2:零3:免
-    GUI_Amt_Start: [null, [Validators.max(10)]],  // 發票總額 起
-    GUI_Amt_End: [null, [Validators.max(10)]],  // 發票總額 迄
-    Rebate_Net_Start: [null, [Validators.max(10)]], // 折讓未稅金額 起
-    Rebate_Net_End: [null, [Validators.max(10)]], // 折讓未稅金額 迄
-    Rebate_Tax_Start: [null, [Validators.max(10)]], // 折讓稅額 起
-    Rebate_Tax_End: [null, [Validators.max(10)]], // 折讓稅額 迄
+    GUI_Amt_Start: [null, [Validators.max(9999999999)]],  // 發票總額 起
+    GUI_Amt_End: [null, [Validators.max(9999999999)]],  // 發票總額 迄
+    Rebate_Net_Start: [null, [Validators.max(9999999999)]], // 折讓未稅金額 起
+    Rebate_Net_End: [null, [Validators.max(9999999999)]], // 折讓未稅金額 迄
+    Rebate_Tax_Start: [null, [Validators.max(9999999999)]], // 折讓稅額 起
+    Rebate_Tax_End: [null, [Validators.max(9999999999)]], // 折讓稅額 迄
     PUR_VoucherType: [null], // 發票格式
     DIS_Status: [null], // 狀況 1 待結帳 2 已結帳 新增時1，月結後變更2
     DIS_EntryType: [null], // 折讓項目
