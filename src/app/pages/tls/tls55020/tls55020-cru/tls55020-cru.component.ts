@@ -117,6 +117,26 @@ export class TLS55020CRUComponent extends BasicCruPageComponent<Tls55020MasterDa
     { field: 'TXN_Disc', header: '單價折扣讓金額(負數)', format: formatAmount },
     { field: 'TXN_SaleAmt', header: '單價銷售金額', format: formatAmount },
   ];
+  // 修改驗證邏輯：僅判斷目前的值是否包含在下拉選單中
+  validateEntireRow = (rowData: ProductDetail): { isValid: boolean, errorMessage: string } => {
+    // 如果該行本來就不可編輯（不是 1000000000001），則視為有效，不進行檢核
+    if (!rowData.isEditable) {
+      return { isValid: true, errorMessage: '' };
+    }
+
+    if (!rowData.PLU_MagNo) {
+      return { isValid: false, errorMessage: '請選擇商品' };
+    }
+
+    // 檢查目前的值是否存在於當前專櫃可選的商品清單 (allPLUOptions) 中
+    const isValidOption = this.allPLUOptions.some(opt => opt.PLU_MagNo === rowData.PLU_MagNo);
+
+    if (!isValidOption) {
+      return { isValid: false, errorMessage: '無效的商品編號，請從下拉選單選擇' };
+    }
+
+    return { isValid: true, errorMessage: '' };
+  };
   data2: PaymentDetail[] = [];
   columns2: EditColumn[] = [
     { field: 'PAY_Name', header: '付款別' },
