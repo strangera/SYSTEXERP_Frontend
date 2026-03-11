@@ -72,6 +72,18 @@ export interface InsertTls55010Data {
   };
 }
 
+export interface QueryTLS55010OneMonthData {
+  QueryData: QueryTLS55010OneMonthResponse[];
+  TotalCount: number;
+}
+
+export interface QueryTLS55010OneMonthResponse {
+  CLS_DATE: string;
+  Cls_ExecDate: string;
+  Lock_USR_No: string;
+  Lock_USR_Name: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -117,5 +129,9 @@ export class Tls55010Service {
 
   queryTLS55010(request: Tls55010DateRequest): Observable<ApiResponse<InsertTls55010Data>> {
     return this.http.post<ApiResponse<InsertTls55010Data>>(`${this.apiUrl}/queryTLS55010`, request);
+  }
+
+  queryTLS55010OneMonth(request: Tls55010DateRequest): Observable<ApiResponse<QueryTLS55010OneMonthData>> {
+    return this.http.post<ApiResponse<QueryTLS55010OneMonthData>>(`${this.apiUrl}/queryTLS55010_OneMonth`, request);
   }
 }

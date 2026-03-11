@@ -34,8 +34,8 @@
 <div class="card">
   @if (showHistory) {
   <p-panel header="日結歷史紀錄">
-    <app-table-report [data]="historyData" [columns]="historyColumns" [showManage]="false" [showCaption]="false"
-      [loading]="historyLoading" [totalRecords]="0">
+    <app-table-report apiUrl="queryTLS55010_OneMonth" [data]="historyData" [columns]="historyColumns"
+      [showManage]="false" [loading]="historyLoading" [totalRecords]="historyData.length || 0" [lazy]="false">
     </app-table-report>
   </p-panel>
   }

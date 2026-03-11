@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { CheckTls55010Data, Tls55010DateRequest, Tls55010Service } from '@service/api/tls/tls55010.service';
+import { CheckTls55010Data, QueryTLS55010OneMonthResponse, Tls55010DateRequest, Tls55010Service } from '@service/api/tls/tls55010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -61,15 +61,13 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
    */
   historyLoading = false;
   showHistory = false;
-  historyData: any[] = []; // 存放歷史紀錄資料
+  historyData: QueryTLS55010OneMonthResponse[] = []; // 存放歷史紀錄資料
   // 歷史紀錄的欄位定義
   historyColumns: ReportColumn[] = [
-    { field: 'id', header: 'ID', visible: false },
-    { field: 'mid', header: 'MID', visible: false },
-    { field: 'cls_date', header: '關帳日期', visible: true, format: formatDate },
-    { field: 'day_lock_date', header: '日關帳鎖定日期', visible: true, format: formatDate },
-    { field: 'day_USR_No', header: '日關帳鎖定人員', visible: true },
-    { field: 'day_USR_Name', header: '日關帳鎖定人員姓名', visible: true },
+    { field: 'CLS_DATE', header: '關帳日期', visible: true, format: formatDate },
+    { field: 'Cls_ExecDate', header: '日關帳鎖定日期', visible: true, format: formatDate },
+    { field: 'Lock_USR_No', header: '日關帳鎖定人員', visible: true },
+    { field: 'Lock_USR_Name', header: '日關帳鎖定人員姓名', visible: true },
   ];
   onQueryHistory() {
     const txnDate = this.datePipe.transform(this.queryForm.value.TXN_Date, 'yyyy-MM-dd');
@@ -81,11 +79,12 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
     this.showHistory = true; // 切換到歷史
     this.historyLoading = true;
 
-    // TODO: 等待 API 串接
-    // this.tls55010Service.queryCloseHistory(txnDate).pipe(...).subscribe(...)
-
-    this.messageService.infoBubble('日結紀錄查詢功能開發中...');
-    this.historyLoading = false;
+    const body = {
+      TXN_Date: this.datePipe.transform(txnDate, 'yyyy-MM-dd') || '',
+    }
+    this.tls55010Service.queryTLS55010OneMonth(body).pipe(untilDestroyed(this), finalize(() => this.historyLoading = false)).subscribe((res) => {
+      this.historyData = res.Data.QueryData;
+    })
   }
   onQuery(frm: FormGroup) {
     this.showHistory = false; // 關閉歷史
