@@ -34,10 +34,12 @@ import { createPaginationConfig, formatAmount } from '../../../shared/componentk
 export class TLS13050Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     tlt_floorList: [[]],
-    tlt_bdate_start: [(new Date()), [Validators.required]],
-    tlt_bdate_end: [(new Date()), [Validators.required]],
-    tlt_edate_start: [(new Date()), [Validators.required]],
-    tlt_edate_end: [(new Date()), [Validators.required]],
+    tlt_bdate: [(new Date()), [Validators.required]],
+    tlt_edate: [(new Date()), [Validators.required]],
+    cag_bdate_start: [(new Date()), [Validators.required]],
+    cag_bdate_end: [(new Date()), [Validators.required]],
+    cag_edate_start: [(new Date()), [Validators.required]],
+    cag_edate_end: [(new Date()), [Validators.required]],
     check_day_start: [null],
     check_day_end: [null],
     Building_No: [[]],
