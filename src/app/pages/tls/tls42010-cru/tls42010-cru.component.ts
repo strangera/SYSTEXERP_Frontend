@@ -29,6 +29,7 @@ export interface KeyItem {
   x: number;
   y: number;
   ID?: number;
+  KB_ScanCode?: string;
   KB_Func?: string;
   KB_Switch?: string;
   KB_Display1?: string;
@@ -102,6 +103,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // 右側設定 form
   selectedKeyForm: FormGroup = this.formBuilder.group({
+    KB_ScanCode: [''],
     KB_Func: [''],
     KB_Switch: ['Y'],
     KB_Display1: ['', Validators.maxLength(5)],
@@ -248,6 +250,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       // react even when pasted values equal the current defaults.
       const val = this.selected;
       this.selectedKeyForm.patchValue({
+        KB_ScanCode: val.KB_ScanCode ?? val.code ?? '',
         KB_Func: val.KB_Func ?? '',
         KB_Switch: val.KB_Switch ?? 'Y',
         KB_Display1: val.KB_Display1 ?? '',
@@ -721,6 +724,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       Object.assign(key, {
         ID: d.ID && Number(d.ID) > 0 ? Number(d.ID) : undefined,
         MID: this.rowdata?.ID ?? 0,
+        KB_ScanCode: d.KB_ScanCode ?? scanCode,
         KB_Func: d.KB_Func,
         KB_Switch: d.KB_Switch,
         KB_Display1: d.KB_Display1,
@@ -752,6 +756,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     if (first) {
       this.selected = first;
       this.selectedKeyForm.patchValue({
+        KB_ScanCode: first.KB_ScanCode ?? first.code ?? '',
         KB_Func: first.KB_Func ?? '',
         KB_Switch: first.KB_Switch ?? 'Y',
         KB_Display1: first.KB_Display1 ?? '',
@@ -813,6 +818,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
 
     // 更新右側表單內容
     this.selectedKeyForm.patchValue({
+      KB_ScanCode: k.KB_ScanCode ?? k.code ?? '',
       KB_Func: k.KB_Func ?? '',
       KB_Switch: k.KB_Switch ?? 'Y',
       KB_Display1: k.KB_Display1 ?? '',
