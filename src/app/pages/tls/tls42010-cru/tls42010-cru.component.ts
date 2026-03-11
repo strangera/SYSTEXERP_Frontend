@@ -860,58 +860,60 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   // ---------------- Submit ----------------
   private buildDetailList(frm: any) {
     return this.pages.flatMap((page, pageIndex) =>
-      page.map(k => {
-        const hasConfig =
-          !!((k as any).__isCopied ||
-            k.KB_Func ||
-            k.KB_Display1 ||
-            k.KB_Display2 ||
-            k.KB_Color !== 'RGB:255,255,255' ||
-            k.KB_FontColor !== 'RGB:0,0,0' ||
-            k.KB_Style !== '1' ||
-            k.KB_Font !== 'Microsoft JhengHei' ||
-            k.KB_Size !== 12);
-        const pos1008 = this.pos1008Map[k.code] ?? this.templateDefaultKeySize ?? { width: 1, height: 1 };
-        const mergeRight = k.mergeRight || 0;
-        const mergeDown = k.mergeDown || 0;
-        const mergeValue = mergeRight > 0 || mergeDown > 0 ? `${mergeRight},${mergeDown}` : '';
-        // 判斷此按鍵是否為被隱藏（即屬於某個已合併的主鍵範圍內）
-        const isHidden = this.isKeyHidden(k, page);
-        // 如果不是被隱藏的主鍵，且有合併設定，則把寬高放大為合併後的尺寸
-        const kbWidth = !isHidden ? (pos1008.width * (mergeRight + 1)) : pos1008.width;
-        const kbHeight = !isHidden ? (pos1008.height * (mergeDown + 1)) : pos1008.height;
-        const keyId =
-          this.crudstatus === CRUDStatus.Create
-            ? 0
-            : (typeof k.ID === 'number' && k.ID > 0 ? k.ID : 0);
-        return {
-          ID: keyId,
-          MID: this.rowdata?.ID ?? 0,
-          ECR_KBType: frm.ECR_KBType,
-          USR_Level:
+      page
+        .filter(k => !this.isKeyHidden(k, page))
+        .map(k => {
+          const hasConfig =
+            !!((k as any).__isCopied ||
+              k.KB_Func ||
+              k.KB_Display1 ||
+              k.KB_Display2 ||
+              k.KB_Color !== 'RGB:255,255,255' ||
+              k.KB_FontColor !== 'RGB:0,0,0' ||
+              k.KB_Style !== '1' ||
+              k.KB_Font !== 'Microsoft JhengHei' ||
+              k.KB_Size !== 12);
+          const pos1008 = this.pos1008Map[k.code] ?? this.templateDefaultKeySize ?? { width: 1, height: 1 };
+          const mergeRight = k.mergeRight || 0;
+          const mergeDown = k.mergeDown || 0;
+          const mergeValue = mergeRight > 0 || mergeDown > 0 ? `${mergeRight},${mergeDown}` : '';
+          // 判斷此按鍵是否為被隱藏（即屬於某個已合併的主鍵範圍內）
+          const isHidden = this.isKeyHidden(k, page);
+          // 如果不是被隱藏的主鍵，且有合併設定，則把寬高放大為合併後的尺寸
+          const kbWidth = !isHidden ? (pos1008.width * (mergeRight + 1)) : pos1008.width;
+          const kbHeight = !isHidden ? (pos1008.height * (mergeDown + 1)) : pos1008.height;
+          const keyId =
             this.crudstatus === CRUDStatus.Create
-              ? frm.USR_Level
-              : this.rowdata?.USR_Level || frm.USR_Level,
-          KB_ScanCode: k.code,
-          KB_Func: hasConfig ? k.KB_Func || '' : '',
-          KB_Arg1: hasConfig ? k.KB_Arg1 || '' : '',
-          KB_Arg2: hasConfig ? k.KB_Arg2 || '' : '',
-          KB_Arg3: hasConfig ? k.KB_Arg3 || '' : '',
-          KB_Display1: hasConfig ? k.KB_Display1 || '' : '',
-          KB_Display2: hasConfig ? k.KB_Display2 || '' : '',
-          KB_Font: hasConfig ? k.KB_Font || 'Microsoft JhengHei' : 'Microsoft JhengHei',
-          KB_Size: hasConfig ? k.KB_Size ?? 12 : 12,
-          KB_Fonttyped: hasConfig ? k.KB_Fonttyped || 'NNN' : 'NNN',
-          KB_Style: hasConfig ? k.KB_Style || '1' : '1',
-          KB_Switch: hasConfig ? k.KB_Switch || 'Y' : 'Y',
-          KB_Width: kbWidth,
-          KB_Height: kbHeight,
-          KB_Merge: mergeValue,
-          KB_Color: hasConfig ? k.KB_Color || 'RGB:255,255,255' : 'RGB:255,255,255',
-          KB_FontColor: hasConfig ? k.KB_FontColor || 'RGB:0,0,0' : 'RGB:0,0,0',
-          KB_KeyPage: pageIndex + 1,
-        };
-      })
+              ? 0
+              : (typeof k.ID === 'number' && k.ID > 0 ? k.ID : 0);
+          return {
+            ID: keyId,
+            MID: this.rowdata?.ID ?? 0,
+            ECR_KBType: frm.ECR_KBType,
+            USR_Level:
+              this.crudstatus === CRUDStatus.Create
+                ? frm.USR_Level
+                : this.rowdata?.USR_Level || frm.USR_Level,
+            KB_ScanCode: k.code,
+            KB_Func: hasConfig ? k.KB_Func || '' : '',
+            KB_Arg1: hasConfig ? k.KB_Arg1 || '' : '',
+            KB_Arg2: hasConfig ? k.KB_Arg2 || '' : '',
+            KB_Arg3: hasConfig ? k.KB_Arg3 || '' : '',
+            KB_Display1: hasConfig ? k.KB_Display1 || '' : '',
+            KB_Display2: hasConfig ? k.KB_Display2 || '' : '',
+            KB_Font: hasConfig ? k.KB_Font || 'Microsoft JhengHei' : 'Microsoft JhengHei',
+            KB_Size: hasConfig ? k.KB_Size ?? 12 : 12,
+            KB_Fonttyped: hasConfig ? k.KB_Fonttyped || 'NNN' : 'NNN',
+            KB_Style: hasConfig ? k.KB_Style || '1' : '1',
+            KB_Switch: hasConfig ? k.KB_Switch || 'Y' : 'Y',
+            KB_Width: kbWidth,
+            KB_Height: kbHeight,
+            KB_Merge: mergeValue,
+            KB_Color: hasConfig ? k.KB_Color || 'RGB:255,255,255' : 'RGB:255,255,255',
+            KB_FontColor: hasConfig ? k.KB_FontColor || 'RGB:0,0,0' : 'RGB:0,0,0',
+            KB_KeyPage: pageIndex + 1,
+          };
+        })
     );
   }
 

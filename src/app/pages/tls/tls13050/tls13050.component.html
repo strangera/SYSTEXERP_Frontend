@@ -18,10 +18,20 @@
               [startControl]="queryForm.controls.cag_edate_start" [endControl]="queryForm.controls.cag_edate_end"
               [submitted]="submitted"></app-calendar-range>
           </div>
+        </div>
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="契約日期" [startControl]="queryForm.controls.tlt_bdate"
-              [endControl]="queryForm.controls.tlt_edate" [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="契約起始日"
+              [startControl]="queryForm.controls.tlt_bdate_start" [endControl]="queryForm.controls.tlt_bdate_end"
+              [submitted]="submitted"></app-calendar-range>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="契約截止日"
+              [startControl]="queryForm.controls.tlt_edate_start" [endControl]="queryForm.controls.tlt_edate_end"
+              [submitted]="submitted"></app-calendar-range>
+          </div>
+        </div>
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
               [control]="queryForm.controls.tlt_floorList" [submitted]="submitted"></app-multi-select>
@@ -53,9 +63,8 @@
 
 <div class="card">
   <app-table tableKey="TargetAchievement" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [showCheckBox]="false" dataKey="id" [rows]="30"
+    (selectionChange)="selectedItems = $event" [showCheckBox]="false" dataKey="apply_no" [rows]="30"
     [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
-    [multiSortMeta]="[{ field: 'targetCode', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-    [loading]="loading" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
-    [showManage]="false" [showDelete]="false"></app-table>
+    [multiSortMeta]="[{ field: 'check_day', order: 0 }]" [totalRecords]="totalRecords" [lazy]="false"
+    [loading]="loading" [showManage]="false" [showDelete]="false"></app-table>
 </div>
