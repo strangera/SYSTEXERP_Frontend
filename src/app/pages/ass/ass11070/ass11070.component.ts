@@ -9,7 +9,6 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatDate } from '@shared/componentkit/table-report/table-report.model';
@@ -36,7 +35,6 @@ import { QueryASS11070Request, QueryASS11070Response } from './ass11070.model';
     CalendarRangeComponent,
     DropdownComponent,
     InputTextComponent,
-    InputTextRangeComponent,
     RadiobuttonComponent,
     MenubarComponent,
     TableReportComponent,
@@ -61,8 +59,7 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
     companyAddress: new FormControl<string | null>(null, [Validators.maxLength(100)]),
     chargeStaff: new FormControl<string | null>(null, [Validators.maxLength(60)]),
     payType: new FormControl<string | null>(null, [Validators.maxLength(20)]),
-    ticketPeriodS: new FormControl<string | null>(null, [Validators.maxLength(30)]),
-    ticketPeriodE: new FormControl<string | null>(null, [Validators.maxLength(30)]),
+    ticketPeriod: new FormControl<string | null>(null, [Validators.maxLength(30)]),
     serviceItems: new FormControl<string | null>(null, [Validators.maxLength(100)]),
     notes: new FormControl<string | null>(null, [Validators.maxLength(100)]),
     pageSize: new FormControl<number>(30),
@@ -176,8 +173,8 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
       CHARGE_STAFF: raw.chargeStaff ?? undefined,
       VENDOR_REG_ADDR: raw.companyAddress ?? undefined,
       PAY_TYPE: raw.payType ?? undefined,
-      TICKET_PERIOD_S: raw.ticketPeriodS ?? undefined,
-      TICKET_PERIOD_E: raw.ticketPeriodE ?? undefined,
+      TICKET_PERIOD_S: raw.ticketPeriod ?? undefined,
+      TICKET_PERIOD_E: raw.ticketPeriod ?? undefined,
       Service_Items: raw.serviceItems ?? undefined,
       NOTES: raw.notes ?? undefined,
       OrderBy: pagingBody.OrderBy,

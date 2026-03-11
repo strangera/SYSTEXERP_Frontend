@@ -83,9 +83,8 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range label="票期" startControlName="ticketPeriodS" endControlName="ticketPeriodE"
-              [startControl]="qf().ticketPeriodS" [endControl]="qf().ticketPeriodE"
-              [submitted]="submitted"></app-input-text-range>
+            <app-input-text label="票期" controlName="ticketPeriod" [control]="qf().ticketPeriod"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="服務項目" controlName="serviceItems" [control]="qf().serviceItems"

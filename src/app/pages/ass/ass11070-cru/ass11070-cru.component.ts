@@ -9,7 +9,6 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -35,7 +34,6 @@ import {
     ButtonComponent,
     DropdownComponent,
     InputTextComponent,
-    InputTextRangeComponent,
     RadiobuttonComponent,
   ],
 })
@@ -56,8 +54,7 @@ export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Res
     companyAddress: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
     chargeStaff: new FormControl<string>('', [Validators.maxLength(60)]),
     payType: new FormControl<string>('', [Validators.maxLength(20)]),
-    ticketPeriodS: new FormControl<string>('', [Validators.maxLength(30)]),
-    ticketPeriodE: new FormControl<string>('', [Validators.maxLength(30)]),
+    ticketPeriod: new FormControl<string>('', [Validators.maxLength(30)]),
     serviceItems: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
     notes: new FormControl<string>('', [Validators.maxLength(100)]),
     // Key fields are kept internally for detail/update payload.
@@ -131,18 +128,6 @@ export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Res
     return this.staffOptions().find(option => option.value === staffId)?.name;
   }
 
-  private parseTicketPeriod(ticketPeriod?: string): { start: string; end: string } {
-    if (!ticketPeriod) return { start: '', end: '' };
-    const normalized = ticketPeriod.replace(/~/g, '-');
-    const [start = '', end = ''] = normalized.split('-', 2).map(item => item.trim());
-    return { start, end };
-  }
-
-  private buildTicketPeriod(start?: string | null, end?: string | null): string | undefined {
-    if (!start && !end) return undefined;
-    return `${start ?? ''}-${end ?? ''}`;
-  }
-
   private getTodayDateString(): string {
     const now = new Date();
     return this.toDateString(now);
@@ -191,14 +176,13 @@ export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Res
       VENDOR_REG_ADDR: raw.companyAddress || undefined,
       PAY_TYPE: raw.payType || undefined,
       MANGER_TYPE: raw.mangerType || undefined,
-      TICKET_PERIOD: this.buildTicketPeriod(raw.ticketPeriodS, raw.ticketPeriodE),
+      TICKET_PERIOD: raw.ticketPeriod?.trim() || undefined,
       Service_Items: raw.serviceItems || undefined,
       NOTES: raw.notes || undefined,
     };
   }
 
   private patchFormWithDetail(detail: DetailASS11070Response): void {
-    const ticketPeriod = this.parseTicketPeriod(detail.TICKET_PERIOD);
     this.dataForm.patchValue({
       stoNo: detail.STO_NO ?? '',
       crtDate: this.normalizeDateString(detail.CRT_Date),
@@ -216,8 +200,7 @@ export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Res
       companyAddress: detail.VENDOR_REG_ADDR ?? '',
       payType: detail.PAY_TYPE ?? '',
       mangerType: detail.MANGER_TYPE ?? '',
-      ticketPeriodS: ticketPeriod.start,
-      ticketPeriodE: ticketPeriod.end,
+      ticketPeriod: detail.TICKET_PERIOD ?? '',
       serviceItems: detail.Service_Items ?? '',
       notes: detail.NOTES ?? '',
     });
