@@ -92,6 +92,8 @@
       tableKey="TLS12070"
       [data]="willing_data"
       [columns]="willing_columns"
+      [customReport]="true"
+      (exportEvent)="onExport($event)"
       [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event"
       [showCheckBox]="false"
