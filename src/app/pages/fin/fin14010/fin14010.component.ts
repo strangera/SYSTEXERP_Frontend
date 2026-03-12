@@ -13,7 +13,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, convertYYYYMMToDate, createPaginationConfig, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { Column, convertYYYYMMToDate, createPaginationConfig, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 // 本期發票月
@@ -321,12 +321,12 @@ export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implemen
     { field: 'REP_TaxSum08', header: '上期月累積留抵稅額', visible: true }, // 上期月累積留抵稅額
     { field: 'REP_TaxSum13', header: '專案退稅金額調整金額', visible: true }, // 專案退稅金額調整金額
 
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
-    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
-    { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
-    { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
-    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
+    // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+    // { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+    // { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+    // { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+    // { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+    // { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
   ];
 
   constructor(
