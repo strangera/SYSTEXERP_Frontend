@@ -64,6 +64,39 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="是否開立發票"
+              [options]="guiFlagOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.GUI_FLAG"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="會計科目名稱"
+              [options]="accountOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.AccNo"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="是否常用"
+              [options]="isCommonlyUsedOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.IsCommonlyUsed"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
         </div>
 
         <div

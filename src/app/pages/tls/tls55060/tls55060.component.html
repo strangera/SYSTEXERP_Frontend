@@ -41,10 +41,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="TLS2C040" [data]="data" [columns]="columns" [showCheckBox]="false" [showDelete]="false"
+  <app-table-report tableKey="TLS55060" [data]="data" [columns]="columns" [showCheckBox]="false" [showDelete]="false"
     [showEdit]="false" (detail)="onEdit($event)" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords" [loading]="loading"
     [showReportMode]="false" [addButton]="addButton" [lastQueryBody]="lastQueryBody"
-    [queryFunction]="tls2c040Service.queryTLS2C040.bind(tls2c040Service)">
+    [queryFunction]="tls55060Service.queryTLS55060.bind(tls55060Service)">
   </app-table-report>
 </div>

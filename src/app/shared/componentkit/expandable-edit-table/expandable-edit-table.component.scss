@@ -196,6 +196,18 @@
       }
     }
 
+    // 重複外層表頭列（前一筆展開時顯示）
+    .repeated-outer-header > th {
+      background: var(--table-header-bg);
+      text-align: center;
+      border: 1px solid #e9ecef;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0.4rem 0.5rem;
+    }
+
     //  重要修正：表格頭的響應式處理 - 統一使用 var(--table-header-bg)
     .p-datatable-thead > tr > th {
       background: var(--table-header-bg);

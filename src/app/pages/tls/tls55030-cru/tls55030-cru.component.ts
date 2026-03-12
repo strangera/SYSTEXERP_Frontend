@@ -358,8 +358,14 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     // 同步處理表單的 disable/enable 狀態
     this.updateFormDisableState();
   }
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      const isTableValid = this.tableEditComponent.validateAndShowErrors();
+      if (!isTableValid) {
+        this.loading = false;
+        return;
+      }
       if ((frm.getRawValue().totalRebateAmount * -1) !== (frm.getRawValue().RJM_TotalBuyAmt || 0)) {
         this.messageService.errorBubble('【退貨總金額】與【折讓總金額】不相符');
         this.loading = false;

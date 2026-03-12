@@ -233,6 +233,9 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @Input() minColumnWidth = 60;
   @Input() maxColumnWidth = 300;
 
+  // 每一筆資料前是否重複顯示外層表頭（從第二筆開始，適用於有展開功能的表格）
+  @Input() showHeaderInExpansion = false;
+
   detailSelectedTabs: { [key: string]: string } = {};
   detailSelectedItems: { [mainRowKey: string]: any[] } = {};
 
@@ -964,6 +967,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     } else {
       this.expandedRows[rowData[this.dataKey]] = true;
     }
+  }
+
+  isPreviousRowExpanded(ri: number): boolean {
+    if (ri === 0) return false;
+    const prevRow = this.data[ri - 1];
+    return prevRow ? !!this.expandedRows[prevRow[this.dataKey]] : false;
   }
 
   onRowEditInit(rowData: any, rowIndex: number) {
