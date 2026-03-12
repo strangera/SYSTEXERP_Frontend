@@ -106,7 +106,7 @@ export const assRoutes: Routes = [
   { path: 'ass21040', loadComponent: () => import('./ass21040/ass21040.component').then(m => m.ASS21040Component), data: { progNo: 'ASS21040' } }, // 基本資料設定-電錶攤提設定
   { path: 'ass21050', loadComponent: () => import('./ass21050/ass21050.component').then(m => m.ASS21050Component), data: { progNo: 'ASS21050' } }, // 基本資料設定-瓦斯錶攤提設定
   { path: 'ass21050cru', loadComponent: () => import('./ass21050-cru/ass21050-cru.component').then(m => m.ASS21050CRUComponent), data: { progNo: 'ASS21050' } },
-  // { path: 'ass21060', loadComponent: () => import('./ass21060/ass21060.component').then(m => m.ASS21060Component),data: {progNo:'ASS21060'} }, // 基本資料設定-能源單價設定
+  { path: 'ass21060', loadComponent: () => import('./ass21060/ass21060.component').then(m => m.ASS21060Component),data: {progNo:'ASS21060'} }, // 基本資料設定-能源單價設定
   // { path: 'ass21060cru', loadComponent: () => import('./ass21060-cru/ass21060-cru.component').then(m => m.ASS21060CRUComponent),data: {progNo:'ASS21060'} },
   // { path: 'ass22010', loadComponent: () => import('./ass22010/ass22010.component').then(m => m.ASS22010Component),data: {progNo:'ASS22010'} }, // 能源使用狀況作業-水錶抄錶作業
   // { path: 'ass22010cru', loadComponent: () => import('./ass22010-cru/ass22010-cru.component').then(m => m.ASS22010CRUComponent),data: {progNo:'ASS22010'} },

@@ -247,8 +247,7 @@ readonly defaultPageSize = 20;
         this.funInfo = progNo ? this.systemDataService.getUserPermissions(progNo) : undefined;
       });
 
-    this.rows = this.defaultPageSize;
-this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
+   this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
 
     const saved = this.queryState.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
     this.selectedColumns = (saved?.length ? saved : this.columns || [])
@@ -265,10 +264,9 @@ this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
       this.selectedColumns = (saved?.length ? saved : this.columns)
         .filter(c => c.visible !== false && c.hidden !== true);
 
-      if (changes['columns'].firstChange) {
+if (changes['columns'].firstChange) {
   setTimeout(() => {
-    this.rows = this.defaultPageSize;
-    this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
+    this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
     this.multiSortMeta = this.queryState.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
     this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
   }, 0);
@@ -337,18 +335,15 @@ this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
       this.cdr.detectChanges?.();
     }
   }
-  getGlobalGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
-    const localNo = this.getGroupDisplayIndex(rowIndexGlobal, rowData); // 本頁第幾個群組（1-based）
-    const pageNo = this.selectedPage ?? 1;                              // 目前第幾頁（1-based）
-    const offset = (pageNo - 1) * (this.groupPageSize || 20);           // 以「群組」為單位的 offset
-    return offset + localNo;
-  }
+getGlobalGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
+  const localNo = this.getGroupDisplayIndex(rowIndexGlobal, rowData);
+  const pageNo = this.selectedPage ?? 1;
+  const offset = (pageNo - 1) * (this.rows || 20);
+  return offset + localNo;
+}
   /** 給右上角頁碼下拉用 */
 goToPage(pageNumber: number) {
-  const unit = this.groupPageSize && this.groupPageSize > 0
-    ? this.groupPageSize
-    : this.rows;
-
+  const unit = this.rows || 20;
   const newFirst = (pageNumber - 1) * unit;
 
   if (this.first === newFirst && this.selectedPage === pageNumber) return;
@@ -360,7 +355,7 @@ goToPage(pageNumber: number) {
     this.loadDataLazy(
       {
         first: newFirst,
-        rows: this.defaultPageSize,
+        rows: this.rows,
         multiSortMeta: this.multiSortMeta,
       } as TableLazyLoadEvent,
       true
@@ -376,7 +371,7 @@ goToPage(pageNumber: number) {
 
 onPageChange(event: TablePageEvent) {
   this.first = event.first;
-  this.rows = this.defaultPageSize;
+  this.rows = event.rows;
   this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
   this.selectedPage = Math.ceil(event.first / this.rows + 1);
 
@@ -391,7 +386,7 @@ onPageChange(event: TablePageEvent) {
     if (force) { this._skipFirstLazy = false; }
 
     // ✅ pageSize 統一用 groupPageSize（你要的一頁 20 筆），沒有才退回 event.rows / rows
-    const pageSize = this.defaultPageSize;
+   const pageSize = event.rows && event.rows > 0 ? event.rows : (this.rows || 20);
 
 console.log('loadDataLazy event.rows =', event.rows);
 console.log('loadDataLazy this.rows =', this.rows);
