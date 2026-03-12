@@ -7,6 +7,7 @@ import { ASS11020Service } from '@service/api/ass/ass11020.service';
 import { ASS11030Service } from '@service/api/ass/ass11030.service';
 import { ASS13050Service } from '@service/api/ass/ass13050.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { TblUserOrgidItem } from '@service/utility/dropdown-api.model';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -20,7 +21,7 @@ import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize, Observable } from 'rxjs';
+import { combineLatest, finalize, map, Observable, startWith } from 'rxjs';
 import { ASS13050QueryRow, QueryASS13050Request } from './ass13050.model';
 import { AsyncPipe } from '@angular/common';
 
@@ -78,12 +79,69 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
 
   // 下拉選單資料來源
   readonly orgOptions$ = this.dropdownApi.querySys3100();
-  readonly userOptions$ = this.dropdownApi.queryTblUser();
+  readonly userOrgidOptions$ = this.dropdownApi.queryTblUserOrgid();
+
+  readonly newHoldEmpOptions$ = combineLatest([
+    this.queryForm.controls.NEW_HOLD_ORG_ID.valueChanges.pipe(
+      startWith(this.queryForm.controls.NEW_HOLD_ORG_ID.value),
+    ),
+    this.userOrgidOptions$,
+  ]).pipe(
+    map(([orgId, options]) =>
+      !orgId
+        ? []
+        : (options ?? []).filter(o => (o as unknown as TblUserOrgidItem).Org_ID === orgId),
+    ),
+  );
+
+  readonly newUseEmpOptions$ = combineLatest([
+    this.queryForm.controls.NEW_USE_ORG_ID.valueChanges.pipe(
+      startWith(this.queryForm.controls.NEW_USE_ORG_ID.value),
+    ),
+    this.userOrgidOptions$,
+  ]).pipe(
+    map(([orgId, options]) =>
+      !orgId
+        ? []
+        : (options ?? []).filter(o => (o as unknown as TblUserOrgidItem).Org_ID === orgId),
+    ),
+  );
+
+  readonly oldHoldEmpOptions$ = combineLatest([
+    this.queryForm.controls.HOLD_ORG_ID.valueChanges.pipe(
+      startWith(this.queryForm.controls.HOLD_ORG_ID.value),
+    ),
+    this.userOrgidOptions$,
+  ]).pipe(
+    map(([orgId, options]) =>
+      !orgId
+        ? []
+        : (options ?? []).filter(o => (o as unknown as TblUserOrgidItem).Org_ID === orgId),
+    ),
+  );
+
+  readonly oldUseEmpOptions$ = combineLatest([
+    this.queryForm.controls.USE_ORG_ID.valueChanges.pipe(
+      startWith(this.queryForm.controls.USE_ORG_ID.value),
+    ),
+    this.userOrgidOptions$,
+  ]).pipe(
+    map(([orgId, options]) =>
+      !orgId
+        ? []
+        : (options ?? []).filter(o => (o as unknown as TblUserOrgidItem).Org_ID === orgId),
+    ),
+  );
+
   readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
   readonly midClassOptions = signal<{ label: string; value: string }[]>([]);
   readonly smallClassOptions = signal<{ label: string; value: string }[]>([]);
-  readonly purchaseTypeOptions: { label: string; value: string }[] = [];
   readonly assetOptions: { label: string; value: string }[] = [];
+  // 進貨類型（DEPRE_YN 財產類型）
+  readonly purchaseTypeOptions: { label: string; value: string }[] = [
+    { value: '1', label: '資產' },
+    { value: '2', label: '列管品' },
+  ];
   readonly titleOptions = [
     { value: 1, label: '交接' },
     { value: 2, label: '移轉' },
