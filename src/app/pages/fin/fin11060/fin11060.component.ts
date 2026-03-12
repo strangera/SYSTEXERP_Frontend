@@ -275,6 +275,6 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
 
   loadOptions() {
     // 查 收銀機號
-    this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.value} - ${item.label}` })));
+    this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.label}` })));
   }
 }
