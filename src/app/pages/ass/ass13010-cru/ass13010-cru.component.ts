@@ -93,13 +93,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   // ----------------------------------------------------------------
   // 下拉選單（來源同 ass13010，見註解）
   itemCodeOptions: Option[] = []; // 待確認
-  assetsStatusOptions: Option[] = [
-    { value: '1', label: '使用中' },
-    { value: '3', label: '維修中' },
-    { value: '4', label: '報廢' },
-    { value: '5', label: '變賣' },
-    { value: '7', label: '庫存中未使用' }
-  ];
+  assetsStatusOptions: Option[] = []; // querySYS1000_DropDownList SYS_Type='ASSET_STATUS'
   assetsTypeOptions: Option[] = [
     { value: '1', label: '資產' },
     { value: '2', label: '列管品' }
@@ -171,6 +165,9 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private loadDropdownOptions(): void {
+    this.dropdownApiService.querySys1000({ SYS_Type: 'ASSET_STATUS' }).pipe(untilDestroyed(this)).subscribe(res => {
+      this.assetsStatusOptions = (res ?? []).map(item => ({ value: item.No, label: item.Name }));
+    });
     this.dropdownApiService.queryPos2013({ VEN_Flag: '' }).pipe(untilDestroyed(this)).subscribe(res => {
       this.supplierCodeOptions = res ?? [];
     });
