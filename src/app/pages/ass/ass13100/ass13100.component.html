@@ -1,25 +1,12 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
-    <div >
-      <app-button btnType="create" label="上傳檔案" class="col"></app-button>
-    </div>
-    <div >
-      <app-button btnType="create" label="盤點表" class="col"></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
+
   <p-accordion>
     <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
+      [header]="'query-conditions' | translate"
       [selected]="true"
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
@@ -30,101 +17,153 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="清點單號"
-              [startControl]="queryForm.controls.inventory_NumberFrom"
-              [endControl]="queryForm.controls.inventory_NumberTo"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="清點日期"
-              [startControl]="queryForm.controls.inventory_DateFrom"
-              [endControl]="queryForm.controls.inventory_DateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="清點人代碼"
-              controlName="inventory_PersonCode"
-              [options]="userCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.inventory_PersonCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+          <app-input-text-range
+            class="col-12 md:col-6 lg:col-4"
+            label="清點單號"
+            [startControl]="queryForm.controls.InventoryNoFrom"
+            [endControl]="queryForm.controls.InventoryNoTo"
+            [submitted]="submitted"
+          ></app-input-text-range>
+
+          <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="清點日期"
+            [startControl]="queryForm.controls.InventoryDateFrom"
+            [endControl]="queryForm.controls.InventoryDateTo"
+            [submitted]="submitted"
+          ></app-calendar-range-quick>
+
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="清點人代碼"
+            controlName="InventoryPersonCode"
+            [options]="inventoryPersonOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.InventoryPersonCode"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
+
+        <div class="grid p-fluid">
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="位置代碼"
+            controlName="LocationCode"
+            [options]="locationOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.LocationCode"
+            [submitted]="submitted"
+          ></app-dropdown>
+
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="清點單狀態"
+            controlName="InventoryStatus"
+            [options]="inventoryStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.InventoryStatus"
+            [submitted]="submitted"
+          ></app-dropdown>
+
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="清點狀態(資料)"
+            controlName="InventoryDataStatus"
+            [options]="inventoryDataStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.InventoryDataStatus"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="位置代碼"
-              controlName="locationCode"
-              [options]="locationCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.locationCode"
+            <app-input-text
+              label="說明"
+              controlName="Remark"
+              [control]="queryForm.controls.Remark"
               [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="清點單狀態"
-              controlName="inventory_Status"
-              [options]="statusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.inventory_Status"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="清點狀態(資料)"
-              controlName="inventory_DataStatus"
-              [options]="dataStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.inventory_DataStatus"
-              [submitted]="submitted"
-            ></app-multi-select>
+            ></app-input-text>
           </div>
         </div>
-        <hr />
-        <app-editor-text
-          label="說明"
-          controlName="remark"
-          [control]="queryForm.controls.remark"
-          [style]="{ height: '100px' }"
-          [submitted]="submitted"
-        ></app-editor-text>
-        <hr />
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-13">
-    <app-table
+  <div class="col-12">
+    <app-table-report
+      tableKey="ASS13100_Data"
       [data]="data"
       [columns]="columns"
+      [totalRecords]="totalRecords"
+      dataKey="InventoryNo"
+      [queryFunction]="service.queryASS13100.bind(service)"
+      [lastQueryBody]="lastQueryBody"
+      [loading]="loading"
+      [showCheckBox]="true"
+      [showDelete]="true"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      (delete)="onDelete($event)"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
-    ></app-table>
+    >
+      <header>
+        <div class="flex justify-content-end gap-2">
+          <p-button
+            label="上傳盤點機檔案"
+            icon="pi pi-upload"
+            (click)="openUploadDialog()"
+            [disabled]="!hasInventoryRange || loading"
+          ></p-button>
+          <p-button
+            label="列印盤點表"
+            icon="pi pi-file"
+            (click)="onPrintInventoryReport()"
+            [disabled]="!hasInventoryRange || loading"
+          ></p-button>
+        </div>
+      </header>
+    </app-table-report>
   </div>
 </div>
+
+<app-dialog
+  [visible]="uploadDialogVisible"
+  (visibleChange)="uploadDialogVisible = $event"
+  header="上傳盤點機檔案"
+  [loading]="uploading"
+  [disable]="uploading"
+  [showFooter]="false"
+>
+  <form>
+    <div class="grid p-fluid">
+      <app-file-upload
+        #fileUpload
+        class="col-12"
+        name="file"
+        [multiple]="true"
+        [customUpload]="true"
+        [auto]="false"
+        mode="advanced"
+        chooseLabel="選擇檔案"
+        cancelLabel="清除"
+        [loading]="uploading"
+        (uploadHandler)="handleCustomUpload($event)"
+      ></app-file-upload>
+    </div>
+  </form>
+</app-dialog>
