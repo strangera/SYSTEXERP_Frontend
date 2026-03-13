@@ -50,23 +50,22 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
     SUBPOENA_ID: [null as string | null],
     GOODS_ID: [null as string | null],
     EMP_ID: [null as string | null],
-    M_ORG_ID: [null as string | null],
+    ORG_ID: [null as string | null],
     APPLY_DATE_S: [null as Date | null],
     APPLY_DATE_E: [null as Date | null],
     SUPPLIER_ID: [null as string | null],
-    M_TAX_AMT_S: [null as number | null],
-    M_TAX_AMT_E: [null as number | null],
-    M_NTAX_AMT_S: [null as number | null],
-    M_NTAX_AMT_E: [null as number | null],
-    M_AMT_S: [null as number | null],
-    M_AMT_E: [null as number | null],
-    NEEDS_STATUS: [null as string | null],
+    TAX_AMT_S: [null as number | null],
+    TAX_AMT_E: [null as number | null],
+    NTAX_AMT_S: [null as number | null],
+    NTAX_AMT_E: [null as number | null],
+    AMT_S: [null as number | null],
+    AMT_E: [null as number | null],
+    STATUS: [null as string | null],
     APRV_EMP_ID: [null as string | null],
     APRV_DATE_S: [null as Date | null],
     APRV_DATE_E: [null as Date | null],
-    PAY_DATE_S: [null as Date | null],
-    PAY_DATE_E: [null as Date | null],
-    APPLY_USER_ID: [null as string | null],
+    CHECK_DATE_S: [null as Date | null],
+    CHECK_DATE_E: [null as Date | null],
     WH_ID: [null as string | null],
     PageSize: [30],
     PageIndex: [1],
@@ -78,14 +77,12 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
   empIdOptions: { value: string; label: string }[] = [];
   /** 審核人：queryTBLUSER_DropDownList */
   aprvEmpIdOptions: { value: string; label: string }[] = [];
-  /** 驗收人：queryTBLUSER_DropDownList */
-  applyUserIdOptions: { value: string; label: string }[] = [];
   /** 部門：querySYS3100_DropDownList */
   orgIdOptions: { value: string; label: string }[] = [];
   /** 供應商：queryPOS2013_DropDownList */
   supplierIdOptions: { value: string; label: string }[] = [];
-  /** 採購單狀態：querySYS1000_DropDownList('NEEDS_STATUS') */
-  needsStatusOptions: { value: string; label: string }[] = [];
+  /** 狀態：querySYS1000_DropDownList */
+  statusOptions: { value: string; label: string }[] = [];
   /** 倉別：queryASS11100 */
   whIdOptions: { value: string; label: string }[] = [];
 
@@ -97,18 +94,18 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
   columns: ReportColumn[] = [
     { field: 'SUBPOENA_ID', header: '採購單號', visible: true },
     { field: 'SUBCHECK_ID', header: '驗收單號', visible: true },
-    { field: 'EMP_NAME', header: '申請人編號', visible: true },
-    { field: 'APPLY_USER_NAME', header: '驗收人', visible: true },
-    { field: 'ORG_NAME', header: '部門', visible: true },
+    { field: 'EMP_Name', header: '申請人', visible: true },
+    { field: 'CLOSE_EMP_NAME', header: '結案人員', visible: true },
+    { field: 'ORG_ID', header: '部門代號', visible: true },
     { field: 'APPLY_DATE', header: '申請日期', visible: true, format: formatDate },
-    { field: 'M_TAX_AMT', header: '稅額', visible: true },
-    { field: 'M_AMT', header: '含稅總金額', visible: true },
-    { field: 'NEEDS_STATUS_NAME', header: '採購單狀態', visible: true },
-    { field: 'CHECK_STATUS_NAME', header: '驗收單狀態', visible: true },
-    { field: 'APRV_EMP_ID', header: '審核人代碼', visible: true },
+    { field: 'TAX_AMT', header: '稅額', visible: true },
+    { field: 'AMT', header: '含稅總金額', visible: true },
+    { field: 'STATUS', header: '狀態', visible: true },
+    { field: 'APRV_EMP_NAME', header: '審核人', visible: true },
     { field: 'APRV_DATE', header: '審核日期', visible: true, format: formatDate },
     { field: 'CHECK_DATE', header: '驗收日期', visible: true, format: formatDate },
-    { field: 'DETAIL_CNT', header: '明細筆數', visible: true },
+    { field: 'DETAIL_COUNT', header: '明細筆數', visible: true },
+    { field: 'CHECK_COUNT', header: '驗收筆數', visible: true },
   ];
 
   addButton: AddButton[] = [
@@ -160,7 +157,6 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
         const options = toOpt(res.Data ?? []);
         this.empIdOptions = options;
         this.aprvEmpIdOptions = options;
-        this.applyUserIdOptions = options;
       });
 
     this.dropDownListService
@@ -187,7 +183,7 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         if (res.Status !== '0000') return;
-        this.needsStatusOptions = toOpt(res.Data ?? []);
+        this.statusOptions = toOpt(res.Data ?? []);
       });
 
     this.fin11040Service
@@ -233,32 +229,33 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
 
   queryFunction = (body: QueryASS12050Request): Observable<ApiResponse<ASS12050QueryRow[]>> => {
     const raw = this.queryForm.getRawValue();
+    /* eslint-disable @typescript-eslint/no-explicit-any */
     const payload: QueryASS12050Request = {
       SUBPOENA_ID: raw.SUBPOENA_ID || undefined,
       GOODS_ID: raw.GOODS_ID || undefined,
       EMP_ID: raw.EMP_ID || undefined,
-      M_ORG_ID: raw.M_ORG_ID || undefined,
+      ORG_ID: raw.ORG_ID || undefined,
       APPLY_DATE_S: raw.APPLY_DATE_S ? this.formatDateStr(raw.APPLY_DATE_S) : undefined,
       APPLY_DATE_E: raw.APPLY_DATE_E ? this.formatDateStr(raw.APPLY_DATE_E) : undefined,
       SUPPLIER_ID: raw.SUPPLIER_ID || undefined,
-      M_TAX_AMT_S: raw.M_TAX_AMT_S ?? undefined,
-      M_TAX_AMT_E: raw.M_TAX_AMT_E ?? undefined,
-      M_NTAX_AMT_S: raw.M_NTAX_AMT_S ?? undefined,
-      M_NTAX_AMT_E: raw.M_NTAX_AMT_E ?? undefined,
-      M_AMT_S: raw.M_AMT_S ?? undefined,
-      M_AMT_E: raw.M_AMT_E ?? undefined,
-      NEEDS_STATUS: raw.NEEDS_STATUS || undefined,
+      TAX_AMT_S: raw.TAX_AMT_S ?? undefined,
+      TAX_AMT_E: raw.TAX_AMT_E ?? undefined,
+      NTAX_AMT_S: raw.NTAX_AMT_S ?? undefined,
+      NTAX_AMT_E: raw.NTAX_AMT_E ?? undefined,
+      AMT_S: raw.AMT_S ?? undefined,
+      AMT_E: raw.AMT_E ?? undefined,
+      STATUS: raw.STATUS || undefined,
       APRV_EMP_ID: raw.APRV_EMP_ID || undefined,
       APRV_DATE_S: raw.APRV_DATE_S ? this.formatDateStr(raw.APRV_DATE_S) : undefined,
       APRV_DATE_E: raw.APRV_DATE_E ? this.formatDateStr(raw.APRV_DATE_E) : undefined,
-      PAY_DATE_S: raw.PAY_DATE_S ? this.formatDateStr(raw.PAY_DATE_S) : undefined,
-      PAY_DATE_E: raw.PAY_DATE_E ? this.formatDateStr(raw.PAY_DATE_E) : undefined,
-      APPLY_USER_ID: raw.APPLY_USER_ID || undefined,
+      CHECK_DATE_S: raw.CHECK_DATE_S ? this.formatDateStr(raw.CHECK_DATE_S) : undefined,
+      CHECK_DATE_E: raw.CHECK_DATE_E ? this.formatDateStr(raw.CHECK_DATE_E) : undefined,
       WH_ID: raw.WH_ID || undefined,
-      PageSize: body.PageSize ?? raw.PageSize ?? 30,
-      PageIndex: body.PageIndex ?? raw.PageIndex ?? 1,
+      PageSize: (body as any).pageSize ?? body.PageSize,
+      PageIndex: (body as any).pageIndex ?? body.PageIndex ?? 1,
       SortBy: body.SortBy,
     };
+
     const clean = removeEmptyValues(payload) as QueryASS12050Request;
     return this.ass12050Service.queryASS12050(clean);
   };
@@ -270,23 +267,22 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
         SUBPOENA_ID: raw.SUBPOENA_ID || undefined,
         GOODS_ID: raw.GOODS_ID || undefined,
         EMP_ID: raw.EMP_ID || undefined,
-        M_ORG_ID: raw.M_ORG_ID || undefined,
+        ORG_ID: raw.ORG_ID || undefined,
         APPLY_DATE_S: raw.APPLY_DATE_S ? this.formatDateStr(raw.APPLY_DATE_S) : undefined,
         APPLY_DATE_E: raw.APPLY_DATE_E ? this.formatDateStr(raw.APPLY_DATE_E) : undefined,
         SUPPLIER_ID: raw.SUPPLIER_ID || undefined,
-        M_TAX_AMT_S: raw.M_TAX_AMT_S ?? undefined,
-        M_TAX_AMT_E: raw.M_TAX_AMT_E ?? undefined,
-        M_NTAX_AMT_S: raw.M_NTAX_AMT_S ?? undefined,
-        M_NTAX_AMT_E: raw.M_NTAX_AMT_E ?? undefined,
-        M_AMT_S: raw.M_AMT_S ?? undefined,
-        M_AMT_E: raw.M_AMT_E ?? undefined,
-        NEEDS_STATUS: raw.NEEDS_STATUS || undefined,
+        TAX_AMT_S: raw.TAX_AMT_S ?? undefined,
+        TAX_AMT_E: raw.TAX_AMT_E ?? undefined,
+        NTAX_AMT_S: raw.NTAX_AMT_S ?? undefined,
+        NTAX_AMT_E: raw.NTAX_AMT_E ?? undefined,
+        AMT_S: raw.AMT_S ?? undefined,
+        AMT_E: raw.AMT_E ?? undefined,
+        STATUS: raw.STATUS || undefined,
         APRV_EMP_ID: raw.APRV_EMP_ID || undefined,
         APRV_DATE_S: raw.APRV_DATE_S ? this.formatDateStr(raw.APRV_DATE_S) : undefined,
         APRV_DATE_E: raw.APRV_DATE_E ? this.formatDateStr(raw.APRV_DATE_E) : undefined,
-        PAY_DATE_S: raw.PAY_DATE_S ? this.formatDateStr(raw.PAY_DATE_S) : undefined,
-        PAY_DATE_E: raw.PAY_DATE_E ? this.formatDateStr(raw.PAY_DATE_E) : undefined,
-        APPLY_USER_ID: raw.APPLY_USER_ID || undefined,
+        CHECK_DATE_S: raw.CHECK_DATE_S ? this.formatDateStr(raw.CHECK_DATE_S) : undefined,
+        CHECK_DATE_E: raw.CHECK_DATE_E ? this.formatDateStr(raw.CHECK_DATE_E) : undefined,
         WH_ID: raw.WH_ID || undefined,
         PageSize: raw.PageSize ?? 30,
         PageIndex: 1,

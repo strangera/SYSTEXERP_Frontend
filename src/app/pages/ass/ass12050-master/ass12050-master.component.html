@@ -20,7 +20,7 @@
     <app-table
       [data]="masterTableData"
       [columns]="masterColumns"
-      dataKey="_masterKey"
+      dataKey="SUBCHECK_ID"
       [showDetail]="false"
       [showEdit]="true"
       [showCheckBox]="true"
@@ -30,7 +30,7 @@
       [loading]="loading"
       [selectedItems]="selectedMasterRows"
       (selectionChange)="selectedMasterRows = $event"
-      (edit)="onEditDetail()"
+      (edit)="onEditDetail($event)"
     ></app-table>
   </p-panel>
 </div>

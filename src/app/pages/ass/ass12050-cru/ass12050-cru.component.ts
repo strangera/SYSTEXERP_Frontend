@@ -7,12 +7,10 @@ import {
   ASS12050DetailItem,
   ASS12050InsertRequest,
   ASS12050TransferRow,
-  ASS12050UpdateRequest,
 } from '@pages/ass/ass12050/ass12050.model';
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12050Service } from '@service/api/ass/ass12050.service';
 import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -28,7 +26,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatDate } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { concat, finalize, last, tap } from 'rxjs';
 
 /** 3.1.2.5 採購單驗收作業 CRU */
 @UntilDestroy()
@@ -58,15 +56,13 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
 
   dataForm = this.formBuilder.group({
     SUBCHECK_ID: [null as string | null],
-    CHECK_STATUS: [null as string | null],
     EMP_ID: [null as string | null, [Validators.required]],
     ORG_ID: [null as string | null, [Validators.required]],
     APPLY_DATE: [null as Date | null, [Validators.required]],
     SUPPLIER_ID: [null as string | null, [Validators.required]],
-    M_NTAX_AMT: [null as number | null],
-    M_TAX_AMT: [null as number | null],
-    M_AMT: [null as number | null],
-    ADJ_AMT: [null as number | null],
+    NTAX_AMT: [null as number | null],
+    TAX_AMT: [null as number | null],
+    AMT: [null as number | null],
   });
 
   /** 明細資料（table-edit 綁定） */
@@ -85,10 +81,6 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
   goodsIdOptions: { value: string; label: string }[] = [];
   /** 倉別下拉選項 */
   whIdOptions: { value: string; label: string }[] = [];
-  /** 分店下拉選項 */
-  branchIdOptions: { value: string; label: string }[] = [];
-  /** 驗收單狀態下拉選項 */
-  checkStatusOptions: { value: string; label: string }[] = [];
 
   editColumns: EditColumn[] = [
     {
@@ -103,10 +95,7 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
     {
       field: 'GOODS_UNIT',
       header: '單位',
-      type: 'dropdown',
-      optionLabel: 'label',
-      optionValue: 'value',
-      options: () => getSYS1000Options('UNIT'),
+      type: 'input',
       disabled: () => !this.isFormCreateable,
     },
     {
@@ -116,17 +105,17 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
       disabled: () => !this.isFormCreateable,
     },
     {
-      field: 'CHECKED_QTY',
-      header: '已驗數量',
+      field: 'SHIP_QTY',
+      header: '出貨數量',
       type: 'inputNumber',
-      disabled: () => false,
+      disabled: () => !this.isFormCreateable,
     },
     {
       field: 'CHECK_QTY',
       header: '驗收數量',
       type: 'inputNumber',
       placeholder: '輸入數字',
-      disabled: () => !this.isFormCreateable,
+      disabled: () => false,
     },
     {
       field: 'GOODS_PRICE',
@@ -135,25 +124,16 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
       disabled: () => !this.isFormCreateable,
     },
     {
-      field: 'ADJ_PRICE',
-      header: '調整單價(未稅)',
+      field: 'DIS_PRICE',
+      header: '折讓單價',
       type: 'inputNumber',
       placeholder: '輸入數字',
       disabled: () => false,
     },
     {
-      field: 'TOTAL_AMT',
-      header: '總金額',
-      type: 'inputNumber',
-      disabled: () => false,
-    },
-    {
-      field: 'BRANCH_ID',
+      field: 'SITE_ID',
       header: '分店',
-      type: 'dropdown',
-      optionLabel: 'label',
-      optionValue: 'value',
-      options: () => this.branchIdOptions,
+      type: 'input',
       disabled: () => !this.isFormCreateable,
     },
     {
@@ -166,19 +146,10 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
       disabled: () => !this.isFormCreateable,
     },
     {
-      field: 'ENTRUST_ORG_ID',
-      header: '委託部門代號/名稱',
-      type: 'dropdown',
-      optionLabel: 'label',
-      optionValue: 'value',
-      options: () => this.orgIdOptions,
-      disabled: () => !this.isFormCreateable,
-    },
-    {
       field: 'NOTES',
       header: '說明',
       type: 'input',
-      disabled: () => !this.isFormCreateable,
+      disabled: () => false,
     },
   ];
 
@@ -189,20 +160,23 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
   transferListLoading = false;
   transferColumns: Column[] = [
     { field: 'SUBPOENA_ID', header: '採購單號' },
-    { field: 'EMP_NAME', header: '申請人代號' },
-    { field: 'ORG_NAME', header: '部門名稱' },
+    { field: 'EMP_NAME', header: '申請人' },
+    { field: 'ORG_NAME', header: '部門' },
     { field: 'APPLY_DATE', header: '申請日期', format: formatDate },
-    { field: 'SUPPLIER_ID', header: '供應商代號' },
+    { field: 'SUPPLIER_NAME', header: '供應商' },
+    { field: 'NTAX_AMT', header: '未稅金額' },
     { field: 'TAX_AMT', header: '稅額' },
     { field: 'AMT', header: '含稅總金額' },
-    { field: 'NEEDS_STATUS_NAME', header: '採購單狀態' },
-    { field: 'APRV_EMP_ID', header: '審核人代碼' },
-    { field: 'APRV_DATE', header: '審核日期', format: formatDate },
-    { field: 'DETAIL_CNT', header: '明細數量' },
+    { field: 'APPLY_QTY', header: '申請數量' },
+    { field: 'CHECKED_QTY', header: '已驗數量' },
+    { field: 'REMAIN_QTY', header: '剩餘數量' },
   ];
 
   /** 編輯時保留的驗收單號 */
   private subcheckId: string | null = null;
+
+  /** 來源採購單號（轉入時取得） */
+  private sourceSubpoenaId: string | null = null;
 
   constructor(
     private readonly ass12050Service: ASS12050Service,
@@ -217,12 +191,17 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
     this.initializePage('ASS12050', this.dataForm);
     this.loadDropdownOptions();
 
+    const navState = this.router.lastSuccessfulNavigation?.extras?.state;
+    if (navState?.['subpoenaId']) {
+      this.sourceSubpoenaId = navState['subpoenaId'] as string;
+    }
+
     const rowSubcheckId = (this.rowdata as Record<string, unknown> | null)?.['SUBCHECK_ID'] as string | undefined;
     if (!this.isFormCreateable && rowSubcheckId) {
       this.subcheckId = rowSubcheckId;
       this.loading = true;
       this.ass12050Service
-        .detailASS12050({ SUBCHECK_ID: rowSubcheckId })
+        .getDetailASS12050({ SUBCHECK_ID: rowSubcheckId })
         .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
         .subscribe({
           next: res => {
@@ -231,15 +210,13 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
             this.subcheckId = d?.SUBCHECK_ID ?? rowSubcheckId;
             this.dataForm.patchValue({
               SUBCHECK_ID: d?.SUBCHECK_ID ?? null,
-              CHECK_STATUS: d?.CHECK_STATUS_NAME ?? d?.CHECK_STATUS ?? null,
               EMP_ID: d?.EMP_ID ?? null,
               ORG_ID: d?.ORG_ID ?? null,
               APPLY_DATE: d?.APPLY_DATE ? new Date(d.APPLY_DATE) : null,
               SUPPLIER_ID: d?.SUPPLIER_ID ?? null,
-              M_NTAX_AMT: d?.M_NTAX_AMT ?? null,
-              M_TAX_AMT: d?.M_TAX_AMT ?? null,
-              M_AMT: d?.M_AMT ?? null,
-              ADJ_AMT: d?.ADJ_AMT ?? null,
+              NTAX_AMT: d?.NTAX_AMT ?? null,
+              TAX_AMT: d?.TAX_AMT ?? null,
+              AMT: d?.AMT ?? null,
             });
             const details = (d?.Details ?? []).map(item => ({ ...item }));
             this.data = details;
@@ -251,11 +228,10 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
 
   /** 覆寫：從編輯主檔進入時，返回編輯主檔而非查詢頁 */
   override onCancel(returnValue?: unknown): void {
-    const fromRoute = (this.router.lastSuccessfulNavigation?.extras?.state as { fromRoute?: string } | undefined)?.fromRoute;
-    if (fromRoute?.includes('ass12050master') && this.subcheckId) {
+    if (this.previousRoute?.includes('ass12050master') && this.sourceSubpoenaId) {
       this.router.navigate(['account/ass/ass12050master'], {
         state: {
-          rowdata: { SUBCHECK_ID: this.subcheckId },
+          rowdata: { SUBPOENA_ID: this.sourceSubpoenaId },
           fromRoute: this.router.url,
           data: returnValue,
         },
@@ -333,14 +309,6 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
             }));
         },
       });
-
-    this.dropDownListService
-      .querySYS3100_join_POS1001_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        if (res.Status !== '0000') return;
-        this.branchIdOptions = toOpt(res.Data ?? []);
-      });
   }
 
   /** 開啟轉入採購單 Dialog */
@@ -348,7 +316,7 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
     this.transferListLoading = true;
     this.selectedTransferRow = null;
     this.ass12050Service
-      .listForTransferASS12050({ PageSize: 9999, PageIndex: 1 })
+      .listForTransferASS12050()
       .pipe(finalize(() => (this.transferListLoading = false)), untilDestroyed(this))
       .subscribe({
         next: res => {
@@ -375,43 +343,36 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
       return;
     }
 
-    this.dataForm.patchValue({
-      EMP_ID: row.EMP_ID ?? this.dataForm.get('EMP_ID')?.value ?? null,
-      ORG_ID: row.ORG_NAME ?? this.dataForm.get('ORG_ID')?.value ?? null,
-      APPLY_DATE: row.APPLY_DATE ? new Date(row.APPLY_DATE) : this.dataForm.get('APPLY_DATE')?.value,
-      SUPPLIER_ID: row.SUPPLIER_ID ?? this.dataForm.get('SUPPLIER_ID')?.value ?? null,
-      M_TAX_AMT: row.TAX_AMT ?? null,
-      M_AMT: row.AMT ?? null,
-    });
-
     this.transferListLoading = true;
     this.ass12050Service
-      .detailASS12050({ SUBCHECK_ID: row.SUBPOENA_ID })
+      .transferASS12050({ SUBPOENA_ID: row.SUBPOENA_ID })
       .pipe(finalize(() => (this.transferListLoading = false)), untilDestroyed(this))
       .subscribe({
         next: res => {
           if (res.Status !== '0000') {
+            this.messageService.errorBubble('轉入失敗：' + (res.Message ?? ''));
             this.displayTransferDialog = false;
-            this.messageService.successBubble('轉入成功');
             return;
           }
-          const d = res.Data;
-          if (d?.Details) {
-            const details = d.Details.map(item => ({ ...item }));
-            this.data = details;
-            this.originalData = details.map(item => ({ ...item }));
-          }
+          this.sourceSubpoenaId = row.SUBPOENA_ID!;
+          this.dataForm.patchValue({
+            EMP_ID: row.EMP_ID ?? this.dataForm.get('EMP_ID')?.value ?? null,
+            SUPPLIER_ID: row.SUPPLIER_ID ?? this.dataForm.get('SUPPLIER_ID')?.value ?? null,
+            NTAX_AMT: row.NTAX_AMT ?? null,
+            TAX_AMT: row.TAX_AMT ?? null,
+            AMT: row.AMT ?? null,
+          });
           this.displayTransferDialog = false;
           this.messageService.successBubble('轉入成功');
         },
       });
   }
 
-  /** 驗收確認 */
+  /** 驗收確認（明細級） */
   onConfirm(): void {
     const subcheckId = this.subcheckId ?? this.dataForm.get('SUBCHECK_ID')?.value;
     if (!subcheckId) {
-      this.messageService.warnBubble('請先儲存驗收單');
+      this.messageService.errorBubble('無可驗收的資料');
       return;
     }
     this.messageService.confirm({
@@ -420,7 +381,7 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
       accept: () => {
         this.loading = true;
         this.ass12050Service
-          .confirmASS12050({ SUBCHECK_ID: subcheckId })
+          .confirmASS12050({ DETAIL_ID: subcheckId })
           .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
           .subscribe({
             next: res => {
@@ -436,7 +397,7 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
     });
   }
 
-  /** 強制結案 */
+  /** 強制結案（單據級） */
   onForceClose(): void {
     const subcheckId = this.subcheckId ?? this.dataForm.get('SUBCHECK_ID')?.value;
     if (!subcheckId) {
@@ -449,7 +410,7 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
       accept: () => {
         this.loading = true;
         this.ass12050Service
-          .forceCloseASS12050({ SUBCHECK_ID: subcheckId })
+          .forceCloseASS12050({ DETAIL_ID: subcheckId })
           .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
           .subscribe({
             next: res => {
@@ -465,7 +426,7 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
     });
   }
 
-  /** 作廢 */
+  /** 作廢（單據級） */
   onVoid(): void {
     const subcheckId = this.subcheckId ?? this.dataForm.get('SUBCHECK_ID')?.value;
     if (!subcheckId) {
@@ -478,7 +439,7 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
       accept: () => {
         this.loading = true;
         this.ass12050Service
-          .voidASS12050({ SUBCHECK_ID: subcheckId })
+          .voidASS12050({ DETAIL_ID: subcheckId })
           .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
           .subscribe({
             next: res => {
@@ -501,37 +462,15 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
       GOODS_NAME: null,
       GOODS_UNIT: null,
       APPLY_QTY: null,
-      CHECKED_QTY: null,
+      SHIP_QTY: null,
       CHECK_QTY: null,
       GOODS_PRICE: null,
-      ADJ_PRICE: null,
-      TOTAL_AMT: null,
-      BRANCH_ID: null,
+      DIS_PRICE: null,
+      SITE_ID: null,
       WH_ID: null,
-      ENTRUST_ORG_ID: null,
-      ENTRUST_ORG_NAME: null,
       NOTES: null,
     };
     this.data = [...this.data, newItem];
-  }
-
-  private toDetails(rows: Record<string, unknown>[]): ASS12050DetailItem[] {
-    return rows.map(row => ({
-      GOODS_ID: (row['GOODS_ID'] as string) || undefined,
-      GOODS_NAME: (row['GOODS_NAME'] as string) || undefined,
-      GOODS_UNIT: (row['GOODS_UNIT'] as string) || undefined,
-      APPLY_QTY: (row['APPLY_QTY'] as number | undefined) ?? undefined,
-      CHECKED_QTY: (row['CHECKED_QTY'] as number | undefined) ?? undefined,
-      CHECK_QTY: (row['CHECK_QTY'] as number | undefined) ?? undefined,
-      GOODS_PRICE: (row['GOODS_PRICE'] as number | undefined) ?? undefined,
-      ADJ_PRICE: (row['ADJ_PRICE'] as number | undefined) ?? undefined,
-      TOTAL_AMT: (row['TOTAL_AMT'] as number | undefined) ?? undefined,
-      BRANCH_ID: (row['BRANCH_ID'] as string) || undefined,
-      WH_ID: (row['WH_ID'] as string) || undefined,
-      ENTRUST_ORG_ID: (row['ENTRUST_ORG_ID'] as string) || undefined,
-      ENTRUST_ORG_NAME: (row['ENTRUST_ORG_NAME'] as string) || undefined,
-      NOTES: (row['NOTES'] as string) || undefined,
-    }));
   }
 
   onSubmit(): void {
@@ -539,7 +478,6 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
       const valid = this.tableEditComponent?.validateAndShowErrors();
       if (valid === false) return;
       const raw = this.dataForm.getRawValue();
-      const details = this.toDetails(this.data as Record<string, unknown>[]);
       const applyDate = raw.APPLY_DATE instanceof Date
         ? raw.APPLY_DATE.toISOString().slice(0, 10)
         : String(raw.APPLY_DATE ?? '');
@@ -547,16 +485,46 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
       this.loading = true;
 
       if (this.crudstatus === CRUDStatus.Create) {
-        const payload: ASS12050InsertRequest = {
-          EMP_ID: raw.EMP_ID ?? '',
-          ORG_ID: raw.ORG_ID ?? '',
-          APPLY_DATE: applyDate,
-          SUPPLIER_ID: raw.SUPPLIER_ID ?? '',
-          Details: details,
-        };
-        this.ass12050Service
-          .insertASS12050(payload)
-          .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+        const details = this.data as Record<string, unknown>[];
+        if (details.length === 0) {
+          this.messageService.warnBubble('請至少新增一筆明細');
+          this.loading = false;
+          return;
+        }
+
+        let subpoenaId = this.sourceSubpoenaId;
+        const insertCalls = details.map((row, idx) => {
+          const payload: ASS12050InsertRequest = {
+            EMP_ID: raw.EMP_ID ?? undefined,
+            M_ORG_ID: raw.ORG_ID ?? undefined,
+            SUPPLIER_ID: raw.SUPPLIER_ID ?? undefined,
+            APPLY_DATE: applyDate || undefined,
+            SUBPOENA_ID: subpoenaId ?? undefined,
+            M_NTAX_AMT: raw.NTAX_AMT ?? undefined,
+            M_TAX_AMT: raw.TAX_AMT ?? undefined,
+            M_AMT: raw.AMT ?? undefined,
+            GOODS_ID: (row['GOODS_ID'] as string) || undefined,
+            GOODS_UNIT: (row['GOODS_UNIT'] as string) || undefined,
+            QTY: (row['APPLY_QTY'] as number | undefined) ?? undefined,
+            SHIP_QTY: (row['SHIP_QTY'] as number | undefined) ?? undefined,
+            CHECK_QTY: (row['CHECK_QTY'] as number | undefined) ?? undefined,
+            GOODS_PRICE: (row['GOODS_PRICE'] as number | undefined) ?? undefined,
+            DIS_PRICE: (row['DIS_PRICE'] as number | undefined) ?? undefined,
+            SITE_ID: (row['SITE_ID'] as string) || undefined,
+            WH_ID: (row['WH_ID'] as string) || undefined,
+            NOTES: (row['NOTES'] as string) || undefined,
+          };
+          return this.ass12050Service.insertASS12050(payload).pipe(
+            tap(res => {
+              if (res.Status === '0000' && idx === 0 && res.Data?.O_SUBPOENA_ID) {
+                subpoenaId = res.Data.O_SUBPOENA_ID;
+              }
+            }),
+          );
+        });
+
+        concat(...insertCalls)
+          .pipe(last(), finalize(() => (this.loading = false)), untilDestroyed(this))
           .subscribe({
             next: res => {
               if (res.Status !== '0000') {
@@ -568,27 +536,8 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
             },
           });
       } else {
-        const payload: ASS12050UpdateRequest = {
-          SUBCHECK_ID: this.subcheckId ?? '',
-          EMP_ID: raw.EMP_ID ?? '',
-          ORG_ID: raw.ORG_ID ?? '',
-          APPLY_DATE: applyDate,
-          SUPPLIER_ID: raw.SUPPLIER_ID ?? '',
-          Details: details,
-        };
-        this.ass12050Service
-          .updateASS12050(payload)
-          .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
-          .subscribe({
-            next: res => {
-              if (res.Status !== '0000') {
-                this.messageService.errorBubble('操作失敗：' + (res.Message ?? ''));
-                return;
-              }
-              this.messageService.successBubble('編輯成功');
-              this.onCancel();
-            },
-          });
+        this.messageService.warnBubble('編輯功能需要 DETAIL_ID，待後端提供明細識別欄位後實作');
+        this.loading = false;
       }
     });
   }

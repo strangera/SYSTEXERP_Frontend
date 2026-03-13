@@ -53,11 +53,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="部門代號"
-              controlName="M_ORG_ID"
+              controlName="ORG_ID"
               [options]="orgIdOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.M_ORG_ID"
+              [control]="queryForm.controls.ORG_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -85,8 +85,8 @@
             <app-input-number-range
               label="稅額"
               descLabel=""
-              [startControl]="queryForm.controls.M_TAX_AMT_S"
-              [endControl]="queryForm.controls.M_TAX_AMT_E"
+              [startControl]="queryForm.controls.TAX_AMT_S"
+              [endControl]="queryForm.controls.TAX_AMT_E"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
@@ -94,8 +94,8 @@
             <app-input-number-range
               label="未稅總金額"
               descLabel=""
-              [startControl]="queryForm.controls.M_NTAX_AMT_S"
-              [endControl]="queryForm.controls.M_NTAX_AMT_E"
+              [startControl]="queryForm.controls.NTAX_AMT_S"
+              [endControl]="queryForm.controls.NTAX_AMT_E"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
@@ -103,19 +103,19 @@
             <app-input-number-range
               label="含稅總金額"
               descLabel=""
-              [startControl]="queryForm.controls.M_AMT_S"
-              [endControl]="queryForm.controls.M_AMT_E"
+              [startControl]="queryForm.controls.AMT_S"
+              [endControl]="queryForm.controls.AMT_E"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="採購單狀態"
-              controlName="NEEDS_STATUS"
-              [options]="needsStatusOptions"
+              label="狀態"
+              controlName="STATUS"
+              [options]="statusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.NEEDS_STATUS"
+              [control]="queryForm.controls.STATUS"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -142,22 +142,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick
               calendarType="dateRange"
-              label="結帳日"
-              [startControl]="queryForm.controls.PAY_DATE_S"
-              [endControl]="queryForm.controls.PAY_DATE_E"
+              label="驗收日期"
+              [startControl]="queryForm.controls.CHECK_DATE_S"
+              [endControl]="queryForm.controls.CHECK_DATE_E"
               [submitted]="submitted"
             ></app-calendar-range-quick>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="驗收人"
-              controlName="APPLY_USER_ID"
-              [options]="applyUserIdOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.APPLY_USER_ID"
-              [submitted]="submitted"
-            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -183,7 +172,7 @@
 </div>
 <div class="card">
   <app-table-report
-    dataKey="FARcvM_ID"
+    dataKey="SUBCHECK_ID"
     [data]="data"
     [columns]="columns"
     [totalRecords]="totalRecords"

@@ -1,33 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ASS12050Detail } from '@pages/ass/ass12050/ass12050.model';
+import { ASS12050MasterRow } from '@pages/ass/ass12050/ass12050.model';
 import { ASS12050Service } from '@service/api/ass/ass12050.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { formatDate } from '@shared/componentkit/table-report/table-report.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, formatDate } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 
-/** 主檔表格一筆（用於表格式顯示） */
-interface MasterTableRow {
-  _masterKey: string;
-  SUBCHECK_ID: string | null;
-  APPLY_USER_DISPLAY: string;
-  ORG_DISPLAY: string;
-  EMP_DISPLAY: string;
-  APPLY_DATE: string | null;
-  SUPPLIER_DISPLAY: string;
-  CHECK_STATUS: string | null;
-  DETAIL_CNT: number;
-}
-
-/** 3.1.2.5 採購單驗收作業 - 編輯主檔（唯讀主檔 + 明細列表） */
+/** 3.1.2.5 採購單驗收作業 - 編輯主檔（唯讀主檔 + 驗收單列表） */
 @UntilDestroy()
 @Component({
   selector: 'app-ass12050-master',
@@ -44,32 +30,28 @@ interface MasterTableRow {
 export class ASS12050MasterComponent implements OnInit {
   readonly ProgNo = 'ASS12050';
 
-  /** 驗收單號（從導航 state 取得） */
-  subcheckId: string | null = null;
+  /** 採購單號（從導航 state 取得） */
+  subpoenaId: string | null = null;
 
-  /** 主檔資料（唯讀顯示用） */
-  masterData: ASS12050Detail | null = null;
+  /** 主檔表格資料（getMaster 回傳的驗收單清單） */
+  masterTableData: ASS12050MasterRow[] = [];
 
-  /** 主檔表格資料（1 筆，表格式顯示） */
-  masterTableData: MasterTableRow[] = [];
-
-  /** 主檔表格已選列（用於結案勾選） */
-  selectedMasterRows: MasterTableRow[] = [];
+  /** 主檔表格已選列 */
+  selectedMasterRows: ASS12050MasterRow[] = [];
 
   /** 主檔表格欄位 */
   masterColumns: Column[] = [
     { field: 'SUBCHECK_ID', header: '驗收單號' },
-    { field: 'APPLY_USER_DISPLAY', header: '驗收人' },
-    { field: 'ORG_DISPLAY', header: '部門代號' },
-    { field: 'EMP_DISPLAY', header: '申請人代號' },
-    { field: 'APPLY_DATE', header: '申請日期' },
-    { field: 'SUPPLIER_DISPLAY', header: '供應商代號' },
-    { field: 'CHECK_STATUS', header: '驗收單狀態' },
-    { field: 'DETAIL_CNT', header: '明細筆數' },
+    { field: 'APPLYName', header: '申請人' },
+    { field: 'CLOSEName', header: '結案人員' },
+    { field: 'Org_Name', header: '部門' },
+    { field: 'APPLY_DATE', header: '申請日期', format: formatDate },
+    { field: 'VEN_Name', header: '供應商' },
+    { field: 'STATUS', header: '狀態' },
+    { field: 'DETAIL_COUNT', header: '明細筆數' },
   ];
 
   loading = false;
-
 
   constructor(
     private readonly router: Router,
@@ -78,71 +60,50 @@ export class ASS12050MasterComponent implements OnInit {
     private readonly messageService: NotificationService,
   ) {
     const nav = this.router.getCurrentNavigation();
-    const state = nav?.extras?.state as { rowdata?: { SUBCHECK_ID?: string } } | undefined;
+    const state = nav?.extras?.state as { rowdata?: { SUBPOENA_ID?: string } } | undefined;
     const rowdata = state?.rowdata;
-    this.subcheckId = rowdata?.SUBCHECK_ID ?? null;
+    this.subpoenaId = rowdata?.SUBPOENA_ID ?? null;
   }
 
   ngOnInit(): void {
     this.currentPageService.setCurrentProgNo(this.ProgNo);
 
-    if (!this.subcheckId) {
+    if (!this.subpoenaId) {
       this.router.navigate(['account/ass/ass12050']);
       return;
     }
 
-    this.loadDetail();
+    this.loadMaster();
   }
 
-  private loadDetail(): void {
-    if (!this.subcheckId) return;
+  private loadMaster(): void {
+    if (!this.subpoenaId) return;
     this.loading = true;
     this.ass12050Service
-      .detailASS12050({ SUBCHECK_ID: this.subcheckId })
+      .getMasterASS12050({ SUBPOENA_ID: this.subpoenaId })
       .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
       .subscribe({
         next: res => {
           if (res.Status !== '0000') return;
-          const d = res.Data;
-          this.masterData = d ?? null;
-
-          if (d) {
-            const applyUserDisplay = d.APPLY_USER_ID && d.APPLY_USER_NAME
-              ? `${d.APPLY_USER_ID}/${d.APPLY_USER_NAME}`
-              : (d.APPLY_USER_ID ?? d.APPLY_USER_NAME ?? '');
-            const orgDisplay = d.ORG_ID && d.ORG_NAME
-              ? `${d.ORG_ID}/${d.ORG_NAME}`
-              : (d.ORG_ID ?? d.ORG_NAME ?? '');
-            const empDisplay = d.EMP_ID && d.EMP_NAME
-              ? `${d.EMP_ID}/${d.EMP_NAME}`
-              : (d.EMP_ID ?? d.EMP_NAME ?? '');
-            const supplierDisplay = d.SUPPLIER_ID && d.SUPPLIER_NAME
-              ? `${d.SUPPLIER_ID}/${d.SUPPLIER_NAME}`
-              : (d.SUPPLIER_ID ?? d.SUPPLIER_NAME ?? '');
-            const row: MasterTableRow = {
-              _masterKey: this.subcheckId ?? '',
-              SUBCHECK_ID: d.SUBCHECK_ID ?? null,
-              APPLY_USER_DISPLAY: applyUserDisplay,
-              ORG_DISPLAY: orgDisplay,
-              EMP_DISPLAY: empDisplay,
-              APPLY_DATE: d.APPLY_DATE ? formatDate(d.APPLY_DATE) : null,
-              SUPPLIER_DISPLAY: supplierDisplay,
-              CHECK_STATUS: d.CHECK_STATUS_NAME ?? d.CHECK_STATUS ?? null,
-              DETAIL_CNT: d.Details?.length ?? 0,
-            };
-            this.masterTableData = [row];
-            this.selectedMasterRows = [row];
-          }
+          this.masterTableData = res.Data ?? [];
         },
       });
   }
 
+  /** 取得已選取的驗收單號 */
+  private get selectedSubcheckId(): string | null {
+    return this.selectedMasterRows?.[0]?.SUBCHECK_ID ?? null;
+  }
+
   /** 列印採購驗收單 */
   onPrint(): void {
-    if (!this.subcheckId) return;
+    if (!this.subpoenaId) {
+      this.messageService.warnBubble('無法取得採購單號');
+      return;
+    }
     this.loading = true;
     this.ass12050Service
-      .exportPDFASS12050({ SUBCHECK_ID: this.subcheckId })
+      .exportASS12050({ SUBPOENA_ID: this.subpoenaId })
       .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
       .subscribe({
         next: res => {
@@ -154,7 +115,7 @@ export class ASS12050MasterComponent implements OnInit {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `ASS12050_${this.subcheckId}.pdf`;
+          a.download = `ASS12050_${this.subpoenaId}.xlsx`;
           a.click();
           window.URL.revokeObjectURL(url);
           this.messageService.successBubble('報表下載成功');
@@ -167,8 +128,9 @@ export class ASS12050MasterComponent implements OnInit {
 
   /** 強制結案 */
   onForceClose(): void {
-    if (!this.subcheckId) {
-      this.messageService.warnBubble('無可結案的資料');
+    const subcheckId = this.selectedSubcheckId;
+    if (!subcheckId) {
+      this.messageService.warnBubble('請先選擇一筆驗收單');
       return;
     }
     this.messageService.confirm({
@@ -177,7 +139,7 @@ export class ASS12050MasterComponent implements OnInit {
       accept: () => {
         this.loading = true;
         this.ass12050Service
-          .forceCloseASS12050({ SUBCHECK_ID: this.subcheckId! })
+          .forceCloseASS12050({ DETAIL_ID: subcheckId })
           .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
           .subscribe({
             next: res => {
@@ -186,7 +148,7 @@ export class ASS12050MasterComponent implements OnInit {
                 return;
               }
               this.messageService.successBubble('強制結案成功');
-              this.onBack();
+              this.loadMaster();
             },
           });
       },
@@ -199,13 +161,14 @@ export class ASS12050MasterComponent implements OnInit {
   }
 
   /** 明細列點編輯：進入 ass12050cru 編輯明細 */
-  onEditDetail(): void {
-    if (!this.subcheckId) return;
+  onEditDetail(event: { SUBCHECK_ID: string }): void {
+    const subcheckId = event.SUBCHECK_ID;
     this.router.navigate(['account/ass/ass12050cru'], {
       state: {
         crudstatus: CRUDStatus.Edit,
-        rowdata: { SUBCHECK_ID: this.subcheckId },
+        rowdata: { SUBCHECK_ID: subcheckId },
         fromRoute: this.router.url,
+        subpoenaId: this.subpoenaId,
       },
     });
   }

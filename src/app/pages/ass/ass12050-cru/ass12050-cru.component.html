@@ -3,7 +3,7 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     @if (isFormCreateable) {
       <app-button
-        btnType="query"
+        icon="pi pi-file-import"
         label="轉入採購單"
         [loading]="transferListLoading || loading"
         (click)="openTransferDialog()"
@@ -15,12 +15,7 @@
         icon="pi pi-file-check"
         label="驗收"
         [loading]="loading"
-      ></app-button>
-      <app-button
-        btnType="default"
-        icon="pi pi-verified"
-        label="審核"
-        [loading]="loading"
+        (click)="onConfirm()"
       ></app-button>
     }
     <app-button btnType="back" (click)="onCancel()"></app-button>
@@ -33,15 +28,6 @@
             label="驗收單號"
             controlName="SUBCHECK_ID"
             [control]="dataForm.controls.SUBCHECK_ID"
-            [submitted]="submitted"
-            [disabled]="true"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="驗收單狀態"
-            controlName="CHECK_STATUS"
-            [control]="dataForm.controls.CHECK_STATUS"
             [submitted]="submitted"
             [disabled]="true"
           ></app-input-text>
@@ -94,8 +80,8 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="未稅總金額"
-            controlName="M_NTAX_AMT"
-            [control]="dataForm.controls.M_NTAX_AMT"
+            controlName="NTAX_AMT"
+            [control]="dataForm.controls.NTAX_AMT"
             [submitted]="submitted"
             [disabled]="!isFormCreateable"
           ></app-input-number>
@@ -103,8 +89,8 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="稅額"
-            controlName="M_TAX_AMT"
-            [control]="dataForm.controls.M_TAX_AMT"
+            controlName="TAX_AMT"
+            [control]="dataForm.controls.TAX_AMT"
             [submitted]="submitted"
             [disabled]="!isFormCreateable"
           ></app-input-number>
@@ -112,17 +98,8 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="含稅總金額"
-            controlName="M_AMT"
-            [control]="dataForm.controls.M_AMT"
-            [submitted]="submitted"
-            [disabled]="!isFormCreateable"
-          ></app-input-number>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="調整總金額"
-            controlName="ADJ_AMT"
-            [control]="dataForm.controls.ADJ_AMT"
+            controlName="AMT"
+            [control]="dataForm.controls.AMT"
             [submitted]="submitted"
             [disabled]="!isFormCreateable"
           ></app-input-number>
@@ -174,7 +151,7 @@
             btnType="submit"
             label="儲存"
             [loading]="loading"
-            (click)="onConfirm()"
+            (click)="onSubmit()"
           ></app-button>
         </div>
       </div>
