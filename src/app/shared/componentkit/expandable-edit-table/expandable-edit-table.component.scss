@@ -1,3 +1,40 @@
+// 欄位切換齒輪按鈕 - 圓形樣式
+::ng-deep .column-toggle-btn.p-multiselect {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  padding: 0;
+  min-width: unset;
+  border: 1px solid #ced4da;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  .p-multiselect-label-container {
+    display: none;
+  }
+
+  .p-multiselect-trigger {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .p-multiselect-trigger-icon {
+      font-size: 0.875rem;
+    }
+  }
+
+  &:hover {
+    border-color: #6366f1;
+    background: #f8f9fa;
+  }
+}
+
 .expandable-edit-table-container {
   // 整體容器樣式 -  移除預設 margin，讓使用者自行控制間距
   margin: 0;

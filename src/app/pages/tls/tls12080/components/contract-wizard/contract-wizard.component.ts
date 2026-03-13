@@ -541,6 +541,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
             building_desc: item.building_desc || '',
             floor_desc: item.floor_desc || '',
             area_desc: item.area_desc || '',
+            tlt_bdate: item.tlt_bdate ? item.tlt_bdate.split('T')[0] : '',
+            tlt_edate: item.tlt_edate ? item.tlt_edate.split('T')[0] : '',
             _status: 'original' as DataStatus
           }));
         }
