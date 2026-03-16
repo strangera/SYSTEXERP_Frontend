@@ -164,23 +164,19 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
       // console.log('SYS1000.BNK_ACCTYPE 存款代號:', this.BNK_AccType_Option);
     });
 
-    // 查 GLS1005會計科目檔 -- 下拉GLS1005.ACCNO，讀取 ACCNO, ACCCNAME
-    this.dropdownApiService.queryGls1005_BNK_DepositAcc().pipe(untilDestroyed(this)).subscribe((response) => {
+    // 查 公司銀行科目代號
+    this.dropdownApiService.queryGls1005For1103().pipe(untilDestroyed(this)).subscribe((response) => {
       // 1. 確保 response 是陣列
       const list = Array.isArray(response) ? response : [];
       // 儲存原始清單供重複性檢查使用
-      this.rawGls1005List = list;
+      this.rawGls1005List = list; ㄑ
 
-      // 2. 進行篩選與轉換
-      this.GLS1005_BNK_DepositAccNo_Option = list
-        .filter((item: any) => item.No && item.No.toString().trim().length === 6) // 規格更新：長度等於 6
-        .map((item: any) => ({
-          No: item.No,
-          Name: item.Name,
-          Label: item.No + '-' + item.Name,
-        }));
-
-      // console.log('篩選後公司銀行科目(6碼):', this.GLS1005_BNK_DepositAccNo_Option);
+      this.GLS1005_BNK_DepositAccNo_Option = list.map((item: any) => ({
+        No: item.No, // 公司銀行科目 代號
+        Name: item.Name, // 公司銀行科目 名稱
+        Label: item.No + '-' + item.Name, // 代碼+名稱
+      }));
+      console.log('公司銀行科目代號:', this.GLS1005_BNK_DepositAccNo_Option);
     });
 
     this.dropdownApiService.queryGls1005_BNK_CheckInAcc().pipe(untilDestroyed(this)).subscribe((response) => {
