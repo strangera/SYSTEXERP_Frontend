@@ -322,7 +322,10 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
   }
 
   private getScrapNoFromState(): string | null {
-    return this.rowdata?.SCRAP_FORM_NO ?? null;
+    const row = this.rowdata as
+      | { DAMAGEM_ID?: string; SCRAP_FORM_NO?: string }
+      | undefined;
+    return row?.DAMAGEM_ID ?? row?.SCRAP_FORM_NO ?? null;
   }
 
   private mapAssetToDetail(row: ASS13040AssetQueryRow): ASS13040DetailItem {

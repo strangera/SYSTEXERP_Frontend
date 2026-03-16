@@ -12,8 +12,14 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import {
+  AddButton,
+  formatDate as formatDateDisplay,
+  ReportColumn,
+} from '@shared/componentkit/table-report/table-report.model';
+import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize, forkJoin } from 'rxjs';
 import { ASS13040QueryRequest, ASS13040QueryRow } from './ass13040.model';
 
@@ -35,6 +41,7 @@ import { ASS13040QueryRequest, ASS13040QueryRow } from './ass13040.model';
     CalendarRangeComponent,
     TableReportComponent,
     TranslateModule,
+    ButtonModule,
   ],
 })
 export class ASS13040Component extends BasicQueryPageComponent<ASS13040QueryRow> implements OnInit {
@@ -59,16 +66,39 @@ export class ASS13040Component extends BasicQueryPageComponent<ASS13040QueryRow>
   selectedRows: ASS13040QueryRow[] = [];
   totalRecords = 0;
   lastQueryBody: ASS13040QueryRequest | null = null;
+  dataKey = 'DAMAGEM_ID';
 
   columns: ReportColumn[] = [
-    { field: 'SCRAP_FORM_NO', header: '商品報廢單編號', visible: true },
-    { field: 'ITEM_NO', header: '商品管理編號', visible: true },
-    { field: 'SCRAP_USER_NO', header: '報廢人員編號', visible: true },
+    { field: 'DAMAGEM_ID', header: '商品報廢單編號', visible: true },
+    { field: 'ASSET_ID', header: '商品管理編號', visible: true },
+    { field: 'EMP_ID', header: '報廢人員編號', visible: true },
     { field: 'ORG_ID', header: '部門代號', visible: true },
-    { field: 'APPLY_DATE', header: '報廢申請日期', visible: true },
-    { field: 'SCRAP_STATUS', header: '商品報廢單狀態', visible: true },
-    { field: 'REMARK', header: '說明', visible: true },
+    {
+      field: 'APPLY_DATE',
+      header: '報廢申請日期',
+      visible: true,
+      format: (value: string) => formatDateDisplay(value),
+    },
+    { field: 'DAMAGEM_STATUS_NAME', header: '商品報廢單狀態', visible: true },
+    { field: 'NOTES', header: '說明', visible: true },
   ];
+
+  isRowSelectable = (row: ASS13040QueryRow): boolean =>
+    row?.CHECK_STATUS === 'Y';
+
+  /** 報廢單狀態：1 待審核、2 已審核、9 作廢 */
+  addButton: AddButton[] = [
+    {
+      label: '審核',
+      icon: 'pi pi-check-circle text-green-500',
+      action: (rowData: ASS13040QueryRow) => this.onApprove(rowData),
+      disabled: (rowData: ASS13040QueryRow) =>
+        rowData.DAMAGEM_STATUS !== '1',
+    },
+  ];
+
+  btnLoading = false;
+  btnPDFLoading = false;
 
   constructor(
     private readonly ass13040Service: ASS13040Service,
@@ -88,13 +118,13 @@ export class ASS13040Component extends BasicQueryPageComponent<ASS13040QueryRow>
     const raw = this.queryForm.getRawValue();
     const b = body as Record<string, unknown>;
     const payload: ASS13040QueryRequest = {
-      SCRAP_FORM_NO: raw.scrapCode ?? undefined,
-      ITEM_NO: raw.manageCode ?? undefined,
-      SCRAP_USER_NO: raw.userCode ?? undefined,
+      DAMAGEM_ID: raw.scrapCode ?? undefined,
+      ASSET_ID: raw.manageCode ?? undefined,
+      EMP_ID: raw.userCode ?? undefined,
       ORG_ID: raw.departmentCode ?? undefined,
       APPLY_DATE_S: raw.scrapDateFrom ? this.formatDate(raw.scrapDateFrom) : undefined,
       APPLY_DATE_E: raw.scrapDateTo ? this.formatDate(raw.scrapDateTo) : undefined,
-      SCRAP_STATUS: raw.scrapStatus ?? undefined,
+      DAMAGEM_STATUS: raw.scrapStatus ?? undefined,
       PageSize: (b['PageSize'] ?? b['pageSize'] ?? 30) as number,
       PageIndex: (b['PageIndex'] ?? b['pageIndex'] ?? 1) as number,
       SortBy: b['SortBy'] as ASS13040QueryRequest['SortBy'],
@@ -106,13 +136,13 @@ export class ASS13040Component extends BasicQueryPageComponent<ASS13040QueryRow>
     this.handleSubmit(frm, () => {
       const raw = frm.getRawValue();
       this.lastQueryBody = {
-        SCRAP_FORM_NO: raw.scrapCode ?? undefined,
-        ITEM_NO: raw.manageCode ?? undefined,
-        SCRAP_USER_NO: raw.userCode ?? undefined,
+        DAMAGEM_ID: raw.scrapCode ?? undefined,
+        ASSET_ID: raw.manageCode ?? undefined,
+        EMP_ID: raw.userCode ?? undefined,
         ORG_ID: raw.departmentCode ?? undefined,
         APPLY_DATE_S: raw.scrapDateFrom ? this.formatDate(raw.scrapDateFrom) : undefined,
         APPLY_DATE_E: raw.scrapDateTo ? this.formatDate(raw.scrapDateTo) : undefined,
-        SCRAP_STATUS: raw.scrapStatus ?? undefined,
+        DAMAGEM_STATUS: raw.scrapStatus ?? undefined,
         PageSize: 30,
         PageIndex: 1,
       };
@@ -131,18 +161,95 @@ export class ASS13040Component extends BasicQueryPageComponent<ASS13040QueryRow>
     });
   }
 
-  onClearForm(): void {
-    this.queryForm.reset({
-      scrapCode: null,
-      manageCode: null,
-      userCode: null,
-      departmentCode: null,
-      scrapDateFrom: null,
-      scrapDateTo: null,
-      scrapStatus: null,
-      PageSize: 30,
-      PageIndex: 1,
+  onDelete(selectedItems: ASS13040QueryRow[]): void {
+    if (!selectedItems?.length) {
+      this.messageService.warnBubble('請先勾選要刪除的資料');
+      return;
+    }
+    const ids = selectedItems
+      .map(row => row.FAASSABANM_ID)
+      .filter((id): id is number => id != null && typeof id === 'number');
+    if (ids.length === 0) {
+      this.messageService.warnBubble('無可刪除的資料');
+      return;
+    }
+    this.messageService.confirm({
+      header: '確認刪除',
+      message: `是否確認刪除 ${ids.length} 筆資料？`,
+      accept: () => {
+        this.loading = true;
+        this.ass13040Service
+          .deleteASS13040({ Ids: ids })
+          .pipe(
+            finalize(() => (this.loading = false)),
+            untilDestroyed(this),
+          )
+          .subscribe({
+            next: res => {
+              if (res.Status !== '0000') return;
+              this.messageService.successBubble(res.Message ?? '刪除成功');
+              this.selectedRows = [];
+              this.onSubmit(this.queryForm);
+            },
+          });
+      },
     });
+  }
+
+  onExportPDF(): void {
+    const ids = this.selectedRows
+      .map(row => row.FAASSABANM_ID)
+      .filter((id): id is number => id != null && typeof id === 'number');
+    if (ids.length === 0) {
+      this.messageService.warnBubble('請先勾選要匯出的資料');
+      return;
+    }
+    this.btnPDFLoading = true;
+    this.ass13040Service
+      .exportpdfass13040({ Ids: ids })
+      .pipe(
+        finalize(() => (this.btnPDFLoading = false)),
+        untilDestroyed(this),
+      )
+      .subscribe({
+        next: blob => {
+          if (!blob) return;
+          const now = new Date();
+          const timestamp =
+            now.getFullYear().toString() +
+            String(now.getMonth() + 1).padStart(2, '0') +
+            String(now.getDate()).padStart(2, '0') +
+            String(now.getHours()).padStart(2, '0') +
+            String(now.getMinutes()).padStart(2, '0') +
+            String(now.getSeconds()).padStart(2, '0');
+          const fileName = `商品報廢單${timestamp}.pdf`;
+          const blobUrl = URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
+          anchor.href = blobUrl;
+          anchor.download = fileName;
+          anchor.click();
+          URL.revokeObjectURL(blobUrl);
+        },
+      });
+  }
+
+  onApprove(rowData: ASS13040QueryRow): void {
+    const id = rowData.FAASSABANM_ID;
+    if (id == null || id === undefined) return;
+    this.btnLoading = true;
+    this.ass13040Service
+      .approveASS13040({ ID: id })
+      .pipe(
+        finalize(() => (this.btnLoading = false)),
+        untilDestroyed(this),
+      )
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          this.messageService.successBubble(res.Message ?? '審核成功');
+          this.onSubmit(this.queryForm);
+        },
+      });
   }
 
   private loadDropdowns(): void {
