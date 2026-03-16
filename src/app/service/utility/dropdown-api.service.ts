@@ -357,6 +357,17 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢品項資料下拉選單(ASS11040) */
+  queryASS11040_DropDownList(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>(
+      '/ASS0000/ASS1000/queryASS11040_DropDownList',
+      'No',
+      'Name'
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
   /** 查詢收銀機設定檔(POS1002) (整檔下傳作業TLS47010) */
   queryPos1002Status(): Observable<Pos1002StatusItem[] | null> {
     return this.queryDropdown<Pos1002StatusItem>('/queryPOS1002_Status_DropDownList').pipe(

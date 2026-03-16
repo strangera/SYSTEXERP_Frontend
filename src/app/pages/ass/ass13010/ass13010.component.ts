@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 // Shared
@@ -18,6 +18,11 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { Actions } from '@shared/service/permission-guard.service';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { finalize, Observable } from 'rxjs';
+import { ASS13010Service } from '@service/api/ass/ass13010.service';
+import { QueryASS13010Request, QueryASS13010Response } from './ass13010.model';
 
 //3.1.3.1 資產維護作業
 @UntilDestroy()
@@ -28,7 +33,7 @@ import { Actions } from '@shared/service/permission-guard.service';
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarRangeQuickComponent, InputNumberRangeComponent, TableReportComponent, TranslateModule]
 })
-export class ASS13010Component extends BasicQueryPageComponent<any> implements OnInit {
+export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Response> implements OnInit {
   private validationService = inject(ValidationService);
   private dropdownApiService = inject(DropdownApiService);
   //
@@ -78,20 +83,21 @@ export class ASS13010Component extends BasicQueryPageComponent<any> implements O
     disposeRemark: [], // 處份說明(變賣或報廢)
     purchaseRemark: [], // 採購說明
   });
+  public readonly qf = computed(() => this.queryForm.controls);
   // 查詢結果表格（序號、checkbox、管理由 app-table-report 內建）
-  tableData = signal<any[]>([]);
+  tableData = signal<QueryASS13010Response[]>([]);
   totalRecords = signal<number>(0);
   tableLoading = signal<boolean>(false);
+  lastQueryBody?: QueryASS13010Request;
   columns: ReportColumn[] = [
-    { field: 'assetsCode', header: '資產代號' },
-    { field: 'itemName', header: '品項名稱' },
-    { field: 'assetsStatus', header: '資產狀態' },
-    { field: 'assetsType', header: '資產類型' },
-    { field: 'purchaseNumber', header: '採購單號' },
-    { field: 'purchaseDate', header: '購入日期', format: formatDate },
-    { field: 'original_price', header: '購入金額', format: (v: unknown) => formatAmount(Number(v ?? 0)) },
-    { field: 'entryDate', header: '入帳日期', format: formatDate },
-    { field: 'amortizationCode', header: '攤提代號' },
+    { field: 'ASSET_ID', header: '資產代號' },
+    { field: 'GOODS_ID', header: '品項編號' },
+    { field: 'ASSET_STATUS_NAME', header: '資產狀態' },
+    { field: 'SUBPOENA_ID', header: '傳票編號' },
+    { field: 'GET_DATE', header: '購入日期', format: formatDate },
+    { field: 'GET_COST', header: '購入金額', format: (v: unknown) => formatAmount(Number(v ?? 0)) },
+    { field: 'BILL_DATE', header: '入帳日期', format: formatDate },
+    { field: 'DEPRE_ID', header: '折舊代號' },
   ];
   // ----------------------------------------------------------------
   // 下拉選單（品項編號、採購單號來源待確認，先留空）
@@ -111,7 +117,7 @@ export class ASS13010Component extends BasicQueryPageComponent<any> implements O
     { value: '1', label: '使用中' },
     { value: '6', label: '閒置中' }
   ];
-  constructor() {
+  constructor(private readonly ass13010Service: ASS13010Service) {
     super();
   }
 
@@ -120,7 +126,38 @@ export class ASS13010Component extends BasicQueryPageComponent<any> implements O
     this.loadDropdownOptions();
   }
 
+  public queryFunction = (body: QueryASS13010Request): Observable<ApiResponse<QueryASS13010Response[]>> => {
+    const raw = this.queryForm.getRawValue();
+    const payload: QueryASS13010Request = {
+      PageSize: body.PageSize,
+      PageIndex: body.PageIndex,
+      OrderBy: body.OrderBy ?? null,
+      Offset: body.Offset ?? null,
+      SortBy: body.SortBy ?? null,
+      ASSET_ID: raw.assetsCode || null,
+      GOODS_ID: raw.itemCode || null,
+      ASSET_STATUS: raw.assetsStatus || null,
+      DEPRE_YN: raw.assetsType || null,
+      GET_DATE_S: raw.purchaseDateFrom || null,
+      GET_DATE_E: raw.purchaseDateTo || null,
+      GET_COST_S: raw.original_priceFrom ?? null,
+      GET_COST_E: raw.original_priceTo ?? null,
+      BILL_DATE_S: raw.entryDateFrom || null,
+      BILL_DATE_E: raw.entryDateTo || null,
+      EXP_YEAR_S: raw.depreciationLifeFrom != null && raw.depreciationLifeFrom !== '' ? Number(raw.depreciationLifeFrom) : null,
+      EXP_YEAR_E: raw.depreciationLifeTo != null && raw.depreciationLifeTo !== '' ? Number(raw.depreciationLifeTo) : null,
+      HOLD_EMP_ID: raw.keepingPerson || null,
+      USE_EMP_ID: raw.user || null,
+      LOCATION_ID: raw.locationCode || null,
+    };
+    const cleanPayload = removeEmptyValues(payload) as QueryASS13010Request;
+    return this.ass13010Service.queryASS13010(cleanPayload);
+  };
+
   private loadDropdownOptions(): void {
+    this.dropdownApiService.queryASS11040_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.itemCodeOptions = res ?? [];
+    });
     this.dropdownApiService.querySys1000({ SYS_Type: 'ASSET_STATUS' }).pipe(untilDestroyed(this)).subscribe(res => {
       this.assetsStatusOptions = (res ?? []).map(item => ({ value: item.No, label: item.Name }));
     });
@@ -142,10 +179,49 @@ export class ASS13010Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(frm: FormGroup): void {
-    if (frm.valid && this.hasPermission(Actions.Query)) {
-      // TODO: 查詢 API 整合
-      // this.xxxService.query(frm.value).subscribe(...)
-    }
+    if (!this.hasPermission(Actions.Query)) return;
+    this.handleSubmit(this.queryForm, () => {
+      const raw = this.queryForm.getRawValue();
+      this.lastQueryBody = {
+        PageSize: 30,
+        PageIndex: 1,
+        OrderBy: null,
+        Offset: null,
+        SortBy: null,
+        ASSET_ID: raw.assetsCode || null,
+        GOODS_ID: raw.itemCode || null,
+        ASSET_STATUS: raw.assetsStatus || null,
+        DEPRE_YN: raw.assetsType || null,
+        GET_DATE_S: raw.purchaseDateFrom || null,
+        GET_DATE_E: raw.purchaseDateTo || null,
+        GET_COST_S: raw.original_priceFrom ?? null,
+        GET_COST_E: raw.original_priceTo ?? null,
+        BILL_DATE_S: raw.entryDateFrom || null,
+        BILL_DATE_E: raw.entryDateTo || null,
+        EXP_YEAR_S: raw.depreciationLifeFrom != null && raw.depreciationLifeFrom !== '' ? Number(raw.depreciationLifeFrom) : null,
+        EXP_YEAR_E: raw.depreciationLifeTo != null && raw.depreciationLifeTo !== '' ? Number(raw.depreciationLifeTo) : null,
+        HOLD_EMP_ID: raw.keepingPerson || null,
+        USE_EMP_ID: raw.user || null,
+        LOCATION_ID: raw.locationCode || null,
+      };
+
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          }),
+        )
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.tableData.set(res.Data ?? []);
+            this.totalRecords.set(res.TotalCount ?? 0);
+          },
+        });
+    });
   }
 
   onClearForm(): void {
