@@ -65,7 +65,9 @@ export class SubmitDataService {
   private cleanLocationItems(locations: LocationItem[]): any[] {
     return locations.map(loc => ({
       ...loc,
-      id: this.hasValidId(loc.id) ? loc.id : undefined
+      id: this.hasValidId(loc.id) ? loc.id : undefined,
+      tlt_bdate: this.formatDateToString(loc.tlt_bdate),
+      tlt_edate: this.formatDateToString(loc.tlt_edate)
     }));
   }
 

@@ -78,7 +78,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
       field: 'RJD_ConfirmQty',
       header: '退回數量',
       type: 'inputNumber',
-      validate: [validateConfirmQtySumNotExceedSubQty(), validateMinNumber(0)],
+      validate: [validateMinNumber(0)],
       width: '100px',
       // 將所有計算邏輯放在這裡
       calculate: (row) => {

@@ -376,7 +376,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
-    return `${yyyy}-${mm}-${dd}T00:00:00`;
+    return `${yyyy}-${mm}-${dd}`;
   }
 
   formatTime(value: any): string | null {
@@ -466,7 +466,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
         VEN_BossEmail: formValue.VEN_BossEmail,
         VEN_BossFax: formValue.VEN_BossFax,
         VEN_Addr: formValue.VEN_Addr,
-        contact_Date: this.formatDateOnly(formValue.contact_Date), // 確保是 YYYY-MM-DDT00:00:00
+        contact_Date: this.formatDateOnly(formValue.contact_Date), // 確保是 YYYY-MM-DD (DateOnly)
         contact_Time: this.formatTime(formValue.contact_Time),
         FLOOR_NO: formValue.FLOOR_NO,
         LOCATION_No: formValue.LOCATION_No,

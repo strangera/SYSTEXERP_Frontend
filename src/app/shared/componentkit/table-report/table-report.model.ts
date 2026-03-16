@@ -95,6 +95,26 @@ export const formatYYYYMM = (value: string | Date | null): string => {
   return '';
 };
 
+export const formatTime = (value: any): string => {
+  if (!value) return '';
+
+  // 如果是字串格式 2026-03-10T04:53:00...
+  if (typeof value === 'string' && value.includes('T')) {
+    // 直接取 T 之後的 5 個字元 (HH:mm)
+    const timePart = value.split('T')[1];
+    return timePart.substring(0, 5);
+  }
+
+  // 如果已經是 Date 物件
+  if (value instanceof Date) {
+    const hours = String(value.getHours()).padStart(2, '0');
+    const minutes = String(value.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  return value;
+};
+
 // 000,000,000
 export const formatAmount = (val: number | string): string => {
   const num = Number(val);

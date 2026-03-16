@@ -1,8 +1,8 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 
 // 查詢參數 Model
 export interface TLS26050QueryRequest extends BaseQueryRequest {
@@ -69,7 +69,9 @@ export interface TLS26050Data {
   group_name: string; // 群組名稱
   tlt_building: string; // 館別
   talent_id: string; // 專櫃編號
+  team_no?: string; // TEAM編號（後端回傳可能包含）
   team_name: string; // TEAM名稱
+  division_no?: string; // 組別編號（後端回傳可能包含）
   division_name: string; // 部門名稱
   tlt_kind: string; // 櫃別
   bus_class_name: string; // 大分類名稱

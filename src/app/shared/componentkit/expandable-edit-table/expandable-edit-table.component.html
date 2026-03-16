@@ -25,7 +25,21 @@
         *ngIf="hasCaptionContent()"
         class="table-caption flex justify-content-between align-items-center"
       >
-        <div class="table-caption-left flex gap-2">
+        <div class="table-caption-left flex gap-2 align-items-center">
+          <p-multiSelect
+            *ngIf="showColumnToggle"
+            [options]="columnToggleOptions"
+            [(ngModel)]="selectedVisibleColumns"
+            optionLabel="header"
+            dropdownIcon="pi pi-cog"
+            pTooltip="顯示欄位"
+            tooltipPosition="top"
+            (onChange)="onColumnToggleChange($event.value)"
+            appendTo="body"
+            styleClass="column-toggle-btn"
+            [panelStyle]="{'min-width': '180px'}"
+          ></p-multiSelect>
+
           <button
             *ngIf="!readonly && showAddButton"
             pButton
@@ -55,7 +69,7 @@
           <ng-content select="[caption-left]"></ng-content>
         </div>
 
-        <div class="table-caption-right flex gap-2">
+        <div class="table-caption-right flex gap-2 align-items-center">
           <button
             *ngIf="detailKey"
             pButton
@@ -108,6 +122,22 @@
       let-editing="editing"
       let-ri="rowIndex"
     >
+      <!-- 前一筆展開時重複顯示外層表頭（作為欄位提示） -->
+      <tr *ngIf="showHeaderInExpansion && isPreviousRowExpanded(ri)" class="repeated-outer-header">
+        <th *ngIf="showSequenceNumber" style="width: 4rem; text-align: center">序號</th>
+        <th *ngIf="showCheckBox && selectionMode === 'multiple' && !readonly" style="width: 4rem"></th>
+        <th *ngIf="detailKey" style="width: 4rem; text-align: center">展開</th>
+        <th
+          *ngFor="let col of mainColumns"
+          [hidden]="col.hidden"
+          [ngStyle]="getColumnStyle(col)"
+          style="text-align: center"
+        >
+          {{ col.header }}
+        </th>
+        <th *ngIf="!readonly && showActionColumn" [ngStyle]="getActionHeaderStyle()">操作</th>
+      </tr>
+
       <tr
         [pEditableRow]="rowData"
         [ngClass]="{

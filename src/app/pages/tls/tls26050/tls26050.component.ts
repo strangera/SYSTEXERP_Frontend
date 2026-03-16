@@ -191,7 +191,11 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.setColumns(frm.value.tax);
-          this.data = response.Data.QueryData;
+          this.data = (response.Data.QueryData ?? []).map((item: TLS26050Data & { team_no?: string; division_no?: string }) => ({
+            ...item,
+            team_name: `${item.team_no ?? ''}-${item.team_name ?? ''}`,
+            division_name: `${item.division_no ?? ''}-${item.division_name ?? ''}`
+          }));
           this.totalRecords = response.TotalCount;
           this.footerData = this.buildFooterData(response);
           this.lastQueryBody = payload;
@@ -207,7 +211,11 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
         this.footerData = this.buildFooterData(res);
       }),
       map(res => ({
-        Data: res.Data?.QueryData ?? [],
+        Data: (res.Data?.QueryData ?? []).map((item: TLS26050Data & { team_no?: string; division_no?: string }) => ({
+          ...item,
+          team_name: `${item.team_no ?? ''}-${item.team_name ?? ''}`,
+          division_name: `${item.division_no ?? ''}-${item.division_name ?? ''}`
+        })),
         TotalCount: res.TotalCount ?? 0
       }))
     );
@@ -458,6 +466,11 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
   private buildFooterData(response: { Data?: { AllData?: TLS26050Data[]; SumData?: TLS26050Data[] } }): TLS26050Data[] {
     const sumData = response.Data?.SumData ?? [];
     const allData = response.Data?.AllData ?? [];
-    return [...sumData, ...allData];
+    const transform = (arr: TLS26050Data[]) => arr.map((i: TLS26050Data & { team_no?: string; division_no?: string }) => ({
+      ...i,
+      team_name: `${i.team_no ?? ''}-${i.team_name ?? ''}`,
+      division_name: `${i.division_no ?? ''}-${i.division_name ?? ''}`
+    }));
+    return [...transform(sumData), ...transform(allData)];
   }
 }

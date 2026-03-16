@@ -1,17 +1,67 @@
+import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-
-// Services
-// Shared
-import { NgIf } from '@angular/common';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { EditorTextComponent } from '@shared/componentkit/editor-text/editor-text.component';
+import { ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
+import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
+import { CRUDStatus } from './../../../shared/models/system/CRUDstatus';
 
+// POS2064M 收支主檔
+export interface sample72050 {
+  'id': string;
+  'STO_No': string; // 公司編號/店號
+  'HOS_No': string; // 倉庫代碼 STO_NO+HOS_NO唯一值 STO_NO+HOS_NO唯一值
+  'HOS_NAME': string; // 倉庫名稱
+  'org_id': string; // 組織代碼/組織名稱
+  'org_name': string; // 部門名稱
+  'building_no': string; // 館別代碼
+  'HOS_Remark'?: string; // 備註說明
+
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+
+  'CanDel': boolean; //能否刪除(僅顯示)
+}
+
+// POS2064 收支明細檔
+export interface POS2064 {
+  id: number | null; // 明細ID，新增時為null
+  type01: string; // 會計費用科目
+  type02: string; // 項目摘要
+  type03: string; // 組織代號
+  type04: string; // 明細類別
+  type05: string; // 發票格式
+  type06: string; // 發票/收據號碼
+  type07: string; // 發票日期
+  type08: string; // 申報年月
+  type09: string; // 廠商統一編號
+  type10: string; // 發票用途
+  type11: string; // 發票總金額
+  type12: string; // 課稅別
+  type13: string; // 發票未稅金額
+  type14: string; // 發票稅額
+  type15: string; // 扣抵代號
+  type16: string; // 彙總張數
+  status: string; // 狀態 (原始: 'orginal', 新增: 'new', 編輯: 'modified', 刪除: 'deleted')
+}
 @Component({
   selector: 'app-fin72050-cru',
   templateUrl: './fin72050-cru.component.html',
@@ -22,337 +72,146 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
     PanelModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
     CalendarComponent,
-    ButtonComponent,
+    CommonModule,
+    DropdownComponent,
+    RadiobuttonComponent,
+    EditorTextComponent,
+    ExpandableEditTableComponent,
+    InputTextComponent,
+    InputNumberComponent,
+    EditorTextComponent,
+    NgFor,
     NgIf,
+    ButtonComponent,
     TranslateModule,
-  ],
+    TableEditComponent,
+    ButtonModule]
 })
-export class FIN72050CRUComponent
+export class FIN72050CRUComponent extends BasicCruPageComponent<sample72050> implements OnInit {
+  isRefreshing = false; // 是否是重製表單狀態(預設為false)
+  orgdataForm: any;
+  dataForm = this.formBuilder.group({
+    id: [{ value: 0, disabled: true }], // 主鍵ID;
+    Pettycashcustodian: [null], // 保管人
+    applyDate: [null], // 盤點日期
 
-  implements OnInit {
-  ProgNo = 'FIN72050';
-  formTitle = 'FIN72050';
-  submitted = false;
-  ngOnInit(): void {
-  }
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      Accountcode: [],
-      vendorCodeOptions: [],
-      summary: [],
-      Debitamount: [],
-      Creditamount: [],
-      Organizationcode: [],
-      StandingInstructionCode: [],
-      Activitycode: [],
-      Objectnumber: [],
-      ReconciliationKEYvalue: [],
-      usercode: [],
-      ExpenseAccount: [],
-      Detailedcategory: [],
-      Invoiceformat: [],
-      receiptnumber: [],
-      Invoicedate: [],
-      YMdeclaration: [],
-      vendorUnifiedNumber: [],
-      invoicePurpose: [],
-      TIA: [],
-      taxCategory: [],
-      invoiceAmtExclTax: [],
-      ITA: [],
-      deductionCode: [],
-      totalSheetCount: [],
-      invDate: [],
-      custodian: [],
-    });
-  }
-
-  // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    invDate: [],
-    invoicePurpose: [],
-    Subpoenanumber: [],
-    Subpoenatype: [],
-    Subpoenadate: [],
-    Subpoenastatus: [],
-    Subpoenasummary: [],
-    Makeupinvoice: [],
-    builder: [],
-    modifyer: [],
-    builddate: [],
-    modifydate: [],
-    uickMenu: [],
-    Companybankcode: [],
-    status: [],
-    usercode: [],
-    Employeename: [],
-    Organizationcode: [],
-    dialnumber: [],
-    creationDate: [],
-    transferdate: [],
-    TCBAC: [],
-    TOCBAC: [],
-    founder: [],
-    counterCode: [], // 專櫃編號
-    counterName: [], // 櫃位名稱
-    violationCategory: [], // 違規類別編號
-    deductionItem: [], // 扣款項目
-    amountStart: [], // 金額開始
-    amountEnd: [], // 金額結束
-    deductionDateStart: [], // 扣款日期起
-    deductionDateEnd: [], // 扣款日期迄
-    violationDateStart: [], // 違規日期起
-    violationDateEnd: [], // 違規日期迄
-    documentNumber: [], // 單據編號
-    issuingUnit: [], // 開立單位
-    createdBy: [], // 建立者(輸入代號)
-    floor: [], // 樓層
-    Applicationdate: [], // 維護日
-    PettyCashOrderNumber: [],
-    Pettycashapplicant: [],
-    Pettycashcustodian: [],
-    Applicantorganizationcode: [],
-    Custodianorganizationcode: [],
-    ExpenseAccount: [],
-    Detailedcategory: [],
-    Invoiceformat: [],
-    receiptnumber: [],
-    Invoicedate: [],
-    YMdeclaration: [],
-    vendorUnifiedNumber: [],
-    TIA: [],
-    taxCategory: [],
-    invoiceAmtExclTax: [],
-    ITA: [],
-    deductionCode: [],
-    totalSheetCount: [],
-    custodian: [],
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([this.createItem()]),
   });
-  // Dropdown options
-  deductionCode: any[] = [
-    { value: 1, label: '代表進項可扣抵之進貨及費用' },
-    { value: 2, label: '代表進項可扣抵之固定資產' },
-    { value: 3, label: '代表進項不可扣抵之進貨及費用' },
-    { value: 4, label: '代表進項不可扣抵之固定資產' },
+  // 基本資料dropdown
+  Pettycashcustodian_Options: apiOption[] = [
+    { No: 'PC001', Name: '保管人1', Label: 'PC001 - 保管人1' },
+    { No: 'PC002', Name: '保管人2', Label: 'PC002 - 保管人2' },
+    { No: 'PC003', Name: '保管人3', Label: 'PC003 - 保管人3' },
   ];
-  taxCategory: any[] = [
-    { value: 1, label: '應稅' },
-    { value: 2, label: '免稅' },
-    { value: 3, label: '零稅率' },
-    { value: 4, label: '內含稅' },
-  ];
-  invoicePurpose: any[] = [
-    { value: 1, label: '共同使用' },
-    { value: 2, label: '營業用' },
-  ];
-  Detailedcategory: any[] = [
-    { value: 1, label: '發票' },
-    { value: 2, label: '不折扣抵憑證' },
-    { value: 3, label: '收據' },
 
-  ];
-  Invoiceformat
-    : any[] = [
-      { value: 1, label: '21' },
-      { value: 2, label: '22' },
-      { value: 3, label: '25' },
-      { value: 4, label: '26' },
-      { value: 5, label: '27' },
+  vendorOptions: option[] = [];  //廠商編號: 資料讀 POS2013
+  // ---POS2064 -------------
+  POS2064Detail: POS2064[] = [];
+  // ---------明細 (POS2064) 編輯表格 至少要一筆-------------------------------------------------------
+  // #region POS2064定義
+  // 廠商編號	下拉
+  POS2064Data: POS2064[] = [];
+  orgPOS2064Data: POS2064[] = []; // POS2064(備分)
+  selectedPOS2064Items: POS2064[] = [];
+  // 預設新項目模板
+  defaultNew2064 = {
+    id: 0, //新增
+    type01: 'item.type01',
+    type02: 'item.type02',
+    type03: 'item.type03',
+    type04: 'item.type04',
+    type05: 'item.type05',
+    type06: 'item.type06',
+    type07: 'item.type07',
+    type08: 'item.type08',
+    type09: 'item.type09',
+    type10: 'item.type10',
+    type11: 'item.type11',
+    type12: 'item.type12',
+    type13: 'item.type13',
+    type14: 'item.type14',
+    type15: 'item.type15',
+    type16: 'item.type16',
 
-    ];
-  ExpenseAccount: any[] = [
-    { value: 1, label: '610101' },
-    { value: 2, label: '610102' },
-    { value: 3, label: '610103' },
-    { value: 4, label: '610104' },
-    { value: 5, label: '610105' },
-    { value: 6, label: '610106' },
-    { value: 7, label: '610107' },
-    { value: 8, label: '610108' },
-    { value: 9, label: '610109' },
-    { value: 10, label: '610110' },
-  ];
-  PettyCashOrderNumber: any[] = [
-    { value: 201407170001, label: 'C201407170001' },
-    { value: 201407170002, label: 'C201407170002' },
-    { value: 201407170003, label: 'C201407170003' },
-    { value: 201407170004, label: 'C201407170004' },
-    { value: 201407210001, label: 'C201407210001' },
-    { value: 201407210002, label: 'C201407210002' },
-    { value: 201407280001, label: 'C201407280001' },
-    { value: 201407280002, label: 'C201407280002' },
-    { value: 201407280003, label: 'C201407280003' },
-    { value: 201407290002, label: 'C201407290002' },
-  ];
-  usercode: any[] = [];
-  Feespayable: any[] = [
-    { value: 210101, label: '銀行短期借款' },
-    { value: 210201, label: '應付商業本票-中華' },
-    { value: 210202, label: '應付商業本票-合庫' },
-    { value: 210203, label: '應付商業本票-聯邦' },
-    { value: 210301, label: '應付商業本票折價' },
-    { value: 210401, label: '一年或一年營業週期內到期長期負債' },
-    { value: 2111, label: '應付票據' },
-    { value: 211101, label: '應付票據-專櫃' },
-    { value: 211102, label: '應付票據-自營' },
-    { value: 211103, label: '應付票據-固資及費用' },
-  ];
-  Inputtax: any[] = [
-    { value: 1, label: '1101_庫存現金' },
-    { value: 2, label: '110101_庫存現金-營收及正負差' },
-    { value: 3, label: '110102_庫存現金-其他收入' },
-    { value: 4, label: '110103_庫存現金-財務部' },
-    { value: 5, label: '110111_庫存現金-外幣' },
-    { value: 6, label: '110112_庫存現金-人民幣' },
-    { value: 7, label: '110199_庫存現金-其他' },
-    { value: 8, label: '1102_零用金' },
-    { value: 9, label: '110200_零用金-總經理室' },
-    { value: 10, label: '110201_零用金-採購組' },
-  ];
-  statusOptions: any[] = [
-    { value: 1, label: '建立' },
-    { value: 2, label: '請款' },
-    { value: 3, label: '拋轉' },
-    { value: 4, label: '撥補' },
-  ];
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  displayOptions: any[] = [];
-  displayOptions2: any[] = [];
-  Billingordernumber: any[] = [
-    { value: 1, label: 'B20150208001' },
-    { value: 2, label: 'B20150208002' },
-    { value: 3, label: 'B20150410001' },
-  ];
-  vendorOptions: any[] = [];
-  counterCodeOptions: any[] = [];
-  violationCategoryOptions: any[] = [];
-  floorOptions: any[] = [];
-  deductionItemOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
-  founder: any[] = [];
-  TOCBACOptions: any[] = [];
-  TCBACOptions: any[] = [];
-  status: any[] = [
-    { value: 1, label: '停用' },
-    { value: 2, label: '手開' },
-    { value: 3, label: '電腦' },
-  ];
-  Companybankcode: any[] = [{ value: 1, label: '110306' }];
-  Activitycode: any[] = [
-    { value: 1, label: '001' },
-    { value: 2, label: '002' },
-    { value: 3, label: '003' },
-    { value: 4, label: '004' },
-    { value: 5, label: '005' },
-    { value: 6, label: '006' },
-    { value: 7, label: '007' },
-    { value: 8, label: '008' },
-    { value: 9, label: '009' },
-    { value: 10, label: '010' },
-  ];
-  StandingInstructionCode: any[] = [];
-  Organizationcode: any[] = [
-    { value: 1, label: '100000' },
-    { value: 2, label: '100100' },
-    { value: 3, label: '101000' },
-    { value: 4, label: '101100' },
-    { value: 5, label: '101200' },
-    { value: 6, label: '101300' },
-    { value: 7, label: '101400' },
-    { value: 8, label: '101500' },
-    { value: 9, label: '101600' },
-    { value: 10, label: '101700' },
-  ];
-  Accountcode: any[] = [
-    { value: 1, label: '110101' },
-    { value: 2, label: '110102' },
-    { value: 3, label: '110103' },
-    { value: 4, label: '110111' },
-    { value: 5, label: '110112' },
-    { value: 6, label: '110199' },
-    { value: 7, label: '110200' },
-    { value: 8, label: '110201' },
-    { value: 9, label: '110210' },
-    { value: 10, label: '110220' },
-  ];
-  Makeupinvoice: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-  Subpoenatype: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-  Subpoenastatus: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-  vendorCodeOptions: any[] = [
-    { value: 1, label: '00000000-1' },
-    { value: 2, label: '00000000-2' },
-    { value: 3, label: '00000000-4' },
-    { value: 4, label: '00000000-5' },
-    { value: 5, label: '00000000-7' },
-    { value: 6, label: '00000000-8' },
-    { value: 7, label: '00852492-1' },
-    { value: 8, label: '01052878-1' },
-    { value: 9, label: '01508949-1' },
-    { value: 10, label: '01515462-1' },
-  ];
-  // ----------------------------------------------------------------
+    status: 'new'
+  };
+
+  // POS2064 展開式表格的欄位定義
+  POS2064DataColumn: EditColumn[] = []; // 等廠商編號好了再寫入POS2064欄位(廠商下拉)
+  // 預設 POS2064 新項目模板 (最後進價=POS2004的標準進價PLU_OrderPrc)
+  createDefaultNew2064() {
+    this.defaultNew2064 = {
+      id: 0,
+      type01: 'item.type01',
+      type02: 'item.type02',
+      type03: 'item.type03',
+      type04: 'item.type04',
+      type05: 'item.type05',
+      type06: 'item.type06',
+      type07: 'item.type07',
+      type08: 'item.type08',
+      type09: 'item.type09',
+      type10: 'item.type10',
+      type11: 'item.type11',
+      type12: 'item.type12',
+      type13: 'item.type13',
+      type14: 'item.type14',
+      type15: 'item.type15',
+      type16: 'item.type16',
+
+      status: 'new'
+    };
+  }
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
+    private tls51070Service: Tls51070Service,
   ) {
+    super(); // 呼叫父類建構子
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
+  ngOnInit(): void {
+    this.initializePage('FIN72050', this.dataForm);
   }
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
+  // #region onSubmit
   onSubmit(frm: FormGroup) {
+    this.messageService.blockUi();
+    this.submitted = true;
 
-    if (this.dataForm.invalid) {
-      return;
-    }
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            console.log('讀取表單', frm);
+            // this.tls51070Service.insertTLS51070(requestBody).subscribe(async (response) => {
+            //   this.messageService.successBubble('POS2004主檔新增成功');
+
+            //   const newSeqNo = response?.Data; // 回傳的 IMG_SeqNo
+            //   console.log('新增取號:', newSeqNo);
+            //   this.onCancel();
+            // });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            console.log('讀取表單', frm);
+            // this.tls51070Service.updateTLS51070(requestBody).subscribe({
+            //   next: async () => {
+            //     // 用 this.img1001Data 裡的 IMG_SeqNo 呼叫 createImage
+            //     const seqNo = this.dataForm.get('PLU_MagNo')?.value; //圖片編號抓商品管理碼
+            //     this.onCancel(); // 儲存後，會返回列表
+            //   }
+            // });
+          }
+          break;
+      }
+    });
+
+    this.messageService.unblockUi();
+    this.submitted = false;
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  } //CRU
-
-  onCancel() {
-    this.router.navigate(['FIN7000/FIN72050']);
+  onClearForm() {
+    this.dataForm.reset(); // 重置表單
   }
 }

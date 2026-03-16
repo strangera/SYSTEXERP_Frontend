@@ -3,7 +3,6 @@
  * 對應現有 tls12040-cru/models/tls12040-cru.model.ts
  */
 
-import { DataStatus } from '../../constants/workflow-step.enum';
 import { LocationItem } from './location-item.interface';
 
 /**
@@ -85,7 +84,7 @@ export interface ContractInfo {
   comm_comp_type?: string;
   /** 是否為抽成 */
   comm_yn?: string;
-  /** 包底類別 (1:年包 2:月包 0:期間包) */
+  /** 包底類別 (1:年包 2:月包 0:區間包) */
   tlt_ctype_mtotal?: string;
   /** 超出部份處理方式 (1:全部 2:部份) */
   overall_status?: string;

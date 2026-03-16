@@ -4,15 +4,37 @@
   </div>
   <p-accordion>
     <p-accordionTab header="上傳檔案" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm">
+      <div class="grid p-fluid">
+        <app-file-upload #fileUpload class="col-12" name="myFile" [accept]="allowedFileTypes" [multiple]="true"
+          chooseLabel="選擇 CSV 或 TXT 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
+          mode="advanced" (select)="files = $event.files" [loading]="loading"
+          [disabled]="!hasPermission(Actions.Upload)" emptyMessage="拖曳檔案到此處或點擊「選擇 CSV 或 TXT 檔案」按鈕。"
+          (uploadHandler)="handleCustomUpload($event)"></app-file-upload>
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <p-accordion>
+    <p-accordionTab header="查詢條件" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-file-upload #fileUpload class="col-12" name="myFile" [accept]="allowedFileTypes" [multiple]="true"
-            chooseLabel="選擇 CSV 或 TXT 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
-            mode="advanced" (select)="files = $event.files" [loading]="loading"
-            [disabled]="!hasPermission(Actions.Upload)" emptyMessage="拖曳檔案到此處或點擊「選擇 CSV 或 TXT 檔案」按鈕。"
-            (uploadHandler)="handleCustomUpload($event)"></app-file-upload>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="轉入檔案名稱" controlName="tsdp_file"
+            [control]="queryForm.controls.tsdp_file" [submitted]="submitted"></app-input-text>
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="檔案日期" controlName="tsdp_date"
+            [control]="queryForm.controls.tsdp_date" [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
+</div>
+
+<div class="card">
+  <app-table-report dataKey="id" [data]="data" [columns]="columns" [showEdit]="false" (detail)="onDetail($event)"
+    [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls27010Service.queryTLS27010.bind(tls27010Service)"></app-table-report>
 </div>

@@ -45,7 +45,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
 
   // 查詢 標籤檔定加入欄位
   queryForm = this.formBuilder.group({
-    KeyWord: ['', [Validators.maxLength(20)]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出
+    KeyWord: ['', [Validators.maxLength(20), Validators.required]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出
 
     Label_Qty: [1], // 標籤數量
 
@@ -55,7 +55,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label> implemen
 
   // 查詢 變價歷史紀錄
   queryPriceForm = this.formBuilder.group({
-    KeyWord: ['', [Validators.maxLength(20)]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出
+    KeyWord: ['', [Validators.maxLength(20), Validators.required]], // 20260112調整: 商品管理編號/國際條碼/廠商貨號都以KeyWord送出
     //分頁查詢
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });

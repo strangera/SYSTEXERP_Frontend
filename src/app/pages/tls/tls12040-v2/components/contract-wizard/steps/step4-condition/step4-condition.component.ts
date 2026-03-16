@@ -1,28 +1,28 @@
 /**
- * TLS12040-V2 Step 4: 條件設定
+ * TLS12040-V2 Step 4: 租金設定
  * 複用 TLS13010-V2 的服務
  */
-import { NgIf, NgFor } from '@angular/common';
-import { Component, EventEmitter, Input, OnInit, Output, OnChanges, SimpleChanges, inject, ChangeDetectorRef } from '@angular/core';
+import { NgFor, NgIf } from '@angular/common';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, inject } from '@angular/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { ExpandableEditTableComponent, ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 使用 TLS13010-V2 的常數、模型、服務
-import { CommissionType, CommissionTypeLabels } from '../../../../../tls13010-v2/core/constants';
+import { CommissionType } from '../../../../../tls13010-v2/core/constants';
 import {
+  BaseCommissionCondition,
+  BaseRentHigherCondition,
+  BaseTierCondition,
   ConditionItem,
   FixedRentCondition,
-  BaseRentHigherCondition,
-  BaseCommissionCondition,
-  GraduatedCommissionCondition,
-  BaseTierCondition
+  GraduatedCommissionCondition
 } from '../../../../../tls13010-v2/core/models/condition';
-import { ConditionTableConfigService } from '../../../../../tls13010-v2/services/condition/condition-table-config.service';
 import { ConditionDataManagerService } from '../../../../../tls13010-v2/services/condition/condition-data-manager.service';
+import { ConditionTableConfigService } from '../../../../../tls13010-v2/services/condition/condition-table-config.service';
 
 /**
  * 表格配置介面
@@ -173,15 +173,15 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     this.initializeTableConfigs();
     this.categorizeConditionItems();
-    this.initializeIfEmpty();
     this.refreshDisplayItems();
+    this.initializeIfEmpty();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['conditionItems']?.firstChange || changes['commissionType']) {
       this.categorizeConditionItems();
-      this.initializeIfEmpty();
       this.refreshDisplayItems();
+      this.initializeIfEmpty();
     }
 
     if (changes['contractStartDate'] || changes['contractEndDate']) {
@@ -249,16 +249,18 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
 
   private requiresCondition(): boolean {
     return this.commissionType !== '' &&
-           this.commissionType !== CommissionType.GENERAL_COMMISSION;
+      this.commissionType !== CommissionType.GENERAL_COMMISSION;
   }
 
   private getCurrentTypeItemCount(): number {
+    // 使用來源陣列（非 display 陣列），因為 refreshDisplayItems 可能尚未執行
+    const countActive = (items: ConditionItem[]) => items.filter(i => i._status !== 'deleted').length;
     switch (this.commissionType) {
-      case CommissionType.FIXED_RENT: return this.displayFixedRentItems.length;
-      case CommissionType.BASE_RENT_HIGHER: return this.displayBaseRentHigherItems.length;
-      case CommissionType.BASE_COMMISSION: return this.displayBaseCommissionItems.length;
-      case CommissionType.GRADUATED: return this.displayGraduatedItems.length;
-      case CommissionType.BASE_TIER: return this.displayBaseTierItems.length;
+      case CommissionType.FIXED_RENT: return countActive(this.fixedRentItems);
+      case CommissionType.BASE_RENT_HIGHER: return countActive(this.baseRentHigherItems);
+      case CommissionType.BASE_COMMISSION: return countActive(this.baseCommissionItems);
+      case CommissionType.GRADUATED: return countActive(this.graduatedItems);
+      case CommissionType.BASE_TIER: return countActive(this.baseTierItems);
       default: return 0;
     }
   }

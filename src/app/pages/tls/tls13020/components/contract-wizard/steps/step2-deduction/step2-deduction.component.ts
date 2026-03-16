@@ -10,7 +10,7 @@ import { ExpandableEditTableComponent, ColumnDef } from '@shared/componentkit/ex
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
-import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '../../../../../tls13010/tls13010.dropdown';
+import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 
 import { FareItem, FaresByType } from '../../../../core/models/deduction/fare-item.interface';
 import { LocationItem } from '../../../../core/models/contract/location-item.interface';
@@ -320,7 +320,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
   /**
    * 重新計算 C 類型的期數和首期金額
    */
-  private recalculateTypeCFields(rowData: FareItem): void {
+  private recalculateTypeCFields(rowData: FareItem, changedField?: string): void {
     const periods = this.calculatePeriods(rowData.tpy_bdate, rowData.tpy_edate);
 
     if (rowData.period_nos !== periods) {
@@ -328,17 +328,25 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     const totalAmt = parseFloat(String(rowData.tpy_totalamt || 0));
-    const monthlyAmt = parseFloat(String(rowData.tpy_amount || 0));
 
-    let newDownPayment = rowData.down_payment;
-    if (totalAmt > 0 && monthlyAmt > 0 && periods > 1) {
-      newDownPayment = totalAmt - (monthlyAmt * (periods - 1));
-    } else if (monthlyAmt > 0) {
-      newDownPayment = monthlyAmt;
-    }
-
-    if (rowData.down_payment !== newDownPayment) {
-      rowData.down_payment = newDownPayment;
+    if (changedField === 'down_payment') {
+      // 輸入首期 → 算每月金額
+      const downPayment = parseFloat(String(rowData.down_payment || 0));
+      if (totalAmt > 0 && periods > 1) {
+        rowData.tpy_amount = Math.ceil((totalAmt - downPayment) / (periods - 1));
+      }
+    } else {
+      // 輸入每月金額（或總金額、日期）→ 算首期金額
+      const monthlyAmt = parseFloat(String(rowData.tpy_amount || 0));
+      let newDownPayment = rowData.down_payment;
+      if (totalAmt > 0 && monthlyAmt > 0 && periods > 1) {
+        newDownPayment = Math.ceil(totalAmt - (monthlyAmt * (periods - 1)));
+      } else if (monthlyAmt > 0) {
+        newDownPayment = Math.ceil(monthlyAmt);
+      }
+      if (rowData.down_payment !== newDownPayment) {
+        rowData.down_payment = newDownPayment;
+      }
     }
   }
 
@@ -536,7 +544,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     // 依類型自動計算金額
-    this.performCalculation(rowData, capType);
+    this.performCalculation(rowData, capType, fieldName);
 
     // 使用 CrudTrackingService 判斷是否真的有修改
     this.updateItemStatus(rowData, capType);
@@ -582,7 +590,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
    * - C 類（分期）: 重算期數、首期金額
    * - D/E 類（費率）: 不需要自動計算
    */
-  private performCalculation(rowData: FareItem, capType: string): void {
+  private performCalculation(rowData: FareItem, capType: string, changedField?: string): void {
     switch (capType) {
       case 'A': {
         const qty = rowData.tpy_qty || 0;
@@ -601,7 +609,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
         break;
       }
       case 'C':
-        this.recalculateTypeCFields(rowData);
+        this.recalculateTypeCFields(rowData, changedField);
         break;
       // D, E: 費率類，不需要自動計算金額
     }

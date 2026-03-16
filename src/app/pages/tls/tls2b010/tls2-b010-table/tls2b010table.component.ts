@@ -232,7 +232,7 @@ export class tls2b010tableComponent
   private _suppressNextLazy = false;
   private lastEmitKey: string | null = null;
   private lastSortSig = '';
-
+readonly defaultPageSize = 20;
   // 本「頁」的群組 meta（rowspan 用）
   private pageGroupMeta: Record<string, { index: number; size: number }> = {};
 
@@ -247,7 +247,7 @@ export class tls2b010tableComponent
         this.funInfo = progNo ? this.systemDataService.getUserPermissions(progNo) : undefined;
       });
 
-    this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
+   this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
 
     const saved = this.queryState.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
     this.selectedColumns = (saved?.length ? saved : this.columns || [])
@@ -264,13 +264,13 @@ export class tls2b010tableComponent
       this.selectedColumns = (saved?.length ? saved : this.columns)
         .filter(c => c.visible !== false && c.hidden !== true);
 
-      if (changes['columns'].firstChange) {
-        setTimeout(() => {
-          this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
-          this.multiSortMeta = this.queryState.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
-          this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
-        }, 0);
-      }
+if (changes['columns'].firstChange) {
+  setTimeout(() => {
+    this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
+    this.multiSortMeta = this.queryState.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
+    this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
+  }, 0);
+}
     }
 
     if (changes['data'] || changes['totalRecords']) {
@@ -335,49 +335,63 @@ export class tls2b010tableComponent
       this.cdr.detectChanges?.();
     }
   }
-  getGlobalGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
-    const localNo = this.getGroupDisplayIndex(rowIndexGlobal, rowData); // 本頁第幾個群組（1-based）
-    const pageNo = this.selectedPage ?? 1;                              // 目前第幾頁（1-based）
-    const offset = (pageNo - 1) * (this.groupPageSize || 20);           // 以「群組」為單位的 offset
-    return offset + localNo;
-  }
+getGlobalGroupDisplayIndex(rowIndexGlobal: number, rowData: any): number {
+  const localNo = this.getGroupDisplayIndex(rowIndexGlobal, rowData);
+  const pageNo = this.selectedPage ?? 1;
+  const offset = (pageNo - 1) * (this.rows || 20);
+  return offset + localNo;
+}
   /** 給右上角頁碼下拉用 */
-  goToPage(pageNumber: number) {
-    // ✅ 改成用 groupPageSize，而不是 rows
-    const unit = this.groupPageSize && this.groupPageSize > 0 ? this.groupPageSize : this.rows;
-    const newFirst = (pageNumber - 1) * unit;
+goToPage(pageNumber: number) {
+  const unit = this.rows || 20;
+  const newFirst = (pageNumber - 1) * unit;
 
-    if (this.first === newFirst && this.selectedPage === pageNumber) return;
+  if (this.first === newFirst && this.selectedPage === pageNumber) return;
 
-    this.first = newFirst;
-    this.selectedPage = pageNumber;
+  this.first = newFirst;
+  this.selectedPage = pageNumber;
 
-    if (!this.lazy) this.rebuildPageGroupMeta();
+  if (this.lazy) {
+    this.loadDataLazy(
+      {
+        first: newFirst,
+        rows: this.rows,
+        multiSortMeta: this.multiSortMeta,
+      } as TableLazyLoadEvent,
+      true
+    );
+  } else {
+    this.rebuildPageGroupMeta();
+    this.calculateTotalPages();
   }
 
+  this.cdr.detectChanges?.();
+}
 
-  onPageChange(event: TablePageEvent) {
-    this.first = event.first;
-    this.rows = event.rows;
-    this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
-    this.selectedPage = Math.ceil(event.first / event.rows + 1);
 
-    if (!this.lazy) {
-      this.rebuildPageGroupMeta();
-      this.calculateTotalPages();
-    }
+onPageChange(event: TablePageEvent) {
+  this.first = event.first;
+  this.rows = event.rows;
+  this.queryState.setQueryState(this.tableKey + 'rows', this.rows);
+  this.selectedPage = Math.ceil(event.first / this.rows + 1);
+
+  if (!this.lazy) {
+    this.rebuildPageGroupMeta();
+    this.calculateTotalPages();
   }
+}
 
   loadDataLazy(event: TableLazyLoadEvent, force = false) {
     if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
     if (force) { this._skipFirstLazy = false; }
 
     // ✅ pageSize 統一用 groupPageSize（你要的一頁 20 筆），沒有才退回 event.rows / rows
-    const pageSize =
-      (this.groupPageSize && this.groupPageSize > 0)
-        ? this.groupPageSize
-        : (event.rows && event.rows > 0 ? event.rows : (this.rows || 20));
+   const pageSize = event.rows && event.rows > 0 ? event.rows : (this.rows || 20);
 
+console.log('loadDataLazy event.rows =', event.rows);
+console.log('loadDataLazy this.rows =', this.rows);
+console.log('loadDataLazy groupPageSize =', this.groupPageSize);
+console.log('loadDataLazy final pageSize =', pageSize);
     const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
       (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
     const normalized = this.normalizeSortMeta(sortRaw);

@@ -1,11 +1,11 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      btnType="create"
+      label="新增驗收單"
+      (click)="onCreateReceiving()"
+    ></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -17,199 +17,173 @@
       <form
         [formGroup]="queryForm"
         id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
+        (ngSubmit)="onSubmit()"
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="採購單號"
-              controlName="purchaseNumber"
-              [control]="queryForm.controls.purchaseNumber"
+              controlName="SUBPOENA_ID"
+              [control]="queryForm.controls.SUBPOENA_ID"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="品項編號"
-              controlName="itemCode"
-              [options]="itemCodeOptions"
+              controlName="GOODS_ID"
+              [options]="goodsIdOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.itemCode"
+              [control]="queryForm.controls.GOODS_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="申請人編號"
-              controlName="applicantCode"
-              [options]="applicantCodeOptions"
+              controlName="EMP_ID"
+              [options]="empIdOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.applicantCode"
+              [control]="queryForm.controls.EMP_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="部門代號"
-              controlName="organizationNumber"
-              [options]="organizationNumberOptions"
+              controlName="ORG_ID"
+              [options]="orgIdOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.organizationNumber"
+              [control]="queryForm.controls.ORG_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
+            <app-calendar-range-quick
               calendarType="dateRange"
               label="申請日期"
-              [startControl]="queryForm.controls.applicationDateFrom"
-              [endControl]="queryForm.controls.applicationDateTo"
+              [startControl]="queryForm.controls.APPLY_DATE_S"
+              [endControl]="queryForm.controls.APPLY_DATE_E"
               [submitted]="submitted"
-            ></app-calendar-range>
+            ></app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="供應商編號"
-              controlName="supplierCode"
-              [options]="supplierCodeOptions"
+              controlName="SUPPLIER_ID"
+              [options]="supplierIdOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.supplierCode"
+              [control]="queryForm.controls.SUPPLIER_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
-              [useGrouping]="false"
               label="稅額"
-              [startControl]="queryForm.controls.taxAmountFrom"
-              [endControl]="queryForm.controls.taxAmountTo"
+              descLabel=""
+              [startControl]="queryForm.controls.TAX_AMT_S"
+              [endControl]="queryForm.controls.TAX_AMT_E"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
-              [useGrouping]="false"
               label="未稅總金額"
-              [startControl]="queryForm.controls.noTaxAmountFrom"
-              [endControl]="queryForm.controls.noTaxAmountTo"
+              descLabel=""
+              [startControl]="queryForm.controls.NTAX_AMT_S"
+              [endControl]="queryForm.controls.NTAX_AMT_E"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
-              [useGrouping]="false"
               label="含稅總金額"
-              [startControl]="queryForm.controls.totalTaxAmountFrom"
-              [endControl]="queryForm.controls.totalTaxAmountTo"
+              descLabel=""
+              [startControl]="queryForm.controls.AMT_S"
+              [endControl]="queryForm.controls.AMT_E"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="採購單狀態"
-              controlName="paperStatus"
-              [options]="paperStatusOptions"
+            <app-dropdown
+              label="狀態"
+              controlName="STATUS"
+              [options]="statusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.paperStatus"
+              [control]="queryForm.controls.STATUS"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="審核人編號"
-              controlName="reviewerCode"
-              [options]="applicantCodeOptions"
+              controlName="APRV_EMP_ID"
+              [options]="aprvEmpIdOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.reviewerCode"
+              [control]="queryForm.controls.APRV_EMP_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
+            <app-calendar-range-quick
               calendarType="dateRange"
               label="審核日期"
-              [startControl]="queryForm.controls.reviewDateFrom"
-              [endControl]="queryForm.controls.reviewDateTo"
+              [startControl]="queryForm.controls.APRV_DATE_S"
+              [endControl]="queryForm.controls.APRV_DATE_E"
               [submitted]="submitted"
-            ></app-calendar-range>
+            ></app-calendar-range-quick>
           </div>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
+            <app-calendar-range-quick
               calendarType="dateRange"
               label="驗收日期"
-              [startControl]="queryForm.controls.checkDateFrom"
-              [endControl]="queryForm.controls.checkDateTo"
+              [startControl]="queryForm.controls.CHECK_DATE_S"
+              [endControl]="queryForm.controls.CHECK_DATE_E"
               [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="驗收人"
-              controlName="checkPerson"
-              [options]="applicantCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.checkPerson"
-              [submitted]="submitted"
-            ></app-dropdown>
+            ></app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="倉別"
-              controlName="storage"
-              [options]="storageOptions"
+              controlName="WH_ID"
+              [options]="whIdOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.storage"
+              [control]="queryForm.controls.WH_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="項次列印筆數"
-              controlName="printNumber"
-              [control]="queryForm.controls.printNumber"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report
+    dataKey="SUBCHECK_ID"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction"
+    [addButton]="addButton"
+    [showDelete]="false"
+    [showDetail]="false"
+    (edit)="onEdit($event)"
+    (selectionChange)="selectedRows = $event"
+    [selectedItems]="selectedRows"
+  ></app-table-report>
 </div>

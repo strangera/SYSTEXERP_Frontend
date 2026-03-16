@@ -30,6 +30,10 @@ export interface LocationItem {
   area_desc?: string;
   /** 營業坪數 */
   tlt_space?: number;
+  /** 起始日 */
+  tlt_bdate?: string | Date;
+  /** 截止日 */
+  tlt_edate?: string | Date;
   /** 資料狀態 */
   _status?: DataStatus;
 }

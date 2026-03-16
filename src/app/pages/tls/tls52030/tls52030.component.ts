@@ -130,7 +130,10 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
       label: '單據審核',
       icon: 'pi pi-check-circle text-green-500',
       action: (rowData: ITLS52030Data) => { this.statusChange(rowData, POStatus.已審核); },
-      disabled: (rowData: ITLS52030Data) => rowData.ODM_Status !== POStatus.已確認 || !this.hasPermission(Actions.Audit)
+      disabled: (rowData: ITLS52030Data) =>
+        rowData.ODM_Status !== POStatus.已確認 ||
+        !rowData.CanAPRV ||
+        !this.hasPermission(Actions.Audit)
     },
     {
       label: '反審核',

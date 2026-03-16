@@ -2,14 +2,14 @@ import { Injectable } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 
 import { ContractDateRange } from '@shared/utils/contract-date-validator.util';
-import { FareValidationService } from '../../../tls13010-next1/Services/fare-validation.service';
-import { CommissionItem, AnnualPerformanceItem, DiscountLevelItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
+import { FareValidationService } from '@pages/tls/shared/services/fare-validation.service';
 import { DiscountSettingItem } from '../../../tls13010-v2/core/models';
+import { AnnualPerformanceItem, CommissionItem, DiscountLevelItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
 import { CommissionCrudService } from '../../../tls13010-v2/services/commission/commission-crud.service';
 
+import { ConditionItem } from '../../core/models/condition/condition-types.interface';
 import { LocationItem } from '../../core/models/contract/location-item.interface';
 import { FareItem } from '../../core/models/deduction/fare-item.interface';
-import { ConditionItem } from '../../core/models/condition/condition-types.interface';
 
 // ========== 介面 ==========
 
@@ -91,7 +91,7 @@ export class ContractValidatorService {
   constructor(
     private fareValidationService: FareValidationService,
     private commissionCrudService: CommissionCrudService
-  ) {}
+  ) { }
 
   // ========== Step 1: 合約基本資料 ==========
 
@@ -405,7 +405,7 @@ export class ContractValidatorService {
     });
   }
 
-  // ========== Step 4: 條件設定 ==========
+  // ========== Step 4: 租金設定 ==========
 
   validateStep4(
     conditionItems: ConditionItem[],
@@ -461,7 +461,10 @@ export class ContractValidatorService {
 
         case '5': // 層級抽成
           if (data['start_number'] !== undefined && data['end_number'] !== undefined) {
-            if (Number(data['start_number']) >= Number(data['end_number'])) {
+            const gradStart = Number(data['start_number']);
+            const gradEnd = Number(data['end_number']);
+            // end=0 視為無上限，不卡控；起始值允許為 0
+            if (gradEnd !== 0 && gradStart >= gradEnd) {
               errorCount++; errorTypes.add('業績起迄值錯誤'); errorFields.push('start_number', 'end_number');
             }
           }
@@ -475,7 +478,10 @@ export class ContractValidatorService {
             errorCount++; errorTypes.add('金額必須大於 0'); errorFields.push('limit_amt');
           }
           if (data['start_number'] !== undefined && data['end_number'] !== undefined) {
-            if (Number(data['start_number']) >= Number(data['end_number'])) {
+            const tierStart = Number(data['start_number']);
+            const tierEnd = Number(data['end_number']);
+            // end=0 視為無上限，不卡控；起始值允許為 0
+            if (tierEnd !== 0 && tierStart >= tierEnd) {
               errorCount++; errorTypes.add('業績起迄值錯誤'); errorFields.push('start_number', 'end_number');
             }
           }
@@ -491,7 +497,7 @@ export class ContractValidatorService {
       const typeList = [...errorTypes].join('、');
       return {
         isValid: false,
-        errorMessages: [`條件設定共 ${errorCount} 項錯誤：${typeList}，請修正紅框欄位`]
+        errorMessages: [`租金設定共 ${errorCount} 項錯誤：${typeList}，請修正紅框欄位`]
       };
     }
 

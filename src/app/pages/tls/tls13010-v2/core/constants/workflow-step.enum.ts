@@ -10,7 +10,7 @@ export enum WorkflowStep {
   DEDUCTION = 2,
   /** 抽成設定 */
   COMMISSION = 3,
-  /** 條件設定 */
+  /** 租金設定 */
   CONDITION = 4,
   /** 最終提交 */
   FINAL = 5
@@ -24,7 +24,7 @@ export const WorkflowStepLabels: Record<WorkflowStep, string> = {
   [WorkflowStep.CONTRACT_INFO]: '合約基本資料',
   [WorkflowStep.DEDUCTION]: '代扣款設定',
   [WorkflowStep.COMMISSION]: '抽成設定',
-  [WorkflowStep.CONDITION]: '條件設定',
+  [WorkflowStep.CONDITION]: '租金設定',
   [WorkflowStep.FINAL]: '完成'
 };
 

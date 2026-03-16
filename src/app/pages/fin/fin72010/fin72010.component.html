@@ -1,15 +1,11 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -27,38 +23,40 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="零用金單號"
-              controlName="PettyCashOrderNumber"
-              [options]="PettyCashOrderNumber"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.PettyCashOrderNumber"
+              controlName="KeepQuota_No"
+              [options]="KeepQuota_Options"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.KeepQuota_No"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
+            <app-calendar-range-quick
               label="申請日期"
-              [startControl]="queryForm.controls.sApplicationdate"
-              [endControl]="queryForm.controls.eApplicationdate"
+              [startControl]="queryForm.controls.applyDateFrom"
+              [endControl]="queryForm.controls.applyDateTo"
               [submitted]="submitted"
-            ></app-calendar-range>
+            />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
-              label="零用金金額"
-              [startControl]="queryForm.controls.sPetty"
-              [endControl]="queryForm.controls.ePetty"
+              [useGrouping]="false"
+              label="零用金額"
+              [startControl]="queryForm.controls.startKeepQuota"
+              [endControl]="queryForm.controls.endKeepQuota"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
+        </div>
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="零用金申請人"
               controlName="Pettycashapplicant"
-              [options]="usercode"
-              optionLabel="label"
-              optionValue="value"
+              [options]="Pettycashapplicant_Options"
+              optionLabel="Label"
+              optionValue="No"
               [control]="queryForm.controls.Pettycashapplicant"
               [submitted]="submitted"
             ></app-dropdown>
@@ -67,9 +65,9 @@
             <app-dropdown
               label="零用金保管人"
               controlName="Pettycashcustodian"
-              [options]="usercode"
-              optionLabel="label"
-              optionValue="value"
+              [options]="Pettycashcustodian_Options"
+              optionLabel="Label"
+              optionValue="No"
               [control]="queryForm.controls.Pettycashcustodian"
               [submitted]="submitted"
             ></app-dropdown>
@@ -78,37 +76,61 @@
             <app-dropdown
               label="狀態"
               controlName="status"
-              [options]="statusOptions"
-              optionLabel="label"
-              optionValue="value"
+              [options]="status_Options"
+              optionLabel="Label"
+              optionValue="No"
               [control]="queryForm.controls.status"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
         </div>
-      </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="保管單位"
+              controlName="keepingUnit"
+              [options]="keepingUnit_Options"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.keepingUnit"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
         </div>
-      </div>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-
 <div class="card">
-  <div class="col-12">
+  <div class="col-13">
     <app-table
-      [showCheckBox]="true"
+      tableKey="FIN72010"
       [data]="data"
       [columns]="columns"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      (delete)="onDelete($event)"
+      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [showDelete]="false"
+      [showCheckBox]="false"
+      dataKey="id"
+      [multiSortMeta]="[{ field: 'HOS_No', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+      [isRowSelectable]="isRowSelectable"
     ></app-table>
   </div>
 </div>

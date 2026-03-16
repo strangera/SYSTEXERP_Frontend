@@ -189,9 +189,4 @@ private initialFormSnapshot: any = null;
     });
     this.dataForm.markAsPristine();
   }
-  override onCancel(): void {
-  this.router.navigate(['/account/tls', 'tls11020'], {
-    state: { fromCru: true },
-  });
-}
 }
