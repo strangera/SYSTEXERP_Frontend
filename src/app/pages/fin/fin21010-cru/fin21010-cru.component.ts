@@ -169,7 +169,7 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
       // 1. 確保 response 是陣列
       const list = Array.isArray(response) ? response : [];
       // 儲存原始清單供重複性檢查使用
-      this.rawGls1005List = list; ㄑ
+      this.rawGls1005List = list;
 
       this.GLS1005_BNK_DepositAccNo_Option = list.map((item: any) => ({
         No: item.No, // 公司銀行科目 代號
