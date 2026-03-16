@@ -1,6 +1,6 @@
 import { NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11010Service } from '@service/api/ass/ass11010.service';
@@ -8,6 +8,7 @@ import { ASS11020Service } from '@service/api/ass/ass11020.service';
 import { ASS11030Service } from '@service/api/ass/ass11030.service';
 import { ASS13060Service } from '@service/api/ass/ass13060.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -28,6 +29,7 @@ import {
   ASS13060AssetQueryRequest,
   ASS13060AssetQueryRow,
   ASS13060DetailItem,
+  QueryDetailASS13060Data,
 } from '../ass13060/ass13060.model';
 
 /** 3.1.3.6 固定資產重估作業 CRU */
@@ -59,77 +61,76 @@ export class ASS13060CRUComponent
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    RevaluationNo: [{ value: '' as string, disabled: true }, [Validators.required]],
-    UserCode: [null as string | null, [Validators.required]],
-    OrganizationNumber: [null as string | null, [Validators.required]],
-    ApplicationDate: [null as Date | null, [Validators.required]],
-    Remark: [''],
+    ASSET_EVAL_ID: [{ value: '' as string, disabled: true }],
+    EMP_ID: [null as string | null, [Validators.required]],
+    ORG_ID: [null as string | null, [Validators.required]],
+    APPLY_DATE: [null as Date | null, [Validators.required]],
+    NOTES: [''],
+    EVAL_TYPE: [null as string | null],
   });
 
   data: ASS13060DetailItem[] = [];
   selectedItems: ASS13060DetailItem[] = [];
 
-  userCodeOptions: { label: string; value: string }[] = [];
-  organizationNumberOptions: { label: string; value: string }[] = [];
+  empIdOptions: { label: string; value: string }[] = [];
+  orgIdOptions: { label: string; value: string }[] = [];
 
   public readonly columns: EditColumn[] = [
+    { field: 'ASSET_ID', header: '資產編號', type: 'input', disabled: () => true },
+    { field: 'QTY', header: '數量', type: 'inputNumber', disabled: () => true },
+    { field: 'GOODS_UNIT', header: '單位', type: 'input', disabled: () => true },
+    { field: 'GET_COST', header: '取得成本', type: 'inputNumber', disabled: () => true },
+    { field: 'EXP_YEAR', header: '折舊年限', type: 'inputNumber', disabled: () => true },
+    { field: 'FIR_EXP_YEAR', header: '原折舊年限', type: 'inputNumber', disabled: () => true },
+    { field: 'FIR_GET_COST', header: '原取得成本', type: 'inputNumber', disabled: () => true },
     {
-      field: 'GoodsId',
-      header: '商品編號/名稱',
-      type: 'input',
-      disabled: () => true,
-      format: (_v, _i, row) =>
-        row ? `${(row as ASS13060DetailItem).GoodsId ?? ''} - ${(row as ASS13060DetailItem).GoodsName ?? ''}` : '',
-    },
-    { field: 'Unit', header: '商品單位', type: 'input', disabled: () => true },
-    { field: 'Quantity', header: '數量', type: 'inputNumber', disabled: () => true },
-    { field: 'DepreciationLife', header: '折舊年限', type: 'inputNumber', disabled: () => true },
-    {
-      field: 'AlteredDepreciationLife',
-      header: '已異動折舊年限',
-      type: 'inputNumber',
-      disabled: () => true,
-    },
-    {
-      field: 'AlteredLife',
-      header: '異動年限',
+      field: 'UPD_GET_COST',
+      header: '異動取得成本',
       type: 'inputNumber',
       validate: [validateRequired],
     },
-    { field: 'ReceivePrice', header: '取得價格', type: 'inputNumber', disabled: () => true },
-    { field: 'AlteredPrice', header: '已異動價格', type: 'inputNumber', disabled: () => true },
     {
-      field: 'TotalSharedPrice',
-      header: '累計已攤提金額',
-      type: 'inputNumber',
-      disabled: () => true,
-    },
-    {
-      field: 'TotalSharedMonth',
-      header: '累計已攤提月數',
-      type: 'inputNumber',
-      disabled: () => true,
-    },
-    {
-      field: 'AlteredBuyPrice',
-      header: '異動購入金額',
+      field: 'UPD_EXP_YEAR',
+      header: '異動折舊年限',
       type: 'inputNumber',
       validate: [validateRequired],
     },
-    { field: 'Depreciation', header: '折舊科目', type: 'input', disabled: () => true },
+    { field: 'TAL_DEPRE_MON', header: '累計已攤月數', type: 'inputNumber', disabled: () => true },
+    { field: 'TAL_DEPRE_AMT', header: '累計已攤金額', type: 'inputNumber', disabled: () => true },
     {
-      field: 'TotalDepreciation',
+      field: 'STYPE_ID',
+      header: '折舊科目',
+      type: 'dropdown',
+      optionsAsync: true,
+      options: () => this.dropdownApi.queryGls1005(),
+      optionLabel: 'label',
+      optionValue: 'value',
+      templateLabel: 'label',
+      showClear: true,
+    },
+    {
+      field: 'STYPE_ID2',
       header: '累計折舊科目',
-      type: 'input',
-      disabled: () => true,
+      type: 'dropdown',
+      optionsAsync: true,
+      options: () => this.dropdownApi.queryGls1005(),
+      optionLabel: 'label',
+      optionValue: 'value',
+      templateLabel: 'label',
+      showClear: true,
     },
-    { field: 'UsageUnit', header: '使用單位', type: 'input', disabled: () => true },
     {
-      field: 'SingleRemark',
-      header: '單項報廢說明',
-      type: 'input',
-      validate: [validateRequired],
+      field: 'USE_ORG_ID',
+      header: '使用單位',
+      type: 'dropdown',
+      optionsAsync: true,
+      options: () => this.dropdownApi.querySys3100(),
+      optionLabel: 'label',
+      optionValue: 'value',
+      templateLabel: 'label',
+      showClear: true,
     },
+    { field: 'NOTES', header: '備註', type: 'input' },
   ];
 
   dialogVisible = false;
@@ -142,45 +143,47 @@ export class ASS13060CRUComponent
   private allSmallClassData: { label: string; value: string; mClassId: string }[] = [];
 
   dialogQueryForm = this.formBuilder.nonNullable.group({
-    AssetNo: [null as string | null],
-    BClassId: [null as string | null],
-    MClassId: [null as string | null],
-    SClassId: [null as string | null],
-    CustodianCode: [null as string | null],
-    CustodyUnitCode: [null as string | null],
-    ItemName: [null as string | null],
-    pageSize: [30],
-    pageIndex: [1],
-    SortBy: [[{ field: 'AssetNo', order: 1 }]],
+    ASSET_ID: [null as string | null],
+    GOODS_NAME: [null as string | null],
+    B_CLASS_ID: [null as string | null],
+    M_CLASS_ID: [null as string | null],
+    S_CLASS_ID: [null as string | null],
+    HOLD_EMP_ID: [null as string | null],
+    HOLD_ORG_ID: [null as string | null],
+    ASSET_STATUS: [null as string | null],
+    PageSize: [30],
+    PageIndex: [1],
+    SortBy: [[{ field: 'ASSET_ID', order: 1 }]],
   });
 
   dialogColumns: ReportColumn[] = [
-    { field: 'AssetNo', header: '資產編號' },
+    { field: 'ASSET_ID', header: '資產編號' },
     { field: 'AssetName', header: '資產名稱' },
     { field: 'Unit', header: '單位' },
-    { field: 'Status', header: '狀態' },
-    { field: 'PurchaseAmount', header: '購入金額' },
-    { field: 'AlteredAmount', header: '異動金額' },
-    { field: 'TotalAmount', header: '合計金額' },
-    { field: 'PurchaseDate', header: '購入日期', format: formatDate },
-    { field: 'OriginalDepreciationLife', header: '原折舊年限' },
-    { field: 'AlteredDepreciationLife', header: '異動折舊年限' },
-    { field: 'TotalSharedPrice', header: '累計已攤提金額' },
-    { field: 'TotalSharedMonth', header: '累計已攤提月數' },
-    { field: 'Depreciation', header: '折舊會科' },
-    { field: 'TotalDepreciation', header: '累計折舊會科' },
-    { field: 'UsageUnit', header: '使用單位' },
+    { field: 'UnitName', header: '單位名稱' },
+    { field: 'ASSET_STATUSName', header: '狀態' },
+    { field: 'PurchaseAmt', header: '購入金額' },
+    { field: 'ChangeAmt', header: '異動金額' },
+    { field: 'TotalAmt', header: '合計金額' },
+    { field: 'GET_DATE', header: '取得日期', format: formatDate },
+    { field: 'FIR_EXP_YEAR', header: '原折舊年限' },
+    { field: 'UPD_EXP_YEAR_SUM', header: '異動折舊年限' },
+    { field: 'SUM_DEPRE_MONTH', header: '累計已攤月數' },
+    { field: 'SUM_DEPRE_AMOUNT', header: '累計已攤金額' },
+    { field: 'user_Name', header: '保管人' },
+    { field: 'Org_Name', header: '保管單位' },
   ];
 
   bClassOptions: { label: string; value: string }[] = [];
   mClassOptions: { label: string; value: string }[] = [];
   sClassOptions: { label: string; value: string }[] = [];
-  custodianOptions: { label: string; value: string }[] = [];
-  custodyUnitOptions: { label: string; value: string }[] = [];
+  holdEmpIdOptions: { label: string; value: string }[] = [];
+  holdOrgIdOptions: { label: string; value: string }[] = [];
 
   constructor(
     private readonly service: ASS13060Service,
     public readonly dropDownListService: DropDownListService,
+    private readonly dropdownApi: DropdownApiService,
     private readonly ass11010Service: ASS11010Service,
     private readonly ass11020Service: ASS11020Service,
     private readonly ass11030Service: ASS11030Service,
@@ -195,14 +198,89 @@ export class ASS13060CRUComponent
     this.setupDialogClassFilterSync();
 
     if (!this.isFormCreateable && this.rowdata) {
-      const row = this.rowdata as unknown as { Details?: ASS13060DetailItem[]; RevaluationNo?: string };
-      this.data = row.Details ?? [];
-      this.dataForm.patchValue({
-        RevaluationNo: row.RevaluationNo ?? '',
-      });
-      if (this.isFormReadable) {
-        this.dataForm.disable();
+      const row = this.rowdata as unknown as {
+        ID?: number;
+        ASSET_EVAL_ID?: string;
+        EMP_ID?: string;
+        ORG_ID?: string;
+        APPLY_DATE?: Date | string;
+        NOTES?: string;
+        EVAL_TYPE?: string;
+      };
+      const id = row.ID;
+
+      // 若缺少 ID，退回使用列表帶入的基本資料以避免畫面完全空白
+      if (id == null) {
+        this.dataForm.patchValue({
+          ASSET_EVAL_ID: row.ASSET_EVAL_ID ?? '',
+          EMP_ID: row.EMP_ID ?? null,
+          ORG_ID: row.ORG_ID ?? null,
+          APPLY_DATE: row.APPLY_DATE ? (row.APPLY_DATE as Date) : null,
+          NOTES: row.NOTES ?? '',
+          EVAL_TYPE: row.EVAL_TYPE ?? null,
+        });
+        if (this.isFormReadable) {
+          this.dataForm.disable();
+        }
+        return;
       }
+
+      this.loading = true;
+      this.service
+        .queryDetailASS13060({ ID: id })
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: (res: ApiResponse<QueryDetailASS13060Data>) => {
+            const master = res.Data?.Master;
+            const details = res.Data?.Details ?? [];
+
+            if (!master) {
+              this.messageService.errorBubble(res.Message ?? '無法載入單據明細');
+              return;
+            }
+
+            const applyDate =
+              master.APPLY_DATE != null
+                ? new Date(master.APPLY_DATE as string | number | Date)
+                : null;
+
+            this.dataForm.patchValue({
+              ASSET_EVAL_ID: master.ASSET_EVAL_ID ?? '',
+              EMP_ID: master.EMP_ID ?? null,
+              ORG_ID: master.ORG_ID ?? null,
+              APPLY_DATE: applyDate,
+              NOTES: master.NOTES ?? '',
+              EVAL_TYPE: master.EVAL_TYPE ?? null,
+            });
+
+            this.data = details.map(detail => ({
+              ASSET_ID: detail.ASSET_ID,
+              QTY: detail.QTY,
+              GOODS_UNIT: detail.GOODS_UNIT,
+              GET_COST: detail.GET_COST,
+              EXP_YEAR: detail.EXP_YEAR,
+              UPD_GET_COST: detail.UPD_GET_COST,
+              UPD_EXP_YEAR: detail.UPD_EXP_YEAR,
+              FIR_GET_COST: detail.FIR_GET_COST,
+              FIR_EXP_YEAR: detail.FIR_EXP_YEAR,
+              STYPE_ID: detail.STYPE_ID,
+              STYPE_ID2: detail.STYPE_ID2,
+              USE_ORG_ID: detail.USE_ORG_ID,
+              TAL_DEPRE_MON: detail.TAL_DEPRE_MON,
+              TAL_DEPRE_AMT: detail.TAL_DEPRE_AMT,
+              NOTES: detail.NOTES,
+            }));
+
+            if (this.isFormReadable) {
+              this.dataForm.disable();
+            }
+          },
+        });
     }
   }
 
@@ -210,33 +288,33 @@ export class ASS13060CRUComponent
     this.dropDownListService.queryTBLUSER_DropDownList().subscribe({
       next: (res) => {
         if (res.Status !== '0000') return;
-        const options = res.Data.map((item) => ({
+        const options = res.Data.map((item: { No: string; Name: string }) => ({
           label: `${item.No} - ${item.Name}`,
           value: item.No,
         }));
-        this.userCodeOptions = options;
-        this.custodianOptions = options;
+        this.empIdOptions = options;
+        this.holdEmpIdOptions = options;
       },
     });
 
     this.dropDownListService.querySYS3100_DropDownList().subscribe({
       next: (res) => {
         if (res.Status !== '0000') return;
-        const options = res.Data.map((item) => ({
+        const options = res.Data.map((item: { No: string; Name: string }) => ({
           label: `${item.No} - ${item.Name}`,
           value: item.No,
         }));
-        this.organizationNumberOptions = options;
-        this.custodyUnitOptions = options;
+        this.orgIdOptions = options;
+        this.holdOrgIdOptions = options;
       },
     });
 
     this.ass11010Service.queryASS11010({}).subscribe({
       next: (res) => {
         if (res.Status !== '0000') return;
-        this.bClassOptions = res.Data.map((item) => ({
-          label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
-          value: item.CLASS_ID,
+        this.bClassOptions = res.Data.map((item: { CLASS_ID?: string; CLASS_NAME?: string }) => ({
+          label: `${item.CLASS_ID ?? ''} - ${item.CLASS_NAME ?? ''}`,
+          value: item.CLASS_ID ?? '',
         }));
       },
     });
@@ -244,7 +322,7 @@ export class ASS13060CRUComponent
     this.ass11020Service.queryASS11020({}).subscribe({
       next: (res) => {
         if (res.Status !== '0000') return;
-        this.allMidClassData = res.Data.map((item) => ({
+        this.allMidClassData = res.Data.map((item: { M_CLASS_ID: string; M_CLASS_NAME: string; B_CLASS_ID: string }) => ({
           label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
           value: item.M_CLASS_ID,
           bClassId: item.B_CLASS_ID,
@@ -256,7 +334,7 @@ export class ASS13060CRUComponent
     this.ass11030Service.queryASS11030({}).subscribe({
       next: (res) => {
         if (res.Status !== '0000') return;
-        this.allSmallClassData = res.Data.map((item) => ({
+        this.allSmallClassData = res.Data.map((item: { S_CLASS_ID: string; S_CLASS_NAME: string; M_CLASS_ID: string }) => ({
           label: `${item.S_CLASS_ID} - ${item.S_CLASS_NAME}`,
           value: item.S_CLASS_ID,
           mClassId: item.M_CLASS_ID,
@@ -268,8 +346,8 @@ export class ASS13060CRUComponent
 
   canSave(): boolean {
     if (this.isFormReadable) return false;
-    const row = this.rowdata as unknown as { StatusCode?: string; Status?: string } | null;
-    const status = row?.StatusCode ?? row?.Status;
+    const row = this.rowdata as unknown as { ASSET_EVAL_STATUS?: string } | null;
+    const status = row?.ASSET_EVAL_STATUS;
     return status !== '2' && status !== '3';
   }
 
@@ -279,36 +357,40 @@ export class ASS13060CRUComponent
     this.selectedItemsDialog = [];
     this.totalRecords = 0;
     this.dialogQueryForm.reset({
-      AssetNo: null,
-      BClassId: null,
-      MClassId: null,
-      SClassId: null,
-      CustodianCode: null,
-      CustodyUnitCode: null,
-      ItemName: null,
-      pageSize: 30,
-      pageIndex: 1,
-      SortBy: [{ field: 'AssetNo', order: 1 }],
+      ASSET_ID: null,
+      GOODS_NAME: null,
+      B_CLASS_ID: null,
+      M_CLASS_ID: null,
+      S_CLASS_ID: null,
+      HOLD_EMP_ID: null,
+      HOLD_ORG_ID: null,
+      ASSET_STATUS: null,
+      PageSize: 30,
+      PageIndex: 1,
+      SortBy: [{ field: 'ASSET_ID', order: 1 }],
     });
   }
 
-  private loadDialogData(query: ASS13060AssetQueryRequest & { pageSize?: number; pageIndex?: number }): void {
+  private loadDialogData(
+    query: ASS13060AssetQueryRequest & { pageSize?: number; pageIndex?: number }
+  ): void {
     const body: ASS13060AssetQueryRequest = {
-      AssetNo: query.AssetNo || undefined,
-      BClassId: query.BClassId || undefined,
-      MClassId: query.MClassId || undefined,
-      SClassId: query.SClassId || undefined,
-      CustodianCode: query.CustodianCode || undefined,
-      CustodyUnitCode: query.CustodyUnitCode || undefined,
-      ItemName: query.ItemName || undefined,
+      ASSET_ID: query.ASSET_ID || undefined,
+      GOODS_NAME: query.GOODS_NAME || undefined,
+      B_CLASS_ID: query.B_CLASS_ID || undefined,
+      M_CLASS_ID: query.M_CLASS_ID || undefined,
+      S_CLASS_ID: query.S_CLASS_ID || undefined,
+      HOLD_EMP_ID: query.HOLD_EMP_ID || undefined,
+      HOLD_ORG_ID: query.HOLD_ORG_ID || undefined,
+      ASSET_STATUS: query.ASSET_STATUS || undefined,
       PageSize: query.PageSize ?? 30,
       PageIndex: query.PageIndex ?? 1,
-      SortBy: query.SortBy ?? [{ field: 'AssetNo', order: 1 }],
+      SortBy: query.SortBy ?? [{ field: 'ASSET_ID', order: 1 }],
     };
 
     this.dialogLoading = true;
     this.service
-      .queryASS13060Asset(body)
+      .queryFAASSETChooseListASS13060(body)
       .pipe(
         untilDestroyed(this),
         finalize(() => (this.dialogLoading = false))
@@ -331,63 +413,66 @@ export class ASS13060CRUComponent
   ) => {
     const raw = this.dialogQueryForm.getRawValue();
     const payload: ASS13060AssetQueryRequest = {
-      AssetNo: raw.AssetNo || undefined,
-      BClassId: raw.BClassId || undefined,
-      MClassId: raw.MClassId || undefined,
-      SClassId: raw.SClassId || undefined,
-      CustodianCode: raw.CustodianCode || undefined,
-      CustodyUnitCode: raw.CustodyUnitCode || undefined,
-      ItemName: raw.ItemName || undefined,
+      ASSET_ID: raw.ASSET_ID || undefined,
+      GOODS_NAME: raw.GOODS_NAME || undefined,
+      B_CLASS_ID: raw.B_CLASS_ID || undefined,
+      M_CLASS_ID: raw.M_CLASS_ID || undefined,
+      S_CLASS_ID: raw.S_CLASS_ID || undefined,
+      HOLD_EMP_ID: raw.HOLD_EMP_ID || undefined,
+      HOLD_ORG_ID: raw.HOLD_ORG_ID || undefined,
+      ASSET_STATUS: raw.ASSET_STATUS || undefined,
       PageSize: body.PageSize ?? body.pageSize ?? 30,
       PageIndex: body.PageIndex ?? body.pageIndex ?? 1,
-      SortBy: body.SortBy ?? [{ field: 'AssetNo', order: 1 }],
+      SortBy: body.SortBy ?? [{ field: 'ASSET_ID', order: 1 }],
     };
-    return this.service.queryASS13060Asset(payload);
+    return this.service.queryFAASSETChooseListASS13060(payload);
   };
 
   onDialogQuery(): void {
     const raw = this.dialogQueryForm.getRawValue();
     this.lastQueryBody = {
-      AssetNo: raw.AssetNo || undefined,
-      BClassId: raw.BClassId || undefined,
-      MClassId: raw.MClassId || undefined,
-      SClassId: raw.SClassId || undefined,
-      CustodianCode: raw.CustodianCode || undefined,
-      CustodyUnitCode: raw.CustodyUnitCode || undefined,
-      ItemName: raw.ItemName || undefined,
+      ASSET_ID: raw.ASSET_ID || undefined,
+      GOODS_NAME: raw.GOODS_NAME || undefined,
+      B_CLASS_ID: raw.B_CLASS_ID || undefined,
+      M_CLASS_ID: raw.M_CLASS_ID || undefined,
+      S_CLASS_ID: raw.S_CLASS_ID || undefined,
+      HOLD_EMP_ID: raw.HOLD_EMP_ID || undefined,
+      HOLD_ORG_ID: raw.HOLD_ORG_ID || undefined,
+      ASSET_STATUS: raw.ASSET_STATUS || undefined,
       PageSize: 30,
       PageIndex: 1,
-      SortBy: [{ field: 'AssetNo', order: 1 }],
+      SortBy: [{ field: 'ASSET_ID', order: 1 }],
     };
     this.loadDialogData(this.lastQueryBody);
   }
 
   saveDialog(): void {
     this.dialogVisible = false;
-    const newItems: ASS13060DetailItem[] = this.selectedItemsDialog.map((asset) => ({
-      GoodsId: asset.AssetNo,
-      GoodsName: asset.AssetName,
-      Unit: asset.Unit,
-      Quantity: 1,
-      DepreciationLife: asset.OriginalDepreciationLife,
-      AlteredDepreciationLife: asset.AlteredDepreciationLife,
-      AlteredLife: undefined,
-      ReceivePrice: asset.PurchaseAmount,
-      AlteredPrice: asset.AlteredAmount,
-      TotalSharedPrice: asset.TotalSharedPrice,
-      TotalSharedMonth: asset.TotalSharedMonth,
-      AlteredBuyPrice: undefined,
-      Depreciation: asset.Depreciation,
-      TotalDepreciation: asset.TotalDepreciation,
-      UsageUnit: asset.UsageUnit,
-      SingleRemark: '',
-    }));
+    const newItems: ASS13060DetailItem[] = this.selectedItemsDialog.map(
+      (asset: ASS13060AssetQueryRow) => ({
+        ASSET_ID: asset.ASSET_ID,
+        QTY: 1,
+        GOODS_UNIT: asset.Unit,
+        GET_COST: asset.TotalAmt ?? asset.PurchaseAmt,
+        EXP_YEAR: asset.FIR_EXP_YEAR,
+        FIR_EXP_YEAR: asset.FIR_EXP_YEAR,
+        FIR_GET_COST: asset.PurchaseAmt,
+        STYPE_ID: asset.STYPE_ID,
+        STYPE_ID2: asset.STYPE_ID2,
+        USE_ORG_ID: asset.USE_ORG_ID,
+        TAL_DEPRE_MON: asset.SUM_DEPRE_MONTH,
+        TAL_DEPRE_AMT: asset.SUM_DEPRE_AMOUNT,
+        UPD_GET_COST: undefined,
+        UPD_EXP_YEAR: undefined,
+        NOTES: '',
+      })
+    );
     this.data = [...this.data, ...newItems];
     this.selectedItemsDialog = [];
     this.cdr.detectChanges();
   }
 
-  onSubmit(frm: FormGroup): void {
+  onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const valid = this.tableEditComponent?.validateAndShowErrors?.();
       if (valid === false) {
@@ -396,50 +481,53 @@ export class ASS13060CRUComponent
       }
 
       const raw = this.dataForm.getRawValue();
-      const payload = {
-        UserCode: raw.UserCode,
-        OrganizationNumber: raw.OrganizationNumber,
-        ApplicationDate: raw.ApplicationDate,
-        Remark: raw.Remark,
-        Details: this.data,
-      };
+      const items = this.data.map(item => ({ ...item }));
 
       if (this.isFormCreateable) {
+        const payload = {
+          ASSET_EVAL_ID: raw.ASSET_EVAL_ID || undefined,
+          EMP_ID: raw.EMP_ID!,
+          ORG_ID: raw.ORG_ID!,
+          APPLY_DATE: raw.APPLY_DATE!,
+          NOTES: raw.NOTES || undefined,
+          EVAL_TYPE: raw.EVAL_TYPE || undefined,
+          Items: items,
+        };
         this.service
-          .insertASS13060(payload as Parameters<ASS13060Service['insertASS13060']>[0])
+          .insertASS13060(payload)
           .pipe(finalize(() => (this.loading = false)))
           .subscribe({
-            next: (res) => {
+            next: res => {
               if (res.Status === '0000') {
                 this.messageService.successBubble('新增成功');
                 this.onCancel();
               } else {
-                this.messageService.errorBubble(res.Message || '新增失敗');
+                this.messageService.errorBubble(res.Message ?? '新增失敗');
               }
-            },
-            error: (err) => {
-              this.messageService.errorBubble('新增失敗：' + (err?.message ?? '請重試'));
             },
           });
       } else {
-        const row = this.rowdata as unknown as { RevaluationNo?: string };
+        const row = this.rowdata as unknown as { ASSET_EVAL_ID?: string };
+        const payload = {
+          ASSET_EVAL_ID: row.ASSET_EVAL_ID ?? '',
+          EMP_ID: raw.EMP_ID!,
+          ORG_ID: raw.ORG_ID!,
+          APPLY_DATE: raw.APPLY_DATE!,
+          NOTES: raw.NOTES || undefined,
+          EVAL_TYPE: raw.EVAL_TYPE || undefined,
+          Items: items,
+        };
         this.service
-          .updateASS13060({
-            RevaluationNo: row.RevaluationNo ?? '',
-            ...payload,
-          } as Parameters<ASS13060Service['updateASS13060']>[0])
+          .updateASS13060(payload)
           .pipe(finalize(() => (this.loading = false)))
           .subscribe({
-            next: (res) => {
+            next: res => {
               if (res.Status === '0000') {
                 this.messageService.successBubble('編輯成功');
                 this.onCancel();
               } else {
-                this.messageService.errorBubble(res.Message || '編輯失敗');
+                this.messageService.errorBubble(res.Message ?? '編輯失敗');
               }
-            },
-            error: (err) => {
-              this.messageService.errorBubble('編輯失敗：' + (err?.message ?? '請重試'));
             },
           });
       }
@@ -455,58 +543,96 @@ export class ASS13060CRUComponent
       this.data = [];
     } else if (this.isFormEditable && this.rowdata) {
       const row = this.rowdata as unknown as {
-        Details?: ASS13060DetailItem[];
-        RevaluationNo?: string;
+        ASSET_EVAL_ID?: string;
+        EMP_ID?: string;
+        ORG_ID?: string;
+        APPLY_DATE?: Date | string;
+        NOTES?: string;
+        EVAL_TYPE?: string;
+        Items?: ASS13060DetailItem[];
       };
-      this.dataForm.reset();
-      this.dataForm.patchValue(this.rowdata as any);
-      this.dataForm.patchValue({ RevaluationNo: row.RevaluationNo ?? '' });
-      this.data = row.Details ? [...row.Details] : [];
+      this.dataForm.patchValue({
+        ASSET_EVAL_ID: row.ASSET_EVAL_ID ?? '',
+        EMP_ID: row.EMP_ID ?? null,
+        ORG_ID: row.ORG_ID ?? null,
+        APPLY_DATE: row.APPLY_DATE ? (row.APPLY_DATE as Date) : null,
+        NOTES: row.NOTES ?? '',
+        EVAL_TYPE: row.EVAL_TYPE ?? null,
+      });
+      this.data = row.Items ? [...row.Items] : [];
     }
   }
 
   onApprove(): void {
-    // TODO: 審核確認
+    const row = this.rowdata as unknown as { ID?: number };
+    const id = row?.ID;
+    if (id == null) {
+      this.messageService.warnBubble('無法取得單據 ID');
+      return;
+    }
+
     this.messageService.confirm({
       message: '確定要審核確認嗎？',
       header: '審核確認',
       icon: 'pi pi-verified',
       acceptLabel: '確定',
       rejectLabel: '取消',
+      accept: () => {
+        const aprvEmpId = this.authService.getUserInfo()?.user_No ?? '';
+        const aprvDate = new Date().toISOString();
+        this.loading = true;
+        this.service
+          .approveASS13060({ Ids: [id], APRV_EMP_ID: aprvEmpId, APRV_DATE: aprvDate })
+          .pipe(finalize(() => (this.loading = false)))
+          .subscribe({
+            next: res => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble('審核成功');
+                this.onCancel();
+              } else {
+                this.messageService.errorBubble(res.Message ?? '審核失敗');
+              }
+            },
+          });
+      },
     });
   }
 
   private setupDialogClassFilterSync(): void {
-    this.dialogQueryForm.controls.BClassId.valueChanges
+    this.dialogQueryForm.controls.B_CLASS_ID.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(() => {
         this.filterMidClassOptions();
-        this.dialogQueryForm.controls.MClassId.setValue(null, { emitEvent: false });
-        this.dialogQueryForm.controls.SClassId.setValue(null, { emitEvent: false });
+        this.dialogQueryForm.controls.M_CLASS_ID.setValue(null, { emitEvent: false });
+        this.dialogQueryForm.controls.S_CLASS_ID.setValue(null, { emitEvent: false });
         this.sClassOptions = [];
       });
 
-    this.dialogQueryForm.controls.MClassId.valueChanges
+    this.dialogQueryForm.controls.M_CLASS_ID.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(() => {
         this.filterSmallClassOptions();
-        this.dialogQueryForm.controls.SClassId.setValue(null, { emitEvent: false });
+        this.dialogQueryForm.controls.S_CLASS_ID.setValue(null, { emitEvent: false });
       });
   }
 
   private filterMidClassOptions(): void {
-    const selectedBClassId = this.dialogQueryForm.controls.BClassId.value;
+    const selectedBClassId = this.dialogQueryForm.controls.B_CLASS_ID.value;
     if (selectedBClassId) {
-      this.mClassOptions = this.allMidClassData.filter(item => item.bClassId === selectedBClassId);
+      this.mClassOptions = this.allMidClassData.filter(
+        item => item.bClassId === selectedBClassId
+      );
     } else {
       this.mClassOptions = [];
     }
   }
 
   private filterSmallClassOptions(): void {
-    const selectedMClassId = this.dialogQueryForm.controls.MClassId.value;
+    const selectedMClassId = this.dialogQueryForm.controls.M_CLASS_ID.value;
     if (selectedMClassId) {
-      this.sClassOptions = this.allSmallClassData.filter(item => item.mClassId === selectedMClassId);
+      this.sClassOptions = this.allSmallClassData.filter(
+        item => item.mClassId === selectedMClassId
+      );
     } else {
       this.sClassOptions = [];
     }

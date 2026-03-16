@@ -11,10 +11,11 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, forkJoin, Observable } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { ASS13060QueryRequest, ASS13060QueryRow } from './ass13060.model';
 
 /** 3.1.3.6 固定資產重估作業 */
@@ -38,22 +39,14 @@ import { ASS13060QueryRequest, ASS13060QueryRow } from './ass13060.model';
 })
 export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow> implements OnInit {
   public readonly queryForm = this.formBuilder.group({
-    /** 申請編號 */
-    RequestCode: new FormControl<string | null>(null),
-    /** 商品管理編號 */
-    ManagementCode: new FormControl<string | null>(null),
-    /** 申請人員編號 */
-    UserCode: new FormControl<string | null>(null),
-    /** 部門代號 */
-    OrganizationNumber: new FormControl<string | null>(null),
-    /** 申請日期(起) */
-    ApplicationDateFrom: new FormControl<Date | null>(null),
-    /** 申請日期(迄) */
-    ApplicationDateTo: new FormControl<Date | null>(null),
-    /** 申請單狀態 */
-    RequestStatus: new FormControl<string | null>(null),
-    pageSize: new FormControl<number>(30),
-    pageIndex: new FormControl<number>(1),
+    ASSET_EVAL_ID: new FormControl<string | null>(null),
+    ASSET_EVAL_STATUS: new FormControl<string | null>(null),
+    APPLY_DATE_S: new FormControl<Date | null>(null),
+    APPLY_DATE_E: new FormControl<Date | null>(null),
+    EMP_ID: new FormControl<string | null>(null),
+    ORG_ID: new FormControl<string | null>(null),
+    PageSize: new FormControl<number>(30),
+    PageIndex: new FormControl<number>(1),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
@@ -64,23 +57,23 @@ export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow>
   public selectedItems: ASS13060QueryRow[] = [];
 
   public readonly columns: ReportColumn[] = [
-    { field: 'RevaluationNo', header: '固資重估單編號' },
-    { field: 'UserCode', header: '申請人員編號' },
-    { field: 'UserName', header: '申請人員名稱' },
-    { field: 'OrganizationNumber', header: '部門代號' },
-    { field: 'OrganizationName', header: '部門名稱' },
-    { field: 'StatusName', header: '狀態' },
-    { field: 'ApplicationDate', header: '申請日期', format: formatDate },
-    { field: 'Remark', header: '說明' },
+    { field: 'ASSET_EVAL_ID', header: '固資重估單編號' },
+    { field: 'EMP_ID', header: '申請人員代碼' },
+    { field: 'EMP_NAME', header: '申請人員名稱' },
+    { field: 'ORG_ID', header: '部門代號' },
+    { field: 'Org_Name', header: '部門名稱' },
+    { field: 'ASSET_EVAL_STATUS_NAME', header: '狀態' },
+    { field: 'APPLY_DATE', header: '申請日期', format: formatDate },
   ];
 
-  public readonly userCodeOptions = signal<{ label: string; value: string }[]>([]);
-  public readonly organizationNumberOptions = signal<{ label: string; value: string }[]>([]);
-  public readonly requestStatusOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly empIdOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly orgIdOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly assetEvalStatusOptions = signal<{ label: string; value: string }[]>([]);
 
   constructor(
     public readonly service: ASS13060Service,
-    private readonly dropDownListService: DropDownListService
+    private readonly dropDownListService: DropDownListService,
+    private readonly fileExportService: FileExportService
   ) {
     super();
   }
@@ -98,7 +91,7 @@ export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow>
           label: `${item.No} - ${item.Name}`,
           value: item.No,
         }));
-        this.userCodeOptions.set(options);
+        this.empIdOptions.set(options);
       },
     });
 
@@ -109,7 +102,7 @@ export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow>
           label: `${item.No} - ${item.Name}`,
           value: item.No,
         }));
-        this.organizationNumberOptions.set(options);
+        this.orgIdOptions.set(options);
       },
     });
 
@@ -122,7 +115,7 @@ export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow>
             label: `${item.No} - ${item.Name}`,
             value: item.No,
           }));
-          this.requestStatusOptions.set(options);
+          this.assetEvalStatusOptions.set(options);
         },
       });
   }
@@ -132,13 +125,12 @@ export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow>
   ): Observable<ApiResponse<ASS13060QueryRow[]>> => {
     const rawFormValue = this.queryForm.getRawValue();
     const payload: ASS13060QueryRequest = {
-      RequestCode: rawFormValue.RequestCode || undefined,
-      ManagementCode: rawFormValue.ManagementCode || undefined,
-      UserCode: rawFormValue.UserCode || undefined,
-      OrganizationNumber: rawFormValue.OrganizationNumber || undefined,
-      ApplicationDateFrom: rawFormValue.ApplicationDateFrom || undefined,
-      ApplicationDateTo: rawFormValue.ApplicationDateTo || undefined,
-      RequestStatus: rawFormValue.RequestStatus || undefined,
+      ASSET_EVAL_ID: rawFormValue.ASSET_EVAL_ID || undefined,
+      ASSET_EVAL_STATUS: rawFormValue.ASSET_EVAL_STATUS || undefined,
+      APPLY_DATE_S: rawFormValue.APPLY_DATE_S || undefined,
+      APPLY_DATE_E: rawFormValue.APPLY_DATE_E || undefined,
+      EMP_ID: rawFormValue.EMP_ID || undefined,
+      ORG_ID: rawFormValue.ORG_ID || undefined,
       PageSize: body.PageSize ?? body.pageSize ?? 30,
       PageIndex: body.PageIndex ?? body.pageIndex ?? 1,
       SortBy: body.SortBy,
@@ -151,18 +143,18 @@ export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow>
     this.handleSubmit(this.queryForm, () => {
       const rawFormValue = this.queryForm.getRawValue();
       this.lastQueryBody = {
-        RequestCode: rawFormValue.RequestCode || undefined,
-        ManagementCode: rawFormValue.ManagementCode || undefined,
-        UserCode: rawFormValue.UserCode || undefined,
-        OrganizationNumber: rawFormValue.OrganizationNumber || undefined,
-        ApplicationDateFrom: rawFormValue.ApplicationDateFrom || undefined,
-        ApplicationDateTo: rawFormValue.ApplicationDateTo || undefined,
-        RequestStatus: rawFormValue.RequestStatus || undefined,
-        PageSize: rawFormValue.pageSize || 30,
-        PageIndex: rawFormValue.pageIndex || 1,
+        ASSET_EVAL_ID: rawFormValue.ASSET_EVAL_ID || undefined,
+        ASSET_EVAL_STATUS: rawFormValue.ASSET_EVAL_STATUS || undefined,
+        APPLY_DATE_S: rawFormValue.APPLY_DATE_S || undefined,
+        APPLY_DATE_E: rawFormValue.APPLY_DATE_E || undefined,
+        EMP_ID: rawFormValue.EMP_ID || undefined,
+        ORG_ID: rawFormValue.ORG_ID || undefined,
+        PageSize: rawFormValue.PageSize ?? 30,
+        PageIndex: rawFormValue.PageIndex ?? 1,
       } as ASS13060QueryRequest;
 
       this.tableLoading.set(true);
+      this.loading = true;
       this.queryStateService.setQueryState(this.ProgNo, rawFormValue);
       this.queryFunction(this.lastQueryBody)
         .pipe(
@@ -182,49 +174,47 @@ export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow>
   }
 
   public editDisabled = (rowData: ASS13060QueryRow): boolean => {
-    const status = rowData.StatusCode ?? rowData.Status;
+    const status = rowData.ASSET_EVAL_STATUS ?? rowData.CHECK_STATUS;
     return status === '2' || status === '3';
   };
 
   public deleteDisabledFn = (rowData: ASS13060QueryRow): boolean => {
-    return false;
-    const status = rowData.StatusCode ?? rowData.Status;
+    const status = rowData.ASSET_EVAL_STATUS ?? rowData.CHECK_STATUS;
     return status === '2' || status === '3';
   };
 
   public onBatchDelete(selectedItems: ASS13060QueryRow[]): void {
     if (!selectedItems || selectedItems.length === 0) return;
 
-    if (selectedItems.some(item => item.Status === '2' || item.Status === '3')) {
+    if (
+      selectedItems.some(
+        item => item.ASSET_EVAL_STATUS === '2' || item.ASSET_EVAL_STATUS === '3'
+      )
+    ) {
       this.messageService.warnBubble('已審核的資料不可刪除');
       return;
     }
 
-    const rows = selectedItems.filter(
-      row => row.RevaluationNo != null && row.RevaluationNo !== ''
-    );
-    if (rows.length === 0) {
+    const ids = selectedItems
+      .filter(row => row.ID != null)
+      .map(row => row.ID as number);
+    if (ids.length === 0) {
       this.messageService.warnBubble('無可刪除的資料');
       return;
     }
 
     this.messageService.confirm({
       header: '確認刪除',
-      message: `是否確認刪除 ${rows.length} 筆資料？`,
+      message: `是否確認刪除 ${ids.length} 筆資料？`,
       accept: () => {
         this.loading = true;
-        const deletes = rows.map(row =>
-          this.service.deleteASS13060({ RevaluationNo: row.RevaluationNo! })
-        );
-        forkJoin(deletes)
+        this.service
+          .deleteASS13060({ Ids: ids })
           .pipe(finalize(() => (this.loading = false)))
           .subscribe({
-            next: results => {
-              const failed = results.filter(r => r.Status !== '0000');
-              if (failed.length > 0) {
-                this.messageService.errorBubble(
-                  '操作失敗：' + (failed[0].Message ?? '部分刪除失敗')
-                );
+            next: res => {
+              if (res.Status !== '0000') {
+                this.messageService.errorBubble(res.Message ?? '刪除失敗');
                 return;
               }
               this.messageService.successBubble('刪除成功');
@@ -237,5 +227,22 @@ export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow>
           });
       },
     });
+  }
+
+  public onExportPDF(): void {
+    const ids = this.selectedItems
+      .filter(row => row.ID != null)
+      .map(row => row.ID as number);
+    if (ids.length === 0) {
+      this.messageService.warnBubble('請先選擇要列印的資料');
+      return;
+    }
+    this.loading = true;
+    const download$ = this.service.exportPDFASS13060({ Ids: ids });
+    this.fileExportService.executeFileExport(
+      download$,
+      '.pdf',
+      (isLoading) => this.loading = isLoading
+    ).subscribe();
   }
 }

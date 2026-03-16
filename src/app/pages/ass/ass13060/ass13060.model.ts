@@ -8,208 +8,230 @@ import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
  * ASS13060 查詢請求參數
  */
 export interface ASS13060QueryRequest extends BaseQueryRequest {
-  /** 申請編號 */
-  RequestCode?: string | null;
-  /** 商品管理編號 */
-  ManagementCode?: string | null;
-  /** 申請人員編號 */
-  UserCode?: string | null;
-  /** 部門代號 */
-  OrganizationNumber?: string | null;
+  /** 固資重估單編號 */
+  ASSET_EVAL_ID?: string | null;
+  /** 固資重估單狀態 */
+  ASSET_EVAL_STATUS?: string | null;
   /** 申請日期(起) */
-  ApplicationDateFrom?: Date | null;
+  APPLY_DATE_S?: Date | string | null;
   /** 申請日期(迄) */
-  ApplicationDateTo?: Date | null;
-  /** 申請單狀態 */
-  RequestStatus?: string | null;
+  APPLY_DATE_E?: Date | string | null;
+  /** 申請人員編號 */
+  EMP_ID?: string | null;
+  /** 部門代號 */
+  ORG_ID?: string | null;
 }
 
 /**
  * ASS13060 查詢結果資料
  */
 export interface ASS13060QueryRow {
-  /** 固資重估單編號 */
-  RevaluationNo?: string;
-  /** 申請人員編號 */
-  UserCode?: string;
-  /** 申請人員名稱 */
-  UserName?: string;
-  /** 部門代號 */
-  OrganizationNumber?: string;
-  /** 部門名稱 */
-  OrganizationName?: string;
-  /** 狀態 */
-  Status?: string;
-  /** 狀態名稱 */
-  StatusName?: string;
+  ID?: number;
+  MID?: number;
+  STO_NO?: string;
+  /** 是否可勾選
+   *
+   * - Y = 可勾選
+   * - N = 不可勾選 */
+  CHECK_STATUS?: string;
+  /** 固資重估單號 */
+  ASSET_EVAL_ID?: string;
+  /** 單據狀態代碼
+   * - 1已申請
+   * - 2已審核 */
+  ASSET_EVAL_STATUS?: string;
+  /** 單據狀態名稱 */
+  ASSET_EVAL_STATUS_NAME?: string;
   /** 申請日期 */
-  ApplicationDate?: Date | string;
-  /** 說明 */
-  Remark?: string;
-  /** 狀態碼（供儲存按鈕禁用判斷：審核、作廢不可儲存） */
-  StatusCode?: string;
+  APPLY_DATE?: Date | string;
+  /** 申請人員代碼 */
+  EMP_ID?: string;
+  /** 申請人員名稱 */
+  EMP_NAME?: string;
+  /** 部門代號 */
+  ORG_ID?: string;
+  /** 部門名稱 */
+  Org_Name?: string;
 }
 
 /**
- * ASS13060 明細項目
+ * ASS13060 明細項目（與 API Items 一致）
  */
 export interface ASS13060DetailItem {
-  /** 商品編號 */
-  GoodsId?: string;
-  /** 商品名稱 */
-  GoodsName?: string;
-  /** 商品單位 */
-  Unit?: string;
-  /** 數量 */
-  Quantity?: number;
-  /** 折舊年限 */
-  DepreciationLife?: number;
-  /** 已異動折舊年限 */
-  AlteredDepreciationLife?: number;
-  /** 異動年限（可手動輸入） */
-  AlteredLife?: number;
-  /** 取得價格 */
-  ReceivePrice?: number;
-  /** 已異動價格 */
-  AlteredPrice?: number;
-  /** 累計已攤提金額 */
-  TotalSharedPrice?: number;
-  /** 累計已攤提月數 */
-  TotalSharedMonth?: number;
-  /** 異動購入金額（可手動輸入） */
-  AlteredBuyPrice?: number;
-  /** 折舊科目 */
-  Depreciation?: string;
-  /** 累計折舊科目 */
-  TotalDepreciation?: string;
-  /** 使用單位 */
-  UsageUnit?: string;
-  /** 單項報廢說明（可手動輸入） */
-  SingleRemark?: string;
+  ASSET_ID?: string;
+  QTY?: number;
+  GOODS_UNIT?: string;
+  UPD_GET_COST?: number;
+  UPD_EXP_YEAR?: number;
+  NOTES?: string;
+  GET_COST?: number;
+  EXP_YEAR?: number;
+  FIR_EXP_YEAR?: number;
+  FIR_GET_COST?: number;
+  STYPE_ID?: string;
+  STYPE_ID2?: string;
+  USE_ORG_ID?: string;
+  TAL_DEPRE_MON?: number;
+  TAL_DEPRE_AMT?: number;
 }
 
 /**
  * ASS13060 新增請求參數
  */
 export interface ASS13060InsertRequest {
-  /** 申請人員編號 */
-  UserCode: string;
-  /** 部門代號 */
-  OrganizationNumber: string;
-  /** 申請日期 */
-  ApplicationDate: Date | string;
-  /** 固資重估說明 */
-  Remark?: string;
-  /** 明細資料 */
-  Details: ASS13060DetailItem[];
+  ASSET_EVAL_ID?: string;
+  EMP_ID: string;
+  ORG_ID: string;
+  APPLY_DATE: Date | string;
+  NOTES?: string;
+  EVAL_TYPE?: string;
+  Items: ASS13060DetailItem[];
 }
 
 /**
  * ASS13060 修改請求參數
  */
 export interface ASS13060UpdateRequest {
-  /** 固資重估單編號 */
-  RevaluationNo: string;
-  /** 申請人員編號 */
-  UserCode: string;
-  /** 部門代號 */
-  OrganizationNumber: string;
-  /** 申請日期 */
-  ApplicationDate: Date | string;
-  /** 固資重估說明 */
-  Remark?: string;
-  /** 明細資料 */
-  Details: ASS13060DetailItem[];
+  ASSET_EVAL_ID: string;
+  EMP_ID: string;
+  ORG_ID: string;
+  APPLY_DATE: Date | string;
+  NOTES?: string;
+  EVAL_TYPE?: string;
+  Items: ASS13060DetailItem[];
 }
 
 /**
  * ASS13060 刪除請求參數
  */
 export interface ASS13060DeleteRequest {
-  /** 固資重估單編號 */
-  RevaluationNo: string;
-}
-
-/**
- * ASS13060 資產查詢請求參數（批次新增彈窗用）
- */
-export interface ASS13060AssetQueryRequest extends BaseQueryRequest {
-  /** 資產編號 */
-  AssetNo?: string | null;
-  /** 大分類編號 */
-  BClassId?: string | null;
-  /** 中分類編號 */
-  MClassId?: string | null;
-  /** 小分類編號 */
-  SClassId?: string | null;
-  /** 保管人代號 */
-  CustodianCode?: string | null;
-  /** 保管單位代號 */
-  CustodyUnitCode?: string | null;
-  /** 品項名稱 */
-  ItemName?: string | null;
-}
-
-/**
- * ASS13060 資產查詢結果（批次新增彈窗用）
- */
-export interface ASS13060AssetQueryRow {
-  /** 資產編號 */
-  AssetNo?: string;
-  /** 資產名稱 */
-  AssetName?: string;
-  /** 單位 */
-  Unit?: string;
-  /** 狀態 */
-  Status?: string;
-  /** 購入金額 */
-  PurchaseAmount?: number;
-  /** 異動金額 */
-  AlteredAmount?: number;
-  /** 合計金額 */
-  TotalAmount?: number;
-  /** 購入日期 */
-  PurchaseDate?: Date | string;
-  /** 原折舊年限 */
-  OriginalDepreciationLife?: number;
-  /** 異動折舊年限 */
-  AlteredDepreciationLife?: number;
-  /** 累計已攤提金額 */
-  TotalSharedPrice?: number;
-  /** 累計已攤提月數 */
-  TotalSharedMonth?: number;
-  /** 折舊會科 */
-  Depreciation?: string;
-  /** 累計折舊會科 */
-  TotalDepreciation?: string;
-  /** 使用單位 */
-  UsageUnit?: string;
-}
-
-/**
- * ASS13060 查詢回應資料包裝器
- */
-export interface ASS13060QueryDataWrapper {
-  /** 總筆數 */
-  TotalRows: number;
-  /** 總頁數 */
-  TotalPages: number;
-  /** 查詢資料 */
-  QueryData: ASS13060QueryRow[];
+  Ids: number[];
 }
 
 /**
  * ASS13060 審核請求參數
  */
 export interface ASS13060ApproveRequest {
-  /** 固資重估單編號 */
-  RevaluationNo: string;
+  Ids: number[];
+  APRV_EMP_ID: string;
+  APRV_DATE: string;
 }
 
 /**
- * ASS13060 列印請求參數
+ * ASS13060 列印/匯出 PDF 請求參數
  */
-export interface ASS13060PrintRequest {
-  /** 固資重估單編號 */
-  RevaluationNo: string;
+export interface ASS13060ExportPDFRequest {
+  Ids: number[];
+}
+
+/**
+ * ASS13060 新增回應 Data
+ */
+export interface ASS13060InsertResponseData {
+  NewID?: number;
+  NewASSET_EVAL_ID?: string;
+  ErrCode?: number;
+  ErrMsg?: string;
+}
+
+/**
+ * ASS13060 資產查詢請求參數（批次新增彈窗用）
+ */
+export interface ASS13060AssetQueryRequest extends BaseQueryRequest {
+  ASSET_ID?: string | null;
+  GOODS_NAME?: string | null;
+  B_CLASS_ID?: string | null;
+  M_CLASS_ID?: string | null;
+  S_CLASS_ID?: string | null;
+  HOLD_EMP_ID?: string | null;
+  HOLD_ORG_ID?: string | null;
+  ASSET_STATUS?: string | null;
+}
+
+/**
+ * ASS13060 資產查詢結果（批次新增彈窗用）
+ */
+export interface ASS13060AssetQueryRow {
+  ID?: number;
+  MID?: number;
+  STO_NO?: string;
+  ASSET_ID?: string;
+  GET_DATE?: Date | string;
+  AssetName?: string;
+  Unit?: string;
+  UnitName?: string;
+  ASSET_STATUS?: string;
+  ASSET_STATUSName?: string;
+  PurchaseAmt?: number;
+  ChangeAmt?: number;
+  TotalAmt?: number;
+  FIR_EXP_YEAR?: number;
+  UPD_EXP_YEAR_SUM?: number;
+  SUM_DEPRE_MONTH?: number;
+  SUM_DEPRE_AMOUNT?: number;
+  STYPE_ID?: string;
+  STYPE_ID2?: string;
+  HOLD_EMP_ID?: string;
+  user_Name?: string;
+  HOLD_ORG_ID?: string;
+  Org_Name?: string;
+  USE_EMP_ID?: string;
+  USE_ORG_ID?: string;
+}
+
+/**
+ * ASS13060 明細查詢（queryDetailASS13060）請求參數
+ */
+export interface QueryDetailASS13060Request {
+  ID: number;
+}
+
+/**
+ * ASS13060 明細查詢 Master 資料
+ */
+export interface QueryDetailASS13060Master {
+  ID?: number;
+  ASSET_EVAL_ID?: string;
+  EMP_ID?: string;
+  ORG_ID?: string;
+  EVAL_YYYYMM?: string;
+  APPLY_DATE?: string | Date;
+  ASSET_EVAL_STATUS?: string;
+  ASSET_EVAL_STATUS_N?: string;
+  APRV_EMP_ID?: string;
+  APRV_DATE?: string | Date;
+  EVAL_TYPE?: string;
+  NOTES?: string;
+}
+
+/**
+ * ASS13060 明細查詢 Detail 資料列
+ */
+export interface QueryDetailASS13060DetailRow {
+  ID?: number;
+  ASSET_EVAL_ID?: string;
+  LINE_NUM?: number;
+  ASSET_ID?: string;
+  QTY?: number;
+  GOODS_UNIT?: string;
+  GET_COST?: number;
+  EXP_YEAR?: number;
+  UPD_GET_COST?: number;
+  UPD_EXP_YEAR?: number;
+  FIR_GET_COST?: number;
+  FIR_EXP_YEAR?: number;
+  STYPE_ID?: string;
+  STYPE_ID2?: string;
+  USE_ORG_ID?: string;
+  TAL_DEPRE_MON?: number;
+  TAL_DEPRE_AMT?: number;
+  NOTES?: string;
+}
+
+/**
+ * ASS13060 明細查詢回應 Data 結構
+ */
+export interface QueryDetailASS13060Data {
+  Master?: QueryDetailASS13060Master;
+  Details?: QueryDetailASS13060DetailRow[];
 }

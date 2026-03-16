@@ -19,47 +19,47 @@
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
-          label="固資重估單"
-          controlName="RevaluationNo"
-          [control]="dataForm.controls.RevaluationNo"
+          label="固資重估單編號"
+          controlName="ASSET_EVAL_ID"
+          [control]="dataForm.controls.ASSET_EVAL_ID"
           [submitted]="submitted"
         ></app-input-text>
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
-          label="申請人員編號"
-          controlName="UserCode"
-          [options]="userCodeOptions"
+          label="申請人員代碼/名稱"
+          controlName="EMP_ID"
+          [options]="empIdOptions"
           optionLabel="label"
           optionValue="value"
-          [control]="dataForm.controls.UserCode"
+          [control]="dataForm.controls.EMP_ID"
           [submitted]="submitted"
         ></app-dropdown>
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
-          label="部門代號"
-          controlName="OrganizationNumber"
-          [options]="organizationNumberOptions"
+          label="部門代碼/名稱"
+          controlName="ORG_ID"
+          [options]="orgIdOptions"
           optionLabel="label"
           optionValue="value"
-          [control]="dataForm.controls.OrganizationNumber"
+          [control]="dataForm.controls.ORG_ID"
           [submitted]="submitted"
         ></app-dropdown>
         <app-calendar
           class="col-12 md:col-6 lg:col-4"
           calendarType="dateOne"
           label="申請日期"
-          [control]="dataForm.controls.ApplicationDate"
+          [control]="dataForm.controls.APPLY_DATE"
           [submitted]="submitted"
         ></app-calendar>
         <app-input-text
-          class="col-12 md:col-6 lg:col-8"
+          class="col-12 md:col-6 lg:col-4"
           label="固資重估說明"
-          controlName="Remark"
-          [control]="dataForm.controls.Remark"
+          controlName="NOTES"
+          [control]="dataForm.controls.NOTES"
           [submitted]="submitted"
         ></app-input-text>
       </div>
@@ -113,59 +113,65 @@
       <app-input-text
         class="col-12 md:col-6 lg:col-4"
         label="資產編號"
-        controlName="AssetNo"
-        [control]="dialogQueryForm.controls.AssetNo"
+        controlName="ASSET_ID"
+        [control]="dialogQueryForm.controls.ASSET_ID"
+      ></app-input-text>
+      <app-input-text
+        class="col-12 md:col-6 lg:col-4"
+        label="品項名稱"
+        controlName="GOODS_NAME"
+        [control]="dialogQueryForm.controls.GOODS_NAME"
       ></app-input-text>
       <app-dropdown
         class="col-12 md:col-6 lg:col-4"
         label="大分類編號"
-        controlName="BClassId"
+        controlName="B_CLASS_ID"
         [options]="bClassOptions"
         optionLabel="label"
         optionValue="value"
-        [control]="dialogQueryForm.controls.BClassId"
+        [control]="dialogQueryForm.controls.B_CLASS_ID"
       ></app-dropdown>
       <app-dropdown
         class="col-12 md:col-6 lg:col-4"
         label="中分類編號"
-        controlName="MClassId"
+        controlName="M_CLASS_ID"
         [options]="mClassOptions"
         optionLabel="label"
         optionValue="value"
-        [control]="dialogQueryForm.controls.MClassId"
+        [control]="dialogQueryForm.controls.M_CLASS_ID"
       ></app-dropdown>
       <app-dropdown
         class="col-12 md:col-6 lg:col-4"
         label="小分類編號"
-        controlName="SClassId"
+        controlName="S_CLASS_ID"
         [options]="sClassOptions"
         optionLabel="label"
         optionValue="value"
-        [control]="dialogQueryForm.controls.SClassId"
+        [control]="dialogQueryForm.controls.S_CLASS_ID"
       ></app-dropdown>
       <app-dropdown
         class="col-12 md:col-6 lg:col-4"
-        label="保管人代號"
-        controlName="CustodianCode"
-        [options]="custodianOptions"
+        label="保管人代碼/名稱"
+        controlName="HOLD_EMP_ID"
+        [options]="holdEmpIdOptions"
         optionLabel="label"
         optionValue="value"
-        [control]="dialogQueryForm.controls.CustodianCode"
+        [control]="dialogQueryForm.controls.HOLD_EMP_ID"
       ></app-dropdown>
       <app-dropdown
         class="col-12 md:col-6 lg:col-4"
-        label="保管單位代號"
-        controlName="CustodyUnitCode"
-        [options]="custodyUnitOptions"
+        label="保管單位代碼/名稱"
+        controlName="HOLD_ORG_ID"
+        [options]="holdOrgIdOptions"
         optionLabel="label"
         optionValue="value"
-        [control]="dialogQueryForm.controls.CustodyUnitCode"
+        [control]="dialogQueryForm.controls.HOLD_ORG_ID"
       ></app-dropdown>
       <app-input-text
         class="col-12 md:col-6 lg:col-4"
-        label="品項名稱"
-        controlName="ItemName"
-        [control]="dialogQueryForm.controls.ItemName"
+        label="資產狀態"
+        controlName="ASSET_STATUS"
+        [control]="dialogQueryForm.controls.ASSET_STATUS"
       ></app-input-text>
     </div>
     <div
@@ -193,6 +199,5 @@
     [totalRecords]="totalRecords"
     [loading]="dialogLoading"
     [lastQueryBody]="lastQueryBody"
-    [queryFunction]="assetQueryFunction"
   ></app-table-report>
 </app-dialog>

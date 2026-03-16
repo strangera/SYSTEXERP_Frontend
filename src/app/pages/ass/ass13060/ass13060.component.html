@@ -15,55 +15,46 @@
         <div class="grid p-fluid">
           <app-input-text
             class="col-12 md:col-6 lg:col-4"
-            label="申請編號"
-            controlName="RequestCode"
-            [control]="qf().RequestCode"
-            [submitted]="submitted"
-          ></app-input-text>
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="商品管理編號"
-            controlName="ManagementCode"
-            [control]="qf().ManagementCode"
+            label="固資重估單編號"
+            controlName="ASSET_EVAL_ID"
+            [control]="qf().ASSET_EVAL_ID"
             [submitted]="submitted"
           ></app-input-text>
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
-            label="申請人員編號"
-            controlName="UserCode"
-            [options]="userCodeOptions()"
+            label="申請人員代碼/名稱"
+            controlName="EMP_ID"
+            [options]="empIdOptions()"
             optionLabel="label"
             optionValue="value"
-            [control]="qf().UserCode"
+            [control]="qf().EMP_ID"
             [submitted]="submitted"
           ></app-dropdown>
-        </div>
-        <div class="grid p-fluid">
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
-            label="部門代號"
-            controlName="OrganizationNumber"
-            [options]="organizationNumberOptions()"
+            label="部門代碼/名稱"
+            controlName="ORG_ID"
+            [options]="orgIdOptions()"
             optionLabel="label"
             optionValue="value"
-            [control]="qf().OrganizationNumber"
+            [control]="qf().ORG_ID"
             [submitted]="submitted"
           ></app-dropdown>
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="申請日期"
-            [startControl]="qf().ApplicationDateFrom"
-            [endControl]="qf().ApplicationDateTo"
+            [startControl]="qf().APPLY_DATE_S"
+            [endControl]="qf().APPLY_DATE_E"
             [submitted]="submitted"
           ></app-calendar-range-quick>
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="申請單狀態"
-            controlName="RequestStatus"
-            [options]="requestStatusOptions()"
+            controlName="ASSET_EVAL_STATUS"
+            [options]="assetEvalStatusOptions()"
             optionLabel="label"
             optionValue="value"
-            [control]="qf().RequestStatus"
+            [control]="qf().ASSET_EVAL_STATUS"
             [submitted]="submitted"
           ></app-dropdown>
         </div>
@@ -82,7 +73,7 @@
   <div class="col-12">
     <app-table-report
       [data]="tableData()"
-      dataKey="RevaluationNo"
+      dataKey="ID"
       tableKey="ASS13060_Data"
       [columns]="columns"
       [totalRecords]="totalRecords()"
@@ -99,6 +90,18 @@
       [editDisabled]="editDisabled"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
-    ></app-table-report>
+    >
+      <header>
+        <div class="flex justify-content-end gap-2">
+          <app-button
+            icon="pi pi-print"
+            label="匯出申請單 PDF"
+            [loading]="loading"
+            [disabled]="selectedItems.length === 0"
+            (click)="onExportPDF()"
+          ></app-button>
+        </div>
+      </header>
+    </app-table-report>
   </div>
 </div>
