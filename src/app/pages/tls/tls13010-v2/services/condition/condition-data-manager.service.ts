@@ -1,17 +1,17 @@
 /**
- * 條件設定資料管理服務
+ * 租金設定資料管理服務
  * 負責條件資料的建立、分類、驗證等操作
  */
 import { Injectable } from '@angular/core';
 import { CommissionType } from '../../core/constants';
 import {
+  BaseCommissionCondition,
+  BaseRentHigherCondition,
+  BaseTierCondition,
+  CategorizedConditions,
   ConditionItem,
   FixedRentCondition,
-  BaseRentHigherCondition,
-  BaseCommissionCondition,
-  GraduatedCommissionCondition,
-  BaseTierCondition,
-  CategorizedConditions
+  GraduatedCommissionCondition
 } from '../../core/models/condition';
 
 @Injectable({
@@ -145,7 +145,8 @@ export class ConditionDataManagerService {
     talentId: string,
     startDate: string,
     endDate: string,
-    existingItems: BaseTierCondition[] = []
+    existingItems: BaseTierCondition[] = [],
+    limitAmt: number = 0
   ): BaseTierCondition {
     const amountRange = this.getSmartAmountRange(existingItems);
     return {
@@ -155,13 +156,79 @@ export class ConditionDataManagerService {
       tlt_id: '',
       cag_bdate: startDate || this.getDefaultStartDate(),
       cag_edate: endDate || this.getDefaultEndDate(),
-      limit_amt: 0,
+      limit_amt: limitAmt,
       start_number: amountRange.start_number,
       end_number: amountRange.end_number,
       charge_rate: 0,
       _status: 'new',
       _isNew: true
     };
+  }
+
+  /**
+   * 取得既有包底加層級項目中第一筆的包底金額（用於新增時帶入）
+   */
+  getFirstLimitAmt(items: BaseTierCondition[]): number {
+    const firstActive = items.find(item => item._status !== 'deleted');
+    return firstActive?.limit_amt ?? 0;
+  }
+
+  /**
+   * 判斷是否應複製一組新增（最後一筆 end_number = MAX，代表該組已完整，下次應開新組）
+   */
+  shouldAddPair(existingItems: (GraduatedCommissionCondition | BaseTierCondition)[]): boolean {
+    const activeItems = existingItems.filter(item => item._status !== 'deleted');
+    if (activeItems.length === 0) return false;
+    const sorted = [...activeItems].sort((a, b) => (a.seq_no || 0) - (b.seq_no || 0));
+    return sorted[sorted.length - 1].end_number === ConditionDataManagerService.MAX_AMOUNT;
+  }
+
+  /**
+   * 重新排序 active 項目的 seq_no，確保連續無缺口
+   * 原本是 [1,3,4] 的序號重排後變 [1,2,3]，原值改變者標為 modified
+   * 在新增前呼叫，讓新筆從正確的號碼接續
+   */
+  renumberActiveItems<T extends { seq_no: number; _status?: string }>(items: T[]): T[] {
+    const activeItems = items
+      .filter(i => i._status !== 'deleted')
+      .sort((a, b) => (a.seq_no || 0) - (b.seq_no || 0));
+    const deletedItems = items.filter(i => i._status === 'deleted');
+
+    let seq = 1;
+    const renumbered = activeItems.map(item => {
+      const newSeq = seq++;
+      if (newSeq === item.seq_no) return item;
+      return {
+        ...item,
+        seq_no: newSeq,
+        _status: item._status === 'original' ? 'modified' : item._status
+      } as T;
+    });
+
+    return [...renumbered, ...deletedItems];
+  }
+
+  /**
+   * 取得最後一組的資料筆數（與最晚 cag_edate 相同的 active 項目數）
+   * 用於複製新增時，確保新增筆數與最後一組一致
+   */
+  getLastGroupCount(existingItems: (GraduatedCommissionCondition | BaseTierCondition)[]): number {
+    const activeItems = existingItems.filter(item => item._status !== 'deleted');
+    if (activeItems.length === 0) return 1;
+
+    let latestEnd: Date | null = null;
+    for (const item of activeItems) {
+      if (!item.cag_edate) continue;
+      const d = this.parseDate(item.cag_edate);
+      if (d && (!latestEnd || d > latestEnd)) latestEnd = d;
+    }
+
+    if (!latestEnd) return activeItems.length;
+
+    return activeItems.filter(item => {
+      const d = this.parseDate(item.cag_edate);
+      return d && d.getTime() === latestEnd!.getTime();
+    }).length;
   }
 
   /**
@@ -175,6 +242,17 @@ export class ConditionDataManagerService {
     endDate: string,
     existingItems: ConditionItem[] = []
   ): ConditionItem | null {
+    // 層級 / 包底加層級：同一期間可有多個金額層，最後一組已到契約截止日時仍允許新增
+    if (commissionType === CommissionType.GRADUATED || commissionType === CommissionType.BASE_TIER) {
+      const dates = this.getNextDatesForTieredItem(existingItems, startDate, endDate);
+      if (commissionType === CommissionType.GRADUATED) {
+        return this.createGraduatedItem(talentId, dates.bdate, dates.edate, existingItems as GraduatedCommissionCondition[]);
+      } else {
+        const limitAmt = this.getFirstLimitAmt(existingItems as BaseTierCondition[]);
+        return this.createBaseTierItem(talentId, dates.bdate, dates.edate, existingItems as BaseTierCondition[], limitAmt);
+      }
+    }
+
     const smartStartDate = this.getNextStartDate(existingItems, startDate, endDate);
     if (smartStartDate === null) {
       return null;
@@ -186,10 +264,6 @@ export class ConditionDataManagerService {
         return this.createBaseRentHigherItem(talentId, smartStartDate, endDate);
       case CommissionType.BASE_COMMISSION:
         return this.createBaseCommissionItem(talentId, smartStartDate, endDate);
-      case CommissionType.GRADUATED:
-        return this.createGraduatedItem(talentId, smartStartDate, endDate, existingItems as GraduatedCommissionCondition[]);
-      case CommissionType.BASE_TIER:
-        return this.createBaseTierItem(talentId, smartStartDate, endDate, existingItems as BaseTierCondition[]);
       default:
         return null;
     }
@@ -302,6 +376,59 @@ export class ConditionDataManagerService {
 
   private getDefaultEndDate(): string {
     return new Date().toISOString().split('T')[0];
+  }
+
+  /**
+   * 計算層級/包底加層級類型的新增項目日期
+   * - 無既有項目 → { bdate: contractStart, edate: contractEnd }
+   * - 最晚截止日 < 契約截止日 → { bdate: 最晚截止日+1, edate: contractEnd }（新期間）
+   * - 最晚截止日 = 契約截止日 → { bdate: 最後一組的起始日, edate: contractEnd }（同期間新層級，不擋）
+   */
+  getNextDatesForTieredItem(
+    existingItems: ConditionItem[],
+    contractStartDate: string,
+    contractEndDate: string
+  ): { bdate: string; edate: string } {
+    const activeItems = existingItems.filter(item => item._status !== 'deleted');
+
+    if (activeItems.length === 0) {
+      return { bdate: contractStartDate, edate: contractEndDate };
+    }
+
+    let latestEnd: Date | null = null;
+    let latestEDateStr: string | null = null;
+    for (const item of activeItems) {
+      if (!item.cag_edate) continue;
+      const d = this.parseDate(item.cag_edate);
+      if (d && (!latestEnd || d > latestEnd)) {
+        latestEnd = d;
+        latestEDateStr = item.cag_edate as string;
+      }
+    }
+
+    if (!latestEnd || !latestEDateStr) {
+      return { bdate: contractStartDate, edate: contractEndDate };
+    }
+
+    const contractEnd = this.parseDate(contractEndDate);
+
+    // 最晚截止日 = 契約截止日 → 同期間新層級（允許，沿用該組的起始日）
+    if (contractEnd && latestEnd.getTime() === contractEnd.getTime()) {
+      const lastGroupItems = activeItems.filter(item => item.cag_edate === latestEDateStr);
+      let groupBdate: string = latestEDateStr;
+      for (const item of lastGroupItems) {
+        if (!item.cag_bdate) continue;
+        const bd = this.parseDate(item.cag_bdate);
+        const gd = this.parseDate(groupBdate);
+        if (bd && gd && bd < gd) groupBdate = item.cag_bdate as string;
+      }
+      return { bdate: groupBdate, edate: contractEndDate };
+    }
+
+    // 否則建立新期間
+    const nextDay = new Date(latestEnd);
+    nextDay.setDate(nextDay.getDate() + 1);
+    return { bdate: this.formatDate(nextDay), edate: contractEndDate };
   }
 
   /**

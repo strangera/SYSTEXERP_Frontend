@@ -6,6 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN15110Service } from '@service/api/fin/fin15110.service';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
@@ -25,7 +26,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
-import { finalize } from 'rxjs';
+import { debounceTime, finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -333,8 +334,8 @@ export class FIN15110Component
 
   /** 監聽報表類型變化，自動調整日期範圍 */
   private setupDisplayModeWatcher(): void {
-    this.queryForm.get('displayMode')?.valueChanges.subscribe(value => {
-      // 更新欄位啟用/停用狀態
+    this.queryForm.get('displayMode')?.valueChanges.pipe(debounceTime(200), untilDestroyed(this)).subscribe(value => {
+      // 更新欄位啟用/停用狀態（不會立刻改變表格欄位）
       this.updateControlsByDisplayMode(value);
       // 當為 2/3 時自動把結束日設為起始日（UI 會把結束日停用）
       if (value === '2' || value === '3') {
@@ -343,8 +344,11 @@ export class FIN15110Component
           this.queryForm.patchValue({ TXN_DT_E: startDate }, { emitEvent: false });
         }
       }
-      // 同步欄位配置（表格欄位會隨報表格式切換）
-      this.columns = this.getColumnsByReportType(value || '1');
+
+      // 立即自動查詢，避免保留先前報表資料
+      if (!this.loading) {
+        this.onSubmit(this.queryForm);
+      }
     });
   }
 

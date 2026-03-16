@@ -337,11 +337,11 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     }
 
     // 根據 API 需求包裝參數，對應您原本程式碼中的 PC_id
-    const formValue = { PC_id: rowData.id };
+    const formValue = { ID: rowData.id };
 
     if (isExcel) {
       this.btnExcelLoading = true;
-      this.tls12010Service.exportTLS12010_Detail(formValue)
+      this.tls12010Service.exportTLS12010(formValue)
         .pipe(
           finalize(() => this.btnExcelLoading = false),
           untilDestroyed(this)
@@ -358,7 +358,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         });
     } else {
       this.btnPDFLoading = true;
-      this.tls12010Service.exportTLS12010_DetailPDF(formValue)
+      this.tls12010Service.exportTLS12010PDF(formValue)
         .pipe(
           finalize(() => this.btnPDFLoading = false),
           untilDestroyed(this)

@@ -9,20 +9,20 @@ import { FormGroup } from '@angular/forms';
 // 類型定義
 import { CommissionType } from '../../core/constants';
 import {
-  CommissionItem,
-  CleanCommissions,
+  CleanCommissionDetails,
   CleanCommissionMaster,
   CleanCommissionMasters,
-  CleanCommissionDetails
+  CleanCommissions,
+  CommissionItem
 } from '../../core/models/commission';
 import { CleanConditions, ConditionItem } from '../../core/models/condition';
-import { LocationItem, CleanLocationInfo } from '../../core/models/contract';
-import { FareItem, CleanFareItem, CleanDeductions } from '../../core/models/deduction';
+import { CleanLocationInfo, LocationItem } from '../../core/models/contract';
+import { CleanDeductions, CleanFareItem, FareItem } from '../../core/models/deduction';
 import {
-  CleanSubmitData,
-  CleanContractInfo,
   CleanContractData,
+  CleanContractInfo,
   CleanMetadata,
+  CleanSubmitData,
   CommissionTypeChangeInfo
 } from '../../core/models/workflow';
 
@@ -188,6 +188,8 @@ export class SubmitDataService {
       tlt_floor: this.str(loc.tlt_floor),
       area_no: this.str(loc.area_no),
       tlt_space: loc.tlt_space || 0,
+      tlt_bdate: this.formatDate(loc.tlt_bdate),
+      tlt_edate: this.formatDate(loc.tlt_edate),
       _status: loc._status || 'original'
     }));
   }
@@ -428,7 +430,7 @@ export class SubmitDataService {
     return { toInsert, toUpdate, toDelete };
   }
 
-  // ========== Step 4: 條件設定 ==========
+  // ========== Step 4: 租金設定 ==========
 
   private buildConditions(
     conditionItems: ConditionItem[],
@@ -444,6 +446,7 @@ export class SubmitDataService {
     };
 
     // 根據抽成別分類處理條件項目
+    // 注意：不對 seq_no 做重排，新增項目使用 max+1 策略，避免唯一索引衝突
     for (const item of conditionItems) {
       this.categorizeConditionItem(item, conditions, talentId, commissionType);
     }
@@ -482,7 +485,7 @@ export class SubmitDataService {
         this.addToLevelOperations(item, conditions.baseTier, talentId, status);
         break;
 
-      // '3' 一般抽成 不需要 Step 4 條件設定
+      // '3' 一般抽成 不需要 Step 4 租金設定
     }
   }
 
@@ -656,7 +659,7 @@ export class SubmitDataService {
       CommissionType.BASE_TIER
     ];
     return commissionTypes.includes(oldType as CommissionType) &&
-           (newType === CommissionType.FIXED_RENT);
+      (newType === CommissionType.FIXED_RENT);
   }
 
   private needsClearLimit(oldType: string, newType: string): boolean {

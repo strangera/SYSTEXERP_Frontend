@@ -11,6 +11,7 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model'; // 引入 ReportColumn
 import { AddButton, formatYYYYMM } from '@shared/componentkit/table/table.model';
@@ -31,7 +32,24 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
   selector: 'app-tls2h030',
   templateUrl: './tls2h030.component.html',
   standalone: true,
-  imports: [ButtonModule, InputTextRangeComponent, CalendarComponent, SelectButtonModule, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, CheckboxModule, TranslateModule]
+  imports: [
+    ButtonModule,
+    InputTextRangeComponent,
+    CalendarComponent,
+    SelectButtonModule,
+    TableReportComponent,
+    AsyncPipe,
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    DropdownComponent,
+    CheckboxModule,
+    TranslateModule,
+    MultiSelectComponent
+  ]
 })
 export class TLS2H030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -41,7 +59,7 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
     SamYyyymm: [new Date(), Validators.required],
     GuiNoStart: [null],
     GuiNoEnd: [null],
-    TltNo: [''],
+    TltNo: [null],
     COMM_MONEY_TYPE: [''],
     SortBy: [[{ field: 'TltNo', order: 1 }]],
   });
@@ -58,8 +76,7 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
     { field: 'TltName', header: '櫃位名稱', visible: true },
     { field: 'ContractNo', header: '契約編號', visible: true },
     { field: 'ContractSubNo', header: '版本編號', visible: true },
-    { field: 'GuiAmt', header: '代扣款發票金額', visible: true, format: formatAmount, align: 'right' },
-    //  { field: 'GuiAmt', header: '發票金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'GuiAmt', header: '抽成發票金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'GuiNo', header: '發票號碼', visible: true },
     { field: 'GuiPrintTimes', header: '發票列印次數', visible: true },
     { field: 'IsPrinted', header: '是否已列印', visible: true, format: (v: any) => (v ? '是' : '否') },
@@ -73,7 +90,11 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
   ) {
     super();
     this.addButton = [
-      { label: '預覽列印', icon: 'fa fa-file-pdf text-blue-500', action: (rowData: any) => { this.previewPrint(rowData); }, disabled: (rowData: any) => !rowData?.GuiNo }
+      {
+        label: '列印', icon: 'fa fa-file-pdf text-blue-500',
+        action: (rowData: any) => { this.previewPrint(rowData); },
+        disabled: (rowData: any) => rowData.IsPrinted // 列印次數0時才啟用列印按鈕
+      }
     ];
   }
   previewPrint(rowData: any): void {
@@ -88,12 +109,17 @@ export class TLS2H030Component extends BasicQueryPageComponent<any> implements O
     this.tls2h030Service.PrintTLS2H(params).pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
       .subscribe({
         next: (res: any) => {
+          this.onSubmit(this.queryForm);
           const url = res.Data?.Print_URL || '';
           if (url) {
             window.open(environment.ApiUrl + url);
           }
         },
       });
+  }
+
+  isRowSelectable(rowData: any) {
+    return rowData.IsPrinted === true; // 只有列印過的發票可以選取進行重印
   }
 
   onReprint(frm: FormGroup): void {

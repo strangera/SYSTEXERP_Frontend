@@ -20,7 +20,6 @@ import { PluLogo } from '../../../shared/models/tls/tls000.model';
 @Component({
   selector: 'app-tls51060',
   templateUrl: './tls51060.component.html',
-  styleUrl: './tls51060.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })

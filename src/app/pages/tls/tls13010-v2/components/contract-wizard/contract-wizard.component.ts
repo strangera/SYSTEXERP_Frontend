@@ -5,11 +5,11 @@
  * - Step 1: 合約基本資料
  * - Step 2: 代扣款設定
  * - Step 3: 抽成設定
- * - Step 4: 條件設定
+ * - Step 4: 租金設定
  *
  * 資料統一在此組件管理，不需要 Session Storage
  */
-import { NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
+import { NgFor, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -27,23 +27,24 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 // 共用組件
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 // V2 服務
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
-import { TLS13010DropdownService } from '../../../tls13010/tls13010.dropdown';
-import { CommissionDataService } from '../../services/commission/commission-data.service';
+import { FareValidationService } from '@pages/tls/shared/services/fare-validation.service';
+import { TLS13010DropdownService } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { CommissionCrudService } from '../../services/commission/commission-crud.service';
+import { CommissionDataService } from '../../services/commission/commission-data.service';
 import { SubmitDataService } from '../../services/submit/submit-data.service';
-import { FareValidationService } from '../../../tls13010-next1/Services/fare-validation.service';
 
 // V2 類型
+import { CommissionType } from '../../core/constants';
 import { CommissionItem, DiscountSettingItem } from '../../core/models/commission';
 import { DropdownOption } from '../../core/models/common.interface';
 import { ConditionItem } from '../../core/models/condition';
 import { ContractInfo, LocationItem } from '../../core/models/contract';
 import { FareItem } from '../../core/models/deduction';
-import { CommissionType } from '../../core/constants';
 // 子組件
 import { Step1ContractInfoComponent } from './steps/step1-contract-info/step1-contract-info.component';
 import { Step2DeductionComponent } from './steps/step2-deduction/step2-deduction.component';
@@ -94,6 +95,7 @@ const DATE_FIELDS = [
   styleUrls: ['./contract-wizard.component.scss'],
   standalone: true,
   imports: [
+    NgFor,
     NgIf,
     NgSwitch,
     NgSwitchCase,
@@ -103,6 +105,7 @@ const DATE_FIELDS = [
     ButtonModule,
     MenubarComponent,
     ButtonComponent,
+    DialogComponent,
     Step1ContractInfoComponent,
     Step2DeductionComponent,
     Step3CommissionComponent,
@@ -197,6 +200,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
   // 儲存狀態
   isSaving = false;
+
+  // 成功確認對話框
+  showSuccessDialog = false;
+  successDialogItems: { label: string; value: string }[] = [];
 
   // Step 3 專用：折扣選項
   discountOptions: DropdownOption[] = [];
@@ -1423,7 +1430,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
   }
 
   private validateStep4(): boolean {
-    // Step 4 條件設定驗證
+    // Step 4 租金設定驗證
     const commissionType = this.currentCommissionType;
 
     // 一般抽成 (3) 不需要 Step 4
@@ -1523,7 +1530,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
         case CommissionType.GRADUATED: // 層級抽成 (5)
           if (data['start_number'] !== undefined && data['end_number'] !== undefined) {
-            if (Number(data['start_number']) >= Number(data['end_number'])) {
+            const gradStart = Number(data['start_number']);
+            const gradEnd = Number(data['end_number']);
+            // end=0 視為無上限，不卡控；起始值允許為 0
+            if (gradEnd !== 0 && gradStart >= gradEnd) {
               errorCount++;
               errorTypes.add('業績起迄值錯誤');
               errorFields.push('start_number', 'end_number');
@@ -1543,7 +1553,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
             errorFields.push('limit_amt');
           }
           if (data['start_number'] !== undefined && data['end_number'] !== undefined) {
-            if (Number(data['start_number']) >= Number(data['end_number'])) {
+            const tierStart = Number(data['start_number']);
+            const tierEnd = Number(data['end_number']);
+            // end=0 視為無上限，不卡控；起始值允許為 0
+            if (tierEnd !== 0 && tierStart >= tierEnd) {
               errorCount++;
               errorTypes.add('業績起迄值錯誤');
               errorFields.push('start_number', 'end_number');
@@ -1575,7 +1588,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
       const typeList = [...errorTypes].join('、');
       this.messageService.warnBubble(
-        `條件設定共 ${errorCount} 項錯誤：${typeList}，請修正紅框欄位`
+        `租金設定共 ${errorCount} 項錯誤：${typeList}，請修正紅框欄位`
       );
       return false;
     }
@@ -1653,8 +1666,6 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
           `品牌(專櫃名稱):${formData.tlt_name || ''}`
         ].join('\n');
 
-        this.messageService.successBubble(successMessage);
-
         // 新增契約時刷新使用者資料權限，否則看不到剛新增的資料
         if (isInsert) {
           try {
@@ -1664,12 +1675,14 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
           }
         }
 
-        // 延遲返回查詢頁，讓使用者看到成功訊息
-        setTimeout(() => {
-          this.router.navigate(['account/tls/tls13010'], {
-            state: { fromRoute: '/tls/tls13010cru' }
-          });
-        }, 2000);
+        // 顯示成功確認對話框（讓使用者抄資料後再跳頁）
+        this.successDialogItems = successMessage.split('\n').map(line => {
+          const idx = line.indexOf(':');
+          return idx !== -1
+            ? { label: line.substring(0, idx), value: line.substring(idx + 1) }
+            : { label: '', value: line };
+        });
+        this.showSuccessDialog = true;
       } else {
         throw new Error(response?.message || '契約書資料提交失敗');
       }
@@ -1690,13 +1703,13 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
   /**
    * 確保條件資料已初始化（針對需要條件的抽成別）
-   * 如果 wizardState.conditionItems 為空且抽成別需要條件設定，
+   * 如果 wizardState.conditionItems 為空且抽成別需要租金設定，
    * 自動建立一筆預設的條件項目
    */
   private ensureConditionItemsInitialized(): void {
     const commissionType = this.currentCommissionType;
 
-    // 一般抽成 (3) 不需要條件設定
+    // 一般抽成 (3) 不需要租金設定
     if (commissionType === CommissionType.GENERAL_COMMISSION || commissionType === '') {
       return;
     }
@@ -1825,7 +1838,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
   }
 
   /**
-   * 格式化日期為條件設定用的字串格式
+   * 格式化日期為租金設定用的字串格式
    */
   private formatDateForCondition(date: unknown): string {
     if (!date) return '';
@@ -1922,7 +1935,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
     // 如果日期沒有變更，不需要同步
     if (this.areDatesEqual(currentStartDate, this.lastContractStartDate) &&
-        this.areDatesEqual(currentEndDate, this.lastContractEndDate)) {
+      this.areDatesEqual(currentEndDate, this.lastContractEndDate)) {
       return;
     }
 
@@ -2094,5 +2107,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
     }
 
     return processed;
+  }
+
+  // ========== 成功對話框 ==========
+  onSuccessConfirm(): void {
+    this.showSuccessDialog = false;
+    this.router.navigate(['account/tls/tls13010'], { state: { fromRoute: '/tls/tls13010cru' } });
+  }
+
+  onSuccessDialogClose(visible: boolean): void {
+    if (!visible) this.onSuccessConfirm();
   }
 }

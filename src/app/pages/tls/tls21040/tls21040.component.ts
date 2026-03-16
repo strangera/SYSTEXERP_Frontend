@@ -1,11 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS21040Data, TLS21040QueryRequest, Tls21040Service } from '@service/api/tls/tls21040.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatYYYYMMDD, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
@@ -16,7 +19,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { formatDateTime } from './../../../shared/componentkit/table/table.model';
-
 
 @Component({
   selector: 'app-tls21040',
@@ -32,9 +34,12 @@ import { formatDateTime } from './../../../shared/componentkit/table/table.model
     InputTextComponent,
     TableReportComponent,
     TranslateModule,
+    DropdownComponent,
   ],
 })
 export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> implements OnInit {
+  @ViewChild(TableReportComponent) tableReport?: TableReportComponent;
+  // public readonly Actions = Actions;
   queryForm = this.formBuilder.group({
     CRD_BinCode: ['', [Validators.maxLength(16)]],
     BNK_No: ['', [Validators.maxLength(3)]],
@@ -48,9 +53,11 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
   totalRecords = 0;
   data: TLS21040Data[] = [];
   selectedItems: TLS21040Data[] = [];
+
   columns: ReportColumn[] = [
     { field: 'CRD_BinCode', header: '信用卡 BIN 碼', visible: true },
     { field: 'BNK_No', header: '發卡銀行代號', visible: true },
+    { field: 'BNK_Name', header: '發卡銀行名稱', visible: true },
     { field: 'CRD_Type', header: '信用卡卡別', visible: true, format: (value: string) => getSYS1000('CRD_Type', value) },
     { field: 'CRD_Kind', header: '信用卡卡種', visible: true, format: (value: string) => getSYS1000('CRD_Kind', value) },
     { field: 'Active_Date', header: '生效日期', visible: true, format: formatYYYYMMDD },
@@ -64,12 +71,24 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
   ];
   cardTypeOptions = getSYS1000Options('CRD_Type');
   cardCategoryOptions = getSYS1000Options('CRD_Kind');
+  BNK_NoOptions: IDropdownItem[] = [];
   constructor(
-    public readonly tls21040Service: Tls21040Service
+    public readonly tls21040Service: Tls21040Service,
+    private readonly fileExportService: FileExportService,
+    private readonly dropDown: DropDownListService,
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS21040', 'TLS/TLS21040cru', this.queryForm, (form) => this.onSubmit(form));
+
+    // 取得發卡銀行下拉 (APS1001, 不含分行)
+    this.dropDown.queryAPS1001NoBranch_DropDownList({ SearchKeyword: '' }).pipe(untilDestroyed(this)).subscribe({
+      next: (res) => {
+        if (res && res.Data) {
+          this.BNK_NoOptions = res.Data.map(item => ({ No: item.No, Name: item.Name, label: `${item.No}-${item.Name}`, value: item.No }));
+        }
+      },
+    });
   }
 
   onSubmit(frm: FormGroup) {
@@ -78,6 +97,8 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
         this.data = res.Data;
         this.lastQueryBody = frm.getRawValue();
         this.totalRecords = res.TotalCount;
+        // 若查詢有資料，自動切換至報表模式以顯示匯出/匯入按鈕
+        try { if (this.data && this.data.length > 0) (this.tableReport as any).IsPrint = true; } catch { }
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     });
@@ -123,5 +144,17 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
         }
       }
     })
+  }
+  btnLoading = false;
+  excelLoading = false;
+  downloadTemplate() {
+    const export$ = this.tls21040Service.downloadTLS21040Template().pipe(
+    );
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
+  }
+
+  /** 自動下載錯誤檔 */
+  downloadErrorFile(filePath: string) {
+    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 }

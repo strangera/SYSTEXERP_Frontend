@@ -103,13 +103,15 @@
               <app-dropdown label="是否啟用" [control]="getControl('KB_Switch')" [options]="KB_SwitchOptions"
                 optionLabel="label" optionValue="value" [showClear]="true"></app-dropdown>
             </div>
-
             <div class="col-12" *ngIf="selectedTab === 'button'">
-              <app-input-text label="案鍵顯示(第一行)" [control]="getControl('KB_Display1')"></app-input-text>
+              <app-input-text label="按鍵編號" [control]="getControl('KB_ScanCode')" [readonly]="true"></app-input-text>
+            </div>
+            <div class="col-12" *ngIf="selectedTab === 'button'">
+              <app-input-text label="按鍵顯示(第一行)" [control]="getControl('KB_Display1')"></app-input-text>
             </div>
 
             <div class="col-12" *ngIf="selectedTab === 'button'">
-              <app-input-text label="案鍵顯示(第二行)" [control]="getControl('KB_Display2')"></app-input-text>
+              <app-input-text label="按鍵顯示(第二行)" [control]="getControl('KB_Display2')"></app-input-text>
             </div>
 
             <div class="col-12" *ngIf="selectedTab === 'button'">

@@ -76,7 +76,7 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
   columns: Column[] = [
     { field: 'TXN_Date', header: '日期', visible: true, format: formatDate },
     { field: 'CardType', header: '卡別', visible: true },
-    { field: 'TXN_PayDesc', header: '聯名卡號', visible: true },
+    { field: 'CRD_No', header: '聯名卡號', visible: true },
     {
       field: 'Org_ID', header: '組織名稱', visible: true, format: (value, _i, row) =>
         row?.Org_Name ?? row?.OrgName ?? this.org_id_Options.find(o => String(o.value) === String(value))?.label ?? value
@@ -101,6 +101,16 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
       return val ?? '';
     } catch {
       return '';
+    }
+  }
+
+  private formatMultiArray(val: any): string[] {
+    try {
+      if (!val) return [];
+      if (Array.isArray(val)) return val as string[];
+      return [String(val)];
+    } catch {
+      return [];
     }
   }
 
@@ -139,9 +149,9 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     const payload = {
       TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
       TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
-      CRD_Kind: this.formatMulti(v.CRD_Kind),
-      Org_ID: this.formatMulti(v.Org_ID),
-      TLT_No: this.formatMulti(v.TLT_No),
+      CRD_Kind: this.formatMultiArray(v.CRD_Kind),
+      Org_ID: this.formatMultiArray(v.Org_ID),
+      TLT_No: this.formatMultiArray(v.TLT_No),
     };
 
     this.loading = true;
@@ -164,15 +174,21 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
       });
 
     // 第二個 API: 卡別明細表（columns）- 初始載入第一頁
+    const pageSize = v.pageSize || 20;
+    const pageIndex = v.pageIndex || 1;
+    const offset = (pageIndex - 1) * pageSize;
+
     const detailPayload = {
-      pageSize: v.pageSize || 20,
-      pageIndex: v.pageIndex || 1,
-      // 傳遞排序資訊給後端（兼容不同後端欄位命名）
+      PageSize: pageSize,
+      PageIndex: pageIndex,
       OrderBy: v.SortBy?.[0]?.field ?? undefined,
+      Offset: offset,
       SortBy: v.SortBy ?? undefined,
-      SortOrder: v.SortBy?.[0]?.order ?? undefined,
-      SortDirection: v.SortBy?.[0]?.order === -1 ? 'DESC' : (v.SortBy?.[0]?.order === 1 ? 'ASC' : undefined),
-      ...payload
+      TXN_Date_Start: payload.TXN_Date_Start,
+      TXN_Date_End: payload.TXN_Date_End,
+      CRD_Kind: payload.CRD_Kind,
+      Org_ID: payload.Org_ID,
+      TLT_No: payload.TLT_No,
     };
 
     this.cpm13040Service.queryCPM13040Detail(detailPayload)
@@ -245,19 +261,21 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     super.onLazyLoadData(event, frm);
 
     const formValue = frm.value;
+    const pageSize = formValue.pageSize ?? event.pageSize ?? 20;
+    const pageIndex = formValue.pageIndex ?? event.pageIndex ?? 1;
+    const offset = (pageIndex - 1) * pageSize;
+
     const payload = {
       TXN_Date_Start: this.datePipe.transform(formValue.TXN_Date_Start, 'yyyy-MM-dd'),
       TXN_Date_End: this.datePipe.transform(formValue.TXN_Date_End, 'yyyy-MM-dd'),
-      CRD_Kind: formValue.CRD_Kind.join(',') || '',
-      Org_ID: formValue.Org_ID.join(',') || '',
-      TLT_No: formValue.TLT_No.join(',') || '',
-      pageSize: formValue.pageSize ?? event.pageSize,
-      pageIndex: formValue.pageIndex ?? event.pageIndex,
-      // 將排序資訊一併傳到後端（同時提供欄位與方向，增加相容性）
+      CRD_Kind: this.formatMultiArray(formValue.CRD_Kind),
+      Org_ID: this.formatMultiArray(formValue.Org_ID),
+      TLT_No: this.formatMultiArray(formValue.TLT_No),
+      PageSize: pageSize,
+      PageIndex: pageIndex,
       OrderBy: formValue.SortBy?.[0]?.field ?? undefined,
       SortBy: formValue.SortBy ?? undefined,
-      SortOrder: formValue.SortBy?.[0]?.order ?? undefined,
-      SortDirection: formValue.SortBy?.[0]?.order === -1 ? 'DESC' : (formValue.SortBy?.[0]?.order === 1 ? 'ASC' : undefined),
+      Offset: offset,
     };
 
     this.loading = true;
@@ -329,9 +347,9 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     const payload = {
       TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
       TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
-      CRD_Kind: this.formatMulti(v.CRD_Kind),
-      Org_ID: this.formatMulti(v.Org_ID),
-      TLT_No: this.formatMulti(v.TLT_No),
+      CRD_Kind: this.formatMultiArray(v.CRD_Kind),
+      Org_ID: this.formatMultiArray(v.Org_ID),
+      TLT_No: this.formatMultiArray(v.TLT_No),
     };
 
     this.btnLoading = true;
@@ -370,9 +388,9 @@ export class CPM13040Component extends BasicQueryPageComponent<any> implements O
     const payload = {
       TXN_Date_Start: this.datePipe.transform(v.TXN_Date_Start, 'yyyy-MM-dd'),
       TXN_Date_End: this.datePipe.transform(v.TXN_Date_End, 'yyyy-MM-dd'),
-      CRD_Kind: this.formatMulti(v.CRD_Kind),
-      Org_ID: this.formatMulti(v.Org_ID),
-      TLT_No: this.formatMulti(v.TLT_No),
+      CRD_Kind: this.formatMultiArray(v.CRD_Kind),
+      Org_ID: this.formatMultiArray(v.Org_ID),
+      TLT_No: this.formatMultiArray(v.TLT_No),
     };
 
     this.btnLoading2 = true;

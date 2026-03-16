@@ -691,7 +691,23 @@ public queryTLS23070MainForReport = (body: any) => {
     )
   );
 };
+onExportExcel(): void {
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
+  }
 
+  this.btnLoading = true;
+  const body = this.buildExportBody();
+
+  this.tls23070Service
+    .exportTLS23070Excel(body)
+    .pipe(finalize(() => (this.btnLoading = false)))
+    .subscribe({
+      next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.xlsx'),
+      error: () => this.messageService?.warnBubble?.('EXCEL 匯出失敗。'),
+    });
+}
   private buildTotalsFromRows(rows: any[]): Record<string, number> {
     const fields = this.numericFields();
     const out: Record<string, number> = {};

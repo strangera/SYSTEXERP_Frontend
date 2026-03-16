@@ -9,10 +9,31 @@ import { map } from 'rxjs/operators';
 export interface QueryCPM13020Request {
   TXN_BDate?: string; // yyyy-MM-dd
   TXN_EDate?: string; // yyyy-MM-dd
-  PAY_No?: string;    // 後端使用 LIKE @PAY_No，空則不送
+  PAY_No?: string[];    // 後端使用 LIKE @PAY_No，空則不送
   pageIndex?: number;
   pageSize?: number;
   SortBy?: SortMeta[];
+}
+export interface PayNoOption {
+  No: string;
+  Name: string;
+}
+
+export interface DropDownListResponse<T> {
+  Status: string;
+  Data: T;
+  Error?: {
+    Code?: string;
+    Message?: string;
+    Details?: string;
+  } | null;
+  Meta?: {
+    Timestamp?: string;
+    RequestId?: string;
+  };
+  Message?: string;
+  TotalCount?: number;
+  TotalPage?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -47,6 +68,7 @@ export class Cpm13020Service {
   );
 }
 
+
 queryPosForReport(body: QueryCPM13020Request): Observable<{ Data: any[]; TotalCount: number; GrandTotal: any }> {
   return this.queryPos(body).pipe(
     map((res: any) => ({
@@ -60,5 +82,13 @@ queryPosForReport(body: QueryCPM13020Request): Observable<{ Data: any[]; TotalCo
         : null,
     }))
   );
+}
+ private payNoDropUrl = `${environment.ApiUrl}/queryPOS1006_PAY_No_DropDownList`;
+
+
+queryPOS1006_PAY_No_DropDownList(): Observable<PayNoOption[]> {
+  return this.http
+    .post<DropDownListResponse<PayNoOption[]>>(this.payNoDropUrl, {})
+    .pipe(map((res) => (Array.isArray(res?.Data) ? res.Data : [])));
 }
 }

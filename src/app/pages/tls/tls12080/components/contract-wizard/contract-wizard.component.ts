@@ -5,7 +5,7 @@
  * - Step 1: 合約基本資料
  * - Step 2: 代扣款設定
  * - Step 3: 抽成設定
- * - Step 4: 條件設定
+ * - Step 4: 租金設定
  *
  * 資料統一在此組件管理，不需要 Session Storage
  */
@@ -27,6 +27,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 // 共用組件
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 // V2 服務
 import { RenewalQueryResponse, TLS12080Service } from '@service/api/tls/tls12080.service';
@@ -35,8 +36,8 @@ import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.s
 import { CrudTrackingService } from '../../../tls13010-v2/core/services/crud-tracking.service';
 
 // V2 服務
-import { ContractValidatorService } from '../../services/validation/contract-validator.service';
 import { SubmitDataService } from '../../services/submit/submit-data.service';
+import { ContractValidatorService } from '../../services/validation/contract-validator.service';
 
 // V2 類型
 import { CommissionItem as V2CommissionItem } from '../../../tls13010-v2/core/models/commission/commission-item.interface';
@@ -96,6 +97,7 @@ interface WizardState {
     ButtonModule,
     MenubarComponent,
     ButtonComponent,
+    DialogComponent,
     Step1ContractInfoComponent,
     Step2DeductionComponent,
     Step3CommissionComponent,
@@ -122,7 +124,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   /**
    * 根據抽成別動態計算應顯示的步驟
    * - 固定租金 (1): Step 0, 1, 3 (跳過 Step 2 抽成設定)
-   * - 一般抽成 (3): Step 0, 1, 2 (跳過 Step 3 條件設定)
+   * - 一般抽成 (3): Step 0, 1, 2 (跳過 Step 3 租金設定)
    * - 其他: 全部 4 個步驟
    */
   get steps(): MenuItem[] {
@@ -198,6 +200,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   // 儲存狀態
   isSaving = false;
+
+  // 成功確認對話框
+  showSuccessDialog = false;
+  successDialogItems: { label: string; value: string }[] = [];
 
   // 原始抽成別（編輯模式用）
   originalCommissionType?: string;
@@ -535,6 +541,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
             building_desc: item.building_desc || '',
             floor_desc: item.floor_desc || '',
             area_desc: item.area_desc || '',
+            tlt_bdate: item.tlt_bdate ? item.tlt_bdate.split('T')[0] : '',
+            tlt_edate: item.tlt_edate ? item.tlt_edate.split('T')[0] : '',
             _status: 'original' as DataStatus
           }));
         }
@@ -1142,7 +1150,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
     // 日期沒有變更就跳過同步
     if (this.areDatesEqual(startDate, this.lastSyncedStartDate) &&
-        this.areDatesEqual(endDate, this.lastSyncedEndDate)) {
+      this.areDatesEqual(endDate, this.lastSyncedEndDate)) {
       return;
     }
 
@@ -1172,7 +1180,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       return updatedItem;
     });
 
-    // Step 4: 條件設定（跳過既有項目）
+    // Step 4: 租金設定（跳過既有項目）
     this.wizardState.conditionItems = this.wizardState.conditionItems.map(item =>
       item._status === 'original' ? item : {
         ...item,
@@ -1225,8 +1233,6 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           `品牌(專櫃名稱):${formData.tlt_name || ''}`
         ].join('\n');
 
-        this.messageService.successBubble(successMessage);
-
         // 新增契約時刷新使用者資料權限，否則看不到剛新增的資料
         if (isInsert) {
           try {
@@ -1236,12 +1242,14 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
           }
         }
 
-        // 延遲返回查詢頁，讓使用者看到成功訊息
-        setTimeout(() => {
-          this.router.navigate(['account/tls/tls12080'], {
-            state: { fromRoute: 'account/tls/tls12080cru' }
-          });
-        }, 2000);
+        // 顯示成功確認對話框（讓使用者抄資料後再跳頁）
+        this.successDialogItems = successMessage.split('\n').map(line => {
+          const idx = line.indexOf(':');
+          return idx !== -1
+            ? { label: line.substring(0, idx), value: line.substring(idx + 1) }
+            : { label: '', value: line };
+        });
+        this.showSuccessDialog = true;
       } else {
         this.messageService.errorBubble(response?.message || '意向書資料提交失敗');
       }
@@ -1490,5 +1498,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       const bIndex = this.discountOptions.findIndex(opt => opt.value === b.cag_barcode);
       return aIndex - bIndex;
     });
+  }
+
+  // ========== 成功對話框 ==========
+  onSuccessConfirm(): void {
+    this.showSuccessDialog = false;
+    this.router.navigate(['account/tls/tls12080'], { state: { fromRoute: 'account/tls/tls12080cru' } });
+  }
+
+  onSuccessDialogClose(visible: boolean): void {
+    if (!visible) this.onSuccessConfirm();
   }
 }

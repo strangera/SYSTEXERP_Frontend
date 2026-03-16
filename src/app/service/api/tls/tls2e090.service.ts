@@ -164,4 +164,34 @@ export class Tls2e090Service {
     const url = `${API_BASE}/queryTLS2E090SalChargeCategory`;
     return this.http.post<ApiResponse<SalChargeCategoryData[], SalChargeTotalData[]>>(url, queryBody);
   }
+  //查詢專櫃帳款結算彙總表
+  exportTLS2E090(queryBody: Tls2e090QueryBody): Observable<Blob> {
+    const url = `${API_BASE}/exportTLS2E090`;
+    return this.http.post(url, queryBody, { responseType: 'blob' });
+  }
+  //查詢專櫃帳款結算彙總表PDF
+  exportTLS2E090PDF(queryBody: Tls2e090QueryBody): Observable<Blob> {
+    const url = `${API_BASE}/exportTLS2E090PDF`;
+    return this.http.post(url, queryBody, { responseType: 'blob' });
+  }
+  //查詢專櫃銷貨彙總表-依抽成
+  exportTLS2E090SalCharge(queryBody: Tls2e090QueryBody): Observable<Blob> {
+    const url = `${API_BASE}/exportTLS2E090SalCharge`;
+    return this.http.post(url, queryBody, { responseType: 'blob' });
+  }
+  //查詢專櫃銷貨彙總表-依抽成PDF
+  exportTLS2E090SalChargePDF(queryBody: Tls2e090QueryBody): Observable<Blob> {
+    const url = `${API_BASE}/exportTLS2E090SalChargePDF`;
+    return this.http.post(url, queryBody, { responseType: 'blob' });
+  }
+  //查詢專櫃銷貨彙總表-依類別
+  exportTLS2E090SalChargeCategory(queryBody: Tls2e090QueryBody): Observable<Blob> {
+    const url = `${API_BASE}/exportTLS2E090SalChargeCategory`;
+    return this.http.post(url, queryBody, { responseType: 'blob' });
+  }
+  //查詢專櫃銷貨彙總表-依類別PDF
+  exportTLS2E090SalChargeCategoryPDF(queryBody: Tls2e090QueryBody): Observable<Blob> {
+    const url = `${API_BASE}/exportTLS2E090SalChargeCategoryPDF`;
+    return this.http.post(url, queryBody, { responseType: 'blob' });
+  }
 }

@@ -1,0 +1,20 @@
+/* 隱藏 table-edit 右側顯示欄位（非編輯狀態的值，例如 0） */
+:host ::ng-deep td.p-cell-editing + td,
+:host ::ng-deep td.p-editable-column > span,
+:host ::ng-deep td.p-editable-column span.ng-star-inserted {
+  display: none !important;
+}
+
+/* 隱藏 editor 容器（避免佔位） */
+:host ::ng-deep .p-cell-editor,
+:host ::ng-deep .editor-container,
+:host ::ng-deep .table-edit-right-panel,
+:host ::ng-deep .p-overlaypanel {
+  display: none !important;
+}
+
+/* 修正 td 空白 padding 避免被撐開 */
+:host ::ng-deep td.p-editable-column {
+  padding-right: 0 !important;
+  width: auto !important;
+}

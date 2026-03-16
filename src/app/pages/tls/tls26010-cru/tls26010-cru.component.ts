@@ -1129,6 +1129,11 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
         return;
       }
 
+      // 建立 tlt_noOption 的 Map（No → Name）供快速查詢
+      const tltOptionMap = new Map(
+        this.tlt_noOption.map(opt => [opt['No'] as string, opt['Name'] as string])
+      );
+
       // 建立現有專櫃編號的集合（用於檢查重複）
       const existingTltNos = new Set(
         this.tltData
@@ -1137,26 +1142,36 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
           .filter(no => no) // 排除空值
       );
 
-      console.log('📥 現有專櫃編號:', Array.from(existingTltNos));
-
-      // 過濾掉重複的專櫃編號
       const newItems: TltItemWithStatus[] = [];
       const duplicateItems: string[] = [];
+      const notFoundItems: string[] = [];
 
       for (const item of validData) {
         const tltNo = item.tlt_no?.trim();
-        if (!tltNo) {
+        if (!tltNo) continue;
+
+        // 查詢名稱
+        const tltName = tltOptionMap.get(tltNo);
+        if (!tltName) {
+          notFoundItems.push(tltNo);
           continue;
         }
 
         // 檢查是否重複
         if (existingTltNos.has(tltNo)) {
           duplicateItems.push(tltNo);
-          console.log(`⚠️ 重複的專櫃編號: ${tltNo}`);
         } else {
-          newItems.push(item);
-          existingTltNos.add(tltNo); // 加入集合，避免同一批匯入中有重複
+          newItems.push({ ...item, tlt_name: tltName });
+          existingTltNos.add(tltNo);
         }
+      }
+
+      // 顯示查無此櫃位訊息
+      if (notFoundItems.length > 0) {
+        const notFoundMsg = notFoundItems.length > 5
+          ? `${notFoundItems.slice(0, 5).join(', ')} 等 ${notFoundItems.length} 筆`
+          : notFoundItems.join(', ');
+        this.messageService.errorBubble(`無此櫃位，已略過：${notFoundMsg}`);
       }
 
       // 顯示重複訊息
@@ -1169,23 +1184,17 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
 
       // 如果沒有新資料
       if (newItems.length === 0) {
-        this.messageService.errorBubble('所有匯入資料都重複，沒有新增任何資料');
+        this.messageService.errorBubble('所有匯入資料都重複或無效，沒有新增任何資料');
         return;
       }
 
       // 將新資料加入到現有資料中
       this.tltData = [...this.tltData, ...newItems];
 
-      console.log('📥 匯入專櫃成功:', {
-        total: validData.length,
-        new: newItems.length,
-        duplicate: duplicateItems.length,
-        currentData: this.tltData
-      });
-
       this.messageService.successBubble(
         `匯入成功！新增 ${newItems.length} 筆資料` +
-        (duplicateItems.length > 0 ? `，略過 ${duplicateItems.length} 筆重複資料` : '')
+        (duplicateItems.length > 0 ? `，略過 ${duplicateItems.length} 筆重複` : '') +
+        (notFoundItems.length > 0 ? `，略過 ${notFoundItems.length} 筆無此櫃位` : '')
       );
 
     } catch (error) {

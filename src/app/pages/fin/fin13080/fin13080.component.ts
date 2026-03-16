@@ -6,12 +6,11 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { Fin13080Service } from 'src/app/service/api/fin/fin13080.service';
-import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount, formatDate } from 'src/app/shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 @Component({
@@ -41,7 +40,7 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
   }
   queryForm = this.formBuilder.group({
     No: [null, Validators.maxLength(16)],
-    Date: [yesterday],
+    Date: [new Date(), Validators.required],
     INV_DeclareYM: [null],
     Invoice_No_Start: ['', Validators.maxLength(10)],
     Invoice_No_End: ['', Validators.maxLength(10)],
@@ -55,9 +54,11 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
   minDate?: Date;
   columns: any[] = [
     { field: 'No', header: '退回/折讓單號', visible: true },
-    { field: 'Date', header: '退回/折讓日期', visible: true },
+    { field: 'Date', header: '退回/折讓日期', visible: true, format: (v: string) => formatDate(v) },
     { field: 'INV_DeclareYM', header: '發票年月', visible: true },
-    { field: 'Invoice_No', header: '發票號碼', visible: true }
+    { field: 'Invoice_No', header: '發票號碼', visible: true },
+    { field: 'SaleAmt', header: '折讓金額', visible: true, align: 'right', format: (v: number | string) => formatAmount(v) },
+    { field: 'INV_Cancel', header: '折讓狀態', visible: true, format: (v: string) => v === 'Y' ? '作廢' : v === 'N' ? '開立' : v }
   ];
 
   constructor(

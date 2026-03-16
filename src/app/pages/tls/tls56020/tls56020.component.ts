@@ -6,11 +6,10 @@ import { Tls52010Service } from '@service/api/tls/tls52010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
-import { Button } from 'primeng/button';
+import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs/operators';
 import { Tls56020Service } from '../../../service/api/tls/tls56020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -29,13 +28,6 @@ export enum POStatus {
   已申請 = '1',
   已審核 = '2',
   已領用 = '3',
-}
-
-interface IQueryPOS2004DetailRequest {
-  queryNo?: string;
-  PLU_Name?: string;
-  VEN_No?: string;
-  LOGO_No?: string;
 }
 interface IQueryPOS2004DetailResponse {
   PLU_MagNo: string;
@@ -62,15 +54,12 @@ interface IQueryPOS2004DetailResponse {
     TableComponent,
     MultiSelectComponent,
     DropdownTableComponent,
-    InputNumberComponent,
-    Button,
-    InputTextComponent
+    ButtonModule
   ],
 })
 export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> implements OnInit {
   // === 查詢條件：完全對齊後端 ===
   queryForm = this.formBuilder.group({
-    ...createPaginationConfig([{ field: 'SPM_No', order: 1 }]),
     SPM_No: [null, [Validators.maxLength(20)]],    // 領用單編號
     queryNo: ['', [Validators.maxLength(50)]],   // 管理編號/關鍵字
     HOS_NoList: [[]],                            // 倉別 (多選)
@@ -86,7 +75,7 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
     issuanceNoteStatus: [null],
     issuanceType: [null],
     issuanceNoteCode: [null],
-    // pageSize / pageIndex / SortBy 由 createPaginationConfig 提供
+    ...createPaginationConfig([{ field: 'SPM_No', order: 1 }]),
   });
   expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
@@ -99,7 +88,6 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
   ];
 
   btnLoading = false;
-  selectedItems: TLS56020Item[] = [];
   selectedCount = 0;
   auditLoading = false; // 單據審核 loading
   issueLoading = false; // 領用 loading
@@ -108,12 +96,13 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
   issuanceNoteStatusOptions = getSYS1000Options('SPM_Status');
   // 清單
   data: TLS56020Item[] = [];
+  selectedItems: TLS56020Item[] = [];
   totalRecords = 0;
   columns: Column[] = TLS56020_COLUMNS;
 
   constructor(
-    private tls56020Service: Tls56020Service,
-    private dropDownListService: DropDownListService,
+    private readonly tls56020Service: Tls56020Service,
+    private readonly dropDownListService: DropDownListService,
     private readonly tls52010Service: Tls52010Service,
   ) {
     super();
@@ -125,47 +114,37 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
     // 倉別
     this.dropDownListService.getPOS2034Options().pipe(
       untilDestroyed(this),
-      map(res => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
+      map(res => (res?.Data ?? []).map((x) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
     ).subscribe(options => this.warehouseOptions = options);
 
 
     // 品牌
     this.dropDownListService.queryPLULOGO_DropDownList().pipe(
       untilDestroyed(this),
-      map(res => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
+      map(res => (res?.Data ?? []).map((x) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
     ).subscribe(options => this.brandOptions = options);
 
     // 人員
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(
       untilDestroyed(this),
-      map(res => (res?.Data ?? []).map((x: any) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
+      map(res => (res?.Data ?? []).map((x) => ({ label: `${x.No}-${x.Name}`, value: x.No })))
     ).subscribe(options => this.userOptions = options);
   }
 
-  canQuery(): boolean { return true; }
-  canAdd(): boolean { return true; }
-  canEdit(): boolean { return true; }
-
   // === 查詢 ===
   onSubmit(frm: FormGroup) {
-    this.submitted = true;
-    this.loading = true;
-
-    const paging = {
-      pageSize: frm.value.pageSize ?? 30,
-      pageIndex: frm.value.pageIndex ?? 1,
-      SortBy: frm.value.SortBy ?? [{ field: 'SPM_No', order: 1 }],
-    };
-
-    const body = buildTLS56020QueryBody(frm.value, paging, true);
-
-    this.tls56020Service.queryTLS56020(body).pipe(
-      finalize(() => this.loading = false),
-      untilDestroyed(this)
-    ).subscribe(res => {
-      this.data = (res?.Data ?? []) as TLS56020Item[];
-      this.totalRecords = res?.TotalCount ?? this.data.length;
-      this.queryStateService.setQueryState(this.ProgNo, body);
+    this.handleSubmit(frm, () => {
+      const paging = {
+        pageSize: frm.value.pageSize ?? 30,
+        pageIndex: frm.value.pageIndex ?? 1,
+        SortBy: frm.value.SortBy ?? [{ field: 'SPM_No', order: 1 }],
+      };
+      const body = buildTLS56020QueryBody(frm.value, paging, true);
+      this.tls56020Service.queryTLS56020(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.data = (res?.Data ?? []) as TLS56020Item[];
+        this.totalRecords = res?.TotalCount ?? this.data.length;
+        this.queryStateService.setQueryState(this.ProgNo, body);
+      });
     });
   }
 
@@ -244,8 +223,7 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
 
   // 編輯按鈕唯讀控制：若 SPM_Status 為 3 (已領用) 或 9 (已作廢) 則禁用編輯
   isEditDisabled(row: TLS56020Item): boolean {
-    const s = String(row?.SPM_Status ?? '').trim();
-    return s === '3' || s === '9' || Number(s) === 3 || Number(s) === 9;
+    return row.SPM_Status !== '1';
   }
 
   batchStatusChange(targetStatus: POStatus) {
@@ -256,17 +234,12 @@ export class TLS56020Component extends BasicQueryPageComponent<TLS56020Item> imp
       })),
     };
 
-    this.tls56020Service.updateStatusTLS56020(payload)
-      .pipe(finalize(() => this.resetButtonLoading()))
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('狀態更新成功');
-          this.selectedItems = [];
-          this.selectedCount = 0;
-          this.onSubmit(this.queryForm);
-        },
-
-      });
+    this.tls56020Service.updateStatusTLS56020(payload).pipe(finalize(() => this.resetButtonLoading())).subscribe(() => {
+      this.messageService.successBubble('狀態更新成功');
+      this.selectedItems = [];
+      this.selectedCount = 0;
+      this.onSubmit(this.queryForm);
+    });
   }
   resetButtonLoading() {
     this.auditLoading = false;

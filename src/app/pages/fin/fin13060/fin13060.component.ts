@@ -255,11 +255,12 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
           { emitEvent: false },
         );
 
-        // ✅ 如果你要從 CRU 回來自動查，解除註解
-        Promise.resolve().then(() => this.onSubmit(this.queryForm));
-            // ✅ 讓 table-report 回來就有「可沿用的查詢 body」
-    const payload = this.buildPayload(this.queryForm);
-    this.lastQueryBody = { ...payload };
+        // ✅ 先設好 lastQueryBody，讓 table-report 的 lazy mode 可使用
+        const payload = this.buildPayload(this.queryForm);
+        this.lastQueryBody = { ...payload };
+
+        // ✅ 等 Angular 完成初始渲染後再查詢，避免與 table-report 初始化競爭
+        setTimeout(() => this.onSubmit(this.queryForm), 0);
       }
     } else {
       this.queryStateService.clearQueryState(this.ProgNo);
@@ -356,7 +357,8 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
     { field: 'AssetType', header: '資產註記', visible: true },
-    { field: 'SAL_Type', header: '系統別', visible: true },
+    { field: 'SYS_ORIGIN', header: '系統別', visible: true },
+    { field: 'SYS_ORIGINDesc', header: '系統別名稱', visible: true },
   ];
 
   // ──────────────────────────────────────────────────────────

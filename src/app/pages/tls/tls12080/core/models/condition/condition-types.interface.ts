@@ -1,5 +1,5 @@
 /**
- * TLS12080-v2 條件設定項目介面
+ * TLS12080-v2 租金設定項目介面
  * 對應現有 tls12080-next3/models/tls12080-next3.model.ts
  */
 

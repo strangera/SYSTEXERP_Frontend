@@ -34,13 +34,14 @@
               [formControl]="queryForm.controls.status2" placeholder="請選擇"></p-dropdown>
           </div>
 
-          <div class="col-12 lg:col-8">
+          <div class="col-12 ">
             <app-radiobutton label="查詢條件" groupname="radioOption" [control]="queryForm.controls.ShowStatus"
               [submitted]="submitted" [options]="[
                 { value: '1', label: '只顯示有交易之機台' },
                 { value: '2', label: '顯示所有之機台' },
                 { value: '3', label: '顯示可能離線之機台' },
                 { value: '4', label: '顯示未清機之機台' },
+                { value: '5', label: '異常交易' }
               ]" (valueChange)="queryForm.controls.ShowStatus.setValue($event)"></app-radiobutton>
           </div>
         </div>

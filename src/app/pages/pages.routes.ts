@@ -1,4 +1,3 @@
-// src/app/pages/pages.routes.ts
 import { Routes } from '@angular/router';
 import { AuthGuard } from '../core/guards/auth.guard';
 import { PagesComponent } from './pages.component';

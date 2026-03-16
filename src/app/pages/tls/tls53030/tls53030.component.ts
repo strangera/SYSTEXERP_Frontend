@@ -22,7 +22,6 @@ import { AddButton, Column, createPaginationConfig, formatDate } from '../../../
 @Component({
   selector: 'app-tls53030',
   templateUrl: './tls53030.component.html',
-  styleUrl: './tls53030.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -109,12 +108,12 @@ export class TLS53030Component extends BasicQueryPageComponent<TLS53030Data> imp
     },
   ];
 
-  loadingStates: Map<number, {
+  loadingStates = new Map<number, {
     print: boolean;
     conclude: boolean;
     reverted: boolean;
     void: boolean
-  }> = new Map();
+  }>();
 
   addButton: AddButton[] = [
     {

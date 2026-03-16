@@ -25,9 +25,9 @@ import { SharedDropdownService } from '@shared/services/shared-dropdown.service'
 
 
 
-import { BusinessClassificationService } from '@pages/tls/tls12040-cru/services/business-classification.service';
-import { TLS12040ValidationService } from '@pages/tls/tls12040-cru/validation/tls12040-validation.service';
-import { DateValidationService } from '@pages/tls/tls13010-cru/validation/date-validation.service';
+import { BusinessClassificationService } from '@pages/tls/shared/services/business-classification.service';
+import { TLS12040ValidationService } from '@pages/tls/shared/services/tls12040-validation.service';
+import { DateValidationService } from '@pages/tls/shared/services/date-validation.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
 import { debounceTime, distinctUntilChanged, forkJoin, Observable, Subscription } from 'rxjs';
 import { LocationItem } from '../../../../core/models/contract/location-item.interface';
@@ -147,7 +147,9 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     { field: 'building_desc', header: '館別', type: 'text', editable: false, style: 'min-width: 100px' },
     { field: 'floor_desc', header: '樓層', type: 'text', editable: false, style: 'min-width: 100px' },
     { field: 'area_desc', header: '區域', type: 'text', editable: false, style: 'min-width: 100px' },
-    { field: 'tlt_space', header: '營業坪數', type: 'number', editable: false, style: 'min-width: 120px' }
+    { field: 'tlt_space', header: '營業坪數', type: 'number', editable: false, style: 'min-width: 120px' },
+    { field: 'tlt_bdate', header: '起始日', type: 'date', editable: true, dateFormat: 'full-date', style: 'min-width: 130px' },
+    { field: 'tlt_edate', header: '截止日', type: 'date', editable: true, dateFormat: 'full-date', style: 'min-width: 130px' }
   ];
 
   // 共用下拉選項
@@ -1044,16 +1046,15 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
    * 儲存位置項目（增強版：狀態追蹤）
    */
   onLocationTableSave(event: any): void {
-    const { row } = event;
+    const row = event.newData || event.row;
     const index = this.locationData.findIndex(item => item.id === row.id);
     if (index !== -1) {
-      // 判斷狀態
-      if (this.locationData[index]._status === 'new') {
-        // 保持新增狀態
-      } else {
+      const prevStatus = this.locationData[index]._status;
+      Object.assign(this.locationData[index], row);
+      // Object.assign 之後再設，避免被 row._status 覆蓋
+      if (prevStatus !== 'new') {
         this.locationData[index]._status = 'modified';
       }
-      Object.assign(this.locationData[index], row);
     }
     this.updateDisplayLocationData();
     this.emitDataChange();
@@ -1163,6 +1164,12 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       }
     }
 
+    // 欄位變更時更新狀態（forceEditMode 下 date 欄位走此路徑）
+    const index = this.locationData.findIndex(item => item.id === rowData.id);
+    if (index !== -1 && this.locationData[index]._status !== 'new') {
+      this.locationData[index]._status = 'modified';
+    }
+
     this.emitDataChange();
   }
 
@@ -1185,7 +1192,9 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       tlt_space: Number(selectedOption.tlt_space) || 0,
       building_desc: selectedOption.building_desc || '',
       floor_desc: selectedOption.floor_desc || '',
-      area_desc: selectedOption.area_desc || ''
+      area_desc: selectedOption.area_desc || '',
+      tlt_bdate: this.locationData[targetIndex].tlt_bdate || this.form.get('tlt_bdate')?.value || '',
+      tlt_edate: this.locationData[targetIndex].tlt_edate || this.form.get('tlt_edate')?.value || ''
     };
 
     // 更新資料

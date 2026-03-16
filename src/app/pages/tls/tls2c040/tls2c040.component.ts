@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -57,11 +58,21 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
       label: '應付',
       action: (rowData: any) => { this.onDetail(rowData, '應付') },
     },
+    {
+      label: '拋轉',
+      action: (rowData: any) => { this.onDetail(rowData, '拋轉') },
+    },
   ];
 
   //#region 下拉選單選項
-  // 傳票種類
-  srcSheetTypeOptions: IDropdownItem[] = [];
+  // 傳票種類 - 從 SYS1000(ENTRY_TYPE) 取得並排除 WT、WD
+  srcSheetTypeOptions = getSYS1000Options('ENTRY_TYPE')
+    .filter(option => option.value !== 'WT' && option.value !== 'WD')
+    .map(option => ({
+      No: option.value,
+      Name: option.label,
+      Display: `${option.value} - ${option.label}`
+    }));
   // 傳票狀態
   postFlagOptions: IDropdownItem[] = [
     { No: '0', Name: '作廢' },
@@ -73,7 +84,12 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
 
   columns: ReportColumn[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },
-    { field: 'SrcSheetType', header: '傳票種類', visible: true, format: (value: string) => this.srcSheetTypeOptions.find(item => item.No === value)?.Name || value },
+    {
+      field: 'SrcSheetType', header: '傳票種類', visible: true, format: (value: string) => {
+        const it = this.srcSheetTypeOptions.find(item => item.No === value);
+        return it ? (it.Display ?? `${it.No}-${it.Name}`) : value;
+      }
+    },
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
     { field: 'PostFlag', header: '傳票狀態', visible: true, format: (value: string) => this.postFlagOptions.find(item => item.No === value)?.Name || value },
     { field: 'Remark', header: '傳票摘要', visible: true },
@@ -89,10 +105,6 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS2C040', 'tls/tls2c040cru', this.queryForm, (form) => this.onSubmit(form));
-    // 載入傳票種類
-    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'entry_type' }).pipe(untilDestroyed(this)).subscribe(response => {
-      this.srcSheetTypeOptions = response.Data;
-    });
   }
 
   onSubmit(form: FormGroup) {

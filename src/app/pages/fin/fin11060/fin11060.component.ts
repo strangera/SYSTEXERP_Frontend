@@ -8,7 +8,7 @@ import { ECRNoService } from '@service/basic/queryPOS1002.service';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { formatDate } from '@shared/componentkit/table2/table2.model';
+import { createPaginationConfig, formatDate } from '@shared/componentkit/table2/table2.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -80,7 +80,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     Is_ShowErr: ['N', [Validators.required]], //  是否只顯示異常
 
     //分頁查詢
-    // ...createPaginationConfig([{ field: 'TXN_GUINo', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'TXN_Time', order: 1 }, { field: 'MIG_Time', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------
@@ -275,6 +275,6 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
 
   loadOptions() {
     // 查 收銀機號
-    this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.value} - ${item.label}` })));
+    this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.label}` })));
   }
 }

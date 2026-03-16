@@ -44,7 +44,7 @@ export class TLS55040Component extends BasicQueryPageComponent<Tls55040Data> imp
     { field: 'TABTYPE', header: '單據種類', format: value => getSYS1000('TABTYPE', value) },
     { field: 'PUR_VoucherType', header: '格式', format: value => getSYS1000('PUR_VoucherType', value) },
     { field: 'OTA_Status', header: '狀況', format: value => getSYS1000('OTA_Status', value) },
-    { field: 'PUR_TotNet', header: '未銷金額', format: formatAmount },
+    { field: 'PUR_TotNet', header: '未稅金額', format: formatAmount },
   ];
   isRowSelectable = (data: Tls55040Data) => data.OTA_Status !== '2';
   editDisabled = (data: Tls55040Data) => data.OTA_Status === '2';

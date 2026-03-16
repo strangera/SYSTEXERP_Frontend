@@ -60,7 +60,7 @@ export class TLS56070Component extends BasicQueryPageComponent<POS2023DAMRespons
     APRV_USR: [null],
     pageSize: [30],
     pageIndex: [1],
-    SortBy: [[{ field: 'DAM_No', order: 1 }]],
+    SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'DAM_No', order: -1 }]],
   });
   totalRecords = 0;
   data: POS2023DAMResponse[] = [];

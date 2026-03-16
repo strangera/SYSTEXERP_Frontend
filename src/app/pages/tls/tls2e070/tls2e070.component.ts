@@ -74,8 +74,8 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     PageIndex: [1],
     sam_yyymm: [new Date(), Validators.required],
     // 結算
-    money_type: [this.money_typeOptions[2]?.value || null as string | null],
-    sam_termno: [1],
+    money_type: [null as string | null],
+    sam_termno: [null as number | null],
     tlt_no: [null],
   });
   totalRecords = 0;
@@ -249,6 +249,41 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
           } else {
             // 處理 SP 回傳的錯誤訊息 (例如：資料已鎖定、查無結算資料)
             this.messageService.errorBubble(res.Message || '鎖定失敗');
+          }
+        });
+    });
+  }
+  /**
+   * 4. 結算反鎖定 (onUnlock)
+   */
+  onUnlock(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      if (!frm.value.money_type || !frm.value.sam_termno) {
+        this.messageService.errorBubble('請選擇結帳方式與帳次');
+        this.loading = false;
+        return;
+      }
+
+      this.loading = true;
+
+      const body: Tls2e070UpdateBody = {
+        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_termno: frm.value.sam_termno as number,
+        money_type: frm.value.money_type,
+        tlt_no: frm.value.tlt_no
+      };
+
+      this.tls2e070Service.unLockTLS2E070(body)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
+        .subscribe(res => {
+          if (res.Status === '0000') {
+            this.messageService.successBubble(res.Message || '反鎖定完成');
+            this.onSubmit(this.queryForm); // 重新查詢刷新列表
+          } else {
+            this.messageService.errorBubble(res.Message || '反鎖定失敗');
           }
         });
     });

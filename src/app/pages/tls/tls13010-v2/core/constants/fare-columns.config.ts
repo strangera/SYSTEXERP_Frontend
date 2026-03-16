@@ -2,8 +2,8 @@
  * 代扣款欄位定義配置
  * 依照不同類型 (A/B/C/D/E) 定義各自的欄位
  */
+import { TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { TLS13010_DROPDOWN_OPTIONS } from '../../../tls13010/tls13010.dropdown';
 
 /**
  * 扣款類型枚舉
@@ -148,7 +148,7 @@ export function getDeductionAColumns(contractDates?: { bdate?: string; edate?: s
       field: 'gui_flag',
       header: '開立發票',
       type: 'dropdown',
-      editable: true,
+      editable: false,
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
@@ -219,7 +219,7 @@ export function getDeductionBColumns(contractDates?: { bdate?: string; edate?: s
       field: 'gui_flag',
       header: '是否開立發票',
       type: 'dropdown',
-      editable: true,
+      editable: false,
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
@@ -312,13 +312,13 @@ export function getDeductionCColumns(contractDates?: { bdate?: string; edate?: s
       field: 'down_payment',
       header: '首期金額',
       type: 'number',
-      editable: false
+      editable: true
     },
     {
       field: 'gui_flag',
       header: '是否開立發票',
       type: 'dropdown',
-      editable: true,
+      editable: false,
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
@@ -337,16 +337,17 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
     ...getBaseColumns().map(col => ({
       ...col,
       style: col.field === 'cap_item' ? 'width: 55px; min-width: 55px; font-size: 0.65rem;' :
-             col.field === 'cap_name' ? 'width: 80px; min-width: 80px; font-size: 0.8rem; white-space: normal; word-break: break-word; line-height: 1.2;' :
-             col.field === 'is_selected' ? 'width: 45px; min-width: 45px; font-size: 0.65rem; text-align: center;' :
-             col.field === 'copy_button' ? 'width: 45px; min-width: 45px; font-size: 0.65rem;' :
-             col.style
+        col.field === 'cap_name' ? 'width: 80px; min-width: 80px; font-size: 0.8rem; white-space: normal; word-break: break-word; line-height: 1.2;' :
+          col.field === 'is_selected' ? 'width: 45px; min-width: 45px; font-size: 0.65rem; text-align: center;' :
+            col.field === 'copy_button' ? 'width: 45px; min-width: 45px; font-size: 0.65rem;' :
+              col.style
     })),
     {
       field: 'cap_saletype',
       header: '銷售類型',
       type: 'dropdown',
       editable: true,
+      hidden: true,
       options: TLS13010_DROPDOWN_OPTIONS.capSaletypeOptions,
       style: 'width: 90px; min-width: 90px; font-size: 0.65rem;'
     },
@@ -355,6 +356,7 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
       header: '期數',
       type: 'dropdown',
       editable: true,
+      hidden: true,
       options: TLS13010_DROPDOWN_OPTIONS.instmsTypeOptions,
       style: 'width: 60px; min-width: 60px; font-size: 0.65rem;'
     },
@@ -363,6 +365,7 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
       header: '收單行',
       type: 'dropdown',
       editable: true,
+      hidden: true,
       options: TLS13010_DROPDOWN_OPTIONS.edcBankOptions,
       style: 'width: 90px; min-width: 90px; font-size: 0.65rem;'
     },
@@ -371,6 +374,7 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
       header: '支付編號',
       type: 'dropdown',
       editable: true,
+      hidden: true,
       options: payNoOptions,
       style: 'width: 90px; min-width: 90px; font-size: 0.65rem;'
     },
@@ -379,6 +383,7 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
       header: '券類計算方式',
       type: 'dropdown',
       editable: true,
+      hidden: true,
       options: TLS13010_DROPDOWN_OPTIONS.calcTypeOptions,
       style: 'width: 90px; min-width: 90px; font-size: 0.65rem;'
     },
@@ -449,7 +454,7 @@ export function getDeductionDColumns(contractDates?: { bdate?: string; edate?: s
       field: 'gui_flag',
       header: '是否開立發票',
       type: 'dropdown',
-      editable: true,
+      editable: false,
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
@@ -523,7 +528,7 @@ export function getDeductionEColumns(contractDates?: { bdate?: string; edate?: s
       field: 'gui_flag',
       header: '是否開立發票',
       type: 'dropdown',
-      editable: true,
+      editable: false,
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }

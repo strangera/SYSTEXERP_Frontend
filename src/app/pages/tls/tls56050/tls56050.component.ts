@@ -11,7 +11,6 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Column, formatDateTime } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -48,9 +47,9 @@ export class TLS56050Component extends BasicQueryPageComponent<ITLS56050Response
     IN_HOS_NoList: [null],          // varchar(6)
     LOGO_NoList: [null],                                        // 非 POS2021 欄位，保留不設驗證
     MVM_StatusList: [null],            // varchar(1)
-    APPLY_Date_Start: [yesterday],                             // datetime，預設無驗證
-    APPLY_Date_End: [yesterday],                               // datetime，預設無驗證
-    APPLY_USR: [this.authService.currentUserValue?.user_No, [Validators.maxLength(8)]],            // varchar(8)
+    APPLY_Date_Start: [null],                             // datetime，預設無驗證
+    APPLY_Date_End: [null],                               // datetime，預設無驗證
+    APPLY_USR: [null, [Validators.maxLength(8)]],            // varchar(8)
     APRV_Date_Start: [null],                            // datetime，預設無驗證
     APRV_Date_End: [null],                              // datetime，預設無驗證
     APRV_USR: [null],          // varchar(8)
@@ -59,14 +58,14 @@ export class TLS56050Component extends BasicQueryPageComponent<ITLS56050Response
     OUTGODS_USR: [null],          // varchar(8)
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'MVM_No', order: 1 }]],
+    SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'MVM_No', order: -1 }]],
   });
   totalRecords = 0;
   data: ITLS56050Response[] = [];
   lastQuery: IQueryTLS56050Request | null = null;
   columns: Column[] = [
     { field: 'MVM_No', header: '調撥單編號', visible: true },
-    { field: 'CRT_Date', header: '申請日期', visible: true, format: formatDateTime },
+    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime },
     { field: 'IN_HOS_No', header: '調入倉別', visible: true },
     { field: 'OUT_HOS_No', header: '調出倉別', visible: true },
     { field: 'LOGO_No', header: '品牌', visible: true },
