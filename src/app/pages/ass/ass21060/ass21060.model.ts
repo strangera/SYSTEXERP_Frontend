@@ -13,6 +13,11 @@ export interface ASS21060Data {
   Contract_SubNo: string | null;
 }
 
+export interface ASS21060Sort {
+  field: string;
+  order: number;
+}
+
 export interface ASS21060Query extends BaseQueryRequest {
   ContractYM: string;
   MeterTypes?: string[];
@@ -23,9 +28,19 @@ export interface ASS21060Query extends BaseQueryRequest {
   Contract_SubNo?: string | null;
   pageSize: number;
   pageIndex: number;
+  SortBy?: ASS21060Sort[];
+}
+
+export interface ASS21060ExportColumn {
+  field: string;
+  header: string;
+}
+
+export interface ASS21060ExportQuery extends ASS21060Query {
+  Columns: ASS21060ExportColumn[];
 }
 
 export interface ASS21060MeterTypeOption {
   label: string;
-  value: 'WATER' | 'ELECTRIC' | 'GAS';
+  value: 'G01' | 'G02' | 'G03';
 }
