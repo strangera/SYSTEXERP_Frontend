@@ -1,7 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
-  ASS13040AssetQueryDataWrapper,
   ASS13040AssetQueryRequest,
   ASS13040AssetQueryRow,
   ASS13040DetailRequest,
@@ -19,11 +18,12 @@ import { environment } from 'src/environments/environment';
 export class ASS13040CRUService {
   private readonly apiUrl = environment.ApiUrl + '/ASS0000/ASS1000';
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient) { }
 
+  /** 查詢報廢單主檔+明細（Request 僅需 ID：主檔值/報廢單ID） */
   detailASS13040(body: ASS13040DetailRequest): Observable<ApiResponse<ASS13040DetailResponseData>> {
     return this.http.post<ApiResponse<ASS13040DetailResponseData>>(
-      `${this.apiUrl}/detailASS13040`,
+      `${this.apiUrl}/queryDetailASS13040`,
       body,
     );
   }
@@ -36,30 +36,15 @@ export class ASS13040CRUService {
     return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/updateASS13040`, body);
   }
 
+  /**
+   * 資產 popup 查詢（對接 queryFAASSETChooseListASS13040）
+   */
   queryASS13040Assets(
     body: ASS13040AssetQueryRequest,
   ): Observable<ApiResponse<ASS13040AssetQueryRow[]>> {
-    return this.http
-      .post<ApiResponse<ASS13040AssetQueryDataWrapper | ASS13040AssetQueryRow[]>>(
-        `${this.apiUrl}/queryASS13040Assets`,
-        body,
-      )
-      .pipe(
-        map(res => {
-          const data = res.Data;
-          if (Array.isArray(data)) {
-            return {
-              ...res,
-              Data: data,
-            } as ApiResponse<ASS13040AssetQueryRow[]>;
-          }
-
-          return {
-            ...res,
-            Data: data?.QueryData ?? [],
-            TotalCount: data?.TotalRows ?? data?.TotalCount ?? res.TotalCount ?? 0,
-          } as ApiResponse<ASS13040AssetQueryRow[]>;
-        }),
-      );
+    return this.http.post<ApiResponse<ASS13040AssetQueryRow[]>>(
+      `${this.apiUrl}/queryFAASSETChooseListASS13040`,
+      body,
+    );
   }
 }

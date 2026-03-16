@@ -10,6 +10,8 @@ import {
   ASS13040Header,
   ASS13040InsertRequest,
   ASS13040UpdateRequest,
+  QueryDetailASS13040DetailData,
+  QueryDetailASS13040MasterData,
 } from '@pages/ass/ass13040-cru/ass13040-cru.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { IDropdownItem, Option } from '@service/utility/dropdown-api.model';
@@ -146,8 +148,8 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
     this.loadDropdowns();
 
     if (!this.isFormCreateable) {
-      const scrapNo = this.getScrapNoFromState();
-      if (scrapNo) this.loadDetail(scrapNo);
+      const detailId = this.getDetailIdFromState();
+      if (detailId != null) this.loadDetail(detailId);
     }
   }
 
@@ -292,51 +294,63 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
       }));
   }
 
-  private loadDetail(scrapNo: string): void {
+  private loadDetail(id: number): void {
     this.loading = true;
     this.ass13040CruService
-      .detailASS13040({ SCRAP_FORM_NO: scrapNo })
+      .detailASS13040({ ID: id })
       .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
       .subscribe({
         next: res => {
           if (res.Status !== '0000') return;
-          const header = res.Data?.Header;
+          const master = res.Data?.Master;
           const details = res.Data?.Details ?? [];
-          if (!header) return;
+          if (!master) return;
 
           this.dataForm.patchValue({
-            scrapCode: header.SCRAP_FORM_NO ?? '',
-            userCode: header.SCRAP_USER_NO ?? null,
-            departmentCode: header.ORG_ID ?? null,
-            scrapVendor: header.VENDOR_NO ?? null,
-            scrapDate: header.APPLY_DATE ? new Date(header.APPLY_DATE) : null,
-            assetsType: header.ASSET_TYPE ?? null,
-            remark: header.NOTES ?? null,
+            scrapCode: master.DAMAGEM_ID ?? '',
+            userCode: master.EMP_ID ?? null,
+            departmentCode: master.ORG_ID ?? null,
+            scrapVendor: master.SUPPLIER_ID ?? null,
+            scrapDate: master.APPLY_DATE ? new Date(master.APPLY_DATE) : null,
+            assetsType: null, // 畫面欄位「資產類型」：API Response.Master 無對應欄位
+            remark: master.NOTES ?? null,
           });
-          this.existingFile1 = header.IMAGE_URL1 ?? null;
-          this.existingFile2 = header.IMAGE_URL2 ?? null;
-          this.existingFile3 = header.IMAGE_URL3 ?? null;
-          this.data = details;
+          this.existingFile1 = master.IMAGE_URL1 ?? null;
+          this.existingFile2 = master.IMAGE_URL2 ?? null;
+          this.existingFile3 = master.IMAGE_URL3 ?? null;
+          this.data = this.mapApiDetailsToTable(details);
         },
       });
   }
 
-  private getScrapNoFromState(): string | null {
-    const row = this.rowdata as
-      | { DAMAGEM_ID?: string; SCRAP_FORM_NO?: string }
-      | undefined;
-    return row?.DAMAGEM_ID ?? row?.SCRAP_FORM_NO ?? null;
+  /** 從 state 取得主檔 ID（報廢單 ID），用於呼叫 detailASS13040 */
+  private getDetailIdFromState(): number | null {
+    const row = this.rowdata as { FAASSABANM_ID?: number; ID?: number } | undefined;
+    const id = row?.FAASSABANM_ID ?? row?.ID;
+    return id != null && typeof id === 'number' ? id : null;
+  }
+
+  private mapApiDetailsToTable(details: QueryDetailASS13040DetailData[]): ASS13040DetailItem[] {
+    return details.map(d => ({
+      ITEM_NO: d.GOODS_ID ?? undefined,
+      UNIT: d.GOODS_UNIT ?? undefined,
+      QTY: d.QTY ?? undefined,
+      BUY_AMT: d.GOODS_COST ?? d.SUBCOST ?? undefined,
+      CHANGE_AMT: d.EVAL_COST ?? undefined,
+      TOTAL_AMT: d.AMT ?? undefined,
+      NOTES: d.NOTES ?? undefined,
+    }));
   }
 
   private mapAssetToDetail(row: ASS13040AssetQueryRow): ASS13040DetailItem {
     return {
-      ITEM_NO: row.ITEM_NO ?? row.ASSET_NO ?? '',
-      UNIT: row.UNIT ?? undefined,
+      ITEM_NO: row.ASSET_ID ?? '',
+      UNIT: row.UnitName ?? row.Unit ?? undefined,
       QTY: 1,
-      BUY_AMT: row.BUY_AMT ?? 0,
-      CHANGE_AMT: row.CHANGE_AMT ?? 0,
-      TOTAL_AMT: row.TOTAL_AMT ?? 0,
-      NOTES: row.NOTES ?? '',
+      BUY_AMT: row.PurchaseAmt ?? 0,
+      CHANGE_AMT: row.ChangeAmt ?? 0,
+      TOTAL_AMT: row.TotalAmt ?? 0,
+      NOTES: undefined,
     };
   }
 

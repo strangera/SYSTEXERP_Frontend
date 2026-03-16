@@ -60,13 +60,13 @@ export class ASS13040AssetDialogComponent implements OnInit {
   lastQueryBody: ASS13040AssetQueryRequest | null = null;
 
   columns: ReportColumn[] = [
-    { field: 'ASSET_NO', header: '資產編號', visible: true },
-    { field: 'ASSET_NAME', header: '資產名稱', visible: true },
-    { field: 'UNIT', header: '單位', visible: true },
-    { field: 'STATUS', header: '狀態', visible: true },
-    { field: 'BUY_AMT', header: '購入金額', visible: true },
-    { field: 'CHANGE_AMT', header: '異動金額', visible: true },
-    { field: 'TOTAL_AMT', header: '合計金額', visible: true },
+    { field: 'ASSET_ID', header: '資產編號', visible: true },
+    { field: 'AssetName', header: '資產名稱', visible: true },
+    { field: 'UnitName', header: '單位', visible: true },
+    { field: 'ASSET_STATUSName', header: '狀態', visible: true },
+    { field: 'PurchaseAmt', header: '購入金額', visible: true },
+    { field: 'ChangeAmt', header: '異動金額', visible: true },
+    { field: 'TotalAmt', header: '合計金額', visible: true },
   ];
 
   constructor(
@@ -84,13 +84,13 @@ export class ASS13040AssetDialogComponent implements OnInit {
     const raw = this.queryForm.getRawValue();
     const b = body as Record<string, unknown>;
     const payload: ASS13040AssetQueryRequest = {
-      ASSET_NO: raw.assetNo ?? undefined,
+      ASSET_ID: raw.assetNo ?? undefined,
+      GOODS_NAME: raw.itemName ?? undefined,
       B_CLASS_ID: raw.bClassId ?? undefined,
       M_CLASS_ID: raw.mClassId ?? undefined,
       S_CLASS_ID: raw.sClassId ?? undefined,
-      CUSTODIAN_NO: raw.custodianNo ?? undefined,
-      CUSTODY_ORG_ID: raw.custodyOrgId ?? undefined,
-      ITEM_NAME: raw.itemName ?? undefined,
+      HOLD_EMP_ID: raw.custodianNo ?? undefined,
+      HOLD_ORG_ID: raw.custodyOrgId ?? undefined,
       PageSize: (b['PageSize'] ?? b['pageSize'] ?? 30) as number,
       PageIndex: (b['PageIndex'] ?? b['pageIndex'] ?? 1) as number,
       SortBy: b['SortBy'] as ASS13040AssetQueryRequest['SortBy'],
@@ -102,13 +102,13 @@ export class ASS13040AssetDialogComponent implements OnInit {
     this.loading = true;
     const raw = this.queryForm.getRawValue();
     this.lastQueryBody = {
-      ASSET_NO: raw.assetNo ?? undefined,
+      ASSET_ID: raw.assetNo ?? undefined,
+      GOODS_NAME: raw.itemName ?? undefined,
       B_CLASS_ID: raw.bClassId ?? undefined,
       M_CLASS_ID: raw.mClassId ?? undefined,
       S_CLASS_ID: raw.sClassId ?? undefined,
-      CUSTODIAN_NO: raw.custodianNo ?? undefined,
-      CUSTODY_ORG_ID: raw.custodyOrgId ?? undefined,
-      ITEM_NAME: raw.itemName ?? undefined,
+      HOLD_EMP_ID: raw.custodianNo ?? undefined,
+      HOLD_ORG_ID: raw.custodyOrgId ?? undefined,
       PageSize: 30,
       PageIndex: 1,
     };
@@ -137,7 +137,7 @@ export class ASS13040AssetDialogComponent implements OnInit {
   }
 
   isRowSelectable = (rowData: ASS13040AssetQueryRow): boolean => {
-    const assetNo = rowData.ASSET_NO ?? '';
+    const assetNo = rowData.ASSET_ID ?? '';
     return !!assetNo && !this.existingAssetNos.includes(assetNo);
   };
 
