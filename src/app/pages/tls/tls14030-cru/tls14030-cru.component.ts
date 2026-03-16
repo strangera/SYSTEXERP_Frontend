@@ -1,19 +1,22 @@
-import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Validators, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { PanelModule } from 'primeng/panel';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
 
 // 專櫃下拉資訊
 interface TLTTALENT {
@@ -37,6 +40,7 @@ interface TLTTALENT {
     FormsModule,
     ReactiveFormsModule,
     DropdownComponent,
+    DropdownTableComponent,
     InputTextComponent,
     InputNumberComponent,
     CalendarComponent,
@@ -75,6 +79,8 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
   TLTTALENT_Option: any[] = [];
 
+  tlt_noListOption: option[] = []; //專櫃編號列表
+
   ticket_typeOption: option[] = [ //保證票型態
     { value: '1', label: '準時開業保證票' },
     { value: '2', label: '施工保證票' },
@@ -94,6 +100,25 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     { value: '2', label: '已退票' },
     { value: '9', label: '封存' },
   ];
+
+  // ===================================================
+  opLoading = false;
+  opForm = this.formBuilder.group({
+    TLT_NO: ['', [Validators.maxLength(12)]], // 專櫃編號
+    ven_uniform: ['', [Validators.maxLength(12)]], // 統一編號
+    ...createPaginationConfig([{ field: 'No', order: 1 }]), // 分頁和排序參數
+  });
+  suggestions: any[] = [];
+  fieldsConfig: FieldsConfig[] = [
+    { field: 'Label', header: '合約編號/名稱', mainDataField: true },
+  ];
+  opData: any[] = [];// overlayPanel 裡面的table
+  opColumns: Column[] = [
+    { field: 'No', header: '合約編號' },
+    { field: 'Name', header: '專櫃名稱' },
+    { field: 'contract_subno', header: '版次' },
+  ];
+  opTotalRecords = 0;
 
   // ----------------------------------------------------------------
   constructor(private tls14030Service: Tls14030Service) {
@@ -194,6 +219,17 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
         console.log('專櫃主檔(合約編號)明細:', response.Data);
       });
+    //專櫃編號 下拉
+    this.tls14030Service
+      .queryTLTTALENT_DropDownList({})
+      .subscribe((response) => {
+        this.tlt_noListOption = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('專櫃編號:', response.Data);
+      });
   }
 
   // 讀取主檔變更候更新的選項
@@ -226,5 +262,36 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
         console.log('偵測到合約編號變更', data);
       });
     }
+  }
+
+  onAutoCompleteInputChange(event: any) {
+    const body = {
+      ...event,
+      TLT_NO: '',
+      ven_uniform: '',
+      pageSize: 90,
+      pageIndex: 1,
+      SortBy: [{ field: 'TLT_NO', order: 1 }],
+    }
+    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.suggestions = results.Data.map((item: any) => ({
+        ...item,
+      }));
+      console.log('AutoComplete input change, query with', body, 'results =', results);
+
+    });
+  }
+
+  onformValueChanged(event: any) {
+    this.opLoading = true;
+    const body = {
+      TLT_NO: event.TLT_NO || '',
+      ven_uniform: event.ven_uniform || '',
+    };
+    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData = [...results.Data]; // 更新data資料
+      this.opTotalRecords = results.TotalCount;
+      this.opLoading = false;
+    });
   }
 }

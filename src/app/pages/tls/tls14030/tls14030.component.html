@@ -30,10 +30,36 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃名稱" controlName="tlt_name" [control]="queryForm.controls.tlt_name"
-              [submitted]="submitted"></app-input-text>
-          </div> -->
+          <!-- <app-dropdown-table
+            class="col-12 md:col-6 lg:col-4"
+            [control]="queryForm.controls.test"
+            [submitted]="submitted"
+            optionLabel="Label"
+            optionValue="No"
+            [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig"
+            (inputValueChanged)="onAutoCompleteInputChange($event)"
+            (formValueChanged)="onformValueChanged($event)"
+            [formGroup]="opForm"
+            [dialogData]="opData"
+            [dialogColumns]="opColumns"
+            [loading]="opLoading"
+            [totalRecords]="opTotalRecords"
+          >
+            <app-input-text
+              class="col-12 md:col-6"
+              label="專櫃編號"
+              controlName="TLT_NO"
+              [control]="opForm.controls.TLT_NO"
+            />
+            <app-input-text
+              class="col-12 md:col-6"
+              label="統一編號"
+              controlName="ven_uniform"
+              [control]="opForm.controls.ven_uniform"
+            />
+          </app-dropdown-table> -->
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="位置編號"
