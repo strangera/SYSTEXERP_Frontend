@@ -89,6 +89,7 @@
   <app-table-report
     tableKey="ass13040AssetDialog"
     dataKey="ASSET_ID"
+    [lazy]="false"
     [showManage]="false"
     [showDelete]="false"
     [showReportMode]="false"
@@ -100,7 +101,5 @@
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
     [isRowSelectable]="isRowSelectable"
-    [lastQueryBody]="lastQueryBody"
-    [queryFunction]="queryFunction"
   ></app-table-report>
 </app-dialog>

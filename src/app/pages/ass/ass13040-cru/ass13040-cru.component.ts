@@ -345,7 +345,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
   private mapAssetToDetail(row: ASS13040AssetQueryRow): ASS13040DetailItem {
     return {
       ITEM_NO: row.ASSET_ID ?? '',
-      UNIT: row.UnitName ?? row.Unit ?? undefined,
+      UNIT: row.Unit ?? undefined,
       QTY: 1,
       BUY_AMT: row.PurchaseAmt ?? 0,
       CHANGE_AMT: row.ChangeAmt ?? 0,
