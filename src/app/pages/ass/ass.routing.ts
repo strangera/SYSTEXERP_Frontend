@@ -74,8 +74,8 @@ export const assRoutes: Routes = [
   // { path: 'ass16020cru', loadComponent: () => import('./ass16020-cru/ass16020-cru.component').then(m => m.ASS16020CRUComponent),data: {progNo:'ASS16020'} },
   { path: 'ass16030', loadComponent: () => import('./ass16030/ass16030.component').then(m => m.ASS16030Component), data: { progNo: 'ASS16030' } }, // 領用申請作業
   { path: 'ass16030cru', loadComponent: () => import('./ass16030-cru/ass16030-cru.component').then(m => m.ASS16030CRUComponent), data: { progNo: 'ASS16030' } },
-  // { path: 'ass16040', loadComponent: () => import('./ass16040/ass16040.component').then(m => m.ASS16040Component),data: {progNo:'ASS16040'} }, // 領用審核作業
-  // { path: 'ass16040cru', loadComponent: () => import('./ass16040-cru/ass16040-cru.component').then(m => m.ASS16040CRUComponent),data: {progNo:'ASS16040'} },
+  { path: 'ass16040', loadComponent: () => import('./ass16040/ass16040.component').then(m => m.ASS16040Component), data: { progNo: 'ASS16040' } }, // 領用審核作業
+  { path: 'ass16040cru', loadComponent: () => import('./ass16040-cru/ass16040-cru.component').then(m => m.ASS16040CRUComponent), data: { progNo: 'ASS16040' } },
   // { path: 'ass16050', loadComponent: () => import('./ass16050/ass16050.component').then(m => m.ASS16050Component),data: {progNo:'ASS16050'} }, // 領用發料作業
   // { path: 'ass16050cru', loadComponent: () => import('./ass16050-cru/ass16050-cru.component').then(m => m.ASS16050CRUComponent),data: {progNo:'ASS16050'} },
   // { path: 'ass16060', loadComponent: () => import('./ass16060/ass16060.component').then(m => m.ASS16060Component),data: {progNo:'ASS16060'} }, // 領用退料作業
@@ -106,7 +106,7 @@ export const assRoutes: Routes = [
   { path: 'ass21040', loadComponent: () => import('./ass21040/ass21040.component').then(m => m.ASS21040Component), data: { progNo: 'ASS21040' } }, // 基本資料設定-電錶攤提設定
   { path: 'ass21050', loadComponent: () => import('./ass21050/ass21050.component').then(m => m.ASS21050Component), data: { progNo: 'ASS21050' } }, // 基本資料設定-瓦斯錶攤提設定
   { path: 'ass21050cru', loadComponent: () => import('./ass21050-cru/ass21050-cru.component').then(m => m.ASS21050CRUComponent), data: { progNo: 'ASS21050' } },
-  { path: 'ass21060', loadComponent: () => import('./ass21060/ass21060.component').then(m => m.ASS21060Component),data: {progNo:'ASS21060'} }, // 基本資料設定-能源單價設定
+  { path: 'ass21060', loadComponent: () => import('./ass21060/ass21060.component').then(m => m.ASS21060Component), data: { progNo: 'ASS21060' } }, // 基本資料設定-能源單價設定
   // { path: 'ass21060cru', loadComponent: () => import('./ass21060-cru/ass21060-cru.component').then(m => m.ASS21060CRUComponent),data: {progNo:'ASS21060'} },
   // { path: 'ass22010', loadComponent: () => import('./ass22010/ass22010.component').then(m => m.ASS22010Component),data: {progNo:'ASS22010'} }, // 能源使用狀況作業-水錶抄錶作業
   // { path: 'ass22010cru', loadComponent: () => import('./ass22010-cru/ass22010-cru.component').then(m => m.ASS22010CRUComponent),data: {progNo:'ASS22010'} },
