@@ -17,8 +17,13 @@ import { formatDate } from '@shared/componentkit/table/table.model';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 
-import { ASS21060Data, ASS21060Query } from './ass21060.model';
+import {
+  ASS21060Data,
+  ASS21060ExportQuery,
+  ASS21060Query,
+} from './ass21060.model';
 
 @Component({
   selector: 'app-ass21060',
@@ -26,6 +31,7 @@ import { ASS21060Data, ASS21060Query } from './ass21060.model';
   standalone: true,
   imports: [
     AccordionModule,
+    ButtonModule,
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
@@ -59,6 +65,7 @@ export class ASS21060Component extends BasicQueryPageComponent<ASS21060Data> imp
   data: ASS21060Data[] = [];
   totalRecords = 0;
   lastQueryBody: ASS21060Query | null = null;
+  btnLoading = false;
 
   columns: ReportColumn[] = [];
 
@@ -122,22 +129,40 @@ export class ASS21060Component extends BasicQueryPageComponent<ASS21060Data> imp
     return '';
   }
 
+  private buildQueryBody(frm: FormGroup): ASS21060Query {
+    const raw = frm.getRawValue();
+
+    return {
+      ContractYM: this.formatContractYM(raw.ContractYM),
+      MeterTypes: raw.ENG_Type ? [raw.ENG_Type] : [],
+      TLT_NoStart: raw.TLT_NoStart?.trim() || null,
+      TLT_NoEnd: raw.TLT_NoEnd?.trim() || null,
+      TLT_Name: raw.TLT_Name?.trim() || null,
+      Contract_No: raw.Contract_No?.trim() || null,
+      Contract_SubNo: raw.Contract_SubNo?.trim() || null,
+      pageSize: raw.pageSize,
+      pageIndex: raw.pageIndex,
+      SortBy: raw.SortBy
+    };
+  }
+
+  private buildExportBody(): ASS21060ExportQuery | null {
+    if (!this.lastQueryBody) {
+      return null;
+    }
+
+    return {
+      ...this.lastQueryBody,
+      Columns: this.columns.map(col => ({
+        field: col.field,
+        header: col.header
+      }))
+    };
+  }
+
   public onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const raw = frm.getRawValue();
-
-      const body: ASS21060Query = {
-        ContractYM: this.formatContractYM(raw.ContractYM),
-        MeterTypes: raw.ENG_Type ? [raw.ENG_Type] : [],
-        TLT_NoStart: raw.TLT_NoStart?.trim() || null,
-        TLT_NoEnd: raw.TLT_NoEnd?.trim() || null,
-        TLT_Name: raw.TLT_Name?.trim() || null,
-        Contract_No: raw.Contract_No?.trim() || null,
-        Contract_SubNo: raw.Contract_SubNo?.trim() || null,
-        pageSize: raw.pageSize,
-        pageIndex: raw.pageIndex,
-        SortBy: raw.SortBy
-      };
+      const body = this.buildQueryBody(frm);
 
       this.service.queryASS21060(body)
         .pipe(
@@ -151,5 +176,82 @@ export class ASS21060Component extends BasicQueryPageComponent<ASS21060Data> imp
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
+  }
+
+  public onExportXLSX(): void {
+    const exportBody = this.buildExportBody();
+    if (!exportBody) {
+      return;
+    }
+
+    this.btnLoading = true;
+
+    this.service.exportASS21060Excel(exportBody)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.btnLoading = false)
+      )
+      .subscribe({
+        next: (res) => {
+          const fileName = this.getFileNameFromResponse(res, 'ASS21060_專櫃合約抄錶資料.xlsx');
+          this.downloadBlob(res.body, fileName);
+        },
+        error: (err) => {
+          console.error('匯出 Excel 失敗', err);
+        }
+      });
+  }
+
+  public onExportPDFClick(): void {
+    const exportBody = this.buildExportBody();
+    if (!exportBody) {
+      return;
+    }
+
+    this.btnLoading = true;
+
+    this.service.exportASS21060PDF(exportBody)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.btnLoading = false)
+      )
+      .subscribe({
+        next: (res) => {
+          const fileName = this.getFileNameFromResponse(res, 'ASS21060_專櫃合約抄錶資料.pdf');
+          this.downloadBlob(res.body, fileName);
+        },
+        error: (err) => {
+          console.error('匯出 PDF 失敗', err);
+        }
+      });
+  }
+
+  private downloadBlob(blob: Blob | null, fileName: string): void {
+    if (!blob) {
+      return;
+    }
+
+    const objectUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = objectUrl;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(objectUrl);
+  }
+
+  private getFileNameFromResponse(response: { headers?: { get(name: string): string | null } }, fallback: string): string {
+    const contentDisposition = response.headers?.get('content-disposition') ?? '';
+    const match = contentDisposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i);
+
+    const encodedFileName = match?.[1] || match?.[2];
+    if (!encodedFileName) {
+      return fallback;
+    }
+
+    try {
+      return decodeURIComponent(encodedFileName);
+    } catch {
+      return encodedFileName;
+    }
   }
 }
