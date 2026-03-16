@@ -253,9 +253,15 @@ export interface ASS12050UpdateRequest {
 
 // ==================== 強制結案 ====================
 
+/** 強制結案明細項目 */
+export interface ASS12050ForceCloseItem {
+  /** 驗收明細或單據識別碼（由後端解讀 DETAIL_ID） */
+  DETAIL_ID: string;
+}
+
 /** 強制結案 Request */
 export interface ASS12050ForceCloseRequest {
-  DETAIL_ID: string;
+  Items: ASS12050ForceCloseItem[];
 }
 
 // ==================== 作廢 ====================

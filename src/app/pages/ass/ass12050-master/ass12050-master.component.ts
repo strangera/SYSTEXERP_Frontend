@@ -139,7 +139,13 @@ export class ASS12050MasterComponent implements OnInit {
       accept: () => {
         this.loading = true;
         this.ass12050Service
-          .forceCloseASS12050({ DETAIL_ID: subcheckId })
+          .forceCloseASS12050({
+            Items: [
+              {
+                DETAIL_ID: subcheckId,
+              },
+            ],
+          })
           .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
           .subscribe({
             next: res => {

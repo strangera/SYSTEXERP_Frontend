@@ -397,35 +397,6 @@ export class ASS12050CRUComponent extends BasicCruPageComponent<ASS12050Detail> 
     });
   }
 
-  /** 強制結案（單據級） */
-  onForceClose(): void {
-    const subcheckId = this.subcheckId ?? this.dataForm.get('SUBCHECK_ID')?.value;
-    if (!subcheckId) {
-      this.messageService.warnBubble('無可結案的資料');
-      return;
-    }
-    this.messageService.confirm({
-      header: '確認強制結案',
-      message: '是否確認強制結案此驗收單？',
-      accept: () => {
-        this.loading = true;
-        this.ass12050Service
-          .forceCloseASS12050({ DETAIL_ID: subcheckId })
-          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-          .subscribe({
-            next: res => {
-              if (res.Status !== '0000') {
-                this.messageService.errorBubble('操作失敗：' + (res.Message ?? ''));
-                return;
-              }
-              this.messageService.successBubble('強制結案成功');
-              this.onCancel();
-            },
-          });
-      },
-    });
-  }
-
   /** 作廢（單據級） */
   onVoid(): void {
     const subcheckId = this.subcheckId ?? this.dataForm.get('SUBCHECK_ID')?.value;
