@@ -13,7 +13,7 @@ import { validateRequired } from '@shared/componentkit/table-edit/validate-field
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
 import { PanelModule } from 'primeng/panel';
-import { debounceTime, finalize, forkJoin, map, withLatestFrom } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, forkJoin, map, of } from 'rxjs';
 import { IPOS2004DetailData, IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { ITLS52020Data, TLS52020Detail, TLS52020Request, Tls52020Service } from '../../../service/api/tls/tls52020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
@@ -276,108 +276,122 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     this.loadDialogData();
   }
   private loadDropdownOptions(): void {
-    const { LOGO_No, HOS_No } = this.dataForm.controls;
+    const { VEN_No, LOGO_No, HOS_No } = this.dataForm.controls;
 
-    // 1. 取得完整資料並設定初始選項 (使用 forkJoin 模擬您的範本邏輯)
+    // 1. 取得初始資料 (倉別與品牌倉別關聯)
     forkJoin({
-      // 獲取所有倉別 (用於構建 HOS_No 的基本選項列表)
       warehouse: this.dropdown.queryPos2034(),
-      // 獲取品牌與倉別的完整對應關係 (使用新的 API)
       logoAccorHos: this.dropdown.queryLogoAccorHOS({}).pipe(
-        // 將 Option[] 轉換為 LogoAccorHosItem[] (假設您的 API 回傳的是 Option 格式)
         map(options => options?.map(opt => opt as unknown as LogoAccorHosItem) ?? [])
       ),
     }).pipe(untilDestroyed(this)).subscribe(({ warehouse, logoAccorHos }) => {
-      // a. 儲存完整的品牌-倉別關聯數據
       this.fullLogoAccorHosData = logoAccorHos;
-
-      // b. 構建並儲存所有不重複的品牌選項 (從關聯數據中提取)
-      const uniqueLogoNos = new Map<string | number, string>();
-      logoAccorHos.forEach(item => {
-        // 使用 LOGO_No 和 LOGO_CH_NAME
-        if (!uniqueLogoNos.has(item.LOGO_No)) {
-          uniqueLogoNos.set(item.LOGO_No, item.LOGO_CH_NAME);
-        }
-      });
-      this.fullLogoOptions = Array.from(uniqueLogoNos).map(([value, label]) => ({
-        value: value,
-        label: `${value} - ${label}`,
-      })).sort((a, b) => {
-        const valA = String(a.value);
-        const valB = String(b.value);
-        return valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
-      });
-
-      // c. 儲存所有倉別選項 (直接使用 queryPos2034 的結果)
       this.fullWarehouseOptions = warehouse || [];
 
-      // 初始時，兩個選單都顯示所有選項
-      this.filteredLogoOptions = this.fullLogoOptions;
+      // 取得初始完整品牌清單 (供廠商未選時使用)
+      this.dropdown.queryPluLogo().subscribe(res => {
+        this.fullLogoOptions = res || [];
+        // 如果目前沒選廠商也沒選倉別，則顯示全部
+        if (!VEN_No.value && !HOS_No.value) {
+          this.filteredLogoOptions = this.fullLogoOptions;
+        }
+      });
+
       this.filteredWarehouseOptions = this.fullWarehouseOptions;
 
-      // d. 初始化過濾：根據表單現有值進行雙向過濾 (用於編輯模式)
-      this.filterWarehouseOptions(LOGO_No.value, { initialLoad: true });
-      this.filterLogoOptions(HOS_No.value, { initialLoad: true });
-    });
-
-    // 2. 監聽 LOGO_No 變化 (觸發 HOS_No 過濾和建議值設定)
-    LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((logoNo) => {
-      // a. 過濾 HOS_No 的選項 (此函數內部會處理無效值重置)
-      this.filterWarehouseOptions(logoNo);
-
-      // b. 設置建議的 HOS_No (如果過濾後只剩下唯一的對應倉別)
-      const associatedHOSNos = this.fullLogoAccorHosData
-        .filter(item => item.LOGO_No === logoNo)
-        .map(item => item.HOS_No);
-      const uniqueAssociatedHOSNos = [...new Set(associatedHOSNos)];
-
-      // 如果只有一個倉別對應，則自動帶入
-      if (uniqueAssociatedHOSNos.length === 1 && HOS_No.value !== uniqueAssociatedHOSNos[0]) {
-        HOS_No.setValue(uniqueAssociatedHOSNos[0], { emitEvent: false });
-        // 接著呼叫 filterLogoOptions 來確保 LOGO_No 的選項列表維持一致
-        this.filterLogoOptions(HOS_No.value);
-      } else if (!logoNo) {
-        // LOGO_No 被清除時，清空 HOS_No (重置邏輯已在 filterWarehouseOptions 內處理)
-        if (HOS_No.value !== null) {
-          HOS_No.setValue(null, { emitEvent: false });
-          this.filterLogoOptions(null); // 清空 HOS_No，重置 LOGO_No 列表
-        }
+      // 編輯模式初始過濾
+      if (!this.isFormCreateable) {
+        this.filterWarehouseOptions(LOGO_No.value, { initialLoad: true });
+        this.filterLogoOptions(HOS_No.value, { initialLoad: true });
       }
-      // 這裡不應包含 GetBudgetAmount/calculateTotals 等與品牌倉別無關的邏輯
-      [this.data, this.selectedItems, this.dialogData] = [[], [], []];
-      this.cdr.detectChanges(); // 觸發畫面更新
     });
 
-    // 3. 監聽 HOS_No 變化 (觸發 LOGO_No 過濾和建議值設定)
-    HOS_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((hosNo) => {
-      // a. 過濾 LOGO_No 的選項 (此函數內部會處理無效值重置)
+    // --- A. [廠商 ↔ 品牌] 雙向連動 (非同步 API) ---
+
+    // 1. 監聽廠商變動 -> 觸發品牌選單更新
+    VEN_No.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      untilDestroyed(this)
+    ).subscribe(venNo => {
+      if (venNo) {
+        this.dropdown.queryLogoByVen(venNo).subscribe(opts => {
+          this.filteredLogoOptions = opts;
+          // 檢查現有品牌是否在廠商代理範圍內
+          if (LOGO_No.value && !opts?.some(o => o.value === LOGO_No.value)) {
+            LOGO_No.setValue(null, { emitEvent: false });
+          }
+        });
+      } else {
+        this.filteredLogoOptions = this.fullLogoOptions;
+      }
+      this.clearDetails();
+    });
+
+    // 2. 監聽品牌變動 -> 觸發廠商選單更新 + 倉別過濾
+    LOGO_No.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      untilDestroyed(this)
+    ).subscribe(logoNo => {
+      if (logoNo) {
+        // (1) 更新廠商選項
+        this.dropdown.queryVenByLogo(logoNo).subscribe(opts => {
+          this.vendorOptions = of(opts);
+          if (VEN_No.value && !opts?.some(o => o.value === VEN_No.value)) {
+            VEN_No.setValue(null, { emitEvent: false });
+          }
+        });
+
+        // (2) 過濾倉別並自動帶入 (原本邏輯)
+        this.filterWarehouseOptions(logoNo);
+        const associatedHOS = this.fullLogoAccorHosData
+          .filter(i => String(i.LOGO_No) === String(logoNo))
+          .map(i => i.HOS_No);
+
+        if (associatedHOS.length === 1 && HOS_No.value !== associatedHOS[0]) {
+          HOS_No.setValue(associatedHOS[0], { emitEvent: false });
+          this.filterLogoOptions(associatedHOS[0]);
+        }
+      } else {
+        // 清空時還原
+        this.vendorOptions = this.dropdown.queryPos2013TltTalent();
+        this.filterWarehouseOptions(null);
+        if (HOS_No.value) HOS_No.setValue(null, { emitEvent: false });
+      }
+      this.clearDetails();
+      this.cdr.detectChanges();
+    });
+
+    // --- B. [品牌 ↔ 倉別] 雙向連動 (前端靜態過濾) ---
+
+    HOS_No.valueChanges.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      untilDestroyed(this)
+    ).subscribe(hosNo => {
       this.filterLogoOptions(hosNo);
 
-      // b. 設置建議的 LOGO_No (如果過濾後只剩下唯一的對應品牌)
-      const associatedLOGONos = this.fullLogoAccorHosData
-        .filter(item => item.HOS_No === hosNo)
-        .map(item => item.LOGO_No);
-      const uniqueAssociatedLOGONos = [...new Set(associatedLOGONos)];
+      if (hosNo) {
+        const associatedLogo = this.fullLogoAccorHosData
+          .filter(i => i.HOS_No === hosNo)
+          .map(i => i.LOGO_No);
 
-      if (uniqueAssociatedLOGONos.length === 1 && LOGO_No.value !== uniqueAssociatedLOGONos[0]) {
-        LOGO_No.setValue(uniqueAssociatedLOGONos[0], { emitEvent: false });
-        // 接著呼叫 filterWarehouseOptions 來確保 HOS_No 的選項列表維持一致
-        this.filterWarehouseOptions(LOGO_No.value);
-      } else if (!hosNo) {
-        // HOS_No 被清除時，清空 LOGO_No (重置邏輯已在 filterLogoOptions 內處理)
-        if (LOGO_No.value !== null) {
-          LOGO_No.setValue(null, { emitEvent: false });
-          this.filterWarehouseOptions(null); // 清空 LOGO_No，重置 HOS_No 列表
+        // 如果該倉別只對應一個品牌，自動帶入品牌 (這會進一步觸發廠商更新)
+        if (associatedLogo.length === 1 && String(LOGO_No.value) !== String(associatedLogo[0])) {
+          LOGO_No.setValue(associatedLogo[0]);
         }
       }
-
-      this.cdr.detectChanges(); // 觸發畫面更新
+      this.cdr.detectChanges();
     });
+  }
 
-    // 4. 監聽廠商編號變化 (邏輯不變)
-    this.dataForm.controls.VEN_No.valueChanges.pipe(withLatestFrom(this.vendorOptions), untilDestroyed(this)).subscribe(() => {
-      [this.data, this.selectedItems, this.dialogData] = [[], [], []];
-    });
+  /** 抽取重複的清空明細邏輯 */
+  private clearDetails() {
+    this.data = [];
+    this.selectedItems = [];
+    this.dialogData = [];
+    this.calculateTotals();
   }
 
   /**

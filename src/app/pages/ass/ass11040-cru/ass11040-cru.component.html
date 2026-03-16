@@ -5,75 +5,229 @@
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <!-- 第一區塊：無標題 -->
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="品項代碼" controlName="itemCode"
-            [control]="dataForm.controls.itemCode" [submitted]="submitted">
-          </app-input-number>
+          <app-input-text label="品項代碼" controlName="itemCode" [control]="dataForm.controls.itemCode"
+            [submitted]="submitted" [disabled]="isFormEditable">
+          </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="品項名稱" controlName="itemName" [control]="dataForm.controls.itemName"
             [submitted]="submitted">
           </app-input-text>
         </div>
-      </div>
-      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="大分類代碼" controlName="bigCategoryCode" [options]="bigCategoryCodeOptions"
             optionLabel="label" optionValue="value" [control]="dataForm.controls.bigCategoryCode"
-            [submitted]="submitted">
+            [submitted]="submitted" [disabled]="isFormEditable || isFormReadable">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="中分類代碼" controlName="midCategoryCode" [options]="midCategoryCodeOptions"
             optionLabel="label" optionValue="value" [control]="dataForm.controls.midCategoryCode"
-            [submitted]="submitted">
+            [submitted]="submitted" [disabled]="isFormEditable || isFormReadable">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="小分類代碼" controlName="smlCategoryCode" [options]="midCategoryCodeOptions"
+          <app-dropdown label="小分類代碼" controlName="smlCategoryCode" [options]="smlCategoryCodeOptions"
             optionLabel="label" optionValue="value" [control]="dataForm.controls.smlCategoryCode"
-            [submitted]="submitted">
+            [submitted]="submitted" [disabled]="isFormEditable || isFormReadable">
           </app-dropdown>
         </div>
-      </div>
-      <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="品項類別區分" controlName="itemCategory" [options]="itemCategoryOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.itemCategory" [submitted]="submitted">
-          </app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="基本單位" controlName="itemUnit" [options]="itemUnitOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.itemUnit" [submitted]="submitted">
-          </app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="包裝單位" controlName="packageUnit" [options]="packageUnitOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.packageUnit" [submitted]="submitted">
+            optionValue="value" [control]="dataForm.controls.itemCategory" [submitted]="submitted"
+            [disabled]="isFormEditable || isFormReadable">
           </app-dropdown>
         </div>
       </div>
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="保固方式" controlName="warrantyMethod" [options]="warrantyMethodOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.warrantyMethod" [submitted]="submitted">
-          </app-dropdown>
+        <div class="col-12 md:col-8">
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 ">
+              <app-input-number [useGrouping]="false" label="安全庫存量" controlName="safeQty"
+                [control]="dataForm.controls.safeQty" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6">
+              <app-input-number [useGrouping]="false" label="最高庫存量" controlName="highStockQty"
+                [control]="dataForm.controls.highStockQty" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6">
+              <app-input-text label="國際條碼" controlName="barCode" [control]="dataForm.controls.barCode"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6">
+              <app-radiobutton groupname="resiStatus" label="預留殘值" controlName="resiStatus"
+                [options]="resiStatusOptions" [control]="dataForm.controls.resiStatus" [submitted]="submitted"
+                [disabled]="true">
+              </app-radiobutton>
+            </div>
+          </div>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="保養方式" controlName="maintenanceMethod" [options]="maintenanceMethodOptions"
-            optionLabel="label" optionValue="value" [control]="dataForm.controls.maintenanceMethod"
-            [submitted]="submitted">
-          </app-dropdown>
+        <div class="col-12 md:col-4">
+          <label for="file">財產照片</label>
+          <p-fileUpload #fileUpload [multiple]="false" accept=".bmp,.jpg,.wmv,.avi,.mpeg,.mp4" maxFileSize="100000000"
+            mode="advanced" [showUploadButton]="false" [disabled]="isFormReadable" chooseLabel="選擇檔案"
+            (onSelect)="onSelectFile($event)" [showCancelButton]="false" [disabled]="this.isFormReadable">
+            <ng-template pTemplate="content" let-files let-removeFileCallback="removeFileCallback">
+              <div *ngIf="mediaItems().length > 0; else noURL"
+                class="flex align-items-center justify-content-between gap-2">
+                <i class="pi pi-file text-blue-600 text-xl flex-shrink-0"></i>
+                <p-button label="{{ mediaItems()[0].name }}" [link]="true" (click)="visible.set(true)"
+                  [ngClass]="{ 'flex-1': true, 'overflow-hidden': true }"
+                  [ngStyle]="{ 'text-overflow': 'ellipsis', 'white-space': 'nowrap' }">
+                </p-button>
+                <div class="flex-shrink-0">
+                  <button *ngIf="!this.isFormReadable" type="button"
+                    (click)="removeFileCallback(files[0], 0); mediaItems().splice(0, 1)"
+                    class="p-button p-button-text p-button-danger p-button-sm w-auto">
+                    <i class="pi pi-trash text-lg"></i>
+                  </button>
+                </div>
+              </div>
+              <ng-template #noURL>
+                <div>請拖拉檔案至此上傳 或 點擊「選擇檔案」按鈕</div>
+                <div>支持圖檔/影片類型：bmp、jpg、wmv、avi、mpeg、mp4</div>
+              </ng-template>
+            </ng-template>
+            <ng-template pTemplate="file"></ng-template>
+          </p-fileUpload>
         </div>
       </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-textarea label="說明" controlName="illustrate" [control]="dataForm.controls.illustrate"
-            [submitted]="submitted">
-          </app-input-textarea>
-        </div>
+
+      <!-- 第二區塊：規格資訊 -->
+      <div class="mt-3">
+        <p-panel header="規格資訊" class="line-height-3 m-0">
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number [useGrouping]="false" label="長(CM)" controlName="lengthCm"
+                [control]="dataForm.controls.lengthCm" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number [useGrouping]="false" label="寬(CM)" controlName="widthCm"
+                [control]="dataForm.controls.widthCm" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number [useGrouping]="false" label="高(CM)" controlName="heightCm"
+                [control]="dataForm.controls.heightCm" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number [useGrouping]="false" label="重量(KG)" controlName="weightKg"
+                [control]="dataForm.controls.weightKg" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="基本單位" controlName="itemUnit" [options]="itemUnitOptions" optionLabel="label"
+                optionValue="value" [control]="dataForm.controls.itemUnit" [submitted]="submitted"
+                [disabled]="isFormReadable">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="包裝單位" controlName="packageUnit" [options]="packageUnitOptions" optionLabel="label"
+                optionValue="value" [control]="dataForm.controls.packageUnit" [submitted]="submitted"
+                [disabled]="isFormReadable">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number [useGrouping]="false" label="包裝入數" controlName="packNum"
+                [control]="dataForm.controls.packNum" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="成本價格" controlName="costPrice" [control]="dataForm.controls.costPrice"
+                [submitted]="submitted" [disabled]="true">
+              </app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="税別" controlName="taxCode" [options]="taxCodeOptions" optionLabel="label"
+                optionValue="value" [control]="dataForm.controls.taxCode" [submitted]="submitted"
+                [disabled]="isFormReadable">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="責任單位" controlName="deptCode" [options]="deptCodeOptions" optionLabel="label"
+                optionValue="value" [control]="dataForm.controls.deptCode" [submitted]="submitted"
+                [disabled]="isFormReadable">
+              </app-dropdown>
+            </div>
+          </div>
+        </p-panel>
       </div>
+
+      <!-- 第三區塊：保固資訊 -->
+      <div class="mt-3">
+        <p-panel header="保固資訊" class="line-height-3 m-0">
+          <div class="grid p-fluid">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="保固方式" controlName="warrantyMethod" [options]="warrantyMethodOptions"
+                optionLabel="label" optionValue="value" [control]="dataForm.controls.warrantyMethod"
+                [submitted]="submitted" [disabled]="isFormReadable">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="維保廠商" controlName="mtSupp" [options]="mtSuppOptions" optionLabel="label"
+                optionValue="value" [control]="dataForm.controls.mtSupp" [submitted]="submitted"
+                [disabled]="isFormReadable">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number [useGrouping]="false" label="維保期限（日）" controlName="mtDay"
+                [control]="dataForm.controls.mtDay" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number [useGrouping]="false" label="保養週期（日）" controlName="mtPeriod"
+                [control]="dataForm.controls.mtPeriod" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="保養方式" controlName="maintenanceMethod" [options]="maintenanceMethodOptions"
+                optionLabel="label" optionValue="value" [control]="dataForm.controls.maintenanceMethod"
+                [submitted]="submitted" [disabled]="isFormReadable">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="續保廠商" controlName="ivnSupp" [options]="ivnSuppOptions" optionLabel="label"
+                optionValue="value" [control]="dataForm.controls.ivnSupp" [submitted]="submitted"
+                [disabled]="isFormReadable">
+              </app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number [useGrouping]="false" label="可維修期限（日）" controlName="ivnDay"
+                [control]="dataForm.controls.ivnDay" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number [useGrouping]="false" label="折舊年限（年）" controlName="expYear"
+                [control]="dataForm.controls.expYear" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number [useGrouping]="false" label="續提期限（年）" controlName="addExpYear"
+                [control]="dataForm.controls.addExpYear" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-number [useGrouping]="false" label="盤點週期（日）" controlName="ivnPeriod"
+                [control]="dataForm.controls.ivnPeriod" [submitted]="submitted">
+              </app-input-number>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="說明" controlName="illustrate" [control]="dataForm.controls.illustrate"
+                [submitted]="submitted">
+              </app-input-text>
+            </div>
+          </div>
+        </p-panel>
+      </div>
+
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
@@ -81,3 +235,17 @@
     </form>
   </p-panel>
 </div>
+<p-galleria #galleria [value]="mediaItems()" [visible]="visible()" (visibleChange)="visible.set($event)"
+  [containerStyle]="{ 'max-width': '850px' }" [circular]="true" [fullScreen]="true" [showThumbnails]="false"
+  [autoPlay]="true">
+  <ng-template pTemplate="item" let-item>
+    <ng-container *ngIf="item.type === 'image'">
+      <img [src]="item.url" alt="Image" style="width: 100%; display: block;" />
+    </ng-container>
+    <ng-container *ngIf="item.type === 'video'">
+      <video [src]="item.url" controls style="width: 100%; display: block;">
+        您的瀏覽器不支援影片標籤。
+      </video>
+    </ng-container>
+  </ng-template>
+</p-galleria>

@@ -2,15 +2,15 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { SortMeta } from 'primeng/api';
 import { AccordionModule } from 'primeng/accordion';
+import { SortMeta } from 'primeng/api';
 import { finalize, Observable } from 'rxjs';
 
 import { TLS51130Service } from '../../../service/api/tls/tls51130.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
 
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // UI
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -21,7 +21,6 @@ import { TableReportComponent } from '../../../shared/componentkit/table-report/
 @Component({
   selector: 'app-tls51130',
   templateUrl: './tls51130.component.html',
-  styleUrls: ['./tls51130.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,

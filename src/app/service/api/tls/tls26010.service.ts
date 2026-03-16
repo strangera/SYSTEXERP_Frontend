@@ -121,6 +121,7 @@ export class TLS26010Service {
       tap(res => {
         const mapped = (res.Data ?? []).map(item => ({
           ...item,
+          Label: `${item.ecr_no} - ${item.ecr_name}`, // 組合 ECR_No 和 ecr_name 作為顯示用的 Label
           ECR_No: item.ecr_no, // tls26010的組成都是吃ECR_No，這邊先進行轉換
         }));
         this.ecrOptions.set(mapped);

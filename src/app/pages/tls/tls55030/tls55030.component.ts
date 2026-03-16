@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { YearMonthComponent } from '@pages/fin/fin11020/query-year-month/query-year-month.component';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -25,7 +26,7 @@ import { DropdownApiService } from './../../../service/utility/dropdown-api.serv
   selector: 'app-tls55030',
   templateUrl: './tls55030.component.html',
   standalone: true,
-  imports: [RadiobuttonComponent, MultiSelectComponent, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberRangeComponent, TranslateModule]
+  imports: [YearMonthComponent, RadiobuttonComponent, MultiSelectComponent, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberRangeComponent, TranslateModule]
 })
 export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -36,12 +37,12 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
     PUR_RepYYYYMM: [null], // 申報年月
     VEN_Uniform: [null, [Validators.maxLength(16)]], // 廠商統一編號
     PUR_TaxType: [null], // 課稅別 稅別 0=免稅 1=應稅 2=零稅 宏誌課稅別(1:應2:零3:免
-    GUI_Amt_Start: [null, [Validators.max(10)]],  // 發票總額 起
-    GUI_Amt_End: [null, [Validators.max(10)]],  // 發票總額 迄
-    Rebate_Net_Start: [null, [Validators.max(10)]], // 折讓未稅金額 起
-    Rebate_Net_End: [null, [Validators.max(10)]], // 折讓未稅金額 迄
-    Rebate_Tax_Start: [null, [Validators.max(10)]], // 折讓稅額 起
-    Rebate_Tax_End: [null, [Validators.max(10)]], // 折讓稅額 迄
+    GUI_Amt_Start: [null, [Validators.max(9999999999)]],  // 發票總額 起
+    GUI_Amt_End: [null, [Validators.max(9999999999)]],  // 發票總額 迄
+    Rebate_Net_Start: [null, [Validators.max(9999999999)]], // 折讓未稅金額 起
+    Rebate_Net_End: [null, [Validators.max(9999999999)]], // 折讓未稅金額 迄
+    Rebate_Tax_Start: [null, [Validators.max(9999999999)]], // 折讓稅額 起
+    Rebate_Tax_End: [null, [Validators.max(9999999999)]], // 折讓稅額 迄
     PUR_VoucherType: [null], // 發票格式
     DIS_Status: [null], // 狀況 1 待結帳 2 已結帳 新增時1，月結後變更2
     DIS_EntryType: [null], // 折讓項目
@@ -64,6 +65,7 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
     { field: 'DIS_No', header: '折讓單維護編號' },
     { field: 'ACP_YYYYMM', header: '結帳年月' },
     { field: 'VEN_No', header: '廠商編號' },
+    { field: 'VEN_Name', header: '廠商名稱' },
     { field: 'TABTYPE', header: '單據種類', format: (v) => getSYS1000('TABTYPE', v) },
     { field: 'PUR_VoucherType', header: '格式' },
     { field: 'DIS_Status', header: '狀況', format: (v) => getSYS1000('DIS_Status', v) },
@@ -82,11 +84,11 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
   }
 
   onSubmit(frm: FormGroup) {
+    console.log(frm.value);
     const body = {
       ...frm.value,
       ACP_YYYYMM: this.datePipe.transform(frm.value.ACP_YYYYMM, 'yyyyMM'),
       PUR_GUIDate: this.datePipe.transform(frm.value.PUR_GUIDate, 'yyyy-MM-dd'),
-      PUR_RepYYYYMM: this.datePipe.transform(frm.value.PUR_RepYYYYMM, 'yyyyMM'),
     }
     this.handleSubmit(frm, () => {
       this.tls55030Service.queryTLS55030(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
@@ -98,12 +100,17 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
     });
   }
   onDelete(event: Tls55030ListData[]) {
-    // "DIS_Nos":string[]
-    const DIS_Nos = event.map(v => v.DIS_No);
-    this.tls55030Service.deleteTLS55030({ DIS_Nos }).subscribe(() => {
-      this.messageService.successBubble('刪除成功');
-      this.onSubmit(this.queryForm);
-      this.selectedItems = [];
+    this.messageService.confirm({
+      message: `是否確認刪除選中的折讓單?`,
+      header: `確認刪除`,
+      accept: () => {
+        const DIS_Nos = event.map(v => v.DIS_No);
+        this.tls55030Service.deleteTLS55030({ DIS_Nos }).subscribe(() => {
+          this.messageService.successBubble('刪除成功');
+          this.onSubmit(this.queryForm);
+          this.selectedItems = [];
+        });
+      }
     });
   }
 }

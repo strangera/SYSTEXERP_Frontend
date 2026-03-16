@@ -15,7 +15,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ReportColumn, formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { debounceTime, finalize } from 'rxjs';
+import { debounceTime, finalize, skip } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -99,6 +99,13 @@ export class TLS2G040Component extends BasicQueryPageComponent<TLS2G040Data> imp
       this.queryForm.controls.bus_sclass.setValue(null); // 清空中分類選擇
     });
     this.updateColumns();
+    // 當報表格式變更時直接觸發查詢（不需額外按確認）
+    this.queryForm.controls.report_type.valueChanges.pipe(debounceTime(200), skip(1), untilDestroyed(this)).subscribe(() => {
+      // 只有在表單主要必要欄位存在時才觸發查詢
+      if (this.queryForm.get('budget_yymm')?.value) {
+        this.onSubmit(this.queryForm);
+      }
+    });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

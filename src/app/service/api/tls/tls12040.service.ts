@@ -3,9 +3,12 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, tap, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
-import { CleanSubmitData } from '../../../pages/tls/tls13010/tls13010.model';
-import { TLS12040RequestModel } from '@pages/tls/tls12040-cru/models/tls12040-cru.model';
-import { TLS12040SubmitData } from '@pages/tls/tls12040/models/tls12040submit.model';
+import { SubmitData as TLS12040SubmitData } from '@pages/tls/tls12040-v2/core/models/submit/submit-data.interface';
+
+interface TLS12040RequestModel {
+  apply_no: string;
+  id?: any;
+}
 
 interface TLS12040FareRequest {
   apply_no: string;

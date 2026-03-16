@@ -1,27 +1,42 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { FileUploadHandlerEvent } from 'primeng/fileupload';
-import { TLS27010Service } from '@service/api/tls/tls27010.service';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS27010Service } from '@service/api/tls/tls27010.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { FileUploadHandlerEvent } from 'primeng/fileupload';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 @Component({
   selector: 'app-tls27010',
   templateUrl: './tls27010.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule, FileUploadComponent],
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    FileUploadComponent,
+    TableReportComponent,
+    InputTextComponent,
+    ButtonComponent,
+    CalendarComponent
+  ],
 })
 export class TLS27010Component extends BasicQueryPageComponent<unknown> implements OnInit {
   @ViewChild(FileUploadComponent) fileUpload?: FileUploadComponent;
-  queryForm = this.formBuilder.group({});
   files: File[] = [];
   allowedFileTypes = '.csv,.txt';
   constructor(
-    private tls27010Service: TLS27010Service,
+    public readonly tls27010Service: TLS27010Service,
   ) { super() }
   ngOnInit(): void {
     this.initializePage('TLS27010', 'tls/tls27010cru');
@@ -54,5 +69,27 @@ export class TLS27010Component extends BasicQueryPageComponent<unknown> implemen
         this.fileUpload?.fileUpload?.clear();
       });
     }
+  }
+
+  queryForm = this.formBuilder.group({
+    tsdp_file: [null], // 轉入檔案名稱
+    tsdp_date: [null], // 檔案日期
+    pageSize: [30],
+    pageIndex: [1],
+  });
+  data: any[] = [];
+  columns: ReportColumn[] = [];
+  totalRecords = 0;
+  lastQueryBody: any = null;
+
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      this.tls27010Service.queryTLS27010(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.lastQueryBody = frm.value;
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      });
+    });
   }
 }

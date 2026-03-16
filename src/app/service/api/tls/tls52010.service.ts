@@ -104,6 +104,9 @@ export interface IPOS2004DetailData {
   POD_SaleAmt?: number; // 銷售金額
   POD_Remark?: string; // 備註
   _TABLE_KEY?: string;
+
+  SPD_ConfirmQty?: number; // 領用量 (用於 TLS56020 的編輯欄位)
+  NowHaveQty?: number;
 }
 
 /** 國際條碼/商品管理編號/廠商貨號查詢商品 (queryPOS2004Detail) 的請求介面 */

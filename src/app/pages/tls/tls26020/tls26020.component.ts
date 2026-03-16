@@ -4,7 +4,6 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls11010Service } from '@service/api/tls/tls11010.service';
-import { Tls51080Service } from '@service/api/tls/tls51080.service';
 import { FloorService } from '@service/basic/querySYS3900.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -104,7 +103,6 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     private tls26020Service: TLS26020Service,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
-    private tls51080Service: Tls51080Service,
     private datePipe: DatePipe,
     private dropDownListService: DropDownListService,
   ) {

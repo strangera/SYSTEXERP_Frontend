@@ -35,7 +35,7 @@ export const COMMISSION_TYPES_WITH_STEP3 = [
   CommissionType.BaseTier
 ];
 
-/** 需要 Step4 (條件設定) 的抽成別 */
+/** 需要 Step4 (租金設定) 的抽成別 */
 export const COMMISSION_TYPES_WITH_STEP4 = [
   CommissionType.FixedRent,
   CommissionType.BaseRentHigher,

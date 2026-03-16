@@ -38,7 +38,7 @@ export interface IRebateDetailForCRU extends IInvoiceDetail {
   Rebate_Net?: number;    // 計算後的折讓淨額
   Rebate_Tax?: number;    // 計算後的折讓稅額
   Rebate_Name: string | null;    // 新增/輸入的折讓名稱
-  Rebate_GUIDate: string;  // 新增/輸入的折讓日期
+  Rebate_GUIDate: Date;  // 新增/輸入的折讓日期
 }
 
 @Component({
@@ -60,7 +60,9 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     ACP_YYYYMM: [new Date(), [Validators.required]],
     VEN_No: [null, [Validators.required]],
     DIS_EntryType: ['1', [Validators.required]],
-    RJM_TotalBuyAmt: [{ value: 0, disabled: true }], 			    // 退貨總金額
+    RJM_TotalBuyAmt: [{ value: 0, disabled: true }],    // 退貨總金額 (含稅)
+    RJM_TotalBuyNet: [{ value: 0, disabled: true }],    // 退貨總未稅金額
+    RJM_TotalBuyTax: [{ value: 0, disabled: true }],    // 退貨總稅額
     invoiceTotalAmount: [{ value: 0, disabled: true }], 			  // 發票總金額(自取) - 彙總所有選取的發票金額
     invoiceRemainingRebateAmount: [{ value: 0, disabled: true }], 	// 發票剩餘可折總金額(自取) - 彙總所有選取的發票剩餘可折金額
     totalRebateAmount: [{ value: 0, disabled: true }], 			    // 折讓總金額(自取) - 彙總所有折讓明細的金額 (APS30231.Rebate_Amt)
@@ -142,7 +144,6 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
         const month = inputDate.getMonth();
         // 計算該月最後一天
         const lastDay = new Date(year, month + 1, 0);
-
         // 更新預設值物件 (確保欄位名稱與 columns 中的 field 一致)
         this.defaultInsertData = {
           ...this.defaultInsertData,
@@ -166,7 +167,7 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
         Rebate_Amt_New: item.Rebate_Amt, // 先給0
         Rebate_Net: item.Rebate_Net, // 需從 Rebate_Amt 計算或後端提供
         Rebate_Tax: item.Rebate_Tax,  // 需從 Rebate_Amt 計算或後端提供
-        Rebate_GUIDate: item.Rebate_GUIDate
+        Rebate_GUIDate: new Date(item.Rebate_GUIDate), // 預設為今天
       }));
       this.data = convertedData;
 
@@ -270,21 +271,28 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
   // **核心修正點：統一處理主表單禁用/啟用和彙總欄位恆禁用邏輯**
   updateFormDisableState(): void {
     if (this.data2.length || this.data.length) {
-      // 有明細資料時，禁用主表單 (防止修改 ACP_YYYYMM, VEN_No, DIS_EntryType)
       this.dataForm.controls.ACP_YYYYMM.disable();
       this.dataForm.controls.VEN_No.disable();
       this.dataForm.controls.DIS_EntryType.disable();
     } else {
-      // 沒有明細資料時，啟用主表單
       this.dataForm.enable();
 
-      // **重點:** 雖然 dataForm.enable() 啟用了所有欄位，但彙總欄位必須保持禁用！
-      this.dataForm.controls.RJM_TotalBuyAmt.disable();
-      this.dataForm.controls.invoiceTotalAmount.disable();
-      this.dataForm.controls.invoiceRemainingRebateAmount.disable();
-      this.dataForm.controls.totalRebateAmount.disable();
-      this.dataForm.controls.balanceAmount.disable();
-      this.dataForm.controls.Rebate_Amt.disable();
+      // 彙總欄位恆禁用清單更新
+      const disableControls = [
+        'RJM_TotalBuyAmt',
+        'RJM_TotalBuyNet',
+        'RJM_TotalBuyTax', // 新增這兩個
+        'invoiceTotalAmount',
+        'invoiceRemainingRebateAmount',
+        'totalRebateAmount',
+        'balanceAmount',
+        'Rebate_Amt'
+      ];
+
+      disableControls.forEach(key => {
+        this.dataForm.get(key)?.disable();
+      });
+
       if (this.isFormReadable) {
         this.dataForm.controls.Rebate_Name.enable();
       }
@@ -311,15 +319,16 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       // 確保輸入的折讓金額在計算前已經處理過（或在此處強制取整）
       const rebateNew = Math.round(item.Rebate_Amt_New || 0);
 
-      totalInvoiceAmt += item.PUR_Amt;
-      totalRemainingRebateAmt += item.PUR_Amt - item.Rebate_Amt;
-      positiveTotalRebateAmt += rebateNew;
+      totalInvoiceAmt += item.PUR_Amt; // 發票總金額累加
+      totalRemainingRebateAmt += item.PUR_Amt - item.Rebate_Amt; // 發票剩餘可折金額累加 (發票金額 - 已折金額)
+      positiveTotalRebateAmt += rebateNew; // 折讓總金額累加 (只計算使用者輸入的折讓金額，且確保是正數)
     });
 
     // 全部取整數
-    const finalPositiveAmt = Math.round(positiveTotalRebateAmt);
-    const negativeTotalRebateAmt = finalPositiveAmt !== 0 ? -finalPositiveAmt : 0;
-    const balance = Math.round(totalInvoiceAmt - totalRemainingRebateAmt + negativeTotalRebateAmt);
+    const finalPositiveAmt = Math.round(positiveTotalRebateAmt); // 折讓總金額
+    const negativeTotalRebateAmt = finalPositiveAmt !== 0 ? -finalPositiveAmt : 0; // 轉為負數表示扣除的金額 (如果有折讓金額才轉負數，沒有則保持0)
+    // 總餘額 = 退貨總金額 - 折讓總金額 (注意：折讓總金額是正數，但在計算餘額時應該扣除，所以用負數表示)
+    const balance = Math.round(totalRemainingRebateAmt + negativeTotalRebateAmt);
 
     // 更新 FormControls
     this.dataForm.controls.invoiceTotalAmount.setValue(Math.round(totalInvoiceAmt));
@@ -331,19 +340,37 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
   // 彙總退貨明細相關欄位 (主要是 RJM_TotalBuyAmt)
   updateReturnSummaryAmounts(newData2?: IReturnDetailData[]): void {
     // 如果是 dataChange 觸發，則更新 data2
-    if (newData2) {
-      this.data2 = newData2;
-    }
+    if (newData2) this.data2 = newData2;
 
-    // 重新計算退貨總金額
-    const totalBuyAmt = this.data2.reduce((total, item) => total + item.RJM_TotalBuyAmt, 0);
-    this.dataForm.controls.RJM_TotalBuyAmt.setValue(totalBuyAmt);
+    // 使用 reduce 一次算出三個總和
+    const summary = this.data2.reduce((acc, item) => {
+      acc.totalAmt += (item.RJM_TotalBuyAmt || 0);
+      acc.totalNet += (item.RJM_TotalBuyNet || 0);
+      acc.totalTax += (item.RJM_TotalBuyTax || 0);
+      return acc;
+    }, { totalAmt: 0, totalNet: 0, totalTax: 0 });
+
+    // 更新 FormControls，並使用 Math.round 確保與後端精度一致
+    this.dataForm.controls.RJM_TotalBuyAmt.setValue(Math.round(summary.totalAmt));
+    this.dataForm.controls.RJM_TotalBuyNet.setValue(Math.round(summary.totalNet));
+    this.dataForm.controls.RJM_TotalBuyTax.setValue(Math.round(summary.totalTax));
 
     // 同步處理表單的 disable/enable 狀態
     this.updateFormDisableState();
   }
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      const isTableValid = this.tableEditComponent.validateAndShowErrors();
+      if (!isTableValid) {
+        this.loading = false;
+        return;
+      }
+      if ((frm.getRawValue().totalRebateAmount * -1) !== (frm.getRawValue().RJM_TotalBuyAmt || 0)) {
+        this.messageService.errorBubble('【退貨總金額】與【折讓總金額】不相符');
+        this.loading = false;
+        return;
+      }
       const formValue = frm.getRawValue();
       const paramBody = {
         DIS_No: this.isFormCreateable ? undefined : formValue.DIS_No,

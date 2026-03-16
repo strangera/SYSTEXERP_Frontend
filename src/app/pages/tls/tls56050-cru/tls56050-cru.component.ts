@@ -85,6 +85,7 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
   warehouseOptions = this.dropDown.queryPos2034(); // 倉別
   userOptions = this.dropDown.queryTblUser(); // 人員選項
   dataChanged = false;
+  initOutgodsQtyIsNull = true;
   initComponent = true;
 
   constructor(
@@ -107,6 +108,7 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
       this.tls56050Service.getTLS56050Info(mvmNo).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
         const masterData = response.Data.TLS56050Data;
         const detailsData = response.Data.detail_TLS56050;
+        this.initOutgodsQtyIsNull = masterData.OUTGODS_TotQty === 0;
         this.dataForm.patchValue({
           MVM_No: masterData.MVM_No,
           LOGO_No: masterData.LOGO_No,
@@ -222,6 +224,7 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
       this.tls56050Service.updateTLS56050(payload).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
         this.messageService.successBubble(response.Message);
         this.dataChanged = false;
+        this.loadData();
       });
     });
   }

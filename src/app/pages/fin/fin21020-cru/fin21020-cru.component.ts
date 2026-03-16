@@ -42,11 +42,11 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
   data: IFin21020Detail[] = [];
   selectedItems: IFin21020Detail[] = [];
   columns: EditColumn[] = [
-    { field: 'Remit_BAmount', header: '金額下限', type: 'inputNumber', maxLength: 10, min: 0, validate: [validateRequired], onFocus: (rowData) => { this.autoFillNextRow(rowData); } },
+    { field: 'Remit_BAmount', header: '金額下限', type: 'inputNumber', maxLength: 10, min: 0, validate: [validateRequired] },
     { field: 'Remit_UAmount', header: '金額上限', type: 'inputNumber', maxLength: 10, min: 0, validate: [validateRequired] },
     { field: 'Remit_Fee', header: '廠商負擔電匯手續費', type: 'inputNumber', maxLength: 6, min: 0, validate: [validateRequired], onBlur: (rowData) => { this.autoFillCashBackAmt(rowData); } },
-    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', type: 'inputNumber', maxLength: 6, min: 0, validate: [validateRequired] },
     { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', type: 'inputNumber', maxLength: 6, min: 0 },
+    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', type: 'inputNumber', maxLength: 6, min: 0, validate: [validateRequired] },
   ];
   excelBtnLoading = signal(false);
   constructor(
@@ -123,17 +123,33 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
     return { isValid: true, errorMessage: '' };
   };
 
-  // 依照上一筆自動帶入相同值+1
-  autoFillNextRow(rowData: IFin21020Detail) {
-    const rowIndex = this.data.indexOf(rowData);
-    if (rowIndex > 0) {
-      const prevRow = this.data[rowIndex - 1];
-      if (typeof prevRow.Remit_UAmount === 'number') {
-        rowData.Remit_BAmount = prevRow.Remit_UAmount + 1;
+  // 2. 建立一個 Getter 來動態計算下一筆的預設值
+  get currentDefaultInsertData() {
+    // 過濾掉還在編輯中的 candidate row，只看已確認的資料
+    const actualData = this.data.filter(item => !item['_isAutoInsertCandidate']);
+
+    if (actualData.length > 0) {
+      const lastRow = actualData[actualData.length - 1];
+      // 如果最後一筆有填上限，預設值就是 上限 + 1
+      if (typeof lastRow.Remit_UAmount === 'number') {
+        return {
+          Remit_BAmount: lastRow.Remit_UAmount + 1,
+          Remit_UAmount: null,
+          Remit_Fee: null,
+          Cash_Back_Amt: null,
+          Comp_Remit_Fee: null
+        };
       }
-    } else {
-      rowData.Remit_BAmount = 0;
     }
+
+    // 如果完全沒資料，第一筆預設下限為 0
+    return {
+      Remit_BAmount: 0,
+      Remit_UAmount: null,
+      Remit_Fee: null,
+      Cash_Back_Amt: null,
+      Comp_Remit_Fee: null
+    };
   }
 
   // 依照Remit_Fee自動帶入Cash_Back_Amt
@@ -191,8 +207,8 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
     { field: 'Remit_BAmount', header: '金額下限', width: 15 },
     { field: 'Remit_UAmount', header: '金額上限', width: 15 },
     { field: 'Remit_Fee', header: '廠商負擔電匯手續費', width: 25 },
-    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', width: 25 },
     { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', width: 30 },
+    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', width: 25 },
   ];
   async onExportExcel() {
     this.excelBtnLoading.set(true);
@@ -229,8 +245,8 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
     { field: 'Remit_BAmount', header: '金額下限', type: 'number' },
     { field: 'Remit_UAmount', header: '金額上限', type: 'number' },
     { field: 'Remit_Fee', header: '廠商負擔電匯手續費', type: 'number' },
-    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', type: 'number' },
     { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', type: 'number' },
+    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', type: 'number' },
   ];
   async onImportExcel(event: FileSelectEvent) {
     const file = event.files[0];

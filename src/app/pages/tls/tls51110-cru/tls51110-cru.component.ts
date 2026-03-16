@@ -1,22 +1,22 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { Tls51110Service } from '../../../service/api/tls/tls51110.service';
-import { Subscription } from 'rxjs';
-import { ExcelImportService, ImportExcelColumn } from '../../../shared/service/excel-import.service';
-import { UserInfo } from '../../../shared/models/system/userInfo';
-import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
+import { Subscription } from 'rxjs';
+import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
+import { Tls51110Service } from '../../../service/api/tls/tls51110.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgIf } from '@angular/common';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { UserInfo } from '../../../shared/models/system/userInfo';
+import { ExcelImportService, ImportExcelColumn } from '../../../shared/service/excel-import.service';
+import { ValidationService } from '../../../shared/service/validation.service';
 export interface LogoBudget {
   id: [0];
   LOGO_No: string;
@@ -40,7 +40,6 @@ interface LogoOption {
 @Component({
   selector: 'app-tls51110-cru',
   templateUrl: './tls51110-cru.component.html',
-  styleUrls: ['./tls51110-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
