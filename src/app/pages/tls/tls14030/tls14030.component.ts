@@ -324,7 +324,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
         .filter((item: apiOption, index: number, self: apiOption[]) => {
           return index === self.findIndex((t) => t.No === item.No);
         })
-        .map((item: any) => ({
+        .map((item: apiOption) => ({
           No: item.No,
           Name: item.Name,
           Label: item.No + '-' + item.Name,
