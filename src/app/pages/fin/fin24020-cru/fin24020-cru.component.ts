@@ -243,6 +243,11 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
           // no-op
         }))
         .subscribe(res => {
+
+          //查詢結果
+          console.log('☀️Query result:', res.Data);
+
+
           let items = (res?.Data ?? []) as any[];
           // 支援兩種回傳：1) 直接明細陣列 2) wrapper 格式 { Data:{...}, Details:[...] }
           if (items && items.length) {
@@ -250,7 +255,7 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
             // wrapper 格式
             if (first && first.Data && Array.isArray(first.Details)) {
               const header = first.Data || {};
-              // 從 header 填入表單欄位（若尚未填）
+              // 從 header 填入主檔欄位（若尚未填）
               try {
                 this.dataForm.patchValue({
                   ACP_Amt: header.ACP_Amt ?? this.dataForm.value.ACP_Amt,
@@ -292,14 +297,16 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
               } catch (e) { /* ignore */ }
 
               this.tableData = details.map((d: any) => ({
-                RET_Date: d.RET_Date ? new Date(d.RET_Date + 'T00:00:00') : null,
-                RET_Amt: Number(d.RET_Amt ?? d.ACP_ReserveAmt ?? 0),
-                Remark: d.NoteDesc ?? '',
-                STATUS: this.toStatusCode(d.STATUS),
-                ACP_Amt: d.ACP_Amt,
-                ACP_BalanceAmt: d.ACP_BalanceAmt
+                RET_Date: d.RET_Date ? new Date(d.RET_Date + 'T00:00:00') : null, // 退保留款日期
+                RET_Amt: Number(d.RET_Amt ?? d.ACP_ReserveAmt ?? 0), // 退保留款金額
+                Remark: d.Remark ?? '', // 應付主檔摘要
+                STATUS: this.toStatusCode(d.STATUS), // 是否已付款(Y/N)
+                ACP_Amt: d.ACP_Amt, // 應付金額
+                ACP_BalanceAmt: d.ACP_BalanceAmt // 應付帳款餘額
                 , _sortIndex: d.SortIndex
               }));
+
+              console.log('✨Processed tableData:', this.tableData);
               // 儲存原始快照以便 local cancel 還原
               try { this.originalTableDataSnapshot = JSON.parse(JSON.stringify(this.tableData || [])); } catch (e) { this.originalTableDataSnapshot = [...(this.tableData || [])]; }
               // 如果 header 沒有金額，嘗試從第一筆明細帶入
