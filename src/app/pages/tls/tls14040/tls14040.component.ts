@@ -272,7 +272,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
     // 專櫃編號 下拉
     this.tls14030Service
-      .queryTLTTALENT_DropDownList({})
+      .queryTLTTALENT_TLS14030_DropDownList({})
       .subscribe((response) => {
         this.tlt_noListOption = response.Data.map((item: apiOption) => ({
           No: item.No,

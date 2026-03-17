@@ -1,3 +1,40 @@
+// 欄位切換齒輪按鈕 - 圓形樣式
+::ng-deep .column-toggle-btn.p-multiselect {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  padding: 0;
+  min-width: unset;
+  border: 1px solid #ced4da;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  .p-multiselect-label-container {
+    display: none;
+  }
+
+  .p-multiselect-trigger {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .p-multiselect-trigger-icon {
+      font-size: 0.875rem;
+    }
+  }
+
+  &:hover {
+    border-color: #6366f1;
+    background: #f8f9fa;
+  }
+}
+
 .expandable-edit-table-container {
   // 整體容器樣式 -  移除預設 margin，讓使用者自行控制間距
   margin: 0;
@@ -194,6 +231,18 @@
       .p-button-icon {
         font-size: 1.5em;
       }
+    }
+
+    // 重複外層表頭列（前一筆展開時顯示）
+    .repeated-outer-header > th {
+      background: var(--table-header-bg);
+      text-align: center;
+      border: 1px solid #e9ecef;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0.4rem 0.5rem;
     }
 
     //  重要修正：表格頭的響應式處理 - 統一使用 var(--table-header-bg)

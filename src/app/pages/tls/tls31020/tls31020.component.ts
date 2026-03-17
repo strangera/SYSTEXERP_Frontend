@@ -586,6 +586,12 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       onedatedd: yesterday,
     });
 
+    //清空查詢資料
+    this.data = [];
+    this.totalRecords = 0;
+    this.footerTotal = null;
+    this.footershowTotal = null;
+
     this.setReadOnlyFields();
     this.syncDateToQueryForm();
   }

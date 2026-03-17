@@ -1,182 +1,280 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+import { Component, computed, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11070Service } from '@service/api/ass/ass11070.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatDate } from '@shared/componentkit/table-report/table-report.model';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
+import { ButtonModule } from 'primeng/button';
+import { finalize, Observable } from 'rxjs';
+import { QueryASS11070Request, QueryASS11070Response } from './ass11070.model';
 
-//3.1.1.7 備用供應商資料維護作業
+// 3.1.1.7 備用供應商資料維護作業
 @Component({
   selector: 'app-ass11070',
   templateUrl: './ass11070.component.html',
   styleUrl: './ass11070.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, InputTextComponent, InputNumberComponent, InputNumberRangeComponent, EditorTextComponent, TableComponent, TranslateModule]
+  imports: [
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    ButtonComponent,
+    CalendarRangeComponent,
+    DropdownComponent,
+    InputTextComponent,
+    RadiobuttonComponent,
+    MenubarComponent,
+    TableReportComponent,
+    ButtonModule,
+  ],
 })
-export class ASS11070Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    startdate: [], // 建檔日期
-    enddate: [], // 建檔日期
-    receptionPerson: [[] as number[]], // 接洽人員
-    vendorUID: [[] as number[]], // 廠商統一編號
-    bussinessModel: [1, []], // 營運模式
-    vendorCName: ['', [Validators.maxLength(60)]], // 廠商名稱(中文)
-    vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
-    //
-    contactPerson: ['', [Validators.maxLength(60)]], // 聯絡人
-    contactPhone: [, [Validators.maxLength(15)]], // 聯絡人電話(O)
-    contactTitle: ['', [Validators.maxLength(60)]], // 聯絡人職稱
-    contactFax: [, [Validators.maxLength(60)]], // 聯絡人傳真
-    contactCellphone: [, [Validators.maxLength(10)]], // 聯絡人行動電話
-    contactEmail: ['', [Validators.maxLength(100)]], // 聯絡人電子郵件
-    //
-    companyAddress: ['', [Validators.maxLength(100)]], // 公司地址
-    companyResponsibility: ['', [Validators.maxLength(60)]], // 公司負責人
-    //
-    paymentMethod: [1, []], // 付款方式
-    startserialticket: [, [this.validationService.numberValidator]], // 票期
-    endserialticket: [, [this.validationService.numberValidator]], // 票期
-    services: ['', [Validators.maxLength(100)]], // 服務項目
-    //
-    remark: [,], // 備註
+export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Response> implements OnInit {
+  public readonly queryForm = this.formBuilder.group({
+    crtDateS: new FormControl<Date | null>(null),
+    crtDateE: new FormControl<Date | null>(null),
+    prStaffId: new FormControl<string | null>(null, [Validators.maxLength(20)]),
+    vendorId: new FormControl<string | null>(null, [Validators.maxLength(20)]),
+    mangerType: new FormControl<string | null>(null, [Validators.maxLength(20)]),
+    vendorName: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    vendorNameE: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    contactStaff: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    contactTel: new FormControl<string | null>(null, [Validators.maxLength(15)]),
+    contactTitle: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    contactFax: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    contactMobilePhone: new FormControl<string | null>(null, [Validators.maxLength(10)]),
+    contactEmail: new FormControl<string | null>(null, [Validators.maxLength(100)]),
+    companyAddress: new FormControl<string | null>(null, [Validators.maxLength(100)]),
+    chargeStaff: new FormControl<string | null>(null, [Validators.maxLength(60)]),
+    payType: new FormControl<string | null>(null, [Validators.maxLength(20)]),
+    ticketPeriod: new FormControl<string | null>(null, [Validators.maxLength(30)]),
+    serviceItems: new FormControl<string | null>(null, [Validators.maxLength(100)]),
+    notes: new FormControl<string | null>(null, [Validators.maxLength(100)]),
+    pageSize: new FormControl<number>(30),
+    pageIndex: new FormControl<number>(1),
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  public readonly qf = computed(() => this.queryForm.controls);
+
+  public readonly tableData = signal<QueryASS11070Response[]>([]);
+  public readonly totalRecords = signal<number>(0);
+  public readonly tableLoading = signal<boolean>(false);
+  public readonly staffOptions = signal<{ label: string; value: string; name: string }[]>([]);
+  public readonly vendorOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly mangerTypeOptions = [
+    { value: '1', label: '工廠直銷' },
+    { value: '2', label: '代理商' },
+    { value: '3', label: '經銷商' },
+    { value: '4', label: '零售連鎖' },
+    { value: '5', label: '零售一般' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      'startdate': '2024/01/01', 'receptionPerson': 1, 'vendorUID': 1, 'vendorCName': 'A廠商', 'vendorEName': 'A manufactory',
-      'contactPerson': 'B先生', 'contactTitle': 'B職稱', 'contactPhone': '062000000', 'contactCellphone': '0911111111', 'contactEmail': 'abc@gmail.com',
-      'contactFax': '111111111', 'companyResponsibility': 'C負責人', 'companyAddress': 'C地址', 'paymentMethod': 2, 'bussinessModel': 2,
-      'startserialticket': 100, 'remark': 'G',
-    },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
+  public readonly payTypeOptions = [
+    { value: '1', label: '電匯' },
+    { value: '2', label: '支票' },
+    { value: '3', label: '現金' },
   ];
-  columns: any[] = [
-    { field: 'startdate', header: '建檔日期', visible: true },
-    { field: 'receptionPerson', header: '接洽人員', visible: false },
-    { field: 'vendorUID', header: '廠商統一編號', visible: true },
-    { field: 'vendorCName', header: '廠商名稱', visible: true },
-    { field: 'vendorEName', header: '廠商名稱(英文)', visible: false },
+  public btnPDFLoading = false;
+  public btnImportLoading = false;
+  public selectedItems: QueryASS11070Response[] = [];
+  public lastQueryBody?: QueryASS11070Request;
 
-    { field: 'contactPerson', header: '聯絡人', visible: true },
-    { field: 'contactTitle', header: '聯絡人職稱', visible: false },
-    { field: 'contactPhone', header: '聯絡人電話(O)', visible: true },
-    { field: 'contactCellphone', header: '聯絡人行動電話', visible: true },
-    { field: 'contactEmail', header: '聯絡人電子郵件', visible: false },
-    { field: 'contactFax', header: '聯絡人傳真', visible: false },
-
-    { field: 'companyResponsibility', header: '公司負責人', visible: false },
-    { field: 'companyAddress', header: '公司地址', visible: false },
-
-    { field: 'paymentMethod', header: '付款方式', visible: false },
-    { field: 'bussinessModel', header: '營運模式', visible: false },
-
-    { field: 'startserialticket', header: '票期', visible: false },
-    { field: 'remark', header: '備註', visible: false },
-    // { field: 'col18', header: '訂貨傳真', visible: true },
-
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
+  public readonly columns: ReportColumn[] = [
+    { field: 'CRT_Date', header: '建立日期', format: formatDate },
+    { field: 'VENDOR_ID', header: '統一編號' },
+    { field: 'VENDOR_NAME', header: '廠商名稱' },
+    { field: 'CONTACT_STAFF', header: '聯絡人' },
+    { field: 'CONTACT_TEL', header: '聯絡人電話' },
+    { field: 'CONTACT_MOBILE_PHONE', header: '聯絡人手機' },
   ];
-  // ----------------------------------------------------------------
-  //
-  receptionPersonOptions: any[] = [];
-  vendorUIDOptions: any[] = [];
-  bussinessOptions: any[] = [
-    { value: 1, label: '工廠直銷' },
-    { value: 2, label: '代理商' },
-    { value: 3, label: '經銷商' },
-    { value: 4, label: '零售連鎖' },
-    { value: 5, label: '零售一般' },
-  ];
-  paymentMethodOptions: any[] = [];
-  //
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
+    public readonly service: ASS11070Service,
+    private readonly dropDownListService: DropDownListService,
+    private readonly logger: NGXLogger
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // ----------------------------------------------------------------
+    this.initializePage('ASS11070', '/ASS/ASS11070CRU', this.queryForm, this.onSubmit.bind(this));
+    this.logger.debug('ASS11070 init:', [this.queryForm]);
+    this.loadDropdownOptions();
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+  private loadDropdownOptions(): void {
+    this.dropDownListService.queryTBLUSER_DropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data ?? []).map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+          name: item.Name,
+        }));
+        this.staffOptions.set(options);
+      },
+    });
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data ?? []).map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+        this.vendorOptions.set(options);
+      },
+    });
+  }
+
+  private resolveStaffName(staffId: string | null): string | undefined {
+    if (!staffId) return undefined;
+    return this.staffOptions().find(option => option.value === staffId)?.name;
+  }
+
+  private toDateString(d: Date | null): string | undefined {
+    if (!d || !(d instanceof Date) || isNaN(d.getTime())) return undefined;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  private buildQueryPayload(body: QueryASS11070Request = {}): QueryASS11070Request {
+    const pagingBody = body as QueryASS11070Request & { pageSize?: number; pageIndex?: number };
+    const raw = this.queryForm.getRawValue();
+    const hasLoadMorePaging = pagingBody.pageIndex !== undefined || pagingBody.pageSize !== undefined;
+    const pageSize = pagingBody.pageSize ?? pagingBody.PageSize ?? raw.pageSize ?? 30;
+    const pageIndex = pagingBody.pageIndex ?? pagingBody.PageIndex ?? raw.pageIndex ?? 1;
+    const payload: QueryASS11070Request = {
+      CRT_Date_S: this.toDateString(raw.crtDateS ?? null),
+      CRT_Date_E: this.toDateString(raw.crtDateE ?? null),
+      PR_STAFF_ID: raw.prStaffId ?? undefined,
+      PR_STAFF_NAME: this.resolveStaffName(raw.prStaffId ?? null),
+      VENDOR_ID: raw.vendorId ?? undefined,
+      MANGER_TYPE: raw.mangerType ?? undefined,
+      VENDOR_NAME: raw.vendorName ?? undefined,
+      VENDOR_NAME_E: raw.vendorNameE ?? undefined,
+      CONTACT_STAFF: raw.contactStaff ?? undefined,
+      CONTACT_TEL: raw.contactTel ?? undefined,
+      CONTACT_MOBILE_PHONE: raw.contactMobilePhone ?? undefined,
+      CONTACT_EMAIL: raw.contactEmail ?? undefined,
+      CONTACT_FAX: raw.contactFax ?? undefined,
+      CHARGE_STAFF: raw.chargeStaff ?? undefined,
+      VENDOR_REG_ADDR: raw.companyAddress ?? undefined,
+      PAY_TYPE: raw.payType ?? undefined,
+      TICKET_PERIOD_S: raw.ticketPeriod ?? undefined,
+      TICKET_PERIOD_E: raw.ticketPeriod ?? undefined,
+      Service_Items: raw.serviceItems ?? undefined,
+      NOTES: raw.notes ?? undefined,
+      OrderBy: pagingBody.OrderBy,
+      Offset: hasLoadMorePaging ? (pageIndex - 1) * pageSize : (pagingBody.Offset ?? (pageIndex - 1) * pageSize),
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: pagingBody.SortBy,
+    };
+    return removeEmptyValues(payload) as QueryASS11070Request;
+  }
+
+  public queryFunction = (body: QueryASS11070Request): Observable<ApiResponse<QueryASS11070Response[]>> => {
+    const clean = this.buildQueryPayload(body);
+    return this.service.queryASS11070(clean);
+  };
+
+  public onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const raw = this.queryForm.getRawValue();
+      this.lastQueryBody = this.buildQueryPayload({
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1,
+      });
+
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.logger.debug('ASS11070 onSubmit:', [this.lastQueryBody]);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.tableData.set(res.Data ?? []);
+            this.totalRecords.set(res.TotalCount ?? 0);
+          },
+        });
+    });
+  }
+
+  public onImportFinancialVendors(): void {
+    if (this.selectedItems.length === 0) {
+      this.messageService.warnBox('請勾選要轉入的廠商');
+      return;
     }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+    const vendorIds = this.selectedItems
+      .map(r => r.VENDOR_ID)
+      .filter((id): id is string => !!id);
+    const VendorIDList = vendorIds.join(',');
+    if (!VendorIDList) {
+      this.messageService.warnBox('勾選的廠商無有效統一編號');
+      return;
     }
+    this.btnImportLoading = true;
+    this.service
+      .transferToPOS2013ASS11070({ VendorIDList })
+      .pipe(
+        finalize(() => {
+          this.btnImportLoading = false;
+        })
+      )
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          this.messageService.successBubble(res.Message ?? '轉入成功');
+          this.selectedItems = [];
+        },
+      });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  public onExportPDF(): void {
+    const payload = this.buildQueryPayload();
+    this.btnPDFLoading = true;
+    this.service
+      .exportPDFASS11070(payload)
+      .pipe(
+        finalize(() => {
+          this.btnPDFLoading = false;
+        })
+      )
+      .subscribe(blob => {
+        if (!blob) return;
+        const now = new Date();
+        const timestamp = now.getFullYear().toString()
+          + (now.getMonth() + 1).toString().padStart(2, '0')
+          + now.getDate().toString().padStart(2, '0')
+          + now.getHours().toString().padStart(2, '0')
+          + now.getMinutes().toString().padStart(2, '0')
+          + now.getSeconds().toString().padStart(2, '0');
+        const fileName = `備用供應商資料${timestamp}.pdf`;
+        const blobUrl = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = blobUrl;
+        anchor.download = fileName;
+        anchor.click();
+        URL.revokeObjectURL(blobUrl);
+      });
   }
 }

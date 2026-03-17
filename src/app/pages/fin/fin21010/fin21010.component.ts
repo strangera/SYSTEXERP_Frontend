@@ -65,15 +65,14 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
 
   data: FIN21010Response[] = [];
   columns: Column[] = [
-    { field: 'BNK_No', header: '銀行代碼', visible: true },
-    { field: 'Bank_Name', header: '銀行名稱', visible: true },
     {
       field: 'BNK_DepositAccNo',
       header: '公司銀行科目',
       visible: true,
     },
     { field: 'AccCName', header: '公司銀行科目中文名稱', visible: true },
-
+    { field: 'BNK_No', header: '銀行代碼', visible: true },
+    { field: 'Bank_Name', header: '銀行名稱', visible: true },
     { field: 'BNK_AccNo', header: '帳號', visible: true },
     { field: 'BNK_AccName', header: '帳戶名稱', visible: true },
     {
@@ -82,12 +81,6 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
         this.BNK_AccType_Option.find((option) => option.No === value)?.Name ||
         value,
     },
-    // {
-    //   field: 'SYS_Name',
-    //   header: 'EDI用戶代號',
-    //   visible: false,
-    // },
-
     {
       field: 'BNK_CheckInAccNo',
       header: '應收票據科目',
@@ -230,16 +223,17 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       console.log('SYS1000.BNK_ACCTYPE 存款代號:', this.BNK_AccType_Option);
     });
 
-    // 查 GLS1005會計科目檔 -- 下拉GLS1005.ACCNO，讀取 ACCNO, ACCCNAME
-    this.dropdownApiService.queryGls1005_BNK_DepositAcc().pipe(untilDestroyed(this)).subscribe((response) => {
+    // 查 公司銀行科目代號
+    this.dropdownApiService.queryGls1005For1103().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];
       this.GLS1005_BNK_DepositAccNo_Option = list.map((item: any) => ({
         No: item.No, // 公司銀行科目 代號
         Name: item.Name, // 公司銀行科目 名稱
-        Label: item.No + '-' + item.Name, // 代號+名稱
+        Label: item.No + '-' + item.Name, // 代碼+名稱
       }));
-      console.log('公司銀行科目:', this.GLS1005_BNK_DepositAccNo_Option);
+      console.log('公司銀行科目代號:', this.GLS1005_BNK_DepositAccNo_Option);
     });
+
 
     this.dropdownApiService.queryGls1005_BNK_CheckInAcc().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];

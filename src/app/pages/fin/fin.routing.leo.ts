@@ -21,6 +21,9 @@ export const finRoutes: Routes = [
   // 費率對照維護
   { path: 'fin21020', loadComponent: () => import('./fin21020/fin21020.component').then(m => m.FIN21020Component), data: { progNo: 'FIN21020' } },
   { path: 'fin21020cru', loadComponent: () => import('./fin21020-cru/fin21020-cru.component').then(m => m.FIN21020CRUComponent), data: { progNo: 'FIN21020' } },
+  // 廠客資料維護
+  { path: 'fin21030', loadComponent: () => import('./fin21030/fin21030.component').then(m => m.FIN21030Component), data: { progNo: 'FIN21030' } },
+  { path: 'fin21030cru', loadComponent: () => import('./fin21030-cru/fin21030-cru.component').then(m => m.FIN21030CRUComponent), data: { progNo: 'FIN21030' } },
   // 應付帳款維護
   { path: 'fin24010', loadComponent: () => import('./fin24010/fin24010.component').then(m => m.FIN24010Component), data: { progNo: 'FIN24010' } },
   { path: 'fin24010cru', loadComponent: () => import('./fin24010-cru/fin24010-cru.component').then(m => m.FIN24010CRUComponent), data: { progNo: 'FIN24010' } },

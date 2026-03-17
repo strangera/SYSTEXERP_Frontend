@@ -13,7 +13,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 
-type DetailRow = {
+interface DetailRow {
   VouDate?: string | null;
   VouNo?: string | null;
   VouType_Name?: string | null;
@@ -26,14 +26,14 @@ type DetailRow = {
   AccAmt_C?: number | null;
   Ven_Name?: string | null;
   Remark?: string | null;
-};
+}
 
-type VoucherMeta = {
+interface VoucherMeta {
   vouDate: string;
   vouType: string;
   vouNo: string;
   vouStatus: string;
-};
+}
 
 @Component({
   selector: 'app-fin55010-cru',
@@ -55,16 +55,16 @@ export class FIN55010CRUComponent extends BasicCruPageComponent<any> implements 
   vouNo = '';
   initialized = false;
   meta: VoucherMeta | null = null;
-  rows: Array<DetailRow & { __rowid: number; AccSubject: string }> = [];
+  rows: (DetailRow & { __rowid: number; AccSubject: string })[] = [];
 
   columns: Column[] = [
-    { field: 'AccSubject', header: '會計科目', visible: true },
-    { field: 'Ven_Name', header: '廠商編號/簡稱', visible: true },
-    { field: 'Org_Name', header: '部門名稱', visible: true },
-    { field: 'NoteDesc', header: '摘要', visible: true },
-    { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount },
-    { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount },
-    { field: 'Remark', header: '備註', visible: true },
+    { field: 'AccSubject', header: '會計科目', visible: true, align: 'left' },
+    { field: 'Ven_Name', header: '廠商編號/簡稱', visible: true, align: 'left' },
+    { field: 'Org_Name', header: '部門名稱', visible: true, align: 'left' },
+    { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
+    { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Remark', header: '備註', visible: true, align: 'left' },
   ];
 
   constructor(private fin55050Service: FIN55050Service) {

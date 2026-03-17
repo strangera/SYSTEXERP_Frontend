@@ -253,4 +253,39 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
         });
     });
   }
+  /**
+   * 4. 結算反鎖定 (onUnlock)
+   */
+  onUnlock(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      if (!frm.value.money_type || !frm.value.sam_termno) {
+        this.messageService.errorBubble('請選擇結帳方式與帳次');
+        this.loading = false;
+        return;
+      }
+
+      this.loading = true;
+
+      const body: Tls2e070UpdateBody = {
+        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_termno: frm.value.sam_termno as number,
+        money_type: frm.value.money_type,
+        tlt_no: frm.value.tlt_no
+      };
+
+      this.tls2e070Service.unLockTLS2E070(body)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
+        .subscribe(res => {
+          if (res.Status === '0000') {
+            this.messageService.successBubble(res.Message || '反鎖定完成');
+            this.onSubmit(this.queryForm); // 重新查詢刷新列表
+          } else {
+            this.messageService.errorBubble(res.Message || '反鎖定失敗');
+          }
+        });
+    });
+  }
 }

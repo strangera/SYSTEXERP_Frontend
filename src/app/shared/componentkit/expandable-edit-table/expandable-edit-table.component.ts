@@ -13,6 +13,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { CalendarModule } from 'primeng/calendar';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 // import { DisplayFieldConfig } from '../selector-panel/selector-panel.component';
 // import { Column } from '../table/table.model';
@@ -188,7 +189,7 @@ export interface ColumnDef {
   templateUrl: './expandable-edit-table.component.html',
   styleUrls: ['./expandable-edit-table.component.scss'],
   standalone: true,
-  imports: [NgIf, TableModule, NgClass, PrimeTemplate, ButtonDirective, Ripple, TooltipModule, NgFor, NgStyle, NgSwitch, NgSwitchCase, FormsModule, InputTextModule, InputNumberModule, DropdownModule, CheckboxModule, NgSwitchDefault, DialogModule, CalendarModule, DecimalPipe, ReactiveFormsModule, SelectorPanelComponent, SelectorPanelComponent]
+  imports: [NgIf, TableModule, NgClass, PrimeTemplate, ButtonDirective, Ripple, TooltipModule, NgFor, NgStyle, NgSwitch, NgSwitchCase, FormsModule, InputTextModule, InputNumberModule, DropdownModule, CheckboxModule, NgSwitchDefault, DialogModule, CalendarModule, DecimalPipe, ReactiveFormsModule, SelectorPanelComponent, SelectorPanelComponent, MultiSelectModule]
 })
 export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @ViewChild('dt') dt!: Table;
@@ -233,8 +234,19 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @Input() minColumnWidth = 60;
   @Input() maxColumnWidth = 300;
 
+  // 每一筆資料前是否重複顯示外層表頭（從第二筆開始，適用於有展開功能的表格）
+  @Input() showHeaderInExpansion = false;
+
+  // 欄位顯示切換（齒輪圖示 multiSelect）
+  @Input() showColumnToggle = false;
+
   detailSelectedTabs: { [key: string]: string } = {};
   detailSelectedItems: { [mainRowKey: string]: any[] } = {};
+
+  // 欄位切換相關狀態
+  columnToggleOptions: ColumnDef[] = [];
+  selectedVisibleColumns: ColumnDef[] = [];
+  private _lastMainColumnsRef: ColumnDef[] | null = null;
 
   @Output() edit = new EventEmitter<any>();
   @Output() save = new EventEmitter<{ oldData: any, newData: any }>();
@@ -333,9 +345,15 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (this.enableDynamicWidth) {
       setTimeout(() => this.calculateDynamicWidths(), 100);
     }
+    if (this.showColumnToggle) {
+      this.initColumnToggle();
+    }
   }
 
   ngOnChanges() {
+    if (this.showColumnToggle) {
+      this.initColumnToggle();
+    }
     if (this.data) {
       this.totalRecords = this.data.length;
       this.initializeDetailArrays();
@@ -356,6 +374,29 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       this.widthCalculator.clearCache();
       setTimeout(() => this.calculateDynamicWidths(), 50);
     }
+  }
+
+  // ========== 欄位顯示切換 ==========
+  initColumnToggle(): void {
+    // mainColumns reference 沒換就不重初始化，避免 change detection loop
+    if (this._lastMainColumnsRef === this.mainColumns) return;
+    this._lastMainColumnsRef = this.mainColumns;
+
+    // 排除操作型欄位（checkbox、button）不加入齒輪選單
+    this.columnToggleOptions = this.mainColumns.filter(col =>
+      col.type !== 'button' && col.field !== 'is_selected'
+    );
+    // 初始可見欄位 = 未標記 hidden 的欄位
+    this.selectedVisibleColumns = this.columnToggleOptions.filter(col => !col.hidden);
+  }
+
+  onColumnToggleChange(selected: ColumnDef[]): void {
+    this.columnToggleOptions.forEach(opt => {
+      const col = this.mainColumns.find(c => c.field === opt.field);
+      if (col) {
+        col.hidden = !selected.some(s => s.field === col.field);
+      }
+    });
   }
 
   private calculateDynamicWidths(): void {
@@ -966,6 +1007,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
   }
 
+  isPreviousRowExpanded(ri: number): boolean {
+    if (ri === 0) return false;
+    const prevRow = this.data[ri - 1];
+    return prevRow ? !!this.expandedRows[prevRow[this.dataKey]] : false;
+  }
+
   onRowEditInit(rowData: any, rowIndex: number) {
     this.editingRow = rowIndex;
     this.clonedItems[rowData[this.dataKey]] = { ...rowData };
@@ -1511,6 +1558,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       (!this.readonly && this.showAddButton) ||
       (!this.readonly && this.showBatchDelete) ||
       !!this.detailKey ||
+      this.showColumnToggle ||
       this.hasCaptionLeftContent() ||
       this.hasCaptionRightContent()
     );

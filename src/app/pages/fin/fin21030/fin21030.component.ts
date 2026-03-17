@@ -4,6 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -12,10 +13,8 @@ import { DropDownListService, IDropdownItem } from 'src/app/service/utility/drop
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 //1.2.1.3 廠客資料維護
@@ -24,7 +23,8 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
   templateUrl: './fin21030.component.html',
   standalone: true,
   imports: [MenubarComponent, DropdownComponent,
-    AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+    AccordionModule, FormsModule, ReactiveFormsModule,
+    InputTextComponent, MultiSelectComponent, ButtonComponent, TranslateModule, TableReportComponent]
 })
 
 export class FIN21030Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -80,6 +80,7 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
   VEN_UniformOptions: IDropdownItem[] = [];
   data: any[] = [];
   totalRecords = 0;
+  lastQueryBody: any;
   // ----------------------------------------------------------------
   venderOptions: any[] = [];
   remitFeeOptions = [
@@ -159,7 +160,7 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private dropDownListService: DropDownListService,
-    private fin21030Service: Fin21030Service
+    public fin21030Service: Fin21030Service
   ) {
     super();
   }
@@ -240,19 +241,12 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     this.fin21030Service.queryFIN21030(payload)
       .pipe(untilDestroyed(this), finalize(() => {
         this.loading = false;
-        this.messageService.unblockUi();
       }))
-      .subscribe({
-        next: (res) => {
-          this.data = res?.Data || [];
-          this.totalRecords = res?.TotalCount || 0;
-          this.queryStateService.setQueryState(this.ProgNo, payload);
-        },
-        error: (err) => {
-          console.error('queryFIN21030 error', err);
-          const msg = err?.error?.Message || err?.message || '查詢失敗，請查看 Console';
-          this.messageService.errorBubble(msg);
-        }
+      .subscribe(res => {
+        this.data = res?.Data || [];
+        this.totalRecords = res?.TotalCount || 0;
+        this.lastQueryBody = payload;
+        this.queryStateService.setQueryState(this.ProgNo, payload);
       });
   }
 }

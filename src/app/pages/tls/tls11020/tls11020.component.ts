@@ -98,6 +98,9 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
     CAP_BaseRate: ['', [Validators.maxLength(5)]],
     CAP_Type: [[] as string[]],
     CAP_Remark: ['', [Validators.maxLength(160)]],
+    GUI_FLAG: [[] as string[]],
+    AccNo: [[] as string[]],
+    IsCommonlyUsed: [[] as string[]],
     ...createPaginationConfig([{ field: 'CAP_Item', order: 1 }]),
   });
 
@@ -188,7 +191,6 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
     if (payload.CAP_Name === '') payload.CAP_Name = null;
     if (payload.CAP_BaseRate === '') payload.CAP_BaseRate = null;
     if (payload.CAP_Remark === '') payload.CAP_Remark = null;
-
     // MultiSelect：統一轉成代碼陣列
     const toCodeArray = (arr: any[]): string[] =>
       (arr || [])
@@ -202,6 +204,18 @@ export class TLS11020Component extends BasicQueryPageComponent<any> implements O
 
     if (Array.isArray(payload.CAP_Type)) {
       payload.CAP_Type = toCodeArray(payload.CAP_Type);
+    }
+    // 單選語意：只有選 1 個才有意義，0 個或全選皆視為不篩選
+    const toSingleOrNull = (arr: any[]): string | null => {
+      const codes = toCodeArray(arr);
+      return codes.length === 1 ? codes[0] : null;
+    };
+
+    payload.GUI_FLAG = toSingleOrNull(payload.GUI_FLAG);
+    payload.IsCommonlyUsed = toSingleOrNull(payload.IsCommonlyUsed);
+
+    if (Array.isArray(payload.AccNo)) {
+      payload.AccNo = toCodeArray(payload.AccNo);
     }
 
     return payload;

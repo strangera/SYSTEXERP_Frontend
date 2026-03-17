@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -19,13 +21,14 @@ import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
   selector: 'app-tls14030',
   templateUrl: './tls14030.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, CalendarRangeQuickComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, CalendarRangeQuickComponent, DropdownTableComponent, TableComponent, TranslateModule]
 })
 export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> implements OnInit {
   // 查詢表單：保證傳票
   queryForm = this.formBuilder.group({
     // id: [{ value: null, disabled: true }], // read only
     tlt_noList: [[]], // 專櫃編號
+    test: [''], // 測試用的 control 
     tlt_name: [''], // 專櫃名稱
     location_noList: [[]], // 位置
 
@@ -88,6 +91,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   selectedItems: Garantee_Ticket[] = [];// 多選項目
 
   tlt_noListOption: option[] = []; //專櫃編號列表
+  tlt_no_14030_ListOption: option[] = []; // 專櫃編號列表 (TLS14030)
   locationOption: apiOption[] = []; //位置編號
   areaOption: apiOption[] = []; //區域
   floorOption: apiOption[] = []; //樓層
@@ -133,6 +137,25 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
     { value: '3', label: '銀行保證函' },
     { value: '9', label: '其他' },
   ];
+
+  // ===================================================
+  opLoading = false;
+  opForm = this.formBuilder.group({
+    TLT_NO: ['', [Validators.maxLength(12)]], // 專櫃編號
+    ven_uniform: ['', [Validators.maxLength(12)]], // 統一編號
+    ...createPaginationConfig([{ field: 'No', order: 1 }]), // 分頁和排序參數
+  });
+  suggestions: any[] = [];
+  fieldsConfig: FieldsConfig[] = [
+    { field: 'Label', header: '專櫃編號/名稱', mainDataField: true },
+  ];
+  opData: any[] = [];// overlayPanel 裡面的table
+  opColumns: Column[] = [
+    { field: 'No', header: '專櫃編號' },
+    { field: 'Name', header: '專櫃名稱' },
+    { field: 'contract_subno', header: '版次' },
+  ];
+  opTotalRecords = 0;
 
   constructor(
     private tls14030Service: Tls14030Service,
@@ -290,5 +313,36 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
         console.log('專櫃編號:', response.Data);
       });
+  }
+
+  onAutoCompleteInputChange(event: any) {
+    const body = {
+      ...event,
+      TLT_NO: '',
+      ven_uniform: '',
+      pageSize: 30,
+      pageIndex: 1,
+      SortBy: [{ field: 'TLT_NO', order: 1 }],
+    }
+    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      // 關鍵修正：將資料加工處理，加上 Label 欄位
+      this.suggestions = results.Data.map((item: any) => ({
+        ...item,
+        // 假設 API 回傳編號為 No, 名稱為 Name，組合成您要的 Label
+        Label: `${item.No}-${item.Name}`
+      }));
+    });
+  }
+  onformValueChanged(event: any) {
+    this.opLoading = true;
+    const body = {
+      TLT_NO: event.TLT_NO || '',
+      ven_uniform: event.ven_uniform || '',
+    };
+    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData = [...results.Data]; // 更新data資料
+      this.opTotalRecords = results.TotalCount;
+      this.opLoading = false;
+    });
   }
 }

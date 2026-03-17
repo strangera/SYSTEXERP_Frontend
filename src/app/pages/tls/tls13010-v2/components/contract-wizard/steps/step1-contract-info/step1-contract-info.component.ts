@@ -136,7 +136,9 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     { field: 'building_desc', header: '館別', type: 'text', editable: false, style: 'min-width: 100px' },
     { field: 'floor_desc', header: '樓層', type: 'text', editable: false, style: 'min-width: 100px' },
     { field: 'area_desc', header: '區域', type: 'text', editable: false, style: 'min-width: 100px' },
-    { field: 'tlt_space', header: '營業坪數', type: 'number', editable: false, style: 'min-width: 120px' }
+    { field: 'tlt_space', header: '營業坪數', type: 'number', editable: false, style: 'min-width: 120px' },
+    { field: 'tlt_bdate', header: '起始日', type: 'date', editable: true, dateFormat: 'full-date', style: 'min-width: 130px' },
+    { field: 'tlt_edate', header: '截止日', type: 'date', editable: true, dateFormat: 'full-date', style: 'min-width: 130px' }
   ];
 
   private subscriptions: Subscription[] = [];
@@ -485,6 +487,14 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       // 設定營業坪數
       rowData.tlt_space = selectedOption.tlt_space || 0;
 
+      // 自動帶入契約起訖日（若尚未設定）
+      if (!rowData.tlt_bdate) {
+        rowData.tlt_bdate = this.form.get('tlt_bdate')?.value || '';
+      }
+      if (!rowData.tlt_edate) {
+        rowData.tlt_edate = this.form.get('tlt_edate')?.value || '';
+      }
+
       const targetIndex = this.locationData.findIndex(item => item.id === rowData.id);
       if (targetIndex !== -1) {
         const currentStatus = this.locationData[targetIndex]._status;
@@ -505,6 +515,21 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onLocationTableCancel(_event: LocationItem): void { }
+
+  /**
+   * 處理 forceEditMode 下日期欄位直接變更（不走 save event）
+   * 確保 _status 從 'original' 更新為 'modified'，後端才知道要 UPDATE
+   */
+  onLocationFieldChange(event: { fieldName: string; newValue: any; rowData: LocationItem }): void {
+    const { rowData } = event;
+    const index = this.locationData.findIndex(loc => loc.id === rowData.id);
+    if (index !== -1 && this.locationData[index]._status === 'original') {
+      this.locationData[index]._status = 'modified';
+      this.locationData = [...this.locationData];
+      this.locationDataChange.emit(this.locationData);
+    }
+  }
+
 
   // ========== 輔助方法 ==========
   get isFormReadonly(): boolean {

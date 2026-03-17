@@ -59,6 +59,9 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit {
 
   ngOnInit(): void {
     this.initControl(this.control);
+    if (this.disabled) {
+      this.control.disable();
+    }
   }
   onInputChange(event: InputNumberInputEvent) {
     this.changeEvent.emit(event);

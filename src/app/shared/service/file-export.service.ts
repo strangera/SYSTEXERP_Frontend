@@ -43,28 +43,54 @@ export class FileExportService {
   }
 
   // 處理檔案匯出的通用邏輯
-  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+  private async handleFileExport(response: HttpResponse<Blob>, fileExtension: string): Promise<void> {
     const contentDisposition = response.headers.get('Content-Disposition');
     const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
     const blob = response.body;
 
-    if (blob && blob.size > 0) {
-      // 執行下載邏輯
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      // --- 在這裡噴成功訊息 ---
-      this.messageService.successBubble('檔案已成功下載！');
-    } else {
-      // 雖然 API 回傳 200，但沒有內容
-      this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
+    if (!blob || blob.size === 0) {
+      this.messageService.warnBubble('沒有內容可下載。');
+      return;
     }
+
+    // 檢查瀏覽器是否支援 showSaveFilePicker
+    if ('showSaveFilePicker' in window) {
+      try {
+        // 1. 彈出另存新檔對話框
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: filename,
+          types: [{
+            description: 'Text Files',
+            accept: { 'text/plain': [fileExtension] }, // 根據副檔名調整 MIME type
+          }],
+        });
+
+        // 2. 寫入檔案
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+
+        this.messageService.successBubble('檔案已儲存成功！');
+      } catch (err) {
+        // 使用者取消下載時會進到這裡
+        console.log('User cancelled the save dialog');
+      }
+    } else {
+      // 降級處理：如果瀏覽器不支援，使用原本的 <a> 標籤下載方式
+      this.fallbackDownload(blob, filename);
+    }
+  }
+
+  private fallbackDownload(blob: Blob, filename: string) {
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    this.messageService.successBubble('檔案已成功下載！');
   }
 
   // 輔助方法：從 header 獲取檔名 (邏輯不變)

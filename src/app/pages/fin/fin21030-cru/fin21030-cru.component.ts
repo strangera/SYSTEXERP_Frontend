@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -91,6 +91,7 @@ export class FIN21030CRUComponent extends BasicCruPageComponent<any> implements 
   ];
   constructor(
     private fin21030Service: Fin21030Service,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
@@ -123,8 +124,8 @@ export class FIN21030CRUComponent extends BasicCruPageComponent<any> implements 
         VEN_Post: raw.VEN_Post || '',
         VEN_DiscYN: Array.isArray(raw.VEN_DiscYN) ? raw.VEN_DiscYN[0] || '' : raw.VEN_DiscYN || '',
         VEN_CTRLYN: Array.isArray(raw.VEN_CTRLYN) ? raw.VEN_CTRLYN[0] || '' : raw.VEN_CTRLYN || '',
-        VEN_DiscDateB: raw.VEN_DiscDateB ? new Date(raw.VEN_DiscDateB).toISOString() : null,
-        VEN_DiscDateE: raw.VEN_DiscDateE ? new Date(raw.VEN_DiscDateE).toISOString() : null,
+        VEN_DiscDateB: this.datePipe.transform(raw.VEN_DiscDateB, 'yyyy-MM-dd'),
+        VEN_DiscDateE: this.datePipe.transform(raw.VEN_DiscDateE, 'yyyy-MM-dd'),
         GUI_ID_WIRE: raw.GUI_ID_WIRE || '',
       };
       this.fin21030Service.updateFIN21030(payload).subscribe({
