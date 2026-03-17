@@ -30,6 +30,16 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="統一編號"
+              [options]="ven_uniformOption"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.ven_uniformList"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
           <!-- <app-dropdown-table
             class="col-12 md:col-6 lg:col-4"
             [control]="queryForm.controls.test"
