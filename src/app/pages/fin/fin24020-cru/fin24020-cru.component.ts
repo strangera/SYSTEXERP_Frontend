@@ -82,6 +82,7 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     { label: '否', value: 'N' },
   ];
   editColumns: EditColumn[] = [
+    { field: 'acp_termno', header: '帳次', type: 'inputNumber', textAlign: 'left' },
     {
       field: 'RET_Date',
       header: '保留退款日期',
@@ -297,6 +298,7 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
               } catch (e) { /* ignore */ }
 
               this.tableData = details.map((d: any) => ({
+                acp_termno: d.acp_termno, // 帳次
                 RET_Date: d.RET_Date ? new Date(d.RET_Date + 'T00:00:00') : null, // 退保留款日期
                 RET_Amt: Number(d.RET_Amt ?? d.ACP_ReserveAmt ?? 0), // 退保留款金額
                 Remark: d.Remark ?? '', // 應付主檔摘要
@@ -354,9 +356,10 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
               } catch (e) { /* ignore */ }
 
               this.tableData = items.map(it => ({
+                acp_termno: it.acp_termno,
                 RET_Date: it.RET_Date ? new Date(it.RET_Date + 'T00:00:00') : null,
                 RET_Amt: Number(it.RET_Amt ?? it.ACP_ReserveAmt ?? 0),
-                Remark: it.NoteDesc ?? '',
+                Remark: it.Remark ?? '',
                 STATUS: this.toStatusCode(it.STATUS)
                 , _sortIndex: it.SortIndex
               }));
@@ -364,24 +367,27 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
             }
           } else {
             this.tableData = [{
+              acp_termno: row.acp_termno,
               RET_Date: retDate,
               RET_Amt: retAmt,
-              Remark: row.NoteDesc ?? '',
+              Remark: row.Remark ?? '',
               STATUS: statusCode,
             }];
             try { this.originalTableDataSnapshot = JSON.parse(JSON.stringify(this.tableData || [])); } catch (e) { this.originalTableDataSnapshot = [...(this.tableData || [])]; }
           }
         }, () => {
           this.tableData = [{
+            acp_termno: row.acp_termno,
             RET_Date: retDate,
             RET_Amt: retAmt,
-            Remark: row.NoteDesc ?? '',
+            Remark: row.Remark ?? '',
             STATUS: statusCode,
           }];
         });
     } else {
       this.dataForm.patchValue({ STATUS: 'N' });
       this.tableData = [{
+        acp_termno: this.dataForm.value.acp_termno,
         RET_Date: this.dataForm.value.RET_Date,
         RET_Amt: this.dataForm.value.RET_Amt,
         Remark: this.dataForm.value.Remark,
@@ -503,7 +509,8 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
           return {
             ACP_No: acpNo,
             ACP_YYYYMM: acpYyyymm,
-            acp_termno: frm.value.acp_termno ?? 0,
+            // acp_termno: frm.value.acp_termno ?? 0,
+            acp_termno: row.acp_termno ?? 0,
             RET_Date: retDate,
             RET_Amt: row.RET_Amt ?? 0,
             STATUS: this.toStatusCode(row.STATUS),
@@ -513,6 +520,7 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
           };
         })
       };
+      console.log('🚀Submitting body:', body);
       const request$ = this.isFormCreateable
         ? this.fin24020Service.createFIN24020(body)
         : this.fin24020Service.updateFIN24020(body);
@@ -543,7 +551,6 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
           this.onCancel();
         });
     });
-
   }
 
   // 保留退款明細異動時，更新 tableData 並即時計算「已產生保留款」
