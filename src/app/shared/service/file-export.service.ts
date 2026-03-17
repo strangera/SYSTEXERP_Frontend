@@ -1,7 +1,7 @@
 import { HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { Observable, tap } from 'rxjs'; // 引入必要的 RxJS 相關
+import { Observable, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -11,17 +11,12 @@ export class FileExportService {
   constructor(private messageService: NotificationService) { }
 
   /**
-   * 執行檔案匯出 Observable 的通用方法。
-   * 它負責處理加載狀態、訂閱、錯誤提示和檔案下載的實際操作。
-   * * @param exportObservable 呼叫後端 API 並回傳 HttpResponse<Blob> 的 Observable。
-   * @param fileExtension 預期的檔案副檔名 (例如: '.pdf', '.xlsx')。
-   * @param btnLoadingSetter 設定 Component 中 btnLoading 狀態的函數。
-   * @returns Subscription 物件，用於手動管理訂閱 (如果需要)。
+   * 執行檔案匯出的通用方法
    */
   public executeFileExport(
     exportObservable: Observable<HttpResponse<Blob>>,
     fileExtension: string,
-    btnLoadingSetter?: (isLoading: boolean) => void // 使用函數來設定元件的狀態
+    btnLoadingSetter?: (isLoading: boolean) => void
   ): Observable<HttpResponse<Blob>> {
 
     if (btnLoadingSetter) {
@@ -31,95 +26,88 @@ export class FileExportService {
     return exportObservable.pipe(
       tap({
         next: (response: HttpResponse<Blob>) => {
-          this.handleFileExport(response, fileExtension);
+          this.downloadFile(response, fileExtension);
         },
         error: (err) => {
           this.messageService.errorBubble('檔案匯出失敗，請重試或聯繫管理員。');
           console.error('File export error:', err);
         },
-        finalize: () => btnLoadingSetter?.(false)
+        finalize: () => {
+          if (btnLoadingSetter) {
+            btnLoadingSetter(false);
+          }
+        }
       })
     );
   }
 
-  // 處理檔案匯出的通用邏輯
-  private async handleFileExport(response: HttpResponse<Blob>, fileExtension: string): Promise<void> {
-    const contentDisposition = response.headers.get('Content-Disposition');
-    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+  /**
+   * 核心下載邏輯：使用最穩定的 ObjectURL 方案
+   */
+  private downloadFile(response: HttpResponse<Blob>, defaultExtension: string): void {
     const blob = response.body;
 
     if (!blob || blob.size === 0) {
-      this.messageService.warnBubble('沒有內容可下載。');
+      this.messageService.warnBubble('目前無資料可供下載。');
       return;
     }
 
-    // 檢查瀏覽器是否支援 showSaveFilePicker
-    if ('showSaveFilePicker' in window) {
-      try {
-        // 1. 彈出另存新檔對話框
-        const handle = await (window as any).showSaveFilePicker({
-          suggestedName: filename,
-          types: [{
-            description: 'Text Files',
-            accept: { 'text/plain': [fileExtension] }, // 根據副檔名調整 MIME type
-          }],
-        });
+    // 1. 取得檔名
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, defaultExtension);
 
-        // 2. 寫入檔案
-        const writable = await handle.createWritable();
-        await writable.write(blob);
-        await writable.close();
+    // 2. 建立 Blob URL (指定正確的 MIME Type)
+    // 如果後端沒傳 Content-Type，則使用傳入的副檔名預設值
+    const contentType = response.headers.get('Content-Type') || blob.type;
+    const downloadBlob = new Blob([blob], { type: contentType });
 
-        this.messageService.successBubble('檔案已儲存成功！');
-      } catch (err) {
-        // 使用者取消下載時會進到這裡
-        console.log('User cancelled the save dialog');
-      }
-    } else {
-      // 降級處理：如果瀏覽器不支援，使用原本的 <a> 標籤下載方式
-      this.fallbackDownload(blob, filename);
-    }
+    // 3. 執行下載
+    const url = window.URL.createObjectURL(downloadBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+
+    // 某些瀏覽器需要將 element 加入 DOM 才能觸發 click
+    document.body.appendChild(link);
+    link.click();
+
+    // 4. 清理資源
+    // 使用微秒延遲確保瀏覽器已經開始下載流程
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(link);
+    }, 200);
+
+    this.messageService.successBubble('檔案匯出成功！');
   }
 
-  private fallbackDownload(blob: Blob, filename: string) {
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-    this.messageService.successBubble('檔案已成功下載！');
-  }
-
-  // 輔助方法：從 header 獲取檔名 (邏輯不變)
+  /**
+   * 精準解析 Content-Disposition 中的檔名
+   */
   private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
     if (!contentDisposition) {
-      return `download${defaultExtension}`;
+      return `export_${new Date().getTime()}${defaultExtension}`;
     }
 
+    let filename = '';
+
+    // 優先處理 filename* (RFC 5987)，解決中文亂碼
     const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
-    if (filenameStarMatch && filenameStarMatch.length > 1) {
-      const encodedFilename = filenameStarMatch[1];
-      try {
-        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
-        return decoded;
-      } catch (error) {
-        console.error('Failed to decode filename*', error);
-        return encodedFilename;
+    if (filenameStarMatch && filenameStarMatch[1]) {
+      const parts = filenameStarMatch[1].split("''");
+      if (parts.length === 2) {
+        filename = decodeURIComponent(parts[1]);
       }
     }
 
-    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
-    if (filenameMatch && filenameMatch.length > 1) {
-      try {
-        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
-      } catch {
-        return filenameMatch[1];
+    // 若無 filename*，則找普通的 filename
+    if (!filename) {
+      const filenameMatch = /filename="?([^";]+)"?/.exec(contentDisposition);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
       }
     }
 
-    return `download${defaultExtension}`;
+    return filename || `download_${new Date().getTime()}${defaultExtension}`;
   }
 }
