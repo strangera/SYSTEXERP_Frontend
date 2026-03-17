@@ -30,7 +30,7 @@
           <app-calendar label="收/付款日" controlName="ACP_ExpectPayDate" [control]="dataForm.controls.ACP_ExpectPayDate"
             [submitted]="submitted"></app-calendar>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-8">
           <app-dropdown-range label="廠客代號" [startControl]="dataForm.controls.ven_no_b"
             [endControl]="dataForm.controls.ven_no_e" [submitted]="submitted" [options]="venNoOptions | async"
             optionLabel="label" optionValue="value"></app-dropdown-range>
@@ -67,10 +67,10 @@
       </div>
       <hr>
     </form>
-    <app-table-report tableKey="FIN25010cru" dataKey="UniqueKey" [data]="data" [columns]="columns"
-      [showCheckBox]="isFormCreateable" [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event; calculateFooter()" [totalRecords]="totalRecords" [loading]="loading"
-      [showReportMode]="false" [lastQueryBody]="lastQueryBody" [showCaption]="false"
+    <app-table-report apiUrl="query_addFIN25010" tableKey="FIN25010cru" dataKey="UniqueKey" [data]="data"
+      [columns]="columns" [showCheckBox]="isFormCreateable" [showDelete]="false" [showManage]="false"
+      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event; calculateFooter()"
+      [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="lastQueryBody"
       [queryFunction]="fin25010Service.queryAddFIN25010.bind(fin25010Service)" groupRowsBy="ven_no"
       [subTotalData]="subTotalData" [footerData]="footerData" [lazy]="false">
     </app-table-report>

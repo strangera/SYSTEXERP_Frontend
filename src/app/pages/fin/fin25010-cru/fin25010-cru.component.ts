@@ -49,7 +49,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     VEN_PayType: ['1'], // 付款方式
     pageSize: [1780],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'ven_no', order: 1 }]],
+    SortBy: [[{ field: 'ven_no', order: 1 }, { field: 'acp_DATE', order: -1 }]],
 
     // 檢視
     PAM_No: [null],  // 匯款來源單號
