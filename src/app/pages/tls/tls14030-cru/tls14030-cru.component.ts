@@ -1,7 +1,6 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
@@ -17,6 +16,12 @@ import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
 import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
+
+interface TLTTALENTOption {
+  No: string;
+  Name: string;
+  contract_no: string;
+}
 
 // 專櫃下拉資訊
 interface TLTTALENT {
@@ -72,7 +77,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     CanDel: [null],  //能否刪除(僅顯示) 卡控
   });
 
-  private skipTalentChange = false; //是否更新編號的旗標
+  private lastTalentData: TLTTALENT | null = null; // 快取選取的 TLTTALENT 資料，避免重複打 API
 
   storageOptions: apiOption[] = [];
   allquery: Garantee_Ticket[] = [];
@@ -103,6 +108,8 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
   // ===================================================
   opLoading = false;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rawTalentData: any[] = []; // 預載所有合約資料，用於 local filter
   opForm = this.formBuilder.group({
     TLT_NO: ['', [Validators.maxLength(12)]], // 專櫃編號
     ven_uniform: ['', [Validators.maxLength(12)]], // 統一編號
@@ -127,7 +134,6 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
   ngOnInit(): void {
     this.initializePage('TLS14030', this.dataForm);
-    //初始先讀取一遍
     this.loadOptions();
     console.log('編輯明細', this.dataForm.value);
 
@@ -135,25 +141,47 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
       this.dataForm.get('talent_id')?.disable();
     }
 
-    // ⭐ 監聽 talent_id 變更
-    this.dataForm.get('talent_id')?.valueChanges.subscribe((value) => { // 合約編號 變更時寫入相關資料
-      if (this.skipTalentChange) {
-        this.skipTalentChange = false; // 重置旗標
-        return;
-      }
-
-      if (value) {
-        this.loadTLTTALENTDetail(value);
-      }
-    });
-
-    // ⭐ 監聽 ticket_type 變更 重新寫入保證票金額
+    // ⭐ 監聽 ticket_type 變更 重新計算保證票金額
     this.dataForm.get('ticket_type')?.valueChanges.subscribe(() => {
-      const talentId = this.dataForm.get('talent_id')?.value;
-      if (talentId) {
-        this.loadTLTTALENTDetail(talentId); // 重新依照型態寫入金額
+      if (this.lastTalentData) {
+        // 有快取直接用，不打 API
+        this.applyTalentData(this.lastTalentData);
+      } else {
+        // 無快取（編輯模式更換 ticket_type 時才會到這），fallback 打一次 API
+        const talentId = this.dataForm.getRawValue().talent_id;
+        if (talentId) {
+          this.loadTLTTALENTDetail(talentId);
+        }
       }
     });
+  }
+
+  // ⭐ 從 dropdown-table (select) 接收選取的 rowData，直接填欄位，不打額外 API
+  onTalentSelected(rowData: TLTTALENT) {
+    this.lastTalentData = rowData as TLTTALENT;
+    this.applyTalentData(this.lastTalentData);
+  }
+
+  // 將 TLTTALENT 資料套用到表單
+  private applyTalentData(data: TLTTALENT) {
+    const ticketType = this.dataForm.get('ticket_type')?.value;
+    let ticketAmount: number | null = null;
+
+    switch (ticketType) {
+      case '1': ticketAmount = data.open_fees ?? null; break;
+      case '2': ticketAmount = data.construct_fees ?? null; break;
+      case '3': ticketAmount = data.expiration_fees ?? null; break;
+    }
+
+    this.dataForm.patchValue({
+      ticket_remarks: data.ticket_remarks || '',
+      tlt_name: data.tlt_name || '',
+      tlt_no: data.tlt_no || '',
+      ticket_amount: ticketAmount,
+    }, { emitEvent: false });
+
+    // this.messageService.infoBubble('已經依照合約編號進行變更');
+    console.log('applyTalentData', data);
   }
 
   onSubmit(frm: FormGroup) {
@@ -176,8 +204,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
           console.log('insert', formValue);
           this.tls14030Service.insertTLS14030(formValue).subscribe(() => {
             this.messageService.successBubble('新增成功');
-            // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-            this.skipTalentChange = true;
+            this.lastTalentData = null;
             this.dataForm.reset(); // 重置表單
           });
         }
@@ -202,15 +229,16 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   }
 
   onClearForm() {
+    this.lastTalentData = null;
     this.dataForm.reset(); // 重置表單
   }
 
-  // 讀取dopropdown選項
+  // 讀取dropdown選項
   loadOptions() {
     this.tls14030Service
       .queryTLTTALENT_Status_DropDownList({ "approve_status": '2' }) //這支作業都固定帶已審核 (能選擇的tltid都已經審核)
       .subscribe((response) => {
-        this.TLTTALENT_Option = response.Data.map((item: any) => ({
+        this.TLTTALENT_Option = response.Data.map((item: TLTTALENTOption) => ({
           No: Number(item.No), // 確保是 number
           Name: item.Name,
           contract_no: item.contract_no,// 用戶顯示適用這個欄位，還是用talent_id，只是顯示是contract_no合約編號)
@@ -230,68 +258,72 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
         console.log('專櫃編號:', response.Data);
       });
-  }
 
-  // 讀取主檔變更候更新的選項
-  loadTLTTALENTDetail(talent_id: number) {
-    {
-      if (!talent_id) return;
-
-      this.tls14030Service.getTLTTALENT({ talent_id }).subscribe((response) => {
-        const data: TLTTALENT = response.Data;
-        if (!data) return;
-
-        const ticketType = this.dataForm.get('ticket_type')?.value;
-        let ticketAmount: number | null = null;
-
-        switch (ticketType) {
-          case '1': ticketAmount = data.open_fees ?? null; break;
-          case '2': ticketAmount = data.construct_fees ?? null; break;
-          case '3': ticketAmount = data.expiration_fees ?? null; break;
-        }
-
-        // ✅ 設定值時關掉事件觸發，避免無限觸發 valueChanges
-        this.dataForm.patchValue({
-          ticket_remarks: data.ticket_remarks || '',
-          tlt_name: data.tlt_name || '',
-          tlt_no: data.tlt_no || '',
-          ticket_amount: ticketAmount,
-        }, { emitEvent: false });
-
-        this.messageService.infoBubble('已經依照合約編號進行變更');
-        console.log('偵測到合約編號變更', data);
-      });
-    }
-  }
-
-  onAutoCompleteInputChange(event: any) {
-    const body = {
-      ...event,
+    // ⭐ 預載 overlay panel 表格資料（參考 fin24020 應收ID 做法，改為 local filter，避免每次展開都打 API）
+    this.opLoading = true;
+    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList({
       TLT_NO: '',
       ven_uniform: '',
-      pageSize: 90,
+      pageSize: 9999,
       pageIndex: 1,
       SortBy: [{ field: 'TLT_NO', order: 1 }],
-    }
-    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = results.Data.map((item: any) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }).subscribe((results: Record<string, any>) => {
+      this.rawTalentData = (results['Data'] ?? []).map((item: apiOption) => ({
         ...item,
+        No: Number(item.No),
+        Label: item.No + '-' + item.Name,
       }));
-      console.log('AutoComplete input change, query with', body, 'results =', results);
-
+      this.opData = this.rawTalentData;
+      this.opTotalRecords = this.rawTalentData.length;
+      this.suggestions = this.rawTalentData;
+      this.opLoading = false;
     });
   }
 
-  onformValueChanged(event: any) {
-    this.opLoading = true;
-    const body = {
-      TLT_NO: event.TLT_NO || '',
-      ven_uniform: event.ven_uniform || '',
-    };
-    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...results.Data]; // 更新data資料
-      this.opTotalRecords = results.TotalCount;
-      this.opLoading = false;
+  // Fallback：只有編輯模式改 ticket_type 且無快取時才呼叫
+  private loadTLTTALENTDetail(talent_id: number) {
+    if (!talent_id) return;
+    this.tls14030Service.getTLTTALENT({ talent_id }).subscribe((response) => {
+      const data: TLTTALENT = response.Data;
+      if (!data) return;
+      this.lastTalentData = data;
+      this.applyTalentData(data);
+      console.log('fallback getTLTTALENT', data);
     });
+  }
+
+  // ⭐ Local filter：autocomplete 輸入時從預載資料篩選（不打 API）
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onAutoCompleteInputChange(event: any) {
+    const keyword = (event?.['Label'] || '').toString().trim().toLowerCase();
+    if (!keyword) {
+      this.suggestions = this.rawTalentData;
+      return;
+    }
+    this.suggestions = this.rawTalentData.filter(item =>
+      (item.Label || '').toLowerCase().includes(keyword)
+    );
+  }
+
+  // ⭐ Local filter：overlay panel 搜尋條件變更時從預載資料篩選（不打 API）
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onformValueChanged(event: any) {
+    const tltNo = (event?.TLT_NO || '').toString().trim().toLowerCase();
+    const venUniform = (event?.ven_uniform || '').toString().trim().toLowerCase();
+    if (!tltNo && !venUniform) {
+      this.opData = this.rawTalentData; // 同一參照 → app-table 不重置 selectedItems → radio button 保持亮
+    } else {
+      this.opData = this.rawTalentData.filter(item => {
+        const matchTlt = !tltNo ||
+          (item.No || '').toString().toLowerCase().includes(tltNo) ||
+          (item.Label || '').toLowerCase().includes(tltNo);
+        const matchVen = !venUniform ||
+          (item.ven_uniform || '').toLowerCase().includes(venUniform) ||
+          (item.Name || '').toLowerCase().includes(venUniform);
+        return matchTlt && matchVen;
+      });
+    }
+    this.opTotalRecords = this.opData.length;
   }
 }

@@ -145,6 +145,32 @@ export interface QueryBankAccountResponse {
 }
 
 /**
+ * 電匯單頭資訊回應
+ */
+export interface QueryRemitHeaderResponse {
+  /** 匯款單號 */
+  WSLIP_NO: string;
+  /** 建立日期 */
+  D_Date: string | null;
+  /** 匯款日期 */
+  RMT_Date: string | null;
+  /** 付款銀行代號 (含銀行名稱) */
+  BankInfo: string | null;
+  /** 轉傳票狀態 (已轉/未轉) */
+  VouStatus: string | null;
+  /** 傳票號碼 */
+  VouNo: string | null;
+}
+
+/**
+ * 電匯明細查詢包裝回應（Header + Details）
+ */
+export interface QueryRemitDetailWrapperResponse {
+  Header: QueryRemitHeaderResponse;
+  Details: QueryRemitDetailResponse[];
+}
+
+/**
  * 電匯明細回應
  */
 export interface QueryRemitDetailResponse {
@@ -202,8 +228,8 @@ export class FIN25020Service {
   /**
    * 查詢電匯明細
    */
-  queryRemitDetail(params: QueryRemitDetailRequest): Observable<ApiResponse<QueryRemitDetailResponse[]>> {
-    return this.http.post<ApiResponse<QueryRemitDetailResponse[]>>(`${this.apiUrl}/queryRemitDetail`, params);
+  queryRemitDetail(params: QueryRemitDetailRequest): Observable<ApiResponse<QueryRemitDetailWrapperResponse>> {
+    return this.http.post<ApiResponse<QueryRemitDetailWrapperResponse>>(`${this.apiUrl}/queryRemitDetail`, params);
   }
 
   /**
