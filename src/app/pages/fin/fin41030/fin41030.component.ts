@@ -33,9 +33,9 @@ import { FIN41030QueryRow, QueryFIN41030Request } from './fin41030.model';
 })
 export class FIN41030Component extends BasicQueryPageComponent<FIN41030QueryRow> implements OnInit {
   queryForm = this.formBuilder.group({
-    budget_version: [null as string | null],
-    budget_yy: [null as string | null],
-    budget_status: [null as string | null],
+    BudgetYear: [null as string | null],
+    BudgetVersion: [null as string | null],
+    BudgetStatus: [null as string | null],
     ...createPaginationConfig(),
   });
 
@@ -50,10 +50,10 @@ export class FIN41030Component extends BasicQueryPageComponent<FIN41030QueryRow>
   queryFIN41030Fn = (body: QueryFIN41030Request) => this.fin41030Service.queryFIN41030(body);
 
   columns: Column[] = [
-    { field: 'budget_yy', header: '年度', visible: true },
-    { field: 'budget_version', header: '版本', visible: true },
+    { field: 'BudgetYear', header: '年度', visible: true },
+    { field: 'BudgetVersion', header: '版本', visible: true },
     {
-      field: 'budget_status',
+      field: 'BudgetStatus',
       header: '審核狀態',
       visible: true,
       format: (value: string) => (value === 'Y' ? '已審核' : value === 'N' ? '未審核' : value),
@@ -70,8 +70,18 @@ export class FIN41030Component extends BasicQueryPageComponent<FIN41030QueryRow>
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
+      const raw = form.getRawValue();
+      const payload: QueryFIN41030Request = {
+        BudgetYear: raw.BudgetYear ?? null,
+        BudgetVersion: raw.BudgetVersion ?? null,
+        BudgetStatus: raw.BudgetStatus ?? null,
+        PageSize: raw.PageSize,
+        PageIndex: raw.PageIndex,
+        SortBy: raw.SortBy,
+      };
+
       this.fin41030Service
-        .queryFIN41030(form.getRawValue())
+        .queryFIN41030(payload)
         .pipe(
           untilDestroyed(this),
           finalize(() => (this.loading = false)),
@@ -79,8 +89,8 @@ export class FIN41030Component extends BasicQueryPageComponent<FIN41030QueryRow>
         .subscribe((response) => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
-          this.lastQueryBody = form.getRawValue();
-          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+          this.lastQueryBody = payload;
+          this.queryStateService.setQueryState(this.ProgNo, raw);
         });
     });
   }

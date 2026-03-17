@@ -10,7 +10,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { FIN41030QueryRow } from '../fin41030/fin41030.model';
+import { FIN41030ApproveData, FIN41030QueryRow } from '../fin41030/fin41030.model';
 @Component({
   selector: 'app-fin41030-cru',
   templateUrl: './fin41030-cru.component.html',
@@ -34,9 +34,10 @@ export class FIN41030CRUComponent extends BasicCruPageComponent<FIN41030QueryRow
   ];
 
   dataForm = this.formBuilder.nonNullable.group({
-    budget_yy: [''],
-    budget_version: [''],
-    budget_status: [''],
+    MID: [0],
+    BudgetYear: [''],
+    BudgetVersion: [''],
+    BudgetStatus: [''],
   });
 
   constructor(private readonly fin41030Service: FIN41030Service) {
@@ -49,7 +50,7 @@ export class FIN41030CRUComponent extends BasicCruPageComponent<FIN41030QueryRow
   }
 
   onApprove(): void {
-    const { budget_yy, budget_version } = this.dataForm.getRawValue();
+    const { MID, BudgetYear, BudgetVersion } = this.dataForm.getRawValue();
     this.messageService.confirm({
       header: '確認審核',
       message: '是否確認審核此筆資料？',
@@ -58,20 +59,20 @@ export class FIN41030CRUComponent extends BasicCruPageComponent<FIN41030QueryRow
         this.fin41030Service
           .approveFIN41030({
             Action: 'A',
-            budget_yy,
-            budget_version,
+            MID,
+            BudgetYear,
+            BudgetVersion,
           })
           .pipe(
             finalize(() => (this.loading = false)),
             untilDestroyed(this),
           )
           .subscribe({
-            next: (res) => {
+            next: (res: { Status: string; Message?: string; Data: FIN41030ApproveData }) => {
               if (res.Status === '0000') {
-                this.messageService.successBubble(res.Message ?? '審核成功');
-                this.dataForm.patchValue({ budget_status: 'Y' });
-              } else {
-                this.messageService.errorBubble(res.Message ?? '審核失敗');
+                const msg = res.Message ?? res.Data?.ResultMessage ?? '審核成功';
+                this.messageService.successBubble(msg);
+                this.dataForm.patchValue({ BudgetStatus: 'Y' });
               }
             },
           });
@@ -80,7 +81,7 @@ export class FIN41030CRUComponent extends BasicCruPageComponent<FIN41030QueryRow
   }
 
   onAntiApprove(): void {
-    const { budget_yy, budget_version } = this.dataForm.getRawValue();
+    const { MID, BudgetYear, BudgetVersion } = this.dataForm.getRawValue();
     this.messageService.confirm({
       header: '確認反審核',
       message: '是否確認反審核此筆資料？',
@@ -89,20 +90,20 @@ export class FIN41030CRUComponent extends BasicCruPageComponent<FIN41030QueryRow
         this.fin41030Service
           .approveFIN41030({
             Action: 'U',
-            budget_yy,
-            budget_version,
+            MID,
+            BudgetYear,
+            BudgetVersion,
           })
           .pipe(
             finalize(() => (this.loading = false)),
             untilDestroyed(this),
           )
           .subscribe({
-            next: (res) => {
+            next: (res: { Status: string; Message?: string; Data: FIN41030ApproveData }) => {
               if (res.Status === '0000') {
-                this.messageService.successBubble(res.Message ?? '反審核成功');
-                this.dataForm.patchValue({ budget_status: 'N' });
-              } else {
-                this.messageService.errorBubble(res.Message ?? '反審核失敗');
+                const msg = res.Message ?? res.Data?.ResultMessage ?? '反審核成功';
+                this.messageService.successBubble(msg);
+                this.dataForm.patchValue({ BudgetStatus: 'N' });
               }
             },
           });

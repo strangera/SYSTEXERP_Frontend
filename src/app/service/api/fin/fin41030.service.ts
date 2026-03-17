@@ -23,7 +23,7 @@ export class FIN41030Service {
     request: QueryFIN41030Request,
   ): Observable<ApiResponse<FIN41030QueryRow[]>> {
     return this.http.post<ApiResponse<FIN41030QueryRow[]>>(
-      `${this.apiUrl}/queryFIN41030`,
+      `${this.apiUrl}/queryYearBudgetFIN41030`,
       request,
     );
   }
@@ -33,7 +33,7 @@ export class FIN41030Service {
     request: ApproveFIN41030Request,
   ): Observable<ApiResponse<FIN41030ApproveData>> {
     return this.http.post<ApiResponse<FIN41030ApproveData>>(
-      `${this.apiUrl}/approveFIN41030`,
+      `${this.apiUrl}/approveToggleYearBudgetFIN41030`,
       request,
     );
   }

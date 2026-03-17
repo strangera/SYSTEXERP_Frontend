@@ -18,27 +18,27 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="版本"
-              controlName="budget_version"
-              [control]="queryForm.controls.budget_version"
+              controlName="BudgetVersion"
+              [control]="queryForm.controls.BudgetVersion"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="年"
-              controlName="budget_yy"
-              [control]="queryForm.controls.budget_yy"
+              controlName="BudgetYear"
+              [control]="queryForm.controls.BudgetYear"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="審核狀態"
-              controlName="budget_status"
+              controlName="BudgetStatus"
               [options]="budgetStatusOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.budget_status"
+              [control]="queryForm.controls.BudgetStatus"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
