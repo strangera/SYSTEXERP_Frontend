@@ -5,13 +5,15 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, of, switchMap } from 'rxjs';
-import { APS3009Item, FIN25010Data, FIN25010Service, InsertFIN25010Request, QueryAddFIN25010Request, QueryAddFIN25010Response, QueryDetailFIN25010Request } from '../../../service/api/fin/fin25010.service';
+import { APS3009Item, FIN25010Data, FIN25010Service, InsertFIN25010Request, QueryAddFIN25010Request, QueryAddFIN25010Response, QueryDetailFIN25010Request, QueryDropFIN25010Response } from '../../../service/api/fin/fin25010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -36,7 +38,9 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     TranslateModule,
     DropdownRangeComponent,
     TableReportComponent,
-    AsyncPipe
+    AsyncPipe,
+    CalendarRangeComponent,
+    DropdownTableComponent
   ]
 })
 export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> implements OnInit {
@@ -53,7 +57,10 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
 
     // 檢視
     PAM_No: [null],  // 匯款來源單號
-    D_Date: [null],  // 建立日期
+    D_Date_b: [null],  // 建立日期
+    D_Date_e: [null],  // 建立日期
+    Remit_Status: [null],  // 是否形成電匯
+    payday_Counts: [null],  // 付款天數
     PTA_Date: [null],  // 收/付款日
     WSLIP_NO: [null],  // 匯款單號
   });
@@ -295,5 +302,54 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     const isTotalNegative = (this.footerData?.ACP_Amt || 0) < 0;
 
     return !hasNegativeSubtotal && !isTotalNegative;
+  }
+
+  suggestions: QueryDropFIN25010Response[] = [];
+  opData: QueryDropFIN25010Response[] = [];
+  opTotalRecords = 0;
+  opLoading = false;
+
+  opForm = this.formBuilder.group({
+    PTA_Date_b: [null],
+    PTA_Date_e: [null],
+    Remit_Status: [null],
+    PAM_No: [null, Validators.maxLength(12)],
+    ...createPaginationConfig([{ field: "D_Date", order: -1 }])
+  });
+
+  fieldsConfig: FieldsConfig[] = [
+    { field: '', header: '匯款來源單號', mainDataField: true }
+  ];
+
+  opColumns: Column[] = [
+    { field: 'PAM_No', header: '匯款來源單號' },
+    { field: 'D_Date', header: '建立日期', format: formatDate },
+    { field: 'Remit_Status', header: '是否形成電匯', format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value }
+  ];
+
+  // auto complete 查詢事件
+  onAutoCompleteInputChange(event: Record<string, string>): void {
+    this.fin25010Service.queryDropFIN25010(event).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PAM_No,
+      }))];
+    });
+  }
+
+  // overlay panel 查詢事件
+  onFormValueChanged(event: Record<string, string>): void {
+    this.opLoading = true;
+    this.fin25010Service.queryDropFIN25010(
+      {
+        ...event,
+        SortBy: [{ field: "D_Date", order: -1 }]
+      }
+    )
+      .pipe(untilDestroyed(this), finalize(() => this.opLoading = false))
+      .subscribe((results) => {
+        this.opData = results.Data;
+        this.opTotalRecords = results.TotalCount;
+      });
   }
 }
