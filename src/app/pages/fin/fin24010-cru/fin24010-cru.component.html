@@ -46,7 +46,8 @@
         </div>
         <div class="col-12 md:col-6 lg:col-3">
           <app-dropdown label="匯款銀行代號" [options]="VEN_BNK_No_ParamOptions | async" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.VEN_BNK_No" [submitted]="submitted"></app-dropdown>
+            optionValue="value" controlName="Full_VEN_BNK_No" [control]="dataForm.controls.Full_VEN_BNK_No"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
           <app-input-text label="銀行帳號" [control]="dataForm.controls.VEN_BankAccountNo"
