@@ -1,211 +1,160 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-// Shared
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { finalize } from 'rxjs/operators';
+
 import { AccordionModule } from 'primeng/accordion';
+
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { FIN73040Service } from '../../../service/api/fin/fin73040.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+
+import { FIN73040Data, FIN73040Option, FIN73040Query } from './fin73040.model';
 
 @Component({
   selector: 'app-fin73040',
   templateUrl: './fin73040.component.html',
-  styleUrl: './fin73040.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    MenubarComponent,
+    ButtonComponent,
+    CalendarRangeComponent,
+    DropdownComponent,
+    TableReportComponent,
+  ],
 })
-export class FIN73040Component extends BasicQpageComponent implements OnInit {
-  queryForm = this.formBuilder.group({
-    counterCode: [],  // 專櫃編號
-    counterName: [],  // 櫃位名稱
-    violationCategory: [],  // 違規類別編號
-    deductionItem: [],  // 扣款項目
-    amountStart: [],  // 金額開始
-    amountEnd: [],  // 金額結束
-    deductionDateStart: [],  // 扣款日期起
-    deductionDateEnd: [],  // 扣款日期迄
-    violationDateStart: [],  // 違規日期起
-    violationDateEnd: [],  // 違規日期迄
-    documentNumber: [],  // 單據編號
-    issuingUnit: [],  // 開立單位
-    createdBy: [],  // 建立者(輸入代號)
-    floor: [],  // 樓層
-    Applicationdate: [],  // 維護日
-    status: [],  // 狀態
-    PettyCashOrderNumber: [],
-    Pettycashapplicant: [],
-    Pettycashcustodian: [],
-    Inventoryordernumber: [],
-    SQuota: [],
-    EQuota: [],
-    startdate: [],
-    enddate: [],
-    description: [],
-    SCountbalance: [],
-    ECountbalance: [],
-    SApplicationdate: [],
-    EApplicationdate: [],
-    SRequestdate: [],
-    ERequestdate: [],
-    SMakeupdate: [],
-    EMakeupdate: [],
+export class FIN73040Component extends BasicQueryPageComponent<FIN73040Data> implements OnInit {
+  public readonly queryForm = this.formBuilder.group({
+    paymentRequestNo: [null as string | null],
+    custodianNo: [null as string | null],
+    custodianDeptNo: [null as string | null],
 
+    applyDateStart: [null as Date | string | null],
+    applyDateEnd: [null as Date | string | null],
 
+    paymentDateStart: [null as Date | string | null],
+    paymentDateEnd: [null as Date | string | null],
+
+    replenishDateStart: [null as Date | string | null],
+    replenishDateEnd: [null as Date | string | null],
+
+    pageSize: [30, [Validators.required]],
+    pageIndex: [1, [Validators.required]],
+    SortBy: [[
+      { field: 'custodianDept', order: 1 },
+      { field: 'custodian', order: 1 },
+      { field: 'applyDate', order: 1 },
+      { field: 'paymentRequestNo', order: 1 },
+    ]],
   });
 
-  // Dropdown options
-  PettyCashOrderNumber: any[] = [{ value: 201407170001, label: 'C201407170001' },
-  { value: 201407170002, label: 'TC201407170002' },
-  { value: 201407170003, label: 'TC201407170003' },
-  { value: 201407170004, label: 'TC201407170004' },
-  { value: 201407210001, label: 'TC201407210001' },
-  { value: 201407210002, label: 'TC201407210002' },
-  { value: 201407280001, label: 'TC201407280001' },
-  { value: 201407280002, label: 'TC201407280002' },
-  { value: 201407280003, label: 'TC201407280003' },
-  { value: 201407290002, label: 'TC201407290002' },];
-  usercode: any[] = [];
-  Feespayable: any[] = [
-    { value: 210101, label: '銀行短期借款' },
-    { value: 210201, label: '應付商業本票-中華' },
-    { value: 210202, label: '應付商業本票-合庫' },
-    { value: 210203, label: '應付商業本票-聯邦' },
-    { value: 210301, label: '應付商業本票折價' },
-    { value: 210401, label: '一年或一年營業週期內到期長期負債' },
-    { value: 2111, label: '應付票據' },
-    { value: 211101, label: '應付票據-專櫃' },
-    { value: 211102, label: '應付票據-自營' },
-    { value: 211103, label: '應付票據-固資及費用' },
+  paymentRequestNoOptions: FIN73040Option[] = [];
+  custodianOptions: FIN73040Option[] = [];
+  custodianDeptOptions: any[] = [];
+
+  data: FIN73040Data[] = [];
+  totalRecords = 0;
+  lastQueryBody: FIN73040Query | null = null;
+
+  columns: ReportColumn[] = [
+    { field: 'custodianDept', header: '保管人組織' },
+    { field: 'custodian', header: '零用金保管人' },
+    { field: 'applyDate', header: '申請日期' },
+    { field: 'paymentRequestNo', header: '支出請款單號' },
+    { field: 'paymentDate', header: '請款日期' },
+    { field: 'replenishDate', header: '撥補日期' },
+    { field: 'replenishAmount', header: '撥補金額' },
+    { field: 'unpaidAmount', header: '應付未付金額' },
   ];
-  Inputtax: any[] = [
-    { value: 1, label: '1101_庫存現金' },
-    { value: 2, label: '110101_庫存現金-營收及正負差' },
-    { value: 3, label: '110102_庫存現金-其他收入' },
-    { value: 4, label: '110103_庫存現金-財務部' },
-    { value: 5, label: '110111_庫存現金-外幣' },
-    { value: 6, label: '110112_庫存現金-人民幣' },
-    { value: 7, label: '110199_庫存現金-其他' },
-    { value: 8, label: '1102_零用金' },
-    { value: 9, label: '110200_零用金-總經理室' },
-    { value: 10, label: '110201_零用金-採購組' }
-  ];
-  statusOptions: any[] = [
-    { value: 1, label: '建立' },
-    { value: 2, label: '請款' },
-    { value: 3, label: '拋轉' },
-    { value: 4, label: '撥補' },
-
-  ];
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  displayOptions: any[] = [];
-  displayOptions2: any[] = [];
-  Billingordernumber: any[] = [
-    { value: 1, label: 'B20150208001' },
-    { value: 2, label: 'B20150208002' },
-    { value: 3, label: 'B20150410001' },
-  ];
-  // Table data
-  data: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'custodianOrganizationCode', header: '保管人組織代號', visible: true },
-    { field: 'custodianOrganizationName', header: '保管人組織名稱', visible: true },
-    { field: 'pettyCashCustodian', header: '零用金保管人', visible: true },
-    { field: 'pettyCashCustodianName', header: '零用金保管人名稱', visible: true },
-    { field: 'applicationDate', header: '申請日期', visible: true },
-    { field: 'paymentRequestNumber', header: '支出請款單號', visible: true },
-    { field: 'paymentRequestDate', header: '請款日期', visible: true },
-    { field: 'replenishmentDate', header: '撥補日期', visible: true },
-    { field: 'replenishmentAmount', header: '撥補金額', visible: true },
-    { field: 'outstandingPaymentAmount', header: '應付未付金額', visible: true }
-  ];
-
-
-
-
-
-  vendorOptions: any[] = [];
-  counterCodeOptions: any[] = [];
-  violationCategoryOptions: any[] = [];
-  floorOptions: any[] = [];
-
-  deductionItemOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
-  Pettycashapplicant: any[] = [];
-
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
+    public readonly service: FIN73040Service,
+    private tls11010Service: Tls11010Service,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
+    this.initializePage('FIN73040', '', this.queryForm, this.onSubmit.bind(this));
+    this.loadOptions();
+
+    this.tls11010Service.getOrgOptions()
+      .subscribe(res => {
+        this.custodianDeptOptions = (res || []).map((x: any) => ({
+          label: `${x.value} - ${x.label}`,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        }));
+      });
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
+  private loadOptions(): void {
+    this.service.getPaymentRequestNoOptions().subscribe(res => this.paymentRequestNoOptions = res);
+    this.service.getCustodianOptions().subscribe(res => this.custodianOptions = res);
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+  private formatDate(value: Date | string | null): string | null {
+    if (!value) return null;
+
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      const year = value.getFullYear();
+      const month = String(value.getMonth() + 1).padStart(2, '0');
+      const day = String(value.getDate()).padStart(2, '0');
+      return `${year}${month}${day}`;
     }
 
-    this.loading = false;
+    const normalized = String(value).replace(/\D/g, '');
+    return normalized.length >= 8 ? normalized.substring(0, 8) : null;
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
+  moneyFormat(value: number | null | undefined): string {
+    return value != null ? value.toLocaleString('en-US') : '';
   }
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
+  public onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
+
+      const body: FIN73040Query = {
+        paymentRequestNo: raw.paymentRequestNo || null,
+        custodianNo: raw.custodianNo || null,
+        custodianDeptNo: raw.custodianDeptNo || null,
+
+        applyDateStart: this.formatDate(raw.applyDateStart),
+        applyDateEnd: this.formatDate(raw.applyDateEnd),
+
+        paymentDateStart: this.formatDate(raw.paymentDateStart),
+        paymentDateEnd: this.formatDate(raw.paymentDateEnd),
+
+        replenishDateStart: this.formatDate(raw.replenishDateStart),
+        replenishDateEnd: this.formatDate(raw.replenishDateEnd),
+
+        pageSize: raw.pageSize ?? 30,
+        pageIndex: raw.pageIndex ?? 1,
+        SortBy: raw.SortBy,
       };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+      this.service.queryFIN73040(body)
+        .pipe(finalize(() => this.loading = false))
+        .subscribe(res => {
+          this.data = (res.Data ?? []).map(item => ({
+            ...item,
+            dataKey: item.dataKey ?? `${item.paymentRequestNo}-${item.replenishAmount}`,
+          }));
+          this.totalRecords = res.TotalCount ?? 0;
+          this.lastQueryBody = body;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
   }
 }

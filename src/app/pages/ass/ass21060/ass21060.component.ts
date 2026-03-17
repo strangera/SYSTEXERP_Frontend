@@ -86,11 +86,19 @@ export class ASS21060Component extends BasicQueryPageComponent<ASS21060Data> imp
 
     this.buildColumns(this.queryForm.getRawValue().ENG_Type);
 
-    this.queryForm.controls.ENG_Type.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe((engType) => {
-        this.buildColumns(engType);
-      });
+  this.queryForm.controls.ENG_Type.valueChanges
+  .pipe(untilDestroyed(this))
+  .subscribe((engType) => {
+    // 1. 切換表頭
+    this.buildColumns(engType);
+
+    // 2. 清空表格資料
+    this.data = [];
+    this.totalRecords = 0;
+
+    // 3. 清掉上一筆查詢條件，避免直接匯出舊資料
+    this.lastQueryBody = null;
+  });
   }
 
   private buildColumns(engType: string | null): void {
