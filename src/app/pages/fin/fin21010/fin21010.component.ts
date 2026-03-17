@@ -223,13 +223,13 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       console.log('SYS1000.BNK_ACCTYPE 存款代號:', this.BNK_AccType_Option);
     });
 
-    // 查 公司銀行科目代號
-    this.dropdownApiService.queryGls1005For1103().pipe(untilDestroyed(this)).subscribe((response) => {
+    // 查 公司銀行科目代號(/queryAPS1002_DropDownList)
+    this.dropdownApiService.queryAps1002().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];
       this.GLS1005_BNK_DepositAccNo_Option = list.map((item: any) => ({
-        No: item.No, // 公司銀行科目 代號
-        Name: item.Name, // 公司銀行科目 名稱
-        Label: item.No + '-' + item.Name, // 代碼+名稱
+        No: item.BNK_DepositAccNo, // 公司銀行科目 代號
+        Name: item.ACCCNAME, // 公司銀行科目 名稱
+        Label: item.BNK_DepositAccNo + '-' + item.ACCCNAME, // 代碼+名稱
       }));
       console.log('公司銀行科目代號:', this.GLS1005_BNK_DepositAccNo_Option);
     });

@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -27,6 +28,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   // 查詢表單：保證傳票
   queryForm = this.formBuilder.group({
     // id: [{ value: null, disabled: true }], // read only
+    ven_uniformList: [[]], // 統一編號
     tlt_noList: [[]], // 專櫃編號
     test: [''], // 測試用的 control 
     tlt_name: [''], // 專櫃名稱
@@ -90,6 +92,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   ];
   selectedItems: Garantee_Ticket[] = [];// 多選項目
 
+  ven_uniformOption: apiOption[] = []; // 統一編號列表
   tlt_noListOption: option[] = []; //專櫃編號列表
   tlt_no_14030_ListOption: option[] = []; // 專櫃編號列表 (TLS14030)
   locationOption: apiOption[] = []; //位置編號
@@ -159,6 +162,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
   constructor(
     private tls14030Service: Tls14030Service,
+    private readonly dropDownListService: DropDownListService,
   ) { super(); }
 
   ngOnInit(): void {
@@ -247,7 +251,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('locationOption:', this.locationOption);
+        // console.log('locationOption:', this.locationOption);
       });
 
     // 區域下拉
@@ -260,7 +264,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('areaOption:', this.areaOption);
+        // console.log('areaOption:', this.areaOption);
       });
 
     // 樓層下拉
@@ -273,7 +277,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('floorOption:', this.floorOption);
+        // console.log('floorOption:', this.floorOption);
       });
 
     // 大分類下拉
@@ -286,7 +290,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('bus_typeOption:', this.bus_typeOption);
+        // console.log('bus_typeOption:', this.bus_typeOption);
       });
 
     // 組織 下拉
@@ -299,7 +303,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('orgOption:', this.orgOption);
+        // console.log('orgOption:', this.orgOption);
       });
 
     // 專櫃編號 下拉
@@ -311,8 +315,22 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('專櫃編號:', response.Data);
+        // console.log('專櫃編號:', response.Data);
       });
+    //統一編號 下拉
+    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe((response) => {
+      //去除掉重複的統一編號，並且加上 Label 欄位
+      this.ven_uniformOption = response.Data
+        .filter((item: apiOption, index: number, self: apiOption[]) => {
+          return index === self.findIndex((t) => t.No === item.No);
+        })
+        .map((item: any) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+      // console.log('統一編號:', response.Data);
+    });
   }
 
   onAutoCompleteInputChange(event: any) {
