@@ -14,7 +14,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { finalize, shareReplay } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
@@ -48,14 +48,14 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     {
       field: 'AccNo', header: '科目代號', width: '120px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true,
-      options: () => this.dropdown.queryGls1005(), // 使用科目代號 API
+      options: () => this.ledgerOptions$, // 使用科目代號 API
       optionLabel: 'value',                        // 顯示選中的代碼
       optionValue: 'value',                        // 綁定的值
       templateLabel: 'label',                      // 下拉清單顯示 "代碼 - 名稱"
       showClear: false,
       onChange: (value: any, rowData: any, col: EditColumn, index: number) => {
         if (value) {
-          this.dropdown.queryGls1005().subscribe(options => {
+          this.dropdown.queryGls1005_ledgerMD().subscribe(options => {
             const selected = options?.find(opt => opt.value === value);
             if (selected) {
               rowData.AccCName = selected['Name'];
@@ -74,7 +74,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     {
       field: 'ORG_ID', header: '組織代號', width: '120px', type: 'dropdown', textAlign: 'left',
       optionsAsync: true,
-      options: () => this.dropdown.querySys3100(),
+      options: () => this.sys3100Options$,
       optionLabel: 'No',       // 對應您 Option 介面的 label (No - Name)
       optionValue: 'value',       // 對應您 Option 介面的 value (No)
       templateLabel: 'label',
@@ -101,7 +101,8 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   ];
   PostFlagOptions = getSYS1000Options('PostFlag');
   Trans_StatusOptions = getSYS1000Options('Trans_Status');
-
+  private ledgerOptions$ = this.dropdown.queryGls1005_ledgerMD().pipe(shareReplay(1));
+  private sys3100Options$ = this.dropdown.querySys3100().pipe(shareReplay(1));
   constructor(
     private readonly fin51010Service: Fin51010Service,
     private readonly dropdown: DropdownApiService,
@@ -114,14 +115,26 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     this.formTitle = '傳票資料'
     if (this.rowdata?.id) {
       this.loading = true;
-      this.fin51010Service.queryFIN51010Detail({ GLS6001_ID: this.rowdata?.id }).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        if (res.Data && res.Data.length > 0) {
-          const mainData = res.Data[0];
-          this.dataForm.patchValue(mainData);
-          this.data = mainData.LineList || [];
-        }
-      });
+      this.fin51010Service
+        .queryFIN51010Detail({ GLS6001_ID: this.rowdata?.id })
+        .pipe(
+          finalize(() => (this.loading = false)),
+          untilDestroyed(this)
+        )
+        .subscribe((res) => {
+          if (res.Data && res.Data.length > 0) {
+            const mainData = res.Data[0];
+            this.dataForm.patchValue(mainData);
 
+            // 處理明細資料，移除特定欄位的空白
+            this.data = (mainData.LineList || []).map((line: any) => ({
+              ...line,
+              // 使用 trim() 移除空白，並確保欄位有值才處理
+              AccNo: line.AccNo?.trim(),
+              ORG_ID: line.ORG_ID?.trim(), // 如果組織代號也有同樣問題，可以一併處理
+            }));
+          }
+        });
     }
   }
   onSubmit(frm: FormGroup) {

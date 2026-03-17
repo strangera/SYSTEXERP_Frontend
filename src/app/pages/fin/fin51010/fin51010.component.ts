@@ -45,7 +45,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
   SrcSheetTypeOptions = this.dropDown.queryGls1010();
   TransStatusOptions = getSYS1000Options('Trans_Status'); // 拋轉狀態
   PostFlagOptions = getSYS1000Options('PostFlag'); // 過帳狀態
-  AccNoOptions = this.dropDown.queryGls1005(); // 會計科目
+  AccNoOptions = this.dropDown.queryGls1005_ledgerMD(); // 會計科目
   DetailNoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商/明細編號
   SubDetailNoOptions = this.dropDown.queryGLS1016(); // 對象別編號
 
