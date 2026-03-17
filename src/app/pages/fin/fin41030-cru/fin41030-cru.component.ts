@@ -1,170 +1,112 @@
-import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { FIN41030Service } from '@service/api/fin/fin41030.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { PanelModule } from 'primeng/panel';
-import { AuthService } from '../../../service/system/auth.service';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
+import { FIN41030QueryRow } from '../fin41030/fin41030.model';
 @Component({
   selector: 'app-fin41030-cru',
   templateUrl: './fin41030-cru.component.html',
   styleUrl: './fin41030-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [
+    MenubarComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    ButtonComponent,
+    TranslateModule,
+  ],
 })
-export class FIN41030CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
-  accordionTabCss = '';
-  canEdit() { return false; }
-  canAdd() { return false; }
+export class FIN41030CRUComponent extends BasicCruPageComponent<FIN41030QueryRow> implements OnInit {
+  budgetStatusOptions = [
+    { value: 'Y', label: '已審核' },
+    { value: 'N', label: '未審核' },
+  ];
 
-  // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    name: [''],
-    age: ['', Validators.required],
-    email: ['', [Validators.maxLength(50), Validators.required]],
-    status: [''],
-    year: [''],
-    version: [''],
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    budget_yy: [''],
+    budget_version: [''],
+    budget_status: [''],
   });
-  // ----------------------------------------------------------------
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-  ) {
+
+  constructor(private readonly fin41030Service: FIN41030Service) {
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '140003';
-    //
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      name: ['', [Validators.required, Validators.maxLength(14)]], // Input Text
-      CashRegisterType: ['1', Validators.required], // 收銀機型態
-      SalesDate: ['', Validators.required], // 銷售日期
-      CashRegisterCode: ['', Validators.required], // 收銀機號
-      TransactionSerialNumber: ['', Validators.required], // 交易流水號
-      CounterNumber: ['', Validators.required], // 專櫃編號
-      TwoPartInvoiceNumberStart: ['', Validators.required], // 二聯發票號碼(起號)
-      TwoPartInvoiceNumberEnd: ['', Validators.required], // 二聯發票號碼(迄號)
-      TaxableAmount: ['', Validators.required], // 應稅金額
-      TaxFreeAmount: ['', Validators.required], // 免稅金額
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
+    this.initializePage('FIN41030', this.dataForm);
     this.dataForm.disable();
   }
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
+  onApprove(): void {
+    const { budget_yy, budget_version } = this.dataForm.getRawValue();
+    this.messageService.confirm({
+      header: '確認審核',
+      message: '是否確認審核此筆資料？',
+      accept: () => {
+        this.loading = true;
+        this.fin41030Service
+          .approveFIN41030({
+            Action: 'A',
+            budget_yy,
+            budget_version,
+          })
+          .pipe(
+            finalize(() => (this.loading = false)),
+            untilDestroyed(this),
+          )
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble(res.Message ?? '審核成功');
+                this.dataForm.patchValue({ budget_status: 'Y' });
+              } else {
+                this.messageService.errorBubble(res.Message ?? '審核失敗');
+              }
+            },
+          });
+      },
+    });
   }
 
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['FIN4000/FIN41030']);
+  onAntiApprove(): void {
+    const { budget_yy, budget_version } = this.dataForm.getRawValue();
+    this.messageService.confirm({
+      header: '確認反審核',
+      message: '是否確認反審核此筆資料？',
+      accept: () => {
+        this.loading = true;
+        this.fin41030Service
+          .approveFIN41030({
+            Action: 'U',
+            budget_yy,
+            budget_version,
+          })
+          .pipe(
+            finalize(() => (this.loading = false)),
+            untilDestroyed(this),
+          )
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble(res.Message ?? '反審核成功');
+                this.dataForm.patchValue({ budget_status: 'N' });
+              } else {
+                this.messageService.errorBubble(res.Message ?? '反審核失敗');
+              }
+            },
+          });
+      },
+    });
   }
 }
