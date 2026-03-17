@@ -16,6 +16,7 @@ import { TableReportComponent } from '../../../shared/componentkit/table-report/
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 
 import { FIN73020Data, FIN73020Option, FIN73020Query } from './fin73020.model';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 
 @Component({
   selector: 'app-fin73020',
@@ -28,9 +29,10 @@ import { FIN73020Data, FIN73020Option, FIN73020Query } from './fin73020.model';
     TranslateModule,
     MenubarComponent,
     ButtonComponent,
-    CalendarComponent,
+    // CalendarComponent,
     DropdownComponent,
     TableReportComponent,
+    CalendarRangeComponent
   ],
 })
 export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> implements OnInit {

@@ -25,22 +25,17 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              label="產生日期(起訖)"
+      
+                     <app-calendar-range
+              label="產生日期"
               controlName="createDateStart"
-              [control]="queryForm.controls.createDateStart"
+              [startControl]="queryForm.controls.createDateStart"
+              [endControl]="queryForm.controls.createDateEnd"
               [submitted]="submitted">
-            </app-calendar>
+            </app-calendar-range>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              label="~"
-              controlName="createDateEnd"
-              [control]="queryForm.controls.createDateEnd"
-              [submitted]="submitted">
-            </app-calendar>
-          </div>
+  
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
