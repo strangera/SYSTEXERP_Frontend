@@ -186,53 +186,64 @@ export class ASS21060Component extends BasicQueryPageComponent<ASS21060Data> imp
     });
   }
 
-  public onExportXLSX(): void {
-    const exportBody = this.buildExportBody();
-    if (!exportBody) {
-      return;
-    }
-
-    this.btnLoading = true;
-
-    this.service.exportASS21060Excel(exportBody)
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => this.btnLoading = false)
-      )
-      .subscribe({
-        next: (res) => {
-          const fileName = this.getFileNameFromResponse(res, 'ASS21060_專櫃合約抄錶資料.xlsx');
-          this.downloadBlob(res.body, fileName);
-        },
-        error: (err) => {
-          console.error('匯出 Excel 失敗', err);
-        }
-      });
+public onExportXLSX(): void {
+  const exportBody = this.buildExportBody();
+  if (!exportBody) {
+    return;
   }
+
+  this.btnLoading = true;
+
+  this.service.exportASS21060Excel(exportBody)
+    .pipe(
+      untilDestroyed(this),
+      finalize(() => this.btnLoading = false)
+    )
+    .subscribe({
+      next: (res) => {
+        const fileName = `ASS21060_抄表專櫃清單_${this.getNowTimeString()}.xlsx`;
+        this.downloadBlob(res.body, fileName);
+      },
+      error: (err) => {
+        console.error('匯出 Excel 失敗', err);
+      }
+    });
+}
 
   public onExportPDFClick(): void {
-    const exportBody = this.buildExportBody();
-    if (!exportBody) {
-      return;
-    }
-
-    this.btnLoading = true;
-
-    this.service.exportASS21060PDF(exportBody)
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => this.btnLoading = false)
-      )
-      .subscribe({
-        next: (res) => {
-          const fileName = this.getFileNameFromResponse(res, 'ASS21060_專櫃合約抄錶資料.pdf');
-          this.downloadBlob(res.body, fileName);
-        },
-        error: (err) => {
-          console.error('匯出 PDF 失敗', err);
-        }
-      });
+  const exportBody = this.buildExportBody();
+  if (!exportBody) {
+    return;
   }
+
+  this.btnLoading = true;
+
+  this.service.exportASS21060PDF(exportBody)
+    .pipe(
+      untilDestroyed(this),
+      finalize(() => this.btnLoading = false)
+    )
+    .subscribe({
+      next: (res) => {
+        const fileName = `ASS21060_抄表專櫃清單_${this.getNowTimeString()}.pdf`;
+        this.downloadBlob(res.body, fileName);
+      },
+      error: (err) => {
+        console.error('匯出 PDF 失敗', err);
+      }
+    });
+}
+private getNowTimeString(): string {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const MM = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  const HH = String(now.getHours()).padStart(2, '0');
+  const mm = String(now.getMinutes()).padStart(2, '0');
+  const ss = String(now.getSeconds()).padStart(2, '0');
+
+  return `${yyyy}${MM}${dd}${HH}${mm}${ss}`;
+}
 
   private downloadBlob(blob: Blob | null, fileName: string): void {
     if (!blob) {
