@@ -87,7 +87,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       type: 'input',
       onBlur: (rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) => this.onPLU_MagNoBlur(rowData, value, col, index),
       validate: [validateRequired],
-
     },
     { field: 'PLU_MagNo', header: '商品管理編號', },
     { field: 'PLU_Name', header: '商品名稱' },
