@@ -297,7 +297,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
       if (!data) return;
       this.lastTalentData = data;
       this.applyTalentData(data);
-      console.log('fallback getTLTTALENT', data);
+      // console.log('fallback getTLTTALENT', data);
     });
   }
 
@@ -328,7 +328,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
             Label: item.Label || `${item.No}-${item.Name}`
           }));
 
-          console.log('⭐fetchTalentData 取得的資料:', data);
+          // console.log('⭐fetchTalentData 取得的資料:', data);
 
           this.opData = [...data];       // 更新 Table
           this.suggestions = [...data];  // 更新 下拉建議清單
