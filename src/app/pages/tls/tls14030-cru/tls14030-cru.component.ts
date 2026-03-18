@@ -2,6 +2,7 @@ import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
@@ -83,7 +84,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   allquery: Garantee_Ticket[] = [];
 
   TLTTALENT_Option: any[] = [];
-
+  ven_uniformOption: apiOption[] = []; // 統一編號列表
   tlt_noListOption: option[] = []; //專櫃編號列表
 
   ticket_typeOption: option[] = [ //保證票型態
@@ -128,7 +129,9 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   opTotalRecords = 0;
 
   // ----------------------------------------------------------------
-  constructor(private tls14030Service: Tls14030Service) {
+  constructor(
+    private tls14030Service: Tls14030Service,
+    private readonly dropDownListService: DropDownListService,) {
     super(); // 呼叫父類建構子
   }
 
@@ -141,12 +144,22 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
       this.dataForm.get('talent_id')?.disable();
     }
 
+    // ⭐ 監聽 talent_id 變更 重新計算保證票金額
+    this.dataForm.get('talent_id')?.valueChanges.subscribe(() => {
+      const talentId = this.dataForm.getRawValue().talent_id;
+      if (talentId) {
+        this.loadTLTTALENTDetail(talentId);
+      }
+    });
+
     // ⭐ 監聽 ticket_type 變更 重新計算保證票金額
     this.dataForm.get('ticket_type')?.valueChanges.subscribe(() => {
       if (this.lastTalentData) {
+        console.log('快取模式')
         // 有快取直接用，不打 API
         this.applyTalentData(this.lastTalentData);
       } else {
+        console.log('無快取查詢')
         // 無快取（編輯模式更換 ticket_type 時才會到這），fallback 打一次 API
         const talentId = this.dataForm.getRawValue().talent_id;
         if (talentId) {
@@ -158,6 +171,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
   // ⭐ 從 dropdown-table (select) 接收選取的 rowData，直接填欄位，不打額外 API
   onTalentSelected(rowData: TLTTALENT) {
+    console.log('這是從清單選取的原始資料:', rowData);
     this.lastTalentData = rowData as TLTTALENT;
     this.applyTalentData(this.lastTalentData);
   }
@@ -181,6 +195,11 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     }, { emitEvent: false });
 
     // this.messageService.infoBubble('已經依照合約編號進行變更');
+    console.log('open_fees', data.open_fees);
+    console.log('construct_fees', data.construct_fees);
+    console.log('expiration_fees', data.expiration_fees);
+
+    console.log('✨applyTalentData ticketType', ticketType, 'ticketAmount', ticketAmount);
     console.log('applyTalentData', data);
   }
 
@@ -247,6 +266,21 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
         console.log('專櫃主檔(合約編號)明細:', response.Data);
       });
+    //統一編號 下拉
+    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe((response) => {
+      //去除掉重複的統一編號，並且加上 Label 欄位
+      this.ven_uniformOption = response.Data
+        .filter((item: apiOption, index: number, self: apiOption[]) => {
+          return index === self.findIndex((t) => t.No === item.No);
+        })
+        .map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+      // console.log('統一編號:', response.Data);
+    });
+
     //專櫃編號 下拉
     this.tls14030Service
       .queryTLTTALENT_DropDownList({})
@@ -267,13 +301,14 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
       pageSize: 9999,
       pageIndex: 1,
       SortBy: [{ field: 'TLT_NO', order: 1 }],
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }).subscribe((results: Record<string, any>) => {
       this.rawTalentData = (results['Data'] ?? []).map((item: apiOption) => ({
         ...item,
-        No: Number(item.No),
+        No: item.No,
         Label: item.No + '-' + item.Name,
       }));
+      console.log('預載專櫃資料(供 overlay panel 搜尋用):', this.rawTalentData);
       this.opData = this.rawTalentData;
       this.opTotalRecords = this.rawTalentData.length;
       this.suggestions = this.rawTalentData;
@@ -311,16 +346,28 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   onformValueChanged(event: any) {
     const tltNo = (event?.TLT_NO || '').toString().trim().toLowerCase();
     const venUniform = (event?.ven_uniform || '').toString().trim().toLowerCase();
+
     if (!tltNo && !venUniform) {
-      this.opData = this.rawTalentData; // 同一參照 → app-table 不重置 selectedItems → radio button 保持亮
+      this.opData = this.rawTalentData;
     } else {
       this.opData = this.rawTalentData.filter(item => {
+        // 修正 1: 先轉字串再補零，或是直接對 Label 比對
+        // 建議直接用原始 item 裡面可能存在的欄位比對
+        const itemNoStr = (item.No || '').toString().toLowerCase();
+        const itemLabel = (item.Label || '').toLowerCase();
+
         const matchTlt = !tltNo ||
-          (item.No || '').toString().toLowerCase().includes(tltNo) ||
-          (item.Label || '').toLowerCase().includes(tltNo);
+          itemNoStr.includes(tltNo) ||
+          itemLabel.includes(tltNo);
+
+        // 修正 2: 檢查 item 裡面的欄位名稱是否真的是小寫 ven_uniform
+        const itemVen = (item.ven_uniform || item.VEN_UNIFORM || '').toString().toLowerCase();
+        const itemName = (item.Name || '').toLowerCase();
+
         const matchVen = !venUniform ||
-          (item.ven_uniform || '').toLowerCase().includes(venUniform) ||
-          (item.Name || '').toLowerCase().includes(venUniform);
+          itemVen.includes(venUniform) ||
+          itemName.includes(venUniform);
+
         return matchTlt && matchVen;
       });
     }
