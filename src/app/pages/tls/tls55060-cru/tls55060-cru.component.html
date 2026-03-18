@@ -11,19 +11,16 @@
           <app-input-text label="傳票編號" controlName="VouNo" [control]="dataForm.controls.VouNo"
             [submitted]="submitted"></app-input-text>
         </div>
-
         <!-- 傳票種類 -->
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown label="傳票種類" controlName="SrcSheetType" [options]="srcSheetTypeOptions" optionLabel="Name"
-            optionValue="No" [control]="dataForm.controls.SrcSheetType" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="傳票種類" controlName="SrcSheetType" [options]="srcSheetTypeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.SrcSheetType" [submitted]="submitted"></app-dropdown>
         </div>
-
         <!-- 傳票型態 -->
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown label="傳票型態" controlName="VouType" [options]="vouTypeOptions" optionLabel="Name"
-            optionValue="No" [control]="dataForm.controls.VouType" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="傳票型態" controlName="VouType" [options]="vouTypeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.VouType" [submitted]="submitted"></app-dropdown>
         </div>
-
         <!-- 傳票日期 -->
         <div class="col-12 md:col-6 lg:col-3">
           <app-calendar label="傳票日期" controlName="VouDate" [control]="dataForm.controls.VouDate"
@@ -41,8 +38,8 @@
         </div>
         <!-- 傳票狀態 -->
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown label="傳票狀態" controlName="PostFlag" [options]="postFlagOptions" optionLabel="Name"
-            optionValue="No" [control]="dataForm.controls.PostFlag" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="傳票狀態" controlName="PostFlag" [options]="postFlagOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.PostFlag" [submitted]="submitted"></app-dropdown>
         </div>
         <!-- 建立人員 -->
         <div class="col-12 md:col-6 lg:col-3">

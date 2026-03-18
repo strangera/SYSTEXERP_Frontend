@@ -3,8 +3,8 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { IDropdownItem } from '@service/utility/dropdown-api.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -54,29 +54,12 @@ export class TLS55060CRUComponent extends BasicCruPageComponent<any> implements 
     UPD_USR_No: [{ value: '', disabled: true }],                // 修改人員
     UPD_Date: [{ value: '', disabled: true }],                  // 修改日期
   });
-
-  //#region 下拉選單選項
-  // 傳票型態
-  vouTypeOptions: IDropdownItem[] = [
-    { No: '1', Name: '現金收入' },
-    { No: '2', Name: '現金支出' },
-    { No: '3', Name: '轉帳傳票' }
-  ];
-  // 傳票種類
-  srcSheetTypeOptions: IDropdownItem[] = [];
-  // 下拉選項快取
-  orgOptions: IDropdownItem[] = [];
-  accnoOptions: IDropdownItem[] = [];
-  // 傳票狀態
-  postFlagOptions: IDropdownItem[] = [
-    { No: '0', Name: '作廢' },
-    { No: '1', Name: '建立' },
-    { No: '2', Name: '確認' },
-    { No: '3', Name: '過帳' }
-  ];
-  //#endregion
-
-  //#region 編輯明細table相關
+  // 下拉選單選項
+  vouTypeOptions = getSYS1000Options('VouType')// 傳票型態
+  srcSheetTypeOptions = getSYS1000Options('ENTRY_TYPE')// 傳票種類
+  postFlagOptions = getSYS1000Options('PostFlag')// 傳票狀態
+  orgOptions$ = this.dropDown.querySys3100();
+  accnoOptions$ = this.dropDown.queryGls1005();
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
   editData: any[] = [];
   selectedItems: any[] = [];
@@ -95,18 +78,10 @@ export class TLS55060CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   editColumns: EditColumn[] = [
-    // { field: 'VOUNO', header: '應收帳款代號' },
-    // { field: 'SrcSheetType', header: '專案代號' },
-    { field: 'ORG_ID', header: '組織代碼', type: 'dropdown', options: this.orgOptions, optionLabel: 'Display', optionValue: 'No' },
-    // { field: 'org_name', header: '組織名稱' },
-    // { field: 'CustomerNo', header: '客戶代碼' },
+    { field: 'ORG_ID', header: '組織代碼', type: 'dropdown', optionsAsync: true, options: this.orgOptions$, optionLabel: 'label', optionValue: 'value' },
     { field: 'DetailNo', header: '廠商代碼' },
-    // { field: 'VouType', header: '傳票類型' },
-    // { field: 'sam_yyymm', header: '年月', format: formatYYYYMM },
-    // { field: 'sam_termno', header: '帳次' },
     { field: 'ap_amt', header: '應付帳款金額', textAlign: 'right', format: formatAmount },
-    // { field: 'pta_amt', header: '沖帳金額', textAlign: 'right', format: formatAmount },
-    { field: 'AccNo', header: '會計科目', type: 'dropdown', options: this.accnoOptions, optionLabel: 'Display', optionValue: 'No' },
+    { field: 'AccNo', header: '會計科目', type: 'dropdown', optionsAsync: true, options: this.accnoOptions$, optionLabel: 'label', optionValue: 'value' },
     { field: 'ent_date', header: '立帳日期', format: formatDate },
     { field: 'perget_date', header: '預計收款日期', format: formatDate },
     { field: 'SrcVouNo', header: '原始憑證' },
@@ -114,197 +89,130 @@ export class TLS55060CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'Ven_Uniform', header: '廠商統一編號' },
     { field: 'PTA', header: '立沖代號' },
     { field: 'AP_Status', header: '狀態' },
-    // { field: 'Trans_Status', header: '抛轉應收狀態' }
   ];
-  //#endregion
-
-  //#region 檢視明細table相關
   detailData: any[] = [];
   totalRecords = 0;
-  // detailFooterData 有時傳給 custom-footer-table（陣列），有時傳給 app-table-edit（物件）
   detailFooterData: any = null;
-
   detailColumns: Column[] = [
-    // { field: 'VOUNO', header: '應收帳款代號', visible: true },
-    // { field: 'SrcSheetType', header: '專案代號', visible: true },
     { field: 'org_id', header: '組織代碼', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
-    // { field: 'CustomerNo', header: '客戶代碼', visible: true },
     { field: 'DetailNo', header: '廠商代碼', visible: true },
-    // { field: 'VouType', header: '傳票類型', visible: true },
-    // { field: 'sam_yyymm', header: '年月', visible: true, format: formatYYYYMM },
-    // { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'ar_amt', header: '應收帳款金額', visible: true, isTotal: true, format: formatAmount },
-    // { field: 'pta_amt', header: '沖帳金額', visible: true, format: formatAmount },
     { field: 'accno', header: '會計科目', visible: true },
     { field: 'ent_date', header: '立帳日期', visible: true, format: formatDate },
     { field: 'perget_date', header: '預計收款日期', visible: true, format: formatDate },
     { field: 'SrcVouNo', header: '原始憑證', visible: true },
     { field: 'notedesc', header: '備註', visible: true }
   ];
-  //#endregion
-
   constructor(
     private tls2c040Service: TLS2C040Service,
-    private dropDownListService: DropDownListService
+    private dropDown: DropdownApiService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS55060', this.dataForm);
-
-    // 載入傳票種類
-    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'entry_type' })
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.srcSheetTypeOptions = response.Data;
-      });
-
-    // 載入組織下拉 (顯示 No-Name)
-    this.dropDownListService.querySYS3100_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(resp => {
-        const mapped = (resp.Data || []).map((it: any) => ({
-          ...it,
-          No: String(it.No), // 確保為字串，避免型別差異
-          Display: `${it.No}-${it.Name}`,
-          label: `${it.No}-${it.Name}`
-        }));
-        // 就地更新陣列，保留原始引用給 editColumns.options
-        this.orgOptions.splice(0, this.orgOptions.length, ...mapped);
-        // 重新指派 editColumns 以觸發下拉 cell 重新渲染，避免只 mutation 無法更新子元件快取
-        this.editColumns = this.editColumns.map(col => col.field === 'ORG_ID' ? { ...col, options: this.orgOptions } : col);
-      });
-
-    // 載入會計科目下拉 (顯示 No-Name)
-    this.dropDownListService.queryGLS1005_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(resp => {
-        const mapped = (resp.Data || []).map((it: any) => ({
-          ...it,
-          No: String(it.No), // 確保為字串
-          Display: `${it.No}-${it.Name}`,
-          label: `${it.No}-${it.Name}`
-        }));
-        this.accnoOptions.splice(0, this.accnoOptions.length, ...mapped);
-        // 重新指派 editColumns 以觸發下拉 cell 重新渲染
-        this.editColumns = this.editColumns.map(col => col.field === 'AccNo' ? { ...col, options: this.accnoOptions } : col);
-      });
-
+    console.log(this.rowdata)
     // 編輯時 帶回明細資料
-    if (this.crudstatus === CRUDStatus.Edit) {
+    if (this.isFormEditable) {
       this.editData = this.rowdata._GLS6002List;
-      this.editFooterData.debitAmount = this.totalDebitAmount;
-      this.editFooterData.creditAmount = this.totalCreditAmount;
+      this.editFooterData.debitAmount = this.editData.reduce((sum, item) => sum + (item.AccDC === 'D' ? item.AccAmt : 0), 0);
+      this.editFooterData.creditAmount = this.editData.reduce((sum, item) => sum + (item.AccDC === 'C' ? item.AccAmt : 0), 0);
     }
-
     // 檢視時：依 queryData 決定要呼叫哪個 API
     if (this.crudstatus === CRUDStatus.Read) {
-      this.loading = true;
       if (this.queryData === '應付') {
         // 直接呼叫應付明細 API
-        const req = { PageSize: 0, PageIndex: 0, OrderBy: '', Offset: 0, SortBy: [], id: this.rowdata.id ?? 0 };
-        this.tls2c040Service.queryTLS2C040_GLS6005(req)
-          .pipe(untilDestroyed(this), finalize(() => { this.loading = false; }))
-          .subscribe(resp => {
-            const rawList = resp.Data?._GLS6005List ?? [];
-            const list = rawList.map((d: any) => ({
+        this.tls2c040Service.queryTLS2C040_GLS6005(this.rowdata).pipe(untilDestroyed(this)).subscribe(resp => {
+          const rawList = resp.Data?._GLS6005List ?? [];
+          const list = rawList.map((d: any) => ({
+            ...d,
+            ent_date: this.toIsoDateString(d.ent_date),
+            perget_date: this.toIsoDateString(d.perget_date)
+          }));
+          this.detailData = list;
+          this.totalRecords = resp.TotalCount ?? (this.detailData.length || 0);
+          this.detailFooterData = { ap_amt: resp.Data?.Total_AP_Amt };
+          this.editData = (list || []).map((d: any) => ({
+            ...d,
+            ORG_ID: d.org_id != null ? String(d.org_id) : d.org_id,
+            AccNo: d.accno != null ? String(d.accno) : d.accno,
+            NoteDesc: d.notedesc
+          }));
+        });
+      } else if (this.queryData === '應收') {
+        // 使用主查詢先取主檔與分錄（若主檔無明細再 fallback 到 GLS6004）
+        this.tls2c040Service.queryTLS2C040_GLS6004(this.rowdata).pipe(untilDestroyed(this)).subscribe(response => {
+          const main = (response.Data && response.Data.length) ? response.Data[0] : null;
+          if (main) {
+            this.rowdata = main as any;
+            try {
+              if (this.dataForm.disabled) this.dataForm.enable();
+              this.dataForm.patchValue({
+                VouNo: main.VouNo,
+                VouType: main.VouType,
+                SrcSheetType: main.SrcSheetType,
+                VouDate: main.VouDate,
+                Remark: main.Remark,
+                No: main.No,
+                PostFlag: main.PostFlag,
+                CRT_USR_No: main.CRT_USR_No,
+                CRT_Date: main.CRT_Date,
+                UPD_USR_No: main.UPD_USR_No,
+                UPD_Date: main.UPD_Date
+              });
+            } finally { if (!this.useReadonlyInsteadOfDisable) this.dataForm.disable(); }
+
+            const mainDetails = main._GLS6002List ?? [];
+            const details = (mainDetails || []).map((d: any) => ({
               ...d,
               ent_date: this.toIsoDateString(d.ent_date),
               perget_date: this.toIsoDateString(d.perget_date)
             }));
-            this.detailData = list;
-            this.totalRecords = resp.TotalCount ?? (this.detailData.length || 0);
-            this.detailFooterData = { ap_amt: resp.Data?.Total_AP_Amt };
-            this.editData = (list || []).map((d: any) => ({
-              ...d,
-              ORG_ID: d.org_id != null ? String(d.org_id) : d.org_id,
-              AccNo: d.accno != null ? String(d.accno) : d.accno,
-              NoteDesc: d.notedesc
-            }));
-          });
-      } else if (this.queryData === '應收') {
-        // 使用主查詢先取主檔與分錄（若主檔無明細再 fallback 到 GLS6004）
-        const mainReq = { id: this.rowdata?.id ?? 0, PageSize: 1, PageIndex: 1, SortBy: [] };
-        this.tls2c040Service.queryTLS2C040(mainReq)
-          .pipe(untilDestroyed(this), finalize(() => { this.loading = false; }))
-          .subscribe(response => {
-            const main = (response.Data && response.Data.length) ? response.Data[0] : null;
-            if (main) {
-              this.rowdata = main as any;
-              try {
-                if (this.dataForm.disabled) this.dataForm.enable();
-                this.dataForm.patchValue({
-                  VouNo: main.VouNo,
-                  VouType: main.VouType,
-                  SrcSheetType: main.SrcSheetType,
-                  VouDate: main.VouDate,
-                  Remark: main.Remark,
-                  No: main.No,
-                  PostFlag: main.PostFlag,
-                  CRT_USR_No: main.CRT_USR_No,
-                  CRT_Date: main.CRT_Date,
-                  UPD_USR_No: main.UPD_USR_No,
-                  UPD_Date: main.UPD_Date
-                });
-              } finally { if (!this.useReadonlyInsteadOfDisable) this.dataForm.disable(); }
 
-              const mainDetails = main._GLS6002List ?? [];
-              const details = (mainDetails || []).map((d: any) => ({
-                ...d,
-                ent_date: this.toIsoDateString(d.ent_date),
-                perget_date: this.toIsoDateString(d.perget_date)
-              }));
-
-              if (details.length) {
-                this.detailData = details;
-                this.totalRecords = details.length;
-                this.detailFooterData = [{ group_name: '總計', ar_amt: details.reduce((s: number, r: any) => s + (Number(r.ar_amt) || 0), 0) }];
-              } else {
-                const req = { id: this.rowdata.id, PageSize: 20, PageIndex: 0, SortBy: [] };
-                this.tls2c040Service.queryTLS2C040_GLS6004(req)
-                  .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-                  .subscribe(resp => {
-                    const list = (resp.Data._GLS6004List || []).map((d: any) => ({
-                      ...d,
-                      ent_date: this.toIsoDateString(d.ent_date),
-                      perget_date: this.toIsoDateString(d.perget_date)
-                    }));
-                    this.detailData = list;
-                    this.totalRecords = resp.TotalCount;
-                    this.detailFooterData = [{ group_name: '總計', ar_amt: resp.Data.Total_ar_amt }];
-                  });
-              }
+            if (details.length) {
+              this.detailData = details;
+              this.totalRecords = details.length;
+              this.detailFooterData = [{ group_name: '總計', ar_amt: details.reduce((s: number, r: any) => s + (Number(r.ar_amt) || 0), 0) }];
+            } else {
+              this.tls2c040Service.queryTLS2C040_GLS6004(this.rowdata).pipe(untilDestroyed(this)).subscribe(resp => {
+                const list = (resp.Data._GLS6004List || []).map((d: any) => ({
+                  ...d,
+                  ent_date: this.toIsoDateString(d.ent_date),
+                  perget_date: this.toIsoDateString(d.perget_date)
+                }));
+                this.detailData = list;
+                this.totalRecords = resp.TotalCount;
+                this.detailFooterData = [{ group_name: '總計', ar_amt: resp.Data.Total_ar_amt }];
+              });
             }
-          });
+          }
+        });
       } else {
         // 其他情況，使用主查詢以確保表單有主檔資料
-        const mainReq = { id: this.rowdata?.id ?? 0, PageSize: 1, PageIndex: 1, SortBy: [] };
-        this.tls2c040Service.queryTLS2C040(mainReq)
-          .pipe(untilDestroyed(this), finalize(() => { this.loading = false; }))
-          .subscribe(response => {
-            const main = (response.Data && response.Data.length) ? response.Data[0] : null;
-            if (main) {
-              this.rowdata = main as any;
-              try {
-                if (this.dataForm.disabled) this.dataForm.enable();
-                this.dataForm.patchValue({
-                  VouNo: main.VouNo,
-                  VouType: main.VouType,
-                  SrcSheetType: main.SrcSheetType,
-                  VouDate: main.VouDate,
-                  Remark: main.Remark,
-                  No: main.No,
-                  PostFlag: main.PostFlag,
-                  CRT_USR_No: main.CRT_USR_No,
-                  CRT_Date: main.CRT_Date,
-                  UPD_USR_No: main.UPD_USR_No,
-                  UPD_Date: main.UPD_Date
-                });
-              } finally { if (!this.useReadonlyInsteadOfDisable) this.dataForm.disable(); }
-            }
-          });
+        this.tls2c040Service.queryTLS2C040(this.rowdata).pipe(untilDestroyed(this)).subscribe(response => {
+          const main = (response.Data && response.Data.length) ? response.Data[0] : null;
+          if (main) {
+            this.rowdata = main as any;
+            try {
+              if (this.dataForm.disabled) this.dataForm.enable();
+              this.dataForm.patchValue({
+                VouNo: main.VouNo,
+                VouType: main.VouType,
+                SrcSheetType: main.SrcSheetType,
+                VouDate: main.VouDate,
+                Remark: main.Remark,
+                No: main.No,
+                PostFlag: main.PostFlag,
+                CRT_USR_No: main.CRT_USR_No,
+                CRT_Date: main.CRT_Date,
+                UPD_USR_No: main.UPD_USR_No,
+                UPD_Date: main.UPD_Date
+              });
+            } finally { if (!this.useReadonlyInsteadOfDisable) this.dataForm.disable(); }
+          }
+        });
       }
     }
   }
@@ -327,13 +235,11 @@ export class TLS55060CRUComponent extends BasicCruPageComponent<any> implements 
       SortBy: raw.SortBy ?? event.SortBy ?? []
     };
     this.loading = true;
-    this.tls2c040Service.queryTLS2C040_GLS6004(req)
-      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-      .subscribe(response => {
-        this.detailData = response.Data?._GLS6004List ?? [];
-        this.totalRecords = response.TotalCount ?? (this.detailData.length || 0);
-        this.detailFooterData = [{ group_name: '總計', ar_amt: response.Data?.Total_ar_amt }];
-      });
+    this.tls2c040Service.queryTLS2C040_GLS6004(req).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+      this.detailData = response.Data?._GLS6004List ?? [];
+      this.totalRecords = response.TotalCount ?? (this.detailData.length || 0);
+      this.detailFooterData = [{ group_name: '總計', ar_amt: response.Data?.Total_ar_amt }];
+    });
   }
 
   onSubmit(form: FormGroup): void {
@@ -355,20 +261,15 @@ export class TLS55060CRUComponent extends BasicCruPageComponent<any> implements 
         this.messageService.warnBubble(`第 ${build.invalidIndex + 1} 筆會計科目不可為空`);
         return;
       }
-
       const updateRequest = {
         id: this.rowdata.id,
         Remark: formValue.Remark || '',
         GLS6002List: build.list
       };
-
-      this.tls2c040Service.updateTLS2C040(updateRequest)
-        .pipe(untilDestroyed(this), finalize(() => { this.loading = false; this.messageService.unblockUi(); }))
-        .subscribe(() => {
-          this.messageService.successBubble('應付明細已更新');
-          this.onCancel();
-        });
-
+      this.tls2c040Service.updateTLS2C040(updateRequest).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(() => {
+        this.messageService.successBubble('應付明細已更新');
+        this.onCancel();
+      });
       return;
     }
 
@@ -381,7 +282,6 @@ export class TLS55060CRUComponent extends BasicCruPageComponent<any> implements 
           this.loading = false;
           return;
         }
-
         if (this.canEdit()) {
           const build = this.buildGLS6002List(this.editData);
           if (build.invalidIndex >= 0) {
@@ -389,19 +289,15 @@ export class TLS55060CRUComponent extends BasicCruPageComponent<any> implements 
             this.messageService.warnBubble(`第 ${build.invalidIndex + 1} 筆會計科目不可為空`);
             return;
           }
-
           const updateRequest = {
             id: this.rowdata.id,
             Remark: formValue.Remark || '',
             GLS6002List: build.list
           };
-
-          this.tls2c040Service.updateTLS2C040(updateRequest)
-            .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-            .subscribe(() => {
-              this.messageService.successBubble('修改成功');
-              this.onCancel();
-            });
+          this.tls2c040Service.updateTLS2C040(updateRequest).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(() => {
+            this.messageService.successBubble('修改成功');
+            this.onCancel();
+          });
         }
       }
       // 若為檢視且是 應付，使用 editData 送出更新（允許直接在檢視中修改應付明細）
@@ -418,13 +314,10 @@ export class TLS55060CRUComponent extends BasicCruPageComponent<any> implements 
           Remark: formValue.Remark || '',
           GLS6002List: build.list
         };
-
-        this.tls2c040Service.updateTLS2C040(updateRequest)
-          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-          .subscribe(() => {
-            this.messageService.successBubble('應付明細已更新');
-            this.onCancel();
-          });
+        this.tls2c040Service.updateTLS2C040(updateRequest).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(() => {
+          this.messageService.successBubble('應付明細已更新');
+          this.onCancel();
+        });
       }
     });
   }
@@ -440,13 +333,5 @@ export class TLS55060CRUComponent extends BasicCruPageComponent<any> implements 
 
     const invalidIndex = list.findIndex(item => item.AccNo === null || item.AccNo === undefined || String(item.AccNo).trim() === '');
     return { list, invalidIndex };
-  }
-
-  get totalDebitAmount() {
-    return this.editData.reduce((sum, item) => sum + (item.AccDC === 'D' ? item.AccAmt : 0), 0);
-  }
-
-  get totalCreditAmount() {
-    return this.editData.reduce((sum, item) => sum + (item.AccDC === 'C' ? item.AccAmt : 0), 0);
   }
 }
