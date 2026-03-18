@@ -1,148 +1,188 @@
 import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 
 /**
- * ASS13100 資產清點作業 - 查詢 Request
- *
- * 後端正式規格尚未定稿，欄位名稱先依業務語意與畫面命名，之後可再調整對應。
+ * ASS13100 資產清點作業 - 查詢 Request（API 規格）
  */
 export interface QueryASS13100Request extends BaseQueryRequest {
   /** 清點單號(起) */
-  InventoryNoFrom?: string | null;
+  CHK_ID_S?: string | null;
   /** 清點單號(迄) */
-  InventoryNoTo?: string | null;
+  CHK_ID_E?: string | null;
   /** 清點日期(起)，ISO 字串 */
-  InventoryDateFrom?: string | null;
+  CHK_DATE_S?: string | null;
   /** 清點日期(迄)，ISO 字串 */
-  InventoryDateTo?: string | null;
+  CHK_DATE_E?: string | null;
   /** 清點人代碼 */
-  InventoryPersonCode?: string | null;
+  CHK_EMP_ID?: string | null;
   /** 位置代碼 */
-  LocationCode?: string | null;
+  LOCATION_ID?: string | null;
   /** 清點單狀態 */
-  InventoryStatus?: string | null;
+  STATUS?: string | null;
   /** 清點狀態(資料) */
-  InventoryDataStatus?: string | null;
+  CHK_STATUS?: string | null;
   /** 說明 */
-  Remark?: string | null;
+  NOTES?: string | null;
 }
 
 /**
- * ASS13100 查詢結果列
+ * ASS13100 查詢結果列（API 規格）
  */
 export interface ASS13100QueryRow {
+  /** 序號 */
+  SeqNo?: number;
+  /** 主檔 ID */
+  ID?: number;
   /** 清點單號 */
-  InventoryNo?: string;
+  CHK_ID?: string;
   /** 清點日期 */
-  InventoryDate?: string | Date;
+  CHK_DATE?: string;
   /** 清點人代碼 */
-  InventoryPersonCode?: string;
+  FIRST_CHK_EMP_ID?: string;
   /** 清點單狀態代碼 */
-  InventoryStatus?: string;
+  STATUS?: string;
   /** 清點單狀態名稱 */
-  InventoryStatusName?: string;
+  STATUS_NAME?: string;
   [key: string]: unknown;
 }
 
 /**
- * 新增頁：單位/人員清點設定明細列
+ * 新增 API - GenList 單筆
+ */
+export interface InsertASS13100GenListItem {
+  ORG_ID?: string | null;
+  EMP_ID?: string | null;
+  CHK_EMP_ID?: string | null;
+  CHK_EMP_ID2?: string | null;
+}
+
+/**
+ * 新增清點單 Request（API 規格）
+ */
+export interface InsertASS13100Request {
+  /** 欄位說明 */
+  COL_NOTES?: string | null;
+  /** 清點日期，ISO 字串 */
+  CHK_DATE: string;
+  /** 是否直接帶入全部部門 */
+  AllOrg: boolean;
+  /** 單位/人員清點設定明細 */
+  GenList: InsertASS13100GenListItem[];
+}
+
+/**
+ * 新增清點單 Response Data（API 規格）
+ */
+export interface InsertASS13100ResponseData {
+  /** 產生的清點單號 */
+  CHK_ID: string;
+  FAASSCHECKM_ID: number;
+  ErrCode: number;
+  ErrMsg: string;
+}
+
+/**
+ * 新增頁：單位/人員清點設定明細列（前端表單用，送出時對應為 GenList）
  */
 export type InventoryGenerateMode = 'KEEPER_ORG' | 'USER_ORG' | 'KEEPER_EMP' | 'USER_EMP';
 
 export interface ASS13100GenerateUnitRow {
-  /** 部門代碼（單位清點時必填） */
+  /** 部門代碼（單位清點時必填）→ ORG_ID */
   Org_ID?: string | null;
   /** 部門名稱（顯示用） */
   Org_Name?: string | null;
-  /** 員工代碼（人員清點時必填） */
+  /** 員工代碼（人員清點時必填）→ EMP_ID */
   Emp_ID?: string | null;
   /** 員工姓名（顯示用） */
   Emp_Name?: string | null;
-  /** 清點員工代碼1（必填） */
+  /** 清點員工代碼1（必填）→ CHK_EMP_ID */
   InventoryEmp_ID_1?: string | null;
-  /** 清點員工代碼2（必填） */
+  /** 清點員工代碼2（必填）→ CHK_EMP_ID2 */
   InventoryEmp_ID_2?: string | null;
 }
 
 /**
- * 新增清點單 Request
- */
-export interface ASS13100GenerateRequest {
-  /** 清點產生方式 */
-  Mode: InventoryGenerateMode;
-  /** 是否直接帶入全部部門（僅單位清點時使用） */
-  IncludeAllOrg?: boolean;
-  /** 所屬部門（人員清點時必填，用來篩選員工清單） */
-  ParentOrg_ID?: string | null;
-  /** 單位/人員清點設定明細 */
-  Units: ASS13100GenerateUnitRow[];
-}
-
-/**
- * 新增清點單 Response
- */
-export interface ASS13100GenerateResponse {
-  /** 產生的清點單號 */
-  InventoryNo: string;
-}
-
-/**
- * 編輯/明細頁：清點單明細列
+ * 編輯/明細頁：清點單明細列（與更新 API Items 對齊）
  */
 export interface ASS13100DetailRow {
-  /** 財產編號（唯讀） */
-  AssetNo: string;
-  /** 資產代號（唯讀） */
-  AssetCode: string;
-  /** 品項編號（唯讀） */
-  ItemNo: string;
-  /** 資產狀態(清點後) */
-  InventoryAssetStatus?: string | null;
+  /** 明細 ID（必填，更新時使用） */
+  ID?: number;
+  /** 清點狀態(資料) */
+  CHK_STATUS?: string | null;
   /** 位置代碼 */
-  LocationCode?: string | null;
+  LOCATION_ID?: string | null;
   /** 註記 */
-  Remark?: string | null;
+  NOTES?: string | null;
+  /** 財產編號（唯讀，顯示用，後端若有則保留） */
+  AssetNo?: string | null;
+  /** 資產代號（唯讀，顯示用） */
+  AssetCode?: string | null;
+  /** 品項編號（唯讀，顯示用） */
+  ItemNo?: string | null;
   [key: string]: unknown;
 }
 
 /**
- * 單筆清點單主檔 + 明細
+ * 單筆清點單主檔 + 明細（detail API 若有）
  */
 export interface ASS13100DetailResponse {
   /** 清點單號 */
-  InventoryNo: string;
-  /** 其他主檔欄位可依後端規格再補充 */
+  CHK_ID?: string;
+  /** 主檔 ID */
+  ID?: number;
+  /** 清點日期（供表單顯示/更新） */
+  CHK_DATE?: string;
+  /** 清點單狀態（供表單顯示/更新） */
+  STATUS?: string;
+  /** 明細列 */
   Details: ASS13100DetailRow[];
 }
 
 /**
- * 更新清點單 Request（確認按鈕）
+ * 更新清點單 Request - Items 單筆（API 規格）
+ */
+export interface ASS13100UpdateItem {
+  ID: number;
+  CHK_STATUS?: string | null;
+  LOCATION_ID?: string | null;
+  NOTES?: string | null;
+}
+
+/**
+ * 更新清點單 Request（API 規格）
  */
 export interface ASS13100UpdateRequest {
-  InventoryNo: string;
-  Details: ASS13100DetailRow[];
+  /** 主檔 ID */
+  ID: number;
+  /** 清點日期，ISO 字串 */
+  CHK_DATE: string;
+  /** 清點單狀態 */
+  STATUS: string;
+  /** 明細列 */
+  Items: ASS13100UpdateItem[];
 }
 
 /**
- * 刪除清點單 Request（查詢頁多筆刪除）
+ * 刪除清點單 Request（API 規格）
  */
 export interface ASS13100DeleteRequest {
-  InventoryNoList: string[];
+  /** 主檔 ID 陣列 */
+  Ids: number[];
 }
 
 /**
- * 結案 Request（結案按鈕）
+ * 結案 Request（API 規格 approveASS13100）
  */
-export interface ASS13100CloseRequest {
-  InventoryNo: string;
+export interface ASS13100ApproveRequest {
+  /** 主檔 ID */
+  ID: number;
 }
 
 /**
- * 列印盤點表 Request
+ * 匯出資產清點作業 PDF Request（API 規格 exportPDFASS13100）
  */
-export interface ASS13100PrintRequest {
+export interface ASS13100ExportPDFRequest {
   /** 清點單號(起) */
-  InventoryNoFrom: string;
+  CHK_ID_S: string;
   /** 清點單號(迄) */
-  InventoryNoTo: string;
+  CHK_ID_E: string;
 }
-

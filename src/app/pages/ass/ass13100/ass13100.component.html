@@ -20,27 +20,27 @@
           <app-input-text-range
             class="col-12 md:col-6 lg:col-4"
             label="清點單號"
-            [startControl]="queryForm.controls.InventoryNoFrom"
-            [endControl]="queryForm.controls.InventoryNoTo"
+            [startControl]="queryForm.controls.CHK_ID_S"
+            [endControl]="queryForm.controls.CHK_ID_E"
             [submitted]="submitted"
           ></app-input-text-range>
 
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="清點日期"
-            [startControl]="queryForm.controls.InventoryDateFrom"
-            [endControl]="queryForm.controls.InventoryDateTo"
+            [startControl]="queryForm.controls.CHK_DATE_S"
+            [endControl]="queryForm.controls.CHK_DATE_E"
             [submitted]="submitted"
           ></app-calendar-range-quick>
 
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="清點人代碼"
-            controlName="InventoryPersonCode"
+            controlName="CHK_EMP_ID"
             [options]="inventoryPersonOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="queryForm.controls.InventoryPersonCode"
+            [control]="queryForm.controls.CHK_EMP_ID"
             [submitted]="submitted"
           ></app-dropdown>
         </div>
@@ -49,33 +49,33 @@
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="位置代碼"
-            controlName="LocationCode"
+            controlName="LOCATION_ID"
             [options]="locationOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="queryForm.controls.LocationCode"
+            [control]="queryForm.controls.LOCATION_ID"
             [submitted]="submitted"
           ></app-dropdown>
 
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="清點單狀態"
-            controlName="InventoryStatus"
+            controlName="STATUS"
             [options]="inventoryStatusOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="queryForm.controls.InventoryStatus"
+            [control]="queryForm.controls.STATUS"
             [submitted]="submitted"
           ></app-dropdown>
 
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="清點狀態(資料)"
-            controlName="InventoryDataStatus"
+            controlName="CHK_STATUS"
             [options]="inventoryDataStatusOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="queryForm.controls.InventoryDataStatus"
+            [control]="queryForm.controls.CHK_STATUS"
             [submitted]="submitted"
           ></app-dropdown>
         </div>
@@ -84,8 +84,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="說明"
-              controlName="Remark"
-              [control]="queryForm.controls.Remark"
+              controlName="NOTES"
+              [control]="queryForm.controls.NOTES"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -109,7 +109,7 @@
       [data]="data"
       [columns]="columns"
       [totalRecords]="totalRecords"
-      dataKey="InventoryNo"
+      dataKey="ID"
       [queryFunction]="service.queryASS13100.bind(service)"
       [lastQueryBody]="lastQueryBody"
       [loading]="loading"
@@ -127,13 +127,13 @@
             label="上傳盤點機檔案"
             icon="pi pi-upload"
             (click)="openUploadDialog()"
-            [disabled]="!hasInventoryRange || loading"
+            [disabled]="loading"
           ></p-button>
           <p-button
             label="列印盤點表"
             icon="pi pi-file"
             (click)="onPrintInventoryReport()"
-            [disabled]="!hasInventoryRange || loading"
+            [disabled]="loading"
           ></p-button>
         </div>
       </header>

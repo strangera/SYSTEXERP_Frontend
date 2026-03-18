@@ -83,6 +83,20 @@
               [control]="generateForm.controls.ParentOrg_ID"
             ></app-dropdown>
           </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              label="清點日期"
+              [control]="generateForm.controls.CHK_DATE"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="欄位說明"
+              controlName="COL_NOTES"
+              [control]="generateForm.controls.COL_NOTES"
+            ></app-input-text>
+          </div>
         </div>
 
         <h3 class="text-lg mt-4 mb-2">單位/人員清點設定</h3>
@@ -123,11 +137,27 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="清點單號"
-              controlName="InventoryNo"
-              [control]="dataForm.controls.InventoryNo"
+              controlName="CHK_ID"
+              [control]="dataForm.controls.CHK_ID"
               [submitted]="submitted"
               [disabled]="true"
             ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              label="清點日期"
+              [control]="dataForm.controls.CHK_DATE"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="清點單狀態"
+              controlName="STATUS"
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.STATUS"
+            ></app-dropdown>
           </div>
         </div>
 

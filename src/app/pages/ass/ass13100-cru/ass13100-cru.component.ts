@@ -8,6 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
@@ -19,8 +20,9 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { finalize } from 'rxjs/operators';
 import {
   ASS13100DetailRow,
-  ASS13100GenerateRequest,
   ASS13100GenerateUnitRow,
+  ASS13100UpdateItem,
+  InsertASS13100Request,
   InventoryGenerateMode,
 } from '../ass13100/ass13100.model';
 
@@ -40,35 +42,42 @@ import {
     InputTextComponent,
     TableEditComponent,
     DropdownComponent,
+    CalendarComponent,
     RadioButtonModule,
     CheckboxModule,
   ],
 })
 export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRow> implements OnInit {
-  /** 固定欄位 Form（目前僅清點單號） */
+  /** 編輯/明細用主檔 Form（清點單號、清點日期、狀態，供更新 API 使用） */
   readonly dataForm = this.formBuilder.group({
-    InventoryNo: new FormControl<string | null>({ value: null, disabled: true }),
+    CHK_ID: new FormControl<string | null>({ value: null, disabled: true }),
+    CHK_DATE: new FormControl<Date | null>(null),
+    STATUS: new FormControl<string | null>(null),
   });
 
   /** 編輯/明細用清點明細資料 */
   detailRows: ASS13100DetailRow[] = [];
   private originalDetailRows: ASS13100DetailRow[] = [];
-  inventoryAssetStatusOptions: { label: string; value: string }[] = [];
+  /** 主檔 ID（來自 rowdata 或 detail 回傳，供更新/結案使用） */
+  private mainIdFromDetail: number | null = null;
+  chkStatusOptions: { label: string; value: string }[] = [];
+  statusOptions: { label: string; value: string }[] = [];
   locationOptions: { label: string; value: string }[] = [];
   detailColumns: EditColumn[] = [
+    { field: 'ID', header: 'ID', type: 'input', disabled: () => true },
     { field: 'AssetNo', header: '財產編號', type: 'input', disabled: () => true },
     { field: 'AssetCode', header: '資產代號', type: 'input', disabled: () => true },
     { field: 'ItemNo', header: '品項編號', type: 'input', disabled: () => true },
     {
-      field: 'InventoryAssetStatus',
+      field: 'CHK_STATUS',
       header: '資產狀態(清點後)',
       type: 'dropdown',
       optionLabel: 'label',
       optionValue: 'value',
-      options: () => this.inventoryAssetStatusOptions,
+      options: () => this.chkStatusOptions,
     },
     {
-      field: 'LocationCode',
+      field: 'LOCATION_ID',
       header: '位置代碼',
       type: 'dropdown',
       optionLabel: 'label',
@@ -76,7 +85,7 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
       options: () => this.locationOptions,
     },
     {
-      field: 'Remark',
+      field: 'NOTES',
       header: '註記',
       type: 'input',
     },
@@ -84,14 +93,16 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
 
   /** 是否為新增模式（僅新增時顯示新增 panel） */
   get isCreateMode(): boolean {
-    return this.crudstatus === CRUDStatus.Create && !(this.rowdata as { InventoryNo?: string } | null)?.InventoryNo;
+    return this.crudstatus === CRUDStatus.Create && !(this.rowdata as { CHK_ID?: string } | null)?.CHK_ID;
   }
 
-  /** 新增模式：產生方式與條件表單 */
+  /** 新增模式：產生方式與條件表單（含 API 欄位 COL_NOTES、CHK_DATE、AllOrg） */
   readonly generateForm = this.formBuilder.group({
     Mode: new FormControl<InventoryGenerateMode>('KEEPER_ORG'),
     IncludeAllOrg: new FormControl<boolean>(false),
     ParentOrg_ID: new FormControl<string | null>(null),
+    COL_NOTES: new FormControl<string | null>(null),
+    CHK_DATE: new FormControl<Date | null>(null),
   });
 
   /** 新增模式：單位/人員清點設定表格 */
@@ -105,9 +116,9 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
   private previousGenerateMode: InventoryGenerateMode = 'KEEPER_ORG';
   displayGenerateMode: InventoryGenerateMode = 'KEEPER_ORG';
 
-  /** 是否存在尚未填寫資產狀態的明細，用於控制「結案」按鈕 disabled 狀態 */
+  /** 是否存在尚未填寫清點狀態的明細，用於控制「結案」按鈕 disabled 狀態 */
   get hasRowWithEmptyStatus(): boolean {
-    return this.detailRows.some(row => !row.InventoryAssetStatus);
+    return this.detailRows.some(row => !row.CHK_STATUS);
   }
 
   constructor(
@@ -122,7 +133,7 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
     this.dropdownApi
       .querySys1000({ SYS_Type: 'CHK_STATUS' } as Sys1000Query)
       ?.subscribe((list: IDropdownItem[] | null) => {
-        this.inventoryAssetStatusOptions = (list ?? []).map(x => ({
+        this.chkStatusOptions = (list ?? []).map(x => ({
           label: x.Name,
           value: x.No,
         }));
@@ -136,18 +147,31 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
           value: x.No,
         }));
       });
+    this.dropdownApi
+      .querySys1000({ SYS_Type: 'ASSET_CHK_STATUS' } as Sys1000Query)
+      ?.subscribe((list: IDropdownItem[] | null) => {
+        this.statusOptions = (list ?? []).map(x => ({
+          label: x.Name,
+          value: x.No,
+        }));
+      });
   }
 
   ngOnInit(): void {
     this.initializePage('ASS13100', this.dataForm);
 
-    const inventoryNo = (this.rowdata as { InventoryNo?: string } | null | undefined)?.InventoryNo;
+    const row = this.rowdata as { CHK_ID?: string; ID?: number; CHK_DATE?: string; STATUS?: string } | null | undefined;
+    const chkId = row?.CHK_ID;
 
-    if (inventoryNo) {
+    if (chkId) {
       // 編輯/明細：有清點單號，載入明細
-      this.dataForm.patchValue({ InventoryNo: inventoryNo });
+      this.dataForm.patchValue({
+        CHK_ID: chkId,
+        CHK_DATE: row?.CHK_DATE ? new Date(row.CHK_DATE) : null,
+        STATUS: row?.STATUS ?? null,
+      });
       this.loadDetailDropdowns();
-      this.loadDetail(inventoryNo);
+      this.loadDetail(chkId);
     } else if (this.crudstatus === CRUDStatus.Create) {
       // 新增模式：顯示新增 panel，不導回查詢頁
       this.loadCreatePanelDropdowns();
@@ -173,6 +197,15 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
       // 無清點單號且非新增（異常），導回查詢頁
       this.router.navigate(['account/ass/ass13100']);
     }
+  }
+
+  /** 取得主檔 ID（rowdata 來自查詢列或新增成功後 state；或 detail 載入後寫入 mainIdFromDetail） */
+  private get mainId(): number | null {
+    const fromRow = (this.rowdata as { ID?: number } | null | undefined)?.ID;
+    if (fromRow != null && typeof fromRow === 'number') {
+      return fromRow;
+    }
+    return this.mainIdFromDetail;
   }
 
   /** 載入新增 panel 下拉選項 */
@@ -292,18 +325,29 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
 
   /** 新增模式：產生清點單（呼叫新增 API） */
   onGenerateInventory(): void {
-    const raw = this.generateForm.getRawValue();
-    const body: ASS13100GenerateRequest = {
-      Mode: raw.Mode ?? 'KEEPER_ORG',
-      IncludeAllOrg: raw.IncludeAllOrg ?? false,
-      ParentOrg_ID: raw.ParentOrg_ID ?? null,
-      Units: this.generateRows,
-    };
-
-    if (!body.Units.length) {
+    if (!this.generateRows.length) {
       this.messageService.warnBubble('請先新增至少一筆單位/人員清點設定');
       return;
     }
+
+    const raw = this.generateForm.getRawValue();
+    const chkDate = raw.CHK_DATE;
+    if (!chkDate) {
+      this.messageService.warnBubble('請選擇清點日期');
+      return;
+    }
+
+    const body: InsertASS13100Request = {
+      COL_NOTES: raw.COL_NOTES ?? null,
+      CHK_DATE: chkDate.toISOString(),
+      AllOrg: raw.IncludeAllOrg ?? false,
+      GenList: this.generateRows.map(r => ({
+        ORG_ID: r.Org_ID ?? null,
+        EMP_ID: r.Emp_ID ?? null,
+        CHK_EMP_ID: r.InventoryEmp_ID_1 ?? null,
+        CHK_EMP_ID2: r.InventoryEmp_ID_2 ?? null,
+      })),
+    };
 
     this.loading = true;
     this.service
@@ -311,15 +355,16 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(res => {
         if (res?.Status === '0000' && res.Data) {
-          const inventoryNo = res.Data.InventoryNo;
+          const chkId = res.Data.CHK_ID;
+          const id = res.Data.FAASSCHECKM_ID;
           this.messageService.confirm({
             header: '清點單產生完成',
-            message: `清點單號：${inventoryNo}`,
+            message: `清點單號：${chkId}`,
             acceptLabel: '前往明細',
             rejectLabel: '關閉',
             accept: () => {
               this.router.navigate(['account/ass/ass13100'], {
-                state: { openDetailInventoryNo: inventoryNo },
+                state: { openDetailCHK_ID: chkId, openDetailID: id },
               });
             },
             reject: () => {
@@ -327,20 +372,29 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
             },
           });
         } else {
-          this.messageService.errorBubble(res?.Message ?? '產生清點單失敗');
+          this.messageService.errorBubble(res?.Message ?? res?.Data?.ErrMsg ?? '產生清點單失敗');
         }
       });
   }
 
   /** 載入清點單明細 */
-  private loadDetail(inventoryNo: string): void {
+  private loadDetail(chkId: string): void {
     this.loading = true;
+    this.mainIdFromDetail = null;
     this.service
-      .detailASS13100(inventoryNo)
+      .detailASS13100(chkId)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(res => {
         if (res?.Status === '0000' && res.Data) {
           this.detailRows = res.Data.Details ?? [];
+          this.dataForm.patchValue({
+            CHK_ID: res.Data.CHK_ID ?? this.dataForm.getRawValue().CHK_ID,
+            CHK_DATE: res.Data.CHK_DATE ? new Date(res.Data.CHK_DATE) : this.dataForm.getRawValue().CHK_DATE,
+            STATUS: res.Data.STATUS ?? this.dataForm.getRawValue().STATUS,
+          });
+          if (res.Data.ID != null) {
+            this.mainIdFromDetail = res.Data.ID;
+          }
           this.originalDetailRows = JSON.parse(JSON.stringify(this.detailRows));
         } else {
           this.detailRows = [];
@@ -356,17 +410,36 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
 
   /** 確認：呼叫修改 API */
   onConfirm(): void {
-    const inventoryNo = this.dataForm.getRawValue().InventoryNo;
-    if (!inventoryNo) {
-      this.messageService.errorBubble('缺少清點單號，無法儲存');
+    const id = this.mainId;
+    if (id == null) {
+      this.messageService.errorBubble('缺少主檔 ID，無法儲存');
       return;
     }
+
+    const raw = this.dataForm.getRawValue();
+    const chkDate = raw.CHK_DATE;
+    const status = raw.STATUS ?? '';
+    if (!chkDate) {
+      this.messageService.warnBubble('請選擇清點日期');
+      return;
+    }
+
+    const items: ASS13100UpdateItem[] = this.detailRows
+      .filter(r => r.ID != null && typeof r.ID === 'number')
+      .map(r => ({
+        ID: r.ID as number,
+        CHK_STATUS: r.CHK_STATUS ?? null,
+        LOCATION_ID: r.LOCATION_ID ?? null,
+        NOTES: r.NOTES ?? null,
+      }));
 
     this.loading = true;
     this.service
       .updateASS13100({
-        InventoryNo: inventoryNo,
-        Details: this.detailRows,
+        ID: id,
+        CHK_DATE: chkDate.toISOString(),
+        STATUS: status,
+        Items: items,
       })
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(res => {
@@ -379,17 +452,17 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
       });
   }
 
-  /** 結案：所有明細資產狀態都需有值 */
+  /** 結案：所有明細清點狀態都需有值，呼叫 approveASS13100 */
   onClose(): void {
-    const hasEmptyStatus = this.detailRows.some(x => !x.InventoryAssetStatus);
+    const hasEmptyStatus = this.detailRows.some(x => !x.CHK_STATUS);
     if (hasEmptyStatus) {
-      this.messageService.warnBubble('仍有明細資產狀態未填寫，無法結案');
+      this.messageService.warnBubble('仍有明細清點狀態未填寫，無法結案');
       return;
     }
 
-    const inventoryNo = this.dataForm.getRawValue().InventoryNo;
-    if (!inventoryNo) {
-      this.messageService.errorBubble('缺少清點單號，無法結案');
+    const id = this.mainId;
+    if (id == null) {
+      this.messageService.errorBubble('缺少主檔 ID，無法結案');
       return;
     }
 
@@ -399,11 +472,12 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
       accept: () => {
         this.loading = true;
         this.service
-          .closeASS13100({ InventoryNo: inventoryNo })
+          .approveASS13100({ ID: id })
           .pipe(finalize(() => (this.loading = false)))
           .subscribe(res => {
             if (res?.Status === '0000') {
               this.messageService.successBubble('結案成功');
+              this.onCancel();
             } else {
               this.messageService.errorBubble(res?.Message ?? '結案失敗');
             }

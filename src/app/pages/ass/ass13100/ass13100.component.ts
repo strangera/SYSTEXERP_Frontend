@@ -24,7 +24,11 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs/operators';
-import { ASS13100PrintRequest, ASS13100QueryRow, QueryASS13100Request } from './ass13100.model';
+import {
+  ASS13100ExportPDFRequest,
+  ASS13100QueryRow,
+  QueryASS13100Request,
+} from './ass13100.model';
 
 // 3.1.3.10 資產清點作業
 @Component({
@@ -53,17 +57,17 @@ import { ASS13100PrintRequest, ASS13100QueryRow, QueryASS13100Request } from './
 export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow> implements OnInit {
   @ViewChild(FileUploadComponent) fileUpload?: FileUploadComponent;
 
-  /** 查詢條件 Form */
+  /** 查詢條件 Form（API 欄位：CHK_ID_S/E, CHK_DATE_S/E, CHK_EMP_ID, LOCATION_ID, STATUS, CHK_STATUS, NOTES） */
   readonly queryForm = this.formBuilder.group({
-    InventoryNoFrom: new FormControl<string | null>(null),
-    InventoryNoTo: new FormControl<string | null>(null),
-    InventoryDateFrom: new FormControl<Date | null>(null),
-    InventoryDateTo: new FormControl<Date | null>(null),
-    InventoryPersonCode: new FormControl<string | null>(null),
-    LocationCode: new FormControl<string | null>(null),
-    InventoryStatus: new FormControl<string | null>(null),
-    InventoryDataStatus: new FormControl<string | null>(null),
-    Remark: new FormControl<string | null>(null),
+    CHK_ID_S: new FormControl<string | null>(null),
+    CHK_ID_E: new FormControl<string | null>(null),
+    CHK_DATE_S: new FormControl<Date | null>(null),
+    CHK_DATE_E: new FormControl<Date | null>(null),
+    CHK_EMP_ID: new FormControl<string | null>(null),
+    LOCATION_ID: new FormControl<string | null>(null),
+    STATUS: new FormControl<string | null>(null),
+    CHK_STATUS: new FormControl<string | null>(null),
+    NOTES: new FormControl<string | null>(null),
     pageSize: new FormControl<number>(30),
     pageIndex: new FormControl<number>(1),
   });
@@ -78,10 +82,11 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
   data: ASS13100QueryRow[] = [];
   totalRecords = 0;
   columns: ReportColumn[] = [
-    { field: 'InventoryNo', header: '清點單號' },
-    { field: 'InventoryDate', header: '清點日期' },
-    { field: 'InventoryPersonCode', header: '清點人代碼' },
-    { field: 'InventoryStatusName', header: '清點單狀態' },
+    { field: 'SeqNo', header: '序號' },
+    { field: 'CHK_ID', header: '清點單號' },
+    { field: 'CHK_DATE', header: '清點日期' },
+    { field: 'FIRST_CHK_EMP_ID', header: '清點人代碼' },
+    { field: 'STATUS_NAME', header: '清點單狀態' },
   ];
   lastQueryBody?: QueryASS13100Request;
   selectedItems: ASS13100QueryRow[] = [];
@@ -92,8 +97,8 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
 
   /** 查詢條件是否已完整輸入清點單號起迄 */
   get hasInventoryRange(): boolean {
-    const from = (this.queryForm.controls.InventoryNoFrom.value ?? '').toString().trim();
-    const to = (this.queryForm.controls.InventoryNoTo.value ?? '').toString().trim();
+    const from = (this.queryForm.controls.CHK_ID_S.value ?? '').toString().trim();
+    const to = (this.queryForm.controls.CHK_ID_E.value ?? '').toString().trim();
     return !!from && !!to;
   }
 
@@ -109,11 +114,19 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
     this.initializePage('ASS13100', 'ass/ass13100cru', this.queryForm, frm => this.onSubmit(frm));
     this.loadDropdowns();
 
-    // CRU 產生成功選「前往明細」時會先導向本頁並帶 openDetailInventoryNo，再導向 CRU 明細
-    const state = this.router.lastSuccessfulNavigation?.extras?.state as { openDetailInventoryNo?: string } | undefined;
-    const openDetailInventoryNo = state?.openDetailInventoryNo;
-    if (openDetailInventoryNo) {
-      this.navigateWithState(CRUDStatus.Read, { InventoryNo: openDetailInventoryNo } as ASS13100QueryRow, this.queryForm.getRawValue());
+    // CRU 產生成功選「前往明細」時會先導向本頁並帶 openDetailCHK_ID / openDetailID，再導向 CRU 明細
+    const state = this.router.lastSuccessfulNavigation?.extras?.state as {
+      openDetailCHK_ID?: string;
+      openDetailID?: number;
+    } | undefined;
+    const chkId = state?.openDetailCHK_ID;
+    const id = state?.openDetailID;
+    if (chkId != null) {
+      this.navigateWithState(
+        CRUDStatus.Read,
+        { CHK_ID: chkId, ID: id } as ASS13100QueryRow,
+        this.queryForm.getRawValue()
+      );
     }
   }
 
@@ -173,15 +186,15 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
       const body: QueryASS13100Request = {
         PageSize: raw.pageSize ?? 30,
         PageIndex: raw.pageIndex ?? 1,
-        InventoryNoFrom: raw.InventoryNoFrom ?? null,
-        InventoryNoTo: raw.InventoryNoTo ?? null,
-        InventoryDateFrom: raw.InventoryDateFrom ? raw.InventoryDateFrom.toISOString() : null,
-        InventoryDateTo: raw.InventoryDateTo ? raw.InventoryDateTo.toISOString() : null,
-        InventoryPersonCode: raw.InventoryPersonCode ?? null,
-        LocationCode: raw.LocationCode ?? null,
-        InventoryStatus: raw.InventoryStatus ?? null,
-        InventoryDataStatus: raw.InventoryDataStatus ?? null,
-        Remark: raw.Remark ?? null,
+        CHK_ID_S: raw.CHK_ID_S ?? null,
+        CHK_ID_E: raw.CHK_ID_E ?? null,
+        CHK_DATE_S: raw.CHK_DATE_S ? raw.CHK_DATE_S.toISOString() : null,
+        CHK_DATE_E: raw.CHK_DATE_E ? raw.CHK_DATE_E.toISOString() : null,
+        CHK_EMP_ID: raw.CHK_EMP_ID ?? null,
+        LOCATION_ID: raw.LOCATION_ID ?? null,
+        STATUS: raw.STATUS ?? null,
+        CHK_STATUS: raw.CHK_STATUS ?? null,
+        NOTES: raw.NOTES ?? null,
       };
 
       this.lastQueryBody = body;
@@ -210,30 +223,28 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
       return;
     }
 
-    const inventoryNoList = items
-      .map(x => x.InventoryNo)
-      .filter((x): x is string => !!x);
+    const ids = items
+      .map(x => x.ID)
+      .filter((x): x is number => x != null && typeof x === 'number');
 
-    if (!inventoryNoList.length) {
-      this.messageService.warnBubble('選取的資料缺少清點單號，無法刪除');
+    if (!ids.length) {
+      this.messageService.warnBubble('選取的資料缺少 ID，無法刪除');
       return;
     }
 
     this.messageService.confirm({
       header: '確認刪除',
-      message: `是否確認刪除 ${inventoryNoList.length} 筆清點單？`,
+      message: `是否確認刪除 ${ids.length} 筆清點單？`,
       accept: () => {
         this.loading = true;
         this.service
-          .deleteASS13100({ InventoryNoList: inventoryNoList })
+          .deleteASS13100({ Ids: ids })
           .pipe(finalize(() => (this.loading = false)))
           .subscribe(res => {
             if (res?.Status === '0000') {
               this.messageService.successBubble('刪除成功');
               this.selectedItems = [];
               this.onSubmit(this.queryForm);
-            } else {
-              this.messageService.errorBubble(res?.Message ?? '刪除失敗');
             }
           });
       },
@@ -259,10 +270,10 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
     }
 
     const raw = this.queryForm.getRawValue();
-    const inventoryNoFrom = (raw.InventoryNoFrom ?? '').toString().trim();
-    const inventoryNoTo = (raw.InventoryNoTo ?? '').toString().trim();
+    const chkIdS = (raw.CHK_ID_S ?? '').toString().trim();
+    const chkIdE = (raw.CHK_ID_E ?? '').toString().trim();
 
-    if (!inventoryNoFrom || !inventoryNoTo) {
+    if (!chkIdS || !chkIdE) {
       this.messageService.warnBubble('請先輸入清點單號起迄');
       return;
     }
@@ -271,7 +282,7 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
 
     this.uploading = true;
     this.service
-      .uploadASS13100DeviceFile(file, inventoryNoFrom, inventoryNoTo)
+      .uploadASS13100DeviceFile(file, chkIdS, chkIdE)
       .pipe(finalize(() => (this.uploading = false)))
       .subscribe({
         next: res => {
@@ -280,13 +291,7 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
             this.messageService.successBubble(message);
             this.uploadDialogVisible = false;
             this.fileUpload?.clearFiles();
-          } else {
-            const message = (res as { Message?: string } | null | undefined)?.Message ?? '上傳失敗';
-            this.messageService.errorBubble(message);
           }
-        },
-        error: () => {
-          this.messageService.errorBubble('上傳失敗（網路或伺服器錯誤）');
         },
       });
   }
@@ -298,25 +303,25 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
     this.fileUpload?.clearFiles();
   }
 
-  /** 列印盤點表 */
+  /** 匯出資產清點作業 PDF */
   onPrintInventoryReport(): void {
     const raw = this.queryForm.getRawValue();
-    const inventoryNoFrom = (raw.InventoryNoFrom ?? '').toString().trim();
-    const inventoryNoTo = (raw.InventoryNoTo ?? '').toString().trim();
+    const chkIdS = (raw.CHK_ID_S ?? '').toString().trim();
+    const chkIdE = (raw.CHK_ID_E ?? '').toString().trim();
 
-    if (!inventoryNoFrom || !inventoryNoTo) {
+    if (!chkIdS || !chkIdE) {
       this.messageService.warnBubble('請先輸入清點單號起迄');
       return;
     }
 
-    const body: ASS13100PrintRequest = {
-      InventoryNoFrom: inventoryNoFrom,
-      InventoryNoTo: inventoryNoTo,
+    const body: ASS13100ExportPDFRequest = {
+      CHK_ID_S: chkIdS,
+      CHK_ID_E: chkIdE,
     };
 
     this.loading = true;
     this.service
-      .printASS13100(body)
+      .exportPDFASS13100(body)
       .pipe(finalize(() => (this.loading = false)))
       .subscribe({
         next: (response: HttpResponse<Blob>) => {
@@ -333,12 +338,7 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-          } else {
-            this.messageService.errorBubble('盤點表列印失敗');
           }
-        },
-        error: () => {
-          this.messageService.errorBubble('盤點表列印失敗');
         },
       });
   }
