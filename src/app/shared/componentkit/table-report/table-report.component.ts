@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, TemplateRef, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
@@ -57,6 +57,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) };
   @Input() isAllSelected = false;           // 是否全選
   @Output() dataChange = new EventEmitter<any[]>();  // 用來儲存查詢結果
+  @Input() customTemplates: Record<string, TemplateRef<any>> = {};/** 接收外部傳入的自定義模板物件，Key 為 field 名稱 */
   // Header 相關
   @Input() showCaption = true;            // 是否顯示 Caption
   @Input() showSort = true;              // 是否顯示 排序
@@ -267,6 +268,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     });
   }
   customSort(event: TableQueryPayload) {
+    if (!event.multiSortMeta) return;
+
+    // 1. 原地排序
     this.data.sort((data1, data2) => {
       for (const sortMeta of event.multiSortMeta!) {
         const value1 = data1[sortMeta.field];
@@ -280,17 +284,26 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         else
           result = value1 < value2 ? -1 : value1 > value2 ? 1 : 0;
 
-        if (result !== 0) {
-          return sortMeta.order * result;
-        }
+        if (result !== 0) return sortMeta.order * result;
       }
       return 0;
     });
-    // 3. 排序完成後更新
-    this.virtualData = this.data; // 確保虛擬滾動看到的也是排序後的
+
+    // 2. 處理勾選參考 (這步很重要，維持高亮的 key)
+    if (this.selectedItems && this.selectedItems.length > 0) {
+      this.selectedItems = [...this.selectedItems];
+    }
+
+    // 3. 更新小計
     this.groupTotals = {};
     this.updateGroupTotals(this.data);
-    this.cdr.markForCheck();
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      if (this.dt) {
+        this.dt.restoreState();
+      }
+      this.cdr.detectChanges();
+    }, 0);
   }
   onLazyLoad() {
     if (this.isAllSelected) {
