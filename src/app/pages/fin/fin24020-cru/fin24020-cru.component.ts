@@ -9,6 +9,7 @@ import { DropDownListService, IAPS3001Item } from '@service/utility/dropDownList
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownTableComponent } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
@@ -35,6 +36,7 @@ import { finalize } from 'rxjs';
     TranslateModule,
     InputNumberComponent,
     CalendarComponent,
+    CalendarRangeQuickComponent,
     DropdownTableComponent,
     InputTextComponent,
     TableEditComponent,
@@ -63,7 +65,8 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     ACP_No: [''],
     VEN_No: [''],    // 新增
     VEN_Name: [''],  // 新增
-    ACP_Date: [''],  // 新增
+    ACP_Date_From: [''],  // 新增
+    ACP_Date_To: [''],  // 新增
   });
   apsDialogLoading = false;
   apsRawData: IAPS3001Item[] = [];
@@ -630,16 +633,6 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     this.apsSuggestions = filtered;
   }
   onDialogQueryFormValueChanged(value: Record<string, string>): void {
-    // const keyword = (value?.['ACP_No'] || '').trim();
-    // if (!keyword) {
-    //   this.apsDialogData = this.apsRawData;
-    //   this.apsSuggestions = this.apsRawData;
-    //   return;
-    // }
-    // const filtered = this.apsRawData.filter(item => item.ACP_No?.includes(keyword));
-    // this.apsDialogData = filtered;
-    // this.apsSuggestions = filtered;
-
     // 當對話框內的查詢條件改變時，直接觸發搜尋(過濾)
     this.onApsDialogSearch();
   }
@@ -692,45 +685,40 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   onApsDialogSearch(): void {
-    const { ACP_No, VEN_No, VEN_Name, ACP_Date } = this.dialogQueryForm.value;
+    const { ACP_No, VEN_No, VEN_Name, ACP_Date_From, ACP_Date_To } = this.dialogQueryForm.value;
 
     if (!this.apsRawData || this.apsRawData.length === 0) {
       return;
     }
 
-    // --- 處理日期格式化 ---
-    let searchDateStr = '';
-    if (ACP_Date) {
-      // 使用 new Date 確保能處理字串或 Date 物件
-      const d = new Date(ACP_Date);
-      if (!isNaN(d.getTime())) {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-
-        // 關鍵點：確保這裡拼接的格式與資料 "2025-11-30" 完全一致
-        searchDateStr = `${y}-${m}-${day}`;
-      }
-    }
+    // 1. 將搜尋條件轉為時間數值 (毫秒)，方便比對大小
+    // 如果沒輸入，則設為 null
+    const fromTime = ACP_Date_From ? new Date(ACP_Date_From).setHours(0, 0, 0, 0) : null;
+    const toTime = ACP_Date_To ? new Date(ACP_Date_To).setHours(23, 59, 59, 999) : null;
 
     this.apsDialogData = this.apsRawData.filter(item => {
       const sAcpNo = (ACP_No || '').toLowerCase();
       const sVenNo = (VEN_No || '').toLowerCase();
       const sVenName = (VEN_Name || '').toLowerCase();
 
-      // 代號與名稱的部分符合
+      // 基本欄位篩選 (部分符合)
       const matchAcpNo = !sAcpNo || (item.ACP_No ?? '').toLowerCase().includes(sAcpNo);
       const matchVenNo = !sVenNo || (item.VEN_No ?? '').toLowerCase().includes(sVenNo);
       const matchVenName = !sVenName || (item.VEN_Name ?? '').toLowerCase().includes(sVenName);
 
-      // --- 日期比對優化 ---
-      // 1. 強制轉換 item.ACP_Date 為字串並去除空白
-      // 2. 確保 searchDateStr 也是乾淨的字串
-      const itemDateStr = (item.ACP_Date ?? '').toString().trim();
-      const matchDate = !searchDateStr || itemDateStr.includes(searchDateStr);
+      // 2. 日期區間篩選邏輯
+      let matchDate = true;
+      if (item.ACP_Date) {
+        // 將資料格式 "2025-11-30" 轉為時間數值
+        const itemTime = new Date(item.ACP_Date).getTime();
 
-      // 除錯紀錄：如果還是搜不到，可以看這行輸出
-      // console.log('Date Check:', { itemDateStr, searchDateStr, isMatch: matchDate });
+        const afterFrom = !fromTime || itemTime >= fromTime;
+        const beforeTo = !toTime || itemTime <= toTime;
+        matchDate = afterFrom && beforeTo;
+      } else {
+        // 如果資料本身沒日期，但使用者有設區間，則視為不符合
+        if (fromTime || toTime) matchDate = false;
+      }
 
       return matchAcpNo && matchVenNo && matchVenName && matchDate;
     });
