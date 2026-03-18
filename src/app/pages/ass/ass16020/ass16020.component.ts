@@ -3,6 +3,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS16020Data } from '@service/api/ass/ass16020.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
@@ -18,7 +19,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
   templateUrl: './ass16020.component.html',
   styleUrl: './ass16020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule, MultiSelectComponent]
 })
 export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -37,17 +38,19 @@ export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> imp
     EReviewdate: [],
     basedate: [],
     Inventoryordernumber: [],
-    Inventorystatus: [],
+    Inventorystatus: [[1, 2]],  // 預設選取
     SInventorydate: [],
     EInventorydate: [],
     SClosingdate: [],
     EClosingdate: [],
     Counter: [],
     illustrate: [],
-    Reporttype: [],
+    Reporttype: [1],  // 預設選取
   });
   // Table data
   data: ASS16020Data[] = [];
+  selectedItems: ASS16020Data[] = [];
+
   Reporttype = [
     { value: 1, label: '全部' },
     { value: 2, label: '差異' },
@@ -67,10 +70,6 @@ export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> imp
     { value: 1, label: '盤點中' },
     { value: 2, label: '登錄完成' },
     { value: 3, label: '已結案' },
-
-  ];
-  Inventoryordenumber = [
-    { value: 1, label: '202406002' },
 
   ];
   custodyunit = [

@@ -3,7 +3,22 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button
       btnType="create"
-      label="{{ '盤點登錄' }}"
+      label="{{ '登入' }}"
+      (click)="onCreate()"
+    ></app-button>
+    <app-button
+      btnType="create"
+      label="{{ '盤後調整' }}"
+      (click)="onCreate()"
+    ></app-button>
+    <app-button
+      btnType="create"
+      label="{{ '盤後查詢' }}"
+      (click)="onCreate()"
+    ></app-button>
+    <app-button
+      btnType="create"
+      label="{{ '盤點報表' }}"
       (click)="onCreate()"
     ></app-button>
   </div>
@@ -21,19 +36,16 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-input-text
               label="盤點單號"
               controlName="Inventoryordernumber"
-              [options]="Inventoryordenumber"
-              optionLabel="label"
-              optionValue="value"
               [control]="queryForm.controls.Inventoryordernumber"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="盤點狀態"
               controlName="Inventorystatus"
               [options]="Inventorystatus"
@@ -41,7 +53,7 @@
               optionValue="value"
               [control]="queryForm.controls.Inventorystatus"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
@@ -103,8 +115,14 @@
 <div class="card">
   <div class="col-12">
     <app-table
+      tableKey="ASS16020"
+      dataKey="inventoryNumber"
       [data]="data"
       [columns]="columns"
+      [loading]="loading"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [showCheckBox]="true"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
     ></app-table>
