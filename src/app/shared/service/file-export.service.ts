@@ -38,7 +38,8 @@ export class FileExportService {
     );
   }
 
-  private handleResponse(response: HttpResponse<Blob>, fileExtension: string) {
+
+  public handleResponse(response: HttpResponse<Blob>, fileExtension: string, saveAs = false) {
     const blob = response.body;
     if (!blob || blob.size === 0) {
       this.messageService.warnBubble('目前無資料可供下載。');
@@ -49,26 +50,28 @@ export class FileExportService {
     const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
     const contentType = response.headers.get('Content-Type');
 
-    // 判斷是否為 .txt
-    if (fileExtension.toLowerCase() === '.txt') {
-      // 1. 【新增】先執行自動下載 (存到瀏覽器預設目錄)
-      this.fallbackDownload(blob, filename, contentType);
+    // 1. 先執行自動下載 (保底：存到瀏覽器預設下載目錄)
+    this.fallbackDownload(blob, filename, contentType);
 
-      // 2. 同時準備另存新檔的暫存資料
+    // 2. 判斷是否需要「另存新檔」流程：
+    // 條件：手動指定 saveAs 為 true，或者是特定的副檔名 (如 .txt)
+    const needsManualSave = saveAs || fileExtension.toLowerCase() === '.txt';
+
+    if (needsManualSave) {
+      // 暫存資料，供後續 savePendingFile 使用
       this.pendingBlob = blob;
       this.pendingFilename = filename;
 
-      // 3. 彈出黑底 Toast 詢問是否要「另存新檔」到其他位置
+      // 彈出黑底 Toast 詢問
       this.primengMessageService.add({
         key: 'confirm',
         sticky: true,
         severity: 'custom',
-        summary: '檔案已自動下載',
-        detail: `報表：${filename} 已存至下載目錄。您也可以點擊另存新檔指定儲存位置。`
+        summary: saveAs ? '檔案已準備就緒' : '檔案已自動下載',
+        detail: saveAs
+          ? `您可以點擊「另存新檔」指定儲存位置。`
+          : `報表：${filename} 已存至下載目錄。您也可以點擊另存新檔指定儲存位置。`
       });
-    } else {
-      // 非 .txt 則維持原樣：僅執行自動下載
-      this.fallbackDownload(blob, filename, contentType);
     }
   }
 

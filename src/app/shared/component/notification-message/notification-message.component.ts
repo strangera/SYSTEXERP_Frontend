@@ -8,6 +8,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ToastModule } from 'primeng/toast';
+import { environment } from 'src/environments/environment';
 import { ConfirmOptions, NotificationService } from './notification.service';
 
 @UntilDestroy()
@@ -181,5 +182,32 @@ export class NotificationMessageComponent implements OnInit {
 
   onGlobalClearPending() {
     this.fileExportService.clearPending();
+  }
+
+  /**
+ * 取得錯誤檔並觸發下載
+ * @param filePath 後端回傳的相對路徑
+ */
+  onDownloadErrorFile(filePath: string): void {
+    if (!filePath) return;
+    // 1. 組合完整的下載網址
+    const fileUrl = `${environment.ApiUrl}/${filePath}`;
+    // 2. 取得檔名（從路徑中切出最後一段）
+    const fileName = filePath.split('/').pop() || 'ErrorData.xlsx';
+    // 3. 建立隱藏的 <a> 標籤
+    const link = document.createElement('a');
+    link.href = fileUrl;
+    // 4. 指定 download 屬性可以嘗試強制瀏覽器下載而非開啟
+    // 注意：跨網域時 download 屬性可能失效，但搭配 _blank 仍能正常下載
+    link.setAttribute('download', fileName);
+    link.target = '_blank';
+    link.style.display = 'none';
+    // 5. 加入 DOM、觸發點擊後移除
+    document.body.appendChild(link);
+    link.click();
+    // 延遲移除以確保某些瀏覽器能正確處理
+    setTimeout(() => {
+      document.body.removeChild(link);
+    }, 100);
   }
 }
