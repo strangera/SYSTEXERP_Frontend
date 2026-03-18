@@ -1,10 +1,12 @@
 import { NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { FileExportService } from '@shared/service/file-export.service';
 import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
 import { Button, ButtonDirective } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { DialogModule } from 'primeng/dialog';
+import { ProgressBarModule } from 'primeng/progressbar';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmOptions, NotificationService } from './notification.service';
 
@@ -14,7 +16,7 @@ import { ConfirmOptions, NotificationService } from './notification.service';
   templateUrl: './notification-message.component.html',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ConfirmDialogModule, PrimeTemplate, NgIf, Button, ToastModule, DialogModule, ButtonDirective, NgFor, NgTemplateOutlet],
+  imports: [ProgressBarModule, ConfirmDialogModule, PrimeTemplate, NgIf, Button, ToastModule, DialogModule, ButtonDirective, NgFor, NgTemplateOutlet],
 })
 export class NotificationMessageComponent implements OnInit {
   currentConfirmOpts?: ConfirmOptions;
@@ -35,6 +37,7 @@ export class NotificationMessageComponent implements OnInit {
     private notificationService: NotificationService,
     public messageService: MessageService,
     private confirmationService: ConfirmationService,
+    private fileExportService: FileExportService
   ) { }
 
   ngOnInit() {
@@ -169,5 +172,14 @@ export class NotificationMessageComponent implements OnInit {
 
     // 3. 關閉視窗 (直接呼叫 service 的 close，不要呼叫 cd.accept())
     this.confirmationService.close();
+  }
+
+  // 2. 增加這兩個給 HTML 呼叫的方法(給標籤檔使用)
+  onGlobalConfirmSave() {
+    this.fileExportService.savePendingFile();
+  }
+
+  onGlobalClearPending() {
+    this.fileExportService.clearPending();
   }
 }

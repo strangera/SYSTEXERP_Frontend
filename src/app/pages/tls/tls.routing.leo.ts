@@ -224,9 +224,9 @@ export const tlsRoutes: Routes = [
   // { path: 'tls51050', loadComponent: () => import('./tls51050/tls51050.component').then(m => m.TLS51050Component), data: { progNo: 'TLS51050' } },
   // // 品牌設定作業
   // { path: 'tls51060', loadComponent: () => import('./tls51060/tls51060.component').then(m => m.TLS51060Component), data: { progNo: 'TLS51060' } },
-  // // 商品基本資料
-  // { path: 'tls51070', loadComponent: () => import('./tls51070/tls51070.component').then(m => m.TLS51070Component), data: { progNo: 'TLS51070' } },
-  // // 分倉資料處理
+  // 商品基本資料
+  { path: 'tls51070', loadComponent: () => import('./tls51070/tls51070.component').then(m => m.TLS51070Component), data: { progNo: 'TLS51070' } },
+  // 分倉資料處理
   // { path: 'tls51080', loadComponent: () => import('./tls51080/tls51080.component').then(m => m.TLS51080Component), data: { progNo: 'TLS51080' } },
   // // 品牌每月可進貨限額維護作業
   // { path: 'tls51110', loadComponent: () => import('./tls51110/tls51110.component').then(m => m.TLS51110Component), data: { progNo: 'TLS51110' } },
@@ -326,10 +326,10 @@ export const tlsRoutes: Routes = [
   // { path: 'tls51050cru', loadComponent: () => import('./tls51050-cru/tls51050-cru.component').then(m => m.TLS51050CRUComponent), data: { progNo: 'TLS51050' } },
   // // 品牌設定作業 CRU
   // { path: 'tls51060cru', loadComponent: () => import('./tls51060-cru/tls51060-cru.component').then(m => m.TLS51060CRUComponent), data: { progNo: 'TLS51060' } },
-  // // 商品基本資料 CRU
-  // { path: 'tls51070cru', loadComponent: () => import('./tls51070-cru/tls51070-cru.component').then(m => m.TLS51070CRUComponent), data: { progNo: 'TLS51070' } },
-  // // 商品基本資料 OS
-  // { path: 'tls51070os', loadComponent: () => import('./tls51070-os/tls51070-os.component').then(m => m.Tls51070OsComponent), data: { progNo: 'tls51070' } },
+  // 商品基本資料 CRU
+  { path: 'tls51070cru', loadComponent: () => import('./tls51070-cru/tls51070-cru.component').then(m => m.TLS51070CRUComponent), data: { progNo: 'TLS51070' } },
+  // 商品基本資料 OS
+  { path: 'tls51070os', loadComponent: () => import('./tls51070-os/tls51070-os.component').then(m => m.Tls51070OsComponent), data: { progNo: 'tls51070' } },
   // // 分倉資料處理 CRU
   // { path: 'tls51080cru', loadComponent: () => import('./tls51080-cru/tls51080-cru.component').then(m => m.TLS51080CRUComponent), data: { progNo: 'TLS51080' } },
   // // 品牌每月可進貨限額維護作業 CRU
