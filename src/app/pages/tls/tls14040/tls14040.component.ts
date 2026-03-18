@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -41,6 +42,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     // id: [{ value: null, disabled: true }], // read only
     tlt_noList: [[]], // 專櫃編號
     tlt_name: [{ value: '', disabled: true }], // 專櫃名稱
+    ven_uniformList: [[]], // 統一編號
     location_noList: [[]], // 位置
 
     area_noList: [[]], // 區域
@@ -87,6 +89,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
   selectedItems: Garantee_Ticket[] = [];// 多選項目
 
   tlt_noListOption: apiOption[] = []; //專櫃編號列表
+  ven_uniformOption: apiOption[] = []; // 統一編號列表
   locationOption: apiOption[] = []; //位置編號
   areaOption: apiOption[] = []; //區域
   floorOption: apiOption[] = []; //樓層
@@ -135,6 +138,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
   constructor(
     private tls14030Service: Tls14030Service,
+    private readonly dropDownListService: DropDownListService,
   ) { super(); }
 
   ngOnInit(): void {
@@ -270,9 +274,9 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
         // console.log('組織:', this.orgOption);
       });
 
-    // 專櫃編號 下拉
+    /// 專櫃編號 下拉
     this.tls14030Service
-      .queryTLTTALENT_TLS14030_DropDownList({})
+      .queryTLTTALENT_DropDownList({})
       .subscribe((response) => {
         this.tlt_noListOption = response.Data.map((item: apiOption) => ({
           No: item.No,
@@ -281,5 +285,19 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
         // console.log('專櫃編號:', response.Data);
       });
+    //統一編號 下拉
+    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe((response) => {
+      //去除掉重複的統一編號，並且加上 Label 欄位
+      this.ven_uniformOption = response.Data
+        .filter((item: apiOption, index: number, self: apiOption[]) => {
+          return index === self.findIndex((t) => t.No === item.No);
+        })
+        .map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+      // console.log('統一編號:', response.Data);
+    });
   }
 }

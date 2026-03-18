@@ -19,27 +19,15 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-range label="收銀機號" controlName="dropdownRange"
               [startControl]="queryForm.controls.ECR_No_Start" [endControl]="queryForm.controls.ECR_No_End"
-              [submitted]="submitted" [options]="systemTypeOptions" optionLabel="label"
-              optionValue="No"></app-dropdown-range>
-            <small class="p-error" *ngIf="
-                queryForm.controls['ECR_No_End']?.errors?.['rangeInvalid'] &&
-                submitted
-              ">
-              結束值必須大於等於起始值
-            </small>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="付款別" controlName="PAY_NO" [options]="paymentToolOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.PAY_NO" [submitted]="submitted"></app-dropdown>
+              [submitted]="submitted" [options]="ECRNoOptions" optionLabel="Name" optionValue="No"></app-dropdown-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="館別" controlName="Building_No" [options]="buildingNoOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.Building_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="發票格式" controlName="invoice" [options]="invoiceOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.invoice" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="發票種類" controlName="TXN_GUIPaper" [options]="TXNGUIPaperOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.TXN_GUIPaper" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -52,46 +40,11 @@
 </div>
 
 <div class="card">
-  <app-table-report dataKey="ID" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="selectedColumns"
-    [columnGroup]="columnGroup" [showCheckBox]="true" (selectionChange)="selectedItems = $event"
-    [selectedItems]="selectedItems" [totalRecords]="totalRecords" [loading]="loading" [addButton]="addButtons"
-    [showDelete]="false" [showDetail]="false" [showEdit]="false" [footerData]="footerData" [showReportMode]="false"
-    [isRowSelectable]="isRowSelectable" [queryFunction]="tls2a010Service.queryTLS2A010.bind(tls2a010Service)"
-    (selectAllChange)="isAllSelected = $event" [isAllSelected]="isAllSelected">
-    <header>
-      <div class="flex align-items-center gap-2">
-        <p-button label="審核完成" severity="success" (click)="onReview(selectedItems)"
-          [disabled]="selectedCount === 0"></p-button>
-        <p-button label="反審核" severity="danger" (click)="onUnreview(selectedItems)"
-          [disabled]="selectedCount === 0"></p-button>
-        <span>
-          審核支付工具：
-          <span class="text-pink-600" *ngIf="PAY_NO">
-            【 {{ PAY_NO_NAME }} 】
-          </span>
-        </span>
-        <span>
-          銷售日期：
-          <span class="text-red-600" *ngIf="TXN_Date">
-            {{ TXN_Date | date: "yyyy-MM-dd" }}
-          </span>
-        </span>
-        <div class="flex justify-content-end align-items-center gap-2 ml-auto">
-          <p-button styleClass="p-2" label="匯出Excel" [loading]="btnLoading" icon="pi pi-file" (click)="onExportXLSX()"
-            [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
-        </div>
-      </div>
-    </header>
-  </app-table-report>
-</div>
-
-<app-dialog [visible]="dialogVisible" header="實收調整" (visibleChange)="onDialogClose($event)" [showFooter]="false"
-  width="95vw">
-  <app-table-edit tableKey="TLS2A010Detail" [data]="dialogData" [columns]="dialogColumns" [showCheckBox]="false"
-    [canInsert]="false" [showInsert]="false" [loading]="false" [showDelete]="false" [disabled]="false"
-    (dataChange)="onDataChange($event)"></app-table-edit>
-  <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-    <app-button btnType="cancel" (click)="onDialogClose(false)"></app-button>
-    <app-button btnType="submit" [loading]="loading" (click)="onSaveDialog()" />
+  <app-table-edit [loading]="loading" [columns]="columns" [(data)]="data" [footerData]="footerData"
+    [showCheckBox]="false" [showDelete]="false" [showReorder]="false" [showSort]="true" [disabled]="false"
+    [scrollable]="true" [showPaginator]="true" [canInsert]="false"
+    (fieldChange)="onCellValueChange($event.rowData)"></app-table-edit>
+  <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3 bg-white sticky-bottom">
+    <app-button btnType="submit" label="審核" [loading]="loading" (clickEvent)="onCheck()" />
   </div>
-</app-dialog>
+</div>
