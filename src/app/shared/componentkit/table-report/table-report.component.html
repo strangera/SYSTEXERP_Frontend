@@ -189,8 +189,7 @@
       class="font-bold text-sm bg-gray-200 text-primary">
 
       <td class="text-center"
-        [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0) + tableUtility.getFirstSubtotalIndex(columns)"
-        pFrozenColumn>
+        [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0) + tableUtility.getFirstSubtotalIndex(columns)">
         <span class="font-bold">
           {{ subTotalLabel }} {{ groupRowsBy ? '(' + tableUtility.getGroupValue(rowData, groupRowsBy,columns) + ')' : ''
           }}
