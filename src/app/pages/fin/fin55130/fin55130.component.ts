@@ -86,25 +86,8 @@ export class FIN55130Component extends BasicQueryPageComponent<FIN55130DetailIte
           { field: '比較年月', header: this.datePipe.transform(compareDateObj, 'yyyy年M月') || '比較年月' },
           { field: '差異', header: '差異' },
         ];
-
-        // 1. 分解資料
-        const aData = response.Data.QueryData.filter(x => x.groupNo === 'A');
-        const lData = response.Data.QueryData.filter(x => x.groupNo !== 'A');
-
-        // 2. 補齊長度
-        const maxLen = Math.max(aData.length, lData.length);
-        while (aData.length < maxLen) {
-          aData.push({} as FIN55130DetailItem);
-        }
-        while (lData.length < maxLen) {
-          lData.push({} as FIN55130DetailItem);
-        }
-
-        // 3. 賦值
-        this.A_data = aData;
-        this.L_data = lData;
-
-        // 原始邏輯保持不變
+        this.A_data = response.Data.QueryData.filter(x => x.groupNo === 'A');
+        this.L_data = response.Data.QueryData.filter(x => x.groupNo !== 'A');
         this.subData = response.Data.SubTotalData;
         this.A_TotalData = response.Data.TotalData.find(x => x.groupNo === 'A') || null;
         this.L_TotalData = response.Data.TotalData.find(x => x.groupNo !== 'A') || null;

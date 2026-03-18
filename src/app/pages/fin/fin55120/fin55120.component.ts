@@ -69,36 +69,12 @@ export class FIN55120Component extends BasicQueryPageComponent<FIN55120DetailIte
         ...frm.value,
         YM: this.datePipe.transform(frm.value.YM, 'yyyyMM'),
       }
-      this.fin55120Service.queryFIN55120(body).pipe(
-        finalize(() => this.loading = false),
-        untilDestroyed(this)
-      ).subscribe(response => {
-        // 1. 先取得原始過濾後的資料
-        const aData = response.Data.QueryData.filter(x => x.groupName === 'A');
-        const lData = response.Data.QueryData.filter(x => x.groupName !== 'A');
-
-        // 2. 核心邏輯：補齊數量
-        const maxLen = Math.max(aData.length, lData.length);
-
-        // 補齊 A_data
-        while (aData.length < maxLen) {
-          // 傳入一個空的物件，確保 p-table 有一行可以渲染，但內容是空的
-          aData.push({} as FIN55120DetailItem);
-        }
-
-        // 補齊 L_data
-        while (lData.length < maxLen) {
-          lData.push({} as FIN55120DetailItem);
-        }
-
-        // 3. 賦值給畫面上繫結的變數
-        this.A_data = aData;
-        this.L_data = lData;
-
-        // 其他原始邏輯保持不變
+      this.fin55120Service.queryFIN55120(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+        this.A_data = response.Data.QueryData.filter(x => x.groupName === 'A');
+        this.L_data = response.Data.QueryData.filter(x => x.groupName !== 'A');
         this.subData = response.Data.SubTotalData;
-        this.A_TotalData = response.Data.TotalData.find(x => x.groupName === 'A') || null;
-        this.L_TotalData = response.Data.TotalData.find(x => x.groupName !== 'A') || null;
+        this.A_TotalData = response.Data.TotalData.filter(x => x.groupName === 'A')[0];
+        this.L_TotalData = response.Data.TotalData.filter(x => x.groupName !== 'A')[0];
         this.totalRecords = response.TotalCount;
         this.YM = frm.value.YM;
         this.lastQueryBody = body;
