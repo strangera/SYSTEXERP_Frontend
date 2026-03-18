@@ -32,40 +32,42 @@
           [dialogColumns]="opColumns"
           [loading]="opLoading"
           [totalRecords]="opTotalRecords"
-          [lazy]="false"
+          [lazy]="true"
         >
-          <!-- <app-dropdown
+          <app-dropdown
             class="col-12 md:col-6"
             label="專櫃編號"
             [options]="tlt_noListOption"
             optionLabel="Label"
             optionValue="No"
+            (click)="$event.stopPropagation()"
             [control]="opForm.controls.TLT_NO"
             [submitted]="submitted"
-          ></app-dropdown> -->
-          <app-input-text
+          ></app-dropdown>
+          <!-- <app-input-text
             class="col-12 md:col-6"
-            label="合約編號"
+            label="專櫃編號"
             controlName="TLT_NO"
             [control]="opForm.controls.TLT_NO"
             [submitted]="submitted"
-          ></app-input-text>
-          <!-- <app-dropdown
+          ></app-input-text> -->
+          <app-dropdown
             class="col-12 md:col-6"
             label="統一編號"
             [options]="ven_uniformOption"
             optionLabel="Label"
             optionValue="No"
+            (click)="$event.stopPropagation()"
             [control]="opForm.controls.ven_uniform"
             [submitted]="submitted"
-          ></app-dropdown> -->
-          <app-input-text
+          ></app-dropdown>
+          <!-- <app-input-text
             class="col-12 md:col-6"
-            label="專櫃名稱"
+            label="統一編號"
             controlName="ven_uniform"
             [control]="opForm.controls.ven_uniform"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-input-text> -->
         </app-dropdown-table>
 
         <div class="col-12 md:col-6 lg:col-4">

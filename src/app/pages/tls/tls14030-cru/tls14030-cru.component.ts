@@ -254,6 +254,9 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
 
   // 讀取dropdown選項
   loadOptions() {
+    // ⭐ 初始化 Overlay Panel 的資料 (第一次展開時看到的內容)
+    this.fetchTalentData();
+
     this.tls14030Service
       .queryTLTTALENT_Status_DropDownList({ "approve_status": '2' }) //這支作業都固定帶已審核 (能選擇的tltid都已經審核)
       .subscribe((response) => {
@@ -294,26 +297,26 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
       });
 
     // ⭐ 預載 overlay panel 表格資料（參考 fin24020 應收ID 做法，改為 local filter，避免每次展開都打 API）
-    this.opLoading = true;
-    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList({
-      TLT_NO: '',
-      ven_uniform: '',
-      pageSize: 9999,
-      pageIndex: 1,
-      SortBy: [{ field: 'TLT_NO', order: 1 }],
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    }).subscribe((results: Record<string, any>) => {
-      this.rawTalentData = (results['Data'] ?? []).map((item: apiOption) => ({
-        ...item,
-        No: item.No,
-        Label: item.No + '-' + item.Name,
-      }));
-      console.log('預載專櫃資料(供 overlay panel 搜尋用):', this.rawTalentData);
-      this.opData = this.rawTalentData;
-      this.opTotalRecords = this.rawTalentData.length;
-      this.suggestions = this.rawTalentData;
-      this.opLoading = false;
-    });
+    // this.opLoading = true;
+    // this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList({
+    //   TLT_NO: '',
+    //   ven_uniform: '',
+    //   pageSize: 9999,
+    //   pageIndex: 1,
+    //   SortBy: [{ field: 'TLT_NO', order: 1 }],
+    //   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // }).subscribe((results: Record<string, any>) => {
+    //   this.rawTalentData = (results['Data'] ?? []).map((item: apiOption) => ({
+    //     ...item,
+    //     No: item.No,
+    //     Label: item.No + '-' + item.Name,
+    //   }));
+    //   console.log('預載專櫃資料(供 overlay panel 搜尋用):', this.rawTalentData);
+    //   this.opData = this.rawTalentData;
+    //   this.opTotalRecords = this.rawTalentData.length;
+    //   this.suggestions = this.rawTalentData;
+    //   this.opLoading = false;
+    // });
   }
 
   // Fallback：只有編輯模式改 ticket_type 且無快取時才呼叫
@@ -328,49 +331,56 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
     });
   }
 
-  // ⭐ Local filter：autocomplete 輸入時從預載資料篩選（不打 API）
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onAutoCompleteInputChange(event: any) {
-    const keyword = (event?.['Label'] || '').toString().trim().toLowerCase();
-    if (!keyword) {
-      this.suggestions = this.rawTalentData;
-      return;
-    }
-    this.suggestions = this.rawTalentData.filter(item =>
-      (item.Label || '').toLowerCase().includes(keyword)
-    );
+  // 2. 修正 fetchTalentData 的參數組合
+  private fetchTalentData(keyword = '') {
+    this.opLoading = true;
+
+    const formRaw = this.opForm.getRawValue();
+
+    // 建立符合 Postman 測試成功的參數格式
+    const params = {
+      // 如果是從 AutoComplete 輸入的，通常對應 TLT_NO 或專櫃編號
+      TLT_NO: keyword || formRaw.TLT_NO || '',
+      ven_uniform: formRaw.ven_uniform || '',
+      pageSize: formRaw.pageSize || 10,
+      pageIndex: formRaw.pageIndex || 1,
+      // 排序欄位需確認後端是否支援 No，若不支援改用 TLT_NO
+      SortBy: formRaw.SortBy || [{ field: 'TLT_NO', order: 1 }]
+    };
+
+    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList(params)
+      .subscribe({
+        next: (results: any) => {
+          // 確保 Data 轉型正確
+          const data = (results['Data'] ?? []).map((item: any) => ({
+            ...item,
+            // 這裡要對應 optionValue="No" 和 optionLabel="Label"
+            No: item.No || item.talent_id,
+            Label: item.Label || `${item.No}-${item.Name}`
+          }));
+
+          console.log('⭐fetchTalentData 取得的資料:', data);
+
+          this.opData = [...data];       // 更新 Table
+          this.suggestions = [...data];  // 更新 下拉建議清單
+          this.opTotalRecords = results['TotalCount'] || data.length;
+          this.opLoading = false;
+        },
+        error: () => {
+          this.opLoading = false;
+        }
+      });
   }
 
-  // ⭐ Local filter：overlay panel 搜尋條件變更時從預載資料篩選（不打 API）
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // 3. 確保事件觸發正常
+  onAutoCompleteInputChange(event: any) {
+    // 判斷 event 是字串還是物件
+    const keyword = (typeof event === 'string') ? event : (event?.No || '');
+    this.fetchTalentData(keyword);
+  }
+
   onformValueChanged(event: any) {
-    const tltNo = (event?.TLT_NO || '').toString().trim().toLowerCase();
-    const venUniform = (event?.ven_uniform || '').toString().trim().toLowerCase();
-
-    if (!tltNo && !venUniform) {
-      this.opData = this.rawTalentData;
-    } else {
-      this.opData = this.rawTalentData.filter(item => {
-        // 修正 1: 先轉字串再補零，或是直接對 Label 比對
-        // 建議直接用原始 item 裡面可能存在的欄位比對
-        const itemNoStr = (item.No || '').toString().toLowerCase();
-        const itemLabel = (item.Label || '').toLowerCase();
-
-        const matchTlt = !tltNo ||
-          itemNoStr.includes(tltNo) ||
-          itemLabel.includes(tltNo);
-
-        // 修正 2: 檢查 item 裡面的欄位名稱是否真的是小寫 ven_uniform
-        const itemVen = (item.ven_uniform || item.VEN_UNIFORM || '').toString().toLowerCase();
-        const itemName = (item.Name || '').toLowerCase();
-
-        const matchVen = !venUniform ||
-          itemVen.includes(venUniform) ||
-          itemName.includes(venUniform);
-
-        return matchTlt && matchVen;
-      });
-    }
-    this.opTotalRecords = this.opData.length;
+    // 當 Overlay Panel 裡的 input 輸入時觸發
+    this.fetchTalentData();
   }
 }
