@@ -38,13 +38,13 @@
               [control]="dialogQueryForm.controls.VEN_Name"
               [submitted]="submitted"
             ></app-input-text>
-            <app-input-text
+            <app-calendar
               class="col-12 md:col-6"
+              calendarType="dateOne"
               label="立帳日期"
-              controlName="ACP_Date"
               [control]="dialogQueryForm.controls.ACP_Date"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-calendar>
           </app-dropdown-table>
         </div>
         <div class="col-12 md:col-6 lg:col-4">

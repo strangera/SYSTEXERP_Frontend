@@ -692,29 +692,49 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   onApsDialogSearch(): void {
-    // 取得表單目前的輸入值
     const { ACP_No, VEN_No, VEN_Name, ACP_Date } = this.dialogQueryForm.value;
 
-    // 如果原始快取沒資料就跳出
     if (!this.apsRawData || this.apsRawData.length === 0) {
       return;
     }
 
-    // 執行 filter：只要符合「包含」關係即顯示 (部分符合)
+    // --- 處理日期格式化 ---
+    let searchDateStr = '';
+    if (ACP_Date) {
+      // 使用 new Date 確保能處理字串或 Date 物件
+      const d = new Date(ACP_Date);
+      if (!isNaN(d.getTime())) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+
+        // 關鍵點：確保這裡拼接的格式與資料 "2025-11-30" 完全一致
+        searchDateStr = `${y}-${m}-${day}`;
+      }
+    }
+
     this.apsDialogData = this.apsRawData.filter(item => {
-      // 轉小寫以進行不分大小寫的比對
-      const searchAcpNo = (ACP_No || '').toLowerCase();
-      const searchVenNo = (VEN_No || '').toLowerCase();
-      const searchVenName = (VEN_Name || '').toLowerCase();
-      const searchDate = (ACP_Date || '');
+      const sAcpNo = (ACP_No || '').toLowerCase();
+      const sVenNo = (VEN_No || '').toLowerCase();
+      const sVenName = (VEN_Name || '').toLowerCase();
 
-      const matchAcpNo = !searchAcpNo || item.ACP_No?.toLowerCase().includes(searchAcpNo);
-      const matchVenNo = !searchVenNo || item.VEN_No?.toLowerCase().includes(searchVenNo);
-      const matchVenName = !searchVenName || item.VEN_Name?.toLowerCase().includes(searchVenName);
-      const matchDate = !searchDate || item.ACP_Date?.includes(searchDate);
+      // 代號與名稱的部分符合
+      const matchAcpNo = !sAcpNo || (item.ACP_No ?? '').toLowerCase().includes(sAcpNo);
+      const matchVenNo = !sVenNo || (item.VEN_No ?? '').toLowerCase().includes(sVenNo);
+      const matchVenName = !sVenName || (item.VEN_Name ?? '').toLowerCase().includes(sVenName);
 
-      // 必須同時滿足所有「已輸入」的條件
+      // --- 日期比對優化 ---
+      // 1. 強制轉換 item.ACP_Date 為字串並去除空白
+      // 2. 確保 searchDateStr 也是乾淨的字串
+      const itemDateStr = (item.ACP_Date ?? '').toString().trim();
+      const matchDate = !searchDateStr || itemDateStr.includes(searchDateStr);
+
+      // 除錯紀錄：如果還是搜不到，可以看這行輸出
+      // console.log('Date Check:', { itemDateStr, searchDateStr, isMatch: matchDate });
+
       return matchAcpNo && matchVenNo && matchVenName && matchDate;
     });
+
+    this.apsSuggestions = [...this.apsDialogData];
   }
 }
