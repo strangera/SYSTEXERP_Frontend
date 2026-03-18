@@ -142,6 +142,7 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     // 若 dropdown-table 在選取後觸發 parent form reset()，當 ACP_No 被清空時在短時間內自動恢復
     this.dialogQueryForm.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
       try {
+        console.log('⭐Dialog query form value changed:', value);
         const now = Date.now();
         if ((value?.ACP_No === null || value?.ACP_No === undefined || String(value?.ACP_No).trim() === '')
           && this.lastAcpNo && (now - this.lastAcpSelectTime) < 1000) {
