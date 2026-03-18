@@ -61,6 +61,9 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
   // APS3001 應付ID 下拉查詢相關
   dialogQueryForm = this.formBuilder.group({
     ACP_No: [''],
+    VEN_No: [''],    // 新增
+    VEN_Name: [''],  // 新增
+    ACP_Date: [''],  // 新增
   });
   apsDialogLoading = false;
   apsRawData: IAPS3001Item[] = [];
@@ -627,15 +630,18 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     this.apsSuggestions = filtered;
   }
   onDialogQueryFormValueChanged(value: Record<string, string>): void {
-    const keyword = (value?.['ACP_No'] || '').trim();
-    if (!keyword) {
-      this.apsDialogData = this.apsRawData;
-      this.apsSuggestions = this.apsRawData;
-      return;
-    }
-    const filtered = this.apsRawData.filter(item => item.ACP_No?.includes(keyword));
-    this.apsDialogData = filtered;
-    this.apsSuggestions = filtered;
+    // const keyword = (value?.['ACP_No'] || '').trim();
+    // if (!keyword) {
+    //   this.apsDialogData = this.apsRawData;
+    //   this.apsSuggestions = this.apsRawData;
+    //   return;
+    // }
+    // const filtered = this.apsRawData.filter(item => item.ACP_No?.includes(keyword));
+    // this.apsDialogData = filtered;
+    // this.apsSuggestions = filtered;
+
+    // 當對話框內的查詢條件改變時，直接觸發搜尋(過濾)
+    this.onApsDialogSearch();
   }
 
   private toStatusCode(status: any): string {
@@ -683,5 +689,32 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     } catch (e) {
       // ignore
     }
+  }
+
+  onApsDialogSearch(): void {
+    // 取得表單目前的輸入值
+    const { ACP_No, VEN_No, VEN_Name, ACP_Date } = this.dialogQueryForm.value;
+
+    // 如果原始快取沒資料就跳出
+    if (!this.apsRawData || this.apsRawData.length === 0) {
+      return;
+    }
+
+    // 執行 filter：只要符合「包含」關係即顯示 (部分符合)
+    this.apsDialogData = this.apsRawData.filter(item => {
+      // 轉小寫以進行不分大小寫的比對
+      const searchAcpNo = (ACP_No || '').toLowerCase();
+      const searchVenNo = (VEN_No || '').toLowerCase();
+      const searchVenName = (VEN_Name || '').toLowerCase();
+      const searchDate = (ACP_Date || '');
+
+      const matchAcpNo = !searchAcpNo || item.ACP_No?.toLowerCase().includes(searchAcpNo);
+      const matchVenNo = !searchVenNo || item.VEN_No?.toLowerCase().includes(searchVenNo);
+      const matchVenName = !searchVenName || item.VEN_Name?.toLowerCase().includes(searchVenName);
+      const matchDate = !searchDate || item.ACP_Date?.includes(searchDate);
+
+      // 必須同時滿足所有「已輸入」的條件
+      return matchAcpNo && matchVenNo && matchVenName && matchDate;
+    });
   }
 }

@@ -25,9 +25,24 @@
             (formValueChanged)="onDialogQueryFormValueChanged($event)"
           >
             <app-input-text
-              label="應付ID"
-              controlName="ACP_No"
-              [control]="dialogQueryForm.controls.ACP_No"
+              class="col-12 md:col-6"
+              label="廠客代號"
+              controlName="VEN_No"
+              [control]="dialogQueryForm.controls.VEN_No"
+              [submitted]="submitted"
+            ></app-input-text>
+            <app-input-text
+              class="col-12 md:col-6"
+              label="廠客名稱"
+              controlName="VEN_Name"
+              [control]="dialogQueryForm.controls.VEN_Name"
+              [submitted]="submitted"
+            ></app-input-text>
+            <app-input-text
+              class="col-12 md:col-6"
+              label="立帳日期"
+              controlName="ACP_Date"
+              [control]="dialogQueryForm.controls.ACP_Date"
               [submitted]="submitted"
             ></app-input-text>
           </app-dropdown-table>
