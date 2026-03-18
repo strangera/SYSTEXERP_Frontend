@@ -1,7 +1,7 @@
-<p-table #dt [columns]="columns" [value]="data" [scrollable]="true" [dataKey]="dataKey" scrollHeight="flex"
+<p-table #dt [columns]="columns" [value]="data" [scrollable]="true" [dataKey]="dataKey" scrollHeight="600px"
   sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true" [reorderableColumns]="true"
-  (onColReorder)="onColReorder($event)" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  [loading]="loading" rowGroupMode="subheader" [groupRowsBy]="groupRowsBy">
+  (onColReorder)="onColReorder($event)" styleClass="p-datatable-sm p-datatable-gridlines" [loading]="loading"
+  rowGroupMode="subheader" [groupRowsBy]="groupRowsBy">
 
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
@@ -51,7 +51,7 @@
   </ng-template>
 
   <ng-template pTemplate="groupheader" let-rowData>
-    <tr pRowGroupHeader class="bg-bluegray-50">
+    <tr pRowGroupHeader class="bg-bluegray-50" *ngIf="rowData.ItemTitle">
       <td [attr.colspan]="columns.length" class="py-3">
         <span class="font-bold text-xl text-bluegray-800">[{{rowData.ItemTitle}}]</span>
       </td>
@@ -59,16 +59,14 @@
   </ng-template>
 
   <ng-template pTemplate="groupfooter" let-rowData>
-    <tr class="font-semibold bg-gray-50">
+    <tr class="font-semibold bg-gray-50" *ngIf="rowData.ItemTitle">
       <td *ngFor="let col of columns"
         [ngStyle]="{'text-align': col.align || 'center', 'border-top': '2px solid #3b82f6'}" class="py-2">
-
         <ng-container *ngIf="col.isSubTotal; else otherCell">
           <span class="text-blue-700 font-bold">
             {{ getGroupSubtotal(rowData, col) }}
           </span>
         </ng-container>
-
         <ng-template #otherCell>
           <span *ngIf="col.field === 'AccNo'" class="text-600 italic">
             {{ rowData.ItemTitle }} 合計：
@@ -79,31 +77,30 @@
   </ng-template>
 
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns">
-    <tr *ngIf="shouldShowClassRow(data, rowIndex)" class="bg-white">
-      <td [attr.colspan]="columns.length" class="py-2 pl-4 border-bottom-1 border-gray-100">
+    <tr *ngIf="rowData.AccNo && shouldShowClassRow(data, rowIndex)" class="row-class-header">
+      <td [attr.colspan]="columns.length" class="py-2 pl-4">
         <div class="flex align-items-center">
-          <span class="font-bold text-700" style="color: #495057;">
-            {{ rowData.ClassCName }}
-          </span>
+          <span class="font-bold text-700" style="color: #495057;">{{ rowData.ClassCName }}</span>
         </div>
       </td>
     </tr>
 
-    <tr [style]="{ height: '28px' }">
+    <tr [style]="{ height: '28px' }" [ngClass]="rowData.AccNo ? 'data-row' : 'empty-row'">
+
       <ng-container *ngFor="let col of columns">
-        <td *ngIf="col.field === 'AccNo' || col.field === 'AccCName'; else regularCell"
-          [ngStyle]="{'text-align': col.align ? col.align : 'center'}" class="report-link"
-          (click)="openDetail(rowData)">
-          {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+        <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
+          [class.report-link]="rowData.AccNo && (col.field === 'AccNo' || col.field === 'AccCName')"
+          (click)="(rowData.AccNo && (col.field === 'AccNo' || col.field === 'AccCName')) ? openDetail(rowData) : null">
+
+          <ng-container *ngIf="rowData.AccNo; else emptyCell">
+            {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : (rowData?.[col.field] || '') }}
+          </ng-container>
+          <ng-template #emptyCell>&nbsp;</ng-template>
         </td>
-        <ng-template #regularCell>
-          <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}">
-            {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
-          </td>
-        </ng-template>
       </ng-container>
     </tr>
-    <tr *ngIf="shouldShowClassFooter(data, rowIndex)" class="bg-blue-50/30">
+
+    <tr *ngIf="rowData.AccNo && shouldShowClassFooter(data, rowIndex)" class="row-class-footer">
       <td *ngFor="let col of columns" class="py-1"
         [ngStyle]="{'text-align': col.align || 'center', 'border-top': col.isSubTotal ? '1px solid #93c5fd' : ''}">
 
@@ -113,17 +110,14 @@
 
         <span *ngIf="col.isSubTotal" class="font-bold text-blue-600">
           <ng-container [ngSwitch]="col.field">
-
             <ng-container *ngSwitchCase="'DiffPct'">
               {{ col.format ? col.format(calculateClassDiffPct(data, rowIndex)) : (calculateClassDiffPct(data, rowIndex)
               | number:'1.2-2') }}
             </ng-container>
-
             <ng-container *ngSwitchDefault>
               {{ col.format ? col.format(calculateClassTotal(data, rowIndex, col.field)) : (calculateClassTotal(data,
               rowIndex, col.field) | number:'1.0-0') }}
             </ng-container>
-
           </ng-container>
         </span>
       </td>

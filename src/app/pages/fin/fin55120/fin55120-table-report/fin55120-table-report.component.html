@@ -1,7 +1,7 @@
 <p-table #dt [columns]="columns" [value]="data" [scrollable]="true" [dataKey]="dataKey" scrollHeight="flex"
   sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true" [reorderableColumns]="true"
-  (onColReorder)="onColReorder($event)" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  [loading]="loading" rowGroupMode="subheader" [groupRowsBy]="groupRowsBy">
+  (onColReorder)="onColReorder($event)" styleClass="p-datatable-sm p-datatable-gridlines" [loading]="loading"
+  rowGroupMode="subheader" [groupRowsBy]="groupRowsBy">
 
   <ng-template pTemplate="header" let-columns>
     <tr class="bg-gray-100">
@@ -14,15 +14,17 @@
   </ng-template>
 
   <ng-template pTemplate="groupheader" let-rowData>
-    <tr pRowGroupHeader class="bg-bluegray-50">
+    <tr pRowGroupHeader class="bg-bluegray-50" *ngIf="rowData.ItemTitle">
       <td [attr.colspan]="columns.length" class="py-3">
-        <span class="font-bold text-xl text-bluegray-800">[{{rowData.ItemTitle}}]</span>
+        <span class="font-bold text-xl text-bluegray-800">
+          [{{ rowData.ItemTitle }}]
+        </span>
       </td>
     </tr>
   </ng-template>
 
   <ng-template pTemplate="groupfooter" let-rowData>
-    <tr class="font-semibold bg-gray-50">
+    <tr class="font-semibold bg-gray-50" *ngIf="rowData.ItemTitle">
       <td *ngFor="let col of columns" [ngStyle]="{
           'text-align': col.align || 'center',
           'border-top': '2px solid #3b82f6'
@@ -46,46 +48,46 @@
   </ng-template>
 
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns">
-    <tr *ngIf="shouldShowClassRow(data, rowIndex)" class="bg-white">
-      <td [attr.colspan]="columns.length" class="py-2 pl-4 border-bottom-1 border-gray-100">
+    <tr *ngIf="rowData.AccNo && shouldShowClassRow(data, rowIndex)" class="row-class-header">
+      <td [attr.colspan]="columns.length" class="py-2 pl-4">
         <div class="flex align-items-center">
-          <span class="font-bold text-700" style="color: #495057;">
+          <span class="font-bold text-800">
             {{ rowData.ClassCName }}
           </span>
         </div>
       </td>
     </tr>
 
-    <tr [style]="{ height: '28px' }">
-      <ng-container *ngFor="let col of columns">
+    <tr [style]="{ height: '28px' }" [ngClass]="{'empty-row': !rowData.AccNo}"> <ng-container
+        *ngFor="let col of columns">
         <td *ngIf="col.field === 'AccNo' || col.field === 'AccCName'; else regularCell"
-          [ngStyle]="{'text-align': col.align ? col.align : 'center'}" class="report-link"
-          (click)="openDetail(rowData)">
-          {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+          [ngStyle]="{'text-align': col.align ? col.align : 'center'}" [class.report-link]="rowData.AccNo"
+          (click)="rowData.AccNo ? openDetail(rowData) : null">
+          {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : (rowData?.[col.field] || '') }}
         </td>
         <ng-template #regularCell>
           <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}">
-            {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+            {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : (rowData?.[col.field] || '') }}
           </td>
         </ng-template>
       </ng-container>
     </tr>
-    <tr *ngIf="shouldShowClassFooter(data, rowIndex)" class="bg-blue-50/30">
+    <tr *ngIf="rowData.ClassNo && shouldShowClassFooter(data, rowIndex)" class="row-class-footer">
       <td *ngFor="let col of columns" [ngStyle]="{
-          'text-align': col.align || 'center',
-          'border-top': (col.field === 'Balance' || col.field === 'BalanceTotal' || col.field === 'Pct') ? '1px solid #93c5fd' : ''
-        }" class="py-1">
+      'text-align': col.align || 'center',
+      'border-top': (col.field === 'Balance' || col.field === 'BalanceTotal' || col.field === 'Pct') ? '1px solid #93c5fd' : ''
+    }" class="py-1">
 
-        <span *ngIf="col.field === 'AccNo'" class="text-500 text-sm font-medium italic pl-4">
+        <span *ngIf="col.field === 'AccNo'" class="text-700 text-sm font-bold italic pl-4">
           {{ rowData.ClassCName }} 合計
         </span>
 
-        <span *ngIf="col.field === 'BalanceTotal'" class="font-bold text-blue-600">
+        <span *ngIf="col.field === 'BalanceTotal'" class="font-bold text-blue-700">
           {{ col.format ? col.format(calculateClassBalanceTotal(data, rowIndex)) : calculateClassBalanceTotal(data,
           rowIndex) }}
         </span>
 
-        <span *ngIf="col.field === 'Pct'" class="font-bold text-blue-600">
+        <span *ngIf="col.field === 'Pct'" class="font-bold text-blue-700">
           <ng-container *ngIf="calculateClassPctTotal(data, rowIndex) !== null">
             {{ calculateClassPctTotal(data, rowIndex) | number:'1.2-2' }}
           </ng-container>

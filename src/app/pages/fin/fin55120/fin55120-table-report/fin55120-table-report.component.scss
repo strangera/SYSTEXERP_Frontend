@@ -40,6 +40,14 @@
     .p-component-overlay {
       background-color: rgb(217 217 217 / 40%) !important;
     }
+    .empty-row {
+      background-color: transparent !important; /* 移除隔行變色的背景 */
+
+      td {
+        border-color: transparent !important; /* 移除網格線 */
+        pointer-events: none; /* 確保不能點擊 */
+      }
+    }
   }
   .no-wrap {
     white-space: nowrap;
@@ -74,5 +82,35 @@
     &:active {
       color: #0d47a1; // 點擊瞬間顏色
     }
+  }
+}
+:host ::ng-deep {
+  /* 中類分類頭：使用淡淡的灰色背景，並加強下邊框 */
+  .row-class-header {
+    background-color: #f8f9fa !important; // 或是 var(--surface-100)
+    border-bottom: 2px solid var(--surface-200) !important;
+
+    span {
+      letter-spacing: 1px;
+    }
+  }
+
+  /* 中類小計行：使用淺藍色背景，讓它從白色資料列中「跳」出來 */
+  .row-class-footer {
+    background-color: #e3f2fd !important; // 淡淡的藍色
+
+    td {
+      color: #1e3a8a; // 深藍色文字
+    }
+
+    // 讓合計的文字稍微有點距離感
+    .font-bold {
+      text-shadow: 0.5px 0px 0px rgba(0, 0, 0, 0.1);
+    }
+  }
+
+  /* 確保原本的資料列維持白色 */
+  tr:not(.row-class-header):not(.row-class-footer):not(.empty-row) {
+    background-color: #ffffff !important;
   }
 }

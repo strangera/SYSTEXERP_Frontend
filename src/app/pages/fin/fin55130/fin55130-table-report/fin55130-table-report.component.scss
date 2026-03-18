@@ -75,4 +75,32 @@
       color: #0d47a1; // 點擊瞬間顏色
     }
   }
+  .p-datatable {
+    .empty-row {
+      background-color: transparent !important;
+      /* 關鍵：強制空列不顯示 striped 背景色 */
+      &.p-highlight,
+      &:nth-child(even) {
+        background-color: transparent !important;
+      }
+
+      td {
+        border-color: transparent !important; /* 讓網格線消失 */
+        border-top: none !important;
+        border-bottom: none !important;
+        background-color: transparent !important;
+        padding: 0 !important;
+        height: 28px; /* 維持與一般資料列一樣的高度 */
+      }
+    }
+
+    /* 修正 Column Group 造成的邊框重疊感 */
+    .row-class-header,
+    .row-class-footer {
+      td {
+        border-left: 1px solid var(--surface-d) !important;
+        border-right: 1px solid var(--surface-d) !important;
+      }
+    }
+  }
 }
