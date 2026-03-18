@@ -949,6 +949,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
   }
 
   private validateStep1(): boolean {
+    // 清除未填位置編號的空列
+    this.step1Component?.removeEmptyNewRows();
+
     // 儲存 Step 1 資料 (無論驗證是否通過都先儲存)
     this.wizardState.contractInfo = this.step1Form.getRawValue() as ContractInfo;
 
