@@ -85,6 +85,10 @@ export const tlsRoutes: Routes = [
   { path: 'tls41010', loadComponent: () => import('./tls41010/tls41010.component').then(m => m.TLS41010Component), data: { progNo: 'TLS41010' } },
   // 收銀機基本資料維護 CRU
   { path: 'tls41010cru', loadComponent: () => import('./tls41010-cru/tls41010-cru.component').then(m => m.TLS41010CRUComponent), data: { progNo: 'TLS41010' } },
+  // 快速鍵維護作業
+  { path: 'tls42010', loadComponent: () => import('./tls42010/tls42010.component').then(m => m.TLS42010Component), data: { progNo: 'TLS42010' } },
+  // 快速鍵維護作業 CRU
+  { path: 'tls42010cru', loadComponent: () => import('./tls42010-cru/tls42010-cru.component').then(m => m.TLS42010CRUComponent), data: { progNo: 'TLS42010' } },
   // 訊息登錄作業
   { path: 'tls43010', loadComponent: () => import('./tls43010/tls43010.component').then(m => m.TLS43010Component), data: { progNo: 'TLS43010' } },
   // 訊息登錄作業 CRU
@@ -105,6 +109,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls51140', loadComponent: () => import('./tls51140/tls51140.component').then(m => m.Tls51140Component), data: { progNo: 'Tls51140' } },
   // 自營專櫃收銀扣庫維護作業 CRU
   { path: 'tls51140cru', loadComponent: () => import('./tls51140-cru/tls51140-cru.component').then(m => m.Tls51140CruComponent), data: { progNo: 'Tls51140' } },
+  // 自營傳票項目設定作業
+  { path: 'tls51150', loadComponent: () => import('./tls51150/tls51150.component').then(m => m.Tls51150Component), data: { progNo: 'Tls51150' } },
   // 採購單維護作業
   { path: 'tls52010', loadComponent: () => import('./tls52010/tls52010.component').then(m => m.TLS52010Component), data: { progNo: 'TLS52010' } },
   // 退貨單維護作業
@@ -127,6 +133,9 @@ export const tlsRoutes: Routes = [
   { path: 'tls52050cru', loadComponent: () => import('./tls52050-cru/tls52050-cru.component').then(m => m.TLS52050CRUComponent), data: { progNo: 'TLS52050' } },
   // 進貨日結作業
   { path: 'tls55010', loadComponent: () => import('./tls55010/tls55010.component').then(m => m.TLS55010Component), data: { progNo: 'TLS55010' } },
+  // 自營交易修正作業
+  { path: 'tls55020', loadComponent: () => import('./tls55020/tls55020.component').then(m => m.TLS55020Component), data: { progNo: 'TLS55020' } },
+  { path: 'tls55020cru', loadComponent: () => import('./tls55020/tls55020-cru/tls55020-cru.component').then(m => m.TLS55020CRUComponent), data: { progNo: 'TLS55020' } },
   // 廠商發票折讓作業
   { path: 'tls55030', loadComponent: () => import('./tls55030/tls55030.component').then(m => m.TLS55030Component), data: { progNo: 'TLS55030' } },
   // 廠商發票折讓作業 CRU
