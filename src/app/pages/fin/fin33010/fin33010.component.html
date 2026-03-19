@@ -83,7 +83,7 @@
   <hr />
   <app-table
     tableKey="fin33010RcvDialogTable"
-    dataKey="No"
+    dataKey="RCV_No"
     [showReportMode]="false"
     [data]="dialogData"
     [columns]="dialogColumns"
@@ -95,9 +95,10 @@
     [showManage]="false"
     [showCheckBox]="true"
     [selectionMode]="'single'"
-    [multiSortMeta]="[{ field: 'No', order: 1 }]"
+    [multiSortMeta]="[{ field: 'RCV_No', order: 1 }]"
     [totalRecords]="dialogTotalRecords"
-    [lazy]="false"
+    [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onQueryRcvNo()"
     [loading]="dialogLoading"
   ></app-table>
 </app-dialog>

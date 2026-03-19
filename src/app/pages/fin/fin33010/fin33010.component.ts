@@ -36,9 +36,9 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   dialogQueryForm = this.formBuilder.nonNullable.group({ RCV_No: [''] });
   dialogData: any[] = [];
   dialogColumns: any[] = [
-    { field: 'No', header: '收款單號' },
-    // { field: 'Name', header: '收款日期' },
-    // { field: 'Name', header: '備註' }
+    { field: 'RCV_No', header: '收款單號' },
+    { field: 'RCV_Date', header: '收款日期' },
+    { field: 'Remark', header: '備註' }
   ];
   dialogLoading = false;
   selectedItemsDialog: any[] = [];
@@ -63,39 +63,40 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
 
   onQueryRcvNo(): void {
     // 從表單取得使用者輸入的篩選關鍵字
-    const filterValue = this.dialogQueryForm.getRawValue().RCV_No?.trim().toLowerCase() || '';
-
     const params = {
       MID: 0,
-      STO_No: '10'
+      STO_No: '10',
+
+      "PageSize": 30,
+      "PageIndex": 1,
+      "SortBy": [
+        {
+          "field": "RCV_No",
+          "order": 1
+        }
+      ],
     };
     this.dialogLoading = true;
     this.dropDownListService.queryARS4001RCVNO_DropDownList(params).subscribe({
       next: (res: any) => {
         console.log('收款單號下拉 response:', res.Data);
         if (res.Status === '0000' || res.Status === '200') {
-          // 將後端回傳可能為字串陣列或物件結構轉成 table 需要的 { No, Name } 陣列
-          const raw = res.Data || {};
-          let list: any[] = [];
-          if (Array.isArray(raw)) {
-            list = raw.map((d: any) => (typeof d === 'string' ? { No: d, Name: d } : { No: d.No || d, Name: d.Name || d }));
-          } else if (Array.isArray(raw.RCV_No)) {
-            list = raw.RCV_No.map((d: any) => (typeof d === 'string' ? { No: d, Name: d } : { No: d.No || d, Name: d.Name || d }));
-          } else if (Array.isArray(raw.data)) {
-            list = raw.data.map((d: any) => (typeof d === 'string' ? { No: d, Name: d } : { No: d.No || d, Name: d.Name || d }));
-          }
+          /// 比照您先前的 API 結構描述
+          const resData = res.Data || {};
+          const queryList = resData.QueryData || [];
 
-          // 2. 執行篩選邏輯：如果輸入框有值，則進行過濾
-          if (filterValue) {
-            list = list.filter(item =>
-              // 轉成字串並轉小寫，確保比對一致
-              String(item.No).toLowerCase().includes(filterValue)
-            );
-          }
+          this.dialogData = queryList.map((item: any) => ({
+            RCV_No: item.RCV_No,
+            RCV_Date: item.RCV_Date,
+            Remark: item.Remark
+          }));
 
-          this.dialogData = list;
-          this.dialogTotalRecords = this.dialogData.length;
+          // 重要：更新總筆數，Table 底下的分頁器才會顯示正確頁數
+          this.dialogTotalRecords = resData.TotalRows || 0;
+          this.queryStateService.setQueryState(this.ProgNo, params);
         } else {
+          this.dialogData = [];
+          this.dialogTotalRecords = 0;
           this.messageService?.errorBubble?.(res.Message || '查詢失敗');
         }
       },
