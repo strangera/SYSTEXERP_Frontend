@@ -12,8 +12,8 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
@@ -36,7 +36,7 @@ import { FIN53010Data, FIN53010Payload } from './fin53010.model';
     MenubarComponent,
     MultiSelectComponent,
     RadiobuttonComponent,
-    TableReportComponent,
+    TableComponent,
   ],
 })
 export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> implements OnInit {
@@ -85,9 +85,6 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     { field: 'DetailCount', header: '明細筆數', align: 'right' },
   ];
 
-  /** 給 app-table-report 使用的最後查詢條件（保留 pageSize/pageIndex 供前端使用） */
-  public lastQueryBody: FIN53010Payload | null = null;
-
   constructor(
     public readonly service: FIN53010Service,
     private readonly logger: NGXLogger,
@@ -106,7 +103,6 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       const payload = this.buildApiPayload();
-      this.lastQueryBody = payload;
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.logger.debug(`onSubmit:`, [payload]);
@@ -121,6 +117,15 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
         },
       });
     });
+  }
+
+  /**
+   * 給 `<app-table>` 的 LazyLoad 事件。
+   * 會先把分頁/排序參數回填到 queryForm，再觸發查詢維持功能正常。
+   */
+  public onTableLazyLoadData(event: LazyLoadEvent): void {
+    this.onLazyLoadData(event, this.queryForm);
+    this.onSubmit();
   }
 
   /**
@@ -158,18 +163,5 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     );
 
     return Object.fromEntries(cleanedEntries) as FIN53010Payload;
-  }
-
-  /** 將分頁欄位
-  /**
-   * 給 app-table-report 使用的查詢函式（分頁 / 排序載入）。
-   */
-  public queryFIN53010(body: FIN53010Payload) {
-    this.lastQueryBody = body;
-    const payload = this.buildApiPayload(body);
-    this.logger.debug('queryFIN53010 (table-report):', [body, payload]);
-    return this.service.loadFIN53010(payload).pipe(
-      tap(res => this.service.getAccDescOptions(res.Data.map(d => d.Remark).filter(Boolean))),
-    );
   }
 }
