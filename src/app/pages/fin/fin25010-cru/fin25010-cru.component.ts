@@ -223,13 +223,13 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
           ACP_YYYYMM: item.ACP_YYYYMM,
           acp_termno: Number(item.ACP_TERMNO),
           ACP_Amt: Number(item.ACP_Amt),
-          PTA_Date: this.datePipe.transform(item.PTA_Date, 'yyyy-MM-dd') || '',
+          PTA_Date: this.datePipe.transform(this.dataForm.value.ACP_ExpectPayDate, 'yyyy-MM-dd') || '',
           NoteDesc: item.NoteDesc,
           IN_TYPE: item.IN_TYPE,
           Remit_Status: item.Remit_Status
         }));
         const request: InsertFIN25010Request = {
-          D_Date: this.datePipe.transform(this.dataForm.get('ACP_ExpectPayDate')?.value, 'yyyy-MM-dd') || '',
+          D_Date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
           APS3009: aps3009Items
         };
         this.loading = true; // 記得要打開 loading
