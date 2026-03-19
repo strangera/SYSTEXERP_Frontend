@@ -67,7 +67,9 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
     { field: 'ARS_BalAmt', header: '應收帳款餘額', format: formatAmount, align: 'right' },
     { field: 'ARS_Date', header: '立帳日期', format: formatDate },
     { field: 'PTA_Date', header: '預計收款日', format: formatDate },
-    { field: 'CustInfo', header: '廠商編號' },
+    // { field: 'CustInfo', header: '廠商編號' },
+    { field: 'CustNo', header: '廠商編號' },
+    { field: 'CustName', header: '廠商名稱' },
     { field: 'NoteDesc', header: '摘要' },
     { field: 'VouNo', header: '傳票號碼' },
     { field: 'PostFlagName', header: '傳票狀態' },
@@ -117,6 +119,7 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
       this.fin32010Service.queryFIN32010(body)
         .pipe(finalize(() => this.loading = false), untilDestroyed(this))
         .subscribe(response => {
+          console.log('API response:', response.Data);
           const rows = response.Data ?? [];
           // 把狀態代碼轉成文字顯示
           this.data = rows.map((r: any) => {
