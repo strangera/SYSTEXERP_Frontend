@@ -153,7 +153,7 @@ export class FIN32020Service {
   /** ✅ GLS1005 科目下拉：/queryGLS1005_DropDownList */
   getGLS1005DropDown(): Observable<ApiResponse<Gls1005DropDownItem[]>> {
     return this.http.post<ApiResponse<Gls1005DropDownItem[]>>(
-      `${this.glsUrl}/queryGLS1005_DropDownList`,
+      `${this.glsUrl}/queryGLS1005_ledgerMD_DropDownList`,
       {}
     );
   }
