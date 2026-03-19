@@ -88,13 +88,19 @@ export class FIN32020Component
       header: '收款日期',
       format: (v: string) => this.formatDate(v),
     },
+     {
+      field: 'ADJ_Amt',
+      header: '調整金額',
+      align: 'right',
+      format: this.moneyFormat,
+    },
     { field: 'Remark', header: '備註' },
   ];
 
   // 展開明細欄位：_Details
   expansionColumns: ReportColumn[] = [
     { field: 'ARS_No', header: '應收帳款單號' },
-    { field: 'AccNo', header: '科目代號' },
+    { field: 'AccNo', header: '調整科目' },
     { field: 'AccCName', header: '科目名稱' },
     {
       field: 'ADJ_Amt',
