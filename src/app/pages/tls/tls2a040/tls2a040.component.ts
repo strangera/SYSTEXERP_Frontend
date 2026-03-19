@@ -5,6 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls2a040Service } from '@service/api/tls/tls2a040.service';
 import { ECRNoService } from '@service/basic/queryPOS1002.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -17,7 +18,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatAmount, formatDate, formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
+import { Column, formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import saveAs from 'file-saver';
 import JSZip from 'jszip';
@@ -26,6 +27,7 @@ import { Button } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
 import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { DOC_TYPE_COLUMNS } from './tls2a040.model';
 
 export interface FileItem {
   fileData: string; // Base64 字串
@@ -59,7 +61,7 @@ export interface FileItem {
 })
 export class TLS2A040Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    referenceNo: [null],                              // 信用卡卡號、券號、發票號碼.有價券.作廢發票
+    referenceNo: [null],                              // 信用卡卡號(信用卡)、有價券號(有價券)、發票號碼(作廢發票)
     docType: ['creditcard', Validators.required],     // 預設選信用卡
     ECR_No: [null],                                   // 收銀機號
     TXN_No: [null],                                   // 交易序號
@@ -70,34 +72,16 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
     check_statusList: [[]],                           // 狀況
     Floor_No: [null],                                 // 樓層
     Building_No: [null],                              // 館別
-    ...createPaginationConfig([{ field: 'TXN_No', order: 1 }]),
-
+    ...createPaginationConfig([{ field: 'TXN_Date,ECR_No,TXN_No', order: 1 }]),
   });
 
   data: any[] = [];
   totalRecords = 0;
-  columns: Column[] = [
-    { field: 'TXN_Date', header: '銷售日期', format: formatDate },
-    { field: 'ECR_No', header: '收銀機號' },
-    { field: 'TXN_No', header: '交易序號' },
-    { field: 'TLT_No', header: '專櫃編號' },
-    { field: 'tlt_name', header: '櫃位名稱' },
-    { field: 'TXN_GUIBegNo', header: '發票號碼' },
-    { field: 'CRD_No', header: '信用卡卡號' },
-    { field: 'TXN_PayAmt', header: '金額', format: formatAmount, align: 'right' },
-    { field: 'check_status_label', header: '狀況' },
-    { field: 'check_remark', header: '備註' }
-  ];
+  columns: Column[] = DOC_TYPE_COLUMNS['creditcard'];
 
   // 下拉選單資料
   ECRNoOptions: any[] = [];
-  statusOptions = [
-    { label: '信用卡缺單', value: '2' },
-    { label: '信用卡未簽名', value: '3' },
-    { label: '其他異常', value: '4' },
-    { label: '遺失券', value: '5' },
-    { label: '發票未繳回', value: '6' }
-  ];
+  statusOptions = getSYS1000Options('check_status').filter(opt => opt.value !== '1');
   floorOptions: any[] = [];
   buildingNoOptions: IDropdownItem[] = [];
   selectedItems: any[] = [];
@@ -155,7 +139,6 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
               ...item,
               TXN_GUIBegNo: item.TXN_GUIBegNo ?? '--',
               check_status_label: statusOption ? statusOption.label : item.check_status,  // 顯示中文
-              TXN_No: item.TXN_No != null ? item.TXN_No.toString().padStart(6, '0') : '' // 補零
             };
           });
 
@@ -237,5 +220,13 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
 
   get selectedCount(): number {
     return this.selectedItems?.length ?? 0;
+  }
+
+  onDocTypeChange(type: string) {
+    this.columns = DOC_TYPE_COLUMNS[type] || DOC_TYPE_COLUMNS['creditcard'];
+    this.queryForm.patchValue({
+      referenceNo: null,
+    });
+    this.onSubmit(this.queryForm);
   }
 }
