@@ -453,10 +453,10 @@ export class FIN32020CRUComponent
       ? this.toYMD(raw.ARS_Date_To as Date)
       : null;
 
-    if (!venNo && !arsNo && !arsDateFrom && !arsDateTo) {
-      console.warn('請至少輸入廠客代號 / 應收帳款單號 / 立帳日');
-      return;
-    }
+    // if (!venNo && !arsNo && !arsDateFrom && !arsDateTo) {
+    //   console.warn('請至少輸入廠客代號 / 應收帳款單號 / 立帳日');
+    //   return;
+    // }
 
     this.arsLoading = true;
 
@@ -775,4 +775,10 @@ confirmAdjAccSelection(): void {
     this.adjAccTotalRecords = 0;
     this.adjAccLastQueryBody = null;
   }
+  onARSCancel(): void {
+  this.resetARSDialogState();
+}
+onAdjAccCancel(): void {
+  this.resetAdjAccDialogState();
+}
 }
