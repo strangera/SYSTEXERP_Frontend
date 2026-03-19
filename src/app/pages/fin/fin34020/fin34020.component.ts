@@ -4,8 +4,8 @@ import { HttpResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { map } from 'rxjs/operators';
 
+import { finalize, map } from 'rxjs/operators';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -451,62 +451,70 @@ export class FIN34020Component extends BasicQueryPageComponent<any> {
     }
   }
 
-  private buildExportBody(): any {
-    if (!this.lastQueryBody) return null;
+private buildExportBody(): QueryFIN34020Request | null {
+  if (!this.lastQueryBody) return null;
 
-    const exportBody = { ...this.lastQueryBody };
+  const payload = this.buildQueryPayload({
+    ...this.lastQueryBody,
+    SortBy: this._currentSortBy || this.defaultSort,
+  });
 
-    // 你專案有時候會混 pageIndex/pageSize & PageIndex/PageSize，這裡全部刪掉最保險
-    delete exportBody.pageIndex;
-    delete exportBody.pageSize;
-    delete exportBody.PageIndex;
-    delete exportBody.PageSize;
+  delete (payload as any).PageIndex;
+  delete (payload as any).PageSize;
+  delete (payload as any).Offset;
+  delete (payload as any).OrderBy;
 
-    delete exportBody.Offset;
-    delete exportBody.OrderBy;
-
-    return exportBody;
+  return payload;
+}
+onExportPDF() {
+  const exportBody = this.buildExportBody();
+  if (!exportBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
   }
 
-  onExportPDF() {
-    const exportBody = this.buildExportBody();
-    if (!exportBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-      return;
-    }
+  this.btnLoading = true;
+  this.fin34020Service
+    .exportFIN34020PDF(exportBody)
+    .pipe(
+      untilDestroyed(this),
+      finalize(() => {
+        this.btnLoading = false;
+        this.cdr.detectChanges();
+      })
+    )
+    .subscribe({
+      next: (resp) => this.handleFileExport(resp, '.pdf'),
+      error: (err) => {
+        console.error('PDF export error:', err);
+        this.messageService?.errorBubble?.(err?.error?.Message || 'PDF 匯出失敗');
+      },
+    });
+}
 
-    this.btnLoading = true;
-    this.fin34020Service
-      .exportFIN34020PDF(exportBody)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (resp) => this.handleFileExport(resp, '.pdf'),
-        error: (err) => {
-          console.error(err);
-          this.messageService.errorBubble('匯出失敗');
-        },
-        complete: () => (this.btnLoading = false),
-      });
+onExportXLSX() {
+  const exportBody = this.buildExportBody();
+  if (!exportBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
   }
 
-  onExportXLSX() {
-    const exportBody = this.buildExportBody();
-    if (!exportBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-      return;
-    }
-
-    this.btnLoading = true;
-    this.fin34020Service
-      .exportFIN34020Excel(exportBody)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (resp) => this.handleFileExport(resp, '.xlsx'),
-        error: (err) => {
-          console.error(err);
-          this.messageService.errorBubble('匯出失敗');
-        },
-        complete: () => (this.btnLoading = false),
-      });
-  }
+  this.btnLoading = true;
+  this.fin34020Service
+    .exportFIN34020Excel(exportBody)
+    .pipe(
+      untilDestroyed(this),
+      finalize(() => {
+        this.btnLoading = false;
+        this.cdr.detectChanges();
+      })
+    )
+    .subscribe({
+      next: (resp) => this.handleFileExport(resp, '.xlsx'),
+      error: (err) => {
+        console.error('Excel export error:', err);
+        this.messageService?.errorBubble?.(err?.error?.Message || 'Excel 匯出失敗');
+      },
+    });
+}
 }
