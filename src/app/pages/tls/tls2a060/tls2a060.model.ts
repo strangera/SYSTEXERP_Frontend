@@ -24,6 +24,8 @@ export interface TLS2A060Data {
   detailId?: number;         // 明細id（POS30011_void_invoice.id => 代表已審核）
   check_status?: string;     // 審核狀況
   check_remark?: string;     // 備註
+  data_status?: string;      // 資料狀態 (insert: 新增, update: 更新)
+  isClose?: string;          // 是否已關帳 (Y/N)
 }
 
 export interface TLS2A060footerData {
