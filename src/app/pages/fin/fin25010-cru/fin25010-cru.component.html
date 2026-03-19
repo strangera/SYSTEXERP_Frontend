@@ -72,7 +72,20 @@
       [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event; calculateFooter()"
       [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="lastQueryBody"
       [queryFunction]="fin25010Service.queryAddFIN25010.bind(fin25010Service)" groupRowsBy="ven_no"
-      [subTotalData]="subTotalData" [footerData]="footerData" [lazy]="false">
+      [subTotalData]="subTotalData" [footerData]="footerData" [lazy]="false"
+      [customTemplates]="{ 'ACP_Amt': acpAmtTemplate }">
     </app-table-report>
   </p-panel>
 </div>
+<ng-template #acpAmtTemplate let-rowData let-index="index">
+  <ng-container *ngIf="rowData.IN_TYPE === '3'; else normalText">
+    <p-inputNumber class="w-full" styleClass="w-full" inputId="integeronly" (onInput)="calculateFooter()"
+      [(ngModel)]="rowData.ACP_Amt" placeholder="請輸入付款金額" />
+  </ng-container>
+
+  <ng-template #normalText>
+    <span [class.text-red-500]="rowData.ACP_Amt < 0">
+      {{ rowData.ACP_Amt | number:'1.0-0' }}
+    </span>
+  </ng-template>
+</ng-template>

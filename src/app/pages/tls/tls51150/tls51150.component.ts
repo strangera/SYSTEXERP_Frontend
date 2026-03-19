@@ -316,16 +316,7 @@ export class Tls51150Component extends BasicQueryPageComponent<any> implements O
   /** 錯誤檢查 */
   public validateRow = (rowData: TLS21020Data, index?: number): { isValid: boolean, errorMessage: string; } => {
     // 重複性檢查
-    const rows = this.tableData();
     const { AccDC, AccNo, ItemDesc, ABAT_YN, VEN_No, PAY_days } = rowData;
-    const duplicateKey = `${AccDC}|${AccNo}|${ItemDesc}`;
-
-    for (const item of rows) {
-      if (item === rowData) continue;
-      const key = `${item.AccDC}|${item.AccNo}|${item.ItemDesc}`;
-      if (key === duplicateKey) return this.fail('會計科目與項目描述必須唯一');
-    }
-
     // 立沖科目檢查
     if (ABAT_YN === 'Y') {
       if (this.isEmpty(VEN_No)) return this.fail('應收廠商必須填寫');
