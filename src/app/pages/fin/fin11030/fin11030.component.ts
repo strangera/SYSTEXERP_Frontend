@@ -71,32 +71,31 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
     });
   }
   onDelete(selectedRows: APS2001Data[]) {
-    const deleteList: FIN11030DeleteItem[] = selectedRows
-      .filter((row) => this.isRowSelectable(row))
-      .map((row) => ({
-        SAL_GUIYYYYMM: this.formatDeleteYYYYMM(row.SAL_GUIYYYYMM),
-        SAL_GUITrack: row.SAL_GUITrack,
-        SAL_GUIBegNo: row.SAL_GUIBegNo,
-        SAL_GUIEndNo: row.SAL_GUIEndNo,
-        SAL_GUIPaper: row.SAL_GUIPaper,
-      }));
+    this.messageService.confirm({
+      header: `是否確認刪除 ${selectedRows.length} 筆資料?`,
+      accept: () => {
+        const deleteList: FIN11030DeleteItem[] = selectedRows
+          .filter((row) => this.isRowSelectable(row))
+          .map((row) => ({
+            SAL_GUIYYYYMM: this.formatDeleteYYYYMM(row.SAL_GUIYYYYMM),
+            SAL_GUITrack: row.SAL_GUITrack,
+            SAL_GUIBegNo: row.SAL_GUIBegNo,
+            SAL_GUIEndNo: row.SAL_GUIEndNo,
+            SAL_GUIPaper: row.SAL_GUIPaper,
+          }));
 
-    if (!deleteList.length) {
-      this.messageService.warnBubble('請先勾選可刪除資料');
-      return;
-    }
-
-    this.fin11030Service.deleteFIN11030(deleteList).pipe(untilDestroyed(this)).subscribe({
-      next: (response) => {
-        if (response?.Status === '0000') {
-          this.messageService.successBubble(response.Message || '刪除成功');
-          this.onSubmit(this.queryForm);
-          this.selectedRows = [];
-          return;
-        }
-        this.messageService.errorBubble(response?.Message || '刪除失敗');
+        this.fin11030Service.deleteFIN11030(deleteList).pipe(untilDestroyed(this)).subscribe({
+          next: (response) => {
+            if (response?.Status === '0000') {
+              this.messageService.successBubble(response.Message || '刪除成功');
+              this.onSubmit(this.queryForm);
+              this.selectedRows = [];
+              return;
+            }
+            this.messageService.errorBubble(response?.Message || '刪除失敗');
+          },
+        });
       },
-
     });
   }
 
