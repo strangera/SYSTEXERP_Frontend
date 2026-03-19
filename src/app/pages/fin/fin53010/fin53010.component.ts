@@ -47,7 +47,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     VouNoStart: new FormControl<number | void>(void 0),
     VouNoEnd: new FormControl<number | void>(void 0),
     /** 傳票類別 1:現金收入 2:現金支出 3:轉帳傳票 */
-    VouType: new FormControl<'0' | '1' | '2' | void>(void 0),
+    VouType: new FormControl<'1' | '2' | '3' | void>('3'),
     VouDateStart: new FormControl<Date | void>(void 0),
     VouDateEnd: new FormControl<Date | void>(void 0),
     /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
