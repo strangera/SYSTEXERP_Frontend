@@ -82,7 +82,7 @@
     <header>
       <div class="flex align-items-center">
         <p-button label="匯出切結書" severity="success" (click)="exportReport(selectedItems)"
-          [disabled]="selectedCount === 0" styleClass="small-btn"></p-button>
+          [disabled]="selectedCount === 0" styleClass="small-btn" [loading]="btnLoading"></p-button>
       </div>
     </header>
   </app-table>

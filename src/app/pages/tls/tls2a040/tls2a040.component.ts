@@ -25,6 +25,7 @@ import JSZip from 'jszip';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { DropdownModule } from 'primeng/dropdown';
+import { finalize } from 'rxjs';
 import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { DOC_TYPE_COLUMNS } from './tls2a040.model';
@@ -85,6 +86,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
   floorOptions: any[] = [];
   buildingNoOptions: IDropdownItem[] = [];
   selectedItems: any[] = [];
+  btnLoading = false;
 
   constructor(
     private locationOptionsService: LocationOptionsService,
@@ -134,11 +136,9 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
           const rawData = res.Data ?? [];
 
           this.data = rawData.map((item: any) => {
-            const statusOption = this.statusOptions.find(opt => opt.value === item.check_status);
             return {
               ...item,
               TXN_GUIBegNo: item.TXN_GUIBegNo ?? '--',
-              check_status_label: statusOption ? statusOption.label : item.check_status,  // 顯示中文
             };
           });
 
@@ -156,9 +156,6 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-
-
-
   getDocLabel(): string {
     const docType = this.queryForm.get('docType')?.value;
     switch (docType) {
@@ -172,6 +169,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
         return '編號';
     }
   }
+
   exportReport(selectedItems: any[]): void {
     if (!selectedItems || selectedItems.length === 0) {
       this.messageService.warnBubble('請先勾選要匯出的項目');
@@ -181,7 +179,8 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
       selectList: selectedItems,
       docType: this.queryForm.get('docType')?.value,
     }
-    this.tls2a040Service.exportTLS2A040(payload).subscribe(response => {
+    this.btnLoading = true;
+    this.tls2a040Service.exportTLS2A040(payload).pipe(finalize(() => this.btnLoading = false)).subscribe(response => {
       if (response.Status !== '0000') {
         return;
       }
@@ -214,7 +213,6 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
           saveAs(content, `CRD-${timestamp}.zip`);
         });
       }
-      this.onSubmit(this.queryForm);
     });
   }
 
