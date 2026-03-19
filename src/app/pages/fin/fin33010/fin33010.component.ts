@@ -37,8 +37,8 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   dialogData: any[] = [];
   dialogColumns: any[] = [
     { field: 'No', header: '收款單號' },
-    { field: 'Name', header: '收款日期' },
-    { field: 'Name', header: '備註' }
+    // { field: 'Name', header: '收款日期' },
+    // { field: 'Name', header: '備註' }
   ];
   dialogLoading = false;
   selectedItemsDialog: any[] = [];
@@ -62,6 +62,9 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   }
 
   onQueryRcvNo(): void {
+    // 從表單取得使用者輸入的篩選關鍵字
+    const filterValue = this.dialogQueryForm.getRawValue().RCV_No?.trim().toLowerCase() || '';
+
     const params = {
       MID: 0,
       STO_No: '10'
@@ -69,6 +72,7 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
     this.dialogLoading = true;
     this.dropDownListService.queryARS4001RCVNO_DropDownList(params).subscribe({
       next: (res: any) => {
+        console.log('收款單號下拉 response:', res.Data);
         if (res.Status === '0000' || res.Status === '200') {
           // 將後端回傳可能為字串陣列或物件結構轉成 table 需要的 { No, Name } 陣列
           const raw = res.Data || {};
@@ -80,6 +84,15 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
           } else if (Array.isArray(raw.data)) {
             list = raw.data.map((d: any) => (typeof d === 'string' ? { No: d, Name: d } : { No: d.No || d, Name: d.Name || d }));
           }
+
+          // 2. 執行篩選邏輯：如果輸入框有值，則進行過濾
+          if (filterValue) {
+            list = list.filter(item =>
+              // 轉成字串並轉小寫，確保比對一致
+              String(item.No).toLowerCase().includes(filterValue)
+            );
+          }
+
           this.dialogData = list;
           this.dialogTotalRecords = this.dialogData.length;
         } else {
