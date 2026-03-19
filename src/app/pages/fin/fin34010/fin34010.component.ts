@@ -114,21 +114,21 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
   readonly defaultSort: SortItem[] = [{ field: 'ARS_Date', order: 1 }];
   private _currentSortBy: SortItem[] = this.defaultSort;
 
-  showFlagOptions: any[] = [
-    { value: '1', label: '顯示' },
-    { value: '2', label: '不顯示' },
-  ];
+showFlagOptions: any[] = [
+  { value: 'Y', label: '顯示' },
+  { value: 'N', label: '不顯示' },
+];
 
-  queryForm = this.formBuilder.group({
-    VEN_No: [null as string | null],
-    AccNo: [null as string | null],
-    ARSDateFrom: [null as Date | null],
-    ARSDateTo: [null as Date | null],
-    ShowArsAmt: ['1' as string],
-    ShowZeroAmt: ['1' as string],
+queryForm = this.formBuilder.group({
+  VEN_No: [null as string | null],
+  AccNo: [null as string | null],
+  ARSDateFrom: [null as Date | null],
+  ARSDateTo: [null as Date | null],
+  ShowArsAmt: ['Y' as string],
+  ShowZeroAmt: ['Y' as string],
 
-    ...createPaginationConfig(this.defaultSort),
-  });
+  ...createPaginationConfig(this.defaultSort),
+});
 
   btnExportExcelLoading = false;
   btnExportPdfLoading = false;
@@ -144,16 +144,16 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
 
   /* ----------------- 工具 ----------------- */
 
-  private updateColumns(): void {
-    const showArsAmt = this.queryForm.get('ShowArsAmt')?.value;
+private updateColumns(): void {
+  const showArsAmt = this.queryForm.get('ShowArsAmt')?.value;
 
-    this.columns = this.allColumns.filter((col) => {
-      if (col.field === 'ARS_Amt' && showArsAmt === '2') {
-        return false;
-      }
-      return true;
-    });
-  }
+  this.columns = this.allColumns.filter((col) => {
+    if (col.field === 'ARS_Amt' && showArsAmt === 'N') {
+      return false;
+    }
+    return true;
+  });
+}
 
   private moneyFormat(value: number | string): string {
     if (value == null || value === '') return '0';
@@ -432,16 +432,16 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  onClear(frm: FormGroup) {
-    frm.reset({
-      VEN_No: null,
-      AccNo: null,
-      ARSDateFrom: null,
-      ARSDateTo: null,
-      ShowArsAmt: '1',
-      ShowZeroAmt: '1',
-      ...createPaginationConfig(this.defaultSort),
-    });
+onClear(frm: FormGroup) {
+  frm.reset({
+    VEN_No: null,
+    AccNo: null,
+    ARSDateFrom: null,
+    ARSDateTo: null,
+    ShowArsAmt: 'Y',
+    ShowZeroAmt: 'Y',
+    ...createPaginationConfig(this.defaultSort),
+  });
 
     this.submitted = false;
     this.data = [];
