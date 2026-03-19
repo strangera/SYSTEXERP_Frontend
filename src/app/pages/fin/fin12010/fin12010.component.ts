@@ -116,22 +116,19 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
 
   onDelete(selectedRows: IFin12010Data[]) {
     if (!selectedRows || selectedRows.length === 0) return;
-
-    const idList = selectedRows.map(row => row.id);
-    this.loading = true;
-
-    this.fin12010Service.deleteFIN12010(idList)
-      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('刪除成功');
-          this.onSubmit(this.queryForm); // 重新查詢資料
-          this.selectedItems = []; // 清空已選項目（假設你有這個變數）
-        },
-        error: () => {
-          this.messageService.errorBubble('刪除失敗');
-        }
-      });
+    this.messageService.confirm({
+      header: `是否確認刪除 ${selectedRows.length} 筆資料?`,
+      accept: () => {
+        const idList = selectedRows.map(row => row.id);
+        this.loading = true;
+        this.fin12010Service.deleteFIN12010(idList)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe(() => {
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit(this.queryForm); // 重新查詢資料
+            this.selectedItems = []; // 清空已選項目（假設你有這個變數）
+          });
+      }
+    });
   }
-
 }
