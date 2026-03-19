@@ -71,19 +71,28 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
   venNoOptions: any[] = [];
 
   readonly pageSizeFixed = 30;
+columns: ReportColumn[] = [];
+private allColumns: ReportColumn[] = [
+  { field: 'ARS_Date', header: '立帳日期', format: (v: string) => this.formatDate(v) },
+  { field: 'VEN_No', header: '客戶代號' },
+  { field: 'VEN_Name', header: '客戶名稱' },
+  { field: 'ARS_No', header: '帳款單號' },
+  { field: 'AccNo', header: '科目代號' },
+  { field: 'ARS_Amt', header: '帳款金額', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'REC_Amt', header: '收款金額', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'ADJ_Amt', header: '調整金額', format: this.moneyFormat.bind(this), isTotal: true },
+  { field: 'Unpaid_Amt', header: '未收金額', format: this.moneyFormat.bind(this), isTotal: true },
+];
+private updateColumns(): void {
+  const showArsAmt = this.queryForm.get('ShowArsAmt')?.value;
 
-  columns: ReportColumn[] = [
-    { field: 'ARS_Date', header: '立帳日期', format: (v: string) => this.formatDate(v) },
-    { field: 'VEN_No', header: '客戶代號' },
-    { field: 'VEN_Name', header: '客戶名稱' },
-    { field: 'ARS_No', header: '帳款單號' },
-    { field: 'AccNo', header: '科目代號' },
-    { field: 'ARS_Amt', header: '帳款金額', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'REC_Amt', header: '收款金額', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'ADJ_Amt', header: '調整金額', format: this.moneyFormat.bind(this), isTotal: true },
-    { field: 'Unpaid_Amt', header: '未收金額', format: this.moneyFormat.bind(this), isTotal: true },
-  ];
-
+  this.columns = this.allColumns.filter(col => {
+    if (col.field === 'ARS_Amt' && showArsAmt === '2') {
+      return false; // ❌ 隱藏
+    }
+    return true;
+  });
+}
   private moneyFormat(value: number | string): string {
     if (value == null || value === '') return '0';
     const num = typeof value === 'string' ? Number(value.replace(/,/g, '')) : Number(value);
@@ -260,6 +269,19 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
     );
 
     this.loadDropdownOptions();
+    // ✅ 初始化一次
+  this.updateColumns();
+
+  // ✅ 監聽 radio 變化
+  this.queryForm.get('ShowArsAmt')?.valueChanges
+    .pipe(untilDestroyed(this))
+    .subscribe(() => {
+      this.updateColumns();
+
+      // 🔥 強制 table refresh（很重要）
+      this.tableVer++;
+      this.cdr.detectChanges();
+    });
   }
 
   /* ----------------- Submit ----------------- */

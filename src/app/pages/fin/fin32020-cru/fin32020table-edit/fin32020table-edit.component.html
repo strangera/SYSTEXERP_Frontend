@@ -331,13 +331,21 @@
           ></ng-container>
         </ng-container>
 
-        <span *ngIf="!col.type">
-          {{
-            col.format
-              ? col.format(rowData[col.field], index, rowData)
-              : rowData[col.field]
-          }}
-        </span>
+   <span
+  *ngIf="!col.type"
+  class="fake-input block w-full"
+  [ngClass]="{
+    'is-placeholder': !rowData[col.field]
+  }"
+>
+  {{
+    rowData[col.field]
+      ? (col.format
+          ? col.format(rowData[col.field], index, rowData)
+          : rowData[col.field])
+      : '請點擊選擇'
+  }}
+</span>
       </td>
     </tr>
   </ng-template>
