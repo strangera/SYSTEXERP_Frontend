@@ -53,7 +53,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
       optionValue: 'value',                        // 綁定的值
       templateLabel: 'label',                      // 下拉清單顯示 "代碼 - 名稱"
       showClear: false,
-      onChange: (value: any, rowData: any, col: EditColumn, index: number) => {
+      onChange: (value: any, rowData: any) => {
         if (value) {
           this.dropdown.queryGls1005_ledgerMD().subscribe(options => {
             const selected = options?.find(opt => opt.value === value);
@@ -79,7 +79,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
       optionValue: 'value',       // 對應您 Option 介面的 value (No)
       templateLabel: 'label',
       showClear: false,
-      onChange: (value: any, rowData: any, col: EditColumn, index: number) => {
+      onChange: (value: any, rowData: any) => {
         if (value) {
           this.dropdown.querySys3100().subscribe(options => {
             const selected = options?.find(opt => opt.value === value);
@@ -103,6 +103,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   Trans_StatusOptions = getSYS1000Options('Trans_Status');
   private ledgerOptions$ = this.dropdown.queryGls1005_ledgerMD().pipe(shareReplay(1));
   private sys3100Options$ = this.dropdown.querySys3100().pipe(shareReplay(1));
+  initTable = false;
   constructor(
     private readonly fin51010Service: Fin51010Service,
     private readonly dropdown: DropdownApiService,
@@ -111,39 +112,41 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   }
 
   ngOnInit(): void {
+    this.initData();
+  }
+  initData() {
+    this.initTable = false;
     this.initializePage('FIN51010', this.dataForm);
     this.formTitle = '傳票資料'
     if (this.rowdata?.id) {
       this.loading = true;
-      this.fin51010Service
-        .queryFIN51010Detail({ GLS6001_ID: this.rowdata?.id })
-        .pipe(
-          finalize(() => (this.loading = false)),
-          untilDestroyed(this)
-        )
-        .subscribe((res) => {
-          if (res.Data && res.Data.length > 0) {
-            const mainData = res.Data[0];
-            this.dataForm.patchValue(mainData);
+      this.fin51010Service.queryFIN51010Detail({ GLS6001_ID: this.rowdata?.id }).pipe(
+        finalize(() => (this.loading = false)),
+        untilDestroyed(this)
+      ).subscribe((res) => {
+        if (res.Data && res.Data.length > 0) {
+          const mainData = res.Data[0];
+          this.dataForm.patchValue(mainData);
 
-            // 處理明細資料，移除特定欄位的空白
-            this.data = (mainData.LineList || []).map((line: any) => ({
-              ...line,
-              // 使用 trim() 移除空白，並確保欄位有值才處理
-              AccNo: line.AccNo?.trim(),
-              ORG_ID: line.ORG_ID?.trim(), // 如果組織代號也有同樣問題，可以一併處理
-            }));
-          }
-        });
+          // 處理明細資料，移除特定欄位的空白
+          this.data = (mainData.LineList || []).map((line: any) => ({
+            ...line,
+            // 使用 trim() 移除空白，並確保欄位有值才處理
+            AccNo: line.AccNo?.trim(),
+            ORG_ID: line.ORG_ID?.trim(), // 如果組織代號也有同樣問題，可以一併處理
+          }));
+          this.initTable = true;
+        }
+      });
     }
   }
   onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      const mainId = this.rowdata?.id;
-      if (mainId) {
-        this.messageService.confirm({
-          header: '確定修改嗎?',
-          accept: () => {
+    const mainId = this.rowdata?.id;
+    if (mainId) {
+      this.messageService.confirm({
+        header: '確定修改嗎?',
+        accept: () => {
+          this.handleSubmit(frm, () => {
             const modifiedDetails = this.data.filter((d: any) => d._dataStatus === 'modified').map((d: any) => ({
               GLS6002_ID: d.id,
               AccNo: d.AccNo,
@@ -159,9 +162,13 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
               this.messageService.successBubble(res.Message || '修改成功');
               this.onCancel();
             });
-          }
-        })
-      }
-    });
+          });
+        }
+      })
+    }
+  }
+
+  onClear() {
+    this.initData();
   }
 }
