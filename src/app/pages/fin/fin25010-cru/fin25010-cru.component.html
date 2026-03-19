@@ -17,6 +17,10 @@
             [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar label="建立日期" controlName="D_Date" [control]="dataForm.controls.D_Date"
+            [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
           <app-input-text label="匯款單號" controlName="WSLIP_NO" [control]="dataForm.controls.WSLIP_NO"
             [submitted]="submitted"></app-input-text>
         </div>
@@ -45,40 +49,6 @@
             optionValue="value" [control]="dataForm.controls.VEN_PayType" [submitted]="submitted"
             [editable]="false"></app-dropdown>
         </div>
-        <!-- 新增介面：增加 【匯款來源單號】、【建立日期起迄】、【是否形成電匯】、【付款天數】查詢條件 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown-table [control]="dataForm.controls.PAM_No" templateLabel="label" [submitted]="submitted"
-            optionLabel="PAM_No" optionValue="PAM_No" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
-            (inputValueChanged)="onAutoCompleteInputChange($event)" [formGroup]="opForm"
-            (formValueChanged)="onFormValueChanged($event)" [dialogData]="opData" [dialogColumns]="opColumns"
-            [loading]="opLoading" [totalRecords]="opTotalRecords">
-            <app-calendar-range class="col-12" label="收/付款日" controlName="PTA_Date_b"
-              [startControl]="opForm.controls.PTA_Date_b" [endControl]="opForm.controls.PTA_Date_e" />
-            <app-dropdown class="col-6" label="是否形成電匯" controlName="Remit_Status"
-              [control]="opForm.controls.Remit_Status" [options]="[
-                  { label: '是', value: 'Y' },
-                  { label: '否', value: 'N' },
-                ]" optionLabel="label" optionValue="value" [editable]="false" />
-            <app-input-text class="col-6" label="匯款來源單號" controlName="PAM_No" [control]="opForm.controls.PAM_No" />
-          </app-dropdown-table>
-        </div>
-        <!-- 建立日期(起迄) -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range label="建立日期" controlName="D_Date_b" [startControl]="dataForm.controls.D_Date_b"
-            [endControl]="dataForm.controls.D_Date_e" [submitted]="submitted"></app-calendar-range>
-        </div>
-        <!-- 是否形成電匯 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="是否形成電匯" controlName="Remit_Status" [control]="dataForm.controls.Remit_Status" [options]="[
-                { label: '是', value: 'Y' },
-                { label: '否', value: 'N' },
-              ]" optionLabel="label" optionValue="value" [submitted]="submitted" [editable]="false"></app-dropdown>
-        </div>
-        <!-- 付款天數 -->
-        <div class="col-12 md: col-6 lg:col-4">
-          <app-input-text label="付款天數" controlName="payday_Counts" [control]="dataForm.controls.payday_Counts"
-            [submitted]="submitted"></app-input-text>
-        </div>
       </div>
       <div *ngIf="!isFormReadable" class="col-12">
         <ul class="line-height-3 pl-4">
@@ -102,21 +72,7 @@
       [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event; calculateFooter()"
       [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="lastQueryBody"
       [queryFunction]="fin25010Service.queryAddFIN25010.bind(fin25010Service)" groupRowsBy="ven_no"
-      [subTotalData]="subTotalData" [footerData]="footerData" [lazy]="false"
-      [customTemplates]="{ 'ACP_Amt': acpAmtTemplate }">
+      [subTotalData]="subTotalData" [footerData]="footerData" [lazy]="false">
     </app-table-report>
   </p-panel>
 </div>
-
-<ng-template #acpAmtTemplate let-rowData let-index="index">
-  <ng-container *ngIf="rowData.IN_TYPE === '3'; else normalText">
-    <p-inputNumber class="w-full" styleClass="w-full" inputId="integeronly" (onInput)="calculateFooter()"
-      [(ngModel)]="rowData.ACP_Amt" placeholder="請輸入付款金額" />
-  </ng-container>
-
-  <ng-template #normalText>
-    <span [class.text-red-500]="rowData.ACP_Amt < 0">
-      {{ rowData.ACP_Amt | number:'1.0-0' }}
-    </span>
-  </ng-template>
-</ng-template>

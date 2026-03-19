@@ -1,20 +1,17 @@
-import { AsyncPipe, DatePipe, DecimalPipe, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
-import { InputNumberModule } from 'primeng/inputnumber';
+import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, of, switchMap } from 'rxjs';
-import { APS3009Item, FIN25010Data, FIN25010Service, InsertFIN25010Request, QueryAddFIN25010Request, QueryAddFIN25010Response, QueryDetailFIN25010Request, QueryDropFIN25010Response } from '../../../service/api/fin/fin25010.service';
+import { APS3009Item, FIN25010Data, FIN25010Service, InsertFIN25010Request, QueryAddFIN25010Request, QueryAddFIN25010Response, QueryDetailFIN25010Request } from '../../../service/api/fin/fin25010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -39,11 +36,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     TranslateModule,
     DropdownRangeComponent,
     TableReportComponent,
-    AsyncPipe,
-    CalendarRangeComponent,
-    DropdownTableComponent,
-    DecimalPipe,
-    InputNumberModule,
+    AsyncPipe
   ]
 })
 export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> implements OnInit {
@@ -53,17 +46,14 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     ven_no_e: [null], // 廠客代號(迄)
     ACP_No: [null, Validators.maxLength(14)], // 應付帳款ID
     Voucher_Kind: [null], // 傳票型態
-    VEN_PayType: ['1'], // 付款方式
+    VEN_PayType: [null], // 付款方式
     pageSize: [1780],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'ven_no', order: 1 }, { field: 'acp_DATE', order: -1 }]],
 
     // 檢視
     PAM_No: [null],  // 匯款來源單號
-    D_Date_b: [null],  // 建立日期
-    D_Date_e: [null],  // 建立日期
-    Remit_Status: [null],  // 是否形成電匯
-    payday_Counts: [null],  // 付款天數
+    D_Date: [null],  // 建立日期
     PTA_Date: [null],  // 收/付款日
     WSLIP_NO: [null],  // 匯款單號
   });
@@ -190,18 +180,24 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
 
       // 第一步：先發一個請求拿 TotalCount (pageSize 給 1 即可)
       this.fin25010Service.queryAddFIN25010({ ...queryParams, pageSize: 1, pageIndex: 1 })
-        .pipe(untilDestroyed(this), switchMap(firstRes => {
-          const total = firstRes.TotalCount || 0;
-          if (total === 0) {
-            return of(firstRes); // 沒資料就直接回傳
-          }
-          // 使用精準的 total 做為 pageSize
-          return this.fin25010Service.queryAddFIN25010({
-            ...queryParams,
-            pageSize: total,
-            pageIndex: 1
-          });
-        }), finalize(() => this.loading = false)).subscribe(response => {
+        .pipe(
+          untilDestroyed(this),
+          // 第二步：拿到總筆數後，發起真正的全量查詢
+          switchMap(firstRes => {
+            const total = firstRes.TotalCount || 0;
+            if (total === 0) {
+              return of(firstRes); // 沒資料就直接回傳
+            }
+            // 使用精準的 total 做為 pageSize
+            return this.fin25010Service.queryAddFIN25010({
+              ...queryParams,
+              pageSize: total,
+              pageIndex: 1
+            });
+          }),
+          finalize(() => this.loading = false)
+        )
+        .subscribe(response => {
           this.lastQueryBody = queryParams;
           this.data = response.Data || [];
           this.totalRecords = response.TotalCount;
@@ -299,54 +295,5 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     const isTotalNegative = (this.footerData?.ACP_Amt || 0) < 0;
 
     return !hasNegativeSubtotal && !isTotalNegative;
-  }
-
-  suggestions: QueryDropFIN25010Response[] = [];
-  opData: QueryDropFIN25010Response[] = [];
-  opTotalRecords = 0;
-  opLoading = false;
-
-  opForm = this.formBuilder.group({
-    PTA_Date_b: [null],
-    PTA_Date_e: [null],
-    Remit_Status: [null],
-    PAM_No: [null, Validators.maxLength(12)],
-    ...createPaginationConfig([{ field: "D_Date", order: -1 }])
-  });
-
-  fieldsConfig: FieldsConfig[] = [
-    { field: '', header: '匯款來源單號', mainDataField: true }
-  ];
-
-  opColumns: Column[] = [
-    { field: 'PAM_No', header: '匯款來源單號' },
-    { field: 'D_Date', header: '建立日期', format: formatDate },
-    { field: 'Remit_Status', header: '是否形成電匯', format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value }
-  ];
-
-  // auto complete 查詢事件
-  onAutoCompleteInputChange(event: Record<string, string>): void {
-    this.fin25010Service.queryDropFIN25010(event).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data.map(item => ({
-        ...item,
-        label: item.PAM_No,
-      }))];
-    });
-  }
-
-  // overlay panel 查詢事件
-  onFormValueChanged(event: Record<string, string>): void {
-    this.opLoading = true;
-    this.fin25010Service.queryDropFIN25010(
-      {
-        ...event,
-        SortBy: [{ field: "D_Date", order: -1 }]
-      }
-    )
-      .pipe(untilDestroyed(this), finalize(() => this.opLoading = false))
-      .subscribe((results) => {
-        this.opData = results.Data;
-        this.opTotalRecords = results.TotalCount;
-      });
   }
 }
