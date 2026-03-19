@@ -522,20 +522,39 @@ confirmARSSelection(): void {
     arsNoToFill = inputArsNo || null;
   }
 
-  if (arsNoToFill) {
-    this.detailTableEdit?.applyDialogValue(targetRow, idx, {
-      receiveID: arsNoToFill,
-    });
-
-    this.syncDetailDataFromTableEdit();
+  if (!arsNoToFill) {
+    this.messageService?.warnBubble?.('請先選擇應收帳款單號');
+    return;
   }
+
+  // ✅ 檢查重複
+  if (this.isDuplicateARSNo(arsNoToFill, idx)) {
+    this.messageService?.warnBubble?.(`應收帳款單號【${arsNoToFill}】已存在，請勿重複選擇`);
+    return;
+  }
+
+  this.detailTableEdit?.applyDialogValue(targetRow, idx, {
+    receiveID: arsNoToFill,
+  });
+
+  this.syncDetailDataFromTableEdit();
 
   this.arsDialogVisible = false;
   this.currentDetailIndex = null;
   this.currentDetailRowData = null;
   this.arsSelectedRows = [];
 }
+private isDuplicateARSNo(arsNo: string, currentIndex: number): boolean {
+  const target = String(arsNo ?? '').trim();
+  if (!target) return false;
 
+  return (this.detailData || []).some((row: any, idx: number) => {
+    if (idx === currentIndex) return false;
+
+    const existing = String(row?.receiveID ?? '').trim();
+    return !!existing && existing === target;
+  });
+}
   /* ================= 調整科目 Dialog ================= */
 
   openAdjAccDialog(): void {
