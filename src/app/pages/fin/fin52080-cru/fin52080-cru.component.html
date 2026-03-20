@@ -14,11 +14,11 @@
           @if (isFormCreateable) {
           <!-- 新增模式：顯示兩個欄位（AccNoPrefix + AccNoSuffix） -->
           <div class="flex gap-2">
-            <div style="flex: 0 0 30%;">
+            <!-- <div style="flex: 0 0 30%;">
               <app-input-text controlName="AccNoPrefix" [control]="df().AccNoPrefix" [submitted]="submitted"
                 [showLabel]="false" [showErrorMessage]="true" [readonly]="!isFormReadable"></app-input-text>
-            </div>
-            <div style="flex: 0 0 70%;">
+            </div> -->
+            <div style="flex: 0 0 100%;">
               <app-input-text controlName="AccNoSuffix" [control]="df().AccNoSuffix" [keyFilter]="accNoSuffixFilter"
                 [submitted]="submitted" [showLabel]="false" [showErrorMessage]="true"></app-input-text>
             </div>
