@@ -76,6 +76,7 @@ export class TLS2A060Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_SaleAmt', header: '付款金額', textAlign: 'right', format: formatAmount },
     {
       field: 'check_status', header: '審核狀態', type: 'dropdown', optionLabel: 'label', optionValue: 'value',
+      width: '150px',
       options: () => this.checkStatusOptions,
     },
     {
@@ -103,11 +104,7 @@ export class TLS2A060Component extends BasicQueryPageComponent<any> implements O
   data: TLS2A060Data[] = [];
   footerData: TLS2A060footerData[] = [];
   totalRecords = 0;
-
-  isRowSelectable(rowData: any) {
-    // 已關帳就不能選取
-    return rowData.isClose !== 'Y';
-  }
+  isClose = false; // 判斷當日是否已關帳，已關帳則不能審核，disable卡控
 
   constructor(
     private dropDownListService: DropDownListService,
@@ -140,6 +137,13 @@ export class TLS2A060Component extends BasicQueryPageComponent<any> implements O
         this.data = res.Data?.mainData || [];
         this.footerData = res.Data?.totalData?.[0] || [];
         this.historyRequestBody = body;
+        if (this.data.length > 0) {
+          // 資料都是同一天取第一筆判斷當日已關帳則不能審核，要disable
+          this.isClose = this.data[0].isClose === 'Y';
+        } else {
+          // 無資料時也disable審核按鈕，避免誤操作
+          this.isClose = true;
+        }
       })
     })
   }
@@ -161,8 +165,8 @@ export class TLS2A060Component extends BasicQueryPageComponent<any> implements O
   /* 讓後端只更新有被編輯的資料，提高效能 */
   onCellValueChange(rowData: any) {
     // 已經有 detailId（代表這筆資料已經審核過要走update，而不是新增）
-    if (rowData.detailId && rowData.dataStatus !== 'insert') {
-      rowData.dataStatus = 'update';
+    if (rowData.detailId && rowData.data_status !== 'insert') {
+      rowData.data_status = 'update';
     }
   }
 }

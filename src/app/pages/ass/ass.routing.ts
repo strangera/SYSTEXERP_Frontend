@@ -39,8 +39,8 @@ export const assRoutes: Routes = [
   // { path: 'ass13040', loadComponent: () => import('./ass13040/ass13040.component').then(m => m.ASS13040Component),data: {progNo:'ASS13040'} }, // 批次報廢作業
   // { path: 'ass13040cru', loadComponent: () => import('./ass13040-cru/ass13040-cru.component').then(m => m.ASS13040CRUComponent),data: {progNo:'ASS13040'} },
   // { path: 'ass13050', loadComponent: () => import('./ass13050/ass13050.component').then(m => m.ASS13050Component),data: {progNo:'ASS13050'} }, // 移轉交接表
-  // { path: 'ass13060', loadComponent: () => import('./ass13060/ass13060.component').then(m => m.ASS13060Component),data: {progNo:'ASS13060'} }, // 固定資產重估作業
-  // { path: 'ass13060cru', loadComponent: () => import('./ass13060-cru/ass13060-cru.component').then(m => m.ASS13060CRUComponent),data: {progNo:'ASS13060'} },
+  { path: 'ass13060', loadComponent: () => import('./ass13060/ass13060.component').then(m => m.ASS13060Component), data: { progNo: 'ASS13060' } }, // 固定資產重估作業
+  { path: 'ass13060cru', loadComponent: () => import('./ass13060-cru/ass13060-cru.component').then(m => m.ASS13060CRUComponent), data: { progNo: 'ASS13060' } },
   // { path: 'ass13070', loadComponent: () => import('./ass13070/ass13070.component').then(m => m.ASS13070Component),data: {progNo:'ASS13070'} }, // 財產保管單位設定作業
   // { path: 'ass13070cru', loadComponent: () => import('./ass13070-cru/ass13070-cru.component').then(m => m.ASS13070CRUComponent),data: {progNo:'ASS13070'} },
   // { path: 'ass13080', loadComponent: () => import('./ass13080/ass13080.component').then(m => m.ASS13080Component),data: {progNo:'ASS13080'} }, // 資產變賣作業
@@ -49,7 +49,7 @@ export const assRoutes: Routes = [
   // { path: 'ass13090cru', loadComponent: () => import('./ass13090-cru/ass13090-cru.component').then(m => m.ASS13090CRUComponent),data: {progNo:'ASS13090'} },
   // { path: 'ass13100', loadComponent: () => import('./ass13100/ass13100.component').then(m => m.ASS13100Component),data: {progNo:'ASS13100'} }, // 資產清點作業
   // { path: 'ass13100cru', loadComponent: () => import('./ass13100-cru/ass13100-cru.component').then(m => m.ASS13100CRUComponent),data: {progNo:'ASS13100'} },
-  // { path: 'ass13110', loadComponent: () => import('./ass13110/ass13110.component').then(m => m.ASS13110Component),data: {progNo:'ASS13110'} }, // 資產差異表
+  { path: 'ass13110', loadComponent: () => import('./ass13110/ass13110.component').then(m => m.ASS13110Component), data: { progNo: 'ASS13110' } }, // 資產差異表
   // { path: 'ass13120', loadComponent: () => import('./ass13120/ass13120.component').then(m => m.ASS13120Component),data: {progNo:'ASS13120'} }, // 折舊攤提作業
   // { path: 'ass13120cru', loadComponent: () => import('./ass13120-cru/ass13120-cru.component').then(m => m.ASS13120CRUComponent),data: {progNo:'ASS13120'} },
   // { path: 'ass14010', loadComponent: () => import('./ass14010/ass14010.component').then(m => m.ASS14010Component),data: {progNo:'ASS14010'} }, // 進貨發票建檔作業

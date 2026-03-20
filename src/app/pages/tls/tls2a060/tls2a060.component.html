@@ -41,10 +41,11 @@
 
 <div class="card">
   <app-table-edit [loading]="loading" [columns]="columns" [(data)]="data" [footerData]="footerData"
-    [showCheckBox]="false" [showDelete]="false" [showReorder]="false" [showSort]="true" [disabled]="false"
+    [showCheckBox]="false" [showDelete]="false" [showReorder]="false" [showSort]="true" [disabled]="isClose"
     [scrollable]="true" [showPaginator]="true" [canInsert]="false"
     (fieldChange)="onCellValueChange($event.rowData)"></app-table-edit>
   <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3 bg-white sticky-bottom">
-    <app-button btnType="submit" label="審核" [loading]="loading" (clickEvent)="onCheck()" />
+    <app-button btnType="submit" label="審核" [loading]="loading" (clickEvent)="onCheck()"
+      [disabled]="isClose"></app-button>
   </div>
 </div>

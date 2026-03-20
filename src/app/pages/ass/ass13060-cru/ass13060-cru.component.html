@@ -1,148 +1,203 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="固資重估單" controlName="assets_Revaluation_Sheet"
-                        [control]="dataForm.controls.assets_Revaluation_Sheet" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="申請人員編號" controlName="userCode" [options]="userCodeOptions" optionLabel="label"
-                        optionValue="value" [control]="dataForm.controls.userCode" [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="部門代號" controlName=" organizationNumber" [options]="organizationNumberOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationNumber"
-                        [submitted]="submitted"></app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.applicationDate"
-                        [submitted]="submitted">
-                    </app-calendar>
-                </div>
-            </div>
-            <hr />
-            <app-editor-text label="固資重估說明" controlName="reamrk" [control]="dataForm.controls.reamrk"
-                [style]="{ height: '100px' }" [submitted]="submitted">
-            </app-editor-text>
-            <hr />
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1">
-                            <h5>商品 {{ i + 1 }}</h5>
-                        </div>
-                        <div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    @if (isFormEditable) {
+      <app-button
+        icon="pi pi-verified"
+        label="審核確認"
+        (click)="onApprove()"
+      ></app-button>
+    }
+    @if (isFormCreateable) {
+      <app-button
+        btnType="query"
+        label="批次新增品項"
+        (click)="openDialog()"
+      ></app-button>
+    }
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
 
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="商品編號/名稱" controlName="managementCode"
-                                [control]="getFormControl(i, 'managementCode')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="商品單位" controlName="unit" [control]="getFormControl(i, 'unit')"
-                                [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="數量" controlName="amount" [control]="getFormControl(i, 'amount')"
-                                [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="折舊年限" controlName="depreciationLife"
-                                [control]="getFormControl(i, 'depreciationLife')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="已異動折舊年限"
-                                controlName="altered_depreciationLife"
-                                [control]="getFormControl(i, 'altered_depreciationLife')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="異動年限" controlName="alteredLife"
-                                [control]="getFormControl(i, 'alteredLife')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="取得價格" controlName="receivePrice"
-                                [control]="getFormControl(i, 'receivePrice')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="已異動價格" controlName="alteredPrice"
-                                [control]="getFormControl(i, 'alteredPrice')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="累計已攤提金額" controlName="total_sharedPrice"
-                                [control]="getFormControl(i, 'total_sharedPrice')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="累計已攤提月數" controlName="total_sharedMonth"
-                                [control]="getFormControl(i, 'total_sharedMonth')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="異動購入金額" controlName="altered_buyPrice"
-                                [control]="getFormControl(i, 'altered_buyPrice')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="折舊科目" controlName="depreciation"
-                                [control]="getFormControl(i, 'depreciation')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="累計折舊科目" controlName="totalDepreciation"
-                                [control]="getFormControl(i, 'totalDepreciation')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="使用單位" controlName="usageUnit"
-                                [control]="getFormControl(i, 'usageUnit')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <hr />
-                    <app-editor-text label="單項說明" controlName="singleRemark"
-                        [control]="getFormControl(i, 'singleRemark')" [style]="{ height: '100px' }"
-                        [submitted]="submitted">
-                    </app-editor-text>
-                    <hr />
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
-
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
-            </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+      <div class="grid p-fluid">
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="固資重估單編號"
+          controlName="ASSET_EVAL_ID"
+          [control]="dataForm.controls.ASSET_EVAL_ID"
+          [submitted]="submitted"
+        ></app-input-text>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="申請人員代碼/名稱"
+          controlName="EMP_ID"
+          [options]="empIdOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.EMP_ID"
+          [submitted]="submitted"
+        ></app-dropdown>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="部門代碼/名稱"
+          controlName="ORG_ID"
+          [options]="orgIdOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.ORG_ID"
+          [submitted]="submitted"
+        ></app-dropdown>
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
+          calendarType="dateOne"
+          label="申請日期"
+          [control]="dataForm.controls.APPLY_DATE"
+          [submitted]="submitted"
+        ></app-calendar>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="固資重估說明"
+          controlName="NOTES"
+          [control]="dataForm.controls.NOTES"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+      <hr />
+      <app-table-edit
+        [data]="data"
+        (dataChange)="data = $event"
+        [loading]="loading"
+        tableKey="ASS13060_detail"
+        [columns]="columns"
+        (selectionChange)="selectedItems = $event"
+        [showInsert]="false"
+        [showReorder]="isFormCreateable || isFormEditable"
+        (insert)="openDialog()"
+        [selectedItems]="selectedItems"
+        [tableRequired]="true"
+        [disabled]="isFormReadable"
+        [canInsert]="false"
+        [showDelete]="!isFormReadable"
+      ></app-table-edit>
+      <ng-container *ngIf="!isFormReadable">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button
+            btnType="cancel"
+            [form]="dataForm"
+            (clickEvent)="onReset()"
+          ></app-button>
+          <app-button
+            btnType="submit"
+            label="儲存"
+            [loading]="loading"
+            [disabled]="!canSave()"
+          ></app-button>
         </div>
-    </p-panel>
+      </ng-container>
+    </form>
+  </p-panel>
 </div>
+
+<app-dialog
+  [visible]="dialogVisible"
+  header="資產查詢列表"
+  (visibleChange)="dialogVisible = $event"
+  (save)="saveDialog()"
+  [disable]="selectedItemsDialog.length === 0"
+>
+  <form [formGroup]="dialogQueryForm">
+    <div class="grid p-fluid">
+      <app-input-text
+        class="col-12 md:col-6 lg:col-4"
+        label="資產編號"
+        controlName="ASSET_ID"
+        [control]="dialogQueryForm.controls.ASSET_ID"
+      ></app-input-text>
+      <app-input-text
+        class="col-12 md:col-6 lg:col-4"
+        label="品項名稱"
+        controlName="GOODS_NAME"
+        [control]="dialogQueryForm.controls.GOODS_NAME"
+      ></app-input-text>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="大分類編號"
+        controlName="B_CLASS_ID"
+        [options]="bClassOptions"
+        optionLabel="label"
+        optionValue="value"
+        [control]="dialogQueryForm.controls.B_CLASS_ID"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="中分類編號"
+        controlName="M_CLASS_ID"
+        [options]="mClassOptions"
+        optionLabel="label"
+        optionValue="value"
+        [control]="dialogQueryForm.controls.M_CLASS_ID"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="小分類編號"
+        controlName="S_CLASS_ID"
+        [options]="sClassOptions"
+        optionLabel="label"
+        optionValue="value"
+        [control]="dialogQueryForm.controls.S_CLASS_ID"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="保管人代碼/名稱"
+        controlName="HOLD_EMP_ID"
+        [options]="holdEmpIdOptions"
+        optionLabel="label"
+        optionValue="value"
+        [control]="dialogQueryForm.controls.HOLD_EMP_ID"
+      ></app-dropdown>
+      <app-dropdown
+        class="col-12 md:col-6 lg:col-4"
+        label="保管單位代碼/名稱"
+        controlName="HOLD_ORG_ID"
+        [options]="holdOrgIdOptions"
+        optionLabel="label"
+        optionValue="value"
+        [control]="dialogQueryForm.controls.HOLD_ORG_ID"
+      ></app-dropdown>
+      <app-input-text
+        class="col-12 md:col-6 lg:col-4"
+        label="資產狀態"
+        controlName="ASSET_STATUS"
+        [control]="dialogQueryForm.controls.ASSET_STATUS"
+      ></app-input-text>
+    </div>
+    <div
+      class="grid justify-content-end gap-2 m-0 mb-2 border-bottom-1 surface-border pb-3"
+    >
+      <app-button btnType="clear" [form]="dialogQueryForm"></app-button>
+      <app-button
+        btnType="query"
+        [loading]="dialogLoading"
+        (click)="onDialogQuery()"
+      ></app-button>
+    </div>
+  </form>
+  <app-table-report
+    tableKey="ASS13060_AssetDialog"
+    [showReportMode]="false"
+    [data]="dialogData"
+    [columns]="dialogColumns"
+    [showDelete]="false"
+    [selectedItems]="selectedItemsDialog"
+    [showCaption]="false"
+    (selectionChange)="selectedItemsDialog = $event"
+    [showManage]="false"
+    [showCheckBox]="true"
+    [totalRecords]="totalRecords"
+    [loading]="dialogLoading"
+    [lastQueryBody]="lastQueryBody"
+  ></app-table-report>
+</app-dialog>
