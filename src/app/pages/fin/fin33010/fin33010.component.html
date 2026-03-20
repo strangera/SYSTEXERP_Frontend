@@ -98,7 +98,7 @@
     [multiSortMeta]="[{ field: 'RCV_No', order: 1 }]"
     [totalRecords]="dialogTotalRecords"
     [lazy]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onQueryRcvNo()"
+    (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQueryRcvNo()"
     [loading]="dialogLoading"
   ></app-table>
 </app-dialog>
