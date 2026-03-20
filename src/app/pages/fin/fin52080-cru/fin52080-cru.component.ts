@@ -101,6 +101,12 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     // 只在新增模式執行
     if (!this.isFormCreateable) return;
 
+    // 若輸入的科目代號為4碼時，「統制/明細」 預設 「統制」
+    if (this.accNoSignal()?.length === 4) {
+      this.df().Ledger_MD.setValue('0', { emitEvent: !1 });
+    }
+
+    // 依科目第1碼判讀「借/貸」欄位（1,6＝借；2, 3, 4, 7＝貸）
     const accNoPrefix1 = this.accNoSignal()?.slice(0, 1) || '';
     const aryDebit = ['1', '6'];
     const aryCredit = ['2', '3', '4', '7'];
