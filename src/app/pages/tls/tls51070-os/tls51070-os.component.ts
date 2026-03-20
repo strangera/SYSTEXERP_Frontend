@@ -167,6 +167,26 @@ export class Tls51070OsComponent extends BasicCruPageComponent<Label> implements
       this.messageService.errorBubble('尚未產生標籤資料，請先查詢後再匯出');
       return;
     }
+
+    // 1. 取得所有必填欄位的 field 名稱
+    const requiredFields = this.labelColumn
+      .filter(col => col.validate?.includes(validateRequired))
+      .map(col => col.field);
+
+    const isAllValid = this.labelData.every((row) => {
+      // 檢查該列中所有必填欄位是否有值 (排除 null, undefined, 空字串)
+      return requiredFields.every(field => {
+        const value = (row as any)[field];
+        return value !== null && value !== undefined && value !== '';
+      });
+    });
+
+    // 3. 根據檢查結果進行後續動作
+    if (!isAllValid) {
+      this.messageService.errorBubble('標籤資料有必填欄位未填寫，請檢查！');
+      return;
+    }
+
     const exportData = this.labelData.map(({ ...rest }) => {
       return {
         PLU_MagNo: rest.PLU_MagNo,
