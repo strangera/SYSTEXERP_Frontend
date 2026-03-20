@@ -81,6 +81,7 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
 
   private readonly leaveLabel = 'T_Name';
   private readonly listTitle = '科目圖';
+  private readonly viewButtonLabel = '查看科目圖';
   private readonly treeColumn = [
     { value: 'T10Label', label: '大分類' },
     { value: 'T20Label', label: '中分類' },
@@ -91,6 +92,7 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     treeColumn: this.treeColumn,
     listTitle: this.listTitle,
     leaveLabel: this.leaveLabel,
+    viewButtonLabel: this.viewButtonLabel,
   };
 
   /** AccNoSuffix 的數字過濾器（最多5碼） */
