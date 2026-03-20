@@ -517,4 +517,54 @@ deleteRow(selectedItems: any[]) {
 
     this.cdr.detectChanges();
   }
+  public applyDialogValue(
+  rowData: any,
+  index: number,
+  patch: Record<string, any>
+): void {
+  if (this.disabled || !rowData) return;
+
+  // 1. 如果是候選列，先轉成正式列
+  if (rowData._isAutoInsertCandidate) {
+    rowData._isAutoInsertCandidate = false;
+
+    if (this.dataStatusField) {
+      rowData[this.dataStatusField] = this.dataStatusValue.New;
+    }
+
+    // 2. 先把值寫進這列
+    Object.assign(rowData, patch);
+
+    // 3. 再補一筆新的候選列
+    this.dataService.insertNewRow(
+      this.columns,
+      this.dataKey,
+      this.defaultInsertData,
+      this.dataStatusField,
+      this.dataStatusValue
+    );
+  } else {
+    // 一般列直接更新
+    Object.assign(rowData, patch);
+
+    // 標記 modified（如果原本不是 new）
+    if (
+      this.dataStatusField &&
+      rowData[this.dataStatusField] !== this.dataStatusValue.New &&
+      rowData[this.dataStatusField] !== this.dataStatusValue.Deleted
+    ) {
+      rowData[this.dataStatusField] = this.dataStatusValue.Modified;
+    }
+  }
+
+  const cleanData = this._tableData
+    .filter((item) => !item._isAutoInsertCandidate)
+    .map((item, idx) => ({
+      ...item,
+      [this.dataKey]: idx + 1,
+    }));
+
+  this.dataChange.emit(cleanData);
+  this.cdr.detectChanges();
+}
 }

@@ -1061,6 +1061,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   }
 
   private validateStep1(): boolean {
+    // 清除未填位置編號的空列
+    this.step1Component?.removeEmptyNewRows();
+
     this.wizardState.contractInfo = this.dataForm.getRawValue() as ContractInfo;
 
     const result = this.validatorService.validateStep1(this.dataForm, this.wizardState.locationData);

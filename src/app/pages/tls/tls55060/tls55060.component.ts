@@ -3,7 +3,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -98,7 +98,6 @@ export class TLS55060Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     public readonly tls55060Service: TLS55060Service,
-    private readonly dropDownListService: DropDownListService
   ) {
     super();
   }

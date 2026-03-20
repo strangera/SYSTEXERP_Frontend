@@ -1,24 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { DatePipe, DecimalPipe, NgFor, NgIf, NgStyle } from '@angular/common';
+import { DatePipe, NgFor, NgIf, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
+import { getSYS1000 } from '@service/system/sys1000.service';
+import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
+import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
+import { ButtonModule } from 'primeng/button';
+import { ImageModule } from 'primeng/image';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableColumnReorderEvent, TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
 import { formatAmountNo0, ReportColumn } from './fin55020-table-report.model';
-import { ImageModule } from 'primeng/image';
-import { ButtonModule } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { FormsModule } from '@angular/forms';
-import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
-import { ActivatedRoute } from '@angular/router';
-import { SkeletonModule } from 'primeng/skeleton';
-import { TableCaptionComponent } from '@shared/componentkit/table/table-caption/table-caption.component';
-import { getSYS1000 } from '@service/system/sys1000.service';
 
 @Component({
   selector: 'app-table-report',
   standalone: true,
-  imports: [DatePipe, DecimalPipe, SkeletonModule, TableModule, NgFor, NgIf, NgStyle, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
+  imports: [DatePipe, SkeletonModule, TableModule, NgFor, NgIf, NgStyle, ImageModule, ButtonModule, TooltipModule, MultiSelectModule, FormsModule, TableCaptionComponent],
   templateUrl: './fin55020-table-report.component.html',
   styleUrls: ['./fin55020-table-report.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
