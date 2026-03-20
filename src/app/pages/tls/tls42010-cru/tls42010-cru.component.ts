@@ -272,9 +272,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       // 1. 同步產生下拉選單與按鍵地圖 (一次迴圈搞定)
       this.TSB_NameOptions = [];
       data.forEach(item => {
-        // 產生選單
         this.TSB_NameOptions.push({ No: item.TSB_Name, Name: item.TSB_Name });
-        // 若有掃描碼，存入 Map
         if (item.KB_ScanCode) {
           this.pos1008Map[item.KB_ScanCode] = {
             width: Number(item.KB_Width) || 1,
@@ -287,8 +285,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       this.xCount = Number(first.TSB_XCount) || this.xCount;
       this.yCount = Number(first.TSB_YCount) || this.yCount;
       this.templateDefaultKeySize = {
-        width: Number(first.TSB_Width) || 1,
-        height: Number(first.TSB_Height) || 1,
+        width: Number(first.TSB_Width) || 100, // 給予預設值防呆
+        height: Number(first.TSB_Height) || 50,
       };
     });
   }
@@ -441,8 +439,16 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       // 1. 透過 Mapper 產生明細清單
       const detailList = this.pages.flatMap((page, idx) =>
         page.map(k => {
-          const posInfo = this.pos1008Map[k.code] ?? this.templateDefaultKeySize;
-          return Tls42010Mapper.toBackend(k, idx + 1, frm.value, this.crudstatus, this.rowdata, posInfo, page);
+          const baseSize = this.pos1008Map[k.code] ?? this.templateDefaultKeySize;
+          return Tls42010Mapper.toBackend(
+            k,
+            idx + 1,
+            frm.value,
+            this.crudstatus,
+            this.rowdata,
+            baseSize, // 這裡傳入的是「單格」的基礎寬高
+            page
+          );
         })
       );
       // 2. ID 防呆

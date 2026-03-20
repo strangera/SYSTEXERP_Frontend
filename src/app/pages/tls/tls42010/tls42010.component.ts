@@ -14,7 +14,6 @@ import { AccordionModule } from 'primeng/accordion';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
 import { POS1004Master, Tls42010MQuery, Tls42010Service, USRLevelOption } from '../../../service/api/tls/tls42010.service';
-import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
@@ -51,6 +50,10 @@ export class TLS42010Component extends BasicQueryPageComponent<POS1004Master> im
     { field: 'USR_Level', header: '鍵盤編號' },
     { field: 'ECR_KBType', header: '鍵盤型態' },
     { field: 'TSB_Name', header: '收銀畫面名稱' },
+    { field: 'TSB_XCount', header: '按鍵欄數' },
+    { field: 'TSB_YCount', header: '按鍵列數' },
+    { field: 'TSB_Height', header: '按鍵高度' },
+    { field: 'TSB_Width', header: '按鍵寬度' },
     { field: 'ECR_KBDesc', header: '鍵盤備註' },
   ];
   kbFuncOptions: USRLevelOption[] = [];
@@ -64,7 +67,6 @@ export class TLS42010Component extends BasicQueryPageComponent<POS1004Master> im
 
   constructor(
     public readonly tls42010Service: Tls42010Service,
-    private readonly dropDownListService: DropDownListService
   ) {
     super();
   }

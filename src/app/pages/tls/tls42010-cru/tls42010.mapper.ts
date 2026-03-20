@@ -96,8 +96,24 @@ export class Tls42010Mapper {
    */
   static toBackend(k: KeyItem, pageNo: number, frm: any, crudStatus: CRUDStatus, rowData: any, posInfo: any, pageKeys: KeyItem[]): any {
     const hasConfig = this.checkIsConfigured(k);
+
+    // 找出誰覆蓋了我 (決定 KB_Merge)
     const master = this.findMasterInPage(k, pageKeys);
     const kbMergeValue = master ? master.code : k.code;
+
+    // --- 寬高計算邏輯 ---
+    const mergeRight = k.mergeRight || 0;
+    const mergeDown = k.mergeDown || 0;
+
+    let kbWidth = posInfo.width;
+    let kbHeight = posInfo.height;
+
+    // 只有當「我就是 Master」且「我沒有被隱藏」時，才需要計算合併後的加總寬高
+    // 判定方式：如果我的 ScanCode 等於 KB_Merge 且我不在隱藏狀態
+    if (kbMergeValue === k.code && !k.isHidden) {
+      kbWidth = posInfo.width * (mergeRight + 1);
+      kbHeight = posInfo.height * (mergeDown + 1);
+    }
     return {
       ID: crudStatus === CRUDStatus.Create ? 0 : (Number(k.ID) || 0),
       MID: rowData?.ID ?? 0,
@@ -115,8 +131,8 @@ export class Tls42010Mapper {
       KB_Fonttyped: hasConfig ? k.KB_Fonttyped || 'NNN' : 'NNN',
       KB_Style: hasConfig ? k.KB_Style || '1' : '1',
       KB_Switch: hasConfig ? k.KB_Switch || 'Y' : 'Y',
-      KB_Width: posInfo.width,   // 寬高建議傳原始尺寸，由後端根據 Merge 判定顯示
-      KB_Height: posInfo.height,
+      KB_Width: kbWidth,   // 寬高建議傳原始尺寸，由後端根據 Merge 判定顯示
+      KB_Height: kbHeight,
       KB_Merge: kbMergeValue,    // <--- 填入 Master 的 ScanCode
       KB_KeyPage: pageNo,
       KB_Color: hasConfig ? k.KB_Color || 'RGB:255,255,255' : 'RGB:255,255,255',
