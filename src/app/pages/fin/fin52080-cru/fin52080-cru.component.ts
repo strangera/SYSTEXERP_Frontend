@@ -101,6 +101,13 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     // 只在新增模式執行
     if (!this.isFormCreateable) return;
 
+    // 若科目長度為4碼，判斷 「是否可輸＝否」；長度為6碼，判斷 「是否可輸＝是」
+    if (this.accNoSignal()?.length === 4) {
+      this.df().Input_YN.setValue('N', { emitEvent: !1 });
+    } else if (this.accNoSignal()?.length === 6) {
+      this.df().Input_YN.setValue('Y', { emitEvent: !1 });
+    }
+
     const prefixAccNo = this.accNoSignal()?.slice(0, 3) || '';
     const classNoOption = this.service.classNoOptions().find(option => option.value === prefixAccNo);
     if (!classNoOption) return;
