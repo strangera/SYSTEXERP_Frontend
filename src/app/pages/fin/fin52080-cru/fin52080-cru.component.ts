@@ -101,6 +101,16 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     // 只在新增模式執行
     if (!this.isFormCreateable) return;
 
+    const accNoPrefix1 = this.accNoSignal()?.slice(0, 1) || '';
+    const aryDebit = ['1', '6'];
+    const aryCredit = ['2', '3', '4', '7'];
+
+    if (aryDebit.includes(accNoPrefix1)) {
+      this.df().AccDC.setValue('D', { emitEvent: !1 });
+    } else if (aryCredit.includes(accNoPrefix1)) {
+      this.df().AccDC.setValue('C', { emitEvent: !1 });
+    }
+
     // 若科目長度為4碼，判斷 「是否可輸＝否」；長度為6碼，判斷 「是否可輸＝是」
     if (this.accNoSignal()?.length === 4) {
       this.df().Input_YN.setValue('N', { emitEvent: !1 });
