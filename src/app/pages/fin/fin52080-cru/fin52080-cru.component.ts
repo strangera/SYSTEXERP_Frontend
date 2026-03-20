@@ -52,9 +52,7 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
    * - Input_YN: 是否可輸
    */
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    AccNo: new FormControl<string>('', [Validators.minLength(3), Validators.maxLength(8)]),
-    AccNoPrefix: new FormControl<string>('', []),
-    AccNoSuffix: new FormControl<string>('', [Validators.required, Validators.maxLength(5), this.validationService.numberValidator]),
+    AccNo: new FormControl<string>('', [Validators.minLength(3), Validators.maxLength(8), Validators.required, this.validationService.numberValidator]),
     AccCName: new FormControl<string>('', [Validators.required, Validators.maxLength(40)]),
     AccEName: new FormControl<string>('', [Validators.maxLength(50)]),
     AccDC: new FormControl<AccDCType | void>(void 0, [Validators.required]),
@@ -67,12 +65,12 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     rest_value: new FormControl<string>('', [Validators.maxLength(10), this.validationService.numberValidator]),
     rest_value2: new FormControl<string>('', [Validators.maxLength(10), this.validationService.numberValidator]),
     Input_YN: new FormControl<'Y' | 'N'>('N', [Validators.required]),
+  }, {
+    validators: [this.validationService.accNoClassNoMatchValidator('AccNo', 'ClassNo')]
   });
   public readonly df = computed(() => this.dataForm.controls);
 
-  private readonly accNoPrefixSignal = toSignal(this.df().AccNoPrefix.valueChanges);
-  private readonly accNoSuffixSignal = toSignal(this.df().AccNoSuffix.valueChanges);
-  private readonly classNoSignal = toSignal(this.df().ClassNo.valueChanges);
+  private readonly accNoSignal = toSignal(this.df().AccNo.valueChanges);
 
   public readonly FIN52080Tree = signal<FIN52080Tree[]>([]);
 
@@ -95,34 +93,21 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     viewButtonLabel: this.viewButtonLabel,
   };
 
-  /** AccNoSuffix 的數字過濾器（最多5碼） */
-  public readonly accNoSuffixFilter = /^\d{0,5}$/;
+  /** AccNo 的數字過濾器（最多8碼） */
+  public readonly accNoFilter = /^\d{0,8}$/;
 
-  /** ClassNo 變更時更新 AccNoPrefix（僅在新增模式） */
-  public readonly classNoEffect = effect(() => {
+  /** AccNo 變更時更新 ClassNo（僅在新增模式） */
+  public readonly accNoEffect = effect(() => {
     // 只在新增模式執行
     if (!this.isFormCreateable) return;
 
-    const classNo = this.classNoSignal();
-    if (!classNo) return;
+    const prefixAccNo = this.accNoSignal()?.slice(0, 3) || '';
+    const classNoOption = this.service.classNoOptions().find(option => option.value === prefixAccNo);
+    if (!classNoOption) return;
 
-    const currentPrefix = this.df().AccNoPrefix.value;
-    if (currentPrefix !== classNo) {
-      this.df().AccNoPrefix.setValue(classNo, { emitEvent: !1 });
-    }
-  }, { allowSignalWrites: !0 });
-
-  /** AccNoPrefix 和 AccNoSuffix 變更時組合為 AccNo（僅在新增模式） */
-  public readonly accNoCombineEffect = effect(() => {
-    // 只在新增模式執行
-    if (!this.isFormCreateable) return;
-
-    const prefix = this.accNoPrefixSignal();
-    const suffix = this.accNoSuffixSignal();
-    const combined = (prefix || '') + (suffix || '');
-    const currentAccNo = this.df().AccNo.value;
-    if (currentAccNo !== combined) {
-      this.df().AccNo.setValue(combined, { emitEvent: !1 });
+    const currentClassNo = this.df().ClassNo.value || '';
+    if (currentClassNo !== classNoOption.value) {
+      this.df().ClassNo.setValue(classNoOption.value, { emitEvent: !1 });
     }
   }, { allowSignalWrites: !0 });
 
@@ -143,27 +128,6 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
   public ngOnInit(): void {
     this.initializePage('FIN52080', this.dataForm);
 
-    // 處理新增模式的資料初始化：從 ClassNo 設定 AccNoPrefix
-    if (this.isFormCreateable) {
-      // 新增模式：如果 ClassNo 有值，使用 ClassNo 作為 AccNoPrefix
-      const classNo = this.df().ClassNo.value;
-      if (classNo) {
-        this.df().AccNoPrefix.setValue(classNo, { emitEvent: !1 });
-      }
-    } else if (this.isFormEditable || this.isFormReadable) {
-      // 編輯/檢視模式：確保 AccNo 有值（從 rowdata 取得）
-      // AccNo 已經在 initializePage 中透過 patchValue 設定，不需要額外處理
-      // 為了提交時使用，仍然需要拆解 AccNo 為 AccNoPrefix 和 AccNoSuffix（但不顯示）
-      const accNo = this.df().AccNo.value;
-      if (accNo && accNo.length >= 3) {
-        const prefix = accNo.substring(0, 3);
-        const suffix = accNo.substring(3);
-        // 設定 AccNoPrefix 和 AccNoSuffix，不觸發事件以避免循環更新
-        this.df().AccNoPrefix.setValue(prefix, { emitEvent: !1 });
-        this.df().AccNoSuffix.setValue(suffix, { emitEvent: !1 });
-      }
-    }
-
     this.treeLoading.set(!0);
     this.service.getClassNos();
     this.service.getFIN52080Tree().pipe(finalize(() => this.treeLoading.set(!1)))
@@ -178,42 +142,9 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     this.loading = true;
 
     // 收集所有錯誤訊息
-    const allErrors: Array<{ fieldName: string; message: string }> = [];
+    const allErrors: { fieldName: string; message: string }[] = [];
 
-    // 檢查科目代號的錯誤
-    // 新增模式：檢查 AccNoPrefix 和 AccNoSuffix
-    // 編輯模式：檢查 AccNo
-    if (this.isFormCreateable) {
-      const accNoError = this.getAccNoErrorMessage();
-      if (accNoError) {
-        allErrors.push({ fieldName: '科目代號', message: accNoError });
-      }
-    } else if (this.isFormEditable) {
-      // 編輯模式：檢查 AccNo 的錯誤
-      const accNoControl = this.df().AccNo;
-      if (accNoControl.errors) {
-        for (const propertyName in accNoControl.errors) {
-          if (Object.prototype.hasOwnProperty.call(accNoControl.errors, propertyName)) {
-            const errorMsg = this.validationService.getValidatorErrorMessage(
-              propertyName,
-              accNoControl.errors[propertyName]
-            );
-            allErrors.push({
-              fieldName: '科目代號',
-              message: `此欄位 ${errorMsg}，請檢查輸入資料`
-            });
-          }
-        }
-      }
-    }
-
-    // 檢查其他欄位的錯誤（排除 AccNoPrefix 和 AccNoSuffix，因為已經在上面處理了）
     Object.keys(this.dataForm.controls).forEach(key => {
-      // 跳過 AccNoPrefix 和 AccNoSuffix，因為已經在上面處理了
-      if (key === 'AccNoPrefix' || key === 'AccNoSuffix') {
-        return;
-      }
-
       const controlErrors = this.dataForm.get(key)?.errors;
       if (controlErrors) {
         const fieldName = this.formLabelService.getLabel(key) || key;
@@ -222,9 +153,14 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
             errorKey,
             controlErrors[errorKey]
           );
+
+          const message = errorKey === 'accNoClassNoMismatch'
+            ? errorMessage
+            : `此欄位 ${errorMessage}，請檢查輸入資料`;
+
           allErrors.push({
             fieldName,
-            message: `此欄位 ${errorMessage}，請檢查輸入資料`
+            message
           });
         });
       }
@@ -242,20 +178,12 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
 
     // 沒有錯誤，繼續執行提交邏輯
     if (this.isFormCreateable || this.isFormEditable) {
-      const raw = this.dataForm.getRawValue() as FIN52080Query & { AccNoPrefix?: string; AccNoSuffix?: string };
+      const raw = this.dataForm.getRawValue() as FIN52080Query;
 
-      // 根據模式決定 AccNo 的值
-      let accNo: string;
-      if (this.isFormCreateable) {
-        // 新增模式：組合 AccNoPrefix + AccNoSuffix 為 AccNo
-        accNo = (raw.AccNoPrefix || '') + (raw.AccNoSuffix || '');
-      } else {
-        // 編輯模式：直接使用 AccNo（已經有值）
-        accNo = raw.AccNo || '';
-      }
+      const accNo = raw.AccNo || '';
 
       const filteredData = Object.fromEntries(Object.entries(raw).filter(([k, v]) =>
-        k !== 'AccNoPrefix' && k !== 'AccNoSuffix' && v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
+        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       ));
 
       this.tableLoading.set(!0);
@@ -301,45 +229,5 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
 
   public onLevelSelected(selected: any[]): void {
     this.logger.debug(`onLevelSelected:`, [selected]);
-  }
-
-  /**
-   * 取得科目代號的共用錯誤訊息
-   * 檢查 AccNoPrefix 和 AccNoSuffix 兩個欄位的錯誤，優先顯示 AccNoPrefix 的錯誤
-   * @returns 錯誤訊息字串，如果沒有錯誤則返回 null
-   */
-  public getAccNoErrorMessage(): string | null {
-    const prefixControl = this.df().AccNoPrefix;
-    const suffixControl = this.df().AccNoSuffix;
-
-    // 優先檢查 AccNoPrefix 的錯誤
-    if (prefixControl.errors) {
-      for (const propertyName in prefixControl.errors) {
-        if (Object.prototype.hasOwnProperty.call(prefixControl.errors, propertyName)) {
-          const errorMsg = this.validationService.getValidatorErrorMessage(
-            propertyName,
-            prefixControl.errors[propertyName]
-          );
-          // 返回錯誤訊息（不包含欄位名稱，因為會在 errorBubble 的標題中顯示）
-          return `此欄位 ${errorMsg}，請檢查輸入資料`;
-        }
-      }
-    }
-
-    // 再檢查 AccNoSuffix 的錯誤
-    if (suffixControl.errors) {
-      for (const propertyName in suffixControl.errors) {
-        if (Object.prototype.hasOwnProperty.call(suffixControl.errors, propertyName)) {
-          const errorMsg = this.validationService.getValidatorErrorMessage(
-            propertyName,
-            suffixControl.errors[propertyName]
-          );
-          // 返回錯誤訊息（不包含欄位名稱，因為會在 errorBubble 的標題中顯示）
-          return `此欄位 ${errorMsg}，請檢查輸入資料`;
-        }
-      }
-    }
-
-    return null;
   }
 }
