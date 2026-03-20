@@ -33,7 +33,14 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   // dialog for selecting RCV_No
   rcvDialogVisible = false;
-  dialogQueryForm = this.formBuilder.nonNullable.group({ RCV_No: [''] });
+  dialogQueryForm = this.formBuilder.nonNullable.group({
+    RCV_No: [''],
+    ...createPaginationConfig([{ field: 'RCV_No', order: 1 }]), // 分頁和排序參數
+  });
+  // 增加排序狀態
+  currentSortField = 'RCV_No'; // 預設排序欄位
+  currentSortOrder = 1;       // 1 為順排, -1 為反排
+
   dialogData: any[] = [];
   dialogColumns: any[] = [
     { field: 'RCV_No', header: '收款單號' },
@@ -62,24 +69,21 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   }
 
   onQueryRcvNo(): void {
-    // 從表單取得使用者輸入的篩選關鍵字
+    // 1. 取得表單原始值
+    const formValue = this.dialogQueryForm.getRawValue();
+
     const params = {
       MID: 0,
-      STO_No: '10',
-
-      "PageSize": 30,
-      "PageIndex": 1,
-      "SortBy": [
-        {
-          "field": "RCV_No",
-          "order": 1
-        }
-      ],
+      STO_No: this.authService.getUserInfo()?.SYS_StoreNo || '',
+      ...formValue,
     };
+
+    console.log("dialog request", params)
+
     this.dialogLoading = true;
     this.dropDownListService.queryARS4001RCVNO_DropDownList(params).subscribe({
       next: (res: any) => {
-        console.log('收款單號下拉 response:', res.Data);
+        // console.log('收款單號下拉 response:', res.Data);
         if (res.Status === '0000' || res.Status === '200') {
           /// 比照您先前的 API 結構描述
           const resData = res.Data || {};
@@ -90,7 +94,6 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
             RCV_Date: item.RCV_Date,
             Remark: item.Remark
           }));
-
           // 重要：更新總筆數，Table 底下的分頁器才會顯示正確頁數
           this.dialogTotalRecords = resData.TotalRows || 0;
           this.queryStateService.setQueryState(this.ProgNo, params);
@@ -112,8 +115,10 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   onSelectRCVNo(): void {
     if (this.selectedItemsDialog && this.selectedItemsDialog.length) {
       const sel = this.selectedItemsDialog[0];
-      this.queryForm.controls.RCV_No.setValue(sel.No);
+      this.queryForm.controls.RCV_No.setValue(sel.RCV_No);
       this.rcvDialogVisible = false;
+
+      console.log('選擇項目', sel);
     }
   }
 
