@@ -8,11 +8,12 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
-import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
+import { POS1004Master, Tls42010MQuery, Tls42010Service, USRLevelOption } from '../../../service/api/tls/tls42010.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -21,7 +22,6 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 @Component({
   selector: 'app-tls42010',
   templateUrl: './tls42010.component.html',
-  styleUrls: ['./tls42010.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -38,137 +38,91 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
     InputTextComponent,
   ],
 })
-export class TLS42010Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS42010Component extends BasicQueryPageComponent<POS1004Master> implements OnInit {
   queryForm = this.formBuilder.group({
     USR_Level: ['', Validators.maxLength(6)],
     ECR_KBDesc: [''],
     ...createPaginationConfig([{ field: 'USR_Level', order: 1 }]),
   });
-  data: any[] = [];
+  data: POS1004Master[] = [];
   totalRecords = 0;
-  footerTotal: any | null = null;
-  lastQueryForm: any;
-
-  columns: Column[] = [
-    { field: 'USR_Level', header: '鍵盤編號', visible: true },
-    { field: 'ECR_KBType', header: '鍵盤型態', visible: true },
-    { field: 'TSB_Name', header: '收銀畫面名稱', visible: true },
-    { field: 'ECR_KBDesc', header: '鍵盤備註', visible: true },
+  lastQueryForm: Tls42010MQuery | null = null;
+  columns: ReportColumn[] = [
+    { field: 'USR_Level', header: '鍵盤編號' },
+    { field: 'ECR_KBType', header: '鍵盤型態' },
+    { field: 'TSB_Name', header: '收銀畫面名稱' },
+    { field: 'ECR_KBDesc', header: '鍵盤備註' },
   ];
-  kbFuncOptions: { label: string; value: string }[] = [];
+  kbFuncOptions: USRLevelOption[] = [];
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
     Source_USR_Level: ['', Validators.required],
     Target_USR_Level: [[Validators.maxLength(6), Validators.required]],
   });
-  dialogOptions: { No?: string; Name?: string; label?: string }[] = [];
   dialogSelectItem: any | null = null;
   dialogSelectTargetItem: any | null = null;
 
   constructor(
     public readonly tls42010Service: Tls42010Service,
-    private dropDownListService: DropDownListService
+    private readonly dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS42010', '/TLS/TLS42010cru', this.queryForm, (form) => this.onSubmit(form));
-    this.loadKeyboardOptions();
-    this.loadDialogKeyboardList();
-  }
-  private loadKeyboardOptions(): void {
-    this.dropDownListService.queryTLS42010DropDownList().subscribe({
-      next: (res) => {
-        if (res?.Status === '0000' && res.Data) {
-          this.kbFuncOptions = res.Data.map((item: any) => ({
-            label: item.valueUSR_Level,
-            value: item.keyUSR_Level,
-          }));
-        }
-      },
+    this.tls42010Service.dropdownTLS42010().subscribe((res) => {
+      this.kbFuncOptions = res.Data;
     });
   }
-  private loadDialogKeyboardList(): void {
-    this.dropDownListService.queryTLS42010DropDownList().subscribe({
-      next: (res) => {
-        if (res?.Status === '0000' && res.Data) {
-          this.dialogOptions = res.Data.map((item: any) => ({
-            label: item.valueUSR_Level,
-            No: item.keyUSR_Level,
-            Name: item.valueUSR_Level,
-          }));
-        }
-      },
-    });
-  }
-
   // ---------------- Dialog 行為 ----------------
   onDialogChange(event: DropdownChangeEvent) {
     const selectedValue = event.value;
     const body = { USR_Level: selectedValue, pageSize: 10, pageIndex: 1 };
-    this.tls42010Service.queryTLS42010M(body).subscribe({
-      next: (res) => (this.dialogSelectItem = res.Data?.[0] ?? null),
+    this.tls42010Service.queryTLS42010M(body).subscribe((res) => {
+      this.dialogSelectItem = res.Data?.[0] ?? null
     });
   }
   saveDialog(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
       if (this.isValid) return;
-
       const srcNo = frm.value.Source_USR_Level;
       const tgtNo = frm.value.Target_USR_Level;
-
-      this.tls42010Service.queryTLS42010M({ USR_Level: srcNo, pageSize: 10, pageIndex: 1 }).subscribe({
-        next: (srcRes) => {
-          const srcData = srcRes?.Data?.[0];
-          if (!srcData) {
-            this.loading = false;
-            return;
-          }
-
-          this.tls42010Service.queryTLS42010_Detail({ USR_Level: [srcNo] }).subscribe({
-            next: (detailRes) => {
-              const details = detailRes?.Data ?? [];
-              const body = {
-                ECR_KBType: srcData.ECR_KBType || 'TCHBTN',
+      this.tls42010Service.queryTLS42010M({ USR_Level: srcNo, pageSize: 10, pageIndex: 1 }).subscribe((srcRes) => {
+        const srcData = srcRes?.Data?.[0];
+        if (!srcData) {
+          this.loading = false;
+          return;
+        }
+        this.tls42010Service.queryTLS42010_Detail({ USR_Level: [srcNo] }).subscribe((detailRes) => {
+          const details = detailRes?.Data ?? [];
+          const body = {
+            ECR_KBType: srcData.ECR_KBType || 'TCHBTN',
+            USR_Level: tgtNo,
+            ECR_KBDesc: srcData.ECR_KBDesc || '',
+            TSB_Name: srcData.TSB_Name || '',
+            POS1004Disc: details.map((d: any) => {
+              const copy = { ...d };
+              delete copy.MID;
+              delete copy.ID;
+              return {
+                ...copy,
+                ID: 0,
                 USR_Level: tgtNo,
-                ECR_KBDesc: srcData.ECR_KBDesc || '',
-                TSB_Name: srcData.TSB_Name || '',
-                POS1004Disc: details.map((d: any) => {
-                  const copy = { ...d };
-                  delete copy.MID;
-                  delete copy.ID;
-
-                  return {
-                    ...copy,
-                    ID: 0,
-                    USR_Level: tgtNo,
-                    ECR_KBType: srcData.ECR_KBType || 'TCHBTN'
-                  };
-                })
+                ECR_KBType: srcData.ECR_KBType || 'TCHBTN'
               };
-              this.tls42010Service
-                .insertTLS42010M(body)
-                .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
-                .subscribe({
-                  next: (res) => {
-                    this.messageService.successBubble(res.Message);
-                    this.dialogVisible = false;
-                    this.onSubmit(this.queryForm);
-                  },
-
-                  complete: () => (this.loading = false)
-                });
-            },
-
+            })
+          };
+          this.tls42010Service.insertTLS42010M(body).pipe(finalize(() => (this.loading = false)), untilDestroyed(this)).subscribe((res) => {
+            this.messageService.successBubble(res.Message);
+            this.dialogVisible = false;
+            this.onSubmit(this.queryForm);
           });
-        },
-
+        });
       });
     });
   }
-
 
   // 判斷來源與目標相同
   get isValid(): boolean {
@@ -181,88 +135,34 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const raw = frm.value;
-      const body = {
-        ...raw,
-        pageSize: 30,
-        pageIndex: 1,
-        SortBy: [{ field: 'USR_Level', order: 1 }],
-      };
-
-      this.lastQueryForm = body;
-      this.loading = true;
-
-      this.tls42010Service
-        .queryTLS42010M(body)
-        .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
-        .subscribe((res) => {
-          this.data = res?.Data ?? [];
-          this.totalRecords = res.TotalCount;
-          this.footerTotal = res.FooterTotal;
-          // 儲存本次查詢條件，供從 CRU 返回時還原查詢列表
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        });
-    });
-  }
-
-  // ---------------- Lazy Load ----------------
-  onReportLazyLoad(event: any) {
-    const { first, rows } = event;
-    const pageIndex = Math.floor(first / rows) + 1;
-
-    const queryBody = {
-      ...this.queryForm.value,
-      pageSize: rows,
-      pageIndex: pageIndex,
-      SortBy: [{ field: 'USR_Level', order: 1 }],
-    };
-    this.lastQueryForm = queryBody;
-    this.loading = true;
-
-    this.tls42010Service
-      .queryTLS42010M(queryBody)
-      .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
-      .subscribe({
-        next: (res) => {
-          if (res?.Data) {
-            this.data = [...this.data, ...res.Data];
-            this.totalRecords = res.TotalCount;
-          }
-          this.loading = false;
-        },
+      this.tls42010Service.queryTLS42010M(raw).pipe(finalize(() => (this.loading = false)), untilDestroyed(this)).subscribe((res) => {
+        this.data = res.Data;
+        this.lastQueryForm = raw;
+        this.totalRecords = res.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
+    });
   }
   // ---------------- 刪除 ----------------
   onDelete(selectedRows: any[]): void {
+    // 1. 防呆：檢查是否有選取資料
     if (!selectedRows || selectedRows.length === 0) {
-      this.messageService.warnBubble('請選擇要刪除的資料');
+      this.messageService.warnBubble('請至少選取一筆資料');
       return;
     }
-    // 後端刪除使用 USR_Level 作為識別鍵
-    const idList = selectedRows
-      .map((item) => item.USR_Level)
-      .filter((level) => level !== undefined && level !== null && level !== '')
-      .map((level) => String(level));
-
-    if (idList.length === 0) {
-      this.messageService.warnBubble('選取的資料沒有有效的鍵盤編號');
-      return;
-    }
-    const payload = { idList };
-    this.loading = true;
-    this.tls42010Service
-      .deleteTLS42010(payload)
-      .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
-      .subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.messageService.successBubble('刪除成功');
-            this.onSubmit(this.queryForm);
-          } else {
-            this.messageService.errorBubble(`刪除失敗：${res.Message || '未知錯誤'}`);
-          }
-        },
-
-      });
+    // 2. 依照後端規格，取出 USR_Level 作為識別鍵
+    const idList: string[] = selectedRows.map(row => row.USR_Level);
+    // 3. 呼叫確認視窗 (建議在刪除前先詢問)
+    this.messageService.confirm({
+      message: `確定要刪除選中的 ${idList.length} 筆鍵盤設定嗎？`,
+      header: '刪除確認',
+      accept: () => {
+        this.loading = true;
+        this.tls42010Service.deleteTLS42010(idList).pipe(finalize(() => (this.loading = false)), untilDestroyed(this)).subscribe((res) => {
+          this.messageService.successBubble(res.Message || '刪除成功');
+          this.onSubmit(this.queryForm);
+        });
+      }
+    });
   }
-
 }

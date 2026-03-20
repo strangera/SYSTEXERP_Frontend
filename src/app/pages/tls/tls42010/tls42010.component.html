@@ -1,23 +1,19 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" label="複製設定" (click)="dialogVisible = true; dialogQueryForm.reset(); submitted = false"></app-button>
+    <app-button btnType="create" label="複製設定"
+      (click)="dialogVisible = true; dialogQueryForm.reset(); submitted = false"></app-button>
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
 
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="鍵盤編號"
-              controlName="USR_Level"
-              [control]="queryForm.controls.USR_Level"
-              [submitted]="submitted"
-              [options]="kbFuncOptions"
-              optionLabel="label"
-              optionValue="value"
+            <app-dropdown label="鍵盤編號" controlName="USR_Level" [control]="queryForm.controls.USR_Level"
+              [submitted]="submitted" [options]="kbFuncOptions" optionLabel="USR_Level" optionValue="USR_Level"
               placeholder="請選擇鍵盤編號">
             </app-dropdown>
           </div>
@@ -25,12 +21,8 @@
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-12">
-            <app-input-textarea
-              label="鍵盤備註"
-              controlName="ECR_KBDesc"
-              [control]="queryForm.controls.ECR_KBDesc"
-              [style]="{ height: '100px' }"
-              [submitted]="submitted">
+            <app-input-textarea label="鍵盤備註" controlName="ECR_KBDesc" [control]="queryForm.controls.ECR_KBDesc"
+              [style]="{ height: '100px' }" [submitted]="submitted">
             </app-input-textarea>
           </div>
         </div>
@@ -45,55 +37,25 @@
 </div>
 
 <div class="card">
-  <app-table-report
-    tableKey="TLS42010"
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showCheckBox]="true"
-    dataKey="id"
-    [totalRecords]="totalRecords"
-    [showManage]="true"
-    [loading]="loading"
-    [showDelete]="true"
-    (delete)="onDelete($event)"
-    [showDetail]="true"
-    [lastQueryBody]="lastQueryForm"
-    [footerData]="footerTotal"
-    [showReportMode]="false"
-    [queryFunction]="tls42010Service.queryTLS42010M.bind(tls42010Service)"
-    (lazyLoadData)="onReportLazyLoad($event)">
+  <app-table-report tableKey="TLS42010" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showCheckBox]="true" dataKey="id" [totalRecords]="totalRecords" [showManage]="true"
+    [loading]="loading" [showDelete]="true" (delete)="onDelete($event)" [showDetail]="true"
+    [lastQueryBody]="lastQueryForm" [showReportMode]="false"
+    [queryFunction]="tls42010Service.queryTLS42010M.bind(tls42010Service)">
   </app-table-report>
 </div>
 
-<app-dialog
-  [visible]="dialogVisible"
-  header="複製鍵盤設定"
-  (visibleChange)="dialogVisible = $event"
-  (save)="saveDialog(dialogQueryForm)"
-  [height]="'auto'">
+<app-dialog [visible]="dialogVisible" header="複製鍵盤設定" (visibleChange)="dialogVisible = $event"
+  (save)="saveDialog(dialogQueryForm)" [height]="'auto'">
 
   <form [formGroup]="dialogQueryForm" class="flex gap-2">
-    <app-dropdown
-      (changeEvent)="onDialogChange($event)"
-      class="flex-1"
-      label="來源鍵盤編號"
-      controlName="Source_USR_Level"
-      [control]="dialogQueryForm.controls.Source_USR_Level"
-      [options]="dialogOptions"
-      optionLabel="label"
-      optionValue="No"
-      [submitted]="submitted">
+    <app-dropdown (changeEvent)="onDialogChange($event)" class="flex-1" label="來源鍵盤編號" controlName="Source_USR_Level"
+      [control]="dialogQueryForm.controls.Source_USR_Level" [options]="kbFuncOptions" optionLabel="USR_Level"
+      optionValue="USR_Level" [submitted]="submitted">
     </app-dropdown>
 
-    <app-input-text
-      class="flex-1"
-      label="目標鍵盤編號"
-      controlName="Target_USR_Level"
-      [control]="dialogQueryForm.controls.Target_USR_Level"
-      placeholder="請輸入新鍵盤編號"
-      [submitted]="submitted">
+    <app-input-text class="flex-1" label="目標鍵盤編號" controlName="Target_USR_Level"
+      [control]="dialogQueryForm.controls.Target_USR_Level" placeholder="請輸入新鍵盤編號" [submitted]="submitted">
     </app-input-text>
   </form>
 
