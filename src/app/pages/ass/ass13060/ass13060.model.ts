@@ -20,6 +20,8 @@ export interface ASS13060QueryRequest extends BaseQueryRequest {
   EMP_ID?: string | null;
   /** 部門代號 */
   ORG_ID?: string | null;
+  /** 商品管理編號 */
+  GOODS_ID?: string | null;
 }
 
 /**

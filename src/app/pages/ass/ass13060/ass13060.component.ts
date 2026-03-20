@@ -45,6 +45,7 @@ export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow>
     APPLY_DATE_E: new FormControl<Date | null>(null),
     EMP_ID: new FormControl<string | null>(null),
     ORG_ID: new FormControl<string | null>(null),
+    GOODS_ID: new FormControl<string | null>(null),
     PageSize: new FormControl<number>(30),
     PageIndex: new FormControl<number>(1),
   });
@@ -131,6 +132,7 @@ export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow>
       APPLY_DATE_E: rawFormValue.APPLY_DATE_E || undefined,
       EMP_ID: rawFormValue.EMP_ID || undefined,
       ORG_ID: rawFormValue.ORG_ID || undefined,
+      GOODS_ID: rawFormValue.GOODS_ID || undefined,
       PageSize: body.PageSize ?? body.pageSize ?? 30,
       PageIndex: body.PageIndex ?? body.pageIndex ?? 1,
       SortBy: body.SortBy,
@@ -149,6 +151,7 @@ export class ASS13060Component extends BasicQueryPageComponent<ASS13060QueryRow>
         APPLY_DATE_E: rawFormValue.APPLY_DATE_E || undefined,
         EMP_ID: rawFormValue.EMP_ID || undefined,
         ORG_ID: rawFormValue.ORG_ID || undefined,
+        GOODS_ID: rawFormValue.GOODS_ID || undefined,
         PageSize: rawFormValue.PageSize ?? 30,
         PageIndex: rawFormValue.PageIndex ?? 1,
       } as ASS13060QueryRequest;
