@@ -3,13 +3,11 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin52060Service } from '@service/api/fin/fin52060.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
@@ -38,7 +36,6 @@ export interface ClassAttr {
 @Component({
   selector: 'app-fin52060',
   templateUrl: './fin52060.component.html',
-  styleUrl: './fin52060.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -46,10 +43,8 @@ export interface ClassAttr {
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarComponent,
     DropdownComponent,
     InputTextComponent,
-    InputTextRangeComponent,
     TableComponent,
     TranslateModule
   ]
@@ -116,7 +111,7 @@ export class FIN52060Component extends BasicQueryPageComponent<GLS1004> implemen
       });
     });
   }
-  // 刪除控制_Grace 9/9: 
+  // 刪除控制_Grace 9/9:
   // 9/9 SA註明: 該作業不可修改/刪除
   onDelete(selectedRows: GLS1004[]) {
     this.messageService.confirm({

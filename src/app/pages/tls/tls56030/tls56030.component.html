@@ -53,9 +53,18 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords"
-    [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
-    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
-    [rows]="30" [loading]="loading" [showDelete]="false" [editDisabled]="isEditDisabled.bind(this)"></app-table>
+  <app-table-report tableKey="TLS2A020" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showCheckBox]="true" dataKey="id" [totalRecords]="totalRecords" [showManage]="true"
+    [loading]="loading" [showDelete]="false" [editDisabled]="isEditDisabled.bind(this)" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls56030Service.queryTLS56030.bind(tls56030Service)">
+    <header>
+      <div class="flex align-items-center gap-2">
+        <p-button label="單據審核" [style]="{ height: '35px' }" pTooltip="僅限【已申請】單據" tooltipPosition="top" [rounded]="true"
+          severity="help" [loading]="auditLoading" (click)="onAuditClick()" [disabled]="!canAuditSelected()" />
+        <p-button label="領退" [style]="{ height: '35px' }" pTooltip="僅限【已審核】單據" tooltipPosition="top" [rounded]="true"
+          severity="success" [loading]="issueLoading" (click)="onIssueClick()" [disabled]="!canIssueSelected()" />
+      </div>
+    </header>
+  </app-table-report>
 </div>

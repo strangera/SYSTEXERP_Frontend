@@ -1,28 +1,25 @@
+import { NgIf } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { ButtonModule } from 'primeng/button';
+import { PanelModule } from 'primeng/panel';
+import { tap } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 import { TLS51130Service } from '../../../service/api/tls/tls51130.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { tap } from 'rxjs';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-
-// 只在這個 component 內直接呼叫小分類 API（不動 service 型別）
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
-import { ButtonModule } from 'primeng/button';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-tls51130-cru',
   templateUrl: './tls51130-cru.component.html',
-  styleUrls: ['./tls51130-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -34,7 +31,7 @@ import { ButtonModule } from 'primeng/button';
     InputTextComponent,
     NgIf,
     TranslateModule,
-    ButtonModule,  
+    ButtonModule,
     InputNumberComponent
   ],
 })
@@ -43,7 +40,7 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
   CAT_LOptions: any[] = [];
   CAT_MOptions: any[] = [];
   CAT_SOptions: any[] = [];
-  private isRestoring = false;  
+  private isRestoring = false;
   private initialFormValue: any;
   private readonly apiUrl = environment.ApiUrl;
 
@@ -159,7 +156,7 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
       }
     });
 
-   // 編輯/檢視模式：預載中/小分類
+    // 編輯/檢視模式：預載中/小分類
     setTimeout(() => {
       if (this.crudstatus !== CRUDStatus.Create) {
         const incomingId =

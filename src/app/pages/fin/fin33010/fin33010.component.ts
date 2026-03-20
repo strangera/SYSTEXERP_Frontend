@@ -33,12 +33,19 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   // dialog for selecting RCV_No
   rcvDialogVisible = false;
-  dialogQueryForm = this.formBuilder.nonNullable.group({ RCV_No: [''] });
+  dialogQueryForm = this.formBuilder.nonNullable.group({
+    RCV_No: [''],
+    ...createPaginationConfig([{ field: 'RCV_No', order: 1 }]), // 分頁和排序參數
+  });
+  // 增加排序狀態
+  currentSortField = 'RCV_No'; // 預設排序欄位
+  currentSortOrder = 1;       // 1 為順排, -1 為反排
+
   dialogData: any[] = [];
   dialogColumns: any[] = [
-    { field: 'No', header: '收款單號' },
-    { field: 'Name', header: '收款日期' },
-    { field: 'Name', header: '備註' }
+    { field: 'RCV_No', header: '收款單號' },
+    { field: 'RCV_Date', header: '收款日期' },
+    { field: 'Remark', header: '備註' }
   ];
   dialogLoading = false;
   selectedItemsDialog: any[] = [];
@@ -62,27 +69,37 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   }
 
   onQueryRcvNo(): void {
+    // 1. 取得表單原始值
+    const formValue = this.dialogQueryForm.getRawValue();
+
     const params = {
       MID: 0,
-      STO_No: '10'
+      STO_No: this.authService.getUserInfo()?.SYS_StoreNo || '',
+      ...formValue,
     };
+
+    console.log("dialog request", params)
+
     this.dialogLoading = true;
     this.dropDownListService.queryARS4001RCVNO_DropDownList(params).subscribe({
       next: (res: any) => {
+        // console.log('收款單號下拉 response:', res.Data);
         if (res.Status === '0000' || res.Status === '200') {
-          // 將後端回傳可能為字串陣列或物件結構轉成 table 需要的 { No, Name } 陣列
-          const raw = res.Data || {};
-          let list: any[] = [];
-          if (Array.isArray(raw)) {
-            list = raw.map((d: any) => (typeof d === 'string' ? { No: d, Name: d } : { No: d.No || d, Name: d.Name || d }));
-          } else if (Array.isArray(raw.RCV_No)) {
-            list = raw.RCV_No.map((d: any) => (typeof d === 'string' ? { No: d, Name: d } : { No: d.No || d, Name: d.Name || d }));
-          } else if (Array.isArray(raw.data)) {
-            list = raw.data.map((d: any) => (typeof d === 'string' ? { No: d, Name: d } : { No: d.No || d, Name: d.Name || d }));
-          }
-          this.dialogData = list;
-          this.dialogTotalRecords = this.dialogData.length;
+          /// 比照您先前的 API 結構描述
+          const resData = res.Data || {};
+          const queryList = resData.QueryData || [];
+
+          this.dialogData = queryList.map((item: any) => ({
+            RCV_No: item.RCV_No,
+            RCV_Date: item.RCV_Date,
+            Remark: item.Remark
+          }));
+          // 重要：更新總筆數，Table 底下的分頁器才會顯示正確頁數
+          this.dialogTotalRecords = resData.TotalRows || 0;
+          this.queryStateService.setQueryState(this.ProgNo, params);
         } else {
+          this.dialogData = [];
+          this.dialogTotalRecords = 0;
           this.messageService?.errorBubble?.(res.Message || '查詢失敗');
         }
       },
@@ -98,8 +115,10 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
   onSelectRCVNo(): void {
     if (this.selectedItemsDialog && this.selectedItemsDialog.length) {
       const sel = this.selectedItemsDialog[0];
-      this.queryForm.controls.RCV_No.setValue(sel.No);
+      this.queryForm.controls.RCV_No.setValue(sel.RCV_No);
       this.rcvDialogVisible = false;
+
+      console.log('選擇項目', sel);
     }
   }
 

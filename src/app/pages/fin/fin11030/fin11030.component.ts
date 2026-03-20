@@ -8,7 +8,7 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
+import { FIN11030DeleteItem, Fin11030Service } from '../../../service/api/fin/fin11030.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -71,14 +71,36 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
     });
   }
   onDelete(selectedRows: APS2001Data[]) {
-    const ids = selectedRows.map(row => row.id);
-    this.fin11030Service.deleteFIN11030(ids).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe({
-      next: () => {
-        this.onSubmit(this.queryForm);
-        this.selectedRows = [];
+    this.messageService.confirm({
+      header: `是否確認刪除 ${selectedRows.length} 筆資料?`,
+      accept: () => {
+        const deleteList: FIN11030DeleteItem[] = selectedRows
+          .filter((row) => this.isRowSelectable(row))
+          .map((row) => ({
+            SAL_GUIYYYYMM: this.formatDeleteYYYYMM(row.SAL_GUIYYYYMM),
+            SAL_GUITrack: row.SAL_GUITrack,
+            SAL_GUIBegNo: row.SAL_GUIBegNo,
+            SAL_GUIEndNo: row.SAL_GUIEndNo,
+            SAL_GUIPaper: row.SAL_GUIPaper,
+          }));
+
+        this.fin11030Service.deleteFIN11030(deleteList).pipe(untilDestroyed(this)).subscribe({
+          next: (response) => {
+            if (response?.Status === '0000') {
+              this.messageService.successBubble(response.Message || '刪除成功');
+              this.onSubmit(this.queryForm);
+              this.selectedRows = [];
+              return;
+            }
+            this.messageService.errorBubble(response?.Message || '刪除失敗');
+          },
+        });
       },
-      error: () => { this.loading = false; },
     });
+  }
+
+  onSelectionChange(selectedRows: APS2001Data[]) {
+    this.selectedRows = selectedRows.filter((row) => this.isRowSelectable(row));
   }
 
   onSubmit(frm: FormGroup) {
@@ -86,6 +108,7 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
       this.loading = true;
       this.fin11030Service.queryFIN11030(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
         this.data = response.Data;
+        this.selectedRows = [];
         this.lastQueryBody = frm.value;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -93,7 +116,35 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
     });
   }
 
+  isRowSelectable(rowdata: APS2001Data): boolean {
+    return rowdata?.CanDel === true;
+  }
+
   editDisabled(rowdata: APS2001Data) {
     return rowdata.SAL_GUIPaper === '35' || (rowdata.SAL_LastUsedGUINo !== '' && rowdata.SAL_LastUsedGUINo !== null);
+  }
+
+  private formatDeleteYYYYMM(value: string | Date | null | undefined): string {
+    if (value instanceof Date) {
+      const year = value.getFullYear().toString();
+      const month = String(value.getMonth() + 1).padStart(2, '0');
+      return `${year}${month}`;
+    }
+
+    if (typeof value === 'string') {
+      const normalized = value.replace(/\//g, '').trim();
+      if (/^\d{6}$/.test(normalized)) {
+        return normalized;
+      }
+
+      const parsedDate = new Date(value);
+      if (!isNaN(parsedDate.getTime())) {
+        const year = parsedDate.getFullYear().toString();
+        const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+        return `${year}${month}`;
+      }
+    }
+
+    return '';
   }
 }

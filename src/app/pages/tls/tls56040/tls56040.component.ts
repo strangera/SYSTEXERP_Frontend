@@ -12,7 +12,6 @@ import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, Column, formatDate } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -57,15 +56,15 @@ export class TLS56040Component extends BasicQueryPageComponent<ITLS56040Data> im
     LOGO_NoList: [null], // 使用 LOGO_NoList 陣列
     OUT_HOS_NoList: [null], // 使用 OUT_HOS_NoList 陣列
     IN_HOS_NoList: [null], // 使用 IN_HOS_NoList 陣列
-    APPLY_USR: [this.authService.currentUserValue?.user_No], // 對應 APPLY_USR
-    APPLY_Date_Start: [yesterday],
-    APPLY_Date_End: [yesterday],
+    APPLY_USR: [null], // 對應 APPLY_USR
+    APPLY_Date_Start: [null],
+    APPLY_Date_End: [null],
     APRV_USR: [null as string | null], // 對應 APRV_USR
     APRV_Date_Start: [null],
     APRV_Date_End: [null],
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'MVM_No', order: 1 }]],
+    SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'MVM_No', order: -1 }]],
   });
   totalRecords = 0;
   data: ITLS56040Data[] = [];

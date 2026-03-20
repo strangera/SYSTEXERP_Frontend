@@ -38,11 +38,8 @@ interface Fin13060CruForm {
   mid: FormControl<number | null>;
   SYS_StoreNo: FormControl<string | null>;
 
-  // ✅ 所有模式：唯讀（不可修改）
-  // ✅ Create 預設值：ECR_No='ZZZ', TXN_No='1'
   ECR_No: FormControl<string | null>;
   TXN_No: FormControl<string | null>;
-
   TXN_GUIPaper: FormControl<string | null>;
 
   INV_NoneTax: FormControl<string | null>;
@@ -54,7 +51,11 @@ interface Fin13060CruForm {
 
   TXN_Date: FormControl<Date | string | null>;
 
+  /** 真正送後端的值 */
   INV_YM: FormControl<string | null>;
+  /** 只給畫面顯示 */
+  INV_YM_Display: FormControl<string | null>;
+
   INV_DeclareYM: FormControl<string | null>;
 
   TXN_SaleAmt: FormControl<number | null>;
@@ -156,6 +157,7 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     TXN_Date: new FormControl<Date | string | null>(null, { validators: [Validators.required] }),
 
     INV_YM: new FormControl<string | null>(null, [Validators.required]),
+    INV_YM_Display: new FormControl<string | null>(null),
     INV_DeclareYM: new FormControl<string | null>(null, [Validators.required, this.declareYMValidator()]),
 
     TXN_SaleAmt: new FormControl<number | null>(null, {
@@ -199,10 +201,21 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('FIN13060', this.dataForm);
     this.hydrateStoreInfoFromLocalStorage();
 
-    // ✅ 先依狀態套 enable/disable（Create 可輸入；Edit/Read 唯讀）
+    // 若 Edit / Read 有 rowdata，補顯示用 INV_YM_Display
+    const row: any = (this as any).rowdata;
+    if (row) {
+      this.dataForm.patchValue(
+        {
+          INV_YM: this.toYYYYMM(row.INV_YM),
+          INV_YM_Display: this.fixInvYmForYearMonthDisplay(row.INV_YM),
+          INV_DeclareYM: this.toYYYYMM(row.INV_DeclareYM),
+        },
+        { emitEvent: false }
+      );
+    }
+
     this.updateDisabledState();
 
-    // ✅ Create：預設 ZZZ / 1（唯讀，不可改）
     if (this.crudstatus === CRUDStatus.Create) {
       const curEcr = this.dataForm.controls.ECR_No.value;
       const curTxn = this.dataForm.controls.TXN_No.value;
@@ -210,12 +223,11 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
       if (!curEcr) this.dataForm.controls.ECR_No.setValue('ZZZ', { emitEvent: false });
       if (!curTxn) this.dataForm.controls.TXN_No.setValue('1', { emitEvent: false });
     }
-    // ✅ 連動：格式代號 -> 發票種類
+
     this.dataForm.controls.INV_GUIType.valueChanges.subscribe((v) => {
       this.applyGuiTypeToPaper(v);
     });
 
-    // 系統別（SAL_Type）
     this.fin13050Service.querySYS1000DropDownList('SAL_Type').subscribe((res) => {
       const list = res?.Data ?? [];
       this.SAL_TypeOptions = list.map((x: any) => ({
@@ -228,28 +240,34 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
         if (hasG) this.dataForm.controls.SYS_ORIGIN.setValue('G', { emitEvent: false });
       }
     });
-const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(type as any);
+
+    const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(type as any);
+
     sys1000('SYS_ORIGIN').subscribe((res: any) => {
       const list = res?.Data ?? [];
-      this.System_IDOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
-    });
-    // 專櫃清單
-    this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) ?? [];
+
+      this.System_IDOptions = list.map((x: any) => ({
+        value: String(x.No ?? ''),
+        label: `${x.No ?? ''}-${x.Name ?? ''}`,
+      }));
+
+      if (this.crudstatus === CRUDStatus.Create) {
+        const ctrl = this.dataForm.controls.SYS_ORIGIN;
+        const cur = String(ctrl.value ?? '').trim();
+
+        const hasG = this.System_IDOptions.some((o) => o.value === 'G');
+
+        if (!cur && hasG) {
+          ctrl.setValue('G', { emitEvent: false });
+        }
+      }
     });
 
-    // 資產註記
     this.fin13050Service.querySYS1000DropDownList('AssetType').subscribe((res) => {
       const list = res?.Data ?? [];
       this.AssetNoteOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
 
-    // 零稅銷售註記
     this.fin13050Service.querySYS1000DropDownList('INV_NoneTax').subscribe((res) => {
       const list = res?.Data ?? [];
       this.INV_NoneTaxOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
@@ -266,7 +284,6 @@ const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(
       }
     });
 
-    // 發票格式（只留 31/32）
     this.fin13060Service.queryAPS2002DropDownList().subscribe((res) => {
       const list = res?.Data ?? [];
       const allow = new Set(['31', '32']);
@@ -287,7 +304,6 @@ const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(
       this.applyGuiTypeToPaper(this.dataForm.controls.INV_GUIType.value);
     });
 
-    // 收銀機號下拉（Edit/Read 用來顯示 label，Create 也可用來選）
     this.ECRNoService.getECRNo().subscribe((res) => {
       this.ECRNoOptions = (res ?? []).map((x: any) => ({
         label: x.label,
@@ -296,13 +312,11 @@ const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(
       }));
     });
 
-    // 稅別
     this.fin13050Service.querySYS1000DropDownList('PLU_TaxType').subscribe((res) => {
       const list = res?.Data ?? [];
       this.taxTypeOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
 
-    // 發票種類
     this.fin13050Service.querySYS1000DropDownList('TXN_GUIPaper').subscribe((res) => {
       const list = res?.Data ?? [];
       this.TXN_GUIPaperOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
@@ -316,9 +330,6 @@ const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(
     if (this.crudstatus === CRUDStatus.Create) {
       this.setDefaultDeclareYM();
     }
-
-    // ❌ 原本你最後「無條件 disable」要拿掉
-    // ✅ 已交由 updateDisabledState() 控制
   }
 
   onSubmit(form: FormGroup<Fin13060CruForm>): void {
@@ -357,7 +368,6 @@ const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(
         mid: Number(raw.mid ?? 0),
         SYS_StoreNo: this.normalize(raw.SYS_StoreNo),
 
-        // ✅ ZZZ 就照傳 ZZZ
         ECR_No: this.normalize(raw.ECR_No),
         TXN_No: this.normalize(raw.TXN_No),
 
@@ -369,6 +379,7 @@ const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(
         INV_GUINumber: this.normalize(raw.INV_GUINumber),
 
         TXN_Date: this.toDateOnlyString(raw.TXN_Date) ?? '',
+        /** ✅ 真正送後端的仍然是 INV_YM，不是 INV_YM_Display */
         INV_YM: this.toYYYYMM(raw.INV_YM) ?? '',
         INV_DeclareYM: this.toYYYYMM(raw.INV_DeclareYM) ?? '',
 
@@ -397,8 +408,15 @@ const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(
           this.hydrateStoreInfoFromLocalStorage();
           this.updateDisabledState();
 
-          // ✅ Create reset 後：再次預設 ZZZ / 1（唯讀）
-          this.dataForm.patchValue({ ECR_No: 'ZZZ', TXN_No: '1' }, { emitEvent: false });
+          this.dataForm.patchValue(
+            {
+              ECR_No: 'ZZZ',
+              TXN_No: '1',
+              INV_YM: null,
+              INV_YM_Display: null,
+            },
+            { emitEvent: false }
+          );
         });
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
         this.fin13060Service.updateFIN13060(payload).subscribe(() => {
@@ -579,15 +597,26 @@ const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(
   private setupInvoiceDateToYM(): void {
     this.dataForm.controls.TXN_Date.valueChanges.subscribe((dateValue) => {
       if (!dateValue) {
-        this.dataForm.controls.INV_YM.setValue(null);
+        this.dataForm.controls.INV_YM.setValue(null, { emitEvent: false });
+        this.dataForm.controls.INV_YM_Display.setValue(null, { emitEvent: false });
         return;
       }
-      const periodYM = this.toInvoicePeriodYM(dateValue);
-      if (periodYM) this.dataForm.controls.INV_YM.setValue(periodYM);
+
+      const realYM = this.toInvoiceRealYM(dateValue);
+      const displayYM = this.toInvoiceDisplayYM(dateValue);
+
+      if (realYM) this.dataForm.controls.INV_YM.setValue(realYM, { emitEvent: false });
+      if (displayYM) this.dataForm.controls.INV_YM_Display.setValue(displayYM, { emitEvent: false });
     });
   }
 
-  private toInvoicePeriodYM(v: any): string | null {
+  /** 真正送後端的發票年月：保留原始月份，例如 202202 */
+  private toInvoiceRealYM(v: any): string | null {
+    return this.toYYYYMM(v);
+  }
+
+  /** 顯示用發票年月：若是雙數月，顯示成對應奇數起始月，例如 202202 -> 202201 */
+  private toInvoiceDisplayYM(v: any): string | null {
     const yyyymm = this.toYYYYMM(v);
     if (!yyyymm) return null;
 
@@ -654,13 +683,9 @@ const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(
     return s === '' ? null : s;
   }
 
-
-
   /**
-   * ✅ 狀態控制（你要的規則）
    * - Read：全表單唯讀
-   * - Edit：ECR_No / TXN_No 唯讀（不可改）
-   * - Create：ECR_No / TXN_No 可修改（不 disable）
+   * - Create / Edit：ECR_No / TXN_No / TXN_GUIPaper 唯讀
    */
   private updateDisabledState(): void {
     if (this.crudstatus === CRUDStatus.Read) {
@@ -671,10 +696,12 @@ const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(
     this.dataForm.enable();
     this.dataForm.controls.mid.disable({ emitEvent: false });
     this.dataForm.controls.SYS_StoreNo.disable({ emitEvent: false });
-    // 所有模式（Create/Edit）皆唯讀
     this.dataForm.controls.ECR_No.disable({ emitEvent: false });
     this.dataForm.controls.TXN_No.disable({ emitEvent: false });
     this.dataForm.controls.TXN_GUIPaper.disable({ emitEvent: false });
+
+    // 顯示用欄位永遠唯讀
+    this.dataForm.controls.INV_YM_Display.disable({ emitEvent: false });
   }
 
   private showErrorsIfInvalid(form: FormGroup, labelMap: Record<string, string>): boolean {
@@ -696,5 +723,19 @@ const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(
     });
 
     return true;
+  }
+
+  /** 後端若回偶數月(02/04/06/...)，顯示要往前推一個月 */
+  private fixInvYmForYearMonthDisplay(invYm: any): string | null {
+    const yyyymm = this.toYYYYMM(invYm);
+    if (!yyyymm) return null;
+
+    const year = yyyymm.substring(0, 4);
+    let month = parseInt(yyyymm.substring(4, 6), 10);
+    if (isNaN(month) || month < 1 || month > 12) return null;
+
+    if (month % 2 === 0) month -= 1;
+
+    return `${year}${String(month).padStart(2, '0')}`;
   }
 }

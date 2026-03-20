@@ -18,3 +18,12 @@
   padding-right: 0 !important;
   width: auto !important;
 }
+.sticky-bottom {
+  /* 浮動按鈕處理 */
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: white;
+  /* 調整按鈕與底部的距離 */
+  padding-bottom: 1.5rem;
+}

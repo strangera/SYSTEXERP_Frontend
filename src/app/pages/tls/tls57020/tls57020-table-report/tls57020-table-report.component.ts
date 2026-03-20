@@ -60,6 +60,17 @@ export class TableReportComponent implements OnChanges {
     }
     return true;
   }
+  /**
+   * 計算該行在所屬廠商群組中的序號
+   * @param rowData 目前這行資料
+   */
+  getGroupIndex(fullList: any[], rowData: any): number {
+    if (!fullList || !rowData) return 1;
+    // 找出該廠商的所有資料
+    const groupRows = fullList.filter(item => item.VEN_NO === rowData.VEN_NO);
+    // 傳回在該子群組中的索引
+    return groupRows.indexOf(rowData) + 1;
+  }
 
   // 計算分組欄位跨度
   getColumnSpan(columns: ReportColumn[], groupField: string): number {

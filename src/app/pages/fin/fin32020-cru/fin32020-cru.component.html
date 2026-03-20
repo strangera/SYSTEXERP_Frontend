@@ -158,11 +158,12 @@
   ></app-table2>
 
   <div class="flex justify-content-end gap-2 mt-3">
-    <app-button
-      btnType="cancel"
-      [type]="'button'"
-      (click)="arsDialogVisible = false"
-    ></app-button>
+ <app-button
+  btnType="cancel"
+  [type]="'button'"
+   label="清除"
+  (click)="onARSCancel()"
+></app-button>
     <app-button
       btnType="submit"
       [type]="'button'"
@@ -237,11 +238,12 @@
 ></app-table-report>
 
   <div class="flex justify-content-end gap-2 mt-3">
-    <app-button
-      btnType="cancel"
-      [type]="'button'"
-      (click)="adjAccDialogVisible = false"
-    ></app-button>
+<app-button
+  btnType="cancel"
+  [type]="'button'"
+  label="清除"
+  (click)="onAdjAccCancel()"
+></app-button>
     <app-button
       btnType="submit"
       [type]="'button'"

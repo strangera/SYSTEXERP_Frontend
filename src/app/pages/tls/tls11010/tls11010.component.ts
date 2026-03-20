@@ -254,20 +254,43 @@ this.lastQueryBody = { ...payload };
 
   onDelete(selectedItems: any[]) {
     if (!selectedItems.length) return;
-    const confirmDelete = window.confirm('是否確定刪除選取項目？');
-    if (!confirmDelete) return;
 
-    const idList = selectedItems.map((item) => item.id);
-    this.tls11010Service
-      .deleteData(idList)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('刪除成功');
-          this.onSubmit(this.queryForm);
-        },
-        error: () => this.messageService.errorBubble('刪除失敗'),
-      });
+    const idList = selectedItems
+      .filter(item => item && item.id != null)
+      .map(item => item.id);
+
+    if (idList.length === 0) {
+      this.messageService.warnBubble('未找到有效的刪除項目');
+      return;
+    }
+
+    this.messageService.confirm({
+      message: '是否確認刪除所選位置資料?',
+      header: '確認刪除',
+      accept: () => {
+        this.loading = true;
+        this.tls11010Service
+          .deleteData(idList)
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: (response: any) => {
+              if (response?.Status === '0000') {
+                this.messageService.successBubble('刪除成功');
+                this.selectedItems = [];
+                this.onSubmit(this.queryForm);
+              } else {
+                this.messageService.errorBubble(`刪除失敗: ${response?.Message}`);
+              }
+            },
+            error: () => {
+              this.messageService.errorBubble('刪除失敗');
+            },
+            complete: () => {
+              this.loading = false;
+            },
+          });
+      }
+    });
   }
 
   override onEdit(data: any): void {

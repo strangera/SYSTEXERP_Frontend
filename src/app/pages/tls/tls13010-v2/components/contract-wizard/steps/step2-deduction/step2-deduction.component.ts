@@ -24,7 +24,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
-import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '../../../../../tls13010/tls13010.dropdown';
+import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 
 import { FareItem } from '../../../../core/models/deduction';
 import { ContractInfo, LocationItem } from '../../../../core/models/contract';
@@ -431,7 +431,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     // 執行計算
-    this.performCalculation(rowData, capType);
+    this.performCalculation(rowData, capType, fieldName);
 
     // 更新追蹤狀態
     this.updateItemStatus(rowData, capType);
@@ -521,7 +521,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   // ========== 計算邏輯 ==========
-  private performCalculation(rowData: FareItem, capType: string): void {
+  private performCalculation(rowData: FareItem, capType: string, changedField?: string): void {
     switch (capType) {
       case 'A':
         this.calculateTypeA(rowData);
@@ -530,7 +530,7 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
         this.calculateTypeB(rowData);
         break;
       case 'C':
-        this.calculateTypeC(rowData);
+        this.calculateTypeC(rowData, changedField);
         break;
       // D, E 類型通常不需要計算
     }
@@ -567,18 +567,26 @@ export class Step2DeductionComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  private calculateTypeC(rowData: FareItem): void {
+  private calculateTypeC(rowData: FareItem, changedField?: string): void {
     const totalAmt = parseFloat(String(rowData.tpy_totalamt || 0));
-    const monthlyAmt = parseFloat(String(rowData.tpy_amount || 0));
     const periods = this.calculatePeriods(rowData.tpy_bdate, rowData.tpy_edate);
 
     rowData.period_nos = periods;
 
-    // 計算首期金額 (無條件進位取整數)
-    if (totalAmt > 0 && monthlyAmt > 0 && periods > 1) {
-      rowData.down_payment = Math.ceil(totalAmt - (monthlyAmt * (periods - 1)));
+    if (changedField === 'down_payment') {
+      // 輸入首期 → 算每月金額
+      const downPayment = parseFloat(String(rowData.down_payment || 0));
+      if (totalAmt > 0 && periods > 1) {
+        rowData.tpy_amount = Math.ceil((totalAmt - downPayment) / (periods - 1));
+      }
     } else {
-      rowData.down_payment = Math.ceil(monthlyAmt);
+      // 輸入每月金額（或總金額、日期）→ 算首期金額
+      const monthlyAmt = parseFloat(String(rowData.tpy_amount || 0));
+      if (totalAmt > 0 && monthlyAmt > 0 && periods > 1) {
+        rowData.down_payment = Math.ceil(totalAmt - (monthlyAmt * (periods - 1)));
+      } else {
+        rowData.down_payment = Math.ceil(monthlyAmt);
+      }
     }
   }
 

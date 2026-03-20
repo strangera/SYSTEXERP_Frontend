@@ -44,6 +44,7 @@ export interface Tls55030ListData {
   DIS_No: string; // 折讓單號
   ACP_YYYYMM: string; // 結帳年月
   VEN_No: string; // 廠商編號
+  VEN_Name: string; // 廠商名稱
   TABTYPE: string; // 單據別
   PUR_VoucherType: string; // 發票格式代碼 (新增)
   DIS_Status: string; // 狀態
@@ -139,7 +140,7 @@ export interface IInvoiceDetail {
   PUR_TaxType_TEXT: string; // 稅別說明 (新增)
   PUR_DirectType: string; // 發票用途
   PUR_VoucherType: string; // 發票格式代碼
-  Rebate_GUIDate: string;
+  Rebate_GUIDate: Date;
   PUR_Amt: number; // 發票金額
   Rebate_Amt: number; // 已折讓金額
   Rebate_Name: string | null;    // 新增/輸入的折讓名稱

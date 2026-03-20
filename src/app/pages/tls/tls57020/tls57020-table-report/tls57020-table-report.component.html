@@ -8,25 +8,19 @@
       </div>
     </div>
   </ng-template>
-  <ng-template pTemplate="header" let-columns>
-    <tr>
-      <th class="w-3rem text-center">序號</th>
-      <th *ngFor="let col of columns" [pSortableColumn]="col.field" class="text-center" style="min-width: 55px">
-        {{ col.header }}
-        <p-sortIcon [field]="col.field" />
-      </th>
-    </tr>
-  </ng-template>
   <ng-template pTemplate="groupheader" let-rowData>
     <tr pRowGroupHeader>
-      <td class="font-bold" [style.background]="'var(--table-header-bg)'">
-        <span class="text-lg">廠商</span>
+      <td [attr.colspan]="columns.length + 1" class="font-bold" [style.background]="'var(--table-header-bg)'">
+        <span class="text-lg text-blue-700">
+          廠商：{{ rowData.VEN_NO }} / {{ getVenName(rowData.VEN_NO) }}
+        </span>
       </td>
-      <td [attr.colspan]="columns.length" class="font-bold text-center" [style.background]="'var(--table-header-bg)'">
-        <span class="font-bold text-blue-700 text-center text-lg">{{ rowData.VEN_NO }} / {{
-          getVenName(rowData.VEN_NO)
-          }}</span>
-      </td>
+    </tr>
+    <tr>
+      <th class="w-3rem text-center bg-gray-100">序號</th>
+      <th *ngFor="let col of columns" class="text-center bg-gray-100" style="min-width: 55px">
+        {{ col.header }}
+      </th>
     </tr>
   </ng-template>
 
@@ -54,10 +48,11 @@
       </th>
     </tr>
   </ng-template>
-  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
-    <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [style]="{ height: '20px' }">
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns">
+    <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined">
       <td class="text-center w-3rem">{{ rowIndex + 1 }}</td>
-      <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align ? col.align : 'center'}">
+      <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
+        style="text-overflow: ellipsis; min-width: 55px">
         <span>
           {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
         </span>
@@ -95,7 +90,9 @@
 </ng-template>
 <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
   <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [style]="{ height: '20px' }">
-    <td class="text-center w-3rem">{{ rowIndex + 1 }}</td>
+    <td class="text-center w-3rem">
+      {{ getGroupIndex(PaymentDetails, rowData) }}
+    </td>
     <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
       style="text-overflow: ellipsis; min-width: 55px">
       <span>
@@ -108,7 +105,7 @@
   <tr>
     <td [attr.colspan]="1 + columns.length">
       <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
-        查無資料
+        <!-- 查無資料 -->
       </div>
     </td>
   </tr>

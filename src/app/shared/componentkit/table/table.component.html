@@ -168,11 +168,12 @@
           <span class="pi pi-bars" pReorderableRowHandle></span>
         </td>
         <td *ngIf="showSerialNo" class="text-center">{{ rowIndex + 1 }}</td>
-        <td *ngIf="IsPrint && showCheckBox && !rowEditing && (selectionMode === 'multiple' || selectionMode === 'single')">
-          <p-tableCheckbox *ngIf="selectionMode === 'multiple'" class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
-            [disabled]="!isRowSelectable(rowData) || disabled" />
-          <p-tableRadioButton *ngIf="selectionMode === 'single'" class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
-            [disabled]="!isRowSelectable(rowData) || disabled" />
+        <td
+          *ngIf="IsPrint && showCheckBox && !rowEditing && (selectionMode === 'multiple' || selectionMode === 'single')">
+          <p-tableCheckbox *ngIf="selectionMode === 'multiple'" class="flex justify-content-center"
+            [pSelectableRow]="rowData" [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled" />
+          <p-tableRadioButton *ngIf="selectionMode === 'single'" class="flex justify-content-center"
+            [pSelectableRow]="rowData" [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled" />
         </td>
         <td *ngIf="expansionColumns.length && IsPrint" class="text-center">
           <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
@@ -293,7 +294,7 @@
       <td [attr.colspan]="getVisibleHeaderCount">
         <div>
           <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
-            {{ emptyMessage }}
+            <!-- {{ emptyMessage }} -->
           </div>
         </div>
       </td>

@@ -87,14 +87,14 @@ export class TLS55030DialogComponent {
   /** 開啟折讓單明細選擇彈窗並載入資料 */
   openInvoiceDialog() {
     // <-- 修正：檢查並使用 venUniformNo (廠商統一編號)
-    if (!this.venUniformNo) return;
+    if (!this.venNo) return;
 
     this.dialogVisible = true;
     this.dialogLoading = true;
     this.selectedItemsDialog = []; // 清空上次的選擇
 
     const body: RebateDetailOptionQueryBody = {
-      VEN_No: this.venUniformNo,
+      VEN_No: this.venNo,
       PageSize: 30,
       PageIndex: 1,
       SortBy: [{ field: 'SeqNo', order: 1 }]

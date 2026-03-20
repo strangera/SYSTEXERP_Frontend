@@ -1,7 +1,7 @@
 /**
  * 抽成項目主欄位定義
  */
-import { TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/tls13010/tls13010.dropdown';
+import { TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { ColumnDef } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 
 
@@ -17,14 +17,15 @@ export function getCommissionMainColumns(): ColumnDef[] {
       options: TLS13010_DROPDOWN_OPTIONS.cagTaxTypeOption,
       defaultValue: '0'
     },
-    { field: 'sst_amount', header: '單筆交易金額(含)以上', editable: true, type: 'number' },
+    { field: 'sst_amount', header: '單筆交易金額(含)以上', editable: true, type: 'number', hidden: true },
     {
       field: 'sst_rate',
       header: '特價抽成(%)',
       editable: true,
       type: 'number',
       allowDecimal: true,
-      decimalPlaces: 3
+      decimalPlaces: 3,
+      hidden: true
     },
     {
       field: 'remark',
