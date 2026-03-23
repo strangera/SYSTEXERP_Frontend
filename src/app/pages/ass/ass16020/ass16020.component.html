@@ -4,22 +4,22 @@
     <app-button
       btnType="create"
       label="{{ '登入' }}"
-      (click)="onCreate()"
+      (clickEvent)="onCreate()"
     ></app-button>
     <app-button
-      btnType="create"
+      btnType="edit"
       label="{{ '盤後調整' }}"
-      (click)="onCreate()"
+      (clickEvent)="onCreate()"
     ></app-button>
     <app-button
-      btnType="create"
-      label="{{ '盤後查詢' }}"
-      (click)="onCreate()"
+      [type]="'button'"
+      label="盤後查詢"
+      (clickEvent)="onQueryDialog()"
     ></app-button>
     <app-button
-      btnType="create"
+      btnType="report"
       label="{{ '盤點報表' }}"
-      (click)="onCreate()"
+      (clickEvent)="goReport()"
     ></app-button>
   </div>
   <p-accordion>
@@ -128,3 +128,27 @@
     ></app-table>
   </div>
 </div>
+
+<!-- 盤後查詢 Dialog -->
+<p-dialog
+  header="盤後查詢"
+  [(visible)]="arDialogVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '90vw', maxWidth: '1200px' }"
+>
+  <app-table
+    tableKey="ASS16020_Query_Dialog"
+    dataKey="inventoryNumber"
+    [data]="QueryDialogData"
+    [columns]="QueryDialogColumns"
+    [loading]="loading"
+    [showManage]="false"
+    [showReportMode]="false"
+    [showReportExcel]="false"
+    [showReportPDF]="false"
+    [showDelete]="false"
+    [showRowEdit]="false"
+  ></app-table>
+</p-dialog>

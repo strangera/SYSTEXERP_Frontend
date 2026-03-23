@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS16020Data } from '@service/api/ass/ass16020.service';
+import { ASS16020Data, Ass16020Service } from '@service/api/ass/ass16020.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { AccordionModule } from 'primeng/accordion';
+import { DialogModule } from 'primeng/dialog';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -19,7 +20,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
   templateUrl: './ass16020.component.html',
   styleUrl: './ass16020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule, MultiSelectComponent]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule, MultiSelectComponent, DialogModule,]
 })
 export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -49,7 +50,11 @@ export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> imp
   });
   // Table data
   data: ASS16020Data[] = [];
+  QueryDialogData: ASS16020Data[] = [];
   selectedItems: ASS16020Data[] = [];
+
+  // Dialog visibility
+  arDialogVisible = false;
 
   Reporttype = [
     { value: 1, label: '全部' },
@@ -63,6 +68,13 @@ export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> imp
     { field: 'inventoryStaff', header: '盤點人員', visible: true },
   ];
 
+  QueryDialogColumns = [
+    { field: 'inventoryNumber', header: '盤點單號', visible: true },
+    { field: 'inventoryStatus', header: '盤點狀態', visible: true },
+    { field: 'inventoryDate', header: '盤點日期', visible: true },
+    { field: 'closingDate', header: '結案日期', visible: true },
+    { field: 'inventoryStaff', header: '盤點人員', visible: true },
+  ];
 
 
   // Dropdown options
@@ -172,6 +184,8 @@ export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> imp
 
   constructor(
     private notificationService: NotificationService,
+    private ass16020Service: Ass16020Service,
+    private readonly cdr: ChangeDetectorRef,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -271,4 +285,54 @@ export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> imp
   //   };
   //   this.router.navigate(['/demoCRU'], extras);
   // }
+
+  /** 打開應收未收查詢 Dialog */
+  onQueryDialog() {
+    // 打開 Dialog
+    this.arDialogVisible = true;
+    this.cdr.detectChanges();
+
+    this.QueryDialogData = [
+      {
+        inventoryNumber: 'IV202603110001',
+        inventoryStatus: '已結案',
+        inventoryDate: '2026-03-01',
+        closingDate: '',
+        inventoryStaff: '王小明'
+      },
+      {
+        inventoryNumber: 'IV202603110002',
+        inventoryStatus: '盤點中',
+        inventoryDate: '2026-03-03',
+        closingDate: '',
+        inventoryStaff: '陳美玲'
+      },
+      {
+        inventoryNumber: 'IV202603110003',
+        inventoryStatus: '登錄完成',
+        inventoryDate: '2026-03-05',
+        closingDate: '2026-03-06',
+        inventoryStaff: '林志宏'
+      },
+      {
+        inventoryNumber: 'IV202603110004',
+        inventoryStatus: '登錄完成',
+        inventoryDate: '2026-03-07',
+        closingDate: '2026-03-08',
+        inventoryStaff: '張雅婷'
+      },
+      {
+        inventoryNumber: 'IV202603110005',
+        inventoryStatus: '盤點中',
+        inventoryDate: '2026-03-09',
+        closingDate: '',
+        inventoryStaff: '劉冠廷'
+      }
+    ];
+
+  }
+
+  goReport() {
+    this.router.navigate(['/account/ass/ass16020cru']);
+  }
 }
