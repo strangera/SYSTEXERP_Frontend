@@ -312,6 +312,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   ngOnInit(): void {
+    this.initMaxClsMonth(); // 取得月結鎖定年月
     this.dataFormNormal.get('tpy_date')?.valueChanges.subscribe((date: any) => {
       this.syncNormalTpyDateToRows(date);
     });
@@ -326,7 +327,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           });
           this.data = [...this.data];
         }
-        this.validateCounterRows();
+        this.runInstantValidation();
       }
     });
     // normal 模式：當上方表單的扣款金額變更時，預設同步到下方所有明細列
@@ -422,6 +423,13 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
+  /** 初始化月結鎖定 */
+  private initMaxClsMonth() {
+    this.tls2d010Service.queryMaxClsMonth().pipe(untilDestroyed(this)).subscribe(res => {
+      this.maxClsMonthNum = this.parseLockYmFromResponse(res);
+    });
+  }
+
   // ===== 載入選單 =====
   private loadTltAndPodOptions(): void {
     forkJoin({
@@ -461,7 +469,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           label: `${item.No}-${item.Name}`,
         }));
 
-        this.CAP_ItemOptions = capItem?.Data || [];
+        this.CAP_ItemOptions = (capItem?.Data || []).filter(item => item.CAP_Type !== '0');
         this.FilterCAP_ItemOptions = this.CAP_ItemOptions.map(item => ({
           value: item.CAP_Item, label: `${item.CAP_Item}-${item.CAP_Name}`, data: item
         }));
@@ -677,16 +685,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     this.data = this.ensureRowIds(updatedData ?? []);
     // counter模式 table-edit mapping
     if (this.currentCreateType === 'counter') {
-      this.data.forEach(row => {
-        this.setTableRowMapping(row);
-      });
-      // 更新總金額（使用共用方法）
-      this.updateTotalCash();
-      // 當 counter table 的資料（尤其是 tpy_date）改變時，驗證每筆扣款日期是否在契約期間且晚於月結鎖定年月
-      this.validateCounterRows();
-    }
-    // normal模式 table-edit tlt_no欄位有新值就自動補 contract_no/contract_subno/org_id
-    if (this.currentCreateType === 'normal') {
+      this.data.forEach(row => this.setTableRowMapping(row));
+      this.updateTotalCash(); // 更新總金額（使用共用方法）
+    } else {
       // 取得上方表單選擇的 tlt_no（可能為物件或字串），以便在新增列時帶入 org_id
       const formTltVal = this.dataFormNormal.get('tlt_no')?.value;
       let normalizedFormTlt: any = formTltVal;
@@ -733,6 +734,63 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       });
       // 讓 table-edit 感知資料變更，立即更新 UI
       this.data = Array.isArray(this.data) ? [...this.data] : this.data;
+    }
+    // --- 觸發即時日期校驗 (通用) ---
+    this.runInstantValidation();
+  }
+
+  /**
+ * 即時驗證：檢查 Table 內每一筆資料的扣款日期是否合法
+ */
+  private runInstantValidation(): void {
+    const rowsToCheck = this.data.filter(r => !r._isAutoInsertCandidate);
+    if (!rowsToCheck.length) return;
+
+    const normalValue = this.dataFormNormal.getRawValue();
+    const counterValue = this.dataFormCounter.getRawValue();
+
+    for (const row of rowsToCheck) {
+      // 1. 取得專櫃資訊
+      const rowTlt = row.tlt_no || (this.currentCreateType === 'counter' ? counterValue.tlt_no : normalValue.tlt_no);
+      if (!rowTlt) continue;
+
+      // 2. 取得扣款日期 (優先拿 row 自己的，沒有才拿表單的)
+      const tpyDateRaw = row.tpy_date || (this.currentCreateType === 'counter' ? counterValue.tpy_date : normalValue.tpy_date);
+      if (!tpyDateRaw) continue; // 尚未填寫則跳過即時檢查
+
+      const d = this.parseBackendDate(tpyDateRaw) ?? new Date(tpyDateRaw);
+      if (!d || isNaN(d.getTime())) continue;
+
+      // 3. 取得契約期間
+      // Normal 模式要拿每一筆專櫃自己的 buildTltInfo
+      const fullTlt = this.buildTltInfo(rowTlt, row.pod_no || (this.currentCreateType === 'counter' ? counterValue.pod_no : normalValue.pod_no));
+      const bDate = this.currentCreateType === 'counter' ? counterValue.tlt_contract_bdate : fullTlt.tlt_contract_bdate;
+      const eDate = this.currentCreateType === 'counter' ? counterValue.tlt_contract_edate : fullTlt.tlt_contract_edate;
+
+      const contractB = this.parseBackendDate(bDate);
+      const contractE = this.parseBackendDate(eDate);
+
+      if (contractB && contractE) {
+        const start = new Date(contractB.getFullYear(), contractB.getMonth(), contractB.getDate(), 0, 0, 0, 0);
+        const end = new Date(contractE.getFullYear(), contractE.getMonth(), contractE.getDate(), 23, 59, 59, 999);
+
+        // 4. 校驗契約期間 (格式依照妳的要求)
+        if (d < start || d > end) {
+          this.messageService.errorBubble(
+            `扣款日期 ${formatDate(d, 'yyyy/MM/dd', 'en-US')} 不在專櫃 ${fullTlt.tlt_no} 的契約期間內 ${formatDate(start, 'yyyy/MM/dd', 'en-US')} ~ ${formatDate(end, 'yyyy/MM/dd', 'en-US')}`
+          );
+          return; // 即時檢查只要報出第一筆錯誤即可
+        }
+      }
+
+      // 5. 校驗月結鎖定 (使用快取，不重複打 API)
+      if (this.maxClsMonthNum != null) {
+        const tpyYm = d.getFullYear() * 100 + (d.getMonth() + 1);
+        if (tpyYm <= this.maxClsMonthNum) {
+          this.messageService.errorBubble(`扣款年月 ${tpyYm} 需大於月結鎖定年月 ${this.maxClsMonthNum}`);
+          return;
+        }
+      }
     }
   }
 
@@ -954,67 +1012,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     return null;
   }
 
-  private ensureMaxClsMonthThen(cb: (val: number | null) => void): void {
-    if (this.maxClsMonthNum != null) {
-      cb(this.maxClsMonthNum);
-      return;
-    }
-    this.tls2d010Service.queryMaxClsMonth()
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: any) => {
-          this.maxClsMonthNum = this.parseLockYmFromResponse(res);
-          cb(this.maxClsMonthNum);
-        },
-        error: () => {
-          cb(null);
-        }
-      });
-  }
-
-  private validateCounterRows(): void {
-    if (this.currentCreateType !== 'counter') return;
-    if (!Array.isArray(this.data) || !this.data.length) return;
-
-    const contractB = this.parseBackendDate(this.dataFormCounter.get('tlt_contract_bdate')?.value);
-    const contractE = this.parseBackendDate(this.dataFormCounter.get('tlt_contract_edate')?.value);
-    if (!contractB || !contractE) {
-      // 無法驗證時不主動阻擋，但提醒使用者
-      return;
-    }
-
-    const rowsToCheck = this.data.filter(r => !r._isAutoInsertCandidate && r.tpy_date);
-    if (!rowsToCheck.length) return;
-
-    const doValidate = (lockYm: number | null) => {
-      for (const r of rowsToCheck) {
-        const d = this.parseBackendDate(r.tpy_date) ?? new Date(r.tpy_date);
-        if (!d || isNaN(d.getTime())) {
-          this.messageService.errorBubble('扣款日期格式錯誤');
-          return;
-        }
-        const start = new Date(contractB.getFullYear(), contractB.getMonth(), contractB.getDate(), 0, 0, 0, 0);
-        const end = new Date(contractE.getFullYear(), contractE.getMonth(), contractE.getDate(), 23, 59, 59, 999);
-        if (d < start || d > end) {
-          this.messageService.errorBubble(`扣款日期需在契約期間內：${formatDate(start, 'yyyy/MM/dd', 'en-US')} ~ ${formatDate(end, 'yyyy/MM/dd', 'en-US')}`);
-          return;
-        }
-        if (lockYm != null) {
-          const tpyYm = d.getFullYear() * 100 + (d.getMonth() + 1);
-          if (tpyYm <= lockYm) {
-            this.messageService.errorBubble('扣款年月需大於月結鎖定年月');
-            return;
-          }
-        }
-      }
-    };
-
-    if (this.maxClsMonthNum != null) {
-      doValidate(this.maxClsMonthNum);
-    } else {
-      this.ensureMaxClsMonthThen(lock => doValidate(lock));
-    }
-  }
   onSubmit(): void {
     if (this.isDetailMode) {
       return;
@@ -1035,6 +1032,11 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     const hasDetail = Array.isArray(this.data) && this.data.some(r => !r._isAutoInsertCandidate);
     if (!hasDetail) {
       this.messageService.errorBubble('明細列表至少需一筆資料');
+      return;
+    }
+
+    // 扣款日期規則檢核
+    if (!this.checkDateValidation()) {
       return;
     }
 
@@ -1132,106 +1134,15 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
             feeMap.set(key, f);
           }
         }
-        let feeList = Array.from(feeMap.values());
+        const feeList = Array.from(feeMap.values());
         const tltList = [{
           tlt_no: tltInfoFull?.tlt_no || '',
           talent_id: Number(tltInfoFull?.talent_id ?? 0),
           pod_no: tltInfoFull?.pod_no || '',
-          org_id: tltInfoFull?.org_id ?? ''
+          org_id: tltInfoFull?.org_id ?? '',
         }];
 
-        if (tltList && tltList.length > 1 && feeList.length > 1) {
-          feeList = [feeList[0]];
-        }
-
-        // 取得月結鎖定年月並做驗證：扣款日期需在契約期間，且扣款年月需大於月結鎖定年月
-        this.tls2d010Service.queryMaxClsMonth()
-          .pipe(untilDestroyed(this))
-          .subscribe((res: any) => {
-            let lockYmNum: number | null = null;
-            try {
-              const raw = res?.Data ?? res;
-              let ym: string | null = null;
-              if (typeof raw === 'string' || typeof raw === 'number') {
-                ym = String(raw);
-              } else if (raw && typeof raw === 'object') {
-                // try common properties
-                ym = raw.maxClsMonth || raw.maxCls_YearMonth || raw.MaxClsMonth || raw.yyyymm || raw.yearMonth || raw.year_month || null;
-                if (!ym) {
-                  // if Data is array
-                  if (Array.isArray(raw) && raw.length && (typeof raw[0] === 'string' || typeof raw[0] === 'number')) {
-                    ym = String(raw[0]);
-                  }
-                }
-              }
-              if (ym) {
-                // normalize formats like '2023-05' or '202305' or '2023/05' -> yyyymm number
-                const m = ym.match(/(\d{4})[^\d]?(\d{1,2})/);
-                if (m) {
-                  const y = Number(m[1]);
-                  const mo = Number(m[2]);
-                  lockYmNum = y * 100 + mo;
-                } else if (/^\d{6}$/.test(ym)) {
-                  lockYmNum = Number(ym);
-                }
-              }
-            } catch (e) {
-              lockYmNum = null;
-            }
-
-            const contractB = this.parseBackendDate(this.dataFormCounter.get('tlt_contract_bdate')?.value);
-            const contractE = this.parseBackendDate(this.dataFormCounter.get('tlt_contract_edate')?.value);
-            if (!contractB || !contractE) {
-              this.messageService.errorBubble('契約期間不足，無法驗證扣款日期');
-              return;
-            }
-
-            for (const f of feeList) {
-              if (!f.tpy_date) {
-                this.messageService.errorBubble('扣款日期為必填，請確認所有明細');
-                return;
-              }
-              const d = this.parseBackendDate(f.tpy_date) ?? new Date(f.tpy_date);
-              if (!d || isNaN(d.getTime())) {
-                this.messageService.errorBubble('扣款日期格式錯誤');
-                return;
-              }
-              // 檢查在契約期間（含起迄日）
-              const start = new Date(contractB.getFullYear(), contractB.getMonth(), contractB.getDate(), 0, 0, 0, 0);
-              const end = new Date(contractE.getFullYear(), contractE.getMonth(), contractE.getDate(), 23, 59, 59, 999);
-              if (d < start || d > end) {
-                this.messageService.errorBubble(`扣款日期需在契約期間內：${formatDate(start, 'yyyy/MM/dd', 'en-US')} ~ ${formatDate(end, 'yyyy/MM/dd', 'en-US')}`);
-                return;
-              }
-
-              // 檢查年月需大於月結鎖定年月
-              if (lockYmNum != null) {
-                const tpyYm = d.getFullYear() * 100 + (d.getMonth() + 1);
-                if (tpyYm <= lockYmNum) {
-                  this.messageService.errorBubble('扣款年月需大於月結鎖定年月');
-                  return;
-                }
-              }
-            }
-
-            // 若通過驗證，組 payload 並送出
-            const payloadObj = { tltList, feeList };
-            this.tls2d010Service.insertTLS2D010(payloadObj)
-              .pipe(untilDestroyed(this))
-              .subscribe({
-                next: () => {
-                  this.messageService.successBubble('新增成功');
-                  this.onCancel();
-                },
-              });
-          }, (err: any) => {
-            this.messageService.errorBubble('取得月結鎖定年月失敗，請稍後再試');
-            return;
-          });
-
-        // 結束 counter 處理流程（insert 在 callback 中）
-        return;
-
+        payload = { tltList, feeList };
       } else {
         const normalValue = this.dataFormNormal.getRawValue();
         const feeItems = this.data
@@ -1265,7 +1176,8 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           }
         }
         let feeList = Array.from(feeMap.values());
-        const tltMap = new Map<string, { tlt_no: string; talent_id: number; pod_no: string; org_id: string }>();
+
+        const tltMap = new Map<string, any>();
         for (const row of this.data.filter(i => !i._isAutoInsertCandidate)) {
           const rowTlt = row.tlt_no || normalValue.tlt_no;
           if (!rowTlt) {
@@ -1279,17 +1191,14 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           const org_id = full?.org_id ?? '';
           const key = `${tlt_no}|${talent_id}|${pod_no}|${org_id}`;
           if (!tltMap.has(key)) {
-            tltMap.set(key, { tlt_no, talent_id, pod_no, org_id });
+            tltMap.set(key, { tlt_no: full.tlt_no, talent_id: Number(full.talent_id), pod_no: full.pod_no, org_id: full.org_id });
           }
         }
 
         const tltList = Array.from(tltMap.values());
-        if (tltList && tltList.length > 1 && feeList.length > 1) {
+
+        if (tltList.length > 1 && feeList.length > 1) {
           feeList = [feeList[0]];
-        }
-        if (tltList.length === 0) {
-          this.messageService.errorBubble('請先選擇至少一筆專櫃');
-          return;
         }
 
         payload = { tltList, feeList };
@@ -1308,4 +1217,68 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
 
+  /**
+   * 共用日期驗證邏輯
+   * @param feeList 欲檢查的費用清單
+   * @param bDateStr 契約起日
+   * @param eDateStr 契約迄日
+   */
+  private checkDateValidation(): boolean {
+    const rowsToValidate = this.data.filter(i => !i._isAutoInsertCandidate);
+    const normalValue = this.dataFormNormal.getRawValue();
+    const counterValue = this.dataFormCounter.getRawValue();
+
+    for (const row of rowsToValidate) {
+      // 1. 決定專櫃來源
+      const rowTlt = row.tlt_no || (this.currentCreateType === 'counter' ? counterValue.tlt_no : normalValue.tlt_no);
+      if (!rowTlt) continue;
+
+      // 2. 取得該筆專櫃的完整資訊 (包含契約起迄)
+      const fullTlt = this.buildTltInfo(rowTlt, row.pod_no || (this.currentCreateType === 'counter' ? counterValue.pod_no : normalValue.pod_no));
+
+      // 3. 取得扣款日期：優先取 row 上的，若無則取表單上的
+      const tpyDateRaw = row.tpy_date || (this.currentCreateType === 'counter' ? counterValue.tpy_date : normalValue.tpy_date);
+      const d = this.parseBackendDate(tpyDateRaw) ?? new Date(tpyDateRaw);
+
+      if (!tpyDateRaw || !d || isNaN(d.getTime())) {
+        this.messageService.errorBubble('扣款日期格式錯誤或未填寫');
+        return false;
+      }
+
+      // 4. 決定契約日期來源
+      // Counter 模式：契約日期統一看表單上方
+      // Normal 模式：契約日期看該列專櫃自己的 (fullTlt)
+      const bDate = this.currentCreateType === 'counter' ? counterValue.tlt_contract_bdate : fullTlt.tlt_contract_bdate;
+      const eDate = this.currentCreateType === 'counter' ? counterValue.tlt_contract_edate : fullTlt.tlt_contract_edate;
+
+      const contractB = this.parseBackendDate(bDate);
+      const contractE = this.parseBackendDate(eDate);
+
+      if (!contractB || !contractE) {
+        this.messageService.errorBubble(`專櫃 ${fullTlt.tlt_no} 契約期間資料不全，無法驗證`);
+        return false;
+      }
+
+      const start = new Date(contractB.getFullYear(), contractB.getMonth(), contractB.getDate(), 0, 0, 0, 0);
+      const end = new Date(contractE.getFullYear(), contractE.getMonth(), contractE.getDate(), 23, 59, 59, 999);
+
+      // 5. 執行校驗：格式依照妳的要求
+      if (d < start || d > end) {
+        this.messageService.errorBubble(
+          `扣款日期 ${formatDate(d, 'yyyy/MM/dd', 'en-US')} 不在專櫃 ${fullTlt.tlt_no} 的契約期間內 ${formatDate(start, 'yyyy/MM/dd', 'en-US')} ~ ${formatDate(end, 'yyyy/MM/dd', 'en-US')}`
+        );
+        return false;
+      }
+
+      // 6. 月結鎖定校驗
+      if (this.maxClsMonthNum != null) {
+        const tpyYm = d.getFullYear() * 100 + (d.getMonth() + 1);
+        if (tpyYm <= this.maxClsMonthNum) {
+          this.messageService.errorBubble(`扣款年月 ${tpyYm} 需大於月結鎖定年月 ${this.maxClsMonthNum}`);
+          return false;
+        }
+      }
+    }
+    return true;
+  }
 }
