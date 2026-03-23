@@ -183,6 +183,14 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
         TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
       }
       this.tls55010Service.queryTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.queryLoading = false)).subscribe((res) => {
+        if (!res.Data) {
+          this.messageService.warnBubble('查無資料');
+          this.data2 = [];
+          this.footerData2 = [];
+          this.dataForm.reset();
+          this.showReverseBtn = false;
+          return;
+        }
         this.messageService.successBubble(res.Message);
         this.lastDate = body.TXN_Date as unknown as Tls55010DateRequest;
         this.isConfirmDate = true;
@@ -193,14 +201,12 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
           DAccAmt: item.AccDC === 'D' ? item.AccAmt : 0,
           CAccAmt: item.AccDC === 'C' ? item.AccAmt : 0,
         }));
-        // 將資料轉成 footerData2 = [{DAccAmt: 100, CAccAmt: 200}]=而不是 footerData2 = {field: 'DAccAmt', value: 100, field: 'CAccAmt', value: 200}
         this.footerData2 = [
           {
             DAccAmt: this.data2.reduce((sum, item) => sum + (item.DAccAmt || 0), 0),
             CAccAmt: this.data2.reduce((sum, item) => sum + (item.CAccAmt || 0), 0),
           },
         ]
-        console.log(this.footerData2);
       });
     });
   }
