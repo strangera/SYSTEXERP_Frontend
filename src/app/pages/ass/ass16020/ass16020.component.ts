@@ -1,34 +1,28 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-
-// Shared
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS16020Data, Ass16020Service } from '@service/api/ass/ass16020.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { AccordionModule } from 'primeng/accordion';
-import { BigCategoryService } from '../../../service/basic/big-category.service';
-import { MidCategoryService } from '../../../service/basic/mid-category.service';
-import { SmallCategoryService } from '../../../service/basic/small-category.service';
-import { AuthService } from '../../../service/system/auth.service';
+import { DialogModule } from 'primeng/dialog';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-ass16020',
   templateUrl: './ass16020.component.html',
   styleUrl: './ass16020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule, MultiSelectComponent, DialogModule,]
 })
-export class ASS16020Component extends BasicQpageComponent implements OnInit {
+export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> implements OnInit {
   queryForm = this.formBuilder.group({
     bigCategoryCode: [],
     midCategoryCode: [],
@@ -45,21 +39,36 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
     EReviewdate: [],
     basedate: [],
     Inventoryordernumber: [],
-    Inventorystatus: [],
+    Inventorystatus: [[1, 2]],  // 預設選取
     SInventorydate: [],
     EInventorydate: [],
     SClosingdate: [],
     EClosingdate: [],
     Counter: [],
     illustrate: [],
-    Reporttype: [],
+    Reporttype: [1],  // 預設選取
   });
   // Table data
-  data: any[] = [];
-  Reporttype: any[] = [{ value: 1, label: '全部' },
-  { value: 2, label: '差異' },];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
+  data: ASS16020Data[] = [];
+  QueryDialogData: ASS16020Data[] = [];
+  selectedItems: ASS16020Data[] = [];
+
+  // Dialog visibility
+  arDialogVisible = false;
+
+  Reporttype = [
+    { value: 1, label: '全部' },
+    { value: 2, label: '差異' },
+  ];
+  columns = [
+    { field: 'inventoryNumber', header: '盤點單號', visible: true },
+    { field: 'inventoryStatus', header: '盤點狀態', visible: true },
+    { field: 'inventoryDate', header: '盤點日期', visible: true },
+    { field: 'closingDate', header: '結案日期', visible: true },
+    { field: 'inventoryStaff', header: '盤點人員', visible: true },
+  ];
+
+  QueryDialogColumns = [
     { field: 'inventoryNumber', header: '盤點單號', visible: true },
     { field: 'inventoryStatus', header: '盤點狀態', visible: true },
     { field: 'inventoryDate', header: '盤點日期', visible: true },
@@ -68,19 +77,14 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
   ];
 
 
-
   // Dropdown options
-  Inventorystatus: any[] = [
+  Inventorystatus = [
     { value: 1, label: '盤點中' },
     { value: 2, label: '登錄完成' },
     { value: 3, label: '已結案' },
 
   ];
-  Inventoryordenumber: any[] = [
-    { value: 1, label: '202406002' },
-
-  ];
-  custodyunit: any[] = [
+  custodyunit = [
     { value: 1, label: '101000' },
     { value: 2, label: '102000' },
     { value: 3, label: '103000' },
@@ -92,7 +96,7 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
     { value: 9, label: '109000' },
     { value: 10, label: '10A000' },
   ];
-  Accountcode: any[] = [
+  Accountcode = [
     { value: 1, label: '1501' },
     { value: 2, label: '150101' },
     { value: 3, label: '1511' },
@@ -104,8 +108,11 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
     { value: 9, label: '1522' },
     { value: 10, label: '152201' },
   ];
-  usercode: any[] = [];
-  bigCategoryOptions: any[] = [
+  usercode = [
+    { value: 1, label: '人員A' },
+    { value: 2, label: '人員B' },
+  ];
+  bigCategoryOptions = [
     { value: 1, label: '裝潢工程' },
     { value: 2, label: '其他工程' },
     { value: 3, label: '電腦及電子零件產品' },
@@ -117,7 +124,7 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
     { value: 9, label: '印刷品(廣告行銷)' },
     { value: 10, label: '衛生及醫療庶務用品' },
   ];
-  midCategoryOptions: any[] = [
+  midCategoryOptions = [
     { value: 1, label: '室內裝潢工程' },
     { value: 2, label: '室內裝潢備品' },
     { value: 3, label: '弱電系統' },
@@ -129,7 +136,7 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
     { value: 9, label: '電子儀器設備' },
     { value: 10, label: '電子儀器設備-資產' },
   ];
-  smallCategoryOptions: any[] = [
+  smallCategoryOptions = [
     { value: 1, label: '機電空調工程' },
     { value: 2, label: '水電消防工程' },
     { value: 3, label: '排油煙工程' },
@@ -141,13 +148,13 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
     { value: 9, label: '資收場回收用品' },
     { value: 10, label: '瓦斯鍋及滅斷設備工程' },
   ];
-  Querybystatus: any[] = [
+  Querybystatus = [
     { value: 1, label: '移轉' },
     { value: 2, label: '報廢除帳' },
     { value: 3, label: '變賣除帳' },
     { value: 4, label: '新購' },
   ];
-  assetCodeOptions: any[] = [
+  assetCodeOptions = [
     { value: 1, label: '1A232300000010000001' },
     { value: 2, label: '1A232300000020000001' },
     { value: 3, label: '1A232300000040000001' },
@@ -158,11 +165,11 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
     { value: 8, label: '1A232400000040000001' },
     { value: 9, label: '1A232400000060000001' },
   ];
-  propertytype: any[] = [
+  propertytype = [
     { value: 1, label: '資產' },
     { value: 2, label: '列管品' },
   ];
-  Itemnumber: any[] = [
+  Itemnumber = [
     { value: 1, label: '3A24210000001' },
     { value: 2, label: '3A24210000002' },
     { value: 3, label: '3A24210000003' },
@@ -176,30 +183,16 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
     private notificationService: NotificationService,
-    private authService: AuthService,
-    private bigCategoryService: BigCategoryService,
-    private midCategoryService: MidCategoryService,
-    private smallCategoryService: SmallCategoryService
+    private ass16020Service: Ass16020Service,
+    private readonly cdr: ChangeDetectorRef,
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.ProgNo = '310041';
-    // Initialize dropdown options
-
-    // this.bigCategoryService
-    //   .getCategories()
-    //   .subscribe((data) => (this.bigCategoryOptions = data));
-    // this.midCategoryService
-    //   .getSubCategories()
-    //   .subscribe((data) => (this.midCategoryOptions = data));
-    // this.smallCategoryService
-    //   .getSmallCategories()
-    //   .subscribe((data) => (this.smallCategoryOptions = data));
+    this.initializePage('ASS16020', 'ass/ass16020cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
@@ -208,57 +201,138 @@ export class ASS16020Component extends BasicQpageComponent implements OnInit {
     this.loading = true;
     this.notificationService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
+    // if (frm.valid && this.canQuery()) {
+    //   // Submit logic here
+    // }
 
     this.loading = false;
     this.notificationService.unblockUi();
-  }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
+    this.data = [
+      {
+        inventoryNumber: 'IV202603110001',
+        inventoryStatus: '已結案',
+        inventoryDate: '2026-03-01',
+        closingDate: '',
+        inventoryStaff: '王小明'
       },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+      {
+        inventoryNumber: 'IV202603110002',
+        inventoryStatus: '盤點中',
+        inventoryDate: '2026-03-03',
+        closingDate: '',
+        inventoryStaff: '陳美玲'
+      },
+      {
+        inventoryNumber: 'IV202603110003',
+        inventoryStatus: '登錄完成',
+        inventoryDate: '2026-03-05',
+        closingDate: '2026-03-06',
+        inventoryStaff: '林志宏'
+      },
+      {
+        inventoryNumber: 'IV202603110004',
+        inventoryStatus: '登錄完成',
+        inventoryDate: '2026-03-07',
+        closingDate: '2026-03-08',
+        inventoryStaff: '張雅婷'
+      },
+      {
+        inventoryNumber: 'IV202603110005',
+        inventoryStatus: '盤點中',
+        inventoryDate: '2026-03-09',
+        closingDate: '',
+        inventoryStaff: '劉冠廷'
+      }
+    ]
   }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+
+  // onCreate() {
+  //   if (this.canAdd()) {
+  //     let extras: NavigationExtras = {
+  //       state: {
+  //         crudstatus: CRUDStatus.Create,
+  //         queryform: this.queryForm,
+  //       },
+  //       skipLocationChange: true,
+  //     };
+  //     this.router.navigate(['FIN3000/FIN34030CRU'], extras);
+  //   }
+  // }
+
+  // onEdit(data: any) {
+  //   if (this.canEdit()) {
+  //     let extras: NavigationExtras = {
+  //       state: {
+  //         crudstatus: CRUDStatus.Edit,
+  //         rowdata: data,
+  //         queryform: this.queryForm,
+  //       },
+  //       skipLocationChange: true,
+  //     };
+  //     this.router.navigate(['/demoCRU'], extras);
+  //   }
+  // }
+
+  // onDetail(data: any) {
+  //   let extras: NavigationExtras = {
+  //     state: {
+  //       crudstatus: CRUDStatus.Read,
+  //       rowdata: data,
+  //       queryform: this.queryForm,
+  //     },
+  //     skipLocationChange: true,
+  //   };
+  //   this.router.navigate(['/demoCRU'], extras);
+  // }
+
+  /** 打開應收未收查詢 Dialog */
+  onQueryDialog() {
+    // 打開 Dialog
+    this.arDialogVisible = true;
+    this.cdr.detectChanges();
+
+    this.QueryDialogData = [
+      {
+        inventoryNumber: 'IV202603110001',
+        inventoryStatus: '已結案',
+        inventoryDate: '2026-03-01',
+        closingDate: '',
+        inventoryStaff: '王小明'
+      },
+      {
+        inventoryNumber: 'IV202603110002',
+        inventoryStatus: '盤點中',
+        inventoryDate: '2026-03-03',
+        closingDate: '',
+        inventoryStaff: '陳美玲'
+      },
+      {
+        inventoryNumber: 'IV202603110003',
+        inventoryStatus: '登錄完成',
+        inventoryDate: '2026-03-05',
+        closingDate: '2026-03-06',
+        inventoryStaff: '林志宏'
+      },
+      {
+        inventoryNumber: 'IV202603110004',
+        inventoryStatus: '登錄完成',
+        inventoryDate: '2026-03-07',
+        closingDate: '2026-03-08',
+        inventoryStaff: '張雅婷'
+      },
+      {
+        inventoryNumber: 'IV202603110005',
+        inventoryStatus: '盤點中',
+        inventoryDate: '2026-03-09',
+        closingDate: '',
+        inventoryStaff: '劉冠廷'
+      }
+    ];
+
+  }
+
+  goReport() {
+    this.router.navigate(['/account/ass/ass16020cru']);
   }
 }
