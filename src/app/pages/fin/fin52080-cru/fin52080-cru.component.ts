@@ -73,11 +73,12 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
   private readonly accNoSignal = toSignal(this.df().AccNo.valueChanges);
 
   public readonly FIN52080Tree = signal<FIN52080Tree[]>([]);
+  public readonly accNoExists = signal<boolean>(false);
 
   public readonly tableLoading = signal<boolean>(!1);
   public readonly treeLoading = signal<boolean>(!1);
 
-  private readonly leaveLabel = 'T_Name';
+  private readonly leaveLabel = 'T30Label';
   private readonly listTitle = '科目圖';
   private readonly viewButtonLabel = '查看科目圖';
   private readonly treeColumn = [
@@ -101,13 +102,15 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     // 只在新增模式執行
     if (!this.isFormCreateable) return;
 
+    const accNo = this.accNoSignal();
+
     // 若輸入的科目代號為4碼時，「統制/明細」 預設 「統制」
-    if (this.accNoSignal()?.length === 4) {
+    if (accNo?.length === 4) {
       this.df().Ledger_MD.setValue('0', { emitEvent: !1 });
     }
 
     // 依科目第1碼判讀「借/貸」欄位（1,6＝借；2, 3, 4, 7＝貸）
-    const accNoPrefix1 = this.accNoSignal()?.slice(0, 1) || '';
+    const accNoPrefix1 = accNo?.slice(0, 1) || '';
     const aryDebit = ['1', '6'];
     const aryCredit = ['2', '3', '4', '7'];
 
@@ -118,19 +121,28 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
     }
 
     // 若科目長度為4碼，判斷 「是否可輸＝否」；長度為6碼，判斷 「是否可輸＝是」
-    if (this.accNoSignal()?.length === 4) {
+    if (accNo?.length === 4) {
       this.df().Input_YN.setValue('N', { emitEvent: !1 });
-    } else if (this.accNoSignal()?.length === 6) {
+    } else if (accNo?.length === 6) {
       this.df().Input_YN.setValue('Y', { emitEvent: !1 });
     }
 
-    const prefixAccNo = this.accNoSignal()?.slice(0, 3) || '';
+    const prefixAccNo = accNo?.slice(0, 3) || '';
     const classNoOption = this.service.classNoOptions().find(option => option.value === prefixAccNo);
-    if (!classNoOption) return;
+    if (classNoOption) {
+      const currentClassNo = this.df().ClassNo.value || '';
+      if (currentClassNo !== classNoOption.value) {
+        this.df().ClassNo.setValue(classNoOption.value, { emitEvent: !1 });
+      }
+    }
 
-    const currentClassNo = this.df().ClassNo.value || '';
-    if (currentClassNo !== classNoOption.value) {
-      this.df().ClassNo.setValue(classNoOption.value, { emitEvent: !1 });
+    // 立即檢查科目代號是否已存在（長度 >= 3 時）
+    if (accNo && accNo.length >= 3) {
+      this.service.checkAccNoExists(accNo).subscribe(res => {
+        this.accNoExists.set((res.Data as unknown as boolean) === true);
+      });
+    } else {
+      this.accNoExists.set(false);
     }
   }, { allowSignalWrites: !0 });
 
@@ -166,6 +178,11 @@ export class FIN52080CRUComponent extends BasicCruPageComponent<FIN52080Data> im
 
     // 收集所有錯誤訊息
     const allErrors: { fieldName: string; message: string }[] = [];
+
+    // 新增模式：檢查科目代號是否已存在
+    if (this.isFormCreateable && this.accNoExists()) {
+      allErrors.push({ fieldName: '科目代號', message: '科目代號已存在，請輸入其他代號' });
+    }
 
     Object.keys(this.dataForm.controls).forEach(key => {
       const controlErrors = this.dataForm.get(key)?.errors;
