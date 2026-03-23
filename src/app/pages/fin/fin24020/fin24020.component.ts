@@ -15,12 +15,14 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatDate, formatYN } from '@shared/componentkit/table/table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { formatAmount, formatYYYYMM } from './../../../shared/componentkit/table-report/table-report.model';
+
 //1.3.2.1 應收帳款維護
 @Component({
   selector: 'app-fin24020',
@@ -162,6 +164,62 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
           this.lastQueryBody = body;
         });
     });
+  }
+
+  // 列印，條件和query完全相同
+  btnLoading = false
+  onReport(frm: FormGroup) {
+    let acpYyyymm = '';
+    const rawAcpYyyymm = frm.value.ACP_YYYYMM;
+    if (rawAcpYyyymm) {
+      const formatted = this.datePipe.transform(rawAcpYyyymm, 'yyyyMM');
+      acpYyyymm = formatted ?? '';
+    }
+    const rawRetFrom = frm.value.RetDate_From;
+    const rawRetTo = frm.value.RetDate_To;
+    const retDateFrom = rawRetFrom
+      ? this.datePipe.transform(rawRetFrom, 'yyyy-MM-dd')
+      : null;
+    const retDateTo = rawRetTo
+      ? this.datePipe.transform(rawRetTo, 'yyyy-MM-dd')
+      : null;
+
+    const body: any = {
+      PageSize: this.pageSize,
+      PageIndex: this.pageIndex,
+      Offset: 0,
+      OrderBy: this.sortBy ?? '',
+      SortBy: (this as any).sortMeta ?? (this.sortBy ? [{ field: this.sortBy, order: (this as any).sortOrder ?? 1 }] : []),
+      ACP_No: frm.value.ACP_No ?? '',
+      VEN_No: frm.value.VEN_No ?? '',
+      ACP_YYYYMM: acpYyyymm,
+      Acp_TermNo: frm.value.Acp_TermNo ?? null,
+      RetDate_From: retDateFrom,
+      RetDate_To: retDateTo,
+      RetAmt_From: frm.value.RetAmt_From ?? null,
+      RetAmt_To: frm.value.RetAmt_To ?? null,
+      PayGenerated: frm.value.PayGenerated ?? '',
+      Remark: frm.value.Remark ?? ''
+    };
+
+    this.btnLoading = true;
+    this.fin24020Service.queryForExportFIN24020(body).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+      .subscribe(res => {
+        if (res.Data) {
+          console.log('列印回應', res.Data);
+          // const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+          // window.open(downloadUrl, '_blank');
+        }
+      });
+
+  }
+
+  onExport(event: string) {
+    if (event == 'PDF') {
+      this.onReport(this.queryForm);
+    } else if (event == 'Excel') {
+      this.onReport(this.queryForm);
+    }
   }
 
   handleLazyLoad(event: any) {
