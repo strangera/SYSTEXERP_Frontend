@@ -219,8 +219,8 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       },
       disabled: (_value: any, _index?: number, rowData?: any) => {
         if (this.isFormReadable) return true;
-        // 沒有選擇收款項目時不可點擊
-        return !rowData?.AccNo;
+        // 沒有選擇收款項目時不可點擊，或非立沖科目(ABAT_YN != 'Y')時不可點擊
+        return !rowData?.AccNo || rowData?.ABAT_YN !== 'Y';
       }
     },
   ];
@@ -871,6 +871,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         CAP_Item: selected.CAP_Item || '',
         CAP_Name: selected.CAP_Name || '',
         AccNo: selected.AccNo || '',
+        ABAT_YN: selected.ABAT_YN || '',
         AbatAcct: '', // 清空沖帳代號
       };
       this.step2TableData = [...this.step2TableData];
@@ -880,6 +881,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         CAP_Item: selected.CAP_Item || '',
         CAP_Name: selected.CAP_Name || '',
         AccNo: selected.AccNo || '',
+        ABAT_YN: selected.ABAT_YN || '',
         ARS_Amt: null,
         NoteDesc: '',
         AbatAcct: ''
@@ -1180,6 +1182,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
                 CAP_Item: item.CAP_Item || '',
                 CAP_Name: capItemData?.CAP_Name || item.CAP_Name || '',
                 AccNo: capItemData?.AccNo || item.AccNo || '',
+                ABAT_YN: capItemData?.ABAT_YN || '',
                 ARS_Amt: item.RCV_Amt || 0, // API 使用 RCV_Amt
                 NoteDesc: item.NoteDesc || '',
                 AbatAcct: item.AbatAcct || ''

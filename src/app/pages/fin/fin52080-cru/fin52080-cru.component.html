@@ -14,6 +14,9 @@
           @if (isFormCreateable) {
           <app-input-text label="科目代號" controlName="AccNo" [control]="df().AccNo" [keyFilter]="accNoFilter"
                 [submitted]="submitted" [showLabel]="false" [showErrorMessage]="true"></app-input-text>
+          @if (accNoExists()) {
+            <small class="p-error">科目代號已存在</small>
+          }
           } @else {
           <!-- 編輯/檢視模式：只顯示一個欄位（AccNo） -->
           <app-input-text controlName="AccNo" [control]="df().AccNo" [submitted]="submitted" [showLabel]="false"
