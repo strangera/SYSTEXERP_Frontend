@@ -334,6 +334,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
     // 6. 清空輸入欄位
     this.dataForm.get('TXN_GUIBegNo')?.setValue('');
+    this.txnNotesChange(); // 同步更新換開發票的備註欄位
   }
 
   /**
@@ -366,6 +367,11 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     }
   }
 
+  txnNotesChange(): void {
+    const row = this.changeEditData[0] as any;
+    // 換開發票的備註欄位，自動帶入所有來源發票的發票號碼
+    row.TXN_Notes = this.data.map(item => item.TXN_GUIBegNo).join('、');
+  }
 
   // ===== 送出與驗證 =====
 
@@ -486,9 +492,10 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       TXN_Net: changeItem.TXN_Net || 0,
       TXN_Tax: changeItem.TXN_Tax || 0,
       TXN_SaleAmt: changeItem.TXN_SaleAmt || 0,
-      TXN_Uniform: changeItem.TXN_Uniform || '',
+      TXN_Uniform: changeItem.TXN_Uniform ?? null,
       INV_NoneTax: changeItem.INV_NoneTax || '',
-      BusTaxExmpCard: changeItem.BusTaxExmpCard || '',
+      INV_CompanyName: changeItem.INV_CompanyName ?? null,
+      BusTaxExmpCard: changeItem.BusTaxExmpCard ?? null,
       TXN_Notes: changeItem.TXN_Notes || ''
     }];
 
