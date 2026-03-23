@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -12,7 +12,7 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { formatDate, formatYN } from '@shared/componentkit/table/table.model';
+import { Column, formatDate, formatYN } from '@shared/componentkit/table/table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, map } from 'rxjs';
@@ -26,7 +26,7 @@ import { formatAmount, formatYYYYMM } from './../../../shared/componentkit/table
   selector: 'app-fin24020',
   templateUrl: './fin24020.component.html',
   standalone: true,
-  imports: [AsyncPipe, NgIf, CalendarRangeQuickComponent, TableComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
+  imports: [AsyncPipe, CalendarRangeQuickComponent, TableComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
 export class FIN24020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -185,5 +185,19 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
 
   override onDetail(row: any, queryConditions?: any) {
     super.onDetail(row, queryConditions);
+  }
+  printColumns: Column[] = [
+    { field: 'ACP_No', header: '應付ID' },
+    { field: 'VEN_No', header: '廠客代號' },
+    { field: 'VEN_Name', header: '廠客名稱' },
+    { field: 'ACP_YYYYMM', header: '應付帳款年月' },
+    { field: 'acp_termno', header: '帳次' },
+    { field: 'ACP_Amt', header: '應付金額', format: formatAmount },
+    { field: 'ACP_BalanceAmt', header: '應付帳款餘額', format: formatAmount },
+    { field: 'RET_Amt', header: '退保留款金額', format: formatAmount },
+    { field: 'RET_Date', header: '退保留款日期', format: formatDate },
+    { field: 'STATUS', header: '是否已付款', format: formatYN }
+  ];
+  onExport(event: string) {
   }
 }

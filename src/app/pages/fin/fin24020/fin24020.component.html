@@ -63,5 +63,6 @@
     expansionDataKey="Details" [expansionColumns]="detailColumns" (edit)="onEdit($event, queryForm.getRawValue())"
     (detail)="onDetail($event, queryForm.getRawValue())" [lazy]="true" [rows]="30"
     [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
-    (lazyLoadData)="handleLazyLoad($event)"></app-table>
+    (lazyLoadData)="handleLazyLoad($event)" [Conditions]="lastQueryBody" [PrintColumn]="printColumns"
+    apiUrl='queryForExportFIN24020'></app-table>
 </div>

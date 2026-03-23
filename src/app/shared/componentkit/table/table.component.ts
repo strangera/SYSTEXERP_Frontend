@@ -271,7 +271,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 底層匯出
   @Input() apiUrl?: string;                         // table API URL (可選)
   @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
-  @Input() PrintRemark = true;                    // 是否列印備註 (可選)
+  @Input() PrintRemark = true;                      // 是否列印備註 (可選)
+  @Input() PrintColumn?: Column[];                    // 是否列印欄位名稱 (可選)
+  @Input() Conditions?: any;                         // table 條件 (可選)
 
   constructor(
     private readonly sanitizer: DomSanitizer,

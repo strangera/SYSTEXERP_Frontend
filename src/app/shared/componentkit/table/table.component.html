@@ -33,8 +33,9 @@
       [exportExcelLoading]="exportExcelLoading" [showPage]="showPage" [totalPages]="totalPages" [pages]="pages"
       [selectedPage]="selectedPage" [rows]="rows" [first]="first" (insert)="insertRow()" (delete)="deleteRow($event)"
       (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" (pageChange)="goToPage($event)"
-      [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark"
-      [customReport]="customReport" (exportEvent)="exportEvent.emit($event)">
+      [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintColumn]="PrintColumn"
+      [Conditions]="Conditions" [PrintRemark]="PrintRemark" [customReport]="customReport"
+      (exportEvent)="exportEvent.emit($event)">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>
