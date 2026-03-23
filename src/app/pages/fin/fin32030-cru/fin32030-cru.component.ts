@@ -228,6 +228,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   // 步驟3: 票據資訊表格資料
   step3TableData: any[] = [];
   step3FooterData: { CHK_Amt?: number } = {}; // 票據明細的 footer 資料
+  step3DefaultInsertData = { CHK_Type: '1', Ticket_YN: 'N' }; // 票據種類預設支票，是否客票預設否
   step3Columns: EditColumn[] = [
     {
       field: 'CHK_No',

@@ -417,7 +417,7 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
     }
   }
 
-  /** 開啟傳票頁面 FIN55050CRU */
+  /** 開啟傳票頁面 FIN55010CRU */
   private openVoucherPage(rowData: Fin34030Response): void {
     const vouNo = rowData?.VoucherNo;
     if (!vouNo) return;
@@ -428,14 +428,14 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
         fromRoute: window.location.pathname,
         ts: Date.now(),
       };
-      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
-      localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
+      localStorage.setItem('FIN55010_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN55010_CRU_PROGNO', 'FIN55010');
     } catch (err) {
       console.error('[FIN34030] handoff save failed:', err);
       return;
     }
 
-    const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
+    const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55010cru');
     const finalUrl = `${window.location.origin}${externalUrl}`;
     window.open(finalUrl, '_blank', 'noopener');
   }
@@ -446,12 +446,24 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
     if (!docNo) return;
 
     const rpFlag = rowData?.RP_Flag;
-    // 收 → fin32010cru?arsid=XXX, 付 → fin24010cru?acpid=XXX
-    const route = rpFlag === '收' ? '/account/fin/fin32010cru' : '/account/fin/fin24010cru';
-    const paramName = rpFlag === '收' ? 'arsid' : 'acpid';
+    const isAR = rpFlag === '收';
+    const route = isAR ? '/account/fin/fin32010cru' : '/account/fin/fin24010cru';
+    const localStorageKey = isAR ? 'FIN32010_CRU_HANDOFF' : 'FIN24010_CRU_HANDOFF';
+
+    try {
+      const handoff = {
+        arsId: docNo,
+        fromRoute: window.location.pathname,
+        ts: Date.now(),
+      };
+      localStorage.setItem(localStorageKey, JSON.stringify(handoff));
+    } catch (err) {
+      console.error('[FIN34030] handoff save failed:', err);
+      return;
+    }
 
     const externalUrl = this.location.prepareExternalUrl(route);
-    const finalUrl = `${window.location.origin}${externalUrl}?${paramName}=${encodeURIComponent(docNo)}`;
+    const finalUrl = `${window.location.origin}${externalUrl}`;
     window.open(finalUrl, '_blank', 'noopener');
   }
 }
