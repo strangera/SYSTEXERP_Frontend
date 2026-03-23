@@ -10,8 +10,9 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
@@ -57,6 +58,27 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public readonly editDisabled = (rowData: TLS26080Data) => !rowData.CanEdit;
   public readonly isRowSelectable = (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.刪除;
 
+  public readonly printLoading = signal(false);
+
+  public readonly addButton: AddButton[] = [
+    {
+      label: '列印',
+      icon: 'pi pi-print',
+      disabled: (rowData: TLS26080Data) => rowData.pod_status === ApprovalStatus.刪除,
+      action: (rowData: TLS26080Data) => {
+        if (!rowData?.pod_no) {
+          this.messageService.errorBubble('無活動編號，無法列印');
+          return;
+        }
+        this.fileExportService.executeFileExport(
+          this.service.printTLS26080({ pod_no: rowData.pod_no, id: rowData.id }),
+          '.pdf',
+          isLoading => this.printLoading.set(isLoading),
+        ).subscribe();
+      },
+    },
+  ];
+
   /** 組裝查詢 payload，供 onSubmit 與 queryFunction 使用 */
   private buildQueryPayload(overrides?: Partial<Record<string, unknown>>): TLS26080Query {
     const raw = { ...this.queryForm.getRawValue(), ...overrides } as Record<string, unknown>;
@@ -94,6 +116,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     public readonly service: TLS26080Service,
     private readonly datePipe: DatePipe,
     private logger: NGXLogger,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }

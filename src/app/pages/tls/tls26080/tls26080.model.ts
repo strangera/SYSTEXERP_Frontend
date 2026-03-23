@@ -117,6 +117,12 @@ export interface TLS26080Query extends BaseQueryRequest {
   CAP_ItemList?: string[];    // 活動項目列表
 }
 
+/** printTLS26080 請求（暫定；TODO: 待 API 規格確認欄位名稱與是否需 id／mid 等其他鍵） */
+export interface TLS26080PrintRequest {
+  pod_no: string;
+  id?: number;
+}
+
 export interface TLS26080UploadResult {
   Success: boolean;
   SuccessCount: number;

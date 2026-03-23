@@ -1,7 +1,7 @@
 import { formatDate } from '@angular/common';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { CampaignData, QueryCampaignRequest, QueryTLS26080TLTTALENT_D16_D17Request, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080EditTable, TLS26080InsertPayload, TLS26080Query, TLS26080TLTTALENT_D16_D17Row, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignData, QueryCampaignRequest, QueryTLS26080TLTTALENT_D16_D17Request, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080EditTable, TLS26080InsertPayload, TLS26080PrintRequest, TLS26080Query, TLS26080TLTTALENT_D16_D17Row, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
 import { Option, TalentOpenFlagItem, TalentOpenFlagQuery } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -135,6 +135,19 @@ export class TLS26080Service {
     );
   }
 
+  /**
+   * TODO: 待 API 規格確認 path、HTTP method、request／response 契約。
+   * 列印活動單（查詢頁管理欄「列印」）。
+   */
+  public printTLS26080(body: TLS26080PrintRequest): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${apiUrl}/TLS0000/TLS2000/printTLS26080`, body, {
+      observe: 'response',
+      responseType: 'blob',
+    }).pipe(
+      take(1),
+      tap(res => this.logger.debug(`printTLS26080:`, [res.status, res.body?.size])),
+    );
+  }
 
   /** 查詢環友資料 */
   public loadCampaignData(query: QueryCampaignRequest = {}): Observable<BaseQueryResponse<CampaignData>> {
