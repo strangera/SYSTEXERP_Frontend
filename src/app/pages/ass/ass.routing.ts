@@ -70,9 +70,9 @@ export const assRoutes: Routes = [
   // { path: 'ass15070', loadComponent: () => import('./ass15070/ass15070.component').then(m => m.ASS15070Component),data: {progNo:'ASS15070'} }, // 財產進貨清單
   // { path: 'ass15080', loadComponent: () => import('./ass15080/ass15080.component').then(m => m.ASS15080Component),data: {progNo:'ASS15080'} }, // 資產重估異動明細表
   { path: 'ass16010', loadComponent: () => import('./ass16010/ass16010.component').then(m => m.ASS16010Component), data: { progNo: 'ASS16010' } }, // 盤點設定
-  { path: 'ass16010cru', loadComponent: () => import('./ass16010-cru/ass16010-cru.component').then(m => m.ASS16010CRUComponent), data: { progNo: 'ASS16010' } },
-  // { path: 'ass16020', loadComponent: () => import('./ass16020/ass16020.component').then(m => m.ASS16020Component),data: {progNo:'ASS16020'} }, // 盤點維護
-  // { path: 'ass16020cru', loadComponent: () => import('./ass16020-cru/ass16020-cru.component').then(m => m.ASS16020CRUComponent),data: {progNo:'ASS16020'} },
+  { path: 'ass16010cru', loadComponent: () => import('./ass16010-cru/ass16010-cru.component').then(m => m.ASS16010CRUComponent),  data: {  progNo:  'ASS16010'  } },
+  { path: 'ass16020', loadComponent: () => import('./ass16020/ass16020.component').then(m => m.ASS16020Component), data: { progNo: 'ASS16020' } }, // 盤點維護
+  { path: 'ass16020cru', loadComponent: () => import('./ass16020-cru/ass16020-cru.component').then(m => m.ASS16020CRUComponent), data: { progNo: 'ASS16020' } },
   { path: 'ass16030', loadComponent: () => import('./ass16030/ass16030.component').then(m => m.ASS16030Component), data: { progNo: 'ASS16030' } }, // 領用申請作業
   { path: 'ass16030cru', loadComponent: () => import('./ass16030-cru/ass16030-cru.component').then(m => m.ASS16030CRUComponent), data: { progNo: 'ASS16030' } },
   { path: 'ass16040', loadComponent: () => import('./ass16040/ass16040.component').then(m => m.ASS16040Component), data: { progNo: 'ASS16040' } }, // 領用審核作業
