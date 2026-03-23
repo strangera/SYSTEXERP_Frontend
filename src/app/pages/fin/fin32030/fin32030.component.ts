@@ -92,7 +92,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
   columns: Column[] = [
     { field: 'RCV_No', header: '收款單號', visible: true },
     { field: 'RCV_Date', header: '收款日期', visible: true, format: formatDate },
-    { field: 'Sales_Id', header: '業務員代號', visible: true },
+    // { field: 'Sales_Id', header: '業務員代號', visible: true },
     { field: 'VouNo', header: '傳票號碼', visible: true },
     { field: 'TotalAmount', header: '總金額', visible: true, format: formatAmountWithFraction, align: 'right' },
     { field: 'Remark', header: '備註', visible: true },
@@ -216,6 +216,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
       .subscribe(response => {
         this.arDialogData = response.Data;
         this.arDialogTotalRecords = response.TotalCount;
+        this.queryStateService.setQueryState('queryFIN32030AR', queryParams);
         this.cdr.detectChanges();
       });
   }

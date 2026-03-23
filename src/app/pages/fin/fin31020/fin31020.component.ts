@@ -114,6 +114,37 @@ export class FIN31020Component extends BasicQueryPageComponent<FIN31020Data> imp
       });
 
   }
+  isRowSelectable = (row: FIN31020Data): boolean => row.CanDel;
+
+  onDelete(rows: FIN31020Data[]): void {
+    if (!rows?.length) {
+      this.messageService.errorBubble('請先勾選要刪除的資料');
+      return;
+    }
+    const accNoList = rows.map(r => r.CAR_AccNo);
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: `確定要刪除科目代號「${accNoList.join('、')}」嗎？`,
+      acceptLabel: '確定刪除',
+      rejectLabel: '取消',
+      accept: () => {
+        this.messageService.blockUi();
+        this.fin31020Service.deleteFIN31020(accNoList)
+          .pipe(untilDestroyed(this), finalize(() => this.messageService.unblockUi()))
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000' || res.Status === '0001') {
+                this.messageService.successBubble(`科目代號「${accNoList.join('、')}」已刪除`);
+                this.onSubmit(this.queryForm);
+              } else {
+                this.messageService.errorBubble(res.Message || '刪除失敗');
+              }
+            },
+          });
+      },
+    });
+  }
+
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const formValue = frm.value;

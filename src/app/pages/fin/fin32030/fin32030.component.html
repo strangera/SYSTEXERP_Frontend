@@ -163,11 +163,13 @@
     [showCheckBox]="false"
     [showSerialNo]="true"
     [showManage]="false"
-    [showReportMode]="false"
-    [showReportExcel]="false"
-    [showReportPDF]="false"
+    [showReportMode]="true"
+    [showReportExcel]="true"
+    [showReportPDF]="true"
     [showDelete]="false"
     [lazy]="true"
+    title="應收未收查詢"
+    [apiUrl]="'queryFIN32030AR'"
     (lazyLoadData)="onLazyLoadData($event, arQueryForm); onARDialogSubmit()"
   ></app-table>
 
