@@ -152,10 +152,25 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
       options: this.service.whetherOption,
       format: v => v === 'Y' ? '是' : v === 'N' ? '否' : v,
     },
+    {
+      field: 'EXP_YEAR',
+      header: '折舊攤提年限',
+      // hidden: true,
+      visible: false,
+    },
+    {
+      field: 'RESI_VALUE',
+      header: '殘值',
+      // hidden: true,
+      visible: false,
+    },
   ];
 
-  private readonly leaveLabel = 'T_Name';
+  public readonly isRowSelectable = (rowData: FIN52080Data): boolean => rowData.CanDel !== false;
+
+  private readonly leaveLabel = 'T30Label';
   private readonly listTitle = '科目圖';
+  private readonly viewButtonLabel = '查看科目圖';
   private readonly treeColumn = [
     { value: 'T10Label', label: '大分類' },
     { value: 'T20Label', label: '中分類' },
@@ -166,6 +181,7 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     treeColumn: this.treeColumn,
     listTitle: this.listTitle,
     leaveLabel: this.leaveLabel,
+    viewButtonLabel: this.viewButtonLabel,
   };
 
   constructor(
