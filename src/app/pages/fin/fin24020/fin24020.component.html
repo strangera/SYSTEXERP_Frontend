@@ -110,30 +110,11 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table
-    tableKey="FIN24020"
-    dataKey="ACP_No"
-    [data]="data"
-    [apiUrl]="'queryForExportFIN24020'"
-    [DataKeyName]="'ACP_No'"
-    [columns]="columns"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    [showReportMode]="true"
-    [showDelete]="false"
-    [editDisabled]="editDisabledByVouNo"
-    [showDetail]="true"
-    expansionDataKey="Details"
-    [expansionColumns]="detailColumns"
-    apiUrl="queryForExportFIN24020"
-    [customReport]="true"
-    (exportEvent)="onExport($event)"
-    (edit)="onEdit($event, queryForm.getRawValue())"
-    (detail)="onDetail($event, queryForm.getRawValue())"
-    [lazy]="true"
-    [rows]="30"
-    [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-    [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
-    (lazyLoadData)="handleLazyLoad($event)"
-  ></app-table>
+  <app-table tableKey="FIN24020" dataKey="ACP_No" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    [loading]="loading" [showDelete]="false" [editDisabled]="editDisabledByVouNo" [showDetail]="true"
+    expansionDataKey="Details" [expansionColumns]="detailColumns" (edit)="onEdit($event, queryForm.getRawValue())"
+    (detail)="onDetail($event, queryForm.getRawValue())" [lazy]="true" [rows]="30"
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
+    (lazyLoadData)="handleLazyLoad($event)" [Conditions]="lastQueryBody" [PrintColumn]="printColumns"
+    apiUrl='queryForExportFIN24020'></app-table>
 </div>
