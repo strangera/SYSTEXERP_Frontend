@@ -249,14 +249,25 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   /** 根據選擇的活動更新表單 */
   public readonly campaignEffect = effect(() => {
     const podDesc = this.podDescSignal();
-    if (!podDesc || !this.selectedCampaign()) return;
-    this.dataForm.patchValue({
-      pod_no: this.selectedCampaign()!.CampaignId,
-      pod_desc: this.selectedCampaign()!.CampaignName,
-      pod_sdate: new Date(this.selectedCampaign()!.StartTime),
-      pod_edate: new Date(this.selectedCampaign()!.EndTime),
-    });
-    this.logger.debug(`campaignEffect:`, [podDesc, this.selectedCampaign()]);
+    const selected = this.selectedCampaign();
+    if (!podDesc || !selected) return;
+    const patch: {
+      pod_no: string;
+      pod_desc: string;
+      pod_sdate: Date;
+      pod_edate: Date;
+      pod_back_sdate: Date;
+      pod_back_edate: Date;
+    } = {
+      pod_no: selected.CampaignId,
+      pod_desc: selected.CampaignName,
+      pod_sdate: new Date(selected.StartTime),
+      pod_edate: new Date(selected.EndTime),
+      pod_back_sdate : new Date(selected.BackRedeemStartTime),
+      pod_back_edate : new Date(selected.BackRedeemEndTime),
+    };
+    this.dataForm.patchValue(patch);
+    this.logger.debug(`campaignEffect:`, [podDesc, selected]);
   }, { allowSignalWrites: true });
 
   /** 根據選擇的活動更新編號 */
@@ -313,6 +324,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { field: 'CampaignName', header: '活動名稱' },
     { field: 'StartTime', header: '活動開始時間', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
     { field: 'EndTime', header: '活動結束時間', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'BackRedeemStartTime', header: '活動兌回日期起日', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'BackRedeemEndTime', header: '活動兌回日期迄日', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
     { field: 'AccountingType', header: '帳務拆分類別' },
     { field: 'Remark', header: '活動備註' },
   ];

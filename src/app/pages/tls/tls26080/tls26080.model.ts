@@ -169,6 +169,9 @@ export interface DeductionItem {
   displayAmount?: string; // 用於顯示格式化後的金額/比率
 }
 
+export interface QueryCampaignRequest {
+}
+
 export interface CampaignData {
   AccountingType: string;
   CampaignId: string;
@@ -176,6 +179,10 @@ export interface CampaignData {
   EndTime: Date;
   Remark: string;
   StartTime: Date;
+  /** TODO(api): 活動兌回日期起日；後端 JSON 欄位名對齊後請全域搜尋替換屬性名 */
+  BackRedeemStartTime: Date;
+  /** TODO(api): 活動兌回日期迄日；後端 JSON 欄位名對齊後請全域搜尋替換屬性名 */
+  BackRedeemEndTime: Date;
 }
 
 // /** 活動類型 */
