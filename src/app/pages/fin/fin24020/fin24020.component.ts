@@ -15,7 +15,6 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatDate, formatYN } from '@shared/componentkit/table/table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
-import { ButtonModule } from 'primeng/button';
 import { finalize, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -256,6 +255,4 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
     { field: 'RET_Date', header: '退保留款日期', format: formatDate },
     { field: 'STATUS', header: '是否已付款', format: formatYN }
   ];
-  onExport(event: string) {
-  }
 }
