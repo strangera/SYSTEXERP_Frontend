@@ -9,7 +9,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { AddButton, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { TLS55060Service } from '../../../service/api/tls/tls55060.service';
+import { QueryTLS55060Request, TLS55060QueryItem, TLS55060Service } from '../../../service/api/tls/tls55060.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -33,7 +33,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
     TranslateModule
   ]
 })
-export class TLS55060Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS55060Component extends BasicQueryPageComponent<TLS55060QueryItem> implements OnInit {
   queryForm = this.formBuilder.group({
     SrcSheetTypeList: [[]],                                    // 傳票種類(多選)
     VouDate_Start: [''],                                       // 傳票日期(起)
@@ -44,35 +44,29 @@ export class TLS55060Component extends BasicQueryPageComponent<any> implements O
     pageIndex: [1], // 你將初始頁碼改為 1
   });
 
-  data: any[] = [];
-  selectedItems: any[] = [];
+  data: TLS55060QueryItem[] = [];
+  selectedItems: TLS55060QueryItem[] = [];
   totalRecords = 0;
-  lastQueryBody: any;
+  lastQueryBody: QueryTLS55060Request | null = null;
 
   addButton: AddButton[] = [
     {
       label: '應收',
-      action: (rowData: any) => { this.onDetail(rowData, '應收') },
+      action: (rowData: TLS55060QueryItem) => { this.onDetail(rowData, '應收') },
     },
     {
       label: '應付',
-      action: (rowData: any) => { this.onDetail(rowData, '應付') },
-    },
-    {
-      label: '拋轉',
-      action: (rowData: any) => { this.onDetail(rowData, '拋轉') },
+      action: (rowData: TLS55060QueryItem) => { this.onDetail(rowData, '應付') },
     },
   ];
 
   //#region 下拉選單選項
   // 傳票種類 - 從 SYS1000(ENTRY_TYPE) 取得並過濾只顯示 WT、WD
-  srcSheetTypeOptions = getSYS1000Options('ENTRY_TYPE')
-    .filter(option => option.value === 'WT' || option.value === 'WD')
-    .map(option => ({
-      No: option.value,
-      Name: option.label,
-      Display: `${option.value} - ${option.label}`
-    }));
+  srcSheetTypeOptions = getSYS1000Options('ENTRY_TYPE').filter(option => option.value === 'WT' || option.value === 'WD').map(option => ({
+    No: option.value,
+    Name: option.label,
+    Display: `${option.value} - ${option.label}`
+  }));
   // 傳票狀態
   postFlagOptions: IDropdownItem[] = [
     { No: '0', Name: '作廢' },
@@ -108,9 +102,8 @@ export class TLS55060Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
-      // Service 已經處理好 map 了，這裡直接賦值
       this.tls55060Service.queryTLS55060(form.getRawValue()).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.data = response.Data; // 直接等於 response.Data
+        this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.lastQueryBody = form.getRawValue();
         this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
