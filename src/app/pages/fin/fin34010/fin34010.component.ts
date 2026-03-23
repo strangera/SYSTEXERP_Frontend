@@ -85,6 +85,7 @@ export class FIN34010Component extends BasicQueryPageComponent<any> implements O
     { field: 'VEN_Name', header: '客戶名稱' },
     { field: 'ARS_No', header: '帳款單號' },
     { field: 'AccNo', header: '科目代號' },
+    { field: 'AccCName', header: '科目名稱' },
     {
       field: 'ARS_Amt',
       header: '帳款金額',
