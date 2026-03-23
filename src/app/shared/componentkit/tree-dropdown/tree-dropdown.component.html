@@ -2,14 +2,14 @@
 <p-button class="flex h-full"
           (onClick)="op.toggle($event)"
           icon="pi pi-share-alt"
-          label="查看階層圖"
+          [label]="viewButtonLabel()"
           [disabled]="disabled()"
           [loading]="loading()" />
 } @else {
 <div class="card flex justify-content-center">
   <p-button (onClick)="op.toggle($event)"
             icon="pi pi-share-alt"
-            label="查看階層圖"
+            [label]="viewButtonLabel()"
             [disabled]="disabled()"
             [loading]="loading()" />
 </div>

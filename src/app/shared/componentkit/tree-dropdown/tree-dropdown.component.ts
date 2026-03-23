@@ -45,7 +45,7 @@ export class TreeDropdownComponent {
   leaveColumnLabel = input<string>('', { alias: 'LeaveColumnLabel' }); // 子節點顯示名稱
   onlySendLeaf = input<boolean>(!0); // 是否只送葉節點資料，預設為 !0
   selectbleCheckBox = input<boolean>(!0, { alias: 'SelectbleCheckBox' }); // 能否選擇checkbox
-  // @Input() buttonTitle = '查看階層圖'; // 按鍵名稱
+  viewButtonLabel = input<string>('查看階層圖'); // 按鍵名稱
   listTitle = input<string>('階層圖'); // 階層圖名稱
 
   confirmSelected = output<any[]>(); // 確定送出所選成員
