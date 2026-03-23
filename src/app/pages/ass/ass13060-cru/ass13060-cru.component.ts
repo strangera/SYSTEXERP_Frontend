@@ -24,7 +24,7 @@ import { formatDate, ReportColumn } from '@shared/componentkit/table-report/tabl
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import {
   ASS13060AssetQueryRequest,
   ASS13060AssetQueryRow,
@@ -396,9 +396,23 @@ export class ASS13060CRUComponent
         finalize(() => (this.dialogLoading = false))
       )
       .subscribe({
-        next: (res: ApiResponse<ASS13060AssetQueryRow[]>) => {
-          this.dialogData = res.Data ?? [];
-          this.totalRecords = res.TotalCount ?? 0;
+        next: (res: ApiResponse<unknown>) => {
+          let rows: ASS13060AssetQueryRow[] = [];
+          const dataAny = res.Data as any;
+          const rowsAny =
+            Array.isArray(dataAny) ? dataAny : Array.isArray(dataAny?.QueryData) ? dataAny.QueryData : Array.isArray(dataAny?.Data) ? dataAny.Data : [];
+
+          rows = rowsAny;
+
+          const totalAny =
+            typeof (res as any).TotalCount === 'number'
+              ? (res as any).TotalCount
+              : typeof dataAny?.TotalCount === 'number'
+                ? dataAny.TotalCount
+                : rows.length;
+
+          this.dialogData = rows;
+          this.totalRecords = totalAny ?? rows.length ?? 0;
           this.cdr.detectChanges();
         },
         error: () => {
@@ -425,7 +439,26 @@ export class ASS13060CRUComponent
       PageIndex: body.PageIndex ?? body.pageIndex ?? 1,
       SortBy: body.SortBy ?? [{ field: 'ASSET_ID', order: 1 }],
     };
-    return this.service.queryFAASSETChooseListASS13060(payload);
+    return this.service.queryFAASSETChooseListASS13060(payload).pipe(
+      map((res: ApiResponse<unknown>) => {
+        const dataAny = res.Data as any;
+        const rows =
+          Array.isArray(dataAny) ? dataAny : Array.isArray(dataAny?.QueryData) ? dataAny.QueryData : Array.isArray(dataAny?.Data) ? dataAny.Data : [];
+
+        const total =
+          typeof (res as any).TotalCount === 'number'
+            ? (res as any).TotalCount
+            : typeof dataAny?.TotalCount === 'number'
+              ? dataAny.TotalCount
+              : rows.length;
+
+        return {
+          ...res,
+          Data: rows,
+          TotalCount: total,
+        } as ApiResponse<ASS13060AssetQueryRow[]>;
+      })
+    );
   };
 
   onDialogQuery(): void {
