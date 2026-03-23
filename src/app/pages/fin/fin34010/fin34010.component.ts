@@ -1,11 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AsyncPipe } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { map, finalize } from 'rxjs/operators';
+import { finalize, map } from 'rxjs/operators';
 
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   createPaginationConfig,
   formatDateToYYYY_MM_DD,
@@ -13,6 +12,7 @@ import {
 
 // UI
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -21,7 +21,6 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 // Service & 型別
 import {
@@ -34,8 +33,9 @@ import {
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 
-type SortItem = { field: string; order: number };
+interface SortItem { field: string; order: number }
 
 @UntilDestroy()
 @Component({
@@ -58,7 +58,7 @@ type SortItem = { field: string; order: number };
     ButtonModule,
   ],
 })
-export class FIN34010Component extends BasicQueryPageComponent<any> {
+export class FIN34010Component extends BasicQueryPageComponent<any> implements OnInit {
   /* ----------------- 狀態 ----------------- */
   data: Fin34010Row[] = [];
   totalRecords = 0;
@@ -114,21 +114,21 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
   readonly defaultSort: SortItem[] = [{ field: 'ARS_Date', order: 1 }];
   private _currentSortBy: SortItem[] = this.defaultSort;
 
-showFlagOptions: any[] = [
-  { value: 'Y', label: '顯示' },
-  { value: 'N', label: '不顯示' },
-];
+  showFlagOptions: any[] = [
+    { value: 'Y', label: '顯示' },
+    { value: 'N', label: '不顯示' },
+  ];
 
-queryForm = this.formBuilder.group({
-  VEN_No: [null as string | null],
-  AccNo: [null as string | null],
-  ARSDateFrom: [null as Date | null],
-  ARSDateTo: [null as Date | null],
-  ShowArsAmt: ['Y' as string],
-  ShowZeroAmt: ['Y' as string],
+  queryForm = this.formBuilder.group({
+    VEN_No: [null as string | null],
+    AccNo: [null as string | null],
+    ARSDateFrom: [null as Date | null],
+    ARSDateTo: [null as Date | null],
+    ShowArsAmt: ['Y' as string],
+    ShowZeroAmt: ['Y' as string],
 
-  ...createPaginationConfig(this.defaultSort),
-});
+    ...createPaginationConfig(this.defaultSort),
+  });
 
   btnExportExcelLoading = false;
   btnExportPdfLoading = false;
@@ -144,16 +144,16 @@ queryForm = this.formBuilder.group({
 
   /* ----------------- 工具 ----------------- */
 
-private updateColumns(): void {
-  const showArsAmt = this.queryForm.get('ShowArsAmt')?.value;
+  private updateColumns(): void {
+    const showArsAmt = this.queryForm.get('ShowArsAmt')?.value;
 
-  this.columns = this.allColumns.filter((col) => {
-    if (col.field === 'ARS_Amt' && showArsAmt === 'N') {
-      return false;
-    }
-    return true;
-  });
-}
+    this.columns = this.allColumns.filter((col) => {
+      if (col.field === 'ARS_Amt' && showArsAmt === 'N') {
+        return false;
+      }
+      return true;
+    });
+  }
 
   private moneyFormat(value: number | string): string {
     if (value == null || value === '') return '0';
@@ -237,8 +237,10 @@ private updateColumns(): void {
       ARSDateFrom: this.toYMDOrUndef(base?.ARSDateFrom),
       ARSDateTo: this.toYMDOrUndef(base?.ARSDateTo),
 
-      VEN_No_From: base?.VEN_No || undefined,
-      AccNoList: base?.AccNo || undefined,
+      // VEN_No_From: base?.VEN_No || undefined,
+      VEN_No: base?.VEN_No || undefined,
+      // AccNoList: base?.AccNo || undefined,
+      AccNo: base?.AccNo || undefined,
 
       ShowArsAmt: base?.ShowArsAmt || undefined,
       ShowZeroAmt: base?.ShowZeroAmt || undefined,
@@ -260,9 +262,9 @@ private updateColumns(): void {
     const base = this.lastQueryBody
       ? { ...this.lastQueryBody }
       : {
-          ...this.queryForm.getRawValue(),
-          SortBy: this._currentSortBy || this.defaultSort,
-        };
+        ...this.queryForm.getRawValue(),
+        SortBy: this._currentSortBy || this.defaultSort,
+      };
 
     const payload = this.buildPayload(base);
 
@@ -432,16 +434,16 @@ private updateColumns(): void {
       });
   }
 
-onClear(frm: FormGroup) {
-  frm.reset({
-    VEN_No: null,
-    AccNo: null,
-    ARSDateFrom: null,
-    ARSDateTo: null,
-    ShowArsAmt: 'Y',
-    ShowZeroAmt: 'Y',
-    ...createPaginationConfig(this.defaultSort),
-  });
+  onClear(frm: FormGroup) {
+    frm.reset({
+      VEN_No: null,
+      AccNo: null,
+      ARSDateFrom: null,
+      ARSDateTo: null,
+      ShowArsAmt: 'Y',
+      ShowZeroAmt: 'Y',
+      ...createPaginationConfig(this.defaultSort),
+    });
 
     this.submitted = false;
     this.data = [];
