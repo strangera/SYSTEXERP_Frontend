@@ -128,7 +128,8 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
   lastQueryBody: any | null = null;
   footerData: any = {};
   InvoiceType_Options: { label: string; value: string }[] = [];
-  SAL_Type_Options = getSYS1000Options('SAL_Type');
+  // SAL_Type_Options = getSYS1000Options('SAL_Type');
+  SAL_Type_Options = getSYS1000Options('T205'); //規格更新
   taxTypeOptions = getSYS1000Options('PUR_TaxType');
   AssetNoteOptions = getSYS1000Options('AssetType');
   Buyer_Uniform_Options: { label: string; value: string }[] = [];
