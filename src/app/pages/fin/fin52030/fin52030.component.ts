@@ -1,5 +1,6 @@
 import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52030Service } from '@service/api/fin/fin52030.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -9,11 +10,10 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { apiOption } from '@shared/models/sys/sysb000.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { apiOption } from '@shared/models/sys/sysb000.model';
 import { FIN52030Data, FIN52030Payload } from './fin52030.model';
 
 @Component({
@@ -53,6 +53,8 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
     { field: 'TempName', header: '常用傳票名稱' },
     { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions().find(option => option.value === v)?.label ?? v },
     { field: 'DetailCount', header: '明細筆數' },
+    { field: 'CRT_USR_Name', header: '建立人員' },
+    { field: 'UPD_USR_Name', header: '修改人員' },
   ];
 
   public readonly tableLoading = signal<boolean>(!1);

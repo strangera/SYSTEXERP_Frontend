@@ -154,7 +154,7 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     },
   ];
 
-  private readonly leaveLabel = 'T_Name';
+  private readonly leaveLabel = 'T30Label';
   private readonly listTitle = '科目圖';
   private readonly viewButtonLabel = '查看科目圖';
   private readonly treeColumn = [
