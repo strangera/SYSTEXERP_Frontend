@@ -119,12 +119,15 @@
     [columns]="columns"
     [totalRecords]="totalRecords"
     [loading]="loading"
-    [showReportMode]="false"
+    [showReportMode]="true"
     [showDelete]="false"
     [editDisabled]="editDisabledByVouNo"
     [showDetail]="true"
     expansionDataKey="Details"
     [expansionColumns]="detailColumns"
+    apiUrl="queryForExportFIN24020"
+    [customReport]="true"
+    (exportEvent)="onExport($event)"
     (edit)="onEdit($event, queryForm.getRawValue())"
     (detail)="onDetail($event, queryForm.getRawValue())"
     [lazy]="true"
@@ -132,19 +135,5 @@
     [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
     [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
     (lazyLoadData)="handleLazyLoad($event)"
-  >
-    <header>
-      <div class="flex justify-content-end align-items-center gap-2">
-        <p-button
-          styleClass="p-2"
-          label="保留款沖款維護.PDF"
-          [loading]="btnPDFLoading"
-          icon="pi pi-file"
-          (click)="onReport(queryForm)"
-          [disabled]="data.length === 0"
-          [loading]="btnPDFLoading"
-        ></p-button>
-      </div>
-    </header>
-  </app-table>
+  ></app-table>
 </div>

@@ -167,7 +167,7 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
   }
 
   // 列印，條件和query完全相同
-  btnPDFLoading = false
+  btnLoading = false
   onReport(frm: FormGroup) {
     let acpYyyymm = '';
     const rawAcpYyyymm = frm.value.ACP_YYYYMM;
@@ -202,8 +202,8 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
       Remark: frm.value.Remark ?? ''
     };
 
-    this.btnPDFLoading = true;
-    this.fin24020Service.queryForExportFIN24020(body).pipe(finalize(() => this.btnPDFLoading = false), untilDestroyed(this))
+    this.btnLoading = true;
+    this.fin24020Service.queryForExportFIN24020(body).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
       .subscribe(res => {
         if (res.Data) {
           console.log('列印回應', res.Data);
@@ -212,6 +212,14 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
         }
       });
 
+  }
+
+  onExport(event: string) {
+    if (event == 'PDF') {
+      this.onReport(this.queryForm);
+    } else if (event == 'Excel') {
+      this.onReport(this.queryForm);
+    }
   }
 
   handleLazyLoad(event: any) {
