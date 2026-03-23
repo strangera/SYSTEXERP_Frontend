@@ -150,7 +150,7 @@ export class AutoCompleteCellComponent {
 
   handleEnter(event: Event) {
     event.preventDefault();
-    event.stopPropagation();
+    // event.stopPropagation();// !!!客戶需求禁止加上這段
     this.handleBlur();
   }
 }

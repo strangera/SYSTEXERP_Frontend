@@ -240,31 +240,107 @@ export class TableEditComponent implements OnChanges {
   onCellKeydown(event: KeyboardEvent, rowIndex: number, colIndex: number): void {
     event.stopPropagation();
 
-    if (!this.enableTabInsert) return;
-    if (event.key !== 'Tab' || event.shiftKey) return;
+    // 定義需要處理的按鍵
+    const isTab = event.key === 'Tab';
+    const isEnter = event.key === 'Enter';
+
+    if (!isTab && !isEnter) return;
     if (this.disabled) return;
 
-    const lastRowIndex = this._tableData.length - 1;
+    const lastRowIndex = this.data.length - 1;
     const lastColIndex = this.columns.length - 1;
 
-    // 只在最後一列最後一欄時處理
-    if (rowIndex !== lastRowIndex || colIndex !== lastColIndex) return;
-
-    // 若已經有自動候選列，就不再自動新增，避免重複
-    const hasCandidate = this._tableData.some(r => r._isAutoInsertCandidate);
-    if (hasCandidate) return;
-
-    // 延遲執行，避免影響瀏覽器原生 Tab 行為與焦點計算
-    setTimeout(() => {
-      // 若外部有定義 insert 事件（例如 TLS2D010 打開專櫃對話框），優先觸發 insert
-      if (this.showInsert && this.insert.observers.length > 0) {
-        this.insert.emit();
-      } else if (this.canInsert) {
-        // 否則使用共用的 insertRow 新增一列
-        this.insertRow();
+    // 判斷是否為「最後一個儲存格」
+    const isLastCell = (rowIndex === lastRowIndex && colIndex === lastColIndex);
+    if (isEnter) {
+      // 阻止 Enter 的預設行為（例如觸發 Form Submit 或換行）
+      event.preventDefault();
+      if (isLastCell) {
+        // 如果是最後一格按 Enter，執行與 Tab 相同的自動新增邏輯
+        this.focusFirstInput(this._tableData.length - 1);
+      } else {
+        // 如果不是最後一格，跳到下一個可輸入位置
+        this.focusNextCell(rowIndex, colIndex);
       }
-      this.cdr.markForCheck();
-    });
+    } else if (isTab && !event.shiftKey && isLastCell && this.enableTabInsert) {
+      // 處理原本就有的最後一格 Tab 自動新增邏輯
+      this.focusFirstInput(this._tableData.length - 1);
+    }
+  }
+  /**
+ * 核心方法：手動計算並聚焦下一個輸入框
+ * @param rowIndex 目前行索引
+ * @param colIndex 目前列(欄位)索引
+ */
+  private focusNextCell(rowIndex: number, colIndex: number): void {
+    let nextRow = rowIndex;
+    let nextCol = colIndex + 1;
+
+    // 1. 如果這一列已經到最後一欄了，換到下一列的第一欄
+    if (nextCol >= this.columns.length) {
+      nextCol = 0;
+      nextRow++;
+    }
+
+    // 2. 檢查是否超出表格總行數
+    if (nextRow < this._tableData.length) {
+      const nextColDef = this.columns[nextCol];
+      const rowData = this._tableData[nextRow];
+
+      // 3. 判斷下一個儲存格是否為「隱藏」或「不可編輯」
+      // 如果該欄位有 hidden 邏輯且結果為 true，或者該欄位根本沒定義 type (純文字)
+      const isHidden = typeof nextColDef.hidden === 'function'
+        ? nextColDef.hidden(rowData, nextRow)
+        : nextColDef.hidden;
+
+      if (isHidden || !nextColDef.type) {
+        // 遞迴尋找再下一個可用的 Cell
+        this.focusNextCell(nextRow, nextCol);
+        return;
+      }
+
+      // 4. 執行聚焦動作
+      setTimeout(() => {
+        if (!this.table || !this.table.el) return;
+
+        const tbody = this.table.el.nativeElement.querySelector('.p-datatable-tbody');
+        if (tbody) {
+          const targetRow = tbody.children[nextRow];
+          if (targetRow) {
+            // 使用 calculateActualTdIndex 修正因 Checkbox/Reorder 產生的偏移
+            const tdIndex = this.calculateActualTdIndex(nextCol);
+            const targetTd = targetRow.children[tdIndex];
+
+            if (targetTd) {
+              // 尋找該 Td 內可聚焦的元素
+              const focusable = targetTd.querySelector(
+                'input, select, textarea, .p-dropdown-label, [tabindex="0"]'
+              ) as HTMLElement;
+
+              if (focusable) {
+                focusable.focus();
+                // 如果是 Input 順便全選內容 (ERP 使用者通常喜歡這樣，方便直接覆蓋輸入)
+                if (focusable instanceof HTMLInputElement) {
+                  focusable.select();
+                }
+              } else {
+                // 雖然有 type 但找不到可聚焦元素，繼續找下一個
+                this.focusNextCell(nextRow, nextCol);
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+  /**
+ * 輔助方法：計算真實的 td index (因為前面有序號、Checkbox、Reorder 欄位)
+ */
+  private calculateActualTdIndex(colIndex: number): number {
+    let offset = 1; // 基礎序號欄位
+    if (this.showReorder && this._tableData.length) offset++;
+    if (this.showCheckBox && !this.disabled && this.data.length) offset++;
+    return colIndex + offset;
   }
   onSelectionChange(event: any) {
     if (this.disabled) { return; }

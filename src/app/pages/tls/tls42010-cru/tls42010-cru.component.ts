@@ -402,6 +402,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     });
 
     this.refreshPageDisplay();
+    this.pages = [...this.pages];
     // 選取第一個有內容的按鍵
     const first = this.pages.flat().find(k => k.KB_Func || k.KB_Display1 || k.KB_Display2);
     if (first) this.selectKey(first);
