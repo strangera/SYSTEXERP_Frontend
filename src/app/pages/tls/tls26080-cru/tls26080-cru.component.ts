@@ -952,7 +952,16 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     const name = `專櫃活動設定匯入範本.xlsx`;
     // const name = `專櫃活動設定匯入範本-${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(wb, name);
-  };
+  }
+
+  public onExportBlankExcelTemplate(): void {
+    this.downloadLoading.set(true);
+    this.service.downloadBlankXLSXTemplate()
+      .pipe(finalize(() => this.downloadLoading.set(false)))
+      .subscribe({
+        next: res => this.logger.debug(`downloadBlankXLSXTemplate:`, [res]),
+      });
+  }
 
   private numVal(value: string | number): ValidationResult {
     const normalized = typeof value === 'number' ? value.toString() : `${value ?? ''}`.trim().replace(/%$/, '');

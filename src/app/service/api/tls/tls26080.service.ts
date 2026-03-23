@@ -223,6 +223,41 @@ export class TLS26080Service {
     );
   }
 
+  /**
+   * 匯出空白 Excel 範本（後端規格未定，以下為暫定實作）
+   * TODO TLS26080：待後端確認
+   * - endpoint 路徑是否為 downloadTLS26080BlankTemplate（或 export… 等命名）
+   * - HTTP 方法：目前比照範例檔使用 GET；若改 POST 需調整並補 model
+   * - query / body：是否需 tlt_bdate、tlt_edate，或無參數
+   * - 下載檔名是否由後端 Content-Disposition 決定
+   * - 錯誤時回傳 JSON blob 與成功檔案之區分方式
+   */
+  public downloadBlankXLSXTemplate(): Observable<Blob> {
+    let params = new HttpParams();
+    // TODO TLS26080：若後端空白範本不需日期參數，移除此兩行
+    params = params.set('tlt_bdate', this.formatQueryDate(this.dateS) || '');
+    params = params.set('tlt_edate', this.formatQueryDate(this.dateE) || '');
+
+    return this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080BlankTemplate`, {
+      params,
+      responseType: 'blob'
+    }).pipe(
+      take(1),
+      tap(res => {
+        const url = window.URL.createObjectURL(res);
+        const link = document.createElement('a');
+        link.href = url;
+        // TODO TLS26080：與 PM/後端確認下載檔名
+        link.download = 'TLS26080_空白範本.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        this.logger.debug(`空白範本下載`);
+      })
+    );
+  }
+
   private formatQueryDate(value?: Date | string | null): string | undefined {
     if (!value) return undefined;
     const date = typeof value === 'string' ? new Date(value) : value;
