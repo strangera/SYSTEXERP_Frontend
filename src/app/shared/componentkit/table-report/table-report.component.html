@@ -257,10 +257,12 @@
     </div>
   </ng-template>
   <ng-template pTemplate="emptymessage">
-    <tr>
-      <td [attr.colspan]="1 + columns.length + (showManage ? 1 : 0) + (showCheckBox ? 1 : 0)+ (showReorder ? 1 : 0)">
-        <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
-          <!-- {{ emptyMessage || '查無資料' }} -->
+    <tr *ngIf="hasSearched">
+      <td
+        [attr.colspan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0) + columns.length + (showManage ? 1 : 0)">
+        <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+          <i class="pi pi-search mr-2"></i>
+          {{ emptyMessage || '查無資料' }}
         </div>
       </td>
     </tr>
