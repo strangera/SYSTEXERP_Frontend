@@ -240,32 +240,75 @@ export class TableEditComponent implements OnChanges {
   onCellKeydown(event: KeyboardEvent, rowIndex: number, colIndex: number): void {
     event.stopPropagation();
 
-    // 定義需要處理的按鍵
     const isTab = event.key === 'Tab';
     const isEnter = event.key === 'Enter';
 
     if (!isTab && !isEnter) return;
     if (this.disabled) return;
 
-    const lastRowIndex = this.data.length - 1;
-    const lastColIndex = this.columns.length - 1;
+    // --- 關鍵修正：動態判斷這是否為該行最後一個可編輯欄位 ---
+    const rowData = this._tableData[rowIndex];
+    const isLastEditableCol = this.isLastEditableColumn(rowData, rowIndex, colIndex);
+    const isLastRow = rowIndex === this._tableData.length - 1;
 
-    // 判斷是否為「最後一個儲存格」
-    const isLastCell = (rowIndex === lastRowIndex && colIndex === lastColIndex);
     if (isEnter) {
-      // 阻止 Enter 的預設行為（例如觸發 Form Submit 或換行）
       event.preventDefault();
-      if (isLastCell) {
-        // 如果是最後一格按 Enter，執行與 Tab 相同的自動新增邏輯
-        this.focusFirstInput(this._tableData.length - 1);
+
+      if (isLastEditableCol) {
+        if (isLastRow) {
+          // 如果是全表格最後一格，觸發轉正與自動新增
+          this.handleEnterAtLastCell(rowIndex);
+        } else {
+          // 如果只是該行最後一格，跳到下一行第一格
+          this.focusFirstInput(rowIndex + 1);
+        }
       } else {
-        // 如果不是最後一格，跳到下一個可輸入位置
+        // 一般跳格
         this.focusNextCell(rowIndex, colIndex);
       }
-    } else if (isTab && !event.shiftKey && isLastCell && this.enableTabInsert) {
-      // 處理原本就有的最後一格 Tab 自動新增邏輯
-      this.focusFirstInput(this._tableData.length - 1);
+    } else if (isTab && !event.shiftKey && isLastEditableCol && isLastRow && this.enableTabInsert) {
+      this.handleEnterAtLastCell(rowIndex);
     }
+  }
+  /**
+   * 判斷當前 colIndex 是否為該 row 邏輯上的最後一個可編輯欄位
+   */
+  private isLastEditableColumn(rowData: any, rowIndex: number, currentColIndex: number): boolean {
+    // 從最後一個欄位開始往前找
+    for (let i = this.columns.length - 1; i >= 0; i--) {
+      const col = this.columns[i];
+      const isHidden = typeof col.hidden === 'function' ? col.hidden(rowData, rowIndex) : col.hidden;
+
+      // 只要有 type 且沒被隱藏，它就是一個「可編輯欄位」
+      if (col.type && !isHidden) {
+        // 如果找到的第一個（也就是最後一個）索引等於當前索引，就是最後一格
+        return i === currentColIndex;
+      }
+    }
+    return false;
+  }
+  private handleEnterAtLastCell(rowIndex: number) {
+    const rowData = this._tableData[rowIndex];
+
+    // 1. 如果目前這筆是候選行，按下 Enter 表示完成輸入，將其轉正
+    if (rowData._isAutoInsertCandidate) {
+      rowData._isAutoInsertCandidate = false;
+      rowData[this.dataStatusField] = this.dataStatusValue.New;
+
+      // 發射事件讓父元件同步資料
+      this.dataChange.emit(this._tableData.filter(item => !item._isAutoInsertCandidate));
+    }
+
+    // 2. 檢查是否能新增，並執行新增
+    if (this.canInsert && !this.disabled) {
+      this.insertRow();
+      this.cdr.detectChanges(); // 強制渲染新 Row DOM
+    }
+
+    // 3. 聚焦到新行
+    setTimeout(() => {
+      this.focusFirstInput(rowIndex + 1);
+    }, 50);
   }
   /**
  * 核心方法：手動計算並聚焦下一個輸入框
@@ -616,23 +659,26 @@ export class TableEditComponent implements OnChanges {
   }
 
   focusFirstInput(rowIndex: number) {
-    // 這裡使用 this.table.el.nativeElement，只會在「這個元件實例」的 HTML 範圍內找
     if (!this.table || !this.table.el) return;
 
     setTimeout(() => {
-      const tbody = this.table.el.nativeElement.querySelector('.p-datatable-tbody');
-      if (tbody) {
-        const rows = tbody.querySelectorAll('tr');
-        const targetRow = rows[rowIndex];
+      const el = this.table.el.nativeElement;
+      const rows = el.querySelectorAll('.p-datatable-tbody tr');
+      const targetRow = rows[rowIndex];
 
-        if (targetRow) {
-          // 優先找輸入框，找不到再找 dropdown 或其他可點選元件
-          const input = targetRow.querySelector('input, select, textarea, .p-dropdown-label, [tabindex="0"]') as HTMLElement;
-          if (input) {
-            input.focus();
+      if (targetRow) {
+        // 尋找該行內第一個「可見且非禁用」的輸入控制項
+        const input = targetRow.querySelector(
+          'input:not([disabled]):not([hidden]), .p-dropdown-label, .p-inputnumber-input, .p-autocomplete-input, [tabindex="0"]'
+        ) as HTMLElement;
+
+        if (input) {
+          input.focus();
+          if (input.tagName === 'INPUT') {
+            (input as HTMLInputElement).select();
           }
         }
       }
-    });
+    }, 50);
   }
 }
