@@ -31,6 +31,6 @@
 <div class="card">
   <app-table-report [data]="data" [columns]="columns" [showDelete]="false" [totalRecords]="totalRecords"
     [lastQueryBody]="lastQueryBody" [queryFunction]="tls55020Service.queryTLS55020.bind(tls55020Service)"
-    (detail)="onDetail($event)" (edit)="onEdit($event)" [loading]="loading">
+    (detail)="onDetail($event)" (edit)="onEdit($event)" [loading]="loading" emptyMessage="查無特殊交易資料">
   </app-table-report>
 </div>
