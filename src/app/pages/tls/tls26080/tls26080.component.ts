@@ -17,7 +17,7 @@ import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { TLS26080Data, TLS26080Query } from './tls26080.model';
+import { ExportTLS26080PDFRequest, TLS26080Data, TLS26080Query } from './tls26080.model';
 
 @Component({
   selector: 'app-tls26080',
@@ -70,8 +70,26 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
           this.messageService.errorBubble('無活動編號，無法列印');
           return;
         }
+        const payload: ExportTLS26080PDFRequest = {
+          PageSize: 0,
+          PageIndex: 0,
+          Offset: 0,
+          SortBy: [{ field: 'pod_no', order: 1 }],
+          POD_No: rowData.pod_no,
+          POD_Desc: rowData.pod_desc,
+          POD_SDate_start: rowData.pod_sdate
+            ? this.datePipe.transform(rowData.pod_sdate, 'yyyy-MM-dd') ?? undefined
+            : undefined,
+          POD_SDate_end: rowData.pod_edate
+            ? this.datePipe.transform(rowData.pod_edate, 'yyyy-MM-dd') ?? undefined
+            : undefined,
+          POD_BusDate: rowData.pod_busdate
+            ? this.datePipe.transform(rowData.pod_busdate, 'yyyy-MM-dd') ?? undefined
+            : undefined,
+          ...(rowData.cap_item ? { CAP_ItemList: [rowData.cap_item] } : {}),
+        };
         this.fileExportService.executeFileExport(
-          this.service.printTLS26080({ pod_no: rowData.pod_no, id: rowData.id }),
+          this.service.exportTLS26080PDF(payload),
           '.pdf',
           isLoading => this.printLoading.set(isLoading),
         ).subscribe();
