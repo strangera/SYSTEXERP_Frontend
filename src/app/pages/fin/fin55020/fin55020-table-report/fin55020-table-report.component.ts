@@ -49,9 +49,13 @@ export class Fin55020TableReportComponent extends BasicPrintDataComponent implem
     this.onScroll = this.onScroll.bind(this);
   }
 
+  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges) {
     // 第一次獲取data
     if (changes['data'] && this.data !== undefined) {
+      if (this.lastQueryBody) {
+        this.hasSearched = true;
+      }
       this.data = this.processGroupIndex(this.data);
       if (this.data.length > 0) {
         if (this.data.length >= 30) {

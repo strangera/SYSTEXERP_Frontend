@@ -152,8 +152,10 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
     private readonly tableUtilityService: TableUtilityService
   ) { super(); }
   // 當 data 發生變化時，重置分頁與頁碼
+  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
+      this.hasSearched = true;
       setTimeout(() => {
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
         this.selectedItems = []
