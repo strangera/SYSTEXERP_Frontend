@@ -500,6 +500,26 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     const align = this.columnGroup?.find(g => g.field === groupField)?.align;
     return align ? 'text-' + align : 'text-center';
   }
+
+  /**
+   * 資料列儲存格：合併對齊 預設樣式 與 Column.cellClass
+   */
+  getBodyCellNgClass(col: Column, rowData: any): Record<string, boolean> {
+    // 預設樣式
+    const result: Record<string, boolean> = {
+      'text-right': col.align === 'right' || col.style === 'text-right',
+      'text-center': col.align === 'center' || (!col.align && !col.style),
+      'text-left': col.align === 'left',
+    };
+
+    const extra = col.cellClass?.(rowData, col.field);
+    if (typeof extra === 'string' && extra.trim()) {
+      for (const cls of extra.trim().split(/\s+/)) {
+        if (cls) result[cls] = true;
+      }
+    }
+    return result;
+  }
   // 分組總計
   getGroupSubtotal(groupValue: any, field: string): number {
     return this.tableUtilityService.getGroupSubtotal(this.data, this.groupRowsBy, groupValue, field);

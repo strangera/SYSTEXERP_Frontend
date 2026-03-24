@@ -182,11 +182,9 @@
                   ? 'pi pi-chevron-down': 'pi pi-chevron-right'" pButton (click)="toggleRowExpansion(rowData)"
             [disabled]="rowData.expansionLoading || (!expansionLoadFn && !rowData[expansionDataKey]?.length)" />
         </td>
-        <td *ngFor="let col of columns" [ngClass]="{
-      'text-right': col.align === 'right' || col.style === 'text-right',
-      'text-center': col.align === 'center' || (!col.align && !col.style),
-      'text-left': col.align === 'left'
-    }" style="text-overflow: ellipsis; min-width: 55px" (click)="editing ? $event.stopPropagation() : null"
+        <td *ngFor="let col of columns"
+          [ngClass]="getBodyCellNgClass(col, rowData)"
+          style="text-overflow: ellipsis; min-width: 55px" (click)="editing ? $event.stopPropagation() : null"
           (dblclick)="detailRow(rowData)" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn
           [frozen]="IsPrint && col.frozen">
           <p-cellEditor *ngIf="showRowEdit">
