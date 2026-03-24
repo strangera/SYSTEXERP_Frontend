@@ -52,6 +52,8 @@ export class FIN52030Component extends BasicQueryPageComponent<FIN52030Data> imp
     { field: 'TempNo', header: '常用傳票代碼' },
     { field: 'TempName', header: '常用傳票名稱' },
     { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions().find(option => option.value === v)?.label ?? v },
+    { field: 'CRT_USR_Name', header: '建立者' },
+    { field: 'UPD_USR_Name', header: '修改者' },
     { field: 'DetailCount', header: '明細筆數' },
     { field: 'CRT_USR_Name', header: '建立人員' },
     { field: 'UPD_USR_Name', header: '修改人員' },
