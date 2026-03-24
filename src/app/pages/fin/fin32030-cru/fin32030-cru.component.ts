@@ -262,6 +262,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       optionValue: 'value',
       showClear: true,
       width: '250px',
+      panelStyle: { 'min-width': '420px' },
       calculate: (_rowData, newValue: string) => {
         // 選擇銀行後自動帶入分行代號和帳號長度
         const selectedBank = this.bankBranchOptions.find(b => b.value === newValue);

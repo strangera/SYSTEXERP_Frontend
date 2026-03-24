@@ -272,14 +272,11 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
   private downloadFile(blob: Blob, type: string, fileName: string) {
     const newBlob = new Blob([blob], { type });
     const url = URL.createObjectURL(newBlob);
-    if (type === 'application/pdf') {
-      window.open(url, '_blank');
-    } else {
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      link.click();
-    }
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 }
 

@@ -121,7 +121,7 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
               finalize(() => this.btnLoading = false)
             ).subscribe({
               next: (response: HttpResponse<Blob>) => {
-                this.handleFileExport(response, '.pdf');
+                this.handleFileExport(response, '.pdf', '試算表');
               },
             });
       }
@@ -137,7 +137,7 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
       finalize(() => this.btnLoading = false)
     ).subscribe({
       next: (response: HttpResponse<Blob>) => {
-        this.handleFileExport(response, '.xlsx');
+        this.handleFileExport(response, '.xlsx', '試算表');
       },
     });
       }
@@ -157,16 +157,14 @@ isNumericColumn(field: string): boolean {
   ].includes(field);
 }
 
- private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
-    const contentDisposition = response.headers.get('Content-Disposition');
-    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
-    const blob = response.body;
-
+ private handleFileExport(resp: any, ext: string, baseName: string): void {
+    const blob = resp?.body instanceof Blob ? resp.body : resp;
+    const fileName = `${baseName}_${new Date().getTime()}${ext}`;
     if (blob && blob.size > 0) {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = filename;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -174,34 +172,6 @@ isNumericColumn(field: string): boolean {
     } else {
       this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
     }
-  }
-  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
-    if (!contentDisposition) {
-      return `download${defaultExtension}`;
-    }
-
-    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
-    if (filenameStarMatch && filenameStarMatch.length > 1) {
-      const encodedFilename = filenameStarMatch[1];
-      try {
-        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
-        return decoded;
-      } catch (error) {
-        console.error('Failed to decode filename*', error);
-        return encodedFilename;
-      }
-    }
-
-    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
-    if (filenameMatch && filenameMatch.length > 1) {
-      try {
-        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
-      } catch {
-        return filenameMatch[1];
-      }
-    }
-
-    return `download${defaultExtension}`;
   }
 
 
