@@ -151,17 +151,30 @@
 >
   <form>
     <div class="grid p-fluid">
+      <app-input-text
+        class="col-12"
+        label="清點單號"
+        [control]="uploadChkIdControl"
+      ></app-input-text>
+
       <app-file-upload
         #fileUpload
         class="col-12"
         name="file"
-        [multiple]="true"
+        [multiple]="false"
+        [fileLimit]="1"
+        accept=".txt"
         [customUpload]="true"
         [auto]="false"
         mode="advanced"
         chooseLabel="選擇檔案"
+        uploadLabel="上傳"
         cancelLabel="清除"
+        [disabled]="uploading || !uploadChkIdControl.value.trim()"
         [loading]="uploading"
+        [showUploadButton]="true"
+        [showCancelButton]="true"
+        (select)="onUploadFileSelect($event)"
         (uploadHandler)="handleCustomUpload($event)"
       ></app-file-upload>
     </div>

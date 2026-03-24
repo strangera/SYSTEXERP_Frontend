@@ -101,40 +101,83 @@ export interface ASS13100GenerateUnitRow {
 }
 
 /**
- * 編輯/明細頁：清點單明細列（與更新 API Items 對齊）
+ * 查詢明細 Request（queryDetailASS13100）
  */
-export interface ASS13100DetailRow {
-  /** 明細 ID（必填，更新時使用） */
-  ID?: number;
-  /** 清點狀態(資料) */
-  CHK_STATUS?: string | null;
-  /** 位置代碼 */
-  LOCATION_ID?: string | null;
-  /** 註記 */
-  NOTES?: string | null;
-  /** 財產編號（唯讀，顯示用，後端若有則保留） */
-  AssetNo?: string | null;
-  /** 資產代號（唯讀，顯示用） */
-  AssetCode?: string | null;
-  /** 品項編號（唯讀，顯示用） */
-  ItemNo?: string | null;
-  [key: string]: unknown;
+export interface QueryDetailASS13100Request {
+  ID: number;
 }
 
 /**
- * 單筆清點單主檔 + 明細（detail API 若有）
+ * 查詢明細回傳主檔（queryDetailASS13100）
  */
-export interface ASS13100DetailResponse {
-  /** 清點單號 */
-  CHK_ID?: string;
-  /** 主檔 ID */
-  ID?: number;
-  /** 清點日期（供表單顯示/更新） */
-  CHK_DATE?: string;
-  /** 清點單狀態（供表單顯示/更新） */
-  STATUS?: string;
-  /** 明細列 */
-  Details: ASS13100DetailRow[];
+export interface ASS13100DetailMaster {
+  ID: number;
+  MID: number;
+  STO_NO: string;
+  CHK_ID: string;
+  CHK_DATE: string;
+  STATUS: string;
+  STATUS_NAME: string;
+  CLOSE_DATE: string;
+}
+
+/**
+ * 查詢明細回傳明細列（queryDetailASS13100）
+ */
+export interface ASS13100DetailItem {
+  SeqNo: number;
+  ID: number;
+  FAASSCHECKM_ID: number;
+  ASSET_ID: string;
+  GOODS_NAME: string;
+  ASSET_STATUS: string;
+  ASSET_STATUS_NAME: string;
+  CHK_STATUS: string | null;
+  CHK_STATUS_NAME: string;
+  LOCATION_ID: string | null;
+  HOLD_ORG_ID: string;
+  HOLD_ORG_NAME: string;
+  HOLD_EMP_ID: string;
+  HOLD_EMP_NAME: string;
+  USE_ORG_ID: string;
+  USE_ORG_NAME: string;
+  USE_EMP_ID: string;
+  USE_EMP_NAME: string;
+  CHK_EMP_ID: string;
+  CHK_EMP_NAME: string;
+  CHK_EMP_ID2: string;
+  CHK_EMP2_NAME: string;
+  NOTES: string | null;
+}
+
+/**
+ * 編輯/明細頁：清點單明細列（UI 編輯使用，與更新 API Items 對齊）
+ */
+export interface ASS13100DetailRow extends ASS13100DetailItem {
+  /** 明細 ID（必填，更新時使用） */
+  ID: number;
+  /** 清點狀態(資料) */
+  CHK_STATUS: string | null;
+  /** 位置代碼 */
+  LOCATION_ID: string | null;
+  /** 註記 */
+  NOTES: string | null;
+}
+
+/**
+ * 查詢明細回傳 Data（queryDetailASS13100）
+ */
+export interface QueryDetailASS13100ResponseData {
+  Master: ASS13100DetailMaster;
+  Details: ASS13100DetailItem[];
+}
+
+/**
+ * 上傳盤點檔回傳 Data（uploadASS13100）
+ */
+export interface UploadASS13100ResponseData {
+  ErrCode: number;
+  ErrMsg: string;
 }
 
 /**

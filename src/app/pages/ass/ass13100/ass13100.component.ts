@@ -21,7 +21,9 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
+import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ButtonModule } from 'primeng/button';
+import { FileSelectEvent } from 'primeng/fileupload';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs/operators';
 import {
@@ -52,7 +54,8 @@ import {
     ButtonModule,
     DialogComponent,
     FileUploadComponent,
-  ],
+    BreadcrumbModule
+],
 })
 export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow> implements OnInit {
   @ViewChild(FileUploadComponent) fileUpload?: FileUploadComponent;
@@ -94,6 +97,12 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
   /** 上傳盤點機檔案 Dialog 狀態 */
   uploadDialogVisible = false;
   uploading = false;
+  uploadChkIdControl = new FormControl<string>('', { nonNullable: true });
+  private selectedUploadFile: File | null = null;
+
+  get canUploadDeviceFile(): boolean {
+    return !!this.selectedUploadFile && !!this.uploadChkIdControl.value.trim() && !this.uploading;
+  }
 
   /** 查詢條件是否已完整輸入清點單號起迄 */
   get hasInventoryRange(): boolean {
@@ -253,53 +262,61 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
 
   /** 開啟上傳盤點機檔案視窗 */
   openUploadDialog(): void {
-    if (!this.hasInventoryRange) {
-      this.messageService.warnBubble('請先輸入清點單號起迄');
-      return;
-    }
-
+    this.selectedUploadFile = null;
+    this.uploadChkIdControl.setValue('');
     this.fileUpload?.clearFiles();
     this.uploadDialogVisible = true;
   }
 
+  onUploadFileSelect(event: FileSelectEvent): void {
+    const files = event.files ?? [];
+    this.selectedUploadFile = files.length > 0 ? files[0] : null;
+  }
+
   /** 自訂上傳事件（由 app-file-upload 觸發） */
   handleCustomUpload(event: FileUploadHandlerEvent): void {
+    const chkId = this.uploadChkIdControl.value.trim();
+    if (!chkId) {
+      this.messageService.warnBubble('請先輸入清點單號');
+      return;
+    }
+
     if (!event.files || event.files.length === 0) {
       this.messageService.errorBubble('上傳檔案為空');
       return;
     }
 
-    const raw = this.queryForm.getRawValue();
-    const chkIdS = (raw.CHK_ID_S ?? '').toString().trim();
-    const chkIdE = (raw.CHK_ID_E ?? '').toString().trim();
-
-    if (!chkIdS || !chkIdE) {
-      this.messageService.warnBubble('請先輸入清點單號起迄');
+    const file = event.files[0];
+    if (!file?.name.toLowerCase().endsWith('.txt')) {
+      this.messageService.errorBubble('僅允許上傳 .txt 檔案');
       return;
     }
 
-    const file = event.files[0];
-
     this.uploading = true;
     this.service
-      .uploadASS13100DeviceFile(file, chkIdS, chkIdE)
+      .uploadASS13100(file, chkId)
       .pipe(finalize(() => (this.uploading = false)))
       .subscribe({
         next: res => {
-          if (res && (res as { Status?: string }).Status === '0000') {
-            const message = (res as { Message?: string }).Message ?? '上傳成功';
-            this.messageService.successBubble(message);
+          if (res?.Status === '0000' && (res.Data?.ErrCode ?? 0) === 0) {
+            this.messageService.successBubble(res.Message ?? '上傳成功');
             this.uploadDialogVisible = false;
+            this.selectedUploadFile = null;
+            this.uploadChkIdControl.setValue('');
             this.fileUpload?.clearFiles();
+            return;
           }
+
+          this.messageService.errorBubble(res.Data?.ErrMsg ?? res.Message ?? '上傳失敗');
         },
       });
   }
 
   /** 確認上傳盤點機檔案 */
   confirmUpload(): void {
-    // 目前上傳流程改由 app-file-upload 的 uploadHandler 觸發，這裡僅關閉視窗並清空檔案。
     this.uploadDialogVisible = false;
+    this.uploadChkIdControl.setValue('');
+    this.selectedUploadFile = null;
     this.fileUpload?.clearFiles();
   }
 

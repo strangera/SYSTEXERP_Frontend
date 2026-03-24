@@ -161,17 +161,17 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
     this.initializePage('ASS13100', this.dataForm);
 
     const row = this.rowdata as { CHK_ID?: string; ID?: number; CHK_DATE?: string; STATUS?: string } | null | undefined;
-    const chkId = row?.CHK_ID;
+    const id = row?.ID;
 
-    if (chkId) {
-      // 編輯/明細：有清點單號，載入明細
+    if (id != null) {
+      // 編輯/明細：有主檔 ID，載入明細
       this.dataForm.patchValue({
-        CHK_ID: chkId,
+        CHK_ID: row?.CHK_ID ?? null,
         CHK_DATE: row?.CHK_DATE ? new Date(row.CHK_DATE) : null,
         STATUS: row?.STATUS ?? null,
       });
       this.loadDetailDropdowns();
-      this.loadDetail(chkId);
+      this.loadDetail(id);
     } else if (this.crudstatus === CRUDStatus.Create) {
       // 新增模式：顯示新增 panel，不導回查詢頁
       this.loadCreatePanelDropdowns();
@@ -194,7 +194,8 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
         }
       });
     } else {
-      // 無清點單號且非新增（異常），導回查詢頁
+      // 無主檔 ID 且非新增（異常），導回查詢頁
+      this.messageService.warnBubble('缺少主檔 ID，無法載入明細');
       this.router.navigate(['account/ass/ass13100']);
     }
   }
@@ -378,22 +379,30 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
   }
 
   /** 載入清點單明細 */
-  private loadDetail(chkId: string): void {
+  private loadDetail(id: number): void {
     this.loading = true;
     this.mainIdFromDetail = null;
     this.service
-      .detailASS13100(chkId)
+      .queryDetailASS13100({ ID: id })
       .pipe(finalize(() => (this.loading = false)))
       .subscribe(res => {
         if (res?.Status === '0000' && res.Data) {
-          this.detailRows = res.Data.Details ?? [];
+          const details = res.Data.Details ?? [];
+          this.detailRows = details.map(detail => ({
+            ...detail,
+            CHK_STATUS: detail.CHK_STATUS ?? null,
+            LOCATION_ID: detail.LOCATION_ID ?? null,
+            NOTES: detail.NOTES ?? null,
+          }));
+
+          const master = res.Data.Master;
           this.dataForm.patchValue({
-            CHK_ID: res.Data.CHK_ID ?? this.dataForm.getRawValue().CHK_ID,
-            CHK_DATE: res.Data.CHK_DATE ? new Date(res.Data.CHK_DATE) : this.dataForm.getRawValue().CHK_DATE,
-            STATUS: res.Data.STATUS ?? this.dataForm.getRawValue().STATUS,
+            CHK_ID: master?.CHK_ID ?? this.dataForm.getRawValue().CHK_ID,
+            CHK_DATE: master?.CHK_DATE ? new Date(master.CHK_DATE) : this.dataForm.getRawValue().CHK_DATE,
+            STATUS: master?.STATUS ?? this.dataForm.getRawValue().STATUS,
           });
-          if (res.Data.ID != null) {
-            this.mainIdFromDetail = res.Data.ID;
+          if (master?.ID != null) {
+            this.mainIdFromDetail = master.ID;
           }
           this.originalDetailRows = JSON.parse(JSON.stringify(this.detailRows));
         } else {

@@ -3,13 +3,15 @@ import { Injectable } from '@angular/core';
 import {
   ASS13100ApproveRequest,
   ASS13100DeleteRequest,
-  ASS13100DetailResponse,
   ASS13100ExportPDFRequest,
   ASS13100QueryRow,
   ASS13100UpdateRequest,
   InsertASS13100Request,
   InsertASS13100ResponseData,
+  QueryDetailASS13100Request,
+  QueryDetailASS13100ResponseData,
   QueryASS13100Request,
+  UploadASS13100ResponseData,
 } from '@pages/ass/ass13100/ass13100.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable } from 'rxjs';
@@ -40,10 +42,9 @@ export class ASS13100Service {
 
   /**
    * 取得單筆清點單明細（編輯 / 明細頁）
-   * 若後端無此 API，請與後端確認規格或改以 query 帶 CHK_ID 取得。
    */
-  detailASS13100(chkId: string): Observable<ApiResponse<ASS13100DetailResponse>> {
-    return this.http.post<ApiResponse<ASS13100DetailResponse>>(`${this.apiUrl}/detailASS13100`, { CHK_ID: chkId });
+  queryDetailASS13100(body: QueryDetailASS13100Request): Observable<ApiResponse<QueryDetailASS13100ResponseData>> {
+    return this.http.post<ApiResponse<QueryDetailASS13100ResponseData>>(`${this.apiUrl}/queryDetailASS13100`, body);
   }
 
   /**
@@ -79,14 +80,13 @@ export class ASS13100Service {
 
   /**
    * 上傳盤點機檔案
-   * 後端正式 API 規格尚未定稿，參數先與 export 一致使用 CHK_ID_S / CHK_ID_E。
    */
-  uploadASS13100DeviceFile(file: File, chkIdS: string, chkIdE: string): Observable<ApiResponse<unknown>> {
+  uploadASS13100(file: File, chkId: string): Observable<ApiResponse<UploadASS13100ResponseData>> {
     const formData = new FormData();
-    formData.append('file', file, file.name);
-    formData.append('CHK_ID_S', chkIdS);
-    formData.append('CHK_ID_E', chkIdE);
+    formData.append('FILENAME', file.name);
+    formData.append('CHK_ID', chkId);
+    formData.append('File', file, file.name);
 
-    return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/uploadASS13100DeviceFile`, formData);
+    return this.http.post<ApiResponse<UploadASS13100ResponseData>>(`${this.apiUrl}/uploadASS13100`, formData);
   }
 }
