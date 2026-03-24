@@ -342,14 +342,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
           header: 'D16',
           groupField: 'groupField2',
           format: (v: unknown) => String(v ?? '') + '%',
-          align: 'right' as const,
+          textAlign: 'right',
         },
         {
           field: 'fare_rate_d17' as const,
           header: 'D17',
           groupField: 'groupField2',
           format: (v: unknown) => String(v ?? '') + '%',
-          align: 'right' as const,
+          textAlign: 'right',
         },
       ]
       : [];
@@ -417,6 +417,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         format: v => this.isFormReadable ? String(v) + '%' : v,
         width: '4rem',
         textAlign: 'right',
+        cellClass: (row: TLS26080EditTable) => (this.isImportContractRateMismatchD16(row) ? 'text-red-500' : ''),
       },
       {
         field: 'tpy_rate_D17',
@@ -431,6 +432,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         format: v => this.isFormReadable ? String(v) + '%' : v,
         width: '4rem',
         textAlign: 'right',
+        cellClass: (row: TLS26080EditTable) => (this.isImportContractRateMismatchD17(row) ? 'text-red-500' : ''),
       },
       ...fareContractCols,
       {
@@ -1035,6 +1037,25 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public onformValueChanged(event: unknown): void {
     this.logger.debug(`onformValueChanged:`, [event]);
+  }
+
+  /** 檢視模式下，匯入分攤 D16 費用比率與合約分攤不一致時標紅。 */
+  private isImportContractRateMismatchD16(row: TLS26080EditTable): boolean {
+    if (!this.isFormReadable) return false;
+    return this.importAndContractRatesDiffer(row.tpy_rate_D16, row.fare_rate_d16);
+  }
+
+  /** 檢視模式下，匯入分攤 D17 費用比率與合約分攤不一致時標紅。 */
+  private isImportContractRateMismatchD17(row: TLS26080EditTable): boolean {
+    if (!this.isFormReadable) return false;
+    return this.importAndContractRatesDiffer(row.tpy_rate_D17, row.fare_rate_d17);
+  }
+
+  private importAndContractRatesDiffer(imported: number | null | undefined, contract: number | null | undefined): boolean {
+    const a = Number(imported);
+    const b = Number(contract);
+    if (Number.isNaN(a) || Number.isNaN(b)) return false;
+    return Number(a.toFixed(2)) !== Number(b.toFixed(2));
   }
 
   private isRowEditable(rowData: TLS26080EditTable): boolean {
