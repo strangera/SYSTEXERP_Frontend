@@ -194,7 +194,7 @@ export class TLS55020CRUComponent extends BasicCruPageComponent<Tls55020MasterDa
       }
       const submitData: Tls55020UpdateRequest = {
         SYS_StoreNo: this.user.SYS_StoreNo || '',
-        TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
+        TXN_Date: this.datePipe.transform(frm.getRawValue().TXN_Date, 'yyyy-MM-dd') || '',
         ECR_No: this.rowdata?.ECR_No || '',
         TXN_No: this.rowdata?.TXN_No || 0,
         POS5006_ID: this.rowdata?.ID || 0, // 主檔 ID

@@ -28,7 +28,7 @@ import { CellInput } from './table-edit-cell.model';
               [editable]="true"
               [loading]="internalLoading"
               [virtualScroll]="true"
-              [virtualScrollItemSize]="40"
+              [virtualScrollItemSize]="37"
               [showClear]="cellInput.col.showClear ?? true"
               [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }"

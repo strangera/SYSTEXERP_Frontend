@@ -3,7 +3,7 @@
   (onSort)="onSort($event)" (sortFunction)="customSort($event)" [customSort]="!lazy" [resetPageOnSort]="false"
   [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn" [resizableColumns]="true"
   [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [selectAll]="isAllSelected"
+  styleClass="p-datatable-sm p-datatable-gridlines" [selectAll]="isAllSelected"
   (selectAllChange)="onSelectAllChange($event)" (selectionChange)="onSelectionChange($event)"
   [rowSelectable]="rowSelectableWrapper" [lazy]="lazy" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
   [virtualScrollOptions]="{
