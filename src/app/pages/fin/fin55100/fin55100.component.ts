@@ -36,12 +36,12 @@ import { FileExportService } from './../../../shared/service/file-export.service
 export class FIN55100Component extends BasicQueryPageComponent<QueryFIN55100Response> implements OnInit {
   // 表單結構與 FIN55100 相同
   queryForm = this.formBuilder.group({
-    DateFrom: this.formBuilder.nonNullable.control(new Date('2025-10-01'), [Validators.required]),
-    DateTo: this.formBuilder.nonNullable.control(new Date('2025-10-31'), [Validators.required]),
-    CmpDateFrom: this.formBuilder.nonNullable.control(new Date('2024-10-01'), [Validators.required]),
-    CmpDateTo: this.formBuilder.nonNullable.control(new Date('2024-10-31'), [Validators.required]),
+    DateFrom: this.formBuilder.nonNullable.control(null, [Validators.required]),
+    DateTo: this.formBuilder.nonNullable.control(null, [Validators.required]),
+    CmpDateFrom: this.formBuilder.nonNullable.control(null, [Validators.required]),
+    CmpDateTo: this.formBuilder.nonNullable.control(null, [Validators.required]),
     // 類別預設為 '1' (明細)
-    Ledger_MD: this.formBuilder.nonNullable.control('1' as '0' | '1', [Validators.required]),
+    Ledger_MD: this.formBuilder.nonNullable.control(null, [Validators.required]),
     OrgId: this.formBuilder.control<string | null>(null),
     ProjectNo: this.formBuilder.control<string | null>(null),
     ShowZero: this.formBuilder.nonNullable.control(false),
