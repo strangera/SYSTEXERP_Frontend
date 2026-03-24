@@ -297,6 +297,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
             ...v,
             tpy_rate_D16: Number(v.tpy_rate_D16) * 100,
             tpy_rate_D17: Number(v.tpy_rate_D17) * 100,
+            fare_rate_d16: Number(v.fare_rate_d16 ?? 0) * 100,
+            fare_rate_d17: Number(v.fare_rate_d17 ?? 0) * 100,
             approval_action: v.pod_status === '1' ? '1' : '0',
           })));
           this.totalRecords.set(res.TotalCount || 0);
@@ -333,7 +335,24 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   // 專櫃資料表
   public readonly counterColumns = computed<Column[]>(() => {
     const tltIdMap = this.tltIdList();
-    const tltOpts = this.service.tltTalentOptions();
+    const fareContractCols = this.isFormReadable
+      ? [
+        {
+          field: 'fare_rate_d16' as const,
+          header: 'D16',
+          groupField: 'groupField2',
+          format: (v: unknown) => String(v ?? '') + '%',
+          align: 'right' as const,
+        },
+        {
+          field: 'fare_rate_d17' as const,
+          header: 'D17',
+          groupField: 'groupField2',
+          format: (v: unknown) => String(v ?? '') + '%',
+          align: 'right' as const,
+        },
+      ]
+      : [];
 
     return [
       {
@@ -348,14 +367,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         validate: [validateRequired, this.duplicateVal.bind(this)],
         disabled: (r) => r.pod_status !== '0',
       },
-      // {
-      //   field: 'tlt_name',
-      //   header: '專櫃名稱',
-      //   format: (v, i, r) => {
-      //     const opts = tltOpts;
-      //     return opts?.find(opt => opt.value === r.tlt_no)?.['Name'] ?? '';
-      //   }
-      // },
+      {
+        field: 'tlt_name',
+        header: '櫃位名稱',
+        format: (v, _i, r) =>
+          (v != null && String(v) !== '' ? String(v) : this.service.tltTalentMap().get(r.tlt_no)?.['Name']) ?? '',
+      },
       {
         field: 'tlt_id',
         header: '抽成類別',
@@ -415,18 +432,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         width: '4rem',
         textAlign: 'right',
       },
-      // {
-      //   field: 'tpy_rate_3',
-      //   header: 'D16',
-      //   textAlign: 'right',
-      //   groupField: 'groupField2',
-      // },
-      // {
-      //   field: 'tpy_rate_4',
-      //   header: 'D17',
-      //   textAlign: 'right',
-      //   groupField: 'groupField2',
-      // },
+      ...fareContractCols,
       {
         field: 'pod_status',
         header: '審核狀態',
@@ -476,10 +482,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     ];
   });
 
-  public readonly counterColumnsGroup: ColumnGroup[] = [
+  public readonly counterColumnsGroup = computed<ColumnGroup[]>(() => [
     { field: 'groupField1', header: '匯入分攤' },
-    // { field: 'groupField2', header: '合約建檔' },
-  ];
+    ...(this.isFormReadable ? [{ field: 'groupField2', header: '合約分攤' }] : []),
+  ]);
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
@@ -608,19 +614,23 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         pod_busdate: d.pod_busdate!,
         pod_back_sdate: d.pod_back_sdate!,
         pod_back_edate: d.pod_back_edate!,
-        TALPORDERD_VOUCHERDetails: validTableData.map(item => ({
-          ...item,
-          pod_no: d.pod_no ?? '',
-          tlt_no: this.service.tltTalentMap().get(item.tlt_no)?.value ?? '',
-          tlt_name: this.service.tltTalentMap().get(item.tlt_no)?.['Name'] ?? '',
-          calc_date_type: item.calc_date_type ?? 'Y',
-          cap_item_D16: item.cap_item_D16 ?? 'D16',
-          cap_item_D17: item.cap_item_D17 ?? 'D17',
-          tpy_rate_D16: item.tpy_rate_D16 / 100,
-          tpy_rate_D17: item.tpy_rate_D17 / 100,
-          approved_date: item.approved_date ? new Date(item.approved_date).toISOString() : null,
-          pod_status: item.pod_status ?? '0',
-        })),
+        // fare_rate_* 僅 queryTLS26080_Detail 使用，不寫入 insert／update
+        TALPORDERD_VOUCHERDetails: validTableData.map(item => {
+          const { fare_rate_d16: _fr16, fare_rate_d17: _fr17, ...row } = item;
+          return {
+            ...row,
+            pod_no: d.pod_no ?? '',
+            tlt_no: this.service.tltTalentMap().get(item.tlt_no)?.value ?? '',
+            tlt_name: this.service.tltTalentMap().get(item.tlt_no)?.['Name'] ?? '',
+            calc_date_type: item.calc_date_type ?? 'Y',
+            cap_item_D16: item.cap_item_D16 ?? 'D16',
+            cap_item_D17: item.cap_item_D17 ?? 'D17',
+            tpy_rate_D16: item.tpy_rate_D16 / 100,
+            tpy_rate_D17: item.tpy_rate_D17 / 100,
+            approved_date: item.approved_date ? new Date(item.approved_date).toISOString() : null,
+            pod_status: item.pod_status ?? '0',
+          };
+        }),
       };
       const payload = Object.fromEntries(Object.entries(raw).filter(([k, v]) =>
         v !== null && v !== undefined && (!(Array.isArray(v)) || v.length > 0) && !k.startsWith('_')

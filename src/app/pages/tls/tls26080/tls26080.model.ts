@@ -44,6 +44,8 @@ export interface TLS26080DetailTable {
   tpy_rate_D16: number;        // D16 費用比率 (不含'%')
   cap_item_D17: string;        // D17
   tpy_rate_D17: number;        // D17 費用比率 (不含'%')
+  fare_rate_d16?: number;      // 合約入攤 D16 費用比率
+  fare_rate_d17?: number;      // 合約入攤 D16 費用比率
   cap_item_3?: string;         // 合約建檔 D16
   tpy_rate_3?: number;         // 合約建檔 D16 費用比率
   cap_item_4?: string;         // 合約建檔 D17
