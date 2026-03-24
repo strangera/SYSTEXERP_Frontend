@@ -211,10 +211,14 @@ export class TLS26080Service {
     if (path && !data.Success) window.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
   }
 
-  public downloadXLSXExample(): Observable<Blob> {
+  /**
+   * `GET downloadTLS26080Template`：query `HaveData` 為 true 時下載含範例資料之檔案，false 為空白範本。
+   */
+  public downloadXLSXExample(haveData: boolean): Observable<Blob> {
     let params = new HttpParams();
     params = params.set('tlt_bdate', this.formatQueryDate(this.dateS) || '');
     params = params.set('tlt_edate', this.formatQueryDate(this.dateE) || '');
+    params = params.set('HaveData', haveData ? 'true' : 'false');
 
     return this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080Template`, {
       params,
@@ -222,51 +226,15 @@ export class TLS26080Service {
     }).pipe(
       take(1),
       tap(res => {
-        // 建立下載連結
         const url = window.URL.createObjectURL(res);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'TLS26080_範例檔案.xlsx';
+        link.download = haveData ? 'TLS26080_範例檔案.xlsx' : 'TLS26080_空白範本.xlsx';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-        this.logger.debug(`範例下載`);
-      })
-    );
-  }
-
-  /**
-   * 匯出空白 Excel 範本（後端規格未定，以下為暫定實作）
-   * TODO TLS26080：待後端確認
-   * - endpoint 路徑是否為 downloadTLS26080BlankTemplate（或 export… 等命名）
-   * - HTTP 方法：目前比照範例檔使用 GET；若改 POST 需調整並補 model
-   * - query / body：是否需 tlt_bdate、tlt_edate，或無參數
-   * - 下載檔名是否由後端 Content-Disposition 決定
-   * - 錯誤時回傳 JSON blob 與成功檔案之區分方式
-   */
-  public downloadBlankXLSXTemplate(): Observable<Blob> {
-    let params = new HttpParams();
-    // TODO TLS26080：若後端空白範本不需日期參數，移除此兩行
-    params = params.set('tlt_bdate', this.formatQueryDate(this.dateS) || '');
-    params = params.set('tlt_edate', this.formatQueryDate(this.dateE) || '');
-
-    return this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080BlankTemplate`, {
-      params,
-      responseType: 'blob'
-    }).pipe(
-      take(1),
-      tap(res => {
-        const url = window.URL.createObjectURL(res);
-        const link = document.createElement('a');
-        link.href = url;
-        // TODO TLS26080：與 PM/後端確認下載檔名
-        link.download = 'TLS26080_空白範本.xlsx';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        this.logger.debug(`空白範本下載`);
+        this.logger.debug(haveData ? `範例下載` : `空白範本下載`);
       })
     );
   }
