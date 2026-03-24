@@ -6,9 +6,12 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
+import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { finalize } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -20,10 +23,6 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IAPS1003Item, IDropdownItem } from './../../../service/utility/dropDownList.service';
-
-import { FileExportService } from '@shared/service/file-export.service';
-import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
-import { finalize } from 'rxjs';
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
@@ -119,21 +118,19 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
       }));
     });
 
-    this.dropDownListService.queryAPS1003DropDownList({ CAP_ItemList: [] }) // 參數照 interface
-      .subscribe((res) => {
-        this.CAP_ItemOptions = (res?.Data || []).map((item: any) => ({
-          CAP_Item: item.CAP_Item, // 扣款項目代碼
-          CAP_Name: item.CAP_Name, // 顯示名稱
-          value: item.CAP_Item,    // 綁定值
-          label: `${item.CAP_Item}-${item.CAP_Name}`, // 顯示文字
-          No: item.CAP_Item,       // 必須的屬性
-          Name: item.CAP_Name,     // 必須的屬性
-          AccNo: item.AccNo,       // 會計科目
-          GUI_FLAG: item.GUI_FLAG, // 是否開立發票
-          CAP_TaxType: item.CAP_TaxType, // 課稅別
-          CAP_Type: item.CAP_Type,       // 扣款類型
+    this.dropDownListService.queryAPS1003DropDownList({ CAP_ItemList: [] }).subscribe((res) => {
+      this.CAP_ItemOptions = (res?.Data || [])
+        .filter((item: any) => item.CAP_Type !== '0')
+        .map(({ CAP_Item, CAP_Name, ...rest }) => ({
+          ...rest,
+          CAP_Item,
+          CAP_Name,
+          value: CAP_Item,
+          label: `${CAP_Item}-${CAP_Name}`,
+          No: CAP_Item,
+          Name: CAP_Name
         }));
-      });
+    });
 
     this.dropDownListService.queryGLS1005_DropDownList().subscribe((res) => {
       this.AccNoOptions = (res?.Data || []).map((item: any) => ({
