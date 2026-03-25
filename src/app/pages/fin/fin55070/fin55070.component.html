@@ -5,70 +5,45 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="日期"
-              controlName="accountsummary"
-              [startControl]="queryForm.controls.DateFrom"
-              [endControl]="queryForm.controls.DateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="日期" controlName="accountsummary"
+              [startControl]="queryForm.controls.DateFrom" [endControl]="queryForm.controls.DateTo"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="類別"
-              [control]="queryForm.controls.Ledger_MD"
-              [options]="typeOptions"
-              [submitted]="submitted"
-               groupname="Ledger_MD"
-            ></app-radiobutton>
+            <app-radiobutton label="類別" [control]="queryForm.controls.Ledger_MD" [options]="typeOptions"
+              [submitted]="submitted" groupname="Ledger_MD"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="部門" controlName="OrgId" [options]="ORG_IDOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.OrgId" [submitted]="submitted"></app-dropdown>
-            </div>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <div class="grid p-fluid">
-  <div class="col pb-0">
-     <app-dropdown label="科目代號" controlName="AccNoFrom" [options]="AccNo_Options | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.AccNoFrom" [submitted]="submitted"></app-dropdown>
-  </div>
-  <div class="flex flex-column justify-content-center align-items-center pt-3" >
-    <span class="text-center" >~</span>
-  </div>
-  <div class="col pb-0">
-    <app-dropdown label="科目代號" controlName="AccNoTo" [options]="AccNo_Options | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.AccNoTo" [submitted]="submitted"></app-dropdown>
-  </div>
-</div>
+              <div class="col pb-0">
+                <app-dropdown label="科目代號" controlName="AccNoFrom" [options]="AccNo_Options | async" optionLabel="label"
+                  optionValue="value" [control]="queryForm.controls.AccNoFrom" [submitted]="submitted"></app-dropdown>
+              </div>
+              <div class="flex flex-column justify-content-center align-items-center pt-3">
+                <span class="text-center">~</span>
+              </div>
+              <div class="col pb-0">
+                <app-dropdown label="科目代號" controlName="AccNoTo" [options]="AccNo_Options | async" optionLabel="label"
+                  optionValue="value" [control]="queryForm.controls.AccNoTo" [submitted]="submitted"></app-dropdown>
+              </div>
+            </div>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="會科是否全部顯示"
-              [control]="queryForm.controls.ShowAll"
-              [options]="display"
-              [submitted]="submitted"
-               groupname="ShowAll"
-            ></app-radiobutton>
+            <app-radiobutton label="會科是否全部顯示" [control]="queryForm.controls.ShowAll" [options]="display"
+              [submitted]="submitted" groupname="ShowAll"></app-radiobutton>
           </div>
-
           <div class="col-12 md:col-4 lg:col-4">
-            <p-checkbox
-  label="列印簽核欄"
-  [formControl]="queryForm.controls.PrintSign"
-  binary="true">
-</p-checkbox>
-
-
+            <p-checkbox label="列印簽核欄" [formControl]="queryForm.controls.PrintSign" binary="true">
+            </p-checkbox>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -80,69 +55,57 @@
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-12">
-    <p-table 
-    id="fin55070Table"
-    [columns]="columns" 
-    [value]="data" 
-    scrollable="true" 
-    scrollHeight="400px" 
-    [virtualScroll]="data.length > 20"
-    [virtualScrollItemSize]="46">
-          <ng-template pTemplate="caption">
-            <header>
-      <div class="flex justify-content-end align-items-center gap-2">
+  <p-table #dt id="fin55070Table" [columns]="columns" [value]="data" scrollable="true" scrollHeight="450px"
+    [virtualScroll]="data.length > 0" [virtualScrollItemSize]="25">
+    <ng-template pTemplate="caption">
+      <div class="flex justify-content-end align-items-center gap-2 p-2">
         <p-button styleClass="p-2" label="產出試算表.PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
           [disabled]="data.length === 0" [loading]="false"></p-button>
         <p-button styleClass="p-2" label="產出試算表.XLSX" [loading]="btnLoading" icon="pi pi-file" (click)="onExportXLSX()"
           [disabled]="data.length === 0" [loading]="false"></p-button>
       </div>
-    </header>
-          </ng-template>
-        <ng-template pTemplate="header" let-columns>
-            <tr>
-                <th style="width:6rem">序號</th>
-                <th *ngFor="let col of columns" style="min-width: 55px">
-                    {{col.header}}
-                </th>
-            </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
-  <tr style="height:46px">
-    <td>{{ rowIndex + 1 }}</td>
-    <td *ngFor="let col of columns"
-        [ngClass]="{
+    </ng-template>
+    <ng-template pTemplate="header" let-columns>
+      <tr>
+        <th style="width:6rem">序號</th>
+        <th *ngFor="let col of columns" style="min-width: 55px">
+          {{col.header}}
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
+      <tr style="height:25px">
+        <td>{{ rowIndex + 1 }}</td>
+        <td *ngFor="let col of columns" [ngClass]="{
           'text-right': isNumericColumn(col.field)
         }">
-      <ng-container *ngIf="isNumericColumn(col.field); else normalCell">
-        {{ rowData[col.field] | number:'1.0-0' }}
-      </ng-container>
-      <ng-template #normalCell>
-        {{ rowData[col.field] }}
-      </ng-template>
-    </td>
-  </tr>
-</ng-template>
+          <ng-container *ngIf="isNumericColumn(col.field); else normalCell">
+            {{ rowData[col.field] | number:'1.0-0' }}
+          </ng-container>
+          <ng-template #normalCell>
+            {{ rowData[col.field] }}
+          </ng-template>
+        </td>
+      </tr>
+    </ng-template>
 
-          <ng-template pTemplate="footer" let-columns>
-  <tr>
-    <td></td>
-    <td></td>
-    <td  class="text-center font-bold">總計：</td>
-    <td class="text-right">{{ getColumnSum('Prior_DAmt') | number:'1.0-0' }}</td>
-    <td class="text-right">{{ getColumnSum('Prior_CAmt') | number:'1.0-0' }}</td>
-    <td class="text-right">{{ getColumnSum('Curr_DAmt') | number:'1.0-0' }}</td>
-    <td class="text-right">{{ getColumnSum('Curr_CAmt') | number:'1.0-0' }}</td>
-    <td class="text-right">{{ getColumnSum('Total_DAmt') | number:'1.0-0' }}</td>
-    <td class="text-right">{{ getColumnSum('Total_CAmt') | number:'1.0-0' }}</td>
-  </tr>
-  <tr>
-    <td colspan="9" class="text-right font-bold">
-      總筆數: {{ data.length }}
-    </td>
-  </tr>
-</ng-template>
-
-    </p-table>
-  </div>
+    <ng-template pTemplate="footer" let-columns>
+      <tr>
+        <td></td>
+        <td></td>
+        <td class="text-center font-bold">總計：</td>
+        <td class="text-right">{{ getColumnSum('Prior_DAmt') | number:'1.0-0' }}</td>
+        <td class="text-right">{{ getColumnSum('Prior_CAmt') | number:'1.0-0' }}</td>
+        <td class="text-right">{{ getColumnSum('Curr_DAmt') | number:'1.0-0' }}</td>
+        <td class="text-right">{{ getColumnSum('Curr_CAmt') | number:'1.0-0' }}</td>
+        <td class="text-right">{{ getColumnSum('Total_DAmt') | number:'1.0-0' }}</td>
+        <td class="text-right">{{ getColumnSum('Total_CAmt') | number:'1.0-0' }}</td>
+      </tr>
+      <tr>
+        <td colspan="9" class="text-right font-bold">
+          總筆數: {{ data.length }}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 </div>
