@@ -133,7 +133,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     pod_no: [],
     CAP_Type: [],
     tpy_date: [null as null | Date, [Validators.required]],
-    CAP_Item: [],
+    CAP_Item: [null, [Validators.required]],
     CAP_Name: [{ value: null as string | null, disabled: true }],
     tpy_net: [],
     cap_taxtype: [{ value: null as string | null, disabled: true }],
@@ -579,12 +579,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           header: '扣款日期',
           type: 'date',
           width: '8rem',
-          validate: [
-            (value: any, rowData: any, data: any[], field: string, header: string) => {
-              const isValid = !!value;
-              return { isValid, errorMessage: isValid ? [] : [`${header}為必填`] };
-            }
-          ]
+          validate: [validateRequired]
         },
         {
           field: 'CAP_Item',
@@ -593,6 +588,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           width: '16rem',
           optionLabel: 'label',
           optionValue: 'value',
+          validate: [validateRequired],
           options: () => {
             return this.CAP_ItemOptions.map(item => ({
               value: item.CAP_Item,
