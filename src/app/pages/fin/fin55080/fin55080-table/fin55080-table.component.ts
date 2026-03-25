@@ -1,8 +1,9 @@
 import { NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core'; // 增加 OnChanges, SimpleChanges
+import { Component, inject, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core'; // 增加 OnChanges, SimpleChanges
 import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { NavigationHelperService } from 'src/app/reports/services/navigation-helper.service';
 
 export interface Finfin55080Column {
   field: string;
@@ -77,32 +78,15 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
     const groupKey = rowData.LTYPE_ID;
     return this.groupedFooters[groupKey] || [];
   }
+  // 新版注入方式navHelper
+  private readonly navHelper = inject(NavigationHelperService);
   onNameClick(rowData: any) {
-    // 只有明細行 (有 STYPE_ID) 才允許點擊
     if (!rowData.STYPE_ID) return;
-
-    // 取得乾淨的 ID
-    const accNo = rowData.STYPE_ID;
-
-    // 從 historyRequestBody 取得日期
-    const dateFrom = this.historyRequestBody?.DateFrom;
-    const dateTo = this.historyRequestBody?.DateTo;
-
-    // 1. 使用 router 建立路由樹 (UrlTree)
-    const urlTree = this.router.createUrlTree(['/reports/fin/fin55080'], {
-      queryParams: {
-        AccNo: accNo,
-        DateFrom: dateFrom,
-        DateTo: dateTo
-      }
+    this.navHelper.openInNewTab('/reports/fin/fin55080', {
+      AccNo: rowData.STYPE_ID,
+      DateFrom: this.historyRequestBody?.DateFrom,
+      DateTo: this.historyRequestBody?.DateTo
     });
-
-    // 2. 將 UrlTree 序列化成字串路徑 (例如: /account/fin/fin55080cru?AccNo=...&DateFrom=...)
-    const url = this.router.serializeUrl(urlTree);
-
-    // 3. 使用 window.open 開新分頁
-    // '_blank' 代表開新分頁，'noopener' 是基於安全性考量建議加上
-    window.open(url, '_blank', 'noopener');
   }
 }
 const formatAmount2 = (val: number | string | null | undefined): string => {
