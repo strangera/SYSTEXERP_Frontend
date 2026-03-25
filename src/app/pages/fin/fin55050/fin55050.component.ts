@@ -13,6 +13,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 import { ExportFIN55050Payload, FIN55050Detail, FIN55050Service } from '../../../service/api/fin/fin55050.service';
@@ -51,7 +52,8 @@ export interface GroupedFIN55050Detail extends FIN55050Detail {
     TableSubheaderComponent,
     InputTextRangeComponent,
     DropdownRangeComponent,
-    DropdownComponent
+    DropdownComponent,
+    ButtonModule
   ]
 })
 export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> implements OnInit {
