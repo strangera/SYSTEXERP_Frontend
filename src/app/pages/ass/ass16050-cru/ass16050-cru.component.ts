@@ -1,13 +1,18 @@
 import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+// import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { AuthService } from '../../../service/system/auth.service';
+// import { AuthService } from '../../../service/system/auth.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+// import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
+import { ASS16050Data } from '@service/api/ass/ass16050.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateDuplicate, validateMaxLength, validateMaxNumber } from '@shared/componentkit/table-edit/validate-field.model';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -19,37 +24,37 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
   templateUrl: './ass16050-cru.component.html',
   styleUrls: ['./ass16050-cru.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, NgFor, NgIf, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, NgFor, NgIf, TranslateModule, TableEditComponent,]
 })
-export class ASS16050CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
-
+export class ASS16050CRUComponent extends BasicCruPageComponent<ASS16050Data> implements OnInit {
+  accordionTabCss = '';
+  data: ASS16050Data[] = [];
+  selectedRows: ASS16050Data[] = [];
+  deleteRows: ASS16050Data[] = [];
+  columns: EditColumn[] = [
+    { field: 'itemCode', header: '品項編碼', type: 'dropdown', validate: [validateDuplicate, validateMaxLength(10)] },
+    { field: 'quantity', header: '申請數量', type: 'inputNumber', maxLength: 8, validate: [validateMaxNumber(99999999)] },
+    { field: 'itemRemark', header: '已發數量', type: 'inputNumber', validate: [validateMaxNumber(99999999)] },
+  ];
 
   // 表單定義
   dataForm = this.formBuilder.nonNullable.group({
-    Warehouse: ['', Validators.required], // 倉別
-    Receiptnumber: [''], // 驗收單號
-    ApplicantCode: [''], // 申請人編號
-    ApplicationDate: [''], // 申請日期
-    PurchaseOrderStatus: [''], // 採購單狀態
-    DepartmentCode: [''], // 部門代號
-    ShippingDate: [''], // 發料日期
-    // 動態新增項目
-    items: this.formBuilder.array([
-      this.createItem() // 初始項目
-    ]),
+    IssueNo: [{ value: '', disabled: true }], // 領用單號
+    DepartmentCode: [{ value: '', disabled: true }], // 部門代號
+    ApplicantCode: [{ value: '', disabled: true }], // 申請人代號
+    ApplicationDate: [{ value: '', disabled: true }], // 申請日期
+    ShippingDate: [{ value: '', disabled: true }], // 發料日期
+    ReceiptStatus: [{ value: '', disabled: true }], // 驗收單狀態
+    DetailCount: [{ value: '', disabled: true }], // 明細筆數
   });
 
   // 下拉選項
-  Departmentcode: any[] = []; // 部門代號選項
-  Kurabe: any[] = [
+  Departmentcode = []; // 部門代號選項
+  Kurabe = [
     { value: 1, label: '001' },
     { value: 2, label: '002' },
   ];
-  Itemnumber: any[] = [
+  Itemnumber = [
     { value: 1, label: '3A24210000001' },
     { value: 2, label: '3A24210000002' },
     { value: 3, label: '3A24210000003' },
@@ -64,10 +69,10 @@ export class ASS16050CRUComponent implements OnInit {
 
   // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
+    // private router: Router,
+    // private formBuilder: FormBuilder,
+    // private messageService: NotificationService,
+    // private authService: AuthService,
     private translate: TranslateService,
   ) {
     super(); // 呼叫父類建構子
@@ -76,13 +81,12 @@ export class ASS16050CRUComponent implements OnInit {
   ngOnInit(): void {
     // 初始化程式
     this.ProgNo = '310044';
+    this.initializePage('ASS16050', this.dataForm);
 
     // 初始化使用者權限
-
-
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,
-      rowdata: any,
+      // rowdata: any,
     };
 
     // 根據狀態決定表單邏輯
@@ -98,41 +102,25 @@ export class ASS16050CRUComponent implements OnInit {
         this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
 
-        this.Edit(state.rowdata);
+        // this.Edit(state.rowdata);
         break;
       case CRUDStatus.Read:
         this.formTitle = 'display-conditions';
         this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
+        // this.Read(state.rowdata);
         break;
     }
-  }
 
-  // 取得動態新增項目的表單組
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  // 動態取得每個項目的控制項
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-
-  // 創建一個新的動態項目
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      ItemCode: [''], // 品項編碼
-      Unit: [''], // 單位
-      RequestedQuantity: [''], // 申請數量
-      ExpectedQuantity: [''], // 應發數量
-      ActualQuantity: [''], // 實發數量
-      Description: [''], // 說明
+    // 模擬從 API 獲取資料
+    this.dataForm.patchValue({
+      IssueNo: 'REC2600001-01',
+      DepartmentCode: '時薪測試人員',
+      ApplicantCode: '人資Team',
+      ApplicationDate: '2023/01/01',
+      ShippingDate: '2023/01/03',
+      ReceiptStatus: '領用申請',
+      DetailCount: '1',
     });
-  }
-
-  // 動態移除項目
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
   }
 
   // 編輯狀態下的讀取方法
@@ -144,11 +132,6 @@ export class ASS16050CRUComponent implements OnInit {
   Read(rowdata: any) {
     this.dataForm.patchValue(rowdata);
     this.dataForm.disable();
-  }
-
-  // 動態新增一個項目
-  onAddItem(): void {
-    this.items.push(this.createItem());
   }
 
   // 表單提交邏輯
@@ -184,8 +167,23 @@ export class ASS16050CRUComponent implements OnInit {
     this.onSubmit(frm);
   }
 
-  // 取消操作
-  onCancel() {
-    this.router.navigate(['ASS1000/ASS16050']);
+  resetTable() {
+    this.data = [];
+    this.selectedRows = [];
   }
+
+  // 刪除資料的方法
+  onDelete(rows: ASS16050Data[]) {
+    // 將畫面資料中刪除這些 row
+    this.data = this.data.filter(item => !rows.includes(item));
+    // 將有 id 的項目（表示是資料庫已存在的）加進 deleteRows，避免重複
+    rows.filter(item => item.id !== undefined && !this.deleteRows.some(d => d.id === item.id)).forEach(item => this.deleteRows.push(item));
+    // 清空選取列
+    this.selectedRows = [];
+  }
+
+  // 取消操作
+  // onCancel() {
+  //   this.router.navigate(['ASS1000/ASS16050']);
+  // }
 }

@@ -3,7 +3,7 @@
   (onSort)="onSort($event)" (sortFunction)="customSort($event)" [customSort]="!lazy" [resetPageOnSort]="false"
   [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn" [resizableColumns]="true"
   [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [selectAll]="isAllSelected"
+  styleClass="p-datatable-sm p-datatable-gridlines" [selectAll]="isAllSelected"
   (selectAllChange)="onSelectAllChange($event)" (selectionChange)="onSelectionChange($event)"
   [rowSelectable]="rowSelectableWrapper" [lazy]="lazy" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
   [virtualScrollOptions]="{
@@ -257,10 +257,12 @@
     </div>
   </ng-template>
   <ng-template pTemplate="emptymessage">
-    <tr>
-      <td [attr.colspan]="1 + columns.length + (showManage ? 1 : 0) + (showCheckBox ? 1 : 0)+ (showReorder ? 1 : 0)">
-        <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
-          <!-- {{ emptyMessage || '查無資料' }} -->
+    <tr *ngIf="hasSearched">
+      <td
+        [attr.colspan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0) + columns.length + (showManage ? 1 : 0)">
+        <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+          <i class="pi pi-search mr-2"></i>
+          {{ emptyMessage || '查無資料' }}
         </div>
       </td>
     </tr>

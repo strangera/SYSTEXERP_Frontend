@@ -240,31 +240,150 @@ export class TableEditComponent implements OnChanges {
   onCellKeydown(event: KeyboardEvent, rowIndex: number, colIndex: number): void {
     event.stopPropagation();
 
-    if (!this.enableTabInsert) return;
-    if (event.key !== 'Tab' || event.shiftKey) return;
+    const isTab = event.key === 'Tab';
+    const isEnter = event.key === 'Enter';
+
+    if (!isTab && !isEnter) return;
     if (this.disabled) return;
 
-    const lastRowIndex = this._tableData.length - 1;
-    const lastColIndex = this.columns.length - 1;
+    // --- 關鍵修正：動態判斷這是否為該行最後一個可編輯欄位 ---
+    const rowData = this._tableData[rowIndex];
+    const isLastEditableCol = this.isLastEditableColumn(rowData, rowIndex, colIndex);
+    const isLastRow = rowIndex === this._tableData.length - 1;
 
-    // 只在最後一列最後一欄時處理
-    if (rowIndex !== lastRowIndex || colIndex !== lastColIndex) return;
+    if (isEnter) {
+      event.preventDefault();
 
-    // 若已經有自動候選列，就不再自動新增，避免重複
-    const hasCandidate = this._tableData.some(r => r._isAutoInsertCandidate);
-    if (hasCandidate) return;
-
-    // 延遲執行，避免影響瀏覽器原生 Tab 行為與焦點計算
-    setTimeout(() => {
-      // 若外部有定義 insert 事件（例如 TLS2D010 打開專櫃對話框），優先觸發 insert
-      if (this.showInsert && this.insert.observers.length > 0) {
-        this.insert.emit();
-      } else if (this.canInsert) {
-        // 否則使用共用的 insertRow 新增一列
-        this.insertRow();
+      if (isLastEditableCol) {
+        if (isLastRow) {
+          // 如果是全表格最後一格，觸發轉正與自動新增
+          this.handleEnterAtLastCell(rowIndex);
+        } else {
+          // 如果只是該行最後一格，跳到下一行第一格
+          this.focusFirstInput(rowIndex + 1);
+        }
+      } else {
+        // 一般跳格
+        this.focusNextCell(rowIndex, colIndex);
       }
-      this.cdr.markForCheck();
-    });
+    } else if (isTab && !event.shiftKey && isLastEditableCol && isLastRow && this.enableTabInsert) {
+      this.handleEnterAtLastCell(rowIndex);
+    }
+  }
+  /**
+   * 判斷當前 colIndex 是否為該 row 邏輯上的最後一個可編輯欄位
+   */
+  private isLastEditableColumn(rowData: any, rowIndex: number, currentColIndex: number): boolean {
+    // 從最後一個欄位開始往前找
+    for (let i = this.columns.length - 1; i >= 0; i--) {
+      const col = this.columns[i];
+      const isHidden = typeof col.hidden === 'function' ? col.hidden(rowData, rowIndex) : col.hidden;
+
+      // 只要有 type 且沒被隱藏，它就是一個「可編輯欄位」
+      if (col.type && !isHidden) {
+        // 如果找到的第一個（也就是最後一個）索引等於當前索引，就是最後一格
+        return i === currentColIndex;
+      }
+    }
+    return false;
+  }
+  private handleEnterAtLastCell(rowIndex: number) {
+    const rowData = this._tableData[rowIndex];
+
+    // 1. 如果目前這筆是候選行，按下 Enter 表示完成輸入，將其轉正
+    if (rowData._isAutoInsertCandidate) {
+      rowData._isAutoInsertCandidate = false;
+      rowData[this.dataStatusField] = this.dataStatusValue.New;
+
+      // 發射事件讓父元件同步資料
+      this.dataChange.emit(this._tableData.filter(item => !item._isAutoInsertCandidate));
+    }
+
+    // 2. 檢查是否能新增，並執行新增
+    if (this.canInsert && !this.disabled) {
+      this.insertRow();
+      this.cdr.detectChanges(); // 強制渲染新 Row DOM
+    }
+
+    // 3. 聚焦到新行
+    setTimeout(() => {
+      this.focusFirstInput(rowIndex + 1);
+    }, 50);
+  }
+  /**
+ * 核心方法：手動計算並聚焦下一個輸入框
+ * @param rowIndex 目前行索引
+ * @param colIndex 目前列(欄位)索引
+ */
+  private focusNextCell(rowIndex: number, colIndex: number): void {
+    let nextRow = rowIndex;
+    let nextCol = colIndex + 1;
+
+    // 1. 如果這一列已經到最後一欄了，換到下一列的第一欄
+    if (nextCol >= this.columns.length) {
+      nextCol = 0;
+      nextRow++;
+    }
+
+    // 2. 檢查是否超出表格總行數
+    if (nextRow < this._tableData.length) {
+      const nextColDef = this.columns[nextCol];
+      const rowData = this._tableData[nextRow];
+
+      // 3. 判斷下一個儲存格是否為「隱藏」或「不可編輯」
+      // 如果該欄位有 hidden 邏輯且結果為 true，或者該欄位根本沒定義 type (純文字)
+      const isHidden = typeof nextColDef.hidden === 'function'
+        ? nextColDef.hidden(rowData, nextRow)
+        : nextColDef.hidden;
+
+      if (isHidden || !nextColDef.type) {
+        // 遞迴尋找再下一個可用的 Cell
+        this.focusNextCell(nextRow, nextCol);
+        return;
+      }
+
+      // 4. 執行聚焦動作
+      setTimeout(() => {
+        if (!this.table || !this.table.el) return;
+
+        const tbody = this.table.el.nativeElement.querySelector('.p-datatable-tbody');
+        if (tbody) {
+          const targetRow = tbody.children[nextRow];
+          if (targetRow) {
+            // 使用 calculateActualTdIndex 修正因 Checkbox/Reorder 產生的偏移
+            const tdIndex = this.calculateActualTdIndex(nextCol);
+            const targetTd = targetRow.children[tdIndex];
+
+            if (targetTd) {
+              // 尋找該 Td 內可聚焦的元素
+              const focusable = targetTd.querySelector(
+                'input, select, textarea, .p-dropdown-label, [tabindex="0"]'
+              ) as HTMLElement;
+
+              if (focusable) {
+                focusable.focus();
+                // 如果是 Input 順便全選內容 (ERP 使用者通常喜歡這樣，方便直接覆蓋輸入)
+                if (focusable instanceof HTMLInputElement) {
+                  focusable.select();
+                }
+              } else {
+                // 雖然有 type 但找不到可聚焦元素，繼續找下一個
+                this.focusNextCell(nextRow, nextCol);
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+  /**
+ * 輔助方法：計算真實的 td index (因為前面有序號、Checkbox、Reorder 欄位)
+ */
+  private calculateActualTdIndex(colIndex: number): number {
+    let offset = 1; // 基礎序號欄位
+    if (this.showReorder && this._tableData.length) offset++;
+    if (this.showCheckBox && !this.disabled && this.data.length) offset++;
+    return colIndex + offset;
   }
   onSelectionChange(event: any) {
     if (this.disabled) { return; }
@@ -540,23 +659,26 @@ export class TableEditComponent implements OnChanges {
   }
 
   focusFirstInput(rowIndex: number) {
-    // 這裡使用 this.table.el.nativeElement，只會在「這個元件實例」的 HTML 範圍內找
     if (!this.table || !this.table.el) return;
 
     setTimeout(() => {
-      const tbody = this.table.el.nativeElement.querySelector('.p-datatable-tbody');
-      if (tbody) {
-        const rows = tbody.querySelectorAll('tr');
-        const targetRow = rows[rowIndex];
+      const el = this.table.el.nativeElement;
+      const rows = el.querySelectorAll('.p-datatable-tbody tr');
+      const targetRow = rows[rowIndex];
 
-        if (targetRow) {
-          // 優先找輸入框，找不到再找 dropdown 或其他可點選元件
-          const input = targetRow.querySelector('input, select, textarea, .p-dropdown-label, [tabindex="0"]') as HTMLElement;
-          if (input) {
-            input.focus();
+      if (targetRow) {
+        // 尋找該行內第一個「可見且非禁用」的輸入控制項
+        const input = targetRow.querySelector(
+          'input:not([disabled]):not([hidden]), .p-dropdown-label, .p-inputnumber-input, .p-autocomplete-input, [tabindex="0"]'
+        ) as HTMLElement;
+
+        if (input) {
+          input.focus();
+          if (input.tagName === 'INPUT') {
+            (input as HTMLInputElement).select();
           }
         }
       }
-    });
+    }, 50);
   }
 }

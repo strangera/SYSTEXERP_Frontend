@@ -7,7 +7,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS57110Service } from '@service/api/tls/tls57110.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { Column, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -17,6 +16,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CustomFooterTableComponent } from './custom-footer-table/customFooterTable.component';
 interface TLS57110Data {
   LOGO_No: string;
   LOGO_CH_NAME: string;
@@ -50,10 +50,8 @@ interface TLS57110Response {
 @Component({
   selector: 'app-tls57110',
   templateUrl: './tls57110.component.html',
-  styleUrl: './tls57110.component.scss',
   standalone: true,
   imports: [
-
     NgIf,
     MenubarComponent,
     CustomFooterTableComponent,

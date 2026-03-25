@@ -14,7 +14,7 @@
     <!-- 新增樣式：bg-blue-100 和 text-blue-700 font-bold -->
     <tr pRowGroupHeader class="bg-blue-100 text-blue-700 font-bold">
       <td [attr.colspan]="columns.length">
-        <span class="font-bold ml-2">{{rowData.LTYPE_ID}} - {{rowData.LTYPE_NAME}}</span>
+        <span class="font-bold ml-2">{{rowData.LTYPE_NAME}}</span>
       </td>
     </tr>
   </ng-template>
@@ -71,10 +71,11 @@
   </ng-template>
 
   <ng-template pTemplate="emptymessage">
-    <tr>
+    <tr *ngIf="hasSearched">
       <td [attr.colspan]="columns.length">
-        <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
-          <!-- 查無資料 -->
+        <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+          <i class="pi pi-search mr-2"></i>
+          查無資料
         </div>
       </td>
     </tr>

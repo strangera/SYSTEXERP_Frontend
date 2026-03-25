@@ -141,9 +141,14 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this.footerData == null) return [];
     return Array.isArray(this.footerData) ? this.footerData : [this.footerData];
   }
-
+  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges) {
     if (changes['data']) {
+      // 只有當資料真的從 API 回來（不論長度是多少）才顯示
+      // 或者是根據你是否有 lastQueryBody 來判斷
+      if (this.lastQueryBody) {
+        this.hasSearched = true;
+      }
       this.isAllSelected = false;
       this.selectedItems = [];
       this.virtualData = [];
@@ -238,6 +243,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     };
     this.loading = true;
     this.queryFunction(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      this.hasSearched = true;
       if (res && res.Data && res.Data.length > 0) {
         this.virtualData = [];
         this.dt.virtualScroll = false;

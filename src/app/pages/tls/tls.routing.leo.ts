@@ -193,12 +193,21 @@ export const tlsRoutes: Routes = [
   { path: 'tls57090', loadComponent: () => import('./tls57090/tls57090.component').then(m => m.TLS57090Component), data: { progNo: 'TLS57090' } },
   // 驗收/驗退單據統計表
   { path: 'tls57100', loadComponent: () => import('./tls57100/tls57100.component').then(m => m.TLS57100Component), data: { progNo: 'TLS57100' } },
+  // 存貨月結庫存表
+  { path: 'tls57110', loadComponent: () => import('./tls57110/tls57110.component').then(m => m.TLS57110Component), data: { progNo: 'TLS57110' } },
+  { path: 'tls57110cru', loadComponent: () => import('./tls57110-cru/tls57110-cru.component').then(m => m.TLS57110CRUComponent), data: { progNo: 'TLS57110' } },
+  // 滯銷商品統計表
+  { path: 'tls57120', loadComponent: () => import('./tls57120/tls57120.component').then(m => m.TLS57120Component), data: { progNo: 'TLS57120' } },
   // 銷售排行報表
   { path: 'tls57130', loadComponent: () => import('./tls57130/tls57130.component').then(m => m.TLS57130Component), data: { progNo: 'TLS57130' } },
+  // 商品迴轉率
+  { path: 'tls57140', loadComponent: () => import('./tls57140/tls57140.component').then(m => m.TLS57140Component), data: { progNo: 'TLS57140' } },
   // 盤點統計表
   { path: 'tls57150', loadComponent: () => import('./tls57150/tls57150.component').then(m => m.TLS57150Component), data: { progNo: 'TLS57150' } },
   // 庫齡分析表
   { path: 'tls57160', loadComponent: () => import('./tls57160/tls57160.component').then(m => m.TLS57160Component), data: { progNo: 'TLS57160' } },
+  // 存貨評價分析表
+  { path: 'tls57170', loadComponent: () => import('./tls57170/tls57170.component').then(m => m.TLS57170Component), data: { progNo: 'TLS57170' } },
   // 存貨評價分析表
   { path: 'tls57190', loadComponent: () => import('./tls57190/tls57190.component').then(m => m.TLS57190Component), data: { progNo: 'TLS57190' } },
 

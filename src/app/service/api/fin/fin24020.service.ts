@@ -21,4 +21,7 @@ export class Fin24020Service {
   updateFIN24020(params: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateFIN24020`, params);
   }
+  queryForExportFIN24020(params: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/queryForExportFIN24020`, params);
+  }
 }

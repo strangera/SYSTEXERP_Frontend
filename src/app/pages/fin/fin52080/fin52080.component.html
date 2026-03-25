@@ -145,6 +145,7 @@
               [Columns]="treeElements.treeColumn"
               [LeaveColumnLabel]="treeElements.leaveLabel"
               [listTitle]="treeElements.listTitle"
+              [viewButtonLabel]="treeElements.viewButtonLabel"
               (confirmSelected)="onLevelSelected($event)"
               [SelectbleCheckBox]="!1"
               [card]="!1"
@@ -175,6 +176,7 @@
     [lazy]="!0"
     [loading]="tableLoading()"
     [showCheckBox]="true"
+    [isRowSelectable]="isRowSelectable"
     (delete)="onDelete($event)"
   ></app-table>
 </div>

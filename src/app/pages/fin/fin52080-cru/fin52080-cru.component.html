@@ -12,17 +12,11 @@
             <span class="text-red-500">*</span>
           </label>
           @if (isFormCreateable) {
-          <!-- 新增模式：顯示兩個欄位（AccNoPrefix + AccNoSuffix） -->
-          <div class="flex gap-2">
-            <div style="flex: 0 0 30%;">
-              <app-input-text controlName="AccNoPrefix" [control]="df().AccNoPrefix" [submitted]="submitted"
-                [showLabel]="false" [showErrorMessage]="true" [readonly]="!isFormReadable"></app-input-text>
-            </div>
-            <div style="flex: 0 0 70%;">
-              <app-input-text controlName="AccNoSuffix" [control]="df().AccNoSuffix" [keyFilter]="accNoSuffixFilter"
+          <app-input-text label="科目代號" controlName="AccNo" [control]="df().AccNo" [keyFilter]="accNoFilter"
                 [submitted]="submitted" [showLabel]="false" [showErrorMessage]="true"></app-input-text>
-            </div>
-          </div>
+          @if (accNoExists()) {
+            <small class="p-error">科目代號已存在</small>
+          }
           } @else {
           <!-- 編輯/檢視模式：只顯示一個欄位（AccNo） -->
           <app-input-text controlName="AccNo" [control]="df().AccNo" [submitted]="submitted" [showLabel]="false"
@@ -72,7 +66,7 @@
       @if (!isFormReadable) {
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-tree-dropdown [members]="FIN52080Tree()" [Columns]="treeElements.treeColumn"
-          [LeaveColumnLabel]="treeElements.leaveLabel" [listTitle]="treeElements.listTitle"
+          [LeaveColumnLabel]="treeElements.leaveLabel" [listTitle]="treeElements.listTitle" [viewButtonLabel]="treeElements.viewButtonLabel"
           (confirmSelected)="onLevelSelected($event)" [SelectbleCheckBox]="!1" [card]="!1"
           [loading]="treeLoading()"></app-tree-dropdown>
         <app-button btnType="cancel" [form]="dataForm"></app-button>
