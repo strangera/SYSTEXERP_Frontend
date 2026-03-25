@@ -1,15 +1,7 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -27,41 +19,41 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="倉別"
-              controlName="Kurabe"
-              [options]="Kurabe"
+              controlName="warehouse"
+              [options]="warehouse"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Kurabe"
+              [control]="queryForm.controls.warehouse"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="退回狀態"
-              controlName="status"
-              [options]="status"
+              controlName="returnStatus"
+              [options]="returnStatus"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.status"
+              [control]="queryForm.controls.returnStatus"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="退回單號"
-              controlName="Receiptnumber"
-              [control]="queryForm.controls.Receiptnumber"
+              controlName="returnNote"
+              [control]="queryForm.controls.returnNote"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="退回人代號"
-              controlName="Applicantcode"
+              controlName="returnerCode"
               [options]="usercode"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Applicantcode"
+              [control]="queryForm.controls.returnerCode"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -69,11 +61,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="部門代號"
-              controlName="Departmentcode"
-              [options]="Departmentcode"
+              controlName="departmentCode"
+              [options]="departmentCode"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Departmentcode"
+              [control]="queryForm.controls.departmentCode"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -81,22 +73,22 @@
             <app-calendar-range
               calendarType="dateRange"
               label="退回日期"
-              [startControl]="queryForm.controls.SApplicationdate"
-              [endControl]="queryForm.controls.EApplicationdate"
+              [startControl]="queryForm.controls.SReturnDate"
+              [endControl]="queryForm.controls.EReturnDate"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="clear" [form]="queryForm"></app-button>
+        <app-button
+          btnType="query"
+          [loading]="loading"
+          (click)="onSubmit(queryForm)"
+        ></app-button>
       </div>
     </p-accordionTab>
   </p-accordion>

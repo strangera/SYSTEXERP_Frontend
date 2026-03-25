@@ -33,8 +33,8 @@ export class ASS16050CRUComponent extends BasicCruPageComponent<ASS16050Data> im
   deleteRows: ASS16050Data[] = [];
   columns: EditColumn[] = [
     { field: 'itemCode', header: '品項編碼', type: 'dropdown', validate: [validateDuplicate, validateMaxLength(10)] },
-    { field: 'quantity', header: '申請數量', type: 'inputNumber', maxLength: 8, validate: [validateMaxNumber(99999999)] },
-    { field: 'itemRemark', header: '已發數量', type: 'inputNumber', validate: [validateMaxNumber(99999999)] },
+    { field: 'applyQty', header: '申請數量', type: 'inputNumber', maxLength: 8, validate: [validateMaxNumber(99999999)] },
+    { field: 'issuedQty', header: '已發數量', type: 'inputNumber', validate: [validateMaxNumber(99999999)] },
   ];
 
   // 表單定義
