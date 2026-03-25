@@ -75,7 +75,7 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060Data> im
       case CRUDStatus.Read:
         this.formTitle = 'display-conditions';
         this.crudstatus = CRUDStatus.Read;
-        this.isEditMode = false; // 新增頁
+        this.isEditMode = false;
 
         this.Read(state.rowdata);
         break;
