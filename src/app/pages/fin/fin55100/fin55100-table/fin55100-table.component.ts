@@ -95,24 +95,18 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
    * @param isoDate YYYY-MM-DD 格式的日期字串
    * @returns 包含 rocYear 和 month 的物件，如果轉換失敗則為 null
    */
-  private toROCDateInfo(isoDate: string | null | undefined): { rocYear: string, month: string } | null {
+  private toROCDateInfo(isoDate: string | null | undefined): { rocYear: string, month: string, year: number } | null {
     if (!isoDate) return null;
-    try {
-      // 使用 ISO 格式解析日期
-      const date = new Date(isoDate);
-      if (isNaN(date.getTime())) return null;
+    // 分割字串，避免 new Date() 的時區轉換問題
+    const parts = isoDate.split('-');
+    if (parts.length < 2) return null;
 
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10);
+    const rocYear = (year - 1911).toString();
+    const monthString = month.toString().padStart(2, '0');
 
-      // ROC Year = Gregorian Year - 1911
-      const rocYear = (year - 1911).toString(); // 不補零，讓範本可以根據需求顯示 3 或 2 位數
-      const monthString = month.toString().padStart(2, '0');
-
-      return { rocYear, month: monthString };
-    } catch (e) {
-      return null;
-    }
+    return { rocYear, month: monthString, year };
   }
 
   /**
@@ -121,7 +115,7 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
   private initializeColumns(): void {
     const request = this.historyRequestBody;
 
-    // 預設標題
+    // 預設標題 (避免 request 為空時報錯)
     let curPeriodHeader = '本期金額';
     let cmpPeriodHeader = '比較期金額';
     let curYTDHeader = '本期累計金額';
@@ -132,10 +126,13 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
       const curTo = this.toROCDateInfo(request.DateTo);
 
       if (curFrom && curTo) {
-        // 本期金額：[年] 年度 [起月] 月 ~ [迄月] 月
-        curPeriodHeader = `${curTo.rocYear} 年度 ${curFrom.month} 月 ~ ${curTo.month} 月`;
-        // 本期累計金額：[年] 年度 01 月 ~ [迄月] 月
-        curYTDHeader = `${curTo.rocYear} 年度 01 月 ~ ${curTo.month} 月`;
+        // --- 本期修正：直接強制顯示起迄的年 ---
+        // 格式：115年01月 ~ 115年03月
+        curPeriodHeader = `${curFrom.rocYear}年${curFrom.month}月 ~ ${curTo.rocYear}年${curTo.month}月`;
+
+        // --- 累計修正：起點通常是當年度 01 月 ---
+        // 格式：115年度 01月 ~ 115年03月
+        curYTDHeader = `${curTo.rocYear}年度 01月 ~ ${curTo.rocYear}年${curTo.month}月`;
       }
     }
 
@@ -144,29 +141,25 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
       const cmpTo = this.toROCDateInfo(request.CmpDateTo);
 
       if (cmpFrom && cmpTo) {
-        // 比較期金額：[年] 年度 [起月] 月 ~ [迄月] 月
-        cmpPeriodHeader = `${cmpTo.rocYear} 年度 ${cmpFrom.month} 月 ~ ${cmpTo.month} 月`;
-        // 比較期累計金額：[年] 年度 01 月 ~ [迄月] 月
-        cmpYTDHeader = `${cmpTo.rocYear} 年度 01 月 ~ ${cmpTo.month} 月`;
+        // --- 比較期修正：同樣強制顯示起迄的年 ---
+        cmpPeriodHeader = `${cmpFrom.rocYear}年${cmpFrom.month}月 ~ ${cmpTo.rocYear}年${cmpTo.month}月`;
+
+        // 比較期累計
+        cmpYTDHeader = `${cmpTo.rocYear}年度 01月 ~ ${cmpTo.rocYear}年${cmpTo.month}月`;
       }
     }
 
-    // 重新定義 columns 陣列
+    // 重新定義 columns 陣列 (欄位定義保持不變)
     this.columns = [
-      // 根據您的需求，只顯示科目名稱
       { field: 'STYPE_NAME', header: '科目名稱' },
-
-      // 本期比較區間
       { field: 'Cur_Period_AMT', header: curPeriodHeader, format: formatAmount2, align: 'right' },
       { field: 'Cmp_Period_AMT', header: cmpPeriodHeader, format: formatAmount2, align: 'right' },
       { field: 'Diff_Period', header: '差異', format: formatAmount2, align: 'right' },
       { field: 'Rate_Period', header: '增減率 (%)', format: formatPercent2Decimals, align: 'right' },
-
-      // 累計比較區間
       { field: 'Cur_YTD_AMT', header: curYTDHeader, format: formatAmount2, align: 'right' },
       { field: 'Cmp_YTD_AMT', header: cmpYTDHeader, format: formatAmount2, align: 'right' },
       { field: 'Diff_YTD', header: '差異', format: formatAmount2, align: 'right' },
-      { field: 'Rate_YTD', header: '累計增減率 (%)', format: formatPercent2Decimals, align: 'right' } // 修正為較完整的標題
+      { field: 'Rate_YTD', header: '累計增減率 (%)', format: formatPercent2Decimals, align: 'right' }
     ];
   }
 
