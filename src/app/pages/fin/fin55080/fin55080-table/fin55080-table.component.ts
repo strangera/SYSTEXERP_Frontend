@@ -1,5 +1,6 @@
 import { NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
 import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core'; // 增加 OnChanges, SimpleChanges
+import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 
@@ -30,11 +31,12 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
   @Input() dataKey: string | undefined;                  // 用來儲存查詢結果
   @Input() loading = false;
   @Input() footerData: any = {};
+  @Input() historyRequestBody: any;
   // 新增屬性：用於儲存分離出來的群組小計資料
   public groupedFooters: Record<string, any[]> = {};
   // 新增屬性：用於儲存過濾掉小計後的明細資料
   public detailData: any[] = [];
-
+  constructor(private router: Router) { } // 注入 Router
   ngOnInit() {
     this.processData();
   }
@@ -74,6 +76,33 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
   getGroupFooterData(rowData: any): any[] {
     const groupKey = rowData.LTYPE_ID;
     return this.groupedFooters[groupKey] || [];
+  }
+  onNameClick(rowData: any) {
+    // 只有明細行 (有 STYPE_ID) 才允許點擊
+    if (!rowData.STYPE_ID) return;
+
+    // 取得乾淨的 ID
+    const accNo = rowData.STYPE_ID;
+
+    // 從 historyRequestBody 取得日期
+    const dateFrom = this.historyRequestBody?.DateFrom;
+    const dateTo = this.historyRequestBody?.DateTo;
+
+    // 1. 使用 router 建立路由樹 (UrlTree)
+    const urlTree = this.router.createUrlTree(['/reports/fin/fin55080'], {
+      queryParams: {
+        AccNo: accNo,
+        DateFrom: dateFrom,
+        DateTo: dateTo
+      }
+    });
+
+    // 2. 將 UrlTree 序列化成字串路徑 (例如: /account/fin/fin55080cru?AccNo=...&DateFrom=...)
+    const url = this.router.serializeUrl(urlTree);
+
+    // 3. 使用 window.open 開新分頁
+    // '_blank' 代表開新分頁，'noopener' 是基於安全性考量建議加上
+    window.open(url, '_blank', 'noopener');
   }
 }
 const formatAmount2 = (val: number | string | null | undefined): string => {
