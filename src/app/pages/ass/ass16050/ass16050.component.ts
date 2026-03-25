@@ -31,7 +31,7 @@ export class ASS16050Component extends BasicQueryPageComponent<ASS16050Data> imp
     Querybystatus: [],
     propertynumber: [],
     propertytype: [],
-    Itemnumber: [],
+    itemCode: [],
     Accountcode: [],
     custodyunit: [],
     SApplicationdate: [],
@@ -48,13 +48,13 @@ export class ASS16050Component extends BasicQueryPageComponent<ASS16050Data> imp
     Counter: [],
     illustrate: [],
     Reporttype: [],
-    Receiptnumber: [],
-    Applicantcode: [],
+    issueNo: [],
+    applicantCode: [],
     reviewer: [],
-    Shippingdate: [],
-    Kurabe: [],
+    shippingDate: [],
+    warehouse: [],
     status: [],
-    Departmentcode: [],
+    departmentCode: [],
 
   });
   // Table data
@@ -63,26 +63,26 @@ export class ASS16050Component extends BasicQueryPageComponent<ASS16050Data> imp
   { value: 2, label: '差異' },];
   filteredData = [...this.data];
   columns = [
-    { field: 'issuanceNote', header: '領用單號', visible: true },
+    { field: 'issueNo', header: '領用單號', visible: true },
     { field: 'applicantCode', header: '申請人代號', visible: true },
     { field: 'departmentCode', header: '部門代號', visible: true },
     { field: 'applicationDate', header: '申請日期', visible: true },
     { field: 'issuanceStatus', header: '領用單狀態', visible: true },
     { field: 'approver', header: '審核者', visible: true },
     { field: 'approvalDate', header: '審核日期', visible: true },
-    { field: 'issuanceDate', header: '發料日期', visible: true },
+    { field: 'shippingDate', header: '發料日期', visible: true },
     { field: 'detailCount', header: '明細筆數', visible: true },
   ];
 
 
 
   // Dropdown options
-  Departmentcode = [];
-  Kurabe = [
+  departmentCode = [];
+  warehouse = [
     { value: 1, label: '001' },
     { value: 2, label: '002' },
   ];
-  Itemnumber = [
+  itemCode = [
     { value: 1, label: '3A24210000001' },
     { value: 2, label: '3A24210000002' },
     { value: 3, label: '3A24210000003' },
@@ -221,14 +221,14 @@ export class ASS16050Component extends BasicQueryPageComponent<ASS16050Data> imp
     this.data = [
       {
         id: '1',
-        issuanceNote: 'REC2600001-01',
+        issueNo: 'REC2600001-01',
         applicantCode: '人資Team',
         departmentCode: '時薪測試人員',
         applicationDate: '2023/01/01',
         issuanceStatus: '領用申請',
         approver: '員工A',
         approvalDate: '2023/01/02',
-        issuanceDate: '2023/01/03',
+        shippingDate: '2023/01/03',
         detailCount: '1'
       }
     ]
