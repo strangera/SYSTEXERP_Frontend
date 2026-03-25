@@ -27,7 +27,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
   ],
 })
 export class LoginComponent implements OnInit {
-  logoPath = 'assets/layout/images/systex.png';
+  logoPath = 'assets/layout/images/login_logo.webp';
 
   loginForm = this.formBuilder.group({
     code: ['' as string, Validators.required],
