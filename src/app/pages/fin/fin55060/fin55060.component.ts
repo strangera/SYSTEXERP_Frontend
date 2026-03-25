@@ -26,13 +26,13 @@ import { Column, createPaginationConfig, formatAmount } from '@shared/componentk
 import { AccordionModule } from 'primeng/accordion';
 import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
 
-type ApiGroup = {
+interface ApiGroup {
   AccNo4: string;
   AccNo4Name: string;
   _Details: ApiDetail[];
-};
+}
 
-type ApiDetail = {
+interface ApiDetail {
   AccNo: string;
   AccCName: string;
   DetailNo: string | null;
@@ -42,7 +42,7 @@ type ApiDetail = {
   Debit_Amt: number | null;
   Credit_Amt: number | null;
   Balance: number | null;
-};
+}
 
 type TableRow = ApiDetail & {
   AccNo4: string;
@@ -334,10 +334,12 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     this.dropDownListService.queryGLS1005_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.AccNoListOptions = response?.Data?.map((item: any) => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
-        })) ?? [];
+        //前端規格新增 (下拉選擇, 只顯示統制科目或取會計科目長度為4碼的資料)
+        this.AccNoListOptions = response?.Data?.filter((item: any) => item.No?.length === 4)
+          .map((item: any) => ({
+            label: `${item.No} - ${item.Name}`,
+            value: item.No,
+          })) ?? [];
       });
 
     // 廠商編號
