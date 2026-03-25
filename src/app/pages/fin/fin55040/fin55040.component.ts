@@ -79,7 +79,7 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     // AccNo 設定為 visible: false 但保留，因為 HTML [groupRowsBy]="'AccNo'" 需要它
     { field: 'PTA', header: '立沖編號', visible: true },
     { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
-    { field: 'NoteDesc', header: '摘要', visible: true },
+    { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
     { field: 'PTA1', header: '借方金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'PTA2', header: '貸方金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'PTA3', header: '餘額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true }

@@ -80,12 +80,12 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     // AccNo 設定為 visible: false 但保留，因為 HTML [groupRowsBy]="'AccNo'" 需要它
     { field: 'VouDate', header: '傳票日期', visible: true, format: tableFormatDate },
     { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
-    { field: 'DetailNo', header: '廠商編號', visible: true },
-    { field: 'VEN_Name', header: '廠商名稱', visible: true },
+    { field: 'DetailNo', header: '廠商編號', visible: true, align: 'left' },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true, align: 'left' },
     { field: 'ORG_ID', header: '部門代號', visible: true },
-    { field: 'Org_Name', header: '部門名稱', visible: true },
-    { field: 'PTA', header: '立沖編號', visible: true },
-    { field: 'NoteDesc', header: '摘要', visible: true },
+    { field: 'Org_Name', header: '部門名稱', visible: true, align: 'left' },
+    { field: 'PTA', header: '立沖編號', visible: true, align: 'left' },
+    { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
     { field: 'PTA1', header: '借方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'PTA2', header: '貸方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true }
   ];
