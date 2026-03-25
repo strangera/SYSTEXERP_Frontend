@@ -14,7 +14,7 @@ import { TableSubheaderComponent } from './table-subheader/table-subheader.compo
 @UntilDestroy()
 @Component({
   selector: 'app-fin55080-report',
-  templateUrl: './fin55080report.component.html',
+  templateUrl: './fin55080Report.component.html',
   standalone: true,
   imports: [
     TranslateModule,
