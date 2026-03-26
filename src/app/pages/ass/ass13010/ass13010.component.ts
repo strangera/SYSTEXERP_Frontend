@@ -9,6 +9,7 @@ import { Option } from '@service/utility/dropdown-api.model';
 //
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -22,7 +23,7 @@ import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { finalize, Observable } from 'rxjs';
 import { ASS13010Service } from '@service/api/ass/ass13010.service';
-import { QueryASS13010Request, QueryASS13010Response } from './ass13010.model';
+import { DeleteASS13010Request, ExportPDFASS13010Request, QueryASS13010Request, QueryASS13010Response } from './ass13010.model';
 
 //3.1.3.1 資產維護作業
 @UntilDestroy()
@@ -31,7 +32,7 @@ import { QueryASS13010Request, QueryASS13010Response } from './ass13010.model';
   templateUrl: './ass13010.component.html',
   styleUrl: './ass13010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarRangeQuickComponent, InputNumberRangeComponent, TableReportComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, ButtonModule, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarRangeQuickComponent, InputNumberRangeComponent, TableReportComponent, TranslateModule]
 })
 export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Response> implements OnInit {
   private validationService = inject(ValidationService);
@@ -89,6 +90,9 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
   totalRecords = signal<number>(0);
   tableLoading = signal<boolean>(false);
   lastQueryBody?: QueryASS13010Request;
+  // 勾選匯出 PDF
+  selectedItems: QueryASS13010Response[] = [];
+  btnPDFLoading = false;
   columns: ReportColumn[] = [
     { field: 'ASSET_ID', header: '資產代號' },
     { field: 'GOODS_ID', header: '品項編號' },
@@ -124,6 +128,10 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
   ngOnInit(): void {
     this.initializePage('ASS13010', 'ass/ass13010cru', this.queryForm, this.onSubmit.bind(this));
     this.loadDropdownOptions();
+  }
+
+  onSelectionChange(items: QueryASS13010Response[]): void {
+    this.selectedItems = items ?? [];
   }
 
   public queryFunction = (body: QueryASS13010Request): Observable<ApiResponse<QueryASS13010Response[]>> => {
@@ -181,6 +189,8 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
   onSubmit(frm: FormGroup): void {
     if (!this.hasPermission(Actions.Query)) return;
     this.handleSubmit(this.queryForm, () => {
+      // 查詢結果更新時，清掉舊勾選，避免匯出按鈕狀態錯誤
+      this.selectedItems = [];
       const raw = this.queryForm.getRawValue();
       this.lastQueryBody = {
         PageSize: 30,
@@ -221,6 +231,105 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
             this.totalRecords.set(res.TotalCount ?? 0);
           },
         });
+    });
+  }
+
+  onExportPDF(): void {
+    const ids = (this.selectedItems ?? [])
+      .map(x => x?.ID)
+      .filter((id): id is number => id != null)
+      .map(id => String(id));
+
+    const idCsv = ids.join(',');
+    if (!idCsv) return;
+
+    const payload: ExportPDFASS13010Request = { ID: idCsv };
+
+    this.btnPDFLoading = true;
+    this.ass13010Service
+      .exportPDFASS13010(payload)
+      .pipe(
+        finalize(() => (this.btnPDFLoading = false)),
+        untilDestroyed(this),
+      )
+      .subscribe(blob => {
+        if (!blob) return;
+        const now = new Date();
+        const timestamp =
+          now.getFullYear().toString() +
+          (now.getMonth() + 1).toString().padStart(2, '0') +
+          now.getDate().toString().padStart(2, '0') +
+          now.getHours().toString().padStart(2, '0') +
+          now.getMinutes().toString().padStart(2, '0') +
+          now.getSeconds().toString().padStart(2, '0');
+
+        const fileName = `資產資料${timestamp}.pdf`;
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(blobUrl);
+      });
+  }
+
+  onDelete(selectedItems: QueryASS13010Response[]): void {
+    if (!this.hasPermission(Actions.Delete)) return;
+
+    const ids = (selectedItems ?? [])
+      .map(x => x?.ID)
+      .filter((id): id is number => id != null);
+
+    if (!ids.length) {
+      this.messageService.warnBubble('請先勾選要刪除的資料');
+      return;
+    }
+
+    const payload: DeleteASS13010Request = { IDS: ids };
+
+    this.messageService.confirm({
+      header: `是否確認刪除 ${ids.length} 筆資料？`,
+      accept: () => {
+        this.loading = true;
+        this.tableLoading.set(true);
+
+        this.ass13010Service
+          .deleteASS13010(payload)
+          .pipe(
+            finalize(() => {
+              this.loading = false;
+              this.tableLoading.set(false);
+            }),
+            untilDestroyed(this),
+          )
+          .subscribe({
+            next: res => {
+              if (res?.Status !== '0000') {
+                this.messageService.errorBubble(
+                  `刪除失敗: ${res?.Message || res?.Error?.Message || '未知錯誤'}`,
+                );
+                return;
+              }
+
+              this.messageService.successBubble('刪除成功');
+              this.selectedItems = [];
+
+              if (this.lastQueryBody) {
+                this.queryFunction(this.lastQueryBody)
+                  .pipe(finalize(() => this.tableLoading.set(false)), untilDestroyed(this))
+                  .subscribe({
+                    next: result => {
+                      if (result?.Status !== '0000') return;
+                      this.tableData.set(result.Data ?? []);
+                      this.totalRecords.set(result.TotalCount ?? 0);
+                    },
+                  });
+              } else {
+                this.onSubmit(this.queryForm);
+              }
+            },
+          });
+      },
     });
   }
 

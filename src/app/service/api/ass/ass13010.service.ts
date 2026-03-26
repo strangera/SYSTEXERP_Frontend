@@ -3,6 +3,9 @@ import { Injectable } from '@angular/core';
 import {
   DetailASS13010Request,
   DetailASS13010Response,
+  DeleteASS13010Request,
+  DeleteASS13010ResultApiResponse,
+  ExportPDFASS13010Request,
   InsertASS13010Request,
   InsertASS13010Response,
   QueryASS13010Request,
@@ -40,6 +43,20 @@ export class ASS13010Service {
 
   insertASS13010(body: InsertASS13010Request): Observable<ApiResponse<InsertASS13010Response>> {
     return this.http.post<ApiResponse<InsertASS13010Response>>(`${this.apiUrl}/insertASS13010`, body);
+  }
+
+  /**
+   * 匯出 PDF
+   */
+  exportPDFASS13010(body: ExportPDFASS13010Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportPDFASS13010`, body, { responseType: 'blob' });
+  }
+
+  /**
+   * 刪除
+   */
+  deleteASS13010(body: DeleteASS13010Request): Observable<DeleteASS13010ResultApiResponse> {
+    return this.http.post<DeleteASS13010ResultApiResponse>(`${this.apiUrl}/deleteASS13010`, body);
   }
 }
 

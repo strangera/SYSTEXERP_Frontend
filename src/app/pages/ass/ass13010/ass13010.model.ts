@@ -132,6 +132,11 @@ export interface DetailASS13010Response {
   Warranty_YEAR: number | null;
 }
 
+// ==================== 匯出 PDF ====================
+export interface ExportPDFASS13010Request {
+  ID: string;
+}
+
 export interface InsertASS13010Request {
   MID?: number | null;
   STO_NO?: string | null;
@@ -196,5 +201,29 @@ export interface InsertASS13010Request {
 
 export interface InsertASS13010Response {
   Message?: string | null;
+}
+
+// ==================== 刪除 ====================
+export interface DeleteASS13010Request {
+  IDS: number[];
+}
+
+export interface DeleteASS13010ResultApiResponse {
+  Status?: string;
+  Data?: {
+    Message?: string | null;
+  } | null;
+  Error?: {
+    Code?: string;
+    Message?: string;
+    Details?: string;
+  } | null;
+  Meta?: {
+    Timestamp?: string;
+    RequestId?: string;
+  } | null;
+  Message?: string | null;
+  TotalCount?: number;
+  TotalPage?: number;
 }
 
