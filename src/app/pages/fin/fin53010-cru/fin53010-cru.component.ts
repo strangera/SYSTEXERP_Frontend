@@ -182,9 +182,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }, { allowSignalWrites: !0 });
 
   // Template 相關屬性
-  public readonly vouTypeTemp = signal<'1' | '2' | '3' | void>(void 0);
   public readonly vouTermSearchTemp = signal<string>('');
-  public readonly detailCountTemp = signal<boolean | null>(null);
   public readonly filteredVoucherTemplateOptions = computed(() =>
     this.service.voucherTemplateOptions().filter(v => {
       return (!this.vouTypeTemp() || v.VouType === this.vouTypeTemp())
@@ -634,9 +632,4 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.vouTermSearchTemp.set((event.target as HTMLInputElement).value?.toString() || '');
   }
 
-  public vouTypeChange(event: '1' | '2' | '3' | void): void {
-    this.logger.debug(`vouTypeChange:`, [event]);
-    this.vouTypeTemp.set((event as '1' | '2' | '3' | void));
-    this.df().VouType.patchValue(event);
-  }
 }

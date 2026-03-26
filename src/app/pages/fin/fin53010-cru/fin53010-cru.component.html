@@ -275,28 +275,11 @@
   (save)="onApplyTemplate()"
 >
   <div class="grid p-fluid mt-3 mb-3">
-    <app-dropdown
-      class="col-12 md:col-6 lg:col-4"
-      label="傳票種類"
-      controlName="VouType"
-      [showClear]="!1"
-      [options]="service.vouTypeOptions"
-      optionLabel="label"
-      optionValue="value"
-      [control]="df().VouType"
-      (valueChange)="vouTypeChange($event)"
-    ></app-dropdown>
     <app-input-text
-      class="col-12 md:col-6 lg:col-4"
+      class="col-12 md:col-6 lg:col-6"
       label="傳票號碼/代號"
       (inputChange)="vouTermChange($event)"
     ></app-input-text>
-    <app-checkbox
-      class="col-12 md:col-6 lg:col-4"
-      label="明細數量 (有/無/全部)"
-      [tri]="!0"
-      (valueChange)="detailCountTemp.set($event)"
-    ></app-checkbox>
   </div>
 
   <div [style]="{ 'min-height': '50vh', 'max-height': '75vh' }">
