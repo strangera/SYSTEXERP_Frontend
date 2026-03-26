@@ -10,11 +10,19 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick calendarType="dateRange" label="撤票日" controlName="generalCode"
               [startControl]="queryForm.controls.WithdrawDateFrom" [endControl]="queryForm.controls.WithdrawDateTo"
-              [submitted]="submitted"></app-calendar-range-quick>
+              [submitted]="submitted">
+            </app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="票據號碼" controlName="ChkNo" [control]="queryForm.controls.ChkNo"
-              [submitted]="submitted"></app-input-text>
+              [submitted]="submitted">
+            </app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4 flex align-items-center">
+            <div class="flex align-items-center gap-2 px-2">
+              <p-checkbox [binary]="true" label="排除已兌現資料" formControlName="ExcludeCashed">
+              </p-checkbox>
+            </div>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
