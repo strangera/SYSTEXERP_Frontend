@@ -47,7 +47,6 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 
 @Component({
   selector: 'app-fin32020-cru',
@@ -77,9 +76,31 @@ export class FIN32020CRUComponent
   extends BasicCruPageComponent<Fin32020Row>
   implements OnInit {
   // ===== 調整科目 report table =====
-  adjAccReportColumns: ReportColumn[] = [
-    { field: 'CAR_AccNo', header: '調整科目代號' },
-    { field: 'AccCName', header: '科目名稱' },
+  // adjAccReportColumns: EditColumn[] = [
+  //   { field: 'CAR_AccNo', header: '調整科目代號' },
+  //   { field: 'AccCName', header: '科目名稱' },
+  //   {
+  //     field: 'CAR_type',
+  //     header: '加減項',
+  //     format: (v: any) =>
+  //       String(v) === '1'
+  //         ? '加項'
+  //         : String(v) === '2'
+  //           ? '減項'
+  //           : (v ?? ''),
+  //   },
+  // ];
+
+  // adj更新版，都使用table2顯示
+  adjAccReportColumns: Column[] = [
+    {
+      field: 'CAR_AccNo',
+      header: '調整科目代號',
+    },
+    {
+      field: 'AccCName',
+      header: '科目名稱',
+    },
     {
       field: 'CAR_type',
       header: '加減項',
@@ -558,8 +579,11 @@ export class FIN32020CRUComponent
 
   openAdjAccDialog(): void {
     if (this.isFormReadable) return;
+    const current = (this.currentDetailRowData?.adjustID ?? '')
+      .toString()
+      .trim();
 
-    this.resetAdjAccDialogState();
+    this.resetAdjAccDialogState(current);
     this.adjAccDialogVisible = true;
   }
 
@@ -579,7 +603,7 @@ export class FIN32020CRUComponent
 
     this.fin32020Service.getAdjAcc(body).subscribe({
       next: (res) => {
-        console.log('query adjAccList', res.Data);
+        // console.log('query adjAccList', res.Data);
         this.adjAccList = Array.isArray(res.Data) ? res.Data : [];
         this.adjAccTotalRecords = // 後端沒有傳total count，這邊直接以data總比數進行計算
           // (res as any).TotalCount ?? this.adjAccList.length;
@@ -783,9 +807,9 @@ export class FIN32020CRUComponent
     this.arsLoading = false;
   }
 
-  private resetAdjAccDialogState(): void {
+  private resetAdjAccDialogState(defaultAccNo?: string): void {
     this.adjAccSearchForm.reset({
-      CAR_AccNo: '',
+      CAR_AccNo: defaultAccNo ?? '', // 如果有傳入值就帶入，否則給空字串
       CAR_type: '',
     });
 
