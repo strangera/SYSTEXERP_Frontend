@@ -56,6 +56,16 @@
           [control]="df().VouDate"
           [submitted]="submitted"
         ></app-calendar>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="傳票狀態"
+          controlName="PostFlag"
+          [options]="service.postFlagOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="df().PostFlag"
+          [submitted]="submitted"
+        ></app-dropdown>
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="傳票摘要"
