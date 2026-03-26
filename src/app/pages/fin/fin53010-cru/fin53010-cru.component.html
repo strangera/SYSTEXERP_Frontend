@@ -179,6 +179,126 @@
   </div>
 </div>
 
+@if (!isFormCreateable && service.detailByVouNoLoading()) {
+  <div class="card flex justify-content-center p-4">
+    <p-progressSpinner ariaLabel="loading" />
+  </div>
+}
+
+@if (!isFormCreateable && ars3001RelatedRows().length > 0) {
+  <div class="card">
+    <p-panel header="應收帳款" class="line-height-3 m-0">
+      <app-table-report
+        tableKey="FIN53010_ARS3001_related"
+        [columns]="ars3001RelatedColumns"
+        [data]="ars3001RelatedRows()"
+        [totalRecords]="ars3001RelatedRows().length"
+        [loading]="service.detailByVouNoLoading()"
+        [lazy]="false"
+        [showCaption]="false"
+        [showManage]="false"
+        [showReportMode]="false"
+        [showCheckBox]="false"
+      ></app-table-report>
+    </p-panel>
+  </div>
+}
+
+@if (!isFormCreateable && aps3001RelatedRows().length > 0) {
+  <div class="card">
+    <p-panel header="應付帳款" class="line-height-3 m-0">
+      <app-table-report
+        tableKey="FIN53010_APS3001_related"
+        [columns]="aps3001RelatedColumns"
+        [data]="aps3001RelatedRows()"
+        [totalRecords]="aps3001RelatedRows().length"
+        [loading]="service.detailByVouNoLoading()"
+        [lazy]="false"
+        [showCaption]="false"
+        [showManage]="false"
+        [showReportMode]="false"
+        [showCheckBox]="false"
+      ></app-table-report>
+    </p-panel>
+  </div>
+}
+
+@if (!isFormCreateable && aps2002_CRelatedRows().length > 0) {
+  <div class="card">
+    <p-panel header="進項折讓發票" class="line-height-3 m-0">
+      <app-table-report
+        tableKey="FIN53010_APS2002_C_related"
+        [columns]="aps2002_CRelatedColumns"
+        [data]="aps2002_CRelatedRows()"
+        [totalRecords]="aps2002_CRelatedRows().length"
+        [loading]="service.detailByVouNoLoading()"
+        [lazy]="false"
+        [showCaption]="false"
+        [showManage]="false"
+        [showReportMode]="false"
+        [showCheckBox]="false"
+      ></app-table-report>
+    </p-panel>
+  </div>
+}
+
+@if (!isFormCreateable && aps2002RelatedRows().length > 0) {
+  <div class="card">
+    <p-panel header="進項發票" class="line-height-3 m-0">
+      <app-table-report
+        tableKey="FIN53010_APS2002_related"
+        [columns]="aps2002RelatedColumns"
+        [data]="aps2002RelatedRows()"
+        [totalRecords]="aps2002RelatedRows().length"
+        [loading]="service.detailByVouNoLoading()"
+        [lazy]="false"
+        [showCaption]="false"
+        [showManage]="false"
+        [showReportMode]="false"
+        [showCheckBox]="false"
+      ></app-table-report>
+    </p-panel>
+  </div>
+}
+
+@if (!isFormCreateable && aps4023_CRelatedRows().length > 0) {
+  <div class="card">
+    <p-panel header="銷項折讓發票" class="line-height-3 m-0">
+      <app-table-report
+        tableKey="FIN53010_APS4023_C_related"
+        [columns]="aps4023_CRelatedColumns"
+        [data]="aps4023_CRelatedRows()"
+        [totalRecords]="aps4023_CRelatedRows().length"
+        [loading]="service.detailByVouNoLoading()"
+        [lazy]="false"
+        [showCaption]="false"
+        [showManage]="false"
+        [showReportMode]="false"
+        [showCheckBox]="false"
+      ></app-table-report>
+    </p-panel>
+  </div>
+}
+
+@if (!isFormCreateable && aps4023RelatedRows().length > 0) {
+  <div class="card">
+    <p-panel header="銷項發票" class="line-height-3 m-0">
+      <app-table-report
+        tableKey="FIN53010_APS4023_related"
+        [columns]="aps4023RelatedColumns"
+        [data]="aps4023RelatedRows()"
+        [totalRecords]="aps4023RelatedRows().length"
+        [loading]="service.detailByVouNoLoading()"
+        [lazy]="false"
+        [showCaption]="false"
+        [showManage]="false"
+        [showReportMode]="false"
+        [showCheckBox]="false"
+      ></app-table-report>
+    </p-panel>
+  </div>
+}
+
 <ng-template
   #venUsrTemplate
   let-rowData

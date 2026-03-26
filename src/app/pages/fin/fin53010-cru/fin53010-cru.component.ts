@@ -15,16 +15,34 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount as reportFormatAmount, formatDate as reportFormatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { concatMap, finalize, Observable, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData } from '../fin52030/fin52030.model';
-import { FIN53010Data, FIN53010DetailTable, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, QueryFIN53010Detail } from '../fin53010/fin53010.model';
+import {
+  FIN53010Aps2002_CRow,
+  FIN53010Aps2002Row,
+  FIN53010Aps3001Row,
+  FIN53010Aps4023_CRow,
+  FIN53010Aps4023Row,
+  FIN53010Ars3001Row,
+  FIN53010Data,
+  FIN53010DetailTable,
+  FIN53010InsertPayload,
+  FIN53010InsertResult,
+  FIN53010Payload,
+  FIN53010UpdatePayload,
+  FIN53010UpdateResult,
+  QueryFIN53010Detail,
+} from '../fin53010/fin53010.model';
 import { TableEditComponent } from './table-edit/table-edit.component';
 import { EditColumn, EditColumnExtend } from './table-edit/table-edit.model';
 
@@ -54,6 +72,8 @@ import { EditColumn, EditColumnExtend } from './table-edit/table-edit.model';
     RadiobuttonComponent,
     TableComponent,
     TableEditComponent,
+    TableReportComponent,
+    ProgressSpinnerModule,
   ],
 })
 export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Detail> implements OnInit {
@@ -88,6 +108,119 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   private readonly selectedOrgId = signal<string>('100000');
 
   public readonly tableLoading = signal<boolean>(!1);
+
+  /** 傳票關聯六表列資料 */
+  public readonly ars3001RelatedRows = signal<FIN53010Ars3001Row[]>([]);
+  public readonly aps3001RelatedRows = signal<FIN53010Aps3001Row[]>([]);
+  public readonly aps2002_CRelatedRows = signal<FIN53010Aps2002_CRow[]>([]);
+  public readonly aps2002RelatedRows = signal<FIN53010Aps2002Row[]>([]);
+  public readonly aps4023_CRelatedRows = signal<FIN53010Aps4023_CRow[]>([]);
+  public readonly aps4023RelatedRows = signal<FIN53010Aps4023Row[]>([]);
+
+  public readonly ars3001RelatedColumns: ReportColumn[] = [
+    { field: 'org_id', header: '組織代號', visible: true },
+    { field: 'ven_no', header: '廠商代號', visible: true },
+    { field: 'ars_amt', header: '金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'pta_date', header: '預計收款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'ars_date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'acc_no', header: '會計科目代號', visible: true },
+    { field: 'note_desc', header: '摘要', visible: true },
+    { field: 'sub_detail_no', header: '對象別編號', visible: true },
+    { field: 'match_key', header: '對帳KEY值', visible: true },
+  ];
+
+  public readonly aps3001RelatedColumns: ReportColumn[] = [
+    { field: 'org_id', header: '組織代號', visible: true },
+    { field: 'VEN_No', header: '廠商代號', visible: true },
+    { field: 'VEN_PayType_Name', header: '付款方式', visible: true, format: (v, _i, row) => {
+      const r = row as FIN53010Aps3001Row;
+      return String(v ?? r?.VEN_PayType ?? '');
+    } },
+    { field: 'ACP_Amt', header: '金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'ACP_ExpectPayDate', header: '預計付款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'ACP_Date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'VEN_BNK_No', header: '匯款銀行代號', visible: true },
+    { field: 'VEN_BankAccountNo', header: '銀行帳號/帳戶名稱', visible: true, format: (_v, _i, row) => {
+      const r = row as FIN53010Aps3001Row;
+      const a = r?.VEN_BankAccountNo;
+      const b = r?.VEN_AccountName;
+      if (a && b) return `${a} / ${b}`;
+      return (a ?? b ?? '') as string;
+    } },
+    { field: 'VEN_CTRLYN', header: '票據禁止背書轉讓', visible: true },
+    { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true },
+    { field: 'AccNo', header: '會計科目代號', visible: true },
+    { field: 'NoteDesc', header: '摘要', visible: true },
+    { field: 'SubDetailNo', header: '對象別編號', visible: true },
+    { field: 'PTA', header: '對帳KEY值', visible: true },
+  ];
+
+  public readonly aps2002_CRelatedColumns: ReportColumn[] = [
+    { field: 'Orig_RepYYYYMM', header: '原發票申報年月', visible: true },
+    { field: 'InvoiceNo', header: '發票號碼/憑證單號', visible: true },
+    { field: 'VoucherType', header: '發票格式', visible: true },
+    { field: 'Orig_InvoiceDate', header: '原發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'CreditDate', header: '退出/折讓日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'RepYYYYMM', header: '申報年月', visible: true },
+    { field: 'CreditTypeDesc', header: '區別', visible: true },
+    { field: 'Orig_Amount', header: '原發票總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'BuyerUniformNo', header: '銷受人統一編號', visible: true },
+    { field: 'ReturnedAmount', header: '已退回/折讓總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'CreditAmount', header: '退回/折讓總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'TaxTypeDesc', header: '課稅別', visible: true },
+    { field: 'CreditNetAmount', header: '退回/折讓未稅金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'CreditTaxAmount', header: '退回/折讓稅額', visible: true, format: v => reportFormatAmount(v) },
+  ];
+
+  public readonly aps2002RelatedColumns: ReportColumn[] = [
+    { field: 'VoucherType', header: '發票格式', visible: true },
+    { field: 'TrackNo', header: '字軌', visible: true },
+    { field: 'InvoiceNo', header: '發票號碼', visible: true },
+    { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'DeclareYM', header: '申報年月', visible: true },
+    { field: 'VendorTaxID', header: '廠商統一編號', visible: true },
+    { field: 'InvoiceUsage', header: '發票用途', visible: true },
+    { field: 'InvoiceAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'TaxType', header: '課稅別', visible: true },
+    { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'DeductionCodeDesc', header: '扣抵代號', visible: true },
+    { field: 'CategoryType', header: '類別區分', visible: true },
+    { field: 'SourceDocNo', header: '憑證單號', visible: true },
+    { field: 'TotalCount', header: '彙總張數', visible: true },
+  ];
+
+  public readonly aps4023_CRelatedColumns: ReportColumn[] = [
+    { field: 'Original_Invoice_DeclareYM', header: '原發票申報年月', visible: true },
+    { field: 'Invoice_Number', header: '發票號碼/憑證單號', visible: true },
+    { field: 'Invoice_Type', header: '發票格式', visible: true },
+    { field: 'Original_Invoice_Date', header: '原發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'Credit_Invoice_Date', header: '退出折讓日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'DeclareYM', header: '申報年月', visible: true },
+    { field: 'Credit_Type_Flag', header: '區別', visible: true },
+    { field: 'Buyer_Uniform_No', header: '買受人統一編號', visible: true },
+    { field: 'Returned_Amount_Zero', header: '已退回/折讓總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'Returned_Amount', header: '退回/折讓總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'Tax_Type', header: '課稅別', visible: true },
+    { field: 'pur_net', header: '退回/折讓未稅金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'pur_tax', header: '退回/折讓稅額', visible: true, format: v => reportFormatAmount(v) },
+  ];
+
+  public readonly aps4023RelatedColumns: ReportColumn[] = [
+    { field: 'InvoiceType', header: '發票格式', visible: true },
+    { field: 'InvoicePrefix', header: '字軌', visible: true },
+    { field: 'InvoiceNo', header: '發票號碼', visible: true },
+    { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'DeclareYM', header: '申報年月', visible: true },
+    { field: 'BuyerUniform', header: '買受人統一編號', visible: true },
+    { field: 'TotalAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'TaxType', header: '課稅別', visible: true },
+    { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'SourceDocNo', header: '憑證單號', visible: true },
+    { field: 'SummaryCount', header: '彙總張數', visible: true },
+    { field: 'AssetFlag', header: '資產註記', visible: true },
+  ];
 
   public selectedItems: FIN53010Data[] = [];
   public rowEditCanSave = signal<boolean>(!1);
@@ -129,7 +262,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       || this.service.orgNoLoading()
       || this.service.voucherTypeLoading()
       || this.service.refNameLoading()
-      || this.service.noteDescLoading();
+      || this.service.noteDescLoading()
+      || this.service.detailByVouNoLoading();
   });
 
   // 載入資料的 effect
@@ -356,9 +490,46 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           if (res.Status !== '0000') return;
           this.fin53010DetailData.set(res.Data);
           this.totalRecords.set(res.TotalCount);
+          this.loadRelatedDetailByVouNo(res.Data?.VouNo);
         },
       });
     }
+  }
+
+  private clearRelatedDetailTables(): void {
+    this.ars3001RelatedRows.set([]);
+    this.aps3001RelatedRows.set([]);
+    this.aps2002_CRelatedRows.set([]);
+    this.aps2002RelatedRows.set([]);
+    this.aps4023_CRelatedRows.set([]);
+    this.aps4023RelatedRows.set([]);
+  }
+
+  /** 依傳票號碼載入應收／應付／進銷項關聯六表（無有效 VouNo 則清空） */
+  private loadRelatedDetailByVouNo(vouNo: string | undefined | null): void {
+    const v = typeof vouNo === 'string' ? vouNo.trim() : '';
+    if (!v || v === '自動給號') {
+      this.clearRelatedDetailTables();
+      return;
+    }
+    this.service.queryFIN53010DetailDataByVouNo({ VouNo: v }).subscribe({
+      next: res => {
+        if (res.Status !== '0000' || !res.Data) {
+          this.clearRelatedDetailTables();
+          return;
+        }
+        const d = res.Data;
+        const pick = <T,>(b: { Details?: T[] | null } | null | undefined): T[] =>
+          Array.isArray(b?.Details) && b!.Details!.length ? b!.Details! : [];
+        this.ars3001RelatedRows.set(pick(d._ARS3001));
+        this.aps3001RelatedRows.set(pick(d._APS3001));
+        this.aps2002_CRelatedRows.set(pick(d._APS2002_C));
+        this.aps2002RelatedRows.set(pick(d._APS2002));
+        this.aps4023_CRelatedRows.set(pick(d._APS4023_C));
+        this.aps4023RelatedRows.set(pick(d._APS4023));
+      },
+      error: () => this.clearRelatedDetailTables(),
+    });
   }
 
   public onSubmit(): void {
@@ -511,7 +682,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.service.deleteFIN53010Data(ids).pipe(
       tap(res => this.logger.debug(`onDelete:`, [ids, res])),
       concatMap(() => this.service.loadFIN53010Detail(this.rowdata!.id)),
-      tap(res => this.logger.debug(`reload after delete:`, [res])),
+      tap(res => {
+        this.logger.debug(`reload after delete:`, [res]);
+        if (res.Status === '0000') {
+          this.fin53010DetailData.set(res.Data);
+          this.loadRelatedDetailByVouNo(res.Data?.VouNo);
+        }
+      }),
       finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
       next: res => {

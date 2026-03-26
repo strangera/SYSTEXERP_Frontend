@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
-import { AccDescOption, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse } from '@pages/fin/fin53010/fin53010.model';
+import { AccDescOption, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, QueryFIN53010DetailDataByVouNoRequest, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -25,6 +25,8 @@ export class FIN53010Service {
   public readonly noteDescLoading = signal<boolean>(!1);
   public readonly fin52030Loading = signal<boolean>(!1);
   public readonly vocTempLoading = signal<boolean>(!1);
+  /** 傳票關聯六表（queryFIN53010DetailData_ByVouNo） */
+  public readonly detailByVouNoLoading = signal<boolean>(!1);
 
   public readonly cru = signal<boolean>(!1);
 
@@ -111,6 +113,16 @@ export class FIN53010Service {
     return this.http.post<FIN53010DataDetail>(`${apiUrl}/queryFIN53010Detail`, { id }).pipe(
       take(1),
       tap(res => this.logger.debug('查詢FIN53010 Detail結果:', [res])),
+    );
+  }
+
+  /** 傳票號碼對應應收／應付／進銷項等關聯明細 */
+  public queryFIN53010DetailDataByVouNo(payload: QueryFIN53010DetailDataByVouNoRequest): Observable<FIN53010DetailDataByVouNoResult> {
+    this.detailByVouNoLoading.set(!0);
+    return this.http.post<FIN53010DetailDataByVouNoResult>(`${apiUrl}/queryFIN53010DetailData_ByVouNo`, payload).pipe(
+      take(1),
+      tap(res => this.logger.debug('queryFIN53010DetailData_ByVouNo:', [res])),
+      finalize(() => this.detailByVouNoLoading.set(!1)),
     );
   }
 

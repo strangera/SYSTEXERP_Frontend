@@ -172,3 +172,133 @@ export type NoteDescResponse = Omit<BaseQueryResponse<NoteDescList>, 'Data'> & {
 export interface AccDescOption extends Option {
   data?: Option[];
 }
+
+/** queryFIN53010DetailData_ByVouNo Request（Swagger FIN53010） */
+export interface QueryFIN53010DetailDataByVouNoRequest {
+  VouNo?: string | null;
+}
+
+/** 應付帳款 APS3001 明細列 */
+export interface FIN53010Aps3001Row {
+  org_id?: string | null;
+  VEN_No?: string | null;
+  VEN_Name?: string | null;
+  VEN_PayType?: string | null;
+  VEN_PayType_Name?: string | null;
+  ACP_Amt?: number | null;
+  ACP_ExpectPayDate?: string | null;
+  ACP_Date?: string | null;
+  VEN_BNK_No?: string | null;
+  VEN_BankAccountNo?: string | null;
+  VEN_AccountName?: string | null;
+  VEN_CTRLYN?: string | null;
+  VEN_CheckTitle?: string | null;
+  AccNo?: string | null;
+  NoteDesc?: string | null;
+  SubDetailNo?: string | null;
+  PTA?: string | null;
+}
+
+/** 進項發票 APS2002 明細列 */
+export interface FIN53010Aps2002Row {
+  VoucherType?: string | null;
+  TrackNo?: string | null;
+  InvoiceNo?: string | null;
+  InvoiceDate?: string | null;
+  DeclareYM?: string | null;
+  VendorTaxID?: string | null;
+  InvoiceUsage?: string | null;
+  InvoiceAmount?: number | null;
+  TaxType?: string | null;
+  NetAmount?: number | null;
+  TaxAmount?: number | null;
+  DeductionCodeDesc?: string | null;
+  CategoryType?: string | null;
+  SourceDocNo?: string | null;
+  TotalCount?: number | null;
+}
+
+/** 進項折讓 APS2002_C 明細列 */
+export interface FIN53010Aps2002_CRow {
+  Orig_RepYYYYMM?: string | null;
+  InvoiceNo?: string | null;
+  VoucherType?: string | null;
+  Orig_InvoiceDate?: string | null;
+  CreditDate?: string | null;
+  RepYYYYMM?: string | null;
+  CreditTypeDesc?: string | null;
+  Orig_Amount?: number | null;
+  BuyerUniformNo?: string | null;
+  ReturnedAmount?: number | null;
+  CreditAmount?: number | null;
+  TaxTypeDesc?: string | null;
+  CreditNetAmount?: number | null;
+  CreditTaxAmount?: number | null;
+}
+
+/** 應收帳款 ARS3001 明細列 */
+export interface FIN53010Ars3001Row {
+  org_id?: string | null;
+  ven_no?: string | null;
+  ven_name?: string | null;
+  ars_amt?: number | null;
+  pta_date?: string | null;
+  ars_date?: string | null;
+  acc_no?: string | null;
+  acc_cname?: string | null;
+  note_desc?: string | null;
+  sub_detail_no?: string | null;
+  match_key?: string | null;
+}
+
+/** 銷項發票 APS4023 明細列 */
+export interface FIN53010Aps4023Row {
+  InvoiceType?: string | null;
+  InvoicePrefix?: string | null;
+  InvoiceNo?: string | null;
+  InvoiceDate?: string | null;
+  DeclareYM?: string | null;
+  BuyerUniform?: string | null;
+  TotalAmount?: number | null;
+  TaxType?: string | null;
+  NetAmount?: number | null;
+  TaxAmount?: number | null;
+  SourceDocNo?: string | null;
+  SummaryCount?: number | null;
+  AssetFlag?: string | null;
+}
+
+/** 銷項折讓 APS4023_C 明細列 */
+export interface FIN53010Aps4023_CRow {
+  Original_Invoice_DeclareYM?: string | null;
+  Invoice_Number?: string | null;
+  Invoice_Type?: string | null;
+  Original_Invoice_Date?: string | null;
+  Credit_Invoice_Date?: string | null;
+  DeclareYM?: string | null;
+  Credit_Type_Flag?: string | null;
+  Buyer_Uniform_No?: string | null;
+  Returned_Amount_Zero?: number | null;
+  Returned_Amount?: number | null;
+  Tax_Type?: string | null;
+  pur_net?: number | null;
+  pur_tax?: number | null;
+}
+
+export interface FIN53010DetailBucket<T> {
+  Details?: T[] | null;
+}
+
+export interface QueryFIN53010DetailDataByVouNoResponse {
+  _APS3001?: FIN53010DetailBucket<FIN53010Aps3001Row> | null;
+  _APS2002?: FIN53010DetailBucket<FIN53010Aps2002Row> | null;
+  _APS2002_C?: FIN53010DetailBucket<FIN53010Aps2002_CRow> | null;
+  _ARS3001?: FIN53010DetailBucket<FIN53010Ars3001Row> | null;
+  _APS4023?: FIN53010DetailBucket<FIN53010Aps4023Row> | null;
+  _APS4023_C?: FIN53010DetailBucket<FIN53010Aps4023_CRow> | null;
+}
+
+export type FIN53010DetailDataByVouNoResult = Omit<BaseQueryResponse<QueryFIN53010DetailDataByVouNoResponse>, 'Data'> & {
+  /** 單筆物件（非陣列） */
+  Data: QueryFIN53010DetailDataByVouNoResponse | null;
+};
