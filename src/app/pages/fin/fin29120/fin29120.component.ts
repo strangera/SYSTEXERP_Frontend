@@ -27,7 +27,9 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
   templateUrl: './fin29120.component.html',
   styleUrl: './fin29120.component.scss',
   standalone: true,
-  imports: [CommonModule, DropdownComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule, DropdownRangeComponent, InputTextRangeComponent,]
+  imports: [CommonModule, 
+    // DropdownComponent, 
+    MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule, DropdownRangeComponent, InputTextRangeComponent,]
 })
 export class FIN29120Component extends BasicQueryPageComponent<any> implements OnInit {
   data: any[] = [
