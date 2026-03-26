@@ -9,7 +9,7 @@ import {
 } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { map, catchError, shareReplay, of } from 'rxjs';
+import { catchError, map, of, shareReplay } from 'rxjs';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -75,8 +75,7 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
 })
 export class FIN32020CRUComponent
   extends BasicCruPageComponent<Fin32020Row>
-  implements OnInit
-{
+  implements OnInit {
   // ===== 調整科目 report table =====
   adjAccReportColumns: ReportColumn[] = [
     { field: 'CAR_AccNo', header: '調整科目代號' },
@@ -168,18 +167,18 @@ export class FIN32020CRUComponent
 
   /** 明細欄位定義 */
   detailColumns: EditColumn[] = [
-{
-  field: 'receiveID',
-  header: '應收帳款單號',
-  width: '200px',
-  textAlign: 'left',
-},
-{
-  field: 'adjustDisplay',
-  header: '調整科目代號',
-  width: '220px',
-  textAlign: 'left',
-},
+    {
+      field: 'receiveID',
+      header: '應收帳款單號',
+      width: '200px',
+      textAlign: 'left',
+    },
+    {
+      field: 'adjustDisplay',
+      header: '調整科目代號',
+      width: '220px',
+      textAlign: 'left',
+    },
     {
       field: 'adjustAmount',
       header: '調整金額',
@@ -499,62 +498,62 @@ export class FIN32020CRUComponent
     this.confirmARSSelection();
   }
 
-confirmARSSelection(): void {
-  const idx = this.currentDetailIndex ?? 0;
-  const targetRow = this.currentDetailRowData;
+  confirmARSSelection(): void {
+    const idx = this.currentDetailIndex ?? 0;
+    const targetRow = this.currentDetailRowData;
 
-  if (!targetRow) {
+    if (!targetRow) {
+      this.arsDialogVisible = false;
+      this.currentDetailIndex = null;
+      this.currentDetailRowData = null;
+      this.arsSelectedRows = [];
+      return;
+    }
+
+    let arsNoToFill: string | null = null;
+
+    if (this.arsSelectedRows && this.arsSelectedRows.length) {
+      arsNoToFill = (this.arsSelectedRows[0].ARS_No ?? '').trim() || null;
+    }
+
+    if (!arsNoToFill) {
+      const inputArsNo = (this.arsSearchForm.controls.ARS_No.value ?? '').trim();
+      arsNoToFill = inputArsNo || null;
+    }
+
+    if (!arsNoToFill) {
+      this.messageService?.warnBubble?.('請先選擇應收帳款單號');
+      return;
+    }
+
+    // ✅ 檢查重複
+    if (this.isDuplicateARSNo(arsNoToFill, idx)) {
+      this.messageService?.warnBubble?.(`應收帳款單號【${arsNoToFill}】已存在，請勿重複選擇`);
+      return;
+    }
+
+    this.detailTableEdit?.applyDialogValue(targetRow, idx, {
+      receiveID: arsNoToFill,
+    });
+
+    this.syncDetailDataFromTableEdit();
+
     this.arsDialogVisible = false;
     this.currentDetailIndex = null;
     this.currentDetailRowData = null;
     this.arsSelectedRows = [];
-    return;
   }
+  private isDuplicateARSNo(arsNo: string, currentIndex: number): boolean {
+    const target = String(arsNo ?? '').trim();
+    if (!target) return false;
 
-  let arsNoToFill: string | null = null;
+    return (this.detailData || []).some((row: any, idx: number) => {
+      if (idx === currentIndex) return false;
 
-  if (this.arsSelectedRows && this.arsSelectedRows.length) {
-    arsNoToFill = (this.arsSelectedRows[0].ARS_No ?? '').trim() || null;
+      const existing = String(row?.receiveID ?? '').trim();
+      return !!existing && existing === target;
+    });
   }
-
-  if (!arsNoToFill) {
-    const inputArsNo = (this.arsSearchForm.controls.ARS_No.value ?? '').trim();
-    arsNoToFill = inputArsNo || null;
-  }
-
-  if (!arsNoToFill) {
-    this.messageService?.warnBubble?.('請先選擇應收帳款單號');
-    return;
-  }
-
-  // ✅ 檢查重複
-  if (this.isDuplicateARSNo(arsNoToFill, idx)) {
-    this.messageService?.warnBubble?.(`應收帳款單號【${arsNoToFill}】已存在，請勿重複選擇`);
-    return;
-  }
-
-  this.detailTableEdit?.applyDialogValue(targetRow, idx, {
-    receiveID: arsNoToFill,
-  });
-
-  this.syncDetailDataFromTableEdit();
-
-  this.arsDialogVisible = false;
-  this.currentDetailIndex = null;
-  this.currentDetailRowData = null;
-  this.arsSelectedRows = [];
-}
-private isDuplicateARSNo(arsNo: string, currentIndex: number): boolean {
-  const target = String(arsNo ?? '').trim();
-  if (!target) return false;
-
-  return (this.detailData || []).some((row: any, idx: number) => {
-    if (idx === currentIndex) return false;
-
-    const existing = String(row?.receiveID ?? '').trim();
-    return !!existing && existing === target;
-  });
-}
   /* ================= 調整科目 Dialog ================= */
 
   openAdjAccDialog(): void {
@@ -580,9 +579,11 @@ private isDuplicateARSNo(arsNo: string, currentIndex: number): boolean {
 
     this.fin32020Service.getAdjAcc(body).subscribe({
       next: (res) => {
+        console.log('query adjAccList', res.Data);
         this.adjAccList = Array.isArray(res.Data) ? res.Data : [];
-        this.adjAccTotalRecords =
-          (res as any).TotalCount ?? this.adjAccList.length;
+        this.adjAccTotalRecords = // 後端沒有傳total count，這邊直接以data總比數進行計算
+          // (res as any).TotalCount ?? this.adjAccList.length;
+          res.Data.length;
         this.adjAccLoading = false;
       },
       error: (err) => {
@@ -610,37 +611,37 @@ private isDuplicateARSNo(arsNo: string, currentIndex: number): boolean {
     this.confirmAdjAccSelection();
   }
 
-confirmAdjAccSelection(): void {
-  if (!this.adjAccSelectedRows.length) return;
+  confirmAdjAccSelection(): void {
+    if (!this.adjAccSelectedRows.length) return;
 
-  const row = this.adjAccSelectedRows[0];
-  const idx = this.currentDetailIndex ?? 0;
-  const targetRow = this.currentDetailRowData;
+    const row = this.adjAccSelectedRows[0];
+    const idx = this.currentDetailIndex ?? 0;
+    const targetRow = this.currentDetailRowData;
 
-  if (!targetRow) {
+    if (!targetRow) {
+      this.adjAccDialogVisible = false;
+      this.currentDetailIndex = null;
+      this.currentDetailRowData = null;
+      this.adjAccSelectedRows = [];
+      return;
+    }
+
+    const accNo = row.CAR_AccNo ?? null;
+    const accName = row.AccCName ?? null;
+
+    this.detailTableEdit?.applyDialogValue(targetRow, idx, {
+      adjustID: accNo,
+      AccCName: accName,
+      adjustDisplay: accName ? `${accNo}-${accName}` : (accNo ?? ''),
+    });
+
+    this.syncDetailDataFromTableEdit();
+
     this.adjAccDialogVisible = false;
     this.currentDetailIndex = null;
     this.currentDetailRowData = null;
     this.adjAccSelectedRows = [];
-    return;
   }
-
-  const accNo = row.CAR_AccNo ?? null;
-  const accName = row.AccCName ?? null;
-
-  this.detailTableEdit?.applyDialogValue(targetRow, idx, {
-    adjustID: accNo,
-    AccCName: accName,
-    adjustDisplay: accName ? `${accNo}-${accName}` : (accNo ?? ''),
-  });
-
-  this.syncDetailDataFromTableEdit();
-
-  this.adjAccDialogVisible = false;
-  this.currentDetailIndex = null;
-  this.currentDetailRowData = null;
-  this.adjAccSelectedRows = [];
-}
 
   /* ================= Cancel 行為修正 ================= */
 
@@ -795,9 +796,9 @@ confirmAdjAccSelection(): void {
     this.adjAccLastQueryBody = null;
   }
   onARSCancel(): void {
-  this.resetARSDialogState();
-}
-onAdjAccCancel(): void {
-  this.resetAdjAccDialogState();
-}
+    this.resetARSDialogState();
+  }
+  onAdjAccCancel(): void {
+    this.resetAdjAccDialogState();
+  }
 }
