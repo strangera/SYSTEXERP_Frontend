@@ -161,7 +161,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       ...data.UPD_Date ? { UPD_Date: new Date(data.UPD_Date) } : {},
     });
 
-    this.tableData.set(data?.Details.map(v => ({
+    this.tableData.set(data?.Details.map((v, index) => ({
       ...v,
       AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
       AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
@@ -169,6 +169,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
         ?? this.service.usrMap().get(String(v.DetailNo))?.label,
       NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
+      SerNo: index + 1, // 序號從 1 起
     })));
 
     this.logger.debug(`loadingDetail:`, [data, this.dataForm.getRawValue(), this.tableData()]);
@@ -185,10 +186,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly vouTermSearchTemp = signal<string>('');
   public readonly filteredVoucherTemplateOptions = computed(() =>
     this.service.voucherTemplateOptions().filter(v => {
-      return (!this.vouTypeTemp() || v.VouType === this.vouTypeTemp())
-        && (this.detailCountTemp() === null ? !0 : this.detailCountTemp() ? v.DetailCount > 0 : v.DetailCount === 0)
-        && (v.TempNo.includes(this.vouTermSearchTemp()) || v.TempName.includes(this.vouTermSearchTemp()));
-    })
+      const term = this.vouTermSearchTemp().trim();
+      if (!term) return !0;
+      return String(v.TempNo).includes(term) || String(v.TempName).includes(term);
+    }),
   );
 
   public selectedTemplateType = 'vendor';
@@ -431,9 +432,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public onDataChange(data: FIN53010DetailTable[]): void {
     this.logger.debug(`onDataChange:`, [data]);
-    // 更新 tableData signal
-    this.tableData.set(data);
-    // 檢查是否可儲存
+    const renumbered = data.map((row, i) => ({ ...row, SerNo: i + 1, index: i }));
+    this.tableData.set(renumbered);
     this.rowEditCanSave.set(this.tableData().some(row => row.AccNo && row.ORG_ID) || !!this.isBalanced());
   }
 
@@ -484,9 +484,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         rowData.AccNo = '123208';
         rowData.AccCName = this.service.accNoMap().get('123208')?.label ?? '';
       }
-
-      // 更新 SerNo（連續序號 1, 2, 3…）
-      rowData.SerNo = index + 1;
     }
   }
 
@@ -499,7 +496,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       const idx = data.findIndex(d => d.SerNo === e.SerNo);
       if (e[idx]?._dataStatus === 'new') {
         // 如果是新資料則直接從 tableData 移除
-        this.tableData.update(current => current.filter(d => d.SerNo !== e.SerNo));
+        this.tableData.update(current =>
+          current
+            .filter(d => d.SerNo !== e.SerNo)
+            .map((row, i) => ({ ...row, SerNo: i + 1, index: i })),
+        );
         continue;
       }
       if (idx > -1) ids.push(idx + 1);
@@ -570,7 +571,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         const data = res.Data;
 
         // 將 VoucherType 的 value 轉換成 label
-        const voucherTypeValue = data.VouType.trim() ?? 'GL';
+        const voucherTypeValue = data.VoucherType?.trim() ?? "GL";
         const voucherTypeLabel = this.service.voucherTypeMap().get(voucherTypeValue)?.label ?? voucherTypeValue;
 
         this.dataForm.patchValue({
@@ -581,20 +582,26 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           UPD_USR_No: data.UPD_USR_No ?? void 0,
           UPD_Date: data.UPD_Date || void 0,
         });
-        this.tableData.set(data.Details.map((v, index) => ({
-          ...v,
-          id: v.id!,
-          ...(v.AccDC === '0' ? { AccAmtC: v.AccAmt } : {}),
-          ...(v.AccDC === '1' ? { AccAmtD: v.AccAmt } : {}),
-          ...(v.NoteDesc ? { NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.label } : {}),
-          AccNo: v.AccNo,
-          DetailNo: v.DetailNo,
-          AccName: this.service.accNoMap().get(String(v.AccNo))?.label,
-          DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
-            ?? this.service.usrMap().get(String(v.DetailNo))?.label,
-          SerNo: v.SerNo,
-          index: v.index,
-        })));
+        this.tableData.set((data.Details || []).map((v, index) => {
+          const accDC = String(v.AccDC ?? '');
+          const isCredit = accDC === 'C' || accDC === '0';
+          const isDebit = accDC === 'D' || accDC === '1';
+
+          return {
+            ...v,
+            id: v.id!,
+            AccAmtC: isCredit ? v.AccAmt : void 0,
+            AccAmtD: isDebit ? v.AccAmt : void 0,
+            AccName: this.service.accNoMap().get(String(v.AccNo))?.label,
+            DetailName:
+              this.service.vendorMap().get(String(v.DetailNo))?.label
+              ?? this.service.usrMap().get(String(v.DetailNo))?.label
+              ?? '',
+            NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
+            SerNo: index + 1, // 序號從 1 起
+            index,
+          };
+        }));
       },
     });
   }
