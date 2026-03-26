@@ -30,7 +30,6 @@ import {
 } from '../../../service/api/fin/fin32020.service';
 
 // ⭐ Table2
-import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
 import { Column } from '../../../shared/componentkit/table2/table2.model';
 
 // 專屬 table-edit
@@ -63,7 +62,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     InputTextComponent,
     ButtonComponent,
     TranslateModule,
-    Table2Component,
+    // Table2Component,
     DialogComponent,
     DropdownComponent,
     CalendarRangeComponent,
@@ -76,31 +75,18 @@ export class FIN32020CRUComponent
   extends BasicCruPageComponent<Fin32020Row>
   implements OnInit {
   // ===== 調整科目 report table =====
-  // adjAccReportColumns: EditColumn[] = [
-  //   { field: 'CAR_AccNo', header: '調整科目代號' },
-  //   { field: 'AccCName', header: '科目名稱' },
-  //   {
-  //     field: 'CAR_type',
-  //     header: '加減項',
-  //     format: (v: any) =>
-  //       String(v) === '1'
-  //         ? '加項'
-  //         : String(v) === '2'
-  //           ? '減項'
-  //           : (v ?? ''),
-  //   },
-  // ];
 
-  // adj更新版，都使用table2顯示
-  adjAccReportColumns: Column[] = [
+  adjAccReportColumns: ReportColumn[] = [
     {
-      field: 'CAR_AccNo',
-      header: '調整科目代號',
+      field: 'selectedFlag',
+      header: '狀態',
+      format: (_: any, __?: number, row?: any) =>
+        this.isAdjAccAlreadySelected(row) ? '⚠ 已選' : '',
+      cellClass: (row: any) =>
+        this.isAdjAccAlreadySelected(row) ? 'selected-flag-cell' : '',
     },
-    {
-      field: 'AccCName',
-      header: '科目名稱',
-    },
+    { field: 'CAR_AccNo', header: '調整科目代號' },
+    { field: 'AccCName', header: '科目名稱' },
     {
       field: 'CAR_type',
       header: '加減項',
@@ -232,23 +218,55 @@ export class FIN32020CRUComponent
   arsSelectedRows: Fin32020ARSRow[] = [];
   VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' });
 
-  arsColumns: Column[] = [
-    { field: 'ARS_No', header: '應收帳款單號' },
-    { field: 'VEN_No', header: '廠客代號' },
+  arsColumns: ReportColumn[] = [
+    {
+      field: 'selectedFlag',
+      header: '狀態',
+      format: (_: any, __?: number, row?: any) =>
+        this.isARSAlreadySelected(row) ? '⚠ 已選' : '',
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-flag-cell' : '',
+    },
+    {
+      field: 'ARS_No',
+      header: '應收帳款單號',
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-key-cell' : '',
+    },
+    {
+      field: 'VEN_No',
+      header: '廠客代號',
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-soft-cell' : '',
+    },
     {
       field: 'ARS_Date',
       header: '立帳日',
       format: (v: any) => this.formatYMD(v),
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-soft-cell' : '',
     },
     {
       field: 'PTA_Date',
       header: '預計收款日',
       format: (v: any) => this.formatYMD(v),
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-soft-cell' : '',
     },
-    { field: 'ARS_Amt', header: '應收金額', format: this.moneyFormat },
-    { field: 'NoteDesc', header: '備註' },
+    {
+      field: 'ARS_Amt',
+      header: '應收金額',
+      format: (v: any) => this.moneyFormat(v),
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-soft-cell' : '',
+    },
+    {
+      field: 'NoteDesc',
+      header: '備註',
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-soft-cell' : '',
+    },
   ];
-
   /** 後端可能回 yyyy-MM-dd / yyyy-MM-ddTHH:mm:ss / Date，都統一顯示 yyyy/MM/dd */
   formatYMD = (v: any): string => {
     if (v === null || v === undefined || v === '') return '';
@@ -564,6 +582,15 @@ export class FIN32020CRUComponent
     this.currentDetailRowData = null;
     this.arsSelectedRows = [];
   }
+
+  /** 給 table 用的整列 class */
+  getARSRowClass = (row: Fin32020ARSRow): string => {
+    return this.isARSAlreadySelected(row) ? 'selected-red-row' : '';
+  };
+
+  getAdjAccRowClass = (row: Fin32020AdjAccRow): string => {
+    return this.isAdjAccAlreadySelected(row) ? 'selected-red-row' : '';
+  };
   private isDuplicateARSNo(arsNo: string, currentIndex: number): boolean {
     const target = String(arsNo ?? '').trim();
     if (!target) return false;
@@ -824,5 +851,26 @@ export class FIN32020CRUComponent
   }
   onAdjAccCancel(): void {
     this.resetAdjAccDialogState();
+  }
+  private normalizeValue(v: any): string {
+    return String(v ?? '').trim();
+  }
+
+  isARSAlreadySelected(row: any): boolean {
+    const arsNo = this.normalizeValue(row?.ARS_No);
+    if (!arsNo) return false;
+
+    return (this.detailData || []).some((item: any) => {
+      return this.normalizeValue(item?.receiveID) === arsNo;
+    });
+  }
+
+  isAdjAccAlreadySelected(row: any): boolean {
+    const accNo = this.normalizeValue(row?.CAR_AccNo);
+    if (!accNo) return false;
+
+    return (this.detailData || []).some((item: any) => {
+      return this.normalizeValue(item?.adjustID) === accNo;
+    });
   }
 }
