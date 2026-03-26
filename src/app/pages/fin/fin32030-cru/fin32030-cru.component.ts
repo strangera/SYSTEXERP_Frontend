@@ -228,7 +228,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   // 步驟3: 票據資訊表格資料
   step3TableData: any[] = [];
   step3FooterData: { CHK_Amt?: number } = {}; // 票據明細的 footer 資料
-  step3DefaultInsertData = { CHK_Type: '1', Ticket_YN: 'N' }; // 票據種類預設支票，是否客票預設否
+  step3DefaultInsertData: { CHK_Type: string; Ticket_YN: string; AccNo?: string | null } = { CHK_Type: '1', Ticket_YN: 'N' }; // 票據種類預設支票，是否客票預設否
   step3Columns: EditColumn[] = [
     {
       field: 'CHK_No',
@@ -298,11 +298,9 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       maxLength: 20,
       width: '130px',
       onBlur: (rowData, value) => {
-        // 即時驗證：離開欄位時檢查長度
         const accLen = rowData.ACC_LEN || 0;
         if (value && accLen > 0 && value.length !== accLen) {
-          // 顯示提示訊息但不阻擋
-          console.warn(`客戶銀行帳號長度不符 - 預期: ${accLen} 碼，實際: ${value.length} 碼`);
+          this.messageService.warnBubble(`客戶銀行帳號須為 ${accLen} 碼（目前 ${value.length} 碼）`);
         }
       },
       validate: [
@@ -1025,19 +1023,28 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     this.abatAcctDialogSelectedItem = null;
   }
 
-  /** 計算票據總金額 */
+  /** 計算票據總金額，並同步更新票據預設 AccNo */
   private calculateBillTotalAmount(): void {
     let totalAmount = 0;
+    let voucherType2AccNo: string | null = null;
     for (const item of this.step2TableData) {
       if (item.CAP_Item) {
         const recvItem = this.recvItemOptions.find(opt => opt.value === item.CAP_Item);
         // Voucher_Type = '2' 為應收票據科目
         if (recvItem?.Voucher_Type === '2') {
           totalAmount += item.ARS_Amt || 0;
+          // 取第一個應收票據科目的 AccNo 作為票據預設值
+          if (voucherType2AccNo === null && item.AccNo) {
+            voucherType2AccNo = item.AccNo;
+          }
         }
       }
     }
     this.billTotalAmountControl.setValue(totalAmount);
+    // 更新票據新增行的預設 AccNo（當值有變化時才更新，避免觸發不必要的 ngOnChanges）
+    if (this.step3DefaultInsertData.AccNo !== voucherType2AccNo) {
+      this.step3DefaultInsertData = { ...this.step3DefaultInsertData, AccNo: voucherType2AccNo };
+    }
   }
 
   // ----------------------------------------------------------------
@@ -1246,7 +1253,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
                   CHK_ExpireDate: check.CHK_ExpireDate ? new Date(check.CHK_ExpireDate) : null,
                   CHK_PreDate: check.CHK_PreDate ? new Date(check.CHK_PreDate) : null,
                   CHK_Comment: check.CHK_Comment || '',
-                  AccNo: check.AccNo || '',
+                  AccNo: check.AccNo || this.step3DefaultInsertData.AccNo || '',
                   ORG_ID: check.ORG_ID || '',
                   ProjectNo: check.ProjectNo || ''
                 };
