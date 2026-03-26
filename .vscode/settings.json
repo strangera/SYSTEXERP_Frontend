@@ -23,7 +23,7 @@
     ".eslintrc.json": true,
     "sonar-project.properties": true,
     "ngsw-config.json": true,
-    // "src/assets": true,
+    "src/assets": true,
     ".sonarlint": true,
     ".scannerwork": true,
     "public": true,

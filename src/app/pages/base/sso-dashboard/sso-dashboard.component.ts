@@ -54,7 +54,7 @@ import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
   ],
 })
 export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDestroy
-  logo = 'assets/layout/images/systex_logo.png';
+  logo = 'assets/layout/images/logo.webp';
   user: UserInfo | null = null;
   private subscriptions: Subscription[] = [];
   items: MenuItem[] = [

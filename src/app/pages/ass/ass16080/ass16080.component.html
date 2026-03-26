@@ -23,74 +23,74 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="調出倉別"
-              controlName="Kurabe"
+              controlName="outWarehouse"
               [options]="Kurabe"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Kurabe"
+              [control]="queryForm.controls.outWarehouse"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="調入倉別"
-              controlName="Kurabe"
+              controlName="inWarehouse"
               [options]="Kurabe"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Kurabe"
+              [control]="queryForm.controls.inWarehouse"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="調撥單狀態"
-              controlName="status"
+              controlName="transferStatus"
               [options]="status"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.status"
+              [control]="queryForm.controls.transferStatus"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="調撥單號"
-              controlName="Receiptnumber"
-              [control]="queryForm.controls.Receiptnumber"
+              controlName="transferNote"
+              [control]="queryForm.controls.transferNote"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="申請人代號"
-              controlName="Applicantcode"
+              controlName="applicantCode"
               [options]="usercode"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Applicantcode"
+              [control]="queryForm.controls.applicantCode"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="品項編號"
-              controlName="Itemnumber"
-              [options]="Itemnumber"
+              controlName="itemCode"
+              [options]="itemCode"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Itemnumber"
+              [control]="queryForm.controls.itemCode"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="部門代號"
-              controlName="Departmentcode"
-              [options]="Departmentcode"
+              controlName="departmentCode"
+              [options]="departmentCode"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Departmentcode"
+              [control]="queryForm.controls.departmentCode"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -107,33 +107,33 @@
             <app-calendar-range
               calendarType="dateRange"
               label="審核日期"
-              [startControl]="queryForm.controls.SApplicationdate"
-              [endControl]="queryForm.controls.EApplicationdate"
+              [startControl]="queryForm.controls.SApprovalDate"
+              [endControl]="queryForm.controls.EApprovalDate"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="審核者"
-              controlName="Applicantcode"
+              controlName="applicantCode"
               [options]="usercode"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Applicantcode"
+              [control]="queryForm.controls.applicantCode"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="clear" [form]="queryForm"></app-button>
+        <app-button
+          btnType="query"
+          [loading]="loading"
+          (clickEvent)="onSubmitQuery(queryForm)"
+        ></app-button>
       </div>
     </p-accordionTab>
   </p-accordion>

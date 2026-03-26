@@ -16,7 +16,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { finalize } from 'rxjs';
 
-import { formatDate } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 
 //1.2.9.4 AP及ARNET之報表
 @Component({
@@ -43,7 +43,7 @@ export class FIN29040Component extends BasicQueryPageComponent<any> implements O
     { field: 'PartyNo', header: '廠客代號', visible: true },
     { field: 'PartyName', header: '廠客名稱', visible: true },
     { field: 'SourceType', header: '資料來源別', visible: true },
-    { field: 'PaymentAmount', header: '付款金額', visible: true },
+    { field: 'PaymentAmount', header: '付款金額', visible: true, format: formatAmount },
     { field: 'APAR_ID', header: '應收/付ID', visible: true },
     { field: 'BookDate', header: '立帳日期', visible: true, format: formatDate },
     { field: 'ExpectedPayDate', header: '預計收/付款日 退保留款/貼現日', visible: true, format: formatDate },
