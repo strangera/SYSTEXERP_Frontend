@@ -26,9 +26,8 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="廠商統一編號" controlName="ven_uniform_List" [options]="VEN_UniformOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.ven_uniform_List"
-              [submitted]="submitted"></app-multi-select>
+            <app-vendor-no-multi-select [control]="queryForm.controls.ven_uniform_List" [submitted]="submitted">
+            </app-vendor-no-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range [useGrouping]="false" label="版本編號"

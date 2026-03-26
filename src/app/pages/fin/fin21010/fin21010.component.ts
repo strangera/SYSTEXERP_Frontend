@@ -66,6 +66,11 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   data: FIN21010Response[] = [];
   columns: Column[] = [
     {
+      field: 'BNK_id',
+      header: '帳戶編號',
+      visible: true,
+    },
+    {
       field: 'BNK_DepositAccNo',
       header: '公司銀行科目',
       visible: true,
@@ -100,13 +105,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       field: 'BNK_CheckOutAccCName',
       header: '應付票據名稱',
       visible: true,
-    },
-    // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
-    // { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
-    // { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-    // { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
-    // { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
-    // { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
+    }
   ];
 
   selectedItems: APS1002[] = [];// 多選項目
@@ -223,22 +222,17 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       console.log('SYS1000.BNK_ACCTYPE 存款代號:', this.BNK_AccType_Option);
     });
 
-    // 查 GLS1005會計科目檔 -- 下拉GLS1005.ACCNO，讀取 ACCNO, ACCCNAME
-    this.dropdownApiService.queryGls1005_BNK_DepositAcc().pipe(untilDestroyed(this)).subscribe((response) => {
-      // 1. 確保 response 是陣列
+    // 查 公司銀行科目代號(/queryAPS1002_DropDownList)
+    this.dropdownApiService.queryAps1002().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];
-
-      // 2. 進行篩選與轉換
-      this.GLS1005_BNK_DepositAccNo_Option = list
-        .filter((item: any) => item.No && item.No.toString().trim().length === 6) // 規格更新：長度等於 6
-        .map((item: any) => ({
-          No: item.No,
-          Name: item.Name,
-          Label: item.No + '-' + item.Name,
-        }));
-
-      // console.log('篩選後公司銀行科目(6碼):', this.GLS1005_BNK_DepositAccNo_Option);
+      this.GLS1005_BNK_DepositAccNo_Option = list.map((item: any) => ({
+        No: item.BNK_DepositAccNo, // 公司銀行科目 代號
+        Name: item.ACCCNAME, // 公司銀行科目 名稱
+        Label: item.BNK_DepositAccNo + '-' + item.ACCCNAME, // 代碼+名稱
+      }));
+      console.log('公司銀行科目代號:', this.GLS1005_BNK_DepositAccNo_Option);
     });
+
 
     this.dropdownApiService.queryGls1005_BNK_CheckInAcc().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];

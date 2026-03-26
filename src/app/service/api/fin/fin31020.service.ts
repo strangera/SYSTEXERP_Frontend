@@ -23,6 +23,7 @@ export interface FIN31020Data {
   UPD_Date: string;       // 更新日期
   UPD_USR_No: string;     // 更新人員代號
   UPD_USR_Name: string;   // 更新人員姓名
+  CanDel: boolean;        // 是否可刪除
 }
 
 // 新增請求介面 (必填: mid、CAR_AccNo、CAR_type、CRT_Date、CRT_USR_No、CRT_USR_Name)
@@ -119,7 +120,7 @@ export class FIN31020Service {
     return this.http.post<FIN31020ApiResponse>(`${this.apiUrl}/updateFIN31020`, data);
   }
 
-  deleteFIN31020(idList: number[]): Observable<FIN31020ApiResponse> {
-    return this.http.post<FIN31020ApiResponse>(`${this.apiUrl}/deleteFIN31020`, { idList });
+  deleteFIN31020(carAccNoList: string[]): Observable<FIN31020ApiResponse> {
+    return this.http.post<FIN31020ApiResponse>(`${this.apiUrl}/deleteFIN31020`, { CAR_AccNoList: carAccNoList });
   }
 }

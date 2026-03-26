@@ -149,6 +149,7 @@ export const COLUMNS_CHANGE_EDIT: EditColumn[] = [
   { field: 'TXN_Net', header: '未稅發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: () => true, minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
   { field: 'TXN_Tax', header: '稅額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: () => true, minFractionDigits: 0, maxFractionDigits: 2, max: 999999999999, validate: [validateRequired, validateMaxNumber(999999999999)] },
   { field: 'TXN_SaleAmt', header: '銷售發票金額', type: 'inputNumber', calculate: (row) => calculateNetTax(row), disabled: () => true, max: 999999999999, validate: [validateMaxNumber(999999999999)] },
+  { field: 'INV_CompanyName', header: '公司名稱', type: 'input', maxLength: 80 },
   { field: 'TXN_Uniform', header: '統一編號', type: 'input', maxLength: 8 },
   { field: 'INV_NoneTax', header: '零稅註記', type: 'dropdown', options: INV_NONETAX_OPTIONS, calculate: (row) => calculateNetTax(row), optionLabel: 'label', optionValue: 'value', validate: [validateRequired] },
   { field: 'BusTaxExmpCard', header: '免徵營業稅證明卡卡號', type: 'input', disabled: (v, i, row) => row['INV_NoneTax'] !== '1', validate: [validateBusTaxExmpCardRequired] },
@@ -166,6 +167,7 @@ export const COLUMNS_CHANGE_VIEW: Column[] = [
   { field: 'TXN_Net', header: '未稅發票金額', disabled: () => true },
   { field: 'TXN_Tax', header: '稅額', disabled: () => true },
   { field: 'TXN_SaleAmt', header: '發票發票金額', format: formatAmount },
+  { field: 'INV_CompanyName', header: '公司名稱' },
   { field: 'TXN_Uniform', header: '統一編號' },
   { field: 'INV_NoneTax', header: '零稅註記', format: (v) => INV_NONETAX_OPTIONS.find(o => o.value === String(v))?.label ?? v },
   { field: 'BusTaxExmpCard', header: '免徵營業稅證明卡卡號' },
@@ -213,6 +215,7 @@ export interface TLS2J030Data {
   TXN_SaleAmt?: number;
   TXN_Uniform?: string;
   INV_NoneTax?: string;
+  INV_CompanyName?: string;
   BusTaxExmpCard?: string;
   GUI_DingType?: string;
   TXN_GUIRemark?: string;

@@ -81,7 +81,7 @@ export class InputCellComponent {
   }
   handleEnter(event: Event) {
     event.preventDefault(); // 阻止表單提交
-    event.stopPropagation(); // 阻止事件冒泡
+    // event.stopPropagation(); // !!!客戶需求禁止加上這段
     this.handleBlur();
   }
 }

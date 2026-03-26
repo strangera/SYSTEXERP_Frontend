@@ -1,14 +1,27 @@
-<div class="flex" style="height: 18px;">
-  <label class="col p-0 m-0 pr-2" [for]="startControlName">{{ label === '' ? startLabel : label + descLabel }}
+<div class="flex align-items-center" style="height: 18px;">
+  <label class="col p-0 m-0 pr-2" [for]="startControlName">
+    {{ label === '' ? startLabel : label + descLabel }}
     <span *ngIf="isRequired" class="text-red-500">*</span>
-  </label>
-  <div class="col-fixed py-0">
-    <span class="text-center"></span>
-  </div>
-  <label class="col p-0 m-0" [hidden]="label!==''" [for]="endControlName">{{ endLabel }}
-    <span *ngIf="isRequired" class="text-red-500">*</span>
+
+    <p-button icon="pi pi-cog" [rounded]="true" [raised]="true" size="small" styleClass="p-0 ml-1"
+      [style]="{'width': '16px','height':'16px'}" (onClick)="op.toggle($event)"
+      [disabled]="isStartDisabled || isEndDisabled" />
   </label>
 </div>
+<p-overlayPanel #op styleClass="p-0">
+  <div class="flex flex-column gap-3">
+    <div class="flex justify-content-between align-items-center">
+      <span class="font-medium text-900 block mb-2">快速選擇</span>
+      <i class="pi pi-times text-sm cursor-pointer" (click)="op.hide()"></i>
+    </div>
+    <div class="flex flex-column gap-2">
+      <p-selectButton [options]="availableUnitOptions" [(ngModel)]="timeUnit" (ngModelChange)="onTimeUnitChange($event)"
+        optionLabel="label" optionValue="value" />
+      <p-selectButton [options]="filteredTimeRangeOptions" [(ngModel)]="timeRange"
+        (onChange)="onTimeRangeChange($event)" optionLabel="label" />
+    </div>
+  </div>
+</p-overlayPanel>
 <ng-content select="header"></ng-content>
 <div class="grid p-fluid">
   <div class="col pb-0">

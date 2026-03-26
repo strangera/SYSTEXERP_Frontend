@@ -1,165 +1,188 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    @if (isFormCreateable) {
+      <app-button
+        icon="pi pi-file-import"
+        label="轉入採購單"
+        [loading]="transferListLoading || loading"
+        (click)="openTransferDialog()"
+      ></app-button>
+    }
+    @if (isFormEditable) {
+      <app-button
+        btnType="default"
+        icon="pi pi-file-check"
+        label="驗收"
+        [loading]="loading"
+        (click)="onConfirm()"
+      ></app-button>
+    }
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel header="採購主檔資料" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="驗收單號"
+            controlName="SUBCHECK_ID"
+            [control]="dataForm.controls.SUBCHECK_ID"
+            [submitted]="submitted"
+            [disabled]="true"
+          ></app-input-text>
         </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="驗收單號" controlName="purchaseNumber"
-                        [control]="dataForm.controls.purchaseNumber" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="驗收單狀態" controlName="paperStatus" [options]="paperStatusOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.paperStatus"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="申請人編號" controlName="applicantCode" [options]="applicantCodeOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.applicantCode"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="部門代號" controlName="organizationNumber" [options]="organizationNumberOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.organizationNumber"
-                        [submitted]="submitted"></app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar calendarType="dateOne" label="申請日期" controlName="applicationDate"
-                        [control]="dataForm.controls.applicationDate" [submitted]="submitted">
-                    </app-calendar>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="供應商編號" controlName="supplierCode" [options]="supplierCodeOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.supplierCode"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="未稅總金額" controlName="noTaxAmount"
-                        [control]="dataForm.controls.noTaxAmount" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="稅額" controlName="taxAmount"
-                        [control]="dataForm.controls.taxAmount" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="含稅總金額" controlName="totalTaxAmount"
-                        [control]="dataForm.controls.totalTaxAmount" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number [useGrouping]="false" label="調整總金額" controlName="adjust_totalTaxAmount"
-                        [control]="dataForm.controls.adjust_totalTaxAmount" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-            </div>
-            <hr>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="品項編號" controlName="itemCode" [options]="itemCodeOptions" optionLabel="label"
-                        optionValue="value" [control]="dataForm.controls.itemCode" [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="單位" controlName="unit" [control]="dataForm.controls.unit"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="申請數量" controlName="requestNumber"
-                        [control]="dataForm.controls.requestNumber" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="應驗數量" controlName="should_checktNumber"
-                        [control]="dataForm.controls.should_checktNumber" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="驗收數量" controlName="checktNumber" [control]="dataForm.controls.checktNumber"
-                        [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="單價(未稅)" controlName="singlePrice" [control]="dataForm.controls.singlePrice"
-                        [submitted]="submitted">
-                    </app-input-number>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="調整單價(未稅)" controlName="adjustPrice"
-                        [control]="dataForm.controls.adjustPrice" [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="總金額" controlName="totalPrice" [control]="dataForm.controls.totalPrice"
-                        [submitted]="submitted">
-                    </app-input-number>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="分店" controlName="branch" [control]="dataForm.controls.branch"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="倉別" controlName="storage" [options]="storageOptions" optionLabel="label"
-                        optionValue="value" [control]="dataForm.controls.storage" [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="委託部門" controlName="department" [control]="dataForm.controls.department"
-                        [submitted]="submitted">
-                    </app-input-text>
-                </div>
-            </div>
-            <!---->
-            <!-- <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1">
-                            <p>服務項目 {{ i + 1 }}</p>
-                        </div>
-                        <div>
-                            
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="服務項目" controlName="services" [control]="getFormControl(i, 'services')" [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                    </div>
-                    <hr/>
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
-                
-            </div> -->
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
-            </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="申請人編號"
+            controlName="EMP_ID"
+            [options]="empIdOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.EMP_ID"
+            [submitted]="submitted"
+            [disabled]="!isFormCreateable"
+          ></app-dropdown>
         </div>
-    </p-panel>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="部門代號"
+            controlName="ORG_ID"
+            [options]="orgIdOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.ORG_ID"
+            [submitted]="submitted"
+            [disabled]="!isFormCreateable"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            calendarType="dateOne"
+            label="申請日期"
+            [control]="dataForm.controls.APPLY_DATE"
+            [submitted]="submitted"
+            [disabled]="!isFormCreateable"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="供應商代號"
+            controlName="SUPPLIER_ID"
+            [options]="supplierIdOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.SUPPLIER_ID"
+            [submitted]="submitted"
+            [disabled]="!isFormCreateable"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="未稅總金額"
+            controlName="NTAX_AMT"
+            [control]="dataForm.controls.NTAX_AMT"
+            [submitted]="submitted"
+            [disabled]="!isFormCreateable"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="稅額"
+            controlName="TAX_AMT"
+            [control]="dataForm.controls.TAX_AMT"
+            [submitted]="submitted"
+            [disabled]="!isFormCreateable"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="含稅總金額"
+            controlName="AMT"
+            [control]="dataForm.controls.AMT"
+            [submitted]="submitted"
+            [disabled]="!isFormCreateable"
+          ></app-input-number>
+        </div>
+      </div>
+      <hr />
+      <app-table-edit
+        #tableEdit
+        class="col-12"
+        tableKey="ASS12050Detail"
+        [columns]="editColumns"
+        [data]="data"
+        (dataChange)="data = $event"
+        (insert)="onTableInsert()"
+        [showReorder]="isFormCreateable"
+        [disabled]="isFormReadable"
+        [showCheckBox]="isFormCreateable"
+        [showInsert]="isFormCreateable"
+        [showDelete]="isFormCreateable"
+        [canInsert]="isFormCreateable"
+      ></app-table-edit>
+    </form>
+    @if (isFormCreateable) {
+      <div class="col pt-4">
+        <div class="grid justify-content-end gap-2">
+          <app-button
+            btnType="cancel"
+            [form]="dataForm"
+            (clickEvent)="onCancelButtonClick()"
+          ></app-button>
+          <app-button
+            btnType="submit"
+            label="儲存"
+            [loading]="loading"
+            (click)="onSubmit()"
+          ></app-button>
+        </div>
+      </div>
+    }
+    @if (isFormEditable) {
+      <div class="col pt-4">
+        <div class="grid justify-content-end gap-2">
+          <app-button
+            btnType="cancel"
+            [form]="dataForm"
+            (clickEvent)="onCancelButtonClick()"
+          ></app-button>
+          <app-button
+            btnType="submit"
+            label="儲存"
+            [loading]="loading"
+            (click)="onSubmit()"
+          ></app-button>
+        </div>
+      </div>
+    }
+  </p-panel>
 </div>
+
+<app-dialog
+  [(visible)]="displayTransferDialog"
+  header="選擇採購單"
+  [disable]="!canConfirmTransfer"
+  [loading]="transferListLoading"
+  (save)="onTransferConfirm()"
+>
+  <div
+    [style]="{ 'min-height': '50vh', 'max-height': '75vh' }"
+    class="mt-3 mb-3"
+  >
+    <app-table
+      [showReportMode]="false"
+      [showCaption]="false"
+      [showHeader]="false"
+      [showManage]="false"
+      [showDelete]="false"
+      [showCheckBox]="true"
+      [selectionMode]="'single'"
+      dataKey="SUBPOENA_ID"
+      [data]="transferData"
+      [columns]="transferColumns"
+      [selectedItems]="selectedTransferRow ? [selectedTransferRow] : []"
+      (selectionChange)="onTransferSelectionChange($event)"
+    ></app-table>
+  </div>
+</app-dialog>

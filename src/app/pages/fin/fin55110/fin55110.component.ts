@@ -149,7 +149,7 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = '日記帳表.pdf';
+          a.download = '部門科目明細表.pdf';
           a.click();
           window.URL.revokeObjectURL(url);
         },
@@ -170,7 +170,7 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = '日記帳表.xlsx';
+          a.download = '部門科目明細表.xlsx';
           a.click();
           window.URL.revokeObjectURL(url);
         },

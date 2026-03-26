@@ -6,6 +6,7 @@ import { environment } from 'src/environments/environment';
 
 // 查詢 Request
 export interface QueryFIN55050Request extends BaseQueryRequest {
+  SortBy?: { field: string; order: number }[];
   DateFrom: string;
   DateTo: string;
   OrgIdList?: string[];
@@ -39,6 +40,12 @@ export interface FIN55050Detail {
   OpeningBal: number;
 }
 
+export interface GroupedFIN55050Detail extends FIN55050Detail {
+  AccNo: string;
+  AccCName: string;
+  VouDate: string;
+}
+
 // 巢狀父資料（包含 _Details）
 export interface FIN55050Data {
   AccNo: string;
@@ -47,8 +54,25 @@ export interface FIN55050Data {
   _Details: FIN55050Detail[];
 }
 
+export interface VouNoIndexEntry {
+  parent: {
+    AccNo: string;
+    AccCName: string;
+    VouDate: string;
+  };
+  rows: FIN55050Detail[];
+  meta: VoucherMeta;
+}
+
+export interface VoucherMeta {
+  vouNo: string;          // 傳票編號
+  vouDate: string;        // 傳票日期
+  vouStatus: string | null; // 狀態（從 rows 第一個非空的 VouStatus 推得）
+  vouType: string | null;   // 傳票型態（若後端沒有，就先 null；可用 setVoucherType 設定）
+}
+
 export interface ExportFIN55050Payload {
-  SortBy: { field: string; order: number }[];
+  SortBy?: { field: string; order: number }[];
   DateFrom: string;
   DateTo: string;
   OrgIdList: string[];

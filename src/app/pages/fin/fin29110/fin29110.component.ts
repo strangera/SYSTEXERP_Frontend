@@ -326,12 +326,12 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
       if (i === periods) {
         const fromDays = (periods - 1) * bucketDays + 1;
         field = `NotDue_${periods}_Over_Days`;
-        header = `${fromDays}天以上\n${this.getRelativeDate(analysisDate, fromDays)}\n以後`;
+        header = `${fromDays}天以上\n${this.getRelativeDate(analysisDate, fromDays - 1)}\n以後`;
       } else {
         const from = (i - 1) * bucketDays + 1;
         const to = i * bucketDays;
         field = `NotDue_${i}_${from}_${to}_Days`;
-        header = `${from}~${to}天\n${this.getRelativeDate(analysisDate, from)}\n${this.getRelativeDate(analysisDate, to)}`;
+        header = `${from}~${to}天\n${this.getRelativeDate(analysisDate, from - 1)}\n${this.getRelativeDate(analysisDate, to - 1)}`;
       }
 
       cols.push({

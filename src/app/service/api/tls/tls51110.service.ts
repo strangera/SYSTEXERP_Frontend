@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
-import { environment } from '../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root',
@@ -31,7 +31,7 @@ export class Tls51110Service {
   }
   /** 匯入 Excel 檔 */
   uploadTLS51110(formData: FormData): Observable<any> {
-     return this.http.post<any>(`${this.apiUrl}/uploadTLS51110`, formData);
+    return this.http.post<any>(`${this.apiUrl}/uploadTLS51110`, formData);
   }
 
 

@@ -8,6 +8,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { DividerModule } from 'primeng/divider';
 import { DropdownModule } from 'primeng/dropdown';
 import { FileUploadModule } from 'primeng/fileupload';
+import { ImageModule } from 'primeng/image';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { MultiSelectModule } from 'primeng/multiselect';
@@ -15,8 +16,6 @@ import { Ripple } from 'primeng/ripple';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
-// 自定義的元件，也一同放在這裡
-import { ImageModule } from 'primeng/image';
 import { TableCaptionComponent } from './table-caption/table-caption.component';
 import { TableExpansionComponent } from './table-expansion/table-expansion.component';
 import { TableInputComponent } from './table-input/table-input.component';
@@ -50,3 +49,4 @@ export const COMMON_IMPORTS = [
   TableCaptionComponent,
   TableInputComponent
 ];
+export { TableCaptionComponent, TableExpansionComponent, TableInputComponent };

@@ -15,5 +15,10 @@ export const routes: Routes = [
     }),
     canActivate: [AuthGuard]
   },
+  {
+    path: 'reports',
+    loadChildren: () => import('./reports/reports.routes').then(m => m.reportsRoutes),
+    canActivate: [AuthGuard]
+  },
   { path: '**', redirectTo: 'login' }
 ];

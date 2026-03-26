@@ -410,6 +410,18 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     this.displayLocationData = this.locationData.filter(loc => loc._status !== 'deleted');
   }
 
+  /** 移除未填入位置編號的新增空列，離開步驟前呼叫 */
+  removeEmptyNewRows(): void {
+    const cleaned = this.locationData.filter(
+      loc => loc._status !== 'new' || loc.location_no?.trim()
+    );
+    if (cleaned.length !== this.locationData.length) {
+      this.locationData = cleaned;
+      this.updateDisplayLocationData();
+      this.locationDataChange.emit(this.locationData);
+    }
+  }
+
   searchLocationOptions(searchParams: Record<string, unknown>): Observable<DropdownOption[]> {
     if (searchParams['SortBy'] && Array.isArray(searchParams['SortBy'])) {
       searchParams['SortBy'] = (searchParams['SortBy'] as { field: string; order: number }[]).map((sort) => ({

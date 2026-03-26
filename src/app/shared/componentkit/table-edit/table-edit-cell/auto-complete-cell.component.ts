@@ -25,7 +25,7 @@ import { CellInput } from './table-edit-cell.model';
         [suggestions]="getOptions(cellInput.rowData, cellInput.col)"
         [optionLabel]="cellInput.col.optionLabel"
         [optionValue]="cellInput.col.optionValue"
-        [disabled]="isDisabled() || internalLoading"
+        [disabled]="isDisabled()"
         [forceSelection]="cellInput.col.forceSelection ?? false"
         [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
         [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }"
@@ -73,6 +73,7 @@ export class AutoCompleteCellComponent {
 
   isDisabled(): boolean {
     const col = this.cellInput.col;
+    // 這裡拿掉 internalLoading 的判斷，只判斷業務邏輯上的 disabled
     return (col.disabled && col.disabled(this.cellInput.rowData[col.field], this.cellInput.index, this.cellInput.rowData)) || this.cellInput.disabled;
   }
 
@@ -93,20 +94,10 @@ export class AutoCompleteCellComponent {
     const col = this.cellInput.col as EditColumn;
     const rowData = this.cellInput.rowData;
 
-    // 1. 處理 triggerFields 邏輯
-    const currentTriggerValues: Record<string, any> = {};
-    if (col.triggerFields) {
-      col.triggerFields.forEach(f => currentTriggerValues[f] = rowData?.[f]);
-    }
-
-    const triggerChanged = JSON.stringify(this._lastTriggerValues) !== JSON.stringify(currentTriggerValues);
-
-    // 2. 如果是 Async，調用搜尋
     if (col.optionsAsync) {
-      this.internalLoading = true;
-      this._lastTriggerValues = currentTriggerValues;
+      this.internalLoading = true; // 開啟 loading 狀態 (顯示旋轉圈圈)
+      this.cdr.markForCheck(); // 確保 UI 更新顯示 loading
 
-      // 假設 options 在 AutoComplete 模式下是一個接收 query 的 function 並返回 Observable
       const optionsResult = typeof col.options === 'function'
         ? col.options(rowData, event.query)
         : col.options;
@@ -115,7 +106,7 @@ export class AutoCompleteCellComponent {
         optionsResult.subscribe({
           next: (data: any) => {
             this._resolvedOptions = data || [];
-            this.internalLoading = false;
+            this.internalLoading = false; // 關閉 loading，但 Input 始終維持 Focus
             this.cdr.markForCheck();
           },
           error: () => {
@@ -124,11 +115,6 @@ export class AutoCompleteCellComponent {
           }
         });
       }
-    }
-
-    // 執行自定義的 onFilterComplete (如有需要)
-    if (col.onFilterComplete) {
-      col.onFilterComplete(event, rowData, col, this.cellInput.index);
     }
   }
 
@@ -164,7 +150,7 @@ export class AutoCompleteCellComponent {
 
   handleEnter(event: Event) {
     event.preventDefault();
-    event.stopPropagation();
+    // event.stopPropagation();// !!!客戶需求禁止加上這段
     this.handleBlur();
   }
 }

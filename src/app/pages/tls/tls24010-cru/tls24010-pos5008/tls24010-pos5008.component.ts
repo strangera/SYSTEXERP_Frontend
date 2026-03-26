@@ -259,7 +259,8 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
       // 條件必填卡控
       if (rowData.PAY_Type === '0') {
         // 信用卡：卡號必填，卡別保持不選則不控 (依您需求)
-        crdNoControl?.setValidators([Validators.required, Validators.maxLength(20)]);
+        // crdNoControl?.setValidators([Validators.required, Validators.maxLength(20)]);
+        crdNoControl?.setValidators([Validators.maxLength(20)]);
         // 如果信用卡別也需要必填，可取消下行註解
         // crdTypeControl?.setValidators([Validators.required]);
       } else if (rowData.PAY_Type === 'A') {

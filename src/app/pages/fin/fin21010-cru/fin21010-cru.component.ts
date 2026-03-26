@@ -32,7 +32,9 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
     //APS1002  公司銀行資料維護主檔
     id: [null], // 主鍵ID，新增時為null，編輯時為存在的ID
 
+    BNK_id: [null, [Validators.required, Validators.maxLength(6), this.validationService.noChineseValidator]], // 帳戶編號 (BNK_NO+BNK_BRANCHNO銀行代碼+分行代碼)  PK
     BNK_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.noChineseValidator]],     // 全省銀行代碼--- 下拉: BNK_NO+BNK_BRANCHNO銀行代碼、銀行名稱BNK_BRANCHNAME
+
     BNK_AccNo: [null, [Validators.required, Validators.maxLength(20), this.validationService.numberValidator]],  // 帳號
     BNK_AccName: [null, [Validators.required, Validators.maxLength(80)]],      // 帳戶名稱
 
@@ -52,9 +54,6 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
   GLS1005_BNK_DepositAccNo_Option: apiOption[] = []; // 公司銀行科目  (accNo like '1103%')
   GLS1005_BNK_CheckInAccNo_Option: apiOption[] = []; // 應收票據科目 (ClassNo 112 or 113)
   GLS1005_BNK_CheckOutAccNo_Option: apiOption[] = []; // 應付票據科目  (ClassNo 211 0r 212)
-
-  // 2. 新增一個陣列存原始清單，用於重複性檢查
-  rawGls1005List: any[] = [];
   // ----------------------------------------------------------------
 
   BNK_AccType_Option: apiOption[] = []; // SYS1000.BNK_ACCTYPE 存款代號 -- 下拉選單
@@ -97,7 +96,6 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
     }
   }
 
-  // 待確認 1.刪除卡控規則 2.BNK_No是否可以用前三碼去切
   onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
@@ -108,19 +106,12 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
       return;
     }
 
+    // 送出檢核(BNK_id不可重複)
     const formValue = frm.getRawValue();
     console.log('formValue', formValue)
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          const currentAccNo = this.dataForm.get('BNK_DepositAccNo')?.value;
-          const isExist = this.rawGls1005List.some(item => item.No === currentAccNo);
-
-          if (isExist) {
-            this.messageService.errorBubble('公司銀行科目代碼已存在，不可新增');
-            return;
-          }
-
           console.log('insert', formValue);
           this.fin21010Service.insertFIN21010(formValue).subscribe(() => {
             this.messageService.successBubble('新增成功');
@@ -164,24 +155,17 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
       // console.log('SYS1000.BNK_ACCTYPE 存款代號:', this.BNK_AccType_Option);
     });
 
-    // 查 GLS1005會計科目檔 -- 下拉GLS1005.ACCNO，讀取 ACCNO, ACCCNAME
-    this.dropdownApiService.queryGls1005_BNK_DepositAcc().pipe(untilDestroyed(this)).subscribe((response) => {
-      // 1. 確保 response 是陣列
+    // 查 公司銀行科目代號(/queryAPS1002_DropDownList)
+    this.dropdownApiService.queryAps1002().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];
-      // 儲存原始清單供重複性檢查使用
-      this.rawGls1005List = list;
-
-      // 2. 進行篩選與轉換
-      this.GLS1005_BNK_DepositAccNo_Option = list
-        .filter((item: any) => item.No && item.No.toString().trim().length === 6) // 規格更新：長度等於 6
-        .map((item: any) => ({
-          No: item.No,
-          Name: item.Name,
-          Label: item.No + '-' + item.Name,
-        }));
-
-      // console.log('篩選後公司銀行科目(6碼):', this.GLS1005_BNK_DepositAccNo_Option);
+      this.GLS1005_BNK_DepositAccNo_Option = list.map((item: any) => ({
+        No: item.BNK_DepositAccNo, // 公司銀行科目 代號
+        Name: item.ACCCNAME, // 公司銀行科目 名稱
+        Label: item.BNK_DepositAccNo + '-' + item.ACCCNAME, // 代碼+名稱
+      }));
+      console.log('公司銀行科目代號:', this.GLS1005_BNK_DepositAccNo_Option);
     });
+
 
     this.dropdownApiService.queryGls1005_BNK_CheckInAcc().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];

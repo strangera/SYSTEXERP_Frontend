@@ -1,40 +1,36 @@
 import { HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { Observable, tap } from 'rxjs'; // 引入必要的 RxJS 相關
+import { MessageService } from 'primeng/api'; // 需引入 PrimeNG 原生 MessageService
+import { Observable, tap } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class FileExportService {
+  // 用於暫存待存檔的資料
+  private pendingBlob: Blob | null = null;
+  private pendingFilename = '';
 
-  constructor(private messageService: NotificationService) { }
+  constructor(
+    private messageService: NotificationService,
+    private primengMessageService: MessageService
+  ) { }
 
-  /**
-   * 執行檔案匯出 Observable 的通用方法。
-   * 它負責處理加載狀態、訂閱、錯誤提示和檔案下載的實際操作。
-   * * @param exportObservable 呼叫後端 API 並回傳 HttpResponse<Blob> 的 Observable。
-   * @param fileExtension 預期的檔案副檔名 (例如: '.pdf', '.xlsx')。
-   * @param btnLoadingSetter 設定 Component 中 btnLoading 狀態的函數。
-   * @returns Subscription 物件，用於手動管理訂閱 (如果需要)。
-   */
   public executeFileExport(
     exportObservable: Observable<HttpResponse<Blob>>,
     fileExtension: string,
-    btnLoadingSetter?: (isLoading: boolean) => void // 使用函數來設定元件的狀態
+    btnLoadingSetter?: (isLoading: boolean) => void
   ): Observable<HttpResponse<Blob>> {
-
-    if (btnLoadingSetter) {
-      btnLoadingSetter(true);
-    }
+    if (btnLoadingSetter) btnLoadingSetter(true);
 
     return exportObservable.pipe(
       tap({
         next: (response: HttpResponse<Blob>) => {
-          this.handleFileExport(response, fileExtension);
+          this.handleResponse(response, fileExtension);
         },
         error: (err) => {
-          this.messageService.errorBubble('檔案匯出失敗，請重試或聯繫管理員。');
+          this.messageService.errorBubble('檔案匯出失敗，請重試。');
           console.error('File export error:', err);
         },
         finalize: () => btnLoadingSetter?.(false)
@@ -42,84 +38,104 @@ export class FileExportService {
     );
   }
 
-  // 處理檔案匯出的通用邏輯
-  private async handleFileExport(response: HttpResponse<Blob>, fileExtension: string): Promise<void> {
-    const contentDisposition = response.headers.get('Content-Disposition');
-    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
-    const blob = response.body;
 
+  public handleResponse(response: HttpResponse<Blob>, fileExtension: string, saveAs = false) {
+    const blob = response.body;
     if (!blob || blob.size === 0) {
-      this.messageService.warnBubble('沒有內容可下載。');
+      this.messageService.warnBubble('目前無資料可供下載。');
       return;
     }
 
-    // 檢查瀏覽器是否支援 showSaveFilePicker
-    if ('showSaveFilePicker' in window) {
-      try {
-        // 1. 彈出另存新檔對話框
-        const handle = await (window as any).showSaveFilePicker({
-          suggestedName: filename,
-          types: [{
-            description: 'Text Files',
-            accept: { 'text/plain': [fileExtension] }, // 根據副檔名調整 MIME type
-          }],
-        });
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const contentType = response.headers.get('Content-Type');
 
-        // 2. 寫入檔案
-        const writable = await handle.createWritable();
-        await writable.write(blob);
-        await writable.close();
+    // 1. 先執行自動下載 (保底：存到瀏覽器預設下載目錄)
+    this.fallbackDownload(blob, filename, contentType);
 
-        this.messageService.successBubble('檔案已儲存成功！');
-      } catch (err) {
-        // 使用者取消下載時會進到這裡
-        console.log('User cancelled the save dialog');
-      }
-    } else {
-      // 降級處理：如果瀏覽器不支援，使用原本的 <a> 標籤下載方式
-      this.fallbackDownload(blob, filename);
+    // 2. 判斷是否需要「另存新檔」流程：
+    // 條件：手動指定 saveAs 為 true，或者是特定的副檔名 (如 .txt)
+    const needsManualSave = saveAs || fileExtension.toLowerCase() === '.txt';
+
+    if (needsManualSave) {
+      // 暫存資料，供後續 savePendingFile 使用
+      this.pendingBlob = blob;
+      this.pendingFilename = filename;
+
+      // 彈出黑底 Toast 詢問
+      this.primengMessageService.add({
+        key: 'confirm',
+        sticky: true,
+        severity: 'custom',
+        summary: saveAs ? '檔案已準備就緒' : '檔案已自動下載',
+        detail: saveAs
+          ? `您可以點擊「另存新檔」指定儲存位置。`
+          : `報表：${filename} 已存至下載目錄。您也可以點擊另存新檔指定儲存位置。`
+      });
     }
   }
 
-  private fallbackDownload(blob: Blob, filename: string) {
-    const url = window.URL.createObjectURL(blob);
+  /**
+   * 被 Component 呼叫的另存新檔方法 (由使用者點擊按鈕觸發)
+   */
+  public async savePendingFile(): Promise<void> {
+    if (!this.pendingBlob) return;
+
+    if ('showSaveFilePicker' in window) {
+      try {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: this.pendingFilename,
+          types: [{
+            description: '純文字檔案',
+            accept: { 'text/plain': ['.txt'] },
+          }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(this.pendingBlob);
+        await writable.close();
+        this.messageService.successBubble('檔案儲存成功！');
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          this.fallbackDownload(this.pendingBlob, this.pendingFilename);
+        }
+      }
+    } else {
+      this.fallbackDownload(this.pendingBlob, this.pendingFilename);
+    }
+    this.clearPending();
+  }
+
+  public clearPending() {
+    this.pendingBlob = null;
+    this.pendingFilename = '';
+    this.primengMessageService.clear('confirm');
+  }
+
+  private fallbackDownload(blob: Blob, filename: string, contentType?: string | null) {
+    const url = window.URL.createObjectURL(new Blob([blob], { type: contentType || 'text/plain' }));
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-    this.messageService.successBubble('檔案已成功下載！');
+    setTimeout(() => {
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }, 200);
   }
 
-  // 輔助方法：從 header 獲取檔名 (邏輯不變)
   private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
-    if (!contentDisposition) {
-      return `download${defaultExtension}`;
-    }
-
+    if (!contentDisposition) return `export_${new Date().getTime()}${defaultExtension}`;
+    let filename = '';
     const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
-    if (filenameStarMatch && filenameStarMatch.length > 1) {
-      const encodedFilename = filenameStarMatch[1];
-      try {
-        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
-        return decoded;
-      } catch (error) {
-        console.error('Failed to decode filename*', error);
-        return encodedFilename;
-      }
+    if (filenameStarMatch?.[1]) {
+      const parts = filenameStarMatch[1].split("''");
+      if (parts.length === 2) filename = decodeURIComponent(parts[1]);
     }
-
-    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
-    if (filenameMatch && filenameMatch.length > 1) {
-      try {
-        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
-      } catch {
-        return filenameMatch[1];
-      }
+    if (!filename) {
+      const filenameMatch = /filename="?([^";]+)"?/.exec(contentDisposition);
+      if (filenameMatch?.[1]) filename = decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
     }
-
-    return `download${defaultExtension}`;
+    return filename || `download${defaultExtension}`;
   }
 }

@@ -108,7 +108,7 @@ export class FIN31020CRUComponent extends BasicCruPageComponent<FIN31020Data> im
   }
   private loadOptions(): void {
     // 科目代號
-    this.DropDownListService.queryGLS1005_DropDownList()
+    this.DropDownListService.queryGLS1005_ledgerMD_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => this.AccNoOptions = res.Data.map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
 

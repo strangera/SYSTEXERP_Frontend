@@ -207,7 +207,8 @@
     [totalRecords]="totalRecords" [data]="data" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [showManage]="!isCheckChangedUserMode" [columns]="isCheckChangedUserMode ? checkChangedUserColumns : columns"
     [loading]="loading" [showDelete]="false" [queryFunction]="fin24010Service.queryFIN24010.bind(fin24010Service)"
-    [showCheckBox]="isCheckChangedUserMode" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
+    [showCheckBox]="isCheckChangedUserMode" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [editDisabled]="editDisabled">
     <header>
       <div class="flex align-items-center gap-2">
         <p-button *ngIf="isCheckChangedUserMode" styleClass="p-2" label="更新匯款檔資料" [loading]="btnLoading"

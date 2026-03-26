@@ -7,22 +7,21 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- 第一行：出借編號(下拉選單)、歸還處理人員、歸還日期 -->
+        <!-- 第一行：出借編號(點擊彈跳選擇框)、歸還處理人員、歸還日期 -->
         <div class="col-12 md:col-4">
-          <app-dropdown
-            label="出借編號"
-            controlName="LoanNo"
-            [options]="loanNoOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.LoanNo"
-            [submitted]="submitted"
-            [showClear]="true"
-            [filter]="true"
-            filterBy="label"
-            [customPlaceholder]="'請選擇出借編號'"
-            (valueChange)="onLoanNoChange($event)"
-          ></app-dropdown>
+          <div
+            [style.cursor]="!isRead ? 'pointer' : ''"
+            (click)="!isRead && openLoanDialog()"
+          >
+            <app-input-text
+              label="出借編號"
+              controlName="LoanNo"
+              [control]="dataForm.controls.LoanNo"
+              [submitted]="submitted"
+              [readonly]="true"
+              [customPlaceholder]="'請選擇出借編號'"
+            ></app-input-text>
+          </div>
         </div>
         <div class="col-12 md:col-4">
           <app-input-text
@@ -117,3 +116,81 @@
     </form>
   </p-panel>
 </div>
+
+<!-- 出借編號選擇 Dialog -->
+<p-dialog
+  header="選擇出借編號"
+  [(visible)]="showLoanDialog"
+  [modal]="true"
+  [style]="{ width: '80vw' }"
+  (onHide)="closeLoanDialog()"
+>
+  <!-- 查詢條件 -->
+  <form [formGroup]="loanQueryForm" class="grid p-fluid mb-3">
+    <app-input-text
+      class="col-12 md:col-4"
+      label="借用人姓名"
+      controlName="UserName"
+      [control]="loanQueryForm.controls.UserName"
+    ></app-input-text>
+    <app-input-text
+      class="col-12 md:col-4"
+      label="電話"
+      controlName="LoanPhone"
+      [control]="loanQueryForm.controls.LoanPhone"
+    ></app-input-text>
+    <app-input-text
+      class="col-12 md:col-4"
+      label="設備號碼"
+      controlName="DeviceID"
+      [control]="loanQueryForm.controls.DeviceID"
+    ></app-input-text>
+  </form>
+  <div class="flex justify-content-end mb-2">
+    <app-button
+      label="查詢"
+      icon="pi pi-search"
+      [type]="'button'"
+      (click)="onQueryLoan()"
+      [loading]="loanDialogLoading"
+    ></app-button>
+  </div>
+
+  <!-- 結果 Table -->
+  <app-table
+    tableKey="LoanQuery"
+    dataKey="LoanNo"
+    [data]="loanDialogData"
+    [columns]="loanDialogColumns"
+    [loading]="loanDialogLoading"
+    [showPaginator]="true"
+    [rows]="30"
+    [totalRecords]="loanDialogTotalRecords"
+    [scrollable]="true"
+    [scrollHeight]="'400px'"
+    [showCheckBox]="true"
+    [showManage]="false"
+    [showFilter]="false"
+    [showDelete]="false"
+    [showCaption]="false"
+    selectionMode="single"
+    [lazy]="true"
+    (lazyLoadData)="onLazyLoadLoan($event)"
+    (select)="onLoanRowSelect($event)"
+  ></app-table>
+
+  <!-- Footer -->
+  <ng-template pTemplate="footer">
+    <app-button
+      label="取消"
+      severity="secondary"
+      [type]="'button'"
+      (click)="closeLoanDialog()"
+    ></app-button>
+    <app-button
+      label="確定"
+      [type]="'button'"
+      (click)="confirmLoanSelection()"
+    ></app-button>
+  </ng-template>
+</p-dialog>

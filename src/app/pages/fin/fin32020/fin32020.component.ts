@@ -33,8 +33,7 @@ import {
 import {
   ApiResponse,
   FIN32020Service,
-  Fin32020QueryRequest,
-  Fin32020Row,
+  Fin32020Row
 } from '../../../service/api/fin/fin32020.service';
 
 interface SortItem {
@@ -88,13 +87,19 @@ export class FIN32020Component
       header: '收款日期',
       format: (v: string) => this.formatDate(v),
     },
+    {
+      field: 'TotalAmt',
+      header: '調整金額',
+      align: 'right',
+      format: this.moneyFormat,
+    },
     { field: 'Remark', header: '備註' },
   ];
 
   // 展開明細欄位：_Details
   expansionColumns: ReportColumn[] = [
     { field: 'ARS_No', header: '應收帳款單號' },
-    { field: 'AccNo', header: '科目代號' },
+    { field: 'AccNo', header: '調整科目' },
     { field: 'AccCName', header: '科目名稱' },
     {
       field: 'ADJ_Amt',
@@ -133,33 +138,33 @@ export class FIN32020Component
   }
 
   /* ----------------- LifeCycle ----------------- */
-ngOnInit(): void {
-  this.initializePage(
-    'FIN32020',
-    'fin/fin32020cru',
-    this.queryForm,
-    (form) => this.onSubmit(form)
-  );
+  ngOnInit(): void {
+    this.initializePage(
+      'FIN32020',
+      'fin/fin32020cru',
+      this.queryForm,
+      (form) => this.onSubmit(form)
+    );
 
-  this._currentSortBy = this.defaultSort;
+    this._currentSortBy = this.defaultSort;
 
-  const fromCru = !!(history.state && history.state['fromCru']);
+    const fromCru = !!(history.state && history.state['fromCru']);
 
-  this.formStatusService.waitForReady(this.ProgNo).pipe(take(1)).subscribe(() => {
-    if (fromCru) {
-      this.handleQueryRestore(this.queryForm, this.ProgNo, (f) => this.onSubmit(f));
-    } else {
-      this.onClear(this.queryForm);
-      this.data = [];
-      this.selectedItems = [];
-      this.totalRecords = 0;
-      this.viewTotalRecords = 0;
-      this.footerData = undefined;
-      this.lastQueryBody = null;
-      this.tableVer++;
-    }
-  });
-}
+    this.formStatusService.waitForReady(this.ProgNo).pipe(take(1)).subscribe(() => {
+      if (fromCru) {
+        this.handleQueryRestore(this.queryForm, this.ProgNo, (f) => this.onSubmit(f));
+      } else {
+        this.onClear(this.queryForm);
+        this.data = [];
+        this.selectedItems = [];
+        this.totalRecords = 0;
+        this.viewTotalRecords = 0;
+        this.footerData = undefined;
+        this.lastQueryBody = null;
+        this.tableVer++;
+      }
+    });
+  }
 
 
 
@@ -200,163 +205,163 @@ ngOnInit(): void {
     return cleaned.length ? cleaned : fallback;
   }
 
-private saveQueryState(): void {
-  // 給 handleQueryRestore 用：只存表單
-  this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+  private saveQueryState(): void {
+    // 給 handleQueryRestore 用：只存表單
+    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
 
-  // 你自己的還原資料：另外存
-  this.queryStateService.setQueryState(`${this.ProgNo}_ext`, {
-    currentSortBy: this._currentSortBy?.length ? this._currentSortBy : this.defaultSort,
-    lastQueryBody: this.lastQueryBody,
-  } as any);
-}
+    // 你自己的還原資料：另外存
+    this.queryStateService.setQueryState(`${this.ProgNo}_ext`, {
+      currentSortBy: this._currentSortBy?.length ? this._currentSortBy : this.defaultSort,
+      lastQueryBody: this.lastQueryBody,
+    } as any);
+  }
 
   /** 把表單 & table-report body 組成 request */
-/** 把表單 & table-report body 組成 request（不帶 Offset/OrderBy；pageIndex/pageSize 小寫） */
-private buildPayload(base: any): any {
-  const raw = this.queryForm.getRawValue();
+  /** 把表單 & table-report body 組成 request（不帶 Offset/OrderBy；pageIndex/pageSize 小寫） */
+  private buildPayload(base: any): any {
+    const raw = this.queryForm.getRawValue();
 
-  const pageIndex =
-    Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
+    const pageIndex =
+      Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
 
-  // ⭐ 固定 pageSize = 30
-  const pageSize = 30;
+    // ⭐ 固定 pageSize = 30
+    const pageSize = 30;
 
-  // ⭐ 主要用 SortBy
-  const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
+    // ⭐ 主要用 SortBy
+    const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
 
-  const req: any = {
-    pageIndex,
-    pageSize,
-    SortBy: sort,
+    const req: any = {
+      pageIndex,
+      pageSize,
+      SortBy: sort,
 
-    ADJ_No: raw.adjust_ID ? String(raw.adjust_ID) : null,
-    ADJ_Date_From: this.toYMDOrNull(raw.adjust_Date_From),
-    ADJ_Date_To: this.toYMDOrNull(raw.adjust_Date_To),
-    Remark: raw.remark || null,
-    VouNo_From: raw.summons_ID_From ? String(raw.summons_ID_From) : null,
-    VouNo_To: raw.summons_ID_To ? String(raw.summons_ID_To) : null,
-  };
+      ADJ_No: raw.adjust_ID ? String(raw.adjust_ID) : null,
+      ADJ_Date_From: this.toYMDOrNull(raw.adjust_Date_From),
+      ADJ_Date_To: this.toYMDOrNull(raw.adjust_Date_To),
+      Remark: raw.remark || null,
+      VouNo_From: raw.summons_ID_From ? String(raw.summons_ID_From) : null,
+      VouNo_To: raw.summons_ID_To ? String(raw.summons_ID_To) : null,
+    };
 
-  // 清掉空值
-  Object.keys(req).forEach((k) => {
-    const v = req[k];
-    if (v === '' || v === null || v === undefined) delete req[k];
-  });
+    // 清掉空值
+    Object.keys(req).forEach((k) => {
+      const v = req[k];
+      if (v === '' || v === null || v === undefined) delete req[k];
+    });
 
-  return req;
-}
+    return req;
+  }
 
 
   /** 給 <app-table-report> 用的查詢函式（分頁載入） */
-/** 給 <app-table-report> 用的查詢函式（分頁載入） */
-public queryFIN32020ForReport = (body: any) =>
-  this.fin32020Service.queryFIN32020(this.buildPayload(body || {})).pipe(
-    map((res: ApiResponse<Fin32020Row[] | Fin32020Row>) => {
-      const src = res?.Data as any;
-      const rows: Fin32020Row[] = Array.isArray(src) ? src : src ? [src] : [];
-      const totalCount = Number((res as any)?.TotalCount ?? rows.length) || rows.length;
+  /** 給 <app-table-report> 用的查詢函式（分頁載入） */
+  public queryFIN32020ForReport = (body: any) =>
+    this.fin32020Service.queryFIN32020(this.buildPayload(body || {})).pipe(
+      map((res: ApiResponse<Fin32020Row[] | Fin32020Row>) => {
+        const src = res?.Data as any;
+        const rows: Fin32020Row[] = Array.isArray(src) ? src : src ? [src] : [];
+        const totalCount = Number((res as any)?.TotalCount ?? rows.length) || rows.length;
 
-      rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
-      return { Data: rows, TotalCount: totalCount, GrandTotal: null };
-    })
-  );
+        rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
+        return { Data: rows, TotalCount: totalCount, GrandTotal: null };
+      })
+    );
 
   /* ----------------- Submit（主表查詢） ----------------- */
-onSubmit(frm: FormGroup) {
-  this.submitted = true;
+  onSubmit(frm: FormGroup) {
+    this.submitted = true;
 
-  if (this.queryForm.invalid) {
-    this.queryForm.markAllAsTouched();
-    return;
-  }
+    if (this.queryForm.invalid) {
+      this.queryForm.markAllAsTouched();
+      return;
+    }
 
-  if (!this.hasPermission(this.Actions.Query)) return;
+    if (!this.hasPermission(this.Actions.Query)) return;
 
-  const raw: any = this.queryForm.getRawValue();
+    const raw: any = this.queryForm.getRawValue();
 
-  // ⭐ 查詢一律回第一頁
-  const payload = this.buildPayload({
-    ...raw,
-    pageIndex: 1,
-    pageSize: 30, // buildPayload 也會固定 30
-    SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
-  });
-
-  this.loading = true;
-  this.data = [];
-  this.selectedItems = [];
-  this.footerData = undefined;
-  this.totalRecords = 0;
-  this.viewTotalRecords = 0;
-  this.tableVer++;
-
-  this.fin32020Service
-    .queryFIN32020(payload)
-    .pipe(untilDestroyed(this))
-    .subscribe({
-      next: (res: ApiResponse<Fin32020Row[]>) => {
-        const rows: Fin32020Row[] = Array.isArray(res?.Data) ? res.Data : [];
-        rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
-
-        this.data = rows;
-        this.cdr.detectChanges();
-
-        const realTotal = Number(res?.TotalCount ?? rows.length) || rows.length;
-
-        setTimeout(() => {
-          this.totalRecords = realTotal;
-          this.viewTotalRecords = realTotal;
-
-          // ✅ 更新 lastQuery / currentSort
-          this.lastQueryBody = { ...payload };
-          this._currentSortBy = payload.SortBy ?? this.defaultSort;
-
-          // ✅ 存狀態
-          this.saveQueryState();
-        });
-
-        this.loading = false;
-      },
-      error: (err: any) => {
-        console.error('FIN32020 API error:', err);
-        this.data = [];
-        this.totalRecords = 0;
-        this.viewTotalRecords = 0;
-        this.footerData = undefined;
-        this.loading = false;
-      },
+    // ⭐ 查詢一律回第一頁
+    const payload = this.buildPayload({
+      ...raw,
+      pageIndex: 1,
+      pageSize: 30, // buildPayload 也會固定 30
+      SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
     });
-}
+
+    this.loading = true;
+    this.data = [];
+    this.selectedItems = [];
+    this.footerData = undefined;
+    this.totalRecords = 0;
+    this.viewTotalRecords = 0;
+    this.tableVer++;
+
+    this.fin32020Service
+      .queryFIN32020(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<Fin32020Row[]>) => {
+          const rows: Fin32020Row[] = Array.isArray(res?.Data) ? res.Data : [];
+          rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
+
+          this.data = rows;
+          this.cdr.detectChanges();
+
+          const realTotal = Number(res?.TotalCount ?? rows.length) || rows.length;
+
+          setTimeout(() => {
+            this.totalRecords = realTotal;
+            this.viewTotalRecords = realTotal;
+
+            // ✅ 更新 lastQuery / currentSort
+            this.lastQueryBody = { ...payload };
+            this._currentSortBy = payload.SortBy ?? this.defaultSort;
+
+            // ✅ 存狀態
+            this.saveQueryState();
+          });
+
+          this.loading = false;
+        },
+        error: (err: any) => {
+          console.error('FIN32020 API error:', err);
+          this.data = [];
+          this.totalRecords = 0;
+          this.viewTotalRecords = 0;
+          this.footerData = undefined;
+          this.loading = false;
+        },
+      });
+  }
 
 
   /* ----------------- 清除 ----------------- */
-onClear(frm: FormGroup) {
-  frm.reset(
-    {
-      adjust_ID: null,
-      adjust_Date_From: null,
-      adjust_Date_To: null,
-      remark: '',
-      summons_ID_From: null,
-      summons_ID_To: null,
-      ...createPaginationConfig([{ field: 'ADJ_Date', order: -1 }]),
-    } as any,
-    { emitEvent: false }
-  );
+  onClear(frm: FormGroup) {
+    frm.reset(
+      {
+        adjust_ID: null,
+        adjust_Date_From: null,
+        adjust_Date_To: null,
+        remark: '',
+        summons_ID_From: null,
+        summons_ID_To: null,
+        ...createPaginationConfig([{ field: 'ADJ_Date', order: -1 }]),
+      } as any,
+      { emitEvent: false }
+    );
 
-  this.submitted = false;
-  this.data = [];
-  this.totalRecords = 0;
-  this.viewTotalRecords = 0;
-  this.footerData = undefined;
+    this.submitted = false;
+    this.data = [];
+    this.totalRecords = 0;
+    this.viewTotalRecords = 0;
+    this.footerData = undefined;
 
-  this.lastQueryBody = null;
-  this._currentSortBy = this.defaultSort;
+    this.lastQueryBody = null;
+    this._currentSortBy = this.defaultSort;
 
-  // ✅ 清掉 restore 狀態（不要再 setQueryState）
-  this.queryStateService.clearQueryState(this.ProgNo);
-}
+    // ✅ 清掉 restore 狀態（不要再 setQueryState）
+    this.queryStateService.clearQueryState(this.ProgNo);
+  }
 
 
   /* ----------------- 建立 / 編輯 / 明細 ----------------- */

@@ -1,11 +1,26 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-          </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      btnType="create"
+      label="{{ '登入' }}"
+      (clickEvent)="onCreate()"
+    ></app-button>
+    <app-button
+      btnType="edit"
+      label="{{ '盤後調整' }}"
+      (clickEvent)="onCreate()"
+    ></app-button>
+    <app-button
+      [type]="'button'"
+      label="盤後查詢"
+      (clickEvent)="onQueryDialog()"
+    ></app-button>
+    <app-button
+      btnType="report"
+      label="{{ '盤點報表' }}"
+      (clickEvent)="goReport()"
+    ></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -21,19 +36,16 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-input-text
               label="盤點單號"
               controlName="Inventoryordernumber"
-              [options]="Inventoryordenumber"
-              optionLabel="label"
-              optionValue="value"
               [control]="queryForm.controls.Inventoryordernumber"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="盤點狀態"
               controlName="Inventorystatus"
               [options]="Inventorystatus"
@@ -41,7 +53,7 @@
               optionValue="value"
               [control]="queryForm.controls.Inventorystatus"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
@@ -89,17 +101,13 @@
             ></app-radiobutton>
           </div>
         </div>
-      </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-      </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
@@ -107,10 +115,40 @@
 <div class="card">
   <div class="col-12">
     <app-table
+      tableKey="ASS16020"
+      dataKey="inventoryNumber"
       [data]="data"
       [columns]="columns"
+      [loading]="loading"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [showCheckBox]="true"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
     ></app-table>
   </div>
 </div>
+
+<!-- 盤後查詢 Dialog -->
+<p-dialog
+  header="盤後查詢"
+  [(visible)]="arDialogVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '90vw', maxWidth: '1200px' }"
+>
+  <app-table
+    tableKey="ASS16020_Query_Dialog"
+    dataKey="inventoryNumber"
+    [data]="QueryDialogData"
+    [columns]="QueryDialogColumns"
+    [loading]="loading"
+    [showManage]="false"
+    [showReportMode]="false"
+    [showReportExcel]="false"
+    [showReportPDF]="false"
+    [showDelete]="false"
+    [showRowEdit]="false"
+  ></app-table>
+</p-dialog>

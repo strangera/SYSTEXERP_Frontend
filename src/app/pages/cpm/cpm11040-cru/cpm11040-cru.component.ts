@@ -4,13 +4,15 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
+import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
 
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -31,21 +33,20 @@ import { getSYS1000Options } from '../../../service/system/sys1000.service';
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    DropdownComponent,
+
     ButtonComponent,
     TranslateModule,
     CalendarComponent,
     NgIf,
+    DialogModule,
+    TableComponent,
   ],
 })
 export class CPM11040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   readonly CRUD = CRUDStatus;
 
-  // 出借編號下拉選項 (只顯示未歸還的)
-  loanNoOptions: { label: string; value: string; data: CPM11040Data }[] = [];
-
   dataForm = this.formBuilder.group({
-    // 出借編號 - 下拉選單，必填
+    // 出借編號 - 彈跳選擇，必填
     LoanNo: [null as string | null, [Validators.required]],
     // 歸還處理人員 - readonly
     ReturnUserName: [{ value: '', disabled: true }],
@@ -64,6 +65,29 @@ export class CPM11040CRUComponent extends BasicCruPageComponent<any> implements 
 
   // 是否已選擇資料
   dataLoaded = false;
+
+  // ===== 彈跳選擇框 Dialog =====
+  showLoanDialog = false;
+  loanDialogLoading = false;
+  loanDialogData: CPM11040Data[] = [];
+  loanDialogTotalRecords = 0;
+  loanDialogSelectedItem: CPM11040Data | null = null;
+
+  loanQueryForm = this.formBuilder.group({
+    UserName: [''],
+    LoanPhone: [''],
+    DeviceID: [''],
+    pageSize: [30],
+    pageIndex: [1],
+  });
+
+  loanDialogColumns: Column[] = [
+    { field: 'LoanNo', header: '出借編號', visible: true },
+    { field: 'UserName', header: '借用人姓名', visible: true },
+    { field: 'LoanPhone', header: '電話', visible: true },
+    { field: 'DeviceID', header: '設備號碼', visible: true },
+    { field: 'DeviceName', header: '設備名稱', visible: true },
+  ];
 
   constructor(private cpm11040Service: CPM11040Service) {
     super();
@@ -91,69 +115,99 @@ export class CPM11040CRUComponent extends BasicCruPageComponent<any> implements 
     // 取得當前使用者名稱
     const currentUser = this.authService.currentUserValue?.user_Name || '';
     this.dataForm.patchValue({ ReturnUserName: currentUser }, { emitEvent: false });
-
-    // 載入未歸還的出借記錄
-    this.loadLoanNoOptions();
   }
 
-  // 載入出借編號下拉選項
-  loadLoanNoOptions() {
-    this.loading = true;
+  // ===== Dialog 開啟/關閉 =====
+  openLoanDialog(): void {
+    this.showLoanDialog = true;
+    this.loanQueryForm.reset({ UserName: '', LoanPhone: '', DeviceID: '', pageSize: 10, pageIndex: 1 });
+    this.loanDialogData = [];
+    this.loanDialogTotalRecords = 0;
+    this.loanDialogSelectedItem = null;
+    // 預設查詢一次
+    this.onQueryLoan();
+  }
 
-    // 使用大的 PageSize 來取得所有資料
+  closeLoanDialog(): void {
+    this.showLoanDialog = false;
+    this.loanDialogData = [];
+    this.loanDialogSelectedItem = null;
+  }
+
+  // 查詢出借記錄（只查未歸還，server-side 分頁）
+  onQueryLoan(): void {
+    const formValue = this.loanQueryForm.value;
+    this.loanDialogLoading = true;
+
     this.cpm11040Service.queryCPM11040({
-      PageSize: 9999,
-      PageIndex: 1
+      UserName: formValue.UserName || undefined,
+      LoanPhone: formValue.LoanPhone || undefined,
+      DeviceID: formValue.DeviceID || undefined,
+      OnlyUnreturned: true,
+      PageSize: formValue.pageSize ?? 30,
+      PageIndex: formValue.pageIndex ?? 1,
     })
       .pipe(
-        finalize(() => this.loading = false),
+        finalize(() => this.loanDialogLoading = false),
         untilDestroyed(this)
       )
       .subscribe(response => {
         if (response.Data) {
-          // 只篩選未歸還的記錄 (LoanStatus !== '已歸還')
-          this.loanNoOptions = response.Data
-            .filter(item => item.LoanStatus !== '已歸還')
-            .map(item => ({
-              label: `${item.LoanNo}`,
-              value: item.LoanNo,
-              data: item
-            }));
+          this.loanDialogData = response.Data;
+          this.loanDialogTotalRecords = response.TotalCount ?? 0;
         }
       });
   }
 
-  // 當選擇出借編號時，自動填入相關資料
-  onLoanNoChange(selectedLoanNo: string | null) {
-    if (!selectedLoanNo) {
-      this.clearFormData();
+  // 分頁切換時重新查詢
+  onLazyLoadLoan(event: { pageSize?: number; pageIndex?: number }): void {
+    this.loanQueryForm.patchValue({
+      pageSize: event.pageSize ?? 30,
+      pageIndex: event.pageIndex ?? 1,
+    });
+    this.onQueryLoan();
+  }
+
+  // 點選 table 列
+  onLoanRowSelect(event: { data?: CPM11040Data }): void {
+    if (event.data) {
+      this.loanDialogSelectedItem = event.data;
+    }
+  }
+
+  // 確認選擇
+  confirmLoanSelection(): void {
+    if (!this.loanDialogSelectedItem) {
+      this.messageService.warnBubble('請選擇一筆出借記錄');
       return;
     }
+    const data = this.loanDialogSelectedItem;
+    this.dataForm.patchValue({ LoanNo: data.LoanNo });
+    this.fillFormData(data);
+    this.showLoanDialog = false;
+    this.loanDialogSelectedItem = null;
+  }
 
-    // 從選項中找到對應的資料
-    const selectedOption = this.loanNoOptions.find(opt => opt.value === selectedLoanNo);
-    if (selectedOption) {
-      const data = selectedOption.data;
-
-      // 填充表單資料
-      this.dataForm.patchValue({
-        ServiceID: data.ServiceID && data.ServiceName ? `${data.ServiceID}-${data.ServiceName}` : data.ServiceName || data.ServiceID || '',
-        LoanDate: data.LoanDate ? new Date(data.LoanDate) : null,
-        UserName: data.UserName || '',
-        LoanPhone: data.LoanPhone || '',
-        CertType: (() => {
-          const opt = getSYS1000Options('Cert_Type').find(o => o.value === data.CertType);
-          return opt ? `${opt.value}-${opt.label}` : data.CertType || '';
-        })(),
-        DeviceName: data.DeviceName || ''
-      });
-      this.dataLoaded = true;
-    }
+  // 填充表單資料
+  fillFormData(data: CPM11040Data): void {
+    this.dataForm.patchValue({
+      ServiceID: data.ServiceID && data.ServiceName ? `${data.ServiceID}-${data.ServiceName}` : data.ServiceName || data.ServiceID || '',
+      LoanDate: data.LoanDate ? new Date(data.LoanDate) : null,
+      UserName: data.UserName || '',
+      LoanPhone: data.LoanPhone || '',
+      CertType: (() => {
+        const opt = getSYS1000Options('Cert_Type').find(o => o.value === data.CertType);
+        return opt ? `${opt.value}-${opt.label}` : data.CertType || '';
+      })(),
+      DeviceName: data.DeviceName || ''
+    });
+    this.dataLoaded = true;
   }
 
   // 清除表單資料
   clearFormData() {
     this.dataForm.patchValue({
+      LoanNo: null,
       ServiceID: '',
       LoanDate: null,
       UserName: '',

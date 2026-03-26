@@ -1,45 +1,41 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-      <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-    </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
+      [header]="'查詢條件'"
       [selected]="true"
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="支出請款單號"
-              controlName="PettyCashOrderNumber"
-              [options]="PettyCashOrderNumber"
+              controlName="paymentRequestNo"
+              [options]="paymentRequestNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.PettyCashOrderNumber"
-              [submitted]="submitted"
-            ></app-dropdown>
+              [control]="queryForm.controls.paymentRequestNo"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
-          <div class="col-12 md:col-6 lg:col-5">
-            <app-calendar-range
-              calendarType="dateRange"
+
+          <div class="col-12 md:col-6 lg:col-4">
+       
+                         <app-calendar-range
               label="產生日期"
-              [startControl]="queryForm.controls.startdate"
-              [endControl]="queryForm.controls.enddate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+              controlName="createDateStart"
+              [startControl]="queryForm.controls.createDateStart"
+              [endControl]="queryForm.controls.createDateEnd"
+              [submitted]="submitted">
+            </app-calendar-range>
           </div>
+
+       
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -49,38 +45,41 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.status"
-              [submitted]="submitted"
-            ></app-dropdown>
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
-          <div class="col-12 md:col-4 lg:col-4">
+
+          <div class="col-12 md:col-6 lg:col-4 flex align-items-end">
             <p-checkbox
-              label="列印簽核欄"
-              controlName="Approvalcolumn"
-            ></p-checkbox>
+              inputId="printSignOff"
+              [formControl]="queryForm.controls.printSignOff"
+              binary="true"
+              label="列印簽核欄">
+            </p-checkbox>
           </div>
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
 
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report
+    apiUrl="queryFIN73030"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="service.queryFIN73030.bind(service)"
+    [data]="data"
+    dataKey="dataKey"
+    tableKey="FIN73030_Data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [showManage]="false"
+  >
+  </app-table-report>
 </div>

@@ -36,12 +36,12 @@ import { FileExportService } from './../../../shared/service/file-export.service
 export class FIN55100Component extends BasicQueryPageComponent<QueryFIN55100Response> implements OnInit {
   // 表單結構與 FIN55100 相同
   queryForm = this.formBuilder.group({
-    DateFrom: this.formBuilder.nonNullable.control(new Date('2025-10-01'), [Validators.required]),
-    DateTo: this.formBuilder.nonNullable.control(new Date('2025-10-31'), [Validators.required]),
-    CmpDateFrom: this.formBuilder.nonNullable.control(new Date('2024-10-01'), [Validators.required]),
-    CmpDateTo: this.formBuilder.nonNullable.control(new Date('2024-10-31'), [Validators.required]),
+    DateFrom: this.formBuilder.nonNullable.control(null, [Validators.required]),
+    DateTo: this.formBuilder.nonNullable.control(null, [Validators.required]),
+    CmpDateFrom: this.formBuilder.nonNullable.control(null, [Validators.required]),
+    CmpDateTo: this.formBuilder.nonNullable.control(null, [Validators.required]),
     // 類別預設為 '1' (明細)
-    Ledger_MD: this.formBuilder.nonNullable.control('1' as '0' | '1', [Validators.required]),
+    Ledger_MD: this.formBuilder.nonNullable.control(null, [Validators.required]),
     OrgId: this.formBuilder.control<string | null>(null),
     ProjectNo: this.formBuilder.control<string | null>(null),
     ShowZero: this.formBuilder.nonNullable.control(false),
@@ -118,6 +118,21 @@ export class FIN55100Component extends BasicQueryPageComponent<QueryFIN55100Resp
     this.fileExportService.executeFileExport(
       export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
       '.' + 'pdf',        // 傳遞檔案副檔名
+      (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    ).subscribe();
+  }
+
+  onExportXLSX() {
+    if (this.data.length === 0) {
+      return;
+    }
+    // 變更匯出 Service 呼叫
+    const export$: Observable<HttpResponse<Blob>> = this.fin55100Service.exportFIN55100Excel(this.historyRequestBody);
+
+    // 使用 fileExportService 統一處理檔案下載和 loading 狀態
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
+      '.' + 'xlsx',        // 傳遞檔案副檔名
       (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
     ).subscribe();
   }

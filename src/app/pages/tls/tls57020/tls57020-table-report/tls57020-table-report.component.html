@@ -1,6 +1,6 @@
 <p-table #dt [columns]="columns" [value]="PaymentDetails" [scrollable]="true" [dataKey]="dataKey" scrollHeight="600px"
   sortMode="multiple" [rowTrackBy]="trackByFn" rowGroupMode="subheader" groupRowsBy="VEN_NO"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [loading]="loading">
+  styleClass="p-datatable-sm p-datatable-gridlines" [loading]="loading">
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0">
       <div class="p-2 w-full">
@@ -31,14 +31,14 @@
       <td class="text-right font-bold">{{ getGroupFooterData(rowData.VEN_NO)?.TotalTotNet | number }}</td>
       <td class="text-right font-bold">{{ getGroupFooterData(rowData.VEN_NO)?.TotalTotTax | number }}</td>
     </tr>
-    <tr class="font-bold">
+    <tr class="font-bold bg-gray-100">
       <td [attr.colspan]="1 + columns.length">單據資料</td>
     </tr>
     <tr class="font-bold">
       <td [attr.colspan]="1 + columns.length">
         <p-table #dt [columns]="subColumns" [value]="getGroupInvoiceDetails(rowData.VEN_NO)" [scrollable]="true"
           [dataKey]="dataKey" scrollHeight="1000px" [rowTrackBy]="trackByFn"
-          styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped">
+          styleClass="p-datatable-sm p-datatable-gridlines">
           <ng-template pTemplate="header" let-columns>
     <tr>
       <th class="w-3rem text-center" [style.background]="'var(--surface-300)'" ]>序號</th>
@@ -102,9 +102,10 @@
   </tr>
 </ng-template>
 <ng-template pTemplate="emptymessage">
-  <tr>
+  <tr *ngIf="hasSearched">
     <td [attr.colspan]="1 + columns.length">
-      <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+      <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+        <i class="pi pi-search mr-2"></i>
         查無資料
       </div>
     </td>

@@ -578,9 +578,20 @@ export class DropDownListService {
   queryTLS42010DropDownList(): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010`, { USR_Level: [] });
   }
-  queryTLS42010FuncDropDownList(): Observable<any> {
+  queryTLS42010FuncDropDownList(): Observable<{ label: string; value: string }[]> {
     const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;
-    const body = { KB_Func: [] }; return this.http.post<any>(url, body);
+    const body = { KB_Func: [] };
+
+    return this.http.post<any>(url, body).pipe(
+      map(res => {
+        // 在 Service 層就決定好 UI 要顯示的格式
+        const data: any[] = res?.Data ?? [];
+        return data.map(item => ({
+          label: `${item.KB_Func} - ${item.KB_Desc}`,
+          value: item.KB_Func
+        }));
+      })
+    );
   }
   // 載入活動清單 (TALPORDERM)
   getActivityOptions(params: TALPORDERMRequest): Observable<ApiResponse<TALPORDERMResponse[]>> {

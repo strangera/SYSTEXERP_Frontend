@@ -4,26 +4,23 @@
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="dataForm">
       <div class="grid p-fluid">
         <!-- 傳票編號 -->
         <div class="col-12 md:col-6 lg:col-3">
           <app-input-text label="傳票編號" controlName="VouNo" [control]="dataForm.controls.VouNo"
             [submitted]="submitted"></app-input-text>
         </div>
-
         <!-- 傳票種類 -->
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown label="傳票種類" controlName="SrcSheetType" [options]="srcSheetTypeOptions" optionLabel="Name"
-            optionValue="No" [control]="dataForm.controls.SrcSheetType" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="傳票種類" controlName="SrcSheetType" [options]="srcSheetTypeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.SrcSheetType" [submitted]="submitted"></app-dropdown>
         </div>
-
         <!-- 傳票型態 -->
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown label="傳票型態" controlName="VouType" [options]="vouTypeOptions" optionLabel="Name"
-            optionValue="No" [control]="dataForm.controls.VouType" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="傳票型態" controlName="VouType" [options]="vouTypeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.VouType" [submitted]="submitted"></app-dropdown>
         </div>
-
         <!-- 傳票日期 -->
         <div class="col-12 md:col-6 lg:col-3">
           <app-calendar label="傳票日期" controlName="VouDate" [control]="dataForm.controls.VouDate"
@@ -41,8 +38,8 @@
         </div>
         <!-- 傳票狀態 -->
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown label="傳票狀態" controlName="PostFlag" [options]="postFlagOptions" optionLabel="Name"
-            optionValue="No" [control]="dataForm.controls.PostFlag" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="傳票狀態" controlName="PostFlag" [options]="postFlagOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.PostFlag" [submitted]="submitted"></app-dropdown>
         </div>
         <!-- 建立人員 -->
         <div class="col-12 md:col-6 lg:col-3">
@@ -65,34 +62,11 @@
             [submitted]="submitted"></app-calendar>
         </div>
       </div>
-      <!-- 編輯資料 table (若為 應付 則不於 Edit 模式顯示) -->
-      <div class="col-12" *ngIf="crudstatus === 'Edit' && queryData !== '應付'">
-        <app-table-edit tableKey="TLS2C040Edit" [columns]="editColumns" [data]="editData"
-          (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
-          [disabled]="isFormReadable" [showInsert]="false" [canInsert]="false" [showCheckBox]="false"
-          [showDelete]="false" [footerData]="editFooterData" [showSort]="false" />
-      </div>
-      <!-- 應收/應付明細 table -->
-      <div class="col-12" *ngIf="crudstatus === 'Read'">
-        <ng-container *ngIf="queryData === '應付'; else showDetailTable">
-          <app-table-edit tableKey="TLS2C040_AP_Edit" [columns]="editColumns" [data]="editData"
-            (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="false"
-            [disabled]="false" [showInsert]="false" [canInsert]="false" [showCheckBox]="false" [showDelete]="false"
-            [footerData]="detailFooterData" [showSort]="false">
-          </app-table-edit>
-        </ng-container>
-        <ng-template #showDetailTable>
-          <app-customFooter-table tableKey="TLS2C040Detail" [data]="detailData" [columns]="detailColumns"
-            [showCheckBox]="false" [showManage]="false" [multiSortMeta]="[]" [totalRecords]="totalRecords"
-            (lazyLoadData)="onLazyLoadData($event, dataForm);
-            onSubmit(dataForm)" [loading]="loading" [lazy]="true" [showReportMode]="false" [showDelete]="false"
-            [footerData]="detailFooterData" />
-        </ng-template>
-      </div>
-      <div *ngIf="crudstatus === 'Edit' && queryData !== '應付'"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit" [loading]="loading"></app-button>
+      <div class="col-12">
+        <app-table-report [data]="data" [columns]="columns" [showManage]="false" [showDelete]="false"
+          [showCaption]="false" [totalRecords]="totalRecords" [loading]="loading" [footerData]="footerData"
+          [lazy]="false" [showSummary]="false">
+        </app-table-report>
       </div>
     </form>
   </p-panel>

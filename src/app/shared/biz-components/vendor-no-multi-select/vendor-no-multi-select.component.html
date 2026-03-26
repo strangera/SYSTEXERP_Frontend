@@ -1,0 +1,35 @@
+<label [for]="controlName" class="block font-medium mb-1">
+  {{ label }}
+  <span *ngIf="submitted && control.errors" class="text-red-500">*</span>
+</label>
+
+<p-multiSelect #ms [id]="controlName" [options]="(options$ | async) || []" [formControl]="control"
+  optionLabel="combinedLabel" optionValue="No" placeholder="請選擇廠商統一編號" [filter]="true" filterBy="No,Name"
+  [selectedItemsLabel]="'已選取 {0} 家廠商'" [resetFilterOnHide]="true" [showHeader]="true" styleClass="w-full"
+  [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" [virtualScroll]="true" [virtualScrollItemSize]="58"
+  scrollHeight="300px" [lazy]="false" [loading]="loading$ | async">
+
+  <ng-template let-vendor pTemplate="item">
+    <div class="vendor-item-container py-1" style="height: 46px;">
+      <div class="flex flex-column">
+        <div class="font-bold text-gray-800 text-sm truncate">
+          {{ vendor.No }} - {{ vendor.Name }}
+        </div>
+
+        <div class="flex flex-wrap gap-1 mt-1">
+          <span *ngFor="let sub of vendor.subItems.slice(0, 5)" class="sub-ven-badge">
+            {{ sub.VEN_No }}
+          </span>
+          <span *ngIf="vendor.subItems.length > 5" class="text-xs text-gray-400">
+            +{{ vendor.subItems.length - 5 }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+
+</p-multiSelect>
+
+<div *ngIf="submitted && control.invalid" class="text-red-500 text-xs mt-1">
+  請至少選擇一家廠商
+</div>
