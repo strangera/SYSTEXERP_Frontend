@@ -1,16 +1,16 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
+
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="資產代號" controlName="assetsCode"
-            [control]="dataForm.controls.assetsCode" [submitted]="submitted">
-          </app-input-number>
+          <app-input-text label="資產代號" controlName="assetsCode" [control]="dataForm.controls.assetsCode"
+            [submitted]="submitted">
+          </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="品項代碼 / 名稱" controlName="itemCode" [options]="itemCodeOptions" optionLabel="label"
@@ -150,8 +150,8 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="使用人" controlName="user" [options]="userOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.user" [submitted]="submitted">
+          <app-dropdown label="使用人" controlName="user" [options]="userOptions" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.user" [submitted]="submitted">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -169,18 +169,18 @@
       <h5>處分資訊</h5>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="處份日期(變賣或報廢)" controlName="disposalDate"
+          <app-calendar calendarType="dateOne" label="處分日期(變賣或報廢)" controlName="disposalDate"
             [control]="dataForm.controls.disposalDate" [submitted]="submitted">
           </app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="處份廠商" controlName="dispose_Manufacturers" [options]="supplierCodeOptions"
+          <app-dropdown label="處分廠商" controlName="dispose_Manufacturers" [options]="supplierCodeOptions"
             optionLabel="label" optionValue="value" [control]="dataForm.controls.dispose_Manufacturers"
             [submitted]="submitted">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="處份傳票編號" controlName="dispose_Manufacturers_Summons"
+          <app-input-number [useGrouping]="false" label="處分傳票編號" controlName="dispose_Manufacturers_Summons"
             [control]="dataForm.controls.dispose_Manufacturers_Summons" [submitted]="submitted">
           </app-input-number>
         </div>
@@ -206,44 +206,22 @@
       <h5>其他</h5>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-6">
-          <app-editor-text label="處份說明(變賣或報廢)" controlName="disposeRemark" [control]="dataForm.controls.disposeRemark"
+          <app-editor-text label="處分說明(變賣或報廢)" controlName="disposeRemark" [control]="dataForm.controls.disposeRemark"
             [style]="{ height: '100px' }" [submitted]="submitted">
           </app-editor-text>
         </div>
         <div class="col-12 md:col-6 lg:col-6">
-          <app-editor-text label="說明" controlName="remark" [control]="dataForm.controls.remark"
+          <app-editor-text label="採購說明" controlName="remark" [control]="dataForm.controls.remark"
             [style]="{ height: '100px' }" [submitted]="submitted">
           </app-editor-text>
         </div>
       </div>
-      <hr>
-      <!-- <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1">
-                            <h5>商品 {{ i + 1 }}</h5>
-                        </div>
-                        <div>
-                            
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="品項編號" [control]="getFormControl(i, 'itemCode')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
-                
-            </div> -->
-    </form>
-    <div class="col pt-4">
-      <div class="grid justify-content-end">
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
-        <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
+      @if (!isFormReadable) {
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
-    </div>
+      }
+    </form>
   </p-panel>
 </div>
