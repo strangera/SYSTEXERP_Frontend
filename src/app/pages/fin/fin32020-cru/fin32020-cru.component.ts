@@ -9,7 +9,7 @@ import {
 } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { map, catchError, shareReplay, of } from 'rxjs';
+import { catchError, map, of, shareReplay } from 'rxjs';
 
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -64,7 +64,7 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
     InputTextComponent,
     ButtonComponent,
     TranslateModule,
-    Table2Component,
+    // Table2Component,
     DialogComponent,
     DropdownComponent,
     CalendarRangeComponent,
@@ -75,10 +75,18 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
 })
 export class FIN32020CRUComponent
   extends BasicCruPageComponent<Fin32020Row>
-  implements OnInit
-{
+  implements OnInit {
   // ===== 調整科目 report table =====
+
   adjAccReportColumns: ReportColumn[] = [
+    {
+      field: 'selectedFlag',
+      header: '狀態',
+      format: (_: any, __?: number, row?: any) =>
+        this.isAdjAccAlreadySelected(row) ? '⚠ 已選' : '',
+      cellClass: (row: any) =>
+        this.isAdjAccAlreadySelected(row) ? 'selected-flag-cell' : '',
+    },
     { field: 'CAR_AccNo', header: '調整科目代號' },
     { field: 'AccCName', header: '科目名稱' },
     {
@@ -168,18 +176,18 @@ export class FIN32020CRUComponent
 
   /** 明細欄位定義 */
   detailColumns: EditColumn[] = [
-{
-  field: 'receiveID',
-  header: '應收帳款單號',
-  width: '200px',
-  textAlign: 'left',
-},
-{
-  field: 'adjustDisplay',
-  header: '調整科目代號',
-  width: '220px',
-  textAlign: 'left',
-},
+    {
+      field: 'receiveID',
+      header: '應收帳款單號',
+      width: '200px',
+      textAlign: 'left',
+    },
+    {
+      field: 'adjustDisplay',
+      header: '調整科目代號',
+      width: '220px',
+      textAlign: 'left',
+    },
     {
       field: 'adjustAmount',
       header: '調整金額',
@@ -212,23 +220,55 @@ export class FIN32020CRUComponent
   arsSelectedRows: Fin32020ARSRow[] = [];
   VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' });
 
-  arsColumns: Column[] = [
-    { field: 'ARS_No', header: '應收帳款單號' },
-    { field: 'VEN_No', header: '廠客代號' },
+  arsColumns: ReportColumn[] = [
+    {
+      field: 'selectedFlag',
+      header: '狀態',
+      format: (_: any, __?: number, row?: any) =>
+        this.isARSAlreadySelected(row) ? '⚠ 已選' : '',
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-flag-cell' : '',
+    },
+    {
+      field: 'ARS_No',
+      header: '應收帳款單號',
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-key-cell' : '',
+    },
+    {
+      field: 'VEN_No',
+      header: '廠客代號',
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-soft-cell' : '',
+    },
     {
       field: 'ARS_Date',
       header: '立帳日',
       format: (v: any) => this.formatYMD(v),
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-soft-cell' : '',
     },
     {
       field: 'PTA_Date',
       header: '預計收款日',
       format: (v: any) => this.formatYMD(v),
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-soft-cell' : '',
     },
-    { field: 'ARS_Amt', header: '應收金額', format: this.moneyFormat },
-    { field: 'NoteDesc', header: '備註' },
+    {
+      field: 'ARS_Amt',
+      header: '應收金額',
+      format: (v: any) => this.moneyFormat(v),
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-soft-cell' : '',
+    },
+    {
+      field: 'NoteDesc',
+      header: '備註',
+      cellClass: (row: any) =>
+        this.isARSAlreadySelected(row) ? 'selected-soft-cell' : '',
+    },
   ];
-
   /** 後端可能回 yyyy-MM-dd / yyyy-MM-ddTHH:mm:ss / Date，都統一顯示 yyyy/MM/dd */
   formatYMD = (v: any): string => {
     if (v === null || v === undefined || v === '') return '';
@@ -499,62 +539,71 @@ export class FIN32020CRUComponent
     this.confirmARSSelection();
   }
 
-confirmARSSelection(): void {
-  const idx = this.currentDetailIndex ?? 0;
-  const targetRow = this.currentDetailRowData;
+  confirmARSSelection(): void {
+    const idx = this.currentDetailIndex ?? 0;
+    const targetRow = this.currentDetailRowData;
 
-  if (!targetRow) {
+    if (!targetRow) {
+      this.arsDialogVisible = false;
+      this.currentDetailIndex = null;
+      this.currentDetailRowData = null;
+      this.arsSelectedRows = [];
+      return;
+    }
+
+    let arsNoToFill: string | null = null;
+
+    if (this.arsSelectedRows && this.arsSelectedRows.length) {
+      arsNoToFill = (this.arsSelectedRows[0].ARS_No ?? '').trim() || null;
+    }
+
+    if (!arsNoToFill) {
+      const inputArsNo = (this.arsSearchForm.controls.ARS_No.value ?? '').trim();
+      arsNoToFill = inputArsNo || null;
+    }
+
+    if (!arsNoToFill) {
+      this.messageService?.warnBubble?.('請先選擇應收帳款單號');
+      return;
+    }
+
+    // ✅ 檢查重複
+    if (this.isDuplicateARSNo(arsNoToFill, idx)) {
+      this.messageService?.warnBubble?.(`應收帳款單號【${arsNoToFill}】已存在，請勿重複選擇`);
+      return;
+    }
+
+    this.detailTableEdit?.applyDialogValue(targetRow, idx, {
+      receiveID: arsNoToFill,
+    });
+
+    this.syncDetailDataFromTableEdit();
+
     this.arsDialogVisible = false;
     this.currentDetailIndex = null;
     this.currentDetailRowData = null;
     this.arsSelectedRows = [];
-    return;
   }
 
-  let arsNoToFill: string | null = null;
+  /** 給 table 用的整列 class */
+  getARSRowClass = (row: Fin32020ARSRow): string => {
+    return this.isARSAlreadySelected(row) ? 'selected-red-row' : '';
+  };
 
-  if (this.arsSelectedRows && this.arsSelectedRows.length) {
-    arsNoToFill = (this.arsSelectedRows[0].ARS_No ?? '').trim() || null;
+  getAdjAccRowClass = (row: Fin32020AdjAccRow): string => {
+    return this.isAdjAccAlreadySelected(row) ? 'selected-red-row' : '';
+  };
+  private isDuplicateARSNo(arsNo: string, currentIndex: number): boolean {
+    const target = String(arsNo ?? '').trim();
+    if (!target) return false;
+
+    return (this.detailData || []).some((row: any, idx: number) => {
+      if (idx === currentIndex) return false;
+
+      const existing = String(row?.receiveID ?? '').trim();
+      return !!existing && existing === target;
+    });
   }
-
-  if (!arsNoToFill) {
-    const inputArsNo = (this.arsSearchForm.controls.ARS_No.value ?? '').trim();
-    arsNoToFill = inputArsNo || null;
-  }
-
-  if (!arsNoToFill) {
-    this.messageService?.warnBubble?.('請先選擇應收帳款單號');
-    return;
-  }
-
-  // ✅ 檢查重複
-  if (this.isDuplicateARSNo(arsNoToFill, idx)) {
-    this.messageService?.warnBubble?.(`應收帳款單號【${arsNoToFill}】已存在，請勿重複選擇`);
-    return;
-  }
-
-  this.detailTableEdit?.applyDialogValue(targetRow, idx, {
-    receiveID: arsNoToFill,
-  });
-
-  this.syncDetailDataFromTableEdit();
-
-  this.arsDialogVisible = false;
-  this.currentDetailIndex = null;
-  this.currentDetailRowData = null;
-  this.arsSelectedRows = [];
-}
-private isDuplicateARSNo(arsNo: string, currentIndex: number): boolean {
-  const target = String(arsNo ?? '').trim();
-  if (!target) return false;
-
-  return (this.detailData || []).some((row: any, idx: number) => {
-    if (idx === currentIndex) return false;
-
-    const existing = String(row?.receiveID ?? '').trim();
-    return !!existing && existing === target;
-  });
-}
   /* ================= 調整科目 Dialog ================= */
 
   openAdjAccDialog(): void {
@@ -610,37 +659,37 @@ private isDuplicateARSNo(arsNo: string, currentIndex: number): boolean {
     this.confirmAdjAccSelection();
   }
 
-confirmAdjAccSelection(): void {
-  if (!this.adjAccSelectedRows.length) return;
+  confirmAdjAccSelection(): void {
+    if (!this.adjAccSelectedRows.length) return;
 
-  const row = this.adjAccSelectedRows[0];
-  const idx = this.currentDetailIndex ?? 0;
-  const targetRow = this.currentDetailRowData;
+    const row = this.adjAccSelectedRows[0];
+    const idx = this.currentDetailIndex ?? 0;
+    const targetRow = this.currentDetailRowData;
 
-  if (!targetRow) {
+    if (!targetRow) {
+      this.adjAccDialogVisible = false;
+      this.currentDetailIndex = null;
+      this.currentDetailRowData = null;
+      this.adjAccSelectedRows = [];
+      return;
+    }
+
+    const accNo = row.CAR_AccNo ?? null;
+    const accName = row.AccCName ?? null;
+
+    this.detailTableEdit?.applyDialogValue(targetRow, idx, {
+      adjustID: accNo,
+      AccCName: accName,
+      adjustDisplay: accName ? `${accNo}-${accName}` : (accNo ?? ''),
+    });
+
+    this.syncDetailDataFromTableEdit();
+
     this.adjAccDialogVisible = false;
     this.currentDetailIndex = null;
     this.currentDetailRowData = null;
     this.adjAccSelectedRows = [];
-    return;
   }
-
-  const accNo = row.CAR_AccNo ?? null;
-  const accName = row.AccCName ?? null;
-
-  this.detailTableEdit?.applyDialogValue(targetRow, idx, {
-    adjustID: accNo,
-    AccCName: accName,
-    adjustDisplay: accName ? `${accNo}-${accName}` : (accNo ?? ''),
-  });
-
-  this.syncDetailDataFromTableEdit();
-
-  this.adjAccDialogVisible = false;
-  this.currentDetailIndex = null;
-  this.currentDetailRowData = null;
-  this.adjAccSelectedRows = [];
-}
 
   /* ================= Cancel 行為修正 ================= */
 
@@ -795,9 +844,30 @@ confirmAdjAccSelection(): void {
     this.adjAccLastQueryBody = null;
   }
   onARSCancel(): void {
-  this.resetARSDialogState();
-}
-onAdjAccCancel(): void {
-  this.resetAdjAccDialogState();
-}
+    this.resetARSDialogState();
+  }
+  onAdjAccCancel(): void {
+    this.resetAdjAccDialogState();
+  }
+  private normalizeValue(v: any): string {
+    return String(v ?? '').trim();
+  }
+
+  isARSAlreadySelected(row: any): boolean {
+    const arsNo = this.normalizeValue(row?.ARS_No);
+    if (!arsNo) return false;
+
+    return (this.detailData || []).some((item: any) => {
+      return this.normalizeValue(item?.receiveID) === arsNo;
+    });
+  }
+
+  isAdjAccAlreadySelected(row: any): boolean {
+    const accNo = this.normalizeValue(row?.CAR_AccNo);
+    if (!accNo) return false;
+
+    return (this.detailData || []).some((item: any) => {
+      return this.normalizeValue(item?.adjustID) === accNo;
+    });
+  }
 }

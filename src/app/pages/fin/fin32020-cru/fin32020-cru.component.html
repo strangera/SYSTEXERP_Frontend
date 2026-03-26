@@ -136,26 +136,25 @@
     </div>
   </form>
 
-  <app-table2
-    [tableKey]="'fin32020Ars'"
-    dataKey="ARS_No"
-    [columns]="arsColumns"
-    [data]="arsList"
-    [loading]="arsLoading"
-    [showCheckBox]="false"
-    [showManage]="false"
-    [showDetail]="true"
-    [showEdit]="false"
-    [showHeader]="true"
-    [showFilter]="false"
-    [showReportMode]="false"
-    [showPaginator]="false"
-    [showCaption]="false"
-    selectionMode="single"
-    [(selectedItems)]="arsSelectedRows"
-    (selectionChange)="onARSSelectionChange($event)"
-    (detail)="onARSRowDetail($event)"
-  ></app-table2>
+<app-table-report
+  [tableKey]="'fin32020Ars'"
+  dataKey="ARS_No"
+  [columns]="arsColumns"
+  [data]="arsList"
+  [loading]="arsLoading"
+  [totalRecords]="arsList.length"
+  [showCheckBox]="false"
+  [showManage]="false"
+  [showDetail]="true"
+  [showEdit]="false"
+  [showFilter]="false"
+  [showReportMode]="false"
+  [showCaption]="false"
+  [lazy]="false"
+  [selectedItems]="arsSelectedRows"
+  (selectionChange)="onARSSelectionChange($event)"
+  (detail)="onARSRowDetail($event)"
+></app-table-report>
 
   <div class="flex justify-content-end gap-2 mt-3">
  <app-button
