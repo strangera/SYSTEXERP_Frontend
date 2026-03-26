@@ -22,8 +22,8 @@ import { FIN13050Service } from '@service/api/fin/fin13050.service';
 import { ValidationService } from '@shared/service/validation.service';
 import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 
+import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -189,10 +189,10 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
 
   constructor(
     private readonly fin13060Service: FIN13060Service,
-    private readonly counterNameService: CounterNameService,
     private readonly fin13050Service: FIN13050Service,
     private readonly validationService: ValidationService,
-    private readonly ECRNoService: ECRNoService
+    private readonly ECRNoService: ECRNoService,
+    private readonly counterNameService: CounterNameService,
   ) {
     super();
   }
@@ -200,6 +200,9 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('FIN13060', this.dataForm);
     this.hydrateStoreInfoFromLocalStorage();
+
+    //後續新增的下拉選項
+    this.loadOptions();
 
     // 若 Edit / Read 有 rowdata，補顯示用 INV_YM_Display
     const row: any = (this as any).rowdata;
@@ -737,5 +740,18 @@ export class FIN13060CRUComponent extends BasicCruPageComponent<any> implements 
     if (month % 2 === 0) month -= 1;
 
     return `${year}${String(month).padStart(2, '0')}`;
+  }
+
+  //下拉
+  loadOptions() {
+    // 專櫃
+    this.counterNameService.getCounters().subscribe((res: any) => {
+      this.CounterOptions =
+        res?.map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        })) ?? [];
+    });
   }
 }

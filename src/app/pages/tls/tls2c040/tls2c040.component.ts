@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { QueryTLS2C040Request } from '@service/api/tls/tls55060.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -41,14 +42,15 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
     PostFlagList: [[]],                                        // 傳票狀態(多選)
     No: ['', Validators.maxLength(12)],                         // 結帳單號
     pageSize: [30],
-    pageIndex: [1], // 你將初始頁碼改為 1
+    pageIndex: [1],
+    SortBy: [[]]                                               // 建議補上 SortBy 欄位以利分頁排序
   });
 
   data: any[] = [];
-  selectedItems: any[] = [];
   totalRecords = 0;
-  lastQueryBody: any;
+  lastQueryBody: QueryTLS2C040Request | null = null;
 
+  // 修正 addButton：呼叫底層的 onDetail 並帶入「類型」字串作為 queryConditions
   addButton: AddButton[] = [
     {
       label: '應收',
@@ -58,14 +60,7 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
       label: '應付',
       action: (rowData: any) => { this.onDetail(rowData, '應付') },
     },
-    {
-      label: '拋轉',
-      action: (rowData: any) => { this.onDetail(rowData, '拋轉') },
-    },
   ];
-
-  //#region 下拉選單選項
-  // 傳票種類 - 從 SYS1000(ENTRY_TYPE) 取得並排除 WT、WD
   srcSheetTypeOptions = getSYS1000Options('ENTRY_TYPE')
     .filter(option => option.value !== 'WT' && option.value !== 'WD')
     .map(option => ({
@@ -73,15 +68,13 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
       Name: option.label,
       Display: `${option.value} - ${option.label}`
     }));
-  // 傳票狀態
+
   postFlagOptions: IDropdownItem[] = [
     { No: '0', Name: '作廢' },
     { No: '1', Name: '建立' },
     { No: '2', Name: '確認' },
     { No: '3', Name: '過帳' }
   ];
-  //#endregion
-
   columns: ReportColumn[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },
     {
@@ -98,7 +91,6 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     public readonly tls2c040Service: TLS2C040Service,
-    private readonly dropDownListService: DropDownListService
   ) {
     super();
   }
@@ -109,13 +101,14 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
-      // Service 已經處理好 map 了，這裡直接賦值
-      this.tls2c040Service.queryTLS2C040(form.getRawValue()).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.data = response.Data; // 直接等於 response.Data
-        this.totalRecords = response.TotalCount;
-        this.lastQueryBody = form.getRawValue();
-        this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
-      });
+      this.tls2c040Service.queryTLS2C040(form.getRawValue())
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data || [];
+          this.totalRecords = response.TotalCount || 0;
+          this.lastQueryBody = form.getRawValue();
+          this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
+        });
     });
   }
 }

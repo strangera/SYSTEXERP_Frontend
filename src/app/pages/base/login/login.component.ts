@@ -45,7 +45,7 @@ export class LoginComponent implements OnInit {
     private notemessage: NotificationService,
     private router: Router,
     private route: ActivatedRoute,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     console.log('[LoginComponent] ngOnInit triggered');
@@ -68,16 +68,16 @@ export class LoginComponent implements OnInit {
     }
 
     // ===== 先處理 SSO 登出回呼 =====
-const ssoLogout = this.getQueryParamFromLocation('ssoLogout');
+    const ssoLogout = this.getQueryParamFromLocation('ssoLogout');
 
-console.log('[LoginComponent] ssoLogout(from location):', ssoLogout);
-console.log('[LoginComponent] current href:', window.location.href);
+    console.log('[LoginComponent] ssoLogout(from location):', ssoLogout);
+    console.log('[LoginComponent] current href:', window.location.href);
 
-if (ssoLogout === '1') {
-  console.log('[LoginComponent] 偵測到 ssoLogout=1，執行 ERP 前後端同步登出');
-  this.authService.ssoLogoutAndRedirectToLogin();
-  return;
-}
+    if (ssoLogout === '1') {
+      console.log('[LoginComponent] 偵測到 ssoLogout=1，執行 ERP 前後端同步登出');
+      this.authService.ssoLogoutAndRedirectToLogin();
+      return;
+    }
 
     const loggedIn = this.authService.isLoggedIn();
     console.log('[LoginComponent] isLoggedIn:', loggedIn);
@@ -231,20 +231,20 @@ if (ssoLogout === '1') {
         },
       });
   }
-private getQueryParamFromLocation(key: string): string {
-  try {
-    const u = new URL(window.location.href);
+  private getQueryParamFromLocation(key: string): string {
+    try {
+      const u = new URL(window.location.href);
 
-    for (const [k, v] of u.searchParams.entries()) {
-      if (k.toLowerCase() === key.toLowerCase()) {
-        return v;
+      for (const [k, v] of u.searchParams.entries()) {
+        if (k.toLowerCase() === key.toLowerCase()) {
+          return v;
+        }
       }
-    }
 
-    return '';
-  } catch (err) {
-    console.error('[getQueryParamFromLocation] error:', err);
-    return '';
+      return '';
+    } catch (err) {
+      console.error('[getQueryParamFromLocation] error:', err);
+      return '';
+    }
   }
-}
 }

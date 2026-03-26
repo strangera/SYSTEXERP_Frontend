@@ -7,6 +7,8 @@ export interface FIN52030Data {
   VouType: string;
   TempName: string;
   DetailCount: number;
+  CRT_USR_Name: string;
+  UPD_USR_Name: string;
 }
 
 /**

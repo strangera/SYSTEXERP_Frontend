@@ -44,8 +44,8 @@ import { Fin29060TableSubheaderComponent } from '../fin29060/fin29060-table-subh
 })
 export class FIN54020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    VouDateFrom: [new Date(), [Validators.required]],
-    VouDateTo: [new Date(), [Validators.required]],
+    VouDateFrom: [new Date()],
+    VouDateTo: [new Date()],
     VouNoFrom: [null, [Validators.maxLength(12)]],
     VouNoTo: [null, [Validators.maxLength(12)]],
     VoucherType: [''],

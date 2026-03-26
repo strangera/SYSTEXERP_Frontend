@@ -91,12 +91,14 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
   checkChangedUserColumns: ReportColumn[] = [
     { field: 'VEN_No', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
-    { field: 'VEN_BNK_No', header: '原匯款銀行代號' },
-    { field: 'VEN_AccountName', header: '原帳戶名稱' },
-    { field: 'VEN_BankAccountNo', header: '原銀行帳號' },
-    { field: 'POS_VEN_BNK_No', header: 'POS銀行代號' },
-    { field: 'POS_VEN_AccountName', header: 'POS帳戶名稱' },
-    { field: 'POS_VEN_BankAccountNo', header: 'POS銀行帳號' },
+    // 帳款檔資訊 (顯示組合後的結果)
+    { field: 'Full_VEN_BNK_No', header: '匯款銀行代號' },
+    { field: 'Full_Bank_Name', header: '匯款銀行名稱' },
+    { field: 'VEN_BankAccountNo', header: '銀行帳號' },
+    // 廠商主檔資訊 (顯示組合後的結果)
+    { field: 'Full_POS_VEN_BNK_No', header: '廠商主檔匯款銀行代號' },
+    { field: 'Full_POS_Bank_Name', header: '廠商主檔匯款銀行名稱' },
+    { field: 'POS_VEN_BankAccountNo', header: '廠商主檔銀行帳號' },
   ];
 
   // 3. 追蹤目前是否處於異動檢核模式 (新增)
@@ -185,5 +187,10 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
       this.onCheckChangedUser(this.queryForm);
       this.selectedItems = [];
     });
+  }
+
+  // "查無可更新資料：可能應付ID不存在、非建立狀態(ACP_Status<>2)、或已沖帳(PTA_Amt<>0)。"
+  editDisabled(item: QueryFIN24010Response) {
+    return item.ACP_Status !== '2' || (item.PTA_Amt !== null && item.PTA_Amt !== 0);
   }
 }

@@ -1,355 +1,153 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-// Shared
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
 import { TranslateModule } from '@ngx-translate/core';
+
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+
+import { FIN73010Data, FIN73010Option, FIN73010Query } from './fin73010.model';
+import { FIN73010Service } from '../../../service/api/fin/fin73010.service';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { Tls11010Service } from '@service/api/tls/tls11010.service';
 
 @Component({
   selector: 'app-fin73010',
   templateUrl: './fin73010.component.html',
-  styleUrl: './fin73010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    MenubarComponent,
+    ButtonComponent,
+    DropdownComponent,
+    // CalendarComponent,
+    TableReportComponent,
+    CalendarRangeComponent
+  ],
 })
-export class FIN73010Component extends BasicQpageComponent implements OnInit {
-  queryForm = this.formBuilder.group({
-    counterCode: [],  // 專櫃編號
-    counterName: [],  // 櫃位名稱
-    violationCategory: [],  // 違規類別編號
-    deductionItem: [],  // 扣款項目
-    amountStart: [],  // 金額開始
-    amountEnd: [],  // 金額結束
-    deductionDateStart: [],  // 扣款日期起
-    deductionDateEnd: [],  // 扣款日期迄
-    violationDateStart: [],  // 違規日期起
-    violationDateEnd: [],  // 違規日期迄
-    documentNumber: [],  // 單據編號
-    issuingUnit: [],  // 開立單位
-    createdBy: [],  // 建立者(輸入代號)
-    floor: [],  // 樓層
-    Applicationdate: [],  // 維護日
-    status: [],  // 狀態
-    PettyCashOrderNumber: [],
-    Pettycashapplicant: [],
-    Pettycashcustodian: [],
-    Inventoryordernumber: [],
-    SQuota: [],
-    EQuota: [],
-    startdate: [],
-    enddate: [],
-    description: [],
-    SCountbalance: [],
-    ECountbalance: [],
-
+export class FIN73010Component extends BasicQueryPageComponent<FIN73010Data> implements OnInit {
+  public readonly queryForm = this.formBuilder.group({
+    pettyCashNo: [null as string | null],
+    applyDateStart: [null as Date | string | null],
+    applyDateEnd: [null as Date | string | null],
+    applicantNo: [null as string | null],
+    custodianNo: [null as string | null],
+    status: [null as string | null],
+    custodianDeptNo: [null as string | null],
+    pageSize: [30, [Validators.required]],
+    pageIndex: [1, [Validators.required]],
+    SortBy: [[
+      { field: 'pettyCashNo', order: 1 },
+      { field: 'applyDate', order: -1 },
+      { field: 'invoiceReceiptNo', order: 1 },
+    ]],
   });
 
-  // Dropdown options
-  PettyCashOrderNumber: any[] = [{ value: 201407170001, label: 'C201407170001' },
-  { value: 201407170002, label: 'TC201407170002' },
-  { value: 201407170003, label: 'TC201407170003' },
-  { value: 201407170004, label: 'TC201407170004' },
-  { value: 201407210001, label: 'TC201407210001' },
-  { value: 201407210002, label: 'TC201407210002' },
-  { value: 201407280001, label: 'TC201407280001' },
-  { value: 201407280002, label: 'TC201407280002' },
-  { value: 201407280003, label: 'TC201407280003' },
-  { value: 201407290002, label: 'TC201407290002' },];
-  usercode: any[] = [];
-  Feespayable: any[] = [
-    { value: 210101, label: '銀行短期借款' },
-    { value: 210201, label: '應付商業本票-中華' },
-    { value: 210202, label: '應付商業本票-合庫' },
-    { value: 210203, label: '應付商業本票-聯邦' },
-    { value: 210301, label: '應付商業本票折價' },
-    { value: 210401, label: '一年或一年營業週期內到期長期負債' },
-    { value: 2111, label: '應付票據' },
-    { value: 211101, label: '應付票據-專櫃' },
-    { value: 211102, label: '應付票據-自營' },
-    { value: 211103, label: '應付票據-固資及費用' },
-  ];
-  Inputtax: any[] = [
-    { value: 1, label: '1101_庫存現金' },
-    { value: 2, label: '110101_庫存現金-營收及正負差' },
-    { value: 3, label: '110102_庫存現金-其他收入' },
-    { value: 4, label: '110103_庫存現金-財務部' },
-    { value: 5, label: '110111_庫存現金-外幣' },
-    { value: 6, label: '110112_庫存現金-人民幣' },
-    { value: 7, label: '110199_庫存現金-其他' },
-    { value: 8, label: '1102_零用金' },
-    { value: 9, label: '110200_零用金-總經理室' },
-    { value: 10, label: '110201_零用金-採購組' }
-  ];
-  statusOptions: any[] = [
-    { value: 1, label: '建立' },
-    { value: 2, label: '請款' },
-    { value: 3, label: '拋轉' },
-    { value: 4, label: '撥補' },
+  pettyCashNoOptions: FIN73010Option[] = [];
+  applicantOptions: FIN73010Option[] = [];
+  custodianOptions: FIN73010Option[] = [];
+  statusOptions: FIN73010Option[] = [];
+  // custodianDeptOptions: FIN73010Option[] = [];
+custodianDeptOptions: any[] = [];
+  data: FIN73010Data[] = [];
+  totalRecords = 0;
+  lastQueryBody: FIN73010Query | null = null;
 
-  ];
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  displayOptions: any[] = [];
-  displayOptions2: any[] = [];
-  Billingordernumber: any[] = [
-    { value: 1, label: 'B20150208001' },
-    { value: 2, label: 'B20150208002' },
-    { value: 3, label: 'B20150410001' },
-  ];
-  // Table data
-  data: any[] = [
-    {
-      pettyCashNumber: 'C201407170001',
-      applyDate: '2014/7/10',
-      applicant: '2014000044-王小明',
-      applicantOrg: '104200-營運部',
-      custodian: '2014000044-王小明',
-      custodianOrg: '101000-經營企劃部(停用)',
-      status: '撥補',
-      expenseAccountCode: '620401/國內差旅費',
-      accountOrgCode: '101000-經營企劃部(停用)',
-      itemDescription: '10305-5/14出差-鄧宇媛',
-      detailType: '收據',
-      invoiceReceiptNumber: '2014051401',
-      date: '2014/5/14',
-      preTaxAmount: 1410,
-      tax: 70,
-      totalAmount: 1480,
-    },
-    {
-      pettyCashNumber: 'C201407170001',
-      applyDate: '2014/7/10',
-      applicant: '2014000044-王小明',
-      applicantOrg: '104200-營運部',
-      custodian: '2014000044-王小明',
-      custodianOrg: '101000-經營企劃部(停用)',
-      status: '撥補',
-      expenseAccountCode: '620401/國內差旅費',
-      accountOrgCode: '101000-經營企劃部(停用)',
-      itemDescription: '10305-5/14出差-鄧宇媛',
-      detailType: '收據',
-      invoiceReceiptNumber: '2014051402',
-      date: '2014/5/14',
-      preTaxAmount: 1367,
-      tax: 68,
-      totalAmount: 1435,
-    },
-    {
-      pettyCashNumber: 'C201407170001',
-      applyDate: '2014/7/10',
-      applicant: '2014000044-王小明',
-      applicantOrg: '104200-營運部',
-      custodian: '2014000044-王小明',
-      custodianOrg: '101000-經營企劃部(停用)',
-      status: '撥補',
-      expenseAccountCode: '620401/國內差旅費',
-      accountOrgCode: '101000-經營企劃部(停用)',
-      itemDescription: '10305-5/14出差-鄧宇媛',
-      detailType: '不扣抵憑證',
-      invoiceReceiptNumber: '',
-      date: '2014/5/14',
-      preTaxAmount: 440,
-      tax: 0,
-      totalAmount: 440,
-    },
-    {
-      pettyCashNumber: 'C201407170001',
-      applyDate: '2014/7/10',
-      applicant: '2014000044-王小明',
-      applicantOrg: '104200-營運部',
-      custodian: '2014000044-王小明',
-      custodianOrg: '101000-經營企劃部(停用)',
-      status: '撥補',
-      expenseAccountCode: '622201/交際費-招待費',
-      accountOrgCode: '101000-經營企劃部(停用)',
-      itemDescription: '10305-招商會議餐-晉邦',
-      detailType: '不扣抵憑證',
-      invoiceReceiptNumber: '',
-      date: '2014/5/14',
-      preTaxAmount: 2074,
-      tax: 0,
-      totalAmount: 2074,
-    },
-    {
-      pettyCashNumber: 'C201407170001',
-      applyDate: '2014/7/10',
-      applicant: '2014000044-王小明',
-      applicantOrg: '104200-營運部',
-      custodian: '2014000044-王小明',
-      custodianOrg: '101000-經營企劃部(停用)',
-      status: '撥補',
-      expenseAccountCode: '620401/國內差旅費',
-      accountOrgCode: '101000-經營企劃部(停用)',
-      itemDescription: '10305-5/28出差-李慧玉',
-      detailType: '收據',
-      invoiceReceiptNumber: '2014052801',
-      date: '2014/5/28',
-      preTaxAmount: 1238,
-      tax: 62,
-      totalAmount: 1300,
-    },
-    {
-      pettyCashNumber: 'C201407170001',
-      applyDate: '2014/7/10',
-      applicant: '2014000044-王小明',
-      applicantOrg: '104200-營運部',
-      custodian: '2014000044-王小明',
-      custodianOrg: '101000-經營企劃部(停用)',
-      status: '撥補',
-      expenseAccountCode: '620401/國內差旅費',
-      accountOrgCode: '101000-經營企劃部(停用)',
-      itemDescription: '10305-5/28出差-李慧玉',
-      detailType: '收據',
-      invoiceReceiptNumber: '2014052802',
-      date: '2014/5/28',
-      preTaxAmount: 1238,
-      tax: 62,
-      totalAmount: 1300,
-    },
-    {
-      pettyCashNumber: 'C201407170001',
-      applyDate: '2014/7/10',
-      applicant: '2014000044-王小明',
-      applicantOrg: '104200-營運部',
-      custodian: '2014000044-王小明',
-      custodianOrg: '101000-經營企劃部(停用)',
-      status: '撥補',
-      expenseAccountCode: '620401/國內差旅費',
-      accountOrgCode: '101000-經營企劃部(停用)',
-      itemDescription: '10306-5/5出差-江宜婷',
-      detailType: '不扣抵憑證',
-      invoiceReceiptNumber: '',
-      date: '2014/5/14',
-      preTaxAmount: 502,
-      tax: 0,
-      totalAmount: 502,
-    },
-    {
-      pettyCashNumber: 'C201407170001',
-      applyDate: '2014/7/10',
-      applicant: '2014000044-王小明',
-      applicantOrg: '104200-營運部',
-      custodian: '2014000044-王小明',
-      custodianOrg: '101000-經營企劃部(停用)',
-      status: '撥補',
-      expenseAccountCode: '622999/其他費用-其他',
-      accountOrgCode: '101000-經營企劃部(停用)',
-      itemDescription: '10306-6/16主管會議餐點',
-      detailType: '不扣抵憑證',
-      invoiceReceiptNumber: '',
-      date: '2014/6/16',
-      preTaxAmount: 935,
-      tax: 0,
-      totalAmount: 935,
-    },
+  columns: ReportColumn[] = [
+    { field: 'pettyCashNo', header: '零用金單號' },
+    { field: 'applyDate', header: '申請日期' },
+    { field: 'applicantNo', header: '零用金申請人' },
+    { field: 'applicantDept', header: '申請人組織' },
+    { field: 'custodianNo', header: '零用金保管人' },
+    { field: 'custodianDept', header: '保管單位' },
+    { field: 'status', header: '狀態' },
+    { field: 'expenseAccountNo', header: '費用會計科目' },
+    { field: 'expenseDeptNo', header: '費用科目組織' },
+    { field: 'subjectSummary', header: '項目摘要' },
+    { field: 'detailCategory', header: '明細類別' },
+    { field: 'invoiceReceiptNo', header: '發票/收據號碼' },
+    { field: 'expenseDate', header: '日期' },
+    { field: 'amountUntaxed', header: '未稅金額' },
+    { field: 'tax', header: '稅額' },
+    { field: 'total', header: '總額' },
   ];
 
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'pettyCashNumber', header: '零用金單號', visible: true },
-    { field: 'applyDate', header: '申請日期', visible: true },
-    { field: 'applicant', header: '零用金申請人', visible: true },
-    { field: 'applicantOrg', header: '申請人組織', visible: true },
-    { field: 'custodian', header: '零用金保管人', visible: true },
-    { field: 'status', header: '狀態', visible: true },
-    { field: 'expenseAccountCode', header: '費用會計科目', visible: true },
-    { field: 'accountOrgCode', header: '費用科目組織', visible: true },
-    { field: 'itemDescription', header: '項目摘要', visible: true },
-    { field: 'detailType', header: '明細類別', visible: true },
-    { field: 'invoiceReceiptNumber', header: '發票/收據號碼', visible: true },
-    { field: 'date', header: '日期', visible: true },
-    { field: 'preTaxAmount', header: '未稅金額', visible: true },
-    { field: 'tax', header: '稅額', visible: true },
-    { field: 'totalAmount', header: '總額', visible: true }
-  ];
-
-
-
-
-
-  vendorOptions: any[] = [];
-  counterCodeOptions: any[] = [];
-  violationCategoryOptions: any[] = [];
-  floorOptions: any[] = [];
-
-  deductionItemOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
-  Pettycashapplicant: any[] = [];
-
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
+  constructor(public readonly service: FIN73010Service  ,
+    private tls11010Service: Tls11010Service,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
+    this.initializePage('FIN73010', '', this.queryForm, this.onSubmit.bind(this));
+    this.loadOptions();
+    this.tls11010Service.getOrgOptions()
+  .subscribe(res => {
+    this.custodianDeptOptions = (res || []).map((x: any) => ({
+      label: `${x.value} - ${x.label}`,
+      formLabel: `${x.value} - ${x.label}`,
+      value: x.value,
+    }));
+  });
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
+  private loadOptions(): void {
+    this.service.getPettyCashNoOptions().subscribe(res => this.pettyCashNoOptions = res);
+    this.service.getApplicantOptions().subscribe(res => this.applicantOptions = res);
+    this.service.getCustodianOptions().subscribe(res => this.custodianOptions = res);
+    this.service.getStatusOptions().subscribe(res => this.statusOptions = res);
+    this.service.getCustodianDeptOptions().subscribe(res => this.custodianDeptOptions = res);
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+  private formatDate(value: Date | string | null): string | null {
+    if (!value) return null;
+
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      const year = value.getFullYear();
+      const month = String(value.getMonth() + 1).padStart(2, '0');
+      const day = String(value.getDate()).padStart(2, '0');
+      return `${year}${month}${day}`;
     }
 
-    this.loading = false;
+    const normalized = String(value).replace(/\D/g, '');
+    return normalized.length >= 8 ? normalized.substring(0, 8) : null;
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
+  public onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
+      const body: FIN73010Query = {
+        pettyCashNo: raw.pettyCashNo || null,
+        applyDateStart: this.formatDate(raw.applyDateStart),
+        applyDateEnd: this.formatDate(raw.applyDateEnd),
+        applicantNo: raw.applicantNo || null,
+        custodianNo: raw.custodianNo || null,
+        status: raw.status || null,
+        custodianDeptNo: raw.custodianDeptNo || null,
+        pageSize: raw.pageSize ?? 30,
+        pageIndex: raw.pageIndex ?? 1,
+        SortBy: raw.SortBy,
       };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+      this.service.queryFIN73010(body)
+        .pipe(finalize(() => this.loading = false))
+        .subscribe(res => {
+          this.data = res.Data ?? [];
+          this.totalRecords = res.TotalCount ?? 0;
+          this.lastQueryBody = body;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
   }
 }

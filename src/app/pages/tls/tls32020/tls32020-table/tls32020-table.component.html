@@ -43,7 +43,7 @@
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex"
     let-expanded="expanded" let-rowgroup="rowgroup" let-rowspan="rowspan">
-    <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [pSelectableRow]="rowData"  
+    <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [pSelectableRow]="rowData"
       [style]="{ height: '46px' }" [pSelectableRowIndex]="rowIndex">
       <td class="w-1rem text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
       <ng-container *ngFor="let col of columns">
@@ -51,7 +51,7 @@
           [attr.rowspan]="rowspan" style="text-overflow: ellipsis; min-width: 55px">
           {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
         </td>
-        <td *ngIf="col.field !== 'YM'" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"  
+        <td *ngIf="col.field !== 'YM'" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
           style="text-overflow: ellipsis; min-width: 55px">
           <span>
             {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
@@ -109,9 +109,10 @@
     </div>
   </ng-template>
   <ng-template pTemplate="emptymessage">
-    <tr>
+    <tr *ngIf="hasSearched">
       <td [attr.colspan]="1 + columns.length">
-        <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+        <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+          <i class="pi pi-search mr-2"></i>
           查無資料
         </div>
       </td>

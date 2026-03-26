@@ -1,195 +1,130 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicQpageComponent } from '@shared/componentextends/basic-qpage/basic-qpage.component';
+import { finalize } from 'rxjs/operators';
+
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
+
+import { FIN73030Service } from '../../../service/api/fin/fin73030.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+
+import { FIN73030Data, FIN73030Option, FIN73030Query } from './fin73030.model';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 
 @Component({
   selector: 'app-fin73030',
   templateUrl: './fin73030.component.html',
-  styleUrl: './fin73030.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    AccordionModule,
+    CheckboxModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    MenubarComponent,
+    ButtonComponent,
+    // CalendarComponent,
+    DropdownComponent,
+    TableReportComponent,
+    CalendarRangeComponent
+  ],
 })
-export class FIN73030Component extends BasicQpageComponent implements OnInit {
-  queryForm = this.formBuilder.group({
-    counterCode: [],  // 專櫃編號
-    counterName: [],  // 櫃位名稱
-    violationCategory: [],  // 違規類別編號
-    deductionItem: [],  // 扣款項目
-    amountStart: [],  // 金額開始
-    amountEnd: [],  // 金額結束
-    deductionDateStart: [],  // 扣款日期起
-    deductionDateEnd: [],  // 扣款日期迄
-    violationDateStart: [],  // 違規日期起
-    violationDateEnd: [],  // 違規日期迄
-    documentNumber: [],  // 單據編號
-    issuingUnit: [],  // 開立單位
-    createdBy: [],  // 建立者(輸入代號)
-    floor: [],  // 樓層
-    Applicationdate: [],  // 維護日
-    status: [],  // 狀態
-    PettyCashOrderNumber: [],
-    Pettycashapplicant: [],
-    Pettycashcustodian: [],
-    Inventoryordernumber: [],
-    SQuota: [],
-    EQuota: [],
-    startdate: [],
-    enddate: [],
-    description: [],
-    SCountbalance: [],
-    ECountbalance: [],
-    Approvalcolumn: [],
+export class FIN73030Component extends BasicQueryPageComponent<FIN73030Data> implements OnInit {
+  public readonly queryForm = this.formBuilder.group({
+    paymentRequestNo: [null as string | null],
+    createDateStart: [null as Date | string | null],
+    createDateEnd: [null as Date | string | null],
+    status: [null as string | null],
+    printSignOff: [false as boolean | null],
+    pageSize: [30, [Validators.required]],
+    pageIndex: [1, [Validators.required]],
+    SortBy: [[
+      { field: 'paymentRequestNo', order: 1 },
+      { field: 'createDate', order: -1 },
+      { field: 'contentName', order: 1 },
+    ]],
   });
 
-  // Dropdown options
-  PettyCashOrderNumber: any[] = [{ value: 201407170001, label: 'C201407170001' },
-  { value: 201407170002, label: 'TC201407170002' },
-  { value: 201407170003, label: 'TC201407170003' },
-  { value: 201407170004, label: 'TC201407170004' },
-  { value: 201407210001, label: 'TC201407210001' },
-  { value: 201407210002, label: 'TC201407210002' },
-  { value: 201407280001, label: 'TC201407280001' },
-  { value: 201407280002, label: 'TC201407280002' },
-  { value: 201407280003, label: 'TC201407280003' },
-  { value: 201407290002, label: 'TC201407290002' },];
-  usercode: any[] = [];
-  Feespayable: any[] = [
-    { value: 210101, label: '銀行短期借款' },
-    { value: 210201, label: '應付商業本票-中華' },
-    { value: 210202, label: '應付商業本票-合庫' },
-    { value: 210203, label: '應付商業本票-聯邦' },
-    { value: 210301, label: '應付商業本票折價' },
-    { value: 210401, label: '一年或一年營業週期內到期長期負債' },
-    { value: 2111, label: '應付票據' },
-    { value: 211101, label: '應付票據-專櫃' },
-    { value: 211102, label: '應付票據-自營' },
-    { value: 211103, label: '應付票據-固資及費用' },
-  ];
-  Inputtax: any[] = [
-    { value: 1, label: '1101_庫存現金' },
-    { value: 2, label: '110101_庫存現金-營收及正負差' },
-    { value: 3, label: '110102_庫存現金-其他收入' },
-    { value: 4, label: '110103_庫存現金-財務部' },
-    { value: 5, label: '110111_庫存現金-外幣' },
-    { value: 6, label: '110112_庫存現金-人民幣' },
-    { value: 7, label: '110199_庫存現金-其他' },
-    { value: 8, label: '1102_零用金' },
-    { value: 9, label: '110200_零用金-總經理室' },
-    { value: 10, label: '110201_零用金-採購組' }
-  ];
-  statusOptions: any[] = [
-    { value: 1, label: '建立' },
-    { value: 2, label: '請款' },
-    { value: 3, label: '拋轉' },
-    { value: 4, label: '撥補' },
+  paymentRequestNoOptions: FIN73030Option[] = [];
+  statusOptions: FIN73030Option[] = [];
 
-  ];
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  displayOptions: any[] = [];
-  displayOptions2: any[] = [];
-  Billingordernumber: any[] = [
-    { value: 1, label: 'B20150208001' },
-    { value: 2, label: 'B20150208002' },
-    { value: 3, label: 'B20150410001' },
-  ];
-  // Table data
-  data: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'itemDescription', header: '名稱/摘要/內容', visible: true },
-    { field: 'unit', header: '單位', visible: true },
-    { field: 'quantity', header: '數量', visible: true },
-    { field: 'unitPrice', header: '單價', visible: true },
-    { field: 'totalPrice', header: '總價', visible: true }
+  data: FIN73030Data[] = [];
+  totalRecords = 0;
+  lastQueryBody: FIN73030Query | null = null;
+
+  columns: ReportColumn[] = [
+    { field: 'contentName', header: '名稱/摘要/內容' },
+    { field: 'unit', header: '單位' },
+    { field: 'quantity', header: '數量' },
+    { field: 'unitPrice', header: '單價' },
+    { field: 'totalPrice', header: '總價' },
   ];
 
-  vendorOptions: any[] = [];
-  counterCodeOptions: any[] = [];
-  violationCategoryOptions: any[] = [];
-  floorOptions: any[] = [];
-
-  deductionItemOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
-  Pettycashapplicant: any[] = [];
-
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-  ) {
-    super(); // 呼叫父類建構子
+  constructor(public readonly service: FIN73030Service) {
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '170010';
+    this.initializePage('FIN73030', '', this.queryForm, this.onSubmit.bind(this));
+    this.loadOptions();
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+  private loadOptions(): void {
+    this.service.getPaymentRequestNoOptions().subscribe(res => this.paymentRequestNoOptions = res);
+    this.service.getStatusOptions().subscribe(res => this.statusOptions = res);
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+  private formatDate(value: Date | string | null): string | null {
+    if (!value) return null;
+
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      const year = value.getFullYear();
+      const month = String(value.getMonth() + 1).padStart(2, '0');
+      const day = String(value.getDate()).padStart(2, '0');
+      return `${year}${month}${day}`;
     }
 
-    this.loading = false;
-    this.notificationService.unblockUi();
+    const normalized = String(value).replace(/\D/g, '');
+    return normalized.length >= 8 ? normalized.substring(0, 8) : null;
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
+  moneyFormat(value: number | null | undefined): string {
+    return value != null ? value.toLocaleString('en-US') : '';
   }
 
-  onCreate() {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Create,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-  }
+  public onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
 
-  onEdit(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Edit,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
+      const body: FIN73030Query = {
+        paymentRequestNo: raw.paymentRequestNo || null,
+        createDateStart: this.formatDate(raw.createDateStart),
+        createDateEnd: this.formatDate(raw.createDateEnd),
+        status: raw.status || null,
+        printSignOff: raw.printSignOff ?? false,
+        pageSize: raw.pageSize ?? 30,
+        pageIndex: raw.pageIndex ?? 1,
+        SortBy: raw.SortBy,
+      };
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+      this.service.queryFIN73030(body)
+        .pipe(finalize(() => this.loading = false))
+        .subscribe(res => {
+          this.data = (res.Data ?? []).map(item => ({
+            ...item,
+            dataKey: item.dataKey ?? `${item.paymentRequestNo}-${item.contentName}-${item.totalPrice}`,
+          }));
+          this.totalRecords = res.TotalCount ?? 0;
+          this.lastQueryBody = body;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
   }
 }

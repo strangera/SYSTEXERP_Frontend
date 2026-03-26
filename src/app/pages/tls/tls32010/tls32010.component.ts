@@ -388,9 +388,16 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       } as TLS32010QueryRequest;
       this.tls32010Service.queryTLS32010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.historyRequestBody = body;
-        this.data = response.Data.slice(0, response.Data.length - 1);
-        this.totalRecords = response.TotalCount - 1;
-        this.footerData = { ...response.Data[response.Data.length - 1], 館別: '' };
+        const rawData = response.Data || []; // 後端回傳的原始資料有包含最後一筆總計
+        if (rawData.length > 0) {
+          this.footerData = { ...rawData[rawData.length - 1], 館別: '' }; // 取最後一筆作為 Footer (總計列)
+          this.data = rawData.slice(0, rawData.length - 1); // 其餘資料作為表格內容
+          this.totalRecords = response.TotalCount;
+        } else {
+          this.data = [];
+          this.totalRecords = 0;
+          this.footerData = null;
+        }
       });
     });
   }

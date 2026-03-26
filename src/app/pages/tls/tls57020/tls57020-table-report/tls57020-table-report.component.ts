@@ -34,8 +34,10 @@ export class TableReportComponent implements OnChanges {
   @Input() groupRowsBy?: string;    // (小計)群組欄位
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
   @Input() subTotalData: any;    // (小計)頁尾資料
+  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges) {
     if (changes['data'] && this.data) {
+      this.hasSearched = true;
       this.Header = this.data.Header;
       this.PaymentDetails = this.data.PaymentDetails;
       this.PaymentFooters = this.data.PaymentFooters;

@@ -33,7 +33,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-customFooter-table *ngIf="columns?.length && columns.length > 0" tableKey="tls57110" dataKey="LOGO_No"
+  <app-customFooter-table *ngIf="columns.length && columns.length > 0" tableKey="tls57110" dataKey="LOGO_No"
     [data]="data" [columns]="columns" [totalRecords]="totalRecords" [footerData]="footerData"
     [rows]="queryForm.value.pgSize ?? 30" [lazy]="true" [loading]="loading"
     (lazyLoadData)="onLazyLoadData($event, queryForm)" [showReportMode]="false" [showManage]="false"

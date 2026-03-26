@@ -273,6 +273,14 @@ export class TableEditDataService {
   }
 
   /**
+   * 在 dataChange.emit 後呼叫，讓 isSynchronized 認出這是自身發出的資料，
+   * 從而跳過 ngOnChanges 的 initializeData，保留 _validationErrors 狀態。
+   */
+  public updateFingerprint(data: any[]): void {
+    this._externalDataFingerprint = JSON.stringify(data);
+  }
+
+  /**
  * 檢查傳入的外部資料是否與 Service 內部維護的完整資料狀態同步。
  * 用於避免 ngOnChanges/dataChange 循環調用 Service.initializeData。
  */

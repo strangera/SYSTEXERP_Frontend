@@ -332,6 +332,38 @@ export interface UpdateFIN32030CompleteRequest {
 // ==================== Response 介面 ====================
 
 /**
+ * 帳款刪除明細
+ */
+export interface ARRecvAcctDeleteDetailItem {
+  /** ARS4001 主鍵 id */
+  id: number;
+}
+
+/**
+ * 帳款刪除
+ */
+export interface DeleteFIN32030ARRecvAcctRequest {
+  /** 要刪除的帳款 id 清單 */
+  Details?: ARRecvAcctDeleteDetailItem[] | null;
+}
+
+/**
+ * 收款單刪除明細
+ */
+export interface RecvDeleteDetailItem {
+  /** 收款單號 */
+  RCV_No: string;
+}
+
+/**
+ * 收款沖帳完整刪除 (含帳款/票據/明細/主檔)
+ */
+export interface DeleteFIN32030RecvCascadeBatchRequest {
+  /** 要刪除的收款單清單 */
+  Details?: RecvDeleteDetailItem[] | null;
+}
+
+/**
  * 收款沖帳維護查詢回應
  */
 export interface QueryFIN32030Response {
@@ -721,5 +753,19 @@ export class FIN32030Service {
    */
   queryAbatAcct(params: QueryAbatAcctRequest): Observable<ApiResponse<QueryAbatAcctResponse[]>> {
     return this.http.post<ApiResponse<QueryAbatAcctResponse[]>>(`${this.apiUrl}/queryAbatAcct`, params);
+  }
+
+  /**
+   * 帳款刪除 (ARS4001 + 回沖 ARS3001.PTA_Amt)
+   */
+  deleteFIN32030ARRecvAcct(params: DeleteFIN32030ARRecvAcctRequest): Observable<ApiResponse<Record<string, never>>> {
+    return this.http.post<ApiResponse<Record<string, never>>>(`${this.apiUrl}/DeleteFIN32030ARRecvAcct`, params);
+  }
+
+  /**
+   * 收款沖帳完整刪除 (含帳款/票據/明細/主檔)
+   */
+  deleteFIN32030RecvCascadeBatch(params: DeleteFIN32030RecvCascadeBatchRequest): Observable<ApiResponse<Record<string, never>>> {
+    return this.http.post<ApiResponse<Record<string, never>>>(`${this.apiUrl}/DeleteFIN32030RecvCascadeBatch`, params);
   }
 }

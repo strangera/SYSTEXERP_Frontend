@@ -89,11 +89,11 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   columns: Column[] = [];
 
   constructor(
-    private locationOptionsService: LocationOptionsService,
-    private sys0110Service: Sys0110Service,
-    private encrypt: EncryptionService,
-    private sysb800DropdownService: Sysb800DropdownService,
-    private userCodeService: UserCodeService,
+    private readonly locationOptionsService: LocationOptionsService,
+    private readonly sys0110Service: Sys0110Service,
+    private readonly encrypt: EncryptionService,
+    private readonly sysb800DropdownService: Sysb800DropdownService,
+    private readonly userCodeService: UserCodeService,
     private readonly validationService: ValidationService
   ) {
     super();

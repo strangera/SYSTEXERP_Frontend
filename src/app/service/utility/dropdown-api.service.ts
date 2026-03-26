@@ -415,6 +415,38 @@ export class DropdownApiService {
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }
+  /** 查詢廠商資料表(POS2013)(統一編號為主) */
+  queryVendorNoGroup(body: any = { VEN_Flag: '' }): Observable<any[] | null> {
+    return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/queryPOS2013_DropDownList`, body).pipe(
+      map(response => {
+        const data = response?.Data;
+        if (!data) return null;
+
+        // 使用 Map 確保每個 No 只有一筆資料，但把所有的 VEN_No 資訊存在內部的 subItems
+        const noMap = new Map<string, any>();
+
+        data.forEach(item => {
+          if (!noMap.has(item.No)) {
+            noMap.set(item.No, {
+              No: item.No,
+              Name: item.Name,
+              // 這是給 MultiSelect 搜尋用的標籤，包含所有相關資訊
+              combinedLabel: `${item.No} - ${item.Name}`,
+              subItems: []
+            });
+          }
+          noMap.get(item.No).subItems.push({
+            VEN_No: item.VEN_No,
+            ShortName: item.ShortName,
+            Address: item.VEN_Address
+          });
+        });
+
+        return Array.from(noMap.values());
+      }),
+      shareReplay(1)
+    );
+  }
   /**
  * 查詢品牌與廠商關聯表 (通用基礎方法)
  */

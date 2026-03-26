@@ -4,9 +4,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
 import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '@shared/componentkit/table/table.model';
@@ -18,16 +18,12 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { DropDownListService } from './../../../service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-fin29050',
   templateUrl: './fin29050.component.html',
   standalone: true,
   imports: [
-    AsyncPipe,
-    DropdownComponent,
     ButtonModule,
     TableSubheaderComponent,
     DropdownRangeComponent,
@@ -37,10 +33,10 @@ import { DropDownListService } from './../../../service/utility/dropDownList.ser
     ReactiveFormsModule,
     CalendarRangeComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
     InputNumberRangeComponent,
-    RadiobuttonComponent
+    RadiobuttonComponent,
+    AsyncPipe
   ]
 })
 export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> implements OnInit {
@@ -58,8 +54,8 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     ...createPaginationConfig([]),
   });
 
-  VendorNoOptions: any[] = []; // 廠商編號選項
-  AccNoOptions: any[] = []; // 科目代號選項
+  VendorNoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
+  AccNoOptions = this.dropdown.queryGls1005();
   data: FIN29050Data[] = [];
   totalRecords = 0;
   totalData: any[] = [];
@@ -85,43 +81,16 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
   ];
 
   constructor(
-    private dropDownListService: DropDownListService,
     private fin29050Service: FIN29050Service,
     private datePipe: DatePipe,
-    private location: Location
+    private location: Location,
+    private readonly dropdown: DropdownApiService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN29050', '/fin/fin29050cru', this.queryForm, (frm) => this.onSubmit(frm));
-    this.loadOptions();
-  }
-
-  private loadOptions(): void {
-    // 廠商編號
-    this.dropDownListService.queryPOS2013_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: res => {
-          this.VendorNoOptions = (res?.Data || []).map((x) => ({ label: `${x.VEN_No} - ${x.Name}`, value: x.VEN_No }));
-        },
-        error: () => {
-          this.VendorNoOptions = [];
-        }
-      });
-
-    // 科目代號
-    this.dropDownListService.queryGLS1005_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: res => {
-          this.AccNoOptions = (res?.Data || []).map((x) => ({ label: `${x.No} - ${x.Name}`, value: x.No }));
-        },
-        error: () => {
-          this.AccNoOptions = [];
-        }
-      });
   }
 
   override onDetail(row: FIN29050Data) {
@@ -130,7 +99,6 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
       this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
       return;
     }
-
     try {
       const handoff = {
         vouNo,
@@ -145,7 +113,6 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
       console.error('[FIN29050] handoff save failed:', err);
       this.messageService?.warnBubble?.('寫入交接資料失敗。');
     }
-
     const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
     const finalUrl = `${window.location.origin}${externalUrl}`;
     window.open(finalUrl, '_blank', 'noopener');
@@ -160,80 +127,61 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
       const requestData: QueryFIN29050Request = {
         PageSize: pageSize,
         PageIndex: pageIndex,
-        OrderBy: '',
-        Offset: Math.max(pageIndex - 1, 0) * pageSize,
         SortBy: raw.SortBy || [],
-        VEN_No_From: raw.VEN_No_From || '',
-        VEN_No_To: raw.VEN_No_To || '',
+        VEN_No_From: raw.VEN_No_From || null,
+        VEN_No_To: raw.VEN_No_To || null,
         ACP_Date_From: this.datePipe.transform(raw.ACP_Date_From, 'yyyy-MM-dd') || '',
         ACP_Date_To: this.datePipe.transform(raw.ACP_Date_To, 'yyyy-MM-dd') || '',
         ACP_Amt_From: raw.ACP_Amt_From ?? undefined,
         ACP_Amt_To: raw.ACP_Amt_To ?? undefined,
-        AccNo_From: raw.AccNo_From || '',
-        AccNo_To: raw.AccNo_To || ''
+        AccNo_From: raw.AccNo_From || null,
+        AccNo_To: raw.AccNo_To || null,
+        ShowZeroBalance: raw.ShowZeroBalance === 'N' ? 'N' : 'A',
+        UnpaidIncludeReserve: raw.UnpaidIncludeReserve === 'N' ? 'N' : 'Y'
       } as QueryFIN29050Request;
 
-      this.fin29050Service
-        .queryFIN29050(requestData)
-        .pipe(
-          untilDestroyed(this),
-          finalize(() => {
-            this.loading = false;
-          })
-        )
-        .subscribe({
-          next: (response) => {
-            if (response && response.Data) {
-              const rows: any[] = response.Data || [];
-              // 檢查是否有後端回傳的頁尾總計列（IsTotal===1 或 VendorNo==='TOTAL' 或 VendorName==='總計'）
-              const totals = rows.filter(r => r?.IsTotal === 1 || String(r?.VendorNo) === 'TOTAL' || String(r?.VendorName) === '總計');
-              if (totals && totals.length) {
-                // 把總計轉成 totalData，並把原本的總計列從 data 中移除
-                this.totalData = totals.map(t => ({ ...t, VendorNo: '' }));
-                this.data = rows.filter(r => !(r?.IsTotal === 1 || String(r?.VendorNo) === 'TOTAL' || String(r?.VendorName) === '總計'));
-              } else {
-                this.totalData = [];
-                this.data = rows;
-              }
-              this.totalRecords = response.TotalCount || 0;
-            } else {
-              this.data = [];
-              this.totalData = [];
-              this.totalRecords = 0;
-            }
-            this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-            // 設定給子元件，讓子元件可在滾動時以 queryFunction 載入下一頁
-            // 同時提供 child 常用的 pageSize/pageIndex 小寫欄位供判斷
-            this.lastQueryBody = { ...requestData, pageSize: requestData.PageSize, pageIndex: requestData.PageIndex };
-            // queryFn 會接受 child 傳進來的 body (小寫 pageSize/pageIndex)，這裡把它轉回 API 要求的格式
-            this.queryFn = (body: any) => {
-              const pageSize = body?.pageSize ?? body?.PageSize ?? requestData.PageSize ?? 30;
-              const pageIndex = body?.pageIndex ?? body?.PageIndex ?? 1;
-              const sortFromEvent = body?.SortBy ?? body?.multiSortMeta ?? requestData.SortBy ?? [];
-              const mapped: QueryFIN29050Request = {
-                ...requestData,
-                PageSize: pageSize,
-                PageIndex: pageIndex,
-                Offset: Math.max(pageIndex - 1, 0) * pageSize,
-                SortBy: sortFromEvent,
-              } as QueryFIN29050Request;
-              console.log('[FIN29050] queryFn mapped request ->', mapped);
-              return this.fin29050Service.queryFIN29050(mapped);
-            };
-          },
-          error: () => {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService?.warnBubble?.('查詢失敗');
+      this.fin29050Service.queryFIN29050(requestData).pipe(untilDestroyed(this), finalize(() => { this.loading = false; })).subscribe((response) => {
+        if (response && response.Data) {
+          const rows: any[] = response.Data || [];
+          // 檢查是否有後端回傳的頁尾總計列（IsTotal===1 或 VendorNo==='TOTAL' 或 VendorName==='總計'）
+          const totals = rows.filter(r => r?.IsTotal === 1 || String(r?.VendorNo) === 'TOTAL' || String(r?.VendorName) === '總計');
+          if (totals && totals.length) {
+            // 把總計轉成 totalData，並把原本的總計列從 data 中移除
+            this.totalData = totals.map(t => ({ ...t, VendorNo: '' }));
+            this.data = rows.filter(r => !(r?.IsTotal === 1 || String(r?.VendorNo) === 'TOTAL' || String(r?.VendorName) === '總計'));
+          } else {
+            this.totalData = [];
+            this.data = rows;
           }
-        });
+          this.totalRecords = response.TotalCount || 0;
+        } else {
+          this.data = [];
+          this.totalData = [];
+          this.totalRecords = 0;
+        }
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        // 設定給子元件，讓子元件可在滾動時以 queryFunction 載入下一頁
+        // 同時提供 child 常用的 pageSize/pageIndex 小寫欄位供判斷
+        this.lastQueryBody = { ...requestData, pageSize: requestData.PageSize, pageIndex: requestData.PageIndex };
+        // queryFn 會接受 child 傳進來的 body (小寫 pageSize/pageIndex)，這裡把它轉回 API 要求的格式
+        this.queryFn = (body: any) => {
+          const pageSize = body?.pageSize ?? body?.PageSize ?? requestData.PageSize ?? 30;
+          const pageIndex = body?.pageIndex ?? body?.PageIndex ?? 1;
+          const sortFromEvent = body?.SortBy ?? body?.multiSortMeta ?? requestData.SortBy ?? [];
+          const mapped: QueryFIN29050Request = {
+            ...requestData,
+            PageSize: pageSize,
+            PageIndex: pageIndex,
+            SortBy: sortFromEvent,
+          } as QueryFIN29050Request;
+          return this.fin29050Service.queryFIN29050(mapped);
+        };
+      });
     });
   }
 
   private buildExportPayload(): QueryFIN29050Request {
     const raw = this.queryForm.getRawValue();
-
-
     return {
       PageSize: 0,
       PageIndex: 0,
@@ -342,48 +290,5 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     a.download = fileName;
     a.click();
     window.URL.revokeObjectURL(url);
-  }
-
-  private fetchRemainingPages(currentPageIndex: number, pageSize: number, baseRaw: any) {
-    const totalPages = Math.ceil((this.totalRecords || 0) / pageSize);
-    const next = currentPageIndex + 1;
-    const fetchNext = (idx: number) => {
-      if (idx > totalPages) {
-        this.loading = false;
-        return;
-      }
-
-      const req: QueryFIN29050Request = {
-        PageSize: pageSize,
-        PageIndex: idx,
-        OrderBy: '',
-        Offset: Math.max(idx - 1, 0) * pageSize,
-        SortBy: baseRaw.SortBy || [],
-        VEN_No_From: baseRaw.VEN_No_From || '',
-        VEN_No_To: baseRaw.VEN_No_To || '',
-        ACP_Date_From: this.datePipe.transform(baseRaw.ACP_Date_From, 'yyyy-MM-dd') || '',
-        ACP_Date_To: this.datePipe.transform(baseRaw.ACP_Date_To, 'yyyy-MM-dd') || '',
-        ACP_Amt_From: baseRaw.ACP_Amt_From ?? undefined,
-        ACP_Amt_To: baseRaw.ACP_Amt_To ?? undefined,
-        AccNo_From: baseRaw.AccNo_From || '',
-        AccNo_To: baseRaw.AccNo_To || '',
-        ShowZeroBalance: baseRaw.ShowZeroBalance === 'N' ? 'N' : 'A',
-        UnpaidIncludeReserve: baseRaw.UnpaidIncludeReserve === 'N' ? 'N' : 'Y'
-      } as QueryFIN29050Request;
-
-      this.fin29050Service.queryFIN29050(req).pipe(untilDestroyed(this)).subscribe({
-        next: (res) => {
-          if (res && res.Data && res.Data.length) {
-            this.data = [...this.data, ...res.Data];
-          }
-          fetchNext(idx + 1);
-        },
-      });
-    };
-
-    if (next <= totalPages) {
-      this.loading = true;
-      fetchNext(next);
-    }
   }
 }

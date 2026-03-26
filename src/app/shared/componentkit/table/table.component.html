@@ -33,8 +33,9 @@
       [exportExcelLoading]="exportExcelLoading" [showPage]="showPage" [totalPages]="totalPages" [pages]="pages"
       [selectedPage]="selectedPage" [rows]="rows" [first]="first" (insert)="insertRow()" (delete)="deleteRow($event)"
       (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" (pageChange)="goToPage($event)"
-      [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark"
-      [customReport]="customReport" (exportEvent)="exportEvent.emit($event)">
+      [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl" [DataKeyName]="DataKeyName" [PrintColumn]="PrintColumn"
+      [Conditions]="Conditions" [PrintRemark]="PrintRemark" [customReport]="customReport"
+      (exportEvent)="exportEvent.emit($event)">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>
@@ -168,11 +169,12 @@
           <span class="pi pi-bars" pReorderableRowHandle></span>
         </td>
         <td *ngIf="showSerialNo" class="text-center">{{ rowIndex + 1 }}</td>
-        <td *ngIf="IsPrint && showCheckBox && !rowEditing && (selectionMode === 'multiple' || selectionMode === 'single')">
-          <p-tableCheckbox *ngIf="selectionMode === 'multiple'" class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
-            [disabled]="!isRowSelectable(rowData) || disabled" />
-          <p-tableRadioButton *ngIf="selectionMode === 'single'" class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData"
-            [disabled]="!isRowSelectable(rowData) || disabled" />
+        <td
+          *ngIf="IsPrint && showCheckBox && !rowEditing && (selectionMode === 'multiple' || selectionMode === 'single')">
+          <p-tableCheckbox *ngIf="selectionMode === 'multiple'" class="flex justify-content-center"
+            [pSelectableRow]="rowData" [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled" />
+          <p-tableRadioButton *ngIf="selectionMode === 'single'" class="flex justify-content-center"
+            [pSelectableRow]="rowData" [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled" />
         </td>
         <td *ngIf="expansionColumns.length && IsPrint" class="text-center">
           <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
@@ -181,11 +183,9 @@
                   ? 'pi pi-chevron-down': 'pi pi-chevron-right'" pButton (click)="toggleRowExpansion(rowData)"
             [disabled]="rowData.expansionLoading || (!expansionLoadFn && !rowData[expansionDataKey]?.length)" />
         </td>
-        <td *ngFor="let col of columns" [ngClass]="{
-      'text-right': col.align === 'right' || col.style === 'text-right',
-      'text-center': col.align === 'center' || (!col.align && !col.style),
-      'text-left': col.align === 'left'
-    }" style="text-overflow: ellipsis; min-width: 55px" (click)="editing ? $event.stopPropagation() : null"
+        <td *ngFor="let col of columns"
+          [ngClass]="getBodyCellNgClass(col, rowData)"
+          style="text-overflow: ellipsis; min-width: 55px" (click)="editing ? $event.stopPropagation() : null"
           (dblclick)="detailRow(rowData)" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn
           [frozen]="IsPrint && col.frozen">
           <p-cellEditor *ngIf="showRowEdit">
@@ -289,12 +289,13 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="emptymessage">
-    <tr>
+    <tr *ngIf="hasSearched">
       <td [attr.colspan]="getVisibleHeaderCount">
         <div>
-          <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
-            {{ emptyMessage }}
-          </div>
+         <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+          <i class="pi pi-search mr-2"></i>
+          {{ emptyMessage || '查無資料' }}
+        </div>
         </div>
       </td>
     </tr>

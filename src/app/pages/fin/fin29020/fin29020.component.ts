@@ -1,6 +1,6 @@
 import { AsyncPipe, CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin24010Service, QueryBankAccountRequest } from '@service/api/fin/fin24010.service';
@@ -9,7 +9,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount } from '@shared/componentkit/table/table.model';
@@ -34,7 +34,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
     CalendarRangeQuickComponent,
     CommonModule,
     TableReportComponent,
-    InputNumberRangeComponent,
+    InputTextRangeComponent,
     DropdownComponent,
     ButtonModule,
     AsyncPipe
@@ -45,8 +45,8 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Detail> i
     DateFrom: [null],           // 匯款日期(起)
     DateTo: [null],             // 匯款日期(迄)
     BNK_No: [null],             // 公司匯出銀行代號 APS3007.BNK_No
-    WslipNoFrom: [null],          // 匯款單號(起)
-    WslipNoTo: [null],            // 匯款單號(迄)
+    WslipNoFrom: [null, [Validators.maxLength(12)]],          // 匯款單號(起)
+    WslipNoTo: [null, [Validators.maxLength(12)]],            // 匯款單號(迄)
     VEN_No: [null],             // 廠商代號 APS3004.PAM_Target
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
@@ -71,18 +71,6 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Detail> i
     { field: 'VendorBankNane', header: '解款銀行名稱', visible: true },
     { field: 'VendorAccNo', header: '銀行帳號', visible: true },
     { field: 'VendorAccName', header: '帳戶名稱', visible: true },
-    // { field: 'STO_No', header: '分店編號', visible: false },
-    // { field: 'VEN_No', header: '廠商編號', visible: false },
-    // { field: 'CompanyBNK_Name', header: '匯款銀行名稱', visible: false },
-    // { field: 'CompanyBNK_BranchNo', header: '匯款銀行分行代號', visible: false },
-    // { field: 'VendorBNK_No', header: '解款銀行代號', visible: false },
-    // { field: 'VendorBNK_BranchNo', header: '解款銀行分行代號', visible: false },
-    // { field: 'VendorBNK_AccNo', header: '解款帳號', visible: false },
-    // { field: 'RMT_Fee', header: '匯款手續費', visible: false, format: formatAmount },
-    // { field: 'RMT_Status', header: '匯款狀態', visible: false },
-    // { field: 'RMT_ExpMediaCnt', header: '媒體匯出次數', visible: false },
-
-    // 加入 isSubTotal: true 讓 app-table 自動計算小計
     { field: 'PayAmount', header: '帳款金額', visible: true, format: formatAmount, isSubTotal: true },
     { field: 'RemitAmount', header: '匯款金額', visible: true, format: formatAmount, isSubTotal: true },
   ];

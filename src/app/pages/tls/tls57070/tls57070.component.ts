@@ -1,4 +1,4 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -31,7 +31,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
     MultiSelectComponent,
     CalendarComponent,
     ButtonComponent,
-    NgIf,
     ButtonModule,
     TranslateModule,
     AsyncPipe,
@@ -209,7 +208,7 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
         ...frm.value,
         STK_YM: convertDateToYYYYMM(frm.value.STK_YM),
         SortBy: frm.value.ShowType === 'M' ?
-          [{ field: 'LOGO_CH_NAME', order: 1 }]
+          [{ field: 'LOGO_No', order: 1 }]
           : [{ field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 }]
       }
       this.tls57070Service.queryTLS57070(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {

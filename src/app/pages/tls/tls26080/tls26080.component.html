@@ -71,5 +71,7 @@
                    (selectionChange)="selectedItems.set($event)"
                    (edit)="onEdit($event)"
                    (detail)="onDetail($event)"
-                   (delete)="onDelete($event)"></app-table-report>
+                   (delete)="onDelete($event)"
+                   [addButton]="addButton"
+                   [buttonsLoading]="printLoading()"></app-table-report>
 </div>

@@ -18,7 +18,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { AddButton, convertDateToYYYYMM, convertYYYYMMToDate } from '../../../shared/componentkit/table/table.model';
+import { AddButton, convertDateToYYYYMM } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 import { columns, monthOptions, Pos1018 } from './fin11200.model';
 
@@ -81,7 +81,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
 
   ngOnInit(): void {
     this.initializePage('FIN11200', '/FIN/FIN11200cru', this.queryForm, (form) => this.onSubmit(form));
-    this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.value} - ${item.label}` })));
+    this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.label}` })));
     // 設定GUI_YYMM預設值
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
@@ -98,10 +98,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
         ECR_NoList: frm.get('ECR_NoList')?.value
       }
       this.fin11200Service.queryFIN11200(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
-        this.data = response.Data.map((item: Pos1018) => ({
-          ...item,
-          GUI_YYMM: convertYYYYMMToDate(item.GUI_YYMM)
-        }));
+        this.data = response.Data;
         this.lastQueryBody = body;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);

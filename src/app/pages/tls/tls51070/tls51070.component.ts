@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NavigationExtras } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
@@ -398,13 +399,13 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
 
   //移動到 歷史紀錄查詢/標籤檔案
   gotoTls51070OS(destination: string) {
-    console.log('導引到', destination);
-    //導引到sysb400.os
-    this.router.navigate(['account/tls/tls51070os'], {
+    const extras: NavigationExtras = {
       state: {
+        fromRoute: this.router.url,
         destination: destination,
-      }
-    });
+      },
+    };
+    this.router.navigate(['account/tls/tls51070os'], extras);
   }
 
   // 開啟匯入 Dialog
