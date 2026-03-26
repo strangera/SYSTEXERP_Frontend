@@ -100,8 +100,56 @@ export interface ASS13040DetailItem {
   NOTES?: string;
 }
 
+/**
+ * ASS13040 明細資料（送後端用，對齊 C# ASS13040DetailItem）
+ */
+export interface ASS13040DetailItemRequest {
+  GOODS_ID?: string | null;
+  GOODS_PRICE?: number | null;
+  QTY?: number | null;
+  GOODS_UNIT?: string | null;
+  SUBCOST?: number | null;
+  GOODS_COST?: number | null;
+  EVAL_COST?: number | null;
+  AMT?: number | null;
+  NOTES?: string | null;
+}
+
 /** detailASS13040 回傳 Data 型別（對應 ApiResponse.Data） */
 export type ASS13040DetailResponseData = QueryDetailASS13040Result;
+
+/**
+ * ASS13040 共用 Request（送後端用，對齊 C# Insert/Update 共用欄位）
+ */
+export interface BaseASS13040Request {
+  MID?: number | null;
+  STO_NO?: string | null;
+  EMP_ID?: string | null;
+  ORG_ID?: string | null;
+  WH_ID?: string | null;
+  APPLY_DATE?: string | null;
+  SUPPLIER_ID?: string | null;
+  NOTES?: string | null;
+  IMAGE_URL1?: string | null;
+  IMAGE_URL2?: string | null;
+  IMAGE_URL3?: string | null;
+  Items: ASS13040DetailItemRequest[];
+}
+
+/**
+ * insertASS13040 Request（送後端用，對齊 C# InsertASS13040Request）
+ * DAMAGEM_ID 不傳則由 SP 自動取號
+ */
+export interface InsertASS13040Request extends BaseASS13040Request {
+  DAMAGEM_ID?: string | null;
+}
+
+/**
+ * updateASS13040 Request（送後端用，對齊 C# UpdateASS13040Request）
+ */
+export interface UpdateASS13040Request extends BaseASS13040Request {
+  ID: number;
+}
 
 export interface ASS13040InsertRequest extends ASS13040Header {
   Items: ASS13040DetailItem[];

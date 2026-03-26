@@ -8,10 +8,11 @@ import {
   ASS13040AssetQueryRow,
   ASS13040DetailItem,
   ASS13040Header,
-  ASS13040InsertRequest,
-  ASS13040UpdateRequest,
+  ASS13040DetailItemRequest,
+  InsertASS13040Request,
   QueryDetailASS13040DetailData,
   QueryDetailASS13040MasterData,
+  UpdateASS13040Request,
 } from '@pages/ass/ass13040-cru/ass13040-cru.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { IDropdownItem, Option } from '@service/utility/dropdown-api.model';
@@ -195,8 +196,9 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
       }
 
       const raw = this.dataForm.getRawValue();
+      const isCreate = this.crudstatus === CRUDStatus.Create;
       const header: ASS13040Header = {
-        SCRAP_FORM_NO: this.crudstatus === CRUDStatus.Create ? undefined : (raw.scrapCode ?? undefined),
+        SCRAP_FORM_NO: isCreate ? undefined : (raw.scrapCode ?? undefined),
         SCRAP_USER_NO: raw.userCode ?? undefined,
         ORG_ID: raw.departmentCode ?? undefined,
         VENDOR_NO: raw.scrapVendor ?? undefined,
@@ -205,21 +207,52 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
         NOTES: raw.remark ?? undefined,
       };
 
-      const requestBody =
-        this.crudstatus === CRUDStatus.Create
-          ? ({
-            ...header,
-            Items: this.data,
-          } as ASS13040InsertRequest)
-          : ({
-            ...header,
-            SCRAP_FORM_NO: raw.scrapCode ?? '',
-            Items: this.data,
-          } as ASS13040UpdateRequest);
+      const id = this.getDetailIdFromState();
+      const items: ASS13040DetailItemRequest[] = this.data.map(d => ({
+        GOODS_ID: d.ITEM_NO ?? null,
+        GOODS_UNIT: d.UNIT ?? null,
+        QTY: d.QTY ?? null,
+        GOODS_COST: d.BUY_AMT ?? null,
+        EVAL_COST: d.CHANGE_AMT ?? null,
+        AMT: d.TOTAL_AMT ?? null,
+        NOTES: d.NOTES ?? null,
+      }));
 
-      const payload = this.buildFormData(requestBody);
+      const requestObj: InsertASS13040Request | UpdateASS13040Request = isCreate
+        ? ({
+          MID: 0,
+          DAMAGEM_ID: raw.scrapCode && raw.scrapCode !== '系統自動產生' ? raw.scrapCode : null,
+          EMP_ID: raw.userCode ?? null,
+          ORG_ID: raw.departmentCode ?? null,
+          SUPPLIER_ID: raw.scrapVendor ?? null,
+          APPLY_DATE: raw.scrapDate ? this.formatDate(raw.scrapDate) : null,
+          NOTES: raw.remark ?? null,
+          IMAGE_URL1: this.existingFile1 ?? null,
+          IMAGE_URL2: this.existingFile2 ?? null,
+          IMAGE_URL3: this.existingFile3 ?? null,
+          Items: items,
+        } satisfies InsertASS13040Request)
+        : ({
+          ID: id ?? 0,
+          MID: 0,
+          EMP_ID: raw.userCode ?? null,
+          ORG_ID: raw.departmentCode ?? null,
+          SUPPLIER_ID: raw.scrapVendor ?? null,
+          APPLY_DATE: raw.scrapDate ? this.formatDate(raw.scrapDate) : null,
+          NOTES: raw.remark ?? null,
+          IMAGE_URL1: this.existingFile1 ?? null,
+          IMAGE_URL2: this.existingFile2 ?? null,
+          IMAGE_URL3: this.existingFile3 ?? null,
+          Items: items,
+        } satisfies UpdateASS13040Request);
+
+      // 用來確認 FormData 還沒包之前，request 欄位是否正確
+      // eslint-disable-next-line no-console
+      console.debug('[ASS13040CRU] requestObj:', requestObj);
+
+      const payload = this.buildFormData(requestObj);
       const request$ =
-        this.crudstatus === CRUDStatus.Create
+        isCreate
           ? this.ass13040CruService.insertASS13040(payload)
           : this.ass13040CruService.updateASS13040(payload);
 
@@ -354,17 +387,13 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
     };
   }
 
-  private buildFormData(body: ASS13040InsertRequest | ASS13040UpdateRequest): FormData {
+  private buildFormData(body: InsertASS13040Request | UpdateASS13040Request): FormData {
     const fd = new FormData();
-    Object.entries(body).forEach(([key, value]) => {
-      if (value == null) return;
-      if (key === 'Items') return;
-      fd.append(key, String(value));
-    });
-    fd.append('Items', JSON.stringify(body.Items ?? []));
-    if (this.formFile1) fd.append('formFile1', this.formFile1);
-    if (this.formFile2) fd.append('formFile2', this.formFile2);
-    if (this.formFile3) fd.append('formFile3', this.formFile3);
+    fd.append('request', JSON.stringify(body));
+    const files = [this.formFile1, this.formFile2, this.formFile3].filter(
+      (f): f is File => !!f,
+    );
+    files.forEach(file => fd.append('files', file, file.name));
     return fd;
   }
 

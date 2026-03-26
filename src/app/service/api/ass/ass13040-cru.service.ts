@@ -5,8 +5,6 @@ import {
   ASS13040AssetQueryRow,
   ASS13040DetailRequest,
   ASS13040DetailResponseData,
-  ASS13040InsertRequest,
-  ASS13040UpdateRequest,
 } from '@pages/ass/ass13040-cru/ass13040-cru.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
@@ -28,11 +26,11 @@ export class ASS13040CRUService {
     );
   }
 
-  insertASS13040(body: ASS13040InsertRequest | FormData): Observable<ApiResponse<unknown>> {
+  insertASS13040(body: FormData): Observable<ApiResponse<unknown>> {
     return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/insertASS13040`, body);
   }
 
-  updateASS13040(body: ASS13040UpdateRequest | FormData): Observable<ApiResponse<unknown>> {
+  updateASS13040(body: FormData): Observable<ApiResponse<unknown>> {
     return this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/updateASS13040`, body);
   }
 
