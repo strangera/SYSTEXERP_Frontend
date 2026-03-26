@@ -10,10 +10,10 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { AddButton, Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
@@ -76,6 +76,18 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     this.loading = this.tableLoading();
   }, { allowSignalWrites: true });
 
+  public readonly voidingRowId = signal<number | null>(null);
+
+  public readonly addButton: AddButton[] = [
+    {
+      label: '作廢',
+      icon: 'pi pi-trash text-red-500',
+      action: (rowData: FIN53010Data) => this.onVoid(rowData),
+      disabled: (rowData: FIN53010Data) => rowData.PostFlag !== '1' || !this.hasPermission(this.Actions.Invalidate),
+      loading: (rowData: FIN53010Data) => this.voidingRowId() === rowData.id,
+    },
+  ];
+
   public readonly columns: Column[] = [
     { field: 'VouNo', header: '傳票號碼', align: 'left' },
     { field: 'VouType', header: '傳票類別', align: 'left', format: d => this.service.vouTypeOptions.find(({ value }) => value === d)?.label ?? d },
@@ -118,6 +130,26 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
           this.totalRecords.set(res.TotalCount || 0);
         },
       });
+    });
+  }
+
+  public onVoid(rowData: FIN53010Data): void {
+    if (rowData.PostFlag !== '1') return;
+    this.messageService.confirm({
+      header: '作廢確認',
+      message: `是否作廢傳票 ${rowData.VouNo} ?`,
+      accept: () => {
+        this.voidingRowId.set(rowData.id);
+        this.service.voidFIN53010Data([rowData.id]).pipe(
+          finalize(() => this.voidingRowId.set(null)),
+        ).subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.messageService.successBubble('作廢成功');
+            this.onSubmit();
+          },
+        });
+      },
     });
   }
 

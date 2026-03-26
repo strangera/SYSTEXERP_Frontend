@@ -26,7 +26,7 @@ interface UPD {
   UPD_Date?: string;
 }
 
-export interface FIN53010Data extends Pick<FIN53010Basic, 'VouType' | 'VouNo'> {
+export interface FIN53010Data extends Pick<FIN53010Basic, 'VouType' | 'VouNo' | 'PostFlag' | 'VoucherType'> {
   id: number;
   Remark: string;
   AccAmt: number;

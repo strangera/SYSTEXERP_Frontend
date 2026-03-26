@@ -135,6 +135,14 @@ export class FIN53010Service {
     );
   }
 
+  // 作廢（TODO：API 規格尚未出來，請依後端 request key / endpoint / response schema 再調整）
+  public voidFIN53010Data(payload: number[]): Observable<FIN53010DeleteResult> {
+    return this.http.post<FIN53010DeleteResult>(`${apiUrl}/voidFIN53010`, { ids: payload }).pipe(
+      take(1),
+      tap(res => this.logger.debug('作廢FIN53010結果:', [res])),
+    );
+  }
+
   public getFin52030(payload: FIN52030Payload): Observable<BaseQueryResponse<FIN52030Data>> {
     this.fin52030Loading.set(!0);
     return this.http.post<BaseQueryResponse<FIN52030Data>>(`${apiUrl}/queryFIN52030`, { ...payload, PageSize: 9999, PageIndex: 1 }).pipe(
