@@ -94,7 +94,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     { field: 'VouDate', header: '傳票日期', align: 'left', format: d => this.date.transform(d, 'yyyy/MM/dd') ?? d },
     { field: 'PostFlag', header: '傳票狀態', align: 'left', format: v => this.service.postFlagOptions.find(item => String(item.value) === String(v))?.label ?? v },
     { field: 'Remark', header: '傳票摘要', align: 'left', format: d => this.service.noteDescMap().get(d)?.label ?? d },
-    { field: 'VoucherType', header: '傳票型態', align: 'left', format: v => this.service.voucherTypeMap().get(String(v))?.label ?? String(v) },
+    { field: 'VouTypeName', header: '傳票型態', align: 'left', format: v => this.service.voucherTypeMap().get(String(v))?.label ?? String(v) },
     { field: 'AccAmt', header: '傳票金額', align: 'right', format: d => formatAmount(d), style: 'text-right' },
     { field: 'DetailCount', header: '明細筆數', align: 'right' },
   ];
