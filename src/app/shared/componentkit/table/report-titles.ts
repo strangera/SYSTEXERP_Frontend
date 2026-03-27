@@ -20,6 +20,7 @@ export const REPORT_TITLES: Record<string, string> = {
   queryFIN52050: '科目大分類代號表',
   queryFIN52060: '科目中分類代號表',
   queryFIN52070: '科目三碼代號表',
+  queryFIN52080: '會計科目代號表',
 
   querySYS0710: 'UserBehavior 使用者權限列表',
   querySYS0730: 'tblRoleBehavior角色系統權限列表',

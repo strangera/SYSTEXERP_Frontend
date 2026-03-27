@@ -39,8 +39,8 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 })
 export class TLS42010Component extends BasicQueryPageComponent<POS1004Master> implements OnInit {
   queryForm = this.formBuilder.group({
-    USR_Level: ['', Validators.maxLength(6)],
-    ECR_KBDesc: [''],
+    USR_Level: [null, Validators.maxLength(6)],
+    ECR_KBDesc: [null],
     ...createPaginationConfig([{ field: 'USR_Level', order: 1 }]),
   });
   data: POS1004Master[] = [];

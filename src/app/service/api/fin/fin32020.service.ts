@@ -114,12 +114,12 @@ export class FIN32020Service {
     );
   }
 
-  queryFIN32020Detail(ADJ_No: string): Observable<ApiResponse<Fin32020DetailRow[]>> {
-    return this.http.post<ApiResponse<Fin32020DetailRow[]>>(
-      `${this.apiUrl}/queryFIN32020Detail`,
-      { ADJ_No }
-    );
-  }
+queryFIN32020Detail(ADJ_No: string): Observable<ApiResponse<Fin32020DetailRow[]>> {
+  return this.http.post<ApiResponse<Fin32020DetailRow[]>>(
+    `${this.apiUrl}/queryFIN32020Detail`,
+    { ADJ_No }
+  );
+}
 
   insertFIN32020(body: Fin32020InsertRequest): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(
@@ -160,3 +160,6 @@ export class FIN32020Service {
 }
 
 export { ApiResponse };
+export interface Fin32020DetailRequest {
+  ADJ_No: string;
+}

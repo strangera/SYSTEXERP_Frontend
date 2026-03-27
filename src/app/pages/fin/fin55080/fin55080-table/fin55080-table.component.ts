@@ -1,7 +1,9 @@
 import { NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core'; // 增加 OnChanges, SimpleChanges
+import { Component, inject, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core'; // 增加 OnChanges, SimpleChanges
+import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
+import { NavigationHelperService } from 'src/app/reports/services/navigation-helper.service';
 
 export interface Finfin55080Column {
   field: string;
@@ -30,11 +32,12 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
   @Input() dataKey: string | undefined;                  // 用來儲存查詢結果
   @Input() loading = false;
   @Input() footerData: any = {};
+  @Input() historyRequestBody: any;
   // 新增屬性：用於儲存分離出來的群組小計資料
   public groupedFooters: Record<string, any[]> = {};
   // 新增屬性：用於儲存過濾掉小計後的明細資料
   public detailData: any[] = [];
-
+  constructor(private router: Router) { } // 注入 Router
   ngOnInit() {
     this.processData();
   }
@@ -74,6 +77,16 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
   getGroupFooterData(rowData: any): any[] {
     const groupKey = rowData.LTYPE_ID;
     return this.groupedFooters[groupKey] || [];
+  }
+  // 新版注入方式navHelper
+  private readonly navHelper = inject(NavigationHelperService);
+  onNameClick(rowData: any) {
+    if (!rowData.STYPE_ID) return;
+    this.navHelper.openInNewTab('/reports/fin/fin55080', {
+      AccNo: rowData.STYPE_ID,
+      DateFrom: this.historyRequestBody?.DateFrom,
+      DateTo: this.historyRequestBody?.DateTo
+    });
   }
 }
 const formatAmount2 = (val: number | string | null | undefined): string => {

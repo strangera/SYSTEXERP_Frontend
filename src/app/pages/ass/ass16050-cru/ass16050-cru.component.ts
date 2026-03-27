@@ -8,7 +8,7 @@ import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 // import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { ASS16050Data } from '@service/api/ass/ass16050.service';
+import { ASS16050Data, ASS16050Request } from '@service/api/ass/ass16050.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -28,28 +28,29 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 })
 export class ASS16050CRUComponent extends BasicCruPageComponent<ASS16050Data> implements OnInit {
   accordionTabCss = '';
-  data: ASS16050Data[] = [];
-  selectedRows: ASS16050Data[] = [];
-  deleteRows: ASS16050Data[] = [];
+  data: ASS16050Request[] = [];
+  selectedRows: ASS16050Request[] = [];
+  deleteRows: ASS16050Request[] = [];
   columns: EditColumn[] = [
-    { field: 'itemCode', header: '品項編碼', type: 'dropdown', validate: [validateDuplicate, validateMaxLength(10)] },
-    { field: 'quantity', header: '申請數量', type: 'inputNumber', maxLength: 8, validate: [validateMaxNumber(99999999)] },
-    { field: 'itemRemark', header: '已發數量', type: 'inputNumber', validate: [validateMaxNumber(99999999)] },
+    { field: 'itemCode', header: '品項編碼', type: 'dropdown', disabled: () => true, validate: [validateDuplicate, validateMaxLength(10)] },
+    { field: 'itemName', header: '品項名稱', type: 'dropdown', disabled: () => true, validate: [validateDuplicate, validateMaxLength(100)] },
+    { field: 'applyQty', header: '申請數量', type: 'inputNumber', disabled: () => true, maxLength: 8, validate: [validateMaxNumber(99999999)] },
+    { field: 'issuedQty', header: '已發數量', type: 'inputNumber', disabled: () => true, validate: [validateMaxNumber(99999999)] },
   ];
 
   // 表單定義
   dataForm = this.formBuilder.nonNullable.group({
-    IssueNo: [{ value: '', disabled: true }], // 領用單號
-    DepartmentCode: [{ value: '', disabled: true }], // 部門代號
-    ApplicantCode: [{ value: '', disabled: true }], // 申請人代號
-    ApplicationDate: [{ value: '', disabled: true }], // 申請日期
-    ShippingDate: [{ value: '', disabled: true }], // 發料日期
-    ReceiptStatus: [{ value: '', disabled: true }], // 驗收單狀態
-    DetailCount: [{ value: '', disabled: true }], // 明細筆數
+    issueNo: [{ value: '', disabled: true }], // 領用單號
+    departmentCode: [{ value: '', disabled: true }], // 部門代號
+    applicantCode: [{ value: '', disabled: true }], // 申請人代號
+    applicationDate: [{ value: '', disabled: true }], // 申請日期
+    shippingDate: [{ value: '', disabled: true }], // 發料日期
+    receiptStatus: [{ value: '', disabled: true }], // 驗收單狀態
+    detailCount: [{ value: '', disabled: true }], // 明細筆數
   });
 
   // 下拉選項
-  Departmentcode = []; // 部門代號選項
+  departmentCode = []; // 部門代號選項
   Kurabe = [
     { value: 1, label: '001' },
     { value: 2, label: '002' },
@@ -111,16 +112,16 @@ export class ASS16050CRUComponent extends BasicCruPageComponent<ASS16050Data> im
         break;
     }
 
-    // 模擬從 API 獲取資料
-    this.dataForm.patchValue({
-      IssueNo: 'REC2600001-01',
-      DepartmentCode: '時薪測試人員',
-      ApplicantCode: '人資Team',
-      ApplicationDate: '2023/01/01',
-      ShippingDate: '2023/01/03',
-      ReceiptStatus: '領用申請',
-      DetailCount: '1',
-    });
+    // 測試用假資料
+    this.data = [
+      {
+        id: 1,
+        itemCode: '3A24210000001',
+        itemName: '筆記型電腦',
+        applyQty: '10',
+        issuedQty: '5',
+      },
+    ]
   }
 
   // 編輯狀態下的讀取方法
@@ -173,7 +174,7 @@ export class ASS16050CRUComponent extends BasicCruPageComponent<ASS16050Data> im
   }
 
   // 刪除資料的方法
-  onDelete(rows: ASS16050Data[]) {
+  onDelete(rows: ASS16050Request[]) {
     // 將畫面資料中刪除這些 row
     this.data = this.data.filter(item => !rows.includes(item));
     // 將有 id 的項目（表示是資料庫已存在的）加進 deleteRows，避免重複

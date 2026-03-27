@@ -30,6 +30,7 @@ import { CellInput } from './table-edit-cell.model';
               [virtualScroll]="true"
               [virtualScrollItemSize]="40"
               [showClear]="cellInput.col.showClear ?? true"
+              [panelStyle]="cellInput.col.panelStyle"
               [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }"
               (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index);onDropdownChange($event)"

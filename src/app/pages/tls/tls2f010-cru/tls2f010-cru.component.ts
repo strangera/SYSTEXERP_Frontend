@@ -22,7 +22,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PanelModule } from 'primeng/panel';
 import { SelectButtonModule } from 'primeng/selectbutton';
-import { distinctUntilChanged, finalize, map, shareReplay, startWith, switchMap } from 'rxjs';
+import { combineLatest, distinctUntilChanged, finalize, map, shareReplay, startWith, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -41,7 +41,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   dataForm = this.formBuilder.nonNullable.group({
     tlt_no: ['', [Validators.required]],
     sam_yyymm: [new Date(), [Validators.required]],
-    money_type: [null, [Validators.required]],
+    money_type: [null],
     sam_termno: [1, [Validators.required]],
     COMM_YM: [new Date(), [Validators.required]],
     COMM_MONEY_TYPE: ['', [Validators.required]],
@@ -100,8 +100,6 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
   // 當頁面顯示 "no - name" 時，保留原始的 tlt_no（送出時使用）
   private selectedTltNoRaw: string | null = null;
 
-
-  // tlt options depend on selected sam_yyymm — call API with sam_yyymm and share the result
   private readonly tltNoData$ = ((): any => {
     const formatYm = (v: any): string => {
       if (!v) return '';
@@ -115,22 +113,25 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       return `${yyyy}${mm}`;
     };
 
-    const control = this.dataForm.controls.sam_yyymm as any;
-    const source$ = control.valueChanges.pipe(
-      startWith(control.value),
-      map(formatYm),
-      distinctUntilChanged(),
-      switchMap((sam_yyymm: string) => this.tls2f010Service.queryTLS2F010_TLT_No({
-        PageSize: 0,
-        PageIndex: 0,
-        OrderBy: '',
-        Offset: 0,
-        SortBy: [],
+    const ymControl = this.dataForm.controls.sam_yyymm as any;
+    const commMoneyTypeControl = this.dataForm.controls.COMM_MONEY_TYPE as any;
+    const source$ = combineLatest({
+      ym: ymControl.valueChanges.pipe(startWith(ymControl.value)),
+      type: commMoneyTypeControl.valueChanges.pipe(startWith(commMoneyTypeControl.value))
+    }).pipe(
+      map(({ ym, type }) => ({
+        sam_yyymm: formatYm(ym),
+        money_type: type
+      })),
+      distinctUntilChanged((prev, curr) =>
+        prev.sam_yyymm === curr.sam_yyymm && prev.money_type === curr.money_type
+      ),
+      switchMap(params => this.tls2f010Service.queryTLS2F010_TLT_No({
         keyword: '',
-        sam_yyymm: sam_yyymm || ''
+        sam_yyymm: params.sam_yyymm || '',
+        money_type: params.money_type || ''
       }))
     );
-
     return source$.pipe(shareReplay(1));
   })();
 
@@ -544,7 +545,6 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       money_type: formValue.COMM_MONEY_TYPE,
       sam_termno: formValue.sam_termno,
     };
-
     this.tls2f010Service.queryTLS2F010InsertData(params)
       .subscribe({
         next: (res: any) => {

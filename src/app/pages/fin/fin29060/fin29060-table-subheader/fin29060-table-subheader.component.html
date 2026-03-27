@@ -205,9 +205,12 @@
         </td>
         <td
           *ngFor="let col of columns"
-          class="text-center"
           style="text-overflow: ellipsis; min-width: 55px"
-          [ngClass]="col.style"
+          [ngClass]="{
+            'text-left': col.align === 'left',
+            'text-right': col.align === 'right' || col.style === 'text-right',
+            'text-center': col.align === 'center' || (!col.align && !col.style)
+          }"
         >
           <!-- 連結到cruPage Read -->
           <ng-container *ngIf="col.type === 'detail'">
