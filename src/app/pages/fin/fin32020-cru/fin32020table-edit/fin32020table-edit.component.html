@@ -66,6 +66,7 @@
               "
               (click)="exportExcel.emit()"
             ></p-button>
+
             <p-fileUpload
               *ngIf="showExcelImport"
               #fileUpload
@@ -241,11 +242,14 @@
       [pReorderableRow]="!rowData._isAutoInsertCandidate ? rowIndex : -1"
       [ngClass]="{
         'invalid-row': this.validationService.hasRowError(rowData),
-        'insert-row': rowData._isAutoInsertCandidate,
+        'insert-row': rowData._isAutoInsertCandidate
       }"
     >
       <!-- Reorder + 新增列 + 號 -->
-      <td *ngIf="_tableData.length && showReorder && !disabled" class="w-3rem text-center">
+      <td
+        *ngIf="_tableData.length && showReorder && !disabled"
+        class="w-3rem text-center"
+      >
         <!-- 一般資料列：拖曳 -->
         <ng-container
           *ngIf="!rowData._isAutoInsertCandidate; else insertRowTpl"
@@ -296,15 +300,15 @@
             'pi pi-exclamation-circle':
               rowData._rowValidationError?.isValid === false &&
               !rowData._isAutoInsertCandidate,
-            'text-blue-500': rowData._isAutoInsertCandidate,
+            'text-blue-500': rowData._isAutoInsertCandidate
           }"
           class="w-1rem text-center"
         >
           {{
             rowData._isAutoInsertCandidate
-              ? ""
+              ? ''
               : rowData._rowValidationError?.isValid === false
-                ? ""
+                ? ''
                 : rowIndex + 1
           }}
         </span>
@@ -317,7 +321,7 @@
         (keydown)="$event.stopPropagation()"
         [style]="{
           width: col.width,
-          'text-align': col.textAlign || 'center',
+          'text-align': col.textAlign || 'center'
         }"
       >
         <ng-container
@@ -331,11 +335,19 @@
           ></ng-container>
         </ng-container>
 
-        <span *ngIf="!col.type">
+        <span
+          *ngIf="!col.type"
+          class="fake-input block w-full"
+          [ngClass]="{
+            'is-placeholder': !rowData[col.field]
+          }"
+        >
           {{
-            col.format
-              ? col.format(rowData[col.field], index, rowData)
-              : rowData[col.field]
+            rowData[col.field]
+              ? (col.format
+                  ? col.format(rowData[col.field], index, rowData)
+                  : rowData[col.field])
+              : '請點擊選擇'
           }}
         </span>
       </td>
@@ -407,7 +419,7 @@
     errorMessage
       ? errorMessage
       : validateOnlySelected
-        ? "請至少選擇一筆資料"
-        : "至少輸入一筆資料"
+        ? '請至少選擇一筆資料'
+        : '至少輸入一筆資料'
   }}
 </span>

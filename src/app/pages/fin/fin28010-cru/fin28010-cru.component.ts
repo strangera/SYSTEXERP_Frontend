@@ -232,9 +232,16 @@ export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements 
       )
       .subscribe({
         next: (res) => {
+          console.log('[FIN28010 insert response]', res);
           if (res.Status === '0000' || res.Status === '0001') {
-            this.messageService.successBubble(res.Message || '儲存成功');
-            this.onCancel();
+            const wslipNo = typeof res.Data === 'string' ? res.Data : (res.Data?.VouNo ?? res.Data?.WSLIP_NO);
+            this.messageService.confirm({
+              header: '新增成功',
+              message: wslipNo ? `匯款來源單號為:${wslipNo}` : (res.Message || '儲存成功'),
+              acceptLabel: '回查詢畫面',
+              rejectLabel: '取消',
+              accept: () => this.onCancel(),
+            });
           } else {
             this.messageService.errorBubble(res.Message || '儲存失敗');
           }

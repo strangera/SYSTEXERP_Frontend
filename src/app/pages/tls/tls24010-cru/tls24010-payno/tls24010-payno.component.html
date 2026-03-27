@@ -1,7 +1,11 @@
-<app-table title="付款別修正" dataKey="PAY_Name" [data]="payNoData" [columns]="columns" [alwaysEdit]="true"
+<!-- <app-table title="付款別修正" dataKey="PAY_Name" [data]="payNoData" [columns]="columns" [alwaysEdit]="true"
   [showRowEdit]="true" [showPaginator]="false" [showCaption]="false" [showSort]="false"
   (dataChange)="payNoData = $event" (fieldChange)="onFieldChange($event)">
-</app-table>
+</app-table> -->
+
+<app-table-edit title="付款別修正" dataKey="PAY_Name" [data]="payNoData" [columns]="columns"
+  (dataChange)="payNoData = $event" (fieldChange)="onFieldChange($event)">
+</app-table-edit>
 
 <!-- <app-table title="付款別修正" dataKey="PAY_Name" [data]="payNoData" [columns]="columns" [alwaysEdit]="true"
   [showRowEdit]="true" [showPaginator]="false" [showReportMode]="false" [showInsert]="true" [showFilter]="false"

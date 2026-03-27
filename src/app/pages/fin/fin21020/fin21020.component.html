@@ -58,12 +58,13 @@
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogForm" id="DialogForm">
     <div class="grid p-fluid justify-content-between align-items-end">
-      <app-dropdown class="col-12" label="公司銀行科目代號/名稱" controlName="BNK_No" [control]="dialogForm.controls.BNK_No"
+      <app-dropdown class="col-12" label="來源公司銀行科目代號" controlName="BNK_No" [control]="dialogForm.controls.BNK_No"
         [options]="bankCodeOptions" optionLabel="label" optionValue="No" [submitted]="dialogSubmitted()"></app-dropdown>
     </div>
   </form>
-  <app-table tableKey="Fin21020DialogTable" dataKey="No" [data]="dataDialog" [columns]="columnsDialog"
-    [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
+
+  <app-table *ngIf="dialogForm.get('BNK_No')?.value" tableKey="Fin21020DialogTable" dataKey="No" [data]="dataDialog"
+    [columns]="columnsDialog" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
     (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true">
   </app-table>
 </app-dialog>

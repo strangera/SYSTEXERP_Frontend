@@ -44,6 +44,8 @@ export interface TLS26080DetailTable {
   tpy_rate_D16: number;        // D16 費用比率 (不含'%')
   cap_item_D17: string;        // D17
   tpy_rate_D17: number;        // D17 費用比率 (不含'%')
+  fare_rate_d16?: number;      // 合約入攤 D16 費用比率
+  fare_rate_d17?: number;      // 合約入攤 D16 費用比率
   cap_item_3?: string;         // 合約建檔 D16
   tpy_rate_3?: number;         // 合約建檔 D16 費用比率
   cap_item_4?: string;         // 合約建檔 D17
@@ -117,6 +119,16 @@ export interface TLS26080Query extends BaseQueryRequest {
   CAP_ItemList?: string[];    // 活動項目列表
 }
 
+/** POST /TLS0000/TLS2000/exportTLS26080PDF 請求 */
+export interface ExportTLS26080PDFRequest extends BaseQueryRequest {
+  POD_No?: string;
+  POD_Desc?: string;
+  POD_SDate_start?: string;
+  POD_SDate_end?: string;
+  POD_BusDate?: string;
+  CAP_ItemList?: string[];
+}
+
 export interface TLS26080UploadResult {
   Success: boolean;
   SuccessCount: number;
@@ -169,6 +181,9 @@ export interface DeductionItem {
   displayAmount?: string; // 用於顯示格式化後的金額/比率
 }
 
+export interface QueryCampaignRequest {
+}
+
 export interface CampaignData {
   AccountingType: string;
   CampaignId: string;
@@ -176,6 +191,10 @@ export interface CampaignData {
   EndTime: Date;
   Remark: string;
   StartTime: Date;
+  /** TODO(api): 活動兌回日期起日；後端 JSON 欄位名對齊後請全域搜尋替換屬性名 */
+  BackRedeemStartTime: Date;
+  /** TODO(api): 活動兌回日期迄日；後端 JSON 欄位名對齊後請全域搜尋替換屬性名 */
+  BackRedeemEndTime: Date;
 }
 
 // /** 活動類型 */

@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, NgFor, NgIf } from '@angular/common';
+import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -7,7 +7,6 @@ import { Tls55050Body, Tls55050Data, Tls55050Service } from '@service/api/tls/tl
 import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -23,7 +22,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
   templateUrl: './tls55050.component.html',
   standalone: true,
   providers: [DatePipe],
-  imports: [DatePipe, ButtonModule, NgFor, NgIf, DividerModule, AsyncPipe, DropdownComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule]
+  imports: [DatePipe, ButtonModule, NgFor, NgIf, DividerModule, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule]
 })
 export class TLS55050Component extends BasicQueryPageComponent<Tls55050Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({

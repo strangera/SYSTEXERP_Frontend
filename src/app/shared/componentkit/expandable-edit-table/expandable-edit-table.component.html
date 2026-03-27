@@ -25,7 +25,21 @@
         *ngIf="hasCaptionContent()"
         class="table-caption flex justify-content-between align-items-center"
       >
-        <div class="table-caption-left flex gap-2">
+        <div class="table-caption-left flex gap-2 align-items-center">
+          <p-multiSelect
+            *ngIf="showColumnToggle"
+            [options]="columnToggleOptions"
+            [(ngModel)]="selectedVisibleColumns"
+            optionLabel="header"
+            dropdownIcon="pi pi-cog"
+            pTooltip="顯示欄位"
+            tooltipPosition="top"
+            (onChange)="onColumnToggleChange($event.value)"
+            appendTo="body"
+            styleClass="column-toggle-btn"
+            [panelStyle]="{'min-width': '180px'}"
+          ></p-multiSelect>
+
           <button
             *ngIf="!readonly && showAddButton"
             pButton
@@ -55,7 +69,7 @@
           <ng-content select="[caption-left]"></ng-content>
         </div>
 
-        <div class="table-caption-right flex gap-2">
+        <div class="table-caption-right flex gap-2 align-items-center">
           <button
             *ngIf="detailKey"
             pButton

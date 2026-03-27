@@ -361,11 +361,12 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="emptymessage">
-    <tr>
+    <tr *ngIf="hasSearched">
       <td [attr.colspan]="getVisibleHeaderCount">
         <div>
-          <div class="flex justify-content-center align-items-center h-5rem min-h-full p-2 font-bold text-xl">
-            {{ emptyMessage }}
+          <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+            <i class="pi pi-search mr-2"></i>
+            {{ emptyMessage || '查無資料' }}
           </div>
         </div>
       </td>

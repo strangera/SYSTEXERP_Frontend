@@ -53,8 +53,10 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
   }
 
   // 監聽 @Input() data 的變化，以便重新處理資料
+  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
+      this.hasSearched = true;
       this.processData();
     }
   }

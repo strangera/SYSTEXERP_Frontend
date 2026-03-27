@@ -54,6 +54,7 @@ export class ValidationService {
       invalidGuiVehicle: '格式錯誤：需以「/」為開頭，長度8碼，且第2碼後只能包含半形英數字+-.等符號',
       dateNotAfterToday: '日期必須大於等於今日',
       containsFullWidth: '不可輸入全形字元，請切換為半形輸入。',
+      accNoClassNoMismatch: '「科目代號」與「三碼代號」不符',
     };
     return config[validatorName];
   }
@@ -546,5 +547,43 @@ export class ValidationService {
     }
 
     return null;
+  }
+
+  // 科目代號與三碼代號是否相符檢核
+  accNoClassNoMatchValidator(accNoControlName: string, classNoControlName: string): ValidatorFn {
+    return (formGroup: AbstractControl): ValidationErrors | null => {
+      if (!(formGroup instanceof FormGroup)) {
+        return null;
+      }
+
+      const accNoControl = formGroup.get(accNoControlName);
+      const classNoControl = formGroup.get(classNoControlName);
+
+      if (!accNoControl || !classNoControl) {
+        return null;
+      }
+
+      const accNo = accNoControl.value;
+      const classNo = classNoControl.value;
+
+      if (accNoControl.hasError('accNoClassNoMismatch')) {
+        const errors = { ...accNoControl.errors };
+        delete errors['accNoClassNoMismatch'];
+        if (Object.keys(errors).length === 0) {
+          accNoControl.setErrors(null);
+        } else {
+          accNoControl.setErrors(errors);
+        }
+      }
+
+      if (accNo && classNo && accNo.length >= 3) {
+        if (accNo.slice(0, 3) !== classNo) {
+          accNoControl.setErrors({ ...accNoControl.errors, accNoClassNoMismatch: true });
+          return { accNoClassNoMismatch: true };
+        }
+      }
+
+      return null;
+    };
   }
 }

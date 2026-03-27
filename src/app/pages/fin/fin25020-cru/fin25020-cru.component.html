@@ -5,6 +5,26 @@
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <!-- 檢視模式 -->
+      @if (isFormReadable) {
+      <div class="grid p-fluid">
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="匯款單號"
+          [control]="dataForm.controls.TransferSourceNo" [readonly]="true" />
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="建立日期" controlName="CreateDate"
+          [control]="dataForm.controls.CreateDate" [submitted]="submitted" />
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="匯款日期" controlName="TransferDate"
+          [control]="dataForm.controls.TransferDate" [submitted]="submitted" />
+      </div>
+      <div class="grid p-fluid">
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="付款銀行代號"
+          [control]="dataForm.controls.BankInfo" [readonly]="true" />
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="拋轉傳票"
+          [control]="dataForm.controls.VouStatus" [readonly]="true" />
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="傳票號碼"
+          [control]="dataForm.controls.VouNo" [readonly]="true" />
+      </div>
+      } @else {
+      <!-- 新增模式 -->
       <div class="grid p-fluid">
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="建立日期" controlName="CreateDate"
           [control]="dataForm.controls.CreateDate" [submitted]="submitted" />
@@ -15,16 +35,16 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="銀行帳戶" controlName="BNK_id" [options]="bankOptions"
           optionLabel="displayLabel" optionValue="BNK_id" [control]="dataForm.controls.BNK_id" [submitted]="submitted"
           [showClear]="true" [filter]="true" />
-        <div class="col-12 md:col-6 lg:col-4" [class.cursor-pointer]="!isFormReadable"
-          (click)="!isFormReadable && openTransferSourceDialog()"
-          (keydown.enter)="!isFormReadable && openTransferSourceDialog()"
-          (keydown.space)="!isFormReadable && openTransferSourceDialog()" [attr.tabindex]="isFormReadable ? null : 0"
-          [style.cursor]="isFormReadable ? 'default' : 'pointer'">
+        <div class="col-12 md:col-6 lg:col-4"
+          (click)="openTransferSourceDialog()"
+          (keydown.enter)="openTransferSourceDialog()"
+          (keydown.space)="openTransferSourceDialog()" [attr.tabindex]="0"
+          style="cursor: pointer">
           <app-input-text label="匯款來源單號" controlName="TransferSourceNo" [control]="dataForm.controls.TransferSourceNo"
-            [submitted]="submitted" [readonly]="true" [customPlaceholder]="isFormReadable ? '' : '點擊選擇匯款來源單號'" />
+            [submitted]="submitted" [readonly]="true" [customPlaceholder]="'點擊選擇匯款來源單號'" />
         </div>
       </div>
-      <div class="grid p-fluid"></div>
+      }
 
       <!-- 檢視模式：顯示電匯明細表格 -->
       @if (isFormReadable) {

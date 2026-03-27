@@ -6,7 +6,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { finalize } from 'rxjs';
-import { FIN32030Service, QueryFIN32030ARResponse, QueryFIN32030Response } from '../../../service/api/fin/fin32030.service';
+import { DeleteFIN32030RecvCascadeBatchRequest, FIN32030Service, QueryFIN32030ARResponse, QueryFIN32030Response } from '../../../service/api/fin/fin32030.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -57,6 +57,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
 
   totalRecords = 0;
   data: QueryFIN32030Response[] = [];
+  selectedItems: QueryFIN32030Response[] = [];
 
   // AR Dialog (應收未收查詢)
   arDialogVisible = false;
@@ -92,7 +93,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
   columns: Column[] = [
     { field: 'RCV_No', header: '收款單號', visible: true },
     { field: 'RCV_Date', header: '收款日期', visible: true, format: formatDate },
-    { field: 'Sales_Id', header: '業務員代號', visible: true },
+    // { field: 'Sales_Id', header: '業務員代號', visible: true },
     { field: 'VouNo', header: '傳票號碼', visible: true },
     { field: 'TotalAmount', header: '總金額', visible: true, format: formatAmountWithFraction, align: 'right' },
     { field: 'Remark', header: '備註', visible: true },
@@ -161,6 +162,40 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     });
   }
 
+  /** 刪除選取的收款沖帳資料 */
+  onDelete(rows: QueryFIN32030Response[]): void {
+    if (!rows?.length) {
+      this.messageService.errorBubble('請先勾選要刪除的資料');
+      return;
+    }
+
+    const rcvNoList = rows.map(r => r.RCV_No).filter(Boolean).join('、');
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: `確定要刪除收款單號「${rcvNoList}」及其相關資料嗎？此操作無法復原。`,
+      acceptLabel: '確定刪除',
+      rejectLabel: '取消',
+      accept: () => {
+        this.messageService.blockUi();
+        const request: DeleteFIN32030RecvCascadeBatchRequest = {
+          Details: rows.map(r => ({ RCV_No: r.RCV_No! }))
+        };
+        this.fin32030Service.deleteFIN32030RecvCascadeBatch(request)
+          .pipe(
+            finalize(() => this.messageService.unblockUi()),
+            untilDestroyed(this)
+          )
+          .subscribe({
+            next: () => {
+              this.messageService.successBubble(`收款單號「${rcvNoList}」已刪除`);
+              this.selectedItems = [];
+              this.onSubmit(this.queryForm);
+            },
+          });
+      },
+    });
+  }
+
   /** 打開應收未收查詢 Dialog */
   onOpenARDialog() {
     // 重置表單
@@ -216,6 +251,7 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
       .subscribe(response => {
         this.arDialogData = response.Data;
         this.arDialogTotalRecords = response.TotalCount;
+        this.queryStateService.setQueryState('queryFIN32030AR', queryParams);
         this.cdr.detectChanges();
       });
   }

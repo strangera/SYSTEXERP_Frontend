@@ -73,7 +73,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
     { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員編號', visible: true },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-    { field: 'UPD_Date', header: '變更日期', visible: true },
+    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate },
     { field: 'UPD_USR_No', header: '變更人員編號', visible: true },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];

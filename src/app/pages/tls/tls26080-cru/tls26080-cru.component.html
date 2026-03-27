@@ -105,6 +105,9 @@
         <app-button btnType="CSV"
                     label="匯出 Excel 樣本"
                     (click)="onExportExcelTemplate()"></app-button>
+        <app-button btnType="CSV"
+                    label="匯出空白Excel範本"
+                    (click)="onExportBlankExcelTemplate()"></app-button>
         <app-button btnType="submit"
                     label="存檔"
                     [loading]="loading"></app-button>
@@ -129,7 +132,7 @@
                         (selectionChange)="selectedItems.set($event)"
                         [isRowSelectable]="isRowSelectable"
                         [columns]="counterColumns()"
-                        [columnGroup]="counterColumnsGroup"
+                        [columnGroup]="counterColumnsGroup()"
                         (insert)="displayDialog.set(true)"
                         [canInsert]="false"
                         [tableRequired]="true"
@@ -147,7 +150,7 @@
                    (selectionChange)="selectedItems.set($event)"
                    [isRowSelectable]="isRowSelectable"
                    [columns]="counterColumns()"
-                   [columnGroup]="counterColumnsGroup"
+                   [columnGroup]="counterColumnsGroup()"
                    [showInsert]="!isFormReadable"
                    [showDelete]="!isFormReadable"
                    [showEdit]="!isFormReadable"

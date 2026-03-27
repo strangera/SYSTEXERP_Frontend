@@ -32,7 +32,9 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
     //APS1002  公司銀行資料維護主檔
     id: [null], // 主鍵ID，新增時為null，編輯時為存在的ID
 
+    BNK_id: [null, [Validators.required, Validators.maxLength(6), this.validationService.noChineseValidator]], // 帳戶編號 (BNK_NO+BNK_BRANCHNO銀行代碼+分行代碼)  PK
     BNK_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.noChineseValidator]],     // 全省銀行代碼--- 下拉: BNK_NO+BNK_BRANCHNO銀行代碼、銀行名稱BNK_BRANCHNAME
+
     BNK_AccNo: [null, [Validators.required, Validators.maxLength(20), this.validationService.numberValidator]],  // 帳號
     BNK_AccName: [null, [Validators.required, Validators.maxLength(80)]],      // 帳戶名稱
 
@@ -40,7 +42,8 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
     BNK_AccType: [null, [Validators.required, Validators.maxLength(2), this.validationService.noChineseValidator]],      // 存款代號 (SYS1000.BNK_ACCTYPE)
     BNK_AccStatus: ['0', [Validators.required, Validators.maxLength(1), this.validationService.noChineseValidator]],     // 帳戶狀態 (0=正常)
 
-    BNK_DepositAccNo: [null, [Validators.maxLength(14), this.validationService.noChineseValidator]],  // 公司銀行科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (accNo like '1103%')
+    // BNK_DepositAccNo: [null, [Validators.maxLength(14), this.validationService.noChineseValidator]],  // 公司銀行科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (accNo like '1103%')
+    BNK_DepositAccNo: [null, [Validators.maxLength(6), this.validationService.noChineseValidator]], // 公司銀行科目
     BNK_CheckInAccNo: [null, [Validators.maxLength(14), this.validationService.noChineseValidator]],  // 應收票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 112 or 113)
     BNK_CheckOutAccNo: [null, [Validators.maxLength(14), this.validationService.noChineseValidator]], // 應付票據科目 //"下拉 GLS1005.ACCNO 讀取 ACCNO, ACCCNAME" (ClassNo 211 0r 212)
   });
@@ -93,7 +96,6 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
     }
   }
 
-  // 待確認 1.刪除卡控規則 2.BNK_No是否可以用前三碼去切
   onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
     this.submitted = true;
@@ -104,6 +106,7 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
       return;
     }
 
+    // 送出檢核(BNK_id不可重複)
     const formValue = frm.getRawValue();
     console.log('formValue', formValue)
     switch (this.crudstatus) {
@@ -152,16 +155,17 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
       // console.log('SYS1000.BNK_ACCTYPE 存款代號:', this.BNK_AccType_Option);
     });
 
-    // 查 GLS1005會計科目檔 -- 下拉GLS1005.ACCNO，讀取 ACCNO, ACCCNAME
-    this.dropdownApiService.queryGls1005_BNK_DepositAcc().pipe(untilDestroyed(this)).subscribe((response) => {
+    // 查 公司銀行科目代號(/queryAPS1002_DropDownList)
+    this.dropdownApiService.queryAps1002().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];
       this.GLS1005_BNK_DepositAccNo_Option = list.map((item: any) => ({
-        No: item.No, // 公司銀行科目 代號
-        Name: item.Name, // 公司銀行科目 名稱
-        Label: item.No + '-' + item.Name
+        No: item.BNK_DepositAccNo, // 公司銀行科目 代號
+        Name: item.ACCCNAME, // 公司銀行科目 名稱
+        Label: item.BNK_DepositAccNo + '-' + item.ACCCNAME, // 代碼+名稱
       }));
-      // console.log('公司銀行科目:', this.GLS1005_BNK_DepositAccNo_Option);
+      console.log('公司銀行科目代號:', this.GLS1005_BNK_DepositAccNo_Option);
     });
+
 
     this.dropdownApiService.queryGls1005_BNK_CheckInAcc().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];

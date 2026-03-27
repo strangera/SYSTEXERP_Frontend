@@ -10,7 +10,7 @@ import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropd
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatAmountCN } from '@shared/componentkit/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -82,8 +82,8 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
     { field: 'CAT_LName', header: '大分類' },
     { field: 'CAT_MName', header: '中分類' },
     { field: 'CAT_SName', header: '小分類' },
-    { field: 'PLU_OrderPrc', header: '進價(未稅)', format: formatAmount },
-    { field: 'PLU_SalePrc', header: '售價(含稅)', format: formatAmount },
+    { field: 'PLU_OrderPrc', header: '進價(未稅)', format: formatAmountCN },
+    { field: 'PLU_SalePrc', header: '售價(含稅)', format: formatAmountCN },
     { field: 'STK_CurrentQty', header: '數量合計', format: formatAmount },
     { field: 'sumPLU_OrderPrc', header: '進價(未稅)', groupField: '合計', format: formatAmount },
     { field: 'sumPLU_SalePrc', header: '售價(含稅)', groupField: '合計', format: formatAmount },

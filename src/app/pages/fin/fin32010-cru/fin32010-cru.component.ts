@@ -80,16 +80,56 @@ export class FIN32010CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initializePage('FIN32010', this.dataForm);
+
+    // 如果是從 fin34030 以新分頁方式開啟（localStorage handoff），透過 API 查詢並填表單
+    const handoff = this.readHandoffLocal();
+    if (handoff?.arsId && !this.rowdata) {
+      this.loading = true;
+      this.fin32010Service.queryFIN32010({ ARS_ID: handoff.arsId })
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe({
+          next: res => {
+            const data = res?.Data?.[0];
+            if (data) {
+              this.dataForm.patchValue(data);
+              this.convertSamYyymmToDate(data['Sam_Yyymm']);
+              this.dataForm.disable();
+            } else {
+              this.messageService.warnBubble('查無資料。');
+            }
+            localStorage.removeItem('FIN32010_CRU_HANDOFF');
+          },
+          error: () => {
+            this.messageService.errorBubble('載入應收帳款資料失敗。');
+            localStorage.removeItem('FIN32010_CRU_HANDOFF');
+          }
+        });
+      return;
+    }
+
     // 如果後端回傳為 yyyyMM 字串（例如 "202512"），將其轉為 Date 物件以便日曆元件正確顯示為 yyyy-mm
-    const samVal: any = this.dataForm.get('Sam_Yyymm')?.value;
+    this.convertSamYyymmToDate(this.dataForm.get('Sam_Yyymm')?.value);
+  }
+
+  private readHandoffLocal(): { arsId?: string; fromRoute?: string } | null {
+    try {
+      const raw = localStorage.getItem('FIN32010_CRU_HANDOFF');
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      return { arsId: obj?.arsId, fromRoute: obj?.fromRoute };
+    } catch {
+      return null;
+    }
+  }
+
+  private convertSamYyymmToDate(samVal: any): void {
     if (typeof samVal === 'string') {
       const nums = (samVal as string).replace(/\D/g, '');
       if (nums.length === 6) {
         const y = parseInt(nums.substring(0, 4), 10);
         const m = parseInt(nums.substring(4, 6), 10);
         if (!isNaN(y) && !isNaN(m)) {
-          const dt = new Date(y, m - 1, 1);
-          this.dataForm.patchValue({ Sam_Yyymm: dt });
+          this.dataForm.patchValue({ Sam_Yyymm: new Date(y, m - 1, 1) });
         }
       }
     }

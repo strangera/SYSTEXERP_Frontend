@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -12,7 +12,7 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { formatDate, formatYN } from '@shared/componentkit/table/table.model';
+import { Column, formatDate, formatYN } from '@shared/componentkit/table/table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, map } from 'rxjs';
@@ -21,12 +21,13 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { formatAmount, formatYYYYMM } from './../../../shared/componentkit/table-report/table-report.model';
+
 //1.3.2.1 應收帳款維護
 @Component({
   selector: 'app-fin24020',
   templateUrl: './fin24020.component.html',
   standalone: true,
-  imports: [AsyncPipe, NgIf, CalendarRangeQuickComponent, TableComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
+  imports: [AsyncPipe, CalendarRangeQuickComponent, TableComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, InputNumberRangeComponent, InputTextComponent, ButtonComponent, TranslateModule]
 })
 export class FIN24020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -164,6 +165,62 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
+  // 列印，條件和query完全相同
+  btnLoading = false
+  onReport(frm: FormGroup) {
+    let acpYyyymm = '';
+    const rawAcpYyyymm = frm.value.ACP_YYYYMM;
+    if (rawAcpYyyymm) {
+      const formatted = this.datePipe.transform(rawAcpYyyymm, 'yyyyMM');
+      acpYyyymm = formatted ?? '';
+    }
+    const rawRetFrom = frm.value.RetDate_From;
+    const rawRetTo = frm.value.RetDate_To;
+    const retDateFrom = rawRetFrom
+      ? this.datePipe.transform(rawRetFrom, 'yyyy-MM-dd')
+      : null;
+    const retDateTo = rawRetTo
+      ? this.datePipe.transform(rawRetTo, 'yyyy-MM-dd')
+      : null;
+
+    const body: any = {
+      PageSize: this.pageSize,
+      PageIndex: this.pageIndex,
+      Offset: 0,
+      OrderBy: this.sortBy ?? '',
+      SortBy: (this as any).sortMeta ?? (this.sortBy ? [{ field: this.sortBy, order: (this as any).sortOrder ?? 1 }] : []),
+      ACP_No: frm.value.ACP_No ?? '',
+      VEN_No: frm.value.VEN_No ?? '',
+      ACP_YYYYMM: acpYyyymm,
+      Acp_TermNo: frm.value.Acp_TermNo ?? null,
+      RetDate_From: retDateFrom,
+      RetDate_To: retDateTo,
+      RetAmt_From: frm.value.RetAmt_From ?? null,
+      RetAmt_To: frm.value.RetAmt_To ?? null,
+      PayGenerated: frm.value.PayGenerated ?? '',
+      Remark: frm.value.Remark ?? ''
+    };
+
+    this.btnLoading = true;
+    this.fin24020Service.queryForExportFIN24020(body).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+      .subscribe(res => {
+        if (res.Data) {
+          console.log('列印回應', res.Data);
+          // const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+          // window.open(downloadUrl, '_blank');
+        }
+      });
+
+  }
+
+  onExport(event: string) {
+    if (event == 'PDF') {
+      this.onReport(this.queryForm);
+    } else if (event == 'Excel') {
+      this.onReport(this.queryForm);
+    }
+  }
+
   handleLazyLoad(event: any) {
     if (!event) return;
     this.pageIndex = event.pageIndex ?? this.pageIndex ?? 1;
@@ -186,4 +243,16 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
   override onDetail(row: any, queryConditions?: any) {
     super.onDetail(row, queryConditions);
   }
+  printColumns: Column[] = [
+    { field: 'ACP_No', header: '應付ID' },
+    { field: 'VEN_No', header: '廠客代號' },
+    { field: 'VEN_Name', header: '廠客名稱' },
+    { field: 'ACP_YYYYMM', header: '應付帳款年月' },
+    { field: 'acp_termno', header: '帳次' },
+    { field: 'ACP_Amt', header: '應付金額', format: formatAmount },
+    { field: 'ACP_BalanceAmt', header: '應付帳款餘額', format: formatAmount },
+    { field: 'RET_Amt', header: '退保留款金額', format: formatAmount },
+    { field: 'RET_Date', header: '退保留款日期', format: formatDate },
+    { field: 'STATUS', header: '是否已付款', format: formatYN }
+  ];
 }

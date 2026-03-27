@@ -3,203 +3,103 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="應收ID"
-              controlName="ARS_No"
-              [control]="queryForm.controls.ARS_No"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="應收ID" controlName="ARS_No" [control]="queryForm.controls.ARS_No"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="組織代碼"
-              controlName="ORG_ID"
-              [options]="Org_IdOptions | async"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ORG_ID"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="組織代碼" controlName="ORG_ID" [options]="Org_IdOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ORG_ID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateMonthOne"
-              label="帳款年月"
-              [control]="queryForm.controls.sam_yyymm"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-calendar calendarType="dateMonthOne" label="帳款年月" [control]="queryForm.controls.sam_yyymm"
+              [submitted]="submitted"></app-calendar>
           </div>
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="帳款帳次"
-              controlName="sam_termno"
-              [control]="queryForm.controls.sam_termno"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number [useGrouping]="false" label="帳款帳次" controlName="sam_termno"
+              [control]="queryForm.controls.sam_termno" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              label="應收金額"
-              [startControl]="queryForm.controls.ARS_Amt_From"
-              [endControl]="queryForm.controls.ARS_Amt_To"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-number-range label="應收金額" [startControl]="queryForm.controls.ARS_Amt_From"
+              [endControl]="queryForm.controls.ARS_Amt_To" [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              label="沖帳金額"
-              [startControl]="queryForm.controls.PTA_Amt_From"
-              [endControl]="queryForm.controls.PTA_Amt_To"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-number-range label="沖帳金額" [startControl]="queryForm.controls.PTA_Amt_From"
+              [endControl]="queryForm.controls.PTA_Amt_To" [submitted]="submitted"></app-input-number-range>
           </div>
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              label="應收餘額"
-              [startControl]="queryForm.controls.BalAmt_From"
-              [endControl]="queryForm.controls.BalAmt_To"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-number-range label="應收餘額" [startControl]="queryForm.controls.BalAmt_From"
+              [endControl]="queryForm.controls.BalAmt_To" [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              calendarType="dateRange"
-              label="預計收款日"
-              [startControl]="queryForm.controls.PTA_Date_From"
-              [endControl]="queryForm.controls.PTA_Date_To"
-              [submitted]="submitted"
-            ></app-calendar-range-quick>
+            <app-calendar-range-quick calendarType="dateRange" label="預計收款日"
+              [startControl]="queryForm.controls.PTA_Date_From" [endControl]="queryForm.controls.PTA_Date_To"
+              [submitted]="submitted"></app-calendar-range-quick>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
-              calendarType="dateRange"
-              label="立帳日期"
-              [startControl]="queryForm.controls.ARS_Date_From"
-              [endControl]="queryForm.controls.ARS_Date_To"
-              [submitted]="submitted"
-            ></app-calendar-range-quick>
+            <app-calendar-range-quick calendarType="dateRange" label="立帳日期"
+              [startControl]="queryForm.controls.ARS_Date_From" [endControl]="queryForm.controls.ARS_Date_To"
+              [submitted]="submitted"></app-calendar-range-quick>
           </div>
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="廠商編號"
-              controlName="CustNo"
-              [options]="VEN_No_ParamOptions | async"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.CustNo"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="廠商編號" controlName="CustNo" [options]="VEN_No_ParamOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CustNo" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="統一編號"
-              controlName="Uniform_No"
-              [control]="queryForm.controls.Uniform_No"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="統一編號" controlName="Uniform_No" [control]="queryForm.controls.Uniform_No"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="會計科目代號"
-              controlName="AccNo"
-              [options]="AccNo_ParamOptions | async"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.AccNo"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="會計科目代號" controlName="AccNo" [options]="AccNo_ParamOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.AccNo" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="帳款來源單號"
-              controlName="ARS_SourceNo"
-              [control]="queryForm.controls.ARS_SourceNo"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="帳款來源單號" controlName="ARS_SourceNo" [control]="queryForm.controls.ARS_SourceNo"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="傳票號碼"
-              controlName="VouNo"
-              [control]="queryForm.controls.VouNo"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="傳票號碼" controlName="VouNo" [control]="queryForm.controls.VouNo"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="傳票狀態"
-              controlName="PostFlag"
-              [options]="VouStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.PostFlag"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="傳票狀態" controlName="PostFlag" [options]="VouStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.PostFlag" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
 
         <!-- 欄位組 6 (立帳日期範圍, 廠商編號, 統一編號) -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="應收狀態"
-              controlName="ARS_Status"
-              [options]="ACP_Status_ParamOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ARS_Status"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="應收狀態" controlName="ARS_Status" [options]="ACP_Status_ParamOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ARS_Status" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="對象別編號"
-              controlName="SubDetailNo"
-              [options]="SubDetailNo_ParamOptions | async"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.SubDetailNo"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="對象別編號" controlName="SubDetailNo" [options]="SubDetailNo_ParamOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.SubDetailNo"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="摘要"
-              controlName="NoteDesc"
-              [control]="queryForm.controls.NoteDesc"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="摘要" controlName="NoteDesc" [control]="queryForm.controls.NoteDesc"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -208,20 +108,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report
-    apiUrl="queryFIN32010"
-    tableKey="FIN32010query"
-    dataKey="RowNo"
-    [lastQueryBody]="lastQueryBody"
-    [showReportMode]="false"
-    [totalRecords]="totalRecords"
-    [data]="data"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [columns]="columns"
-    [loading]="loading"
-    [showDelete]="false"
+  <app-table-report apiUrl="queryFIN32010" tableKey="FIN32010query" dataKey="RowNo" [lastQueryBody]="lastQueryBody"
+    [showReportMode]="true" [totalRecords]="totalRecords" [data]="data" [footerData]="footerData"
+    (edit)="onEdit($event)" (detail)="onDetail($event)" [columns]="columns" [loading]="loading" [showDelete]="false"
     [editDisabled]="editDisabledByVouNo"
-    [queryFunction]="fin32010Service.queryFIN32010.bind(fin32010Service)"
-  ></app-table-report>
+    [queryFunction]="fin32010Service.queryFIN32010.bind(fin32010Service)"></app-table-report>
 </div>

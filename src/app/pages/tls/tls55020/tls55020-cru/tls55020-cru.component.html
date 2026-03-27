@@ -16,8 +16,6 @@
           optionValue="No" />
         <app-input-text class="col-12 md:col-6 lg:col-3" label="交易序號" [control]="dataForm.controls.TXN_No"
           [submitted]="submitted" controlName="TXN_No" />
-        <app-input-textarea class="col-12" label="備註" [control]="dataForm.controls.TXN_Remark" [submitted]="submitted"
-          controlName="TXN_Remark" />
       </div>
       <hr />
       <div class="grid p-fluid">
@@ -69,6 +67,8 @@
           optionValue="value" controlName="IsHaveGUILoveCode" />
         <app-input-text class="col-12 md:col-6 lg:col-3" label="捐贈社福團體代碼" [control]="dataForm.controls.TXN_GUILoveCode"
           [submitted]="submitted" controlName="TXN_GUILoveCode" />
+        <app-input-textarea class="col-12" label="備註" [control]="dataForm.controls.TXN_Remark" [submitted]="submitted"
+          controlName="TXN_Remark" />
       </div>
       <app-table-edit title="商品管理編號修正" [data]="data" [columns]="columns" [disabled]="isFormReadable" [canInsert]="false"
         [showCheckBox]="false" [showDelete]="false" [rowValidate]="validateEntireRow">

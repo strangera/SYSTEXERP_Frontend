@@ -10,6 +10,9 @@ export interface FIN52080Data {
   Ledger_MD: LedgerMDType;
   Org_YN: 'Y' | 'N';
   Voucher_Type: VoucherType;
+  CanDel?: boolean;
+  EXP_YEAR?: number | null;
+  RESI_VALUE?: number | null;
 }
 
 export interface FIN52080Query {
@@ -32,12 +35,12 @@ export interface FIN52080ClassNo {
 }
 
 export interface FIN52080Tree {
-  org_id: string;
-  org10Label: string;
-  org20Label: string;
-  org30Label: string;
-  org40Label: string;
-  org_name: string;
+  T_Id: string;
+  T10Label: string;
+  T20Label: string;
+  T30Label: string;
+  T40Label?: string;
+  T_Name: string;
 }
 
 export interface DeleteFIN52080Request {

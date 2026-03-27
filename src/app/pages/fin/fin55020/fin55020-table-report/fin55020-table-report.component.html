@@ -105,9 +105,10 @@
     </div>
   </ng-template>
   <ng-template pTemplate="emptymessage">
-    <tr>
+    <tr *ngIf="hasSearched">
       <td [attr.colspan]="1 + columns.length">
-        <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+        <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+          <i class="pi pi-search mr-2"></i>
           查無資料
         </div>
       </td>

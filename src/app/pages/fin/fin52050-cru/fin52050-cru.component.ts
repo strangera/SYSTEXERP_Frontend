@@ -3,14 +3,11 @@ import { Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin52050Service } from '@service/api/fin/fin52050.service';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
@@ -31,7 +28,6 @@ export interface GLS1003 {
 @Component({
   selector: 'app-fin52050-cru',
   templateUrl: './fin52050-cru.component.html',
-  styleUrl: './fin52050-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -40,11 +36,8 @@ export interface GLS1003 {
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    DropdownComponent,
-    DialogComponent,
     NgIf,
     TranslateModule,
-    TableComponent
   ]
 })
 export class FIN52050CRUComponent extends BasicCruPageComponent<GLS1003> implements OnInit {

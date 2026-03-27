@@ -12,10 +12,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
-/**
- * ASS12040 採購單審核作業 API
- * TODO: 待 API 規格確認後補上路徑與參數（審核是否區分強制結案/審核確認）
- */
+/** ASS12040 採購單審核作業 API */
 @Injectable({ providedIn: 'root' })
 export class ASS12040Service {
   private readonly apiUrl = environment.ApiUrl + '/ASS0000/ASS1000';
@@ -36,7 +33,7 @@ export class ASS12040Service {
           const raw = res.Data;
           const list = Array.isArray(raw)
             ? raw
-            : (raw as ASS12040QueryDataWrapper)?.QueryData ?? [];
+            : (raw as ASS12040QueryDataWrapper)?.Details ?? [];
           const total =
             (res as ApiResponse<ASS12040QueryRow[]>).TotalCount ??
             (raw as ASS12040QueryDataWrapper)?.TotalRows ??
@@ -56,11 +53,8 @@ export class ASS12040Service {
     );
   }
 
-  /**
-   * 審核功能（強制結案 / 審核確認 皆先共用此介面）
-   * TODO: 審核功能 API 參數與回傳規格待後端確認；是否區分強制結案與審核確認端點
-   */
-  approveASS12040(payload: ASS12040ApproveRequest): Observable<ApiResponse<void>> {
-    return this.http.post<ApiResponse<void>>(`${this.apiUrl}/approveASS12040`, payload);
+  /** 審核功能 */
+  approveASS12040(payload: ASS12040ApproveRequest): Observable<ApiResponse<ASS12040QueryRow>> {
+    return this.http.post<ApiResponse<ASS12040QueryRow>>(`${this.apiUrl}/approveASS12040`, payload);
   }
 }
