@@ -266,7 +266,7 @@ export interface TalentOpenFlagQuery {
   /** 廠商編號 */
   VEN_No: string;
   /** 契約有效起日 */
-  tlt_sdate?: string;
+  tlt_bdate?: string;
   /** 契約有效迄日 */
   tlt_edate?: string;
 }

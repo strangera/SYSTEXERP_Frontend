@@ -247,7 +247,7 @@ export class TLS26080Service {
     this.tltTalentOptionsLoading.set(true);
     const payload: TalentOpenFlagQuery = {
       VEN_No: query.ven_no,
-      ...(query.tlt_bdate != null && { tlt_sdate: this.formatQueryDate(query.tlt_bdate) }),
+      ...(query.tlt_bdate != null && { tlt_bdate: this.formatQueryDate(query.tlt_bdate) }),
       ...(query.tlt_edate != null && { tlt_edate: this.formatQueryDate(query.tlt_edate) }),
     };
 
