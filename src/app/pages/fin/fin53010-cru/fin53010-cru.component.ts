@@ -25,7 +25,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { concatMap, finalize, Observable, tap } from 'rxjs';
+import { concatMap, EMPTY, finalize, Observable, switchMap, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData } from '../fin52030/fin52030.model';
 import {
   FIN53010Aps2002_CRow,
@@ -108,6 +108,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   private readonly selectedOrgId = signal<string>('100000');
 
   public readonly tableLoading = signal<boolean>(!1);
+  /** 依傳票編號查詢並重載（僅編輯模式） */
+  public readonly lookupVouLoading = signal<boolean>(!1);
+  /** 與表單欄位分離，避免與目前傳票號混淆 */
+  public readonly lookupVouNo = new FormControl<string>('', { nonNullable: true });
+
+  /** 查詢傳票編號為空白（含僅空白字元）時，停用「載入傳票」 */
+  public isLookupVouNoEmpty(): boolean {
+    return !this.lookupVouNo.value?.trim();
+  }
 
   /** 傳票關聯六表列資料 */
   public readonly ars3001RelatedRows = signal<FIN53010Ars3001Row[]>([]);
@@ -263,15 +272,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       || this.service.voucherTypeLoading()
       || this.service.refNameLoading()
       || this.service.noteDescLoading()
-      || this.service.detailByVouNoLoading();
+      || this.service.detailByVouNoLoading()
+      || this.lookupVouLoading();
   });
 
-  // 載入資料的 effect
+  // 載入資料的 effect（不 destroy，以便刪除明細重載或依傳票編號重載時仍能同步表單）
   public readonly dataEffect = effect(() => {
-    if (this.isFormCreateable) return void (() => {
-      this.tableLoading.set(!1);
-      this.dataEffect.destroy();
-    });
+    if (this.isFormCreateable) return;
     const data = this.fin53010DetailData();
     if (!data?.Details) return;
 
@@ -312,8 +319,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       || !this.service.usrMap().size
       || !this.service.noteDescMap().size
       || !this.service.voucherTypeMap().size) return;
-
-    this.dataEffect.destroy();
   }, { allowSignalWrites: !0 });
 
   // Template 相關屬性
@@ -494,6 +499,59 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         },
       });
     }
+  }
+
+  /** 依「查詢傳票編號」呼叫 queryFIN53010 → queryFIN53010Detail 並刷新編輯頁 */
+  public onLookupVoucherByVouNo(): void {
+    if (this.isFormCreateable || this.lookupVouLoading()) return;
+    const raw = this.lookupVouNo.value?.trim() ?? '';
+    if (!raw) {
+      this.messageService.errorBubble('請輸入傳票編號');
+      return;
+    }
+
+    const payload: FIN53010Payload = {
+      VouNoStart: raw,
+      VouNoEnd: raw,
+      PageIndex: 1,
+      PageSize: 30,
+      SortBy: [{ field: 'id', order: 1 }],
+    };
+
+    this.lookupVouLoading.set(!0);
+    this.service.loadFIN53010(payload).pipe(
+      tap(res => {
+        if (res.Status === '0000' && res.Data?.length) {
+          this.service.getAccDescOptions(res.Data.map(d => d.Remark).filter(Boolean) as string[]);
+        }
+      }),
+      switchMap(res => {
+        if (res.Status !== '0000') {
+          this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '查詢傳票失敗');
+          return EMPTY;
+        }
+        const rows = res.Data ?? [];
+        if (rows.length === 0) {
+          this.messageService.errorBubble('查無資料');
+          return EMPTY;
+        }
+        this.rowdata = rows[0] as unknown as QueryFIN53010Detail;
+        return this.service.loadFIN53010Detail(this.rowdata!.id);
+      }),
+      tap(res => {
+        if (!res || res.Status !== '0000') {
+          if (res && res.Status !== '0000') {
+            this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '載入傳票明細失敗');
+          }
+          return;
+        }
+        this.fin53010DetailData.set(res.Data);
+        this.totalRecords.set(res.TotalCount);
+        this.loadRelatedDetailByVouNo(res.Data?.VouNo);
+        this.messageService.successBubble('已載入傳票');
+      }),
+      finalize(() => this.lookupVouLoading.set(!1)),
+    ).subscribe();
   }
 
   private clearRelatedDetailTables(): void {
