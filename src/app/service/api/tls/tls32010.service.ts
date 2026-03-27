@@ -28,6 +28,7 @@ export interface TLS32010QueryRequest extends BaseQueryRequest {
 
 // 查詢結果 Model (保持不變)
 export interface TLS32010Data {
+  序號: number;
   館別: string;
   組織名稱: string;
   櫃別名稱: string;
