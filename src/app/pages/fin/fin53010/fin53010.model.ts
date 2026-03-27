@@ -142,6 +142,12 @@ export type FIN53010DeleteResult = Omit<BaseQueryResponse<any>, 'Data'> & {
     [key: string]: any;
   };
 };
+
+/** updateStatusFIN53010 Request */
+export interface VoidFIN53010Request {
+  /** GLS3001_ID字串(用逗號分隔) */
+  GLS3001_IDList: string;
+}
 export interface VendorList {
   VEN_No: string;
   VEN_Name: string;

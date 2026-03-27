@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
-import { AccDescOption, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, QueryFIN53010DetailDataByVouNoRequest, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse } from '@pages/fin/fin53010/fin53010.model';
+import { AccDescOption, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoResult, FIN53010InsertPayload, FIN53010InsertResult, FIN53010Payload, QueryFIN53010DetailDataByVouNoRequest, FIN53010UpdatePayload, FIN53010UpdateResult, NoteDescResponse, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -147,9 +147,13 @@ export class FIN53010Service {
     );
   }
 
-  // 作廢（TODO：API 規格尚未出來，請依後端 request key / endpoint / response schema 再調整）
+  // 作廢
   public voidFIN53010Data(payload: number[]): Observable<FIN53010DeleteResult> {
-    return this.http.post<FIN53010DeleteResult>(`${apiUrl}/voidFIN53010`, { ids: payload }).pipe(
+    const body: VoidFIN53010Request = {
+      GLS3001_IDList: payload.join(','),
+    };
+
+    return this.http.post<FIN53010DeleteResult>(`${apiUrl}/updateStatusFIN53010`, body).pipe(
       take(1),
       tap(res => this.logger.debug('作廢FIN53010結果:', [res])),
     );

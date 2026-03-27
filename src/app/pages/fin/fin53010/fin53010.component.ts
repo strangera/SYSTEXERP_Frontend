@@ -83,7 +83,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
       label: '作廢',
       icon: 'pi pi-trash text-red-500',
       action: (rowData: FIN53010Data) => this.onVoid(rowData),
-      disabled: (rowData: FIN53010Data) => rowData.PostFlag !== '1' || !this.hasPermission(this.Actions.Invalidate),
+      disabled: (rowData: FIN53010Data) => rowData.PostFlag !== '1',
       loading: (rowData: FIN53010Data) => this.voidingRowId() === rowData.id,
     },
   ];
