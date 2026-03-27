@@ -139,6 +139,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly isRowSelectable = (rowData: TLS26080EditTable) => rowData.pod_status !== '9';
 
   public readonly tltIdList = signal(new Map<number, Option[]>());
+  private readonly lastOpenFlagCampaignId = signal<string | undefined>(undefined);
+  private readonly lastDetailCampaignId = signal<string | undefined>(undefined);
 
   public readonly calcDateType = [
     { label: '活動起始日至截止日', value: 'Y' },
@@ -270,6 +272,55 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.logger.debug(`campaignEffect:`, [podDesc, selected]);
   }, { allowSignalWrites: true });
 
+  /** 活動切換後，依新活動日期重載專櫃選項（openflag API） */
+  public readonly campaignTalentOptionsEffect = effect(() => {
+    const selected = this.selectedCampaign();
+    if (!selected) return;
+    if (this.lastOpenFlagCampaignId() === selected.CampaignId) return;
+    this.lastOpenFlagCampaignId.set(selected.CampaignId);
+
+    this.dialogLoading.set(true);
+    this.fetchTltTalentOptions({
+      ven_no: '',
+      tlt_bdate: new Date(selected.StartTime),
+      tlt_edate: new Date(selected.EndTime),
+    }).subscribe({
+      next: res => {
+        const options = res.map(item => ({
+          ...item,
+          No: item['No'] ?? item.value,
+          Name: item['Name'] ?? item.label,
+          value: item.value ?? item['No'],
+          label: item.label ?? `${item['No']}-${item['Name']}`,
+          talent_id: item.talent_id,
+        }));
+        this.service.tltTalentOptions.set(options);
+      },
+    });
+  }, { allowSignalWrites: true });
+
+  /** 新增模式選活動後，主動查詢 detail 並帶回合約分攤欄位 */
+  public readonly createCampaignDetailEffect = effect(() => {
+    if (!this.isFormCreateable) return;
+    const selected = this.selectedCampaign();
+    if (!selected) return;
+    if (this.lastDetailCampaignId() === selected.CampaignId) return;
+    this.lastDetailCampaignId.set(selected.CampaignId);
+
+    this.tableLoading.set(true);
+    this.service.loadTLS26080Detail(selected.CampaignId)
+      .pipe(finalize(() => this.tableLoading.set(false)))
+      .subscribe({
+        next: res => {
+          const data = res?.Data ?? [];
+          for (const item of data) this.updateTltIdOptions(item.talent_id);
+          this.tableData.set(this.mapDetailRows(data));
+          this.totalRecords.set(res?.TotalCount || data.length);
+          this.logger.debug(`createCampaignDetailEffect:`, [selected.CampaignId, data.length]);
+        },
+      });
+  }, { allowSignalWrites: true });
+
   /** 根據選擇的活動更新編號 */
   public readonly campaignIdEffect = effect(() => {
     const data = this.campaignData();
@@ -292,15 +343,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         next: res => {
           const data = res.Data;
           for (const item of data) this.updateTltIdOptions(item.talent_id);
-
-          this.tableData.set(data.map(v => ({
-            ...v,
-            tpy_rate_D16: Number(v.tpy_rate_D16) * 100,
-            tpy_rate_D17: Number(v.tpy_rate_D17) * 100,
-            fare_rate_d16: Number(v.fare_rate_d16 ?? 0) * 100,
-            fare_rate_d17: Number(v.fare_rate_d17 ?? 0) * 100,
-            approval_action: v.pod_status === '1' ? '1' : '0',
-          })));
+          this.tableData.set(this.mapDetailRows(data));
           this.totalRecords.set(res.TotalCount || 0);
           console.log('initEffect tableData:', this.tableData());
 
@@ -335,7 +378,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   // 專櫃資料表
   public readonly counterColumns = computed<Column[]>(() => {
     const tltIdMap = this.tltIdList();
-    const fareContractCols = this.isFormReadable
+    const fareContractCols = (this.isFormReadable || this.isFormCreateable)
       ? [
         {
           field: 'fare_rate_d16' as const,
@@ -486,7 +529,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public readonly counterColumnsGroup = computed<ColumnGroup[]>(() => [
     { field: 'groupField1', header: '匯入分攤' },
-    ...(this.isFormReadable ? [{ field: 'groupField2', header: '合約分攤' }] : []),
+    ...((this.isFormReadable || this.isFormCreateable) ? [{ field: 'groupField2', header: '合約分攤' }] : []),
   ]);
 
   public readonly loadingEffect = effect(() => {
@@ -1075,6 +1118,17 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     return isNaN(parsed) ? fallback : parsed * 100;
   }
 
+  private mapDetailRows(data: TLS26080EditTable[]): TLS26080EditTable[] {
+    return data.map(v => ({
+      ...v,
+      tpy_rate_D16: Number(v.tpy_rate_D16) * 100,
+      tpy_rate_D17: Number(v.tpy_rate_D17) * 100,
+      fare_rate_d16: Number(v.fare_rate_d16 ?? 0) * 100,
+      fare_rate_d17: Number(v.fare_rate_d17 ?? 0) * 100,
+      approval_action: v.pod_status === '1' ? '1' : '0',
+    }));
+  }
+
   public getDialogQueryBody(): Record<string, unknown> {
     return {
       tlt_bdate: this.df().pod_sdate.value,
@@ -1084,8 +1138,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public fetchTltTalentOptions(venNoOrBody: string | Record<string, unknown>): Observable<(Option & { talent_id: number })[]> {
     const ven_no = typeof venNoOrBody === 'string' ? venNoOrBody : (venNoOrBody?.['ven_no'] as string) ?? '';
-    const tlt_bdate = this.df().pod_sdate.value;
-    const tlt_edate = this.df().pod_edate.value;
+    const tlt_bdate = typeof venNoOrBody === 'string'
+      ? this.df().pod_sdate.value
+      : (venNoOrBody?.['tlt_bdate'] as Date | null | undefined) ?? this.df().pod_sdate.value;
+    const tlt_edate = typeof venNoOrBody === 'string'
+      ? this.df().pod_edate.value
+      : (venNoOrBody?.['tlt_edate'] as Date | null | undefined) ?? this.df().pod_edate.value;
     return this.service.getTLTTalentOptions({ ven_no, tlt_bdate, tlt_edate }).pipe(
       map(res => res ?? []),
       tap(res => {
@@ -1098,6 +1156,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         this.dialogData.set(options);
         this.filteredDialogData.set(options);
         this.dialogTotalRecords.set(options.length);
+        this.service.tltTalentOptions.set(options);
         this.counterColumns();
       }),
       finalize(() => this.dialogLoading.set(false))
