@@ -18,6 +18,9 @@ export const finRoutes: Routes = [
   // 電子式發票各系統配號維護
   { path: 'fin12010', loadComponent: () => import('./fin12010/fin12010.component').then(m => m.FIN12010Component), data: { progNo: 'FIN12010' } },
   { path: 'fin12010cru', loadComponent: () => import('./fin12010-cru/fin12010-cru.component').then(m => m.FIN12010CRUComponent), data: { progNo: 'FIN12010' } },
+  //非二聯式收銀機發票調整作業
+  { path: 'fin13040', loadComponent: () => import('./fin13040/fin13040.component').then(m => m.FIN13040Component), data: { progNo: 'FIN13040' } },
+  { path: 'fin13040cru', loadComponent: () => import('./fin13040-cru/fin13040-cru.component').then(m => m.FIN13040CRUComponent), data: { progNo: 'FIN13040' } },
   // 費率對照維護
   { path: 'fin21020', loadComponent: () => import('./fin21020/fin21020.component').then(m => m.FIN21020Component), data: { progNo: 'FIN21020' } },
   { path: 'fin21020cru', loadComponent: () => import('./fin21020-cru/fin21020-cru.component').then(m => m.FIN21020CRUComponent), data: { progNo: 'FIN21020' } },
