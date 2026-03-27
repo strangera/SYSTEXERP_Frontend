@@ -1,168 +1,390 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+import { CommonModule } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS13100Service } from '@service/api/ass/ass13100.service';
+import { IDropdownItem } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ValidationService } from '../../../shared/service/validation.service';
-//
+import { BreadcrumbModule } from "primeng/breadcrumb";
+import { ButtonModule } from 'primeng/button';
+import { FileSelectEvent } from 'primeng/fileupload';
+import { FileUploadHandlerEvent } from 'primeng/fileupload';
+import { finalize } from 'rxjs/operators';
+import {
+  ASS13100ExportPDFRequest,
+  ASS13100QueryRow,
+  QueryASS13100Request,
+} from './ass13100.model';
 
-//3.1.3.10  資產清點作業
+// 3.1.3.10 資產清點作業
 @Component({
   selector: 'app-ass13100',
   templateUrl: './ass13100.component.html',
   styleUrl: './ass13100.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, EditorTextComponent, TableComponent, TranslateModule]
+  imports: [
+    CommonModule,
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    InputTextRangeComponent,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarRangeQuickComponent,
+    TableReportComponent,
+    ButtonModule,
+    DialogComponent,
+    FileUploadComponent,
+    BreadcrumbModule
+],
 })
-export class ASS13100Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    inventory_NumberFrom: [, [Validators.required, Validators.max(9999999999), this.validationService.numberValidator]], // 清點單號
-    inventory_NumberTo: [, [Validators.required, Validators.max(9999999999), this.validationService.numberValidator]], // 清點單號
-    inventory_DateFrom: [], // 清點日期
-    inventory_DateTo: [], // 清點日期
-    inventory_PersonCode: [], // 清點人代碼
-    locationCode: [], // 位置代碼
-    inventory_Status: [[] as number[]], // 清點單狀態
-    inventory_DataStatus: [[] as number[]], // 清點狀態(資料)
-    remark: [,], // 說明
+export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow> implements OnInit {
+  @ViewChild(FileUploadComponent) fileUpload?: FileUploadComponent;
+
+  /** 查詢條件 Form（API 欄位：CHK_ID_S/E, CHK_DATE_S/E, CHK_EMP_ID, LOCATION_ID, STATUS, CHK_STATUS, NOTES） */
+  readonly queryForm = this.formBuilder.group({
+    CHK_ID_S: new FormControl<string | null>(null),
+    CHK_ID_E: new FormControl<string | null>(null),
+    CHK_DATE_S: new FormControl<Date | null>(null),
+    CHK_DATE_E: new FormControl<Date | null>(null),
+    CHK_EMP_ID: new FormControl<string | null>(null),
+    LOCATION_ID: new FormControl<string | null>(null),
+    STATUS: new FormControl<string | null>(null),
+    CHK_STATUS: new FormControl<string | null>(null),
+    NOTES: new FormControl<string | null>(null),
+    pageSize: new FormControl<number>(30),
+    pageIndex: new FormControl<number>(1),
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  /** 下拉選項（查詢條件） */
+  inventoryPersonOptions: { label: string; value: string }[] = [];
+  locationOptions: { label: string; value: string }[] = [];
+  inventoryStatusOptions: { label: string; value: string }[] = [];
+  inventoryDataStatusOptions: { label: string; value: string }[] = [];
+
+  /** 表格資料與狀態 */
+  data: ASS13100QueryRow[] = [];
+  totalRecords = 0;
+  columns: ReportColumn[] = [
+    { field: 'SeqNo', header: '序號' },
+    { field: 'CHK_ID', header: '清點單號' },
+    { field: 'CHK_DATE', header: '清點日期' },
+    { field: 'FIRST_CHK_EMP_ID', header: '清點人代碼' },
+    { field: 'STATUS_NAME', header: '清點單狀態' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '清點單號', visible: true },
-    { field: 'col2', header: '清點日期', visible: true },
-    { field: 'col3', header: '清點人代碼', visible: true },
-    { field: 'col4', header: '位置代碼', visible: true },
-    { field: 'col5', header: '清點單狀態', visible: true },
-    // { field: 'col6', header: '會計科目代號', visible: true },
-    // { field: 'col7', header: '購入金額', visible: true },
-    // { field: 'col8', header: '採購單號', visible: true },
-    // { field: 'col9', header: '條件篩選', visible: true },
+  lastQueryBody?: QueryASS13100Request;
+  selectedItems: ASS13100QueryRow[] = [];
 
-    // { field: 'col10', header: '資產類型', visible: true },
-    // { field: 'col11', header: '會計科目代號', visible: true },
-    // { field: 'col12', header: '購入金額', visible: true },
-    // { field: 'col13', header: '驗收單號', visible: true },
+  /** 上傳盤點機檔案 Dialog 狀態 */
+  uploadDialogVisible = false;
+  uploading = false;
+  uploadChkIdControl = new FormControl<string>('', { nonNullable: true });
+  private selectedUploadFile: File | null = null;
 
-    // { field: 'col14', header: '入帳日期', visible: true },
-    // { field: 'col15', header: '條件篩選', visible: true },
-    // { field: 'col16', header: '顯示筆數', visible: true },
+  get canUploadDeviceFile(): boolean {
+    return !!this.selectedUploadFile && !!this.uploadChkIdControl.value.trim() && !this.uploading;
+  }
 
-    // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
-    // { field: 'col18', header: '報廢損失', visible: true },
+  /** 查詢條件是否已完整輸入清點單號起迄 */
+  get hasInventoryRange(): boolean {
+    const from = (this.queryForm.controls.CHK_ID_S.value ?? '').toString().trim();
+    const to = (this.queryForm.controls.CHK_ID_E.value ?? '').toString().trim();
+    return !!from && !!to;
+  }
 
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-
-  userCodeOptions: any[] = [];
-  locationCodeOptions: any[] = [];
-  statusOptions: any[] = [
-    { value: 1, label: '清點中' },
-    { value: 2, label: '已結案' },
-  ];
-  dataStatusOptions: any[] = [
-    { value: 1, label: '良好' },
-    { value: 2, label: '損壞' },
-    { value: 3, label: '下落不明' },
-  ];
-
-  //
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private validationService: ValidationService,
+    public readonly service: ASS13100Service,
+    private readonly dropdownApi: DropdownApiService,
+    private readonly dropDownListService: DropDownListService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310025';
-    this.cruPage = '/ASS1000/ASS13100CRU';
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('ASS13100', 'ass/ass13100cru', this.queryForm, frm => this.onSubmit(frm));
+    this.loadDropdowns();
+
+    // CRU 產生成功選「前往明細」時會先導向本頁並帶 openDetailCHK_ID / openDetailID，再導向 CRU 明細
+    const state = this.router.lastSuccessfulNavigation?.extras?.state as {
+      openDetailCHK_ID?: string;
+      openDetailID?: number;
+    } | undefined;
+    const chkId = state?.openDetailCHK_ID;
+    const id = state?.openDetailID;
+    if (chkId != null) {
+      this.navigateWithState(
+        CRUDStatus.Read,
+        { CHK_ID: chkId, ID: id } as ASS13100QueryRow,
+        this.queryForm.getRawValue()
+      );
+    }
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
+  /** 覆寫新增：導向 CRU 頁（新增模式） */
+  override onCreate(): void {
+    if (!this.hasPermission(this.Actions.Create)) {
+      return;
+    }
+    super.onCreate(undefined, this.queryForm.getRawValue());
+  }
+
+  /** 載入下拉選單資料 */
+  private loadDropdowns(): void {
+    // 清點人 / 清點員工代碼：queryTBLUSER_DropDownList
+    this.dropdownApi.queryTblUser()?.subscribe((options: { label: string; value: string }[] | null) => {
+      this.inventoryPersonOptions = (options ?? []).map(x => ({
+        label: `${x.label}`,
+        value: x.value,
+      }));
+    });
+
+    // 位置代碼：queryPOS2002_Location_DropDownList
+    this.dropdownApi.queryPos2002Location()?.subscribe((options: IDropdownItem[] | null) => {
+      this.locationOptions = (options ?? []).map(x => ({
+        label: `${x.Name}`,
+        value: x.No,
+      }));
+    });
+
+    // 清點單狀態：SYS1000.SYS_TYPE = 'ASSET_CHK_STATUS'
+    this.dropDownListService
+      .querySYS1000_DropDownList({ SYS_Type: 'ASSET_CHK_STATUS' })
+      .subscribe(res => {
+        const list = res?.Data ?? [];
+        this.inventoryStatusOptions = list.map(x => ({
+          label: `${x.Name}`,
+          value: x.No,
+        }));
+      });
+
+    // 清點狀態(資料)：SYS1000.SYS_TYPE = 'CHK_STATUS'
+    this.dropDownListService
+      .querySYS1000_DropDownList({ SYS_Type: 'CHK_STATUS' })
+      .subscribe(res => {
+        const list = res?.Data ?? [];
+        this.inventoryDataStatusOptions = list.map(x => ({
+          label: `${x.Name}`,
+          value: x.No,
+        }));
+      });
+  }
+
+  /** 查詢送出 */
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
+      const body: QueryASS13100Request = {
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1,
+        CHK_ID_S: raw.CHK_ID_S ?? null,
+        CHK_ID_E: raw.CHK_ID_E ?? null,
+        CHK_DATE_S: raw.CHK_DATE_S ? raw.CHK_DATE_S.toISOString() : null,
+        CHK_DATE_E: raw.CHK_DATE_E ? raw.CHK_DATE_E.toISOString() : null,
+        CHK_EMP_ID: raw.CHK_EMP_ID ?? null,
+        LOCATION_ID: raw.LOCATION_ID ?? null,
+        STATUS: raw.STATUS ?? null,
+        CHK_STATUS: raw.CHK_STATUS ?? null,
+        NOTES: raw.NOTES ?? null,
+      };
+
+      this.lastQueryBody = body;
+      this.loading = true;
+      this.service
+        .queryASS13100(body)
+        .pipe(finalize(() => (this.loading = false)))
+        .subscribe((res: ApiResponse<ASS13100QueryRow[]>) => {
+          if (res?.Status === '0000') {
+            this.data = res.Data ?? [];
+            this.totalRecords = res.TotalCount ?? this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, raw);
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+          }
+        });
+    });
+  }
+
+  /** 多筆刪除 */
+  onDelete(event: ASS13100QueryRow[] | ASS13100QueryRow): void {
+    const items = Array.isArray(event) ? event : [event];
+    if (!items.length) {
+      this.messageService.warnBubble('請先勾選要刪除的清點單');
+      return;
+    }
+
+    const ids = items
+      .map(x => x.ID)
+      .filter((x): x is number => x != null && typeof x === 'number');
+
+    if (!ids.length) {
+      this.messageService.warnBubble('選取的資料缺少 ID，無法刪除');
+      return;
+    }
+
+    this.messageService.confirm({
+      header: '確認刪除',
+      message: `是否確認刪除 ${ids.length} 筆清點單？`,
+      accept: () => {
+        this.loading = true;
+        this.service
+          .deleteASS13100({ Ids: ids })
+          .pipe(finalize(() => (this.loading = false)))
+          .subscribe(res => {
+            if (res?.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+              this.selectedItems = [];
+              this.onSubmit(this.queryForm);
+            }
+          });
+      },
+    });
+  }
+
+  /** 開啟上傳盤點機檔案視窗 */
+  openUploadDialog(): void {
+    this.selectedUploadFile = null;
+    this.uploadChkIdControl.setValue('');
+    this.fileUpload?.clearFiles();
+    this.uploadDialogVisible = true;
+  }
+
+  onUploadFileSelect(event: FileSelectEvent): void {
+    const files = event.files ?? [];
+    this.selectedUploadFile = files.length > 0 ? files[0] : null;
+  }
+
+  /** 自訂上傳事件（由 app-file-upload 觸發） */
+  handleCustomUpload(event: FileUploadHandlerEvent): void {
+    const chkId = this.uploadChkIdControl.value.trim();
+    if (!chkId) {
+      this.messageService.warnBubble('請先輸入清點單號');
+      return;
+    }
+
+    if (!event.files || event.files.length === 0) {
+      this.messageService.errorBubble('上傳檔案為空');
+      return;
+    }
+
+    const file = event.files[0];
+    if (!file?.name.toLowerCase().endsWith('.txt')) {
+      this.messageService.errorBubble('僅允許上傳 .txt 檔案');
+      return;
+    }
+
+    this.uploading = true;
+    this.service
+      .uploadASS13100(file, chkId)
+      .pipe(finalize(() => (this.uploading = false)))
+      .subscribe({
+        next: res => {
+          if (res?.Status === '0000' && (res.Data?.ErrCode ?? 0) === 0) {
+            this.messageService.successBubble(res.Message ?? '上傳成功');
+            this.uploadDialogVisible = false;
+            this.selectedUploadFile = null;
+            this.uploadChkIdControl.setValue('');
+            this.fileUpload?.clearFiles();
+            return;
+          }
+
+          this.messageService.errorBubble(res.Data?.ErrMsg ?? res.Message ?? '上傳失敗');
+        },
+      });
+  }
+
+  /** 確認上傳盤點機檔案 */
+  confirmUpload(): void {
+    this.uploadDialogVisible = false;
+    this.uploadChkIdControl.setValue('');
+    this.selectedUploadFile = null;
+    this.fileUpload?.clearFiles();
+  }
+
+  /** 匯出資產清點作業 PDF */
+  onPrintInventoryReport(): void {
+    const raw = this.queryForm.getRawValue();
+    const chkIdS = (raw.CHK_ID_S ?? '').toString().trim();
+    const chkIdE = (raw.CHK_ID_E ?? '').toString().trim();
+
+    if (!chkIdS || !chkIdE) {
+      this.messageService.warnBubble('請先輸入清點單號起迄');
+      return;
+    }
+
+    const body: ASS13100ExportPDFRequest = {
+      CHK_ID_S: chkIdS,
+      CHK_ID_E: chkIdE,
+    };
+
     this.loading = true;
-    this.messageService.blockUi();
+    this.service
+      .exportPDFASS13100(body)
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => {
+          const contentDisposition = response.headers.get('Content-Disposition');
+          const filename = this.getFilenameFromHeader(contentDisposition, '.pdf');
+          const blob = response.body;
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+          if (blob && blob.size > 0) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          }
+        },
+      });
+  }
+
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) {
+      return `download${defaultExtension}`;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch {
+        return encodedFilename;
+      }
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
     }
-  }
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+    return `download${defaultExtension}`;
   }
 }

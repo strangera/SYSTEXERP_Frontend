@@ -301,8 +301,8 @@ export const finRoutes: Routes = [
   { path: 'fin55130cru', loadComponent: () => import('./fin55130/fin55130cru/fin55130cru.component').then(m => m.Fin55130cruComponent), data: { progNo: 'FIN55130' } },
   { path: 'fin55130detail', loadComponent: () => import('./fin55130/fin55130-detail/fin55130-detail.component').then(m => m.Fin55130DetailComponent), data: { progNo: 'FIN55130' } },
   // 支票號碼維護
-  // { path: 'fin61010', loadComponent: () => import('./fin61010/fin61010.component').then(m => m.FIN61010Component),data:{progNo:'FIN61010'} },
-  // { path: 'fin61010cru', loadComponent: () => import('./fin61010-cru/fin61010-cru.component').then(m => m.FIN61010CRUComponent),data: { progNo: 'FIN61010'} },
+  { path: 'fin61010', loadComponent: () => import('./fin61010/fin61010.component').then(m => m.FIN61010Component), data: { progNo: 'FIN61010' } },
+  { path: 'fin61010cru', loadComponent: () => import('./fin61010-cru/fin61010-cru.component').then(m => m.FIN61010CRUComponent), data: { progNo: 'FIN61010' } },
   // 業務員資料維護
   { path: 'fin61020', loadComponent: () => import('./fin61020/fin61020.component').then(m => m.FIN61020Component), data: { progNo: 'FIN61020' } },
   { path: 'fin61020cru', loadComponent: () => import('./fin61020-cru/fin61020-cru.component').then(m => m.FIN61020CRUComponent), data: { progNo: 'FIN61020' } },
