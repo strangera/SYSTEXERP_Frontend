@@ -83,7 +83,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly dataForm = this.formBuilder.nonNullable.group({
     VouNo: new FormControl<string>('自動給號'),
     /** 傳票類別 1:現金收入 2:現金支出 3:轉帳傳票 */
-    VouType: new FormControl<'1' | '2' | '3' | void>(void 0, [Validators.required]),
+    VouType: new FormControl<'1' | '2' | '3' | void>('3', [Validators.required]),
     /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
     PostFlag: new FormControl<'0' | '1' | '3' | void>(void 0),
     /** 傳票種類(SYS1000.VoucherType) */
