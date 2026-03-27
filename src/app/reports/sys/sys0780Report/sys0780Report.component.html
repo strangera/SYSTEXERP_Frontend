@@ -1,0 +1,82 @@
+<div class="flex flex-column align-items-center mb-5 mt-2">
+  <div class="flex align-items-center gap-3">
+    <i class="pi pi-file-edit text-primary text-4xl"></i>
+    <h2 class="text-900 font-bold m-0" style="letter-spacing: 3px;">作業權限申請表</h2>
+  </div>
+  <div class="surface-border border-bottom-2 w-6rem mt-3"></div>
+</div>
+
+<div class="card p-5 shadow-2 border-round-xl mx-auto" style="max-width: 900px;">
+  <div class="flex align-items-center mb-4 pb-2 border-bottom-1 surface-border">
+    <div class="w-1rem h-1rem bg-primary border-round mr-2"></div>
+    <span class="text-xl font-semibold text-700">申請資訊填寫</span>
+  </div>
+
+  <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <div class="grid p-fluid row-gap-4">
+
+      <div class="col-12 md:col-6">
+        <app-calendar label="申請日期" controlName="APPLY_DATE" [control]="queryForm.controls.APPLY_DATE"
+          [submitted]="submitted" placeholder="請選擇日期">
+        </app-calendar>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <app-dropdown label="主系統名稱" controlName="prog_no" [control]="queryForm.controls.prog_no"
+          [options]="subModuleNoOptions$ | async" optionLabel="Name" optionValue="No" [submitted]="submitted">
+        </app-dropdown>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <app-dropdown label="部門編號/名稱" controlName="org_no" [control]="queryForm.controls.org_no"
+          [options]="orgIdOptions$ | async" optionLabel="label" optionValue="value" [submitted]="submitted">
+        </app-dropdown>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <app-dropdown label="角色編號/名稱" controlName="role_no" [control]="queryForm.controls.role_no"
+          [options]="tblRoleOptions$ | async" optionLabel="label" optionValue="value" [submitted]="submitted">
+        </app-dropdown>
+      </div>
+
+      <div class="col-12">
+        <div class="p-4 border-round-xl bg-gray-50 border-1 border-200">
+          <div class="grid">
+            <div class="col-12">
+              <app-multi-select #userSelect label="欲申請權限之人員 (可多選)" controlName="user_NoList"
+                [control]="queryForm.controls.user_NoList" [options]="tblUserOptions$ | async" optionLabel="label"
+                optionValue="value" [submitted]="submitted" [maxSelectedLabels]="1" display="chip">
+              </app-multi-select>
+            </div>
+
+            <div class="col-12 mt-2" *ngIf="(queryForm.get('user_NoList')?.value?.length || 0) > 0">
+              <div class="flex flex-wrap gap-2 p-3 bg-white border-round-lg shadow-1 min-h-4rem align-items-center">
+                <ng-container *ngFor="let userId of queryForm.get('user_NoList')?.value">
+                  <p-chip [label]="getUserLabel(userId)" [removable]="true" (onRemove)="removeUser(userId)">
+                  </p-chip>
+                </ng-container>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <app-dropdown label="申請人" controlName="user_No" [control]="queryForm.controls.user_No"
+          [options]="tblUserOptions$ | async" optionLabel="label" optionValue="value" [submitted]="submitted">
+        </app-dropdown>
+      </div>
+
+      <div class="col-12 flex justify-content-center gap-3 mt-5 pt-4 border-top-1 surface-border">
+        <!-- <p-button label="重設表單" icon="pi pi-refresh" severity="secondary" [outlined]="true" class="w-full md:w-auto">
+        </p-button>
+        <p-button label="匯出 PDF 報表" icon="pi pi-file-pdf" severity="danger" [loading]="isPdfExporting()"
+          (onClick)="onExportPDF()" class="w-full md:w-auto">
+        </p-button>
+        <p-button label="匯出 Excel" icon="pi pi-file-excel" severity="success" [loading]="isXlsxExporting()"
+          (onClick)="onExportXLSX()" class="w-full md:w-auto">
+        </p-button> -->
+      </div>
+    </div>
+  </form>
+</div>

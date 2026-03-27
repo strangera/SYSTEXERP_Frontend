@@ -48,10 +48,13 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
   @Input() optionGroupLabel = 'label'; // 分組的標籤欄位
   @Input() optionGroupChildren = 'items'; // 分組的子項目欄位
   @Input() selectedItemsLabel?: string;
-  @Input() maxSelectedLabels = 3; // 預設值，可被覆寫
+  @Input() maxSelectedLabels: number | null = 3; // 預設值，可被覆寫
   @Input() filter = true;
   @Input() dataKey = this.optionValue;
   @Input() showClear = true;
+  @Input() display: string | 'comma' | 'chip' = 'comma';
+  @Input() styleClass = '';
+
   private _options: any[] = [];
 
   ngOnInit(): void {

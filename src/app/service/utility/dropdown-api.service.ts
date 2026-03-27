@@ -51,6 +51,7 @@ import {
   Pos2013LogoRequest,
   Pos2013Query,
   Sys1000Query,
+  Sys5000SubModuleItem,
   TalentByContractDateItem,
   TalentByContractDateQuery,
   TalentChargeItem,
@@ -742,6 +743,43 @@ export class DropdownApiService {
   /** 查詢洽談人員資料表(TBLUSER) */
   queryTblUser(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>('/queryTBLUSER_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢子模組代碼(SYS5000) */
+  querySys5000SubModuleNo(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Sys5000SubModuleItem>('/querySYS5000SubModuleNo_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢子模組代碼(SYS5000) */
+  querySys5000SubModuleNoGroup(): Observable<Option[] | null> {
+    return this.http.post<ApiResponse<Sys5000SubModuleItem[]>>(`${this.apiUrl}/querySYS5000SubModuleNo_DropDownList`, {}).pipe(
+      map(response => {
+        const data = response?.Data;
+        if (!data) return null;
+
+        const grouped = data.reduce((acc, item) => {
+          const key = item.module_no;
+          if (!acc[key]) {
+            acc[key] = {
+              label: `${item.module_no} - ${item.module_name}`,
+              value: item.module_no,
+              items: []
+            };
+          }
+          acc[key].items.push({
+            ...item,
+            label: `${item.No} - ${item.Name}`,
+            value: item.No
+          });
+          return acc;
+        }, {} as Record<string, any>);
+
+        return Object.values(grouped);
+      }),
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
