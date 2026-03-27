@@ -262,7 +262,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       pod_back_edate: Date;
     } = {
       pod_no: selected.CampaignId,
-      pod_desc: selected.CampaignName,
+      pod_desc: selected.CampaignId,
       pod_sdate: new Date(selected.StartTime),
       pod_edate: new Date(selected.EndTime),
       pod_back_sdate : new Date(selected.BackRedeemStartTime),
