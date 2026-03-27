@@ -2,7 +2,7 @@ import { NgIf } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Option } from '@service/utility/dropdown-api.model';
@@ -31,7 +31,6 @@ import { finalize } from 'rxjs';
 })
 export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   private validationService = inject(ValidationService);
-  private translate = inject(TranslateService);
   private dropdownApiService = inject(DropdownApiService);
   private ass13010Service = inject(ASS13010Service);
   accordionTabCss = '';
@@ -365,51 +364,71 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     return null;
   }
 
+  private buildInsertPayload(raw: Record<string, unknown>): InsertASS13010Request {
+    // 表單欄位名稱 => API request 欄位（InsertASS13010Request）
+    return {
+      ASSET_ID: raw['assetsCode'] != null && raw['assetsCode'] !== '' ? String(raw['assetsCode']) : null,
+      GOODS_ID: raw['itemCode'] != null && raw['itemCode'] !== '' ? String(raw['itemCode']) : null,
+      ASSET_STATUS: raw['assetsStatus'] != null && raw['assetsStatus'] !== '' ? String(raw['assetsStatus']) : null,
+      DEPRE_YN: raw['assetsType'] != null && raw['assetsType'] !== '' ? String(raw['assetsType']) : null,
+      ORI_ASSET_ID:
+        raw['original_assetsCode'] != null && raw['original_assetsCode'] !== ''
+          ? String(raw['original_assetsCode'])
+          : null,
+      SUBPOENA_ID:
+        raw['purchaseNumber'] != null && raw['purchaseNumber'] !== '' ? String(raw['purchaseNumber']) : null,
+      GET_DATE: this.toDateString(raw['purchaseDate'] as Date | string | null),
+      GET_COST: raw['purchasePrice'] != null && raw['purchasePrice'] !== '' ? Number(raw['purchasePrice']) : null,
+      SUPPLIER_ID: raw['supplierCode'] != null && raw['supplierCode'] !== '' ? String(raw['supplierCode']) : null,
+      STYPE_D: raw['accounting_Borrow'] != null && raw['accounting_Borrow'] !== '' ? String(raw['accounting_Borrow']) : null,
+      STYPE_C: raw['accounting_Credit'] != null && raw['accounting_Credit'] !== '' ? String(raw['accounting_Credit']) : null,
+      BILL_DATE: this.toDateString(raw['entryDate'] as Date | string | null),
+      EQUIP_ID: raw['deviceCode'] != null && raw['deviceCode'] !== '' ? String(raw['deviceCode']) : null,
+      STYPE_ID: raw['depreciation'] != null && raw['depreciation'] !== '' ? String(raw['depreciation']) : null,
+      STYPE_ID2:
+        raw['totalDepreciation'] != null && raw['totalDepreciation'] !== '' ? String(raw['totalDepreciation']) : null,
+      EXP_YEAR: raw['depreciationLife'] != null && raw['depreciationLife'] !== '' ? Number(raw['depreciationLife']) : null,
+      RESI_VALUE: raw['residual'] != null && raw['residual'] !== '' ? Number(raw['residual']) : null,
+      EXP_MONTH:
+        raw['depreciationLifeMM'] != null && raw['depreciationLifeMM'] !== '' ? Number(raw['depreciationLifeMM']) : null,
+      ORI_IMPORT_DEPRE_MON:
+        raw['amortizedMonth'] != null && raw['amortizedMonth'] !== '' ? Number(raw['amortizedMonth']) : null,
+      ORI_IMPORT_DEPRE_AMT:
+        raw['amortizedAmount'] != null && raw['amortizedAmount'] !== '' ? Number(raw['amortizedAmount']) : null,
+      HOLD_EMP_ID: raw['keepingPerson'] != null && raw['keepingPerson'] !== '' ? String(raw['keepingPerson']) : null,
+      HOLD_ORG_ID: raw['keepingUnit'] != null && raw['keepingUnit'] !== '' ? String(raw['keepingUnit']) : null,
+      USE_EMP_ID: raw['user'] != null && raw['user'] !== '' ? String(raw['user']) : null,
+      USE_ORG_ID: raw['userUnit'] != null && raw['userUnit'] !== '' ? String(raw['userUnit']) : null,
+      LOCATION_ID: raw['locationCode'] != null && raw['locationCode'] !== '' ? String(raw['locationCode']) : null,
+      FIX_N: raw['maintenanceCode'] != null && raw['maintenanceCode'] !== '' ? String(raw['maintenanceCode']) : null,
+      HANDLE_DATE: this.toDateString(raw['disposalDate'] as Date | string | null),
+      HANDLE_VENDOR:
+        raw['dispose_Manufacturers'] != null && raw['dispose_Manufacturers'] !== ''
+          ? String(raw['dispose_Manufacturers'])
+          : null,
+      HANDLE_VID:
+        raw['dispose_Manufacturers_Summons'] != null && raw['dispose_Manufacturers_Summons'] !== ''
+          ? String(raw['dispose_Manufacturers_Summons'])
+          : null,
+      ONSALE_AMT: raw['soldAmount'] != null && raw['soldAmount'] !== '' ? Number(raw['soldAmount']) : null,
+      Warranty_YEAR: raw['warrantyDays'] != null && raw['warrantyDays'] !== '' ? Number(raw['warrantyDays']) : null,
+      DEPRE_SDATE:
+        raw['amortizationYearMonth'] != null && raw['amortizationYearMonth'] !== '' ? String(raw['amortizationYearMonth']) : null,
+      HANDLE_NOTE: raw['disposeRemark'] != null && raw['disposeRemark'] !== '' ? String(raw['disposeRemark']) : null,
+      PURCHASE_NOTES: raw['remark'] != null && raw['remark'] !== '' ? String(raw['remark']) : null,
+      CRT_USR_No: this.user?.user_No ?? null,
+      CRT_USR_Name: this.user?.user_Name ?? null,
+    };
+  }
+
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
             const raw = frm.getRawValue() as Record<string, unknown>;
-            // 表單→API 對應見計畫；表單無欄位不送出：MID, STO_NO, FORG_ID, HANDLE_VKEY, DEPRE_ID, GET_COST_TAX, USE_STATUS, DEPRE_AMT, ORI_ORG_ID, ORI_EMP_ID, ASSET_INS_ID, FIX_AMT, SOURCE_STATUS, SUBCHECK_ID, FIR_GET_COST, FIR_EXP_YEAR, LEND_TYPE, REDU_CODE, ONSALE_RATE, ONSALE_NORATE_AMT, EXTEND_EXP_YEAR, DAMAGEM_ID。remark→PURCHASE_NOTES；amortizedMonth→ORI_IMPORT_DEPRE_MON、amortizedAmount→ORI_IMPORT_DEPRE_AMT。
-            const payload: InsertASS13010Request = {
-              ASSET_ID: raw['assetsCode'] != null && raw['assetsCode'] !== '' ? String(raw['assetsCode']) : null,
-              GOODS_ID: raw['itemCode'] != null && raw['itemCode'] !== '' ? String(raw['itemCode']) : null,
-              ASSET_STATUS: raw['assetsStatus'] != null && raw['assetsStatus'] !== '' ? String(raw['assetsStatus']) : null,
-              DEPRE_YN: raw['assetsType'] != null && raw['assetsType'] !== '' ? String(raw['assetsType']) : null,
-              ORI_ASSET_ID: raw['original_assetsCode'] != null && raw['original_assetsCode'] !== '' ? String(raw['original_assetsCode']) : null,
-              SUBPOENA_ID: raw['purchaseNumber'] != null && raw['purchaseNumber'] !== '' ? String(raw['purchaseNumber']) : null,
-              GET_DATE: this.toDateString(raw['purchaseDate'] as Date | string | null),
-              GET_COST: raw['purchasePrice'] != null && raw['purchasePrice'] !== '' ? Number(raw['purchasePrice']) : null,
-              SUPPLIER_ID: raw['supplierCode'] != null && raw['supplierCode'] !== '' ? String(raw['supplierCode']) : null,
-              STYPE_D: raw['accounting_Borrow'] != null && raw['accounting_Borrow'] !== '' ? String(raw['accounting_Borrow']) : null,
-              STYPE_C: raw['accounting_Credit'] != null && raw['accounting_Credit'] !== '' ? String(raw['accounting_Credit']) : null,
-              BILL_DATE: this.toDateString(raw['entryDate'] as Date | string | null),
-              EQUIP_ID: raw['deviceCode'] != null && raw['deviceCode'] !== '' ? String(raw['deviceCode']) : null,
-              STYPE_ID: raw['depreciation'] != null && raw['depreciation'] !== '' ? String(raw['depreciation']) : null,
-              STYPE_ID2: raw['totalDepreciation'] != null && raw['totalDepreciation'] !== '' ? String(raw['totalDepreciation']) : null,
-              EXP_YEAR: raw['depreciationLife'] != null && raw['depreciationLife'] !== '' ? Number(raw['depreciationLife']) : null,
-              RESI_VALUE: raw['residual'] != null && raw['residual'] !== '' ? Number(raw['residual']) : null,
-              EXP_MONTH: raw['depreciationLifeMM'] != null && raw['depreciationLifeMM'] !== '' ? Number(raw['depreciationLifeMM']) : null,
-              ORI_IMPORT_DEPRE_MON: raw['amortizedMonth'] != null && raw['amortizedMonth'] !== '' ? Number(raw['amortizedMonth']) : null,
-              ORI_IMPORT_DEPRE_AMT: raw['amortizedAmount'] != null && raw['amortizedAmount'] !== '' ? Number(raw['amortizedAmount']) : null,
-              HOLD_EMP_ID: raw['keepingPerson'] != null && raw['keepingPerson'] !== '' ? String(raw['keepingPerson']) : null,
-              HOLD_ORG_ID: raw['keepingUnit'] != null && raw['keepingUnit'] !== '' ? String(raw['keepingUnit']) : null,
-              USE_EMP_ID: raw['user'] != null && raw['user'] !== '' ? String(raw['user']) : null,
-              USE_ORG_ID: raw['userUnit'] != null && raw['userUnit'] !== '' ? String(raw['userUnit']) : null,
-              LOCATION_ID: raw['locationCode'] != null && raw['locationCode'] !== '' ? String(raw['locationCode']) : null,
-              FIX_N: raw['maintenanceCode'] != null && raw['maintenanceCode'] !== '' ? String(raw['maintenanceCode']) : null,
-              HANDLE_DATE: this.toDateString(raw['disposalDate'] as Date | string | null),
-              HANDLE_VENDOR: raw['dispose_Manufacturers'] != null && raw['dispose_Manufacturers'] !== '' ? String(raw['dispose_Manufacturers']) : null,
-              HANDLE_VID: raw['dispose_Manufacturers_Summons'] != null && raw['dispose_Manufacturers_Summons'] !== '' ? String(raw['dispose_Manufacturers_Summons']) : null,
-              ONSALE_AMT: raw['soldAmount'] != null && raw['soldAmount'] !== '' ? Number(raw['soldAmount']) : null,
-              Warranty_YEAR: raw['warrantyDays'] != null && raw['warrantyDays'] !== '' ? Number(raw['warrantyDays']) : null,
-              DEPRE_SDATE: raw['amortizationYearMonth'] != null && raw['amortizationYearMonth'] !== '' ? String(raw['amortizationYearMonth']) : null,
-              HANDLE_NOTE: raw['disposeRemark'] != null && raw['disposeRemark'] !== '' ? String(raw['disposeRemark']) : null,
-              PURCHASE_NOTES: raw['remark'] != null && raw['remark'] !== '' ? String(raw['remark']) : null,
-              CRT_USR_No: this.user?.user_No ?? null,
-              CRT_USR_Name: this.user?.user_Name ?? null,
-            };
+            // 表單→API 對應見計畫；表單無欄位不送出：MID, STO_NO, NOTES, FORG_ID, HANDLE_VKEY, DEPRE_ID, GET_COST_TAX, USE_STATUS, DEPRE_AMT, ORI_ORG_ID, ORI_EMP_ID, ASSET_INS_ID, FIX_AMT, SOURCE_STATUS, SUBCHECK_ID, FIR_GET_COST, FIR_EXP_YEAR, LEND_TYPE, REDU_CODE, ONSALE_RATE, ONSALE_NORATE_AMT, EXTEND_EXP_YEAR, DAMAGEM_ID。remark→PURCHASE_NOTES；amortizedMonth→ORI_IMPORT_DEPRE_MON、amortizedAmount→ORI_IMPORT_DEPRE_AMT。
+            const payload: InsertASS13010Request = this.buildInsertPayload(raw);
             this.ass13010Service
               .insertASS13010(payload)
               .pipe(
@@ -435,8 +454,30 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            // TODO: this.storeService.updateMachine(frm.value).subscribe(...)
-            this.messageService.successBubble(this.translate.instant('updated-successfully'));
+            const raw = frm.getRawValue() as Record<string, unknown>;
+            // 表單→API 對應見計畫；表單無欄位不送出同 Create 分支。
+            const payload: InsertASS13010Request = this.buildInsertPayload(raw);
+            this.ass13010Service
+              .insertASS13010(payload)
+              .pipe(
+                finalize(() => {
+                  this.loading = false;
+                }),
+                untilDestroyed(this),
+              )
+              .subscribe({
+                next: res => {
+                  if (res.Status !== '0000') {
+                    this.messageService.errorBubble(res.Message ?? res.Error?.Message ?? '新增失敗');
+                    return;
+                  }
+                  this.messageService.successBubble(res.Data?.Message ?? res.Message ?? '新增成功');
+                  this.onCancel();
+                },
+                error: err => {
+                  this.messageService.errorBubble(err?.message ?? '新增失敗');
+                },
+              });
           }
           break;
       }
