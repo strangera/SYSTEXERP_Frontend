@@ -154,8 +154,8 @@ export class FIN63030Component extends BasicQueryPageComponent<any> implements A
           const list = Array.isArray(res?.Data) ? res.Data : [];
 
           const sorted = list.slice().sort((a: any, b: any) => {
-            const aId = String(a?.BNK_id ?? '').trim();
-            const bId = String(b?.BNK_id ?? '').trim();
+            const aId = String(a?.BNK_No ?? '').trim();
+            const bId = String(b?.BNK_No ?? '').trim();
 
             const aNum = Number(aId);
             const bNum = Number(bId);
@@ -170,14 +170,14 @@ export class FIN63030Component extends BasicQueryPageComponent<any> implements A
           });
 
           this.CompanyAccNoOptions = sorted.map((x: any) => ({
-            label: `${x.BNK_id}-${x.BNK_AccName}`,
-            value: x.BNK_id,
+            label: `${x.BNK_No}-${x.BNK_AccName}`,
+            value: x.BNK_No,
             raw: x,
           }));
 
           this.CompanyBankNoOptions = sorted.map((x: any) => ({
-            label: `${x.BNK_id}-${x.BNK_AccName}`,
-            value: x.BNK_id,
+            label: `${x.BNK_No}-${x.BNK_AccName}`,
+            value: x.BNK_No,
             raw: x,
           }));
         },
