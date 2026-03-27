@@ -597,3 +597,10 @@ export interface Sys5000SubModuleItem extends IDropdownItem {
   /** 排列順序 */
   prog_sort: number | null;
 }
+
+/** * TLS55020 專用查詢參數
+ */
+export interface Tls55020Query {
+  /** 交易日期 (YYYY-MM-DD) */
+  TXN_Date: string;
+}

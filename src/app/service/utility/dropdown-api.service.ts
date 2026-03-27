@@ -66,6 +66,7 @@ import {
   TALPORDERMQuery,
   TALPORDERMQueryForShare,
   TblUserOrgidItem,
+  Tls55020Query,
   TLTTALENTItem,
   TLTTALENTQuery,
   TlttalentTltSpaceItem
@@ -873,5 +874,24 @@ export class DropdownApiService {
     return this.queryAndMapDropdown<IDropdownItem>('/queryCSS2001_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
+  }
+  /** 查詢當日交易日期有特殊條碼的機台 (TLS55020) */
+  queryPos1002Tls55020(body: Tls55020Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, Tls55020Query>(
+      '/queryPOS1002_TLS55020_DropDownList',
+      'No',
+      'Name',
+      body
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢當日交易日期有特殊條碼的專櫃 (TLS55020) */
+  queryTltTalentTls55020(body: Tls55020Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, Tls55020Query>(
+      '/queryTLTTALENT_TLS55020_DropDownList',
+      'No',
+      'Name',
+      body
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 }
