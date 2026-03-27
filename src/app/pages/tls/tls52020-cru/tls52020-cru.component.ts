@@ -177,7 +177,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
           const buyPrc = newData.PLU_SalePrc_UNI || 0;
           const salePrc = newData.PLU_SalePrc || 0;
           const taxType = newData.PLU_StockTaxType;
-          const subQty = 1; // 預設數量為 1
+          const subQty = 0; // 預設數量為 1
 
           const buyNet = Math.round(subQty * buyPrc);
           const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0; // 計算稅額
@@ -564,7 +564,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       const buyPrc = item.PLU_SalePrc_UNI || 0;
       const salePrc = item.PLU_SalePrc || 0;
       const taxType = item.PLU_StockTaxType;
-      const subQty = 1; // 預設數量為 1
+      const subQty = 0; // 預設數量為 1
 
       const buyNet = Math.round(subQty * buyPrc);
       const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;

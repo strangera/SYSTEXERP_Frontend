@@ -65,9 +65,13 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
     super();
     this.onScroll = this.onScroll.bind(this);
   }
+  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges) {
     // 第一次獲取data
     if (changes['data'] && this.data !== changes['data'].previousValue) {
+      if (this.lastQueryBody) {
+        this.hasSearched = true;
+      }
       const flatData = this.flattenData(this.data);
 
       if (flatData.length >= 30) {

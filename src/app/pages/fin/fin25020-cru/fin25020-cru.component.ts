@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { FIN25020Service, QueryBankAccountResponse, QueryRemitDetailResponse, QueryUnremittedPAMResponse } from '../../../service/api/fin/fin25020.service';
+import { FIN25020Service, QueryBankAccountResponse, QueryRemitDetailResponse, QueryRemitHeaderResponse, QueryUnremittedPAMResponse } from '../../../service/api/fin/fin25020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -44,6 +44,11 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     TransferDate: [new Date(), [Validators.required]], // 匯款日期（預設系統日期，可修改）
     BNK_id: [null as number | null, [Validators.required]],
     TransferSourceNo: ['', [Validators.required, Validators.maxLength(20)]], // 匯款來源單號
+    // 檢視模式專用欄位（永遠 disabled）
+    BankInfo: [{ value: '', disabled: true }],   // 付款銀行代號 (含銀行名稱)
+    BNK_FULLNAME: [{ value: '', disabled: true }],   // 銀行帳戶全稱
+    VouStatus: [{ value: '', disabled: true }],  // 轉傳票狀態
+    VouNo: [{ value: '', disabled: true }],      // 傳票號碼
   });
 
   // 銀行下拉選項 (從 API 載入)
@@ -77,16 +82,17 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
   // 檢視模式：電匯明細資料
   remitDetailData: QueryRemitDetailResponse[] = [];
   remitDetailColumns: Column[] = [
-    { field: 'VEN_No', header: '廠商編號', visible: true },
-    { field: 'VEN_Name', header: '廠商名稱', visible: true },
+    { field: 'VEN_No', header: '廠商編號', visible: true, align: 'left' },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true, align: 'left' },
     { field: 'ACP_Amt', header: '收/付金額', visible: true, format: formatAmount, align: 'right', isTotal: true },
     { field: 'RMT_Amt', header: '匯款金額', visible: true, format: formatAmount, align: 'right', isTotal: true },
     { field: 'RMT_Fee', header: '廠商負擔匯款手續費', visible: true, format: formatAmount, align: 'right', isTotal: true },
     { field: 'CASH_BACK_AMT', header: '廠商負擔電匯手續費回饋收入', visible: true, format: formatAmount, align: 'right', isTotal: true },
     { field: 'COMP_WIRE_FEE', header: '公司負擔匯款手續費', visible: true, format: formatAmount, align: 'right', isTotal: true },
-    { field: 'BANK_DESC', header: '匯款銀行代號', visible: true },
-    { field: 'RMT_BnkAccNo', header: '銀行帳號', visible: true },
-    { field: 'RMT_BnkAccName', header: '匯款銀行帳戶名稱', visible: true },
+    { field: 'RMT_BNKNO', header: '匯款銀行代號', visible: true, align: 'left' },
+    { field: 'BNK_FULLNAME', header: '銀行名稱', visible: true, align: 'left' },
+    { field: 'RMT_BnkAccNo', header: '銀行帳號', visible: true, align: 'left' },
+    { field: 'RMT_BnkAccName', header: '匯款銀行帳戶名稱', visible: true, align: 'left' },
   ];
 
   constructor(
@@ -120,14 +126,17 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     this.fin25020Service.queryRemitDetail({ WSLIP_NO: headerData.WSLIP_NO })
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.remitDetailData = response.Data;
+        const header: QueryRemitHeaderResponse = response.Data.Header;
+        this.remitDetailData = response.Data.Details;
 
-        // 填入表單資料（header 資訊）
         this.dataForm.patchValue({
-          TransferSourceNo: headerData.WSLIP_NO,
-          CreateDate: headerData.D_Date ? new Date(headerData.D_Date) : new Date(),
-          TransferDate: headerData.RMT_Date ? new Date(headerData.RMT_Date) : new Date(),
-          BNK_id: headerData.BNK_id
+          TransferSourceNo: header.WSLIP_NO,
+          CreateDate: header.D_Date ? new Date(header.D_Date) : new Date(),
+          TransferDate: header.RMT_Date ? new Date(header.RMT_Date) : new Date(),
+          BNK_id: headerData.BNK_id,
+          BankInfo: header.BankInfo ?? '',
+          VouStatus: header.VouStatus ?? '',
+          VouNo: header.VouNo ?? '',
         });
       });
   }
@@ -190,6 +199,25 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
       TransferSourceNo: this.selectedTransferSource.PAM_No,
     });
     this.showTransferSourceDialog = false;
+  }
+
+  formatCreateDate(): string {
+    const date = this.dataForm.controls.CreateDate.value;
+    if (!date) return '';
+    return new Intl.DateTimeFormat('zh-TW', {
+      year: 'numeric', month: 'numeric', day: 'numeric',
+      hour: 'numeric', minute: '2-digit', second: '2-digit',
+      hour12: true
+    }).format(date);
+  }
+
+  formatTransferDate(): string {
+    const date = this.dataForm.controls.TransferDate.value;
+    if (!date) return '';
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
   }
 
   onSubmit(frm: FormGroup): void {

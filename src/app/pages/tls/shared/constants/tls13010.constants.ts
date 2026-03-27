@@ -180,7 +180,7 @@ export const INSTMS_TYPE_OPTIONS = {
   '6': '6',
   '9': '9',
   '12': '12',
-  '14': '14',
+  '24': '24',
 } as const;
 
 //收單行

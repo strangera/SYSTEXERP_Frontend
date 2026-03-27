@@ -40,7 +40,7 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
   // 下拉選單/多選列表的 Options 宣告 (參考查詢頁面)
   Org_IdOptions = this.dropDown.querySys3100(); // 組織代碼
   PayTypeOptions = [{ label: '電匯', value: '1' }, { label: '開票', value: '2' }, { label: '現金', value: '3' }] // 付款方式 1:電匯,2:開票,3:現金
-  VEN_BNK_No_ParamOptions = this.dropDown.queryAps1001NoBranch(); // 匯款銀行代號
+  VEN_BNK_No_ParamOptions = this.dropDown.queryAps1001_DropDownList(); // 匯款銀行代號
   CTRLYNOptions = [{ label: '是', value: 'Y' }, { label: '否', value: 'N' }]; // 票據禁止背書轉讓 (Y/N)
   AccNoOptions = this.dropDown.queryGls1005(); // 會計科目代號
   SubDetailNoOptions = this.dropDown.queryGLS1016(); // 對象別編號
@@ -65,7 +65,7 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
     ACP_ReserveAmt: [{ value: null, disabled: true }], // 保留款金額 (唯讀)
     RetReserveAmt: [{ value: null, disabled: true }], // 退保留款金額 (唯讀)
     VEN_PayType: [null], // 付款方式 (Editable: PayType)
-    VEN_BNK_No: [null], // 匯款銀行代號 (Editable: BankNo, 對應 `VEN_BNK_No`)
+    Full_VEN_BNK_No: [null], // 匯款銀行代號 (Editable: BankNo, 對應 `VEN_BNK_No`)
     VEN_BNK_BranchNo: [{ value: null, disabled: true }], // 匯款銀行分行代號 (唯讀)
     VEN_BankAccountNo: [null], // 銀行帳號 (Editable: BankAcc, 對應 `VEN_BankAccountNo`)
     VEN_AccountName: [null], // 帳戶名稱 (Editable: AccName, 對應 `VEN_AccountName`)
@@ -122,7 +122,7 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
     const updateBody = {
       ACP_No: form.get('ACP_No')?.value,
       PayType: form.get('VEN_PayType')?.value,
-      BankNo: form.get('VEN_BNK_No')?.value,
+      BankNo: form.get('Full_VEN_BNK_No')?.value,
       BankAcc: form.get('VEN_BankAccountNo')?.value,
       AccName: form.get('VEN_AccountName')?.value,
       ExpectPayDate: this.datePipe.transform(form.get('ACP_ExpectPayDate')?.value, 'yyyy-MM-dd') as string, // 假設後端會處理日期格式

@@ -28,9 +28,9 @@
 
           <!-- 匯款單號(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="匯款單號" controlNameStart="WslipNoFrom" controlNameEnd="WslipNoTo"
+            <app-input-text-range label="匯款單號" controlNameStart="WslipNoFrom" controlNameEnd="WslipNoTo"
               [startControl]="queryForm.controls.WslipNoFrom" [endControl]="queryForm.controls.WslipNoTo"
-              [submitted]="submitted"></app-input-number-range>
+              [submitted]="submitted"></app-input-text-range>
           </div>
 
           <!-- 匯款狀態 -->

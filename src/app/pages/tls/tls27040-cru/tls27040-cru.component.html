@@ -48,11 +48,13 @@
           [control]="POS6118dataForm.controls.TXN_No" [submitted]="submitted"></app-input-text>
         <app-calendar class="col-12 md:col-6 lg:col-4" label="銷售日期" controlName="NCML_TxnDate"
           [control]="POS6118dataForm.controls.NCML_TxnDate" [submitted]="submitted" />
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="timeOne" label="銷售時間" controlName="NCML_TxnTime"
+          [control]="POS6118dataForm.controls.NCML_TxnTime" [submitted]="submitted" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="TLT_No"
           [control]="POS6118dataForm.controls.TLT_No" [options]="TLT_NoOptions | async" optionLabel="label"
           optionValue="value" [submitted]="submitted"></app-dropdown>
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="請款日期" controlName="NCML_Date"
-          [control]="POS6118dataForm.controls.NCML_Date" [submitted]="submitted" />
+        <app-calendar class="col-12 md:col-6 lg:col-4" label="請款日期" controlName="NCML_BatCloseDate"
+          [control]="POS6118dataForm.controls.NCML_BatCloseDate" [submitted]="submitted" />
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="支付卡別簡碼" controlName="NCML_PayCrdType"
           [options]="PayCrdTypeOptions" optionLabel="label" optionValue="value"
           [control]="POS6118dataForm.controls.NCML_PayCrdType" [submitted]="submitted" />
@@ -68,8 +70,6 @@
           [control]="POS6118dataForm.controls.NCML_CrdNo" [submitted]="submitted"></app-input-text>
         <app-input-text class="col-12 md:col-6 lg:col-4" label="EDC號碼" controlName="NCML_TmID"
           [control]="POS6118dataForm.controls.NCML_TmID" [submitted]="submitted"></app-input-text>
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="入帳日" controlName="NCML_BatCloseDate"
-          [control]="POS6118dataForm.controls.NCML_BatCloseDate" [submitted]="submitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="授權碼" controlName="NCML_ApprovalCode"
           [control]="POS6118dataForm.controls.NCML_ApprovalCode" [submitted]="submitted"></app-input-text>
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="輸入狀況" controlName="NCML_EntryFg"
@@ -81,8 +81,6 @@
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="分期期數" controlName="NCML_TermNo"
           [options]="TermNoOptions" [control]="POS6118dataForm.controls.NCML_TermNo" [submitted]="submitted"
           optionLabel="label" optionValue="value" />
-        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="timeOne" label="銷售時間" controlName="NCML_TxnTime"
-          [control]="POS6118dataForm.controls.NCML_TxnTime" [submitted]="submitted" />
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" (click)="onCancel()"></app-button>
@@ -109,8 +107,8 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="TLT_No"
           [control]="POS6119dataForm.controls.TLT_No" [options]="TLT_NoOptions | async" optionLabel="label"
           optionValue="value" [submitted]="submitted"></app-dropdown>
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="請款日期" controlName="CTBC_Date"
-          [control]="POS6119dataForm.controls.CTBC_Date" [submitted]="submitted" />
+        <app-calendar class="col-12 md:col-6 lg:col-4" label="請款日期" controlName="CTBC_PayDate"
+          [control]="POS6119dataForm.controls.CTBC_PayDate" [submitted]="submitted" />
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="資料型態" controlName="CTBC_DataType"
           [options]="pos6119TxnFgOptions" optionLabel="label" optionValue="value"
           [control]="POS6119dataForm.controls.CTBC_DataType" [submitted]="submitted" />
@@ -126,8 +124,6 @@
           [control]="POS6119dataForm.controls.CTBC_TxnCode" [submitted]="submitted" />
         <app-input-number class="col-12 md:col-6 lg:col-4" label="交易金額" controlName="CTBC_TxnAmt"
           [control]="POS6119dataForm.controls.CTBC_TxnAmt" [submitted]="submitted" />
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="入帳日" controlName="CTBC_PayDate"
-          [control]="POS6119dataForm.controls.CTBC_PayDate" [submitted]="submitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="授權碼" controlName="CTBC_ApprovalCode"
           [control]="POS6119dataForm.controls.CTBC_ApprovalCode" [submitted]="submitted"></app-input-text>
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="輸入狀況" controlName="CTBC_EntryFg"
@@ -162,8 +158,8 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="TLT_No"
           [control]="POS6119PdataForm.controls.TLT_No" [options]="TLT_NoOptions | async" optionLabel="label"
           optionValue="value" [submitted]="submitted"></app-dropdown>
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="請款日期" controlName="CTBC_Date"
-          [control]="POS6119PdataForm.controls.CTBC_Date" [submitted]="submitted" />
+        <app-calendar class="col-12 md:col-6 lg:col-4" label="請款日期" controlName="CTBC_PayDate"
+          [control]="POS6119PdataForm.controls.CTBC_PayDate" [submitted]="submitted" />
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="卡別" controlName="CRD_Type"
           [options]="CRDTypeOptions" optionLabel="label" optionValue="value"
           [control]="POS6119PdataForm.controls.CRD_Type" [submitted]="submitted" />
@@ -174,8 +170,6 @@
         <app-dropdown [filter]="false" class="col-12 md:col-6 lg:col-4" label="交易類別" controlName="CTBC_TxnType"
           [options]="POS6119P_TxnTypeOptions" [control]="POS6119PdataForm.controls.CTBC_TxnType" [submitted]="submitted"
           optionLabel="label" optionValue="value" />
-        <app-calendar class="col-12 md:col-6 lg:col-4" label="入帳日" controlName="CTBC_PayDate"
-          [control]="POS6119PdataForm.controls.CTBC_PayDate" [submitted]="submitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="EDC號碼" controlName="CTBC_TmID"
           [control]="POS6119PdataForm.controls.CTBC_TmID" [submitted]="submitted"></app-input-text>
         <app-input-text class="col-12 md:col-6 lg:col-4" label="授權碼" controlName="CTBC_ApprovalCode"

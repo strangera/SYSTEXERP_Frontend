@@ -112,8 +112,13 @@ export class TLS2F010TableReportComponent extends BasicPrintDataComponent implem
     super();
     this.onScroll = this.onScroll.bind(this);
   }
+  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges) {
     if (changes['data']) {
+
+      if (this.lastQueryBody) {
+        this.hasSearched = true;
+      }
       this.isAllSelected = false;
       this.selectedItems = [];
       this.virtualData = [];

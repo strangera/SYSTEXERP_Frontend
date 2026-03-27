@@ -51,6 +51,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   private inputChangeSubject = new Subject<Record<string, string>>();
   // 新增標記，判斷是否為第一次點擊
   private initialLoadDone = false;
+
   ngOnInit(): void {
     this.updateControlState(this.control);
     if (this.formGroup) {

@@ -330,6 +330,7 @@
           [showAddButton]="!isViewMode"
           [showBatchDelete]="!isViewMode"
           (dropdownChange)="onLocationDropdownChange($event)"
+          (fieldChange)="onLocationFieldChange($event)"
         ></app-expandable-edit-table>
       </div>
     </p-accordionTab>

@@ -58,19 +58,22 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
   // ----------------------------------------------------------------
   totalRecords = 0;
   data: any[] = [];
+  footerData: any = [];
   lastQueryBody: any | null = null;
   columns: ReportColumn[] = [
     // { field: 'RowNo', header: '序號', visible: false },
     { field: 'ARS_ID', header: '應收ID' },
-    { field: 'ARS_Amt', header: '應收金額', format: formatAmount, align: 'right' },
-    { field: 'PTA_Amt', header: '沖帳金額', format: formatAmount, align: 'right' },
-    { field: 'ARS_BalAmt', header: '應收帳款餘額', format: formatAmount, align: 'right' },
+    { field: 'ARS_Amt', header: '應收金額', format: formatAmount, align: 'right', isTotal: true },
+    { field: 'PTA_Amt', header: '沖帳金額', format: formatAmount, align: 'right', isTotal: true },
+    { field: 'ARS_BalAmt', header: '應收帳款餘額', format: formatAmount, align: 'right', isTotal: true },
     { field: 'ARS_Date', header: '立帳日期', format: formatDate },
     { field: 'PTA_Date', header: '預計收款日', format: formatDate },
-    { field: 'CustInfo', header: '廠商編號' },
+    // { field: 'CustInfo', header: '廠商編號' },
+    { field: 'CustNo', header: '廠商編號' },
+    { field: 'CustName', header: '廠商名稱' },
     { field: 'NoteDesc', header: '摘要' },
     { field: 'VouNo', header: '傳票號碼' },
-    { field: 'PostFlagName', header: '傳票狀態' },
+    { field: 'VouStatus', header: '傳票狀態' },
     { field: 'ARS_StatusName', header: '應收狀態' },
   ];
   // 下拉選單/多選列表的 Options 宣告 (必須與 HTML 中的 options 屬性對應)
@@ -114,57 +117,13 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
         NoteDesc: frm.value.NoteDesc || null,
       };
 
-      this.fin32010Service.queryFIN32010(body)
-        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
-        .subscribe(response => {
-          const rows = response.Data ?? [];
-          // 把狀態代碼轉成文字顯示
-          this.data = rows.map((r: any) => {
-            // ARS_StatusName (既有邏輯)
-            const rawCode = r.ARS_StatusCode;
-            const normalizeCode = (() => {
-              if (rawCode === null || rawCode === undefined) return '';
-              const s = String(rawCode).trim();
-              if (s.toLowerCase() === 'n') return '0';
-              if (s.toLowerCase() === 'y') return '2';
-              if (!isNaN(Number(s))) {
-                const num = Number(s);
-                if (num === 10) return '0';
-                if (num === 20) return '2';
-                return String(num);
-              }
-              return s;
-            })();
-
-            const arsLabel = this.ACP_Status_ParamOptions.find(opt => String(opt.value) === String(normalizeCode))?.label
-              ?? this.ACP_Status_ParamOptions.find(opt => String(opt.value) === String(rawCode))?.label
-              ?? rawCode;
-
-            // PostFlagName mapping: backend returns 0 (未過帳), 1 (已製票), 3 (已過帳)
-            const postRaw = r.PostFlagCode ?? r.PostFlag ?? null;
-            let postLabel = '';
-            if (postRaw === null || postRaw === undefined || String(postRaw).trim() === '') {
-              postLabel = '';
-            } else {
-              const p = Number(String(postRaw).trim());
-              if (!isNaN(p)) {
-                if (p === 0) postLabel = '未過帳';
-                else if (p === 1) postLabel = '已製票';
-                else if (p === 3) postLabel = '已過帳';
-                else postLabel = String(postRaw);
-              } else {
-                postLabel = String(postRaw);
-              }
-            }
-
-            return { ...r, ARS_StatusName: arsLabel, PostFlagName: postLabel };
-          });
-          this.totalRecords = response.TotalCount;
-          this.lastQueryBody = body;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        });
+      this.fin32010Service.queryFIN32010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+        this.data = response.Data ?? [];
+        this.footerData = response.footerData;
+        this.totalRecords = response.TotalCount;
+        this.lastQueryBody = body;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      });
     });
   }
-
-
 }

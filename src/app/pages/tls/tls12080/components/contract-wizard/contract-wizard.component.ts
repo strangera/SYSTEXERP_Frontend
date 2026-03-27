@@ -541,6 +541,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
             building_desc: item.building_desc || '',
             floor_desc: item.floor_desc || '',
             area_desc: item.area_desc || '',
+            tlt_bdate: item.tlt_bdate ? item.tlt_bdate.split('T')[0] : '',
+            tlt_edate: item.tlt_edate ? item.tlt_edate.split('T')[0] : '',
             _status: 'original' as DataStatus
           }));
         }
@@ -1059,6 +1061,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   }
 
   private validateStep1(): boolean {
+    // 清除未填位置編號的空列
+    this.step1Component?.removeEmptyNewRows();
+
     this.wizardState.contractInfo = this.dataForm.getRawValue() as ContractInfo;
 
     const result = this.validatorService.validateStep1(this.dataForm, this.wizardState.locationData);

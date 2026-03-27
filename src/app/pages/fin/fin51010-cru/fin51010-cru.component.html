@@ -51,12 +51,13 @@
         </div>
       </div>
 
-      <app-table-edit title="傳票明細" [data]="data" [columns]="columns" [showDelete]="false" class="mt-3 block"
-        [loading]="loading" [canInsert]="false" [showFooter]="true" [showCheckBox]="false" [disabled]="isFormReadable">
+      <app-table-edit *ngIf="initTable" title="傳票明細" [data]="data" [columns]="columns" [showDelete]="false"
+        class="mt-3 block" [showPaginator]="true" [loading]="loading" [canInsert]="false" [showFooter]="true"
+        [showCheckBox]="false" [disabled]="isFormReadable">
       </app-table-edit>
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
+        <app-button btnType="cancel" [form]="dataForm" (click)="onClear()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>

@@ -1,3 +1,4 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -22,7 +23,7 @@ import { ExcelColumn, ExcelExportService } from './../../../shared/service/excel
   selector: 'app-fin21020',
   templateUrl: './fin21020.component.html',
   standalone: true,
-  imports: [TableReportComponent, DialogComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  imports: [TableReportComponent, DialogComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule, NgIf]
 })
 export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -46,8 +47,8 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     { field: 'Remit_BAmount', header: '金額下限', format: formatAmount },
     { field: 'Remit_UAmount', header: '金額上限', format: formatAmount },
     { field: 'Remit_Fee', header: '廠商負擔電匯手續費', format: formatAmount },
-    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', format: formatAmount },
     { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', format: formatAmount },
+    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', format: formatAmount },
   ];
   bankCodeOptions: IDropdownItem[] = [];
   addButton: AddButton[] = [
@@ -120,8 +121,8 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     { field: 'Remit_BAmount', header: '金額下限', width: 15 },
     { field: 'Remit_UAmount', header: '金額上限', width: 15 },
     { field: 'Remit_Fee', header: '廠商負擔電匯手續費', width: 25 },
-    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', width: 25 },
     { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', width: 30 },
+    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', width: 25 },
   ];
   onExport(rowData: IFin21020Data) {
     this.btnLoading = true;

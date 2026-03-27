@@ -3,13 +3,10 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin52050Service } from '@service/api/fin/fin52050.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
@@ -30,7 +27,6 @@ export interface GLS1003 {
 @Component({
   selector: 'app-fin52050',
   templateUrl: './fin52050.component.html',
-  styleUrl: './fin52050.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -38,10 +34,7 @@ export interface GLS1003 {
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarComponent,
-    DropdownComponent,
     InputTextComponent,
-    InputTextRangeComponent,
     TableComponent,
     TranslateModule
   ]
@@ -54,7 +47,6 @@ export class FIN52050Component extends BasicQueryPageComponent<GLS1003> implemen
     ClassAttr: ['', [Validators.maxLength(1)]], //  大類代碼
     ClassAttrCName: ['', [Validators.maxLength(100)]], // 大類名稱
     ClassAttrEname: ['', [Validators.maxLength(100)]], // 大類英文名稱 (非必填)
-
     ...createPaginationConfig([{ field: 'ClassAttr', order: 1 }]), // 分頁和排序參數
   });
 
@@ -105,7 +97,7 @@ export class FIN52050Component extends BasicQueryPageComponent<GLS1003> implemen
       });
     });
   }
-  // 刪除控制_Grace 9/9: 
+  // 刪除控制_Grace 9/9:
   // 9/9 SA註明: 該作業不可修改/刪除
   onDelete(selectedRows: GLS1003[]) {
     this.messageService.confirm({

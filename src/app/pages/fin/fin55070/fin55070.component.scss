@@ -63,7 +63,11 @@
     }
 
     .p-datatable-tbody > tr {
-      height: 46px; // 跟 virtualScrollItemSize 一致
+      height: 25px; // 跟 virtualScrollItemSize 一致
+    }
+
+    .p-datatable-tbody > tr > td {
+      padding: 4px !important;
     }
 
     .p-selectable-row:not(.p-disabled-row):hover {

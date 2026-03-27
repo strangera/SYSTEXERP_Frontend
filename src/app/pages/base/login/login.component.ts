@@ -1,7 +1,7 @@
 import { NgClass, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { userLogin } from '@shared/models/system/userInfo';
 import { Button, ButtonDirective } from 'primeng/button';
@@ -44,7 +44,8 @@ export class LoginComponent implements OnInit {
     private formBuilder: FormBuilder,
     private notemessage: NotificationService,
     private router: Router,
-  ) {}
+    private route: ActivatedRoute,
+  ) { }
 
   ngOnInit(): void {
     console.log('[LoginComponent] ngOnInit triggered');
@@ -66,11 +67,29 @@ export class LoginComponent implements OnInit {
       return;
     }
 
+    // ===== 先處理 SSO 登出回呼 =====
+    const ssoLogout = this.getQueryParamFromLocation('ssoLogout');
+
+    console.log('[LoginComponent] ssoLogout(from location):', ssoLogout);
+    console.log('[LoginComponent] current href:', window.location.href);
+
+    if (ssoLogout === '1') {
+      console.log('[LoginComponent] 偵測到 ssoLogout=1，執行 ERP 前後端同步登出');
+      this.authService.ssoLogoutAndRedirectToLogin();
+      return;
+    }
+
     const loggedIn = this.authService.isLoggedIn();
     console.log('[LoginComponent] isLoggedIn:', loggedIn);
 
     if (loggedIn) {
-      // ✅ 已登入時，只看「目前網址」有沒有 redirectURL
+      // 避免剛從外站 logout 回來，又自動重新 SSO
+      if (!this.authService.canAutoSSO()) {
+        console.log('[LoginComponent] canAutoSSO = false，停留在 login 頁');
+        return;
+      }
+
+      // 已登入時，只看目前網址有沒有 redirectURL
       const redirect = this.getRedirectFromPreLoginOrLocation();
       console.log('[LoginComponent] redirect (ngOnInit):', redirect);
 
@@ -97,14 +116,14 @@ export class LoginComponent implements OnInit {
         return;
       }
 
-      // ✅ 已登入而且沒有 redirectURL：直接進首頁，不再亂跳到舊的外部網址
+      // 已登入而且沒有 redirectURL：直接進首頁
       this.router.navigate(['/sso/dashboard']);
     }
   }
 
   /**
-   * 取出完整 redirectURL（只看「目前網址」，不再吃 localStorage 舊資料）
-   * 會把外層的 formsflow_id、popup... 一起帶回去
+   * 取出完整 redirectURL（只看目前網址，不吃 localStorage 舊資料）
+   * 會把外層 formsflow_id、popup 等參數一起帶回去
    */
   private getRedirectFromPreLoginOrLocation(): string {
     try {
@@ -113,7 +132,6 @@ export class LoginComponent implements OnInit {
 
       const u = new URL(href);
 
-      // 1. 先抓 redirectURL / redirect 參數
       const rawRedirect =
         u.searchParams.get('redirectURL') ||
         u.searchParams.get('redirecturl') ||
@@ -125,20 +143,19 @@ export class LoginComponent implements OnInit {
         return '';
       }
 
-      // 2. 把外層其餘 query（formsflow_id、popup...）撿起來
       const outerParams = new URLSearchParams(u.search);
       outerParams.delete('redirectURL');
       outerParams.delete('redirecturl');
       outerParams.delete('redirect');
+      outerParams.delete('ssoLogout'); // 避免把 ssoLogout 帶去外站
 
-      const outerQuery = outerParams.toString(); // 例如：formsflow_id=1110&popup=1
+      const outerQuery = outerParams.toString();
 
-      // 3. 處理可能被 encode 過的 redirectURL
       let baseRedirect = rawRedirect;
       try {
         baseRedirect = decodeURIComponent(rawRedirect);
       } catch {
-        // 不是合法的 encode，就當作原字串用
+        // ignore
       }
 
       if (!outerQuery) {
@@ -146,7 +163,6 @@ export class LoginComponent implements OnInit {
         return baseRedirect;
       }
 
-      // 4. 把外層 query 拼回去
       const fullRedirect =
         baseRedirect + (baseRedirect.includes('?') ? '&' : '?') + outerQuery;
 
@@ -170,14 +186,13 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  onSubmit(frm: FormGroup) {
+  onSubmit(frm: FormGroup): void {
     this.submitted = true;
 
     if (frm.invalid) return;
 
     this.loading = true;
 
-    // 登入時不要自動導頁，由這裡決定要外跳或進首頁
     this.authService
       .login(this.loginForm.value as userLogin, { skipNavigate: true })
       .pipe(first(), untilDestroyed(this))
@@ -185,19 +200,16 @@ export class LoginComponent implements OnInit {
         next: () => {
           this.notemessage.successBubble('登入成功');
 
-          // 一樣只看「目前這個網址」的 redirectURL
           const redirect = this.getRedirectFromPreLoginOrLocation();
           console.log('[LoginComponent] redirect (onSubmit):', redirect);
 
           if (redirect) {
-            // 有 redirectURL：先取外部 token，再直跳外部網址
             this.authService
               .getOuterToken()
               .pipe(first(), untilDestroyed(this))
               .subscribe({
                 next: (res) => {
                   const target = this.appendOrReplaceParam(redirect, 'token', res.token);
-                  // 直接導到外部頁（同分頁）
                   window.location.href = target;
                 },
                 error: () => {
@@ -207,7 +219,6 @@ export class LoginComponent implements OnInit {
                 },
               });
           } else {
-            // 沒有 redirectURL：照舊進系統首頁
             this.router.navigate(['/sso/dashboard']);
             this.loading = false;
           }
@@ -215,9 +226,25 @@ export class LoginComponent implements OnInit {
           this.loading = false;
         },
         error: () => {
-          this.loginForm.patchValue({ password: '' }); // 清空密碼
-          this.loading = false; // 必須關閉 loading 狀態，否則按鈕會一直轉
+          this.loginForm.patchValue({ password: '' });
+          this.loading = false;
         },
       });
+  }
+  private getQueryParamFromLocation(key: string): string {
+    try {
+      const u = new URL(window.location.href);
+
+      for (const [k, v] of u.searchParams.entries()) {
+        if (k.toLowerCase() === key.toLowerCase()) {
+          return v;
+        }
+      }
+
+      return '';
+    } catch (err) {
+      console.error('[getQueryParamFromLocation] error:', err);
+      return '';
+    }
   }
 }

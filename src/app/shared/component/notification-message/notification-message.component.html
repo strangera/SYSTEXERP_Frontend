@@ -47,8 +47,6 @@
   </ng-template>
 </p-toast>
 
-
-
 <p-dialog [header]="msgBoxHeader" [(visible)]="msgBoxDisplay" [modal]="true" [closeOnEscape]="true"
   [dismissableMask]="true" (onHide)="hideAndCleanMsgBox();" class="msg-box-dialog">
   <div class="msg-box-content">
@@ -60,3 +58,51 @@
     </button>
   </ng-template>
 </p-dialog>
+
+<!-- (給標籤檔使用) -->
+<p-toast position="bottom-right" key="confirm" [baseZIndex]="9999">
+  <ng-template let-message pTemplate="headless" let-closeFn="closeFn">
+    <section class="flex p-3 gap-3 w-full bg-black-alpha-90 shadow-2"
+      style="border-radius: 10px; border: 1px solid #444; min-width: 350px;">
+      <i class="pi pi-cloud-download text-primary-500 text-2xl"></i>
+      <div class="flex flex-column gap-3 w-full">
+        <div class="flex flex-column gap-1">
+          <p class="m-0 font-semibold text-base text-white">
+            {{ message.summary }}
+          </p>
+          <p class="m-0 text-sm text-400">
+            {{ message.detail }}
+          </p>
+        </div>
+        <div class="flex gap-3 mb-2">
+          <p-button label="另存新檔" icon="pi pi-save" [text]="true" styleClass="p-0 text-primary-500 font-bold"
+            (onClick)="onGlobalConfirmSave()" />
+          <p-button label="取消" [text]="true" styleClass="text-white p-0" (onClick)="onGlobalClearPending()" />
+        </div>
+      </div>
+    </section>
+  </ng-template>
+</p-toast>
+
+<!-- 給錯誤檔使用 -->
+<p-toast position="bottom-right" key="importError" [baseZIndex]="10000">
+  <ng-template let-message pTemplate="headless" let-closeFn="closeFn">
+    <section class="flex p-3 gap-3 w-full">
+      <i class=" pi pi-exclamation-circle text-2xl"></i>
+      <div class="flex flex-column gap-3 w-full">
+        <div class="flex flex-column gap-1">
+          <p class="m-0 font-semibold text-base">{{ message.summary }}</p>
+          <p class="m-0 text-sm text-red-500">{{ message.detail }}</p>
+        </div>
+
+        <div class="flex gap-3 mb-2">
+          <p-button styleClass="p-0" [text]="true" (click)="onDownloadErrorFile(message.data);closeFn($event)">
+            <i class="pi pi-download"></i> 下載錯誤檢查檔
+          </p-button>
+          <p-button label="關閉" [text]="true" styleClass="p-0" [style]="{'color': 'var(--text-color)'
+      }" (onClick)="closeFn($event)" />
+        </div>
+      </div>
+    </section>
+  </ng-template>
+</p-toast>

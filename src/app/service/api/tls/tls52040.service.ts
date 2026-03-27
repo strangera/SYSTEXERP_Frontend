@@ -62,6 +62,7 @@ export interface ITLS52040Data {
   UPD_Date: string; // 變更日期 (ISO 格式字串)
   UPD_USR_No: string; // 變更人員編號
   UPD_USR_Name: string; // 變更人員姓名
+  CanAPRV: boolean; // 可否審核
 }
 
 /** 退貨驗收明細資料介面 (用於 insert/update TLS52040 的 Details 陣列，對應 POS2032) */

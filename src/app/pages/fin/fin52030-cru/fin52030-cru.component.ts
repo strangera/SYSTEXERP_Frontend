@@ -63,6 +63,14 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
 
   public readonly fin52030DetailData = signal<FIN52030DetailData>(Object.create(null));
   private readonly selectedOrgId = signal<string>('100000');
+  /**
+   * 編輯模式用：用於「取消」還原為尚未修改前的表頭/明細狀態
+   */
+  private editOriginalSnapshot: {
+    formValue: Record<string, unknown>;
+    tableData: FIN52030DetailTable[];
+    selectedOrgId: string;
+  } | null = null;
 
   public readonly tableData = signal<FIN52030DetailTable[]>([]);
   public readonly tableLoading = signal<boolean>(!0);
@@ -135,27 +143,40 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
     this.logger.debug(`set init table:`, [data]);
     if (!data.Details?.length) return;
 
+    // 讓 table-edit「新增候選列」的預設 ORG_ID 與原始資料一致
+    const fallbackOrgId = this.selectedOrgId();
+    this.selectedOrgId.set(String(data.Details?.[0]?.ORG_ID ?? fallbackOrgId));
+
     this.dataForm.patchValue({
       TempNo: data.TempNo,
       TempName: data.TempName,
       VouType: data.VouType,
     });
 
-    this.tableData.set(data.Details.map((v, index) => ({
+    const mappedTableData = data.Details.map((v, index) => ({
       ...v,
       AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
       AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
       AccName: this.service.accNoMap().get(String(v.AccNo))?.label,
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
         ?? usrMap.get(String(v.DetailNo))?.label,
-      NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
+      NoteDesc: v.NoteDesc ?? this.service.noteDescMap().get(String(v.AccNo))?.label ?? '',
       SerNo: (index + 1) * 10,
-    })));
+    }));
+
+    this.tableData.set(mappedTableData);
 
     this.logger.debug(`dataEffect:`, [data, this.dataForm.getRawValue(), this.tableData()]);
     if (!accNoMap.size || !vendorMap.size || !usrMap.size || !noteDescMap.size) return;
     // 資料已載入完成，關閉 loading
     this.tableLoading.set(!1);
+
+    // 資料載入完成後，建立快照供「取消」還原
+    this.editOriginalSnapshot = {
+      formValue: this.dataForm.getRawValue(),
+      tableData: mappedTableData.map(row => ({ ...row })),
+      selectedOrgId: this.selectedOrgId(),
+    };
     this.dataEffect.destroy();
   }, { allowSignalWrites: !0 });
 
@@ -169,7 +190,6 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   });
 
   public readonly initEffect = effect(() => {
-    if (!this.isFormCreateable) this.initEffect.destroy();
     const id = this.getId();
     if (typeof id !== 'number' || !Number.isInteger(id)) return;
 
@@ -180,7 +200,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         ...res.Data,
         Details: res.Data?.Details.map(v => ({
           ...v,
-          NoteDesc: this.service.noteDescMap().get(String(v.AccNo))?.value ?? v.NoteDesc,
+          // 「摘要」改為輸入框：以後端 NoteDesc 為主；缺值才用預設值補齊
+          NoteDesc: v.NoteDesc ?? this.service.noteDescMap().get(String(v.AccNo))?.label ?? '',
         })) || [],
       })),
       finalize(() => {
@@ -192,6 +213,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
         if (res.Status !== '0000') return;
         this.tableData.set((res.Data?.Details || []).map((v, index) => ({
           ...v,
+          NoteDesc: v.NoteDesc ?? this.service.noteDescMap().get(String(v.AccNo))?.label ?? '',
           SerNo: (index + 1) * 10,
         })));
       },
@@ -207,8 +229,6 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   ];
 
   public readonly columns = computed<(Omit<EditColumn, 'field'> & { field: keyof FIN52030DetailTable; })[]>(() => {
-    const noteDesc = this.service.noteDescOptions();
-
     return [
       {
         field: 'AccNo',
@@ -233,11 +253,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
       {
         field: 'NoteDesc',
         header: '摘要',
-        type: 'dropdown',
-        disabled: () => this.service.noteDescLoading(),
-        options: noteDesc,
-        optionLabel: 'label',
-        optionValue: 'value',
+        type: 'input',
       },
       {
         field: 'AccAmtD',
@@ -318,7 +334,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
           index,
           AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
           AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
-          NoteDesc: this.service.noteDescMap().get(String(NoteDesc))?.label ?? NoteDesc,
+          NoteDesc: NoteDesc !== undefined && NoteDesc !== null ? String(NoteDesc) : '',
         })),
       } as FIN52030InsertPayload | FIN52030UpdatePayload;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
@@ -361,7 +377,7 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
           // 自動帶入科目名稱
           // result[index].AccName = this.service.accNoMap().get(String(event.value))?.label ?? '';
           // 自動帶入摘要
-          result[index].NoteDesc = this.service.noteDescMap().get(String(event.value))?.value ?? '';
+          result[index].NoteDesc = this.service.noteDescMap().get(String(event.value))?.label ?? '';
           break;
 
         case 'AccAmtD':
@@ -380,10 +396,8 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
           result[index].SubDetailNo = '';
           break;
         case 'NoteDesc':
-          result[index].NoteDesc = String(this.service.noteDescMap()
-            .get(result[index].AccNo)?.data
-            ?.find(d => d.value === event.value)?.label
-            || event.value || '');
+          // input 輸入即直接寫入字串
+          result[index].NoteDesc = event.value !== undefined && event.value !== null ? String(event.value) : '';
           break;
       }
 
@@ -470,6 +484,21 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<FIN52030Data> im
   }
 
   public onCancelClearTable(): void {
-    this.tableData.set([]);
+    // 新增模式：維持既有行為（取消編輯/新增明細：清空表格）
+    if (this.isFormCreateable) {
+      this.tableData.set([]);
+      return;
+    }
+
+    // 編輯模式：還原成尚未修改前的狀態（表頭 + 明細 + 組織代號）
+    if (!this.editOriginalSnapshot) {
+      this.tableData.set([]);
+      return;
+    }
+
+    const snap = this.editOriginalSnapshot;
+    this.dataForm.reset(snap.formValue as any);
+    this.selectedOrgId.set(snap.selectedOrgId);
+    this.tableData.set(snap.tableData.map(row => ({ ...row })));
   }
 }

@@ -241,8 +241,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     this.initializeTableConfigs();
     this.categorizeConditionItems();
-    this.initializeIfEmpty();
     this.refreshDisplayItems();
+    this.initializeIfEmpty();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -250,8 +250,8 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
     // 避免 emit → 父組件寫回 → ngOnChanges → 重複 categorize 的浪費
     if (changes['conditionItems']?.firstChange || changes['commissionType']) {
       this.categorizeConditionItems();
-      this.initializeIfEmpty();
       this.refreshDisplayItems();
+      this.initializeIfEmpty();
     }
 
     // 當契約日期變更時，同步更新新增項目的日期
@@ -348,12 +348,14 @@ export class Step4ConditionComponent implements OnInit, OnChanges {
   }
 
   private getCurrentTypeItemCount(): number {
+    // 使用來源陣列（非 display 陣列），因為 refreshDisplayItems 可能尚未執行
+    const countActive = (items: ConditionItem[]) => items.filter(i => i._status !== 'deleted').length;
     switch (this.commissionType) {
-      case CommissionType.FIXED_RENT: return this.displayFixedRentItems.length;
-      case CommissionType.BASE_RENT_HIGHER: return this.displayBaseRentHigherItems.length;
-      case CommissionType.BASE_COMMISSION: return this.displayBaseCommissionItems.length;
-      case CommissionType.GRADUATED: return this.displayGraduatedItems.length;
-      case CommissionType.BASE_TIER: return this.displayBaseTierItems.length;
+      case CommissionType.FIXED_RENT: return countActive(this.fixedRentItems);
+      case CommissionType.BASE_RENT_HIGHER: return countActive(this.baseRentHigherItems);
+      case CommissionType.BASE_COMMISSION: return countActive(this.baseCommissionItems);
+      case CommissionType.GRADUATED: return countActive(this.graduatedItems);
+      case CommissionType.BASE_TIER: return countActive(this.baseTierItems);
       default: return 0;
     }
   }

@@ -10,6 +10,6 @@ export interface ASS16010Data {
 @Injectable({
     providedIn: 'root'
 })
-export class Ass16010Service {
+export class ASS16010Service {
     constructor() { }
 }

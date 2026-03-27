@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
+import { AsyncPipe, DatePipe, DecimalPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -9,6 +9,7 @@ import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/drop
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { InputNumberModule } from 'primeng/inputnumber';
 import { PanelModule } from 'primeng/panel';
 import { finalize, of, switchMap } from 'rxjs';
 import { APS3009Item, FIN25010Data, FIN25010Service, InsertFIN25010Request, QueryAddFIN25010Request, QueryAddFIN25010Response, QueryDetailFIN25010Request } from '../../../service/api/fin/fin25010.service';
@@ -36,7 +37,9 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     TranslateModule,
     DropdownRangeComponent,
     TableReportComponent,
-    AsyncPipe
+    AsyncPipe,
+    DecimalPipe,
+    InputNumberModule,
   ]
 })
 export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> implements OnInit {
@@ -46,10 +49,10 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     ven_no_e: [null], // 廠客代號(迄)
     ACP_No: [null, Validators.maxLength(14)], // 應付帳款ID
     Voucher_Kind: [null], // 傳票型態
-    VEN_PayType: ['1'], // 付款方式
+    VEN_PayType: [null], // 付款方式
     pageSize: [1780],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'ven_no', order: 1 }]],
+    SortBy: [[{ field: 'ven_no', order: 1 }, { field: 'acp_DATE', order: -1 }]],
 
     // 檢視
     PAM_No: [null],  // 匯款來源單號
@@ -180,24 +183,18 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
 
       // 第一步：先發一個請求拿 TotalCount (pageSize 給 1 即可)
       this.fin25010Service.queryAddFIN25010({ ...queryParams, pageSize: 1, pageIndex: 1 })
-        .pipe(
-          untilDestroyed(this),
-          // 第二步：拿到總筆數後，發起真正的全量查詢
-          switchMap(firstRes => {
-            const total = firstRes.TotalCount || 0;
-            if (total === 0) {
-              return of(firstRes); // 沒資料就直接回傳
-            }
-            // 使用精準的 total 做為 pageSize
-            return this.fin25010Service.queryAddFIN25010({
-              ...queryParams,
-              pageSize: total,
-              pageIndex: 1
-            });
-          }),
-          finalize(() => this.loading = false)
-        )
-        .subscribe(response => {
+        .pipe(untilDestroyed(this), switchMap(firstRes => {
+          const total = firstRes.TotalCount || 0;
+          if (total === 0) {
+            return of(firstRes); // 沒資料就直接回傳
+          }
+          // 使用精準的 total 做為 pageSize
+          return this.fin25010Service.queryAddFIN25010({
+            ...queryParams,
+            pageSize: total,
+            pageIndex: 1
+          });
+        }), finalize(() => this.loading = false)).subscribe(response => {
           this.lastQueryBody = queryParams;
           this.data = response.Data || [];
           this.totalRecords = response.TotalCount;
@@ -226,13 +223,13 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
           ACP_YYYYMM: item.ACP_YYYYMM,
           acp_termno: Number(item.ACP_TERMNO),
           ACP_Amt: Number(item.ACP_Amt),
-          PTA_Date: this.datePipe.transform(item.PTA_Date, 'yyyy-MM-dd') || '',
+          PTA_Date: this.datePipe.transform(this.dataForm.value.ACP_ExpectPayDate, 'yyyy-MM-dd') || '',
           NoteDesc: item.NoteDesc,
           IN_TYPE: item.IN_TYPE,
           Remit_Status: item.Remit_Status
         }));
         const request: InsertFIN25010Request = {
-          D_Date: this.datePipe.transform(this.dataForm.get('ACP_ExpectPayDate')?.value, 'yyyy-MM-dd') || '',
+          D_Date: this.datePipe.transform(new Date(), 'yyyy-MM-dd') || '',
           APS3009: aps3009Items
         };
         this.loading = true; // 記得要打開 loading

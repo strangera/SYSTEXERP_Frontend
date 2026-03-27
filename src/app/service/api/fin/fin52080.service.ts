@@ -128,4 +128,12 @@ export class FIN52080Service {
       tap(res => this.logger.debug('刪除FIN52080結果:', [res])),
     );
   };
+
+  /** 檢查科目代號是否已存在 */
+  public checkAccNoExists(accNo: string): Observable<BaseQueryResponse<boolean>> {
+    return this.http.post<BaseQueryResponse<boolean>>(`${apiUrl}/checkAccNoExists`, { AccNo: accNo }).pipe(
+      take(1),
+      tap(res => this.logger.debug('檢查科目代號結果:', [res])),
+    );
+  }
 }

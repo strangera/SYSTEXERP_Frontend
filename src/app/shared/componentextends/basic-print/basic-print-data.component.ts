@@ -49,13 +49,14 @@ export abstract class BasicPrintDataComponent {
     }
   }
 
-  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, PrintRemark?: boolean, Conditions?: any): void {
+  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, PrintRemark?: boolean, Conditions?: any, PrintColumn?: Column[]): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);
     const userInfo = this.authService.currentUserValue;
     const formattedToday = this.datePipe.transform(new Date(), 'yyyyMMdd');
-    const pdfColumns = columns.map(col => {
+    const printColumns = PrintColumn ? PrintColumn : columns;
+    const pdfColumns = printColumns.map(col => {
       const mappingList = SystemOptionsService.getOptions(col.field);
       let exportFormat: any = [];
       if (col.exportFormat) {
@@ -96,13 +97,14 @@ export abstract class BasicPrintDataComponent {
       (isLoading) => this.exportDialog = isLoading
     ).subscribe();
   }
-  exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, Conditions?: any): void {
+  exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, Conditions?: any, PrintColumn?: Column[]): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string; // 取得程式編號
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`); // 取得查詢條件
     const userInfo = this.authService.currentUserValue;                                      // 取得使用者
     const formattedToday = this.datePipe.transform(new Date(), 'yyyyMMdd');                   // 格式化日期
-    const excelColumns = columns.map(col => {
+    const printColumns = PrintColumn ? PrintColumn : columns;
+    const excelColumns = printColumns.map(col => {
       const mappingList = SystemOptionsService.getOptions(col.field);
       let exportFormat: any = [];
       if (col.exportFormat) {             // 先檢查是否有 exportFormat

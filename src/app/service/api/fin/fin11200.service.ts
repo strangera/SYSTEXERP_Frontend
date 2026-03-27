@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { convertYYYYMMToDate } from '@shared/componentkit/table/table.model';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -22,7 +23,17 @@ export class Fin11200Service {
     ECR_NoList?: string[];
     GUI_StatusList: string[];
   }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/queryFIN11200`, params);
+    return this.http.post(`${this.apiUrl}/queryFIN11200`, params).pipe(
+      map((res: any) => {
+        return {
+          ...res,
+          Data: (res.Data ?? []).map((item: any) => ({
+            ...item,
+            GUI_YYMM: convertYYYYMMToDate(item.GUI_YYMM)
+          }))
+        };
+      })
+    )
   }
 
   /**

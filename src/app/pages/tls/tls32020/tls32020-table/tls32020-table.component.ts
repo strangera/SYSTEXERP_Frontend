@@ -44,8 +44,12 @@ export class TableReportComponent implements OnChanges {
     public readonly tableUtility: TableReportUtilityService,
     private readonly cdr: ChangeDetectorRef
   ) { }
+  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges) {
     if (changes['data']) {
+      if (this.lastQueryBody) {
+        this.hasSearched = true;
+      }
       this.virtualData = [];
       this.groupTotals = {};
       this.updateGroupTotals(this.data);
