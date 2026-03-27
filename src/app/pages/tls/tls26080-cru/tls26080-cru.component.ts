@@ -926,7 +926,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
     if (exampleByApi) {
       this.downloadLoading.set(true);
-      this.service.downloadXLSXExample(true)
+      this.service.downloadXLSXExample(true, {
+        tlt_bdate: this.df().pod_sdate.value,
+        tlt_edate: this.df().pod_edate.value,
+      })
         .pipe(finalize(() => this.downloadLoading.set(false)))
         .subscribe({ next: res => this.logger.debug(`downloadXLSXExample:`, [res]) });
       return;
@@ -968,7 +971,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public onExportBlankExcelTemplate(): void {
     this.downloadLoading.set(true);
-    this.service.downloadXLSXExample(false)
+    this.service.downloadXLSXExample(false, {
+      tlt_bdate: this.df().pod_sdate.value,
+      tlt_edate: this.df().pod_edate.value,
+    })
       .pipe(finalize(() => this.downloadLoading.set(false)))
       .subscribe({
         next: res => this.logger.debug(`downloadXLSXExample blank:`, [res]),
