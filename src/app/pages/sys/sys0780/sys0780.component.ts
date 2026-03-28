@@ -2,7 +2,7 @@ import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { QuerySYS0780Request, QuerySYS0780Response, Sys0780Service } from '@service/api/sys/sys0780.service';
+import { Sys0780Service } from '@service/api/sys/sys0780.service';
 import { Sys5000SubModuleItem } from '@service/utility/dropdown-api.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
@@ -31,14 +31,14 @@ import { DropdownApiService } from './../../../service/utility/dropdown-api.serv
   ],
 })
 // 作業權限申請表
-export class SYS0780Component extends BasicQueryPageComponent<QuerySYS0780Response> implements OnInit {
+export class SYS0780Component extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
     // user_No: [this.authService.currentUserValue?.user_No || null],
     prog_no: [null as Sys5000SubModuleItem | null],
     ...createPaginationConfig([]),
   });
-  lastQueryBody: QuerySYS0780Request | null = null;
-  data: QuerySYS0780Response[] = [];
+  // lastQueryBody: QuerySYS0780Request | null = null;
+  // data: QuerySYS0780Response[] = [];
   totalRecords = 0
   // userNoOptions = this.dropdown.queryTblUser();
   subModuleNoOptions = this.dropdown.querySys5000SubModuleNoGroup();
