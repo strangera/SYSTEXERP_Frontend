@@ -265,8 +265,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       pod_desc: selected.CampaignId,
       pod_sdate: new Date(selected.StartTime),
       pod_edate: new Date(selected.EndTime),
-      pod_back_sdate : new Date(selected.BackRedeemStartTime),
-      pod_back_edate : new Date(selected.BackRedeemEndTime),
+      pod_back_sdate : new Date(selected.DiscountStartTime),
+      pod_back_edate : new Date(selected.DiscountEndTime),
     };
     this.dataForm.patchValue(patch);
     this.logger.debug(`campaignEffect:`, [podDesc, selected]);
@@ -369,8 +369,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { field: 'CampaignName', header: '活動名稱' },
     { field: 'StartTime', header: '活動開始時間', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
     { field: 'EndTime', header: '活動結束時間', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'BackRedeemStartTime', header: '活動兌回日期起日', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'BackRedeemEndTime', header: '活動兌回日期迄日', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'DiscountStartTime', header: '活動兌回日期起日', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'DiscountEndTime', header: '活動兌回日期迄日', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
     { field: 'AccountingType', header: '帳務拆分類別' },
     { field: 'Remark', header: '活動備註' },
   ];
