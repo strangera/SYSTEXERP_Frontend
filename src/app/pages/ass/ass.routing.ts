@@ -67,7 +67,7 @@ export const assRoutes: Routes = [
   // { path: 'ass15040', loadComponent: () => import('./ass15040/ass15040.component').then(m => m.ASS15040Component),data: {progNo:'ASS15040'} }, // 財產目錄之會計科目報表
   // { path: 'ass15050', loadComponent: () => import('./ass15050/ass15050.component').then(m => m.ASS15050Component),data: {progNo:'ASS15050'} }, // 折舊攤提表
   // { path: 'ass15060', loadComponent: () => import('./ass15060/ass15060.component').then(m => m.ASS15060Component),data: {progNo:'ASS15060'} }, // 財產異動記錄查詢
-  // { path: 'ass15070', loadComponent: () => import('./ass15070/ass15070.component').then(m => m.ASS15070Component),data: {progNo:'ASS15070'} }, // 財產進貨清單
+  { path: 'ass15070', loadComponent: () => import('./ass15070/ass15070.component').then(m => m.ASS15070Component), data: { progNo: 'ASS15070' } }, // 財產進貨清單
   // { path: 'ass15080', loadComponent: () => import('./ass15080/ass15080.component').then(m => m.ASS15080Component),data: {progNo:'ASS15080'} }, // 資產重估異動明細表
   { path: 'ass16010', loadComponent: () => import('./ass16010/ass16010.component').then(m => m.ASS16010Component), data: { progNo: 'ASS16010' } }, // 盤點設定
   { path: 'ass16010cru', loadComponent: () => import('./ass16010-cru/ass16010-cru.component').then(m => m.ASS16010CRUComponent), data: { progNo: 'ASS16010' } },

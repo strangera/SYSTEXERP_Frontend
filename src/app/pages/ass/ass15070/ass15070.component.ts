@@ -1,20 +1,25 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-
-// Shared
+import { Component, computed, OnInit, signal, ViewChild } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS15070Service } from '@service/api/ass/ass15070.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ButtonModule } from 'primeng/button';
+import { finalize, Observable } from 'rxjs';
+import { QueryASS15070QueryBody, QueryASS15070Request, QueryASS15070Row } from './ass15070.model';
 
+// 財產進貨清單
 @Component({
   selector: 'app-ass15070',
   templateUrl: './ass15070.component.html',
@@ -28,214 +33,140 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     CalendarRangeComponent,
     DropdownComponent,
     ButtonComponent,
-    TableComponent,
+    ButtonModule,
+    TableReportComponent,
     TranslateModule,
   ],
 })
-export class ASS15070Component extends BasicQpageComponent implements OnInit {
-  queryForm = this.formBuilder.group({
-    bigCategoryCode: [],
-    midCategoryCode: [],
-    smallCategoryCode: [],
-    Querybystatus: [],
-    propertynumber: [],
-    propertytype: [],
-    Itemnumber: [],
-    accountingCodeOptions: [],
-    startbuttontime: [],
-    endbuttontime: [],
-    SPurchasedate: [],
-    EPurchasedate: [],
-    purchaseOrderOptions: [],
-    vendorCode: [],
-    Applicantcode: [],
+export class ASS15070Component extends BasicQueryPageComponent<QueryASS15070Row> implements OnInit {
+  @ViewChild('tableReport') tableReport?: TableReportComponent;
+  public readonly queryForm = this.formBuilder.group({
+    CHECK_DATE_S: new FormControl<Date | null>(null),
+    CHECK_DATE_E: new FormControl<Date | null>(null),
+    SUBPOENA_ID: new FormControl<string | null>(null),
+    SUPPLIER_ID: new FormControl<string | null>(null),
+    EMP_ID: new FormControl<string | null>(null),
+    pageSize: new FormControl<number>(30),
+    pageIndex: new FormControl<number>(1),
   });
-  // Table data
-  data: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'loanNumber', header: '進貨單號', visible: true },
-    { field: 'loanDate', header: '進貨日期', visible: true },
-    { field: 'applicant', header: '申請人', visible: true },
-    { field: 'vendorNumber', header: '廠商編號', visible: true },
-    { field: 'description', header: '說明', visible: true },
-  ];
 
+  public readonly qf = computed(() => this.queryForm.controls);
 
-  // Dropdown options
+  public readonly tableData = signal<QueryASS15070Row[]>([]);
+  public readonly totalRecords = signal<number>(0);
+  public readonly tableLoading = signal<boolean>(false);
+  public lastQueryBody?: QueryASS15070Request;
 
-  usercode: any[] = [];
-  purchaseOrderOptions: any[] = [
-    { value: 1, label: '201410300001' },
-    { value: 2, label: '201410310001' },
-    { value: 3, label: '201410310002' },
-    { value: 4, label: '201410310004' },
-    { value: 5, label: '201410310005' },
-    { value: 6, label: '201410310006' },
-    { value: 7, label: '201411010001' },
-    { value: 8, label: '201411010002' },
-    { value: 9, label: '201411010003' },
-    { value: 10, label: '201411150001' },
-  ];
+  /** 進貨單號／廠商編號／申請人代號下拉：來源未提供，待後端 API */
+  public readonly subpoenaOptions: { label: string; value: string }[] = [];
+  public readonly supplierOptions: { label: string; value: string }[] = [];
+  public readonly applicantOptions: { label: string; value: string }[] = [];
 
-  bigCategoryOptions: any[] = [
-    { value: 1, label: '裝潢工程' },
-    { value: 2, label: '其他工程' },
-    { value: 3, label: '電腦及電子零件產品' },
-    { value: 4, label: '電力及照明系統' },
-    { value: 5, label: '家電家俱設備' },
-    { value: 6, label: '機消空電水零配件' },
-    { value: 7, label: '辦公及營運庶務' },
-    { value: 8, label: '印刷品(非廣告行銷)' },
-    { value: 9, label: '印刷品(廣告行銷)' },
-    { value: 10, label: '衛生及醫療庶務用品' },
-  ];
-  midCategoryOptions: any[] = [
-    { value: 1, label: '室內裝潢工程' },
-    { value: 2, label: '室內裝潢備品' },
-    { value: 3, label: '弱電系統' },
-    { value: 4, label: '房屋及建築設備' },
-    { value: 5, label: '停車場設備' },
-    { value: 6, label: '其他工程' },
-    { value: 7, label: '機電消防工程' },
-    { value: 8, label: '電子產品及零件' },
-    { value: 9, label: '電子儀器設備' },
-    { value: 10, label: '電子儀器設備-資產' },
-  ];
-  smallCategoryOptions: any[] = [
-    { value: 1, label: '機電空調工程' },
-    { value: 2, label: '水電消防工程' },
-    { value: 3, label: '排油煙工程' },
-    { value: 4, label: '商場高壓電節能工程' },
-    { value: 5, label: '商場弱電系統工程' },
-    { value: 6, label: '網路佈線工程' },
-    { value: 7, label: '鐵路自動測試儀' },
-    { value: 8, label: '風車零件' },
-    { value: 9, label: '資收場回收用品' },
-    { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  ];
-  Querybystatus: any[] = [
-    { value: 1, label: '移轉' },
-    { value: 2, label: '報廢除帳' },
-    { value: 3, label: '變賣除帳' },
-    { value: 4, label: '新購' },
-  ];
-  assetCodeOptions: any[] = [
-    { value: 1, label: '1A232300000010000001' },
-    { value: 2, label: '1A232300000020000001' },
-    { value: 3, label: '1A232300000040000001' },
-    { value: 4, label: '1A232300000050000001' },
-    { value: 5, label: '1A232300000060000001' },
-    { value: 6, label: '1A232300000090000001' },
-    { value: 7, label: '1A232400000010000001' },
-    { value: 8, label: '1A232400000040000001' },
-    { value: 9, label: '1A232400000060000001' },
-  ];
-  propertytype
-    : any[] = [
-      { value: 1, label: '合併' },
-      { value: 2, label: '展開' },
-    ];
-  Itemnumber
-    : any[] = [
+  public exportPdfLoading = false;
 
-      { value: 1, label: '3A24210000001' },
-      { value: 2, label: '3A24210000002' },
-      { value: 3, label: '3A24210000003' },
-      { value: 4, label: '3A24210000004' },
-      { value: 5, label: '3A24210000005' },
-      { value: 6, label: '3A24210000006' },
-      { value: 7, label: '3A24210000007' },
-      { value: 8, label: '3A24210000008' },
-      { value: 9, label: '3A24210000009' },
-      { value: 10, label: '3A24210000010' },
-    ];
-  accountingCodeOptions: any[] = [
-    { value: 1, label: '150101' },
-    { value: 2, label: '151101' },
-    { value: 3, label: '151201' },
-    { value: 4, label: '152101' },
-    { value: 5, label: '152201' },
-    { value: 6, label: '153101' },
-    { value: 7, label: '153201' },
-    { value: 8, label: '154101' },
-    { value: 9, label: '154201' },
-    { value: 10, label: '155101' },
+  public readonly columns: ReportColumn[] = [
+    { field: 'SUBPOENA_ID', header: '進貨單號' },
+    { field: 'CHECK_DATE', header: '進貨日期' },
+    { field: 'EMP_ID', header: '申請人' },
+    { field: 'user_Name', header: '申請人姓名' },
+    { field: 'SUPPLIER_ID', header: '廠商編號' },
+    { field: 'VEN_Name', header: '廠商名稱' },
+    { field: 'NOTES', header: '說明' },
   ];
-
-  vendorOptions: any[] = [];
-
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
+    public readonly service: ASS15070Service,
+    private readonly fileExportService: FileExportService,
+    private readonly logger: NGXLogger,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '310038';
-    // Initialize dropdown options
+    this.initializePage('ASS15070', '', this.queryForm, () => this.submitQuery());
+    this.logger.debug('ASS15070 init', [this.queryForm]);
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+  public queryFunction = (body: QueryASS15070QueryBody): Observable<ApiResponse<QueryASS15070Row[]>> => {
+    const raw = this.queryForm.getRawValue();
+    const pageSize = body.pageSize ?? body.PageSize ?? 30;
+    const pageIndex = body.pageIndex ?? body.PageIndex ?? 1;
+    const payload: QueryASS15070Request = {
+      CHECK_DATE_S: raw.CHECK_DATE_S ? raw.CHECK_DATE_S.toISOString() : undefined,
+      CHECK_DATE_E: raw.CHECK_DATE_E ? raw.CHECK_DATE_E.toISOString() : undefined,
+      SUBPOENA_ID: raw.SUBPOENA_ID || undefined,
+      SUPPLIER_ID: raw.SUPPLIER_ID || undefined,
+      EMP_ID: raw.EMP_ID || undefined,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: body.SortBy,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    const cleanPayload = removeEmptyValues(payload as Record<string, unknown>) as QueryASS15070Request;
+    return this.service.queryASS15070(cleanPayload);
+  };
+
+  /** 查詢送出（表單 ngSubmit 與還原查詢狀態皆使用） */
+  public submitQuery(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const raw = this.queryForm.getRawValue();
+      this.lastQueryBody = {
+        CHECK_DATE_S: raw.CHECK_DATE_S ? raw.CHECK_DATE_S.toISOString() : undefined,
+        CHECK_DATE_E: raw.CHECK_DATE_E ? raw.CHECK_DATE_E.toISOString() : undefined,
+        SUBPOENA_ID: raw.SUBPOENA_ID || undefined,
+        SUPPLIER_ID: raw.SUPPLIER_ID || undefined,
+        EMP_ID: raw.EMP_ID || undefined,
+        PageSize: raw.pageSize || 30,
+        PageIndex: raw.pageIndex || 1,
+      } as QueryASS15070Request;
+
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.logger.debug('onSubmit', [this.lastQueryBody]);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          }),
+        )
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.tableData.set(res.Data ?? []);
+            this.totalRecords.set(res.TotalCount ?? 0);
+          },
+        });
+    });
   }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+
+  public onExportPdf(): void {
+    if (!this.lastQueryBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    const raw = this.queryForm.getRawValue();
+    const pageSize = raw.pageSize ?? 30;
+    const pageIndex = raw.pageIndex ?? 1;
+    const meta = this.tableReport?.multiSortMeta ?? [];
+    const sortBy = meta.map(m => ({ field: m.field, order: m.order }));
+    const payload: QueryASS15070Request = {
+      CHECK_DATE_S: raw.CHECK_DATE_S ? raw.CHECK_DATE_S.toISOString() : undefined,
+      CHECK_DATE_E: raw.CHECK_DATE_E ? raw.CHECK_DATE_E.toISOString() : undefined,
+      SUBPOENA_ID: raw.SUBPOENA_ID || undefined,
+      SUPPLIER_ID: raw.SUPPLIER_ID || undefined,
+      EMP_ID: raw.EMP_ID || undefined,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      OrderBy: sortBy[0]?.field,
+      Offset: (pageIndex - 1) * pageSize,
+      SortBy: sortBy.length > 0 ? sortBy : undefined,
+    };
+    const cleanPayload = removeEmptyValues(payload as Record<string, unknown>) as QueryASS15070Request;
+    const export$ = this.service.exportPDFASS15070(cleanPayload);
+    this.fileExportService
+      .executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', isLoading => {
+        this.exportPdfLoading = isLoading;
+      })
+      .subscribe();
   }
 }
