@@ -34,3 +34,32 @@
     }
   }
 }
+
+:host ::ng-deep {
+  /* 針對權限明細內的備註框進行美化 */
+  textarea[pInputTextarea] {
+    background-color: var(--surface-0);
+    border-color: var(--surface-200);
+    box-shadow: none;
+    line-height: 1.5;
+
+    &:focus {
+      border-color: var(--primary-color) !important;
+      background-color: #fff;
+      box-shadow: 0 0 0 2px var(--primary-100);
+    }
+
+    &::placeholder {
+      color: var(--text-color-secondary);
+      opacity: 0.6;
+      font-style: italic;
+    }
+  }
+
+  /* 讓虛線邊框更有質感 */
+  .border-dashed {
+    border-left-style: dashed !important;
+    border-left-width: 1px !important;
+    border-left-color: var(--surface-300) !important;
+  }
+}

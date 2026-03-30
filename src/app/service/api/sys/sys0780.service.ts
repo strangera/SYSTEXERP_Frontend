@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { TreeNode } from '@shared/models/sys/role.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
@@ -9,6 +9,7 @@ export interface PrivilegeOutput {
   prog_no: string;
   function_code: string;
   isEnable: 'Y' | 'N';
+  remark?: string;
 }
 
 @Injectable({
@@ -117,5 +118,21 @@ export class Sys0780Service {
     }
     node.children?.forEach(child => this.getEnabledPrivileges(child, list));
     return list;
+  }
+
+  exportPDFSYS0780(body: any): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportPDFSYS0780`, body,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
+  }
+
+  exportWordSYS0780(body: any): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportWordSYS0780`, body,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      });
   }
 }

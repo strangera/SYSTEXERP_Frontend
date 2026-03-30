@@ -1,6 +1,6 @@
 import { AsyncPipe, CommonModule, DatePipe } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectorRef, Component, OnInit, inject, signal } from '@angular/core';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -11,9 +11,11 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TreeNode } from '@shared/models/sys/role.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ChipModule } from 'primeng/chip';
+import { InputTextareaModule } from 'primeng/inputtextarea';
 import { PanelModule } from 'primeng/panel';
 import { TriStateCheckboxModule } from 'primeng/tristatecheckbox';
 import { finalize } from 'rxjs';
@@ -27,7 +29,7 @@ import { finalize } from 'rxjs';
   imports: [
     TranslateModule, DropdownComponent, CalendarComponent, MultiSelectComponent,
     ReactiveFormsModule, FormsModule, AsyncPipe, ChipModule, CommonModule, PanelModule,
-    TriStateCheckboxModule, CheckboxModule, ButtonModule
+    TriStateCheckboxModule, CheckboxModule, ButtonModule, InputTextareaModule
   ],
   providers: [DatePipe]
 })
@@ -38,6 +40,11 @@ export class SYS0780ReportComponent extends BasicCruPageComponent<unknown> imple
   private readonly dropdown = inject(DropdownApiService);
   private readonly sys0780Service = inject(Sys0780Service);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly fileExportService = inject(FileExportService);
+
+  // 1. 新增導出狀態控制
+  readonly isPdfExporting = signal(false);
+  readonly isWordExporting = signal(false);
 
   readonly queryForm = this.fb.group({
     APPLY_DATE: [new Date(), [Validators.required]],
@@ -113,42 +120,82 @@ export class SYS0780ReportComponent extends BasicCruPageComponent<unknown> imple
     this.queryForm.patchValue({ user_NoList: [] });
   }
 
-  onSubmit(frm: FormGroup) {
-    if (frm.invalid) {
+  /** 遞迴提取包含備註的選取權限 */
+  private extractWithRemark(nodes: TreeNode[], list: PrivilegeOutput[]) {
+    nodes.forEach(node => {
+      // 如果是頁面級別且有勾選 (IsEnable 為 true 或半選)
+      if (node.actions && node.actions.length > 0) {
+        node.actions.forEach(act => {
+          if (act.IsEnable === true) {
+            list.push({
+              prog_no: node.id,
+              function_code: act.id,
+              isEnable: 'Y',
+              remark: node['remark'] // 抓取該程式節點上的備註
+            });
+          }
+        });
+      }
+
+      if (node.children && node.children.length > 0) {
+        this.extractWithRemark(node.children, list);
+      }
+    });
+  }
+
+  // 2. 實作導出方法 (這裡對接 FileExportService)
+  onExportPDF(): void {
+    if (this.queryForm.invalid) {
       this.submitted = true;
+      this.messageService.warnBubble('請填寫完整申請資訊');
       return;
     }
 
-    // 1. 提取權限資料
     const selectedPrivileges: PrivilegeOutput[] = [];
-    this.privilegeTree.forEach(node =>
-      this.sys0780Service.getEnabledPrivileges(node, selectedPrivileges)
-    );
+    this.extractWithRemark(this.privilegeTree, selectedPrivileges);
 
-    // 2. 檢查是否至少勾選了一個功能
     if (selectedPrivileges.length === 0) {
       this.messageService.warnBubble('請至少選擇一項功能權限');
       return;
     }
 
-    // 3. 組裝傳給後端的 Body
     const body = {
-      ...frm.getRawValue(),
-      APPLY_DATE: this.datePipe.transform(frm.value.APPLY_DATE, 'yyyy-MM-dd'),
-      // 如果後端需要 user_NoList 轉成逗號隔開的字串，可在此處理
-      user_nos: frm.value.user_NoList.join(','),
+      ...this.queryForm.getRawValue(),
+      APPLY_DATE: this.datePipe.transform(this.queryForm.value.APPLY_DATE, 'yyyy-MM-dd'),
       privileges: selectedPrivileges
     };
+    console.log(body);
 
-    this.loading = true;
-    this.sys0780Service.submitApplyReport(body)
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => this.loading = false)
-      )
-      .subscribe(res => {
-        this.messageService.successBubble(res.Message || '申請已送出');
-        this.onCancel(); // 回到上一頁或清空
-      });
+    this.sys0780Service.exportPDFSYS0780(body).pipe(untilDestroyed(this), finalize(() => this.isPdfExporting.set(false))).subscribe(res => {
+      // 呼叫你的下載邏輯，例如：this.fileExportService.download(res, '作業權限申請表.pdf');
+    });
+
+    const export$ = this.sys0780Service.exportPDFSYS0780(body);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.isPdfExporting.set(isLoading)).subscribe();
+  }
+
+  onExportWord(): void {
+    if (this.queryForm.invalid) {
+      this.submitted = true;
+      this.messageService.warnBubble('請填寫完整申請資訊');
+      return;
+    }
+
+    const selectedPrivileges: PrivilegeOutput[] = [];
+    this.extractWithRemark(this.privilegeTree, selectedPrivileges);
+
+    if (selectedPrivileges.length === 0) {
+      this.messageService.warnBubble('請至少選擇一項功能權限');
+      return;
+    }
+
+    const body = {
+      ...this.queryForm.getRawValue(),
+      APPLY_DATE: this.datePipe.transform(this.queryForm.value.APPLY_DATE, 'yyyy-MM-dd'),
+      privileges: selectedPrivileges
+    };
+    console.log(body);
+    const export$ = this.sys0780Service.exportWordSYS0780(body);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.doc', (isLoading) => this.isWordExporting.set(isLoading)).subscribe();
   }
 }
