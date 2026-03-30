@@ -49,6 +49,8 @@ export interface ASS13080Detail {
   ID?: number | null;
   ASSET_SALENO?: string | null;
   ASSET_ID?: string | null;
+  /** 1:資產 2:列管品（detailASS13010 等） */
+  DEPRE_YN?: string | null;
   GOODS_ID?: string | null;
   GOODS_NAME?: string | null;
   ASSET_STATUS?: string | null;

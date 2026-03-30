@@ -5,6 +5,7 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11040Service } from '@service/api/ass/ass11040.service';
+import { ASS13010Service } from '@service/api/ass/ass13010.service';
 import { ASS13080Service } from '@service/api/ass/ass13080.service';
 import { DropDownListService, ISYS1000Request, IPOS2013Request } from '@service/utility/dropDownList.service';
 import { QueryASS11040DataWrapper, QueryASS11040Request, QueryASS11040Response } from '@pages/ass/ass11040/ass11040.model';
@@ -16,8 +17,9 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
-import { finalize, map } from 'rxjs';
+import { distinctUntilChanged, finalize, map, switchMap, throwError } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { DetailASS13010Response } from '../ass13010/ass13010.model';
 import {
   ApproveASS13080Request,
   ASS13080Detail,
@@ -109,6 +111,7 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
   vendorOptions: { value: string; label: string }[] = [];
 
   constructor(
+    private readonly ass13010Service: ASS13010Service,
     private readonly ass13080Service: ASS13080Service,
     private readonly dropDownListService: DropDownListService,
     private readonly ass11040Service: ASS11040Service,
@@ -125,12 +128,240 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
     if (this.crudstatus === CRUDStatus.Create) {
       this.dataForm.enable({ emitEvent: false });
       this.disableReadonlyFieldsForCreate();
+      this.wireAssetSelectionOnCreate();
     } else {
       this.dataForm.disable({ emitEvent: false });
     }
 
-    // 由 rowdata 直接帶入（若後端有 detail API 再改成呼叫後端）
     if (this.rowdata) this.patchFormFromRow(this.rowdata as Partial<ASS13080Detail>);
+  }
+
+  /** 新增：選擇資產編號後載入 detailASS13010 + queryFAASSETChooseListASS13060 並帶入唯讀欄位 */
+  private wireAssetSelectionOnCreate(): void {
+    this.df()
+      .assetNo.valueChanges.pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe(v => {
+        const id = (v ?? '').trim();
+        if (!id) {
+          this.clearAssetDerivedFieldsForCreate();
+          return;
+        }
+        this.loadAssetDetailForCreate(id);
+      });
+  }
+
+  /**
+   * 先以 ASSET_ID 查 queryFAASSETChooseListASS13060 取得主鍵 ID，再呼叫 detailASS13010（Swagger 要求 body: { ID }）
+   */
+  private loadAssetDetailForCreate(assetId: string): void {
+    this.loading = true;
+    this.ass13080Service
+      .queryFAASSETChooseListASS13060({
+        ASSET_ID: assetId,
+        PageIndex: 1,
+        PageSize: 10,
+      })
+      .pipe(
+        switchMap(cRes => {
+          if (cRes.Status !== '0000') {
+            return throwError(() => new Error(cRes.Message ?? '載入資產列表失敗'));
+          }
+          const rows = cRes.Data ?? [];
+          const choose =
+            rows.find(r => (r.ASSET_ID ?? '').trim() === assetId) ?? (rows.length > 0 ? rows[0] : null);
+          if (!choose?.ID) {
+            return throwError(() => new Error('查無資產主鍵，無法載入明細'));
+          }
+          return this.ass13010Service.detailASS13010({ ID: String(choose.ID) }).pipe(
+            map(dRes => ({ dRes, choose }))
+          );
+        }),
+        untilDestroyed(this),
+        finalize(() => {
+          this.loading = false;
+        })
+      )
+      .subscribe({
+        next: ({ dRes, choose }) => {
+          if (dRes.Status !== '0000') {
+            this.messageService.errorBubble('操作失敗：' + (dRes.Message ?? '載入資產明細失敗'));
+            return;
+          }
+          const detail = dRes.Data;
+          if (!detail) {
+            this.messageService.warnBubble('查無資產明細');
+            return;
+          }
+          this.applyAssetDetailToForm(detail, choose);
+        },
+        error: (err: unknown) => {
+          const msg = err instanceof Error ? err.message : '請稍後再試';
+          this.messageService.errorBubble('操作失敗：' + msg);
+        },
+      });
+  }
+
+  /** 清空資產帶入欄位（資產編號清空時） */
+  private clearAssetDerivedFieldsForCreate(): void {
+    this.dataForm.patchValue(
+      {
+        goodsId: null,
+        assetStatus: null,
+        assetType: null,
+        acpNo: null,
+        poNo: null,
+        buyDate: null,
+        buyAmt: null,
+        chgAmt: null,
+        vendorNo: null,
+        deviceNo: null,
+        accNoDr: null,
+        accNoCr: null,
+        txnDate: null,
+        deprAccNo: null,
+        accuDeprAccNo: null,
+        deprYears: null,
+        chgYears: null,
+        residualAmt: null,
+        deprDue: null,
+        unamortAmt: null,
+        amortAmt: null,
+        amortMonths: null,
+        keepUserNo: null,
+        keepOrgId: null,
+        useUserNo: null,
+        useOrgId: null,
+        locNo: null,
+        maintContractNo: null,
+        assetRemark: null,
+      },
+      { emitEvent: false }
+    );
+  }
+
+  private computeUnamortAmt(
+    buyAmt: number | null,
+    chgAmt: number | null,
+    amortAmt: number | null
+  ): number | null {
+    const b = buyAmt ?? 0;
+    const c = chgAmt ?? 0;
+    const a = amortAmt ?? 0;
+    const result = b + c - a;
+    return Number.isFinite(result) ? result : null;
+  }
+
+  /** 後端明細欄位 → 表單資產區塊（不含 id、變賣單號、資產編號、變賣欄位） */
+  private buildAssetFieldsFromBackend(row: Partial<ASS13080Detail>) {
+    const depreYn = row.DEPRE_YN;
+    return {
+      goodsId: row.GOODS_ID ?? null,
+      assetStatus: row.ASSET_STATUS ?? null,
+      assetType: depreYn != null && String(depreYn).trim() !== '' ? String(depreYn) : null,
+      acpNo: row.DEPRE_ID ?? null,
+      poNo: row.PO_NO ?? null,
+      buyDate: row.BUY_DATE ? new Date(row.BUY_DATE) : null,
+      buyAmt: row.BUY_AMT ?? null,
+      chgAmt: row.CHG_AMT ?? null,
+      vendorNo: row.VENDOR_NO ?? null,
+      deviceNo: row.DEVICE_NO ?? null,
+      accNoDr: row.ACC_NO_DR ?? null,
+      accNoCr: row.ACC_NO_CR ?? null,
+      txnDate: row.TXN_DATE ? new Date(row.TXN_DATE) : null,
+      deprAccNo: row.DEPR_ACC_NO ?? null,
+      accuDeprAccNo: row.ACCU_DEPR_ACC_NO ?? null,
+      deprYears: row.DEPR_YEARS ?? null,
+      chgYears: row.CHG_YEARS ?? null,
+      residualAmt: row.RESIDUAL_AMT ?? null,
+      deprDue: row.DEPR_DUE ?? null,
+      unamortAmt: row.UNAMORT_AMT ?? null,
+      amortAmt: row.AMORT_AMT ?? null,
+      amortMonths: row.AMORT_MONTHS ?? null,
+      keepUserNo: row.HOLD_EMP_ID ?? null,
+      keepOrgId: row.HOLD_ORG_ID ?? null,
+      useUserNo: row.USE_EMP_ID ?? null,
+      useOrgId: row.USE_ORG_ID ?? null,
+      locNo: row.LOC_NO ?? null,
+      maintContractNo: row.MAINT_CONTRACT_NO ?? null,
+      assetRemark: row.ASSET_REMARK ?? null,
+    };
+  }
+
+  /** detailASS13010（Swagger 欄位）→ 表單資產區塊 */
+  private mapDetailASS13010ToFormFields(d: DetailASS13010Response): {
+    goodsId: string | null;
+    assetStatus: string | null;
+    assetType: string | null;
+    acpNo: string | null;
+    poNo: string | null;
+    buyDate: Date | null;
+    buyAmt: number | null;
+    chgAmt: number | null;
+    vendorNo: string | null;
+    deviceNo: string | null;
+    accNoDr: string | null;
+    accNoCr: string | null;
+    txnDate: Date | null;
+    deprAccNo: string | null;
+    accuDeprAccNo: string | null;
+    deprYears: number | null;
+    chgYears: number | null;
+    residualAmt: number | null;
+    deprDue: number | null;
+    unamortAmt: number | null;
+    amortAmt: number | null;
+    amortMonths: number | null;
+    keepUserNo: string | null;
+    keepOrgId: string | null;
+    useUserNo: string | null;
+    useOrgId: string | null;
+    locNo: string | null;
+    maintContractNo: string | null;
+    assetRemark: string | null;
+  } {
+    const depreYn = d.DEPRE_YN;
+    return {
+      goodsId: d.GOODS_ID ?? null,
+      assetStatus: d.ASSET_STATUS ?? null,
+      assetType: depreYn != null && String(depreYn).trim() !== '' ? String(depreYn) : null,
+      acpNo: d.DEPRE_ID ?? null,
+      poNo: d.SUBPOENA_ID ?? null,
+      buyDate: d.GET_DATE ? new Date(d.GET_DATE) : null,
+      buyAmt: d.GET_COST ?? null,
+      chgAmt: null,
+      vendorNo: d.SUPPLIER_ID ?? null,
+      deviceNo: d.EQUIP_ID ?? null,
+      accNoDr: d.STYPE_D ?? null,
+      accNoCr: d.STYPE_C ?? null,
+      txnDate: d.BILL_DATE ? new Date(d.BILL_DATE) : null,
+      deprAccNo: d.STYPE_ID ?? null,
+      accuDeprAccNo: d.STYPE_ID2 ?? null,
+      deprYears: d.EXP_YEAR ?? null,
+      chgYears: null,
+      residualAmt: d.RESI_VALUE ?? null,
+      deprDue: null,
+      unamortAmt: null,
+      amortAmt: d.TAL_DEPRE_AMT ?? null,
+      amortMonths: d.TAL_DEPRE_MON ?? null,
+      keepUserNo: d.HOLD_EMP_ID ?? null,
+      keepOrgId: d.HOLD_ORG_ID ?? null,
+      useUserNo: d.USE_EMP_ID ?? null,
+      useOrgId: d.USE_ORG_ID ?? null,
+      locNo: d.LOCATION_ID ?? null,
+      maintContractNo: d.FIX_N ?? null,
+      assetRemark: d.NOTES ?? null,
+    };
+  }
+
+  private applyAssetDetailToForm(
+    detail: DetailASS13010Response,
+    chooseRow: QueryFAASSETChooseListASS13060Response
+  ): void {
+    const base = this.mapDetailASS13010ToFormFields(detail);
+    base.chgAmt = chooseRow.ChangeAmt ?? null;
+    base.chgYears = chooseRow.UPD_EXP_YEAR_SUM ?? null;
+    base.unamortAmt = this.computeUnamortAmt(base.buyAmt, base.chgAmt, base.amortAmt);
+    this.dataForm.patchValue(base, { emitEvent: false });
   }
 
   private toDateStr(d: Date | null): string | undefined {
@@ -267,44 +498,21 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
   }
 
   private patchFormFromRow(row: Partial<ASS13080Detail>): void {
-    // 將後端（或查詢 rowdata）欄位對應到表單
+    const asset = this.buildAssetFieldsFromBackend(row);
+    const unamortAmt =
+      row.UNAMORT_AMT ?? this.computeUnamortAmt(asset.buyAmt, asset.chgAmt, asset.amortAmt);
     this.dataForm.patchValue(
       {
         id: row.ID ?? null,
         soldNo: row.ASSET_SALENO ?? null,
         assetNo: row.ASSET_ID ?? null,
-        goodsId: row.GOODS_ID ?? null,
-        assetStatus: row.ASSET_STATUS ?? null,
-        acpNo: row.DEPRE_ID ?? null,
-        poNo: row.PO_NO ?? null,
-        buyDate: row.BUY_DATE ? new Date(row.BUY_DATE) : null,
-        buyAmt: row.BUY_AMT ?? null,
-        chgAmt: row.CHG_AMT ?? null,
-        vendorNo: row.VENDOR_NO ?? null,
-        deviceNo: row.DEVICE_NO ?? null,
-        accNoDr: row.ACC_NO_DR ?? null,
-        accNoCr: row.ACC_NO_CR ?? null,
-        txnDate: row.TXN_DATE ? new Date(row.TXN_DATE) : null,
-        deprAccNo: row.DEPR_ACC_NO ?? null,
-        accuDeprAccNo: row.ACCU_DEPR_ACC_NO ?? null,
-        deprYears: row.DEPR_YEARS ?? null,
-        chgYears: row.CHG_YEARS ?? null,
-        residualAmt: row.RESIDUAL_AMT ?? null,
-        deprDue: row.DEPR_DUE ?? null,
-        unamortAmt: row.UNAMORT_AMT ?? null,
-        amortAmt: row.AMORT_AMT ?? null,
-        amortMonths: row.AMORT_MONTHS ?? null,
-        keepUserNo: row.HOLD_EMP_ID ?? null,
-        useUserNo: row.USE_EMP_ID ?? null,
-        useOrgId: row.USE_ORG_ID ?? null,
-        locNo: row.LOC_NO ?? null,
-        maintContractNo: row.MAINT_CONTRACT_NO ?? null,
+        ...asset,
+        unamortAmt,
         soldDate: row.SOLD_DATE ? new Date(row.SOLD_DATE) : null,
         soldVendorNo: row.SOLD_VENDOR_NO ?? null,
         soldVoucherNo: row.SOLD_VOUCHER_NO ?? null,
         soldAmtTax: row.SOLD_AMT_TAX ?? null,
         soldRemark: row.SOLD_REMARK ?? null,
-        assetRemark: row.ASSET_REMARK ?? null,
       },
       { emitEvent: false }
     );
