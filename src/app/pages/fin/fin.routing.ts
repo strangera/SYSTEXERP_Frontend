@@ -209,7 +209,7 @@ export const finRoutes: Routes = [
   // 部門預算審核作業
   // { path: 'fin41060', loadComponent: () => import('./fin41060/fin41060.component').then(m => m.Fin41060Component),data:{progNo:'Fin41060'} },
   // 預計損益表
-  // { path: 'fin42010', loadComponent: () => import('./fin42010/fin42010.component').then(m => m.FIN42010Component),data:{progNo:'FIN42010'} },
+  { path: 'fin42010', loadComponent: () => import('./fin42010/fin42010.component').then(m => m.FIN42010Component), data: { progNo: 'FIN42010' } },
   // 預算、實績比較表
   { path: 'fin42020', loadComponent: () => import('./fin42020/fin42020.component').then(m => m.FIN42020Component), data: { progNo: 'FIN42020' } },
   // 預算同期比較表
