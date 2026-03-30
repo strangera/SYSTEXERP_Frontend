@@ -56,7 +56,15 @@
               (onSelect)="onSelectFile1($event)" [showCancelButton]="false">
               <ng-template pTemplate="content">
                 <div class="flex align-items-center justify-content-between gap-2">
-                  <span class="flex-1">{{ formFile1?.name || existingFile1 || '尚未選擇檔案' }}</span>
+                  <i class="pi pi-file text-blue-600 text-xl flex-shrink-0"></i>
+                  <div class="flex-1 overflow-hidden" style="text-overflow:ellipsis; white-space:nowrap;">
+                    <a *ngIf="!formFile1 && existingFile1" role="button" (click)="openGalleriaFromSlot(1)"
+                      class="text-blue-600">
+                      {{ existingFile1 }}
+                    </a>
+                    <span *ngIf="formFile1">{{ formFile1.name }}</span>
+                    <span *ngIf="!formFile1 && !existingFile1">尚未選擇檔案</span>
+                  </div>
                   <button *ngIf="formFile1 && !isFormReadable" type="button"
                     class="p-button p-button-text p-button-danger p-button-sm w-auto" (click)="removeFile1()">
                     <i class="pi pi-trash"></i>
@@ -72,7 +80,15 @@
               (onSelect)="onSelectFile2($event)" [showCancelButton]="false">
               <ng-template pTemplate="content">
                 <div class="flex align-items-center justify-content-between gap-2">
-                  <span class="flex-1">{{ formFile2?.name || existingFile2 || '尚未選擇檔案' }}</span>
+                  <i class="pi pi-file text-blue-600 text-xl flex-shrink-0"></i>
+                  <div class="flex-1 overflow-hidden" style="text-overflow:ellipsis; white-space:nowrap;">
+                    <a *ngIf="!formFile2 && existingFile2" role="button" (click)="openGalleriaFromSlot(2)"
+                      class="text-blue-600">
+                      {{ existingFile2 }}
+                    </a>
+                    <span *ngIf="formFile2">{{ formFile2.name }}</span>
+                    <span *ngIf="!formFile2 && !existingFile2">尚未選擇檔案</span>
+                  </div>
                   <button *ngIf="formFile2 && !isFormReadable" type="button"
                     class="p-button p-button-text p-button-danger p-button-sm w-auto" (click)="removeFile2()">
                     <i class="pi pi-trash"></i>
@@ -88,7 +104,15 @@
               (onSelect)="onSelectFile3($event)" [showCancelButton]="false">
               <ng-template pTemplate="content">
                 <div class="flex align-items-center justify-content-between gap-2">
-                  <span class="flex-1">{{ formFile3?.name || existingFile3 || '尚未選擇檔案' }}</span>
+                  <i class="pi pi-file text-blue-600 text-xl flex-shrink-0"></i>
+                  <div class="flex-1 overflow-hidden" style="text-overflow:ellipsis; white-space:nowrap;">
+                    <a *ngIf="!formFile3 && existingFile3" role="button" (click)="openGalleriaFromSlot(3)"
+                      class="text-blue-600">
+                      {{ existingFile3 }}
+                    </a>
+                    <span *ngIf="formFile3">{{ formFile3.name }}</span>
+                    <span *ngIf="!formFile3 && !existingFile3">尚未選擇檔案</span>
+                  </div>
                   <button *ngIf="formFile3 && !isFormReadable" type="button"
                     class="p-button p-button-text p-button-danger p-button-sm w-auto" (click)="removeFile3()">
                     <i class="pi pi-trash"></i>
@@ -108,6 +132,14 @@
     </form>
   </p-panel>
 </div>
+
+<p-galleria [value]="galleriaItems" [(visible)]="visible" [containerStyle]="{ 'max-width': '850px' }"
+  [circular]="true" [fullScreen]="true" [showThumbnails]="false" [autoPlay]="true"
+  [(activeIndex)]="galleriaActiveIndex">
+  <ng-template pTemplate="item" let-item>
+    <img [src]="item.url" alt="Image" style="width: 100%; display: block;" />
+  </ng-template>
+</p-galleria>
 
 <app-ass13040-asset-dialog [(visible)]="dialogVisible" [existingAssetNos]="existingAssetNos"
   (assetsSelected)="onAssetsSelected($event)"></app-ass13040-asset-dialog>

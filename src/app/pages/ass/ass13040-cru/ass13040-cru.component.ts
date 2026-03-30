@@ -27,10 +27,20 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { GalleriaModule } from 'primeng/galleria';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ASS13040AssetDialogComponent } from './ass13040-asset-dialog.component';
+import { environment } from 'src/environments/environment';
+
+interface MediaItem {
+  url: string;
+  type: 'image';
+  name: string;
+  slot: 1 | 2 | 3;
+}
 
 @UntilDestroy()
 @Component({
@@ -52,6 +62,7 @@ import { ASS13040AssetDialogComponent } from './ass13040-asset-dialog.component'
     TranslateModule,
     TableEditComponent,
     FileUploadModule,
+    GalleriaModule,
     ASS13040AssetDialogComponent,
   ],
 })
@@ -87,6 +98,18 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
   existingFile1: string | null = null;
   existingFile2: string | null = null;
   existingFile3: string | null = null;
+
+  // 保留後端回傳的原始路徑/檔名（用於組 URL / 傳回給後端）
+  rawExistingFile1: string | null = null;
+  rawExistingFile2: string | null = null;
+  rawExistingFile3: string | null = null;
+
+  // -----------------------------
+  // 報廢照片預覽（p-galleria）
+  // -----------------------------
+  visible = false;
+  galleriaItems: MediaItem[] = [];
+  galleriaActiveIndex = 0;
 
   editColumns: EditColumn[] = [
     {
@@ -140,6 +163,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
   constructor(
     private readonly ass13040CruService: ASS13040CRUService,
     private readonly dropdownApiService: DropdownApiService,
+    private readonly http: HttpClient,
   ) {
     super();
   }
@@ -227,9 +251,9 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
           SUPPLIER_ID: raw.scrapVendor ?? null,
           APPLY_DATE: raw.scrapDate ? this.formatDate(raw.scrapDate) : null,
           NOTES: raw.remark ?? null,
-          IMAGE_URL1: this.existingFile1 ?? null,
-          IMAGE_URL2: this.existingFile2 ?? null,
-          IMAGE_URL3: this.existingFile3 ?? null,
+          IMAGE_URL1: this.rawExistingFile1 ?? null,
+          IMAGE_URL2: this.rawExistingFile2 ?? null,
+          IMAGE_URL3: this.rawExistingFile3 ?? null,
           Items: items,
         } satisfies InsertASS13040Request)
         : ({
@@ -240,9 +264,9 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
           SUPPLIER_ID: raw.scrapVendor ?? null,
           APPLY_DATE: raw.scrapDate ? this.formatDate(raw.scrapDate) : null,
           NOTES: raw.remark ?? null,
-          IMAGE_URL1: this.existingFile1 ?? null,
-          IMAGE_URL2: this.existingFile2 ?? null,
-          IMAGE_URL3: this.existingFile3 ?? null,
+          IMAGE_URL1: this.rawExistingFile1 ?? null,
+          IMAGE_URL2: this.rawExistingFile2 ?? null,
+          IMAGE_URL3: this.rawExistingFile3 ?? null,
           Items: items,
         } satisfies UpdateASS13040Request);
 
@@ -314,6 +338,13 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
             value: item.No,
             label: `${item.No} - ${item.Name}`,
           }));
+
+          // 若明細已先載入（loadDetail 比 loadDropdowns 更早完成），
+          // table-edit 的 OnPush 子元件可能尚未拿到最新 unitOptions，
+          // 這裡刷新 data 參考以觸發重新渲染。
+          if (this.data?.length) {
+            this.data = [...this.data];
+          }
         },
       });
   }
@@ -348,9 +379,21 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
             assetsType: null, // 畫面欄位「資產類型」：API Response.Master 無對應欄位
             remark: master.NOTES ?? null,
           });
-          this.existingFile1 = master.IMAGE_URL1 ?? null;
-          this.existingFile2 = master.IMAGE_URL2 ?? null;
-          this.existingFile3 = master.IMAGE_URL3 ?? null;
+
+          this.rawExistingFile1 = master.IMAGE_URL1 ?? null;
+          this.rawExistingFile2 = master.IMAGE_URL2 ?? null;
+          this.rawExistingFile3 = master.IMAGE_URL3 ?? null;
+
+          // UI 顯示只保留檔名（跟 cpm12050-cru 同邏輯）
+          this.existingFile1 = this.extractFileName(this.rawExistingFile1);
+          this.existingFile2 = this.extractFileName(this.rawExistingFile2);
+          this.existingFile3 = this.extractFileName(this.rawExistingFile3);
+
+          // galleriaItems 在點擊時才組裝（避免預覽時把顯示用檔名拿去當 URL）
+          this.galleriaItems = [];
+          this.galleriaActiveIndex = 0;
+          this.visible = false;
+
           this.data = this.mapApiDetailsToTable(details);
         },
       });
@@ -385,6 +428,83 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
       TOTAL_AMT: row.TotalAmt ?? 0,
       NOTES: undefined,
     };
+  }
+
+  private toAbsolutePhotoUrl(rawUrl: string): string {
+    const trimmed = rawUrl.trim();
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+
+    // 支援 "~xxx" 或 "/xxx" 類型，統一轉成 `${environment.ApiUrl}/xxx`
+    const withoutTilde = trimmed.replace(/^~+/, '');
+    const path = withoutTilde.replace(/^\/+/, '');
+    return `${environment.ApiUrl}/${path}`.replace(/([^:]\/)\/+/g, '$1');
+  }
+
+  private extractFileName(raw: string | null): string | null {
+    if (!raw) return null;
+    try {
+      const s = String(raw);
+      return s.split('\\').pop()?.split('/').pop() ?? s;
+    } catch {
+      return null;
+    }
+  }
+
+  private resolveImageUrlWithAuthFallback(fullUrl: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(fullUrl);
+      img.onerror = () => {
+        const token = this.authService.getUserInfo()?.AccessToken;
+        const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+
+        this.http
+          .get(fullUrl, { responseType: 'blob', headers: headers as any })
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: blob => {
+              const objectUrl = window.URL.createObjectURL(blob);
+              setTimeout(() => {
+                try {
+                  window.URL.revokeObjectURL(objectUrl);
+                } catch {
+                  // ignore
+                }
+              }, 60000);
+              resolve(objectUrl);
+            },
+            error: err => reject(err),
+          });
+      };
+
+      img.src = fullUrl;
+    });
+  }
+
+  async openGalleriaFromSlot(slot: 1 | 2 | 3): Promise<void> {
+    const rawMap = [this.rawExistingFile1, this.rawExistingFile2, this.rawExistingFile3] as Array<string | null>;
+    const raw = rawMap[slot - 1];
+    if (!raw) {
+      this.messageService.errorBubble('沒有可預覽的檔案');
+      return;
+    }
+
+    const full = this.toAbsolutePhotoUrl(raw);
+    const name = this.extractFileName(raw) ?? String(raw).split('/').pop() ?? '';
+
+    // 先直接顯示後端 URL；若需要授權且直連失敗，背景換成 blob+token
+    this.galleriaItems = [{ url: full, type: 'image', name, slot }];
+    this.galleriaActiveIndex = 0;
+    this.visible = true;
+
+    try {
+      const resolved = await this.resolveImageUrlWithAuthFallback(full);
+      if (resolved && resolved !== full) {
+        this.galleriaItems = [{ url: resolved, type: 'image', name, slot }];
+      }
+    } catch {
+      // 已在 fallback 內處理錯誤提示與流程；或失敗就維持顯示 fullUrl
+    }
   }
 
   private buildFormData(body: InsertASS13040Request | UpdateASS13040Request): FormData {
