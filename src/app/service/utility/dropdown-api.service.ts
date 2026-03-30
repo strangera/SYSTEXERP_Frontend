@@ -746,11 +746,47 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢 ASS11040 品項編號下拉選單 */
+  queryASS11040DropDownList(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>(
+      '/ASS0000/ASS1000/queryASS11040_DropDownList',
+      'No',
+      'Name'
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
   /** 查詢人員資料表(TBLUSER) (依照組織代碼查詢) */
   queryTblUserOrgid(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<TblUserOrgidItem>('/queryTBLUSER_Orgid_DropDownList', 'user_No', 'user_Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
+  }
+
+  /** 查詢使用單位下拉（value 使用 Org_ID） */
+  queryTblUserOrgidAsOrg(): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<TblUserOrgidItem[]>>(`${this.apiUrl}/queryTBLUSER_Orgid_DropDownList`, {})
+      .pipe(
+        map(response => {
+          const data = response?.Data ?? [];
+          const orgMap = new Map<string, Option>();
+          data.forEach(item => {
+            if (!item?.Org_ID || orgMap.has(item.Org_ID)) return;
+            orgMap.set(item.Org_ID, {
+              value: item.Org_ID,
+              label: `${item.Org_ID} - ${item.Org_Name}`,
+              Org_ID: item.Org_ID,
+              Org_Name: item.Org_Name,
+            });
+          });
+          return Array.from(orgMap.values());
+        }),
+        catchError(err => {
+          console.error('API /queryTBLUSER_Orgid_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
   }
 
   /** 查詢專櫃活動編號資料表下拉選單() */

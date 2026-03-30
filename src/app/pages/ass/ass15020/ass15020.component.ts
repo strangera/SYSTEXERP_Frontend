@@ -15,6 +15,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -41,12 +42,12 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
     ButtonComponent,
     TableReportComponent,
     TranslateModule,
+    ButtonModule,
   ],
 })
 export class ASS15020Component
   extends BasicQueryPageComponent<ASS15020QueryRow>
-  implements OnInit
-{
+  implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     keepingDepartment: [null as string | null],
     usageUnit: [null as string | null],
@@ -58,7 +59,7 @@ export class ASS15020Component
     assetStatus: [null as string | null],
     purchaseDateFrom: [null as string | null],
     purchaseDateTo: [null as string | null],
-    grouping: [1 as number],
+    grouping: ['HOLD_ORG_ID' as string],
   });
 
   keepingDepartmentOptions: { value: string; label: string }[] = [];
@@ -69,36 +70,38 @@ export class ASS15020Component
   itemCodeOptions: { value: string; label: string }[] = [];
   propertyTypeOptions: { value: string; label: string }[] = [];
   assetStatusOptions: { value: string; label: string }[] = [];
-  groupingOptions: { value: number; label: string }[] = [
-    { value: 1, label: '有保管部門' },
-    { value: 2, label: '保管人員' },
-    { value: 3, label: '品項編號' },
-    { value: 4, label: '財產類型' },
+  groupingOptions: { value: string; label: string }[] = [
+    { value: 'HOLD_ORG_ID', label: '有保管部門' },
+    { value: 'HOLD_EMP_ID', label: '保管人員' },
+    { value: 'GOODS_ID', label: '品項編號' },
+    { value: 'DEPRE_YN', label: '財產類型' },
   ];
 
   readonly tableData = signal<ASS15020QueryRow[]>([]);
   readonly totalRecords = signal<number>(0);
   readonly tableLoading = signal<boolean>(false);
+  exportExcelLoading = false;
   lastQueryBody?: ASS15020QueryRequest;
+  private readonly defaultPageSize = 30;
 
   columns: ReportColumn[] = [
-    { field: 'RowNum', header: '序號', visible: true },
-    { field: 'AssetCode', header: '資產代號', visible: true },
-    { field: 'AssetName', header: '財產名稱', visible: true },
-    { field: 'EquipmentNo', header: '設備編號', visible: true },
+    { field: 'ASSET_ID', header: '資產編號', visible: true },
+    { field: 'GOODS_ID', header: '品項編號', visible: true },
+    { field: 'GOODS_NAME', header: '品項名稱', visible: true },
+    { field: 'EQUIP_ID', header: '設備編號', visible: true },
     {
-      field: 'PurchaseDate',
+      field: 'GET_DATE',
       header: '購入日期',
       visible: true,
       format: (v: string) => formatDate(v),
     },
-    { field: 'AssetStatus', header: '資產狀態', visible: true },
-    { field: 'KeepingDept', header: '保管單位', visible: true },
-    { field: 'KeepingPerson', header: '保管人', visible: true },
-    { field: 'UsageUnit', header: '使用單位', visible: true },
-    { field: 'UsagePerson', header: '使用人', visible: true },
-    { field: 'OriginalAmount', header: '原購入金額', visible: true },
-    { field: 'Remark', header: '備注', visible: true },
+    { field: 'ASSET_STATUS_NAME', header: '資產狀態', visible: true },
+    { field: 'HOLD_ORG_NAME', header: '保管單位', visible: true },
+    { field: 'HOLD_EMP_NAME', header: '保管人', visible: true },
+    { field: 'USE_ORG_NAME', header: '使用單位', visible: true },
+    { field: 'USE_EMP_NAME', header: '使用人', visible: true },
+    { field: 'FIR_GET_COST', header: '原購入金額', visible: true },
+    { field: 'NOTES', header: '備註', visible: true },
   ];
 
   constructor(
@@ -136,6 +139,20 @@ export class ASS15020Component
       });
 
     this.dropdownApi
+      .queryTblUserOrgidAsOrg()
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.usageUnitOptions = opts ?? [];
+      });
+
+    this.dropdownApi
+      .queryASS11040DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.itemCodeOptions = opts ?? [];
+      });
+
+    this.dropdownApi
       .querySys1000({ SYS_Type: 'ASSET_TYPE' })
       .pipe(
         untilDestroyed(this),
@@ -164,32 +181,75 @@ export class ASS15020Component
       .subscribe((opts) => {
         this.assetStatusOptions = opts;
       });
-    // usageUnit, propertyCode, itemCode: 選項來源未提供，維持空陣列
+    // propertyCode: 選項來源未提供，維持空陣列
   }
+
+  private buildRequest(body?: {
+    pageSize?: number;
+    PageSize?: number;
+    pageIndex?: number;
+    PageIndex?: number;
+    SortBy?: unknown;
+  }): ASS15020QueryRequest {
+    const raw = this.queryForm.getRawValue();
+    const pageSize = body?.pageSize ?? body?.PageSize ?? this.defaultPageSize;
+    const pageIndex = body?.pageIndex ?? body?.PageIndex ?? 1;
+    const sortBy = Array.isArray(body?.SortBy) ? body?.SortBy : undefined;
+
+    const payload: ASS15020QueryRequest = {
+      STO_NO: this.authService.currentUserValue?.SYS_StoreNo ?? undefined,
+      HOLD_ORG_ID: raw.keepingDepartment || undefined,
+      USE_ORG_ID: raw.usageUnit || undefined,
+      USE_EMP_ID: raw.usagePerson || undefined,
+      ASSET_ID: raw.propertyCode || undefined,
+      GOODS_ID: raw.itemCode || undefined,
+      DEPRE_YN: raw.propertyType || undefined,
+      ASSET_STATUS: raw.assetStatus || undefined,
+      GET_DATE_S: this.toApiDateValue(raw.purchaseDateFrom),
+      GET_DATE_E: this.toApiDateValue(raw.purchaseDateTo),
+      GROUP: raw.grouping || undefined,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: sortBy,
+    };
+
+    return removeEmptyValues(payload) as ASS15020QueryRequest;
+  }
+
+  queryFunction = (body: {
+    pageSize?: number;
+    PageSize?: number;
+    pageIndex?: number;
+    PageIndex?: number;
+    SortBy?: unknown;
+  }) => {
+    const request = this.buildRequest(body);
+    this.lastQueryBody = request;
+    return this.ass15020Service.queryASS15020(request).pipe(
+      map((res: ApiResponse<ASS15020QueryRow[]>) => {
+        const list = res.Status === '0000' ? (res.Data ?? []) : [];
+        const mapped = list.map((row, idx) => ({
+          ...row,
+          RowNum: row.RowNum ?? idx + 1,
+          ID: row.ID ?? row.ASSET_ID ?? `row-${idx}`,
+        }));
+        return {
+          Data: mapped,
+          TotalCount: res.TotalCount ?? mapped.length,
+        };
+      })
+    );
+  };
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const raw = frm.getRawValue();
-      const payload: ASS15020QueryRequest = {
-        KeepingDept: raw.keepingDepartment || undefined,
-        UsageUnit: raw.usageUnit || undefined,
-        UsageDept: raw.usageDepartment || undefined,
-        UsagePerson: raw.usagePerson || undefined,
-        PropertyCode: raw.propertyCode || undefined,
-        ItemCode: raw.itemCode || undefined,
-        PropertyType: raw.propertyType || undefined,
-        AssetStatus: raw.assetStatus || undefined,
-        PurchaseDateFrom: raw.purchaseDateFrom || undefined,
-        PurchaseDateTo: raw.purchaseDateTo || undefined,
-        Grouping: raw.grouping ?? undefined,
-        PageSize: 30,
-        PageIndex: 1,
-      };
-      const body = removeEmptyValues(payload) as ASS15020QueryRequest;
-      this.lastQueryBody = body;
+      this.lastQueryBody = this.buildRequest({
+        pageSize: this.defaultPageSize,
+        pageIndex: 1,
+        SortBy: this.lastQueryBody?.SortBy,
+      });
       this.tableLoading.set(true);
-      this.ass15020Service
-        .queryASS15020(body)
+      this.queryFunction(this.lastQueryBody)
         .pipe(
           untilDestroyed(this),
           finalize(() => {
@@ -198,24 +258,69 @@ export class ASS15020Component
           })
         )
         .subscribe({
-          next: (res: ApiResponse<ASS15020QueryRow[]>) => {
-            if (res.Status !== '0000') return;
-            const data = res.Data ?? [];
-            this.tableData.set(
-              data.map((row, idx) => ({
-                ...row,
-                RowNum: row.RowNum ?? idx + 1,
-                ID: row.ID ?? row.AssetCode ?? `row-${idx}`,
-              }))
-            );
-            this.totalRecords.set(res.TotalCount ?? data.length);
+          next: (res) => {
+            this.tableData.set(res.Data ?? []);
+            this.totalRecords.set(res.TotalCount ?? 0);
+          },
+          error: () => {
+            this.tableData.set([]);
+            this.totalRecords.set(0);
           },
         });
     });
   }
 
+  private buildExportPayload(): ASS15020QueryRequest {
+    return this.buildRequest({
+      PageSize: this.lastQueryBody?.PageSize ?? 0,
+      PageIndex: this.lastQueryBody?.PageIndex ?? 0,
+      SortBy: this.lastQueryBody?.SortBy,
+    });
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(blobUrl);
+  }
+
+  private getTimestamp(): string {
+    const now = new Date();
+    return now.getFullYear().toString() +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') + '_' +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0');
+  }
+
+  onExportExcel(): void {
+    const payload = this.buildExportPayload();
+    this.exportExcelLoading = true;
+    this.ass15020Service
+      .exportExcelASS15020(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.exportExcelLoading = false)
+      )
+      .subscribe(blob => {
+        if (blob) {
+          this.downloadBlob(blob, `財產保管清冊_${this.getTimestamp()}.xlsx`);
+        }
+      });
+  }
+
+  private toApiDateValue(value: unknown): string | undefined {
+    if (value == null || value === '') return undefined;
+    if (value instanceof Date) return value.toISOString();
+    if (typeof value === 'string') return value;
+    return undefined;
+  }
+
   onClearForm(): void {
-    this.queryForm.reset({ grouping: 1 });
+    this.queryForm.reset({ grouping: 'HOLD_ORG_ID' });
   }
 
   override onDetail(data: ASS15020QueryRow): void {
