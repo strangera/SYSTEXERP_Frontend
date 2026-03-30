@@ -1,0 +1,9 @@
+/**
+ * 匯入分攤 D16/D17 與合約不一致時，cellClass 會加上 text-red-500。
+ * 明細為純文字可繼承 td 顏色；新增頁為 p-inputNumber，需覆寫預設 input 顏色才會顯示紅字。
+ */
+:host ::ng-deep .p-datatable td.text-red-500 {
+  .p-inputnumber .p-inputnumber-input {
+    color: #ef4444 !important; /* 對齊 Tailwind text-red-500；suffix 與數字同在 input 內 */
+  }
+}
