@@ -9,10 +9,11 @@ import {
   FIN61010QueryRequest,
   FIN61010Service,
 } from '../../../service/api/fin/fin61010.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
@@ -30,7 +31,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
+    DropdownComponent,
     MultiSelectComponent,
     TableReportComponent,
     TranslateModule,
@@ -48,6 +49,8 @@ export class FIN61010Component extends BasicQueryPageComponent<FIN61010Data> imp
     { value: '1', label: '手開' },
     { value: '2', label: '電腦' },
   ];
+
+  bankNoOptions: { value: string; label: string }[] = [];
 
   totalRecords = 0;
   data: FIN61010Data[] = [];
@@ -71,12 +74,25 @@ export class FIN61010Component extends BasicQueryPageComponent<FIN61010Data> imp
     { field: 'CHK_StopDate', header: '停用日', visible: true },
   ];
 
-  constructor(private fin61010Service: FIN61010Service) {
+  constructor(
+    private fin61010Service: FIN61010Service,
+    private dropdownApiService: DropdownApiService,
+  ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN61010', 'fin/fin61010cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.loadBankOptions();
+  }
+
+  private loadBankOptions(): void {
+    this.dropdownApiService.queryAps1002().pipe(untilDestroyed(this)).subscribe(res => {
+      this.bankNoOptions = (res ?? []).map(opt => ({
+        value: opt.value,
+        label: `${opt.value} - ${opt.label}`,
+      }));
+    });
   }
 
   queryFunction = (body: FIN61010QueryRequest) => {

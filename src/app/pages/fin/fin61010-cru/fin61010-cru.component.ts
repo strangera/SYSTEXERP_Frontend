@@ -1,9 +1,10 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN61010Data, FIN61010InsertRequest, FIN61010Service, FIN61010UpdateRequest, FIN61010VoidHistoryData } from '@service/api/fin/fin61010.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -15,6 +16,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
+@UntilDestroy()
 @Component({
   selector: 'app-fin61010-cru',
   templateUrl: './fin61010-cru.component.html',
@@ -48,6 +50,8 @@ export class FIN61010CRUComponent extends BasicCruPageComponent<FIN61010Data> im
   hasIssuedRecord = false;
 
   isOriginalVoidRow = (row: any): boolean => row._dataStatus === 'original';
+
+  bankNoOptions: { value: string; label: string }[] = [];
 
   voidItems: any[] = [];
   voidColumns: EditColumn[] = [
@@ -89,12 +93,22 @@ export class FIN61010CRUComponent extends BasicCruPageComponent<FIN61010Data> im
     { value: '2', label: '電腦' },
   ];
 
-  constructor(private readonly fin61010Service: FIN61010Service) {
+  constructor(
+    private readonly fin61010Service: FIN61010Service,
+    private readonly dropdownApiService: DropdownApiService,
+  ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN61010', this.dataForm);
+
+    this.dropdownApiService.queryAps1002().pipe(untilDestroyed(this)).subscribe(res => {
+      this.bankNoOptions = (res ?? []).map(opt => ({
+        value: opt.value,
+        label: `${opt.value} - ${opt.label}`,
+      }));
+    });
 
     if (this.isFormEditable) {
       this.hasIssuedRecord = this.dataForm.controls.HasIssuedRecord.value === true;
@@ -135,6 +149,35 @@ export class FIN61010CRUComponent extends BasicCruPageComponent<FIN61010Data> im
       this.loading = true;
       const raw = frm.getRawValue();
 
+      // 驗證：已用號碼必須在起始碼~終止碼範圍內
+      const begNo = raw.CHK_BegNo as string;
+      const endNo = raw.CHK_EndNo as string;
+      const lastUsedNo = raw.CHK_LastUsedNo as string;
+      if (lastUsedNo && begNo && endNo) {
+        if (lastUsedNo < begNo || lastUsedNo > endNo) {
+          this.loading = false;
+          this.messageService.errorBubble('已用號碼必須大於等於起始碼並小於等於終止碼');
+          return;
+        }
+      }
+
+      // 驗證：新增的作廢明細，作廢迄號 >= 作廢起號 且 <= 終止碼
+      const newVoidItems = this.voidItems.filter(
+        item => !item._isAutoInsertCandidate && item._dataStatus === 'new' && item.VoidBegNo && item.VoidEndNo
+      );
+      for (const item of newVoidItems) {
+        if (item.VoidEndNo < item.VoidBegNo) {
+          this.loading = false;
+          this.messageService.errorBubble('作廢迄號必須大於等於作廢起號');
+          return;
+        }
+        if (endNo && item.VoidEndNo > endNo) {
+          this.loading = false;
+          this.messageService.errorBubble('作廢迄號必須小於等於終止碼');
+          return;
+        }
+      }
+
       const serviceCall = this.isFormCreateable
         ? this.fin61010Service.insertFIN61010({
             BNK_No: raw.BNK_No,
@@ -158,14 +201,12 @@ export class FIN61010CRUComponent extends BasicCruPageComponent<FIN61010Data> im
             CHK_EndNo: raw.CHK_EndNo,
             CHK_UseDate: this.formatVoidDate(raw.CHK_UseDate),
             CHK_StopDate: this.formatVoidDate(raw.CHK_StopDate),
-            VoidItems: this.voidItems
-              .filter(item => !item._isAutoInsertCandidate && item._dataStatus === 'new' && item.VoidBegNo && item.VoidEndNo)
-              .map(item => ({
-                VoidDate: this.formatVoidDate(item.VoidDate),
-                VoidBegNo: item.VoidBegNo,
-                VoidEndNo: item.VoidEndNo,
-                VoidReason: item.VoidReason || undefined,
-              })),
+            VoidItems: newVoidItems.map(item => ({
+              VoidDate: this.formatVoidDate(item.VoidDate),
+              VoidBegNo: item.VoidBegNo,
+              VoidEndNo: item.VoidEndNo,
+              VoidReason: item.VoidReason || undefined,
+            })),
           } as FIN61010UpdateRequest);
 
       serviceCall.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
