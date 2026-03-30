@@ -52,23 +52,23 @@ import {
 })
 export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow> implements OnInit {
   public readonly queryForm = this.formBuilder.nonNullable.group({
-    soldNo: [null as string | null],
-    assetNo: [null as string | null],
+    assetSaleNo: [null as string | null],
+    assetId: [null as string | null],
     goodsId: [null as string | null],
-    buyDateFrom: [null as Date | null],
-    buyDateTo: [null as Date | null],
+    getDateFrom: [null as Date | null],
+    getDateTo: [null as Date | null],
     assetStatus: [null as string | null],
-    acpNo: [null as string | null],
-    keepOrgId: [null as string | null],
-    keepUserNo: [null as string | null],
+    depreId: [null as string | null],
+    holdOrgId: [null as string | null],
+    holdEmpId: [null as string | null],
     useOrgId: [null as string | null],
-    useUserNo: [null as string | null],
-    accNo: [null as string | null],
-    buyAmtFrom: [null as number | null],
-    buyAmtTo: [null as number | null],
-    rcvNo: [null as string | null],
-    txnDateFrom: [null as Date | null],
-    txnDateTo: [null as Date | null],
+    useEmpId: [null as string | null],
+    stypeId: [null as string | null],
+    getCostFrom: [null as number | null],
+    getCostTo: [null as number | null],
+    subcheckId: [null as string | null],
+    billDateFrom: [null as Date | null],
+    billDateTo: [null as Date | null],
     pageSize: [30],
     pageIndex: [1],
   });
@@ -79,20 +79,15 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
   public lastQueryBody?: QueryASS13080Request;
 
   public readonly columns: ReportColumn[] = [
-    { field: 'ASSET_NO', header: '資產代號', visible: true },
+    { field: 'ASSET_SALENO', header: '變賣單號', visible: true },
+    { field: 'ASSET_ID', header: '資產代號', visible: true },
     { field: 'GOODS_ID', header: '品項編號', visible: true },
-    { field: 'TXN_DATE', header: '入帳日期', visible: true, format: formatDate },
+    { field: 'GOODS_NAME', header: '品項名稱', visible: true },
     { field: 'ASSET_STATUS_NAME', header: '資產狀態', visible: true },
-    { field: 'KEEP_USER_NAME', header: '保管人', visible: true },
-    { field: 'USE_USER_NAME', header: '使用人', visible: true },
-    { field: 'BUY_AMT', header: '購入金額', visible: true, type: 'inputNumber' },
-    { field: 'REVAL_AMT', header: '重估金額', visible: true, type: 'inputNumber' },
-    { field: 'ACP_NO', header: '攤提代號', visible: true },
-    { field: 'SOLD_ASSET_DATE', header: '變賣資產日期', visible: true, format: formatDate },
-    { field: 'SOLD_NTAX_AMT', header: '變賣金額(未稅)', visible: true, type: 'inputNumber' },
-    { field: 'SOLD_DATE_DEPR_AMT', header: '變賣日期已提折舊', visible: true, type: 'inputNumber' },
-    { field: 'SOLD_BEFORE_BOOK_AMT', header: '變賣日前之帳面價值', visible: true, type: 'inputNumber' },
-    { field: 'SOLD_PL_NTAX_AMT', header: '變賣盈虧(未稅)', visible: true, type: 'inputNumber' },
+    { field: 'HOLD_EMP_NAME', header: '保管人', visible: true },
+    { field: 'USE_EMP_NAME', header: '使用人', visible: true },
+    { field: 'GET_COST', header: '取得成本', visible: true, type: 'inputNumber' },
+    { field: 'DEPRE_ID', header: '攤提代號', visible: true },
   ];
 
   /** 品項：query11040dropdown（先以 ASS11040 查詢替代） */
@@ -103,10 +98,8 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
   orgOptions: { value: string; label: string }[] = [];
   /** 保管/使用人：TBLUSER */
   userOptions: { value: string; label: string }[] = [];
-  /** 會計科目：GLS1005 */
-  accOptions: { value: string; label: string }[] = [];
-  /** 驗收單號：來源未確認，先留白 */
-  rcvNoOptions: { value: string; label: string }[] = [];
+  /** 資產類別：來源未確認，先留白 */
+  stypeOptions: { value: string; label: string }[] = [];
 
   constructor(
     private readonly ass13080Service: ASS13080Service,
@@ -124,7 +117,7 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
 
   private toDateStr(d: Date | null): string | undefined {
     if (!d) return undefined;
-    return this.datePipe.transform(d, 'yyyy-MM-dd') ?? undefined;
+    return d.toISOString();
   }
 
   private loadDropdownOptions(): void {
@@ -158,14 +151,6 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
         this.userOptions = toOpt(res.Data ?? []);
       });
 
-    this.dropDownListService
-      .queryGLS1005_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        if (res.Status !== '0000') return;
-        this.accOptions = toOpt(res.Data ?? []);
-      });
-
     this.ass11040Service
       .queryASS11040({ PageSize: 9999, PageIndex: 1 } as any)
       .pipe(
@@ -188,23 +173,23 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
   ): Observable<ApiResponse<ASS13080QueryRow[]>> => {
     const raw = this.queryForm.getRawValue();
     const payload: QueryASS13080Request = {
-      SOLD_NO: raw.soldNo ?? undefined,
-      ASSET_NO: raw.assetNo ?? undefined,
+      ASSET_SALENO: raw.assetSaleNo ?? undefined,
+      ASSET_ID: raw.assetId ?? undefined,
       GOODS_ID: raw.goodsId ?? undefined,
-      BUY_DATE_S: this.toDateStr(raw.buyDateFrom) ?? undefined,
-      BUY_DATE_E: this.toDateStr(raw.buyDateTo) ?? undefined,
+      GET_DATE_S: this.toDateStr(raw.getDateFrom) ?? undefined,
+      GET_DATE_E: this.toDateStr(raw.getDateTo) ?? undefined,
       ASSET_STATUS: raw.assetStatus ?? undefined,
-      ACP_NO: raw.acpNo ?? undefined,
-      KEEP_ORG_ID: raw.keepOrgId ?? undefined,
-      KEEP_USER_NO: raw.keepUserNo ?? undefined,
+      DEPRE_ID: raw.depreId ?? undefined,
+      HOLD_ORG_ID: raw.holdOrgId ?? undefined,
+      HOLD_EMP_ID: raw.holdEmpId ?? undefined,
       USE_ORG_ID: raw.useOrgId ?? undefined,
-      USE_USER_NO: raw.useUserNo ?? undefined,
-      ACC_NO: raw.accNo ?? undefined,
-      BUY_AMT_S: raw.buyAmtFrom ?? undefined,
-      BUY_AMT_E: raw.buyAmtTo ?? undefined,
-      RCV_NO: raw.rcvNo ?? undefined,
-      TXN_DATE_S: this.toDateStr(raw.txnDateFrom) ?? undefined,
-      TXN_DATE_E: this.toDateStr(raw.txnDateTo) ?? undefined,
+      USE_EMP_ID: raw.useEmpId ?? undefined,
+      STYPE_ID: raw.stypeId ?? undefined,
+      GET_COST_S: raw.getCostFrom ?? undefined,
+      GET_COST_E: raw.getCostTo ?? undefined,
+      SUBCHECK_ID: raw.subcheckId ?? undefined,
+      BILL_DATE_S: this.toDateStr(raw.billDateFrom) ?? undefined,
+      BILL_DATE_E: this.toDateStr(raw.billDateTo) ?? undefined,
       PageSize: body.PageSize ?? raw.pageSize ?? 30,
       PageIndex: body.PageIndex ?? raw.pageIndex ?? 1,
       SortBy: body.SortBy,
@@ -217,23 +202,23 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
     this.handleSubmit(frm, () => {
       const raw = this.queryForm.getRawValue();
       this.lastQueryBody = {
-        SOLD_NO: raw.soldNo ?? undefined,
-        ASSET_NO: raw.assetNo ?? undefined,
+        ASSET_SALENO: raw.assetSaleNo ?? undefined,
+        ASSET_ID: raw.assetId ?? undefined,
         GOODS_ID: raw.goodsId ?? undefined,
-        BUY_DATE_S: this.toDateStr(raw.buyDateFrom) ?? undefined,
-        BUY_DATE_E: this.toDateStr(raw.buyDateTo) ?? undefined,
+        GET_DATE_S: this.toDateStr(raw.getDateFrom) ?? undefined,
+        GET_DATE_E: this.toDateStr(raw.getDateTo) ?? undefined,
         ASSET_STATUS: raw.assetStatus ?? undefined,
-        ACP_NO: raw.acpNo ?? undefined,
-        KEEP_ORG_ID: raw.keepOrgId ?? undefined,
-        KEEP_USER_NO: raw.keepUserNo ?? undefined,
+        DEPRE_ID: raw.depreId ?? undefined,
+        HOLD_ORG_ID: raw.holdOrgId ?? undefined,
+        HOLD_EMP_ID: raw.holdEmpId ?? undefined,
         USE_ORG_ID: raw.useOrgId ?? undefined,
-        USE_USER_NO: raw.useUserNo ?? undefined,
-        ACC_NO: raw.accNo ?? undefined,
-        BUY_AMT_S: raw.buyAmtFrom ?? undefined,
-        BUY_AMT_E: raw.buyAmtTo ?? undefined,
-        RCV_NO: raw.rcvNo ?? undefined,
-        TXN_DATE_S: this.toDateStr(raw.txnDateFrom) ?? undefined,
-        TXN_DATE_E: this.toDateStr(raw.txnDateTo) ?? undefined,
+        USE_EMP_ID: raw.useEmpId ?? undefined,
+        STYPE_ID: raw.stypeId ?? undefined,
+        GET_COST_S: raw.getCostFrom ?? undefined,
+        GET_COST_E: raw.getCostTo ?? undefined,
+        SUBCHECK_ID: raw.subcheckId ?? undefined,
+        BILL_DATE_S: this.toDateStr(raw.billDateFrom) ?? undefined,
+        BILL_DATE_E: this.toDateStr(raw.billDateTo) ?? undefined,
         PageSize: raw.pageSize ?? 30,
         PageIndex: raw.pageIndex ?? 1,
       };

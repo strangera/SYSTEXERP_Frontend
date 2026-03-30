@@ -12,7 +12,6 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '@shared/componentkit/editor-text/editor-text.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
@@ -24,6 +23,8 @@ import {
   ASS13080Detail,
   CancelASS13080Request,
   CreateASS13080Request,
+  QueryFAASSETChooseListASS13060Request,
+  QueryFAASSETChooseListASS13060Response,
 } from '../ass13080/ass13080.model';
 
 /** 3.1.3.8 資產變賣作業 CRU */
@@ -43,7 +44,6 @@ import {
     DropdownComponent,
     InputNumberComponent,
     CalendarComponent,
-    EditorTextComponent,
     ButtonComponent,
     NgIf,
     TranslateModule,
@@ -52,6 +52,7 @@ import {
 export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> implements OnInit {
   public readonly CRUDStatus = CRUDStatus;
   public readonly dataForm = this.formBuilder.group({
+    id: new FormControl<number | null>(null),
     soldNo: new FormControl<string | null>(null),
     assetNo: new FormControl<string | null>(null, { nonNullable: false }),
     goodsId: new FormControl<string | null>(null),
@@ -137,20 +138,34 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
     return this.datePipe.transform(d, 'yyyy-MM-dd') ?? undefined;
   }
 
-  private toOpt(items: { No?: string; Name?: string }[]) {
+  private toOpt(items: { No?: string | null; Name?: string | null }[]) {
     return (items ?? []).map(item => ({
       value: item.No ?? '',
       label: `${item.No ?? ''} - ${item.Name ?? ''}`,
     }));
   }
 
+  private faAssetChooseListToOpts(rows: QueryFAASSETChooseListASS13060Response[]) {
+    return (rows ?? []).map(r => ({
+      value: r.ASSET_ID ?? '',
+      label: `${r.ASSET_ID ?? ''} - ${r.AssetName ?? ''}`,
+    }));
+  }
+
   private loadDropdownOptions(): void {
+    const assetListReq: QueryFAASSETChooseListASS13060Request = {
+      PageSize: 9999,
+      PageIndex: 1,
+      ...(this.rowdata?.ASSET_ID
+        ? { ASSET_ID: String(this.rowdata.ASSET_ID) }
+        : {}),
+    };
     this.ass13080Service
-      .queryFAASSET_DropDownList()
+      .queryFAASSETChooseListASS13060(assetListReq)
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         if (res.Status !== '0000') return;
-        this.assetsOptions = this.toOpt(res.Data ?? []);
+        this.assetsOptions = this.faAssetChooseListToOpts(res.Data ?? []);
       });
 
     const q11040: QueryASS11040Request = { PageSize: 9999, PageIndex: 1 };
@@ -217,7 +232,7 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
     // 新增頁：規格要求固定欄位唯讀不可改，只允許變賣資訊可輸入
     const readonlyControls = [
       this.df().soldNo,
-      this.df().assetNo,
+      // this.df().assetNo,
       this.df().goodsId,
       this.df().assetStatus,
       this.df().assetType,
@@ -255,12 +270,12 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
     // 將後端（或查詢 rowdata）欄位對應到表單
     this.dataForm.patchValue(
       {
-        soldNo: row.SOLD_NO ?? null,
-        assetNo: row.ASSET_NO ?? null,
+        id: row.ID ?? null,
+        soldNo: row.ASSET_SALENO ?? null,
+        assetNo: row.ASSET_ID ?? null,
         goodsId: row.GOODS_ID ?? null,
         assetStatus: row.ASSET_STATUS ?? null,
-        assetType: row.DEPRE_YN ?? null,
-        acpNo: row.ACP_NO ?? null,
+        acpNo: row.DEPRE_ID ?? null,
         poNo: row.PO_NO ?? null,
         buyDate: row.BUY_DATE ? new Date(row.BUY_DATE) : null,
         buyAmt: row.BUY_AMT ?? null,
@@ -279,9 +294,8 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
         unamortAmt: row.UNAMORT_AMT ?? null,
         amortAmt: row.AMORT_AMT ?? null,
         amortMonths: row.AMORT_MONTHS ?? null,
-        keepUserNo: row.KEEP_USER_NO ?? null,
-        keepOrgId: row.KEEP_ORG_ID ?? null,
-        useUserNo: row.USE_USER_NO ?? null,
+        keepUserNo: row.HOLD_EMP_ID ?? null,
+        useUserNo: row.USE_EMP_ID ?? null,
         useOrgId: row.USE_ORG_ID ?? null,
         locNo: row.LOC_NO ?? null,
         maintContractNo: row.MAINT_CONTRACT_NO ?? null,
@@ -305,14 +319,20 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
       return;
     }
     const raw = this.dataForm.getRawValue();
+    if (!raw.assetNo) {
+      this.messageService.warnBubble('缺少資產代號，無法送出');
+      return;
+    }
+    if (!raw.soldVendorNo) {
+      this.messageService.warnBubble('缺少變賣廠商，無法送出');
+      return;
+    }
     const payload: CreateASS13080Request = {
-      SOLD_NO: raw.soldNo ?? undefined,
-      ASSET_NO: raw.assetNo ?? undefined,
-      SOLD_DATE: this.toDateStr(raw.soldDate) ?? '',
-      SOLD_VENDOR_NO: raw.soldVendorNo ?? '',
-      SOLD_VOUCHER_NO: raw.soldVoucherNo ?? undefined,
-      SOLD_AMT_TAX: raw.soldAmtTax ?? 0,
-      SOLD_REMARK: raw.soldRemark ?? '',
+      ASSET_ID: raw.assetNo,
+      SALDATE: raw.soldDate ? raw.soldDate.toISOString() : '',
+      BUYER_VENNO: raw.soldVendorNo,
+      SALE_AMT: raw.soldAmtTax ?? 0,
+      HANDLE_NOTE: raw.soldRemark ?? undefined,
     };
     this.messageService.confirm({
       header: '確認變賣',
@@ -321,7 +341,7 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
         this.messageService.blockUi();
         this.loading = true;
         this.ass13080Service
-          .createASS13080(payload)
+          .insertASS13080(payload)
           .pipe(
             untilDestroyed(this),
             finalize(() => {
@@ -347,12 +367,12 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
   /** 取消變賣 */
   onCancelSold(): void {
     if (!this.isFormEditable && !this.isFormReadable) return;
-    const soldNo = this.dataForm.getRawValue().soldNo;
-    if (!soldNo) {
-      this.messageService.warnBubble('缺少變賣單號，無法取消變賣');
+    const id = this.dataForm.getRawValue().id;
+    if (!id) {
+      this.messageService.warnBubble('缺少 ID，無法取消變賣');
       return;
     }
-    const payload: CancelASS13080Request = { SOLD_NO: soldNo };
+    const payload: CancelASS13080Request = { ID: id };
     this.messageService.confirm({
       header: '取消變賣',
       message: '是否確認取消變賣？',
@@ -386,12 +406,12 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
   /** 變賣審核 */
   onApproveSold(): void {
     if (!this.isFormEditable && !this.isFormReadable) return;
-    const soldNo = this.dataForm.getRawValue().soldNo;
-    if (!soldNo) {
-      this.messageService.warnBubble('缺少變賣單號，無法審核');
+    const id = this.dataForm.getRawValue().id;
+    if (!id) {
+      this.messageService.warnBubble('缺少 ID，無法審核');
       return;
     }
-    const payload: ApproveASS13080Request = { SOLD_NO: soldNo };
+    const payload: ApproveASS13080Request = { ID: id };
     this.messageService.confirm({
       header: '變賣審核',
       message: '是否確認進行變賣審核？',

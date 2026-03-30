@@ -1,99 +1,64 @@
 import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 
-/**
- * ASS13080 資產變賣作業 - 資料模型
- * 注意：API 詳細規格尚未確定，以下以「可先接線」為優先，後續依後端欄位調整。
- */
-
-// ==================== 查詢 ====================
-
 export interface QueryASS13080Request extends BaseQueryRequest {
-  /** 變賣單號 */
-  SOLD_NO?: string | null;
-  /** 資產代號 */
-  ASSET_NO?: string | null;
-  /** 品項編號 */
+  ASSET_SALENO?: string | null;
+  ASSET_ID?: string | null;
   GOODS_ID?: string | null;
-  /** 購入日期(起)(迄) yyyy-MM-dd */
-  BUY_DATE_S?: string | null;
-  BUY_DATE_E?: string | null;
-  /** 資產狀態（SYS1000: ASSET_STATUS） */
+  GET_DATE_S?: string | null;
+  GET_DATE_E?: string | null;
   ASSET_STATUS?: string | null;
-  /** 攤提代號 */
-  ACP_NO?: string | null;
-  /** 保管單位（SYS3100） */
-  KEEP_ORG_ID?: string | null;
-  /** 保管人（TBLUSER） */
-  KEEP_USER_NO?: string | null;
-  /** 使用單位（SYS3100） */
+  DEPRE_ID?: string | null;
+  HOLD_ORG_ID?: string | null;
+  HOLD_EMP_ID?: string | null;
   USE_ORG_ID?: string | null;
-  /** 使用人（TBLUSER） */
-  USE_USER_NO?: string | null;
-  /** 會計科目（GLS1005） */
-  ACC_NO?: string | null;
-  /** 購入金額(起)(迄) */
-  BUY_AMT_S?: number | null;
-  BUY_AMT_E?: number | null;
-  /** 驗收單號 */
-  RCV_NO?: string | null;
-  /** 入帳日期(起)(迄) yyyy-MM-dd */
-  TXN_DATE_S?: string | null;
-  TXN_DATE_E?: string | null;
+  USE_EMP_ID?: string | null;
+  STYPE_ID?: string | null;
+  GET_COST_S?: number | null;
+  GET_COST_E?: number | null;
+  SUBCHECK_ID?: string | null;
+  BILL_DATE_S?: string | null;
+  BILL_DATE_E?: string | null;
 }
 
 export interface ASS13080QueryRow {
-  /** 資產代號 */
-  ASSET_NO?: string;
-  /** 品項編號 */
+  ROWNO?: number;
+  ID?: number;
+  MID?: number;
+  STO_NO?: string;
+  ASSET_SALENO?: string;
+  ASSET_ID?: string;
   GOODS_ID?: string;
-  /** 入帳日期 */
-  TXN_DATE?: string;
-  /** 資產狀態 */
+  GOODS_NAME?: string;
+  ASSET_STATUS?: string;
   ASSET_STATUS_NAME?: string;
-  /** 保管人 */
-  KEEP_USER_NAME?: string;
-  /** 使用人 */
-  USE_USER_NAME?: string;
-  /** 購入金額 */
-  BUY_AMT?: number;
-  /** 重估金額 */
-  REVAL_AMT?: number;
-  /** 攤提代號 */
-  ACP_NO?: string;
-  /** 變賣資產日期 */
-  SOLD_ASSET_DATE?: string;
-  /** 變賣金額(未稅) */
-  SOLD_NTAX_AMT?: number;
-  /** 變賣日期已提折舊 */
-  SOLD_DATE_DEPR_AMT?: number;
-  /** 變賣日前之帳面價值 */
-  SOLD_BEFORE_BOOK_AMT?: number;
-  /** 變賣盈虧(未稅) */
-  SOLD_PL_NTAX_AMT?: number;
-
-  /** 變賣單號（供 dataKey / 導頁用，若後端有回傳） */
-  SOLD_NO?: string;
+  HOLD_EMP_ID?: string;
+  HOLD_EMP_NAME?: string;
+  USE_EMP_ID?: string;
+  USE_EMP_NAME?: string;
+  GET_COST?: number;
+  DEPRE_ID?: string;
 }
 
-/** 查詢回應資料結構（若後端巢狀 Data） */
 export interface ASS13080QueryDataWrapper {
-  QueryData?: ASS13080QueryRow[];
+  Details?: ASS13080QueryRow[];
   TotalRows?: number;
   TotalPages?: number;
 }
 
-// ==================== 新增 / 編輯頁（變賣） ====================
-
 export interface ASS13080Detail {
-  SOLD_NO?: string | null;
-  ASSET_NO?: string | null;
+  ID?: number | null;
+  ASSET_SALENO?: string | null;
+  ASSET_ID?: string | null;
   GOODS_ID?: string | null;
   GOODS_NAME?: string | null;
   ASSET_STATUS?: string | null;
   ASSET_STATUS_NAME?: string | null;
-  /** DEPRE_YN 1:資產 2:列管品 */
-  DEPRE_YN?: string | null;
-  ACP_NO?: string | null;
+  HOLD_EMP_ID?: string | null;
+  HOLD_EMP_NAME?: string | null;
+  USE_EMP_ID?: string | null;
+  USE_EMP_NAME?: string | null;
+  GET_COST?: number | null;
+  DEPRE_ID?: string | null;
   PO_NO?: string | null;
   BUY_DATE?: string | null;
   BUY_AMT?: number | null;
@@ -112,52 +77,92 @@ export interface ASS13080Detail {
   UNAMORT_AMT?: number | null;
   AMORT_AMT?: number | null;
   AMORT_MONTHS?: number | null;
-  KEEP_USER_NO?: string | null;
-  KEEP_ORG_ID?: string | null;
-  USE_USER_NO?: string | null;
+  HOLD_ORG_ID?: string | null;
   USE_ORG_ID?: string | null;
   LOC_NO?: string | null;
   MAINT_CONTRACT_NO?: string | null;
-
   SOLD_DATE?: string | null;
   SOLD_VENDOR_NO?: string | null;
   SOLD_VOUCHER_NO?: string | null;
   SOLD_AMT_TAX?: number | null;
   SOLD_REMARK?: string | null;
-
   ASSET_REMARK?: string | null;
 }
 
 export interface CreateASS13080Request {
-  SOLD_NO?: string | null;
-  ASSET_NO?: string | null;
-  SOLD_DATE: string;
-  SOLD_VENDOR_NO: string;
-  SOLD_VOUCHER_NO?: string | null;
-  SOLD_AMT_TAX: number;
-  SOLD_REMARK: string;
+  ASSET_ID: string;
+  SALDATE: string;
+  BUYER_VENNO: string;
+  SALE_AMT: number;
+  HANDLE_NOTE?: string;
 }
 
 export interface CreateASS13080Result {
-  SOLD_NO?: string;
+  ID?: number;
+  ASSET_SALENO?: string;
+  ErrCode?: number;
+  ErrMsg?: string;
 }
 
 export interface ApproveASS13080Request {
-  SOLD_NO: string;
+  ID: number;
 }
 
 export interface CancelASS13080Request {
-  SOLD_NO: string;
+  ID: number;
 }
 
-export interface PrintASS13080Request {
-  SOLD_NO: string;
+export type PrintASS13080Request = Omit<
+  QueryASS13080Request,
+  'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset' | 'SortBy'
+>;
+
+// ==================== 資產選擇列表（queryFAASSETChooseListASS13060） ====================
+
+export interface QueryFAASSETChooseListASS13060Request extends BaseQueryRequest {
+  MID?: number | null;
+  STO_NO?: string | null;
+  ASSET_ID?: string | null;
+  GOODS_NAME?: string | null;
+  B_CLASS_ID?: string | null;
+  M_CLASS_ID?: string | null;
+  S_CLASS_ID?: string | null;
+  HOLD_EMP_ID?: string | null;
+  HOLD_ORG_ID?: string | null;
+  ASSET_STATUS?: string | null;
 }
 
-// ==================== 下拉（預留） ====================
+export interface QueryFAASSETChooseListASS13060Response {
+  ID?: number;
+  MID?: number | null;
+  STO_NO?: string | null;
+  ASSET_ID?: string | null;
+  GET_DATE?: string | null;
+  AssetName?: string | null;
+  Unit?: string | null;
+  UnitName?: string | null;
+  ASSET_STATUS?: string | null;
+  ASSET_STATUSName?: string | null;
+  PurchaseAmt?: number | null;
+  ChangeAmt?: number | null;
+  TotalAmt?: number | null;
+  FIR_EXP_YEAR?: number | null;
+  UPD_EXP_YEAR_SUM?: number | null;
+  SUM_DEPRE_MONTH?: number | null;
+  SUM_DEPRE_AMOUNT?: number | null;
+  STYPE_ID?: string | null;
+  STYPE_ID2?: string | null;
+  HOLD_EMP_ID?: string | null;
+  user_Name?: string | null;
+  HOLD_ORG_ID?: string | null;
+  Org_Name?: string | null;
+  USE_EMP_ID?: string | null;
+  USE_ORG_ID?: string | null;
+}
 
-export interface FAAssetOptionItem {
-  No?: string;
-  Name?: string;
+export interface QueryFAASSETChooseListASS13060Result {
+  QueryData?: QueryFAASSETChooseListASS13060Response[] | null;
+  TotalRows?: number;
+  TotalPages?: number;
 }
 

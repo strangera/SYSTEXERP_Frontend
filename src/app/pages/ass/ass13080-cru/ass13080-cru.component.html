@@ -358,20 +358,24 @@
         ></app-input-number>
       </div>
 
-      <app-editor-text
-        label="變賣說明"
-        controlName="soldRemark"
-        [control]="df().soldRemark"
-        [style]="{ height: '100px' }"
-        [submitted]="submitted"
-      ></app-editor-text>
-      <app-editor-text
-        label="資產註記"
-        controlName="assetRemark"
-        [control]="df().assetRemark"
-        [style]="{ height: '100px' }"
-        [submitted]="submitted"
-      ></app-editor-text>
+      <div class="grid p-fluid">
+        <app-input-text
+          class="col-12"
+          label="變賣說明"
+          controlName="soldRemark"
+          [control]="df().soldRemark"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+      <div class="grid p-fluid">
+        <app-input-text
+          class="col-12"
+          label="資產註記"
+          controlName="assetRemark"
+          [control]="df().assetRemark"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
     </form>
   </p-panel>
 </div>

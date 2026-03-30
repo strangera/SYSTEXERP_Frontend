@@ -1,6 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -18,15 +19,15 @@
           <app-input-text
             class="col-12 md:col-6 lg:col-4"
             label="變賣單號"
-            controlName="soldNo"
-            [control]="queryForm.controls.soldNo"
+            controlName="assetSaleNo"
+            [control]="queryForm.controls.assetSaleNo"
             [submitted]="submitted"
           ></app-input-text>
           <app-input-text
             class="col-12 md:col-6 lg:col-4"
             label="資產代號"
-            controlName="assetNo"
-            [control]="queryForm.controls.assetNo"
+            controlName="assetId"
+            [control]="queryForm.controls.assetId"
             [submitted]="submitted"
           ></app-input-text>
           <app-dropdown
@@ -43,9 +44,9 @@
         <div class="grid p-fluid">
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
-            label="購入日期"
-            [startControl]="queryForm.controls.buyDateFrom"
-            [endControl]="queryForm.controls.buyDateTo"
+            label="取得日期"
+            [startControl]="queryForm.controls.getDateFrom"
+            [endControl]="queryForm.controls.getDateTo"
             [submitted]="submitted"
           ></app-calendar-range-quick>
           <app-dropdown
@@ -61,8 +62,8 @@
           <app-input-text
             class="col-12 md:col-6 lg:col-4"
             label="攤提代號"
-            controlName="acpNo"
-            [control]="queryForm.controls.acpNo"
+            controlName="depreId"
+            [control]="queryForm.controls.depreId"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -70,31 +71,31 @@
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="保管單位"
-            controlName="keepOrgId"
+            controlName="holdOrgId"
             [options]="orgOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="queryForm.controls.keepOrgId"
+            [control]="queryForm.controls.holdOrgId"
             [submitted]="submitted"
           ></app-dropdown>
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="保管人"
-            controlName="keepUserNo"
+            controlName="holdEmpId"
             [options]="userOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="queryForm.controls.keepUserNo"
+            [control]="queryForm.controls.holdEmpId"
             [submitted]="submitted"
           ></app-dropdown>
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
-            label="會計科目"
-            controlName="accNo"
-            [options]="accOptions"
+            label="資產類別"
+            controlName="stypeId"
+            [options]="stypeOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="queryForm.controls.accNo"
+            [control]="queryForm.controls.stypeId"
             [submitted]="submitted"
           ></app-dropdown>
         </div>
@@ -112,38 +113,35 @@
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="使用人"
-            controlName="useUserNo"
+            controlName="useEmpId"
             [options]="userOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="queryForm.controls.useUserNo"
+            [control]="queryForm.controls.useEmpId"
             [submitted]="submitted"
           ></app-dropdown>
           <app-input-number-range
             class="col-12 md:col-4 lg:col-4"
             [useGrouping]="false"
-            label="購入金額"
-            [startControl]="queryForm.controls.buyAmtFrom"
-            [endControl]="queryForm.controls.buyAmtTo"
+            label="取得成本"
+            [startControl]="queryForm.controls.getCostFrom"
+            [endControl]="queryForm.controls.getCostTo"
             [submitted]="submitted"
           ></app-input-number-range>
         </div>
         <div class="grid p-fluid">
-          <app-dropdown
+          <app-input-text
             class="col-12 md:col-6 lg:col-4"
             label="驗收單號"
-            controlName="rcvNo"
-            [options]="rcvNoOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.rcvNo"
+            controlName="subcheckId"
+            [control]="queryForm.controls.subcheckId"
             [submitted]="submitted"
-          ></app-dropdown>
+          ></app-input-text>
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="入帳日期"
-            [startControl]="queryForm.controls.txnDateFrom"
-            [endControl]="queryForm.controls.txnDateTo"
+            [startControl]="queryForm.controls.billDateFrom"
+            [endControl]="queryForm.controls.billDateTo"
             [submitted]="submitted"
           ></app-calendar-range-quick>
         </div>
@@ -159,7 +157,7 @@
 </div>
 <div class="card">
   <app-table-report
-    dataKey="SOLD_NO"
+    dataKey="ID"
     tableKey="ASS13080_Data"
     [data]="tableData()"
     [columns]="columns"
