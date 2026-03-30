@@ -16,6 +16,7 @@ import { formatAmount, formatDate } from '@shared/componentkit/table/table.model
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -25,7 +26,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   selector: 'app-fin63050',
   templateUrl: './fin63050.component.html',
   standalone: true,
-  imports: [CalendarComponent, DropdownComponent, DialogComponent, ButtonModule, CalendarRangeQuickComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, TranslateModule]
+  imports: [CheckboxModule, CalendarComponent, DropdownComponent, DialogComponent, ButtonModule, CalendarRangeQuickComponent, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, TranslateModule]
 })
 export class FIN63050Component extends BasicQueryPageComponent<Fin63050ListData> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -34,6 +35,7 @@ export class FIN63050Component extends BasicQueryPageComponent<Fin63050ListData>
     ChkNo: [null, [Validators.maxLength(10)]],// 票據號碼
     WithdrawDateFrom: [null], // 撤票日(起)
     WithdrawDateTo: [null],  // 撤票日(迄)
+    ExcludeCashed: [false] // 預設勾選排除已兌現
   });
   data: Fin63050ListData[] = [];
   selectedItems: Fin63050ListData[] = [];
@@ -91,10 +93,12 @@ export class FIN63050Component extends BasicQueryPageComponent<Fin63050ListData>
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      const formValue = frm.getRawValue();
       const body = {
-        ...frm.value,
+        ...formValue,
         WithdrawDateFrom: this.datePipe.transform(frm.value.WithdrawDateFrom, 'yyyy-MM-dd'),
         WithdrawDateTo: this.datePipe.transform(frm.value.WithdrawDateFrom, 'yyyy-MM-dd'),
+        ExcludeCashed: formValue.ExcludeCashed // 確保這個 bool 值有傳給後端
       }
       this.fin63050Service.queryFIN63050(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(result => {
         this.data = result.Data;

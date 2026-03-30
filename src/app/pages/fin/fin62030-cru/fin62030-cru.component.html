@@ -36,7 +36,7 @@
         </div>
       </div>
       <div class="mt-2">
-        <app-table-edit #editTable tableKey="FIN62030Detail" [columns]="columns" [data]="data"
+        <app-table-edit #editTable tableKey="FIN62030Detail" [columns]="columns" [data]="data" [showFooter]="true"
           (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [showInsert]="false"
           [canInsert]="false" [showDelete]="false" [showCheckBox]="false" [showReorder]="false"></app-table-edit>
       </div>

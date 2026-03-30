@@ -36,7 +36,7 @@ export class FIN62020Component extends BasicQueryPageComponent<Fin62020QueryResp
     IsLoadRemark: [false],
     pageSize: [30],
     pageIndex: [1],
-    SortBy: [[{ field: 'Tran_Date', order: -1 }]],
+    SortBy: [[{ field: 'Tran_Date', order: 1 }]],
   });
   BNK_NoOptions = this.dropdown.queryGls1005_BNK_DepositAcc();
   ifOptions = [
@@ -72,6 +72,14 @@ export class FIN62020Component extends BasicQueryPageComponent<Fin62020QueryResp
   }
   ngOnInit(): void {
     this.initializePage('FIN62020');
+    this.queryForm.controls.IsLoadRemark.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
+      if (this.lastQueryBody) {
+        this.lastQueryBody = {
+          ...this.lastQueryBody,
+          IsLoadRemark: val
+        };
+      }
+    });
   }
 
   onSubmit(frm: FormGroup) {

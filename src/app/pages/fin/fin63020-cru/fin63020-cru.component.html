@@ -70,7 +70,9 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="票據狀態(確認/拋轉)" controlName="StatusFlag" [options]="statusOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.StatusFlag" [submitted]="submitted"></app-dropdown>
         </div>
-
+     <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="兌現傳票編號" controlName="VouNo_paid" [control]="dataForm.controls.VouNo_paid" [submitted]="submitted"></app-input-text>
+        </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="領取狀態" controlName="PickupType" [options]="pickupTypeOptions" optionLabel="label" optionValue="value" [control]="dataForm.controls.PickupType" [submitted]="submitted"></app-dropdown>
         </div>
@@ -103,9 +105,7 @@
           <app-input-text label="傳票號碼" controlName="VoucherNoIssued" [control]="dataForm.controls.VoucherNoIssued" [submitted]="submitted"></app-input-text>
         </div>
 
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="已拋轉傳票號碼" controlName="VouNo_paid" [control]="dataForm.controls.VouNo_paid" [submitted]="submitted"></app-input-text>
-        </div>
+   
 
         <div class="col-12 md:col-6 lg:col-12">
           <app-input-text label="備註" controlName="Remark" [control]="dataForm.controls.Remark" [submitted]="submitted"></app-input-text>
