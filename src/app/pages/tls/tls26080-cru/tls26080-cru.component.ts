@@ -1088,15 +1088,15 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.logger.debug(`onformValueChanged:`, [event]);
   }
 
-  /** 檢視模式下，匯入分攤 D16 費用比率與合約分攤不一致時標紅。 */
+  /** 檢視或新增模式下，匯入分攤 D16 費用比率與合約分攤不一致時標紅。 */
   private isImportContractRateMismatchD16(row: TLS26080EditTable): boolean {
-    if (!this.isFormReadable) return false;
+    if (!(this.isFormReadable || this.isFormCreateable)) return false;
     return this.importAndContractRatesDiffer(row.tpy_rate_D16, row.fare_rate_d16);
   }
 
-  /** 檢視模式下，匯入分攤 D17 費用比率與合約分攤不一致時標紅。 */
+  /** 檢視或新增模式下，匯入分攤 D17 費用比率與合約分攤不一致時標紅。 */
   private isImportContractRateMismatchD17(row: TLS26080EditTable): boolean {
-    if (!this.isFormReadable) return false;
+    if (!(this.isFormReadable || this.isFormCreateable)) return false;
     return this.importAndContractRatesDiffer(row.tpy_rate_D17, row.fare_rate_d17);
   }
 
