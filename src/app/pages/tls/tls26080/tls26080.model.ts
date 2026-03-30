@@ -191,10 +191,8 @@ export interface CampaignData {
   EndTime: Date;
   Remark: string;
   StartTime: Date;
-  /** TODO(api): 活動兌回日期起日；後端 JSON 欄位名對齊後請全域搜尋替換屬性名 */
-  BackRedeemStartTime: Date;
-  /** TODO(api): 活動兌回日期迄日；後端 JSON 欄位名對齊後請全域搜尋替換屬性名 */
-  BackRedeemEndTime: Date;
+  DiscountStartTime: Date;
+  DiscountEndTime: Date;
 }
 
 // /** 活動類型 */
