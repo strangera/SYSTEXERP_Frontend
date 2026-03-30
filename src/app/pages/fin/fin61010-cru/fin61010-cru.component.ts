@@ -1,241 +1,181 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { FIN61010Data, FIN61010InsertRequest, FIN61010Service, FIN61010UpdateRequest, FIN61010VoidHistoryData } from '@service/api/fin/fin61010.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-fin61010-cru',
   templateUrl: './fin61010-cru.component.html',
   styleUrl: './fin61010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [
+    MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule,
+    InputTextComponent, DropdownComponent, CalendarComponent,
+    ButtonComponent, NgIf, TranslateModule, TableEditComponent
+  ]
 })
-export class FIN61010CRUComponent
+export class FIN61010CRUComponent extends BasicCruPageComponent<FIN61010Data> implements OnInit {
 
-  implements OnInit {
-  ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '160001';
-    //
-    // ----------------------------------------------------------------
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
+  @ViewChild('voidTable') voidTableComponent?: TableEditComponent;
 
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      Accountcode: [],
-      vendorCodeOptions: [],
-      summary: [],
-      Debitamount: [],
-      Creditamount: [],
-      Organizationcode: [],
-      StandingInstructionCode: [],
-      Activitycode: [],
-      Objectnumber: [],
-      ReconciliationKEYvalue: [],
-    });
-  }
-
-  // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    Subpoenanumber: [],
-    Subpoenatype: [],
-    Subpoenadate: [],
-    Subpoenastatus: [],
-    Subpoenasummary: [],
-    Makeupinvoice: [],
-    builder: [],
-    modifyer: [],
-    builddate: [],
-    modifydate: [],
-    uickMenu: [],
-    Companybankcode: [],
-    status: [],
-
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([this.createItem()]),
+    id: [null as number | null],
+    BNK_No: ['', [Validators.required]],
+    BNK_BranchNo: ['', [Validators.required]],
+    BNK_AccNo: [''],
+    CHK_Track: ['', [Validators.required]],
+    CHK_BegNo: ['', [Validators.required]],
+    CHK_EndNo: ['', [Validators.required]],
+    CHK_LastUsedNo: [{ value: '', disabled: true }],
+    CHK_Status: ['', [Validators.required]],
+    CHK_UseDate: [null as string | null],
+    CHK_StopDate: [null as string | null],
+    HasIssuedRecord: [false],
   });
-  // Dropdown options
-  status: any[] = [
-    { value: 1, label: '停用' },
-    { value: 2, label: '手開' },
-    { value: 3, label: '電腦' },
 
-  ];
-  Companybankcode: any[] = [
-    { value: 1, label: '110306' },
+  hasIssuedRecord = false;
 
+  isOriginalVoidRow = (row: any): boolean => row._dataStatus === 'original';
+
+  voidItems: any[] = [];
+  voidColumns: EditColumn[] = [
+    {
+      field: 'VoidDate',
+      header: '作廢日期',
+      type: 'date',
+      width: '160px',
+      isUserInput: true,
+    },
+    {
+      field: 'VoidBegNo',
+      header: '作廢起號',
+      type: 'input',
+      width: '150px',
+      isUserInput: true,
+      maxLength: 20,
+    },
+    {
+      field: 'VoidEndNo',
+      header: '作廢迄號',
+      type: 'input',
+      width: '150px',
+      isUserInput: true,
+      maxLength: 20,
+    },
+    {
+      field: 'VoidReason',
+      header: '作廢原因',
+      type: 'input',
+      isUserInput: true,
+      maxLength: 200,
+    },
   ];
-  Activitycode: any[] = [
-    { value: 1, label: '001' },
-    { value: 2, label: '002' },
-    { value: 3, label: '003' },
-    { value: 4, label: '004' },
-    { value: 5, label: '005' },
-    { value: 6, label: '006' },
-    { value: 7, label: '007' },
-    { value: 8, label: '008' },
-    { value: 9, label: '009' },
-    { value: 10, label: '010' },
+
+  statusOptions = [
+    { value: '0', label: '停用' },
+    { value: '1', label: '手開' },
+    { value: '2', label: '電腦' },
   ];
-  StandingInstructionCode: any[] = [];
-  Organizationcode: any[] = [
-    { value: 1, label: '100000' },
-    { value: 2, label: '100100' },
-    { value: 3, label: '101000' },
-    { value: 4, label: '101100' },
-    { value: 5, label: '101200' },
-    { value: 6, label: '101300' },
-    { value: 7, label: '101400' },
-    { value: 8, label: '101500' },
-    { value: 9, label: '101600' },
-    { value: 10, label: '101700' },
-  ];
-  usercode: any[] = [];
-  Accountcode: any[] = [
-    { value: 1, label: '110101' },
-    { value: 2, label: '110102' },
-    { value: 3, label: '110103' },
-    { value: 4, label: '110111' },
-    { value: 5, label: '110112' },
-    { value: 6, label: '110199' },
-    { value: 7, label: '110200' },
-    { value: 8, label: '110201' },
-    { value: 9, label: '110210' },
-    { value: 10, label: '110220' },
-  ];
-  Makeupinvoice: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
-  Subpoenatype: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-  Subpoenastatus: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-  vendorCodeOptions: any[] = [
-    { value: 1, label: '00000000-1' },
-    { value: 2, label: '00000000-2' },
-    { value: 3, label: '00000000-4' },
-    { value: 4, label: '00000000-5' },
-    { value: 5, label: '00000000-7' },
-    { value: 6, label: '00000000-8' },
-    { value: 7, label: '00852492-1' },
-    { value: 8, label: '01052878-1' },
-    { value: 9, label: '01508949-1' },
-    { value: 10, label: '01515462-1' },
-  ];
-  // ----------------------------------------------------------------
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-  ) {
+
+  constructor(private readonly fin61010Service: FIN61010Service) {
+    super();
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
+  ngOnInit(): void {
+    this.initializePage('FIN61010', this.dataForm);
+
+    if (this.isFormEditable) {
+      this.hasIssuedRecord = this.dataForm.controls.HasIssuedRecord.value === true;
+      if (this.hasIssuedRecord) {
+        this.dataForm.controls.BNK_No.disable();
+        this.dataForm.controls.BNK_BranchNo.disable();
+        this.dataForm.controls.BNK_AccNo.disable();
+        this.dataForm.controls.CHK_Track.disable();
+        this.dataForm.controls.CHK_BegNo.disable();
+        this.dataForm.controls.CHK_EndNo.disable();
+        this.dataForm.controls.CHK_UseDate.disable();
+        this.dataForm.controls.CHK_StopDate.disable();
+      }
+
+      const id = this.dataForm.controls.id.value;
+      if (id) {
+        this.fin61010Service.queryFIN61010Detail(id, 1000, 1)
+          .pipe(untilDestroyed(this))
+          .subscribe(res => {
+            this.voidItems = (res.Data?.VoidHistory ?? []).map((item: FIN61010VoidHistoryData) => ({
+              ...item,
+              _dataStatus: 'original',
+            }));
+          });
+      }
+    }
   }
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-  ProgNo = 'FIN72050';
-  formTitle = 'FIN72050';
-  submitted = false;
-  accordionTabCss = 'create-accordionTab';
-  crudstatus: CRUDStatus = CRUDStatus.Create;
-  canAdd() { return true; }
-  canEdit() { return true; }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
+  private formatVoidDate(d: Date | string | null | undefined): string | undefined {
+    if (!d) return undefined;
+    const date = d instanceof Date ? d : new Date(d);
+    if (isNaN(date.getTime())) return undefined;
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
 
   onSubmit(frm: FormGroup) {
-    this.submitted = true;
+    this.handleSubmit(frm, () => {
+      this.loading = true;
+      const raw = frm.getRawValue();
 
-    if (this.dataForm.invalid) {
-      return;
-    }
+      const serviceCall = this.isFormCreateable
+        ? this.fin61010Service.insertFIN61010({
+            BNK_No: raw.BNK_No,
+            BNK_BranchNo: raw.BNK_BranchNo,
+            BNK_AccNo: raw.BNK_AccNo || undefined,
+            CHK_Track: raw.CHK_Track,
+            CHK_BegNo: raw.CHK_BegNo,
+            CHK_EndNo: raw.CHK_EndNo,
+            CHK_Status: raw.CHK_Status,
+            CHK_UseDate: this.formatVoidDate(raw.CHK_UseDate),
+            CHK_StopDate: this.formatVoidDate(raw.CHK_StopDate),
+          } as FIN61010InsertRequest)
+        : this.fin61010Service.updateFIN61010({
+            id: raw.id!,
+            CHK_Status: raw.CHK_Status,
+            BNK_No: raw.BNK_No,
+            BNK_BranchNo: raw.BNK_BranchNo,
+            BNK_AccNo: raw.BNK_AccNo || undefined,
+            CHK_Track: raw.CHK_Track,
+            CHK_BegNo: raw.CHK_BegNo,
+            CHK_EndNo: raw.CHK_EndNo,
+            CHK_UseDate: this.formatVoidDate(raw.CHK_UseDate),
+            CHK_StopDate: this.formatVoidDate(raw.CHK_StopDate),
+            VoidItems: this.voidItems
+              .filter(item => !item._isAutoInsertCandidate && item._dataStatus === 'new' && item.VoidBegNo && item.VoidEndNo)
+              .map(item => ({
+                VoidDate: this.formatVoidDate(item.VoidDate),
+                VoidBegNo: item.VoidBegNo,
+                VoidEndNo: item.VoidEndNo,
+                VoidReason: item.VoidReason || undefined,
+              })),
+          } as FIN61010UpdateRequest);
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
+      serviceCall.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+        } else if (this.isFormEditable) {
+          this.onCancel();
         }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-        }
-        break;
-    }
-
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  } //CRU
-
-  onCancel() {
-    this.router.navigate(['FIN6000/FIN61010']);
+      });
+    });
   }
 }
