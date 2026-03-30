@@ -378,24 +378,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   // 專櫃資料表
   public readonly counterColumns = computed<Column[]>(() => {
     const tltIdMap = this.tltIdList();
-    const fareContractCols = (this.isFormReadable || this.isFormCreateable)
-      ? [
-        {
-          field: 'fare_rate_d16' as const,
-          header: 'D16',
-          groupField: 'groupField2',
-          format: (v: unknown) => String(v ?? '') + '%',
-          textAlign: 'right',
-        },
-        {
-          field: 'fare_rate_d17' as const,
-          header: 'D17',
-          groupField: 'groupField2',
-          format: (v: unknown) => String(v ?? '') + '%',
-          textAlign: 'right',
-        },
-      ]
-      : [];
 
     return [
       {
@@ -477,7 +459,20 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         textAlign: 'right',
         cellClass: (row: TLS26080EditTable) => (this.isImportContractRateMismatchD17(row) ? 'text-red-500' : ''),
       },
-      ...fareContractCols,
+      {
+        field: 'fare_rate_d16' as const,
+        header: 'D16',
+        groupField: 'groupField2',
+        format: (v: unknown) => String(v ?? '') + '%',
+        textAlign: 'right',
+      },
+      {
+        field: 'fare_rate_d17' as const,
+        header: 'D17',
+        groupField: 'groupField2',
+        format: (v: unknown) => String(v ?? '') + '%',
+        textAlign: 'right',
+      },
       {
         field: 'pod_status',
         header: '審核狀態',
@@ -529,7 +524,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public readonly counterColumnsGroup = computed<ColumnGroup[]>(() => [
     { field: 'groupField1', header: '匯入分攤' },
-    ...((this.isFormReadable || this.isFormCreateable) ? [{ field: 'groupField2', header: '合約分攤' }] : []),
+    { field: 'groupField2', header: '合約分攤' },
   ]);
 
   public readonly loadingEffect = effect(() => {
@@ -1088,15 +1083,13 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.logger.debug(`onformValueChanged:`, [event]);
   }
 
-  /** 檢視或新增模式下，匯入分攤 D16 費用比率與合約分攤不一致時標紅。 */
+  /** 匯入分攤 D16 費用比率與合約分攤不一致時標紅。 */
   private isImportContractRateMismatchD16(row: TLS26080EditTable): boolean {
-    if (!(this.isFormReadable || this.isFormCreateable)) return false;
     return this.importAndContractRatesDiffer(row.tpy_rate_D16, row.fare_rate_d16);
   }
 
-  /** 檢視或新增模式下，匯入分攤 D17 費用比率與合約分攤不一致時標紅。 */
+  /** 匯入分攤 D17 費用比率與合約分攤不一致時標紅。 */
   private isImportContractRateMismatchD17(row: TLS26080EditTable): boolean {
-    if (!(this.isFormReadable || this.isFormCreateable)) return false;
     return this.importAndContractRatesDiffer(row.tpy_rate_D17, row.fare_rate_d17);
   }
 
