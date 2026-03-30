@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ASS15070Component } from './ass15070.component';
@@ -8,9 +10,9 @@ describe('ASS15070Component', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ASS15070Component]
-    })
-      .compileComponents();
+      imports: [ASS15070Component],
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ASS15070Component);
     component = fixture.componentInstance;
