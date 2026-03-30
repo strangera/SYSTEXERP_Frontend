@@ -32,6 +32,7 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
     //APS1002  公司銀行資料維護主檔
     id: [null], // 主鍵ID，新增時為null，編輯時為存在的ID
 
+    BNK_id: [null, [Validators.required, Validators.maxLength(6), this.validationService.noChineseValidator]], // 帳戶編號 (BNK_NO+BNK_BRANCHNO銀行代碼+分行代碼)  PK
     BNK_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.noChineseValidator]],     // 全省銀行代碼--- 下拉: BNK_NO+BNK_BRANCHNO銀行代碼、銀行名稱BNK_BRANCHNAME
 
     BNK_AccNo: [null, [Validators.required, Validators.maxLength(20), this.validationService.numberValidator]],  // 帳號
@@ -105,19 +106,12 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
       return;
     }
 
+    // 送出檢核(BNK_id不可重複)
     const formValue = frm.getRawValue();
     console.log('formValue', formValue)
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          //新增 頁面只卡控 BNK_No 不可重複即可
-          const currentBNK_No = this.dataForm.get('BNK_No')?.value;
-          const isExist = this.APS1004_Option.some(item => item.No === currentBNK_No);
-          if (isExist) {
-            this.messageService.errorBubble('全省銀行代碼不可重複');
-            return;
-          }
-
           console.log('insert', formValue);
           this.fin21010Service.insertFIN21010(formValue).subscribe(() => {
             this.messageService.successBubble('新增成功');
@@ -163,9 +157,7 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
 
     // 查 公司銀行科目代號(/queryAPS1002_DropDownList)
     this.dropdownApiService.queryAps1002().pipe(untilDestroyed(this)).subscribe((response) => {
-      // 1. 確保 response 是陣列
       const list = Array.isArray(response) ? response : [];
-
       this.GLS1005_BNK_DepositAccNo_Option = list.map((item: any) => ({
         No: item.BNK_DepositAccNo, // 公司銀行科目 代號
         Name: item.ACCCNAME, // 公司銀行科目 名稱
@@ -173,6 +165,7 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
       }));
       console.log('公司銀行科目代號:', this.GLS1005_BNK_DepositAccNo_Option);
     });
+
 
     this.dropdownApiService.queryGls1005_BNK_CheckInAcc().pipe(untilDestroyed(this)).subscribe((response) => {
       const list = Array.isArray(response) ? response : [];

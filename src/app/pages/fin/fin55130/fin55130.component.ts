@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN55130DetailItem, Fin55130Service, QueryFIN55130Request } from '@service/api/fin/fin55130.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { lastLastYearToday, lastYearToday } from '@shared/models/system/query-form.model';
+import { lastYearToday } from '@shared/models/system/query-form.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -25,8 +25,8 @@ import { ColumnGroup, ReportColumn } from './fin55130-table-report/fin55130-tabl
 })
 export class FIN55130Component extends BasicQueryPageComponent<FIN55130DetailItem> implements OnInit {
   queryForm = this.formBuilder.group({
-    BaseYM: [lastYearToday, [Validators.required]],
-    CompareYM: [lastLastYearToday, [Validators.required]],
+    BaseYM: [new Date(), [Validators.required]],
+    CompareYM: [lastYearToday, [Validators.required]],
     Category: ['2', [Validators.required]],
     PrintSign: [true],
     ShowZero: [false],
@@ -49,7 +49,7 @@ export class FIN55130Component extends BasicQueryPageComponent<FIN55130DetailIte
     { field: 'BaseAmt', header: '金額', isSubTotal: true, format: formatAmount, align: 'right', groupField: '基準年月' },
     { field: 'CompareAmt', header: '金額', isSubTotal: true, format: formatAmount, align: 'right', groupField: '比較年月' },
     { field: 'DiffAmt', header: '金額', isSubTotal: true, format: formatAmount, align: 'right', groupField: '差異' },
-    { field: 'DiffPct', header: '百分比', isSubTotal: true, format: formatAmount, align: 'right', groupField: '差異' },
+    { field: 'DiffPct', header: '百分比', isSubTotal: true, format: formatPercent, align: 'right', groupField: '差異' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: '基準年月', header: 'YYYY年M月' },
@@ -140,4 +140,26 @@ const formatAmount = (val: number | string | null | undefined): string => {
 
   // 4. 正數或 0 則直接進行本地化格式化
   return num.toLocaleString(); // eg. 1,000,000
+};
+const formatPercent = (val: number | string | null | undefined): string => {
+  if (val === null || val === undefined || val === '') {
+    return '';
+  }
+
+  const num = Number(val);
+
+  if (isNaN(num)) {
+    return String(val);
+  }
+
+  // 格式化數字：強制保留兩位小數
+  const formattedNum = Math.abs(num).toFixed(2);
+
+  if (num < 0) {
+    // 負數顯示為 (1.20%)
+    return `(${formattedNum}%)`;
+  }
+
+  // 正數顯示為 1.20%
+  return `${formattedNum}%`;
 };

@@ -66,6 +66,11 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   data: FIN21010Response[] = [];
   columns: Column[] = [
     {
+      field: 'BNK_id',
+      header: '帳戶編號',
+      visible: true,
+    },
+    {
       field: 'BNK_DepositAccNo',
       header: '公司銀行科目',
       visible: true,
@@ -100,13 +105,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       field: 'BNK_CheckOutAccCName',
       header: '應付票據名稱',
       visible: true,
-    },
-    // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
-    // { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
-    // { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-    // { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
-    // { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
-    // { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
+    }
   ];
 
   selectedItems: APS1002[] = [];// 多選項目

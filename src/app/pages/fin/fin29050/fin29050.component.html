@@ -15,7 +15,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-range label="廠商編號" [startControl]="queryForm.controls.VEN_No_From"
-              [endControl]="queryForm.controls.VEN_No_To" [submitted]="submitted" [options]="VendorNoOptions"
+              [endControl]="queryForm.controls.VEN_No_To" [submitted]="submitted" [options]="VendorNoOptions | async"
               optionLabel="label" optionValue="value"></app-dropdown-range>
           </div>
 
@@ -26,7 +26,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-range label="科目代號" [startControl]="queryForm.controls.AccNo_From"
-              [endControl]="queryForm.controls.AccNo_To" [submitted]="submitted" [options]="AccNoOptions"
+              [endControl]="queryForm.controls.AccNo_To" [submitted]="submitted" [options]="AccNoOptions | async"
               optionLabel="label" optionValue="value"></app-dropdown-range>
           </div>
 

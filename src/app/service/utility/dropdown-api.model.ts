@@ -266,7 +266,7 @@ export interface TalentOpenFlagQuery {
   /** 廠商編號 */
   VEN_No: string;
   /** 契約有效起日 */
-  tlt_sdate?: string;
+  tlt_bdate?: string;
   /** 契約有效迄日 */
   tlt_edate?: string;
 }
@@ -573,4 +573,34 @@ export interface Aps1002Item {
  */
 export interface IGLS1005LedgerMDItem extends IDropdownItem {
   ABAT_YN: string; // 應收廠商
+}
+
+/**
+ * 查詢 SYS5000 子模組下拉選單 (querySYS5000SubModuleNo_DropDownList) 回傳的項目型別
+ * 繼承 IDropdownItem (No, Name) 並擴充完整 SYS5000 屬性
+ */
+export interface Sys5000SubModuleItem extends IDropdownItem {
+  /** 模組代碼 (如: ASS) */
+  module_no: string;
+  /** 模組名稱 */
+  module_name: string;
+  /** 唯一識別碼 */
+  id: number;
+  /** 程式快捷編號 */
+  prog_id: string | null;
+  /** 上層程式代號 */
+  prog_up: string | null;
+  /** 是否可執行的程式 (Y=可執行) */
+  prog_ispage: string;
+  /** 是否停用 (Y=停用) */
+  prog_stopflag: string;
+  /** 排列順序 */
+  prog_sort: number | null;
+}
+
+/** * TLS55020 專用查詢參數
+ */
+export interface Tls55020Query {
+  /** 交易日期 (YYYY-MM-DD) */
+  TXN_Date: string;
 }

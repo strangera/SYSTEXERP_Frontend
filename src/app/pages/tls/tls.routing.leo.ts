@@ -85,6 +85,10 @@ export const tlsRoutes: Routes = [
   { path: 'tls41010', loadComponent: () => import('./tls41010/tls41010.component').then(m => m.TLS41010Component), data: { progNo: 'TLS41010' } },
   // 收銀機基本資料維護 CRU
   { path: 'tls41010cru', loadComponent: () => import('./tls41010-cru/tls41010-cru.component').then(m => m.TLS41010CRUComponent), data: { progNo: 'TLS41010' } },
+  // 快速鍵維護作業
+  { path: 'tls42010', loadComponent: () => import('./tls42010/tls42010.component').then(m => m.TLS42010Component), data: { progNo: 'TLS42010' } },
+  // 快速鍵維護作業 CRU
+  { path: 'tls42010cru', loadComponent: () => import('./tls42010-cru/tls42010-cru.component').then(m => m.TLS42010CRUComponent), data: { progNo: 'TLS42010' } },
   // 訊息登錄作業
   { path: 'tls43010', loadComponent: () => import('./tls43010/tls43010.component').then(m => m.TLS43010Component), data: { progNo: 'TLS43010' } },
   // 訊息登錄作業 CRU
@@ -105,6 +109,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls51140', loadComponent: () => import('./tls51140/tls51140.component').then(m => m.Tls51140Component), data: { progNo: 'Tls51140' } },
   // 自營專櫃收銀扣庫維護作業 CRU
   { path: 'tls51140cru', loadComponent: () => import('./tls51140-cru/tls51140-cru.component').then(m => m.Tls51140CruComponent), data: { progNo: 'Tls51140' } },
+  // 自營傳票項目設定作業
+  { path: 'tls51150', loadComponent: () => import('./tls51150/tls51150.component').then(m => m.Tls51150Component), data: { progNo: 'Tls51150' } },
   // 採購單維護作業
   { path: 'tls52010', loadComponent: () => import('./tls52010/tls52010.component').then(m => m.TLS52010Component), data: { progNo: 'TLS52010' } },
   // 退貨單維護作業
@@ -127,6 +133,9 @@ export const tlsRoutes: Routes = [
   { path: 'tls52050cru', loadComponent: () => import('./tls52050-cru/tls52050-cru.component').then(m => m.TLS52050CRUComponent), data: { progNo: 'TLS52050' } },
   // 進貨日結作業
   { path: 'tls55010', loadComponent: () => import('./tls55010/tls55010.component').then(m => m.TLS55010Component), data: { progNo: 'TLS55010' } },
+  // 自營交易修正作業
+  { path: 'tls55020', loadComponent: () => import('./tls55020/tls55020.component').then(m => m.TLS55020Component), data: { progNo: 'TLS55020' } },
+  { path: 'tls55020cru', loadComponent: () => import('./tls55020/tls55020-cru/tls55020-cru.component').then(m => m.TLS55020CRUComponent), data: { progNo: 'TLS55020' } },
   // 廠商發票折讓作業
   { path: 'tls55030', loadComponent: () => import('./tls55030/tls55030.component').then(m => m.TLS55030Component), data: { progNo: 'TLS55030' } },
   // 廠商發票折讓作業 CRU
@@ -184,12 +193,21 @@ export const tlsRoutes: Routes = [
   { path: 'tls57090', loadComponent: () => import('./tls57090/tls57090.component').then(m => m.TLS57090Component), data: { progNo: 'TLS57090' } },
   // 驗收/驗退單據統計表
   { path: 'tls57100', loadComponent: () => import('./tls57100/tls57100.component').then(m => m.TLS57100Component), data: { progNo: 'TLS57100' } },
+  // 存貨月結庫存表
+  { path: 'tls57110', loadComponent: () => import('./tls57110/tls57110.component').then(m => m.TLS57110Component), data: { progNo: 'TLS57110' } },
+  { path: 'tls57110cru', loadComponent: () => import('./tls57110-cru/tls57110-cru.component').then(m => m.TLS57110CRUComponent), data: { progNo: 'TLS57110' } },
+  // 滯銷商品統計表
+  { path: 'tls57120', loadComponent: () => import('./tls57120/tls57120.component').then(m => m.TLS57120Component), data: { progNo: 'TLS57120' } },
   // 銷售排行報表
   { path: 'tls57130', loadComponent: () => import('./tls57130/tls57130.component').then(m => m.TLS57130Component), data: { progNo: 'TLS57130' } },
+  // 商品迴轉率
+  { path: 'tls57140', loadComponent: () => import('./tls57140/tls57140.component').then(m => m.TLS57140Component), data: { progNo: 'TLS57140' } },
   // 盤點統計表
   { path: 'tls57150', loadComponent: () => import('./tls57150/tls57150.component').then(m => m.TLS57150Component), data: { progNo: 'TLS57150' } },
   // 庫齡分析表
   { path: 'tls57160', loadComponent: () => import('./tls57160/tls57160.component').then(m => m.TLS57160Component), data: { progNo: 'TLS57160' } },
+  // 存貨評價分析表
+  { path: 'tls57170', loadComponent: () => import('./tls57170/tls57170.component').then(m => m.TLS57170Component), data: { progNo: 'TLS57170' } },
   // 存貨評價分析表
   { path: 'tls57190', loadComponent: () => import('./tls57190/tls57190.component').then(m => m.TLS57190Component), data: { progNo: 'TLS57190' } },
 
@@ -224,12 +242,12 @@ export const tlsRoutes: Routes = [
   // { path: 'tls51050', loadComponent: () => import('./tls51050/tls51050.component').then(m => m.TLS51050Component), data: { progNo: 'TLS51050' } },
   // // 品牌設定作業
   // { path: 'tls51060', loadComponent: () => import('./tls51060/tls51060.component').then(m => m.TLS51060Component), data: { progNo: 'TLS51060' } },
-  // // 商品基本資料
-  // { path: 'tls51070', loadComponent: () => import('./tls51070/tls51070.component').then(m => m.TLS51070Component), data: { progNo: 'TLS51070' } },
-  // // 分倉資料處理
+  // 商品基本資料
+  { path: 'tls51070', loadComponent: () => import('./tls51070/tls51070.component').then(m => m.TLS51070Component), data: { progNo: 'TLS51070' } },
+  // 分倉資料處理
   // { path: 'tls51080', loadComponent: () => import('./tls51080/tls51080.component').then(m => m.TLS51080Component), data: { progNo: 'TLS51080' } },
-  // // 品牌每月可進貨限額維護作業
-  // { path: 'tls51110', loadComponent: () => import('./tls51110/tls51110.component').then(m => m.TLS51110Component), data: { progNo: 'TLS51110' } },
+  // 品牌每月可進貨限額維護作業
+  { path: 'tls51110', loadComponent: () => import('./tls51110/tls51110.component').then(m => m.TLS51110Component), data: { progNo: 'TLS51110' } },
   // // 品牌進貨折數設定作業
   // { path: 'tls51130', loadComponent: () => import('./tls51130/tls51130.component').then(m => m.TLS51130Component), data: { progNo: 'TLS51130' } },
   // // 自營專櫃收銀扣庫維護作業
@@ -326,14 +344,14 @@ export const tlsRoutes: Routes = [
   // { path: 'tls51050cru', loadComponent: () => import('./tls51050-cru/tls51050-cru.component').then(m => m.TLS51050CRUComponent), data: { progNo: 'TLS51050' } },
   // // 品牌設定作業 CRU
   // { path: 'tls51060cru', loadComponent: () => import('./tls51060-cru/tls51060-cru.component').then(m => m.TLS51060CRUComponent), data: { progNo: 'TLS51060' } },
-  // // 商品基本資料 CRU
-  // { path: 'tls51070cru', loadComponent: () => import('./tls51070-cru/tls51070-cru.component').then(m => m.TLS51070CRUComponent), data: { progNo: 'TLS51070' } },
-  // // 商品基本資料 OS
-  // { path: 'tls51070os', loadComponent: () => import('./tls51070-os/tls51070-os.component').then(m => m.Tls51070OsComponent), data: { progNo: 'tls51070' } },
+  // 商品基本資料 CRU
+  { path: 'tls51070cru', loadComponent: () => import('./tls51070-cru/tls51070-cru.component').then(m => m.TLS51070CRUComponent), data: { progNo: 'TLS51070' } },
+  // 商品基本資料 OS
+  { path: 'tls51070os', loadComponent: () => import('./tls51070-os/tls51070-os.component').then(m => m.Tls51070OsComponent), data: { progNo: 'tls51070' } },
   // // 分倉資料處理 CRU
   // { path: 'tls51080cru', loadComponent: () => import('./tls51080-cru/tls51080-cru.component').then(m => m.TLS51080CRUComponent), data: { progNo: 'TLS51080' } },
-  // // 品牌每月可進貨限額維護作業 CRU
-  // { path: 'tls51110cru', loadComponent: () => import('./tls51110-cru/tls51110-cru.component').then(m => m.TLS51110CRUComponent), data: { progNo: 'TLS51110' } },
+  // 品牌每月可進貨限額維護作業 CRU
+  { path: 'tls51110cru', loadComponent: () => import('./tls51110-cru/tls51110-cru.component').then(m => m.TLS51110CRUComponent), data: { progNo: 'TLS51110' } },
   // // 品牌進貨折數設定作業 CRU
   // { path: 'tls51130cru', loadComponent: () => import('./tls51130-cru/tls51130-cru.component').then(m => m.TLS51130CRUComponent), data: { progNo: 'TLS51130' } },
   // // 自營專櫃收銀扣庫維護作業 CRU

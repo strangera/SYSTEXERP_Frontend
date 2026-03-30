@@ -9,6 +9,7 @@ import { DropDownListService, IAPS3001Item } from '@service/utility/dropDownList
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownTableComponent } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
@@ -35,6 +36,7 @@ import { finalize } from 'rxjs';
     TranslateModule,
     InputNumberComponent,
     CalendarComponent,
+    CalendarRangeQuickComponent,
     DropdownTableComponent,
     InputTextComponent,
     TableEditComponent,
@@ -61,6 +63,10 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
   // APS3001 應付ID 下拉查詢相關
   dialogQueryForm = this.formBuilder.group({
     ACP_No: [''],
+    VEN_No: [''],    // 新增
+    VEN_Name: [''],  // 新增
+    ACP_Date_From: [''],  // 新增
+    ACP_Date_To: [''],  // 新增
   });
   apsDialogLoading = false;
   apsRawData: IAPS3001Item[] = [];
@@ -142,6 +148,7 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     // 若 dropdown-table 在選取後觸發 parent form reset()，當 ACP_No 被清空時在短時間內自動恢復
     this.dialogQueryForm.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
       try {
+        console.log('⭐Dialog query form value changed:', value);
         const now = Date.now();
         if ((value?.ACP_No === null || value?.ACP_No === undefined || String(value?.ACP_No).trim() === '')
           && this.lastAcpNo && (now - this.lastAcpSelectTime) < 1000) {
@@ -626,15 +633,8 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     this.apsSuggestions = filtered;
   }
   onDialogQueryFormValueChanged(value: Record<string, string>): void {
-    const keyword = (value?.['ACP_No'] || '').trim();
-    if (!keyword) {
-      this.apsDialogData = this.apsRawData;
-      this.apsSuggestions = this.apsRawData;
-      return;
-    }
-    const filtered = this.apsRawData.filter(item => item.ACP_No?.includes(keyword));
-    this.apsDialogData = filtered;
-    this.apsSuggestions = filtered;
+    // 當對話框內的查詢條件改變時，直接觸發搜尋(過濾)
+    this.onApsDialogSearch();
   }
 
   private toStatusCode(status: any): string {
@@ -682,5 +682,47 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
     } catch (e) {
       // ignore
     }
+  }
+
+  onApsDialogSearch(): void {
+    const { ACP_No, VEN_No, VEN_Name, ACP_Date_From, ACP_Date_To } = this.dialogQueryForm.value;
+
+    if (!this.apsRawData || this.apsRawData.length === 0) {
+      return;
+    }
+
+    // 1. 將搜尋條件轉為時間數值 (毫秒)，方便比對大小
+    // 如果沒輸入，則設為 null
+    const fromTime = ACP_Date_From ? new Date(ACP_Date_From).setHours(0, 0, 0, 0) : null;
+    const toTime = ACP_Date_To ? new Date(ACP_Date_To).setHours(23, 59, 59, 999) : null;
+
+    this.apsDialogData = this.apsRawData.filter(item => {
+      const sAcpNo = (ACP_No || '').toLowerCase();
+      const sVenNo = (VEN_No || '').toLowerCase();
+      const sVenName = (VEN_Name || '').toLowerCase();
+
+      // 基本欄位篩選 (部分符合)
+      const matchAcpNo = !sAcpNo || (item.ACP_No ?? '').toLowerCase().includes(sAcpNo);
+      const matchVenNo = !sVenNo || (item.VEN_No ?? '').toLowerCase().includes(sVenNo);
+      const matchVenName = !sVenName || (item.VEN_Name ?? '').toLowerCase().includes(sVenName);
+
+      // 2. 日期區間篩選邏輯
+      let matchDate = true;
+      if (item.ACP_Date) {
+        // 將資料格式 "2025-11-30" 轉為時間數值
+        const itemTime = new Date(item.ACP_Date).getTime();
+
+        const afterFrom = !fromTime || itemTime >= fromTime;
+        const beforeTo = !toTime || itemTime <= toTime;
+        matchDate = afterFrom && beforeTo;
+      } else {
+        // 如果資料本身沒日期，但使用者有設區間，則視為不符合
+        if (fromTime || toTime) matchDate = false;
+      }
+
+      return matchAcpNo && matchVenNo && matchVenName && matchDate;
+    });
+
+    this.apsSuggestions = [...this.apsDialogData];
   }
 }

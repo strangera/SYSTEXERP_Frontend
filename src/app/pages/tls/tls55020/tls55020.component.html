@@ -11,11 +11,12 @@
             [control]="queryForm.controls.TXN_Date" [submitted]="submitted"></app-calendar>
           <!-- 收銀機號 → POS5006.ECR_No -->
           <app-auto-complete class="col-12 md:col-6" label="收銀機號" [control]="queryForm.controls.ECR_No"
-            [submitted]="submitted" [options]="ECR_NoOptions$ | async" optionLabel="label"
-            optionValue="value"></app-auto-complete>
+            [submitted]="submitted" [options]="ECR_NoOptions$ | async" optionLabel="label" optionValue="value">
+          </app-auto-complete>
           <!-- 專櫃編號 → POS5006.TLT_No -->
           <app-dropdown class="col-12 md:col-6" label="專櫃編號" [control]="queryForm.controls.TLT_No"
-            [submitted]="submitted" [options]="TLT_NoOptions$ | async" optionLabel="label" optionValue="No" />
+            [submitted]="submitted" [options]="TLT_NoOptions$ | async" optionLabel="label" optionValue="value">
+          </app-dropdown>
           <!-- 交易序號 → POS5006.TXN_No -->
           <app-input-text class="col-12 md:col-6" label="交易序號" [control]="queryForm.controls.TXN_No"
             [submitted]="submitted"></app-input-text>
@@ -31,6 +32,6 @@
 <div class="card">
   <app-table-report [data]="data" [columns]="columns" [showDelete]="false" [totalRecords]="totalRecords"
     [lastQueryBody]="lastQueryBody" [queryFunction]="tls55020Service.queryTLS55020.bind(tls55020Service)"
-    (detail)="onDetail($event)" (edit)="onEdit($event)" [loading]="loading">
+    (detail)="onDetail($event)" (edit)="onEdit($event)" [loading]="loading" emptyMessage="查無特殊交易資料">
   </app-table-report>
 </div>

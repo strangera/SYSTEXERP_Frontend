@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Tls13070QueryRequest, Tls13070Response, Tls13070Service } from '@service/api/tls/tls13070.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { VendorNoMultiSelectComponent } from '@shared/biz-components/vendor-no-multi-select/vendor-no-multi-select.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -35,7 +36,8 @@ import { Tls13070TableComponent } from './tls13070-table/tls13070-table.componen
     AsyncPipe,
     RadiobuttonYNComponent,
     MultiSelectComponent,
-    Tls13070TableComponent
+    Tls13070TableComponent,
+    VendorNoMultiSelectComponent
   ],
 })
 export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response> implements OnInit {
@@ -85,7 +87,6 @@ export class TLS13070Component extends BasicQueryPageComponent<Tls13070Response>
   totalRecords = 0;
   lastQueryBody: Tls13070QueryRequest | null = null;
   BUS_TypeOptions = this.dropdown.queryTltBusType();
-  VEN_UniformOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   Tlt_NoOptions = this.dropdown.queryTltTalent();
   approve_statusOptions = getSYS1000Options('approve_status');
   Area_NoOptions = this.dropdown.querySys3A00();

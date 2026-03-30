@@ -1,1 +1,194 @@
-<p>ass16020-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (clickEvent)="onCancel()"></app-button>
+    <app-button
+      btnType="default"
+      label="結案"
+      *ngIf="isEditMode"
+      (clickEvent)="onCancel()"
+    ></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form
+      [formGroup]="dataForm"
+      (ngSubmit)="onSubmit(dataForm)"
+      *ngIf="!isReportMode"
+    >
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="倉別"
+            controlName="warehouseType"
+            [control]="dataForm.controls.warehouseType"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="盤點單號"
+            controlName="inventoryNumber"
+            [control]="dataForm.controls.inventoryNumber"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar-range
+            calendarType="dateRange"
+            label="盤點日期"
+            [startControl]="dataForm.controls.SInventoryDate"
+            [endControl]="dataForm.controls.EInventoryDate"
+            [submitted]="submitted"
+          ></app-calendar-range>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <label for="initOrgCode" class="block">
+            初盤人員
+            <span class="text-red-500">*</span>
+          </label>
+          <div class="grid">
+            <div class="col-12 md:col-6">
+              <app-dropdown
+                [showLabel]="false"
+                controlName="initOrgCode"
+                [options]="initOrgCodeOp"
+                optionLabel="label"
+                optionValue="value"
+                [control]="dataForm.controls.initOrgCode"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+            <div class="col-12 md:col-6">
+              <app-dropdown
+                [showLabel]="false"
+                controlName="initChecker"
+                [options]="initCheckerOp"
+                optionLabel="label"
+                optionValue="value"
+                [control]="dataForm.controls.initChecker"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <label for="reOrgCode" class="block">
+            複盤人員
+            <span class="text-red-500">*</span>
+          </label>
+          <div class="grid">
+            <div class="col-12 md:col-6">
+              <app-dropdown
+                [showLabel]="false"
+                controlName="reOrgCode"
+                [options]="reOrgCodeOp"
+                optionLabel="label"
+                optionValue="value"
+                [control]="dataForm.controls.reOrgCode"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+            <div class="col-12 md:col-6">
+              <app-dropdown
+                [showLabel]="false"
+                controlName="rechecker"
+                [options]="recheckerOp"
+                optionLabel="label"
+                optionValue="value"
+                [control]="dataForm.controls.rechecker"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="說明"
+            controlName="remark"
+            [control]="dataForm.controls.remark"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <app-table-edit
+          tableKey="ASS16020Detail"
+          class="col-12"
+          [data]="data"
+          [columns]="columns"
+          (dataChange)="data = $event"
+          [tableRequired]="true"
+          [canInsert]="isEditMode || data.length === 0"
+        ></app-table-edit>
+      </div>
+      <div
+        *ngIf="!isFormReadable"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button
+          btnType="cancel"
+          [form]="dataForm"
+          (clickEvent)="resetTable()"
+        ></app-button>
+        <app-button
+          btnType="submit"
+          label="儲存"
+          [loading]="loading"
+        ></app-button>
+      </div>
+    </form>
+
+    <div *ngIf="isReportMode">
+      <div class="flex gap-2 mb-2">
+        <app-input-text
+          label="盤點單號"
+          controlName="inventoryNumber"
+          [control]="dataForm.controls.inventoryNumber"
+          [submitted]="submitted"
+        ></app-input-text>
+        <!-- <div class="block">盤點單號:</div>
+        <div class="block">{{ reportRequest.inventoryNumber }}</div> -->
+      </div>
+
+      <div class="card">
+        <div class="col-12">
+          <app-table-report
+            [data]="reportData"
+            dataKey="M_CLASS_ID"
+            tableKey="ASS16020_Data"
+            [totalRecords]="totalRecords"
+            [columns]="reportColumns"
+            [footerData]="footerData"
+            [showDelete]="false"
+            [showReportMode]="false"
+            [showSort]="false"
+            [showManage]="false"
+            [footerLabelField]="'group_name'"
+          >
+            <header>
+              <div class="flex justify-content-end align-items-center gap-2">
+                <p-button
+                  styleClass="p-2"
+                  label="盤點維護報表.PDF"
+                  [loading]="btnLoading"
+                  icon="pi pi-file"
+                  [disabled]="
+                    reportData.length === 0 || !hasPermission(Actions.Print)
+                  "
+                ></p-button>
+                <p-button
+                  styleClass="p-2"
+                  label="盤點維護報表.XLSX"
+                  [loading]="btnLoading"
+                  icon="pi pi-file"
+                  [disabled]="
+                    reportData.length === 0 ||
+                    !hasPermission(Actions.ExportExcel)
+                  "
+                ></p-button>
+              </div>
+            </header>
+          </app-table-report>
+        </div>
+      </div>
+    </div>
+  </p-panel>
+</div>

@@ -12,7 +12,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 import { monthOptions } from '../fin11200/fin11200.model';
 
@@ -53,7 +52,6 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
   maxQty = 0;
 
   constructor(
-    private validationService: ValidationService,
     private fin12010Service: Fin12010Service
   ) {
     super();  // 呼叫父類建構子

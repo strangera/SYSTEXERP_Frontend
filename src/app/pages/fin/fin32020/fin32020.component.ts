@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -8,33 +8,32 @@ import {
   Validators,
 } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-
-
-// UI
 import { TranslateModule } from '@ngx-translate/core';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { Observable, of } from 'rxjs';
+import { map, take } from 'rxjs/operators';
+
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
-// 共用
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   createPaginationConfig,
   formatDateToYYYY_MM_DD,
 } from '../../../shared/componentkit/table/table.model';
 
-// Service & 型別
 import {
   ApiResponse,
   FIN32020Service,
-  Fin32020QueryRequest,
   Fin32020Row,
+  Fin32020DetailRow,
 } from '../../../service/api/fin/fin32020.service';
 
 interface SortItem {
@@ -42,7 +41,6 @@ interface SortItem {
   order: number;
 }
 
-import { map, take } from 'rxjs/operators';
 @UntilDestroy()
 @Component({
   selector: 'app-fin32020',
@@ -64,23 +62,21 @@ import { map, take } from 'rxjs/operators';
     TableReportComponent,
   ],
 })
-export class FIN32020Component
-  extends BasicQueryPageComponent<Fin32020Row>
-  implements OnInit {
-  /* ----------------- 主表狀態 ----------------- */
+export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
   data: Fin32020Row[] = [];
-  totalRecords = 0; // 後端真實總筆數
-  viewTotalRecords = 0; // 當前顯示總筆數（for table-report）
+  totalRecords = 0;
+  viewTotalRecords = 0;
   selectedItems: Fin32020Row[] = [];
 
-  // ✅ 還原用
   lastQueryBody: any = null;
   private _currentSortBy: SortItem[] = [];
   footerData: any = undefined;
   tableVer = 0;
-
-  /* ----------------- 欄位定義 (app-table-report) ----------------- */
-  // 主表欄位：主檔
+  moneyFormat = (value: any): string => {
+    const num = Number(value ?? 0);
+    if (!Number.isFinite(num)) return '0';
+    return num.toLocaleString('en-US');
+  };
   columns: ReportColumn[] = [
     { field: 'ADJ_No', header: '調整單號' },
     {
@@ -88,13 +84,18 @@ export class FIN32020Component
       header: '收款日期',
       format: (v: string) => this.formatDate(v),
     },
+    {
+      field: 'TotalAmt',
+      header: '調整金額',
+      align: 'right',
+      format: this.moneyFormat,
+    },
     { field: 'Remark', header: '備註' },
   ];
 
-  // 展開明細欄位：_Details
   expansionColumns: ReportColumn[] = [
     { field: 'ARS_No', header: '應收帳款單號' },
-    { field: 'AccNo', header: '科目代號' },
+    { field: 'AccNo', header: '調整科目' },
     { field: 'AccCName', header: '科目名稱' },
     {
       field: 'ADJ_Amt',
@@ -106,13 +107,11 @@ export class FIN32020Component
     { field: 'VouNo', header: '傳票單號' },
   ];
 
-  /** 預設排序：調整日期 DESC, 調整單號 ASC */
   readonly defaultSort: SortItem[] = [
     { field: 'ADJ_Date', order: -1 },
     { field: 'ADJ_No', order: 1 },
   ];
 
-  /* ----------------- 查詢表單 ----------------- */
   queryForm = this.formBuilder.group({
     adjust_ID: [null as string | null, [Validators.maxLength(14)]],
     adjust_Date_From: [null as Date | null],
@@ -120,62 +119,61 @@ export class FIN32020Component
     remark: ['', [Validators.maxLength(30)]],
     summons_ID_From: [null as string | null],
     summons_ID_To: [null as string | null],
-
-    // 分頁 + 排序（給 table-report 用）
-    ...createPaginationConfig([{ field: 'ADJ_Date', order: -1 }]),
+    ...createPaginationConfig([
+      { field: 'ADJ_Date', order: -1 },
+      { field: 'ADJ_No', order: 1 },
+    ]),
   });
 
   constructor(
-    private fin32020Service: FIN32020Service,
-    private cdr: ChangeDetectorRef
+    private readonly fin32020Service: FIN32020Service,
+    private readonly cdr: ChangeDetectorRef
   ) {
     super();
   }
 
-  /* ----------------- LifeCycle ----------------- */
-ngOnInit(): void {
-  this.initializePage(
-    'FIN32020',
-    'fin/fin32020cru',
-    this.queryForm,
-    (form) => this.onSubmit(form)
-  );
+  override ngOnInit(): void {
+    this.initializePage(
+      'FIN32020',
+      'fin/fin32020cru',
+      this.queryForm,
+      (form) => this.onSubmit(form)
+    );
 
-  this._currentSortBy = this.defaultSort;
+    this._currentSortBy = this.defaultSort;
 
-  const fromCru = !!(history.state && history.state['fromCru']);
+    const fromCru = !!(history.state && history.state['fromCru']);
 
-  this.formStatusService.waitForReady(this.ProgNo).pipe(take(1)).subscribe(() => {
-    if (fromCru) {
-      this.handleQueryRestore(this.queryForm, this.ProgNo, (f) => this.onSubmit(f));
-    } else {
-      this.onClear(this.queryForm);
-      this.data = [];
-      this.selectedItems = [];
-      this.totalRecords = 0;
-      this.viewTotalRecords = 0;
-      this.footerData = undefined;
-      this.lastQueryBody = null;
-      this.tableVer++;
-    }
-  });
-}
-
-
-
-
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
+    this.formStatusService
+      .waitForReady(this.ProgNo)
+      .pipe(untilDestroyed(this), take(1))
+      .subscribe(() => {
+        if (fromCru) {
+          this.handleQueryRestore(this.queryForm, this.ProgNo, (f) =>
+            this.onSubmit(f)
+          );
+        } else {
+          this.onClear(this.queryForm);
+          this.data = [];
+          this.selectedItems = [];
+          this.totalRecords = 0;
+          this.viewTotalRecords = 0;
+          this.footerData = undefined;
+          this.lastQueryBody = null;
+          this.tableVer++;
+        }
+      });
   }
 
-  /* ----------------- Utility ----------------- */
-  private formatDate(val: string): string {
+
+
+  private formatDate(val: string | null | undefined): string {
     if (!val) return '';
     const d = new Date(val);
-    if (isNaN(d.getTime())) return val;
-    return `${d.getFullYear()}/${(d.getMonth() + 1)
-      .toString()
-      .padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
+    if (Number.isNaN(d.getTime())) return String(val);
+    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(
+      d.getDate()
+    ).padStart(2, '0')}`;
   }
 
   private toYMDOrNull(d: Date | string | null | undefined): string | null {
@@ -197,175 +195,214 @@ ngOnInit(): void {
           typeof x.order === 'number'
       )
       .map((x) => ({ field: String(x.field), order: x.order as number }));
+
     return cleaned.length ? cleaned : fallback;
   }
 
-private saveQueryState(): void {
-  // 給 handleQueryRestore 用：只存表單
-  this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+  private initRows(rows: Fin32020Row[]): Fin32020Row[] {
+    rows.forEach((r, idx) => {
+      (r as any)._rowKey = idx + 1;
 
-  // 你自己的還原資料：另外存
-  this.queryStateService.setQueryState(`${this.ProgNo}_ext`, {
-    currentSortBy: this._currentSortBy?.length ? this._currentSortBy : this.defaultSort,
-    lastQueryBody: this.lastQueryBody,
-  } as any);
-}
+      // 一開始不要用主查詢 queryFIN32020 回來的 _Details
+      r._Details = [];
+      (r as any)._detailLoaded = false;
+    });
 
-  /** 把表單 & table-report body 組成 request */
-/** 把表單 & table-report body 組成 request（不帶 Offset/OrderBy；pageIndex/pageSize 小寫） */
-private buildPayload(base: any): any {
-  const raw = this.queryForm.getRawValue();
-
-  const pageIndex =
-    Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1;
-
-  // ⭐ 固定 pageSize = 30
-  const pageSize = 30;
-
-  // ⭐ 主要用 SortBy
-  const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
-
-  const req: any = {
-    pageIndex,
-    pageSize,
-    SortBy: sort,
-
-    ADJ_No: raw.adjust_ID ? String(raw.adjust_ID) : null,
-    ADJ_Date_From: this.toYMDOrNull(raw.adjust_Date_From),
-    ADJ_Date_To: this.toYMDOrNull(raw.adjust_Date_To),
-    Remark: raw.remark || null,
-    VouNo_From: raw.summons_ID_From ? String(raw.summons_ID_From) : null,
-    VouNo_To: raw.summons_ID_To ? String(raw.summons_ID_To) : null,
-  };
-
-  // 清掉空值
-  Object.keys(req).forEach((k) => {
-    const v = req[k];
-    if (v === '' || v === null || v === undefined) delete req[k];
-  });
-
-  return req;
-}
-
-
-  /** 給 <app-table-report> 用的查詢函式（分頁載入） */
-/** 給 <app-table-report> 用的查詢函式（分頁載入） */
-public queryFIN32020ForReport = (body: any) =>
-  this.fin32020Service.queryFIN32020(this.buildPayload(body || {})).pipe(
-    map((res: ApiResponse<Fin32020Row[] | Fin32020Row>) => {
-      const src = res?.Data as any;
-      const rows: Fin32020Row[] = Array.isArray(src) ? src : src ? [src] : [];
-      const totalCount = Number((res as any)?.TotalCount ?? rows.length) || rows.length;
-
-      rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
-      return { Data: rows, TotalCount: totalCount, GrandTotal: null };
-    })
-  );
-
-  /* ----------------- Submit（主表查詢） ----------------- */
-onSubmit(frm: FormGroup) {
-  this.submitted = true;
-
-  if (this.queryForm.invalid) {
-    this.queryForm.markAllAsTouched();
-    return;
+    return rows;
   }
 
-  if (!this.hasPermission(this.Actions.Query)) return;
+  private saveQueryState(): void {
+    this.queryStateService.setQueryState(
+      this.ProgNo,
+      this.queryForm.getRawValue()
+    );
 
-  const raw: any = this.queryForm.getRawValue();
+    this.queryStateService.setQueryState(`${this.ProgNo}_ext`, {
+      currentSortBy: this._currentSortBy?.length
+        ? this._currentSortBy
+        : this.defaultSort,
+      lastQueryBody: this.lastQueryBody,
+    } as any);
+  }
 
-  // ⭐ 查詢一律回第一頁
-  const payload = this.buildPayload({
-    ...raw,
-    pageIndex: 1,
-    pageSize: 30, // buildPayload 也會固定 30
-    SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
-  });
+  private buildPayload(base: any): any {
+    const raw = this.queryForm.getRawValue();
 
-  this.loading = true;
-  this.data = [];
-  this.selectedItems = [];
-  this.footerData = undefined;
-  this.totalRecords = 0;
-  this.viewTotalRecords = 0;
-  this.tableVer++;
+    const pageIndex =
+      Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
+        ? base.pageIndex
+        : 1;
 
-  this.fin32020Service
-    .queryFIN32020(payload)
-    .pipe(untilDestroyed(this))
-    .subscribe({
-      next: (res: ApiResponse<Fin32020Row[]>) => {
-        const rows: Fin32020Row[] = Array.isArray(res?.Data) ? res.Data : [];
-        rows.forEach((r, idx) => ((r as any)._rowKey = idx + 1));
+    const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
 
-        this.data = rows;
+    const req: any = {
+      pageIndex,
+      pageSize: 30,
+      SortBy: sort,
+      ADJ_No: raw.adjust_ID ? String(raw.adjust_ID) : null,
+      ADJ_Date_From: this.toYMDOrNull(raw.adjust_Date_From),
+      ADJ_Date_To: this.toYMDOrNull(raw.adjust_Date_To),
+      Remark: raw.remark || null,
+      VouNo_From: raw.summons_ID_From ? String(raw.summons_ID_From) : null,
+      VouNo_To: raw.summons_ID_To ? String(raw.summons_ID_To) : null,
+    };
+
+    Object.keys(req).forEach((k) => {
+      const v = req[k];
+      if (v === '' || v === null || v === undefined) {
+        delete req[k];
+      }
+    });
+
+    return req;
+  }
+
+  public loadDetailForExpansion = (
+    row: Fin32020Row
+  ): Observable<{ Data: Fin32020DetailRow[]; TotalCount: number }> => {
+    if (!row?.ADJ_No) {
+      row._Details = [];
+      (row as any)._detailLoaded = true;
+      return of({ Data: [], TotalCount: 0 });
+    }
+
+    if ((row as any)._detailLoaded) {
+      return of({
+        Data: Array.isArray(row._Details) ? row._Details : [],
+        TotalCount: Array.isArray(row._Details) ? row._Details.length : 0,
+      });
+    }
+
+    return this.fin32020Service.queryFIN32020Detail(row.ADJ_No).pipe(
+      map((res: ApiResponse<Fin32020DetailRow[]>) => {
+        const details = Array.isArray(res?.Data) ? res.Data : [];
+        row._Details = details;
+        (row as any)._detailLoaded = true;
+
+        this.data = [...this.data];
         this.cdr.detectChanges();
 
-        const realTotal = Number(res?.TotalCount ?? rows.length) || rows.length;
+        return {
+          Data: details,
+          TotalCount: details.length,
+        };
+      })
+    );
+  };
 
-        setTimeout(() => {
-          this.totalRecords = realTotal;
-          this.viewTotalRecords = realTotal;
+  public queryFIN32020ForReport = (body: any) =>
+    this.fin32020Service.queryFIN32020(this.buildPayload(body || {})).pipe(
+      map((res: ApiResponse<Fin32020Row[] | Fin32020Row>) => {
+        const src = res?.Data as any;
+        const rows: Fin32020Row[] = Array.isArray(src) ? src : src ? [src] : [];
+        const totalCount =
+          Number((res as any)?.TotalCount ?? rows.length) || rows.length;
 
-          // ✅ 更新 lastQuery / currentSort
-          this.lastQueryBody = { ...payload };
-          this._currentSortBy = payload.SortBy ?? this.defaultSort;
+        this.initRows(rows);
 
-          // ✅ 存狀態
-          this.saveQueryState();
-        });
+        return {
+          Data: rows,
+          TotalCount: totalCount,
+          GrandTotal: null,
+        };
+      })
+    );
 
-        this.loading = false;
-      },
-      error: (err: any) => {
-        console.error('FIN32020 API error:', err);
-        this.data = [];
-        this.totalRecords = 0;
-        this.viewTotalRecords = 0;
-        this.footerData = undefined;
-        this.loading = false;
-      },
+  onSubmit(frm: FormGroup): void {
+    this.submitted = true;
+
+    if (this.queryForm.invalid) {
+      this.queryForm.markAllAsTouched();
+      return;
+    }
+
+    if (!this.hasPermission(this.Actions.Query)) return;
+
+    const raw: any = this.queryForm.getRawValue();
+
+    const payload = this.buildPayload({
+      pageIndex: 1,
+      pageSize: 30,
+      SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
     });
-}
 
+    this.loading = true;
+    this.data = [];
+    this.selectedItems = [];
+    this.footerData = undefined;
+    this.totalRecords = 0;
+    this.viewTotalRecords = 0;
+    this.tableVer++;
 
-  /* ----------------- 清除 ----------------- */
-onClear(frm: FormGroup) {
-  frm.reset(
-    {
-      adjust_ID: null,
-      adjust_Date_From: null,
-      adjust_Date_To: null,
-      remark: '',
-      summons_ID_From: null,
-      summons_ID_To: null,
-      ...createPaginationConfig([{ field: 'ADJ_Date', order: -1 }]),
-    } as any,
-    { emitEvent: false }
-  );
+    this.fin32020Service
+      .queryFIN32020(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<Fin32020Row[]>) => {
+          const rows: Fin32020Row[] = Array.isArray(res?.Data) ? res.Data : [];
 
-  this.submitted = false;
-  this.data = [];
-  this.totalRecords = 0;
-  this.viewTotalRecords = 0;
-  this.footerData = undefined;
+          this.initRows(rows);
+          this.data = rows;
+          this.cdr.detectChanges();
 
-  this.lastQueryBody = null;
-  this._currentSortBy = this.defaultSort;
+          const realTotal =
+            Number((res as any)?.TotalCount ?? rows.length) || rows.length;
 
-  // ✅ 清掉 restore 狀態（不要再 setQueryState）
-  this.queryStateService.clearQueryState(this.ProgNo);
-}
+          setTimeout(() => {
+            this.totalRecords = realTotal;
+            this.viewTotalRecords = realTotal;
+            this.lastQueryBody = { ...payload };
+            this._currentSortBy = payload.SortBy ?? this.defaultSort;
+            this.saveQueryState();
+          });
 
+          this.loading = false;
+        },
+        error: (err: any) => {
+          console.error('FIN32020 API error:', err);
+          this.data = [];
+          this.totalRecords = 0;
+          this.viewTotalRecords = 0;
+          this.footerData = undefined;
+          this.loading = false;
+        },
+      });
+  }
 
-  /* ----------------- 建立 / 編輯 / 明細 ----------------- */
-  onClickCreate() {
+  onClear(frm: FormGroup): void {
+    frm.reset(
+      {
+        adjust_ID: null,
+        adjust_Date_From: null,
+        adjust_Date_To: null,
+        remark: '',
+        summons_ID_From: null,
+        summons_ID_To: null,
+        ...createPaginationConfig([
+          { field: 'ADJ_Date', order: -1 },
+          { field: 'ADJ_No', order: 1 },
+        ]),
+      } as any,
+      { emitEvent: false }
+    );
+
+    this.submitted = false;
+    this.data = [];
+    this.selectedItems = [];
+    this.totalRecords = 0;
+    this.viewTotalRecords = 0;
+    this.footerData = undefined;
+    this.lastQueryBody = null;
+    this._currentSortBy = this.defaultSort;
+
+    this.queryStateService.clearQueryState(this.ProgNo);
+    this.queryStateService.clearQueryState(`${this.ProgNo}_ext`);
+  }
+
+  onClickCreate(): void {
     this.saveQueryState();
     this.onCreate(undefined, this.queryForm.value);
   }
-
-
 
   override onDetail(row: Fin32020Row, queryConditions?: any): void {
     this.saveQueryState();
@@ -373,7 +410,10 @@ onClear(frm: FormGroup) {
   }
 
   get canShowEdit(): boolean {
-    return Array.isArray(this.data) && this.data.some((r) => (r as any)?.['CanEdit'] === true);
+    return (
+      Array.isArray(this.data) &&
+      this.data.some((r) => (r as any)?.['CanEdit'] === true)
+    );
   }
 
   override onEdit(row: Fin32020Row, queryConditions?: any): void {
@@ -386,6 +426,4 @@ onClear(frm: FormGroup) {
 
     super.onEdit(row, this.queryForm.value);
   }
-
-
 }

@@ -6,7 +6,6 @@
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <!-- 主檔欄位 -->
       <div class="grid p-fluid">
         <div class="col-12 md:col-12 lg:col-4">
           <app-input-text
@@ -37,34 +36,31 @@
         </div>
       </div>
 
-      <!-- 明細 -->
-<app-fin32020table-edit
-  [title]="'調整明細'"
-  [tableKey]="'fin32020Detail'"
-  dataKey="SeqNo"
-  [data]="detailData"
-  [columns]="detailColumns"
-  [loading]="detailLoading"
-  [disabled]="isFormReadable"
-  [showReorder]="!isFormReadable"
-  [showCheckBox]="!isFormReadable"
-  [showInsert]="false"
-  [insertDisabled]="isFormReadable"
-  [canInsert]="!isFormReadable"
-  [showDelete]="!isFormReadable"
-  [keepDeletedData]="false"
-  [defaultInsertData]="defaultDetailRow"
-  [showPaginator]="false"
-  [scrollable]="false"
-  [showCaption]="!isFormReadable"
-  (dataChange)="onDetailDataChange($event)"
-  (fieldChange)="onDetailFieldChange($event)"
-  (delete)="onDetailDelete($event)"
-  (cellClick)="onDetailCellClick($event)"
-></app-fin32020table-edit>
+      <app-fin32020table-edit
+        [title]="'調整明細'"
+        [tableKey]="'fin32020Detail'"
+        dataKey="SeqNo"
+        [data]="detailData"
+        [columns]="detailColumns"
+        [loading]="detailLoading"
+        [disabled]="isFormReadable"
+        [showReorder]="!isFormReadable"
+        [showCheckBox]="!isFormReadable"
+        [showInsert]="false"
+        [insertDisabled]="isFormReadable"
+        [canInsert]="!isFormReadable"
+        [showDelete]="!isFormReadable"
+        [keepDeletedData]="false"
+        [defaultInsertData]="defaultDetailRow"
+        [showPaginator]="false"
+        [scrollable]="false"
+        [showCaption]="!isFormReadable"
+        (dataChange)="onDetailDataChange($event)"
+        (fieldChange)="onDetailFieldChange($event)"
+        (delete)="onDetailDelete($event)"
+        (cellClick)="onDetailCellClick($event)"
+      ></app-fin32020table-edit>
 
-
-      <!-- ✅ 合計（新增/編輯/檢視 都要顯示，且即時加總） -->
       <div class="grid p-fluid mt-2">
         <div class="col-12 flex justify-content-end align-items-center">
           <div class="mr-3 font-bold">合計</div>
@@ -74,179 +70,176 @@
         </div>
       </div>
 
-      <!-- Footer -->
-<div
-  class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-  *ngIf="!isFormReadable"
->
-  <app-button
-    btnType="cancel"
-    [type]="'button'"
-    (click)="onCancel()"
-  ></app-button>
-  <app-button btnType="submit" [loading]="loading"></app-button>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button
+          btnType="cancel"
+          [type]="'button'"
+          (click)="onCancel()"
+        ></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+
+      <app-dialog
+        [(visible)]="arsDialogVisible"
+        [header]="'選擇應收帳款'"
+        [showFooter]="false"
+      >
+        <form
+          [formGroup]="arsSearchForm"
+          (ngSubmit)="onSearchARS()"
+          class="grid p-fluid mb-3"
+        >
+          <div class="col-12 md:col-4">
+            <app-input-text
+              label="應收帳款單號"
+              controlName="ARS_No"
+              [control]="arsSearchForm.controls.ARS_No"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-4">
+            <app-dropdown
+              label="廠客代號"
+              controlName="VEN_No"
+              [options]="VEN_No_Options | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="arsSearchForm.controls.VEN_No"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-4">
+            <app-calendar-range
+              calendarType="dateRange"
+              label="立帳日"
+              [startControl]="arsSearchForm.controls.ARS_Date_From"
+              [endControl]="arsSearchForm.controls.ARS_Date_To"
+              [submitted]="submitted"
+            ></app-calendar-range>
+          </div>
+
+          <div class="col-12 flex justify-content-end mt-2">
+            <app-button btnType="query" [type]="'submit'"></app-button>
+          </div>
+        </form>
+
+        <app-table2
+          [tableKey]="'fin32020Ars'"
+          dataKey="ARS_No"
+          [columns]="arsColumns"
+          [data]="arsList"
+          [loading]="arsLoading"
+          [showCheckBox]="false"
+          [showManage]="false"
+          [showDetail]="true"
+          [showEdit]="false"
+          [showHeader]="true"
+          [showFilter]="false"
+          [showReportMode]="false"
+          [showPaginator]="false"
+          [showCaption]="false"
+          selectionMode="single"
+          [(selectedItems)]="arsSelectedRows"
+          (selectionChange)="onARSSelectionChange($event)"
+          (detail)="onARSRowDetail($event)"
+        ></app-table2>
+
+        <div class="flex justify-content-end gap-2 mt-3">
+          <app-button
+            btnType="cancel"
+            [type]="'button'"
+            label="清除"
+            (click)="onARSCancel()"
+          ></app-button>
+          <app-button
+            btnType="submit"
+            [type]="'button'"
+            (click)="confirmARSSelection()"
+          ></app-button>
+        </div>
+      </app-dialog>
+
+      <app-dialog
+        [(visible)]="adjAccDialogVisible"
+        [header]="'選擇調整科目'"
+        [showFooter]="false"
+      >
+        <form
+          [formGroup]="adjAccSearchForm"
+          (ngSubmit)="onSearchAdjAcc()"
+          class="grid p-fluid mb-3"
+        >
+          <div class="col-12 md:col-6">
+            <app-dropdown
+              label="科目代號"
+              controlName="CAR_AccNo"
+              [options]="adjAccNoOptions$ | async"
+              optionLabel="label"
+              optionValue="value"
+              [showClear]="true"
+              [control]="adjAccSearchForm.controls.CAR_AccNo"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-4">
+            <app-dropdown
+              label="加減項"
+              controlName="CAR_type"
+              [options]="carTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="adjAccSearchForm.controls.CAR_type"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-2 flex justify-content-end mt-2">
+            <app-button btnType="query" [type]="'submit'"></app-button>
+          </div>
+        </form>
+
+        <app-table2
+          [tableKey]="'fin32020AdjAccReport'"
+          dataKey="CAR_AccNo"
+          [columns]="adjAccReportColumns"
+          [data]="adjAccList"
+          [loading]="adjAccLoading"
+          [showCheckBox]="false"
+          [showManage]="false"
+          [showDetail]="true"
+          [showEdit]="false"
+          [showHeader]="true"
+          [showFilter]="false"
+          [showReportMode]="false"
+          [showPaginator]="false"
+          [showCaption]="false"
+          selectionMode="single"
+          [(selectedItems)]="adjAccSelectedRows"
+          (selectionChange)="onAdjAccSelectionChange($event)"
+          (detail)="onAdjAccRowDetail($event)"
+        ></app-table2>
+
+        <div class="flex justify-content-end gap-2 mt-3">
+          <app-button
+            btnType="cancel"
+            [type]="'button'"
+            label="清除"
+            (click)="onAdjAccCancel()"
+          ></app-button>
+          <app-button
+            btnType="submit"
+            [type]="'button'"
+            [disabled]="!adjAccSelectedRows || !adjAccSelectedRows.length"
+            (click)="confirmAdjAccSelection()"
+          ></app-button>
+        </div>
+      </app-dialog>
+    </form>
+  </p-panel>
 </div>
-
-
-<!-- ====== 應收帳款 Dialog：可輸入 ARS_No 搜尋 ====== -->
-<app-dialog
-  [(visible)]="arsDialogVisible"
-  [header]="'選擇應收帳款'"
-  [showFooter]="false"
->
-  <form
-    [formGroup]="arsSearchForm"
-    (ngSubmit)="onSearchARS()"
-    class="grid p-fluid mb-3"
-  >
-      <div class="col-12 md:col-4">
-      <app-input-text
-        label="應收帳款單號"
-        controlName="ARS_No"
-        [control]="arsSearchForm.controls.ARS_No"
-        [submitted]="submitted"
-      ></app-input-text>
-    </div>
-    <div class="col-12 md:col-4">
-      <app-dropdown
-        label="廠客代號"
-        controlName="VEN_No"
-        [options]="VEN_No_Options | async"
-        optionLabel="label"
-        optionValue="value"
-        [control]="arsSearchForm.controls.VEN_No"
-        [submitted]="submitted"
-      ></app-dropdown>
-    </div>
-
-
-
-    <div class="col-12 md:col-4">
-      <app-calendar-range
-        calendarType="dateRange"
-        label="立帳日"
-        [startControl]="arsSearchForm.controls.ARS_Date_From"
-        [endControl]="arsSearchForm.controls.ARS_Date_To"
-        [submitted]="submitted"
-      ></app-calendar-range>
-    </div>
-
-    <div class="col-12 flex justify-content-end mt-2">
-      <app-button btnType="query" [type]="'submit'"></app-button>
-    </div>
-  </form>
-
-  <app-table2
-    [tableKey]="'fin32020Ars'"
-    dataKey="ARS_No"
-    [columns]="arsColumns"
-    [data]="arsList"
-    [loading]="arsLoading"
-    [showCheckBox]="false"
-    [showManage]="false"
-    [showDetail]="true"
-    [showEdit]="false"
-    [showHeader]="true"
-    [showFilter]="false"
-    [showReportMode]="false"
-    [showPaginator]="false"
-    [showCaption]="false"
-    selectionMode="single"
-    [(selectedItems)]="arsSelectedRows"
-    (selectionChange)="onARSSelectionChange($event)"
-    (detail)="onARSRowDetail($event)"
-  ></app-table2>
-
-  <div class="flex justify-content-end gap-2 mt-3">
-    <app-button
-      btnType="cancel"
-      [type]="'button'"
-      (click)="arsDialogVisible = false"
-    ></app-button>
-    <app-button
-      btnType="submit"
-      [type]="'button'"
-   
-      (click)="confirmARSSelection()"
-    ></app-button>
-  </div>
-</app-dialog>
-
-<!-- ====== 調整科目 Dialog：CAR_type 改 1/2 ====== -->
-<app-dialog
-  [(visible)]="adjAccDialogVisible"
-  [header]="'選擇調整科目'"
-  [showFooter]="false"
->
-  <form
-    [formGroup]="adjAccSearchForm"
-    (ngSubmit)="onSearchAdjAcc()"
-    class="grid p-fluid mb-3"
-  >
-    <div class="col-12 md:col-6">
-<app-dropdown
-  label="科目代號"
-  controlName="CAR_AccNo"
-  [options]="adjAccNoOptions$ | async"
-  optionLabel="label"
-  optionValue="value"
-  [showClear]="true"
-  [control]="adjAccSearchForm.controls.CAR_AccNo"
-  [submitted]="submitted"
-></app-dropdown>
-    </div>
-
-    <div class="col-12 md:col-4">
-      <app-dropdown
-        label="加減項"
-        controlName="CAR_type"
-        [options]="carTypeOptions"
-        optionLabel="label"
-        optionValue="value"
-        [control]="adjAccSearchForm.controls.CAR_type"
-        [submitted]="submitted"
-      ></app-dropdown>
-    </div>
-
-    <div class="col-12 md:col-2 flex justify-content-end mt-2">
-      <app-button btnType="query" [type]="'submit'"></app-button>
-    </div>
-  </form>
-
-<app-table-report
-  [tableKey]="'fin32020AdjAccReport'"
-  dataKey="CAR_AccNo"
-  [columns]="adjAccReportColumns"
-  [data]="adjAccList"
-  [loading]="adjAccLoading"
-  [totalRecords]="adjAccTotalRecords"
-  [lastQueryBody]="adjAccLastQueryBody"
-  [queryFunction]="adjAccQueryFn"
-  [lazy]="true"
-
-  [showCheckBox]="false"
-  [showManage]="false"
-  [showDetail]="true"
-  [showEdit]="false"
- 
-  [showFilter]="false"
-  [showReportMode]="false"
-  [showCaption]="false"
-
-  (detail)="onAdjAccRowDetail($event)"
-></app-table-report>
-
-  <div class="flex justify-content-end gap-2 mt-3">
-    <app-button
-      btnType="cancel"
-      [type]="'button'"
-      (click)="adjAccDialogVisible = false"
-    ></app-button>
-    <app-button
-      btnType="submit"
-      [type]="'button'"
-      [disabled]="!adjAccSelectedRows || !adjAccSelectedRows.length"
-      (click)="confirmAdjAccSelection()"
-    ></app-button>
-  </div>
-</app-dialog>

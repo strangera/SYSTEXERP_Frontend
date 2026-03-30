@@ -8,9 +8,9 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '@shared/componentkit/editor-text/editor-text.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { ASS12040DetailResponse, ASS12040QueryRow } from '../ass12040/ass12040.model';
@@ -26,7 +26,7 @@ import { ASS12040DetailResponse, ASS12040QueryRow } from '../ass12040/ass12040.m
     PanelModule,
     FormsModule,
     ReactiveFormsModule,
-    EditorTextComponent,
+    InputTextareaComponent,
     InputNumberComponent,
     DropdownComponent,
     CalendarComponent,
@@ -93,15 +93,15 @@ export class ASS12040CRUComponent
     const r = row as Record<string, unknown>;
     this.dataForm.patchValue({
       remark: (r['REMARK'] ?? r['remark']) as string | null,
-      purchaseNumber: (r['PurchaseNo'] ?? r['purchaseNumber'] ?? r['INVOICE_NO']) as string | null,
-      paperStatus: (r['NEEDS_STATUS'] ?? r['paperStatus'] ?? r['SUBPOENA_STATUS']) as string | null,
+      purchaseNumber: (r['SUBPOENA_ID'] ?? r['purchaseNumber']) as string | null,
+      paperStatus: (r['SUBPOENA_STATUS'] ?? r['paperStatus']) as string | null,
       supplierCode: (r['SUPPLIER_ID'] ?? r['supplierCode']) as string | null,
       applicantCode: (r['EMP_ID'] ?? r['applicantCode']) as string | null,
       organizationNumber: (r['ORG_ID'] ?? r['organizationNumber']) as string | null,
       applicationDate: (r['APPLY_DATE'] ?? r['applicationDate']) as Date | string | null,
-      noTaxAmount: (r['NO_TAX_AMT'] ?? r['noTaxAmount']) as number | null,
+      noTaxAmount: (r['NTAX_AMT'] ?? r['noTaxAmount']) as number | null,
       taxAmount: (r['TAX_AMT'] ?? r['taxAmount']) as number | null,
-      totalTaxAmount: (r['TOTAL_TAX_AMT'] ?? r['totalTaxAmount'] ?? r['AMOUNT']) as number | null,
+      totalTaxAmount: (r['AMT'] ?? r['totalTaxAmount']) as number | null,
       itemCode: (r['GOODS_ID'] ?? r['itemCode']) as string | null,
       itemNumber: (r['ITEM_QTY'] ?? r['itemNumber']) as number | null,
       singlePrice: (r['UNIT_PRICE'] ?? r['singlePrice']) as number | null,
@@ -134,7 +134,7 @@ export class ASS12040CRUComponent
     });
 
     this.dropDownListService
-      .querySYS1000_DropDownList({ SYS_Type: 'NEEDS_STATUS' })
+      .querySYS1000_DropDownList({ SYS_Type: 'SUBPOENA_STATUS' })
       .subscribe({
         next: res => {
           if (res.Status !== '0000') return;
@@ -149,25 +149,20 @@ export class ASS12040CRUComponent
     super.onCancel();
   }
 
-  onForceClose(): void {
-    this.runApprove('FORCE_CLOSE');
-  }
-
   onApproveConfirm(): void {
-    this.runApprove('APPROVE');
+    this.runApprove();
   }
 
-  private runApprove(actionType: 'FORCE_CLOSE' | 'APPROVE'): void {
+  private runApprove(): void {
     const key =
       this.rowdata &&
-      ((this.rowdata as ASS12040QueryRow).PurchaseNo ??
-        (this.rowdata as ASS12040QueryRow).INVOICE_NO ??
-        (this.rowdata as ASS12040DetailResponse).PurchaseNo);
+      ((this.rowdata as ASS12040QueryRow).SUBPOENA_ID ??
+        (this.rowdata as ASS12040DetailResponse).SUBPOENA_ID);
     if (!key) {
       this.messageService.warnBubble('無法取得單據識別，無法執行審核');
       return;
     }
-    const label = actionType === 'FORCE_CLOSE' ? '強制結案' : '審核確認';
+    const label = '審核確認';
     this.messageService.confirm({
       message: `確定要${label}嗎？`,
       header: `${label}確認`,
@@ -177,7 +172,7 @@ export class ASS12040CRUComponent
       accept: () => {
         this.messageService.blockUi();
         this.ass12040Service
-          .approveASS12040({ PurchaseNo: String(key), ActionType: actionType })
+          .approveASS12040({ SUBPOENA_ID: String(key) })
           .pipe(finalize(() => this.messageService.unblockUi()))
           .subscribe({
             next: res => {

@@ -64,10 +64,14 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
   }
 
   onSubmit(frm: FormGroup) {
+    const body = {
+      ...frm.value,
+      GUI_No_start: frm.value.GUI_No_start ? frm.value.GUI_No_start : '00000000',
+    }
     this.handleSubmit(frm, () => {
-      this.fin11020Service.queryFIN11020(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+      this.fin11020Service.queryFIN11020(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
         this.data = response.Data;
-        this.lastQueryBody = frm.value;
+        this.lastQueryBody = body;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });

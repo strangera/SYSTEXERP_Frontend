@@ -188,4 +188,9 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
       this.selectedItems = [];
     });
   }
+
+  // "查無可更新資料：可能應付ID不存在、非建立狀態(ACP_Status<>2)、或已沖帳(PTA_Amt<>0)。"
+  editDisabled(item: QueryFIN24010Response) {
+    return item.ACP_Status !== '2' || (item.PTA_Amt !== null && item.PTA_Amt !== 0);
+  }
 }

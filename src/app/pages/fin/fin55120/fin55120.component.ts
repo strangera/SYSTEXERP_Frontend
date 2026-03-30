@@ -6,7 +6,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { FIN55120DetailItem, Fin55120Service, QueryFIN55120Request } from '@service/api/fin/fin55120.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { lastYearToday } from '@shared/models/system/query-form.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -25,7 +24,7 @@ import { Fin55120TableReportComponent } from './fin55120-table-report/fin55120-t
 })
 export class FIN55120Component extends BasicQueryPageComponent<FIN55120DetailItem> implements OnInit {
   queryForm = this.formBuilder.group({
-    YM: [lastYearToday, [Validators.required]],
+    YM: [new Date(), [Validators.required]],
     Category: ['2', [Validators.required]],
     PrintSign: [true],
     ShowZero: [false],
@@ -47,7 +46,7 @@ export class FIN55120Component extends BasicQueryPageComponent<FIN55120DetailIte
     { field: 'AccCName', header: '科目名稱', align: 'left' },
     { field: 'Balance', header: '金額', isSubTotal: true, format: formatAmount, align: 'right' },
     { field: 'BalanceTotal', header: '合計', isSubTotal: true, format: formatAmount, align: 'right' },
-    { field: 'Pct', header: '百分比', isSubTotal: true, format: formatAmount, align: 'right' },
+    { field: 'Pct', header: '百分比', isSubTotal: true, format: formatPercent, align: 'right' },
   ];
   YM: Date | null = null;
 
@@ -124,4 +123,21 @@ const formatAmount = (val: number | string | null | undefined): string => {
 
   // 4. 正數或 0 則直接進行本地化格式化
   return num.toLocaleString(); // eg. 1,000,000
+};
+const formatPercent = (val: number | string | null | undefined): string => {
+  // 1. 檢查空值
+  if (val === null || val === undefined || val === '') {
+    return '';
+  }
+
+  const num = Number(val);
+
+  // 2. 檢查是否為有效數字
+  if (isNaN(num)) {
+    return String(val);
+  }
+
+  // 3. 格式化：保留小數兩位並加上 %
+  // 使用 toFixed(2) 強制補齊兩位小數
+  return `${num.toFixed(2)}%`;
 };

@@ -118,6 +118,7 @@
         tableKey="Step2Checks"
         [data]="step3TableData"
         [columns]="step3Columns"
+        [defaultInsertData]="step3DefaultInsertData"
         [disabled]="isFormReadable"
         [canInsert]="!isFormReadable"
         [showFooter]="true"
@@ -180,7 +181,7 @@
       @if (!isFormReadable) {
         <app-button
           btnType="submit"
-          label="確定修改"
+          label="確定存檔"
           icon="pi pi-check"
           [loading]="loading"
           (click)="onFinalSubmit()"
