@@ -8,9 +8,12 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, map, Observable, take, tap } from 'rxjs';
+import { shareReplay } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
 
 const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
+/** FIN53010 根路徑 API（與 DropdownApiService 相同，非 `/FIN0000/GLS1000` 前綴） */
+const fin53010RootApiUrl = environment.ApiUrl;
 
 @Injectable({ providedIn: 'root' })
 export class FIN53010Service {
@@ -124,6 +127,76 @@ export class FIN53010Service {
       tap(res => this.logger.debug('queryFIN53010DetailData_ByVouNo:', [res])),
       finalize(() => this.detailByVouNoLoading.set(!1)),
     );
+  }
+
+  /** 依銷項發票號碼查詢 APS4023 發票主檔 */
+  public queryAps4023DetailDataByInvoiceNumber(
+    body: QueryAps4023DetailDataByInvoiceNumberRequest
+  ): Observable<Aps4023DetailDataByInvoiceNumberData | null> {
+    return this.http
+      .post<ApiResponse<Aps4023DetailDataByInvoiceNumberData | null>>(
+        `${apiUrl}/queryAPS4023DetatilData_ByInvoiceNumber`,
+        body
+      )
+      .pipe(
+        map(response => response?.Data ?? null),
+        catchError(err => {
+          console.error('API queryAPS4023DetatilData_ByInvoiceNumber 失敗:', err);
+          return of(null);
+        })
+      );
+  }
+
+  /** 查詢會計科目（GLS1005 FIN53010 專用下拉） */
+  public queryGls1005Fin53010(): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<Gls1005Fin53010DropdownItem[]>>(
+        `${fin53010RootApiUrl}/queryGLS1005_FIN53010_DropDownList`,
+        {}
+      )
+      .pipe(
+        map(response => {
+          const data = response?.Data;
+          return data
+            ? data.map(item => ({
+                ...item,
+                value: item.AccNo ?? '',
+                label: `${item.AccNo ?? ''} - ${item.AccCName ?? ''}`,
+              }))
+            : null;
+        }),
+        catchError(err => {
+          console.error('API /queryGLS1005_FIN53010_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
+  }
+
+  /** 查詢廠商（POS2013 FIN53010 專用下拉） */
+  public queryPos2013Fin53010(body: QueryPos2013Fin53010Request = {}): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<Pos2013Fin53010DropdownItem[]>>(
+        `${fin53010RootApiUrl}/queryPOS2013_FIN53010_DropDownList`,
+        body
+      )
+      .pipe(
+        map(response => {
+          const data = response?.Data;
+          return data
+            ? data.map(item => ({
+                ...item,
+                value: item.VEN_No ?? '',
+                label: `${item.VEN_No ?? ''} - ${item.VEN_Name ?? ''}`,
+              }))
+            : null;
+        }),
+        catchError(err => {
+          console.error('API /queryPOS2013_FIN53010_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
   }
 
   public insertFIN53010Data(payload: FIN53010InsertPayload): Observable<FIN53010InsertResult> {
@@ -250,9 +323,13 @@ export class FIN53010Service {
 
   public getAccNoOptions(): void {
     this.accLoading.set(!0);
-    this.dropdownApi.queryGls1005_ledgerMD().pipe(
+    this.queryGls1005Fin53010().pipe(
       take(1),
-      map(res => res as Option[] ?? []),
+      map(res => (res ?? []).map(item => ({
+        ...item,
+        Voucher_Type: item['Voucher_Type'] ?? item['voucherType'],
+        voucherType: item['voucherType'] ?? item['Voucher_Type'],
+      } as Option))),
       tap(res => {
         this.accNoOptions.set(res);
         this.logger.debug('查詢AccNoOptions結果:', [res]);
@@ -263,7 +340,7 @@ export class FIN53010Service {
 
   public getVendorOptions(): void {
     this.venLoading.set(!0);
-    this.dropdownApi.queryPos2013({ VEN_Flag: '' }).pipe(
+    this.queryPos2013Fin53010({}).pipe(
       take(1),
       map(res => res ?? []),
       tap(res => {

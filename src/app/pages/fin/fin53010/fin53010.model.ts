@@ -179,6 +179,161 @@ export interface AccDescOption extends Option {
   data?: Option[];
 }
 
+/** queryPOS2013_FIN53010_DropDownList Request */
+export interface QueryPos2013Fin53010Request {
+  VEN_No?: string | null;
+}
+
+/**
+ * queryPOS2013_FIN53010_DropDownList 單筆（Swagger Data.items）
+ */
+export interface Pos2013Fin53010DropdownItem {
+  id?: number;
+  mid?: number;
+  VEN_No?: string | null;
+  VEN_Name?: string | null;
+  VEN_ShortName?: string | null;
+  VEN_EngName?: string | null;
+  VEN_Flag?: string | null;
+  VEN_Uniform?: string | null;
+  VEN_RemitFeeMode?: string | null;
+  VEN_Post?: string | null;
+  VEN_Address?: string | null;
+  VEN_Tel?: string | null;
+  VEN_Fax?: string | null;
+  VEN_Email?: string | null;
+  VEN_GUIAddr?: string | null;
+  VEN_GUIEmail?: string | null;
+  VEN_PayType?: string | null;
+  VEN_BNK_No?: string | null;
+  VEN_BNK_BranchNo?: string | null;
+  VEN_BankAccountNo?: string | null;
+  VEN_AccountName?: string | null;
+  VEN_PayConditionDay?: number | null;
+  VEN_CheckTitle?: string | null;
+  VEN_Status?: string | null;
+  Approved_Date?: string | null;
+  VEN_DiscYN?: string | null;
+  VEN_CTRLYN?: string | null;
+  VEN_DiscDateB?: string | null;
+  VEN_DiscDateE?: string | null;
+  GUI_ID_WIRE?: string | null;
+  VEN_Remark?: string | null;
+  CRT_Date?: string | null;
+  CRT_USR_No?: string | null;
+  CRT_USR_Name?: string | null;
+  UPD_Date?: string | null;
+  UPD_USR_No?: string | null;
+  UPD_USR_Name?: string | null;
+  CHARGE_STAFF?: string | null;
+  CHARGE_TITLE?: string | null;
+  CHARGE_PID?: string | null;
+  CHARGE_TEL?: string | null;
+  CHARGE_ADDR?: string | null;
+  CHARGE_EMAIL?: string | null;
+  ORDER_ADDR?: string | null;
+  ORDER_TEL?: string | null;
+  ORDER_FAX?: string | null;
+  FACTO_ADDR?: string | null;
+  FACTO_TEL?: string | null;
+  FACTO_FAX?: string | null;
+  DELIVERY?: string | null;
+  RETURN_ORDER?: string | null;
+  DELIVERY_LIMIT?: string | null;
+  VEN_ORDER_ADDR?: string | null;
+  VEN_ORDER_TEL?: string | null;
+  VEN_ORDER_FAX?: string | null;
+  VEN_FACTO_ADDR?: string | null;
+  VEN_FACTO_TEL?: string | null;
+  VEN_FACTO_FAX?: string | null;
+  VEN_DELIVERY?: string | null;
+  VEN_RETURN_ORDER?: string | null;
+  VEN_DELIVERY_LIMIT?: string | null;
+  VEN_PostAddr?: string | null;
+}
+
+/**
+ * queryGLS1005_FIN53010_DropDownList 單筆（Swagger Data.items）
+ */
+export interface Gls1005Fin53010DropdownItem {
+  CompNo?: string | null;
+  AccNo?: string | null;
+  AccCName?: string | null;
+  AccEName?: string | null;
+  ClassNo?: string | null;
+  AccDC?: string | null;
+  Ledger_MD?: string | null;
+  ParentAccNo?: string | null;
+  Input_YN?: string | null;
+  ABAT_YN?: string | null;
+  NoteDesc?: string | null;
+  Voucher_Type?: string | null;
+  Budget_YN?: string | null;
+  Org_YN?: string | null;
+  ROC_AccNo?: string | null;
+  IFRS_AccNo?: string | null;
+  DEPRE_AccNo?: string | null;
+  ACCUDEPRE_AccNo?: string | null;
+  EXP_YEAR?: number | null;
+  RESI_YEAR?: number | null;
+  CRT_Date?: string | null;
+  CRT_USR_No?: string | null;
+  CRT_USR_Name?: string | null;
+  UPD_Date?: string | null;
+  UPD_USR_No?: string | null;
+  UPD_USR_Name?: string | null;
+  RESI_VALUE?: number | null;
+}
+
+/** queryAPS4023DetatilData_ByInvoiceNumber Request */
+export interface QueryAps4023DetailDataByInvoiceNumberRequest {
+  InvoiceNumber?: string | null;
+}
+
+/** queryAPS4023DetatilData_ByInvoiceNumber 200 Data（發票主檔） */
+export interface Aps4023DetailDataByInvoiceNumberData {
+  ID?: number;
+  mid?: number;
+  STO_No?: string | null;
+  InvoiceNumber?: string | null;
+  InvoiceType?: string | null;
+  InvoiceDate?: string | null;
+  InvoiceTime?: string | null;
+  Seller_Uniform?: string | null;
+  Buyer_Uniform?: string | null;
+  Buyer_VenNo?: string | null;
+  Buyer_Name?: string | null;
+  Group_Mark?: string | null;
+  Donate_Mark?: string | null;
+  Invoice_VoidDT?: string | null;
+  Invoice_Cancel?: string | null;
+  PUR_Net?: number;
+  PUR_Tax?: number;
+  PUR_Amt?: number;
+  PUR_TaxType?: string | null;
+  CRT_Date?: string | null;
+  CRT_USR_No?: string | null;
+  CRT_USR_Name?: string | null;
+  UPD_Date?: string | null;
+  UPD_USR_No?: string | null;
+  UPD_USR_Name?: string | null;
+  Print_Date?: string | null;
+  ORG_INV_Date?: string | null;
+  ORG_INV_Time?: string | null;
+  TXN_Ret_No?: string | null;
+  INV_RcvTime?: string | null;
+  INV_VoidTime?: string | null;
+  INV_RjtTime?: string | null;
+  Credit_Type?: string | null;
+  Source_Doc_No?: string | null;
+  Voucher_No?: string | null;
+  INV_DeclareYM?: string | null;
+  INV_REMARK?: string | null;
+  SAL_Type?: string | null;
+  AssetType?: string | null;
+  TXN_GUIRemark?: string | null;
+}
+
 /** queryFIN53010DetailData_ByVouNo Request（Swagger FIN53010） */
 export interface QueryFIN53010DetailDataByVouNoRequest {
   VouNo?: string | null;
