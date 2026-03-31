@@ -121,6 +121,8 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     tlt_building: [''],
     tlt_floor: [],
     org_id: [],
+    ORG_TXN_DateStart: [null],
+    ORG_TXN_DateEnd: [null],
     ...createPaginationConfig([
       { field: 'tlt_no', order: 1 },
       { field: 'TXN_Date', order: 1 },
@@ -309,6 +311,9 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
       ...(this.toNumOrUndef(raw?.TXN_No_Start) != null ? { TXN_No_Start: this.toNumOrUndef(raw?.TXN_No_Start) } : {}),
       ...(this.toNumOrUndef(raw?.TXN_No_End) != null ? { TXN_No_End: this.toNumOrUndef(raw?.TXN_No_End) } : {}),
+
+      ...(this.toDateOnly(raw?.ORG_TXN_DateStart) ? { ORG_TXN_DateStart: this.toDateOnly(raw?.ORG_TXN_DateStart) } : {}),
+      ...(this.toDateOnly(raw?.ORG_TXN_DateEnd) ? { ORG_TXN_DateEnd: this.toDateOnly(raw?.ORG_TXN_DateEnd) } : {}),
 
       pageIndex: Number(raw?.pageIndex) || 1,
       pageSize: Number(raw?.pageSize) || 30,
