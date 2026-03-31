@@ -894,4 +894,11 @@ export class DropdownApiService {
       body
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
+
+  /** 查詢寄件者資料(NTY1001) */
+  queryNTY1001_DropDownList(): Observable<IDropdownItem[] | null> {
+    return this.queryDropdown<IDropdownItem>('/queryNTY1001_DropDownList').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
 }

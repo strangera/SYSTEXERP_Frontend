@@ -7,6 +7,8 @@ import { IQueryData, IQueryRequest, TLS2E080Service } from '@service/api/tls/tls
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -37,6 +39,8 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
     InputTextComponent,
     TableReportComponent,
     ButtonModule,
+    DialogComponent,
+    DropdownComponent,
   ]
 })
 export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> implements OnInit {
@@ -51,10 +55,14 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     check_typeList: [null], // 對帳方式
     ven_uniform: [null, [Validators.minLength(8), Validators.maxLength(8)]], // 統一編號
   });
+  dialogForm = this.formBuilder.group({
+    SMTP_No: [null, [Validators.required]], // 寄件者
+  })
   historyRequestBody?: IQueryRequest;
   tlt_noListOption = this.dropdown.queryTltTalent();
   tlt_term_typeListOption = getSYS1000Options('tlt_term_type');
   tlt_floorListOption = this.dropdown.querySys3900();
+  SMTP_NoOptions = this.dropdown.queryNTY1001_DropDownList();
   money_typeListOption = getSYS1000Options('money_type');
   sam_termnoListOption = [
     { value: '1', label: '1' },
@@ -78,6 +86,8 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
   ];
   btnLoading = false;
+  dialogVisible = false;
+  dialogLoading = false;
   ngOnInit(): void {
     this.initializePage('TLS2E080');
     if (this.hasPermission(this.Actions.Preview)) {
@@ -162,7 +172,55 @@ export class TLS2E080Component extends BasicQueryPageComponent<IQueryData> imple
     });
   }
 
-  autoMail() {
+  autoMail(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body: any = {
+        SMTP_No: frm.value.SMTP_No,
+        tlt_noList: this.historyRequestBody?.tlt_noList || null,
+        tlt_term_typeList: this.historyRequestBody?.tlt_term_typeList || null,
+        tlt_floorList: this.historyRequestBody?.tlt_floorList || null,
+        sam_yyymm: this.historyRequestBody?.sam_yyymm || null,
+        money_typeList: this.historyRequestBody?.money_typeList || null,
+        sam_termnoList: this.historyRequestBody?.sam_termnoList || null,
+        tlt_buildingList: this.historyRequestBody?.tlt_buildingList || null,
+        check_typeList: this.historyRequestBody?.check_typeList || null,
+        ven_uniform: this.historyRequestBody?.ven_uniform || null,
+        exportList: []
+      };
+
+      if (this.selectedItems.length === this.totalRecords || !this.isAllSelected) {
+        body.exportList = this.selectedItems.map(item => {
+          let sam_yyymm_string = '';
+          if (item.sam_yyymm) {
+            const date = new Date(item.sam_yyymm);
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            sam_yyymm_string = `${year}${month}`;
+          }
+          const year = parseInt(sam_yyymm_string.substring(0, 4), 10);
+          const month = parseInt(sam_yyymm_string.substring(4, 6), 10) - 1;
+          const sad_date_Start = new Date(year, month, 1);
+          const sad_date_End = new Date(year, month + 1, 0);
+          return {
+            mid: this.authService.currentUserValue?.mid,
+            talent_id: item.talent_id,
+            sam_yyymm: item.sam_yyymm,
+            sad_date_Start: sad_date_Start,
+            sad_date_End: sad_date_End,
+            money_type: item.money_type,
+            sam_termno: item.sam_termno,
+            tlt_no: item.tlt_no,
+            tlt_name: item.tlt_name,
+            VEN_Name: item.VEN_Name,
+            email: item.email,
+          };
+        });
+      }
+      this.dialogLoading = true;
+      this.tls2e080Service.autoMailTLS2E080(body).pipe(untilDestroyed(this), finalize(() => [this.loading = false, this.dialogLoading = false, this.dialogVisible = false])).subscribe(res => {
+        this.messageService.successBubble(res.Message);
+      });
+    })
   }
 
   exportZip() {
