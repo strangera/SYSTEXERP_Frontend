@@ -64,7 +64,7 @@
     [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [loading]="loading"
     [queryFunction]="tls2e080Service.queryTLS2E080.bind(tls2e080Service)" [showCheckBox]="true"
     (selectButton)="onSelectButton($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [loading]="loading" (selectAllChange)="isAllSelected = $event">
+    (selectAllChange)="isAllSelected = $event">
     <header>
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex gap-2">
@@ -76,7 +76,7 @@
           <p-button styleClass="p-2" label="網路對帳" [rounded]="true" icon="pi pi-file" (click)="netReport()"
             [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.OnlineCheck)"
             [loading]="btnLoading"></p-button>
-          <p-button styleClass="p-2" label="AUTOMAIL" [rounded]="true" icon="pi pi-file" (click)="autoMail()"
+          <p-button styleClass="p-2" label="AUTOMAIL" [rounded]="true" icon="pi pi-file" (click)="dialogVisible = true"
             [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.AUTOMAIL)"
             [loading]="btnLoading"></p-button>
         </div>
@@ -84,3 +84,15 @@
     </header>
   </app-table-report>
 </div>
+<app-dialog [visible]="dialogVisible" header="AutoMail" [showFooter]="false" (visibleChange)="dialogVisible = $event"
+  width="400px">
+  <form [formGroup]="dialogForm" (ngSubmit)="autoMail(dialogForm)">
+    <div class="grid p-fluid">
+      <app-dropdown class="col-12" label="寄件者" controlName="SMTP_No" [control]="dialogForm.controls.SMTP_No"
+        [options]="SMTP_NoOptions | async" optionLabel="Name" optionValue="No" [submitted]="submitted" />
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="submit" [loading]="dialogLoading"></app-button>
+    </div>
+  </form>
+</app-dialog>

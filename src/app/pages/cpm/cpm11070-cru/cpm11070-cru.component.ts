@@ -65,6 +65,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     RECAPTION_NAME: ['', [Validators.maxLength(10)]],
     RECAPTION_PHONE: ['', [Validators.maxLength(10)]],
     PROCESSING_USER: [{ value: '', disabled: true }, [Validators.maxLength(20)]],
+    GetLocation: ['', [Validators.maxLength(100)]],
   });
   selectedItems: any[] = [];
   totalRecords = 0;
@@ -164,6 +165,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
       REGISTRANT: '報失者姓名',
       IDENTITY_KIND: '報失者身分別',
       SEX: '報失者性別',
+      GET_LOCATION_LABEL: '遺失地點',
     },
     F: {
       LOST_DATE_HEADER: '拾獲日期',
@@ -171,6 +173,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
       REGISTRANT: '拾獲者姓名',
       IDENTITY_KIND: '拾獲者身分別',
       SEX: '拾獲者性別',
+      GET_LOCATION_LABEL: '拾獲地點',
     },
   };
 
@@ -288,6 +291,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           ADDRESS: d.ADDRESS,
           RECAPTION_NAME: d.RECAPTION_NAME,
           RECAPTION_PHONE: d.RECAPTION_PHONE,
+          GetLocation: d.GetLocation,
         });
 
         try {
@@ -579,6 +583,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           TEL: raw.TEL,
           MOBILE_PHONE: raw.MOBILE_PHONE,
           ADDRESS: raw.ADDRESS,
+          GetLocation: raw.GetLocation,
         };
 
         // 若為 null，從 payload 中移除屬性，嘗試避免後端自動填入預設值
@@ -656,6 +661,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           TEL: raw.TEL,
           MOBILE_PHONE: raw.MOBILE_PHONE,
           ADDRESS: raw.ADDRESS,
+          GetLocation: raw.GetLocation,
         };
 
         this.cpm11070Service.updateCPM11070(updatePayload)

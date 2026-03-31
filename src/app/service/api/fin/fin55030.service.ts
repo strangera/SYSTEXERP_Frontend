@@ -29,6 +29,7 @@ export interface fin55030response {
   PTA: string;
   PTA1: number;
   PTA2: number;
+  Balance: number;
 }
 
 // 明細 Row
@@ -45,6 +46,7 @@ export interface FIN55030Detail {
   PTA: string;
   PTA1: number;
   PTA2: number;
+  Balance: number;
 
   Label?: string; // AccNo + AccCName
 }

@@ -191,8 +191,8 @@ export interface CampaignData {
   EndTime: Date;
   Remark: string;
   StartTime: Date;
-  DiscountStartTime: Date;
-  DiscountEndTime: Date;
+  DiscountStartTime: Date | null;
+  DiscountEndTime: Date | null;
 }
 
 // /** 活動類型 */

@@ -63,16 +63,8 @@ export class FIN61010CRUComponent extends BasicCruPageComponent<FIN61010Data> im
       isUserInput: true,
     },
     {
-      field: 'VoidBegNo',
-      header: '作廢起號',
-      type: 'input',
-      width: '150px',
-      isUserInput: true,
-      maxLength: 20,
-    },
-    {
-      field: 'VoidEndNo',
-      header: '作廢迄號',
+      field: 'CHK_No',
+      header: '支票號碼',
       type: 'input',
       width: '150px',
       isUserInput: true,
@@ -161,22 +153,9 @@ export class FIN61010CRUComponent extends BasicCruPageComponent<FIN61010Data> im
         }
       }
 
-      // 驗證：新增的作廢明細，作廢迄號 >= 作廢起號 且 <= 終止碼
       const newVoidItems = this.voidItems.filter(
-        item => !item._isAutoInsertCandidate && item._dataStatus === 'new' && item.VoidBegNo && item.VoidEndNo
+        item => !item._isAutoInsertCandidate && item._dataStatus === 'new' && item.CHK_No
       );
-      for (const item of newVoidItems) {
-        if (item.VoidEndNo < item.VoidBegNo) {
-          this.loading = false;
-          this.messageService.errorBubble('作廢迄號必須大於等於作廢起號');
-          return;
-        }
-        if (endNo && item.VoidEndNo > endNo) {
-          this.loading = false;
-          this.messageService.errorBubble('作廢迄號必須小於等於終止碼');
-          return;
-        }
-      }
 
       const serviceCall = this.isFormCreateable
         ? this.fin61010Service.insertFIN61010({
@@ -203,8 +182,7 @@ export class FIN61010CRUComponent extends BasicCruPageComponent<FIN61010Data> im
             CHK_StopDate: this.formatVoidDate(raw.CHK_StopDate),
             VoidItems: newVoidItems.map(item => ({
               VoidDate: this.formatVoidDate(item.VoidDate),
-              VoidBegNo: item.VoidBegNo,
-              VoidEndNo: item.VoidEndNo,
+              CHK_No: item.CHK_No,
               VoidReason: item.VoidReason || undefined,
             })),
           } as FIN61010UpdateRequest);

@@ -48,8 +48,8 @@ export class FIN62010Component extends BasicQueryPageComponent<QueryFIN62010Resp
     { field: 'BNK_No_Out', header: '轉出公司銀行科目代號' },
     { field: 'BNK_No_Out_Name', header: '轉出銀行名稱' },
     { field: 'VouNo', header: '傳票號碼' },
-    { field: 'Tran_Amt', header: '金額', format: formatAmount },
-    { field: 'Fee_Amt', header: '手續費', format: formatAmount },
+    { field: 'Tran_Amt', header: '金額', format: formatAmount, align: 'right' },
+    { field: 'Fee_Amt', header: '手續費', format: formatAmount, align: 'right' },
     { field: 'Remark', header: '備註' }
   ];
   constructor(
