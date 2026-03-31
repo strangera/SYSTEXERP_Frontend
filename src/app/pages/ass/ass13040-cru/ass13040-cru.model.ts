@@ -27,6 +27,7 @@ export interface QueryDetailASS13040MasterData {
   SUPPLIER_ID?: string | null;
   VOUCHER_ID?: string | null;
   ASSET_V_KEY?: string | null;
+  ASSET_TYPE?: string | null;
   NOTES?: string | null;
   IMAGE_URL1?: string | null;
   IMAGE_URL2?: string | null;
@@ -128,6 +129,7 @@ export interface BaseASS13040Request {
   ORG_ID?: string | null;
   WH_ID?: string | null;
   APPLY_DATE?: string | null;
+  ASSET_TYPE?: string | null;
   SUPPLIER_ID?: string | null;
   NOTES?: string | null;
   IMAGE_URL1?: string | null;

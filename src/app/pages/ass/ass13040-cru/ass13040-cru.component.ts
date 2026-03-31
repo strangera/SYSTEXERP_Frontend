@@ -250,6 +250,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
           ORG_ID: raw.departmentCode ?? null,
           SUPPLIER_ID: raw.scrapVendor ?? null,
           APPLY_DATE: raw.scrapDate ? this.formatDate(raw.scrapDate) : null,
+          ASSET_TYPE: raw.assetsType ?? null,
           NOTES: raw.remark ?? null,
           IMAGE_URL1: this.rawExistingFile1 ?? null,
           IMAGE_URL2: this.rawExistingFile2 ?? null,
@@ -263,6 +264,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
           ORG_ID: raw.departmentCode ?? null,
           SUPPLIER_ID: raw.scrapVendor ?? null,
           APPLY_DATE: raw.scrapDate ? this.formatDate(raw.scrapDate) : null,
+          ASSET_TYPE: raw.assetsType ?? null,
           NOTES: raw.remark ?? null,
           IMAGE_URL1: this.rawExistingFile1 ?? null,
           IMAGE_URL2: this.rawExistingFile2 ?? null,
@@ -376,7 +378,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
             departmentCode: master.ORG_ID ?? null,
             scrapVendor: master.SUPPLIER_ID ?? null,
             scrapDate: master.APPLY_DATE ? new Date(master.APPLY_DATE) : null,
-            assetsType: null, // 畫面欄位「資產類型」：API Response.Master 無對應欄位
+            assetsType: master.ASSET_TYPE ?? null,
             remark: master.NOTES ?? null,
           });
 
