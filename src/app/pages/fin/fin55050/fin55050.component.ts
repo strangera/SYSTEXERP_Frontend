@@ -1,14 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, OnInit } from '@angular/core';
-import { finalize } from 'rxjs';
-
-import {
-  ExportFIN55050Payload,
-  FIN55050Detail,
-  FIN55050Service
-} from '../../../service/api/fin/fin55050.service';
-
 import { Location } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -20,13 +11,16 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
 import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { finalize } from 'rxjs';
+import { ExportFIN55050Payload, FIN55050Detail, FIN55050Service } from '../../../service/api/fin/fin55050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableSubheaderComponent } from './table-subheader/table-subheader.component';
 export interface FIN55050Data {
   AccNo: string;
   AccCName: string;
@@ -58,7 +52,8 @@ export interface GroupedFIN55050Detail extends FIN55050Detail {
     TableSubheaderComponent,
     InputTextRangeComponent,
     DropdownRangeComponent,
-    DropdownComponent
+    DropdownComponent,
+    ButtonModule
   ]
 })
 export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> implements OnInit {
@@ -138,16 +133,11 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
 
   ngOnInit(): void {
     this.initializePage('FIN55050', 'account/fin/fin55050cru', this.queryForm, (form) => this.onSubmit(form));
-    // ✅ 預先把 ProgNo 寫入一次，避免你從其它地方直開 CRU
     try { localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050'); } catch { }
-
     this.loadOptions();
-
-    this.queryForm.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe(() => {
-        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      });
+    this.queryForm.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+    });
   }
 
   onSubmit(form: FormGroup) {
@@ -239,8 +229,32 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   /** 從巢狀資料展平成清單 */
   restructureData(data: FIN55050Data[]): GroupedFIN55050Detail[] {
     const grouped: GroupedFIN55050Detail[] = [];
+
     (data ?? []).forEach(parent => {
-      (parent._Details ?? []).forEach(detail => {
+      const details = parent._Details ?? [];
+
+      // --- 1. 插入期初餘額列 ---
+      // 假設後端 parent 有提供初始餘額，若無，則取第一筆明細的 OpeningBal 減去其借貸變動
+      const firstDetail = details[0];
+      grouped.push({
+        AccNo: parent.AccNo,
+        AccCName: parent.AccCName,
+        VouDate: parent.VouDate,
+        VouNo: '', // 虛擬列不給傳票號碼，避免點擊進入明細
+        NoteDesc: '【期初餘額】',
+        OpeningBal: firstDetail?.OpeningBal ?? 0, // 這裡需視後端 API 實際給值邏輯調整
+        VouStatus: '',
+        isVirtual: true // 新增標記，用於 CSS 樣式區隔
+      } as any);
+
+      // --- 2. 插入實際明細 ---
+      let totalD = 0;
+      let totalC = 0;
+
+      details.forEach(detail => {
+        totalD += (detail.AccAmt_D ?? 0);
+        totalC += (detail.AccAmt_C ?? 0);
+
         grouped.push({
           ...detail,
           AccNo: parent.AccNo,
@@ -248,7 +262,23 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
           VouDate: parent.VouDate
         });
       });
+
+      // --- 3. 插入本期合計列 ---
+      const lastDetail = details[details.length - 1];
+      grouped.push({
+        AccNo: parent.AccNo,
+        AccCName: parent.AccCName,
+        VouDate: '',
+        VouNo: '',
+        NoteDesc: '【本期合計】',
+        AccAmt_D: totalD,
+        AccAmt_C: totalC,
+        OpeningBal: lastDetail?.OpeningBal ?? 0, // 最終餘額
+        VouStatus: '',
+        isVirtual: true
+      } as any);
     });
+
     return grouped;
   }
 

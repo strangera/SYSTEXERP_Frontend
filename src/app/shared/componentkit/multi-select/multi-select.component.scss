@@ -47,7 +47,9 @@
     font-size: 1rem;
     line-height: 1.5;
     border-radius: 0.375rem;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    transition:
+      border-color 0.15s ease-in-out,
+      box-shadow 0.15s ease-in-out;
   }
 }
 
@@ -96,5 +98,60 @@
   &:not(.p-disabled).p-focus .p-multiselect-label {
     border-color: #80bdff !important;
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15) !important;
+  }
+}
+:host ::ng-deep {
+  .custom-multi-select.p-multiselect {
+    min-height: 120px;
+    display: flex;
+    position: relative;
+    /* 讓整個元件內部的內容物對齊頂部，但維持整體結構 */
+    align-items: stretch;
+
+    /* --- 1. 處理右側箭頭置中 --- */
+    .p-multiselect-trigger {
+      height: 100%; /* 撐滿整個元件高度 */
+      display: flex;
+      align-items: center; /* 讓 icon 在這 100% 的高度中垂直居中 */
+      justify-content: center;
+      width: 3rem; /* 固定寬度讓右側留白一致 */
+    }
+
+    /* --- 2. 處理選取項 (Tokens/Chips) 自適應寬度 --- */
+    .p-multiselect-label {
+      display: flex;
+      flex-wrap: wrap; /* 允許換行 */
+      gap: 6px; /* Chip 之間的間距 */
+      padding: 0.75rem; /* 內距調整 */
+      flex: 1; /* 佔滿剩餘空間 */
+      align-content: flex-start; /* 內容從頂部開始排 */
+    }
+
+    .p-multiselect-token {
+      display: inline-flex; /* 改為行內彈性佈局 */
+      width: auto !important; /* 強制不固定寬度 */
+      max-width: fit-content; /* 依照內容寬度 */
+      white-space: nowrap; /* 文字不換行 */
+      padding: 0.25rem 0.75rem;
+      background: var(--primary-50, #eff6ff);
+      color: var(--primary-700, #1d4ed8);
+      border-radius: 20px; /* 膠囊狀更美觀 */
+      align-items: center;
+
+      .p-multiselect-token-label {
+        margin-right: 0.5rem;
+        font-size: 0.875rem;
+      }
+
+      .p-multiselect-token-icon {
+        font-size: 0.75rem; /* 叉叉圖示小一點 */
+      }
+    }
+
+    /* 處理 placeholder 置頂 */
+    .p-placeholder {
+      position: absolute;
+      top: 0.75rem;
+    }
   }
 }

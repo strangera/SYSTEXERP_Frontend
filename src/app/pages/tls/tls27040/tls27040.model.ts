@@ -101,6 +101,7 @@ export const pos6119pTxnFgOptions = [
 
 export const POS611XOptions = [
   { label: '聯合', value: 'POS6118' },
+  { label: '聯合-宏誌', value: 'POS6118H' },
   { label: '中信', value: 'POS6119' },
   { label: '中信-停車場', value: 'POS6119P' },
 ];

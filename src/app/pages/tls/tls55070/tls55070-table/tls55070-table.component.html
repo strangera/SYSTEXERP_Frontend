@@ -14,7 +14,7 @@
   }" [lazy]="false" [loading]="loading && data.length === 0" [selectionMode]="showCheckBox ? selectionMode : null"
   [(selection)]="selectedItems" (selectionChange)="onSelectionChangeInternal($event)"
   [rowSelectable]="rowSelectableWrapper" (onRowSelect)="select.emit($event)" (onRowUnselect)="unSelect.emit($event)"
-  [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines table-font-md'">
+  [styleClass]="'p-datatable-sm p-datatable-gridlines table-font-md'">
 
   <!-- ===== Caption / 工具列 ===== -->
   <ng-template pTemplate="caption">

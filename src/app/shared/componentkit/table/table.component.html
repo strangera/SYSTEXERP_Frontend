@@ -183,11 +183,9 @@
                   ? 'pi pi-chevron-down': 'pi pi-chevron-right'" pButton (click)="toggleRowExpansion(rowData)"
             [disabled]="rowData.expansionLoading || (!expansionLoadFn && !rowData[expansionDataKey]?.length)" />
         </td>
-        <td *ngFor="let col of columns" [ngClass]="{
-      'text-right': col.align === 'right' || col.style === 'text-right',
-      'text-center': col.align === 'center' || (!col.align && !col.style),
-      'text-left': col.align === 'left'
-    }" style="text-overflow: ellipsis; min-width: 55px" (click)="editing ? $event.stopPropagation() : null"
+        <td *ngFor="let col of columns"
+          [ngClass]="getBodyCellNgClass(col, rowData)"
+          style="text-overflow: ellipsis; min-width: 55px" (click)="editing ? $event.stopPropagation() : null"
           (dblclick)="detailRow(rowData)" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn
           [frozen]="IsPrint && col.frozen">
           <p-cellEditor *ngIf="showRowEdit">
@@ -291,12 +289,13 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="emptymessage">
-    <tr>
+    <tr *ngIf="hasSearched">
       <td [attr.colspan]="getVisibleHeaderCount">
         <div>
-          <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
-            <!-- {{ emptyMessage }} -->
-          </div>
+         <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+          <i class="pi pi-search mr-2"></i>
+          {{ emptyMessage || '查無資料' }}
+        </div>
         </div>
       </td>
     </tr>

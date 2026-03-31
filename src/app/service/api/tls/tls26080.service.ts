@@ -1,7 +1,7 @@
 import { formatDate } from '@angular/common';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { CampaignData, QueryTLS26080TLTTALENT_D16_D17Request, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080EditTable, TLS26080InsertPayload, TLS26080Query, TLS26080TLTTALENT_D16_D17Row, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignData, ExportTLS26080PDFRequest, QueryCampaignRequest, QueryTLS26080TLTTALENT_D16_D17Request, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080EditTable, TLS26080InsertPayload, TLS26080Query, TLS26080TLTTALENT_D16_D17Row, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
 import { Option, TalentOpenFlagItem, TalentOpenFlagQuery } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -135,9 +135,19 @@ export class TLS26080Service {
     );
   }
 
+  /** 匯出活動單 PDF（查詢頁管理欄「列印」） */
+  public exportTLS26080PDF(body: ExportTLS26080PDFRequest): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${apiUrl}/TLS0000/TLS2000/exportTLS26080PDF`, body, {
+      observe: 'response',
+      responseType: 'blob',
+    }).pipe(
+      take(1),
+      tap(res => this.logger.debug(`exportTLS26080PDF:`, [res.status, res.body?.size])),
+    );
+  }
 
   /** 查詢環友資料 */
-  public loadCampaignData(query: any = {}): Observable<BaseQueryResponse<CampaignData>> {
+  public loadCampaignData(query: QueryCampaignRequest = {}): Observable<BaseQueryResponse<CampaignData>> {
     return this.http.post<BaseQueryResponse<CampaignData>>(`${apiUrl}/TLS0000/TLS2000/queryCampaign`, query).pipe(
       take(1),
       tap(res => this.logger.debug(`環友資料查詢結果:`, [res]))
@@ -198,10 +208,19 @@ export class TLS26080Service {
     if (path && !data.Success) window.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
   }
 
-  public downloadXLSXExample(): Observable<Blob> {
+  /**
+   * `GET downloadTLS26080Template`：query `HaveData` 為 true 時下載含範例資料之檔案，false 為空白範本。
+   */
+  public downloadXLSXExample(
+    haveData: boolean,
+    queryDate?: { tlt_bdate?: Date | null; tlt_edate?: Date | null }
+  ): Observable<Blob> {
+    const bdate = queryDate?.tlt_bdate ?? this.dateS;
+    const edate = queryDate?.tlt_edate ?? this.dateE;
     let params = new HttpParams();
-    params = params.set('tlt_bdate', this.formatQueryDate(this.dateS) || '');
-    params = params.set('tlt_edate', this.formatQueryDate(this.dateE) || '');
+    params = params.set('tlt_bdate', this.formatQueryDate(bdate) || '');
+    params = params.set('tlt_edate', this.formatQueryDate(edate) || '');
+    params = params.set('HaveData', haveData ? 'true' : 'false');
 
     return this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080Template`, {
       params,
@@ -209,16 +228,15 @@ export class TLS26080Service {
     }).pipe(
       take(1),
       tap(res => {
-        // 建立下載連結
         const url = window.URL.createObjectURL(res);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'TLS26080_範例檔案.xlsx';
+        link.download = haveData ? 'TLS26080_範例檔案.xlsx' : 'TLS26080_空白範本.xlsx';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-        this.logger.debug(`範例下載`);
+        this.logger.debug(haveData ? `範例下載` : `空白範本下載`);
       })
     );
   }
@@ -234,7 +252,7 @@ export class TLS26080Service {
     this.tltTalentOptionsLoading.set(true);
     const payload: TalentOpenFlagQuery = {
       VEN_No: query.ven_no,
-      ...(query.tlt_bdate != null && { tlt_sdate: this.formatQueryDate(query.tlt_bdate) }),
+      ...(query.tlt_bdate != null && { tlt_bdate: this.formatQueryDate(query.tlt_bdate) }),
       ...(query.tlt_edate != null && { tlt_edate: this.formatQueryDate(query.tlt_edate) }),
     };
 

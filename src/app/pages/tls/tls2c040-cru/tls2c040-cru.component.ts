@@ -3,7 +3,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -96,26 +96,40 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
   totalRecords = 0;
   readonly arColumns: ReportColumn[] = [
     { field: 'VOUNO', header: '應收帳款代號', align: 'left' },
+    { field: 'SrcSheetType', header: '專案代號', align: 'left', format: (v) => getSYS1000('ENTRY_TYPE', v) },
+    { field: 'org_id', header: '組織代碼', align: 'left', width: '40px' },
+    { field: 'org_name', header: '組織名稱', align: 'left' },
+    { field: 'CustomerNo', header: '客戶代碼', align: 'left' },
+    { field: 'DetailNo', header: '廠商代號', align: 'left' },
+    { field: 'VouType', header: '傳票類型', align: 'left', width: '40px' },
+    { field: 'sam_yyymm', header: '年月', align: 'left', width: '40px' },
+    { field: 'sam_termno', header: '帳次', align: 'left', width: '40px' },
+    { field: 'ar_amt', header: '應收帳款金額', format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'pta_amt', header: '沖帳金額', format: formatAmount, align: 'right' },
     { field: 'accno', header: '會計科目', align: 'left' },
     { field: 'ent_date', header: '立帳日期', align: 'left', format: formatDate },
     { field: 'perget_date', header: '預計收款日期', align: 'left', format: formatDate },
-    { field: 'ar_amt', header: '應收金額', format: formatAmount, isTotal: true, align: 'right' },
-    { field: 'pta_amt', header: '沖帳金額', format: formatAmount, align: 'right' },
-    { field: 'org_id', header: '組織代碼', align: 'left' },
-    { field: 'CustomerNo', header: '客戶代碼', align: 'left' },
+    { field: 'SrcVouNo', header: '原始憑證', align: 'left' },
     { field: 'notedesc', header: '備註', align: 'left' },
   ];
-
   readonly apColumns: ReportColumn[] = [
     { field: 'VOUNO', header: '應付帳款代號', align: 'left' },
+    { field: 'SrcSheetType', header: '專案代號', align: 'left', format: (v) => getSYS1000('ENTRY_TYPE', v) },
+    { field: 'org_id', header: '組織代碼', align: 'left', width: '40px' },
+    { field: 'org_name', header: '組織名稱', align: 'left' },
+    { field: 'CustomerNo', header: '客戶代碼', align: 'left' },
+    { field: 'DetailNo', header: '廠商代號', align: 'left' },
+    { field: 'VouType', header: '傳票類型', align: 'left', width: '40px' },
+    { field: 'sam_yyymm', header: '年月', align: 'left', width: '40px' },
+    { field: 'sam_termno', header: '帳次', align: 'left', width: '40px' },
+    { field: 'ap_amt', header: '應付帳款金額', format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'pta_amt', header: '沖帳金額', format: formatAmount, align: 'right' },
     { field: 'accno', header: '會計科目', align: 'left' },
     { field: 'ent_date', header: '立帳日期', align: 'left', format: formatDate },
-    { field: 'ap_amt', header: '應付金額', format: formatAmount, isTotal: true, align: 'right' },
-    { field: 'pta_amt', header: '沖帳金額', format: formatAmount, align: 'right' },
-    { field: 'org_id', header: '組織代碼', align: 'left' },
-    { field: 'DetailNo', header: '廠商代碼', align: 'left' },
-    { field: 'AP_Status', header: '狀態', align: 'left' },
+    { field: 'perget_date', header: '預計付款日期', align: 'left', format: formatDate },
+    { field: 'SrcVouNo', header: '原始憑證', align: 'left' },
     { field: 'notedesc', header: '備註', align: 'left' },
+    // { field: 'AP_Status', header: '狀態', align: 'left' },
   ];
 
   constructor(

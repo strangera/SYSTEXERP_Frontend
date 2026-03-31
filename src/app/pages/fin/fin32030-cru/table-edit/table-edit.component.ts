@@ -340,6 +340,8 @@ export class TableEditComponent implements OnChanges {
     this.footerUpdateSubject.next();
     // 發射 cleanData 給父層
     this.dataChange.emit(cleanData);
+    // 更新 fingerprint，讓 ngOnChanges 認出這是自身發出的資料，跳過 initializeData，保留 _validationErrors
+    this.dataService.updateFingerprint(cleanData);
     this.cdr.markForCheck();
   }
   // Delete 按鈕

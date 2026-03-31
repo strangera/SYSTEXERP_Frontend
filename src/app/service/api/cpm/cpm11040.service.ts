@@ -19,6 +19,7 @@ export interface QueryCPM11040Request extends BaseQueryRequest {
   DeviceName?: string;        // 設備名稱
   CertType?: string;          // 證件類型
   LoanUserName?: string;      // 出借處理人員
+  OnlyUnreturned?: boolean;   // 只查未歸還記錄
 }
 
 // 查詢客服設備出借/歸還記錄 Response 資料結構

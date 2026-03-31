@@ -28,7 +28,8 @@ import { CellInput } from './table-edit-cell.model';
               [editable]="true"
               [loading]="internalLoading"
               [virtualScroll]="true"
-              [virtualScrollItemSize]="40"
+              [virtualScrollItemSize]="37"
+              scrollHeight="250px"
               [showClear]="cellInput.col.showClear ?? true"
               [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }"
@@ -49,6 +50,21 @@ import { CellInput } from './table-edit-cell.model';
                tooltipPosition="bottom" />
 </p-iconField>
   `,
+  styles: [`
+    /* 使用 ::ng-deep 是因為下拉選單通常 appendTo="body"，不在組件視圖內 */
+    ::ng-deep .p-dropdown-item {
+        height: 37px !important;      /* 必須與 virtualScrollItemSize 一致 */
+        line-height: 37px !important; /* 確保文字垂直居中 */
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 確保虛擬滾動容器高度也是固定的 */
+    ::ng-deep .p-scroller {
+        height: 250px !important; /* 與 scrollHeight 一致 */
+    }
+    `],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
@@ -190,6 +206,6 @@ export class DropdownCellComponent {
 
   handleEnter(event: Event) {
     event.preventDefault(); // 阻止表單提交
-    event.stopPropagation(); // 阻止事件冒泡
+    // event.stopPropagation(); // !!!客戶需求禁止加上這段
   }
 }

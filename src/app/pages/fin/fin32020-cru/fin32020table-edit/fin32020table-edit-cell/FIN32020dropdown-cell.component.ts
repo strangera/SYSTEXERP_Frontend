@@ -6,8 +6,8 @@ import { DropdownModule } from 'primeng/dropdown';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { TooltipModule } from 'primeng/tooltip';
-import { TableUtilityService } from '../services/fin32020table-edit-utility.service'; // 🎯 引入服務
 import { EditColumn } from '../fin32020table-edit.model';
+import { TableUtilityService } from '../services/fin32020table-edit-utility.service'; // 🎯 引入服務
 import { FIN32020CellInput } from './FIN32020table-edit-cell.model';
 
 @Component({
@@ -27,7 +27,9 @@ import { FIN32020CellInput } from './FIN32020table-edit-cell.model';
                   [editable]="true"
                   (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
                   (onHide)="handleHide()"
-                  [virtualScroll]="true" [virtualScrollItemSize]="40"
+                  [virtualScroll]="true"
+                  [virtualScrollItemSize]="37"
+                  scrollHeight="250px"
                   [showClear]="cellInput.col.showClear ?? true"
                   [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
                   [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }">

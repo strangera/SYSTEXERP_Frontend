@@ -131,7 +131,7 @@ export class FIN63020Component extends BasicQueryPageComponent<any> implements A
     const statusFlag = String(row?.StatusFlag ?? '').trim();
 
     if (!this.isPickup0(pickupStatus)) return true;  // 已領/郵寄
-    if (this.isCashed(checkStatus)) return true;     // 兌現
+    // if (this.isCashed(checkStatus)) return true;     // 兌現
     if (this.isPosted(statusFlag)) return true;      // 拋轉（你要禁編就保留）
     return false;
   };

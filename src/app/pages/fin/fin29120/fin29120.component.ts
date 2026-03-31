@@ -27,7 +27,9 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
   templateUrl: './fin29120.component.html',
   styleUrl: './fin29120.component.scss',
   standalone: true,
-  imports: [CommonModule, DropdownComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule, DropdownRangeComponent, InputTextRangeComponent,]
+  imports: [CommonModule, 
+    // DropdownComponent, 
+    MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule, DropdownRangeComponent, InputTextRangeComponent,]
 })
 export class FIN29120Component extends BasicQueryPageComponent<any> implements OnInit {
   data: any[] = [
@@ -57,6 +59,9 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
       ]
     ]
   });
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
+  }
 
   factoryIDOptions: any[] = [];
   columns: any[] = [
@@ -65,13 +70,13 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
     { field: 'ACPId', header: '應付ID', visible: true, htmlFormat: true },
     { field: 'PaymentDate', header: '付款日期', visible: true, format: formatDate },
     { field: 'ACPDate', header: '立帳日期', visible: true, format: formatDate },
-    { field: 'ACPAmount', header: '應付金額', visible: true },
-    { field: 'SettleAmount', header: '沖帳金額', visible: true },
+    { field: 'ACPAmount', header: '應付金額', visible: true, format:this.moneyFormat },
+    { field: 'SettleAmount', header: '沖帳金額', visible: true, format:this.moneyFormat },
     { field: 'InvoiceNo', header: '發票號碼', visible: true, htmlFormat: true },
     { field: 'InvoiceDate', header: '發票日期', visible: true, format: formatDate },
-    { field: 'NetAmount', header: '未稅金額', visible: true },
-    { field: 'TaxAmount', header: '稅額金額', visible: true },
-    { field: 'AmtWithTax', header: '含稅金額', visible: true },
+    { field: 'NetAmount', header: '未稅金額', visible: true, format:this.moneyFormat },
+    { field: 'TaxAmount', header: '稅額金額', visible: true, format:this.moneyFormat },
+    { field: 'AmtWithTax', header: '含稅金額', visible: true, format:this.moneyFormat },
     { field: 'VoucherType', header: '憑證類別', visible: true },
   ];
 
@@ -162,16 +167,40 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
   //   window.open(url, '_blank', 'noopener');
   // }
 
-
   private buildQueryPayload(formValue: any): any {
     return {
-      PurGuiDateYyyymm: formValue.onedatemm,
-      PurGuiNoPrefix: formValue.track,
+      PurGuiDateYyyymm: this.formatYearMonth(formValue.onedatemm),
+      PurGuiNoPrefix: formValue.track || null,
       VenNoFrom: formValue.startFactoryID || null,
       VenNoTo: formValue.endFactoryID || null,
       PurGuiNoFrom: formValue.startserialticket || null,
       PurGuiNoTo: formValue.endserialticket || null
     };
+  }
+
+  private formatYearMonth(value: any): string | null {
+    if (!value) return null;
+
+    if (value instanceof Date) {
+      const y = value.getFullYear();
+      const m = String(value.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    }
+
+    const str = String(value).trim();
+
+    // 已經是 YYYYMM
+    if (/^\d{6}$/.test(str)) return str;
+
+    // YYYY-MM-DDTHH:mm:ss 或 YYYY/MM/DD 或 YYYY-MM
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    }
+
+    return null;
   }
 
 

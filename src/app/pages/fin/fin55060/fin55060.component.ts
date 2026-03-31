@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -26,13 +25,13 @@ import { Column, createPaginationConfig, formatAmount } from '@shared/componentk
 import { AccordionModule } from 'primeng/accordion';
 import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
 
-type ApiGroup = {
+interface ApiGroup {
   AccNo4: string;
   AccNo4Name: string;
   _Details: ApiDetail[];
-};
+}
 
-type ApiDetail = {
+interface ApiDetail {
   AccNo: string;
   AccCName: string;
   DetailNo: string | null;
@@ -42,7 +41,7 @@ type ApiDetail = {
   Debit_Amt: number | null;
   Credit_Amt: number | null;
   Balance: number | null;
-};
+}
 
 type TableRow = ApiDetail & {
   AccNo4: string;
@@ -254,7 +253,7 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
       .exportFIN55060PDF(payload)
       .pipe(untilDestroyed(this), finalize(() => (this.PDFBtnLoading = false)))
       .subscribe({
-        next: (r) => this.handleFileExport(r, '.pdf', '分類帳_科目'),
+        next: (r) => this.handleFileExport(r, '.pdf', '分類帳彙總報表'),
         error: (e) => console.error('Export PDF failed', e),
       });
   }
@@ -269,33 +268,22 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
       .exportFIN55060Excel(payload)
       .pipe(untilDestroyed(this), finalize(() => (this.XLSXBtnLoading = false)))
       .subscribe({
-        next: (r) => this.handleFileExport(r, '.xlsx', '分類帳_科目'),
+        next: (r) => this.handleFileExport(r, '.xlsx', '分類帳彙總報表'),
         error: (e) => console.error('Export Excel failed', e),
       });
   }
 
-  private handleFileExport(response: HttpResponse<Blob>, ext: string, defaultBaseName: string): void {
-    const cd = response.headers.get('Content-Disposition');
-    const def = `${defaultBaseName}${ext}`;
-    const name = this.getFilenameFromHeader(cd, def);
-    const blob = response.body;
-    if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = name;
-      document.body.appendChild(a); a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    }
-  }
-
-  private getFilenameFromHeader(cd: string | null, def: string): string {
-    if (!cd) return def;
-    const star = /filename\*=([^;]+)/.exec(cd);
-    if (star?.[1]) { try { return decodeURIComponent(star[1].replace(/^UTF-8''/, '')); } catch { return star[1]; } }
-    const m = /filename="([^"]+)"/.exec(cd);
-    if (m?.[1]) { try { return decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch { return m[1]; } }
-    return def;
+  private handleFileExport(resp: any, ext: string, baseName: string): void {
+    const blob = resp?.body instanceof Blob ? resp.body : resp;
+    const fileName = `${baseName}_${new Date().getTime()}${ext}`;
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   }
 
   override onDetail(row: TableRow) {
@@ -334,10 +322,12 @@ export class FIN55060Component extends BasicQueryPageComponent<TableRow> impleme
     this.dropDownListService.queryGLS1005_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.AccNoListOptions = response?.Data?.map((item: any) => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
-        })) ?? [];
+        //前端規格新增 (下拉選擇, 只顯示統制科目或取會計科目長度為4碼的資料)
+        this.AccNoListOptions = response?.Data?.filter((item: any) => item.No?.length === 4)
+          .map((item: any) => ({
+            label: `${item.No} - ${item.Name}`,
+            value: item.No,
+          })) ?? [];
       });
 
     // 廠商編號

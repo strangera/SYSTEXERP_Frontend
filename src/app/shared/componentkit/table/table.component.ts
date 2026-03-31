@@ -280,8 +280,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     private readonly tableUtilityService: TableUtilityService
   ) { super(); }
   // 當 data 發生變化時，重置分頁與頁碼
+  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
+      this.hasSearched = true;
       setTimeout(() => {
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
         this.selectedItems = [];
@@ -501,6 +503,26 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   getGroupAlignClass(groupField: string): string {
     const align = this.columnGroup?.find(g => g.field === groupField)?.align;
     return align ? 'text-' + align : 'text-center';
+  }
+
+  /**
+   * 資料列儲存格：合併對齊 預設樣式 與 Column.cellClass
+   */
+  getBodyCellNgClass(col: Column, rowData: any): Record<string, boolean> {
+    // 預設樣式
+    const result: Record<string, boolean> = {
+      'text-right': col.align === 'right' || col.style === 'text-right',
+      'text-center': col.align === 'center' || (!col.align && !col.style),
+      'text-left': col.align === 'left',
+    };
+
+    const extra = col.cellClass?.(rowData, col.field);
+    if (typeof extra === 'string' && extra.trim()) {
+      for (const cls of extra.trim().split(/\s+/)) {
+        if (cls) result[cls] = true;
+      }
+    }
+    return result;
   }
   // 分組總計
   getGroupSubtotal(groupValue: any, field: string): number {

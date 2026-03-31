@@ -62,6 +62,6 @@
       [disabled]="data.length <= 2 || !hasPermission(Actions.ExportExcel)"></p-button>
   </div>
   <!-- 假設 FIN55080 沿用 FIN55090 的表格結構 -->
-  <app-table-subheader-grouping [data]="data" [footerData]="footerData">
+  <app-table-subheader-grouping [data]="data" [footerData]="footerData" [historyRequestBody]="historyRequestBody">
   </app-table-subheader-grouping>
 </div>

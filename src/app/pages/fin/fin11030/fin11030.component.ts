@@ -47,7 +47,7 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
     SAL_GUIPaper: [null],
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'SAL_GUIYYYYMM', order: 1 }, { field: 'SAL_GUITrack', order: 1 }]],
+    SortBy: [[{ field: 'SAL_GUIYYYYMM', order: 1 }, { field: 'SAL_GUITrack', order: 1 }, { field: 'SAL_GUIBegNo', order: 1 }]],
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUINo_start', 'SAL_GUINo_end') });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   SAL_GUIPaperOptions = getSYS1000Options('SAL_GUIPaper');     // 發票類別選項

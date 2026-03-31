@@ -69,4 +69,11 @@ export class Fin55100Service {
       responseType: 'blob'
     });
   }
+
+  exportFIN55100Excel(request: QueryFIN55100Request): Observable<ExportFileResponse> {
+    return this.http.post(`${this.apiUrl}/exportFIN55100Excel`, request, {
+      observe: 'response',
+      responseType: 'blob'
+    });
+  }
 }

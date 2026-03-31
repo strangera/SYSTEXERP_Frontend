@@ -196,12 +196,10 @@ export class TLS57150Component extends BasicQueryPageComponent<QueryTLS57150Deta
       };
 
       this.tls57150Service.queryTLS57150(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.historyRequestBody = requestBody;
         if (response.Data && response.Data.length > 0) {
-          console.log(response);
-
           this.totalRecords = response.TotalCount || 0;
           this.footerTotal = response.GrandTotal || response.SummaryTotal; // 根據 ReportType 取得總計
-          this.historyRequestBody = requestBody;
           this.subTotalData = response.SubTotals;
           this.data = response.Data;
         } else {
