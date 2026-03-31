@@ -146,6 +146,15 @@
             [endControl]="queryForm.controls.ORG_TXN_DateEnd"
             [submitted]="submitted">
           </app-calendar-range-quick>
+
+          <div *ngIf="viewMode === 'invoice'" class="col-12 md:col-6 lg:col-4 flex align-items-center gap-2" style="padding-top: 1.75rem;">
+            <p-checkbox
+              inputId="ExcludeNoGUI"
+              formControlName="ExcludeNoGUI"
+              [binary]="true">
+            </p-checkbox>
+            <label for="ExcludeNoGUI" class="cursor-pointer">排除無發票號碼交易</label>
+          </div>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
