@@ -190,3 +190,5 @@ When working with this codebase, focus on maintaining the established patterns f
 | Navigate to CRU | `this.navigateWithState(CRUDStatus.Edit, rowdata)` |
 | Submit form | `this.handleSubmit(form, () => { /* API call */ })` |
 | Auto-unsubscribe | `pipe(untilDestroyed(this))` with `@UntilDestroy()` decorator |
+| **Dropdown options** | Prefer [dropdown-api.service.ts](src/app/service/utility/dropdown-api.service.ts) existing methods; if none, add there and document "source not provided" items (e.g. 使用單位、財產編號、品項編號) for later backend API |
+| **Query result list** | Use `app-table-report` for search result block on query pages (not `app-table` unless special table need) |

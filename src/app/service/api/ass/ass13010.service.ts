@@ -24,7 +24,7 @@ import { environment } from 'src/environments/environment';
 export class ASS13010Service {
   private readonly apiUrl = environment.ApiUrl + '/ASS0000/ASS1000';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   queryASS13010(body: QueryASS13010Request): Observable<ApiResponse<QueryASS13010Response[]>> {
     return this.http.post<QueryASS13010ResultApiResponse>(`${this.apiUrl}/queryASS13010`, body).pipe(

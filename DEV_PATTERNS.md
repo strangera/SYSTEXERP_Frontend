@@ -809,6 +809,11 @@ export class FIN11010Service {
 }
 ```
 
+### 4.2a Dropdown and query list conventions
+
+- **Dropdown options**: Prefer [dropdown-api.service.ts](src/app/service/utility/dropdown-api.service.ts) existing methods. If no method exists, add one in `dropdown-api.service.ts` and document which dropdowns have "source not provided" (e.g. 使用單位、財產編號、品項編號) for later backend API.
+- **Query result list**: Use **app-table-report** for the search result block on query pages (not `app-table` unless the page has a special table requirement).
+
 ### 4.2 Basic Service (Dropdown)
 
 **Location**: `src/app/service/basic/`

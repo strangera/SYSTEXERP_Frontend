@@ -9,6 +9,7 @@ export const reportsRoutes: Routes = [
     canActivate: [AuthGuard],
     children: [
       { path: 'fin', loadChildren: () => import('./fin/fin.routing').then(m => m.finRoutes) },// 財務會計系統 (FIN)
+      { path: 'sys', loadChildren: () => import('./sys/sys.routing').then(m => m.sysRoutes) },// 系統管理 (SYS)
     ]
   }
 ];
