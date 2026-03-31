@@ -1,0 +1,168 @@
+<div class="flex flex-column align-items-center mb-4 mt-2">
+  <div class="flex align-items-center gap-3">
+    <i class="pi pi-file-edit text-primary text-4xl"></i>
+    <h2 class="text-900 font-bold m-0" style="letter-spacing: 3px;">作業權限申請表</h2>
+  </div>
+  <div class="surface-border border-bottom-2 w-6rem mt-3"></div>
+</div>
+
+<div class="mx-auto mb-3 flex justify-content-between align-items-end" style="max-width: 90vw;">
+  <div class="flex gap-2">
+    <p-button label="匯出 PDF 申請書" icon="pi pi-file-pdf" severity="danger" [raised]="true" [loading]="isPdfExporting()"
+      (onClick)="onExportPDF()">
+    </p-button>
+    <p-button label="匯出 Word 申請書" icon="pi pi-file-word" severity="info" [raised]="true" [loading]="isWordExporting()"
+      (onClick)="onExportWord()">
+    </p-button>
+  </div>
+</div>
+
+<div class="card p-5 shadow-2 border-round-xl mx-auto" style="max-width: 90vw;">
+  <form [formGroup]="queryForm" id="queryForm">
+
+    <div class="flex align-items-center mb-4 pb-2 border-bottom-1 surface-border">
+      <div class="w-1rem h-1rem bg-primary border-round mr-2"></div>
+      <span class="text-xl font-semibold text-700">申請資訊填寫</span>
+    </div>
+
+    <div class="grid p-fluid row-gap-4">
+      <div class="col-12 md:col-6">
+        <app-calendar label="申請日期" controlName="APPLY_DATE" [control]="queryForm.controls.APPLY_DATE"
+          [submitted]="submitted" placeholder="請選擇日期">
+        </app-calendar>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <app-dropdown label="主系統名稱" controlName="prog_no" [control]="queryForm.controls.prog_no"
+          [options]="subModuleNoOptions$ | async" optionLabel="Name" optionValue="No" [submitted]="submitted">
+        </app-dropdown>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <app-dropdown label="部門編號/名稱" controlName="org_no" [control]="queryForm.controls.org_no"
+          [options]="orgIdOptions$ | async" optionLabel="label" optionValue="value" [submitted]="submitted">
+        </app-dropdown>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <app-dropdown label="角色編號/名稱" controlName="role_no" [control]="queryForm.controls.role_no"
+          [options]="tblRoleOptions$ | async" optionLabel="label" optionValue="value" [submitted]="submitted">
+        </app-dropdown>
+      </div>
+
+      <div class="col-12">
+        <div class="p-4 border-round-xl bg-gray-50 border-1 border-200">
+          <div class="grid">
+            <div class="col-12">
+              <app-multi-select #userSelect label="欲申請權限之人員 (可多選)" controlName="user_NoList"
+                [control]="queryForm.controls.user_NoList" [options]="tblUserOptions$ | async" optionLabel="label"
+                optionValue="value" [submitted]="submitted" [maxSelectedLabels]="0">
+              </app-multi-select>
+            </div>
+
+            <div class="col-12 mt-2" *ngIf="(queryForm.get('user_NoList')?.value?.length || 0) > 0">
+              <div
+                class="flex flex-wrap gap-2 p-3 bg-white border-round-lg shadow-1 align-items-center border-1 border-100"
+                style="max-height: 160px; overflow-y: auto;">
+                <ng-container *ngFor="let userId of queryForm.get('user_NoList')?.value">
+                  <p-chip [label]="getUserLabel(userId)" [removable]="true" (onRemove)="removeUser(userId)"
+                    icon="pi pi-user" styleClass="custom-person-chip">
+                  </p-chip>
+                </ng-container>
+              </div>
+
+              <div class="flex justify-content-between mt-2 px-1">
+                <small class="text-500 font-medium">已選擇 {{ queryForm.get('user_NoList')?.value?.length }} 位人員</small>
+                <a href="javascript:void(0)" class="text-xs text-primary no-underline hover:underline"
+                  (click)="clearAllUsers()">一鍵清空</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 md:col-6">
+        <app-dropdown label="申請人" controlName="user_No" [control]="queryForm.controls.user_No"
+          [options]="tblUserOptions$ | async" optionLabel="label" optionValue="value" [submitted]="submitted">
+        </app-dropdown>
+      </div>
+    </div>
+
+    <div class="mt-5 pt-5">
+      <div class="flex align-items-center mb-4 pb-2 border-bottom-1 surface-border">
+        <div class="w-1rem h-1rem bg-orange-500 border-round mr-2"></div>
+        <span class="text-xl font-semibold text-700">申請功能權限明細</span>
+      </div>
+
+      <div class="privilege-container p-3 border-round-lg bg-gray-50 border-1 border-200">
+        <div *ngIf="privilegeTree.length > 0; else emptyTree">
+          <div *ngFor="let module of privilegeTree" class="flex flex-column mb-3 bg-white p-3 border-round shadow-sm">
+            <div class="flex align-items-center gap-2 mb-2">
+              <p-triStateCheckbox [ngModel]="module.IsEnable" (ngModelChange)="onCheckboxChange(module, $event)"
+                [ngModelOptions]="{standalone: true}" checkboxFalseIcon="pi pi-minus" />
+              <span class="font-bold text-lg text-primary">{{module.label}}</span>
+            </div>
+
+            <div class="ml-4 pl-3 border-left-2 surface-border">
+              <div *ngFor="let subModule of module.children" class="flex flex-column mb-3">
+                <div class="flex align-items-center gap-2 mb-2">
+                  <p-triStateCheckbox [ngModel]="subModule.IsEnable"
+                    (ngModelChange)="onCheckboxChange(subModule, $event)" [ngModelOptions]="{standalone: true}"
+                    checkboxFalseIcon="pi pi-minus" />
+                  <span class="font-bold text-600">{{subModule.label}}</span>
+                </div>
+
+                <div class="ml-4 pl-3 border-left-1 surface-border border-dashed">
+                  <div *ngFor="let program of subModule.children"
+                    class="py-3 border-bottom-1 surface-border last:border-none">
+                    <div class="grid align-items-start">
+
+                      <div class="col-12 lg:col-8">
+                        <div class="flex flex-column gap-3">
+                          <div class="flex align-items-start gap-3">
+                            <p-triStateCheckbox [label]="program.label + ' (' + program.prog_id + ')'"
+                              [ngModel]="program.IsEnable" (ngModelChange)="onCheckboxChange(program, $event)"
+                              [ngModelOptions]="{standalone: true}" class="min-w-max font-medium" />
+                          </div>
+
+                          <div class="flex flex-wrap gap-3 ml-5">
+                            <div *ngFor="let action of program.actions">
+                              <p-checkbox [binary]="true" [label]="action.label" [ngModel]="action.IsEnable"
+                                (ngModelChange)="onCheckboxChange(action, $event)"
+                                [ngModelOptions]="{standalone: true}" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="col-12 lg:col-4">
+                        <div class="flex flex-column gap-2 mr-2">
+                          <label [for]="'remark-' + program.id"
+                            class="text-sm font-medium text-600 flex align-items-center gap-2">
+                            <i class="pi pi-pencil text-primary"></i>
+                            申請備註
+                          </label>
+
+                          <textarea [id]="'remark-' + program.id" pInputTextarea rows="3"
+                            class="w-full text-sm p-2 border-1 surface-border border-round-md focus:border-primary transition-colors"
+                            [(ngModel)]="program.remark" [ngModelOptions]="{standalone: true}" placeholder="請輸入備註...">
+                          </textarea>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #emptyTree>
+          <div class="text-center py-5 text-500">
+            <i class="pi pi-spin pi-spinner mr-2"></i> 正在載入功能結構...
+          </div>
+        </ng-template>
+      </div>
+    </div>
+  </form>
+</div>

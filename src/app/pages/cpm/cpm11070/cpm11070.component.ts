@@ -121,7 +121,7 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
     { field: 'OffDate', header: '轉出日期', visible: true, format: formatDate },
     { field: 'DocTypeName', header: '失物類別', visible: true },
     { field: 'SeqStatusName', header: '失物狀態', visible: true },
-    { field: 'Location', header: '地點', visible: true },
+    { field: 'Location', header: '登記點位', visible: true },
     { field: 'ServiceUser', header: '服務人員', visible: true },
     { field: 'Registrant', header: '遺失者/拾獲者姓名', visible: true },
     { field: 'Tel', header: '電話', visible: true },

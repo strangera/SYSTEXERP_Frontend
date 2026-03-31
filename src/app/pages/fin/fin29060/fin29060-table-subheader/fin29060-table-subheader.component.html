@@ -146,36 +146,32 @@
           ></ng-container>
         </ng-container>
         <ng-template #defaultGroupHeader>
-          <span>{{ groupRowsByName }}：{{ rowData[groupRowsBy] }}</span>
+          <div style="display: flex; justify-content: space-between">
+            <div>{{ groupRowsByName }}：{{ rowData[groupRowsBy] }}</div>
+
+            <div class="flex items-center gap-6">
+              <span>
+                廠商立帳合計：{{
+                  getGroupSubtotal(rowData[groupRowsBy], "ACP_Amt") | number
+                }}
+              </span>
+              <span>
+                廠商沖銷合計：{{
+                  getGroupSubtotal(rowData[groupRowsBy], "PayAmt") | number
+                }}
+              </span>
+              <span>
+                廠商未沖銷合計：{{
+                  getGroupSubtotal(rowData[groupRowsBy], "NotPayAmt") | number
+                }}
+              </span>
+            </div>
+          </div>
         </ng-template>
       </td>
     </tr>
   </ng-template>
-  <ng-template pTemplate="groupfooter" let-rowData *ngIf="showSubTotal">
-    <tr>
-      <td
-        class="text-center font-bold"
-        [attr.colspan]="getVisibleHeaderCount - 6"
-      >
-        {{ subtotalLabel }}
-      </td>
 
-      <td class="text-center font-bold">廠商立帳合計</td>
-      <td class="text-center font-bold">
-        {{ getGroupSubtotal(rowData[groupRowsBy], "ACP_Amt") | number }}
-      </td>
-      <td class="text-center font-bold">廠商沖銷合計</td>
-      <td class="text-center font-bold">
-        {{ getGroupSubtotal(rowData[groupRowsBy], "PayAmt") | number }}
-      </td>
-      <td class="text-center font-bold">廠商未沖銷合計</td>
-      <td class="text-center font-bold">
-        {{ getGroupSubtotal(rowData[groupRowsBy], "NotPayAmt") | number }}
-      </td>
-
-      <td [hidden]="!IsPrint || !showManage"></td>
-    </tr>
-  </ng-template>
   <ng-template
     pTemplate="body"
     let-rowIndex="rowIndex"
@@ -209,7 +205,7 @@
           [ngClass]="{
             'text-left': col.align === 'left',
             'text-right': col.align === 'right' || col.style === 'text-right',
-            'text-center': col.align === 'center' || (!col.align && !col.style)
+            'text-center': col.align === 'center' || (!col.align && !col.style),
           }"
         >
           <!-- 連結到cruPage Read -->
