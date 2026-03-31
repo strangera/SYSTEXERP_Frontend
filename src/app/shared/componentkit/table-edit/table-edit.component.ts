@@ -172,6 +172,12 @@ export class TableEditComponent implements OnChanges {
       }
     }
 
+    // 新增：當 columns 改變時也重新計算 footer
+    if (changes['columns'] && !changes['columns'].firstChange) {
+      this._calculatedFooterData = this.calculateFooterData();
+      this.cdr.markForCheck();
+    }
+
     // 處理 defaultInsertData 改變的邏輯：更新現有的新增候選行
     if (changes['defaultInsertData']) {
       this.dataService.updateCandidateRowDefaults(this.dataKey, this.dataStatusField, this.defaultInsertData);

@@ -211,10 +211,15 @@ export class TLS26080Service {
   /**
    * `GET downloadTLS26080Template`：query `HaveData` 為 true 時下載含範例資料之檔案，false 為空白範本。
    */
-  public downloadXLSXExample(haveData: boolean): Observable<Blob> {
+  public downloadXLSXExample(
+    haveData: boolean,
+    queryDate?: { tlt_bdate?: Date | null; tlt_edate?: Date | null }
+  ): Observable<Blob> {
+    const bdate = queryDate?.tlt_bdate ?? this.dateS;
+    const edate = queryDate?.tlt_edate ?? this.dateE;
     let params = new HttpParams();
-    params = params.set('tlt_bdate', this.formatQueryDate(this.dateS) || '');
-    params = params.set('tlt_edate', this.formatQueryDate(this.dateE) || '');
+    params = params.set('tlt_bdate', this.formatQueryDate(bdate) || '');
+    params = params.set('tlt_edate', this.formatQueryDate(edate) || '');
     params = params.set('HaveData', haveData ? 'true' : 'false');
 
     return this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080Template`, {
@@ -247,7 +252,7 @@ export class TLS26080Service {
     this.tltTalentOptionsLoading.set(true);
     const payload: TalentOpenFlagQuery = {
       VEN_No: query.ven_no,
-      ...(query.tlt_bdate != null && { tlt_sdate: this.formatQueryDate(query.tlt_bdate) }),
+      ...(query.tlt_bdate != null && { tlt_bdate: this.formatQueryDate(query.tlt_bdate) }),
       ...(query.tlt_edate != null && { tlt_edate: this.formatQueryDate(query.tlt_edate) }),
     };
 

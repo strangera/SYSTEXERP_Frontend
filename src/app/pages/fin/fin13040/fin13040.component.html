@@ -51,9 +51,9 @@
             [submitted]="submitted" [evenMonth]="true" (valueChanges)="loadGuiTrackOptions($event)"></app-year-month>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="買受人統一編號" controlName="Buyer_Uniform" [control]="queryForm.controls.Buyer_Uniform"
-              [options]="Buyer_Uniform_Options" optionLabel="label" optionValue="value"
-              [submitted]="submitted"></app-dropdown>
+            <app-auto-complete label="買受人統一編號" controlName="Buyer_Uniform" [control]="queryForm.controls.Buyer_Uniform"
+              [options]="Buyer_Uniform_Options" optionLabel="label" optionValue="value" [submitted]="submitted"
+              [forceSelection]="false"></app-auto-complete>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">

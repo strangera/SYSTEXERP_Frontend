@@ -27,6 +27,8 @@ export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
   optionLabel = input<string | undefined>(undefined);
   optionValue = input<string | undefined>(undefined);
   showClear = input<boolean>(true);
+  forceSelection = input<boolean>(true);
+  autofocus = input<boolean>(true);
   optionSelected = output<AutoCompleteSelectEvent>();
   valueChange = output<any>();
   // 這是實際的選項列表，由 effect 根據 options 更新
@@ -70,6 +72,7 @@ export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
     const query = event.query.toLowerCase();
     const availableOptions = this._options();
 
+    // 如果正在載入且沒有資料
     if (this.loading() || availableOptions.length === 0) {
       this.filteredOptions.set([]);
       this.tryRefreshVirtualScroll();
@@ -77,18 +80,13 @@ export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
     }
 
     const labelKey = this.optionLabel() || 'name';
-    const valueKey = this.optionValue(); // 取得 value 的 key (例如 'ecr_no')
+    const valueKey = this.optionValue();
 
     const filtered = availableOptions.filter(option => {
       const textToMatch = option[labelKey];
       const valueToMatch = valueKey ? option[valueKey] : null;
-
-      // 轉為字串進行模糊比對
       const isLabelMatch = String(textToMatch).toLowerCase().includes(query);
-
-      // 如果有 valueKey，也一起比對 (這樣輸入編號或名稱都能搜到)
       const isValueMatch = valueToMatch ? String(valueToMatch).toLowerCase().includes(query) : false;
-
       return isLabelMatch || isValueMatch;
     });
 

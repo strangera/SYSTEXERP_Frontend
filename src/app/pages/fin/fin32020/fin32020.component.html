@@ -4,11 +4,11 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <div>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
+      <app-button
+        btnType="create"
+        (click)="onClickCreate()"
+        label="{{ 'create' | translate }}"
+      ></app-button>
     </div>
   </div>
 
@@ -25,10 +25,8 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <!-- 調整單號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-          
               label="調整單號"
               controlName="adjust_ID"
               [control]="queryForm.controls.adjust_ID"
@@ -36,7 +34,6 @@
             ></app-input-text>
           </div>
 
-          <!-- 調整日期 起訖 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
@@ -47,7 +44,6 @@
             ></app-calendar-range>
           </div>
 
-          <!-- 備註 (模糊) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="備註"
@@ -59,7 +55,6 @@
         </div>
 
         <div class="grid p-fluid">
-          <!-- 傳票單號 起迄 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
               [useGrouping]="false"
@@ -71,7 +66,9 @@
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button
             btnType="clear"
             [type]="'button'"
@@ -88,33 +85,33 @@
   </p-accordion>
 </div>
 
-<!-- 主表：改用 app-table-report -->
 <div class="card">
-<app-table-report
-  [tableKey]="'fin32020_' + tableVer"
-  [dataKey]="'ADJ_No'"
-  [columns]="columns"
-  [data]="data"
-  [totalRecords]="viewTotalRecords"
-  [loading]="loading"
-  [showManage]="true"
-  [showFilter]="true"
-  [showExcel]="false"
-  [footerData]="footerData"
-  [queryFunction]="queryFIN32020ForReport"
-  [lastQueryBody]="lastQueryBody"
-  [showDelete]="false"
-  [showReportMode]="false"
-  [showCheckBox]="false"
-  [selectedItems]="selectedItems"
-  (selectionChange)="selectedItems = $event"
-  [showDetail]="true"
-  (detail)="onDetail($event)"
-  [showEdit]="canShowEdit"
-  (edit)="onEdit($event)"
-  [expansionDataKey]="'_Details'"
-  [expansionColumns]="expansionColumns"
-  [expansionMultiSortMeta]="[{ field: 'ARS_No', order: 1 }]"
->
-</app-table-report>
+  <app-table-report
+    [tableKey]="'fin32020_' + tableVer"
+    [dataKey]="'ADJ_No'"
+    [columns]="columns"
+    [data]="data"
+    [totalRecords]="viewTotalRecords"
+    [loading]="loading"
+    [showManage]="true"
+    [showFilter]="true"
+    [showExcel]="false"
+    [footerData]="footerData"
+    [queryFunction]="queryFIN32020ForReport"
+    [lastQueryBody]="lastQueryBody"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [showCheckBox]="false"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [showDetail]="true"
+    (detail)="onDetail($event)"
+    [showEdit]="canShowEdit"
+    (edit)="onEdit($event)"
+    [expansionDataKey]="'_Details'"
+    [expansionColumns]="expansionColumns"
+    [expansionMultiSortMeta]="[{ field: 'ARS_No', order: 1 }]"
+    [expansionLoadFn]="loadDetailForExpansion"
+  >
+  </app-table-report>
 </div>

@@ -1,188 +1,245 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ItemCodeService } from '../../../service/basic/item-code.service';
-import { AssetStatusService } from '../../../service/basic/asset-status.service';
-import { AssetsTypeService } from '../../../service/basic/assets-type.service';
-import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CheckboxModule } from 'primeng/checkbox';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { DatePipe } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { ASS11040Service } from '@service/api/ass/ass11040.service';
+import { ASS13080Service } from '@service/api/ass/ass13080.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { QueryASS11040DataWrapper, QueryASS11040Response } from '@pages/ass/ass11040/ass11040.model';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate } from '@shared/componentkit/table/table.model';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize, map, Observable } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import {
+  ASS13080QueryRow,
+  QueryASS13080Request,
+} from './ass13080.model';
 
-//3.1.3.8  資產變賣作業
+/** 3.1.3.8 資產變賣作業 */
+@UntilDestroy()
 @Component({
   selector: 'app-ass13080',
   templateUrl: './ass13080.component.html',
   styleUrl: './ass13080.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarRangeComponent, MultiSelectComponent, InputNumberRangeComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
+  providers: [DatePipe],
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    InputNumberComponent,
+    InputNumberRangeComponent,
+    DropdownComponent,
+    CalendarRangeQuickComponent,
+    ButtonComponent,
+    TableReportComponent,
+    TranslateModule,
+  ],
 })
-export class ASS13080Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    assetsCode: [, [Validators.maxLength(20)]], // 資產代號
-    itemCode: [], // 	品項編號
-    shareCode: [, [Validators.maxLength(20)]], // 攤提代號
-    purchaseDateFrom: [], // 	購入日期
-    purchaseDateTo: [], // 	購入日期
-    assetStatus: [[] as number[]], // 資產狀態
-    //
-    keeper: [], // 保管人
-    keeperUnit: [], // 保管單位
-    user: [], // 使用人
-    userUnit: [], // 使用單位
-    //
-    assetType: [[] as number[]], // 資產類型
-    accountingCode: [], // 會計科目代號
-    purchaseAmountFrom: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 購入金額
-    purchaseAmountTo: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 購入金額
-    orderNumber: [], // 驗收單號
-    entryDateFrom: [], // 入帳日期
-    entryDateTo: [], // 入帳日期
-    outofLimit: [,], // 已達耐用年限
-    displayNumber: [, [this.validationService.numberValidator, Validators.maxLength(160)]], // 	顯示筆數
+export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow> implements OnInit {
+  public readonly queryForm = this.formBuilder.nonNullable.group({
+    assetSaleNo: [null as string | null],
+    assetId: [null as string | null],
+    goodsId: [null as string | null],
+    getDateFrom: [null as Date | null],
+    getDateTo: [null as Date | null],
+    assetStatus: [null as string | null],
+    depreId: [null as string | null],
+    holdOrgId: [null as string | null],
+    holdEmpId: [null as string | null],
+    useOrgId: [null as string | null],
+    useEmpId: [null as string | null],
+    stypeId: [null as string | null],
+    getCostFrom: [null as number | null],
+    getCostTo: [null as number | null],
+    subcheckId: [null as string | null],
+    billDateFrom: [null as Date | null],
+    billDateTo: [null as Date | null],
+    pageSize: [30],
+    pageIndex: [1],
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      'assetsCode': '1A232300040001', 'itemCode': '1A232300040004/3F', 'entryDateFrom': '2014/12/31', 'assetStatus': '使用中',
-      'keeper': '楊先生', 'user': '', 'purchaseAmountFrom': 56108772, 'shareCode': '1A232300040004001',
-    },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'assetsCode', header: '資產代號', visible: true },
-    { field: 'itemCode', header: '品項編號', visible: true },
-    { field: 'entryDateFrom', header: '入帳日期', visible: true },
-    { field: 'assetStatus', header: '資產狀態', visible: true },
 
-    { field: 'keeper', header: '保管人', visible: true },
-    { field: 'user', header: '使用人', visible: true },
-    { field: 'purchaseAmountFrom', header: '購入金額', visible: true },
-    { field: 'shareCode', header: '攤提代號', visible: true },
+  public readonly tableData = signal<ASS13080QueryRow[]>([]);
+  public readonly totalRecords = signal<number>(0);
+  public readonly tableLoading = signal<boolean>(false);
+  public lastQueryBody?: QueryASS13080Request;
 
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  itemCodeOptions: any[] = [];
-  assetsStatusOptions: any[] = [];
-  assetTypeOptions: any[] = [];
-  accountingCodeOptions: any[] = [];
-  orderNumberOptions: any[] = [
-    { value: 1, label: '201410300001' },
-    { value: 2, label: '201410300002' },
-    { value: 3, label: '201410300003' },
+  public readonly columns: ReportColumn[] = [
+    { field: 'ASSET_SALENO', header: '變賣單號', visible: true },
+    { field: 'ASSET_ID', header: '資產代號', visible: true },
+    { field: 'GOODS_ID', header: '品項編號', visible: true },
+    { field: 'GOODS_NAME', header: '品項名稱', visible: true },
+    { field: 'ASSET_STATUS_NAME', header: '資產狀態', visible: true },
+    { field: 'HOLD_EMP_NAME', header: '保管人', visible: true },
+    { field: 'USE_EMP_NAME', header: '使用人', visible: true },
+    { field: 'GET_COST', header: '取得成本', visible: true, type: 'inputNumber' },
+    { field: 'DEPRE_ID', header: '攤提代號', visible: true },
   ];
 
-  //
+  /** 品項：query11040dropdown（先以 ASS11040 查詢替代） */
+  goodsIdOptions: { value: string; label: string }[] = [];
+  /** 資產狀態：SYS1000(ASSET_STATUS) */
+  assetStatusOptions: { value: string; label: string }[] = [];
+  /** 保管/使用單位：SYS3100 */
+  orgOptions: { value: string; label: string }[] = [];
+  /** 保管/使用人：TBLUSER */
+  userOptions: { value: string; label: string }[] = [];
+  /** 資產類別：來源未確認，先留白 */
+  stypeOptions: { value: string; label: string }[] = [];
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private itemCodeService: ItemCodeService,
-    private assetStatusService: AssetStatusService,
-    private assetsTypeService: AssetsTypeService,
-    private needPayTicketService: NeedPayTicketService,
+    private readonly ass13080Service: ASS13080Service,
+    private readonly dropDownListService: DropDownListService,
+    private readonly ass11040Service: ASS11040Service,
+    private readonly datePipe: DatePipe,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310023';
-    this.cruPage = '/ASS1000/ASS13080CRU';
-    //
+    this.initializePage('ASS13080', 'ass/ass13080cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadDropdownOptions();
+  }
 
-    //
-    this.itemCodeService.getSystemTypes().subscribe(data => {
-      this.itemCodeOptions = data;
+  private toDateStr(d: Date | null): string | undefined {
+    if (!d) return undefined;
+    return d.toISOString();
+  }
+
+  private loadDropdownOptions(): void {
+    const toOpt = (items: { No?: string; Name?: string }[]) =>
+      (items ?? []).map(item => ({
+        value: item.No ?? '',
+        label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+      }));
+
+    this.dropDownListService
+      .querySYS1000_DropDownList({ SYS_Type: 'ASSET_STATUS' } as any)
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res.Status !== '0000') return;
+        this.assetStatusOptions = toOpt(res.Data ?? []);
+      });
+
+    this.dropDownListService
+      .querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res.Status !== '0000') return;
+        this.orgOptions = toOpt(res.Data ?? []);
+      });
+
+    this.dropDownListService
+      .queryTBLUSER_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res.Status !== '0000') return;
+        this.userOptions = toOpt(res.Data ?? []);
+      });
+
+    this.ass11040Service
+      .queryASS11040({ PageSize: 9999, PageIndex: 1 } as any)
+      .pipe(
+        untilDestroyed(this),
+        map(res => (res.Data as QueryASS11040DataWrapper | null | undefined)?.QueryData ?? []),
+        map((rows: QueryASS11040Response[]) =>
+          rows
+            .filter(x => (x.GOODS_ID ?? '') !== '')
+            .map(x => ({
+              value: String(x.GOODS_ID ?? ''),
+              label: `${x.GOODS_ID ?? ''} - ${x.GOODS_NAME ?? ''}`,
+            }))
+        ),
+      )
+      .subscribe(options => (this.goodsIdOptions = options));
+  }
+
+  public queryFunction = (
+    body: QueryASS13080Request
+  ): Observable<ApiResponse<ASS13080QueryRow[]>> => {
+    const raw = this.queryForm.getRawValue();
+    const payload: QueryASS13080Request = {
+      ASSET_SALENO: raw.assetSaleNo ?? undefined,
+      ASSET_ID: raw.assetId ?? undefined,
+      GOODS_ID: raw.goodsId ?? undefined,
+      GET_DATE_S: this.toDateStr(raw.getDateFrom) ?? undefined,
+      GET_DATE_E: this.toDateStr(raw.getDateTo) ?? undefined,
+      ASSET_STATUS: raw.assetStatus ?? undefined,
+      DEPRE_ID: raw.depreId ?? undefined,
+      HOLD_ORG_ID: raw.holdOrgId ?? undefined,
+      HOLD_EMP_ID: raw.holdEmpId ?? undefined,
+      USE_ORG_ID: raw.useOrgId ?? undefined,
+      USE_EMP_ID: raw.useEmpId ?? undefined,
+      STYPE_ID: raw.stypeId ?? undefined,
+      GET_COST_S: raw.getCostFrom ?? undefined,
+      GET_COST_E: raw.getCostTo ?? undefined,
+      SUBCHECK_ID: raw.subcheckId ?? undefined,
+      BILL_DATE_S: this.toDateStr(raw.billDateFrom) ?? undefined,
+      BILL_DATE_E: this.toDateStr(raw.billDateTo) ?? undefined,
+      PageSize: body.PageSize ?? raw.pageSize ?? 30,
+      PageIndex: body.PageIndex ?? raw.pageIndex ?? 1,
+      SortBy: body.SortBy,
+    };
+    const clean = removeEmptyValues(payload) as QueryASS13080Request;
+    return this.ass13080Service.queryASS13080(clean);
+  };
+
+  public onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const raw = this.queryForm.getRawValue();
+      this.lastQueryBody = {
+        ASSET_SALENO: raw.assetSaleNo ?? undefined,
+        ASSET_ID: raw.assetId ?? undefined,
+        GOODS_ID: raw.goodsId ?? undefined,
+        GET_DATE_S: this.toDateStr(raw.getDateFrom) ?? undefined,
+        GET_DATE_E: this.toDateStr(raw.getDateTo) ?? undefined,
+        ASSET_STATUS: raw.assetStatus ?? undefined,
+        DEPRE_ID: raw.depreId ?? undefined,
+        HOLD_ORG_ID: raw.holdOrgId ?? undefined,
+        HOLD_EMP_ID: raw.holdEmpId ?? undefined,
+        USE_ORG_ID: raw.useOrgId ?? undefined,
+        USE_EMP_ID: raw.useEmpId ?? undefined,
+        STYPE_ID: raw.stypeId ?? undefined,
+        GET_COST_S: raw.getCostFrom ?? undefined,
+        GET_COST_E: raw.getCostTo ?? undefined,
+        SUBCHECK_ID: raw.subcheckId ?? undefined,
+        BILL_DATE_S: this.toDateStr(raw.billDateFrom) ?? undefined,
+        BILL_DATE_E: this.toDateStr(raw.billDateTo) ?? undefined,
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1,
+      };
+
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.tableData.set(res.Data ?? []);
+            this.totalRecords.set(res.TotalCount ?? 0);
+          },
+        });
     });
-    //
-    this.assetStatusService.getAssetStatus().subscribe(data => {
-      this.assetsStatusOptions = data;
-    });
-    //
-    this.assetStatusService.getAssetStatus().subscribe(data => {
-      this.assetTypeOptions = data;
-    });
-    //
-    this.needPayTicketService.getNeedPayTickets().subscribe(data => {
-      this.accountingCodeOptions = data;
-    });
-    // ----------------------------------------------------------------
-  }
-
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
   }
 }

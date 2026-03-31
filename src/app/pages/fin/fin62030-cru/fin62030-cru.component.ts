@@ -71,6 +71,42 @@ export class FIN62030CRUComponent extends BasicCruPageComponent<FIN62030Data[]> 
     this.loadAndSetupColumns().add(() => {
       this.loadPreviewData();
     });
+    setTimeout(() => {
+      this.data = [
+        {
+          Tran_No: '1',
+          AccDC: '1',
+          SerNo: '1',
+          ACC_No: '1',
+          ACC_Name: '1',
+          DetailNo: '1',
+          NoteDesc: '1',
+          Debit_Amt: 100,
+          Credit_Amt: 0,
+          ORG_ID: '1',
+          ORG_Name: '1',
+          PTA: '1',
+          ProjectNo: '1',
+          SubDetailNo: '1',
+        },
+        {
+          Tran_No: '1',
+          AccDC: '1',
+          SerNo: '1',
+          ACC_No: '1',
+          ACC_Name: '1',
+          DetailNo: '1',
+          NoteDesc: '1',
+          Debit_Amt: 0,
+          Credit_Amt: 200,
+          ORG_ID: '1',
+          ORG_Name: '1',
+          PTA: '1',
+          ProjectNo: '1',
+          SubDetailNo: '1',
+        }
+      ]
+    }, 123);
   }
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   onSubmit(form: FormGroup): void {
@@ -80,6 +116,25 @@ export class FIN62030CRUComponent extends BasicCruPageComponent<FIN62030Data[]> 
         this.loading = false;
         return;
       };
+      // 2. 借貸平衡卡控
+      // 計算借方與貸方的加總 (排除掉新增候選行)
+      const totals = this.data.reduce((acc, curr) => {
+        // 確保數值有效，若為 undefined 或 null 則視為 0
+        const debit = Number(curr.Debit_Amt) || 0;
+        const credit = Number(curr.Credit_Amt) || 0;
+        return {
+          debitSum: acc.debitSum + debit,
+          creditSum: acc.creditSum + credit
+        };
+      }, { debitSum: 0, creditSum: 0 });
+      console.log('totals', totals);
+
+      // 判斷是否平衡 (ERP 系統通常建議使用誤差值判斷，或直接比較)
+      if (totals.debitSum !== totals.creditSum) {
+        this.messageService.errorBubble(`借貸不平衡！借方總計：${totals.debitSum}，貸方總計：${totals.creditSum}`, '驗證失敗');
+        this.loading = false;
+        return;
+      }
       const insertFIN62030Request: InsertFIN62030Request = {
         Tran_Nos: this.rowdata?.map(item => item.Tran_No!) || [],
         Remark: this.dataForm.get('Remark')?.value || '',
@@ -127,17 +182,17 @@ export class FIN62030CRUComponent extends BasicCruPageComponent<FIN62030Data[]> 
         {
           field: 'ACC_No',
           header: '科目代號',
-          type: 'dropdown',
-          options: this.AccNoOptions,
-          optionLabel: 'label',
-          optionValue: 'value',
-          showClear: false,
-          disabled: (value: any, index?: number, rowData?: any) => !(rowData?._originalACC_No?.startsWith('612') && rowData?.AccDC === 'D')
+          // type: 'dropdown',
+          // options: this.AccNoOptions,
+          // optionLabel: 'label',
+          // optionValue: 'value',
+          // showClear: false,
+          // disabled: (value: any, index?: number, rowData?: any) => !(rowData?._originalACC_No?.startsWith('612') && rowData?.AccDC === 'D')
         },
         { field: 'DetailNo', header: '廠商編號' },
         { field: 'NoteDesc', header: '摘要', type: 'input' },
-        { field: 'Debit_Amt', header: '借方金額', format: formatAmount },
-        { field: 'Credit_Amt', header: '貸方金額', format: formatAmount },
+        { field: 'Debit_Amt', header: '借方金額', format: formatAmount, aggregate: 'sum' },
+        { field: 'Credit_Amt', header: '貸方金額', format: formatAmount, aggregate: 'sum' },
         {
           field: 'ORG_ID',
           header: '組織代號',
@@ -176,8 +231,7 @@ export class FIN62030CRUComponent extends BasicCruPageComponent<FIN62030Data[]> 
       this.loading = true;
       const Tran_Nos = this.rowdata.map(item => item.Tran_No!);
 
-      this.fin62030Service.previewFIN62030({ Tran_Nos: Tran_Nos })
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+      this.fin62030Service.previewFIN62030({ Tran_Nos: Tran_Nos }).pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe((response: any) => { // 先用 any 避開類型檢查
           // 關鍵點：後端回傳的是陣列，要取第一個物件
           const responseData = Array.isArray(response.Data) ? response.Data[0] : response.Data;
