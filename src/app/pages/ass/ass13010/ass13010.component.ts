@@ -134,11 +134,16 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
     this.selectedItems = items ?? [];
   }
 
-  public queryFunction = (body: QueryASS13010Request): Observable<ApiResponse<QueryASS13010Response[]>> => {
+  /** table-report 傳入的 body 可能為小寫 pageIndex/pageSize（見 normalizeQueryBody） */
+  public queryFunction = (
+    body: QueryASS13010Request & { pageSize?: number; pageIndex?: number },
+  ): Observable<ApiResponse<QueryASS13010Response[]>> => {
+    const pageSize = body.pageSize ?? body.PageSize ?? 30;
+    const pageIndex = body.pageIndex ?? body.PageIndex ?? 1;
     const raw = this.queryForm.getRawValue();
     const payload: QueryASS13010Request = {
-      PageSize: body.PageSize,
-      PageIndex: body.PageIndex,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
       OrderBy: body.OrderBy ?? null,
       Offset: body.Offset ?? null,
       SortBy: body.SortBy ?? null,
@@ -146,6 +151,16 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
       GOODS_ID: raw.itemCode || null,
       ASSET_STATUS: raw.assetsStatus || null,
       DEPRE_YN: raw.assetsType || null,
+      ORI_ASSET_ID: raw.original_assetsCode || null,
+      SUBPOENA_ID: raw.purchaseNumber || null,
+      SUPPLIER_ID: raw.supplierCode || null,
+      STYPE_D: raw.accounting_Borrow || null,
+      STYPE_C: raw.accounting_Credit || null,
+      EQUIP_ID: raw.deviceCode || null,
+      STYPE_ID: raw.depreciation || null,
+      STYPE_ID2: raw.totalDepreciation || null,
+      RESI_VALUE_S: raw.residualFrom != null && raw.residualFrom !== '' ? Number(raw.residualFrom) : null,
+      RESI_VALUE_E: raw.residualTo != null && raw.residualTo !== '' ? Number(raw.residualTo) : null,
       GET_DATE_S: raw.purchaseDateFrom || null,
       GET_DATE_E: raw.purchaseDateTo || null,
       GET_COST_S: raw.original_priceFrom ?? null,
@@ -156,7 +171,19 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
       EXP_YEAR_E: raw.depreciationLifeTo != null && raw.depreciationLifeTo !== '' ? Number(raw.depreciationLifeTo) : null,
       HOLD_EMP_ID: raw.keepingPerson || null,
       USE_EMP_ID: raw.user || null,
+      HOLD_ORG_ID: raw.keepingUnit || null,
+      USE_ORG_ID: raw.userUnit || null,
       LOCATION_ID: raw.locationCode || null,
+      FIX_N: raw.maintenanceCode || null,
+      HANDLE_DATE_S: raw.disposalDateFrom || null,
+      HANDLE_DATE_E: raw.disposalDateTo || null,
+      LEND_TYPE: raw.rentStatus || null,
+      HANDLE_VENDOR: raw.dispose_Manufacturers || null,
+      HANDLE_VID: raw.dispose_Manufacturers_Summons || null,
+      ONSALE_AMT_S: raw.soldAmountFrom != null && raw.soldAmountFrom !== '' ? Number(raw.soldAmountFrom) : null,
+      ONSALE_AMT_E: raw.soldAmountTo != null && raw.soldAmountTo !== '' ? Number(raw.soldAmountTo) : null,
+      // 查詢時 `disposeRemark(處份說明)` 對應後端 `HANDLE_NOTE`
+      HANDLE_NOTE: raw.disposeRemark || null,
     };
     const cleanPayload = removeEmptyValues(payload) as QueryASS13010Request;
     return this.ass13010Service.queryASS13010(cleanPayload);
@@ -165,6 +192,9 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
   private loadDropdownOptions(): void {
     this.dropdownApiService.queryASS11040_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.itemCodeOptions = res ?? [];
+    });
+    this.dropdownApiService.queryASS13010DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.purchaseNumberOptions = res ?? [];
     });
     this.dropdownApiService.querySys1000({ SYS_Type: 'ASSET_STATUS' }).pipe(untilDestroyed(this)).subscribe(res => {
       this.assetsStatusOptions = (res ?? []).map(item => ({ value: item.No, label: item.Name }));
@@ -192,27 +222,13 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
       // 查詢結果更新時，清掉舊勾選，避免匯出按鈕狀態錯誤
       this.selectedItems = [];
       const raw = this.queryForm.getRawValue();
+      // 供 app-table-report 排序／load more；篩選條件仍以表單 getRawValue() 為準
       this.lastQueryBody = {
         PageSize: 30,
         PageIndex: 1,
         OrderBy: null,
         Offset: null,
         SortBy: null,
-        ASSET_ID: raw.assetsCode || null,
-        GOODS_ID: raw.itemCode || null,
-        ASSET_STATUS: raw.assetsStatus || null,
-        DEPRE_YN: raw.assetsType || null,
-        GET_DATE_S: raw.purchaseDateFrom || null,
-        GET_DATE_E: raw.purchaseDateTo || null,
-        GET_COST_S: raw.original_priceFrom ?? null,
-        GET_COST_E: raw.original_priceTo ?? null,
-        BILL_DATE_S: raw.entryDateFrom || null,
-        BILL_DATE_E: raw.entryDateTo || null,
-        EXP_YEAR_S: raw.depreciationLifeFrom != null && raw.depreciationLifeFrom !== '' ? Number(raw.depreciationLifeFrom) : null,
-        EXP_YEAR_E: raw.depreciationLifeTo != null && raw.depreciationLifeTo !== '' ? Number(raw.depreciationLifeTo) : null,
-        HOLD_EMP_ID: raw.keepingPerson || null,
-        USE_EMP_ID: raw.user || null,
-        LOCATION_ID: raw.locationCode || null,
       };
 
       this.tableLoading.set(true);
@@ -331,9 +347,5 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
           });
       },
     });
-  }
-
-  onClearForm(): void {
-    this.queryForm.reset();
   }
 }

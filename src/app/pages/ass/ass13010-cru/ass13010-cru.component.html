@@ -80,9 +80,9 @@
           </app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="設備編號" controlName="deviceCode"
-            [control]="dataForm.controls.deviceCode" [submitted]="submitted">
-          </app-input-number>
+          <app-input-text label="設備編號" controlName="deviceCode" [control]="dataForm.controls.deviceCode"
+            [submitted]="submitted">
+          </app-input-text>
         </div>
       </div>
       <hr>
@@ -197,9 +197,9 @@
           </app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="攤提年月" controlName="amortizationYearMonth"
+          <app-calendar calendarType="dateMonthOne" label="攤提年月" controlName="amortizationYearMonth"
             [control]="dataForm.controls.amortizationYearMonth" [submitted]="submitted">
-          </app-input-number>
+          </app-calendar>
         </div>
       </div>
       <hr />
@@ -218,7 +218,7 @@
       </div>
       @if (!isFormReadable) {
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="cancel" (clickEvent)="onCancelFormReset()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
       }

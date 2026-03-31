@@ -67,7 +67,8 @@ import {
   TblUserOrgidItem,
   TLTTALENTItem,
   TLTTALENTQuery,
-  TlttalentTltSpaceItem
+  TlttalentTltSpaceItem,
+  Ass13010PurchaseNumberDropDownItem
 } from './dropdown-api.model';
 
 @Injectable({
@@ -365,6 +366,24 @@ export class DropdownApiService {
       'Name'
     ).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢採購單號下拉選單(ASS13010) */
+  queryASS13010DropDownList(): Observable<Option[] | null> {
+    return this.queryDropdown<Ass13010PurchaseNumberDropDownItem>(
+      '/ASS0000/ASS1000/queryASS13010DropDownList'
+    ).pipe(
+      map(items => {
+        if (!items) return null;
+        // 下拉顯示僅需 ID；保留 APPLY_DATE 給之後可能的需求
+        return items.map(item => ({
+          ...item,
+          value: String(item.ID),
+          label: String(item.ID),
+        }));
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 

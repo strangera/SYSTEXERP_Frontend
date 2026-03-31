@@ -1,6 +1,6 @@
 import { NgIf } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
-import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
@@ -17,7 +17,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ASS13010Service } from '@service/api/ass/ass13010.service';
-import { DetailASS13010Response, InsertASS13010Request } from '@pages/ass/ass13010/ass13010.model';
+import { DetailASS13010Response, InsertASS13010Request, UpdateASS13010Request } from '@pages/ass/ass13010/ass13010.model';
 import { finalize } from 'rxjs';
 
 //3.1.3.1 資產維護作業 CRU
@@ -82,16 +82,12 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     dispose_Manufacturers_Summons: [, [Validators.maxLength(12)]], // 處份傳票編號
     soldAmount: [, [Validators.maxLength(8)]], // 變賣金額
     warrantyDays: [, [Validators.maxLength(8)]], // 保固年限(日)
-    amortizationYearMonth: [, [Validators.maxLength(6)]], // 攤提年月 YYYYMM
+    amortizationYearMonth: [], // 攤提年月（dateMonthOne，表單值為 Date；送 API 由 interceptor 序列化）
     //---
     //其他
     //---
     disposeRemark: [,], // 處份說明(變賣或報廢)
     remark: [,], // 說明
-
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
   });
   // ----------------------------------------------------------------
   // 下拉選單（來源同 ass13010，見註解）
@@ -100,11 +96,6 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   assetsTypeOptions: Option[] = [
     { value: '1', label: '資產' },
     { value: '2', label: '列管品' }
-  ];
-  orderNumberOptions: any[] = [
-    { value: 1, label: '201410300001' },
-    { value: 2, label: '201410300002' },
-    { value: 3, label: '201410300003' },
   ];
   supplierCodeOptions: Option[] = []; // queryPOS2013_DropDownList
   depreciationOptions: Option[] = []; // queryGLS1005_ledgerMD_DropDownList
@@ -119,6 +110,12 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   orgUnitOptions: Option[] = []; // querySYS3100_DropDownList
   locationCodeOptions: Option[] = []; // queryPOS2002_DropDownList
 
+  /**
+   * 「取消」還原用快照。ButtonComponent 的 cancel 會在 mount 後 1s 截表單初值；
+   * 編輯頁明細由 API 較晚帶入，初值會錯，導致 reset 變成清空。改由明細就緒後自行保存。
+   */
+  private formBaseline: Record<string, unknown> | null = null;
+
   constructor() {
     super();
   }
@@ -126,12 +123,6 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('ASS13010', this.dataForm);
     this.accordionTabCss = this.crudstatus === CRUDStatus.Create ? 'create-accordionTab' : 'edit-accordionTab';
-    // 新增時 insert 不帶入 items，預設一筆空明細會讓整份 form 因 required 永遠 invalid，故清空以僅驗證主表
-    if (this.crudstatus === CRUDStatus.Create) {
-      while (this.items.length) {
-        this.items.removeAt(0);
-      }
-    }
     this.loadDropdownOptions();
     this.dataForm.controls.keepingUnit.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.updateKeepingPersonOptions();
@@ -157,6 +148,10 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
         this.dataForm.controls.user.markAsPristine({ onlySelf: true });
       }
     });
+
+    if (this.crudstatus === CRUDStatus.Create) {
+      queueMicrotask(() => this.captureFormBaseline());
+    }
 
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
       const id = this.rowdata?.ID != null ? String(this.rowdata.ID) : '';
@@ -206,7 +201,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
                 totalDepreciation: data.STYPE_ID2 ?? null,
                 depreciationLife: data.EXP_YEAR ?? null,
                 residual: data.RESI_VALUE ?? null,
-                depreciationLifeMM: data.FIR_EXP_YEAR ?? data.EXP_MONTH ?? null,
+                depreciationLifeMM: data.FIR_EXP_YEAR ?? null,
                 amortizedAmount: data.TAL_DEPRE_AMT ?? null,
                 amortizedMonth: data.TAL_DEPRE_MON ?? null,
                 keepingUnit: data.HOLD_ORG_ID ?? null,
@@ -219,8 +214,9 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
                 soldAmount,
                 warrantyDays: data.Warranty_YEAR ?? null,
                 disposeRemark: data.HANDLE_NOTE ?? null,
+                // 畫面 `remark` 對應採購說明（PURCHASE_NOTES）
                 remark: data.PURCHASE_NOTES ?? null,
-                amortizationYearMonth: data.TAL_DEPRE_MON != null ? String(data.TAL_DEPRE_MON) : null,
+                amortizationYearMonth: data.DEPRE_SDATE ? new Date(data.DEPRE_SDATE) : null, // 與後端同為日期時間字串
               };
 
               // detail 初始化帶值時不觸發 valueChanges，避免保管人/使用人被清空
@@ -231,15 +227,47 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
               };
               this.applyPendingEmployeeSelection();
 
+              // Edit 模式：依是否已攤提動態鎖欄
+              const isAlreadyAmortized = (data.TAL_DEPRE_AMT ?? 0) > 0;
+              if (this.crudstatus === CRUDStatus.Edit) {
+                this.applyEditLock(isAlreadyAmortized);
+              }
+
               if (this.crudstatus === CRUDStatus.Read) {
                 this.dataForm.disable();
               }
+
+              this.captureFormBaseline();
             },
             error: () => {
               // 交給共用的 error interceptor / notification 處理，這裡不另外彈錯
             },
           });
       }
+    }
+  }
+
+  private captureFormBaseline(): void {
+    try {
+      this.formBaseline = structuredClone(this.dataForm.getRawValue()) as Record<string, unknown>;
+    } catch {
+      this.formBaseline = { ...(this.dataForm.getRawValue() as Record<string, unknown>) };
+    }
+  }
+
+  /** 取消鈕：還原至進入頁／明細載入後的狀態（同 ass11010 的「復原」語意，非清空） */
+  onCancelFormReset(): void {
+    if (this.formBaseline == null) {
+      return;
+    }
+    this.dataForm.reset(this.formBaseline);
+    this.submitted = false;
+    this.updateKeepingPersonOptions();
+    this.updateUserOptions();
+    if (this.crudstatus === CRUDStatus.Edit) {
+      const raw = this.dataForm.getRawValue() as Record<string, unknown>;
+      const isAlreadyAmortized = Number(raw['amortizedAmount'] ?? 0) > 0;
+      this.applyEditLock(isAlreadyAmortized);
     }
   }
 
@@ -313,36 +341,6 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      itemCode: [, [Validators.required]], // 品項編號
-      queryCode: [, [Validators.required]], // 詢價單號
-      taxType: [, [Validators.required]], // 稅別
-
-      queryNumber: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(5)]], // 詢價數量
-      number: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(5)]], // 數量
-      singlePrice: [, [this.validationService.numberValidator, Validators.required]], // 單價(未稅)
-      purchasePrice: [, [this.validationService.numberValidator, Validators.required]], // 最近採購單價
-      totalPrice: [, [this.validationService.numberValidator, Validators.required]], // 總金額
-
-      storage: [, [Validators.required]], // 倉別
-      department: [, [Validators.required]], // 委託部門
-      singleRemark: [,], // 說明
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
   Edit(rowdata: any): void {
     this.dataForm.patchValue(rowdata);
   }
@@ -352,14 +350,18 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.disable();
   }
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
   /** 將表單日期欄位轉成 API 接受的 date-time 字串 */
   private toDateString(value: Date | string | null | undefined): string | null {
     if (value == null) return null;
     if (value instanceof Date) return value.toISOString();
+    if (typeof value === 'string') return value;
+    return null;
+  }
+
+  /** 攤提年月：傳 Date 或既有字串，由 dateToISOStringInterceptor 轉成與其他日期相同之時間格式（不另做 YYYYMM 等轉換） */
+  private depreciationDateForApi(value: unknown): Date | string | null {
+    if (value == null || value === '') return null;
+    if (value instanceof Date) return value;
     if (typeof value === 'string') return value;
     return null;
   }
@@ -389,7 +391,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
         raw['totalDepreciation'] != null && raw['totalDepreciation'] !== '' ? String(raw['totalDepreciation']) : null,
       EXP_YEAR: raw['depreciationLife'] != null && raw['depreciationLife'] !== '' ? Number(raw['depreciationLife']) : null,
       RESI_VALUE: raw['residual'] != null && raw['residual'] !== '' ? Number(raw['residual']) : null,
-      EXP_MONTH:
+      FIR_EXP_YEAR:
         raw['depreciationLifeMM'] != null && raw['depreciationLifeMM'] !== '' ? Number(raw['depreciationLifeMM']) : null,
       ORI_IMPORT_DEPRE_MON:
         raw['amortizedMonth'] != null && raw['amortizedMonth'] !== '' ? Number(raw['amortizedMonth']) : null,
@@ -412,12 +414,62 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
           : null,
       ONSALE_AMT: raw['soldAmount'] != null && raw['soldAmount'] !== '' ? Number(raw['soldAmount']) : null,
       Warranty_YEAR: raw['warrantyDays'] != null && raw['warrantyDays'] !== '' ? Number(raw['warrantyDays']) : null,
-      DEPRE_SDATE:
-        raw['amortizationYearMonth'] != null && raw['amortizationYearMonth'] !== '' ? String(raw['amortizationYearMonth']) : null,
+      DEPRE_SDATE: this.depreciationDateForApi(raw['amortizationYearMonth']),
       HANDLE_NOTE: raw['disposeRemark'] != null && raw['disposeRemark'] !== '' ? String(raw['disposeRemark']) : null,
+      // 畫面 `remark` 僅對應採購說明
       PURCHASE_NOTES: raw['remark'] != null && raw['remark'] !== '' ? String(raw['remark']) : null,
       CRT_USR_No: this.user?.user_No ?? null,
       CRT_USR_Name: this.user?.user_Name ?? null,
+    };
+  }
+
+  private applyEditLock(isAlreadyAmortized: boolean): void {
+    // 由於 ReactiveForms 的 disabled 欄位不參與 validation，因此鎖欄能避免 required 驗證誤擋送出。
+    const allowedControls = new Set<string>(
+      isAlreadyAmortized
+        ? ['assetsStatus', 'purchaseDate', 'deviceCode', 'remark']
+        : [
+          'purchasePrice',
+          'depreciationLife',
+          'keepingPerson',
+          'user',
+          'amortizationYearMonth',
+          'assetsStatus',
+          'purchaseDate',
+          'deviceCode',
+          'remark',
+        ]
+    );
+
+    // `Object.keys()` 會回傳 `string[]`，但 `controls` 是強型別結構；
+    // 這裡把 key 型別收斂回 `keyof controls` 以避免 TS7053。
+    for (const key of Object.keys(this.dataForm.controls) as Array<keyof typeof this.dataForm.controls>) {
+      const ctrl = this.dataForm.controls[key];
+      if (allowedControls.has(key as string)) {
+        ctrl.enable({ emitEvent: false });
+      } else {
+        ctrl.disable({ emitEvent: false });
+      }
+    }
+  }
+
+  private buildUpdatePayload(raw: Record<string, unknown>): UpdateASS13010Request {
+    return {
+      ID: (this.rowdata as any)?.ID as number,
+      GET_DATE: this.toDateString(raw['purchaseDate'] as Date | string | null),
+      ASSET_STATUS: raw['assetsStatus'] != null && raw['assetsStatus'] !== '' ? String(raw['assetsStatus']) : null,
+      EQUIP_ID: raw['deviceCode'] != null && raw['deviceCode'] !== '' ? String(raw['deviceCode']) : null,
+      NOTES: raw['remark'] != null && raw['remark'] !== '' ? String(raw['remark']) : null,
+      // API：RESI_VALUE = 預留殘值（residual）；購入金額 update 無對應欄位，不送
+      RESI_VALUE: raw['residual'] != null && raw['residual'] !== '' ? Number(raw['residual']) : null,
+      EXP_YEAR: raw['depreciationLife'] != null && raw['depreciationLife'] !== '' ? Number(raw['depreciationLife']) : null,
+      EXP_MONTH:
+        raw['depreciationLifeMM'] != null && raw['depreciationLifeMM'] !== '' ? Number(raw['depreciationLifeMM']) : null,
+      HOLD_EMP_ID: raw['keepingPerson'] != null && raw['keepingPerson'] !== '' ? String(raw['keepingPerson']) : null,
+      USE_EMP_ID: raw['user'] != null && raw['user'] !== '' ? String(raw['user']) : null,
+      DEPRE_SDATE: this.depreciationDateForApi(raw['amortizationYearMonth']),
+      UPD_USR_No: this.user?.user_No ?? null,
+      UPD_USR_Name: this.user?.user_Name ?? null,
     };
   }
 
@@ -427,7 +479,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
         case CRUDStatus.Create:
           if (this.canAdd()) {
             const raw = frm.getRawValue() as Record<string, unknown>;
-            // 表單→API 對應見計畫；表單無欄位不送出：MID, STO_NO, NOTES, FORG_ID, HANDLE_VKEY, DEPRE_ID, GET_COST_TAX, USE_STATUS, DEPRE_AMT, ORI_ORG_ID, ORI_EMP_ID, ASSET_INS_ID, FIX_AMT, SOURCE_STATUS, SUBCHECK_ID, FIR_GET_COST, FIR_EXP_YEAR, LEND_TYPE, REDU_CODE, ONSALE_RATE, ONSALE_NORATE_AMT, EXTEND_EXP_YEAR, DAMAGEM_ID。remark→PURCHASE_NOTES；amortizedMonth→ORI_IMPORT_DEPRE_MON、amortizedAmount→ORI_IMPORT_DEPRE_AMT。
+            // 表單無欄位不送出：MID, STO_NO, NOTES, FORG_ID, HANDLE_VKEY, DEPRE_ID, GET_COST_TAX, USE_STATUS, DEPRE_AMT, ORI_ORG_ID, ORI_EMP_ID, ASSET_INS_ID, FIX_AMT, SOURCE_STATUS, SUBCHECK_ID, FIR_GET_COST, LEND_TYPE, REDU_CODE, ONSALE_RATE, ONSALE_NORATE_AMT, EXTEND_EXP_YEAR, DAMAGEM_ID。remark→PURCHASE_NOTES；depreciationLifeMM→FIR_EXP_YEAR；amortizedMonth→ORI_IMPORT_DEPRE_MON、amortizedAmount→ORI_IMPORT_DEPRE_AMT。
             const payload: InsertASS13010Request = this.buildInsertPayload(raw);
             this.ass13010Service
               .insertASS13010(payload)
@@ -456,9 +508,9 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
           if (this.canEdit()) {
             const raw = frm.getRawValue() as Record<string, unknown>;
             // 表單→API 對應見計畫；表單無欄位不送出同 Create 分支。
-            const payload: InsertASS13010Request = this.buildInsertPayload(raw);
+            const payload: UpdateASS13010Request = this.buildUpdatePayload(raw);
             this.ass13010Service
-              .insertASS13010(payload)
+              .updateASS13010(payload)
               .pipe(
                 finalize(() => {
                   this.loading = false;
@@ -468,14 +520,14 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
               .subscribe({
                 next: res => {
                   if (res.Status !== '0000') {
-                    this.messageService.errorBubble(res.Message ?? res.Error?.Message ?? '新增失敗');
+                    this.messageService.errorBubble(res.Message ?? res.Error?.Message ?? '更新失敗');
                     return;
                   }
-                  this.messageService.successBubble(res.Data?.Message ?? res.Message ?? '新增成功');
+                  this.messageService.successBubble(res.Data?.Message ?? res.Message ?? '更新成功');
                   this.onCancel();
                 },
                 error: err => {
-                  this.messageService.errorBubble(err?.message ?? '新增失敗');
+                  this.messageService.errorBubble(err?.message ?? '更新失敗');
                 },
               });
           }

@@ -13,6 +13,7 @@ export interface QueryASS13010Request {
   STO_NO?: string | null;
   ASSET_ID?: string | null;
   GOODS_ID?: string | null;
+  ORI_ASSET_ID?: string | null;
   ASSET_STATUS?: string | null;
   DEPRE_YN?: string | null;
   SUBPOENA_ID?: string | null;
@@ -24,9 +25,28 @@ export interface QueryASS13010Request {
   BILL_DATE_E?: string | null;
   EXP_YEAR_S?: number | null;
   EXP_YEAR_E?: number | null;
+  RESI_VALUE_S?: number | null;
+  RESI_VALUE_E?: number | null;
+  ONSALE_AMT_S?: number | null;
+  ONSALE_AMT_E?: number | null;
+  HANDLE_DATE_S?: string | null;
+  HANDLE_DATE_E?: string | null;
   HOLD_EMP_ID?: string | null;
+  HOLD_ORG_ID?: string | null;
   USE_EMP_ID?: string | null;
+  USE_ORG_ID?: string | null;
   LOCATION_ID?: string | null;
+  SUPPLIER_ID?: string | null;
+  STYPE_D?: string | null;
+  STYPE_C?: string | null;
+  STYPE_ID?: string | null;
+  STYPE_ID2?: string | null;
+  EQUIP_ID?: string | null;
+  FIX_N?: string | null;
+  LEND_TYPE?: string | null;
+  HANDLE_VENDOR?: string | null;
+  HANDLE_VID?: string | null;
+  HANDLE_NOTE?: string | null;
 }
 
 export interface QueryASS13010Response {
@@ -180,7 +200,8 @@ export interface InsertASS13010Request {
   GOODS_ID?: string | null;
   SUPPLIER_ID?: string | null;
   EQUIP_ID?: string | null;
-  DEPRE_SDATE?: string | null;
+  /** 送出可為 Date，由 HTTP interceptor 轉成與其他日期欄位相同的時間字串 */
+  DEPRE_SDATE?: string | Date | null;
   SOURCE_STATUS?: string | null;
   SUBCHECK_ID?: string | null;
   FIR_GET_COST?: number | null;
@@ -200,6 +221,35 @@ export interface InsertASS13010Request {
 }
 
 export interface InsertASS13010Response {
+  Message?: string | null;
+}
+
+// ==================== 更新 ====================
+/**
+ * 更新資產維護作業（updateASS13010）
+ *
+ * 欄位依你提供的 UpdateASS13010Request 截圖：
+ * - 判斷是否已攤提：TAL_DEPRE_AMT > 0（此判斷在前端用於鎖欄位）
+ * - 後端 update 需要：ID/GET_DATE/ASSET_STATUS/EQUIP_ID/NOTES/RESI_VALUE(預留殘值)/EXP_YEAR/EXP_MONTH/HOLD_EMP_ID/USE_EMP_ID/DEPRE_SDATE/UPD_USR_No/UPD_USR_Name（購入金額無對應欄位）
+ */
+export interface UpdateASS13010Request {
+  ID: number;
+  GET_DATE?: string | null;
+  ASSET_STATUS?: string | null;
+  EQUIP_ID?: string | null;
+  NOTES?: string | null;
+  RESI_VALUE?: number | null;
+  EXP_YEAR?: number | null;
+  EXP_MONTH?: number | null;
+  HOLD_EMP_ID?: string | null;
+  USE_EMP_ID?: string | null;
+  /** 送出可為 Date，由 HTTP interceptor 轉成與其他日期欄位相同的時間字串 */
+  DEPRE_SDATE?: string | Date | null;
+  UPD_USR_No?: string | null;
+  UPD_USR_Name?: string | null;
+}
+
+export interface UpdateASS13010Response {
   Message?: string | null;
 }
 

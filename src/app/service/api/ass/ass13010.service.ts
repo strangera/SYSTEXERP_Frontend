@@ -8,6 +8,8 @@ import {
   ExportPDFASS13010Request,
   InsertASS13010Request,
   InsertASS13010Response,
+  UpdateASS13010Request,
+  UpdateASS13010Response,
   QueryASS13010Request,
   QueryASS13010Response,
   QueryASS13010ResultApiResponse,
@@ -43,6 +45,13 @@ export class ASS13010Service {
 
   insertASS13010(body: InsertASS13010Request): Observable<ApiResponse<InsertASS13010Response>> {
     return this.http.post<ApiResponse<InsertASS13010Response>>(`${this.apiUrl}/insertASS13010`, body);
+  }
+
+  /**
+   * 修改資產維護作業
+   */
+  updateASS13010(body: UpdateASS13010Request): Observable<ApiResponse<UpdateASS13010Response>> {
+    return this.http.post<ApiResponse<UpdateASS13010Response>>(`${this.apiUrl}/updateASS13010`, body);
   }
 
   /**

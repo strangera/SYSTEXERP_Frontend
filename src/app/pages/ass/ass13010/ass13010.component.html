@@ -164,8 +164,8 @@
         <hr />
         <div>
           <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button btnType="query" (onClick)="onSubmit(queryForm)" [loading]="loading"></app-button>
+            <app-button btnType="clear" [form]="queryForm"></app-button>
+            <app-button btnType="query" [loading]="loading"></app-button>
           </div>
         </div>
       </form>
@@ -175,7 +175,8 @@
 <div class="card">
   <div class="col-12">
     <app-table-report [data]="tableData()" dataKey="ASSET_ID" tableKey="ASS13010" [columns]="columns"
-      [totalRecords]="totalRecords()" [loading]="tableLoading()" [showCheckBox]="true" [showDelete]="false"
+      [totalRecords]="totalRecords()" [loading]="tableLoading()" [queryFunction]="queryFunction"
+      [lastQueryBody]="lastQueryBody" [showCheckBox]="true" [showDelete]="false"
       [showReportMode]="false" [selectedItems]="selectedItems" (selectionChange)="onSelectionChange($event)"
       (edit)="onEdit($event)" (detail)="onDetail($event)">
       <header>
