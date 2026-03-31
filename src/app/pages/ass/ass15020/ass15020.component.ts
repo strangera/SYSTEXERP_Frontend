@@ -181,7 +181,13 @@ export class ASS15020Component
       .subscribe((opts) => {
         this.assetStatusOptions = opts;
       });
-    // propertyCode: 選項來源未提供，維持空陣列
+
+    this.dropdownApi
+      .queryFAASSETChooseList_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(opts => {
+        this.propertyCodeOptions = opts ?? [];
+      });
   }
 
   private buildRequest(body?: {

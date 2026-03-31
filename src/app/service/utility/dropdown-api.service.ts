@@ -872,4 +872,27 @@ export class DropdownApiService {
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
+
+  /** 查詢財產編號下拉選單 (FAASSET) */
+  queryFAASSETChooseList_DropDownList(): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<{ AssetId: string; AssetName: string }[]>>(
+        `${this.apiUrl}/queryFAASSETChooseList_DropDownList`,
+        {},
+      )
+      .pipe(
+        map(response => {
+          const data = response?.Data ?? [];
+          return data.map(item => ({
+            value: item.AssetId,
+            label: `${item.AssetId} - ${item.AssetName}`,
+          }));
+        }),
+        catchError(err => {
+          console.error('API /queryFAASSETChooseList_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
+  }
 }
