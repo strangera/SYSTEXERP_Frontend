@@ -72,7 +72,8 @@ export abstract class BasicPrintDataComponent {
         align: (col as any).align || 'left',
         visible: col.visible ? col.visible : true,
         exportFormat: exportFormat,
-        groupField: col.groupField
+        groupField: col.groupField,
+        reportType: col.reportType || '',
       };
     });
 
