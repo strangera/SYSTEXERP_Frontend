@@ -191,8 +191,12 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
             }
           });
 
-          // 攤平後進行排序確保分組正確
-          flattenedList.sort((a, b) => a.AccNo.localeCompare(b.AccNo));
+          // 攤平後進行排序確保分組正確，同科目內先沖帳(Status='2')後立帳(Status='1')
+          flattenedList.sort((a, b) => {
+            const accCmp = a.AccNo.localeCompare(b.AccNo);
+            if (accCmp !== 0) return accCmp;
+            return b.Status.localeCompare(a.Status); // DESC: '2' > '1'
+          });
 
           this.fullData = flattenedList;
           // 改為直接賦值：

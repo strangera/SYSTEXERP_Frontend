@@ -23,10 +23,10 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { EditColumn } from './table-edit/table-edit.model';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatAmountWithFraction, formatDate } from '../../../shared/componentkit/table/table.model';
 import { TableEditComponent } from './table-edit/table-edit.component';
+import { EditColumn } from './table-edit/table-edit.model';
 
 // 擴展應收帳款類型,添加收款金額欄位
 interface ARWithRCVAmt extends QueryFIN32030ARResponse {
@@ -40,7 +40,6 @@ interface ARWithRCVAmt extends QueryFIN32030ARResponse {
 @Component({
   selector: 'app-fin32030-cru',
   templateUrl: './fin32030-cru.component.html',
-  styleUrl: './fin32030-cru.component.scss',
   standalone: true,
   imports: [
     CommonModule,

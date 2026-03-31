@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin13040Service } from '@service/api/fin/fin13040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -24,7 +25,6 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
-
 /**
  * 格式化發票狀態
  */
@@ -37,7 +37,6 @@ const formatInvoiceStatus = (value: any) => {
 @Component({
   selector: 'app-fin13040',
   templateUrl: './fin13040.component.html',
-  styleUrl: './fin13040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -56,7 +55,8 @@ const formatInvoiceStatus = (value: any) => {
     CalendarModule,
     MultiSelectComponent,
     InputNumberRangeComponent,
-    InputTextRangeComponent
+    InputTextRangeComponent,
+    AutoCompleteComponent
   ],
 })
 export class FIN13040Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -65,26 +65,9 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
       label: '列印',
       icon: 'pi pi-file-pdf',
       action: (rowData: any) => this.onPrint(rowData),
-      disabled: (rowData: any) => !this.hasPermission(this.Actions.Query),
+      disabled: () => !this.hasPermission(this.Actions.Query),
     },
   ];
-  /**
-   * 取得當前或下一個雙數月的日期物件
-   */
-  private getEvenMonthDate(): Date {
-    const now = new Date();
-    let year = now.getFullYear();
-    let month = now.getMonth() + 1; // 1-12
-    if (month % 2 !== 0) {
-      month += 1;
-      if (month > 12) {
-        month = 2;
-        year += 1;
-      }
-    }
-    // 設定為該月1日
-    return new Date(year, month - 1, 1);
-  }
 
   // wrapper for table-report's queryFunction shape
   queryFn = (body: any) => {
@@ -94,41 +77,37 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
   };
 
   // Disable edit button for rows with InvoiceType === '35'
-  editDisabled = (rowData: any) => {
-    return rowData?.InvoiceType === '35';
-  };
+  editDisabled = (rowData: any) => { return rowData?.InvoiceType === '35' }
 
   queryForm = this.formBuilder.group({
     // InvoiceType UI removed; default query to ['35'] per requirement
     InvoiceType: [['35']],
-    GUI_Track: ['', [Validators.maxLength(2)]],
-    InvoiceNo_S: ['', [Validators.maxLength(8)]],
-    InvoiceNo_E: ['', [Validators.maxLength(8)]],
-    InvoiceDate_S: [''],
-    InvoiceDate_E: [''],
-    InvoiceDateYM: [''],
-    INV_DeclareYM: ['', [Validators.required]],
-    INV_Data_YM_S: [''],
-    INV_Data_YM_E: [''],
-    Buyer_Uniform: [''],
+    GUI_Track: [null, [Validators.maxLength(2)]],
+    InvoiceNo_S: [null, [Validators.maxLength(8)]],
+    InvoiceNo_E: [null, [Validators.maxLength(8)]],
+    InvoiceDate_S: [null],
+    InvoiceDate_E: [null],
+    InvoiceDateYM: [null],
+    INV_DeclareYM: [null as string | null, [Validators.required]],
+    INV_Data_YM_S: [null],
+    INV_Data_YM_E: [null],
+    Buyer_Uniform: [null],
     PUR_TaxType: [[]],
     PUR_Amt_S: [null],
     PUR_Amt_E: [null],
     PUR_Tax_S: [null],
     PUR_Tax_E: [null],
-    Voucher_No_S: [''],
-    Voucher_No_E: [''],
-    AssetType: [[]],
-    SAL_Type: [[]],
+    Voucher_No_S: [null],
+    Voucher_No_E: [null],
+    AssetType: [null],
+    SAL_Type: [null],
     ...createPaginationConfig([{ field: 'InvoiceType', order: 1 }]),
-    pageSize: [30],
   });
   data: any[] = [];
   totalRecords = 0;
   lastQueryBody: any | null = null;
   footerData: any = {};
   InvoiceType_Options: { label: string; value: string }[] = [];
-  // SAL_Type_Options = getSYS1000Options('SAL_Type');
   SAL_Type_Options = getSYS1000Options('T205'); //規格更新
   taxTypeOptions = getSYS1000Options('PUR_TaxType');
   AssetNoteOptions = getSYS1000Options('AssetType');
@@ -178,9 +157,7 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
       STO_No: '10',
       GUI_Type: this.queryForm.controls.InvoiceType.value ?? []
     }).pipe(untilDestroyed(this)).subscribe(r => {
-      // 若回傳結構不同，嘗試從 r.Data.GuiTracks 取得陣列
       const tracks = r?.Data?.GuiTracks ?? r?.Data ?? [];
-      // 不直接存到 control，僅供其他下拉使用；若需要可存到 this.guiTrackOptions
       console.log('[loadGuiTrackOptions] tracks', tracks);
     });
   }
@@ -193,7 +170,17 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
       .subscribe({
         next: (res) => {
           const data = res?.Data ?? [];
-          this.Buyer_Uniform_Options = data.map((item: any) => ({
+
+          // 使用 Map 以 No 作為 Key 來去重，後出現的會覆蓋先出現的（或可自行調整邏輯）
+          const uniqueDataMap = new Map();
+          data.forEach((item: any) => {
+            if (item.No) {
+              uniqueDataMap.set(item.No, item);
+            }
+          });
+
+          // 將 Map 的結果轉回 Array 並進行 map 轉換
+          this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map((item: any) => ({
             label: `${item.No} - ${item.Name}`,
             value: item.No,
           }));

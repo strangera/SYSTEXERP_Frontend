@@ -33,6 +33,7 @@ export interface fin55040response {
 
 // 明細 Row
 export interface FIN55040Detail {
+  Status: string;
   PTA: string;
   VouNo: string;
   AccNo: string;

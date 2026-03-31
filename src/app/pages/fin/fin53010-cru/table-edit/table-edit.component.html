@@ -97,9 +97,9 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="_tableData.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
+        <th *ngIf="_tableData.length && showReorder" rowspan="1" class="w-1rem text-center"></th>
         <th
-          [attr.colspan]="canInsert && !disabled &&_tableData.length > 0 &&_tableData[_tableData.length - 1]._isAutoInsertCandidate &&!showCheckBox ? 2: 1"
+          [attr.colspan]="serialThColspan"
           class="w-1rem text-center">
           {{ serialName }}
         </th>
@@ -132,13 +132,7 @@
             'text-blue-500': rowData._isAutoInsertCandidate,
           }"></span>
       </td>
-      <td class="text-center w-1rem" [attr.colspan]="
-          rowData._isAutoInsertCandidate && data.length && showCheckBox
-            ? 2
-            : rowData._isAutoInsertCandidate
-              ? 1
-              : 1
-        " [pTooltip]="
+      <td class="text-center w-1rem" [attr.colspan]="serialTdColspan(rowData)" [pTooltip]="
           rowData._rowValidationError?.errorMessage
             ? rowData._rowValidationError.errorMessage
             : ''

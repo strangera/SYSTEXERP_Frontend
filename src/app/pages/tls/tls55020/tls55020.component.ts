@@ -5,6 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls55020MasterData, Tls55020QueryRequest, Tls55020Service } from '@service/api/tls/tls55020.service';
 import { getSYS1000 } from '@service/system/sys1000.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
@@ -12,10 +13,11 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { yesterday } from '@shared/models/system/query-form.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { filter, finalize, map, Observable, startWith, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -42,15 +44,15 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 })
 export class TLS55020Component extends BasicQueryPageComponent<Tls55020MasterData> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    TXN_Date: [null, Validators.required],
+    TXN_Date: [yesterday, Validators.required],
     ECR_No: [null],
     TLT_No: [null],
     TXN_No: [null, [Validators.maxLength(8), this.validation.numberValidator]],
     pageIndex: [1],
     pageSize: [30]
   });
-  ECR_NoOptions$ = this.dropDown.queryPos1002();
-  TLT_NoOptions$ = this.dropDown.queryTltTalent();
+  ECR_NoOptions$: Observable<Option[] | null> = new Observable<Option[] | null>();
+  TLT_NoOptions$: Observable<Option[] | null> = new Observable<Option[] | null>();
   data: Tls55020MasterData[] = [];
   columns: ReportColumn[] = [
     { field: 'TXN_Date', header: '交易日期', format: formatDate },
@@ -82,6 +84,28 @@ export class TLS55020Component extends BasicQueryPageComponent<Tls55020MasterDat
 
   ngOnInit(): void {
     this.initializePage('TLS55020', '/tls/tls55020cru', this.queryForm, (form) => this.onSubmit(form));
+    // 2. 監聽日期變化來連動下拉選單
+    const dateChange$ = this.queryForm.controls.TXN_Date.valueChanges.pipe(
+      startWith(this.queryForm.controls.TXN_Date.value),
+      // 只有當日期有值時才觸發 API
+      filter(date => !!date),
+      map(date => ({ TXN_Date: this.datePipe.transform(date, 'yyyy-MM-dd')! })),
+      untilDestroyed(this)
+    );
+
+    // 3. 將日期流轉換為 API 下拉資料流
+    this.ECR_NoOptions$ = dateChange$.pipe(
+      switchMap(body => this.dropDown.queryPos1002Tls55020(body))
+    );
+
+    this.TLT_NoOptions$ = dateChange$.pipe(
+      switchMap(body => this.dropDown.queryTltTalentTls55020(body))
+    );
+
+    // 4. 加碼功能：當日期清空或改變時，自動清空已選的機號與專櫃（選配）
+    this.queryForm.controls.TXN_Date.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.queryForm.patchValue({ ECR_No: null, TLT_No: null });
+    });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

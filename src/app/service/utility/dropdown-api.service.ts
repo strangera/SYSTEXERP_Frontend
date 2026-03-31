@@ -51,6 +51,7 @@ import {
   Pos2013LogoRequest,
   Pos2013Query,
   Sys1000Query,
+  Sys5000SubModuleItem,
   TalentByContractDateItem,
   TalentByContractDateQuery,
   TalentChargeItem,
@@ -65,6 +66,7 @@ import {
   TALPORDERMQuery,
   TALPORDERMQueryForShare,
   TblUserOrgidItem,
+  Tls55020Query,
   TLTTALENTItem,
   TLTTALENTQuery,
   TlttalentTltSpaceItem
@@ -754,6 +756,44 @@ export class DropdownApiService {
       'Name'
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
+  /** 查詢子模組代碼(SYS5000) */
+  querySys5000SubModuleNo(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Sys5000SubModuleItem>('/querySYS5000SubModuleNo_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+
+  /** 查詢子模組代碼(SYS5000) */
+  querySys5000SubModuleNoGroup(): Observable<Option[] | null> {
+    return this.http.post<ApiResponse<Sys5000SubModuleItem[]>>(`${this.apiUrl}/querySYS5000SubModuleNo_DropDownList`, {}).pipe(
+      map(response => {
+        const data = response?.Data;
+        if (!data) return null;
+
+        const grouped = data.reduce((acc, item) => {
+          const key = item.module_no;
+          if (!acc[key]) {
+            acc[key] = {
+              label: `${item.module_no} - ${item.module_name}`,
+              value: item.module_no,
+              items: []
+            };
+          }
+          acc[key].items.push({
+            ...item,
+            label: `${item.No} - ${item.Name}`,
+            value: item.No
+          });
+          return acc;
+        }, {} as Record<string, any>);
+
+        return Object.values(grouped);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
 
   /** 查詢人員資料表(TBLUSER) (依照組織代碼查詢) */
   queryTblUserOrgid(): Observable<Option[] | null> {
@@ -894,5 +934,31 @@ export class DropdownApiService {
         }),
         shareReplay({ bufferSize: 1, refCount: true }),
       );
+  }
+  /** 查詢當日交易日期有特殊條碼的機台 (TLS55020) */
+  queryPos1002Tls55020(body: Tls55020Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, Tls55020Query>(
+      '/queryPOS1002_TLS55020_DropDownList',
+      'No',
+      'Name',
+      body
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢當日交易日期有特殊條碼的專櫃 (TLS55020) */
+  queryTltTalentTls55020(body: Tls55020Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, Tls55020Query>(
+      '/queryTLTTALENT_TLS55020_DropDownList',
+      'No',
+      'Name',
+      body
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢寄件者資料(NTY1001) */
+  queryNTY1001_DropDownList(): Observable<IDropdownItem[] | null> {
+    return this.queryDropdown<IDropdownItem>('/queryNTY1001_DropDownList').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
   }
 }

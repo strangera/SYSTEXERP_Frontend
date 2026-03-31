@@ -211,7 +211,7 @@ export const finRoutes: Routes = [
   // 預計損益表
   // { path: 'fin42010', loadComponent: () => import('./fin42010/fin42010.component').then(m => m.FIN42010Component),data:{progNo:'FIN42010'} },
   // 預算、實績比較表
-  // { path: 'fin42020', loadComponent: () => import('./fin42020/fin42020.component').then(m => m.FIN42020Component),data:{progNo:'FIN42020'} },
+  { path: 'fin42020', loadComponent: () => import('./fin42020/fin42020.component').then(m => m.FIN42020Component), data: { progNo: 'FIN42020' } },
   // 預算同期比較表
   // { path: 'fin42030', loadComponent: () => import('./fin42030/fin42030.component').then(m => m.FIN42030Component),data:{progNo:'FIN42030'} },
   // 去年同期比較表

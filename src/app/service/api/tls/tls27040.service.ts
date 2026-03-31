@@ -154,6 +154,11 @@ export interface POS6118Update {
   NCML_TxnTime: string
 }
 
+export interface POS6118HUpdate {
+  ID: number,
+  ECR_No: string,
+}
+
 export interface POS6119Update {
   ID: number,
   ECR_No: string,
@@ -265,6 +270,13 @@ export class TLS27040Service {
    */
   updatePOS6118(body: POS6118Update): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/updatePOS6118`, body);
+  }
+
+  /**
+  * 更新 POS6118H
+  */
+  updatePOS6118H(body: POS6118HUpdate): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/updatePOS6118H`, body);
   }
 
   /**

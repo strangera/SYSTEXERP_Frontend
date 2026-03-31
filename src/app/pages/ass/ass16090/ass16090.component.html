@@ -1,9 +1,7 @@
 <div class="card">
   <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <div>
       <app-button
         btnType="create"
         (click)="onCreate()"
@@ -27,11 +25,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="倉別"
-              controlName="Kurabe"
-              [options]="Kurabe"
+              controlName="warehouse"
+              [options]="warehouse"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Kurabe"
+              [control]="queryForm.controls.warehouse"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -58,11 +56,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="申請人代號"
-              controlName="Applicantcode"
+              controlName="applicantCode"
               [options]="usercode"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Applicantcode"
+              [control]="queryForm.controls.applicantCode"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -80,11 +78,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="部門代號"
-              controlName="Departmentcode"
-              [options]="Departmentcode"
+              controlName="departmentCode"
+              [options]="departmentCode"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Departmentcode"
+              [control]="queryForm.controls.departmentCode"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -109,25 +107,25 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="審核者"
-              controlName="Applicantcode"
+              controlName="applicantCode"
               [options]="usercode"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Applicantcode"
+              [control]="queryForm.controls.applicantCode"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="clear" [form]="queryForm"></app-button>
+        <app-button
+          btnType="query"
+          [loading]="loading"
+          (clickEvent)="onSubmitQuery(queryForm)"
+        ></app-button>
       </div>
     </p-accordionTab>
   </p-accordion>
