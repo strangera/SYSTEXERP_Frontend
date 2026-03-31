@@ -1,5 +1,6 @@
-import { NgClass } from '@angular/common';
+import { DatePipe, NgClass } from '@angular/common';
 import { Component, computed, effect, OnInit, signal, TemplateRef, viewChild } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN53010Service } from '@service/api/fin/fin53010.service';
@@ -13,10 +14,10 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatAmount as reportFormatAmount, formatDate as reportFormatDate } from '@shared/componentkit/table-report/table-report.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, FieldChangeEvent, formatAmount } from '@shared/componentkit/table/table.model';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmount as reportFormatAmount, formatDate as reportFormatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { NGXLogger } from 'ngx-logger';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -25,9 +26,11 @@ import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
-import { concatMap, EMPTY, finalize, Observable, switchMap, tap } from 'rxjs';
+import { concatMap, EMPTY, finalize, forkJoin, Observable, startWith, switchMap, take, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData } from '../fin52030/fin52030.model';
+import { buildInsertFin53010Request, buildUpdateFin53010Request, Fin53010PayloadMapperDeps } from '../fin53010/fin53010-payload.mapper';
 import {
+  Aps4023DetailDataByInvoiceNumberData,
   FIN53010Aps2002_CRow,
   FIN53010Aps2002Row,
   FIN53010Aps3001Row,
@@ -36,15 +39,18 @@ import {
   FIN53010Ars3001Row,
   FIN53010Data,
   FIN53010DetailTable,
-  FIN53010InsertPayload,
   FIN53010InsertResult,
   FIN53010Payload,
-  FIN53010UpdatePayload,
+  FIN53010StepAP,
+  FIN53010StepAR,
+  FIN53010StepBankDeposit,
+  FIN53010StepPurchaseInvoiceRow,
+  FIN53010StepSalesInvoiceRow,
   FIN53010UpdateResult,
   QueryFIN53010Detail,
 } from '../fin53010/fin53010.model';
 import { TableEditComponent } from './table-edit/table-edit.component';
-import { EditColumn, EditColumnExtend } from './table-edit/table-edit.model';
+import { EditColumn, EditColumnExtend, FieldChangeEvent as StepFieldChangeEvent } from './table-edit/table-edit.model';
 
 @Component({
   selector: 'app-fin53010-cru',
@@ -106,12 +112,58 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly tableData = signal<FIN53010DetailTable[]>([]);
   public readonly selectedDetail = signal<FIN52030DetailData[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
+  public readonly currentStep = signal<number>(1);
+  public readonly activeVoucherSteps = signal<number[]>([]);
+  public readonly stepLabels = new Map<number, string>([
+    [1, '傳票資料'],
+    [3, '應付帳款'],
+    [4, '應收帳款'],
+    [5, '進項發票'],
+    [6, '銷項發票'],
+    [7, '銀行存款'],
+  ]);
 
   public readonly tableLoading = signal<boolean>(!1);
   /** 依傳票編號查詢並重載（僅編輯模式） */
   public readonly lookupVouLoading = signal<boolean>(!1);
   /** 與表單欄位分離，避免與目前傳票號混淆 */
   public readonly lookupVouNo = new FormControl<string>('', { nonNullable: true });
+
+  public readonly stepAPRows = signal<FIN53010StepAP[]>([]);
+  public readonly stepARRows = signal<FIN53010StepAR[]>([]);
+  public readonly stepSalesRows = signal<FIN53010StepSalesInvoiceRow[]>([]);
+  public readonly stepPurchaseRows = signal<FIN53010StepPurchaseInvoiceRow[]>([]);
+  public readonly stepBankRows = signal<FIN53010StepBankDeposit[]>([]);
+
+  /** APS1001 銀行下拉 + 步驟列上 POS2013 銀行代號（清單無該代碼時補佔位） */
+  public readonly bankNoOptionsForStep = computed(() => {
+    const base = this.service.bankNoOptions();
+    const seen = new Set(base.map(o => String(o.value)));
+    const extra: Option[] = [];
+    for (const r of this.stepAPRows()) {
+      const c = String(r.ven_bnk_no ?? '').trim();
+      if (c && !seen.has(c)) {
+        seen.add(c);
+        extra.push({ value: c, label: c });
+      }
+    }
+    for (const r of this.stepBankRows()) {
+      const c = String(r.bank_no ?? '').trim();
+      if (c && !seen.has(c)) {
+        seen.add(c);
+        extra.push({ value: c, label: c });
+      }
+    }
+    return [...base, ...extra];
+  });
+
+  /** 供「下一步」步驟表同步時讀取傳票日期（表單非 signal，需轉成 signal） */
+  private readonly vouDateForStepSync = toSignal(
+    this.dataForm.controls.VouDate.valueChanges.pipe(
+      startWith(this.dataForm.controls.VouDate.value),
+    ),
+    { initialValue: this.dataForm.controls.VouDate.value },
+  );
 
   /** 查詢傳票編號為空白（含僅空白字元）時，停用「載入傳票」 */
   public isLookupVouNoEmpty(): boolean {
@@ -141,21 +193,25 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly aps3001RelatedColumns: ReportColumn[] = [
     { field: 'org_id', header: '組織代號', visible: true },
     { field: 'VEN_No', header: '廠商代號', visible: true },
-    { field: 'VEN_PayType_Name', header: '付款方式', visible: true, format: (v, _i, row) => {
-      const r = row as FIN53010Aps3001Row;
-      return String(v ?? r?.VEN_PayType ?? '');
-    } },
+    {
+      field: 'VEN_PayType_Name', header: '付款方式', visible: true, format: (v, _i, row) => {
+        const r = row as FIN53010Aps3001Row;
+        return String(v ?? r?.VEN_PayType ?? '');
+      }
+    },
     { field: 'ACP_Amt', header: '金額', visible: true, format: v => reportFormatAmount(v) },
     { field: 'ACP_ExpectPayDate', header: '預計付款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'ACP_Date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'VEN_BNK_No', header: '匯款銀行代號', visible: true },
-    { field: 'VEN_BankAccountNo', header: '銀行帳號/帳戶名稱', visible: true, format: (_v, _i, row) => {
-      const r = row as FIN53010Aps3001Row;
-      const a = r?.VEN_BankAccountNo;
-      const b = r?.VEN_AccountName;
-      if (a && b) return `${a} / ${b}`;
-      return (a ?? b ?? '') as string;
-    } },
+    {
+      field: 'VEN_BankAccountNo', header: '銀行帳號/帳戶名稱', visible: true, format: (_v, _i, row) => {
+        const r = row as FIN53010Aps3001Row;
+        const a = r?.VEN_BankAccountNo;
+        const b = r?.VEN_AccountName;
+        if (a && b) return `${a} / ${b}`;
+        return (a ?? b ?? '') as string;
+      }
+    },
     { field: 'VEN_CTRLYN', header: '票據禁止背書轉讓', visible: true },
     { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true },
     { field: 'AccNo', header: '會計科目代號', visible: true },
@@ -273,8 +329,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       || this.service.refNameLoading()
       || this.service.noteDescLoading()
       || this.service.detailByVouNoLoading()
-      || this.lookupVouLoading();
+      || this.lookupVouLoading()
+      || this.service.bankNoLoading()
+      || this.service.aps4023ByInvoiceLoading();
   });
+
+  /** 銷項／進項步驟表：已依 API 成功帶入的發票字串（列索引 → 完整 10 碼），避免重複請求 */
+  private readonly lastSalesInvoiceLookupKey = new Map<number, string>();
+  private readonly lastPurchaseInvoiceLookupKey = new Map<number, string>();
 
   // 載入資料的 effect（不 destroy，以便刪除明細重載或依傳票編號重載時仍能同步表單）
   public readonly dataEffect = effect(() => {
@@ -439,9 +501,80 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'DetailCount', header: '明細筆數' },
   ];
 
+  public readonly stepAPColumns: EditColumn[] = [
+    { field: 'org_id', header: '組織代號', type: 'dropdown', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'ven_pay_type', header: '付款方式', type: 'dropdown', options: () => this.service.venPayTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'acp_amt', header: '金額', type: 'inputNumber', disabled: () => true },
+    { field: 'acp_expect_pay_date', header: '預計付款日', type: 'date' },
+    { field: 'acp_date', header: '立帳日期', type: 'date', disabled: () => true },
+    { field: 'ven_bnk_no', header: '匯款銀行代號', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'ven_bank_account', header: '銀行帳號/帳戶名稱', type: 'input', disabled: () => true },
+    { field: 'ven_ctrlyn', header: '票據禁止背書轉讓', type: 'dropdown', options: () => this.service.yesNoOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'ven_check_title', header: '票據抬頭', type: 'input', disabled: () => true },
+    { field: 'acc_no', header: '會計科目代號', type: 'dropdown', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'note_desc', header: '摘要', type: 'input' },
+  ];
+
+  public readonly stepARColumns: EditColumn[] = [
+    { field: 'org_id', header: '組織代號', type: 'dropdown', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'ars_amt', header: '金額', type: 'inputNumber', disabled: () => true },
+    { field: 'pta_date', header: '預計收款日', type: 'date' },
+    { field: 'ars_date', header: '立帳日期', type: 'date', disabled: () => true },
+    { field: 'acc_no', header: '會計科目代號', type: 'dropdown', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'note_desc', header: '摘要', type: 'input' },
+  ];
+
+  public readonly stepSalesColumns: EditColumn[] = [
+    { field: 'add_flag', header: '是否新增', type: 'checkbox' },
+    { field: 'invoice_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'invoice_prefix', header: '字軌', type: 'input', maxLength: 2 },
+    { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8 },
+    { field: 'invoice_date', header: '發票日期', type: 'date' },
+    { field: 'declare_ym', header: '申報年月', type: 'date', view: 'month' },
+    { field: 'buyer_uniform', header: '買受人統一編號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'total_amount', header: '發票總金額', type: 'inputNumber' },
+    { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber' },
+    { field: 'tax_amount', header: '發票稅額', type: 'inputNumber' },
+    { field: 'source_doc_no', header: '憑證單號', type: 'input' },
+    { field: 'summary_count', header: '彙整單號', type: 'inputNumber' },
+    { field: 'asset_flag', header: '資產註記', type: 'dropdown', options: () => this.service.assetTypeOptions(), optionLabel: 'label', optionValue: 'value' },
+  ];
+
+  public readonly stepPurchaseColumns: EditColumn[] = [
+    { field: 'add_flag', header: '是否新增', type: 'checkbox' },
+    { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'track_no', header: '字軌', type: 'input', maxLength: 2 },
+    { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8 },
+    { field: 'invoice_date', header: '發票日期', type: 'date' },
+    { field: 'declare_ym', header: '申報年月', type: 'date', view: 'month' },
+    { field: 'vendor_tax_id', header: '廠商統一編號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'invoice_usage', header: '發票用途', type: 'dropdown', options: () => this.service.purDirectTypeOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'invoice_amount', header: '發票總金額', type: 'inputNumber' },
+    { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber' },
+    { field: 'tax_amount', header: '發票稅額', type: 'inputNumber' },
+    { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'category_type', header: '類別區分', type: 'dropdown', options: () => this.service.purTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'source_doc_no', header: '憑證單號', type: 'input' },
+    { field: 'total_count', header: '彙整張數', type: 'inputNumber' },
+  ];
+
+  public readonly stepBankColumns: EditColumn[] = [
+    { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'bank_no', header: '銀行代號', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'deposit_amt', header: '存款', type: 'inputNumber', disabled: () => true },
+    { field: 'withdraw_amt', header: '提款', type: 'inputNumber', disabled: () => true },
+    { field: 'note_desc', header: '摘要', type: 'input' },
+    { field: 'txn_date', header: '日期', type: 'date', disabled: () => true },
+  ];
+
   constructor(
     public readonly service: FIN53010Service,
     private readonly logger: NGXLogger,
+    private readonly datePipe: DatePipe,
   ) {
     super();
     this.user = this.authService.getUserInfo()!;
@@ -457,6 +590,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.service.getRefNameOptions();
     this.service.getAccDescOptions();
     this.service.getVoucherTypeOptions();
+    this.service.getBankNoOptions();
+    this.service.getStepDropdownOptions();
 
     // 如果是新增模式，等待選項載入後設定初始 label
     if (this.isFormCreateable) {
@@ -501,6 +636,157 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }
   }
 
+  public readonly canGoBack = computed(() => this.currentStep() > 1);
+  public readonly canGoNext = computed(() => {
+    if (!this.isFormCreateable) return false;
+    const flow = [1, ...this.activeVoucherSteps()];
+    return flow.indexOf(this.currentStep()) < flow.length - 1;
+  });
+  public readonly isLastStep = computed(() => {
+    if (!this.isFormCreateable) return true;
+    const flow = [1, ...this.activeVoucherSteps()];
+    return this.currentStep() === flow[flow.length - 1];
+  });
+
+  private readonly stepFlowEffect = effect(() => {
+    if (!this.isFormCreateable) return;
+    const types = new Set<string>();
+    for (const row of this.tableData()) {
+      const accNo = String(row.AccNo ?? '');
+      if (!accNo) continue;
+      const t = this.service.accVoucherTypeMap().get(accNo);
+      if (['3', '4', '5', '6', '7'].includes(String(t))) types.add(String(t));
+    }
+    const ordered = ['3', '4', '5', '6', '7']
+      .filter(v => types.has(v))
+      .map(v => Number(v));
+    this.activeVoucherSteps.set(ordered);
+    const flow = [1, ...ordered];
+    if (!flow.includes(this.currentStep())) this.currentStep.set(1);
+  }, { allowSignalWrites: true });
+
+  /** 依傳票明細與 queryPOS2013（廠商主檔）同步應付／應收／銀行存款步驟表（僅新增模式） */
+  private readonly stepRowsSyncEffect = effect(onCleanup => {
+    if (!this.isFormCreateable) return;
+
+    const table = this.tableData();
+    const vouRaw = this.vouDateForStepSync();
+    const vouDate = vouRaw instanceof Date ? vouRaw : (vouRaw ? new Date(vouRaw) : new Date());
+    const accVt = this.service.accVoucherTypeMap();
+
+    this.service.vendorOptions();
+
+    const getVenOpt = (venNo: string | undefined) =>
+      venNo ? this.service.findVendorOptionByVenNo(venNo) : undefined;
+
+    const vensNeedingFin53010 = new Set<string>();
+    for (const row of table) {
+      const t = accVt.get(String(row.AccNo ?? ''));
+      if (!['3', '4', '7'].includes(String(t))) continue;
+      const ven = String(row.DetailNo ?? '').trim();
+      if (ven) vensNeedingFin53010.add(ven);
+    }
+
+    if (vensNeedingFin53010.size > 0) {
+      const sub = forkJoin([...vensNeedingFin53010].map(v => this.service.ensureFin53010VendorForSteps(v))).subscribe({
+        error: err => this.logger.error('補詢廠商主檔 queryPOS2013_FIN53010 失敗', err),
+      });
+      onCleanup(() => sub.unsubscribe());
+    }
+
+    const ap: FIN53010StepAP[] = [];
+    const ar: FIN53010StepAR[] = [];
+    const bk: FIN53010StepBankDeposit[] = [];
+
+    for (const row of table) {
+      const accNo = String(row.AccNo ?? '');
+      const vt = accVt.get(accNo);
+      if (!vt || !['3', '4', '7'].includes(String(vt))) continue;
+
+      const venOpt = getVenOpt(String(row.DetailNo ?? ''));
+      const amt = (row.AccAmtD ?? 0) + (row.AccAmtC ?? 0);
+      const noteDesc = this.resolveNoteDescForStep(row);
+
+      if (vt === '3') {
+        ap.push({
+          org_id: row.ORG_ID ?? '100000',
+          ven_no: row.DetailNo,
+          ven_pay_type: venOpt?.['VEN_PayType'] ?? undefined,
+          acp_amt: amt || undefined,
+          acp_date: vouDate,
+          ven_bnk_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
+          ven_bank_account: this.formatVenBankAccount(venOpt),
+          ven_ctrlyn: venOpt?.['VEN_CTRLYN'] ?? undefined,
+          ven_check_title: row.DetailName ?? venOpt?.['VEN_Name'] ?? undefined,
+          acc_no: row.AccNo,
+          note_desc: noteDesc,
+        });
+      } else if (vt === '4') {
+        ar.push({
+          org_id: row.ORG_ID ?? '100000',
+          ven_no: row.DetailNo,
+          ars_amt: amt || undefined,
+          ars_date: vouDate,
+          acc_no: row.AccNo,
+          note_desc: noteDesc,
+        });
+      } else if (vt === '7') {
+        bk.push({
+          ven_no: row.DetailNo,
+          bank_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
+          deposit_amt: row.AccAmtD ?? undefined,
+          withdraw_amt: row.AccAmtC ?? undefined,
+          note_desc: noteDesc,
+          txn_date: vouDate,
+        });
+      }
+    }
+
+    this.stepAPRows.set(ap);
+    this.stepARRows.set(ar);
+    this.stepBankRows.set(bk);
+  }, { allowSignalWrites: true });
+
+  private formatVenBankAccount(venOpt?: Option): string | undefined {
+    if (!venOpt) return undefined;
+    const a = venOpt['VEN_BankAccountNo'] as string | undefined | null;
+    const b = venOpt['VEN_AccountName'] as string | undefined | null;
+    if (a && b) return `${a} / ${b}`;
+    const s = (a ?? b ?? '') as string;
+    return s || undefined;
+  }
+
+  private resolveNoteDescForStep(row: FIN53010DetailTable): string {
+    const n = row.NoteDesc;
+    if (n === void 0 || n === null) return '';
+    const mapped = this.service.noteDescMap().get(String(n))?.label;
+    return mapped ?? String(n);
+  }
+
+  private dateToYmdOrUndefined(d: Date | null | undefined): string | undefined {
+    if (d == null) return undefined;
+    return this.datePipe.transform(d, 'yyyy-MM-dd') ?? undefined;
+  }
+
+  public goNextStep(): void {
+    if (!this.isFormCreateable) return;
+    const flow = [1, ...this.activeVoucherSteps()];
+    const idx = flow.indexOf(this.currentStep());
+    if (idx < flow.length - 1) this.currentStep.set(flow[idx + 1]);
+  }
+
+  public goPrevStep(): void {
+    if (!this.isFormCreateable) return;
+    const flow = [1, ...this.activeVoucherSteps()];
+    const idx = flow.indexOf(this.currentStep());
+    if (idx > 0) this.currentStep.set(flow[idx - 1]);
+  }
+
+  public goToStep(step: number): void {
+    const flow = [1, ...this.activeVoucherSteps()];
+    if (flow.includes(step)) this.currentStep.set(step);
+  }
+
   /** 依「查詢傳票編號」呼叫 queryFIN53010 → queryFIN53010Detail 並刷新編輯頁 */
   public onLookupVoucherByVouNo(): void {
     if (this.isFormCreateable || this.lookupVouLoading()) return;
@@ -520,11 +806,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     this.lookupVouLoading.set(!0);
     this.service.loadFIN53010(payload).pipe(
-      tap(res => {
-        if (res.Status === '0000' && res.Data?.length) {
-          this.service.getAccDescOptions(res.Data.map(d => d.Remark).filter(Boolean) as string[]);
-        }
-      }),
       switchMap(res => {
         if (res.Status !== '0000') {
           this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '查詢傳票失敗');
@@ -547,6 +828,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         }
         this.fin53010DetailData.set(res.Data);
         this.totalRecords.set(res.TotalCount);
+        const accNos = Array.from(new Set(
+          (res.Data?.Details ?? []).map(d => d.AccNo).filter((a): a is string => !!a && String(a).trim() !== ''),
+        ));
+        if (accNos.length) this.service.getAccDescOptions(accNos);
         this.loadRelatedDetailByVouNo(res.Data?.VouNo);
         this.messageService.successBubble('已載入傳票');
       }),
@@ -592,6 +877,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
+      if (this.isFormCreateable && !this.isLastStep()) {
+        this.messageService.warnBubble('請先完成所有步驟，再進行送出');
+        return;
+      }
       // 驗證借貸是否平衡
       if (!this.isBalanced()) {
         this.messageService.errorBubble('借貸金額不平衡');
@@ -618,35 +907,45 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       const voucherTypeLabel = d.VoucherType;
       const voucherTypeValue = this.service.voucherTypeOptions().find(opt => opt.label === voucherTypeLabel)?.value
         ?? (this.service.voucherTypeMap().get(voucherTypeLabel)?.value ?? voucherTypeLabel);
+      const voucherTypePadded = (voucherTypeValue?.padEnd(3, ' ')) || 'GL ';
 
-      const raw = {
-        ...d,
-        VoucherType: (voucherTypeValue?.padEnd(3, ' ')) || 'GL ',
-        Details: this.tableData().map(({ AccAmtD, AccAmtC, NoteDesc, ...rest }, index) => {
-          return {
-            ...rest,
-            index,
-            id: typeof rest.id === 'number' ? rest.id! : void 0,
-            AccAmt: (AccAmtD ?? 0) + (AccAmtC ?? 0),
-            AccDC: AccAmtD ? 'D' : AccAmtC ? 'C' : '',
-            ORG_ID: rest.ORG_ID || '100000',
-            VoucherType: (voucherTypeValue?.padEnd(3, ' ')) || 'GL ',
-            NoteDesc: this.service.noteDescMap().get(String(NoteDesc))?.label ?? NoteDesc,
-          };
-        }),
-        ...(!this.isFormCreateable && { VouNo }),
-      } as FIN53010InsertPayload | FIN53010UpdatePayload;
-      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
-      )) as unknown as FIN53010InsertPayload | FIN53010UpdatePayload;
+      const mapperDeps: Fin53010PayloadMapperDeps = {
+        datePipe: this.datePipe,
+        resolveNoteDesc: (note, row) =>
+          this.service.noteDescMap().get(String(note))?.label ?? (note != null ? String(note) : undefined),
+        getVendorOption: v => this.service.findVendorOptionByVenNo(v),
+      };
 
       this.tableLoading.set(!0);
       const request: Observable<FIN53010InsertResult | FIN53010UpdateResult> = this.isFormCreateable
-        ? this.service.insertFIN53010Data({ ...payload, CRT_USR_No: this.user.user_No })
-        : this.service.updateFIN53010Data({ ...payload, id: this.rowdata!.id, UPD_USR_No: this.user.user_No });
+        ? this.service.insertFIN53010Data(buildInsertFin53010Request({
+          form: { ...d, VouDate: d.VouDate } as Record<string, unknown>,
+          voucherTypePadded,
+          tableData: this.tableData(),
+          activeVoucherSteps: this.activeVoucherSteps(),
+          stepAPRows: this.stepAPRows(),
+          stepARRows: this.stepARRows(),
+          stepSalesRows: this.stepSalesRows(),
+          stepPurchaseRows: this.stepPurchaseRows(),
+          stepBankRows: this.stepBankRows(),
+          deps: mapperDeps,
+        }))
+        : this.service.updateFIN53010Data(buildUpdateFin53010Request({
+          form: { ...d, VouDate: d.VouDate, VouNo } as Record<string, unknown>,
+          voucherTypePadded,
+          tableData: this.tableData(),
+          activeVoucherSteps: this.activeVoucherSteps(),
+          stepAPRows: this.stepAPRows(),
+          stepARRows: this.stepARRows(),
+          stepSalesRows: this.stepSalesRows(),
+          stepPurchaseRows: this.stepPurchaseRows(),
+          stepBankRows: this.stepBankRows(),
+          masterId: this.rowdata!.id,
+          deps: mapperDeps,
+        }));
 
 
-      this.logger.debug(`submit:`, [payload]);
+      this.logger.debug(`submit:`, [this.isFormCreateable ? 'insert' : 'update', d, this.tableData()]);
       request.pipe(
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
@@ -664,6 +963,160 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const renumbered = data.map((row, i) => ({ ...row, SerNo: i + 1, index: i }));
     this.tableData.set(renumbered);
     this.rowEditCanSave.set(this.tableData().some(row => row.AccNo && row.ORG_ID) || !!this.isBalanced());
+  }
+
+  public onStepAPDataChange(data: FIN53010StepAP[]): void {
+    this.stepAPRows.set(data);
+  }
+
+  public onStepARDataChange(data: FIN53010StepAR[]): void {
+    this.stepARRows.set(data);
+  }
+
+  public onStepSalesDataChange(data: FIN53010StepSalesInvoiceRow[]): void {
+    this.stepSalesRows.set(data);
+  }
+
+  public onStepPurchaseDataChange(data: FIN53010StepPurchaseInvoiceRow[]): void {
+    const normalized = data.map(row => {
+      const discNo = String(row.deduction_code ?? '');
+      const purType = (discNo === '1' || discNo === '3') ? '1' : discNo ? '2' : row.category_type;
+      return { ...row, category_type: purType };
+    });
+    this.stepPurchaseRows.set(normalized);
+  }
+
+  public onStepBankDataChange(data: FIN53010StepBankDeposit[]): void {
+    this.stepBankRows.set(data);
+  }
+
+  /** 銷項步驟表：字軌 2 碼 + 發票號碼 8 碼齊備時查 APS4023 並帶入該列 */
+  public onStepSalesInvoiceFieldChange(event: StepFieldChangeEvent): void {
+    if (!this.isFormCreateable || this.isFormReadable) return;
+    const f = event.field;
+    if (f !== 'invoice_prefix' && f !== 'invoice_no') return;
+    const idx = event.index;
+    if (typeof idx !== 'number' || idx < 0) return;
+    const row = event.rowData as FIN53010StepSalesInvoiceRow;
+    const prefix = String(row.invoice_prefix ?? '').trim();
+    const no = String(row.invoice_no ?? '').trim();
+    if (prefix.length !== 2 || no.length !== 8) return;
+    const full = `${prefix}${no}`;
+    if (this.lastSalesInvoiceLookupKey.get(idx) === full) return;
+
+    this.service.queryAps4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
+      next: res => {
+        if (res.Status !== '0000') {
+          this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '查詢發票失敗');
+          return;
+        }
+        const d = res.Data;
+        if (!d) {
+          this.messageService.errorBubble('查無資料');
+          return;
+        }
+        this.lastSalesInvoiceLookupKey.set(idx, full);
+        const patch = this.mapAps4023ToSalesRow(d, prefix, no);
+        this.stepSalesRows.update(rows => {
+          const next = [...rows];
+          if (!next[idx]) return rows;
+          next[idx] = { ...next[idx], ...patch };
+          return next;
+        });
+      },
+    });
+  }
+
+  /** 進項步驟表：字軌 2 碼 + 發票號碼 8 碼齊備時查 APS4023 並帶入該列 */
+  public onStepPurchaseInvoiceFieldChange(event: StepFieldChangeEvent): void {
+    if (!this.isFormCreateable || this.isFormReadable) return;
+    const f = event.field;
+    if (f !== 'track_no' && f !== 'invoice_no') return;
+    const idx = event.index;
+    if (typeof idx !== 'number' || idx < 0) return;
+    const row = event.rowData as FIN53010StepPurchaseInvoiceRow;
+    const prefix = String(row.track_no ?? '').trim();
+    const no = String(row.invoice_no ?? '').trim();
+    if (prefix.length !== 2 || no.length !== 8) return;
+    const full = `${prefix}${no}`;
+    if (this.lastPurchaseInvoiceLookupKey.get(idx) === full) return;
+
+    this.service.queryAps4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
+      next: res => {
+        if (res.Status !== '0000') {
+          this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '查詢發票失敗');
+          return;
+        }
+        const d = res.Data;
+        if (!d) {
+          this.messageService.errorBubble('查無資料');
+          return;
+        }
+        this.lastPurchaseInvoiceLookupKey.set(idx, full);
+        const patch = this.mapAps4023ToPurchaseRow(d, prefix, no);
+        this.stepPurchaseRows.update(rows => {
+          const next = [...rows];
+          if (!next[idx]) return rows;
+          const merged = { ...next[idx], ...patch };
+          const discNo = String(merged.deduction_code ?? '');
+          const purType = (discNo === '1' || discNo === '3') ? '1' : discNo ? '2' : merged.category_type;
+          next[idx] = { ...merged, category_type: purType };
+          return next;
+        });
+      },
+    });
+  }
+
+  private mapAps4023ToSalesRow(
+    d: Aps4023DetailDataByInvoiceNumberData,
+    prefix: string,
+    no: string,
+  ): Partial<FIN53010StepSalesInvoiceRow> {
+    const invYm = d.INV_DeclareYM;
+    const declareYm = invYm
+      ? new Date(`${String(invYm).slice(0, 4)}-${String(invYm).slice(4, 6)}-01`)
+      : null;
+    return {
+      id: d.ID,
+      add_flag: true,
+      invoice_type: d.InvoiceType ?? undefined,
+      invoice_prefix: prefix,
+      invoice_no: no,
+      invoice_date: d.InvoiceDate ? new Date(d.InvoiceDate) : null,
+      declare_ym: declareYm,
+      buyer_uniform: d.Buyer_Uniform ?? undefined,
+      total_amount: d.PUR_Amt,
+      tax_type: d.PUR_TaxType ?? undefined,
+      net_amount: d.PUR_Net,
+      tax_amount: d.PUR_Tax,
+      source_doc_no: d.Source_Doc_No ?? undefined,
+      asset_flag: d.AssetType ?? undefined,
+    };
+  }
+
+  private mapAps4023ToPurchaseRow(
+    d: Aps4023DetailDataByInvoiceNumberData,
+    prefix: string,
+    no: string,
+  ): Partial<FIN53010StepPurchaseInvoiceRow> {
+    const invYm = d.INV_DeclareYM;
+    const declareYm = invYm
+      ? new Date(`${String(invYm).slice(0, 4)}-${String(invYm).slice(4, 6)}-01`)
+      : null;
+    return {
+      add_flag: true,
+      voucher_type: d.InvoiceType ?? undefined,
+      track_no: prefix,
+      invoice_no: no,
+      invoice_date: d.InvoiceDate ? new Date(d.InvoiceDate) : null,
+      declare_ym: declareYm,
+      vendor_tax_id: d.Seller_Uniform ?? undefined,
+      invoice_amount: d.PUR_Amt,
+      tax_type: d.PUR_TaxType ?? undefined,
+      net_amount: d.PUR_Net,
+      tax_amount: d.PUR_Tax,
+      source_doc_no: d.Source_Doc_No ?? undefined,
+    };
   }
 
   public onFieldChange(event: FieldChangeEvent<FIN53010DetailTable>): void {

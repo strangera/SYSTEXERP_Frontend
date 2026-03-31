@@ -11,6 +11,24 @@
     }
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
+  @if (isFormCreateable) {
+    <div class="flex gap-2 mb-2">
+      <app-button
+        btnType="default"
+        [label]="stepLabels.get(1) || '傳票資料'"
+        [severity]="currentStep() === 1 ? undefined : 'secondary'"
+        (click)="goToStep(1)"
+      ></app-button>
+      @for (step of activeVoucherSteps(); track step) {
+        <app-button
+          btnType="default"
+          [label]="stepLabels.get(step) || ('步驟' + step)"
+          [severity]="currentStep() === step ? undefined : 'secondary'"
+          (click)="goToStep(step)"
+        ></app-button>
+      }
+    </div>
+  }
 
   <div
     class="flex flex-column"
@@ -40,6 +58,7 @@
       </p-panel>
     }
 
+    @if (!isFormCreateable || currentStep() === 1) {
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
@@ -176,11 +195,17 @@
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
           <app-button btnType="cancel" [form]="dataForm"></app-button>
-          <app-button btnType="submit" [loading]="loading"></app-button>
+          @if (!isFormCreateable || isLastStep()) {
+            <app-button btnType="submit" [loading]="loading"></app-button>
+          }
+          @if (isFormCreateable && canGoNext()) {
+            <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
+          }
         </div>
       }
     </form>
   </p-panel>
+  }
   </div>
 </div>
 
@@ -207,6 +232,124 @@
     </div>
   </div>
 </div>
+
+@if (isFormCreateable && currentStep() === 3) {
+  <div class="card">
+    <p-panel header="應付帳款" class="line-height-3 m-0">
+      <app-table-edit
+        [showCheckBox]="false"
+        [showReorder]="false"
+        [disabled]="isFormReadable"
+        [data]="stepAPRows()"
+        [columns]="stepAPColumns"
+        [tableKey]="'FIN53010_step_ap'"
+        (dataChange)="onStepAPDataChange($event)"
+      ></app-table-edit>
+      <div class="flex justify-content-between mt-3">
+        <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
+        @if (canGoNext()) {
+          <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
+        } @else {
+          <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+        }
+      </div>
+    </p-panel>
+  </div>
+}
+
+@if (isFormCreateable && currentStep() === 4) {
+  <div class="card">
+    <p-panel header="應收帳款" class="line-height-3 m-0">
+      <app-table-edit
+        [showCheckBox]="false"
+        [showReorder]="false"
+        [disabled]="isFormReadable"
+        [data]="stepARRows()"
+        [columns]="stepARColumns"
+        [tableKey]="'FIN53010_step_ar'"
+        (dataChange)="onStepARDataChange($event)"
+      ></app-table-edit>
+      <div class="flex justify-content-between mt-3">
+        <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
+        @if (canGoNext()) {
+          <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
+        } @else {
+          <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+        }
+      </div>
+    </p-panel>
+  </div>
+}
+
+@if (isFormCreateable && currentStep() === 5) {
+  <div class="card">
+    <p-panel header="銷項發票" class="line-height-3 m-0">
+      <app-table-edit
+        [showCheckBox]="false"
+        [showReorder]="false"
+        [disabled]="isFormReadable"
+        [data]="stepSalesRows()"
+        [columns]="stepSalesColumns"
+        [tableKey]="'FIN53010_step_sales'"
+        (dataChange)="onStepSalesDataChange($event)"
+        (fieldChange)="onStepSalesInvoiceFieldChange($event)"
+      ></app-table-edit>
+      <div class="flex justify-content-between mt-3">
+        <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
+        @if (canGoNext()) {
+          <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
+        } @else {
+          <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+        }
+      </div>
+    </p-panel>
+  </div>
+}
+
+@if (isFormCreateable && currentStep() === 6) {
+  <div class="card">
+    <p-panel header="進項發票" class="line-height-3 m-0">
+      <app-table-edit
+        [showCheckBox]="false"
+        [showReorder]="false"
+        [disabled]="isFormReadable"
+        [data]="stepPurchaseRows()"
+        [columns]="stepPurchaseColumns"
+        [tableKey]="'FIN53010_step_purchase'"
+        (dataChange)="onStepPurchaseDataChange($event)"
+        (fieldChange)="onStepPurchaseInvoiceFieldChange($event)"
+      ></app-table-edit>
+      <div class="flex justify-content-between mt-3">
+        <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
+        @if (canGoNext()) {
+          <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
+        } @else {
+          <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+        }
+      </div>
+    </p-panel>
+  </div>
+}
+
+@if (isFormCreateable && currentStep() === 7) {
+  <div class="card">
+    <p-panel header="銀行存款" class="line-height-3 m-0">
+      <app-table-edit
+        [showCheckBox]="false"
+        [showReorder]="false"
+        [disabled]="isFormReadable"
+        [data]="stepBankRows()"
+        [columns]="stepBankColumns"
+        [tableKey]="'FIN53010_step_bank'"
+        (dataChange)="onStepBankDataChange($event)"
+      ></app-table-edit>
+      <div class="flex justify-content-between mt-3">
+        <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
+        <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+      </div>
+    </p-panel>
+  </div>
+}
 
 @if (!isFormCreateable && service.detailByVouNoLoading()) {
   <div class="card flex justify-content-center p-4">
