@@ -100,9 +100,27 @@ export class ASS15020Component
     { field: 'HOLD_EMP_NAME', header: '保管人', visible: true },
     { field: 'USE_ORG_NAME', header: '使用單位', visible: true },
     { field: 'USE_EMP_NAME', header: '使用人', visible: true },
-    { field: 'FIR_GET_COST', header: '原購入金額', visible: true },
+    {
+      field: 'FIR_GET_COST',
+      header: '原購入金額',
+      visible: true,
+      align: 'right',
+      format: (v: number) => this.formatMoney(v),
+    },
     { field: 'NOTES', header: '備註', visible: true },
   ];
+
+  get footerData(): { label: string; FIR_GET_COST: number } | null {
+    const rows = this.tableData();
+    if (!rows.length) {
+      return null;
+    }
+    const total = rows.reduce((sum, row) => sum + this.toSafeNumber(row.FIR_GET_COST), 0);
+    return {
+      label: '合計',
+      FIR_GET_COST: total,
+    };
+  }
 
   constructor(
     private readonly dropdownApi: DropdownApiService,
@@ -323,6 +341,19 @@ export class ASS15020Component
     if (value instanceof Date) return value.toISOString();
     if (typeof value === 'string') return value;
     return undefined;
+  }
+
+  private toSafeNumber(value: unknown): number {
+    if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
+    if (typeof value === 'string') {
+      const parsed = Number(value.replaceAll(',', '').trim());
+      return Number.isFinite(parsed) ? parsed : 0;
+    }
+    return 0;
+  }
+
+  private formatMoney(value: unknown): string {
+    return this.toSafeNumber(value).toLocaleString('en-US');
   }
 
   onClearForm(): void {
