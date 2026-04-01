@@ -25,4 +25,5 @@ export interface TreeNode {
   isDisable?: boolean | string
   enabledCount?: number;
   totalCount?: number;
+  remark?: string
 }

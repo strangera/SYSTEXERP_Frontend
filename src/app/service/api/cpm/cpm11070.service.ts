@@ -92,6 +92,7 @@ export interface CPM11070DetailData {
   MOBILE_PHONE: string;
   ADDRESS: string;
   ID_NO: string;
+  GetLocation: string;
   RELATED_SEQ_ID: number;
   CRT_Date: string;
   CRT_USR_No: string;

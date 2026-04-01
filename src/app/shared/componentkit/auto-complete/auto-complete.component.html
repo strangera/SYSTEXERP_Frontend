@@ -9,7 +9,7 @@
   [suggestions]="filteredOptions()" [optionLabel]="optionLabel()" [optionValue]="optionValue()"
   [showClear]="showClear()" [ngClass]="{ 'ng-dirty ng-invalid': submitted() && control().invalid }" [lazy]="true"
   [dropdownIcon]="control().disabled ? 'hidden' : 'pi pi-angle-down'" appendTo="body" [virtualScroll]="true"
-  [virtualScrollItemSize]="34" (completeMethod)="filterOptions($event)" [dropdown]="true"
+  [virtualScrollItemSize]="38" [scrollHeight]="'200px'" (completeMethod)="filterOptions($event)" [dropdown]="true"
   [forceSelection]="forceSelection()" [ariaLabel]="'請輸入' + label" [dropdownAriaLabel]="'請選擇' + label"
   [ariaLabelledBy]="controlName" [autofocus]="autofocus()" (onSelect)="handleOptionSelected($event)"
   (keydown.enter)="$event.preventDefault()" />

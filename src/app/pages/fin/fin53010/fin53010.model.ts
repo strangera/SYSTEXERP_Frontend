@@ -26,7 +26,7 @@ interface UPD {
   UPD_Date?: string;
 }
 
-export interface FIN53010Data extends Pick<FIN53010Basic, 'VouType' | 'VouNo'> {
+export interface FIN53010Data extends Pick<FIN53010Basic, 'VouType' | 'VouNo' | 'PostFlag' | 'VoucherType'> {
   id: number;
   Remark: string;
   AccAmt: number;
@@ -113,28 +113,180 @@ export interface FIN53010Insert extends FIN53010Basic {
   Details: FIN53010Detail[];
 }
 
-export interface FIN53010InsertPayload extends Omit<FIN53010Payload, 'CRT_USR_No'> {
-  CRT_USR_No: string;
-  Details: FIN53010Detail[];
+/** Swagger InsertFIN53010Detail */
+export interface InsertFIN53010DetailBody {
+  index?: number;
+  SerNo?: number;
+  AccDC?: string | null;
+  AccNo?: string | null;
+  AccAmt?: number;
+  ORG_ID?: string | null;
+  DetailNo?: string | null;
+  SubDetailNo?: string | null;
+  ProjectNo?: string | null;
+  NoteDesc?: string | null;
+  PTA?: string | null;
 }
 
-export interface FIN53010UpdatePayload extends Omit<FIN53010Payload, 'UPD_USR_No'> {
+/** Swagger insertAPS3001Data */
+export interface InsertAPS3001DataBody {
+  org_id?: string | null;
+  ACP_YYYYMM?: string | null;
+  ACP_Date?: string | null;
+  VEN_No?: string | null;
+  VEN_Name?: string | null;
+  VEN_Uniform?: string | null;
+  AccNo?: string | null;
+  ACP_Amt?: number | null;
+  VEN_BNK_No?: string | null;
+  VEN_BNK_BranchNo?: string | null;
+  VEN_BankAccountNo?: string | null;
+  VEN_AccountName?: string | null;
+  ACP_ExpectPayDate?: string | null;
+  NoteDesc?: string | null;
+  VEN_CTRLYN?: string | null;
+}
+
+/** Swagger insertAPS2002Data */
+export interface InsertAPS2002DataBody {
+  PUR_GUINo?: string | null;
+  PUR_VoucherType?: string | null;
+  ACP_Type?: string | null;
+  PUR_GUIDate?: string | null;
+  PUR_VenNo?: string | null;
+  PUR_VenName?: string | null;
+  PUR_VenUniform?: string | null;
+  PUR_Net?: number;
+  PUR_Tax?: number;
+  PUR_Amt?: number;
+  PUR_Uniform?: string | null;
+  PUR_TaxType?: string | null;
+  PUR_DiscNo?: string | null;
+  PUR_RepYYYYMM?: string | null;
+  PUR_DirectType?: string | null;
+  PUR_SeqNo?: number;
+  PUR_Type?: string | null;
+  PUR_Comb_Cnt?: number | null;
+  PUR_Comb?: string | null;
+}
+
+/** Swagger insertARS3001Data */
+export interface InsertARS3001DataBody {
+  ORG_ID?: string | null;
+  ARS_Amt?: number | null;
+  PTA_Date?: string | null;
+  ARS_Date?: string | null;
+  VEN_No?: string | null;
+  VEN_Name?: string | null;
+  VEN_Uniform?: string | null;
+  AccNo?: string | null;
+  NoteDesc?: string | null;
+}
+
+/** Swagger insertAPS4023Data（目前僅 ID） */
+export interface InsertAPS4023DataBody {
+  ID?: number;
+}
+
+/** Swagger insertAPS4002Data */
+export interface InsertAPS4002DataBody {
+  BNK_id?: string | null;
+  DAmt?: number;
+  CAmt?: number;
+  VEN_No?: string | null;
+  Remark?: string | null;
+  Source_Date?: string | null;
+}
+
+/** Swagger insertFIN53010DetailData_NextRequest（五陣列一律送出，無資料為 []） */
+export interface InsertFIN53010DetailDataNextBody {
+  insertAPS3001Datas: InsertAPS3001DataBody[];
+  insertAPS2002Datas: InsertAPS2002DataBody[];
+  insertARS3001Datas: InsertARS3001DataBody[];
+  insertAPS4023Datas: InsertAPS4023DataBody[];
+  insertAPS4002Datas: InsertAPS4002DataBody[];
+}
+
+/** Swagger InsertFIN53010Request */
+export interface InsertFIN53010Request {
+  VouNo?: string | null;
+  VouType?: string | null;
+  VouDate: string;
+  PostFlag?: string | null;
+  VoucherType?: string | null;
+  INV_YN?: string | null;
+  Remark?: string | null;
+  VouAccType?: string | null;
+  Details?: InsertFIN53010DetailBody[] | null;
+  insertFIN53010DetailData_Next: InsertFIN53010DetailDataNextBody;
+}
+
+/** Swagger InsertFIN53010Response 單筆 */
+export interface InsertFIN53010ResponseItem {
+  gls3002_id?: number;
+  DetailCount?: number;
+}
+
+/** Swagger UpdateFIN53010Detail */
+export interface UpdateFIN53010DetailBody {
+  id?: number | null;
+  index?: number;
+  SerNo?: number;
+  AccDC?: string | null;
+  AccNo?: string | null;
+  AccAmt?: number;
+  ORG_ID?: string | null;
+  DetailNo?: string | null;
+  SubDetailNo?: string | null;
+  ProjectNo?: string | null;
+  NoteDesc?: string | null;
+  PTA?: string | null;
+}
+
+/** Swagger updateAPS3001Data / updateARS3001Data 等同 insert 欄位 + id */
+export type UpdateAPS3001DataBody = InsertAPS3001DataBody & { id?: number };
+export type UpdateARS3001DataBody = InsertARS3001DataBody & { id?: number };
+export type UpdateAPS2002DataBody = InsertAPS2002DataBody & { id?: number };
+export type UpdateAPS4023DataBody = { ID?: number; id?: number };
+export type UpdateAPS4002DataBody = InsertAPS4002DataBody & { id?: number };
+
+/** Swagger updateFIN53010DetailData_NextRequest */
+export interface UpdateFIN53010DetailDataNextBody {
+  updateAPS3001Data?: UpdateAPS3001DataBody | null;
+  updateAPS2002Datas?: UpdateAPS2002DataBody[] | null;
+  updateARS3001Data?: UpdateARS3001DataBody | null;
+  updateAPS4023Datas?: UpdateAPS4023DataBody[] | null;
+  updateAPS4002Datas?: UpdateAPS4002DataBody[] | null;
+}
+
+/** Swagger UpdateFIN53010Request */
+export interface UpdateFIN53010Request {
   id: number;
-  UPD_USR_No: string;
-  Details: FIN53010Detail[];
+  CompNo?: string | null;
+  VouNo?: string | null;
+  VouType?: string | null;
+  VouDate: string;
+  PostFlag?: string | null;
+  VoucherType?: string | null;
+  INV_YN?: string | null;
+  Remark?: string | null;
+  VouAccType?: string | null;
+  Details?: UpdateFIN53010DetailBody[] | null;
+  updateFIN53010DetailData_Next?: UpdateFIN53010DetailDataNextBody | null;
 }
 
-export type FIN53010InsertResult = Omit<BaseQueryResponse<any>, 'Data'> & {
-  Data: {
-    DetailCount: number;
-    gls3002_id: number;
-  };
+/** @deprecated 請改用 InsertFIN53010Request */
+export type FIN53010InsertPayload = InsertFIN53010Request;
+
+/** @deprecated 請改用 UpdateFIN53010Request */
+export type FIN53010UpdatePayload = UpdateFIN53010Request;
+
+export type FIN53010InsertResult = Omit<BaseQueryResponse<unknown>, 'Data'> & {
+  Data: InsertFIN53010ResponseItem[] | null;
 };
 
-export type FIN53010UpdateResult = Omit<BaseQueryResponse<any>, 'Data'> & {
-  Data: {
-    [key: string]: any;
-  };
+export type FIN53010UpdateResult = Omit<BaseQueryResponse<unknown>, 'Data'> & {
+  Data: InsertFIN53010ResponseItem[] | null;
 };
 
 export type FIN53010DeleteResult = Omit<BaseQueryResponse<any>, 'Data'> & {
@@ -142,6 +294,12 @@ export type FIN53010DeleteResult = Omit<BaseQueryResponse<any>, 'Data'> & {
     [key: string]: any;
   };
 };
+
+/** updateStatusFIN53010 Request */
+export interface VoidFIN53010Request {
+  /** GLS3001_ID字串(用逗號分隔) */
+  GLS3001_IDList: string;
+}
 export interface VendorList {
   VEN_No: string;
   VEN_Name: string;
@@ -171,4 +329,366 @@ export type NoteDescResponse = Omit<BaseQueryResponse<NoteDescList>, 'Data'> & {
 
 export interface AccDescOption extends Option {
   data?: Option[];
+}
+
+/** queryPOS2013_FIN53010_DropDownList Request */
+export interface QueryPos2013Fin53010Request {
+  VEN_No?: string | null;
+}
+
+/**
+ * queryPOS2013_FIN53010_DropDownList 單筆（Swagger Data.items）
+ */
+export interface Pos2013Fin53010DropdownItem {
+  id?: number;
+  mid?: number;
+  VEN_No?: string | null;
+  VEN_Name?: string | null;
+  VEN_ShortName?: string | null;
+  VEN_EngName?: string | null;
+  VEN_Flag?: string | null;
+  VEN_Uniform?: string | null;
+  VEN_RemitFeeMode?: string | null;
+  VEN_Post?: string | null;
+  VEN_Address?: string | null;
+  VEN_Tel?: string | null;
+  VEN_Fax?: string | null;
+  VEN_Email?: string | null;
+  VEN_GUIAddr?: string | null;
+  VEN_GUIEmail?: string | null;
+  VEN_PayType?: string | null;
+  VEN_BNK_No?: string | null;
+  VEN_BNK_BranchNo?: string | null;
+  VEN_BankAccountNo?: string | null;
+  VEN_AccountName?: string | null;
+  VEN_PayConditionDay?: number | null;
+  VEN_CheckTitle?: string | null;
+  VEN_Status?: string | null;
+  Approved_Date?: string | null;
+  VEN_DiscYN?: string | null;
+  VEN_CTRLYN?: string | null;
+  VEN_DiscDateB?: string | null;
+  VEN_DiscDateE?: string | null;
+  GUI_ID_WIRE?: string | null;
+  VEN_Remark?: string | null;
+  CRT_Date?: string | null;
+  CRT_USR_No?: string | null;
+  CRT_USR_Name?: string | null;
+  UPD_Date?: string | null;
+  UPD_USR_No?: string | null;
+  UPD_USR_Name?: string | null;
+  CHARGE_STAFF?: string | null;
+  CHARGE_TITLE?: string | null;
+  CHARGE_PID?: string | null;
+  CHARGE_TEL?: string | null;
+  CHARGE_ADDR?: string | null;
+  CHARGE_EMAIL?: string | null;
+  ORDER_ADDR?: string | null;
+  ORDER_TEL?: string | null;
+  ORDER_FAX?: string | null;
+  FACTO_ADDR?: string | null;
+  FACTO_TEL?: string | null;
+  FACTO_FAX?: string | null;
+  DELIVERY?: string | null;
+  RETURN_ORDER?: string | null;
+  DELIVERY_LIMIT?: string | null;
+  VEN_ORDER_ADDR?: string | null;
+  VEN_ORDER_TEL?: string | null;
+  VEN_ORDER_FAX?: string | null;
+  VEN_FACTO_ADDR?: string | null;
+  VEN_FACTO_TEL?: string | null;
+  VEN_FACTO_FAX?: string | null;
+  VEN_DELIVERY?: string | null;
+  VEN_RETURN_ORDER?: string | null;
+  VEN_DELIVERY_LIMIT?: string | null;
+  VEN_PostAddr?: string | null;
+}
+
+/**
+ * queryGLS1005_FIN53010_DropDownList 單筆（Swagger Data.items）
+ */
+export interface Gls1005Fin53010DropdownItem {
+  CompNo?: string | null;
+  AccNo?: string | null;
+  AccCName?: string | null;
+  AccEName?: string | null;
+  ClassNo?: string | null;
+  AccDC?: string | null;
+  Ledger_MD?: string | null;
+  ParentAccNo?: string | null;
+  Input_YN?: string | null;
+  ABAT_YN?: string | null;
+  NoteDesc?: string | null;
+  Voucher_Type?: string | null;
+  Budget_YN?: string | null;
+  Org_YN?: string | null;
+  ROC_AccNo?: string | null;
+  IFRS_AccNo?: string | null;
+  DEPRE_AccNo?: string | null;
+  ACCUDEPRE_AccNo?: string | null;
+  EXP_YEAR?: number | null;
+  RESI_YEAR?: number | null;
+  CRT_Date?: string | null;
+  CRT_USR_No?: string | null;
+  CRT_USR_Name?: string | null;
+  UPD_Date?: string | null;
+  UPD_USR_No?: string | null;
+  UPD_USR_Name?: string | null;
+  RESI_VALUE?: number | null;
+}
+
+/** queryAPS4023DetatilData_ByInvoiceNumber Request */
+export interface QueryAps4023DetailDataByInvoiceNumberRequest {
+  InvoiceNumber?: string | null;
+}
+
+/** queryAPS4023DetatilData_ByInvoiceNumber 200 Data（發票主檔） */
+export interface Aps4023DetailDataByInvoiceNumberData {
+  ID?: number;
+  mid?: number;
+  STO_No?: string | null;
+  InvoiceNumber?: string | null;
+  InvoiceType?: string | null;
+  InvoiceDate?: string | null;
+  InvoiceTime?: string | null;
+  Seller_Uniform?: string | null;
+  Buyer_Uniform?: string | null;
+  Buyer_VenNo?: string | null;
+  Buyer_Name?: string | null;
+  Group_Mark?: string | null;
+  Donate_Mark?: string | null;
+  Invoice_VoidDT?: string | null;
+  Invoice_Cancel?: string | null;
+  PUR_Net?: number;
+  PUR_Tax?: number;
+  PUR_Amt?: number;
+  PUR_TaxType?: string | null;
+  CRT_Date?: string | null;
+  CRT_USR_No?: string | null;
+  CRT_USR_Name?: string | null;
+  UPD_Date?: string | null;
+  UPD_USR_No?: string | null;
+  UPD_USR_Name?: string | null;
+  Print_Date?: string | null;
+  ORG_INV_Date?: string | null;
+  ORG_INV_Time?: string | null;
+  TXN_Ret_No?: string | null;
+  INV_RcvTime?: string | null;
+  INV_VoidTime?: string | null;
+  INV_RjtTime?: string | null;
+  Credit_Type?: string | null;
+  Source_Doc_No?: string | null;
+  Voucher_No?: string | null;
+  INV_DeclareYM?: string | null;
+  INV_REMARK?: string | null;
+  SAL_Type?: string | null;
+  AssetType?: string | null;
+  TXN_GUIRemark?: string | null;
+}
+
+/** queryFIN53010DetailData_ByVouNo Request（Swagger FIN53010） */
+export interface QueryFIN53010DetailDataByVouNoRequest {
+  VouNo?: string | null;
+}
+
+/** 應付帳款 APS3001 明細列 */
+export interface FIN53010Aps3001Row {
+  org_id?: string | null;
+  VEN_No?: string | null;
+  VEN_Name?: string | null;
+  VEN_PayType?: string | null;
+  VEN_PayType_Name?: string | null;
+  ACP_Amt?: number | null;
+  ACP_ExpectPayDate?: string | null;
+  ACP_Date?: string | null;
+  VEN_BNK_No?: string | null;
+  VEN_BankAccountNo?: string | null;
+  VEN_AccountName?: string | null;
+  VEN_CTRLYN?: string | null;
+  VEN_CheckTitle?: string | null;
+  AccNo?: string | null;
+  NoteDesc?: string | null;
+  SubDetailNo?: string | null;
+  PTA?: string | null;
+}
+
+/** 進項發票 APS2002 明細列 */
+export interface FIN53010Aps2002Row {
+  VoucherType?: string | null;
+  TrackNo?: string | null;
+  InvoiceNo?: string | null;
+  InvoiceDate?: string | null;
+  DeclareYM?: string | null;
+  VendorTaxID?: string | null;
+  InvoiceUsage?: string | null;
+  InvoiceAmount?: number | null;
+  TaxType?: string | null;
+  NetAmount?: number | null;
+  TaxAmount?: number | null;
+  DeductionCodeDesc?: string | null;
+  CategoryType?: string | null;
+  SourceDocNo?: string | null;
+  TotalCount?: number | null;
+}
+
+/** 進項折讓 APS2002_C 明細列 */
+export interface FIN53010Aps2002_CRow {
+  Orig_RepYYYYMM?: string | null;
+  InvoiceNo?: string | null;
+  VoucherType?: string | null;
+  Orig_InvoiceDate?: string | null;
+  CreditDate?: string | null;
+  RepYYYYMM?: string | null;
+  CreditTypeDesc?: string | null;
+  Orig_Amount?: number | null;
+  BuyerUniformNo?: string | null;
+  ReturnedAmount?: number | null;
+  CreditAmount?: number | null;
+  TaxTypeDesc?: string | null;
+  CreditNetAmount?: number | null;
+  CreditTaxAmount?: number | null;
+}
+
+/** 應收帳款 ARS3001 明細列 */
+export interface FIN53010Ars3001Row {
+  org_id?: string | null;
+  ven_no?: string | null;
+  ven_name?: string | null;
+  ars_amt?: number | null;
+  pta_date?: string | null;
+  ars_date?: string | null;
+  acc_no?: string | null;
+  acc_cname?: string | null;
+  note_desc?: string | null;
+  sub_detail_no?: string | null;
+  match_key?: string | null;
+}
+
+/** 銷項發票 APS4023 明細列 */
+export interface FIN53010Aps4023Row {
+  InvoiceType?: string | null;
+  InvoicePrefix?: string | null;
+  InvoiceNo?: string | null;
+  InvoiceDate?: string | null;
+  DeclareYM?: string | null;
+  BuyerUniform?: string | null;
+  TotalAmount?: number | null;
+  TaxType?: string | null;
+  NetAmount?: number | null;
+  TaxAmount?: number | null;
+  SourceDocNo?: string | null;
+  SummaryCount?: number | null;
+  AssetFlag?: string | null;
+}
+
+/** 銷項折讓 APS4023_C 明細列 */
+export interface FIN53010Aps4023_CRow {
+  Original_Invoice_DeclareYM?: string | null;
+  Invoice_Number?: string | null;
+  Invoice_Type?: string | null;
+  Original_Invoice_Date?: string | null;
+  Credit_Invoice_Date?: string | null;
+  DeclareYM?: string | null;
+  Credit_Type_Flag?: string | null;
+  Buyer_Uniform_No?: string | null;
+  Returned_Amount_Zero?: number | null;
+  Returned_Amount?: number | null;
+  Tax_Type?: string | null;
+  pur_net?: number | null;
+  pur_tax?: number | null;
+}
+
+export interface FIN53010DetailBucket<T> {
+  Details?: T[] | null;
+}
+
+export interface QueryFIN53010DetailDataByVouNoResponse {
+  _APS3001?: FIN53010DetailBucket<FIN53010Aps3001Row> | null;
+  _APS2002?: FIN53010DetailBucket<FIN53010Aps2002Row> | null;
+  _APS2002_C?: FIN53010DetailBucket<FIN53010Aps2002_CRow> | null;
+  _ARS3001?: FIN53010DetailBucket<FIN53010Ars3001Row> | null;
+  _APS4023?: FIN53010DetailBucket<FIN53010Aps4023Row> | null;
+  _APS4023_C?: FIN53010DetailBucket<FIN53010Aps4023_CRow> | null;
+}
+
+export type FIN53010DetailDataByVouNoResult = Omit<BaseQueryResponse<QueryFIN53010DetailDataByVouNoResponse>, 'Data'> & {
+  /** 單筆物件（非陣列） */
+  Data: QueryFIN53010DetailDataByVouNoResponse | null;
+};
+
+/** FIN53010 新增多步驟：應付帳款（Voucher_Type=3） */
+export interface FIN53010StepAP {
+  org_id?: string;
+  ven_no?: string;
+  ven_pay_type?: string;
+  acp_amt?: number;
+  acp_expect_pay_date?: Date | null;
+  acp_date?: Date | null;
+  ven_bnk_no?: string;
+  ven_bank_account?: string;
+  ven_ctrlyn?: string;
+  ven_check_title?: string;
+  acc_no?: string;
+  note_desc?: string;
+}
+
+/** FIN53010 新增多步驟：應收帳款（Voucher_Type=4） */
+export interface FIN53010StepAR {
+  org_id?: string;
+  ven_no?: string;
+  ars_amt?: number;
+  pta_date?: Date | null;
+  ars_date?: Date | null;
+  acc_no?: string;
+  note_desc?: string;
+}
+
+/** FIN53010 新增多步驟：銷項發票（Voucher_Type=5）單列 */
+export interface FIN53010StepSalesInvoiceRow {
+  /** APS4023 主檔 ID（insertAPS4023Data 用，查詢發票帶入） */
+  id?: number;
+  add_flag?: boolean;
+  invoice_type?: string;
+  invoice_prefix?: string;
+  invoice_no?: string;
+  invoice_date?: Date | null;
+  declare_ym?: Date | null;
+  buyer_uniform?: string;
+  total_amount?: number;
+  tax_type?: string;
+  net_amount?: number;
+  tax_amount?: number;
+  source_doc_no?: string;
+  summary_count?: number;
+  asset_flag?: string;
+}
+
+/** FIN53010 新增多步驟：進項發票（Voucher_Type=6）單列 */
+export interface FIN53010StepPurchaseInvoiceRow {
+  add_flag?: boolean;
+  voucher_type?: string;
+  track_no?: string;
+  invoice_no?: string;
+  invoice_date?: Date | null;
+  declare_ym?: Date | null;
+  vendor_tax_id?: string;
+  invoice_usage?: string;
+  invoice_amount?: number;
+  tax_type?: string;
+  net_amount?: number;
+  tax_amount?: number;
+  deduction_code?: string;
+  category_type?: string;
+  source_doc_no?: string;
+  total_count?: number;
+}
+
+/** FIN53010 新增多步驟：銀行存款（Voucher_Type=7） */
+export interface FIN53010StepBankDeposit {
+  ven_no?: string;
+  bank_no?: string;
+  deposit_amt?: number;
+  withdraw_amt?: number;
+  note_desc?: string;
+  txn_date?: Date | null;
 }
