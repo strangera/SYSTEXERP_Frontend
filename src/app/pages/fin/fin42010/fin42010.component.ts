@@ -4,23 +4,26 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
+import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN42010Data } from '@service/api/fin/fin42010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableSubheaderComponent } from './fin42010-table/fin42010-table.component';
 
 @Component({
   selector: 'app-fin42010',
   templateUrl: './fin42010.component.html',
   styleUrl: './fin42010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule, CommonModule, TableSubheaderComponent, ButtonModule]
 })
 export class FIN42010Component extends BasicQueryPageComponent<FIN42010Data> implements OnInit {
   // Upload files
@@ -76,6 +79,9 @@ export class FIN42010Component extends BasicQueryPageComponent<FIN42010Data> imp
     { field: 'totalBudget', header: '預算總金額', visible: true },
   ];
 
+  // 控制變數
+  btnLoading = false;
+
   constructor(
     // private router: Router,
     // private formBuilder: FormBuilder,
@@ -121,46 +127,347 @@ export class FIN42010Component extends BasicQueryPageComponent<FIN42010Data> imp
         december: 0,
         totalBudget: 0
       },
+      {
+        subjectCode: '42',
+        subjectName: '營業租金收入',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '43',
+        subjectName: '其他營業收入',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '',
+        subjectName: '營業收入',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '51',
+        subjectName: '銷貨成本',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '52',
+        subjectName: '其他營業支出',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '',
+        subjectName: '營業成本',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '',
+        subjectName: '營業毛利',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '61',
+        subjectName: '推銷費用',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '62',
+        subjectName: '管理費用',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '',
+        subjectName: '營業費用',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '',
+        subjectName: '營業淨利(淨損)',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '71',
+        subjectName: '營業外收入',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '73',
+        subjectName: '營業外收入',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '74',
+        subjectName: '營業外收入',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '76',
+        subjectName: '營業外支出',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '',
+        subjectName: '營業外收入及支出',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '',
+        subjectName: '稅前損益',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '81',
+        subjectName: '所得稅費用',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '',
+        subjectName: '所得稅費用',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      },
+      {
+        subjectCode: '',
+        subjectName: '本期淨利(淨損)',
+        january: 0,
+        february: 0,
+        march: 0,
+        april: 0,
+        may: 0,
+        june: 0,
+        july: 0,
+        august: 0,
+        september: 0,
+        october: 0,
+        november: 0,
+        december: 0,
+        totalBudget: 0
+      }
     ];
-    this.filteredData = [...this.data];
   }
 
-  // onCreate() {
-  //   if (this.canAdd()) {
-  //     const extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Create,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-  //   }
-  // }
-
-  // onEdit(data: any) {
-  //   if (this.canEdit()) {
-  //     const extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Edit,
-  //         rowdata: data,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['/demoCRU'], extras);
-  //   }
-  // }
-
-  // onDetail(data: any) {
-  //   const extras: NavigationExtras = {
-  //     state: {
-  //       crudstatus: CRUDStatus.Read,
-  //       rowdata: data,
-  //       queryform: this.queryForm,
-  //     },
-  //     skipLocationChange: true,
-  //   };
-  //   this.router.navigate(['/demoCRU'], extras);
-  // }
 }
