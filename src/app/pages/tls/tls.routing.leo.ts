@@ -236,62 +236,62 @@ export const tlsRoutes: Routes = [
 
 
 
-  // // 大分類維護作業
-  // { path: 'tls51010', loadComponent: () => import('./tls51010/tls51010.component').then(m => m.TLS51010Component), data: { progNo: 'TLS51010' } },
-  // // 中分類維護作業
-  // { path: 'tls51020', loadComponent: () => import('./tls51020/tls51020.component').then(m => m.TLS51020Component), data: { progNo: 'TLS51020' } },
-  // // 小分類維護作業
-  // { path: 'tls51030', loadComponent: () => import('./tls51030/tls51030.component').then(m => m.TLS51030Component), data: { progNo: 'TLS51030' } },
-  // // 商品單位設定
-  // { path: 'tls51050', loadComponent: () => import('./tls51050/tls51050.component').then(m => m.TLS51050Component), data: { progNo: 'TLS51050' } },
-  // // 品牌設定作業
-  // { path: 'tls51060', loadComponent: () => import('./tls51060/tls51060.component').then(m => m.TLS51060Component), data: { progNo: 'TLS51060' } },
+  // 大分類維護作業
+  { path: 'tls51010', loadComponent: () => import('./tls51010/tls51010.component').then(m => m.TLS51010Component), data: { progNo: 'TLS51010' } },
+  // 中分類維護作業
+  { path: 'tls51020', loadComponent: () => import('./tls51020/tls51020.component').then(m => m.TLS51020Component), data: { progNo: 'TLS51020' } },
+  // 小分類維護作業
+  { path: 'tls51030', loadComponent: () => import('./tls51030/tls51030.component').then(m => m.TLS51030Component), data: { progNo: 'TLS51030' } },
+  // 商品單位設定
+  { path: 'tls51050', loadComponent: () => import('./tls51050/tls51050.component').then(m => m.TLS51050Component), data: { progNo: 'TLS51050' } },
+  // 品牌設定作業
+  { path: 'tls51060', loadComponent: () => import('./tls51060/tls51060.component').then(m => m.TLS51060Component), data: { progNo: 'TLS51060' } },
   // 商品基本資料
   { path: 'tls51070', loadComponent: () => import('./tls51070/tls51070.component').then(m => m.TLS51070Component), data: { progNo: 'TLS51070' } },
   // 分倉資料處理
-  // { path: 'tls51080', loadComponent: () => import('./tls51080/tls51080.component').then(m => m.TLS51080Component), data: { progNo: 'TLS51080' } },
+  { path: 'tls51080', loadComponent: () => import('./tls51080/tls51080.component').then(m => m.TLS51080Component), data: { progNo: 'TLS51080' } },
   // 品牌每月可進貨限額維護作業
   { path: 'tls51110', loadComponent: () => import('./tls51110/tls51110.component').then(m => m.TLS51110Component), data: { progNo: 'TLS51110' } },
-  // // 品牌進貨折數設定作業
-  // { path: 'tls51130', loadComponent: () => import('./tls51130/tls51130.component').then(m => m.TLS51130Component), data: { progNo: 'TLS51130' } },
-  // // 自營專櫃收銀扣庫維護作業
-  // { path: 'tls51140', loadComponent: () => import('./tls51140/tls51140.component').then(m => m.Tls51140Component), data: { progNo: 'Tls51140' } },
-  // // 採購單維護作業
-  // { path: 'tls52010', loadComponent: () => import('./tls52010/tls52010.component').then(m => m.TLS52010Component), data: { progNo: 'TLS52010' } },
-  // // 退貨單維護作業
-  // { path: 'tls52020', loadComponent: () => import('./tls52020/tls52020.component').then(m => m.TLS52020Component), data: { progNo: 'TLS52020' } },
-  // // 進貨驗收作業
-  // { path: 'tls52030', loadComponent: () => import('./tls52030/tls52030.component').then(m => m.TLS52030Component), data: { progNo: 'TLS52030' } },
-  // // 退貨驗收作業
-  // { path: 'tls52040', loadComponent: () => import('./tls52040/tls52040.component').then(m => m.TLS52040Component), data: { progNo: 'TLS52040' } },
-  // // 進價/售價變價作業
-  // { path: 'tls52050', loadComponent: () => import('./tls52050/tls52050.component').then(m => m.TLS52050Component), data: { progNo: 'TLS52050' } },
-  // // 盤點單開立
-  // { path: 'tls53010', loadComponent: () => import('./tls53010/tls53010.component').then(m => m.TLS53010Component), data: { progNo: 'TLS53010' } },
-  // // 盤點資料匯入作業
-  // { path: 'tls53020', loadComponent: () => import('./tls53020/tls53020.component').then(m => m.TLS53020Component), data: { progNo: 'TLS53020' } },
-  // // 盤點資料維護作業
-  // { path: 'tls53030', loadComponent: () => import('./tls53030/tls53030.component').then(m => m.TLS53030Component), data: { progNo: 'TLS53030' } },
-  // // 進貨日結作業
-  // { path: 'tls55010', loadComponent: () => import('./tls55010/tls55010.component').then(m => m.TLS55010Component), data: { progNo: 'TLS55010' } },
-  // // 自營交易修正作業
-  // { path: 'tls55020', loadComponent: () => import('./tls55020/tls55020.component').then(m => m.TLS55020Component), data: { progNo: 'TLS55020' } },
-  // { path: 'tls55020cru', loadComponent: () => import('./tls55020/tls55020-cru/tls55020-cru.component').then(m => m.TLS55020CRUComponent), data: { progNo: 'TLS55020' } },
-  // // 廠商發票折讓作業
-  // { path: 'tls55030', loadComponent: () => import('./tls55030/tls55030.component').then(m => m.TLS55030Component), data: { progNo: 'TLS55030' } },
-  // // 廠商請款作業
-  // { path: 'tls55040', loadComponent: () => import('./tls55040/tls55040.component').then(m => m.TLS55040Component), data: { progNo: 'TLS55040' } },
-  // // 月結帳作業
-  // { path: 'tls55050', loadComponent: () => import('./tls55050/tls55050.component').then(m => m.TLS55050Component), data: { progNo: 'TLS55050' } },
-  // // 銷貨日報查詢列印
-  // { path: 'tls55070', loadComponent: () => import('./tls55070/tls55070.component').then(m => m.TLS55070Component), data: { progNo: 'TLS55070' } },
-  // // 商品庫存查詢作業
-  // { path: 'tls56010', loadComponent: () => import('./tls56010/tls56010.component').then(m => m.TLS56010Component), data: { progNo: 'TLS56010' } },
-  // // 商品領用(內部)作業
-  // { path: 'tls56020', loadComponent: () => import('./tls56020/tls56020.component').then(m => m.TLS56020Component), data: { progNo: 'TLS56020' } },
-  // // 商品退回(內部)作業
-  // { path: 'tls56030', loadComponent: () => import('./tls56030/tls56030.component').then(m => m.TLS56030Component), data: { progNo: 'TLS56030' } },
-  // // 倉別調撥申請維護
+  // 品牌進貨折數設定作業
+  { path: 'tls51130', loadComponent: () => import('./tls51130/tls51130.component').then(m => m.TLS51130Component), data: { progNo: 'TLS51130' } },
+  // 自營專櫃收銀扣庫維護作業
+  { path: 'tls51140', loadComponent: () => import('./tls51140/tls51140.component').then(m => m.Tls51140Component), data: { progNo: 'Tls51140' } },
+  // 採購單維護作業
+  { path: 'tls52010', loadComponent: () => import('./tls52010/tls52010.component').then(m => m.TLS52010Component), data: { progNo: 'TLS52010' } },
+  // 退貨單維護作業
+  { path: 'tls52020', loadComponent: () => import('./tls52020/tls52020.component').then(m => m.TLS52020Component), data: { progNo: 'TLS52020' } },
+  // 進貨驗收作業
+  { path: 'tls52030', loadComponent: () => import('./tls52030/tls52030.component').then(m => m.TLS52030Component), data: { progNo: 'TLS52030' } },
+  // 退貨驗收作業
+  { path: 'tls52040', loadComponent: () => import('./tls52040/tls52040.component').then(m => m.TLS52040Component), data: { progNo: 'TLS52040' } },
+  // 進價/售價變價作業
+  { path: 'tls52050', loadComponent: () => import('./tls52050/tls52050.component').then(m => m.TLS52050Component), data: { progNo: 'TLS52050' } },
+  // 盤點單開立
+  { path: 'tls53010', loadComponent: () => import('./tls53010/tls53010.component').then(m => m.TLS53010Component), data: { progNo: 'TLS53010' } },
+  // 盤點資料匯入作業
+  { path: 'tls53020', loadComponent: () => import('./tls53020/tls53020.component').then(m => m.TLS53020Component), data: { progNo: 'TLS53020' } },
+  // 盤點資料維護作業
+  { path: 'tls53030', loadComponent: () => import('./tls53030/tls53030.component').then(m => m.TLS53030Component), data: { progNo: 'TLS53030' } },
+  // 進貨日結作業
+  { path: 'tls55010', loadComponent: () => import('./tls55010/tls55010.component').then(m => m.TLS55010Component), data: { progNo: 'TLS55010' } },
+  // 自營交易修正作業
+  { path: 'tls55020', loadComponent: () => import('./tls55020/tls55020.component').then(m => m.TLS55020Component), data: { progNo: 'TLS55020' } },
+  { path: 'tls55020cru', loadComponent: () => import('./tls55020/tls55020-cru/tls55020-cru.component').then(m => m.TLS55020CRUComponent), data: { progNo: 'TLS55020' } },
+  // 廠商發票折讓作業
+  { path: 'tls55030', loadComponent: () => import('./tls55030/tls55030.component').then(m => m.TLS55030Component), data: { progNo: 'TLS55030' } },
+  // 廠商請款作業
+  { path: 'tls55040', loadComponent: () => import('./tls55040/tls55040.component').then(m => m.TLS55040Component), data: { progNo: 'TLS55040' } },
+  // 月結帳作業
+  { path: 'tls55050', loadComponent: () => import('./tls55050/tls55050.component').then(m => m.TLS55050Component), data: { progNo: 'TLS55050' } },
+  // 銷貨日報查詢列印
+  { path: 'tls55070', loadComponent: () => import('./tls55070/tls55070.component').then(m => m.TLS55070Component), data: { progNo: 'TLS55070' } },
+  // 商品庫存查詢作業
+  { path: 'tls56010', loadComponent: () => import('./tls56010/tls56010.component').then(m => m.TLS56010Component), data: { progNo: 'TLS56010' } },
+  // 商品領用(內部)作業
+  { path: 'tls56020', loadComponent: () => import('./tls56020/tls56020.component').then(m => m.TLS56020Component), data: { progNo: 'TLS56020' } },
+  // 商品退回(內部)作業
+  { path: 'tls56030', loadComponent: () => import('./tls56030/tls56030.component').then(m => m.TLS56030Component), data: { progNo: 'TLS56030' } },
+  // 倉別調撥申請維護
   // { path: 'tls56040', loadComponent: () => import('./tls56040/tls56040.component').then(m => m.TLS56040Component), data: { progNo: 'TLS56040' } },
   // // 倉別調撥發貨作業
   // { path: 'tls56050', loadComponent: () => import('./tls56050/tls56050.component').then(m => m.TLS56050Component), data: { progNo: 'TLS56050' } },

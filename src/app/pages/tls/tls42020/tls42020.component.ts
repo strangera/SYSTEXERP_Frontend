@@ -144,6 +144,10 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
   onFileUpload(event: FileUploadHandlerEvent) {
     const file = event.files[0];
     this.tls42020Service.uploadTLS42020(file, this.queryForm2.value.uploadType!).pipe(untilDestroyed(this)).subscribe(res => {
+      if (res.Status !== '0000') {
+        this.messageService.errorBubble(res.Message);
+        return;
+      }
       this.messageService.successBubble(res.Message);
       // 使用封裝的清空方法
       this.fileUploadComponent.clearFiles();
