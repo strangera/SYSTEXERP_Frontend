@@ -61,14 +61,12 @@ export interface FIN61010InsertRequest {
 
 export interface VoidItem {
   VoidDate?: string | null;
-  VoidBegNo?: string;
-  VoidEndNo?: string;
+  CHK_No?: string;
   VoidReason?: string;
 }
 
 export interface FIN61010VoidHistoryData {
-  VoidBegNo: string;
-  VoidEndNo: string;
+  CHK_No: string;
   VoidDate: string;
   VoidReason: string;
 }

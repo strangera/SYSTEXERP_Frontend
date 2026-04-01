@@ -10,10 +10,10 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { AddButton, Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
@@ -76,11 +76,25 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     this.loading = this.tableLoading();
   }, { allowSignalWrites: true });
 
+  public readonly voidingRowId = signal<number | null>(null);
+
+  public readonly addButton: AddButton[] = [
+    {
+      label: '作廢',
+      icon: 'pi pi-trash text-red-500',
+      action: (rowData: FIN53010Data) => this.onVoid(rowData),
+      disabled: (rowData: FIN53010Data) => rowData.PostFlag !== '1',
+      loading: (rowData: FIN53010Data) => this.voidingRowId() === rowData.id,
+    },
+  ];
+
   public readonly columns: Column[] = [
     { field: 'VouNo', header: '傳票號碼', align: 'left' },
     { field: 'VouType', header: '傳票類別', align: 'left', format: d => this.service.vouTypeOptions.find(({ value }) => value === d)?.label ?? d },
     { field: 'VouDate', header: '傳票日期', align: 'left', format: d => this.date.transform(d, 'yyyy/MM/dd') ?? d },
+    { field: 'PostFlag', header: '傳票狀態', align: 'left', format: v => this.service.postFlagOptions.find(item => String(item.value) === String(v))?.label ?? v },
     { field: 'Remark', header: '傳票摘要', align: 'left', format: d => this.service.noteDescMap().get(d)?.label ?? d },
+    { field: 'VouTypeName', header: '傳票型態', align: 'left', format: v => this.service.voucherTypeMap().get(String(v))?.label ?? String(v) },
     { field: 'AccAmt', header: '傳票金額', align: 'right', format: d => formatAmount(d), style: 'text-right' },
     { field: 'DetailCount', header: '明細筆數', align: 'right' },
   ];
@@ -116,6 +130,26 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
           this.totalRecords.set(res.TotalCount || 0);
         },
       });
+    });
+  }
+
+  public onVoid(rowData: FIN53010Data): void {
+    if (rowData.PostFlag !== '1') return;
+    this.messageService.confirm({
+      header: '作廢確認',
+      message: `是否作廢傳票 ${rowData.VouNo} ?`,
+      accept: () => {
+        this.voidingRowId.set(rowData.id);
+        this.service.voidFIN53010Data([rowData.id]).pipe(
+          finalize(() => this.voidingRowId.set(null)),
+        ).subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.messageService.successBubble('作廢成功');
+            this.onSubmit();
+          },
+        });
+      },
     });
   }
 

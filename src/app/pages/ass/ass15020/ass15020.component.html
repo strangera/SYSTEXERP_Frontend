@@ -3,146 +3,66 @@
     <div class="col" style="flex: 1">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="保管部門"
-              controlName="keepingDepartment"
-              [options]="keepingDepartmentOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.keepingDepartment"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="保管部門" controlName="keepingDepartment" [options]="keepingDepartmentOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.keepingDepartment"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="保管人"
-              controlName="keepingPerson"
-              [options]="keepingPersonOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.keepingPerson"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="使用單位" controlName="usageUnit" [options]="usageUnitOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.usageUnit" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="使用部門" controlName="usageDepartment" [options]="usageDepartmentOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.usageDepartment"
+              [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="使用部門"
-              controlName="usageDepartment"
-              [options]="keepingDepartmentOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.usageDepartment"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="使用人員" controlName="usagePerson" [options]="usagePersonOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.usagePerson" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="使用人員"
-              controlName="usagePerson"
-              [options]="keepingPersonOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.usagePerson"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="財產編號" controlName="propertyCode" [options]="propertyCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.propertyCode" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="品項編號" controlName="itemCode" [options]="itemCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.itemCode" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="財產編號"
-              controlName="propertyCode"
-              [options]="propertyCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.propertyCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="財產類型" controlName="propertyType" [options]="propertyTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.propertyType" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品項編號"
-              controlName="itemCode"
-              [options]="itemCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.itemCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="資產狀態" controlName="assetStatus" [options]="assetStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.assetStatus" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="財產類型"
-              controlName="propertyType"
-              [options]="propertyTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.propertyType"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="資產狀態"
-              controlName="assetStatus"
-              [options]="assetsStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.assetStatus"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="購入日期"
-              [startControl]="queryForm.controls.purchaseDateFrom"
-              [endControl]="queryForm.controls.purchaseDateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="購入日期"
+              [startControl]="queryForm.controls.purchaseDateFrom" [endControl]="queryForm.controls.purchaseDateTo"
+              [submitted]="submitted"></app-calendar-range>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
-          <app-radiobutton
-            label="群組分類"
-            groupname="grouping"
-            [control]="queryForm.controls.grouping"
-            [options]="groupingOptions"
-            [submitted]="submitted"
-          ></app-radiobutton>
+          <app-radiobutton label="群組分類" groupname="grouping" [control]="queryForm.controls.grouping"
+            [options]="groupingOptions" [submitted]="submitted"></app-radiobutton>
         </div>
         <hr />
         <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
+          <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+            <app-button btnType="clear" [form]="queryForm" (onClick)="onClearForm()"></app-button>
+            <app-button btnType="query" [loading]="loading"></app-button>
           </div>
         </div>
       </form>
@@ -150,12 +70,18 @@
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+  <div class="col-12">
+    <app-table-report [data]="tableData()" [columns]="columns" [totalRecords]="totalRecords()"
+      [loading]="tableLoading()" dataKey="ID" tableKey="ASS15020_Data" [showCheckBox]="false" [showEdit]="false"
+      [showDetail]="false" [showDelete]="false" [queryFunction]="queryFunction" [showManage]="false"
+      [lastQueryBody]="lastQueryBody" (dataChange)="tableData.set($event)"
+      (detail)="onDetail($event)">
+      <header>
+        <div class="flex justify-content-end gap-2">
+          <p-button label="匯出 Excel" icon="pi pi-file-excel" [loading]="exportExcelLoading"
+            [disabled]="tableData().length === 0" (click)="onExportExcel()"></p-button>
+        </div>
+      </header>
+    </app-table-report>
   </div>
 </div>
