@@ -83,7 +83,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
     newPassword: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(8), this.validationService.passwordStrengthValidator()]],
     confirmPassword: ['', [Validators.required]],
   }, { validators: this.validationService.passwordsMatchValidator('newPassword', 'confirmPassword') });
-  strongRegex = '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>\\-_+=`~[\\]\\\\;\']).{4,8}$';
+  strongRegex = '^(?=.*[a-z])(?=.*[0-9]).{4,8}$';
   formButtonLoading = false;
   noClose = false;
 

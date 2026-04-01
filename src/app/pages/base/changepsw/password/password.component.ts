@@ -24,7 +24,7 @@ export class PasswordComponent extends BasicKitComponent implements OnInit {
   @Input() errorForGroup = false;
   @Input() showPasswordRule = true; // 是否顯示密碼規則
   @Input() feedback = true; // 是否顯示回饋訊息
-  strongRegex = '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>\\-_+=`~[\\]\\\\;\']).{4,8}$';
+  strongRegex = '^(?=.*[a-z])(?=.*[0-9]).{4,8}$';
 
   ngOnInit(): void {
     if (this.disabled) {

@@ -48,7 +48,7 @@ export class PagesComponent implements OnInit {
   );
 
   // 可有可無，沒用到可以刪掉
-  strongRegex = '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>\\-_+=`~[\\]\\\\;\']).{4,8}$';
+  strongRegex = '^(?=.*[a-z])(?=.*[0-9]).{4,8}$';
 
   formButtonLoading = false;
   noClose = false;
