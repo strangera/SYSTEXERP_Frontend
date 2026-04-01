@@ -80,10 +80,10 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
   form = this.formBuilder.group({
     code: [{ value: '', disabled: true }],
     oldPassword: ['', [Validators.required]],
-    newPassword: ['', [Validators.required, this.validationService.passwordStrengthValidator()]],
+    newPassword: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(8), this.validationService.passwordStrengthValidator()]],
     confirmPassword: ['', [Validators.required]],
   }, { validators: this.validationService.passwordsMatchValidator('newPassword', 'confirmPassword') });
-  strongRegex = '^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>-_+=`~[]\\;\']).{4,8}$';
+  strongRegex = '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>\\-_+=`~[\\]\\\\;\']).{4,8}$';
   formButtonLoading = false;
   noClose = false;
 
@@ -258,31 +258,32 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
 
   onSubmit(frm: FormGroup): void {
     frm.markAllAsTouched();
-    if (frm.valid) {
-      this.formButtonLoading = true;
-      const query = {
-        User_No: this.user?.user_No || '',
-        Old_password: this.encryptionService.getPassword(this.user?.user_No || '', frm.value.oldPassword),
-        New_password: this.encryptionService.getPassword(this.user?.user_No || '', frm.value.newPassword),
-        PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 密碼到期日設為90天後
-      };
-      this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
-        this.userCodeService.changePassword(query).pipe(
-          untilDestroyed(this),
-          finalize(() => this.formButtonLoading = false) // 無論成功失敗，都重置按鈕載入狀態
-        ).subscribe({
-          next: () => {
-            this.messageService.successBubble('密碼修改成功');
-            this.authService.logout(); // 修改密碼成功後登出
-            // this.formButtonLoading = false; // 這裡不需要，因為 finalize 會處理
-          },
-          error: (err) => {
-            // 錯誤處理會由 ErrorHandlerService 負責顯示訊息
-            console.error('Change password failed:', err);
-            // this.formButtonLoading = false; // 這裡不需要，因為 finalize 會處理
-          },
-        })
-      );
-    }
+    if (!frm.valid) return;
+
+    this.formButtonLoading = true;
+    const query = {
+      User_No: this.user?.user_No || '',
+      Old_password: this.encryptionService.getPassword(this.user?.user_No || '', frm.value.oldPassword),
+      New_password: this.encryptionService.getPassword(this.user?.user_No || '', frm.value.newPassword),
+      PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+    this.subscriptions.push(
+      this.userCodeService.changePassword(query).pipe(
+        untilDestroyed(this),
+        finalize(() => this.formButtonLoading = false)
+      ).subscribe({
+        next: (response) => {
+          if (response && response.Status === '0000') {
+            this.messageService.successBubble(response?.Message, '更新成功');
+            this.authService.logout();
+          } else {
+            this.messageService.errorBubble(response?.Message, '更新失敗');
+          }
+        },
+        error: (err) => {
+          console.error('Change password failed:', err);
+        },
+      })
+    );
   }
 }

@@ -41,14 +41,14 @@ export class PagesComponent implements OnInit {
     {
       code: [{ value: '', disabled: true }],
       oldPassword: ['', [Validators.required]],
-      newPassword: ['', [Validators.required, this.validationService.passwordStrengthValidator()]],
+      newPassword: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(8), this.validationService.passwordStrengthValidator()]],
       confirmPassword: ['', [Validators.required]],
     },
     { validators: this.validationService.passwordsMatchValidator('newPassword', 'confirmPassword') },
   );
 
   // 可有可無，沒用到可以刪掉
-  strongRegex = '^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>-_+=`~[]\\;\']).{4,8}$';
+  strongRegex = '^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>\\-_+=`~[\\]\\\\;\']).{4,8}$';
 
   formButtonLoading = false;
   noClose = false;
@@ -107,9 +107,13 @@ export class PagesComponent implements OnInit {
         finalize(() => (this.formButtonLoading = false)),
       )
       .subscribe({
-        next: () => {
-          this.messageService.successBubble('密碼修改成功');
-          this.authService.logout();
+        next: (response) => {
+          if (response && response.Status === '0000') {
+            this.messageService.successBubble(response?.Message, '更新成功');
+            this.authService.logout();
+          } else {
+            this.messageService.errorBubble(response?.Message, '更新失敗');
+          }
         },
         error: (err) => {
           console.error('Change password failed:', err);
