@@ -22,6 +22,7 @@ import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/i
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -49,6 +50,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
     MultiSelectComponent,
     InputTextComponent,
     ButtonComponent,
+    CheckboxModule,
     DialogModule,
     RadioButtonModule,
     TranslateModule,
@@ -121,6 +123,9 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     tlt_building: [''],
     tlt_floor: [],
     org_id: [],
+    ORG_TXN_DateStart: [null],
+    ORG_TXN_DateEnd: [null],
+    ExcludeNoGUI: [false],
     ...createPaginationConfig([
       { field: 'tlt_no', order: 1 },
       { field: 'TXN_Date', order: 1 },
@@ -309,6 +314,10 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
       ...(this.toNumOrUndef(raw?.TXN_No_Start) != null ? { TXN_No_Start: this.toNumOrUndef(raw?.TXN_No_Start) } : {}),
       ...(this.toNumOrUndef(raw?.TXN_No_End) != null ? { TXN_No_End: this.toNumOrUndef(raw?.TXN_No_End) } : {}),
+
+      ...(this.toDateOnly(raw?.ORG_TXN_DateStart) ? { ORG_TXN_DateStart: this.toDateOnly(raw?.ORG_TXN_DateStart) } : {}),
+      ...(this.toDateOnly(raw?.ORG_TXN_DateEnd) ? { ORG_TXN_DateEnd: this.toDateOnly(raw?.ORG_TXN_DateEnd) } : {}),
+      ExcludeNoGUI: raw?.ExcludeNoGUI === true,
 
       pageIndex: Number(raw?.pageIndex) || 1,
       pageSize: Number(raw?.pageSize) || 30,
@@ -517,64 +526,64 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   // =========================
   // 匯出：PDF（Blob 下載，避免導頁成 PDF Viewer）
   // =========================
-onExportPDF() {
-  if (!this.historyRequestBody) return this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-  if (this.lastTotalCount <= 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
+  onExportPDF() {
+    if (!this.historyRequestBody) return this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    if (this.lastTotalCount <= 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
 
-  this.btnLoading = true;
+    this.btnLoading = true;
 
-  this.tls23040Service.exportTLS23040PDF(this.historyRequestBody)
-    .pipe(
-      untilDestroyed(this),
-      finalize(() => (this.btnLoading = false))
-    )
-    .subscribe({
-      next: (res) => {
-        const urlPath = res?.Data; // 後端回 /temp/xxx.pdf 或 http://localhost:5142/temp/xxx.pdf
-        if (!urlPath) {
-          this.messageService?.warnBubble?.(res?.ReturnMessage || '沒有回傳 PDF 路徑');
-          return;
-        }
+    this.tls23040Service.exportTLS23040PDF(this.historyRequestBody)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.btnLoading = false))
+      )
+      .subscribe({
+        next: (res) => {
+          const urlPath = res?.Data; // 後端回 /temp/xxx.pdf 或 http://localhost:5142/temp/xxx.pdf
+          if (!urlPath) {
+            this.messageService?.warnBubble?.(res?.ReturnMessage || '沒有回傳 PDF 路徑');
+            return;
+          }
 
-        // ✅ 直接開新分頁到後端實際位置（避免 4200 的 /temp 404）
-        const openUrl = this.resolveTempUrlForOpen(urlPath);
-        if (!openUrl) {
-          this.messageService?.warnBubble?.('PDF 路徑不正確，無法開啟。');
-          return;
-        }
+          // ✅ 直接開新分頁到後端實際位置（避免 4200 的 /temp 404）
+          const openUrl = this.resolveTempUrlForOpen(urlPath);
+          if (!openUrl) {
+            this.messageService?.warnBubble?.('PDF 路徑不正確，無法開啟。');
+            return;
+          }
 
-        window.open(openUrl, '_blank', 'noopener');
-      },
-      error: () => this.messageService?.errorBubble?.('PDF 匯出失敗'),
-    });
-}
-/** ✅ 給「開分頁」用：確保一定指向後端 host（例如 5142） */
-private resolveTempUrlForOpen(pathOrUrl: string): string {
-  if (!pathOrUrl) return '';
+          window.open(openUrl, '_blank', 'noopener');
+        },
+        error: () => this.messageService?.errorBubble?.('PDF 匯出失敗'),
+      });
+  }
+  /** ✅ 給「開分頁」用：確保一定指向後端 host（例如 5142） */
+  private resolveTempUrlForOpen(pathOrUrl: string): string {
+    if (!pathOrUrl) return '';
 
-  // 後端若已回完整 URL，直接用
-  if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
+    // 後端若已回完整 URL，直接用
+    if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
 
-  // 抽出 /temp/xxx.pdf
-  const idx = pathOrUrl.indexOf('/temp/');
-  const tempPath =
-    idx >= 0 ? pathOrUrl.substring(idx) :
-    pathOrUrl.startsWith('/') ? pathOrUrl :
-    `/${pathOrUrl}`;
+    // 抽出 /temp/xxx.pdf
+    const idx = pathOrUrl.indexOf('/temp/');
+    const tempPath =
+      idx >= 0 ? pathOrUrl.substring(idx) :
+        pathOrUrl.startsWith('/') ? pathOrUrl :
+          `/${pathOrUrl}`;
 
-  // 用 apiUrl 的 host 組完整 URL（例如 http://localhost:5142 + /temp/xxx.pdf）
-  const apiBase = (this.tls23040Service.apiUrl || '').replace(/\/+$/, '');
-  return `${apiBase}${tempPath}`;
-}
+    // 用 apiUrl 的 host 組完整 URL（例如 http://localhost:5142 + /temp/xxx.pdf）
+    const apiBase = (this.tls23040Service.apiUrl || '').replace(/\/+$/, '');
+    return `${apiBase}${tempPath}`;
+  }
 
 
-/** 把後端回來的 Data 轉成 /temp/...（同源 proxy 用） */
-private toTempPath(pathOrUrl: string): string {
-  const idx = pathOrUrl.indexOf('/temp/');
-  if (idx >= 0) return pathOrUrl.substring(idx); // 變成 /temp/xxx.pdf
-  if (pathOrUrl.startsWith('/')) return pathOrUrl;
-  return `/${pathOrUrl}`;
-}
+  /** 把後端回來的 Data 轉成 /temp/...（同源 proxy 用） */
+  private toTempPath(pathOrUrl: string): string {
+    const idx = pathOrUrl.indexOf('/temp/');
+    if (idx >= 0) return pathOrUrl.substring(idx); // 變成 /temp/xxx.pdf
+    if (pathOrUrl.startsWith('/')) return pathOrUrl;
+    return `/${pathOrUrl}`;
+  }
 
 
   onExportXLSX() {
