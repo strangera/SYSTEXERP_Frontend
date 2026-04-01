@@ -60,7 +60,7 @@ export class FIN63050CRUComponent extends BasicCruPageComponent<Fin63050ListData
     super();
   }
   ngOnInit(): void {
-    this.initializePage('CPM12020', this.dataForm);
+    this.initializePage('FIN63050', this.dataForm);
     if (this.rowdata) {
       this.fin63050Service.queryFIN63050Detail({ ChkNo: this.rowdata.CheckNo }).pipe(untilDestroyed(this)).subscribe(response => {
         if (!response.Data.ErrorMsg) {

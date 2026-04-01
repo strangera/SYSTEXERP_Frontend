@@ -14,7 +14,7 @@ import { validateMinNumber, validateRequired } from '@shared/componentkit/table-
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
 import { PanelModule } from 'primeng/panel';
-import { debounceTime, finalize, forkJoin, map, withLatestFrom } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize, forkJoin, map, of } from 'rxjs';
 import { IGetBudgetAmountRequest, IPODetail, IPOS2004DetailData, IQueryPOS2004DetailResponse, ITLS52010Data, ITLS52010Request, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -87,7 +87,6 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       type: 'input',
       onBlur: (rowData: IPOS2004DetailData, value: string, col: EditColumn, index: number) => this.onPLU_MagNoBlur(rowData, value, col, index),
       validate: [validateRequired],
-
     },
     { field: 'PLU_MagNo', header: '商品管理編號', },
     { field: 'PLU_Name', header: '商品名稱' },
@@ -172,7 +171,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           const buyPrc = newData.PLU_SalePrc_UNI || 0;
           const salePrc = newData.PLU_SalePrc || 0;
           const taxType = newData.PLU_StockTaxType;
-          const subQty = 1; // 預設數量為 1
+          const subQty = 0; // 預設數量為 1
 
           const buyNet = Math.round(subQty * buyPrc);
           const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;
@@ -270,115 +269,102 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   private loadDropdownOptions(): void {
     const { VEN_No, LOGO_No, HOS_No, APPLY_Date } = this.dataForm.controls;
 
-    // 1. 取得完整資料並設定初始選項
+    // --- A. 初始資料載入 (保留原本的倉別與關聯資料) ---
     forkJoin({
-      // 獲取所有倉別 (用於構建 HOS_No 的基本選項列表)
       warehouse: this.dropdown.queryPos2034(),
-      // 獲取品牌與倉別的完整對應關係 (使用新的 API)
       logoAccorHos: this.dropdown.queryLogoAccorHOS({}).pipe(
-        // 新 API 回傳的是 Option[] 格式，我們需要還原或使用其內建的物件屬性
         map(options => options?.map(opt => opt as unknown as LogoAccorHosItem) ?? [])
       ),
     }).pipe(untilDestroyed(this)).subscribe(({ warehouse, logoAccorHos }) => {
-      // a. 儲存完整的品牌-倉別關聯數據
       this.fullLogoAccorHosData = logoAccorHos;
-
-      // b. 構建並儲存所有不重複的品牌選項 (從關聯數據中提取)
-      const uniqueLogoNos = new Map<string | number, string>();
-      logoAccorHos.forEach(item => {
-        if (!uniqueLogoNos.has(item.LOGO_No)) {
-          uniqueLogoNos.set(item.LOGO_No, item.LOGO_CH_NAME);
-        }
-      });
-      this.fullLogoOptions = Array.from(uniqueLogoNos).map(([value, label]) => ({
-        value: value,
-        label: `${value} - ${label}`,
-      })).sort((a, b) => {
-        const valA = String(a.value);
-        const valB = String(b.value);
-        return valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
-      });
-
-      // c. 儲存所有倉別選項 (直接使用 queryPos2034 的結果)
       this.fullWarehouseOptions = warehouse || [];
 
-      // 初始時，兩個選單都顯示所有選項
-      this.filteredLogoOptions = this.fullLogoOptions;
+      // 初始品牌清單 (由 queryPluLogo 取得完整清單，之後會被動態覆蓋)
+      this.dropdown.queryPluLogo().subscribe(res => {
+        this.fullLogoOptions = res || [];
+        this.filteredLogoOptions = this.fullLogoOptions;
+      });
+
       this.filteredWarehouseOptions = this.fullWarehouseOptions;
-
-      // d. 初始化過濾：根據表單現有值進行雙向過濾
-      this.filterWarehouseOptions(LOGO_No.value, { initialLoad: true });
-      this.filterLogoOptions(HOS_No.value, { initialLoad: true });
     });
 
-    // 2. 監聽表單欄位變化
-    // 監聽廠商編號變化 (邏輯不變)
-    VEN_No.valueChanges.pipe(withLatestFrom(this.vendorOptions), untilDestroyed(this)).subscribe(() => {
-      this.calculateTotals();
-      [this.data, this.selectedItems, this.dialogData] = [[], [], []];
+    // --- B. [廠商 ↔ 品牌] 雙向連動 ---
+
+    // 1. 監聽廠商變動 -> 更新品牌清單
+    VEN_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this), distinctUntilChanged()).subscribe(venNo => {
+      if (venNo) {
+        // 調用雙向 API：由廠商查品牌
+        this.dropdown.queryLogoByVen(venNo).subscribe(opts => {
+          this.filteredLogoOptions = opts;
+          // 如果當前品牌不在新清單內，清空它
+          if (LOGO_No.value && !opts?.some(o => o.value === LOGO_No.value)) {
+            LOGO_No.setValue(null, { emitEvent: false });
+          }
+        });
+      } else {
+        this.filteredLogoOptions = this.fullLogoOptions;
+      }
+      this.resetDetails();
     });
 
-    // 監聽 LOGO_No 變化
-    LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((logoNo) => {
-      // a. 過濾 HOS_No 的選項
-      this.filterWarehouseOptions(logoNo);
+    // 2. 監聽品牌變動 -> 更新廠商清單 + 原本的倉別過濾
+    LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this), distinctUntilChanged()).subscribe(logoNo => {
+      if (logoNo) {
+        // (1) 更新廠商下拉選單 (雙向連動新加的)
+        this.dropdown.queryVenByLogo(logoNo).subscribe(opts => {
+          this.vendorOptions = of(opts);
+          if (VEN_No.value && !opts?.some(o => o.value === VEN_No.value)) {
+            VEN_No.setValue(null, { emitEvent: false });
+          }
+        });
 
-      // b. 設置建議的 HOS_No (如果 HOS_No 欄位目前是空的，則嘗試填入唯一的對應倉別)
-      const associatedHOSNos = this.fullLogoAccorHosData
-        .filter(item => item.LOGO_No === logoNo)
-        .map(item => item.HOS_No);
-      const uniqueAssociatedHOSNos = [...new Set(associatedHOSNos)];
+        // (2) 執行原本的倉別過濾邏輯
+        this.filterWarehouseOptions(logoNo);
 
-      // 如果只有一個倉別對應，則自動帶入
-      if (uniqueAssociatedHOSNos.length === 1 && HOS_No.value !== uniqueAssociatedHOSNos[0]) {
-        HOS_No.setValue(uniqueAssociatedHOSNos[0], { emitEvent: false });
-        // 接著呼叫 filterLogoOptions 來確保 LOGO_No 的選項列表維持一致
-        this.filterLogoOptions(HOS_No.value);
-      } else if (!logoNo) {
-        // LOGO_No 被清除時，清空 HOS_No
+        // 自動帶入倉別 (原本邏輯)
+        const associatedHOS = this.fullLogoAccorHosData.filter(i => i.LOGO_No === logoNo).map(i => i.HOS_No);
+        if (associatedHOS.length === 1 && HOS_No.value !== associatedHOS[0]) {
+          HOS_No.setValue(associatedHOS[0], { emitEvent: false });
+        }
+      } else {
+        // 品牌清空時的處理
+        this.vendorOptions = this.dropdown.queryPos2013TltTalent();
+        this.filterWarehouseOptions(null);
         HOS_No.setValue(null, { emitEvent: false });
-        this.filterLogoOptions(null); // 清空 HOS_No，重置 LOGO_No 列表
       }
 
-      // c. 執行後續邏輯 (不變)
       this.GetBudgetAmount();
-      this.calculateTotals();
-      [this.data, this.selectedItems, this.dialogData] = [[], [], []];
+      this.resetDetails();
     });
 
-    // 監聽 HOS_No 變化
-    HOS_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((hosNo) => {
-      // a. 過濾 LOGO_No 的選項
+    // --- C. [品牌 ↔ 倉別] 雙向連動 (原本邏輯，微調以配合廠商) ---
+
+    HOS_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this), distinctUntilChanged()).subscribe(hosNo => {
       this.filterLogoOptions(hosNo);
 
-      // b. 設置建議的 LOGO_No (如果 LOGO_No 欄位目前是空的，則嘗試填入唯一的對應品牌)
-      const associatedLOGONos = this.fullLogoAccorHosData
-        .filter(item => item.HOS_No === hosNo)
-        .map(item => item.LOGO_No);
-      const uniqueAssociatedLOGONos = [...new Set(associatedLOGONos)];
-
-      if (uniqueAssociatedLOGONos.length === 1 && LOGO_No.value !== uniqueAssociatedLOGONos[0]) {
-        LOGO_No.setValue(uniqueAssociatedLOGONos[0], { emitEvent: false });
-        // 接著呼叫 filterWarehouseOptions 來確保 HOS_No 的選項列表維持一致
-        this.filterWarehouseOptions(LOGO_No.value);
+      const associatedLogo = this.fullLogoAccorHosData.filter(i => i.HOS_No === hosNo).map(i => i.LOGO_No);
+      if (associatedLogo.length === 1 && LOGO_No.value !== associatedLogo[0]) {
+        LOGO_No.setValue(associatedLogo[0]); // 這裡觸發 LOGO 變動，進而也會去過濾廠商
       } else if (!hosNo) {
-        // HOS_No 被清除時，清空 LOGO_No
-        LOGO_No.setValue(null, { emitEvent: false });
-        this.filterWarehouseOptions(null); // 清空 LOGO_No，重置 HOS_No 列表
+        // 倉別清空不一定要清空品牌，除非業務需求
       }
-
-      this.cdr.detectChanges(); // 觸發畫面更新
+      this.cdr.detectChanges();
     });
 
-    // 監聽申請日期變化，重新獲取剩餘預算金額 (邏輯不變)
-    APPLY_Date.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(() => {
-      this.GetBudgetAmount();
-    });
+    // 監聽日期 (預算)
+    APPLY_Date.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(() => this.GetBudgetAmount());
 
     // 確保在非新增模式（編輯模式）下也能載入預算金額
     if (!this.isFormCreateable) {
       this.GetBudgetAmount();
     }
+  }
+  // 抽取重複的清空 logic
+  private resetDetails() {
+    this.calculateTotals();
+    this.data = [];
+    this.selectedItems = [];
+    this.dialogData = [];
   }
   /**
  * 根據選定的品牌代碼 (LOGO_No) 過濾倉別 (HOS_No) 選項
@@ -569,7 +555,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       const buyPrc = item.PLU_SalePrc_UNI || 0;
       const salePrc = item.PLU_SalePrc || 0;
       const taxType = item.PLU_StockTaxType;
-      const subQty = 1; // 預設數量為 1
+      const subQty = 0; // 預設數量為 1
 
       const buyNet = Math.round(subQty * buyPrc);
       const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;

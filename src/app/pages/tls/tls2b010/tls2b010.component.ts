@@ -259,7 +259,7 @@ this.queryForm.get('reporttype')?.valueChanges.subscribe((val) => {
     // 組 payload（含 TXN_Date -> yyyy-MM-dd）
     const payload: any = { ...form.value };
 payload.TXN_Date = this.toDateOnly(payload.TXN_Date);
-payload.pageSize = this.defaultPageSize;
+payload.pageSize = Number(payload.pageSize || this.defaultPageSize);
 payload.pageIndex = payload.pageIndex || 1;
 console.log('onSubmit form.pageIndex =', form.value.pageIndex);
 console.log('onSubmit form.pageSize =', form.value.pageSize);
@@ -412,10 +412,10 @@ console.log('onSubmit payload.pageSize =', payload.pageSize);
       this.lastSimpleLazyKey = key;
     }
 
-   form.patchValue(
+form.patchValue(
   {
     pageIndex: e.pageIndex,
-    pageSize: this.defaultPageSize,
+    pageSize: e.pageSize,
     SortBy: sortBy
   },
   { emitEvent: false }

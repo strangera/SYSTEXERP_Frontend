@@ -15,4 +15,9 @@ export const REPORT_TITLES2: Record<string, string> = {
   queryTLS23110: '折扣別月報表',
   queryTLS23120: '專櫃日對帳單',
   queryTLS23130: '信用卡銷貨月報表',
+
+  queryFIN52090: '會計科目摘要明細表',
+  queryFIN52050: '科目大分類代號表',
+  queryFIN52060: '科目中分類代號表',
+  queryFIN52070: '科目三碼代號表',
 };

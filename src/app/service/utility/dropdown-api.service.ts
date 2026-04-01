@@ -46,9 +46,12 @@ import {
   Pos2004LogoItem,
   Pos2004LogoQuery,
   Pos2004Query,
+  Pos2004WithBrandItem,
   Pos2013Item,
+  Pos2013LogoRequest,
   Pos2013Query,
   Sys1000Query,
+  Sys5000SubModuleItem,
   TalentByContractDateItem,
   TalentByContractDateQuery,
   TalentChargeItem,
@@ -63,6 +66,7 @@ import {
   TALPORDERMQuery,
   TALPORDERMQueryForShare,
   TblUserOrgidItem,
+  Tls55020Query,
   TLTTALENTItem,
   TLTTALENTQuery,
   TlttalentTltSpaceItem
@@ -402,10 +406,76 @@ export class DropdownApiService {
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }
-  /** 查詢廠商資料表(POS2013依照品牌) */
-  queryPos2013LOGO_No(body: { LOGO_No: string }): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<Pos2013Item, { LOGO_No: string }>('/queryPOS2013LOGO_NoDropDownList', 'VEN_No', 'Name', body).pipe(
-      shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
+  /** 查詢廠商資料表(POS2013)(統一編號為主) */
+  queryVendorNoGroup(body: any = { VEN_Flag: '' }): Observable<any[] | null> {
+    return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/queryPOS2013_DropDownList`, body).pipe(
+      map(response => {
+        const data = response?.Data;
+        if (!data) return null;
+
+        // 使用 Map 確保每個 No 只有一筆資料，但把所有的 VEN_No 資訊存在內部的 subItems
+        const noMap = new Map<string, any>();
+
+        data.forEach(item => {
+          if (!noMap.has(item.No)) {
+            noMap.set(item.No, {
+              No: item.No,
+              Name: item.Name,
+              // 這是給 MultiSelect 搜尋用的標籤，包含所有相關資訊
+              combinedLabel: `${item.No} - ${item.Name}`,
+              subItems: []
+            });
+          }
+          noMap.get(item.No).subItems.push({
+            VEN_No: item.VEN_No,
+            ShortName: item.ShortName,
+            Address: item.VEN_Address
+          });
+        });
+
+        return Array.from(noMap.values());
+      }),
+      shareReplay(1)
+    );
+  }
+  /**
+ * 查詢品牌與廠商關聯表 (通用基礎方法)
+ */
+  private queryPos2013LogoBase(body: Pos2013LogoRequest = {}): Observable<Pos2013Item[] | null> {
+    // 這裡不使用 queryAndMapDropdown，改用更底層的 post 取得原始陣列，
+    // 因為同一個 API 資料要給兩個不同的 Dropdown (一個要 VEN_No, 一個要 LOGO_No)
+    return this.http.post<ApiResponse<Pos2013Item[]>>(
+      `${this.apiUrl}/queryPOS2013LOGO_NoDropDownList`,
+      body
+    ).pipe(
+      map(res => res.Data || []),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  /** * [雙向 - 向下] 給品牌，查廠商選單
+   * Value: VEN_No, Label: Name
+   */
+  queryVenByLogo(logoNo: string): Observable<Option[] | null> {
+    return this.queryPos2013LogoBase({ LOGO_No: logoNo }).pipe(
+      map(data => data?.map(item => ({
+        label: `${item.VEN_No} - ${item.Name}`,
+        value: item.VEN_No,
+        ...item // 保留原始物件供後續使用
+      })) || [])
+    );
+  }
+
+  /** * [雙向 - 向上] 給廠商，查品牌選單
+   * Value: LOGO_No, Label: LOGO_Name
+   */
+  queryLogoByVen(venNo: string): Observable<Option[] | null> {
+    return this.queryPos2013LogoBase({ VEN_No: venNo }).pipe(
+      map(data => data?.map(item => ({
+        label: `${item.LOGO_No} - ${item.LOGO_CH_NAME}`,
+        value: item.LOGO_No,
+        ...item
+      })) || [])
     );
   }
   /** * 查詢廠商資料表(POS2013)下拉選單 */
@@ -532,6 +602,19 @@ export class DropdownApiService {
   queryPos2004(body: Pos2004Query): Observable<Pos2004Item[] | null> {
     return this.queryDropdownWithParams<Pos2004Item, Pos2004Query>('/queryPOS2004_DropDownList', body).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** * 查詢商品資料(POS2004 By Talent)
+ * 依照專櫃編號連動品牌，查詢該品牌下的所有商品
+ */
+  queryPos2004ByTalent(body: Pos2004Query): Observable<Pos2004WithBrandItem[] | null> {
+    // 注意：路徑改為後端新開的 /queryPOS2004_ByTalentDropDownList
+    return this.queryDropdownWithParams<Pos2004WithBrandItem, Pos2004Query>(
+      '/queryPOS2004_ByTalentDropDownList',
+      body
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 
@@ -665,11 +748,85 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢 ASS11040 品項編號下拉選單 */
+  queryASS11040DropDownList(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>(
+      '/ASS0000/ASS1000/queryASS11040_DropDownList',
+      'No',
+      'Name'
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+  /** 查詢子模組代碼(SYS5000) */
+  querySys5000SubModuleNo(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Sys5000SubModuleItem>('/querySYS5000SubModuleNo_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+
+  /** 查詢子模組代碼(SYS5000) */
+  querySys5000SubModuleNoGroup(): Observable<Option[] | null> {
+    return this.http.post<ApiResponse<Sys5000SubModuleItem[]>>(`${this.apiUrl}/querySYS5000SubModuleNo_DropDownList`, {}).pipe(
+      map(response => {
+        const data = response?.Data;
+        if (!data) return null;
+
+        const grouped = data.reduce((acc, item) => {
+          const key = item.module_no;
+          if (!acc[key]) {
+            acc[key] = {
+              label: `${item.module_no} - ${item.module_name}`,
+              value: item.module_no,
+              items: []
+            };
+          }
+          acc[key].items.push({
+            ...item,
+            label: `${item.No} - ${item.Name}`,
+            value: item.No
+          });
+          return acc;
+        }, {} as Record<string, any>);
+
+        return Object.values(grouped);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+
   /** 查詢人員資料表(TBLUSER) (依照組織代碼查詢) */
   queryTblUserOrgid(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<TblUserOrgidItem>('/queryTBLUSER_Orgid_DropDownList', 'user_No', 'user_Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
+  }
+
+  /** 查詢使用單位下拉（value 使用 Org_ID） */
+  queryTblUserOrgidAsOrg(): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<TblUserOrgidItem[]>>(`${this.apiUrl}/queryTBLUSER_Orgid_DropDownList`, {})
+      .pipe(
+        map(response => {
+          const data = response?.Data ?? [];
+          const orgMap = new Map<string, Option>();
+          data.forEach(item => {
+            if (!item?.Org_ID || orgMap.has(item.Org_ID)) return;
+            orgMap.set(item.Org_ID, {
+              value: item.Org_ID,
+              label: `${item.Org_ID} - ${item.Org_Name}`,
+              Org_ID: item.Org_ID,
+              Org_Name: item.Org_Name,
+            });
+          });
+          return Array.from(orgMap.values());
+        }),
+        catchError(err => {
+          console.error('API /queryTBLUSER_Orgid_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
   }
 
   /** 查詢專櫃活動編號資料表下拉選單() */
@@ -752,6 +909,55 @@ export class DropdownApiService {
   // 查詢CPM11030 設備名稱下拉選單
   queryCSS2001(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>('/queryCSS2001_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢財產編號下拉選單 (FAASSET) */
+  queryFAASSETChooseList_DropDownList(): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<{ AssetId: string; AssetName: string }[]>>(
+        `${this.apiUrl}/queryFAASSETChooseList_DropDownList`,
+        {},
+      )
+      .pipe(
+        map(response => {
+          const data = response?.Data ?? [];
+          return data.map(item => ({
+            value: item.AssetId,
+            label: `${item.AssetId} - ${item.AssetName}`,
+          }));
+        }),
+        catchError(err => {
+          console.error('API /queryFAASSETChooseList_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
+  }
+  /** 查詢當日交易日期有特殊條碼的機台 (TLS55020) */
+  queryPos1002Tls55020(body: Tls55020Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, Tls55020Query>(
+      '/queryPOS1002_TLS55020_DropDownList',
+      'No',
+      'Name',
+      body
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢當日交易日期有特殊條碼的專櫃 (TLS55020) */
+  queryTltTalentTls55020(body: Tls55020Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem, Tls55020Query>(
+      '/queryTLTTALENT_TLS55020_DropDownList',
+      'No',
+      'Name',
+      body
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢寄件者資料(NTY1001) */
+  queryNTY1001_DropDownList(): Observable<IDropdownItem[] | null> {
+    return this.queryDropdown<IDropdownItem>('/queryNTY1001_DropDownList').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

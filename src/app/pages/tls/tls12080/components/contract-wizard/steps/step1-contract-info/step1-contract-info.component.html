@@ -27,7 +27,7 @@
             [submitted]="submitted"
             [customPlaceholder]="'審核過系統自動產生'"
             [alwaysShowPlaceholder]="true"
-            [readonly]="true"
+            [readonly]="false"
           ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -330,6 +330,7 @@
           [showAddButton]="!isViewMode"
           [showBatchDelete]="!isViewMode"
           (dropdownChange)="onLocationDropdownChange($event)"
+          (fieldChange)="onLocationFieldChange($event)"
         ></app-expandable-edit-table>
       </div>
     </p-accordionTab>

@@ -90,7 +90,7 @@ export const OVERALL_STATUS_OPTIONS = {
 export const TLT_CTYPE_MTOTAL_OPTIONS = {
   '1': '年包',
   '2': '月包',
-  '0': '期間包',
+  '0': '區間包',
 } as const;
 
 export const TPY_TYPE_OPTIONS = {
@@ -180,7 +180,7 @@ export const INSTMS_TYPE_OPTIONS = {
   '6': '6',
   '9': '9',
   '12': '12',
-  '14': '14',
+  '24': '24',
 } as const;
 
 //收單行

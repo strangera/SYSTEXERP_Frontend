@@ -131,8 +131,8 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table-report
-      [tableKey]="'FIN53010'"
+    <app-table
+      tableKey="FIN53010"
       dataKey="id"
       [data]="tableData()"
       [columns]="columns"
@@ -140,10 +140,12 @@
       [loading]="loading"
       [showDelete]="false"
       [showManage]="true"
-      [lastQueryBody]="lastQueryBody"
-      [queryFunction]="queryFIN53010.bind(this)"
+      [addButton]="addButton"
+      [multiSortMeta]="multiSortMeta"
+      [lazy]="true"
+      (lazyLoadData)="onTableLazyLoadData($event)"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
-    ></app-table-report>
+    ></app-table>
   </div>
 </div>

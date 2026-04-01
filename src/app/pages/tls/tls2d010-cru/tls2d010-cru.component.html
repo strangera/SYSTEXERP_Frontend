@@ -104,9 +104,9 @@
       </div>
 
       <!-- table-edit：一般扣款明細（點擊開啟專櫃選擇彈窗） -->
-      <app-table-edit #normalTable title="新增扣款" tableKey="talent_id" [data]="data" class="col-12" dataKey="rowId"
+      <app-table-edit #normalTable title="整批新增專櫃" tableKey="talent_id" [data]="data" class="col-12" dataKey="rowId"
         [columns]="columnsNormal" (selectionChange)="normalSelectedItems = $event" [selectedItems]="normalSelectedItems"
-        (dataChange)="onCounterDataChange($event)" dataStatusField="status" [loading]="loading" [tableRequired]="true"
+        (dataChange)="data = $event" (fieldChange)="onFieldChange($event)" [loading]="loading" [tableRequired]="true"
         [disabled]="isDetailMode" [showCheckBox]="!isDetailMode" [showDelete]="!isDetailMode" [canInsert]="false"
         [showInsert]="!isDetailMode" [enableTabInsert]="true" (insert)="onOpenTalentDialog()"></app-table-edit>
 

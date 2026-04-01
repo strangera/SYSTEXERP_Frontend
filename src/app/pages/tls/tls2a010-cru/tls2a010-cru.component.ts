@@ -116,15 +116,15 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
       header: '備註',
       type: 'input',
       textAlign: 'left',
-      maxLength: 10,
+      maxLength: 100,
       width: '200px',
       validate: [
         (value: any) => {
           if (!value) return { isValid: true, errorMessage: [] };
-          const isValid = value.toString().length <= 10;
+          const isValid = value.toString().length <= 100;
           return {
             isValid,
-            errorMessage: ['備註最多 10 個字'],
+            errorMessage: ['備註最多 100 個字'],
           };
         },
       ],

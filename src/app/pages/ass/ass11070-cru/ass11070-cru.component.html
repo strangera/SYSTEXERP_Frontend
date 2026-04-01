@@ -1,142 +1,103 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
+
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="建檔日期" controlName="buildDate"
-            [control]="dataForm.controls.buildDate" [submitted]="submitted">
-          </app-calendar>
+          <app-input-text label="建檔日期" controlName="crtDate" [control]="df().crtDate" [readonly]="true"
+            [disabled]="true" [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="接洽人員" controlName="receptionPerson" [options]="receptionPersonOptions"
-            optionLabel="label" optionValue="value" [control]="dataForm.controls.receptionPerson"
-            [submitted]="submitted">
-          </app-dropdown>
+          <app-dropdown label="接洽人員" controlName="prStaffId" [options]="staffOptions()" optionLabel="label"
+            optionValue="value" [control]="df().prStaffId" [disabled]="isFormReadable"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="廠商統一編號" controlName="vendorUID" [options]="vendorUIDOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.vendorUID" [submitted]="submitted">
-          </app-dropdown>
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton label="營運模式" groupname="bussinessModel" [control]="dataForm.controls.bussinessModel"
-            [options]="bussinessOptions" [submitted]="submitted">
-          </app-radiobutton>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="廠商名稱(中文)" controlName="vendorCName" [control]="dataForm.controls.vendorCName"
-            [submitted]="submitted">>
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="廠商名稱(英文)" controlName="vendorEName" [control]="dataForm.controls.vendorEName"
-            [submitted]="submitted">>
-          </app-input-text>
-        </div>
-      </div>
-      <hr>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="聯絡人" controlName="contactPerson" [control]="dataForm.controls.contactPerson"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="聯絡人電話(O)" controlName="contactPhone"
-            [control]="dataForm.controls.contactPhone" [submitted]="submitted">
-          </app-input-number>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="聯絡人職稱" controlName="contactTitle" [control]="dataForm.controls.contactTitle"
-            [submitted]="submitted">
-          </app-input-text>
+          <app-dropdown label="廠商統一編號" controlName="vendorId" [options]="vendorOptions()" optionLabel="label"
+            optionValue="value" [control]="df().vendorId" [disabled]="isFormReadable"
+            [submitted]="submitted"></app-dropdown>
         </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="聯絡人傳真" controlName="contactFax"
-            [control]="dataForm.controls.contactFax" [submitted]="submitted">
-          </app-input-number>
+          <app-radiobutton label="營運模式" groupname="mangerType" [control]="df().mangerType" [options]="mangerTypeOptions"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-radiobutton>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="聯絡人行動電話" controlName="contactCellphone"
-            [control]="dataForm.controls.contactCellphone" [submitted]="submitted">
-          </app-input-number>
+          <app-input-text label="廠商名稱(中文)/簡稱" controlName="vendorName" [control]="df().vendorName"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="聯絡人電子郵件" controlName="contactEmail" [control]="dataForm.controls.contactEmail"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-      </div>
-      <hr>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="公司地址" controlName="companyAddress" [control]="dataForm.controls.companyAddress"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="公司負責人" controlName="companyResponsibility"
-            [control]="dataForm.controls.companyResponsibility" [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton label="付款方式" groupname="paymentMethod" [control]="dataForm.controls.paymentMethod"
-            [options]="paymentMethodOptions" [submitted]="submitted">
-          </app-radiobutton>
+          <app-input-text label="廠商名稱(英文)/簡稱" controlName="vendorNameE" [control]="df().vendorNameE"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-input-text>
         </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number-range [useGrouping]="false" label="票期" [startControl]="dataForm.controls.startserialticket"
-            [endControl]="dataForm.controls.endserialticket" [submitted]="submitted">
-          </app-input-number-range>
+          <app-input-text label="聯絡人" controlName="contactStaff" [control]="df().contactStaff"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="聯絡人電話(O)" controlName="contactTel" [control]="df().contactTel"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="聯絡人職稱" controlName="contactTitle" [control]="df().contactTitle"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-input-text>
         </div>
       </div>
-      <!---->
-      <hr />
-      <ng-container formArrayName="items">
-        <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-          <div class="grid align-items-center">
-            <div class="col" style="flex: 1">
-              <p>服務項目 {{ i + 1 }}</p>
-            </div>
-            <div>
-
-            </div>
-          </div>
-          <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="服務項目" controlName="services" [control]="getFormControl(i, 'services')"
-                [submitted]="submitted">
-              </app-input-text>
-            </div>
-          </div>
-          <hr />
-        </ng-container>
-      </ng-container>
-      <hr />
-      <app-editor-text label="備註" controlName="remark" [control]="dataForm.controls.remark"
-        [style]="{ height: '100px' }" [submitted]="submitted">
-      </app-editor-text>
-      <hr />
-      <div class="pt-1">
-
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="聯絡人傳真" controlName="contactFax" [control]="df().contactFax" [disabled]="isFormReadable"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="聯絡人行動電話" controlName="contactMobilePhone" [control]="df().contactMobilePhone"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="聯絡人電子郵件" controlName="contactEmail" [control]="df().contactEmail"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-input-text>
+        </div>
       </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="公司地址" controlName="companyAddress" [control]="df().companyAddress"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="公司負責人" controlName="chargeStaff" [control]="df().chargeStaff"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-radiobutton label="付款方式" groupname="payType" [control]="df().payType" [options]="payTypeOptions"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-radiobutton>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="票期" controlName="ticketPeriod" [control]="df().ticketPeriod"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="服務項目" controlName="serviceItems" [control]="df().serviceItems"
+            [disabled]="isFormReadable" [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="備註" controlName="notes" [control]="df().notes" [disabled]="isFormReadable"
+            [submitted]="submitted"></app-input-text>
+        </div>
+      </div>
+      @if (!isFormReadable) {
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+      }
     </form>
-    <div class="col pt-4">
-      <div class="grid justify-content-end">
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
-        <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
-      </div>
-    </div>
   </p-panel>
 </div>

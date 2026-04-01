@@ -3,14 +3,14 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { CheckTls55010Data, Tls55010DateRequest, Tls55010Service } from '@service/api/tls/tls55010.service';
+import { CheckTls55010Data, QueryTLS55010OneMonthResponse, Tls55010DateRequest, Tls55010Service } from '@service/api/tls/tls55010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -56,7 +56,39 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
       ...item, check_content: item.label, details: []
     }));
   }
+  /**
+   * 查詢日結紀錄方法 (等待後端 API)
+   */
+  historyLoading = false;
+  showHistory = false;
+  historyData: QueryTLS55010OneMonthResponse[] = []; // 存放歷史紀錄資料
+  // 歷史紀錄的欄位定義
+  historyColumns: ReportColumn[] = [
+    { field: 'CLS_DATE', header: '關帳日期', visible: true, format: formatDate },
+    { field: 'Cls_ExecDate', header: '日關帳鎖定日期', visible: true, format: formatDate },
+    { field: 'Lock_USR_No', header: '日關帳鎖定人員', visible: true },
+    { field: 'Lock_USR_Name', header: '日關帳鎖定人員姓名', visible: true },
+  ];
+  onQueryHistory() {
+    const txnDate = this.datePipe.transform(this.queryForm.value.TXN_Date, 'yyyy-MM-dd');
+    if (!txnDate) {
+      this.messageService.warnBubble('請先選擇結帳日期');
+      return;
+    }
+
+    this.showHistory = true; // 切換到歷史
+    this.historyLoading = true;
+
+    const body = {
+      TXN_Date: this.datePipe.transform(txnDate, 'yyyy-MM-dd') || '',
+    }
+    this.tls55010Service.queryTLS55010OneMonth(body).pipe(untilDestroyed(this), finalize(() => this.historyLoading = false)).subscribe((res) => {
+      this.historyData = res.Data.QueryData;
+    })
+  }
   onQuery(frm: FormGroup) {
+    this.showHistory = false; // 關閉歷史
+    this.isConfirmDate = false; // 切換回檢查表格
     this.handleSubmit(frm, () => {
       const body = {
         TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
@@ -110,6 +142,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   // 宣告是否確定日期變數
   isConfirmDate = false;
   onSubmit(frm: FormGroup) {
+    this.showHistory = false; // 關閉歷史
     this.handleSubmit(frm, () => {
       this.loading = false;
       this.insertLoading = true;
@@ -142,6 +175,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   }
   queryLoading = false;
   onQueryVou(frm: FormGroup) {
+    this.showHistory = false; // 關閉歷史
     this.handleSubmit(frm, () => {
       this.loading = false;
       this.queryLoading = true;
@@ -149,6 +183,14 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
         TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
       }
       this.tls55010Service.queryTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.queryLoading = false)).subscribe((res) => {
+        if (!res.Data) {
+          this.messageService.warnBubble('查無資料');
+          this.data2 = [];
+          this.footerData2 = [];
+          this.dataForm.reset();
+          this.showReverseBtn = false;
+          return;
+        }
         this.messageService.successBubble(res.Message);
         this.lastDate = body.TXN_Date as unknown as Tls55010DateRequest;
         this.isConfirmDate = true;
@@ -159,14 +201,12 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
           DAccAmt: item.AccDC === 'D' ? item.AccAmt : 0,
           CAccAmt: item.AccDC === 'C' ? item.AccAmt : 0,
         }));
-        // 將資料轉成 footerData2 = [{DAccAmt: 100, CAccAmt: 200}]=而不是 footerData2 = {field: 'DAccAmt', value: 100, field: 'CAccAmt', value: 200}
         this.footerData2 = [
           {
             DAccAmt: this.data2.reduce((sum, item) => sum + (item.DAccAmt || 0), 0),
             CAccAmt: this.data2.reduce((sum, item) => sum + (item.CAccAmt || 0), 0),
           },
         ]
-        console.log(this.footerData2);
       });
     });
   }

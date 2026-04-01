@@ -1,178 +1,332 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS12050QueryRow, QueryASS12050Request } from '@pages/ass/ass12050/ass12050.model';
+import { ASS11100Service } from '@service/api/ass/ass11100.service';
+import { ASS12050Service } from '@service/api/ass/ass12050.service';
+import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { Actions } from '@shared/service/permission-guard.service';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { finalize, Observable } from 'rxjs';
 
-//3.1.2.5 採購單驗收作業
+/** 3.1.2.5 採購單驗收作業 */
+@UntilDestroy()
 @Component({
   selector: 'app-ass12050',
   templateUrl: './ass12050.component.html',
   styleUrl: './ass12050.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarRangeComponent, InputNumberRangeComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    CalendarRangeQuickComponent,
+    InputNumberRangeComponent,
+    InputTextComponent,
+    TableReportComponent,
+    TranslateModule,
+  ],
 })
-export class ASS12050Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    purchaseNumber: [, [this.validationService.numberValidator, Validators.maxLength(11)]], // 採購單號
-    itemCode: [], // 品項編號
-    applicantCode: [], // 申請人編號
-    organizationNumber: [], // 部門代號
-    applicationDateFrom: [], // 申請日期
-    applicationDateTo: [], // 申請日期
-    supplierCode: [], // 	供應商編號
-    taxAmountFrom: [, [Validators.maxLength(8)]], // 稅額
-    taxAmountTo: [, [Validators.maxLength(8)]], // 稅額
-    noTaxAmountFrom: [, [Validators.maxLength(8)]], // 未稅總金額
-    noTaxAmountTo: [, [Validators.maxLength(8)]], // 未稅總金額
-    totalTaxAmountFrom: [, [Validators.maxLength(8)]], // 含稅總金額
-    totalTaxAmountTo: [, [Validators.maxLength(8)]], // 含稅總金額
-    paperStatus: [[] as number[]], // 採購單狀態
-    reviewerCode: [], // 審核人編號
-    reviewDateFrom: [], // 審核日期
-    reviewDateTo: [], // 審核日期
-    checkDateFrom: [], // 驗收日期
-    checkDateTo: [], // 驗收日期
-    checkPerson: [], // 驗收人
-    storage: [], // 倉別
-    printNumber: [, [Validators.required, Validators.maxLength(3)]], // 項次列印筆數
+export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    SUBPOENA_ID: [null as string | null],
+    GOODS_ID: [null as string | null],
+    EMP_ID: [null as string | null],
+    ORG_ID: [null as string | null],
+    APPLY_DATE_S: [null as Date | null],
+    APPLY_DATE_E: [null as Date | null],
+    SUPPLIER_ID: [null as string | null],
+    TAX_AMT_S: [null as number | null],
+    TAX_AMT_E: [null as number | null],
+    NTAX_AMT_S: [null as number | null],
+    NTAX_AMT_E: [null as number | null],
+    AMT_S: [null as number | null],
+    AMT_E: [null as number | null],
+    STATUS: [null as string | null],
+    APRV_EMP_ID: [null as string | null],
+    APRV_DATE_S: [null as Date | null],
+    APRV_DATE_E: [null as Date | null],
+    CHECK_DATE_S: [null as Date | null],
+    CHECK_DATE_E: [null as Date | null],
+    WH_ID: [null as string | null],
+    PageSize: [30],
+    PageIndex: [1],
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  /** 品項：queryFIN11040 */
+  goodsIdOptions: { value: string; label: string }[] = [];
+  /** 申請人：queryTBLUSER_DropDownList */
+  empIdOptions: { value: string; label: string }[] = [];
+  /** 審核人：queryTBLUSER_DropDownList */
+  aprvEmpIdOptions: { value: string; label: string }[] = [];
+  /** 部門：querySYS3100_DropDownList */
+  orgIdOptions: { value: string; label: string }[] = [];
+  /** 供應商：queryPOS2013_DropDownList */
+  supplierIdOptions: { value: string; label: string }[] = [];
+  /** 狀態：querySYS1000_DropDownList */
+  statusOptions: { value: string; label: string }[] = [];
+  /** 倉別：queryASS11100 */
+  whIdOptions: { value: string; label: string }[] = [];
+
+  data: ASS12050QueryRow[] = [];
+  selectedRows: ASS12050QueryRow[] = [];
+  totalRecords = 0;
+  lastQueryBody: QueryASS12050Request | null = null;
+
+  columns: ReportColumn[] = [
+    { field: 'SUBPOENA_ID', header: '採購單號', visible: true },
+    { field: 'SUBCHECK_ID', header: '驗收單號', visible: true },
+    { field: 'EMP_Name', header: '申請人', visible: true },
+    { field: 'CLOSE_EMP_NAME', header: '結案人員', visible: true },
+    { field: 'ORG_ID', header: '部門代號', visible: true },
+    { field: 'APPLY_DATE', header: '申請日期', visible: true, format: formatDate },
+    { field: 'TAX_AMT', header: '稅額', visible: true },
+    { field: 'AMT', header: '含稅總金額', visible: true },
+    { field: 'STATUS', header: '狀態', visible: true },
+    { field: 'APRV_EMP_NAME', header: '審核人', visible: true },
+    { field: 'APRV_DATE', header: '審核日期', visible: true, format: formatDate },
+    { field: 'CHECK_DATE', header: '驗收日期', visible: true, format: formatDate },
+    { field: 'DETAIL_COUNT', header: '明細筆數', visible: true },
+    { field: 'CHECK_COUNT', header: '驗收筆數', visible: true },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
+
+  addButton: AddButton[] = [
     {
-      'purchaseNumber': '20210128001', 'itemCode': '20210128001-02', 'applicantCode': '', 'checkPerson': 'xcom/', 'organizationNumber': '化妝品',
-      'applicationDateFrom': '2021/01/28', 'taxAmountFrom': 10, 'totalTaxAmountFrom': 210,
-      'paperStatus': '全部驗收', 'checkStatus': '全部驗收', 'reviewerCode': '權限管理者', 'reviewDateFrom': '2021/01/28', 'checkDateTo': '2021/01/28',
-      'detailNumber': 1, 'checkNumber': 2
+      label: '下載報表',
+      icon: 'pi pi-download',
+      action: (rowData: ASS12050QueryRow) => this.onDownloadReport(rowData),
+      disabled: () => !this.hasPermission(Actions.Report),
     },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'purchaseNumber', header: '採購單號', visible: true },
-    { field: 'itemCode', header: '驗收單號', visible: true },
-    { field: 'applicantCode', header: '申請人編號', visible: true },
-    { field: 'checkPerson', header: '驗收人', visible: true },
-    { field: 'organizationNumber', header: '部門', visible: true },
-
-    { field: 'applicationDateFrom', header: '申請日期', visible: true },
-    { field: 'taxAmountFrom', header: '稅額', visible: true },
-    { field: 'totalTaxAmountFrom', header: '含稅總金額', visible: true },
-
-    { field: 'paperStatus', header: '採購單狀態', visible: true },
-    { field: 'checkStatus', header: '驗收單狀態', visible: true },
-    { field: 'reviewerCode', header: '審核人代碼', visible: true },
-    { field: 'reviewDateFrom', header: '審核日期', visible: true },
-    { field: 'checkDateTo', header: '驗收日期', visible: true },
-
-    { field: 'detailNumber', header: '明細筆數', visible: true },
-    { field: 'checkNumber', header: '驗收單筆數', visible: true },
-
-    // { field: 'col15', header: '營運模式', visible: true },
-    // { field: 'col16', header: '票期', visible: true },
-    // { field: 'col17', header: '備註', visible: true },
-    // { field: 'col18', header: '訂貨傳真', visible: true },
-
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  itemCodeOptions: any[] = [];
-  applicantCodeOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
-  supplierCodeOptions: any[] = [];
-  paperStatusOptions: any[] = [];
-  storageOptions: any[] = [
-    { value: 1, label: '總公司' },
-    { value: 2, label: '測試' },
   ];
 
-  //
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
+    private readonly ass12050Service: ASS12050Service,
+    private readonly dropDownListService: DropDownListService,
+    private readonly fin11040Service: Fin11040Service,
+    private readonly ass11100Service: ASS11100Service,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310015';
-    this.cruPage = '/ASS1000/ASS12050CRU';
-    //
+    this.initializePage('ASS12050', 'ass/ass12050master', this.queryForm, () =>
+      this.onSubmit(),
+    );
+    this.loadDropdownOptions();
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
+  onCreateReceiving(): void {
+    if (!this.hasPermission(Actions.Create)) return;
+    this.router.navigate(['account/ass/ass12050cru'], {
+      state: {
+        crudstatus: CRUDStatus.Create,
+        fromRoute: this.router.url,
+      },
+    });
+  }
+
+  private loadDropdownOptions(): void {
+    const toOpt = (items: { No?: string; Name?: string }[]) =>
+      (items ?? []).map(item => ({
+        label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+        value: item.No ?? '',
+      }));
+
+    this.dropDownListService
+      .queryTBLUSER_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const options = toOpt(res.Data ?? []);
+        this.empIdOptions = options;
+        this.aprvEmpIdOptions = options;
+      });
+
+    this.dropDownListService
+      .querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res.Status !== '0000') return;
+        this.orgIdOptions = toOpt(res.Data ?? []);
+      });
+
+    this.dropDownListService
+      .queryPOS2013_DropDownList({})
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const list = res.Data ?? [];
+        this.supplierIdOptions = list.map((item: { VEN_No?: string; No?: string; Name?: string }) => ({
+          value: item.VEN_No ?? item.No ?? '',
+          label: `${item.VEN_No ?? item.No ?? ''} - ${item.Name ?? ''}`,
+        }));
+      });
+
+    this.dropDownListService
+      .querySYS1000_DropDownList({ SYS_Type: 'NEEDS_STATUS' })
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res.Status !== '0000') return;
+        this.statusOptions = toOpt(res.Data ?? []);
+      });
+
+    this.fin11040Service
+      .queryFIN11040({ PageSize: 9999, PageIndex: 1 })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          const data: TDS1008Data[] = res.Data ?? [];
+          this.goodsIdOptions = data
+            .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
+            .map(item => ({
+              label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
+              value: item.INV_ItemNo,
+            }));
+        },
+      });
+
+    this.ass11100Service
+      .queryASS11100({ PageSize: 9999, PageIndex: 1 })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          this.whIdOptions = (res.Data ?? [])
+            .filter(item => item.WH_ID != null && item.WH_ID !== '')
+            .map(item => ({
+              label: `${item.WH_ID} - ${item.WH_NAME ?? ''}`,
+              value: item.WH_ID!,
+            }));
+        },
+      });
+  }
+
+  private formatDateStr(d: Date | null): string {
+    if (!d) return '';
+    const x = new Date(d);
+    const y = x.getFullYear();
+    const m = String(x.getMonth() + 1).padStart(2, '0');
+    const day = String(x.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  queryFunction = (body: QueryASS12050Request): Observable<ApiResponse<ASS12050QueryRow[]>> => {
+    const raw = this.queryForm.getRawValue();
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const payload: QueryASS12050Request = {
+      SUBPOENA_ID: raw.SUBPOENA_ID || undefined,
+      GOODS_ID: raw.GOODS_ID || undefined,
+      EMP_ID: raw.EMP_ID || undefined,
+      ORG_ID: raw.ORG_ID || undefined,
+      APPLY_DATE_S: raw.APPLY_DATE_S ? this.formatDateStr(raw.APPLY_DATE_S) : undefined,
+      APPLY_DATE_E: raw.APPLY_DATE_E ? this.formatDateStr(raw.APPLY_DATE_E) : undefined,
+      SUPPLIER_ID: raw.SUPPLIER_ID || undefined,
+      TAX_AMT_S: raw.TAX_AMT_S ?? undefined,
+      TAX_AMT_E: raw.TAX_AMT_E ?? undefined,
+      NTAX_AMT_S: raw.NTAX_AMT_S ?? undefined,
+      NTAX_AMT_E: raw.NTAX_AMT_E ?? undefined,
+      AMT_S: raw.AMT_S ?? undefined,
+      AMT_E: raw.AMT_E ?? undefined,
+      STATUS: raw.STATUS || undefined,
+      APRV_EMP_ID: raw.APRV_EMP_ID || undefined,
+      APRV_DATE_S: raw.APRV_DATE_S ? this.formatDateStr(raw.APRV_DATE_S) : undefined,
+      APRV_DATE_E: raw.APRV_DATE_E ? this.formatDateStr(raw.APRV_DATE_E) : undefined,
+      CHECK_DATE_S: raw.CHECK_DATE_S ? this.formatDateStr(raw.CHECK_DATE_S) : undefined,
+      CHECK_DATE_E: raw.CHECK_DATE_E ? this.formatDateStr(raw.CHECK_DATE_E) : undefined,
+      WH_ID: raw.WH_ID || undefined,
+      PageSize: (body as any).pageSize ?? body.PageSize,
+      PageIndex: (body as any).pageIndex ?? body.PageIndex ?? 1,
+      SortBy: body.SortBy,
+    };
+
+    const clean = removeEmptyValues(payload) as QueryASS12050Request;
+    return this.ass12050Service.queryASS12050(clean);
+  };
+
+  onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const raw = this.queryForm.getRawValue();
+      this.lastQueryBody = {
+        SUBPOENA_ID: raw.SUBPOENA_ID || undefined,
+        GOODS_ID: raw.GOODS_ID || undefined,
+        EMP_ID: raw.EMP_ID || undefined,
+        ORG_ID: raw.ORG_ID || undefined,
+        APPLY_DATE_S: raw.APPLY_DATE_S ? this.formatDateStr(raw.APPLY_DATE_S) : undefined,
+        APPLY_DATE_E: raw.APPLY_DATE_E ? this.formatDateStr(raw.APPLY_DATE_E) : undefined,
+        SUPPLIER_ID: raw.SUPPLIER_ID || undefined,
+        TAX_AMT_S: raw.TAX_AMT_S ?? undefined,
+        TAX_AMT_E: raw.TAX_AMT_E ?? undefined,
+        NTAX_AMT_S: raw.NTAX_AMT_S ?? undefined,
+        NTAX_AMT_E: raw.NTAX_AMT_E ?? undefined,
+        AMT_S: raw.AMT_S ?? undefined,
+        AMT_E: raw.AMT_E ?? undefined,
+        STATUS: raw.STATUS || undefined,
+        APRV_EMP_ID: raw.APRV_EMP_ID || undefined,
+        APRV_DATE_S: raw.APRV_DATE_S ? this.formatDateStr(raw.APRV_DATE_S) : undefined,
+        APRV_DATE_E: raw.APRV_DATE_E ? this.formatDateStr(raw.APRV_DATE_E) : undefined,
+        CHECK_DATE_S: raw.CHECK_DATE_S ? this.formatDateStr(raw.CHECK_DATE_S) : undefined,
+        CHECK_DATE_E: raw.CHECK_DATE_E ? this.formatDateStr(raw.CHECK_DATE_E) : undefined,
+        WH_ID: raw.WH_ID || undefined,
+        PageSize: raw.PageSize ?? 30,
+        PageIndex: 1,
+      } as QueryASS12050Request;
+
+      this.loading = true;
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(finalize(() => (this.loading = false)))
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.data = res.Data ?? [];
+            this.totalRecords = res.TotalCount ?? 0;
+          },
+        });
+    });
+  }
+
+  onDownloadReport(row: ASS12050QueryRow): void {
+    const subcheckId = row.SUBCHECK_ID;
+    if (!subcheckId) return;
     this.loading = true;
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+    this.ass12050Service
+      .exportPDFASS12050({ SUBCHECK_ID: subcheckId })
+      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      .subscribe({
+        next: res => {
+          const blob = res.body;
+          if (!blob) {
+            this.messageService.errorBubble('報表下載失敗');
+            return;
+          }
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `ASS12050_${subcheckId}.pdf`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+          this.messageService.successBubble('報表下載成功');
+        },
+        error: () => {
+          this.messageService.errorBubble('報表下載失敗');
+        },
+      });
   }
 }

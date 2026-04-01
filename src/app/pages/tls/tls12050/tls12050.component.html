@@ -27,7 +27,9 @@
       <!-- 左圖區塊 -->
       <div style="flex: 2 1 0; min-width: 300px">
         <div class="image-container" #imageContainer (mousemove)="onImageMouseMove($event, imageContainer)"
-          (mouseleave)="onImageMouseLeave()" (click)="onImageClick($event, imageContainer)">
+          (mouseleave)="onImageMouseLeave()" (click)="onImageClick($event, imageContainer)"
+          (keydown.enter)="onImageKeyboardSelect(imageContainer)"
+          (keydown.space)="onImageKeyboardSelect(imageContainer)" tabindex="0">
           <p-image *ngIf="selectedImage" [src]="selectedImage" (onImageError)="onImageError($event)"
             [attr.alt]="'目前選擇樓層：' + selectedFloor" [preview]="false" imageClass="w-full h-auto max-w-full"></p-image>
 
@@ -114,5 +116,12 @@
         </table>
       </div>
     </div>
+  </div>
+  <div class="card">
+    <app-table-report dataKey="LOCATION_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+      [showReportMode]="false" [showManage]="false" (detail)="onDetail($event)" [totalRecords]="totalRecords"
+      [loading]="loading" [lastQueryBody]="lastQuery" [showDelete]="false" [lazy]="false"
+      [queryFunction]="queryTableData">
+    </app-table-report>
   </div>
 </div>

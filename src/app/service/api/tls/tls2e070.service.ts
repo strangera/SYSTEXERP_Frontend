@@ -111,4 +111,13 @@ export class Tls2e070Service {
     // 確保這裡傳送的是符合後端 Request 結構的物件
     return this.http.post<ApiResponse<Tls2e070UpdateData>>(url, updateBody);
   }
+  /**
+   * 新增：專櫃帳款結算作業 - 執行反鎖定 (unLockTLS2E070)
+   * @param unLockBody 包含要解除鎖定的年月、帳次、結帳方式
+   * @returns 包含執行結果的 Observable
+   */
+  unLockTLS2E070(unLockBody: Tls2e070UpdateBody): Observable<ApiResponse<Tls2e070UpdateData>> {
+    const url = `${API_BASE_URL}/unLockTLS2E070`; // 請確認後端 API 端點名稱
+    return this.http.post<ApiResponse<Tls2e070UpdateData>>(url, unLockBody);
+  }
 }

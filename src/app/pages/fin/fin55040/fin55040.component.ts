@@ -79,7 +79,7 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     // AccNo 設定為 visible: false 但保留，因為 HTML [groupRowsBy]="'AccNo'" 需要它
     { field: 'PTA', header: '立沖編號', visible: true },
     { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
-    { field: 'NoteDesc', header: '摘要', visible: true },
+    { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
     { field: 'PTA1', header: '借方金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'PTA2', header: '貸方金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'PTA3', header: '餘額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true }
@@ -191,8 +191,12 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
             }
           });
 
-          // 攤平後進行排序確保分組正確
-          flattenedList.sort((a, b) => a.AccNo.localeCompare(b.AccNo));
+          // 攤平後進行排序確保分組正確，同科目內先沖帳(Status='2')後立帳(Status='1')
+          flattenedList.sort((a, b) => {
+            const accCmp = a.AccNo.localeCompare(b.AccNo);
+            if (accCmp !== 0) return accCmp;
+            return b.Status.localeCompare(a.Status); // DESC: '2' > '1'
+          });
 
           this.fullData = flattenedList;
           // 改為直接賦值：
@@ -247,19 +251,22 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     if (isPDF) {
       this.btn_pdf_Loading = true;
       this.fin55040Service.exportFIN55040PDF(formValue).pipe(finalize(() => this.btn_pdf_Loading = false))
-        .subscribe(blob => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const url = URL.createObjectURL(pdfBlob);
-          window.open(url, '_blank');
-        });
+        .subscribe(resp => this.handleFileExport(resp, '.pdf', '立沖科目明細表'));
     } else {
       this.btn_excel_Loading = true;
       this.fin55040Service.exportFIN55040Excel(formValue).pipe(finalize(() => this.btn_excel_Loading = false))
-        .subscribe(blob => {
-          const excelBlob = new Blob([blob], { type: 'application/vnd.ms-excel' });
-          const url = URL.createObjectURL(excelBlob);
-          window.open(url, '_blank');
-        });
+        .subscribe(resp => this.handleFileExport(resp, '.xlsx', '立沖科目明細表'));
     }
+  }
+
+  private handleFileExport(resp: any, ext: '.pdf' | '.xlsx', baseName: string) {
+    const blob = resp?.body instanceof Blob ? resp.body : resp;
+    const fileName = `${baseName}_${new Date().getTime()}${ext}`;
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 }

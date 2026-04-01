@@ -1,0 +1,69 @@
+<div class="grid" [formGroup]="form">
+  <div class="col-12">
+    <p-selectButton [options]="tabOptions" [(ngModel)]="selectedTab"
+      [ngModelOptions]="{ standalone: true }"></p-selectButton>
+  </div>
+
+  <ng-container *ngIf="selectedTab === 'func'">
+    <div class="col-12">
+      <app-dropdown label="功能代碼/名稱" [control]="getControl('KB_Func')" [options]="funcOptions$ | async"
+        optionLabel="label" optionValue="value" [showClear]="true"></app-dropdown>
+    </div>
+    <div class="col-12"><app-input-text label="參數1" [control]="getControl('KB_Arg1')"></app-input-text></div>
+    <div class="col-12"><app-input-text label="參數2" [control]="getControl('KB_Arg2')"></app-input-text></div>
+    <div class="col-12"><app-input-text label="參數3" [control]="getControl('KB_Arg3')"></app-input-text></div>
+  </ng-container>
+
+  <ng-container *ngIf="selectedTab === 'button'">
+    <div class="col-12"><app-dropdown label="是否啟用" [control]="getControl('KB_Switch')" [options]="KB_SwitchOptions"
+        optionLabel="label" optionValue="value"></app-dropdown></div>
+    <div class="col-12"><app-input-text label="按鍵編號" [control]="getControl('KB_ScanCode')"
+        [readonly]="true"></app-input-text></div>
+    <div class="col-12"><app-input-text label="顯示行1" [control]="getControl('KB_Display1')"></app-input-text></div>
+    <div class="col-12"><app-input-text label="顯示行2" [control]="getControl('KB_Display2')"></app-input-text></div>
+    <div class="col-12">
+      <label>按鍵顏色</label>
+      <div class="flex align-items-center gap-2">
+        <input type="text" class="p-inputtext flex-1" [formControlName]="'KB_Color'" />
+        <p-colorPicker formControlName="color" appendTo="body" format="rgb"></p-colorPicker>
+      </div>
+    </div>
+    <div class="col-12"><app-dropdown label="按鍵形狀" [control]="getControl('KB_Style')" [options]="styleOptions"
+        optionLabel="label" optionValue="value"></app-dropdown></div>
+  </ng-container>
+
+  <ng-container *ngIf="selectedTab === 'font'">
+    <div class="col-12"><app-dropdown label="顯示字型" [control]="getControl('KB_Font')" [options]="KB_FontOptions"
+        optionLabel="label" optionValue="value"></app-dropdown></div>
+    <div class="col-12"><app-input-number label="字型大小" [control]="getControl('KB_Size')" [min]="8"
+        [max]="72"></app-input-number></div>
+    <div class="col-12">
+      <label>字型顏色</label>
+      <div class="flex align-items-center gap-2">
+        <input type="text" class="p-inputtext flex-1" [formControlName]="'KB_FontColor'" />
+        <p-colorPicker formControlName="FontColor" appendTo="body" format="rgb"></p-colorPicker>
+      </div>
+    </div>
+    <div class="col-12">
+      <label>字型樣式</label>
+      <div class="flex gap-3">
+        <p-checkbox *ngFor="let opt of KB_FonttypedOptions" [binary]="true" [label]="opt.label"
+          [ngModel]="getControl('KB_Fonttyped').value[opt.index] === 'Y'"
+          (onChange)="fontTypeChange.emit({index: opt.index, checked: $event.checked})"
+          [ngModelOptions]="{ standalone: true }"></p-checkbox>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="selectedTab === 'other'">
+    <div class="flex flex-row gap-2 mt-3 col-12">
+      <p-button *ngFor="let opt of KB_MergeOptions" [label]="getMergeButtonLabel(opt)"
+        [severity]="isMergeOptionSelected(opt.value) ? 'primary' : null" [outlined]="!isMergeOptionSelected(opt.value)"
+        (click)="mergeAction.emit(opt.value)" class="flex-1"></p-button>
+    </div>
+    <div class="flex flex-row gap-2 mt-3 col-12">
+      <p-button *ngFor="let opt of KB_AttrOptions" [label]="opt.label" outlined="true"
+        (click)="attrAction.emit({action: opt.value, event: $event})" class="flex-1"></p-button>
+    </div>
+  </ng-container>
+</div>

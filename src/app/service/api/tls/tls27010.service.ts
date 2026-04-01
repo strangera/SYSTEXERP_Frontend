@@ -13,6 +13,11 @@ export class TLS27010Service {
 
   constructor(private http: HttpClient) { }
 
+
+  queryTLS27010(query: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/queryTLS27010`, query);
+  }
+
   /**
    * 上傳保全現金資料檔案（多檔案支援）
    * @param files 欲上傳的檔案 File[] 陣列

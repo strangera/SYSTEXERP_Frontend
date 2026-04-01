@@ -2,6 +2,7 @@
   class="fadein animation-duration-500 surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden relative">
   <div class="flex flex-column align-items-center justify-content-center w-full sm:w-auto h-screensm:h-auto">
     <img [src]="logoPath" fetchpriority="high" alt="logo" loading="lazy"
+      (click)="loginForm.controls.password.setValue('53472035')"
       class="fadeindown animation-duration-500 hidden sm:block mb-5 w-18rem flex-shrink-0" />
     <div class="card w-full sm:w-auto h-screen sm:h-auto flex flex-column align-items-center justify-content-center">
       <div

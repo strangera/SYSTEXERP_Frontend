@@ -1,11 +1,9 @@
 import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -14,6 +12,12 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
+import { ASS16060Data, ASS16060Request } from '@service/api/ass/ass16060.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateDuplicate, validateMaxLength, validateMaxNumber } from '@shared/componentkit/table-edit/validate-field.model';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 // Services
 
@@ -22,14 +26,26 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   templateUrl: './ass16060-cru.component.html',
   styleUrl: './ass16060-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, EditorTextComponent, NgFor, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, EditorTextComponent, NgFor, InputTextComponent, ButtonComponent, NgIf, TranslateModule, TableEditComponent, InputTextareaComponent]
 })
-export class ASS16060CRUComponent
+export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060Data> implements OnInit {
+  data: ASS16060Request[] = [];
+  selectedRows: ASS16060Request[] = [];
+  deleteRows: ASS16060Request[] = [];
+  columns: EditColumn[] = [
+    { field: 'itemCode', header: '品項編號', type: 'dropdown', validate: [validateDuplicate, validateMaxLength(10)] },
+    { field: 'unit', header: '單位', type: 'input', maxLength: 8, validate: [validateMaxLength(100)] },
+    { field: 'returnQty', header: '退回數量', type: 'inputNumber', maxLength: 8, validate: [validateMaxNumber(99999999)] },
+    { field: 'remark', header: '說明', type: 'autoComplete' },
+  ];
 
-  implements OnInit {
+  // 控制
+  isEditMode = true; // 修改頁
+
   ngOnInit(): void {
     // 網站導覽設定
     this.ProgNo = '310045';
+    this.initializePage('ASS16060', this.dataForm);
 
     // 下拉選單--------------------------------------------------------
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
@@ -41,15 +57,17 @@ export class ASS16060CRUComponent
       // 創建
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
+        // this.accordionTabCss = 'create-accordionTab';
         this.crudstatus = CRUDStatus.Create;
+        this.isEditMode = false; // 新增頁
 
         break;
       // 修改
       case CRUDStatus.Edit:
         this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
+        // this.accordionTabCss = 'edit-accordionTab';
         this.crudstatus = CRUDStatus.Edit;
+        this.isEditMode = true; // 修改頁
 
         this.Edit(state.rowdata);
         break;
@@ -57,11 +75,13 @@ export class ASS16060CRUComponent
       case CRUDStatus.Read:
         this.formTitle = 'display-conditions';
         this.crudstatus = CRUDStatus.Read;
+        this.isEditMode = false;
+
         this.Read(state.rowdata);
         break;
     }
 
-    console.log(this.accordionTabCss);
+    // console.log(this.accordionTabCss);
   }
 
   //動態新增----------------------------------------------------------
@@ -77,22 +97,22 @@ export class ASS16060CRUComponent
 
   //非動態新增 ----------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    Kurabe: [],
-    Applicantcode: [],
-    Departmentcode: [],
-    rtnDate: [],
+    warehouse: [],
+    returnerCode: [],
+    departmentCode: [],
+    applyDate: [],
     retExp: [],
     // ----------------------------------------------------------------
     items: this.formBuilder.array([this.createItem()]),
   });
   // Dropdown options
-  Kurabe: any[] = [
+  warehouse = [
     { value: 1, label: '001' },
     { value: 2, label: '002' },
   ];
-  Applicantcode: any[] = [];
-  Departmentcode: any[] = [];
-  itemCodeOptions: any[] = [
+  returnerCode = [];
+  departmentCode = [];
+  itemCodeOptions = [
     { value: 1, label: '3A24210000001' },
     { value: 2, label: '3A24210000002' },
     { value: 3, label: '3A24210000003' },
@@ -109,9 +129,10 @@ export class ASS16060CRUComponent
 
   // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
+    // private router: Router,
+    // private formBuilder: FormBuilder,
+    // private messageService: NotificationService,
+    private translate: TranslateService,
 
   ) {
     super(); // 呼叫父類建構子
@@ -184,7 +205,23 @@ export class ASS16060CRUComponent
     this.onSubmit(frm);
   } //CRU
 
-  onCancel() {
-    this.router.navigate(['ASS1000/ASS16060']);
+  resetTable() {
+    this.data = [];
+    this.selectedRows = [];
+    // this.dataForm.reset();
   }
+
+  // 刪除資料的方法
+  onDelete(rows: ASS16060Request[]) {
+    // 將畫面資料中刪除這些 row
+    this.data = this.data.filter(item => !rows.includes(item));
+    // 將有 id 的項目（表示是資料庫已存在的）加進 deleteRows，避免重複
+    rows.filter(item => item.id !== undefined && !this.deleteRows.some(d => d.id === item.id)).forEach(item => this.deleteRows.push(item));
+    // 清空選取列
+    this.selectedRows = [];
+  }
+
+  // onCancel() {
+  //   this.router.navigate(['ASS1000/ASS16060']);
+  // }
 }

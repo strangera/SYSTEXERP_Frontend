@@ -1,6 +1,6 @@
 import { animate, style, transition, trigger } from '@angular/animations'; // 1. 引入動畫相關函式
 import { SortMeta } from 'primeng/api';
-import { TableTypes } from '../table/table.model';
+import { reportType, TableTypes } from '../table/table.model';
 
 export interface ReportColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)
@@ -15,6 +15,7 @@ export interface ReportColumn {
   showSort?: boolean;
   sortField?: string; // 排序欄位(預設為 field)
   align?: 'left' | 'center' | 'right';
+  reportType?: reportType; // 共通匯出格式類型
   type?: TableTypes; // 欄位類型
   cellClass?: (rowData: any, field?: string) => string;// 新增動態樣式 Callback，不影響舊邏輯
   link?: boolean; // 是否為連結
@@ -93,6 +94,26 @@ export const formatYYYYMM = (value: string | Date | null): string => {
 
   // 如果輸入格式不符合預期，回傳空字串
   return '';
+};
+
+export const formatTime = (value: any): string => {
+  if (!value) return '';
+
+  // 如果是字串格式 2026-03-10T04:53:00...
+  if (typeof value === 'string' && value.includes('T')) {
+    // 直接取 T 之後的 5 個字元 (HH:mm)
+    const timePart = value.split('T')[1];
+    return timePart.substring(0, 5);
+  }
+
+  // 如果已經是 Date 物件
+  if (value instanceof Date) {
+    const hours = String(value.getHours()).padStart(2, '0');
+    const minutes = String(value.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  return value;
 };
 
 // 000,000,000

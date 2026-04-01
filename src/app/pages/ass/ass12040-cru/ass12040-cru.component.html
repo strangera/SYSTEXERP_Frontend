@@ -3,27 +3,26 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
     <app-button
-      label="強制結案"
-      (click)="onForceClose()"
-      [disabled]="!hasPermission(Actions.Audit)"
-    ></app-button>
-    <app-button
       label="審核確認"
       (click)="onApproveConfirm()"
-      [disabled]="!hasPermission(Actions.Audit)"
     ></app-button>
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm">
       <h5>採購主檔資料</h5>
-      <app-editor-text
-        label="採購案說明"
-        controlName="remark"
-        [control]="df().remark"
-        [style]="{ height: '100px' }"
-        [submitted]="submitted"
-      ></app-editor-text>
+      <div class="grid p-fluid">
+        <div class="col-12">
+          <app-input-textarea
+            class="w-full"
+            label="採購案說明"
+            controlName="remark"
+            [control]="df().remark"
+            [rows]="5"
+            [submitted]="submitted"
+          ></app-input-textarea>
+        </div>
+      </div>
       <hr />
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
@@ -199,13 +198,18 @@
         </div>
       </div>
       <hr />
-      <app-editor-text
-        label="說明"
-        controlName="itemRemark"
-        [control]="df().itemRemark"
-        [style]="{ height: '100px' }"
-        [submitted]="submitted"
-      ></app-editor-text>
+      <div class="grid p-fluid">
+        <div class="col-12">
+          <app-input-textarea
+            class="w-full"
+            label="說明"
+            controlName="itemRemark"
+            [control]="df().itemRemark"
+            [rows]="5"
+            [submitted]="submitted"
+          ></app-input-textarea>
+        </div>
+      </div>
     </form>
   </p-panel>
 </div>

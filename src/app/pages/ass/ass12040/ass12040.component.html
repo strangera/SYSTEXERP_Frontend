@@ -15,8 +15,8 @@
           <app-input-text
             class="col-12 md:col-6 lg:col-4"
             label="採購單號"
-            controlName="PurchaseNo"
-            [control]="qf().PurchaseNo"
+            controlName="SUBPOENA_ID"
+            [control]="qf().SUBPOENA_ID"
             [submitted]="submitted"
           ></app-input-text>
           <app-dropdown
@@ -54,8 +54,8 @@
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="申請日期"
-            [startControl]="qf().APPLY_DATE_S"
-            [endControl]="qf().APPLY_DATE_E"
+            [startControl]="qf().APPLY_DATE_FROM"
+            [endControl]="qf().APPLY_DATE_TO"
             [submitted]="submitted"
           ></app-calendar-range-quick>
           <app-dropdown
@@ -74,24 +74,24 @@
             class="col-12 md:col-6 lg:col-4"
             [useGrouping]="false"
             label="稅額"
-            [startControl]="qf().TAX_AMT_S"
-            [endControl]="qf().TAX_AMT_E"
+            [startControl]="qf().TAX_AMT_FROM"
+            [endControl]="qf().TAX_AMT_TO"
             [submitted]="submitted"
           ></app-input-number-range>
           <app-input-number-range
             class="col-12 md:col-6 lg:col-4"
             [useGrouping]="false"
             label="未稅總金額"
-            [startControl]="qf().NO_TAX_AMT_S"
-            [endControl]="qf().NO_TAX_AMT_E"
+            [startControl]="qf().NTAX_AMT_FROM"
+            [endControl]="qf().NTAX_AMT_TO"
             [submitted]="submitted"
           ></app-input-number-range>
           <app-input-number-range
             class="col-12 md:col-6 lg:col-4"
             [useGrouping]="false"
             label="含稅總金額"
-            [startControl]="qf().TOTAL_TAX_AMT_S"
-            [endControl]="qf().TOTAL_TAX_AMT_E"
+            [startControl]="qf().AMT_FROM"
+            [endControl]="qf().AMT_TO"
             [submitted]="submitted"
           ></app-input-number-range>
         </div>
@@ -109,18 +109,18 @@
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="審核人編號"
-            controlName="REVIEW_EMP_ID"
+            controlName="APRV_EMP_ID"
             [options]="reviewerOptions()"
             optionLabel="label"
             optionValue="value"
-            [control]="qf().REVIEW_EMP_ID"
+            [control]="qf().APRV_EMP_ID"
             [submitted]="submitted"
           ></app-dropdown>
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="審核日期"
-            [startControl]="qf().REVIEW_DATE_S"
-            [endControl]="qf().REVIEW_DATE_E"
+            [startControl]="qf().APRV_DATE_FROM"
+            [endControl]="qf().APRV_DATE_TO"
             [submitted]="submitted"
           ></app-calendar-range-quick>
         </div>
@@ -128,8 +128,8 @@
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="結帳日期"
-            [startControl]="qf().CHECKOUT_DATE_S"
-            [endControl]="qf().CHECKOUT_DATE_E"
+            [startControl]="qf().PAY_DATE_FROM"
+            [endControl]="qf().PAY_DATE_TO"
             [submitted]="submitted"
           ></app-calendar-range-quick>
           <app-dropdown
@@ -164,7 +164,7 @@
   <div class="col-12">
     <app-table-report
       [data]="tableData()"
-      dataKey="INVOICE_NO"
+      dataKey="SUBPOENA_ID"
       tableKey="ASS12040_Data"
       [columns]="columns"
       [totalRecords]="totalRecords()"

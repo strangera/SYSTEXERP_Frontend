@@ -28,8 +28,10 @@ import { CellInput } from './table-edit-cell.model';
               [editable]="true"
               [loading]="internalLoading"
               [virtualScroll]="true"
-              [virtualScrollItemSize]="40"
+              [virtualScrollItemSize]="37"
+              scrollHeight="250px"
               [showClear]="cellInput.col.showClear ?? true"
+              [panelStyle]="cellInput.col.panelStyle"
               [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }"
               (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index);onDropdownChange($event)"
@@ -37,7 +39,7 @@ import { CellInput } from './table-edit-cell.model';
               (keydown.enter)="handleEnter($event)">
 
     <ng-template let-item pTemplate="item" *ngIf="cellInput.col.templateLabel">
-      <div class="flex align-items-center gap-2">
+      <div class="flex align-items-center gap-2" >
         <span>{{ item[cellInput.col.templateLabel] }}</span>
       </div>
     </ng-template>
@@ -49,6 +51,21 @@ import { CellInput } from './table-edit-cell.model';
                tooltipPosition="bottom" />
 </p-iconField>
   `,
+  styles: [`
+    /* 使用 ::ng-deep 是因為下拉選單通常 appendTo="body"，不在組件視圖內 */
+    ::ng-deep .p-dropdown-item {
+        height: 37px !important;      /* 必須與 virtualScrollItemSize 一致 */
+        line-height: 37px !important; /* 確保文字垂直居中 */
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 確保虛擬滾動容器高度也是固定的 */
+    ::ng-deep .p-scroller {
+        height: 250px !important; /* 與 scrollHeight 一致 */
+    }
+    `],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [

@@ -949,6 +949,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
   }
 
   private validateStep1(): boolean {
+    // 清除未填位置編號的空列
+    this.step1Component?.removeEmptyNewRows();
+
     // 儲存 Step 1 資料 (無論驗證是否通過都先儲存)
     this.wizardState.contractInfo = this.step1Form.getRawValue() as ContractInfo;
 
@@ -1530,7 +1533,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
         case CommissionType.GRADUATED: // 層級抽成 (5)
           if (data['start_number'] !== undefined && data['end_number'] !== undefined) {
-            if (Number(data['start_number']) >= Number(data['end_number'])) {
+            const gradStart = Number(data['start_number']);
+            const gradEnd = Number(data['end_number']);
+            // end=0 視為無上限，不卡控；起始值允許為 0
+            if (gradEnd !== 0 && gradStart >= gradEnd) {
               errorCount++;
               errorTypes.add('業績起迄值錯誤');
               errorFields.push('start_number', 'end_number');
@@ -1550,7 +1556,10 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
             errorFields.push('limit_amt');
           }
           if (data['start_number'] !== undefined && data['end_number'] !== undefined) {
-            if (Number(data['start_number']) >= Number(data['end_number'])) {
+            const tierStart = Number(data['start_number']);
+            const tierEnd = Number(data['end_number']);
+            // end=0 視為無上限，不卡控；起始值允許為 0
+            if (tierEnd !== 0 && tierStart >= tierEnd) {
               errorCount++;
               errorTypes.add('業績起迄值錯誤');
               errorFields.push('start_number', 'end_number');

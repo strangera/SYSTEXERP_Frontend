@@ -5,6 +5,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { ASS11040Service } from '@service/api/ass/ass11040.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ImageService } from '@service/utility/image.service';
 import {
   CreateASS11040Request,
@@ -152,6 +153,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
 
   constructor(
     private readonly ass11040Service: ASS11040Service,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly imageService: ImageService
   ) {
     super();
@@ -163,6 +165,14 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
     this.loadMidCategoryOptions('');
     this.loadSmlCategoryOptions('');
     this.setupCategoryListeners(); //大中小分類欄位連動監聽
+    this.dropdownApiService.querySys3100().pipe(untilDestroyed(this)).subscribe(res => {
+      this.deptCodeOptions = res ?? [];
+    });
+    this.dropdownApiService.queryPos2013({ VEN_Flag: '' }).pipe(untilDestroyed(this)).subscribe(res => {
+      const opts = res ?? [];
+      this.mtSuppOptions = opts;
+      this.ivnSuppOptions = opts;
+    });
     if (!this.isFormCreateable && this.rowdata) {
       this.patchFormFromRow(this.rowdata);
     }

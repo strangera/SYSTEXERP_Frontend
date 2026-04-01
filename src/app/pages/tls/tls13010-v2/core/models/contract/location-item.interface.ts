@@ -16,6 +16,8 @@ export interface LocationItem {
   building_desc: string;
   floor_desc: string;
   area_desc: string;
+  tlt_bdate?: string | Date;
+  tlt_edate?: string | Date;
   _status?: LocationStatus;
   _isNew?: boolean;
   _isEmpty?: boolean;
@@ -34,5 +36,7 @@ export interface CleanLocationInfo {
   tlt_floor?: string;
   area_no?: string;
   tlt_space?: number;
+  tlt_bdate?: string;
+  tlt_edate?: string;
   _status?: LocationStatus;
 }

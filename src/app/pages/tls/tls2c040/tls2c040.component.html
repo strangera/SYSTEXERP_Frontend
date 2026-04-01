@@ -42,8 +42,7 @@
 </div>
 <div class="card">
   <app-table-report tableKey="TLS2C040" [data]="data" [columns]="columns" [showCheckBox]="false" [showDelete]="false"
-    [showEdit]="false" (detail)="onEdit($event)" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords" [loading]="loading"
+    [showEdit]="false" (detail)="onEdit($event)" [totalRecords]="totalRecords" [loading]="loading"
     [showReportMode]="false" [addButton]="addButton" [lastQueryBody]="lastQueryBody"
     [queryFunction]="tls2c040Service.queryTLS2C040.bind(tls2c040Service)">
   </app-table-report>

@@ -34,8 +34,10 @@ export class TableReportComponent implements OnChanges {
   @Input() groupRowsBy?: string;    // (小計)群組欄位
   groupTotals: Record<string, Record<string, number>> = {}; // 用於儲存每個群組的總計
   @Input() subTotalData: any;    // (小計)頁尾資料
+  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges) {
     if (changes['data'] && this.data) {
+      this.hasSearched = true;
       this.Header = this.data.Header;
       this.PaymentDetails = this.data.PaymentDetails;
       this.PaymentFooters = this.data.PaymentFooters;
@@ -59,6 +61,17 @@ export class TableReportComponent implements OnChanges {
       }
     }
     return true;
+  }
+  /**
+   * 計算該行在所屬廠商群組中的序號
+   * @param rowData 目前這行資料
+   */
+  getGroupIndex(fullList: any[], rowData: any): number {
+    if (!fullList || !rowData) return 1;
+    // 找出該廠商的所有資料
+    const groupRows = fullList.filter(item => item.VEN_NO === rowData.VEN_NO);
+    // 傳回在該子群組中的索引
+    return groupRows.indexOf(rowData) + 1;
   }
 
   // 計算分組欄位跨度

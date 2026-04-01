@@ -7,6 +7,8 @@ export interface FIN52030Data {
   VouType: string;
   TempName: string;
   DetailCount: number;
+  CRT_USR_Name: string;
+  UPD_USR_Name: string;
 }
 
 /**
@@ -66,6 +68,8 @@ export interface FIN52030DetailData {
   UPD_USR_Name: string;
   VouType: '1' | '2' | '3';
   VouTypeName?: string;
+  /** TODO: 待確認後端 GetFIN52030Detail 是否回傳「傳票型態」(SYS1000.VoucherType) code，若有請使用此欄位。 */
+  VoucherType?: string;
   id: number;
 };
 

@@ -453,12 +453,16 @@ export const tlsRoutes: Routes = [
   { path: 'tls53030', loadComponent: () => import('./tls53030/tls53030.component').then(m => m.TLS53030Component), data: { progNo: 'TLS53030' } },
   // 進貨日結作業
   { path: 'tls55010', loadComponent: () => import('./tls55010/tls55010.component').then(m => m.TLS55010Component), data: { progNo: 'TLS55010' } },
+  // 自營交易修正作業
+  { path: 'tls55020', loadComponent: () => import('./tls55020/tls55020.component').then(m => m.TLS55020Component), data: { progNo: 'TLS55020' } },
+  { path: 'tls55020cru', loadComponent: () => import('./tls55020/tls55020-cru/tls55020-cru.component').then(m => m.TLS55020CRUComponent), data: { progNo: 'TLS55020' } },
   // 廠商發票折讓作業
   { path: 'tls55030', loadComponent: () => import('./tls55030/tls55030.component').then(m => m.TLS55030Component), data: { progNo: 'TLS55030' } },
   // 廠商請款作業
   { path: 'tls55040', loadComponent: () => import('./tls55040/tls55040.component').then(m => m.TLS55040Component), data: { progNo: 'TLS55040' } },
   // 月結帳作業
   { path: 'tls55050', loadComponent: () => import('./tls55050/tls55050.component').then(m => m.TLS55050Component), data: { progNo: 'TLS55050' } },
+  // 自營暫存傳票查詢作業
   { path: 'tls55060', loadComponent: () => import('./tls55060/tls55060.component').then(m => m.TLS55060Component), data: { progNo: 'TLS55060' } },
   { path: 'tls55060cru', loadComponent: () => import('./tls55060-cru/tls55060-cru.component').then(m => m.TLS55060CRUComponent), data: { progNo: 'TLS55060' } },
   // 銷貨日報查詢列印

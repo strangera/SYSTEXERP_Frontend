@@ -1,13 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { ErrorReportService } from '@shared/service/error-report.service';
 import { saveAs } from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs';
-import { environment } from 'src/environments/environment';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { Tls51110Service } from '../../../service/api/tls/tls51110.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -40,7 +41,6 @@ interface LogoBudget {
   BUD_Remark: string | null;
 }
 
-
 @Component({
   selector: 'app-tls51110',
   templateUrl: './tls51110.component.html',
@@ -62,9 +62,7 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
     LOGO_No: [''],
     YYYYMM: [''],
     YYYYMM2: [new Date(), Validators.required],
-
     ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }]),
-    pageSize: [30], // 本頁預設送後端每頁 30 筆
   });
   expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
@@ -85,12 +83,10 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
     },
     { field: 'BUD_Remark', header: '備註說明', visible: true },
   ];
-
   LOGO_No_Option: LogoOption[] = [];
   totalRecords = 0;
   data: LogoBudget[] = [];
   selectedItems: LogoBudget[] = [];
-
   editDisabled(rowData: LogoBudget) {
     return rowData.BUD_Status === "1";
   }
@@ -128,105 +124,59 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
 
 
   constructor(
-    private apiService: Tls51110Service,
-    private tls51070Service: Tls51070Service
+    private readonly apiService: Tls51110Service,
+    private readonly tls51070Service: Tls51070Service,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS51110', '/TLS/TLS51110CRU', this.queryForm, (form) => this.onSubmit(form));
-    this.tls51070Service.queryPLULOGO_DropDownList({}).subscribe({
-      next: (res) => {
-        this.LOGO_No_Option = res.Data.map((item: LogoOption) => ({
-          ...item,
-          label: `${item.No} - ${item.Name}`,
-        }));
-      },
-      error: (err) => {
-        console.error('載入品牌失敗', err);
-      },
+    this.tls51070Service.queryPLULOGO_DropDownList({}).subscribe(res => {
+      this.LOGO_No_Option = res.Data.map((item: LogoOption) => ({
+        ...item, label: `${item.No} - ${item.Name}`,
+      }));
     });
-  }
-
-  formatYYYYMM(dateStr: string): string {
-    if (!dateStr) return '';
-    if (/^\d{6}$/.test(dateStr)) {
-      return dateStr;
-    }
-    const date = new Date(dateStr);
-    const year = date.getFullYear();
-    const month = ('0' + (date.getMonth() + 1)).slice(-2);
-    return `${year}${month}`;
   }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue();
-      const formattedYYYYMM = this.formatYYYYMM(formValue.YYYYMM2);
-      frm.patchValue({
-        ...frm.value,
-        YYYYMM: formattedYYYYMM,
-      });
-
-      console.log('查詢參數:', frm.value);
-
-      this.apiService.queryTLS51110(frm.value).subscribe({
-        next: (response) => {
-          console.log('查詢成功', response);
-          console.log('回傳資料筆數:', response.Data?.length, '總筆數:', response.TotalCount);
-
-          this.loading = false;
-          this.data = response.Data.map((item: any) => ({
-            ...item,
-            YYYYMM2: frm.value.YYYYMM2
-          }));
-          this.totalRecords = response.TotalCount || this.data.length;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        },
+      const body = {
+        ...formValue,
+        YYYYMM: this.datePipe.transform(formValue.YYYYMM2, 'yyyyMM'),
+      }
+      this.apiService.queryTLS51110(body).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((response) => {
+        this.data = response.Data;
+        this.totalRecords = response.TotalCount || this.data.length;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
-
+  private readonly erroreportService = inject(ErrorReportService);
   /** 匯入 Excel 並產生錯誤檔 */
   onImportExcel(event: FileSelectEvent) {
-    const file = event.files[0];
     const formData = new FormData();
-    formData.append('file', file);
-
-    this.apiService.uploadTLS51110(formData).pipe(untilDestroyed(this)).subscribe({
-      next: (res) => {
-        const data = res?.Data;
-
-        if (data) {
-          if (data.ErrorFilePath) {
-            // 有錯誤檔：顯示錯誤提示
-            this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
-            // 自動下載錯誤檔
-            this.downloadErrorFile(data.ErrorFilePath);
-          } else {
-            // 沒有錯誤檔：顯示成功筆數
-            this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
-          }
-        }
-      },
+    formData.append('file', event.files[0]);
+    this.apiService.uploadTLS51110(formData).pipe(untilDestroyed(this)).subscribe(res => {
+      const data = res?.Data;
+      if (data?.ErrorFilePath) {
+        this.erroreportService.showImportError(
+          data.ErrorFilePath,
+          `匯入失敗：成功 ${data.SuccessCount} 筆，失敗 ${data.ErrorCount} 筆`
+        );
+      } else {
+        this.messageService.successBubble(`匯入成功，共 ${data?.SuccessCount} 筆`);
+        this.onSubmit(this.queryForm); // 重新查詢
+      }
     });
   }
-
-  /** 自動下載錯誤檔 */
-  downloadErrorFile(filePath: string) {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
-  }
-
-
-
   // 下載範例檔案
   onExportExcel() {
-    this.apiService.downloadTemplate().subscribe({
-      next: (res: Blob) => {
-        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        saveAs(blob, 'TLS51110_Template.xlsx');
-      },
+    this.apiService.downloadTemplate().subscribe((res: Blob) => {
+      const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      saveAs(blob, 'TLS51110_Template.xlsx');
     });
   }
   statusChange(row: LogoBudget, status: string) {
@@ -235,10 +185,8 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
       this.messageService.errorBubble(`找不到有效的 id`);
       return;
     }
-
     if (this.actionLoadingId) return;
     this.actionLoadingId = id;
-
     const payload = {
       id: Number(id),
       LOGO_No: row.LOGO_No,
@@ -248,13 +196,10 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
       BUD_Remark: row.BUD_Remark ?? '',
       BUD_Status: status === "1" ? "0" : "1"
     };
-
-    this.apiService.approveTLS51110(payload).pipe(finalize(() => (this.actionLoadingId = null))).subscribe({
-      next: () => {
-        const msg = status === "1" ? '審核成功' : '反審核成功';
-        this.onSubmit(this.queryForm);
-        this.messageService.successBubble(`${msg}（ID: ${id}）`);
-      },
+    this.apiService.approveTLS51110(payload).pipe(finalize(() => (this.actionLoadingId = null))).subscribe(() => {
+      const msg = status === "1" ? '審核成功' : '反審核成功';
+      this.onSubmit(this.queryForm);
+      this.messageService.successBubble(`${msg}（ID: ${id}）`);
     });
   }
 }

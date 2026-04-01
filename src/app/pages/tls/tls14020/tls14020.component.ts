@@ -2,9 +2,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatStoreWay, formatTltTermType } from '@pages/tls/shared/constants/tls13010.constants';
+import { TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { ContractItem } from '@service/api/tls/tls14020.service';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { forkJoin } from 'rxjs';
@@ -25,8 +26,6 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatStoreWay, formatTltTermType } from '@pages/tls/shared/constants/tls13010.constants';
-import { TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 
 //專櫃契約書列印
 @Component({
@@ -166,10 +165,10 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     contact_Date_Start: [],
     contact_Date_End: [],
     paper_type_List: [[]],
-    tlt_bdate_Start: [yesterday],
-    tlt_bdate_End: [yesterday],
-    tlt_edate_Start: [yesterday],
-    tlt_edate_End: [yesterday],
+    tlt_bdate_Start: [null],
+    tlt_bdate_End: [null],
+    tlt_edate_Start: [null],
+    tlt_edate_End: [null],
     tlt_contract_bdate_Start: [],
     tlt_contract_bdate_End: [],
     tlt_contract_edate_Start: [],

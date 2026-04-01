@@ -26,7 +26,7 @@
               [control]="getControl('tlt_no')"
               [customPlaceholder]="'系統自動產生'"
               [alwaysShowPlaceholder]="true"
-              [readonly]="true"
+              [readonly]="false"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -288,6 +288,7 @@
           (save)="onLocationSave($event)"
           (edit)="onLocationTableEdit($event)"
           (cancel)="onLocationTableCancel($event)"
+          (fieldChange)="onLocationFieldChange($event)"
           (dropdownChange)="onLocationDropdownChange($event)"
         ></app-expandable-edit-table>
       </div>

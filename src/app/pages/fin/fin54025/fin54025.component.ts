@@ -28,8 +28,8 @@ import { Fin29060TableSubheaderComponent } from '../fin29060/fin29060-table-subh
 
 export class FIN54025Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    VouDateFrom: [new Date(), [Validators.required]],
-    VouDateTo: [new Date(), [Validators.required]],
+    VouDateFrom: [new Date(new Date().setHours(0, 0, 0, 0)), [Validators.required]],
+    VouDateTo: [new Date(new Date().setHours(23, 59, 59, 0)), [Validators.required]],
     VouNoFrom: [null, [Validators.maxLength(12)]],
     VouNoTo: [null, [Validators.maxLength(12)]],
     VoucherType: [''],
@@ -128,8 +128,8 @@ export class FIN54025Component extends BasicQueryPageComponent<any> implements O
     this.handleSubmit(frm, () => {
       const v = frm.value;
       const basePayload = {
-        VouDateFrom: v.VouDateFrom,
-        VouDateTo: v.VouDateTo,
+        VouDateFrom: v.VouDateFrom ? new Date(v.VouDateFrom.getFullYear(), v.VouDateFrom.getMonth(), v.VouDateFrom.getDate(), 0, 0, 0) : null,
+        VouDateTo: v.VouDateTo ? new Date(v.VouDateTo.getFullYear(), v.VouDateTo.getMonth(), v.VouDateTo.getDate(), 23, 59, 59) : null,
         VouNoFrom: (v.VouNoFrom ?? '').toString().trim(),
         VouNoTo: (v.VouNoTo ?? '').toString().trim(),
         VoucherType: (v.VoucherType ?? '').toString().trim(),

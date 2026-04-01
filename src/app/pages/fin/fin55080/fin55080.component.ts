@@ -85,8 +85,8 @@ export class FIN55080Component extends BasicQueryPageComponent<QueryFIN55080Resp
       // 強轉型為 QueryFIN5508Request，並格式化日期
       const requestBody = {
         ...frm.value,
-        DateFrom: this.datePipe.transform(frm.value.DateFrom, 'yyyy-MM-dd'),
-        DateTo: this.datePipe.transform(frm.value.DateTo, 'yyyy-MM-dd'),
+        DateFrom: this.datePipe.transform(frm.value.DateFrom, 'yyyy-MM'),
+        DateTo: this.datePipe.transform(frm.value.DateTo, 'yyyy-MM'),
       } as QueryFIN55080Request;
 
       this.fin55080Service.queryFIN55080(requestBody).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {

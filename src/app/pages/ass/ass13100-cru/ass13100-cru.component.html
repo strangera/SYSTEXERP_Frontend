@@ -1,1 +1,207 @@
-<p>ass13100-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      btnType="back"
+      [attr.aria-label]="'返回'"
+      (click)="onCancel()"
+    ></app-button>
+  </div>
+
+  <!-- 新增模式：新增清點單 p-panel -->
+  <ng-container *ngIf="isCreateMode">
+    <p-panel header="新增清點單" class="line-height-3 m-0">
+      <form [formGroup]="generateForm" id="generateForm">
+        <div class="grid">
+          <div class="col-12">
+            <h3 class="text-lg mb-2">選擇清點產生方式</h3>
+            <p-radioButton
+              name="mode"
+              inputId="mode-keeper-org"
+              value="KEEPER_ORG"
+              [ngModel]="displayGenerateMode"
+              [ngModelOptions]="{ standalone: true }"
+              (onClick)="onModeChange('KEEPER_ORG')"
+              label="保管單位清點"
+            ></p-radioButton>
+            <p-radioButton
+              name="mode"
+              inputId="mode-user-org"
+              value="USER_ORG"
+              [ngModel]="displayGenerateMode"
+              [ngModelOptions]="{ standalone: true }"
+              (onClick)="onModeChange('USER_ORG')"
+              label="使用單位清點"
+              class="ml-3"
+            ></p-radioButton>
+            <p-radioButton
+              name="mode"
+              inputId="mode-keeper-emp"
+              value="KEEPER_EMP"
+              [ngModel]="displayGenerateMode"
+              [ngModelOptions]="{ standalone: true }"
+              (onClick)="onModeChange('KEEPER_EMP')"
+              label="保管人清點"
+              class="ml-3"
+            ></p-radioButton>
+            <p-radioButton
+              name="mode"
+              inputId="mode-user-emp"
+              value="USER_EMP"
+              [ngModel]="displayGenerateMode"
+              [ngModelOptions]="{ standalone: true }"
+              (onClick)="onModeChange('USER_EMP')"
+              label="使用人清點"
+              class="ml-3"
+            ></p-radioButton>
+          </div>
+        </div>
+
+        <div class="grid mt-3">
+          <div
+            class="col-12 md:col-6 lg:col-4"
+            *ngIf="['KEEPER_ORG', 'USER_ORG'].includes(displayGenerateMode)"
+          >
+            <p-checkbox
+              inputId="IncludeAllOrg"
+              [binary]="true"
+              [formControl]="generateForm.controls.IncludeAllOrg"
+              label="直接帶入全部部門"
+            ></p-checkbox>
+          </div>
+
+          <div
+            class="col-12 md:col-6 lg:col-4"
+            *ngIf="['KEEPER_EMP', 'USER_EMP'].includes(displayGenerateMode)"
+          >
+            <app-dropdown
+              label="所屬部門"
+              controlName="ParentOrg_ID"
+              [options]="orgOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="generateForm.controls.ParentOrg_ID"
+            ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              label="清點日期"
+              [control]="generateForm.controls.CHK_DATE"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="欄位說明"
+              controlName="COL_NOTES"
+              [control]="generateForm.controls.COL_NOTES"
+            ></app-input-text>
+          </div>
+        </div>
+
+        <h3 class="text-lg mt-4 mb-2">單位/人員清點設定</h3>
+        <app-table-edit
+          tableKey="ASS13100_GenerateUnits"
+          [data]="generateRows"
+          [columns]="generateColumns"
+          [showInsert]="true"
+          [showDelete]="true"
+          [showCheckBox]="true"
+          (dataChange)="generateRows = $event"
+        ></app-table-edit>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-4 border-top-1 surface-border pt-3"
+        >
+          <app-button
+            btnType="cancel"
+            [form]="generateForm"
+            (click)="onResetGenerate()"
+          ></app-button>
+          <app-button
+            label="確定"
+            btnType="submit"
+            [loading]="loading"
+            (click)="onGenerateInventory()"
+          ></app-button>
+        </div>
+      </form>
+    </p-panel>
+  </ng-container>
+
+  <!-- 編輯/明細模式：清點單明細 p-panel -->
+  <ng-container *ngIf="!isCreateMode">
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+      <form [formGroup]="dataForm" id="dataForm">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="清點單號"
+              controlName="CHK_ID"
+              [control]="dataForm.controls.CHK_ID"
+              [submitted]="submitted"
+              [disabled]="true"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              label="清點日期"
+              [control]="dataForm.controls.CHK_DATE"
+            ></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="清點單狀態"
+              controlName="STATUS"
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.STATUS"
+            ></app-dropdown>
+          </div>
+        </div>
+
+        <!-- 清點明細表格 -->
+        <hr />
+        <app-table-edit
+          tableKey="ASS13100_Detail"
+          [data]="detailRows"
+          [columns]="detailColumns"
+          [canInsert]="false"
+          [showInsert]="false"
+          [showDelete]="false"
+          [showCheckBox]="false"
+          [showReorder]="!isFormReadable"
+          [disabled]="isFormReadable"
+          (dataChange)="detailRows = $event"
+        ></app-table-edit>
+
+        <!-- 下方按鈕 -->
+        @if (!isFormReadable) {
+          <div
+            class="grid justify-content-end gap-2 m-0 mt-4 border-top-1 surface-border pt-3"
+          >
+            <app-button
+              label="結案"
+              icon="pi pi-check"
+              severity="success"
+              (click)="onClose()"
+              [disabled]="hasRowWithEmptyStatus"
+            ></app-button>
+            <app-button
+              btnType="cancel"
+              [form]="dataForm"
+              (click)="onCancelDetail()"
+            ></app-button>
+            <app-button
+              *ngIf="!isFormReadable"
+              btnType="submit"
+              [loading]="loading"
+              (click)="onConfirm()"
+            ></app-button>
+          </div>
+        }
+      </form>
+    </p-panel>
+  </ng-container>
+</div>

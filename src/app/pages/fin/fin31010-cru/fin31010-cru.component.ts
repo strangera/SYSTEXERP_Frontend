@@ -25,8 +25,8 @@ export class FIN31010CRUComponent extends BasicCruPageComponent<QueryFin31010Res
   dataForm = this.formBuilder.nonNullable.group({
     id: [null], // PK
     CAP_Item: [{ value: '系統自動給號', disabled: true }], // 收款項目代號
-    CAP_Name: [null, [Validators.maxLength(30)]], // 收款項目名稱
-    AccNo: [null], // 會計科目代號
+    CAP_Name: [null, [Validators.maxLength(30), Validators.required]], // 收款項目名稱
+    AccNo: [null, [Validators.required]], // 會計科目代號
     Remark: [null, [Validators.maxLength(100)]], // 備註
     CRT_Date: [{ value: null, disabled: true }], // CRT_USR_No
     CRT_USR_No: [{ value: null, disabled: true }], // CRT_USR_No

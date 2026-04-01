@@ -5,7 +5,6 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
@@ -17,9 +16,8 @@ import { FIN29100Data, FIN29100Service, QueryBankAccountResponse, QueryFIN29100R
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+
+type TxnTypeOption = { label: string; value: string };
 
 @Component({
   selector: 'app-fin29100',
@@ -29,40 +27,39 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
   imports: [
     ButtonModule,
     TableSubheaderComponent,
-    DropdownRangeComponent,
+    // DropdownRangeComponent,
     MenubarComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
     CalendarRangeComponent,
-    InputTextComponent,
-    RadiobuttonComponent,
+    // InputTextComponent,
+    // RadiobuttonComponent,
     ButtonComponent,
-    TableComponent,
+    // TableComponent,
     TranslateModule,
     InputTextRangeComponent,
     DropdownComponent
   ]
 })
 export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> implements OnInit {
-  queryForm = this.formBuilder.nonNullable.group({
-    BNK_No: [null],
-    DocNo_From: [null],
-    DocNo_To: [null],
+  queryForm = this.formBuilder.group({
+    BNK_No: [null as string | null],
+    DocNo_From: [null as string | null],
+    DocNo_To: [null as string | null],
     TxnDate_From: ['', Validators.required],
     TxnDate_To: ['', Validators.required],
-    TxnType: [null],
+    TxnType: [null as TxnTypeOption | null],
     ...createPaginationConfig([]),
   });
 
-  BankOptions: (QueryBankAccountResponse & { displayLabel: string })[] = []; // 銀行選項
-  TxnTypeOptions: { label: string; value: string }[] = [
+  BankOptions: (QueryBankAccountResponse & { displayLabel: string })[] = [];
+  TxnTypeOptions: TxnTypeOption[] = [
     { label: '開票', value: '1' },
     { label: '匯款', value: '2' },
     { label: '調撥', value: '3' }
   ];
 
-  // 型態 對照表
   TxnTypeMap: Record<string, string> = {
     '1': '開票',
     '2': '匯款',
@@ -113,7 +110,6 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
     this.fin29100Service.queryBankAccount({})
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        // 格式化顯示: BNK_id - BNK_AccName
         this.BankOptions = response.Data.map(item => ({
           ...item,
           displayLabel: `${item.BNK_id || item.id} - ${item.BNK_AccName}`
@@ -124,19 +120,30 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const formValue = frm.value;
+      const formValue = frm.getRawValue() as {
+        BNK_No: string | null;
+        DocNo_From: string | null;
+        DocNo_To: string | null;
+        TxnDate_From: string;
+        TxnDate_To: string;
+        TxnType: TxnTypeOption | null;
+        pageSize: number;
+        pageIndex: number;
+        SortBy: any[];
+      };
+
       this.loading = true;
 
       const requestData: QueryFIN29100Request = {
-        PageSize: formValue.PageSize || 10,
-        PageIndex: formValue.PageIndex || 1,
+        PageSize: formValue.pageSize || 10,
+        PageIndex: formValue.pageIndex || 1,
         SortBy: formValue.SortBy || [],
         BNK_No: formValue.BNK_No || '',
         DocNo_From: formValue.DocNo_From || '',
         DocNo_To: formValue.DocNo_To || '',
-        TxnType: formValue.TxnType || '',
-        TxnDate_From: this.datePipe.transform(formValue.TxnDate_From!, 'yyyy-MM-dd') || '',
-        TxnDate_To: this.datePipe.transform(formValue.TxnDate_To!, 'yyyy-MM-dd') || ''
+        TxnType: formValue.TxnType?.value || '',
+        TxnDate_From: this.datePipe.transform(formValue.TxnDate_From, 'yyyy-MM-dd') || '',
+        TxnDate_To: this.datePipe.transform(formValue.TxnDate_To, 'yyyy-MM-dd') || ''
       };
 
       this.fin29100Service
@@ -170,7 +177,17 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
   }
 
   private buildExportPayload(): QueryFIN29100Request {
-    const raw = this.queryForm.getRawValue();
+    const raw = this.queryForm.getRawValue() as {
+      BNK_No: string | null;
+      DocNo_From: string | null;
+      DocNo_To: string | null;
+      TxnDate_From: string;
+      TxnDate_To: string;
+      TxnType: TxnTypeOption | null;
+      pageSize: number;
+      pageIndex: number;
+      SortBy: any[];
+    };
 
     return {
       PageSize: raw.pageSize ?? 10,
@@ -181,11 +198,11 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
       BNK_No: raw.BNK_No || '',
       DocNo_From: raw.DocNo_From || '',
       DocNo_To: raw.DocNo_To || '',
-      TxnType: raw.TxnType || ''
+      TxnType: raw.TxnType?.value || ''
     };
   }
 
-  onExportExcel() {
+  onExportExcel(): void {
     if (!this.data?.length) {
       this.messageService.warnBubble('目前沒有資料可匯出');
       return;
@@ -202,7 +219,7 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
       });
   }
 
-  onExportPDF() {
+  onExportPDF(): void {
     if (!this.data?.length) {
       this.messageService.warnBubble('目前沒有資料可匯出');
       return;
@@ -219,7 +236,7 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
       });
   }
 
-  private downloadFile(resp: HttpResponse<Blob>, ext: string, name: string) {
+  private downloadFile(resp: HttpResponse<Blob>, ext: string, name: string): void {
     const blob = resp.body!;
     const fileName = `${name}_${new Date().getTime()}${ext}`;
     const url = window.URL.createObjectURL(blob);
