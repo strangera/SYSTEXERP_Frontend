@@ -35,4 +35,10 @@ export class ASS15080Service {
         )
       );
   }
+
+  exportPDFASS15080(body: ASS15080QueryRequest): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportPDFASS15080`, body, {
+      responseType: 'blob',
+    });
+  }
 }

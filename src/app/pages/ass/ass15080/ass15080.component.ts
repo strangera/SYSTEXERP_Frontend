@@ -14,6 +14,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { SortOption } from '@shared/models/api/base-api.interface';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -38,6 +39,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
     CalendarRangeComponent,
     CalendarComponent,
     ButtonComponent,
+    ButtonModule,
     TableReportComponent,
     TranslateModule,
   ],
@@ -72,6 +74,7 @@ export class ASS15080Component
   readonly tableLoading = signal<boolean>(false);
   lastQueryBody?: ASS15080QueryRequest;
   private readonly defaultPageSize = 30;
+  btnPDFLoading = false;
 
   columns: ReportColumn[] = [
     { field: 'ASSET_ID', header: '財產編號', visible: true },
@@ -216,5 +219,43 @@ export class ASS15080Component
 
   onClearForm(): void {
     this.queryForm.reset();
+  }
+
+  private buildExportPayload(): ASS15080QueryRequest {
+    return this.buildRequest({
+      PageSize: 0,
+      PageIndex: 0,
+      SortBy: this.lastQueryBody?.SortBy,
+    });
+  }
+
+  onExportPDF(): void {
+    const payload = this.buildExportPayload();
+    this.btnPDFLoading = true;
+    this.ass15080Service
+      .exportPDFASS15080(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.btnPDFLoading = false))
+      )
+      .subscribe((blob) => {
+        if (blob) {
+          const now = new Date();
+          const timestamp =
+            now.getFullYear().toString() +
+            (now.getMonth() + 1).toString().padStart(2, '0') +
+            now.getDate().toString().padStart(2, '0') +
+            now.getHours().toString().padStart(2, '0') +
+            now.getMinutes().toString().padStart(2, '0') +
+            now.getSeconds().toString().padStart(2, '0');
+          const fileName = `資產重估查詢_${timestamp}.pdf`;
+          const blobUrl = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = fileName;
+          a.click();
+          URL.revokeObjectURL(blobUrl);
+        }
+      });
   }
 }
