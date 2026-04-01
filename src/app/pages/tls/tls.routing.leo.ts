@@ -89,6 +89,10 @@ export const tlsRoutes: Routes = [
   { path: 'tls42010', loadComponent: () => import('./tls42010/tls42010.component').then(m => m.TLS42010Component), data: { progNo: 'TLS42010' } },
   // 快速鍵維護作業 CRU
   { path: 'tls42010cru', loadComponent: () => import('./tls42010-cru/tls42010-cru.component').then(m => m.TLS42010CRUComponent), data: { progNo: 'TLS42010' } },
+  // 快速鍵名稱維護作業
+  { path: 'tls42020', loadComponent: () => import('./tls42020/tls42020.component').then(m => m.TLS42020Component), data: { progNo: 'TLS42020' } },
+  // 快速鍵名稱維護作業 CRU
+  { path: 'tls42020cru', loadComponent: () => import('./tls42020-cru/tls42020-cru.component').then(m => m.TLS42020CRUComponent), data: { progNo: 'TLS42020' } },
   // 訊息登錄作業
   { path: 'tls43010', loadComponent: () => import('./tls43010/tls43010.component').then(m => m.TLS43010Component), data: { progNo: 'TLS43010' } },
   // 訊息登錄作業 CRU
