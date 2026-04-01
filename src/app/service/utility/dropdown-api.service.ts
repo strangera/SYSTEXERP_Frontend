@@ -23,6 +23,12 @@ import {
   EcrItem,
   EcrQuery,
   ENG1001Item,
+  FaClass1Item,
+  FaClass1Query,
+  FaClass2Item,
+  FaClass2Query,
+  FaClassMItem,
+  FaClassMQuery,
   IDropdownItem,
   IGLS1005LedgerMDItem,
   LogoAccorHosItem,
@@ -228,6 +234,45 @@ export class DropdownApiService {
     return this.queryAndMapDropdown<IDropdownItem>('/querySYS3100_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
+  }
+
+  /** 查詢資產大分類(FACLASSM)資料表下拉選單 - 回傳 B_CLASS_ID / B_CLASS_NAME */
+  queryFaClassM(body: FaClassMQuery = {}): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FaClassMItem, FaClassMQuery>(
+      '/queryFACLASSM_DropDownList',
+      'B_CLASS_ID',
+      'B_CLASS_NAME',
+      body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢資產中分類(FACLASS1)資料表下拉選單 - 回傳 M_CLASS_ID / M_CLASS_NAME */
+  queryFaClass1(body: FaClass1Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FaClass1Item, FaClass1Query>(
+      '/queryFACLASS1_DropDownList',
+      'M_CLASS_ID',
+      'M_CLASS_NAME',
+      body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢資產小分類(FACLASS2)資料表下拉選單 - 回傳 S_CLASS_ID / S_CLASS_NAME */
+  queryFaClass2(body: FaClass2Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FaClass2Item, FaClass2Query>(
+      '/queryFACLASS2_DropDownList',
+      'S_CLASS_ID',
+      'S_CLASS_NAME',
+      body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢商品管理編號(ASS11040)下拉選單 */
+  queryAss11040Dropdown(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>(
+      '/ASS0000/ASS1000/queryASS11040_DropDownList',
+      'No',
+      'Name',
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
   /** 查詢組織階層樹狀圖(SYS3100)下拉選單 */
   querySys3100Tree(body: OrgTreeQuery): Observable<OrgTreeItem[] | null> {
@@ -748,12 +793,21 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢 ASS11040 品項編號下拉選單 */
+  queryASS11040DropDownList(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>(
+      '/ASS0000/ASS1000/queryASS11040_DropDownList',
+      'No',
+      'Name'
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
   /** 查詢子模組代碼(SYS5000) */
   querySys5000SubModuleNo(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<Sys5000SubModuleItem>('/querySYS5000SubModuleNo_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
+
 
   /** 查詢子模組代碼(SYS5000) */
   querySys5000SubModuleNoGroup(): Observable<Option[] | null> {
@@ -785,11 +839,39 @@ export class DropdownApiService {
     );
   }
 
+
   /** 查詢人員資料表(TBLUSER) (依照組織代碼查詢) */
   queryTblUserOrgid(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<TblUserOrgidItem>('/queryTBLUSER_Orgid_DropDownList', 'user_No', 'user_Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
+  }
+
+  /** 查詢使用單位下拉（value 使用 Org_ID） */
+  queryTblUserOrgidAsOrg(): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<TblUserOrgidItem[]>>(`${this.apiUrl}/queryTBLUSER_Orgid_DropDownList`, {})
+      .pipe(
+        map(response => {
+          const data = response?.Data ?? [];
+          const orgMap = new Map<string, Option>();
+          data.forEach(item => {
+            if (!item?.Org_ID || orgMap.has(item.Org_ID)) return;
+            orgMap.set(item.Org_ID, {
+              value: item.Org_ID,
+              label: `${item.Org_ID} - ${item.Org_Name}`,
+              Org_ID: item.Org_ID,
+              Org_Name: item.Org_Name,
+            });
+          });
+          return Array.from(orgMap.values());
+        }),
+        catchError(err => {
+          console.error('API /queryTBLUSER_Orgid_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
   }
 
   /** 查詢專櫃活動編號資料表下拉選單() */
@@ -874,6 +956,29 @@ export class DropdownApiService {
     return this.queryAndMapDropdown<IDropdownItem>('/queryCSS2001_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
+  }
+
+  /** 查詢財產編號下拉選單 (FAASSET) */
+  queryFAASSETChooseList_DropDownList(): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<{ AssetId: string; AssetName: string }[]>>(
+        `${this.apiUrl}/queryFAASSETChooseList_DropDownList`,
+        {},
+      )
+      .pipe(
+        map(response => {
+          const data = response?.Data ?? [];
+          return data.map(item => ({
+            value: item.AssetId,
+            label: `${item.AssetId} - ${item.AssetName}`,
+          }));
+        }),
+        catchError(err => {
+          console.error('API /queryFAASSETChooseList_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true }),
+      );
   }
   /** 查詢當日交易日期有特殊條碼的機台 (TLS55020) */
   queryPos1002Tls55020(body: Tls55020Query): Observable<Option[] | null> {
