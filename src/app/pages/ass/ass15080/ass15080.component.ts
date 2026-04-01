@@ -1,25 +1,29 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-
-// Shared
+import { Component, OnInit, signal } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS15080Service } from '@service/api/ass/ass15080.service';
+import {
+  ASS15080QueryRequest,
+  ASS15080QueryRow,
+} from '@pages/ass/ass15080/ass15080.model';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatDate } from '@shared/componentkit/table-report/table-report.model';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { SortOption } from '@shared/models/api/base-api.interface';
+import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
-import { BigCategoryService } from '../../../service/basic/big-category.service';
-import { MidCategoryService } from '../../../service/basic/mid-category.service';
-import { SmallCategoryService } from '../../../service/basic/small-category.service';
-import { AuthService } from '../../../service/system/auth.service';
+import { finalize } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
+/** 資產重估查詢 */
+@UntilDestroy()
 @Component({
   selector: 'app-ass15080',
   templateUrl: './ass15080.component.html',
@@ -34,221 +38,183 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     CalendarRangeComponent,
     CalendarComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
-export class ASS15080Component extends BasicQpageComponent implements OnInit {
-  queryForm = this.formBuilder.group({
-    bigCategoryCode: [],
-    midCategoryCode: [],
-    smallCategoryCode: [],
-    Querybystatus: [],
-    propertynumber: [],
-    propertytype: [],
-    Itemnumber: [],
-    Accountcode: [],
-    custodyunit: [],
-    SApplicationdate: [],
-    EApplicationdate: [],
-    SReviewdate: [],
-    EReviewdate: [],
-    basedate: [],
+export class ASS15080Component
+  extends BasicQueryPageComponent<ASS15080QueryRow>
+  implements OnInit
+{
+  queryForm = this.formBuilder.nonNullable.group({
+    accNo: [null as string | null],
+    orgId: [null as string | null],
+    appDateFrom: [null as string | null],
+    appDateTo: [null as string | null],
+    chkDateFrom: [null as string | null],
+    chkDateTo: [null as string | null],
+    bClassId: [null as string | null],
+    mClassId: [null as string | null],
+    sClassId: [null as string | null],
+    goodsId: [null as string | null],
+    baseDate: [null as Date | string | null],
   });
-  // Table data
-  data: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'assetNumber', header: '財產編號', visible: true },
-    { field: 'itemName', header: '項目名稱', visible: true },
-    { field: 'activityCheckItem', header: '異動審核項目', visible: true },
-    { field: 'managementUnit', header: '保管單位', visible: true },
-    { field: 'activityPrice', header: '異動價格', visible: true },
-    { field: 'durableYears', header: '異動耐用年限', visible: true },
-    { field: 'remark', header: '備註', visible: true },
+
+  accNoOptions: { value: string; label: string }[] = [];
+  orgIdOptions: { value: string; label: string }[] = [];
+  bClassOptions: { value: string; label: string }[] = [];
+  mClassOptions: { value: string; label: string }[] = [];
+  sClassOptions: { value: string; label: string }[] = [];
+  goodsIdOptions: { value: string; label: string }[] = [];
+
+  readonly tableData = signal<ASS15080QueryRow[]>([]);
+  readonly totalRecords = signal<number>(0);
+  readonly tableLoading = signal<boolean>(false);
+  lastQueryBody?: ASS15080QueryRequest;
+  private readonly defaultPageSize = 30;
+
+  columns: ReportColumn[] = [
+    { field: 'ASSET_ID', header: '財產編號', visible: true },
+    { field: 'GOODS_ID', header: '項目編號', visible: true },
+    { field: 'GOODS_NAME', header: '項目名稱', visible: true },
+    {
+      field: 'CRT_Date',
+      header: '異動審核日',
+      visible: true,
+      format: (v: string) => formatDate(v),
+    },
+    { field: 'HOLD_ORG_ID', header: '保管單位', visible: true },
+    { field: 'Org_Name', header: '保管單位名稱', visible: true },
+    { field: 'UPD_GET_COST', header: '異動價格', visible: true },
+    { field: 'UPD_EXP_YEAR', header: '異動耐用年限', visible: true },
+    { field: 'NOTES', header: '備註', visible: true },
   ];
 
-
-  // Dropdown options
-  custodyunit: any[] = [
-    { value: 1, label: '101000' },
-    { value: 2, label: '102000' },
-    { value: 3, label: '103000' },
-    { value: 4, label: '104000' },
-    { value: 5, label: '105000' },
-    { value: 6, label: '106000' },
-    { value: 7, label: '107000' },
-    { value: 8, label: '108000' },
-    { value: 9, label: '109000' },
-    { value: 10, label: '10A000' },
-  ];
-  Accountcode: any[] = [
-    { value: 1, label: '1501' },
-    { value: 2, label: '150101' },
-    { value: 3, label: '1511' },
-    { value: 4, label: '151101' },
-    { value: 5, label: '1512' },
-    { value: 6, label: '151201' },
-    { value: 7, label: '1521' },
-    { value: 8, label: '152101' },
-    { value: 9, label: '1522' },
-    { value: 10, label: '152201' },
-  ];
-  usercode: any[] = [];
-  bigCategoryOptions: any[] = [
-    { value: 1, label: '裝潢工程' },
-    { value: 2, label: '其他工程' },
-    { value: 3, label: '電腦及電子零件產品' },
-    { value: 4, label: '電力及照明系統' },
-    { value: 5, label: '家電家俱設備' },
-    { value: 6, label: '機消空電水零配件' },
-    { value: 7, label: '辦公及營運庶務' },
-    { value: 8, label: '印刷品(非廣告行銷)' },
-    { value: 9, label: '印刷品(廣告行銷)' },
-    { value: 10, label: '衛生及醫療庶務用品' },
-  ];
-  midCategoryOptions: any[] = [
-    { value: 1, label: '室內裝潢工程' },
-    { value: 2, label: '室內裝潢備品' },
-    { value: 3, label: '弱電系統' },
-    { value: 4, label: '房屋及建築設備' },
-    { value: 5, label: '停車場設備' },
-    { value: 6, label: '其他工程' },
-    { value: 7, label: '機電消防工程' },
-    { value: 8, label: '電子產品及零件' },
-    { value: 9, label: '電子儀器設備' },
-    { value: 10, label: '電子儀器設備-資產' },
-  ];
-  smallCategoryOptions: any[] = [
-    { value: 1, label: '機電空調工程' },
-    { value: 2, label: '水電消防工程' },
-    { value: 3, label: '排油煙工程' },
-    { value: 4, label: '商場高壓電節能工程' },
-    { value: 5, label: '商場弱電系統工程' },
-    { value: 6, label: '網路佈線工程' },
-    { value: 7, label: '鐵路自動測試儀' },
-    { value: 8, label: '風車零件' },
-    { value: 9, label: '資收場回收用品' },
-    { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  ];
-  Querybystatus: any[] = [
-    { value: 1, label: '移轉' },
-    { value: 2, label: '報廢除帳' },
-    { value: 3, label: '變賣除帳' },
-    { value: 4, label: '新購' },
-  ];
-  assetCodeOptions: any[] = [
-    { value: 1, label: '1A232300000010000001' },
-    { value: 2, label: '1A232300000020000001' },
-    { value: 3, label: '1A232300000040000001' },
-    { value: 4, label: '1A232300000050000001' },
-    { value: 5, label: '1A232300000060000001' },
-    { value: 6, label: '1A232300000090000001' },
-    { value: 7, label: '1A232400000010000001' },
-    { value: 8, label: '1A232400000040000001' },
-    { value: 9, label: '1A232400000060000001' },
-  ];
-  propertytype: any[] = [
-    { value: 1, label: '資產' },
-    { value: 2, label: '列管品' },
-  ];
-  Itemnumber: any[] = [
-    { value: 1, label: '3A24210000001' },
-    { value: 2, label: '3A24210000002' },
-    { value: 3, label: '3A24210000003' },
-    { value: 4, label: '3A24210000004' },
-    { value: 5, label: '3A24210000005' },
-    { value: 6, label: '3A24210000006' },
-    { value: 7, label: '3A24210000007' },
-    { value: 8, label: '3A24210000008' },
-    { value: 9, label: '3A24210000009' },
-    { value: 10, label: '3A24210000010' },
-  ];
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private authService: AuthService,
-    private bigCategoryService: BigCategoryService,
-    private midCategoryService: MidCategoryService,
-    private smallCategoryService: SmallCategoryService
-  ) {
-    super(); // 呼叫父類建構子
+  constructor(private readonly ass15080Service: ASS15080Service) {
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '310039';
-    // Initialize dropdown options
-
-    // this.bigCategoryService
-    //   .getCategories()
-    //   .subscribe((data) => (this.bigCategoryOptions = data));
-    // this.midCategoryService
-    //   .getSubCategories()
-    //   .subscribe((data) => (this.midCategoryOptions = data));
-    // this.smallCategoryService
-    //   .getSmallCategories()
-    //   .subscribe((data) => (this.smallCategoryOptions = data));
+    this.initializePage(
+      'ASS15080',
+      '',
+      this.queryForm,
+      (form) => this.onSubmit(form)
+    );
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+  private buildRequest(body?: {
+    pageSize?: number;
+    PageSize?: number;
+    pageIndex?: number;
+    PageIndex?: number;
+    SortBy?: unknown;
+  }): ASS15080QueryRequest {
+    const raw = this.queryForm.getRawValue();
+    const pageSize = body?.pageSize ?? body?.PageSize ?? this.defaultPageSize;
+    const pageIndex = body?.pageIndex ?? body?.PageIndex ?? 1;
+    const sortBy = Array.isArray(body?.SortBy)
+      ? (body.SortBy as SortOption[])
+      : undefined;
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+    const payload: ASS15080QueryRequest = {
+      ACC_NO: raw.accNo || undefined,
+      ORG_ID: raw.orgId || undefined,
+      APP_DATE_S: this.toApiDateValue(raw.appDateFrom),
+      APP_DATE_E: this.toApiDateValue(raw.appDateTo),
+      CHK_DATE_S: this.toApiDateValue(raw.chkDateFrom),
+      CHK_DATE_E: this.toApiDateValue(raw.chkDateTo),
+      B_CLASS_ID: raw.bClassId || undefined,
+      M_CLASS_ID: raw.mClassId || undefined,
+      S_CLASS_ID: raw.sClassId || undefined,
+      GOODS_ID: raw.goodsId || undefined,
+      BASE_DATE: this.toBaseDateYyyyMm(raw.baseDate),
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: sortBy,
     };
-    this.router.navigate(['/demoCRU'], extras);
+
+    return removeEmptyValues(payload) as ASS15080QueryRequest;
   }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+
+  queryFunction = (body: {
+    pageSize?: number;
+    PageSize?: number;
+    pageIndex?: number;
+    PageIndex?: number;
+    SortBy?: unknown;
+  }) => {
+    const request = this.buildRequest(body);
+    this.lastQueryBody = request;
+    return this.ass15080Service.queryASS15080(request).pipe(
+      map((res: ApiResponse<ASS15080QueryRow[]>) => {
+        const list = res.Status === '0000' ? (res.Data ?? []) : [];
+        const mapped = list.map((row, idx) => ({
+          ...row,
+          RowNum: row.RowNum ?? idx + 1,
+          ID:
+            row.ID ??
+            `${row.ASSET_ID ?? ''}-${row.GOODS_ID ?? ''}-${idx}`,
+        }));
+        return {
+          Data: mapped,
+          TotalCount: res.TotalCount ?? mapped.length,
+        };
+      })
+    );
+  };
+
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      this.lastQueryBody = this.buildRequest({
+        pageSize: this.defaultPageSize,
+        pageIndex: 1,
+        SortBy: this.lastQueryBody?.SortBy,
+      });
+      this.tableLoading.set(true);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: (res) => {
+            this.tableData.set(res.Data ?? []);
+            this.totalRecords.set(res.TotalCount ?? 0);
+          },
+          error: () => {
+            this.tableData.set([]);
+            this.totalRecords.set(0);
+          },
+        });
+    });
+  }
+
+  private toApiDateValue(value: unknown): string | undefined {
+    if (value == null || value === '') return undefined;
+    if (value instanceof Date) return value.toISOString();
+    if (typeof value === 'string') return value;
+    return undefined;
+  }
+
+  private toBaseDateYyyyMm(value: unknown): string | undefined {
+    if (value == null || value === '') return undefined;
+    if (value instanceof Date) {
+      const y = value.getFullYear();
+      const m = (value.getMonth() + 1).toString().padStart(2, '0');
+      return `${y}${m}`;
+    }
+    if (typeof value === 'string') {
+      const nums = value.replace(/\D/g, '');
+      if (nums.length >= 6) return nums.substring(0, 6);
+    }
+    return undefined;
+  }
+
+  onClearForm(): void {
+    this.queryForm.reset();
   }
 }
