@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
-import { AccDescOption, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps4023DetailDataByInvoiceNumberRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
+import { AccDescOption, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps4023DetailDataByInvoiceNumberRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -31,6 +31,8 @@ export class FIN53010Service {
   public readonly vocTempLoading = signal<boolean>(!1);
   /** 傳票關聯六表（queryFIN53010DetailData_ByVouNo） */
   public readonly detailByVouNoLoading = signal<boolean>(!1);
+  /** 編輯步驟用（queryFIN53010DetailData_ByVouNo_forupdate） */
+  public readonly detailByVouNoForUpdateLoading = signal<boolean>(!1);
   /** 依發票號碼查 APS4023（queryAPS4023DetatilData_ByInvoiceNumber） */
   public readonly aps4023ByInvoiceLoading = signal<boolean>(!1);
 
@@ -151,6 +153,21 @@ export class FIN53010Service {
       take(1),
       tap(res => this.logger.debug('queryFIN53010DetailData_ByVouNo:', [res])),
       finalize(() => this.detailByVouNoLoading.set(!1)),
+    );
+  }
+
+  /** 編輯頁「下一步」步驟表資料 */
+  public queryFIN53010DetailDataByVouNoForUpdate(
+    payload: QueryFIN53010DetailDataByVouNoForUpdateRequest,
+  ): Observable<FIN53010DetailDataByVouNoForUpdateResult> {
+    this.detailByVouNoForUpdateLoading.set(!0);
+    return this.http.post<FIN53010DetailDataByVouNoForUpdateResult>(
+      `${apiUrl}/queryFIN53010DetailData_ByVouNo_forupdate`,
+      payload,
+    ).pipe(
+      take(1),
+      tap(res => this.logger.debug('queryFIN53010DetailData_ByVouNo_forupdate:', [res])),
+      finalize(() => this.detailByVouNoForUpdateLoading.set(!1)),
     );
   }
 

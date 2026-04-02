@@ -81,7 +81,7 @@
       <label for="oldPassword" class="col-12 mb-2 md:col-2 md:mb-0">舊密碼</label>
       <div class="col-12 md:col-10">
         <p-password id="oldPassword" formControlName="oldPassword" class="w-full" styleClass="w-full"
-          inputStyleClass="w-full" placeholder="請輸入舊密碼" [maxLength]="8" [toggleMask]="true" [feedback]="false" />
+          inputStyleClass="w-full" placeholder="請輸入舊密碼" [toggleMask]="true" [feedback]="false" />
         <small *ngIf="form.controls['oldPassword'].touched && form.controls['oldPassword'].errors?.['required']"
           class="p-error block">舊密碼為必填項。</small>
       </div>

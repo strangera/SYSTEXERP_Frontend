@@ -81,7 +81,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly cf = computed(() => this.campaignForm.controls);
 
   public readonly dataForm = this.formBuilder.group({
-    pod_no: [null as string | null, [Validators.maxLength(10)]], // 活動單號
+    pod_no: [null as string | null, [Validators.maxLength(25)]], // 活動單號
     pod_desc: [null as string | null, [Validators.required]], // 活動名稱
     pod_sdate: [{ value: this.service.dateS as Date | null, disabled: true }], // 起始日期(起)
     pod_back_sdate: [null as Date | null, [Validators.required]], // 兌回日期(起)
