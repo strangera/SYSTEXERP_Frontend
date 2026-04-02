@@ -160,8 +160,6 @@
                    (insert)="displayDialog.set(true)"
                    [disabled]="isFormReadable"
                    (delete)="onDelete()"
-                   (lazyLoadData)="onLazyLoadData($event, dataForm); service.loadTLS26080Detail(df().pod_no.value ?? '')"
-                   [lazy]="true"
                    [loading]="tableLoading()">
           <header>
             <div class="flex align-items-center mb-4">
