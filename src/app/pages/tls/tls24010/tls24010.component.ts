@@ -329,7 +329,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         disabled: (() => {
           if (!this.hasPermission(Actions.Delete)) return true;// 1. 沒有權限，直接禁用
           if (!row) return true; // 2. 如果沒有選中任何列 (row 為空)，應預設為禁用
-          if (isFixedTerm) return true;
+          // if (isFixedTerm) return true;
           if (row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') return false; // 3. 無發票狀態：可以刪除 (disable = false)
           return !row?.IsCanDel;// 4. 有發票或其他狀態：依據 IsCanDel 欄位決定
         })(),
