@@ -1,19 +1,26 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-
-// Shared
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS17060Service } from '@service/api/ass/ass17060.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { finalize, map, Observable, of } from 'rxjs';
+import type { Option } from '@service/utility/dropdown-api.model';
+import { QueryASS17060DetailRow, QueryASS17060Request } from './ass17060.model';
 
+/** 3.1.7.6 調撥明細表 */
+@UntilDestroy()
 @Component({
   selector: 'app-ass17060',
   templateUrl: './ass17060.component.html',
@@ -27,186 +34,195 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     CalendarRangeComponent,
     DropdownComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
-export class ASS17060Component extends BasicQpageComponent implements OnInit {
-  queryForm = this.formBuilder.group({
-    bigCategoryCode: [],
-    midCategoryCode: [],
-    smallCategoryCode: [],
-    Querybystatus: [],
-    propertynumber: [],
-    propertytype: [],
-    Itemnumber: [],
-    Sdate: [],
-    Edate: [],
-    Departmentcode: [],
+export class ASS17060Component extends BasicQueryPageComponent<QueryASS17060DetailRow> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    Sdate: [null as Date | null, Validators.required],
+    Edate: [null as Date | null, Validators.required],
+    OrgID: [null as string | null],
+    BClassID: [null as string | null],
+    MClassID: [null as string | null],
+    SClassID: [null as string | null],
+    GoodsID: [null as string | null],
+    PageSize: [30],
+    PageIndex: [1],
   });
-  // Table data
-  data: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'itemCode', header: '品項編號', visible: true },
-    { field: 'itemName', header: '品項名稱', visible: true },
-    { field: 'itemPrice', header: '品項單價', visible: true },
-    { field: 'unit', header: '單號', visible: true },
-    { field: 'department', header: '部門', visible: true },
-    { field: 'quantity', header: '數量', visible: true },
-    { field: 'amount', header: '金額', visible: true },
+
+  orgOptions: Array<{ label: string; value: string }> = [];
+  bigCategoryOptions: Option[] = [];
+  midCategoryOptions: Option[] = [];
+  smallCategoryOptions: Option[] = [];
+  goodsOptions: Option[] = [];
+
+  data: QueryASS17060DetailRow[] = [];
+  totalRecords = 0;
+  lastQueryBody: (QueryASS17060Request & { pageSize?: number; pageIndex?: number }) | null = null;
+
+  columns: ReportColumn[] = [
+    { field: 'sort_no', header: '序號', align: 'right' },
+    { field: 'row_type', header: '列類別' },
+    { field: 'goods_id', header: '品項ID' },
+    { field: 'goods_name', header: '品項名稱' },
+    { field: 'unit_price', header: '品項單價', align: 'right' },
+    { field: 'whmove_id', header: 'WHMOVE_ID' },
+    { field: 'whmove_status_name', header: 'WHMOVE_STATUS_NAME' },
+    { field: 'wh_name', header: 'WH_NAME' },
+    { field: 'qty', header: '調撥數量', align: 'right' },
+    { field: 'move_amt', header: '調撥金額', align: 'right' },
   ];
-
-
-
-  // Dropdown options
-  Departmentcode: any[] = [];
-  usercode: any[] = [];
-  bigCategoryOptions: any[] = [
-    { value: 1, label: '裝潢工程' },
-    { value: 2, label: '其他工程' },
-    { value: 3, label: '電腦及電子零件產品' },
-    { value: 4, label: '電力及照明系統' },
-    { value: 5, label: '家電家俱設備' },
-    { value: 6, label: '機消空電水零配件' },
-    { value: 7, label: '辦公及營運庶務' },
-    { value: 8, label: '印刷品(非廣告行銷)' },
-    { value: 9, label: '印刷品(廣告行銷)' },
-    { value: 10, label: '衛生及醫療庶務用品' },
-  ];
-  midCategoryOptions: any[] = [
-    { value: 1, label: '室內裝潢工程' },
-    { value: 2, label: '室內裝潢備品' },
-    { value: 3, label: '弱電系統' },
-    { value: 4, label: '房屋及建築設備' },
-    { value: 5, label: '停車場設備' },
-    { value: 6, label: '其他工程' },
-    { value: 7, label: '機電消防工程' },
-    { value: 8, label: '電子產品及零件' },
-    { value: 9, label: '電子儀器設備' },
-    { value: 10, label: '電子儀器設備-資產' },
-  ];
-  smallCategoryOptions: any[] = [
-    { value: 1, label: '機電空調工程' },
-    { value: 2, label: '水電消防工程' },
-    { value: 3, label: '排油煙工程' },
-    { value: 4, label: '商場高壓電節能工程' },
-    { value: 5, label: '商場弱電系統工程' },
-    { value: 6, label: '網路佈線工程' },
-    { value: 7, label: '鐵路自動測試儀' },
-    { value: 8, label: '風車零件' },
-    { value: 9, label: '資收場回收用品' },
-    { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  ];
-  Querybystatus: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '發料' },
-    { value: 3, label: '退料' },
-
-  ];
-  assetCodeOptions: any[] = [
-    { value: 1, label: '1A232300000010000001' },
-    { value: 2, label: '1A232300000020000001' },
-    { value: 3, label: '1A232300000040000001' },
-    { value: 4, label: '1A232300000050000001' },
-    { value: 5, label: '1A232300000060000001' },
-    { value: 6, label: '1A232300000090000001' },
-    { value: 7, label: '1A232400000010000001' },
-    { value: 8, label: '1A232400000040000001' },
-    { value: 9, label: '1A232400000060000001' },
-  ];
-  propertytype
-    : any[] = [
-      { value: 1, label: '資產' },
-      { value: 2, label: '列管品' },
-    ];
-  Itemnumber
-    : any[] = [
-
-      { value: 1, label: '3A24210000001' },
-      { value: 2, label: '3A24210000002' },
-      { value: 3, label: '3A24210000003' },
-      { value: 4, label: '3A24210000004' },
-      { value: 5, label: '3A24210000005' },
-      { value: 6, label: '3A24210000006' },
-      { value: 7, label: '3A24210000007' },
-      { value: 8, label: '3A24210000008' },
-      { value: 9, label: '3A24210000009' },
-      { value: 10, label: '3A24210000010' },
-    ];
-
-
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-
+    private readonly ass17060Service: ASS17060Service,
+    private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '310054';
-    // Initialize dropdown options
+    this.initializePage('ASS17060', '', this.queryForm, () => this.onSubmit());
+    this.loadOrgOptions();
+    this.loadBigCategoryOptions();
+    this.loadGoodsOptions();
+    this.setupCategoryCascade();
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+  private loadOrgOptions(): void {
+    this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe((res) => {
+      if (res.Status !== '0000') return;
+      this.orgOptions = (res.Data ?? []).map((item) => ({
+        label: `${item.No ?? ''}-${item.Name ?? ''}`,
+        value: item.No ?? '',
+      }));
+    });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+  private loadBigCategoryOptions(): void {
+    this.dropdownApiService.queryFaClassM({}).pipe(untilDestroyed(this)).subscribe((opts) => {
+      this.bigCategoryOptions = opts ?? [];
+    });
+  }
+
+  private loadGoodsOptions(): void {
+    this.dropdownApiService.queryFasItem({ MATERIAL_TYPE: '3' }).pipe(untilDestroyed(this)).subscribe((opts) => {
+      this.goodsOptions = opts ?? [];
+    });
+  }
+
+  private setupCategoryCascade(): void {
+    this.queryForm.controls.BClassID.valueChanges.pipe(untilDestroyed(this)).subscribe((b) => {
+      this.queryForm.patchValue({ MClassID: null, SClassID: null }, { emitEvent: false });
+      this.midCategoryOptions = [];
+      this.smallCategoryOptions = [];
+      if (!b) return;
+      this.dropdownApiService.queryFaClass1({ B_CLASS_ID: b }).pipe(untilDestroyed(this)).subscribe((opts) => {
+        this.midCategoryOptions = opts ?? [];
+      });
+    });
+
+    this.queryForm.controls.MClassID.valueChanges.pipe(untilDestroyed(this)).subscribe((m) => {
+      this.queryForm.patchValue({ SClassID: null }, { emitEvent: false });
+      this.smallCategoryOptions = [];
+      if (!m) return;
+      this.dropdownApiService.queryFaClass2({ M_CLASS_ID: m }).pipe(untilDestroyed(this)).subscribe((opts) => {
+        this.smallCategoryOptions = opts ?? [];
+      });
+    });
+  }
+
+  private toStartOfDayIso(d: Date): string {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x.toISOString();
+  }
+
+  private toEndOfDayIso(d: Date): string {
+    const x = new Date(d);
+    x.setHours(23, 59, 59, 999);
+    return x.toISOString();
+  }
+
+  private buildPayload(raw: ReturnType<typeof this.queryForm.getRawValue>, body: object): QueryASS17060Request | null {
+    const b = body as Record<string, unknown>;
+    const pageSize = (b['pageSize'] as number | undefined) ?? (b['PageSize'] as number | undefined) ?? raw.PageSize ?? 30;
+    const pageIndex = (b['pageIndex'] as number | undefined) ?? (b['PageIndex'] as number | undefined) ?? 1;
+    const sortBy = b['SortBy'] as QueryASS17060Request['SortBy'] | undefined;
+    const s = raw.Sdate;
+    const e = raw.Edate;
+    if (!s || !e) {
+      return null;
     }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+    const payload: QueryASS17060Request = {
+      StartDate: this.toStartOfDayIso(s),
+      EndDate: this.toEndOfDayIso(e),
+      OrgID: raw.OrgID || undefined,
+      BClassID: raw.BClassID || undefined,
+      MClassID: raw.MClassID || undefined,
+      SClassID: raw.SClassID || undefined,
+      GoodsID: raw.GoodsID || undefined,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      Offset: (pageIndex - 1) * pageSize,
+      SortBy: sortBy,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    const cleaned = removeEmptyValues({ ...payload } as Record<string, unknown>);
+    return cleaned as unknown as QueryASS17060Request;
   }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+
+  queryFunction = (body: object): Observable<ApiResponse<QueryASS17060DetailRow[]>> => {
+    const raw = this.queryForm.getRawValue();
+    const payload = this.buildPayload(raw, body);
+    if (!payload) {
+      const empty: ApiResponse<QueryASS17060DetailRow[]> = {
+        Status: '0000',
+        Data: [],
+        TotalCount: 0,
+        Error: null,
+        Meta: { Timestamp: '', RequestId: '' },
+        Message: '',
+        TotalPage: 0,
+      };
+      return of(empty);
+    }
+    return this.ass17060Service.queryASS17060(payload).pipe(
+      map((res) => ({
+        ...res,
+        Data: (res.Data ?? []).map((r, i) => ({
+          ...r,
+          _pk: `${r.sort_no ?? ''}_${r.goods_id ?? ''}_${r.whmove_id ?? ''}_${i}`,
+        })),
+      })),
+    );
+  };
+
+  onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const raw = this.queryForm.getRawValue();
+      const pageSize = raw.PageSize ?? 30;
+      const built = this.buildPayload(raw, { pageSize, pageIndex: 1 });
+      if (!built) {
+        this.loading = false;
+        return;
+      }
+      this.lastQueryBody = {
+        ...built,
+        pageSize,
+        pageIndex: 1,
+      };
+      this.loading = true;
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (res) => {
+            if (res.Status !== '0000') return;
+            this.data = res.Data ?? [];
+            this.totalRecords = res.TotalCount ?? 0;
+          },
+        });
+    });
   }
 }
