@@ -11,9 +11,9 @@
     [optionValue]="optionValue" [showClear]="showClear" [filterBy]="filterBy"
     [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }" (onHide)="onDropdownHide()"
     [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
-    [dataKey]="optionValue" appendTo="body" [resetFilterOnHide]="true" [virtualScroll]="true"
-    [virtualScrollItemSize]="40" [editable]="editable" [loading]="loading" [filter]="filter"
-    (keydown.enter)="$event.preventDefault()" [group]="group">
+    [dataKey]="optionValue" appendTo="body" [resetFilterOnHide]="true"
+    [virtualScroll]="options.length > 10 ? true : false" [virtualScrollItemSize]="40" [editable]="editable"
+    [loading]="loading" [filter]="filter" (keydown.enter)="$event.preventDefault()" [group]="group">
     <ng-template let-options pTemplate="item">
       <div class="flex align-items-center gap-2">
         <div>

@@ -265,8 +265,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       pod_desc: selected.CampaignId,
       pod_sdate: new Date(selected.StartTime),
       pod_edate: new Date(selected.EndTime),
-      pod_back_sdate: selected.DiscountStartTime,
-      pod_back_edate: selected.DiscountEndTime,
+      pod_back_sdate: selected.DiscountStartTime ? new Date(selected.DiscountStartTime) : null,
+      pod_back_edate: selected.DiscountEndTime ? new Date(selected.DiscountEndTime) : null,
     };
     this.dataForm.patchValue(patch);
     this.logger.debug(`campaignEffect:`, [podDesc, selected]);
