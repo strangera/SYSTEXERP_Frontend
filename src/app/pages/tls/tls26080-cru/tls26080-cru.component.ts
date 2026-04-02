@@ -609,6 +609,18 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         return;
       }
 
+      // 檢查專櫃編號是否有重複
+      const seen = new Set();
+      const hasDuplicate = validTableData.some(item => {
+        if (seen.has(item.tlt_no)) return true;
+        seen.add(item.id);
+        return false;
+      });
+      if (hasDuplicate) {
+        this.messageService.errorBubble('有重複的專櫃編號，無法儲存');
+        return;
+      }
+
       // 逐筆驗證表格資料
       for (const item of validTableData) {
         if (!item.tlt_no || !item.calc_date_type) {
