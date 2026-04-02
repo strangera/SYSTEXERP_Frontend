@@ -178,7 +178,7 @@ export class ASS17060Component extends BasicQueryPageComponent<QueryASS17060Deta
     if (!payload) {
       const empty: ApiResponse<QueryASS17060DetailRow[]> = {
         Status: '0000',
-        Data: [],
+        Data: [] as QueryASS17060DetailRow[],
         TotalCount: 0,
         Error: null,
         Meta: { Timestamp: '', RequestId: '' },
