@@ -1,3 +1,4 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -6,8 +7,8 @@ import { ASS11010Service } from '@service/api/ass/ass11010.service';
 import { ASS11020Service } from '@service/api/ass/ass11020.service';
 import { ASS11030Service } from '@service/api/ass/ass11030.service';
 import { ASS13050Service } from '@service/api/ass/ass13050.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TblUserOrgidItem } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -17,13 +18,13 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ColumnGroup, formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { combineLatest, finalize, map, Observable, startWith } from 'rxjs';
 import { ASS13050QueryRow, QueryASS13050Request } from './ass13050.model';
-import { AsyncPipe } from '@angular/common';
 
 // 3.1.3.5 移轉交接表
 @UntilDestroy()
@@ -136,12 +137,13 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
   readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
   readonly midClassOptions = signal<{ label: string; value: string }[]>([]);
   readonly smallClassOptions = signal<{ label: string; value: string }[]>([]);
-  readonly assetOptions: { label: string; value: string }[] = [];
   // 進貨類型（DEPRE_YN 財產類型）
   readonly purchaseTypeOptions: { label: string; value: string }[] = [
     { value: '1', label: '資產' },
     { value: '2', label: '列管品' },
   ];
+  /** 財產編號下拉選項 */
+  readonly assetOptions$ = this.dropdownApi.queryFAASSETChooseList_DropDownList();
   readonly titleOptions = [
     { value: 1, label: '交接' },
     { value: 2, label: '移轉' },
@@ -155,21 +157,22 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
 
   readonly columns: ReportColumn[] = [
     { field: 'ASSET_ID', header: '財產編號', groupField: 'item' },
-    { field: 'ITEM_NAME', header: '品項', groupField: 'item' },
+    { field: 'GOODS_ID', header: '品項代碼', groupField: 'item' },
+    { field: 'GOODS_NAME', header: '品項名稱', groupField: 'item' },
     { field: 'QTY', header: '數量', groupField: 'item' },
     { field: 'UNIT', header: '單位', groupField: 'item' },
     { field: 'CONFIRM_TRANSFER', header: '確定交接' },
-    { field: 'HOLD_ORG_NAME', header: '保管單位', groupField: 'oldKeeper' },
-    { field: 'HOLD_EMP_NAME', header: '保管人', groupField: 'oldKeeper' },
-    { field: 'USE_ORG_NAME', header: '使用單位', groupField: 'oldKeeper' },
-    { field: 'USE_EMP_NAME', header: '使用者', groupField: 'oldKeeper' },
-    { field: 'NEW_HOLD_ORG_NAME', header: '保管單位', groupField: 'newKeeper' },
-    { field: 'NEW_HOLD_EMP_NAME', header: '保管人', groupField: 'newKeeper' },
-    { field: 'NEW_USE_ORG_NAME', header: '使用單位', groupField: 'newKeeper' },
-    { field: 'NEW_USE_EMP_NAME', header: '使用者', groupField: 'newKeeper' },
-    { field: 'ASSET_STATUS', header: '資產狀態' },
-    { field: 'ORIGINAL_AMOUNT', header: '原始取得金額', format: formatAmount },
-    { field: 'REMARK', header: '備註' },
+    { field: 'ORI_HOLD_ORG_NAME', header: '保管單位', groupField: 'oldKeeper' },
+    { field: 'ORI_HOLD_EMP_NAME', header: '保管人', groupField: 'oldKeeper' },
+    { field: 'ORI_USE_ORG_NAME', header: '使用單位', groupField: 'oldKeeper' },
+    { field: 'ORI_USE_EMP_NAME', header: '使用者', groupField: 'oldKeeper' },
+    { field: 'HOLD_ORG_NAME', header: '保管單位', groupField: 'newKeeper' },
+    { field: 'HOLD_EMP_NAME', header: '保管人', groupField: 'newKeeper' },
+    { field: 'USE_ORG_NAME', header: '使用單位', groupField: 'newKeeper' },
+    { field: 'USE_EMP_NAME', header: '使用者', groupField: 'newKeeper' },
+    { field: 'ASSET_STATUS_NAME', header: '資產狀態' },
+    { field: 'FIR_GET_COST', header: '原始取得金額', format: formatAmount },
+    { field: 'NOTES', header: '備註' },
   ];
 
   constructor(
@@ -178,6 +181,7 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
     private readonly ass11020Service: ASS11020Service,
     private readonly ass11030Service: ASS11030Service,
     private readonly dropdownApi: DropdownApiService,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }
@@ -223,6 +227,7 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
       ).subscribe({
         next: res => {
           if (res.Status !== '0000') return;
+          console.log("Data: ", res.Data);
           this.tableData.set(res.Data);
           this.totalRecords.set(res.TotalCount || 0);
         },
@@ -238,28 +243,12 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
       PageIndex: 1,
     }) as QueryASS13050Request;
 
-    this.btnReportLoading = true;
-    this.ass13050Service.downloadReportASS13050(payload).pipe(
-      finalize(() => this.btnReportLoading = false),
-      untilDestroyed(this),
-    ).subscribe(blob => {
-      if (!blob) return;
-      const now = new Date();
-      const timestamp = now.getFullYear().toString() +
-        (now.getMonth() + 1).toString().padStart(2, '0') +
-        now.getDate().toString().padStart(2, '0') +
-        now.getHours().toString().padStart(2, '0') +
-        now.getMinutes().toString().padStart(2, '0') +
-        now.getSeconds().toString().padStart(2, '0');
-      const fileName = `移轉交接表${timestamp}.pdf`;
-
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(blobUrl);
-    });
+    const download$ = this.ass13050Service.downloadReportASS13050(payload);
+    this.fileExportService.executeFileExport(
+      download$,
+      '.pdf',
+      (isLoading) => this.loading = isLoading
+    ).subscribe();
   }
 
   private buildQueryPayload(rawValue: ReturnType<typeof this.queryForm.getRawValue>): QueryASS13050Request {
@@ -286,7 +275,7 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}${month}${day}`;
+    return `${year}-${month}-${day}`;
   }
 
   private loadBigClassOptions(): void {

@@ -87,7 +87,7 @@
             <app-dropdown
               label="財產編號"
               controlName="ASSET_ID"
-              [options]="assetOptions"
+              [options]="assetOptions$ | async"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.ASSET_ID"

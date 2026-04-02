@@ -41,6 +41,13 @@ export type DownloadASS13050Request = QueryASS13050Request;
 
 // ==================== Response 介面 ====================
 
+/** 查詢回應資料結構 */
+export interface ASS13050QueryDataWrapper {
+  TotalRows: number;
+  TotalPages: number;
+  QueryData: ASS13050QueryRow[];
+}
+
 /** 移轉交接表查詢結果列 */
 export interface ASS13050QueryRow {
   /** 財產編號 */
