@@ -87,6 +87,22 @@ export interface FaClass2Item {
 }
 
 /**
+ * queryFASITEM_DropDownList 請求（若後端欄位不同請再調整）
+ */
+export interface FaSitemQuery {
+  MATERIAL_TYPE?: string | null;
+}
+
+/**
+ * queryFASITEM_DropDownList 回傳項目
+ */
+export interface FaSitemItem {
+  RowNo?: string;
+  GOODS_ID: string;
+  GOODS_NAME: string;
+}
+
+/**
  * 查詢 TLTBUSCLASS 時的請求 body
  */
 export interface BusClassQuery {

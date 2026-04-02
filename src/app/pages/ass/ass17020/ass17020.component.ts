@@ -1,19 +1,38 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras } from '@angular/router';
-// Services
-
-// Shared
+import { Component, OnInit, signal } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS17020Service } from '@service/api/ass/ass17020.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import {
+  ASS17020DataPayload,
+  ASS17020DataRow,
+  ASS17020DeptInfo,
+  ASS17020FlatRow,
+  ASS17020Summary,
+  QueryASS17020Request,
+} from '@pages/ass/ass17020/ass17020.model';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import {
+  ColumnGroup,
+  ReportColumn,
+  formatAmount,
+} from '@shared/componentkit/table-report/table-report.model';
+import { SortOption } from '@shared/models/api/base-api.interface';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { distinctUntilChanged } from 'rxjs';
+import { finalize, map, tap } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
+/** 領用統計表 */
+@UntilDestroy()
 @Component({
   selector: 'app-ass17020',
   templateUrl: './ass17020.component.html',
@@ -27,184 +46,360 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     CalendarRangeComponent,
     DropdownComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
+    ButtonModule,
   ],
 })
-export class ASS17020Component extends BasicQpageComponent implements OnInit {
-  queryForm = this.formBuilder.group({
-    bigCategoryCode: [],
-    midCategoryCode: [],
-    smallCategoryCode: [],
-    Querybystatus: [],
-    propertynumber: [],
-    propertytype: [],
-    Itemnumber: [],
-    Sdate: [],
-    Edate: [],
-    Departmentcode: [],
+export class ASS17020Component
+  extends BasicQueryPageComponent<ASS17020FlatRow>
+  implements OnInit
+{
+  queryForm = this.formBuilder.nonNullable.group({
+    startDate: [null as Date | string | null, [Validators.required]],
+    endDate: [null as Date | string | null, [Validators.required]],
+    orgId: [null as string | null],
+    bClassId: [null as string | null],
+    mClassId: [null as string | null],
+    sClassId: [null as string | null],
+    goodsId: [null as string | null],
   });
-  // Table data
-  data: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'itemCode', header: '品項編號', visible: true },
-    { field: 'itemName', header: '品項名稱', visible: true },
-    { field: 'itemPrice', header: '品項單價', visible: true },
-    { field: 'unit', header: '單號', visible: true },
-    { field: 'department', header: '部門', visible: true },
-    { field: 'quantity', header: '數量', visible: true },
-    { field: 'amount', header: '金額', visible: true },
+
+  orgOptions: { value: string; label: string }[] = [];
+  bigClassOptions: { value: string; label: string }[] = [];
+  midClassOptions: { value: string; label: string }[] = [];
+  smallClassOptions: { value: string; label: string }[] = [];
+  goodsOptions: { value: string; label: string }[] = [];
+
+  readonly tableData = signal<ASS17020FlatRow[]>([]);
+  readonly totalRecords = signal<number>(0);
+  readonly tableLoading = signal<boolean>(false);
+
+  lastQueryBody?: QueryASS17020Request;
+  private readonly defaultPageSize = 30;
+
+  columns: ReportColumn[] = [];
+  columnGroup: ColumnGroup[] = [];
+  summaryFooter: Record<string, unknown> | null = null;
+
+  private readonly baseColumns: ReportColumn[] = [
+    { field: 'RowNo', header: '列號', sortField: 'RowNo' },
+    { field: 'Goods', header: '品名或物品描述', sortField: 'Goods' },
+    {
+      field: 'UnitPrice',
+      header: '單價',
+      align: 'right',
+      sortField: 'UnitPrice',
+      format: (v) => formatAmount(v as number),
+    },
   ];
 
-
-
-  // Dropdown options
-  Departmentcode: any[] = [];
-  usercode: any[] = [];
-  bigCategoryOptions: any[] = [
-    { value: 1, label: '裝潢工程' },
-    { value: 2, label: '其他工程' },
-    { value: 3, label: '電腦及電子零件產品' },
-    { value: 4, label: '電力及照明系統' },
-    { value: 5, label: '家電家俱設備' },
-    { value: 6, label: '機消空電水零配件' },
-    { value: 7, label: '辦公及營運庶務' },
-    { value: 8, label: '印刷品(非廣告行銷)' },
-    { value: 9, label: '印刷品(廣告行銷)' },
-    { value: 10, label: '衛生及醫療庶務用品' },
+  private readonly tailColumns: ReportColumn[] = [
+    {
+      field: 'TotalQty',
+      header: '總數量',
+      align: 'right',
+      sortField: 'TotalQty',
+      format: (v) => formatAmount(v as number),
+    },
+    {
+      field: 'TotalAmt',
+      header: '總金額',
+      align: 'right',
+      sortField: 'TotalAmt',
+      format: (v) => formatAmount(v as number),
+    },
   ];
-  midCategoryOptions: any[] = [
-    { value: 1, label: '室內裝潢工程' },
-    { value: 2, label: '室內裝潢備品' },
-    { value: 3, label: '弱電系統' },
-    { value: 4, label: '房屋及建築設備' },
-    { value: 5, label: '停車場設備' },
-    { value: 6, label: '其他工程' },
-    { value: 7, label: '機電消防工程' },
-    { value: 8, label: '電子產品及零件' },
-    { value: 9, label: '電子儀器設備' },
-    { value: 10, label: '電子儀器設備-資產' },
-  ];
-  smallCategoryOptions: any[] = [
-    { value: 1, label: '機電空調工程' },
-    { value: 2, label: '水電消防工程' },
-    { value: 3, label: '排油煙工程' },
-    { value: 4, label: '商場高壓電節能工程' },
-    { value: 5, label: '商場弱電系統工程' },
-    { value: 6, label: '網路佈線工程' },
-    { value: 7, label: '鐵路自動測試儀' },
-    { value: 8, label: '風車零件' },
-    { value: 9, label: '資收場回收用品' },
-    { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  ];
-  Querybystatus: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '發料' },
-    { value: 3, label: '退料' },
-
-  ];
-  assetCodeOptions: any[] = [
-    { value: 1, label: '1A232300000010000001' },
-    { value: 2, label: '1A232300000020000001' },
-    { value: 3, label: '1A232300000040000001' },
-    { value: 4, label: '1A232300000050000001' },
-    { value: 5, label: '1A232300000060000001' },
-    { value: 6, label: '1A232300000090000001' },
-    { value: 7, label: '1A232400000010000001' },
-    { value: 8, label: '1A232400000040000001' },
-    { value: 9, label: '1A232400000060000001' },
-  ];
-  propertytype
-    : any[] = [
-      { value: 1, label: '資產' },
-      { value: 2, label: '列管品' },
-    ];
-  Itemnumber
-    : any[] = [
-
-      { value: 1, label: '3A24210000001' },
-      { value: 2, label: '3A24210000002' },
-      { value: 3, label: '3A24210000003' },
-      { value: 4, label: '3A24210000004' },
-      { value: 5, label: '3A24210000005' },
-      { value: 6, label: '3A24210000006' },
-      { value: 7, label: '3A24210000007' },
-      { value: 8, label: '3A24210000008' },
-      { value: 9, label: '3A24210000009' },
-      { value: 10, label: '3A24210000010' },
-    ];
-
-
 
   constructor(
-    private formBuilder: FormBuilder,
-
+    private readonly dropdownApi: DropdownApiService,
+    private readonly ass17020Service: ASS17020Service
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '310050';
+    this.initializePage(
+      'ASS17020',
+      '',
+      this.queryForm,
+      (form) => this.onSubmit(form)
+    );
+    this.rebuildColumns([]);
+    this.loadStaticDropdowns();
+    this.setupClassCascades();
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+  private loadStaticDropdowns(): void {
+    this.dropdownApi
+      .querySys3100()
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.orgOptions = opts ?? [];
+      });
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+    this.dropdownApi
+      .queryFaClassM({})
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.bigClassOptions = opts ?? [];
+      });
+
+    this.dropdownApi
+      .queryFasItemDropdown({ MATERIAL_TYPE: '3' })
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.goodsOptions = opts ?? [];
+      });
+  }
+
+  private setupClassCascades(): void {
+    this.queryForm.controls.bClassId.valueChanges
+      .pipe(untilDestroyed(this), distinctUntilChanged())
+      .subscribe((b) => {
+        this.queryForm.patchValue(
+          { mClassId: null, sClassId: null },
+          { emitEvent: false }
+        );
+        this.midClassOptions = [];
+        this.smallClassOptions = [];
+        if (!b) {
+          return;
+        }
+        this.dropdownApi
+          .queryFaClass1({ B_CLASS_ID: b })
+          .pipe(untilDestroyed(this))
+          .subscribe((opts) => {
+            this.midClassOptions = opts ?? [];
+          });
+      });
+
+    this.queryForm.controls.mClassId.valueChanges
+      .pipe(untilDestroyed(this), distinctUntilChanged())
+      .subscribe((m) => {
+        this.queryForm.patchValue({ sClassId: null }, { emitEvent: false });
+        this.smallClassOptions = [];
+        if (!m) {
+          return;
+        }
+        this.dropdownApi
+          .queryFaClass2({ M_CLASS_ID: m })
+          .pipe(untilDestroyed(this))
+          .subscribe((opts) => {
+            this.smallClassOptions = opts ?? [];
+          });
+      });
+  }
+
+  private sanitizeDeptKey(key: string): string {
+    return key.replace(/[^a-zA-Z0-9_]/g, '_');
+  }
+
+  private deptQtyField(key: string): string {
+    return `dept__${this.sanitizeDeptKey(key)}__Qty`;
+  }
+
+  private deptAmtField(key: string): string {
+    return `dept__${this.sanitizeDeptKey(key)}__Amt`;
+  }
+
+  private rebuildColumns(deptData: ASS17020DeptInfo[]): void {
+    const deptCols: ReportColumn[] = [];
+    for (const d of deptData) {
+      const k = d.Key;
+      const qf = this.deptQtyField(k);
+      const af = this.deptAmtField(k);
+      deptCols.push({
+        field: qf,
+        header: '數量',
+        groupField: k,
+        align: 'right',
+        sortField: qf,
+        format: (v) => formatAmount(v as number),
+      });
+      deptCols.push({
+        field: af,
+        header: '金額',
+        groupField: k,
+        align: 'right',
+        sortField: af,
+        format: (v) => formatAmount(v as number),
+      });
     }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
+    this.columns = [...this.baseColumns, ...deptCols, ...this.tailColumns];
+    this.columnGroup = deptData.map((d) => ({ field: d.Key, header: d.Name }));
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+  private flattenRow(
+    row: ASS17020DataRow,
+    deptInfos: ASS17020DeptInfo[],
+    pageIndex: number,
+    rowIndex: number
+  ): ASS17020FlatRow {
+    const out: ASS17020FlatRow = {
+      RowNo: row.RowNo,
+      Goods: row.Goods,
+      UnitPrice: row.UnitPrice,
+      TotalQty: row.TotalQty,
+      TotalAmt: row.TotalAmt,
+      __rowUid: `${pageIndex}-${rowIndex}-${row.RowNo}`,
     };
-    this.router.navigate(['/demoCRU'], extras);
+    for (const d of deptInfos) {
+      const det = row.Depts?.[d.Key];
+      out[this.deptQtyField(d.Key)] = det?.Qty ?? null;
+      out[this.deptAmtField(d.Key)] = det?.Amt ?? null;
+    }
+    return out;
   }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+
+  private flattenSummary(
+    summary: ASS17020Summary | null | undefined,
+    deptInfos: ASS17020DeptInfo[]
+  ): Record<string, unknown> | null {
+    if (!summary) {
+      return null;
+    }
+    const row: Record<string, unknown> = {
+      RowNo: '',
+      Goods: '總計',
+      UnitPrice: '',
+      __rowUid: 'summary',
+    };
+    for (const d of deptInfos) {
+      const det = summary.Depts?.[d.Key];
+      row[this.deptQtyField(d.Key)] = det?.Qty ?? '';
+      row[this.deptAmtField(d.Key)] = det?.Amt ?? '';
+    }
+    row['TotalQty'] = summary.TotalQty;
+    row['TotalAmt'] = summary.TotalAmt;
+    return row;
+  }
+
+  private buildRequest(body?: {
+    pageSize?: number;
+    PageSize?: number;
+    pageIndex?: number;
+    PageIndex?: number;
+    SortBy?: unknown;
+  }): QueryASS17020Request {
+    const raw = this.queryForm.getRawValue();
+    const pageSize = body?.pageSize ?? body?.PageSize ?? this.defaultPageSize;
+    const pageIndex = body?.pageIndex ?? body?.PageIndex ?? 1;
+    const sortBy = Array.isArray(body?.SortBy)
+      ? (body?.SortBy as SortOption[])
+      : undefined;
+
+    const payload: QueryASS17020Request = {
+      StartDate: this.toApiDateValue(raw.startDate),
+      EndDate: this.toApiDateValue(raw.endDate),
+      OrgID: raw.orgId || undefined,
+      BClassID: raw.bClassId || undefined,
+      MClassID: raw.mClassId || undefined,
+      SClassID: raw.sClassId || undefined,
+      GoodsID: raw.goodsId || undefined,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: sortBy,
+    };
+
+    return removeEmptyValues(payload) as QueryASS17020Request;
+  }
+
+  queryFunction = (body: {
+    pageSize?: number;
+    PageSize?: number;
+    pageIndex?: number;
+    PageIndex?: number;
+    SortBy?: unknown;
+  }) => {
+    const request = this.buildRequest(body);
+    this.lastQueryBody = request;
+    return this.ass17020Service.queryASS17020(request).pipe(
+      tap((res: ApiResponse<ASS17020DataPayload>) => {
+        if (res.Status === '0000' && res.Data?.QueryData) {
+          const deptData = res.Data.QueryData.DeptData ?? [];
+          this.rebuildColumns(deptData);
+          this.summaryFooter = this.flattenSummary(
+            res.Data.QueryData.Summary,
+            deptData
+          );
+        } else {
+          this.rebuildColumns([]);
+          this.summaryFooter = null;
+        }
+      }),
+      map((res) => {
+        if (res.Status !== '0000') {
+          return { Data: [] as ASS17020FlatRow[], TotalCount: 0 };
+        }
+        const qd = res.Data?.QueryData;
+        const deptData = qd?.DeptData ?? [];
+        const rows = qd?.Data ?? [];
+        const pageIndex = request.PageIndex ?? 1;
+        const flat = rows.map((row, idx) =>
+          this.flattenRow(row, deptData, pageIndex, idx)
+        );
+        const total = res.Data?.TotalRows ?? res.TotalCount ?? 0;
+        return { Data: flat, TotalCount: total };
+      })
+    );
+  };
+
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      this.lastQueryBody = this.buildRequest({
+        pageSize: this.defaultPageSize,
+        pageIndex: 1,
+        SortBy: this.lastQueryBody?.SortBy,
+      });
+      this.tableLoading.set(true);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: (res) => {
+            this.tableData.set(res.Data ?? []);
+            this.totalRecords.set(res.TotalCount ?? 0);
+          },
+          error: () => {
+            this.tableData.set([]);
+            this.totalRecords.set(0);
+            this.summaryFooter = null;
+            this.rebuildColumns([]);
+          },
+        });
+    });
+  }
+
+  private toApiDateValue(value: unknown): string | undefined {
+    if (value == null || value === '') {
+      return undefined;
+    }
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    return undefined;
+  }
+
+  onClearForm(): void {
+    this.queryForm.reset({
+      startDate: null,
+      endDate: null,
+      orgId: null,
+      bClassId: null,
+      mClassId: null,
+      sClassId: null,
+      goodsId: null,
+    });
+    this.midClassOptions = [];
+    this.smallClassOptions = [];
   }
 }
