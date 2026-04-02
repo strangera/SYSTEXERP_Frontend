@@ -16,6 +16,13 @@ export interface IDropdownItem {
   Name: string;
 }
 
+/** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME） */
+export interface FasItemDropdownItem {
+  RowNo?: string;
+  GOODS_ID?: string | null;
+  GOODS_NAME?: string | null;
+}
+
 /**
  * 查詢 FACLASSM_DropDownList 時的請求 body
  */
