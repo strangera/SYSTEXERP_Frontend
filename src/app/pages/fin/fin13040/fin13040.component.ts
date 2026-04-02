@@ -170,7 +170,17 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
       .subscribe({
         next: (res) => {
           const data = res?.Data ?? [];
-          this.Buyer_Uniform_Options = data.map((item: any) => ({
+
+          // 使用 Map 以 No 作為 Key 來去重，後出現的會覆蓋先出現的（或可自行調整邏輯）
+          const uniqueDataMap = new Map();
+          data.forEach((item: any) => {
+            if (item.No) {
+              uniqueDataMap.set(item.No, item);
+            }
+          });
+
+          // 將 Map 的結果轉回 Array 並進行 map 轉換
+          this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map((item: any) => ({
             label: `${item.No} - ${item.Name}`,
             value: item.No,
           }));

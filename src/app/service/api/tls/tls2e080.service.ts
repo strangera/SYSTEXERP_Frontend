@@ -48,7 +48,19 @@ export interface IOnlineRequest extends Omit<IQueryRequest, 'PageSize' | 'PageIn
     sad_date_End: string | Date;
     money_type: string;
     sam_termno: number;
+    tlt_no: string;
+    tlt_name: string;
+    VEN_Name: string;
+    email: string;
   }[];
+}
+
+/**
+ * AutoMail請求介面
+ * 根據 Swagger 定義，這結合了查詢條件與 exportList
+ */
+export interface IAutoMailRequest extends Omit<IOnlineRequest, 'PageSize' | 'PageIndex'> {
+  SMTP_No: string;
 }
 
 export interface IQueryData {
@@ -106,5 +118,10 @@ export class TLS2E080Service {
    */
   onlineTLS2E080(data: IOnlineRequest): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/onlineTLS2E080`, data);
+  }
+
+  /** AutoMail：將對帳單 PDF 儲存至伺服器並發送郵件(郵件採用常駐程式發送) */
+  autoMailTLS2E080(data: IAutoMailRequest): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/autoMailTLS2E080`, data);
   }
 }

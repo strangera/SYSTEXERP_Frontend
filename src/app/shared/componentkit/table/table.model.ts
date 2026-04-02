@@ -5,6 +5,7 @@ export interface Column<T = Record<string, any>> {
   header: string;    // 欄位標題 (顯示在表格上的標題)
   /** 對齊方式：預設由元件決定，常見為 'left' | 'center' | 'right' */
   align?: 'left' | 'center' | 'right';
+  reportType?: reportType; // 共通匯出格式類型
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
@@ -375,6 +376,8 @@ export const formatToSixDigits = (value: string | number | null | undefined): st
   return strValue.padStart(6, '0');
 };
 
+export type reportType =
+  'string'; // string 類型，匯出時直接輸出原始值
 
 export type TableTypes =
   'input' |

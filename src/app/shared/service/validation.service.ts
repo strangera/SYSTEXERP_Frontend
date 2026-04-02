@@ -30,7 +30,7 @@ export class ValidationService {
       invalidDateRange: '日期起不可大於日期迄',
       invalidNumberRange: '起始數字不可大於結束數字',
       passwordsMismatch: '兩次輸入的密碼不一致，請重新輸入。',
-      invalidPasswordStrength: '密碼強度不足，至少包含一個大小寫字母、一個數字和一個特殊符號。',
+      invalidPasswordStrength: '密碼強度不足，至少包含一個英文小寫字母與一個數字。',
       invalidGuiTrack: '僅能輸入大寫英文字母',
       invalidGuiBegNo: '起號結尾只能為 00 或 50',
       invalidGuiEndNo: '迄號結尾只能為 49 或 99',
@@ -135,12 +135,10 @@ export class ValidationService {
         return null;
       }
 
-      const hasUpperCase = /[A-Z]/.test(value);
       const hasLowerCase = /[a-z]/.test(value);
       const hasNumber = /[0-9]/.test(value);
-      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>\-_+=`~[\]\\;']/.test(value);
 
-      const isValid = hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
+      const isValid = hasLowerCase && hasNumber;
 
       return isValid ? null : { invalidPasswordStrength: true };
     };

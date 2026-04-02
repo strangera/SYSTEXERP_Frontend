@@ -253,19 +253,5 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     }).subscribe(r => {
       this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track }));
     });
-
-    // 自動代入資料所屬年月(起迄)
-    if (this.queryForm.controls.INV_YM2.valid && event) {
-      const year = parseInt(event.substring(0, 4));
-      const month = parseInt(event.substring(4, 6));
-      const startOfMonth = new Date(year, month - 2, 1);
-      const endOfMonth = new Date(year, month - 1, 1);
-      this.queryForm.controls.INV_YM1_S.setValue(this.datePipe.transform(startOfMonth, 'yyyy/MM'));
-      this.queryForm.controls.INV_YM1_E.setValue(this.datePipe.transform(endOfMonth, 'yyyy/MM'));
-    }
-    else {
-      this.queryForm.controls.INV_YM1_S.setValue('');
-      this.queryForm.controls.INV_YM1_E.setValue('');
-    }
   }
 }

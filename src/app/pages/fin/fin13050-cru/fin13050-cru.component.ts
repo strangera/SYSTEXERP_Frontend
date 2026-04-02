@@ -21,7 +21,6 @@ import {
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-// UI
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -31,9 +30,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 /* ---------------------------
- *  Validators
+ * Validators
  * --------------------------- */
-/** 有填才驗證：英數且長度必須是 16 */
 const alnumMax16IfFilled: ValidatorFn = (c: AbstractControl): ValidationErrors | null => {
   const v = (c.value ?? '').toString().trim();
   if (!v) return null;
@@ -42,16 +40,15 @@ const alnumMax16IfFilled: ValidatorFn = (c: AbstractControl): ValidationErrors |
   return null;
 };
 
-/** 發票號碼驗證：2碼大寫英文 + 8碼數字 */
 const invoiceNoValidator: ValidatorFn = (c: AbstractControl): ValidationErrors | null => {
   const v = (c.value ?? '').toString().trim();
   if (!v) return { required: true };
-  if (!/^[A-Z]{2}\d{8}$/.test(v))
+  if (!/^[A-Z]{2}\d{8}$/.test(v)) {
     return { invoiceNo: { reason: '格式需為2碼大寫英文+8碼數字（如AB12345678）' } };
+  }
   return null;
 };
 
-/** 純數字驗證 */
 const digitsOnly: ValidatorFn = (c: AbstractControl): ValidationErrors | null => {
   const v = (c.value ?? '').toString();
   if (!v) return { required: true };
@@ -87,7 +84,6 @@ interface DropdownOption {
   ],
 })
 export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements OnInit {
-  // 下拉來源
   ACP_TypeOptions: DropdownOption[] = [];
   PUR_VoucherTypeOptions: DropdownOption[] = [];
   invoicePurposeOptions: DropdownOption[] = [];
@@ -100,11 +96,9 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     { value: '1', label: '已立帳' },
   ];
 
-  // 供應商下拉
   PUR_VenUniformOptions: VendorOption[] = [];
   VendorNoOptions: DropdownOption[] = [];
 
-  /** 欄位中文名稱 */
   private readonly labelOf: Record<string, string> = {
     ACP_Type: '應付帳款類型',
     PUR_Uniform: '自家統編',
@@ -131,7 +125,6 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_Remark: '備註',
   };
 
-  /** 錯誤顯示順序 */
   private readonly checkOrder: string[] = [
     'PUR_VoucherType',
     'PUR_GUINo',
@@ -146,7 +139,6 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     'Source_Doc_No',
   ];
 
-  /** 申報年月驗證：接受 Date 或 'YYYYMM'，同時檢查偶數月 */
   private repYYYYMMEvenValidator: ValidatorFn = (ctrl: AbstractControl): ValidationErrors | null => {
     const v = ctrl.value;
     if (v == null || v === '') return { required: true };
@@ -166,13 +158,9 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     return null;
   };
 
-  /* ---------------------------
-   *  表單
-   * --------------------------- */
   dataForm = this.formBuilder.group({
     id: [{ value: null, disabled: true }],
 
-    // 系統欄位
     mid: [0, [Validators.required]],
     STO_No: ['', [Validators.required]],
     ACP_Type: ['6', [Validators.required]],
@@ -181,29 +169,24 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_GUIBalance: [0, [Validators.required, Validators.min(0)]],
     PUR_SeqNo: [1, [Validators.required, Validators.min(1)]],
 
-    // 使用者輸入
     PUR_VoucherType: ['', [Validators.required]],
     PUR_GUINo: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10), invoiceNoValidator]],
     PUR_GUIDate: [null as Date | null, [Validators.required]],
     PUR_RepYYYYMM: [null as Date | null, [Validators.required, this.repYYYYMMEvenValidator]],
 
-    // 供應商
     PUR_VenNo: ['', [Validators.required]],
     PUR_VenName: [{ value: '', disabled: true }],
     PUR_VenUniform: ['', [Validators.required, digitsOnly, Validators.minLength(8), Validators.maxLength(8)]],
 
-    // 金額
     PUR_Amt: [null as number | null, [Validators.required, Validators.min(0.01)]],
     PUR_Net: [null as number | null, [Validators.required, Validators.min(0.01)]],
     PUR_Tax: [null as number | null, [Validators.required]],
 
-    // 其他下拉
     PUR_DirectType: ['1'],
     PUR_TaxType: ['1', [Validators.required]],
     PUR_DiscNo: ['1'],
     PUR_Type: [''],
 
-    // 憑證/傳票/系統別/備註
     Source_Doc_No: ['', [alnumMax16IfFilled]],
     Voucher_No: [{ value: '', disabled: true }],
     SYS_ORIGIN: ['G'],
@@ -224,11 +207,10 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     this.handleQueryParams();
     this.loadAllDropdowns();
     this.setupVendorSync();
-    this.setupAmountRelations(); // 金額自動計算
+    this.setupAmountRelations();
     this.updateDisabledState();
   }
 
-  /** 初始化使用者資料 */
   private initUserInfo(): void {
     const u = this.getUserInfo();
     this.dataForm.patchValue({
@@ -236,66 +218,109 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
       STO_No: u?.SYS_StoreNo ?? '',
     });
 
-    // 從 queryFIN11010 取得 STO_Uniform（統一編號），STO_Status 後端收 list
-    this.fin13050Service.queryFIN11010({ STO_StatusList: ['1'] }).pipe(untilDestroyed(this)).subscribe({
-      next: (res) => {
-        const data = Array.isArray(res?.Data) ? res.Data[0] : res?.Data;
-        const stoUniform = data?.STO_Uniform ?? '';
-        if (stoUniform) {
-          this.dataForm.patchValue({ PUR_Uniform: stoUniform }, { emitEvent: false });
-        }
-      },
-    });
+    this.fin13050Service.queryFIN11010({ STO_StatusList: ['1'] })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          const data = Array.isArray(res?.Data) ? res.Data[0] : res?.Data;
+          const stoUniform = data?.STO_Uniform ?? '';
+          if (stoUniform) {
+            this.dataForm.patchValue({ PUR_Uniform: stoUniform }, { emitEvent: false });
+          }
+        },
+      });
   }
 
-  /** 處理從查詢頁帶入的 rowdata */
   private handleRowData(): void {
     const rd: any = this.rowdata;
     if (!rd) return;
 
-    const patch: any = {
-      ...rd,
-      PUR_GUINo: this.mergeInvoiceNo(rd.PUR_GUITrack, rd.PUR_GUINo),
-    };
-
-    if (rd.PUR_VenUniform) {
-      patch.PUR_VenUniform = rd.PUR_VenUniform;
-    }
-
-    this.dataForm.patchValue(patch, { emitEvent: false });
+    this.patchForm(rd);
   }
 
-  /** 處理 queryParams 帶入的 GUI_No */
   private handleQueryParams(): void {
     this.route.queryParams.pipe(untilDestroyed(this)).subscribe((params) => {
-      const guiNo = (params['GUI_No'] ?? '').toString().trim();
+      const guiNo = (
+        params['GUI_No'] ??
+        params['gui_no'] ??
+        params['invoiceNo'] ??
+        ''
+      ).toString().trim().toUpperCase();
+
       if (!guiNo) return;
 
-      this.fin13050Service.queryDetailByGUI({ GUI_No: guiNo }).pipe(untilDestroyed(this)).subscribe({
-        next: (res) => {
-          const row = Array.isArray(res?.Data) ? res.Data[0] : null;
-          if (!row) {
-            this.messageService.errorBubble(`查無發票資料（GUI_No=${guiNo}）`);
-            return;
-          }
+      const body = {
+        pageSize: 30,
+        pageIndex: 1,
+        PUR_GUINo: guiNo,
+        SortBy: [
+          { field: 'PUR_GUINo', order: 1 },
+          { field: 'PUR_GUIDate', order: 1 }
+        ]
+      };
 
-          const patch: any = {
-            ...row,
-            PUR_GUINo: this.mergeInvoiceNo(row.PUR_GUITrack, row.PUR_GUINo ?? row.GUI_No),
-          };
+      this.fin13050Service.queryFIN13050(body)
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (res: any) => {
+            const row = Array.isArray(res?.Data) ? res.Data[0] : null;
+            if (!row) {
+              this.messageService.errorBubble(`查無發票資料（PUR_GUINo=${guiNo}）`);
+              return;
+            }
 
-          this.dataForm.patchValue(patch, { emitEvent: false });
-          this.crudstatus = CRUDStatus.Read;
-          this.updateDisabledState();
-        },
-        error: () => {
-          this.messageService.errorBubble('查詢發票資料失敗');
-        },
-      });
+            this.patchForm(row);
+            this.crudstatus = CRUDStatus.Read;
+            this.updateDisabledState();
+          },
+          error: () => {
+            this.messageService.errorBubble('查詢發票資料失敗');
+          },
+        });
     });
   }
 
-  /** 使用 forkJoin 並行載入所有下拉選項 */
+  private patchForm(row: any): void {
+    const patch: any = {
+      id: row.id ?? null,
+      mid: row.mid ?? this.dataForm.get('mid')?.value ?? 0,
+      STO_No: row.STO_No ?? this.dataForm.get('STO_No')?.value ?? '',
+      ACP_Type: row.ACP_Type ?? '6',
+      PUR_Uniform: row.PUR_Uniform ?? this.dataForm.get('PUR_Uniform')?.value ?? '',
+      PUR_GUIStatus: row.PUR_GUIStatus ?? '0',
+      PUR_GUIBalance: this.toNumberOrZero(row.PUR_GUIBalance),
+      PUR_SeqNo: this.toNumberOrDefault(row.PUR_SeqNo, 1),
+
+      PUR_VoucherType: row.PUR_VoucherType ?? '',
+      PUR_GUINo: this.normalizeInvoiceNo(
+        row.PUR_GUINo ?? this.mergeInvoiceNo(row.PUR_GUITrack, row.PUR_GUINo)
+      ),
+      PUR_GUIDate: this.toDate(row.PUR_GUIDate),
+      PUR_RepYYYYMM: this.toYYYYMM(row.PUR_RepYYYYMM),
+
+      PUR_VenNo: row.PUR_VenNo ?? '',
+      PUR_VenName: row.PUR_VenName ?? '',
+      PUR_VenUniform: row.PUR_VenUniform ?? '',
+
+      PUR_Amt: this.toNumberOrNull(row.PUR_Amt),
+      PUR_Net: this.toNumberOrNull(row.PUR_Net),
+      PUR_Tax: this.toNumberOrNull(row.PUR_Tax),
+
+      PUR_DirectType: row.PUR_DirectType ?? '1',
+      PUR_TaxType: row.PUR_TaxType ?? '1',
+      PUR_DiscNo: row.PUR_DiscNo ?? '1',
+      PUR_Type: row.PUR_Type ?? '',
+
+      Source_Doc_No: row.Source_Doc_No ?? '',
+      Voucher_No: row.Voucher_No ?? '',
+      SYS_ORIGIN: row.SYS_ORIGIN ?? row.SAL_Type ?? 'G',
+      PUR_Remark: row.PUR_Remark ?? '',
+    };
+
+    this.dataForm.patchValue(patch, { emitEvent: false });
+    this.syncVendorFromDropdown();
+  }
+
   private loadAllDropdowns(): void {
     forkJoin({
       voucherType: this.fin13050Service.queryAPS2002DropDownList(),
@@ -325,11 +350,9 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
         },
       });
 
-    // 供應商下拉（獨立載入）
     this.loadVendorOptions();
   }
 
-  /** 載入供應商選項 */
   private loadVendorOptions(): void {
     forkJoin({
       uniform: this.fin13050Service.queryVendorUniformOptions(''),
@@ -339,7 +362,6 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
       .subscribe({
         next: ({ uniform, vendor }) => {
           this.PUR_VenUniformOptions = uniform ?? [];
-          // 廠商編號下拉：顯示 VEN_No - VEN_Name，值用 VEN_No
           this.VendorNoOptions = (vendor ?? []).map((x: any) => {
             const venNo = String(x.value ?? x.VEN_No ?? '').trim();
             const venName = String(x.venName ?? x.VEN_Name ?? '').trim();
@@ -356,14 +378,14 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
       });
   }
 
-  /** 設定廠商編號變更時的同步 */
   private setupVendorSync(): void {
-    this.dataForm.get('PUR_VenNo')?.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
-      this.syncVendorFromDropdown();
-    });
+    this.dataForm.get('PUR_VenNo')?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.syncVendorFromDropdown();
+      });
   }
 
-  /** 同步廠商名稱與統一編號（依 VEN_No 查找） */
   private syncVendorFromDropdown(): void {
     const venNoCtrl = this.dataForm.get('PUR_VenNo');
     if (!venNoCtrl) return;
@@ -373,16 +395,14 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
 
     this.dataForm.patchValue(
       {
-        PUR_VenName: picked?.venName ?? '',
+        PUR_VenName: picked?.venName ?? this.dataForm.get('PUR_VenName')?.value ?? '',
         PUR_VenUniform: picked?.venUniform ?? this.dataForm.get('PUR_VenUniform')?.value ?? '',
       },
       { emitEvent: false },
     );
   }
 
-  /** CRUD 狀態 -> 啟用/停用 */
   private updateDisabledState(): void {
-    // PUR_Tax 永遠不可手動編輯（自動計算）
     const alwaysDisabled = ['id', 'Voucher_No', 'PUR_VenName', 'PUR_Tax'];
 
     if (this.crudstatus === CRUDStatus.Read) {
@@ -393,7 +413,6 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
 
-  /** 送出表單 */
   onSubmit(): void {
     this.handleSubmit(null, () => {
       Object.values(this.dataForm.controls).forEach((c) => c.markAsTouched());
@@ -418,7 +437,6 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  /** 組裝 payload */
   private buildPayload(): any {
     const fv = this.dataForm.getRawValue();
     const u = this.getUserInfo();
@@ -428,12 +446,12 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
       mid: Number(u?.mid) || Number(fv.mid) || 0,
       STO_No: u?.SYS_StoreNo ?? fv.STO_No ?? null,
       ACP_Type: fv.ACP_Type ?? '6',
-      PUR_Uniform: u?.STR_Uniform ?? fv.PUR_Uniform ?? null,
+      PUR_Uniform: fv.PUR_Uniform ?? null,
       PUR_GUIStatus: fv.PUR_GUIStatus ?? '0',
       PUR_GUIBalance: fv.PUR_GUIBalance != null ? Number(fv.PUR_GUIBalance) : 0,
       PUR_SeqNo: fv.PUR_SeqNo != null ? Number(fv.PUR_SeqNo) : 1,
       PUR_VoucherType: fv.PUR_VoucherType,
-      PUR_GUINo: fv.PUR_GUINo?.toUpperCase() ?? '',
+      PUR_GUINo: this.normalizeInvoiceNo(fv.PUR_GUINo),
       PUR_GUIDate: fv.PUR_GUIDate ? new Date(fv.PUR_GUIDate).toISOString() : null,
       PUR_RepYYYYMM: this.toYYYYMM(fv.PUR_RepYYYYMM),
       PUR_VenNo: fv.PUR_VenNo,
@@ -453,55 +471,40 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     };
   }
 
-  /** 執行新增 */
-
-
-  /** 執行更新 */
-
-  // FIN13050CRUComponent
-
   override onCancel(): void {
     this.router.navigate(['/account/fin', 'fin13050'], {
       state: { fromCru: true },
     });
   }
 
-  // 更新成功後
   private doUpdate(payload: any): void {
     this.fin13050Service.updateFIN13050(payload).subscribe({
       next: () => {
         this.messageService.successBubble('更新成功');
-        this.onCancel(); // 會帶 fromCru
+        this.onCancel();
       },
       error: () => this.messageService.unblockUi(),
     });
   }
 
-  // 新增成功後：如果你要回列表就 onCancel；如果你要留在頁面繼續新增就不要帶 fromCru
   private doInsert(payload: any): void {
     const { id, ...forInsert } = payload;
     this.fin13050Service.insertFIN13050(forInsert).subscribe({
       next: () => {
         this.messageService.successBubble('新增成功');
-        // 方案A：新增後回列表（會還原）
         this.onCancel();
-
-        // 方案B：新增後留在 CRU 繼續新增（不回列表就不需要 fromCru）
-        // this.resetFormAfterInsert();
       },
       error: () => this.messageService.unblockUi(),
     });
   }
 
-
-  /** 新增成功後重設表單 */
   private resetFormAfterInsert(): void {
     this.dataForm.reset();
     const u = this.getUserInfo();
     this.dataForm.patchValue({
       mid: Number(u?.mid) || 0,
       STO_No: u?.SYS_StoreNo ?? '',
-      PUR_Uniform: u?.STR_Uniform ?? '',
+      PUR_Uniform: '',
       ACP_Type: '6',
       PUR_GUIStatus: '0',
       PUR_GUIBalance: 0,
@@ -510,7 +513,6 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     this.updateDisabledState();
   }
 
-  /** 顯示錯誤訊息 */
   private showTopErrors(): void {
     const msgs: string[] = [];
 
@@ -557,7 +559,6 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     }
   }
 
-  /** Date/ISO/'YYYYMM' -> 'YYYYMM' */
   private toYYYYMM(input: any): string | null {
     if (!input && input !== 0) return null;
     if (input instanceof Date && !isNaN(input.getTime())) {
@@ -569,7 +570,50 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     return s.length >= 6 ? s.slice(0, 6) : null;
   }
 
-  /** 合併字軌與號碼為完整發票號碼（10碼），用於編輯時從後端資料組合 */
+  private toDate(val: any): Date | null {
+    if (!val) return null;
+    if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+
+    const s = String(val).trim();
+    const digits = s.replace(/\D/g, '');
+
+    if (/^\d{8}$/.test(digits)) {
+      return new Date(
+        Number(digits.slice(0, 4)),
+        Number(digits.slice(4, 6)) - 1,
+        Number(digits.slice(6, 8))
+      );
+    }
+
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  private toMonthDate(val: any): Date | null {
+    if (!val) return null;
+    if (val instanceof Date) {
+      return isNaN(val.getTime()) ? null : new Date(val.getFullYear(), val.getMonth(), 1);
+    }
+
+    const s = String(val).trim();
+    const digits = s.replace(/\D/g, '');
+
+    if (/^\d{6}$/.test(digits)) {
+      return new Date(Number(digits.slice(0, 4)), Number(digits.slice(4, 6)) - 1, 1);
+    }
+
+    if (/^\d{8}$/.test(digits)) {
+      return new Date(Number(digits.slice(0, 4)), Number(digits.slice(4, 6)) - 1, 1);
+    }
+
+    const m = s.match(/^(\d{4})[-\/](\d{1,2})$/);
+    if (m) {
+      return new Date(Number(m[1]), Number(m[2]) - 1, 1);
+    }
+
+    return null;
+  }
+
   private mergeInvoiceNo(track: any, no: any): string {
     const t = (track ?? '').toString().trim().toUpperCase();
     const n = (no ?? '').toString().replace(/\D/g, '');
@@ -578,15 +622,30 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     return trackPart + noPart;
   }
 
-  /**
-   * 金額互算邏輯（比照 fin13010）
-   * - 輸入「發票未稅金額」(PUR_Net) → 自動計算「發票稅額」(PUR_Tax) + 「發票總金額」(PUR_Amt)
-   * - 輸入「發票總金額」(PUR_Amt) → 反推「發票未稅金額」(PUR_Net) + 「發票稅額」(PUR_Tax)
-   */
+  private normalizeInvoiceNo(value: any): string {
+    return String(value ?? '').trim().toUpperCase();
+  }
+
+  private toNumberOrNull(value: any): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const n = Number(value);
+    return isNaN(n) ? null : n;
+  }
+
+  private toNumberOrZero(value: any): number {
+    const n = Number(value);
+    return isNaN(n) ? 0 : n;
+  }
+
+  private toNumberOrDefault(value: any, defaultValue: number): number {
+    const n = Number(value);
+    return isNaN(n) ? defaultValue : n;
+  }
+
   private setupAmountRelations(): void {
-    const netControl = this.dataForm.get('PUR_Net');   // 發票未稅金額
-    const taxControl = this.dataForm.get('PUR_Tax');   // 發票稅額（自動計算，不可修改）
-    const amtControl = this.dataForm.get('PUR_Amt');   // 發票總金額
+    const netControl = this.dataForm.get('PUR_Net');
+    const taxControl = this.dataForm.get('PUR_Tax');
+    const amtControl = this.dataForm.get('PUR_Amt');
 
     if (!netControl || !taxControl || !amtControl) {
       return;
@@ -595,13 +654,11 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     let updatingFromNet = false;
     let updatingFromAmt = false;
 
-    // 使用者輸入「發票未稅金額」時：
     netControl.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
-      if (updatingFromAmt) return; // 避免互相觸發
+      if (updatingFromAmt) return;
       updatingFromNet = true;
 
       if (value === null || value === undefined || String(value) === '') {
-        // 清空時：連帶清空稅額與總額
         taxControl.setValue(null, { emitEvent: false });
         amtControl.setValue(null, { emitEvent: false });
         updatingFromNet = false;
@@ -622,7 +679,6 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
       updatingFromNet = false;
     });
 
-    // 使用者輸入「發票總金額」時：
     amtControl.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {
       if (updatingFromNet) return;
       updatingFromAmt = true;
@@ -637,10 +693,8 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
       const rawTotal = Number(value);
       if (!isNaN(rawTotal)) {
         const totalInt = this.roundToInt(rawTotal);
-        // total = net + tax，tax = round(net * 0.05)
-        // 反推 net，用 total / 1.05，再取整數
         const netInt = this.roundToInt(totalInt / 1.05);
-        const taxInt = totalInt - netInt; // 保證 net + tax = total
+        const taxInt = totalInt - netInt;
 
         amtControl.setValue(totalInt, { emitEvent: false });
         netControl.setValue(netInt, { emitEvent: false });
@@ -651,7 +705,6 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  /** 四捨五入為整數 */
   private roundToInt(value: number): number {
     return Math.round(value);
   }
