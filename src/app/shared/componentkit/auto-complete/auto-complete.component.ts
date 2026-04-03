@@ -50,6 +50,7 @@ export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
         // 當 options 收到資料時，停止載入
         this.loading.set(false);
         this._options.set(value);
+        this.filteredOptions.set(value); // 當 API 資料回來時，預設把過濾後的清單先填滿
       } else {
         // 當 options 收到 null 時，表示開始載入
         this.loading.set(true);
