@@ -16,6 +16,7 @@ import { formatDate, ReportColumn } from '@shared/componentkit/table-report/tabl
 import { yesterday } from '@shared/models/system/query-form.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, distinctUntilChanged, filter, finalize, map, Observable, startWith, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -39,7 +40,8 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
     TranslateModule,
     InputTextComponent,
     AsyncPipe,
-    AutoCompleteComponent
+    AutoCompleteComponent,
+    CheckboxModule
   ]
 })
 export class TLS55020Component extends BasicQueryPageComponent<Tls55020MasterData> implements OnInit {
@@ -48,6 +50,7 @@ export class TLS55020Component extends BasicQueryPageComponent<Tls55020MasterDat
     ECR_No: [null],
     TLT_No: [null],
     TXN_No: [null, [Validators.maxLength(8), this.validation.numberValidator]],
+    IncludeSpecialMagNo: [false], // 新增此控制項
     pageIndex: [1],
     pageSize: [30]
   });

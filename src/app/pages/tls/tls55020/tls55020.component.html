@@ -20,6 +20,10 @@
           <!-- 交易序號 → POS5006.TXN_No -->
           <app-input-text class="col-12 md:col-6" label="交易序號" [control]="queryForm.controls.TXN_No"
             [submitted]="submitted"></app-input-text>
+          <div class="col-12 md:col-6 flex align-items-center">
+            <p-checkbox [binary]="true" label="包含修正特殊條碼交易" formControlName="IncludeSpecialMagNo">
+            </p-checkbox>
+          </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
