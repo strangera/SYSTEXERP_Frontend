@@ -17,7 +17,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
-import { filter, finalize, map, Observable, startWith, switchMap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, finalize, map, Observable, startWith, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -87,12 +87,25 @@ export class TLS55020Component extends BasicQueryPageComponent<Tls55020MasterDat
     // 2. 監聽日期變化來連動下拉選單
     const dateChange$ = this.queryForm.controls.TXN_Date.valueChanges.pipe(
       startWith(this.queryForm.controls.TXN_Date.value),
-      // 只有當日期有值時才觸發 API
-      filter(date => !!date),
-      map(date => ({ TXN_Date: this.datePipe.transform(date, 'yyyy-MM-dd')! })),
+      debounceTime(500), // 重要：等使用者停下 0.5 秒，避免連續觸發
+      distinctUntilChanged(),
+      filter(date => {
+        // 驗證：日期必須存在，且如果是字串，長度要夠（避免 2025/01/0 這種情況）
+        if (!date) return false;
+        const dateStr = date instanceof Date ? date.toISOString() : String(date);
+        return dateStr.length >= 10;
+      }),
+      map(date => {
+        try {
+          const transformed = this.datePipe.transform(date, 'yyyy-MM-dd');
+          return transformed ? { TXN_Date: transformed } : null;
+        } catch {
+          return null;
+        }
+      }),
+      filter(body => body !== null),
       untilDestroyed(this)
     );
-
     // 3. 將日期流轉換為 API 下拉資料流
     this.ECR_NoOptions$ = dateChange$.pipe(
       switchMap(body => this.dropDown.queryPos1002Tls55020(body))
@@ -109,8 +122,10 @@ export class TLS55020Component extends BasicQueryPageComponent<Tls55020MasterDat
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      const rawValue = frm.getRawValue();
       const body = {
-        ...frm.getRawValue(),
+        ...rawValue,
+        ECR_No: rawValue.ECR_No?.value || rawValue.ECR_No || null,
         TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd'),
       }
       this.tls55020Service.queryTLS55020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
