@@ -39,7 +39,7 @@ export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
   filteredOptions = signal<any[]>([]);
   loading = signal<boolean>(false);
   // 如果設為 false，我們將透過邏輯避免它自動匹配
-  autoHighlight = input<boolean>(false);
+  autoHighlight = input<boolean>(true);
 
   // 使用 effect 來處理 options 變化時的副作用 (更新 _options 和 loading 狀態)
   constructor() {
