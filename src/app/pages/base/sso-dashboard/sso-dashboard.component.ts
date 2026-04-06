@@ -163,7 +163,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
             {
               System_Id: 'ERP',
               System_Name: '商場營運管理系統',
-              System_Url: '/account/dashboard',
+              System_Url: 'account/dashboard',
               System_ImgFile: 'TSRDERP',
               IsEnable: 'Y',
               Seq_No: 1,
@@ -173,7 +173,7 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
             {
               System_Id: 'ERP2',
               System_Name: '測試如果未來有第五個系統顯示在此處',
-              System_Url: '/account/dashboard',
+              System_Url: 'account/dashboard',
               System_ImgFile: 'TSRDERP',
               IsEnable: 'Y',
               Seq_No: 1,
@@ -235,7 +235,10 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
             }
           })
         ).subscribe({
-          next: () => { this.router.navigate([item.System_Url]); },
+          next: () => {
+            const targetPath = item.System_Url.split('/');
+            this.router.navigate(targetPath);
+          },
         })
       );
     } else {
