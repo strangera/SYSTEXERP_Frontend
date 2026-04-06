@@ -25,6 +25,10 @@ export const tlsRoutes: Routes = [
   { path: 'tls24030cru', loadComponent: () => import('./tls24030/tls24030-cru/tls24030-cru.component').then(m => m.TLS24030CRUComponent), data: { progNo: 'TLS24030' } },
   // 交易資料修正報表
   { path: 'tls24020', loadComponent: () => import('./tls24020/tls24020.component').then(m => m.TLS24020Component), data: { progNo: 'TLS24020' } },
+  // 專櫃活動設定作業
+  { path: 'tls26080', loadComponent: () => import('./tls26080/tls26080.component').then(m => m.TLS26080Component), data: { progNo: 'TLS26080' } },
+  // 專櫃活動作業 CRU
+  { path: 'tls26080cru', loadComponent: () => import('./tls26080-cru/tls26080-cru.component').then(m => m.TLS26080CRUComponent), data: { progNo: 'TLS26080' } },
   // 保全現金資料轉入作業
   { path: 'tls27010', loadComponent: () => import('./tls27010/tls27010.component').then(m => m.TLS27010Component), data: { progNo: 'TLS27010' } },
   // 保全實收現金調整作業
@@ -85,6 +89,10 @@ export const tlsRoutes: Routes = [
   { path: 'tls41010', loadComponent: () => import('./tls41010/tls41010.component').then(m => m.TLS41010Component), data: { progNo: 'TLS41010' } },
   // 收銀機基本資料維護 CRU
   { path: 'tls41010cru', loadComponent: () => import('./tls41010-cru/tls41010-cru.component').then(m => m.TLS41010CRUComponent), data: { progNo: 'TLS41010' } },
+  // POS清機時間設定
+  { path: 'tls41040', loadComponent: () => import('./tls41040/tls41040.component').then(m => m.TLS41040Component), data: { progNo: 'TLS41040' } },
+  // POS清機時間設定 CRU
+  { path: 'tls41040cru', loadComponent: () => import('./tls41040-cru/tls41040-cru.component').then(m => m.TLS41040CRUComponent), data: { progNo: 'TLS41040' } },
   // 快速鍵維護作業
   { path: 'tls42010', loadComponent: () => import('./tls42010/tls42010.component').then(m => m.TLS42010Component), data: { progNo: 'TLS42010' } },
   // 快速鍵維護作業 CRU

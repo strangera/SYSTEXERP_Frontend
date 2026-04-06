@@ -342,10 +342,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.cdr.detectChanges();
       }
     }
+    this.cdr.markForCheck();
   }
   // 1. 處理單一勾選變更 (在 HTML 中對應 selectionChange)
   onSelectionChange(event: any[]) {
-    this.selectedItems = event;
+    this.selectedItems = [...event];
 
     // 找出目前資料中真正「可以被勾選」的數量
     const selectableRows = this.data.filter(rowData => {
