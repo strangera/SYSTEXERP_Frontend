@@ -6,7 +6,9 @@
   <ng-content select="header"></ng-content>
 </label>
 <p-autoComplete [inputId]="controlName" [id]="controlName" [formControl]="control()" placeholder="請選擇"
-  [suggestions]="filteredOptions()" [optionLabel]="optionLabel()" [optionValue]="optionValue()"
+  [suggestions]="filteredOptions()" [optionLabel]="optionLabel()"
+  [optionValue]="autoHighlight() ? optionValue() : undefined"
+  [forceSelection]="autoHighlight() ? forceSelection() : false" [autoHighlight]="autoHighlight()"
   [showClear]="showClear()" [ngClass]="{ 'ng-dirty ng-invalid': submitted() && control().invalid }" [lazy]="true"
   [dropdownIcon]="control().disabled ? 'hidden' : 'pi pi-angle-down'" appendTo="body" [virtualScroll]="true"
   [virtualScrollItemSize]="38" [scrollHeight]="'200px'" (completeMethod)="filterOptions($event)" [dropdown]="true"
