@@ -62,6 +62,8 @@ export interface QueryASS13010Response {
   GET_COST: number | null;
   BILL_DATE: string | null;
   DEPRE_ID: string | null;
+  TAL_DEPRE_AMT: number | null;
+  TAL_DEPRE_MON: number | null;
 }
 
 export interface QueryASS13010Result {
@@ -208,8 +210,8 @@ export interface InsertASS13010Request {
   FIR_EXP_YEAR?: number | null;
   LEND_TYPE?: string | null;
   ORI_ASSET_ID?: string | null;
-  ORI_IMPORT_DEPRE_MON?: number | null;
-  ORI_IMPORT_DEPRE_AMT?: number | null;
+  TAL_DEPRE_AMT?: number | null;
+  TAL_DEPRE_MON?: number | null;
   REDU_CODE?: string | null;
   ONSALE_RATE?: number | null;
   ONSALE_NORATE_AMT?: number | null;
@@ -230,14 +232,14 @@ export interface InsertASS13010Response {
  *
  * 欄位依你提供的 UpdateASS13010Request 截圖：
  * - 判斷是否已攤提：TAL_DEPRE_AMT > 0（此判斷在前端用於鎖欄位）
- * - 後端 update 需要：ID/GET_DATE/ASSET_STATUS/EQUIP_ID/NOTES/RESI_VALUE(預留殘值)/EXP_YEAR/EXP_MONTH/HOLD_EMP_ID/USE_EMP_ID/DEPRE_SDATE/UPD_USR_No/UPD_USR_Name（購入金額無對應欄位）
+ * - 後端 update 需要：ID/GET_DATE/ASSET_STATUS/EQUIP_ID/PURCHASE_NOTES(採購說明)/RESI_VALUE(預留殘值)/EXP_YEAR/EXP_MONTH/HOLD_EMP_ID/USE_EMP_ID/DEPRE_SDATE/TAL_DEPRE_AMT/TAL_DEPRE_MON/UPD_USR_No/UPD_USR_Name（購入金額無對應欄位；EXP_MONTH 為原折舊年限(月)，TAL_DEPRE_MON 為已攤提月數）
  */
 export interface UpdateASS13010Request {
   ID: number;
   GET_DATE?: string | null;
   ASSET_STATUS?: string | null;
   EQUIP_ID?: string | null;
-  NOTES?: string | null;
+  PURCHASE_NOTES?: string | null;
   RESI_VALUE?: number | null;
   EXP_YEAR?: number | null;
   EXP_MONTH?: number | null;
@@ -245,6 +247,8 @@ export interface UpdateASS13010Request {
   USE_EMP_ID?: string | null;
   /** 送出可為 Date，由 HTTP interceptor 轉成與其他日期欄位相同的時間字串 */
   DEPRE_SDATE?: string | Date | null;
+  TAL_DEPRE_AMT?: number | null;
+  TAL_DEPRE_MON?: number | null;
   UPD_USR_No?: string | null;
   UPD_USR_Name?: string | null;
 }

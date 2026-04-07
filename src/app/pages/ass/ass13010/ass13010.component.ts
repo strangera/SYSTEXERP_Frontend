@@ -102,6 +102,8 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
     { field: 'GET_COST', header: '購入金額', format: (v: unknown) => formatAmount(Number(v ?? 0)) },
     { field: 'BILL_DATE', header: '入帳日期', format: formatDate },
     { field: 'DEPRE_ID', header: '折舊代號' },
+    { field: 'TAL_DEPRE_AMT', header: '已攤提金額', format: (v: unknown) => formatAmount(Number(v ?? 0)) },
+    { field: 'TAL_DEPRE_MON', header: '已攤提月數' },
   ];
   // ----------------------------------------------------------------
   // 下拉選單（品項編號、採購單號來源待確認，先留空）

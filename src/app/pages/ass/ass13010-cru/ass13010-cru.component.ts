@@ -393,9 +393,9 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       RESI_VALUE: raw['residual'] != null && raw['residual'] !== '' ? Number(raw['residual']) : null,
       FIR_EXP_YEAR:
         raw['depreciationLifeMM'] != null && raw['depreciationLifeMM'] !== '' ? Number(raw['depreciationLifeMM']) : null,
-      ORI_IMPORT_DEPRE_MON:
+      TAL_DEPRE_MON:
         raw['amortizedMonth'] != null && raw['amortizedMonth'] !== '' ? Number(raw['amortizedMonth']) : null,
-      ORI_IMPORT_DEPRE_AMT:
+      TAL_DEPRE_AMT:
         raw['amortizedAmount'] != null && raw['amortizedAmount'] !== '' ? Number(raw['amortizedAmount']) : null,
       HOLD_EMP_ID: raw['keepingPerson'] != null && raw['keepingPerson'] !== '' ? String(raw['keepingPerson']) : null,
       HOLD_ORG_ID: raw['keepingUnit'] != null && raw['keepingUnit'] !== '' ? String(raw['keepingUnit']) : null,
@@ -459,7 +459,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       GET_DATE: this.toDateString(raw['purchaseDate'] as Date | string | null),
       ASSET_STATUS: raw['assetsStatus'] != null && raw['assetsStatus'] !== '' ? String(raw['assetsStatus']) : null,
       EQUIP_ID: raw['deviceCode'] != null && raw['deviceCode'] !== '' ? String(raw['deviceCode']) : null,
-      NOTES: raw['remark'] != null && raw['remark'] !== '' ? String(raw['remark']) : null,
+      PURCHASE_NOTES: raw['remark'] != null && raw['remark'] !== '' ? String(raw['remark']) : null,
       // API：RESI_VALUE = 預留殘值（residual）；購入金額 update 無對應欄位，不送
       RESI_VALUE: raw['residual'] != null && raw['residual'] !== '' ? Number(raw['residual']) : null,
       EXP_YEAR: raw['depreciationLife'] != null && raw['depreciationLife'] !== '' ? Number(raw['depreciationLife']) : null,
@@ -468,6 +468,10 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
       HOLD_EMP_ID: raw['keepingPerson'] != null && raw['keepingPerson'] !== '' ? String(raw['keepingPerson']) : null,
       USE_EMP_ID: raw['user'] != null && raw['user'] !== '' ? String(raw['user']) : null,
       DEPRE_SDATE: this.depreciationDateForApi(raw['amortizationYearMonth']),
+      TAL_DEPRE_AMT:
+        raw['amortizedAmount'] != null && raw['amortizedAmount'] !== '' ? Number(raw['amortizedAmount']) : null,
+      TAL_DEPRE_MON:
+        raw['amortizedMonth'] != null && raw['amortizedMonth'] !== '' ? Number(raw['amortizedMonth']) : null,
       UPD_USR_No: this.user?.user_No ?? null,
       UPD_USR_Name: this.user?.user_Name ?? null,
     };
@@ -479,7 +483,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
         case CRUDStatus.Create:
           if (this.canAdd()) {
             const raw = frm.getRawValue() as Record<string, unknown>;
-            // 表單無欄位不送出：MID, STO_NO, NOTES, FORG_ID, HANDLE_VKEY, DEPRE_ID, GET_COST_TAX, USE_STATUS, DEPRE_AMT, ORI_ORG_ID, ORI_EMP_ID, ASSET_INS_ID, FIX_AMT, SOURCE_STATUS, SUBCHECK_ID, FIR_GET_COST, LEND_TYPE, REDU_CODE, ONSALE_RATE, ONSALE_NORATE_AMT, EXTEND_EXP_YEAR, DAMAGEM_ID。remark→PURCHASE_NOTES；depreciationLifeMM→FIR_EXP_YEAR；amortizedMonth→ORI_IMPORT_DEPRE_MON、amortizedAmount→ORI_IMPORT_DEPRE_AMT。
+            // 表單無欄位不送出：MID, STO_NO, NOTES, FORG_ID, HANDLE_VKEY, DEPRE_ID, GET_COST_TAX, USE_STATUS, DEPRE_AMT, ORI_ORG_ID, ORI_EMP_ID, ASSET_INS_ID, FIX_AMT, SOURCE_STATUS, SUBCHECK_ID, FIR_GET_COST, LEND_TYPE, REDU_CODE, ONSALE_RATE, ONSALE_NORATE_AMT, EXTEND_EXP_YEAR, DAMAGEM_ID。remark→PURCHASE_NOTES；depreciationLifeMM→FIR_EXP_YEAR；amortizedAmount→TAL_DEPRE_AMT、amortizedMonth→TAL_DEPRE_MON。
             const payload: InsertASS13010Request = this.buildInsertPayload(raw);
             this.ass13010Service
               .insertASS13010(payload)
@@ -495,11 +499,11 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
                     this.messageService.errorBubble(res.Message ?? res.Error?.Message ?? '新增失敗');
                     return;
                   }
-                  this.messageService.successBubble(res.Data?.Message ?? res.Message ?? '新增成功');
+                  this.messageService.successBubble(res.Message ?? '新增成功');
                   this.onCancel();
                 },
                 error: err => {
-                  this.messageService.errorBubble(err?.message ?? '新增失敗');
+                  // this.messageService.errorBubble(err?.message ?? '新增失敗');
                 },
               });
           }
@@ -523,11 +527,11 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
                     this.messageService.errorBubble(res.Message ?? res.Error?.Message ?? '更新失敗');
                     return;
                   }
-                  this.messageService.successBubble(res.Data?.Message ?? res.Message ?? '更新成功');
+                  this.messageService.successBubble(res.Message ?? '更新成功');
                   this.onCancel();
                 },
                 error: err => {
-                  this.messageService.errorBubble(err?.message ?? '更新失敗');
+                  // this.messageService.errorBubble(err?.message ?? '更新失敗');
                 },
               });
           }
