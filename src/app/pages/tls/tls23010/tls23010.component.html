@@ -248,7 +248,7 @@
   </p-accordion>
 </div>
 
-<div class="card">
+<div class="card" *ngIf="showTable">
   <div class="col-12">
     <!-- ✅ 明細：以 TXN_No 作為唯一鍵 -->
     <app-table-report
