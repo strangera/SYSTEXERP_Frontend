@@ -204,18 +204,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'ACP_ExpectPayDate', header: '預計付款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'ACP_Date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'VEN_BNK_No', header: '匯款銀行代號', visible: true },
-    {
-      field: 'VEN_BankAccountNo', header: '銀行帳號/帳戶名稱', visible: true, format: (_v, _i, row) => {
-        const r = row as FIN53010Aps3001Row;
-        const a = r?.VEN_BankAccountNo;
-        const b = r?.VEN_AccountName;
-        if (a && b) return `${a} / ${b}`;
-        return (a ?? b ?? '') as string;
-      }
-    },
+    { field: 'VEN_BankAccountNo', header: '銀行帳號', visible: true },
+    { field: 'VEN_AccountName', header: '帳號名稱', visible: true },
     { field: 'VEN_CTRLYN', header: '票據禁止背書轉讓', visible: true },
     { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true },
     { field: 'AccNo', header: '會計科目代號', visible: true },
+    { field: 'AccName', header: '會計科目名稱', visible: true },
     { field: 'NoteDesc', header: '摘要', visible: true },
     { field: 'SubDetailNo', header: '對象別編號', visible: true },
     { field: 'PTA', header: '對帳KEY值', visible: true },
