@@ -7,7 +7,7 @@ import { Fin13040Service } from '@service/api/fin/fin13040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -26,7 +26,7 @@ import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
   templateUrl: './fin13040-cru.component.html',
   standalone: true,
   imports: [
-    InputTextRangeComponent,
+    AutoCompleteComponent,
     MenubarComponent,
     PanelModule,
     FormsModule,
@@ -182,12 +182,15 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     // 統編帶出廠商資訊
     this.dataForm.get('Buyer_Uniform')?.valueChanges
       .pipe(untilDestroyed(this))
-      .subscribe((val) => {
-        const selected = this.Buyer_Uniform_Options.find(o => o.value === val);
+      .subscribe((val: any) => {
+        // 取得真正的統編值 (如果是物件就拿 .value，如果是字串就直接用)
+        const actualValue = (val && typeof val === 'object') ? val.value : val;
+
+        const selected = this.Buyer_Uniform_Options.find(o => o.value === actualValue);
         this.dataForm.patchValue({
           Buyer_VenNo: selected?.VEN_No ?? '',
           Buyer_Name: selected?.VEN_Name ?? '',
-        });
+        }, { emitEvent: false }); // 建議加 emitEvent: false 避免無限循環
       });
   }
 
@@ -337,14 +340,25 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   // ======================== 下拉選單 ========================
+  /** 載入買受人統一編號下拉清單 */
   loadBuyerUniformOptions(): void {
     this.dropDownListService
       .queryPOS2013_DropDownList({})
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res) => {
-          const list = res?.Data ?? [];
-          this.Buyer_Uniform_Options = list.map((item: any) => ({
+          const data = res?.Data ?? [];
+
+          // 使用 Map 以 No 作為 Key 來去重
+          const uniqueDataMap = new Map();
+          data.forEach((item: any) => {
+            if (item.No) {
+              uniqueDataMap.set(item.No, item);
+            }
+          });
+
+          // 轉換為 AutoComplete 需要的格式，並保留原始屬性供後續 patchValue 使用
+          this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map((item: any) => ({
             label: `${item.No} - ${item.Name}`,
             value: item.No,
             VEN_No: item.VEN_No,
@@ -568,7 +582,9 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       InvoiceNumber: v.INV_GUINumber,
       InvoiceDate: toISO(v.InvoiceDate),
       INV_DeclareYM: this.formatDeclareYM(v.InvoiceDate),
-      Buyer_Uniform: selectedBuyer.value,
+      Buyer_Uniform: (v.Buyer_Uniform && typeof v.Buyer_Uniform === 'object')
+        ? v.Buyer_Uniform.value
+        : v.Buyer_Uniform,
       Buyer_VenNo: selectedBuyer.VEN_No ?? '',
       Buyer_Name: selectedBuyer.VEN_Name ?? '',
       Group_Mark: 'N',

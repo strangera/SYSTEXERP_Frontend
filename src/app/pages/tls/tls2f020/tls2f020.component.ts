@@ -170,8 +170,13 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
     }
 
     const sam_termno = v.sam_termno ?? null;
+    const money_type = v.COMM_MONEY_TYPE ?? null;
     if (!sam_yyymm) {
       this.messageService.warnBubble('請輸入 查核年月');
+      return;
+    }
+    if (money_type == null) {
+      this.messageService.warnBubble('請選擇 結帳方式');
       return;
     }
     if (sam_termno == null) {
@@ -181,7 +186,8 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
 
     const params = {
       sam_yyymm: sam_yyymm,
-      sam_termno: sam_termno
+      money_type: money_type,
+      sam_termno: sam_termno,
     };
 
     this.loading = true;

@@ -170,7 +170,17 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
       .subscribe({
         next: (res) => {
           const data = res?.Data ?? [];
-          this.Buyer_Uniform_Options = data.map((item: any) => ({
+
+          // 使用 Map 以 No 作為 Key 來去重，後出現的會覆蓋先出現的（或可自行調整邏輯）
+          const uniqueDataMap = new Map();
+          data.forEach((item: any) => {
+            if (item.No) {
+              uniqueDataMap.set(item.No, item);
+            }
+          });
+
+          // 將 Map 的結果轉回 Array 並進行 map 轉換
+          this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map((item: any) => ({
             label: `${item.No} - ${item.Name}`,
             value: item.No,
           }));
@@ -205,10 +215,18 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
       const v = form.value;
 
       const dp = (d: any, key: string) => {
+        // --- 新增的防呆邏輯 ---
+        // 如果這個欄位不小心變成了物件（例如 AutoComplete 傳回了整個 item）
+        // 我們只取裡面的 value 屬性 (也就是統編 No)
+        if (d !== null && typeof d === 'object' && 'value' in d && !(d instanceof Date)) {
+          d = d.value;
+        }
+        // --------------------
+
         if (!(d instanceof Date)) return d === '' ? null : d;
+
         const date = new Date(d);
         if (key.toLowerCase().includes('ym')) {
-
           const y = date.getFullYear();
           const m = String(date.getMonth() + 1).padStart(2, '0');
           return `${y}${m}`;

@@ -1,8 +1,8 @@
 // src/app/pages/base/sso-dashboard/sso-dashboard.component.ts
-import { AsyncPipe, NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
+import { AsyncPipe, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core'; // 新增 OnDestroy
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { SystemDataService } from '@service/system/system-data.service';
@@ -26,17 +26,22 @@ import { UserInfo } from '../../../shared/models/system/userInfo';
 import { EncryptionService } from '../../../shared/service/encryption.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
-
+const SYSTEM_CONFIG: Record<string, { color: string, order: number }> = {
+  'ERP': { color: '#e98ab1', order: 1 }, // 商場營運 (左上)
+  'CRM': { color: '#f3bc18', order: 2 }, // 行銷管理 (右上)
+  'HR': { color: '#c6d914', order: 3 }, // 人資系統 (左下)
+  'EIP': { color: '#4fbcec', order: 4 }, // EIP (右下)
+  'ERP2': { color: '#e98ab1', order: 5 }, // 商場營運 (左上)
+};
 @UntilDestroy()
 @Component({
   selector: 'app-sso-dashboard',
   templateUrl: './sso-dashboard.component.html',
+  styleUrls: ['./sso-dashboard.component.scss'],
   standalone: true,
   imports: [
     NgIf,
-    RouterLink,
     NgClass,
-    NgStyle,
     TooltipModule,
     MenuModule,
     PrimeTemplate,
@@ -54,7 +59,9 @@ import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
   ],
 })
 export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDestroy
-  logo = 'assets/layout/images/logo.webp';
+  currentPage = 0;
+  pagedItems: ApiItem[][] = [];
+  logo = 'assets/layout/images/logo-main.svg';
   user: UserInfo | null = null;
   private subscriptions: Subscription[] = [];
   items: MenuItem[] = [
@@ -80,10 +87,10 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
   form = this.formBuilder.group({
     code: [{ value: '', disabled: true }],
     oldPassword: ['', [Validators.required]],
-    newPassword: ['', [Validators.required, this.validationService.passwordStrengthValidator()]],
+    newPassword: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(8), this.validationService.passwordStrengthValidator()]],
     confirmPassword: ['', [Validators.required]],
   }, { validators: this.validationService.passwordsMatchValidator('newPassword', 'confirmPassword') });
-  strongRegex = '^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?":{}|<>-_+=`~[]\\;\']).{4,8}$';
+  strongRegex = '^(?=.*[a-z])(?=.*[0-9]).{4,8}$';
   formButtonLoading = false;
   noClose = false;
 
@@ -136,31 +143,50 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
 
   fetchUrlList(): void {
     this.loading = true; // 在開始請求前設置為 true
-    this.urlItems = [
-      {
-        System_Id: 'ERP',
-        System_Name: '商場營運管理系統',
-        System_Url: '/account/dashboard',
-        System_ImgFile: 'TSRDERP',
-      },
-    ];
     this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
       this.ssoDashboardService.fetchUrlList().pipe(
         untilDestroyed(this),
         finalize(() => this.loading = false) // 無論成功失敗，在所有請求完成後將 loading 設為 false
       ).subscribe({
         next: (data) => {
-          const sortedAndFilteredData = data.Data
-            .sort((a: any, b: any) => {
-              const seqNoA = Number(a.Seq_No);
-              const seqNoB = Number(b.Seq_No);
-              if (seqNoA === undefined || seqNoA === null) return 1;
-              if (seqNoB === undefined || seqNoB === null) return -1;
-              return seqNoA - seqNoB;
-            })
-            .filter((item: any) => item.IsEnable === 'Y');
-          this.urlItems = [...this.urlItems, ...sortedAndFilteredData];
+          const processedData = data.Data.map((item: any) => {
+            // 根據 System_Id 取得配置，若找不到則給預設灰色
+            const config = SYSTEM_CONFIG[item.System_Id] || { color: '#95a5a6', order: 99 };
+            return {
+              ...item,
+              dynamicColor: config.color,
+              customOrder: config.order
+            };
+          });
+          const allItems = [
+            // 加入原本寫死的 ERP (如果是從 API 回來就不用這段)
+            {
+              System_Id: 'ERP',
+              System_Name: '商場營運管理系統',
+              System_Url: 'account/dashboard',
+              System_ImgFile: 'TSRDERP',
+              IsEnable: 'Y',
+              Seq_No: 1,
+              dynamicColor: SYSTEM_CONFIG['ERP'].color,
+              customOrder: SYSTEM_CONFIG['ERP'].order,
+            },
+            {
+              System_Id: 'ERP2',
+              System_Name: '測試如果未來有第五個系統顯示在此處',
+              System_Url: 'account/dashboard',
+              System_ImgFile: 'TSRDERP',
+              IsEnable: 'Y',
+              Seq_No: 1,
+              dynamicColor: SYSTEM_CONFIG['ERP2'].color,
+              customOrder: SYSTEM_CONFIG['ERP2'].order,
+            },
+            ...processedData
+          ].sort((a, b) => a.customOrder - b.customOrder).filter((item: any) => item.IsEnable === 'Y'); // 強制按我們定義的順序排
           // this.loading = false; // 這裡不需要設置 false，由 finalize 處理
+          this.pagedItems = [];
+          for (let i = 0; i < allItems.length; i += 4) {
+            this.pagedItems.push(allItems.slice(i, i + 4));
+          }
         },
         error: (error) => {
           this.errorMessage = '無法載入 URL 清單。請稍後再試。';
@@ -169,6 +195,15 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
         },
       })
     );
+  }
+  // 導覽功能
+  nextPage() { if (this.hasMorePages()) this.currentPage++; }
+  prevPage() { if (this.currentPage > 0) this.currentPage--; }
+  hasMorePages() { return this.currentPage < this.pagedItems.length - 1; }
+
+  // 填充空白 block 讓佈局不崩壞
+  getFillerArray(page: any[]) {
+    return new Array(4 - page.length);
   }
   private appendOrReplaceParam(url: string, key: string, value: string): string {
     try {
@@ -200,7 +235,10 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
             }
           })
         ).subscribe({
-          next: () => { this.router.navigate([item.System_Url]); },
+          next: () => {
+            const targetPath = item.System_Url.split('/');
+            this.router.navigate(targetPath);
+          },
         })
       );
     } else {
@@ -258,31 +296,32 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
 
   onSubmit(frm: FormGroup): void {
     frm.markAllAsTouched();
-    if (frm.valid) {
-      this.formButtonLoading = true;
-      const query = {
-        User_No: this.user?.user_No || '',
-        Old_password: this.encryptionService.getPassword(this.user?.user_No || '', frm.value.oldPassword),
-        New_password: this.encryptionService.getPassword(this.user?.user_No || '', frm.value.newPassword),
-        PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 密碼到期日設為90天後
-      };
-      this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
-        this.userCodeService.changePassword(query).pipe(
-          untilDestroyed(this),
-          finalize(() => this.formButtonLoading = false) // 無論成功失敗，都重置按鈕載入狀態
-        ).subscribe({
-          next: () => {
-            this.messageService.successBubble('密碼修改成功');
-            this.authService.logout(); // 修改密碼成功後登出
-            // this.formButtonLoading = false; // 這裡不需要，因為 finalize 會處理
-          },
-          error: (err) => {
-            // 錯誤處理會由 ErrorHandlerService 負責顯示訊息
-            console.error('Change password failed:', err);
-            // this.formButtonLoading = false; // 這裡不需要，因為 finalize 會處理
-          },
-        })
-      );
-    }
+    if (!frm.valid) return;
+
+    this.formButtonLoading = true;
+    const query = {
+      User_No: this.user?.user_No || '',
+      Old_password: this.encryptionService.getPassword(this.user?.user_No || '', frm.value.oldPassword),
+      New_password: this.encryptionService.getPassword(this.user?.user_No || '', frm.value.newPassword),
+      PwdExpireDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+    };
+    this.subscriptions.push(
+      this.userCodeService.changePassword(query).pipe(
+        untilDestroyed(this),
+        finalize(() => this.formButtonLoading = false)
+      ).subscribe({
+        next: (response) => {
+          if (response && response.Status === '0000') {
+            this.messageService.successBubble(response?.Message, '更新成功');
+            this.authService.logout();
+          } else {
+            this.messageService.errorBubble(response?.Message, '更新失敗');
+          }
+        },
+        error: (err) => {
+          console.error('Change password failed:', err);
+        },
+      })
+    );
   }
 }

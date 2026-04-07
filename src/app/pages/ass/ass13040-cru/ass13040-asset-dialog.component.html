@@ -1,0 +1,105 @@
+<app-dialog
+  [visible]="visible"
+  header="選取資產資料"
+  [disable]="selectedItems.length === 0"
+  [loading]="loading"
+  width="1200px"
+  (visibleChange)="onVisibleChange($event)"
+  (save)="onSave()"
+>
+  <form [formGroup]="queryForm" class="mt-3">
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-input-text
+          label="資產編號"
+          controlName="assetNo"
+          [control]="queryForm.controls.assetNo"
+          [submitted]="false"
+        ></app-input-text>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="大分類編號"
+          controlName="bClassId"
+          [options]="bClassOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="queryForm.controls.bClassId"
+          [submitted]="false"
+        ></app-dropdown>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="中分類編號"
+          controlName="mClassId"
+          [options]="mClassOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="queryForm.controls.mClassId"
+          [submitted]="false"
+        ></app-dropdown>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="小分類編號"
+          controlName="sClassId"
+          [options]="sClassOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="queryForm.controls.sClassId"
+          [submitted]="false"
+        ></app-dropdown>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="保管人代號"
+          controlName="custodianNo"
+          [options]="custodianOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="queryForm.controls.custodianNo"
+          [submitted]="false"
+        ></app-dropdown>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="保管單位代號"
+          controlName="custodyOrgId"
+          [options]="custodyOrgOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="queryForm.controls.custodyOrgId"
+          [submitted]="false"
+        ></app-dropdown>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-input-text
+          label="品項名稱"
+          controlName="itemName"
+          [control]="queryForm.controls.itemName"
+          [submitted]="false"
+        ></app-input-text>
+      </div>
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mb-3">
+      <app-button btnType="query" [loading]="loading" (clickEvent)="onQuery()"></app-button>
+    </div>
+  </form>
+
+  <app-table-report
+    tableKey="ass13040AssetDialog"
+    dataKey="ASSET_ID"
+    [lazy]="false"
+    [showManage]="false"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [showCheckBox]="true"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [isRowSelectable]="isRowSelectable"
+  ></app-table-report>
+</app-dialog>

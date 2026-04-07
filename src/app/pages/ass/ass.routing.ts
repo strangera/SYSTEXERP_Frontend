@@ -36,9 +36,9 @@ export const assRoutes: Routes = [
   { path: 'ass13010cru', loadComponent: () => import('./ass13010-cru/ass13010-cru.component').then(m => m.ASS13010CRUComponent), data: { progNo: 'ASS13010' } },
   // { path: 'ass13020', loadComponent: () => import('./ass13020/ass13020.component').then(m => m.ASS13020Component),data: {progNo:'ASS13020'} }, // 資產轉入
   // { path: 'ass13020cru', loadComponent: () => import('./ass13020-cru/ass13020-cru.component').then(m => m.ASS13020CRUComponent),data: {progNo:'ASS13020'} },
-  // { path: 'ass13040', loadComponent: () => import('./ass13040/ass13040.component').then(m => m.ASS13040Component),data: {progNo:'ASS13040'} }, // 批次報廢作業
-  // { path: 'ass13040cru', loadComponent: () => import('./ass13040-cru/ass13040-cru.component').then(m => m.ASS13040CRUComponent),data: {progNo:'ASS13040'} },
-  // { path: 'ass13050', loadComponent: () => import('./ass13050/ass13050.component').then(m => m.ASS13050Component),data: {progNo:'ASS13050'} }, // 移轉交接表
+  { path: 'ass13040', loadComponent: () => import('./ass13040/ass13040.component').then(m => m.ASS13040Component), data: { progNo: 'ASS13040' } }, // 批次報廢作業
+  { path: 'ass13040cru', loadComponent: () => import('./ass13040-cru/ass13040-cru.component').then(m => m.ASS13040CRUComponent), data: { progNo: 'ASS13040' } },
+  { path: 'ass13050', loadComponent: () => import('./ass13050/ass13050.component').then(m => m.ASS13050Component),data: {progNo:'ASS13050'} }, // 移轉交接表
   { path: 'ass13060', loadComponent: () => import('./ass13060/ass13060.component').then(m => m.ASS13060Component), data: { progNo: 'ASS13060' } }, // 固定資產重估作業
   { path: 'ass13060cru', loadComponent: () => import('./ass13060-cru/ass13060-cru.component').then(m => m.ASS13060CRUComponent), data: { progNo: 'ASS13060' } },
   // { path: 'ass13070', loadComponent: () => import('./ass13070/ass13070.component').then(m => m.ASS13070Component),data: {progNo:'ASS13070'} }, // 財產保管單位設定作業
@@ -62,7 +62,7 @@ export const assRoutes: Routes = [
   // { path: 'ass14040cru', loadComponent: () => import('./ass14040-cru/ass14040-cru.component').then(m => m.ASS14040CRUComponent),data: {progNo:'ASS14040'} },
   // { path: 'ass15010', loadComponent: () => import('./ass15010/ass15010.component').then(m => m.ASS15010Component),data: {progNo:'ASS15010'} }, // 財產標籤列印作業
   // { path: 'ass15010cru', loadComponent: () => import('./ass15010-cru/ass15010-cru.component').then(m => m.ASS15010CRUComponent),data: {progNo:'ASS15010'} },
-  // { path: 'ass15020', loadComponent: () => import('./ass15020/ass15020.component').then(m => m.ASS15020Component),data: {progNo:'ASS15020'} }, // 財產保管清冊
+  { path: 'ass15020', loadComponent: () => import('./ass15020/ass15020.component').then(m => m.ASS15020Component), data: { progNo: 'ASS15020' } }, // 財產保管清冊
   // { path: 'ass15030', loadComponent: () => import('./ass15030/ass15030.component').then(m => m.ASS15030Component),data: {progNo:'ASS15030'} }, // 財產目錄
   // { path: 'ass15040', loadComponent: () => import('./ass15040/ass15040.component').then(m => m.ASS15040Component),data: {progNo:'ASS15040'} }, // 財產目錄之會計科目報表
   // { path: 'ass15050', loadComponent: () => import('./ass15050/ass15050.component').then(m => m.ASS15050Component),data: {progNo:'ASS15050'} }, // 折舊攤提表
