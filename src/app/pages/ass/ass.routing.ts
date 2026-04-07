@@ -96,7 +96,7 @@ export const assRoutes: Routes = [
   // { path: 'ass17070', loadComponent: () => import('./ass17070/ass17070.component').then(m => m.ASS17070Component),data: {progNo:'ASS17070'} }, // 報廢明細表
   // { path: 'ass17080', loadComponent: () => import('./ass17080/ass17080.component').then(m => m.ASS17080Component),data: {progNo:'ASS17080'} }, // 耗材庫存查詢作業(含金額)
   // { path: 'ass17090', loadComponent: () => import('./ass17090/ass17090.component').then(m => m.ASS17090Component),data: {progNo:'ASS17090'} }, // 耗材庫存查詢作業
-  // { path: 'ass17100', loadComponent: () => import('./ass17100/ass17100.component').then(m => m.ASS17100Component),data: {progNo:'ASS17100'} }, // 耗材進耗存報表
+  { path: 'ass17100', loadComponent: () => import('./ass17100/ass17100.component').then(m => m.ASS17100Component), data: { progNo: 'ASS17100' } }, // 耗材進耗存報表
   // { path: 'ass17110', loadComponent: () => import('./ass17110/ass17110.component').then(m => m.ASS17110Component),data: {progNo:'ASS17110'} }, // 耗材進耗存之會計科目報表
   { path: 'ass21010', loadComponent: () => import('./ass21010/ass21010.component').then(m => m.ASS21010Component), data: { progNo: 'ASS21010' } }, // 基本資料設定-能源錶號基本維護
   { path: 'ass21010cru', loadComponent: () => import('./ass21010-cru/ass21010-cru.component').then(m => m.ASS21010CRUComponent), data: { progNo: 'ASS21010' } },

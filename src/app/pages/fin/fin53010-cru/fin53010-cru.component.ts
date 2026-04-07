@@ -113,6 +113,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly tableData = signal<FIN53010DetailTable[]>([]);
   public readonly selectedDetail = signal<FIN52030DetailData[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
+  /** 立沖代號等暫無選項時使用，固定參考避免 dropdown 每次 getOptions 回傳新陣列 */
+  readonly emptyClearingOptions: Option[] = [];
+  /** 避免 effect 在 maps 抖動時反覆 tableData.set 造成 table-edit 重初始化 */
+  private _lastAppliedDetailTableFingerprint: string | null = null;
   public readonly currentStep = signal<number>(1);
   public readonly activeVoucherSteps = signal<number[]>([]);
   public readonly stepLabels = new Map<number, string>([
@@ -204,18 +208,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'ACP_ExpectPayDate', header: '預計付款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'ACP_Date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'VEN_BNK_No', header: '匯款銀行代號', visible: true },
-    {
-      field: 'VEN_BankAccountNo', header: '銀行帳號/帳戶名稱', visible: true, format: (_v, _i, row) => {
-        const r = row as FIN53010Aps3001Row;
-        const a = r?.VEN_BankAccountNo;
-        const b = r?.VEN_AccountName;
-        if (a && b) return `${a} / ${b}`;
-        return (a ?? b ?? '') as string;
-      }
-    },
+    { field: 'VEN_BankAccountNo', header: '銀行帳號', visible: true },
+    { field: 'VEN_AccountName', header: '帳號名稱', visible: true },
     { field: 'VEN_CTRLYN', header: '票據禁止背書轉讓', visible: true },
     { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true },
     { field: 'AccNo', header: '會計科目代號', visible: true },
+    { field: 'AccName', header: '會計科目名稱', visible: true },
     { field: 'NoteDesc', header: '摘要', visible: true },
     { field: 'SubDetailNo', header: '對象別編號', visible: true },
     { field: 'PTA', header: '對帳KEY值', visible: true },
@@ -363,7 +361,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly dataEffect = effect(() => {
     if (this.isFormCreateable) return;
     const data = this.fin53010DetailData();
-    if (!data?.Details) return;
+    if (!data?.Details) {
+      this._lastAppliedDetailTableFingerprint = null;
+      return;
+    }
 
     // 將 VoucherType 的 value 轉換成 label
     const voucherTypeValue = data.VoucherType?.trim() ?? 'GL';
@@ -385,7 +386,17 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       ...data.UPD_Date ? { UPD_Date: new Date(data.UPD_Date) } : {},
     });
 
-    this.tableData.set(data?.Details.map((v, index) => ({
+    if (!this.areDetailMapsReady()) {
+      return;
+    }
+
+    const fp = this.buildDetailTableFingerprint(data);
+    if (fp === this._lastAppliedDetailTableFingerprint) {
+      return;
+    }
+    this._lastAppliedDetailTableFingerprint = fp;
+
+    this.tableData.set(data.Details.map((v, index) => ({
       ...v,
       AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
       AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
@@ -396,12 +407,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       SerNo: index + 1, // 序號從 1 起
     })));
 
-    this.logger.debug(`loadingDetail:`, [data, this.dataForm.getRawValue(), this.tableData()]);
-    if (!this.service.accNoMap().size
-      || !this.service.vendorMap().size
-      || !this.service.usrMap().size
-      || !this.service.noteDescMap().size
-      || !this.service.voucherTypeMap().size) return;
+    const rows = this.tableData();
+    this.logger.debug(`loadingDetail:`, {
+      data,
+      form: this.dataForm.getRawValue(),
+      tableRowCount: rows.length,
+      tableSample: rows.slice(0, 5),
+    });
   }, { allowSignalWrites: !0 });
 
   // Template 相關屬性
@@ -493,7 +505,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         header: '立沖代號',
         textAlign: 'left',
         type: 'dropdown',
-        options: () => [],
+        options: () => this.emptyClearingOptions,
         optionLabel: 'label',
         optionValue: 'value',
       },
@@ -591,6 +603,30 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'note_desc', header: '摘要', type: 'input' },
     { field: 'txn_date', header: '日期', type: 'date', disabled: () => true },
   ];
+
+  private areDetailMapsReady(): boolean {
+    return this.service.accNoMap().size > 0
+      && this.service.vendorMap().size > 0
+      && this.service.usrMap().size > 0
+      && this.service.noteDescMap().size > 0
+      && this.service.voucherTypeMap().size > 0;
+  }
+
+  /** 僅依 API 明細內容（不含畫面解析名稱），用於避免 maps 就緒後 effect 重複觸發 tableData.set */
+  private buildDetailTableFingerprint(data: QueryFIN53010Detail): string {
+    const rows = (data.Details ?? []).map(d => ({
+      id: d.id,
+      SerNo: d.SerNo,
+      AccNo: d.AccNo,
+      AccDC: d.AccDC,
+      AccAmt: d.AccAmt,
+      DetailNo: d.DetailNo ?? null,
+      ORG_ID: d.ORG_ID ?? null,
+      NoteDesc: d.NoteDesc ?? null,
+      SubDetailNo: d.SubDetailNo ?? null,
+    }));
+    return `${data.id}|${data.VouNo}|${JSON.stringify(rows)}`;
+  }
 
   constructor(
     public readonly service: FIN53010Service,
