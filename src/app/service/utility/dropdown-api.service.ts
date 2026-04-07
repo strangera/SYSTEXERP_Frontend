@@ -27,6 +27,8 @@ import {
   FaClass1Query,
   FaClass2Item,
   FaClass2Query,
+  FasItemDropDownItem,
+  FasItemDropDownQuery,
   FaClassMItem,
   FaClassMQuery,
   IDropdownItem,
@@ -262,6 +264,16 @@ export class DropdownApiService {
       '/queryFACLASS2_DropDownList',
       'S_CLASS_ID',
       'S_CLASS_NAME',
+      body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢品項(FASITEM)下拉選單，例：耗材 MATERIAL_TYPE = "3" */
+  queryFasItemDropDownList(body: FasItemDropDownQuery): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FasItemDropDownItem, FasItemDropDownQuery>(
+      '/queryFASITEM_DropDownList',
+      'GOODS_ID',
+      'GOODS_NAME',
       body,
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
