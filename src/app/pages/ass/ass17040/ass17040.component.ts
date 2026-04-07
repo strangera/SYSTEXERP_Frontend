@@ -1,19 +1,33 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-
-// Shared
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS17040Service } from '@service/api/ass/ass17040.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { Observable, finalize, map } from 'rxjs';
+import { QueryASS17040Detail, QueryASS17040Request } from './ass17040.model';
 
+function formatOrgDetails(value: unknown): string {
+  if (value == null || typeof value !== 'object') {
+    return '';
+  }
+  return Object.entries(value as Record<string, string>)
+    .map(([k, v]) => `${k}: ${v}`)
+    .join('；');
+}
+
+@UntilDestroy()
 @Component({
   selector: 'app-ass17040',
   templateUrl: './ass17040.component.html',
@@ -27,186 +41,214 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     CalendarRangeComponent,
     DropdownComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
-export class ASS17040Component extends BasicQpageComponent implements OnInit {
-  queryForm = this.formBuilder.group({
-    bigCategoryCode: [],
-    midCategoryCode: [],
-    smallCategoryCode: [],
-    Querybystatus: [],
-    propertynumber: [],
-    propertytype: [],
-    Itemnumber: [],
-    Sdate: [],
-    Edate: [],
-    Departmentcode: [],
+export class ASS17040Component
+  extends BasicQueryPageComponent<QueryASS17040Detail>
+  implements OnInit
+{
+  readonly queryForm = this.formBuilder.nonNullable.group({
+    Sdate: [null as Date | null, [Validators.required]],
+    Edate: [null as Date | null, [Validators.required]],
+    OrgID: [null as string | null],
+    bigCategoryCode: [null as string | null],
+    midCategoryCode: [null as string | null],
+    smallCategoryCode: [null as string | null],
+    GoodsID: [null as string | null],
   });
-  // Table data
-  data: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'itemCode', header: '品項編號', visible: true },
-    { field: 'itemName', header: '品項名稱', visible: true },
-    { field: 'itemPrice', header: '品項單價', visible: true },
-    { field: 'unit', header: '單號', visible: true },
-    { field: 'department', header: '部門', visible: true },
-    { field: 'quantity', header: '數量', visible: true },
-    { field: 'amount', header: '金額', visible: true },
+
+  orgOptions: Option[] = [];
+  bigCategoryOptions: Option[] = [];
+  midCategoryOptions: Option[] = [];
+  smallCategoryOptions: Option[] = [];
+  goodsOptions: Option[] = [];
+
+  data: QueryASS17040Detail[] = [];
+  totalRecords = 0;
+  lastQueryBody: QueryASS17040Request | null = null;
+
+  @ViewChild(TableReportComponent) tableReport!: TableReportComponent;
+
+  readonly columns: ReportColumn[] = [
+    { field: 'Seq', header: '序號', sortField: 'Seq' },
+    { field: 'GoodsID', header: '品項ID', sortField: 'GoodsID' },
+    { field: 'GoodsName', header: '品項名稱', sortField: 'GoodsName' },
+    { field: 'GoodsPrice', header: '品項單價', sortField: 'GoodsPrice' },
+    { field: 'TotalQty', header: '總數量', sortField: 'TotalQty' },
+    { field: 'TotalAmt', header: '總金額', sortField: 'TotalAmt' },
+    { field: 'RowType', header: '總筆性質', sortField: 'RowType' },
+    {
+      field: 'OrgDetails',
+      header: '部門明細',
+      showSort: false,
+      format: (v, _i, row) => formatOrgDetails(row?.OrgDetails ?? v),
+    },
   ];
-
-
-
-  // Dropdown options
-  Departmentcode: any[] = [];
-  usercode: any[] = [];
-  bigCategoryOptions: any[] = [
-    { value: 1, label: '裝潢工程' },
-    { value: 2, label: '其他工程' },
-    { value: 3, label: '電腦及電子零件產品' },
-    { value: 4, label: '電力及照明系統' },
-    { value: 5, label: '家電家俱設備' },
-    { value: 6, label: '機消空電水零配件' },
-    { value: 7, label: '辦公及營運庶務' },
-    { value: 8, label: '印刷品(非廣告行銷)' },
-    { value: 9, label: '印刷品(廣告行銷)' },
-    { value: 10, label: '衛生及醫療庶務用品' },
-  ];
-  midCategoryOptions: any[] = [
-    { value: 1, label: '室內裝潢工程' },
-    { value: 2, label: '室內裝潢備品' },
-    { value: 3, label: '弱電系統' },
-    { value: 4, label: '房屋及建築設備' },
-    { value: 5, label: '停車場設備' },
-    { value: 6, label: '其他工程' },
-    { value: 7, label: '機電消防工程' },
-    { value: 8, label: '電子產品及零件' },
-    { value: 9, label: '電子儀器設備' },
-    { value: 10, label: '電子儀器設備-資產' },
-  ];
-  smallCategoryOptions: any[] = [
-    { value: 1, label: '機電空調工程' },
-    { value: 2, label: '水電消防工程' },
-    { value: 3, label: '排油煙工程' },
-    { value: 4, label: '商場高壓電節能工程' },
-    { value: 5, label: '商場弱電系統工程' },
-    { value: 6, label: '網路佈線工程' },
-    { value: 7, label: '鐵路自動測試儀' },
-    { value: 8, label: '風車零件' },
-    { value: 9, label: '資收場回收用品' },
-    { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  ];
-  Querybystatus: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '發料' },
-    { value: 3, label: '退料' },
-
-  ];
-  assetCodeOptions: any[] = [
-    { value: 1, label: '1A232300000010000001' },
-    { value: 2, label: '1A232300000020000001' },
-    { value: 3, label: '1A232300000040000001' },
-    { value: 4, label: '1A232300000050000001' },
-    { value: 5, label: '1A232300000060000001' },
-    { value: 6, label: '1A232300000090000001' },
-    { value: 7, label: '1A232400000010000001' },
-    { value: 8, label: '1A232400000040000001' },
-    { value: 9, label: '1A232400000060000001' },
-  ];
-  propertytype
-    : any[] = [
-      { value: 1, label: '資產' },
-      { value: 2, label: '列管品' },
-    ];
-  Itemnumber
-    : any[] = [
-
-      { value: 1, label: '3A24210000001' },
-      { value: 2, label: '3A24210000002' },
-      { value: 3, label: '3A24210000003' },
-      { value: 4, label: '3A24210000004' },
-      { value: 5, label: '3A24210000005' },
-      { value: 6, label: '3A24210000006' },
-      { value: 7, label: '3A24210000007' },
-      { value: 8, label: '3A24210000008' },
-      { value: 9, label: '3A24210000009' },
-      { value: 10, label: '3A24210000010' },
-    ];
-
-
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-
+    private readonly ass17040Service: ASS17040Service,
+    private readonly dropdown: DropdownApiService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '310052';
-    // Initialize dropdown options
+    this.initializePage('ASS17040', '', this.queryForm, (form) =>
+      this.onSubmit(form),
+    );
+    this.loadOrgOptions();
+    this.loadBigCategoryOptions();
+    this.loadGoodsOptions();
+    this.setupCategoryListeners();
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+  private loadOrgOptions(): void {
+    this.dropdown
+      .querySys3100()
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.orgOptions = opts ?? [];
+      });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
+  private loadBigCategoryOptions(): void {
+    this.dropdown
+      .queryFaClassM({})
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.bigCategoryOptions = opts ?? [];
+      });
+  }
+
+  private loadMidCategoryOptions(bClassId: string): void {
+    if (!bClassId) {
+      this.midCategoryOptions = [];
+      return;
     }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
+    this.dropdown
+      .queryFaClass1({ B_CLASS_ID: bClassId })
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.midCategoryOptions = opts ?? [];
+      });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
+  private loadSmallCategoryOptions(mClassId: string): void {
+    if (!mClassId) {
+      this.smallCategoryOptions = [];
+      return;
     }
+    this.dropdown
+      .queryFaClass2({ M_CLASS_ID: mClassId })
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.smallCategoryOptions = opts ?? [];
+      });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
+  private loadGoodsOptions(): void {
+    this.dropdown
+      .queryFasItemDropDownList({ MATERIAL_TYPE: '3' })
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.goodsOptions = opts ?? [];
+      });
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+  private setupCategoryListeners(): void {
+    this.queryForm.controls.bigCategoryCode.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((big) => {
+        this.queryForm.patchValue(
+          { midCategoryCode: null, smallCategoryCode: null },
+          { emitEvent: false },
+        );
+        this.midCategoryOptions = [];
+        this.smallCategoryOptions = [];
+        if (big) {
+          this.loadMidCategoryOptions(big);
+        }
+      });
+
+    this.queryForm.controls.midCategoryCode.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((mid) => {
+        this.queryForm.patchValue({ smallCategoryCode: null }, { emitEvent: false });
+        this.smallCategoryOptions = [];
+        if (mid) {
+          this.loadSmallCategoryOptions(mid);
+        }
+      });
   }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+
+  private buildPayload(
+    raw: ReturnType<typeof this.queryForm.getRawValue>,
+    pageSize: number,
+    pageIndex: number,
+    sortBy: QueryASS17040Request['SortBy'],
+  ): QueryASS17040Request {
+    return removeEmptyValues({
+      StartDate: raw.Sdate ? new Date(raw.Sdate).toISOString() : undefined,
+      EndDate: raw.Edate ? new Date(raw.Edate).toISOString() : undefined,
+      OrgID: raw.OrgID || undefined,
+      BClassID: raw.bigCategoryCode || undefined,
+      MClassID: raw.midCategoryCode || undefined,
+      SClassID: raw.smallCategoryCode || undefined,
+      GoodsID: raw.GoodsID || undefined,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: sortBy,
+    }) as QueryASS17040Request;
+  }
+
+  queryFunction = (
+    body: QueryASS17040Request & { pageSize?: number; pageIndex?: number },
+  ): Observable<ApiResponse<QueryASS17040Detail[]>> => {
+    const rawForm = this.queryForm.getRawValue();
+    const pageSize = body.pageSize ?? body.PageSize ?? 30;
+    const pageIndex = body.pageIndex ?? body.PageIndex ?? 1;
+    const payload = this.buildPayload(rawForm, pageSize, pageIndex, body.SortBy);
+    return this.ass17040Service.queryASS17040(payload).pipe(
+      map((res) => {
+        const details = res.Data?.Details ?? [];
+        const mapped = details.map((row, i) => ({
+          ...row,
+          rowKey: `${row.Seq ?? i}-${row.RowType ?? ''}-${row.GoodsID ?? ''}-${i}`,
+        }));
+        return {
+          ...res,
+          Data: mapped,
+          TotalCount: res.Data?.TotalRows ?? res.TotalCount ?? 0,
+        } as ApiResponse<QueryASS17040Detail[]>;
+      }),
+    );
+  };
+
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
+      const currentSort = this.tableReport?.multiSortMeta?.length
+        ? [...this.tableReport.multiSortMeta]
+        : undefined;
+      this.lastQueryBody = this.buildPayload(raw, 30, 1, currentSort);
+
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.loading = false;
+          }),
+        )
+        .subscribe((res) => {
+          if (res.Status !== '0000') {
+            return;
+          }
+          this.data = res.Data ?? [];
+          this.totalRecords = res.TotalCount ?? 0;
+          this.queryStateService.setQueryState(this.ProgNo, raw);
+        });
+    });
   }
 }

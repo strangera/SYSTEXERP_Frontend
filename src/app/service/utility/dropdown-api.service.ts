@@ -29,6 +29,8 @@ import {
   FaClass2Query,
   FaClassMItem,
   FaClassMQuery,
+  FaSitemItem,
+  FasitemQuery,
   IDropdownItem,
   IGLS1005LedgerMDItem,
   LogoAccorHosItem,
@@ -262,6 +264,16 @@ export class DropdownApiService {
       '/queryFACLASS2_DropDownList',
       'S_CLASS_ID',
       'S_CLASS_NAME',
+      body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢品項(FASITEM)下拉選單 - GOODS_ID / GOODS_NAME（例：MATERIAL_TYPE=3） */
+  queryFasItemDropDownList(body: FasitemQuery = { MATERIAL_TYPE: '3' }): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FaSitemItem, FasitemQuery>(
+      '/queryFASITEM_DropDownList',
+      'GOODS_ID',
+      'GOODS_NAME',
       body,
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }

@@ -87,6 +87,23 @@ export interface FaClass2Item {
 }
 
 /**
+ * queryFASITEM_DropDownList 請求（例：ASS17040 品項編碼，MATERIAL_TYPE=3）
+ */
+export interface FasitemQuery {
+  MATERIAL_TYPE?: string | null;
+  Keyword?: string | null;
+}
+
+/**
+ * queryFASITEM_DropDownList 回傳項目
+ */
+export interface FaSitemItem {
+  RowNo?: string;
+  GOODS_ID: string;
+  GOODS_NAME: string;
+}
+
+/**
  * 查詢 TLTBUSCLASS 時的請求 body
  */
 export interface BusClassQuery {
