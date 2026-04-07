@@ -2,10 +2,10 @@ import { AuthService } from './../system/auth.service';
 // !!! 新版下拉方法
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiResponse } from '../../shared/utils/rxjs-operators/validate-api-response';
 import { Observable, of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
+import { environment } from '../../../environments/environment';
 import {
   Aps1001ComboItem,
   Aps1001ComboQuery,
@@ -29,6 +29,8 @@ import {
   FaClass2Query,
   FaClassMItem,
   FaClassMQuery,
+  FaSItemItem,
+  FaSItemQuery,
   IDropdownItem,
   IGLS1005LedgerMDItem,
   LogoAccorHosItem,
@@ -262,6 +264,16 @@ export class DropdownApiService {
       '/queryFACLASS2_DropDownList',
       'S_CLASS_ID',
       'S_CLASS_NAME',
+      body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢品項編碼(FASITEM)資料表下拉選單 - 回傳 GOODS_ID / GOODS_NAME */
+  queryFaSItem(body: FaSItemQuery): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FaSItemItem, FaSItemQuery>(
+      '/queryFASITEM_DropDownList',
+      'GOODS_ID',
+      'GOODS_NAME',
       body,
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
@@ -831,9 +843,9 @@ export class DropdownApiService {
             value: item.No
           });
           return acc;
-        }, {} as Record<string, any>);
+        }, {} as Record<string, Option & { items: Option[] }>);
 
-        return Object.values(grouped);
+        return Object.values(grouped) as Option[];
       }),
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
