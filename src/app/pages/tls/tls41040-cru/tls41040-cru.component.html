@@ -13,14 +13,11 @@
             [control]="dataForm.controls.NOT_DateTime" [submitted]="submitted"></app-calendar>
         </div>
 
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar label="有效開始日期" controlName="NOT_BegDateTime" calendarType="dateTimeOne"
-            [control]="dataForm.controls.NOT_BegDateTime" [submitted]="submitted"></app-calendar>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar label="有效結束時間" controlName="NOT_EndDateTime" calendarType="dateTimeOne"
-            [control]="dataForm.controls.NOT_EndDateTime" [submitted]="submitted"></app-calendar>
+        <div class="col-12 md:col-8">
+          <app-calendar-range startLabel="有效開始日期" endLabel="有效結束日期" startControlName="NOT_BegDateTime"
+            endControlName="NOT_EndDateTime" calendarType="dateTimeRange"
+            [startControl]="dataForm.controls.NOT_BegDateTime" [endControl]="dataForm.controls.NOT_EndDateTime"
+            [submitted]="submitted"></app-calendar-range>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -28,9 +25,9 @@
             optionValue="value" [control]="dataForm.controls.NOT_Status" [submitted]="submitted"></app-dropdown>
         </div>
 
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="通告備註" controlName="NOT_Remark" [control]="dataForm.controls.NOT_Remark"
-            [style]="{ height: '100px' }" [submitted]="submitted"></app-input-text>
+        <div class="col-12 md:col-8">
+          <app-input-textarea label="通告備註" controlName="NOT_Remark" [control]="dataForm.controls.NOT_Remark"
+            [style]="{ height: '100px' }" [submitted]="submitted"></app-input-textarea>
         </div>
       </div>
       <div class="grid p-fluid">
@@ -39,7 +36,7 @@
             [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]" (valueChange)="dataForm.controls.NOT_DispRt.setValue($event)"></app-radiobutton>
+            ]"></app-radiobutton>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -47,7 +44,7 @@
             [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]" (valueChange)="dataForm.controls.NOT_DispSpd.setValue($event)"></app-radiobutton>
+            ]"></app-radiobutton>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -55,7 +52,7 @@
             [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]" (valueChange)="dataForm.controls.NOT_DispBtn.setValue($event)"></app-radiobutton>
+            ]"></app-radiobutton>
         </div>
       </div>
 
@@ -65,7 +62,7 @@
             [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]" (valueChange)="dataForm.controls.NOT_DispCd.setValue($event)"></app-radiobutton>
+            ]"></app-radiobutton>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -73,10 +70,10 @@
             [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
               { value: 'N', label: '否' },
-            ]" (valueChange)="dataForm.controls.NOT_Prn.setValue($event)"></app-radiobutton>
+            ]"></app-radiobutton>
         </div>
 
-        <div class="col-12 md:col-6 lg:col-4">
+        <div class=" col-12 md:col-6 lg:col-4">
           <app-radiobutton label="是否限制播放條件" groupname="NOT_DtlLimit" [control]="dataForm.controls.NOT_DtlLimit"
             [submitted]="submitted" [options]="[
               { value: 'Y', label: '是' },
@@ -88,15 +85,12 @@
           <app-input-textarea label="通告內容" controlName="NOT_Desc" [control]="dataForm.controls.NOT_Desc"
             [style]="{ height: '100px' }" [submitted]="submitted"></app-input-textarea>
         </div>
-
-        <app-table-edit *ngIf="dataForm.controls.NOT_DtlLimit.value === 'Y'" class="col-12" tableKey="tls41040Detail"
-          [columns]="columns" [data]="data" [dataStatusField]="'status'" [disabled]="false" [canInsert]="true"
-          [tableRequired]="true" [selectedItems]="selectedRows" (selectionChange)="selectedRows = $event"
-          (dataChange)="onDataChange($event)" (delete)="onDelete($event)" [loading]="loading"
-          [disabled]="isFormReadable">
-        </app-table-edit>
-
       </div>
+      <app-table-edit *ngIf="dataForm.controls.NOT_DtlLimit.value === 'Y'" tableKey="tls41040Detail" [columns]="columns"
+        [data]="data" [dataStatusField]="'status'" [disabled]="isFormReadable" [tableRequired]="true"
+        [selectedItems]="selectedRows" (selectionChange)="selectedRows = $event" (dataChange)="data = $event"
+        [loading]="loading" [disabled]="isFormReadable">
+      </app-table-edit>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onCancelClicked()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
