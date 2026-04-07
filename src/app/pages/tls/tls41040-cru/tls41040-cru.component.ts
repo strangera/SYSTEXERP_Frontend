@@ -54,8 +54,8 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<TLS41040Data> im
   TLTTALENT_OPTIONS$ = this.dropDown.queryTLTTALENT_TLS41040();
   ECR_Type_Options = getSYS1000Options('ECR_Type');
   ECR_GrpNoOptions$ = this.dropDown.queryPos1002Grm();
-  SYS3700_Options$ = this.dropDown.querySys3A00();
-  SYS3800_Options$ = this.dropDown.querySys3900();
+  SYS3800_Options$ = this.dropDown.querySys3800();
+  SYS3900_Options$ = this.dropDown.querySys3900();
   SYS3A00_Options$ = this.dropDown.querySys3A00();
   ECR_NoOptions$ = this.dropDown.queryPos1002();
   NOT_Status_Option = [{ value: 'A', label: '已生效' }, { value: 'D', label: '已刪除' },];
@@ -64,8 +64,8 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<TLS41040Data> im
     { field: 'ECR_No', header: '收銀機號', type: 'dropdown', width: '100%', options: () => this.ECR_NoOptions$, optionsAsync: true, optionLabel: 'label', optionValue: 'value', disabled: (_value, _index, row) => this.isOtherGroupSelected(row) },
     { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', width: '100%', options: () => this.TLTTALENT_OPTIONS$, optionsAsync: true, optionLabel: 'label', optionValue: 'value', disabled: (_value, _index, row) => this.isOtherGroupSelected(row) },
     { field: 'ECR_Type', header: '機台類型', type: 'dropdown', width: '100%', options: () => this.ECR_Type_Options, optionsAsync: true, optionLabel: 'label', optionValue: 'value', disabled: (_value, _index, row) => this.isOtherGroupSelected(row) },
-    { field: 'BUILDING_No', header: '館別', type: 'dropdown', width: '100%', options: () => this.SYS3700_Options$, optionsAsync: true, optionLabel: 'Name', optionValue: 'No', disabled: (_value, _index, row) => this.isOtherGroupSelected(row) },
-    { field: 'FLOOR_No', header: '樓層', type: 'dropdown', width: '100%', options: () => this.SYS3800_Options$, optionsAsync: true, optionLabel: 'Name', optionValue: 'No', disabled: (_value, _index, row) => this.isOtherGroupSelected(row) },
+    { field: 'BUILDING_No', header: '館別', type: 'dropdown', width: '100%', options: () => this.SYS3800_Options$, optionsAsync: true, optionLabel: 'Name', optionValue: 'No', disabled: (_value, _index, row) => this.isOtherGroupSelected(row) },
+    { field: 'FLOOR_No', header: '樓層', type: 'dropdown', width: '100%', options: () => this.SYS3900_Options$, optionsAsync: true, optionLabel: 'Name', optionValue: 'No', disabled: (_value, _index, row) => this.isOtherGroupSelected(row) },
     { field: 'Area_No', header: '區域', type: 'dropdown', width: '100%', options: () => this.SYS3A00_Options$, optionsAsync: true, optionLabel: 'Name', optionValue: 'No', disabled: (_value, _index, row) => this.isOtherGroupSelected(row) },
   ];
   data: TLS41040Detail[] = [];
@@ -77,10 +77,14 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<TLS41040Data> im
     super();
   }
   ngOnInit(): void {
+    this.initData();
+  }
+  initData() {
     this.initializePage('TLS41040', this.dataForm);
     if (this.rowdata) {
       this.data = this.rowdata?.Details;
     }
+    this.initDone = true;
   }
   // 檢查其他互斥欄位是否有值
   private isOtherGroupSelected(rowData: TLS41040Detail): boolean {
@@ -127,7 +131,14 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<TLS41040Data> im
   /**
    * Cancel 按鈕被按下時呼叫：還原明細資料與已選列
    */
+  initDone = false;
   onCancelClicked(): void {
+    this.data = [];
+    this.selectedRows = [];
+    this.dataForm.markAsPristine();
+    this.dataForm.reset();
+    this.initDone = false;
+    this.initData();
   }
 }
 

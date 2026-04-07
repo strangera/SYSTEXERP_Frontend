@@ -62,13 +62,16 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Data> imp
     { field: 'NOT_Remark', header: '通告備註' },
   ];
   expansionColumns7: Column[] = [
+    { field: 'ECR_GrpNo', header: '機台群組編號' },
+    { field: 'ECR_GrpName', header: '機台群組名稱' },
+    { field: 'ECR_No', header: '收銀機號' },
+    { field: 'ECR_Name', header: '收銀機名稱' },
     { field: 'TLT_No', header: '專櫃編號' },
     { field: 'tlt_name', header: '專櫃名稱' },
     { field: 'ECR_Type', header: '機台類別', format: (v) => getSYS1000('ECR_Type', v) },
-    { field: 'ECR_GrpNo', header: '機台群組編號' },
-    { field: 'BUILDING_No', header: '館別' },
-    { field: 'FLOOR_No', header: '樓層' },
-    { field: 'Area_No', header: '區域' },
+    { field: 'BUILDING_Name', header: '館別' },
+    { field: 'FLOOR_Name', header: '樓層' },
+    { field: 'Area_Name', header: '區域' },
   ];
   data: TLS41040Data[] = [];
   lastQueryBody: TLS41040QueryReq | null = null;

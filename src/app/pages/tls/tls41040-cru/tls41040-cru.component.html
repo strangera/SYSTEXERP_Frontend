@@ -4,7 +4,7 @@
     <app-button btnType="back" (click)="onCancel()" />
   </div>
 
-  <p-panel [header]="formTitle" class="line-height-3 m-0">
+  <p-panel *ngIf="initDone" [header]="formTitle" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <!-- 日期時間與狀態 -->
       <div class="grid p-fluid">
@@ -89,7 +89,7 @@
       <app-table-edit *ngIf="dataForm.controls.NOT_DtlLimit.value === 'Y'" tableKey="tls41040Detail" [columns]="columns"
         [data]="data" [dataStatusField]="'status'" [disabled]="isFormReadable" [tableRequired]="true"
         [selectedItems]="selectedRows" (selectionChange)="selectedRows = $event" (dataChange)="data = $event"
-        [loading]="loading" [disabled]="isFormReadable">
+        [loading]="loading" [disabled]="isFormReadable" [keepDeletedData]="true">
       </app-table-edit>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onCancelClicked()"></app-button>
