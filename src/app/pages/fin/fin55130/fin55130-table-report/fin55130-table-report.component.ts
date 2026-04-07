@@ -196,24 +196,22 @@ export class Fin55130TableReportComponent {
     const currentClass = data[currentIndex]?.ClassNo;
     const currentGroup = data[currentIndex]?.groupNo;
 
+    // 過濾出同一中類的所有項目進行加總
+    const sameClassItems = data.filter(item => item.ClassNo === currentClass && item.groupNo === currentGroup);
+
     let totalBaseAmt = 0;
     let totalDiffAmt = 0;
 
-    for (let i = currentIndex; i >= 0; i--) {
-      const item = data[i];
-      if (item.ClassNo === currentClass && item.groupNo === currentGroup) {
-        totalBaseAmt += (Number(item.BaseAmt) || 0);
-        totalDiffAmt += (Number(item.DiffAmt) || 0);
-      } else {
-        break;
-      }
-    }
+    sameClassItems.forEach(item => {
+      totalBaseAmt += (Number(item.BaseAmt) || 0);
+      totalDiffAmt += (Number(item.DiffAmt) || 0);
+    });
 
-    // 避免除以 0
+    // 財務邏輯：如果基準月(分母)是 0，通常百分比顯示為 null 或 0
     if (totalBaseAmt === 0) return 0;
 
-    // 回傳百分比數值 (不含 % 符號，交由 format 處理)
-    return (totalDiffAmt / totalBaseAmt) * 100;
+    // 注意：這裡算出來如果是 0.1865，乘上 100 變成 18.65
+    return (totalDiffAmt / Math.abs(totalBaseAmt)) * 100;
   }
 
   // 新增跳窗方法

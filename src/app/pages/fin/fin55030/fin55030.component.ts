@@ -87,7 +87,8 @@ export class FIN55030Component extends BasicQueryPageComponent<any> implements O
     { field: 'PTA', header: '立沖編號', visible: true, align: 'left' },
     { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
     { field: 'PTA1', header: '借方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
-    { field: 'PTA2', header: '貸方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true }
+    { field: 'PTA2', header: '貸方金額(餘額)', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
+    { field: 'Balance', header: '立沖餘額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true }
   ];
   data: fin55030response[] = [];
   totalRecords = 0;

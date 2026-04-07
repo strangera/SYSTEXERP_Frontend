@@ -29,11 +29,13 @@ import { CellInput } from './table-edit-cell.model';
               [loading]="internalLoading"
               [virtualScroll]="true"
               [virtualScrollItemSize]="37"
+              scrollHeight="250px"
               [showClear]="cellInput.col.showClear ?? true"
               [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }"
               (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index);onDropdownChange($event)"
               (onHide)="handleHide()"
+              (onBlur)="handleBlur()"
               (keydown.enter)="handleEnter($event)">
 
     <ng-template let-item pTemplate="item" *ngIf="cellInput.col.templateLabel">
@@ -49,6 +51,21 @@ import { CellInput } from './table-edit-cell.model';
                tooltipPosition="bottom" />
 </p-iconField>
   `,
+  styles: [`
+    /* 使用 ::ng-deep 是因為下拉選單通常 appendTo="body"，不在組件視圖內 */
+    ::ng-deep .p-dropdown-item {
+        height: 37px !important;      /* 必須與 virtualScrollItemSize 一致 */
+        line-height: 37px !important; /* 確保文字垂直居中 */
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 確保虛擬滾動容器高度也是固定的 */
+    ::ng-deep .p-scroller {
+        height: 250px !important; /* 與 scrollHeight 一致 */
+    }
+    `],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
@@ -74,6 +91,23 @@ export class DropdownCellComponent {
   isDisabled(): boolean {
     const col = this.cellInput.col;
     return (col.disabled && col.disabled(this.cellInput.rowData[col.field], this.cellInput.index, this.cellInput.rowData)) || this.cellInput.disabled;
+  }
+
+  handleBlur() {
+    // 執行自定義的 onBlur
+    this.cellInput.col.onBlur?.(
+      this.cellInput.rowData,
+      this.cellInput.rowData[this.cellInput.col.field],
+      this.cellInput.col,
+      this.cellInput.index
+    );
+    // 觸發驗證與同步
+    this.cellInput.onValueChange(
+      this.cellInput.rowData,
+      this.cellInput.rowData[this.cellInput.col.field],
+      this.cellInput.col,
+      this.cellInput.index
+    );
   }
 
   handleHide() {
@@ -116,6 +150,8 @@ export class DropdownCellComponent {
       col,
       this.cellInput.index
     );
+
+    this.handleBlur();
   }
 
 
@@ -143,23 +179,26 @@ export class DropdownCellComponent {
     // 2. 判斷是否需要刷新：rowData 指標變了 OR 任何一個 triggerField 的值變了
     const triggerChanged = JSON.stringify(this._lastTriggerValues) !== JSON.stringify(currentTriggerValues);
 
-    if (this._lastRowData !== rowData || triggerChanged) {
+    if ((this._lastRowData !== rowData || triggerChanged) && !this._isSubscribing) {
       this._lastRowData = rowData;
-      this._lastTriggerValues = currentTriggerValues; // 更新快照
+      this._lastTriggerValues = currentTriggerValues;
 
       const optionsResult = typeof col.options === 'function' ? col.options(rowData) : col.options;
 
-      // ... 以下維持原有的 Observable subscribe 邏輯 ...
       if (optionsResult && typeof optionsResult.subscribe === 'function') {
         this.internalLoading = true;
+        this._isSubscribing = true; // 加鎖
+
         optionsResult.subscribe({
           next: (data: any) => {
             this._resolvedOptions = data;
             this.internalLoading = false;
+            this._isSubscribing = false; // 解鎖
             this.cdr.markForCheck();
           },
           error: () => {
             this.internalLoading = false;
+            this._isSubscribing = false;
             this.cdr.markForCheck();
           }
         });

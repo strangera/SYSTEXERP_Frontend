@@ -17,6 +17,9 @@ export interface ApiItem {
   UPD_Date?: string,
   UPD_USR_No?: string,
   UPD_USR_Name?: string
+
+  dynamicColor?: string,
+  customOrder?: number
 }
 
 @Injectable({

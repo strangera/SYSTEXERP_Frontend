@@ -1,6 +1,5 @@
-// ... (保留所有原本的 import)
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, inject } from '@angular/core'; // 引入 inject
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DoCheck, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
 import { IconFieldModule } from 'primeng/iconfield';
@@ -18,20 +17,21 @@ import { CellInput } from './table-edit-cell.model';
   <p-dropdown class="flex min-w-max" appendTo="body"
               [(ngModel)]="cellInput.rowData[cellInput.col.field]"
               [ngModelOptions]="{ standalone: true }"
-              [placeholder]="internalLoading ? '載入中...' : (isDisabled() ? '' : '請輸入' + cellInput.col.header)"
+              [placeholder]="internalLoading ? '載入中...' : (dropdownDisabled ? '' : '請輸入' + cellInput.col.header)"
               [options]="getOptions(cellInput.rowData, cellInput.col)"
               [optionLabel]="cellInput.col.optionLabel"
               [optionValue]="cellInput.col.optionValue"
               [filter]="true"
               [style]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
-              [disabled]="isDisabled() || internalLoading"
-              [editable]="true"
+              [disabled]="dropdownDisabled"
+              [editable]="false"
               [loading]="internalLoading"
               (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
               (onHide)="handleHide()"
               (keydown.enter)="handleEnter($event)"
               [virtualScroll]="true"
-              [virtualScrollItemSize]="40"
+              [virtualScrollItemSize]="37"
+              scrollHeight="250px"
               [showClear]="cellInput.col.showClear ?? true"
               [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }">
@@ -49,6 +49,21 @@ import { CellInput } from './table-edit-cell.model';
                tooltipPosition="bottom" />
 </p-iconField>
   `,
+  styles: [`
+    /* 使用 ::ng-deep 是因為下拉選單通常 appendTo="body"，不在組件視圖內 */
+    ::ng-deep .p-dropdown-item {
+        height: 37px !important;      /* 必須與 virtualScrollItemSize 一致 */
+        line-height: 37px !important; /* 確保文字垂直居中 */
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 確保虛擬滾動容器高度也是固定的 */
+    ::ng-deep .p-scroller {
+        height: 250px !important; /* 與 scrollHeight 一致 */
+    }
+    `],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
@@ -60,7 +75,7 @@ import { CellInput } from './table-edit-cell.model';
     TooltipModule
   ]
 })
-export class DropdownCellComponent {
+export class DropdownCellComponent implements OnChanges, DoCheck {
   @Input({ required: true }) cellInput!: CellInput;
 
   protected readonly tableUtilityService = inject(TableUtilityService);
@@ -71,9 +86,30 @@ export class DropdownCellComponent {
   private _lastRowData: any = null;
   private _isSubscribing = false;
 
+  /** 快取後綁定 p-dropdown，避免每次 CD 重算觸發 PrimeNG disabled setter 內的 detectChanges 連鎖 */
+  public dropdownDisabled = false;
+
   isDisabled(): boolean {
     const col = this.cellInput.col;
     return (col.disabled && col.disabled(this.cellInput.rowData[col.field], this.cellInput.index, this.cellInput.rowData)) || this.cellInput.disabled;
+  }
+
+  private syncDropdownDisabled(): void {
+    const next = this.isDisabled() || this.internalLoading;
+    if (this.dropdownDisabled !== next) {
+      this.dropdownDisabled = next;
+      this.cdr.markForCheck();
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['cellInput']) {
+      this.syncDropdownDisabled();
+    }
+  }
+
+  ngDoCheck(): void {
+    this.syncDropdownDisabled();
   }
 
   handleHide() {
@@ -144,23 +180,28 @@ export class DropdownCellComponent {
     // 2. 判斷是否需要刷新：rowData 指標變了 OR 任何一個 triggerField 的值變了
     const triggerChanged = JSON.stringify(this._lastTriggerValues) !== JSON.stringify(currentTriggerValues);
 
-    if (this._lastRowData !== rowData || triggerChanged) {
+    if ((this._lastRowData !== rowData || triggerChanged) && !this._isSubscribing) {
       this._lastRowData = rowData;
       this._lastTriggerValues = currentTriggerValues; // 更新快照
 
       const optionsResult = typeof col.options === 'function' ? col.options(rowData) : col.options;
 
-      // ... 以下維持原有的 Observable subscribe 邏輯 ...
       if (optionsResult && typeof optionsResult.subscribe === 'function') {
         this.internalLoading = true;
+        this.syncDropdownDisabled();
+        this._isSubscribing = true;
         optionsResult.subscribe({
           next: (data: any) => {
             this._resolvedOptions = data;
             this.internalLoading = false;
+            this._isSubscribing = false;
+            this.syncDropdownDisabled();
             this.cdr.markForCheck();
           },
           error: () => {
             this.internalLoading = false;
+            this._isSubscribing = false;
+            this.syncDropdownDisabled();
             this.cdr.markForCheck();
           }
         });

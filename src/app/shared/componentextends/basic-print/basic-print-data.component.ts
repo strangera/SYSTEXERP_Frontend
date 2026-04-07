@@ -69,9 +69,11 @@ export abstract class BasicPrintDataComponent {
       return {
         field: col.field,
         header: col.header,
+        align: (col as any).align || 'left',
         visible: col.visible ? col.visible : true,
         exportFormat: exportFormat,
-        groupField: col.groupField
+        groupField: col.groupField,
+        reportType: col.reportType || '',
       };
     });
 
@@ -117,9 +119,11 @@ export abstract class BasicPrintDataComponent {
       return {
         field: col.field,
         header: col.header,
+        align: (col as any).align || 'left',
         visible: col.visible ? col.visible : true,
         exportFormat: exportFormat,
-        groupField: col.groupField
+        groupField: col.groupField,
+        reportType: col.reportType || '',
       };
     });
 

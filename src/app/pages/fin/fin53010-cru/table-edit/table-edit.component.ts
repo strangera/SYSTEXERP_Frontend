@@ -120,6 +120,9 @@ export class TableEditComponent implements OnChanges {
   @Input() footerSummaryLabel = '總計'; // 新增：Footer 摘要行的標籤名稱
   @Input() showFooter = false;
   @Input() scrollable = false; // 是否要滾輪
+  /** 大量列時與 scrollable 併用以僅渲染可視列（本機 FIN53010 明細表可選用） */
+  @Input() virtualScroll = false;
+  @Input() virtualScrollItemSize: number | undefined = undefined;
   @Input() showPaginator = false; // 是否顯示 分頁器
 
   protected readonly tableUtilityService = inject(TableUtilityService);
@@ -459,12 +462,39 @@ export class TableEditComponent implements OnChanges {
   protected getObjectKeys(obj: any): string[] {
     return obj ? Object.keys(obj) : [];
   }
+
+  /**
+   * 非群組表頭序號欄 colspan（與 thead 一致；無 checkbox 時以序號佔滿原 checkbox 欄位寬）
+   */
+  protected get serialThColspan(): number {
+    return this.canInsert && !this.disabled && this._tableData.length > 0
+      && this._tableData[this._tableData.length - 1]._isAutoInsertCandidate && !this.showCheckBox
+      ? 2
+      : 1;
+  }
+
+  /**
+   * body 序號欄 colspan：與表頭／checkbox 合併列一致
+   */
+  protected serialTdColspan(rowData: any): number {
+    if (rowData._isAutoInsertCandidate && this.data.length && this.showCheckBox) {
+      return 2;
+    }
+    if (!this.columnGroup?.length && this.serialThColspan === 2) {
+      return 2;
+    }
+    return 1;
+  }
+
   /**
  * 計算總計行第一個 td 應該合併的欄位數量 (colspan)
  * @returns 合併的欄位數
  */
   calculateFooterColspan(): number {
     let baseColspan = 1;// 基礎合併數：序號欄位 (1)
+    if (!this.columnGroup?.length && this.serialThColspan === 2) {
+      baseColspan++;// 序號佔 2 欄（無獨立 checkbox 欄）
+    }
     if (this.showReorder && this._tableData.length) baseColspan++;// Reorder 欄位
     if (this.showCheckBox && !this.disabled && this.data.length) baseColspan++;// CheckBox 欄位 (僅在顯示且資料不為空時計入)
     let firstAggregateIndex = -1;

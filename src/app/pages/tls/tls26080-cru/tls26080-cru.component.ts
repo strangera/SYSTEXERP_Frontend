@@ -81,7 +81,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly cf = computed(() => this.campaignForm.controls);
 
   public readonly dataForm = this.formBuilder.group({
-    pod_no: [null as string | null, [Validators.maxLength(10)]], // 活動單號
+    pod_no: [null as string | null, [Validators.maxLength(25)]], // 活動單號
     pod_desc: [null as string | null, [Validators.required]], // 活動名稱
     pod_sdate: [{ value: this.service.dateS as Date | null, disabled: true }], // 起始日期(起)
     pod_back_sdate: [null as Date | null, [Validators.required]], // 兌回日期(起)
@@ -258,15 +258,15 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       pod_desc: string;
       pod_sdate: Date;
       pod_edate: Date;
-      pod_back_sdate: Date;
-      pod_back_edate: Date;
+      pod_back_sdate: Date | null;
+      pod_back_edate: Date | null;
     } = {
       pod_no: selected.CampaignId,
       pod_desc: selected.CampaignId,
       pod_sdate: new Date(selected.StartTime),
       pod_edate: new Date(selected.EndTime),
-      pod_back_sdate : new Date(selected.BackRedeemStartTime),
-      pod_back_edate : new Date(selected.BackRedeemEndTime),
+      pod_back_sdate: selected.DiscountStartTime ? new Date(selected.DiscountStartTime) : null,
+      pod_back_edate: selected.DiscountEndTime ? new Date(selected.DiscountEndTime) : null,
     };
     this.dataForm.patchValue(patch);
     this.logger.debug(`campaignEffect:`, [podDesc, selected]);
@@ -369,8 +369,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { field: 'CampaignName', header: '活動名稱' },
     { field: 'StartTime', header: '活動開始時間', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
     { field: 'EndTime', header: '活動結束時間', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'BackRedeemStartTime', header: '活動兌回日期起日', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'BackRedeemEndTime', header: '活動兌回日期迄日', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'DiscountStartTime', header: '活動兌回日期起日', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'DiscountEndTime', header: '活動兌回日期迄日', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
     { field: 'AccountingType', header: '帳務拆分類別' },
     { field: 'Remark', header: '活動備註' },
   ];
@@ -378,24 +378,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   // 專櫃資料表
   public readonly counterColumns = computed<Column[]>(() => {
     const tltIdMap = this.tltIdList();
-    const fareContractCols = (this.isFormReadable || this.isFormCreateable)
-      ? [
-        {
-          field: 'fare_rate_d16' as const,
-          header: 'D16',
-          groupField: 'groupField2',
-          format: (v: unknown) => String(v ?? '') + '%',
-          textAlign: 'right',
-        },
-        {
-          field: 'fare_rate_d17' as const,
-          header: 'D17',
-          groupField: 'groupField2',
-          format: (v: unknown) => String(v ?? '') + '%',
-          textAlign: 'right',
-        },
-      ]
-      : [];
 
     return [
       {
@@ -477,7 +459,20 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         textAlign: 'right',
         cellClass: (row: TLS26080EditTable) => (this.isImportContractRateMismatchD17(row) ? 'text-red-500' : ''),
       },
-      ...fareContractCols,
+      {
+        field: 'fare_rate_d16' as const,
+        header: 'D16',
+        groupField: 'groupField2',
+        format: (v: unknown) => String(v ?? '') + '%',
+        textAlign: 'right',
+      },
+      {
+        field: 'fare_rate_d17' as const,
+        header: 'D17',
+        groupField: 'groupField2',
+        format: (v: unknown) => String(v ?? '') + '%',
+        textAlign: 'right',
+      },
       {
         field: 'pod_status',
         header: '審核狀態',
@@ -529,7 +524,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public readonly counterColumnsGroup = computed<ColumnGroup[]>(() => [
     { field: 'groupField1', header: '匯入分攤' },
-    ...((this.isFormReadable || this.isFormCreateable) ? [{ field: 'groupField2', header: '合約分攤' }] : []),
+    { field: 'groupField2', header: '合約分攤' },
   ]);
 
   public readonly loadingEffect = effect(() => {
@@ -611,6 +606,18 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       if (!validTableData.length) {
         this.messageService.errorBubble('請至少新增一筆專櫃資料');
         this.tableLoading.set(false);
+        return;
+      }
+
+      // 檢查專櫃編號是否有重複
+      const seen = new Set();
+      const hasDuplicate = validTableData.some(item => {
+        if (seen.has(item.tlt_no)) return true;
+        seen.add(item.id);
+        return false;
+      });
+      if (hasDuplicate) {
+        this.messageService.errorBubble('有重複的專櫃編號，無法儲存');
         return;
       }
 
@@ -1088,15 +1095,13 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.logger.debug(`onformValueChanged:`, [event]);
   }
 
-  /** 檢視模式下，匯入分攤 D16 費用比率與合約分攤不一致時標紅。 */
+  /** 匯入分攤 D16 費用比率與合約分攤不一致時標紅。 */
   private isImportContractRateMismatchD16(row: TLS26080EditTable): boolean {
-    if (!this.isFormReadable) return false;
     return this.importAndContractRatesDiffer(row.tpy_rate_D16, row.fare_rate_d16);
   }
 
-  /** 檢視模式下，匯入分攤 D17 費用比率與合約分攤不一致時標紅。 */
+  /** 匯入分攤 D17 費用比率與合約分攤不一致時標紅。 */
   private isImportContractRateMismatchD17(row: TLS26080EditTable): boolean {
-    if (!this.isFormReadable) return false;
     return this.importAndContractRatesDiffer(row.tpy_rate_D17, row.fare_rate_d17);
   }
 
