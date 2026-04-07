@@ -10,6 +10,8 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -23,6 +25,7 @@ import { ASS11020Data } from '../ass11020/ass11020.model';
 import { ASS11030Data } from '../ass11030/ass11030.model';
 import { Ass15060Service } from './../../../service/api/ass/ass15060.service';
 import { RadiobuttonComponent } from './../../../shared/componentkit/radiobutton/radiobutton.component';
+
 
 // 財產變更記錄查詢
 
@@ -53,6 +56,7 @@ export interface ass15060 {
     AsyncPipe,
     MenubarComponent,
     ButtonComponent,
+    ButtonModule,
     AccordionModule,
     CalendarRangeQuickComponent,
     FormsModule,
@@ -72,13 +76,13 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
 
     QUERY_MODE: [4, [Validators.min(1), Validators.max(4)]], // 查詢模式
 
-    MV_TYPE: ['s', [Validators.maxLength(1)]], // 變更類型
-    ASSET_ID: [null, [Validators.maxLength(20)]], // 財產編號
+    MV_TYPE: ['1', [Validators.maxLength(1)]], // 變更類型
+    ASSET_ID: [null, [Validators.maxLength(20)]], // 財產編號 (參考 ass15020 的 queryFAASSETChooseList_DropDownList)
     DEPRE_YN: ['1', [Validators.maxLength(1)]], // 財產類型
-    B_CLASS_ID: [null, [Validators.maxLength(1)]], // 大分類編號(先用自營的，之後再換成別支)
+    B_CLASS_ID: [null, [Validators.maxLength(1)]], // 大分類編號(參考 ass11030)
     M_CLASS_ID: [null, [Validators.maxLength(2)]], // 中分類編號
     S_CLASS_ID: [null, [Validators.maxLength(2)]], // 小分類編號
-    GOODS_ID: [null, [Validators.maxLength(20)]], // 品項編號
+    GOODS_ID: [null, [Validators.maxLength(20)]], // 品項編號 (參考 ass15020 的 queryASS11040DropDownList)
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'ASSET_ID', order: 1 }]), // 分頁和排序參數
@@ -230,9 +234,15 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      console.log('財產變更request:', JSON.stringify(frm.value, null, 2));
+      // console.log('原始request:', JSON.stringify(frm.value, null, 2));
+      const request = {
+        ...frm.value,
+        "PageIndex": frm.value.pageIndex,
+        "PageSize": frm.value.pageSize,
+      }
+      console.log('財產變更request:', JSON.stringify(request, null, 2));
       this.loading = false;
-      this.ass15060Service.queryASS15060(frm.value).subscribe({
+      this.ass15060Service.queryASS15060(request).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data.Details || []; // 這邊後端多包了一層 Details
@@ -254,34 +264,40 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
     });
   }
 
+  private getTimestamp(): string {
+    const now = new Date();
+    return now.getFullYear().toString() +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') + '_' +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0');
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(blobUrl);
+  }
+
   // 列印明細
-  // btnLoading = false;
-  // onBtnToss(rowData: ass15060) {
-  //   if (!rowData) {
-  //     this.messageService.errorBubble('找不到該筆資料的 ID');
-  //     return;
-  //   }
-
-  //   // 根據 API 需求包裝參數，對應您原本程式碼中的 PC_id
-  //   // const formValue = { ID: rowData.id };
-
-  //   this.btnLoading = true;
-  //   // this.tls12010Service.exportTLS12010(formValue)
-  //   //   .pipe(
-  //   //     finalize(() => this.btnExcelLoading = false),
-  //   //     untilDestroyed(this)
-  //   //   )
-  //   //   .subscribe({
-  //   //     next: (blob: Blob) => {
-  //   //       this.downloadFile(blob, `潛在客戶明細_${rowData.id}_${new Date().getTime()}.xlsx`);
-  //   //       this.messageService.successBubble('匯出 Excel 成功');
-  //   //     },
-  //   //     error: (err) => {
-  //   //       console.error(err);
-  //   //       this.messageService.errorBubble('匯出失敗');
-  //   //     }
-  //   //   });
-  // }
+  exportExcelLoading = false
+  onExportExcel(): void {
+    this.exportExcelLoading = true;
+    this.ass15060Service
+      .exportExcelASS15060(this.queryForm.value)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.exportExcelLoading = false)
+      )
+      .subscribe(blob => {
+        if (blob) {
+          this.downloadBlob(blob, `財產異動記錄查詢_${this.getTimestamp()}.xlsx`);
+        }
+      });
+  }
 
   //讀取 大分類表單 (該情況禁止 中小下拉選擇)
   loadCATOptions() {
@@ -305,23 +321,6 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
 
   // 讀取 下拉
   loadOptions() {
-    // 品項代碼 (GOODS_ID)
-    console.log('讀取品項代碼下拉選單');
-    // 品項代碼 (GOODS_ID)
-    // this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
-    //   next: res => {
-    //     if (res.Status !== '0000') return;
-    //     const data: TDS1008Data[] = res.Data ?? [];
-    //     const options = data
-    //       .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
-    //       .map(item => ({
-    //         label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
-    //         value: item.INV_ItemNo,
-    //       }));
-    //     this.goodsIdOptions.set(options);
-    //   },
-    // });
-
     //品項編號 (GOODS_ID) 下拉選項
     this.dropdownApi
       .queryASS11040DropDownList()

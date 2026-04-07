@@ -19,7 +19,7 @@ export class Ass15060Service {
   }
 
   // 匯出移轉交接明細Excel
-  exportExcelASS15060(body: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/exportExcelASS15060`, body);
+  exportExcelASS15060(body: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportExcelASS15060`, body, { responseType: 'blob' });
   }
 }
