@@ -2,6 +2,7 @@ import { Component, computed, OnInit, signal, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS15070Service } from '@service/api/ass/ass15070.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -57,10 +58,12 @@ export class ASS15070Component extends BasicQueryPageComponent<QueryASS15070Row>
   public readonly tableLoading = signal<boolean>(false);
   public lastQueryBody?: QueryASS15070Request;
 
-  /** 進貨單號／廠商編號／申請人代號下拉：來源未提供，待後端 API */
+  /** 進貨單號下拉：來源待補 */
   public readonly subpoenaOptions: { label: string; value: string }[] = [];
-  public readonly supplierOptions: { label: string; value: string }[] = [];
-  public readonly applicantOptions: { label: string; value: string }[] = [];
+  /** 廠商編號下拉：queryPOS2013_DropDownList */
+  public supplierOptions: { label: string; value: string }[] = [];
+  /** 申請人代號下拉：queryTBLUSER_DropDownList */
+  public applicantOptions: { label: string; value: string }[] = [];
 
   public exportPdfLoading = false;
 
@@ -76,6 +79,7 @@ export class ASS15070Component extends BasicQueryPageComponent<QueryASS15070Row>
 
   constructor(
     public readonly service: ASS15070Service,
+    private readonly dropdownApi: DropdownApiService,
     private readonly fileExportService: FileExportService,
     private readonly logger: NGXLogger,
   ) {
@@ -84,7 +88,30 @@ export class ASS15070Component extends BasicQueryPageComponent<QueryASS15070Row>
 
   ngOnInit(): void {
     this.initializePage('ASS15070', '', this.queryForm, () => this.submitQuery());
+    this.loadDropdowns();
     this.logger.debug('ASS15070 init', [this.queryForm]);
+  }
+
+  private loadDropdowns(): void {
+    this.dropdownApi
+      .queryPos2013({ VEN_Flag: '' })
+      .pipe(untilDestroyed(this))
+      .subscribe(options => {
+        this.supplierOptions = (options ?? []).map(x => ({
+          label: x.label,
+          value: x.value,
+        }));
+      });
+
+    this.dropdownApi
+      .queryTblUser()
+      .pipe(untilDestroyed(this))
+      .subscribe(options => {
+        this.applicantOptions = (options ?? []).map(x => ({
+          label: x.label,
+          value: x.value,
+        }));
+      });
   }
 
   public queryFunction = (body: QueryASS15070QueryBody): Observable<ApiResponse<QueryASS15070Row[]>> => {
