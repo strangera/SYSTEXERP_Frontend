@@ -3,6 +3,11 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS15080Service } from '@service/api/ass/ass15080.service';
+import { ASS11010Service } from '@service/api/ass/ass11010.service';
+import { ASS11020Service } from '@service/api/ass/ass11020.service';
+import { ASS11030Service } from '@service/api/ass/ass11030.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import {
   ASS15080QueryRequest,
   ASS15080QueryRow,
@@ -93,7 +98,14 @@ export class ASS15080Component
     { field: 'NOTES', header: '備註', visible: true },
   ];
 
-  constructor(private readonly ass15080Service: ASS15080Service) {
+  constructor(
+    private readonly ass15080Service: ASS15080Service,
+    private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
+    private readonly ass11010Service: ASS11010Service,
+    private readonly ass11020Service: ASS11020Service,
+    private readonly ass11030Service: ASS11030Service
+  ) {
     super();
   }
 
@@ -104,6 +116,113 @@ export class ASS15080Component
       this.queryForm,
       (form) => this.onSubmit(form)
     );
+    this.loadDropdownOptions();
+  }
+
+  private loadDropdownOptions(): void {
+    this.loadOrgOptions();
+    this.loadBigClassOptions();
+    this.loadMidClassOptions();
+    this.loadSmallClassOptions();
+    this.loadGoodsOptions();
+  }
+
+  private loadOrgOptions(): void {
+    this.dropDownListService
+      .querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: ApiResponse<IDropdownItem[]>) => {
+          this.orgIdOptions = res.Status === '0000' ? this.mapNoNameOptions(res.Data) : [];
+        },
+        error: () => {
+          this.orgIdOptions = [];
+        },
+      });
+  }
+
+  private loadBigClassOptions(): void {
+    this.ass11010Service
+      .queryASS11010({})
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          this.bClassOptions =
+            res.Status === '0000'
+              ? (res.Data ?? []).map((item) => ({
+                  label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
+                  value: item.CLASS_ID,
+                }))
+              : [];
+        },
+        error: () => {
+          this.bClassOptions = [];
+        },
+      });
+  }
+
+  private loadMidClassOptions(): void {
+    this.ass11020Service
+      .queryASS11020({})
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          this.mClassOptions =
+            res.Status === '0000'
+              ? (res.Data ?? []).map((item) => ({
+                  label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
+                  value: item.M_CLASS_ID,
+                }))
+              : [];
+        },
+        error: () => {
+          this.mClassOptions = [];
+        },
+      });
+  }
+
+  private loadSmallClassOptions(): void {
+    this.ass11030Service
+      .queryASS11030({})
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          this.sClassOptions =
+            res.Status === '0000'
+              ? (res.Data ?? []).map((item) => ({
+                  label: `${item.S_CLASS_ID} - ${item.S_CLASS_NAME}`,
+                  value: item.S_CLASS_ID,
+                }))
+              : [];
+        },
+        error: () => {
+          this.sClassOptions = [];
+        },
+      });
+  }
+
+  private loadGoodsOptions(): void {
+    this.dropdownApiService
+      .queryAss11040Dropdown()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: { value: string | number; label: string }[] | null) => {
+          this.goodsIdOptions = (res ?? []).map((item) => ({
+            value: String(item.value),
+            label: item.label,
+          }));
+        },
+        error: () => {
+          this.goodsIdOptions = [];
+        },
+      });
+  }
+
+  private mapNoNameOptions(items: IDropdownItem[] | null | undefined): { value: string; label: string }[] {
+    return (items ?? []).map((item) => ({
+      value: item.No,
+      label: `${item.No} - ${item.Name}`,
+    }));
   }
 
   private buildRequest(body?: {
