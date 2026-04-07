@@ -1,13 +1,11 @@
 import { AsyncPipe } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11010Service } from '@service/api/ass/ass11010.service';
 import { ASS11020Service } from '@service/api/ass/ass11020.service';
 import { ASS11030Service } from '@service/api/ass/ass11030.service';
-import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
-import { Tls51070Service } from '@service/api/tls/tls51070.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
@@ -20,6 +18,9 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
+import { ASS11010Data } from '../ass11010/ass11010.model';
+import { ASS11020Data } from '../ass11020/ass11020.model';
+import { ASS11030Data } from '../ass11030/ass11030.model';
 import { Ass15060Service } from './../../../service/api/ass/ass15060.service';
 import { RadiobuttonComponent } from './../../../shared/componentkit/radiobutton/radiobutton.component';
 
@@ -119,15 +120,13 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
     { value: '1', label: '資產' },
     { value: '2', label: '列管品' },
   ];
-  public readonly goodsIdOptions = signal<{ label: string; value: string }[]>([]);
+  goodsIdOptions: { value: string; label: string }[] = [];
   /** 財產編號下拉選項 */
   readonly assetOptions$ = this.dropdownApi.queryFAASSETChooseList_DropDownList();
 
   // ----------------------------------------------------------------
   constructor(
-    private readonly tls51070Service: Tls51070Service,
     private readonly dropdownApi: DropdownApiService,
-    private readonly fin11040Service: Fin11040Service, //品項
     private readonly ass11010Service: ASS11010Service, //大類
     private readonly ass11020Service: ASS11020Service, //中類
     private readonly ass11030Service: ASS11030Service, //小類
@@ -171,7 +170,7 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
         this.ass11020Service
           .queryASS11020(midPayload)
           .subscribe((res) => {
-            this.middleOption = res.Data.map((item: any) => ({
+            this.middleOption = res.Data.map((item: ASS11020Data) => ({
               No: item.M_CLASS_ID,
               Name: item.M_CLASS_NAME,
               Label: item.M_CLASS_ID + '-' + item.M_CLASS_NAME,
@@ -207,7 +206,7 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
           .queryASS11030(requestPayload)
           .subscribe((res) => {
             // 1. 先進行 map 轉換格式 (這邊後端回傳的小分類有重複，先進行去重處理)
-            const mappedOptions = res.Data.map((item: any) => ({
+            const mappedOptions = res.Data.map((item: ASS11030Data) => ({
               No: item.S_CLASS_ID,
               Name: item.S_CLASS_NAME,
               Label: item.S_CLASS_ID + '-' + item.S_CLASS_NAME,
@@ -256,33 +255,33 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
   }
 
   // 列印明細
-  btnLoading = false;
-  onBtnToss(rowData: ass15060) {
-    if (!rowData) {
-      this.messageService.errorBubble('找不到該筆資料的 ID');
-      return;
-    }
+  // btnLoading = false;
+  // onBtnToss(rowData: ass15060) {
+  //   if (!rowData) {
+  //     this.messageService.errorBubble('找不到該筆資料的 ID');
+  //     return;
+  //   }
 
-    // 根據 API 需求包裝參數，對應您原本程式碼中的 PC_id
-    // const formValue = { ID: rowData.id };
+  //   // 根據 API 需求包裝參數，對應您原本程式碼中的 PC_id
+  //   // const formValue = { ID: rowData.id };
 
-    this.btnLoading = true;
-    // this.tls12010Service.exportTLS12010(formValue)
-    //   .pipe(
-    //     finalize(() => this.btnExcelLoading = false),
-    //     untilDestroyed(this)
-    //   )
-    //   .subscribe({
-    //     next: (blob: Blob) => {
-    //       this.downloadFile(blob, `潛在客戶明細_${rowData.id}_${new Date().getTime()}.xlsx`);
-    //       this.messageService.successBubble('匯出 Excel 成功');
-    //     },
-    //     error: (err) => {
-    //       console.error(err);
-    //       this.messageService.errorBubble('匯出失敗');
-    //     }
-    //   });
-  }
+  //   this.btnLoading = true;
+  //   // this.tls12010Service.exportTLS12010(formValue)
+  //   //   .pipe(
+  //   //     finalize(() => this.btnExcelLoading = false),
+  //   //     untilDestroyed(this)
+  //   //   )
+  //   //   .subscribe({
+  //   //     next: (blob: Blob) => {
+  //   //       this.downloadFile(blob, `潛在客戶明細_${rowData.id}_${new Date().getTime()}.xlsx`);
+  //   //       this.messageService.successBubble('匯出 Excel 成功');
+  //   //     },
+  //   //     error: (err) => {
+  //   //       console.error(err);
+  //   //       this.messageService.errorBubble('匯出失敗');
+  //   //     }
+  //   //   });
+  // }
 
   //讀取 大分類表單 (該情況禁止 中小下拉選擇)
   loadCATOptions() {
@@ -291,7 +290,7 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
       this.ass11010Service
         .queryASS11010({}).pipe(untilDestroyed(this))
         .subscribe((response) => {
-          this.largeOption = response.Data.map((item: any) => ({
+          this.largeOption = response.Data.map((item: ASS11010Data) => ({
             No: item.CLASS_ID,
             Name: item.CLASS_NAME,
             Label: item.CLASS_ID + '-' + item.CLASS_NAME,
@@ -309,18 +308,26 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
     // 品項代碼 (GOODS_ID)
     console.log('讀取品項代碼下拉選單');
     // 品項代碼 (GOODS_ID)
-    this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        const data: TDS1008Data[] = res.Data ?? [];
-        const options = data
-          .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
-          .map(item => ({
-            label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
-            value: item.INV_ItemNo,
-          }));
-        this.goodsIdOptions.set(options);
-      },
-    });
+    // this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
+    //   next: res => {
+    //     if (res.Status !== '0000') return;
+    //     const data: TDS1008Data[] = res.Data ?? [];
+    //     const options = data
+    //       .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
+    //       .map(item => ({
+    //         label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
+    //         value: item.INV_ItemNo,
+    //       }));
+    //     this.goodsIdOptions.set(options);
+    //   },
+    // });
+
+    //品項編號 (GOODS_ID) 下拉選項
+    this.dropdownApi
+      .queryASS11040DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.goodsIdOptions = opts ?? [];
+      });
   }
 }
