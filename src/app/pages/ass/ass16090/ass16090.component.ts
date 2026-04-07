@@ -64,6 +64,7 @@ interface SortItem {
   ],
 })
 export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
+  showTable = true;
   data: Ass16090Row[] = [];
   totalRecords = 0;
   viewTotalRecords = 0;
@@ -389,31 +390,44 @@ this.dropDownListService
       })
     );
 
-  onSubmit(frm: FormGroup): void {
-    this.submitted = true;
+onSubmit(frm: FormGroup): void {
+  this.submitted = true;
 
-    if (frm.invalid) {
-      frm.markAllAsTouched();
-      return;
-    }
+  if (frm.invalid) {
+    frm.markAllAsTouched();
+    return;
+  }
 
-    if (!this.hasPermission(this.Actions.Query)) return;
+  if (!this.hasPermission(this.Actions.Query)) return;
 
-    const raw: any = this.queryForm.getRawValue();
+  const raw: any = this.queryForm.getRawValue();
 
-    const payload = this.buildPayload({
-      pageIndex: 1,
-      pageSize: 30,
-      SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
-    });
+  const payload = this.buildPayload({
+    pageIndex: 1,
+    pageSize: 30,
+    SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
+  });
 
-    this.loading = true;
-    this.data = [];
-    this.selectedItems = [];
-    this.footerData = undefined;
-    this.totalRecords = 0;
-    this.viewTotalRecords = 0;
-    this.tableVer++;
+  this.loading = true;
+
+  /** 先把表格銷毀，讓已展開項目收合 */
+  this.showTable = false;
+
+  /** 清空舊資料 */
+  this.data = [];
+  this.selectedItems = [];
+  this.footerData = undefined;
+  this.totalRecords = 0;
+  this.viewTotalRecords = 0;
+  this.lastQueryBody = null;
+  this.tableVer++;
+
+  this.cdr.detectChanges();
+
+  setTimeout(() => {
+    /** 重建表格 */
+    this.showTable = true;
+    this.cdr.detectChanges();
 
     this.ass16090Service
       .queryASS16090(payload)
@@ -448,7 +462,8 @@ this.dropDownListService
           this.loading = false;
         },
       });
-  }
+  });
+}
 
   onClear(frm: FormGroup): void {
     frm.reset(
