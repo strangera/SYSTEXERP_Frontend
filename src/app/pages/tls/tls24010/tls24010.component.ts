@@ -18,7 +18,7 @@ import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { Menu, MenuModule } from 'primeng/menu';
-import { finalize, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, finalize, map, Observable, startWith, switchMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { TLS24010Data, TLS24010Request, Tls24010Service } from '../../../service/api/tls/tls24010.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
@@ -105,12 +105,38 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(this.datePipe.transform(yesterday, 'yyyy-MM-dd')).pipe(untilDestroyed(this)).subscribe(options => {
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
-    this.queryForm.get('TXN_Date')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
-      const dateString = value ? this.datePipe.transform(value, 'yyyy-MM-dd') : '';
-      if (!dateString) { return; }
-      this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(dateString).pipe(untilDestroyed(this)).subscribe(options => {
-        this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-      });
+    // 監聽日期變化來連動專櫃編下拉選單
+    this.queryForm.get('TXN_Date')?.valueChanges.pipe(
+      startWith(this.queryForm.get('TXN_Date')?.value || yesterday), // 初始值處理
+      debounceTime(500),         // 等使用者停手 0.5 秒
+      distinctUntilChanged(),    // 只有值變動才執行
+      filter(value => {
+        if (!value) return false;
+        // 先轉成字串檢查長度，避免 datePipe 噴錯
+        const str = value instanceof Date ? value.toISOString() : String(value);
+        return str.length >= 10;
+      }),
+      map(value => {
+        // 第二道防線：轉換日期未成功時(日期輸入格式錯誤)，傳入null
+        try {
+          return this.datePipe.transform(value, 'yyyy-MM-dd');
+        } catch {
+          return null;
+        }
+      }),
+      filter(dateString => !!dateString),
+      switchMap(dateString =>
+        this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(dateString!).pipe(
+          map(res => res.Data.map((item: any) => ({
+            ...item,
+            label: `${item.No} - ${item.Name}`,
+            value: item.No
+          })))
+        )
+      ),
+      untilDestroyed(this)
+    ).subscribe(processedOptions => {
+      this.TLT_NoOptions = processedOptions;
     });
   }
   onECRNoChanged(ecrNo: string): void {
@@ -329,7 +355,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         disabled: (() => {
           if (!this.hasPermission(Actions.Delete)) return true;// 1. 沒有權限，直接禁用
           if (!row) return true; // 2. 如果沒有選中任何列 (row 為空)，應預設為禁用
-          if (isFixedTerm) return true;
+          // if (isFixedTerm) return true;
           if (row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') return false; // 3. 無發票狀態：可以刪除 (disable = false)
           return !row?.IsCanDel;// 4. 有發票或其他狀態：依據 IsCanDel 欄位決定
         })(),

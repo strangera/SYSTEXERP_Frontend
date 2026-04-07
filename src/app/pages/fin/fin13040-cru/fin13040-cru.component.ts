@@ -182,12 +182,15 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     // 統編帶出廠商資訊
     this.dataForm.get('Buyer_Uniform')?.valueChanges
       .pipe(untilDestroyed(this))
-      .subscribe((val) => {
-        const selected = this.Buyer_Uniform_Options.find(o => o.value === val);
+      .subscribe((val: any) => {
+        // 取得真正的統編值 (如果是物件就拿 .value，如果是字串就直接用)
+        const actualValue = (val && typeof val === 'object') ? val.value : val;
+
+        const selected = this.Buyer_Uniform_Options.find(o => o.value === actualValue);
         this.dataForm.patchValue({
           Buyer_VenNo: selected?.VEN_No ?? '',
           Buyer_Name: selected?.VEN_Name ?? '',
-        });
+        }, { emitEvent: false }); // 建議加 emitEvent: false 避免無限循環
       });
   }
 
@@ -579,7 +582,9 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       InvoiceNumber: v.INV_GUINumber,
       InvoiceDate: toISO(v.InvoiceDate),
       INV_DeclareYM: this.formatDeclareYM(v.InvoiceDate),
-      Buyer_Uniform: selectedBuyer.value,
+      Buyer_Uniform: (v.Buyer_Uniform && typeof v.Buyer_Uniform === 'object')
+        ? v.Buyer_Uniform.value
+        : v.Buyer_Uniform,
       Buyer_VenNo: selectedBuyer.VEN_No ?? '',
       Buyer_Name: selectedBuyer.VEN_Name ?? '',
       Group_Mark: 'N',

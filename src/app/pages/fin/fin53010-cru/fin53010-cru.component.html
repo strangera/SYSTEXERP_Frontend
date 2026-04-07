@@ -11,7 +11,7 @@
     }
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-  @if (isFormCreateable) {
+  @if (isFormCreateable || isFormEditable) {
     <div class="flex gap-2 mb-2">
       <app-button
         btnType="default"
@@ -32,7 +32,7 @@
 
   <div
     class="flex flex-column"
-    [class.gap-3]="!isFormCreateable"
+    [class.gap-3]="!isFormCreateable && !isFormEditable"
   >
     @if (!isFormCreateable) {
       <p-panel header="查詢傳票" class="line-height-3 m-0">
@@ -58,7 +58,7 @@
       </p-panel>
     }
 
-    @if (!isFormCreateable || currentStep() === 1) {
+    @if (!isFormCreateable && !isFormEditable || currentStep() === 1) {
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
@@ -195,10 +195,10 @@
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
           <app-button btnType="cancel" [form]="dataForm"></app-button>
-          @if (!isFormCreateable || isLastStep()) {
+          @if (isLastStep()) {
             <app-button btnType="submit" [loading]="loading"></app-button>
           }
-          @if (isFormCreateable && canGoNext()) {
+          @if (canGoNext()) {
             <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
           }
         </div>
@@ -227,13 +227,16 @@
           [tableKey]="'FIN52030_detail'"
           [tableRequired]="true"
           [columns]="columns()"
+          [scrollable]="true"
+          [virtualScroll]="true"
+          [virtualScrollItemSize]="46"
         ></app-table-edit>
       </p-panel>
     </div>
   </div>
 </div>
 
-@if (isFormCreateable && currentStep() === 3) {
+@if ((isFormCreateable || isFormEditable) && currentStep() === 3) {
   <div class="card">
     <p-panel header="應付帳款" class="line-height-3 m-0">
       <app-table-edit
@@ -257,7 +260,7 @@
   </div>
 }
 
-@if (isFormCreateable && currentStep() === 4) {
+@if ((isFormCreateable || isFormEditable) && currentStep() === 4) {
   <div class="card">
     <p-panel header="應收帳款" class="line-height-3 m-0">
       <app-table-edit
@@ -281,7 +284,7 @@
   </div>
 }
 
-@if (isFormCreateable && currentStep() === 5) {
+@if ((isFormCreateable || isFormEditable) && currentStep() === 5) {
   <div class="card">
     <p-panel header="銷項發票" class="line-height-3 m-0">
       <app-table-edit
@@ -306,7 +309,7 @@
   </div>
 }
 
-@if (isFormCreateable && currentStep() === 6) {
+@if ((isFormCreateable || isFormEditable) && currentStep() === 6) {
   <div class="card">
     <p-panel header="進項發票" class="line-height-3 m-0">
       <app-table-edit
@@ -331,7 +334,7 @@
   </div>
 }
 
-@if (isFormCreateable && currentStep() === 7) {
+@if ((isFormCreateable || isFormEditable) && currentStep() === 7) {
   <div class="card">
     <p-panel header="銀行存款" class="line-height-3 m-0">
       <app-table-edit
@@ -351,13 +354,13 @@
   </div>
 }
 
-@if (!isFormCreateable && service.detailByVouNoLoading()) {
+@if (!isFormCreateable && (service.detailByVouNoLoading() || service.detailByVouNoForUpdateLoading())) {
   <div class="card flex justify-content-center p-4">
     <p-progressSpinner ariaLabel="loading" />
   </div>
 }
 
-@if (!isFormCreateable && ars3001RelatedRows().length > 0) {
+@if (isFormReadable && !isFormCreateable && ars3001RelatedRows().length > 0) {
   <div class="card">
     <p-panel header="應收帳款" class="line-height-3 m-0">
       <app-table-report
@@ -376,7 +379,7 @@
   </div>
 }
 
-@if (!isFormCreateable && aps3001RelatedRows().length > 0) {
+@if (isFormReadable && !isFormCreateable && aps3001RelatedRows().length > 0) {
   <div class="card">
     <p-panel header="應付帳款" class="line-height-3 m-0">
       <app-table-report
@@ -395,7 +398,7 @@
   </div>
 }
 
-@if (!isFormCreateable && aps2002_CRelatedRows().length > 0) {
+@if (isFormReadable && !isFormCreateable && aps2002_CRelatedRows().length > 0) {
   <div class="card">
     <p-panel header="進項折讓發票" class="line-height-3 m-0">
       <app-table-report
@@ -414,7 +417,7 @@
   </div>
 }
 
-@if (!isFormCreateable && aps2002RelatedRows().length > 0) {
+@if (isFormReadable && !isFormCreateable && aps2002RelatedRows().length > 0) {
   <div class="card">
     <p-panel header="進項發票" class="line-height-3 m-0">
       <app-table-report
@@ -433,7 +436,7 @@
   </div>
 }
 
-@if (!isFormCreateable && aps4023_CRelatedRows().length > 0) {
+@if (isFormReadable && !isFormCreateable && aps4023_CRelatedRows().length > 0) {
   <div class="card">
     <p-panel header="銷項折讓發票" class="line-height-3 m-0">
       <app-table-report
@@ -452,7 +455,7 @@
   </div>
 }
 
-@if (!isFormCreateable && aps4023RelatedRows().length > 0) {
+@if (isFormReadable && !isFormCreateable && aps4023RelatedRows().length > 0) {
   <div class="card">
     <p-panel header="銷項發票" class="line-height-3 m-0">
       <app-table-report

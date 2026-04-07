@@ -170,25 +170,25 @@
       <ng-container *ngFor="let item of aps1003_A | async">
         <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
           *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']] | number}}</td>
+          {{rowData.fareList[item['No']]}}</td>
       </ng-container>
       <ng-container *ngFor="let item of aps1003_B | async">
         <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
           *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']] | number}}</td>
+          {{rowData.fareList[item['No']]}}</td>
       </ng-container>
       <ng-container *ngFor="let item of aps1003_C | async">
         <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
           *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']]?.tpy_totalamt | number}}
+          {{rowData.fareList[item['No']]?.tpy_totalamt}}
         </td>
         <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
           *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']]?.month_payment | number}}
+          {{rowData.fareList[item['No']]?.month_payment}}
         </td>
         <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
           *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']]?.down_payment | number}}
+          {{rowData.fareList[item['No']]?.down_payment}}
         </td>
       </ng-container>
       <ng-container *ngFor="let item of aps1003_D | async">

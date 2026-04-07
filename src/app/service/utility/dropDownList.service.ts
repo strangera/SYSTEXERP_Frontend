@@ -284,6 +284,17 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2034_DropDownList`, {});
   }
 
+  /**
+   * 查詢倉別(FAHOS)下拉選單（ASS17100 等）
+   */
+  queryFAHOS_DropDownList(body: Record<string, unknown> = {}): Observable<
+    ApiResponse<{ WH_ID?: string | null; WH_NAME?: string | null }[]>
+  > {
+    return this.http.post<ApiResponse<{ WH_ID?: string | null; WH_NAME?: string | null }[]>>(
+      `${this.apiUrl}/queryFAHOS_DropDownList`,
+      body,
+    );
+  }
 
   // 查詢上層組織(SYS3000)資料表下拉選單
   querySYS3000_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {

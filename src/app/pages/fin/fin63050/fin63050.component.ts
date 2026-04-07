@@ -35,7 +35,7 @@ export class FIN63050Component extends BasicQueryPageComponent<Fin63050ListData>
     ChkNo: [null, [Validators.maxLength(10)]],// 票據號碼
     WithdrawDateFrom: [null], // 撤票日(起)
     WithdrawDateTo: [null],  // 撤票日(迄)
-    ExcludeCashed: [false] // 預設勾選排除已兌現
+    ExcludeCashed: ['N'] // 預設勾選排除已兌現(Y/N)
   });
   data: Fin63050ListData[] = [];
   selectedItems: Fin63050ListData[] = [];

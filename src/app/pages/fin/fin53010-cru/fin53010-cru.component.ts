@@ -28,6 +28,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TableModule, TableRowReorderEvent } from 'primeng/table';
 import { concatMap, EMPTY, finalize, forkJoin, Observable, startWith, switchMap, take, tap } from 'rxjs';
 import { FIN52030Data, FIN52030DetailData } from '../fin52030/fin52030.model';
+import { mapFin53010ForUpdateResponseToStepRows } from '../fin53010/fin53010-detail-for-update.mapper';
 import { buildInsertFin53010Request, buildUpdateFin53010Request, Fin53010PayloadMapperDeps } from '../fin53010/fin53010-payload.mapper';
 import {
   Aps4023DetailDataByInvoiceNumberData,
@@ -112,6 +113,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly tableData = signal<FIN53010DetailTable[]>([]);
   public readonly selectedDetail = signal<FIN52030DetailData[]>([]);
   private readonly selectedOrgId = signal<string>('100000');
+  /** 立沖代號等暫無選項時使用，固定參考避免 dropdown 每次 getOptions 回傳新陣列 */
+  readonly emptyClearingOptions: Option[] = [];
+  /** 避免 effect 在 maps 抖動時反覆 tableData.set 造成 table-edit 重初始化 */
+  private _lastAppliedDetailTableFingerprint: string | null = null;
   public readonly currentStep = signal<number>(1);
   public readonly activeVoucherSteps = signal<number[]>([]);
   public readonly stepLabels = new Map<number, string>([
@@ -179,15 +184,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly aps4023RelatedRows = signal<FIN53010Aps4023Row[]>([]);
 
   public readonly ars3001RelatedColumns: ReportColumn[] = [
-    { field: 'org_id', header: '組織代號', visible: true },
-    { field: 'ven_no', header: '廠商代號', visible: true },
-    { field: 'ars_amt', header: '金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'pta_date', header: '預計收款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'ars_date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'acc_no', header: '會計科目代號', visible: true },
-    { field: 'note_desc', header: '摘要', visible: true },
-    { field: 'sub_detail_no', header: '對象別編號', visible: true },
-    { field: 'match_key', header: '對帳KEY值', visible: true },
+    { field: 'ORG_ID', header: '組織代號', visible: true },
+    { field: 'VEN_No', header: '廠商代號', visible: true },
+    { field: 'ARS_Amt', header: '金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'PTA_Date', header: '預計收款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'ARS_Date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'AccNo', header: '會計科目代號', visible: true },
+    { field: 'NoteDesc', header: '摘要', visible: true },
+    { field: 'SubDetailNo', header: '對象別編號', visible: true },
+    { field: 'PTA', header: '對帳KEY值', visible: true },
   ];
 
   public readonly aps3001RelatedColumns: ReportColumn[] = [
@@ -203,18 +208,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'ACP_ExpectPayDate', header: '預計付款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'ACP_Date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'VEN_BNK_No', header: '匯款銀行代號', visible: true },
-    {
-      field: 'VEN_BankAccountNo', header: '銀行帳號/帳戶名稱', visible: true, format: (_v, _i, row) => {
-        const r = row as FIN53010Aps3001Row;
-        const a = r?.VEN_BankAccountNo;
-        const b = r?.VEN_AccountName;
-        if (a && b) return `${a} / ${b}`;
-        return (a ?? b ?? '') as string;
-      }
-    },
+    { field: 'VEN_BankAccountNo', header: '銀行帳號', visible: true },
+    { field: 'VEN_AccountName', header: '帳號名稱', visible: true },
     { field: 'VEN_CTRLYN', header: '票據禁止背書轉讓', visible: true },
     { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true },
     { field: 'AccNo', header: '會計科目代號', visible: true },
+    { field: 'AccName', header: '會計科目名稱', visible: true },
     { field: 'NoteDesc', header: '摘要', visible: true },
     { field: 'SubDetailNo', header: '對象別編號', visible: true },
     { field: 'PTA', header: '對帳KEY值', visible: true },
@@ -238,21 +237,30 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly aps2002RelatedColumns: ReportColumn[] = [
-    { field: 'VoucherType', header: '發票格式', visible: true },
-    { field: 'TrackNo', header: '字軌', visible: true },
-    { field: 'InvoiceNo', header: '發票號碼', visible: true },
-    { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'DeclareYM', header: '申報年月', visible: true },
-    { field: 'VendorTaxID', header: '廠商統一編號', visible: true },
-    { field: 'InvoiceUsage', header: '發票用途', visible: true },
-    { field: 'InvoiceAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'TaxType', header: '課稅別', visible: true },
-    { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'DeductionCodeDesc', header: '扣抵代號', visible: true },
-    { field: 'CategoryType', header: '類別區分', visible: true },
-    { field: 'SourceDocNo', header: '憑證單號', visible: true },
-    { field: 'TotalCount', header: '彙總張數', visible: true },
+    { field: 'PUR_VoucherType', header: '發票格式', visible: true },
+    {
+      field: 'PUR_GUINo',
+      header: '字軌／發票號碼',
+      visible: true,
+      format: (_v, _i, row) => {
+        const r = row as FIN53010Aps2002Row;
+        const g = String(r?.PUR_GUINo ?? '').trim();
+        if (g.length >= 10) return `${g.slice(0, 2)} / ${g.slice(2)}`;
+        return g;
+      },
+    },
+    { field: 'PUR_GUIDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
+    { field: 'PUR_VenUniform', header: '廠商統一編號', visible: true },
+    { field: 'PUR_DirectType', header: '發票用途', visible: true },
+    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'PUR_TaxType', header: '課稅別', visible: true },
+    { field: 'PUR_Net', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'PUR_DiscNo', header: '扣抵代號', visible: true },
+    { field: 'PUR_Type', header: '類別區分', visible: true },
+    { field: 'Source_Doc_No', header: '憑證單號', visible: true },
+    { field: 'PUR_Comb_Cnt', header: '彙總張數', visible: true },
   ];
 
   public readonly aps4023_CRelatedColumns: ReportColumn[] = [
@@ -273,18 +281,28 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public readonly aps4023RelatedColumns: ReportColumn[] = [
     { field: 'InvoiceType', header: '發票格式', visible: true },
-    { field: 'InvoicePrefix', header: '字軌', visible: true },
-    { field: 'InvoiceNo', header: '發票號碼', visible: true },
+    {
+      field: 'InvoiceNumber',
+      header: '字軌／發票號碼',
+      visible: true,
+      format: (_v, _i, row) => {
+        const r = row as FIN53010Aps4023Row;
+        const g = String(r?.InvoiceNumber ?? '').trim();
+        if (g.length >= 10) return `${g.slice(0, 2)} / ${g.slice(2)}`;
+        return g;
+      },
+    },
     { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'DeclareYM', header: '申報年月', visible: true },
-    { field: 'BuyerUniform', header: '買受人統一編號', visible: true },
-    { field: 'TotalAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'TaxType', header: '課稅別', visible: true },
-    { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'SourceDocNo', header: '憑證單號', visible: true },
-    { field: 'SummaryCount', header: '彙總張數', visible: true },
-    { field: 'AssetFlag', header: '資產註記', visible: true },
+    { field: 'INV_DeclareYM', header: '申報年月', visible: true },
+    { field: 'Buyer_Uniform', header: '買受人統一編號', visible: true },
+    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'PUR_TaxType', header: '課稅別', visible: true },
+    { field: 'PUR_Net', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'Source_Doc_No', header: '憑證單號', visible: true },
+    { field: 'Group_Mark', header: '彙開註記', visible: true },
+    { field: 'AssetType', header: '資產註記', visible: true },
+    { field: 'SAL_Type', header: '發票使用別', visible: true },
   ];
 
   public selectedItems: FIN53010Data[] = [];
@@ -329,6 +347,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       || this.service.refNameLoading()
       || this.service.noteDescLoading()
       || this.service.detailByVouNoLoading()
+      || this.service.detailByVouNoForUpdateLoading()
       || this.lookupVouLoading()
       || this.service.bankNoLoading()
       || this.service.aps4023ByInvoiceLoading();
@@ -342,7 +361,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly dataEffect = effect(() => {
     if (this.isFormCreateable) return;
     const data = this.fin53010DetailData();
-    if (!data?.Details) return;
+    if (!data?.Details) {
+      this._lastAppliedDetailTableFingerprint = null;
+      return;
+    }
 
     // 將 VoucherType 的 value 轉換成 label
     const voucherTypeValue = data.VoucherType?.trim() ?? 'GL';
@@ -364,7 +386,17 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       ...data.UPD_Date ? { UPD_Date: new Date(data.UPD_Date) } : {},
     });
 
-    this.tableData.set(data?.Details.map((v, index) => ({
+    if (!this.areDetailMapsReady()) {
+      return;
+    }
+
+    const fp = this.buildDetailTableFingerprint(data);
+    if (fp === this._lastAppliedDetailTableFingerprint) {
+      return;
+    }
+    this._lastAppliedDetailTableFingerprint = fp;
+
+    this.tableData.set(data.Details.map((v, index) => ({
       ...v,
       AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
       AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
@@ -375,12 +407,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       SerNo: index + 1, // 序號從 1 起
     })));
 
-    this.logger.debug(`loadingDetail:`, [data, this.dataForm.getRawValue(), this.tableData()]);
-    if (!this.service.accNoMap().size
-      || !this.service.vendorMap().size
-      || !this.service.usrMap().size
-      || !this.service.noteDescMap().size
-      || !this.service.voucherTypeMap().size) return;
+    const rows = this.tableData();
+    this.logger.debug(`loadingDetail:`, {
+      data,
+      form: this.dataForm.getRawValue(),
+      tableRowCount: rows.length,
+      tableSample: rows.slice(0, 5),
+    });
   }, { allowSignalWrites: !0 });
 
   // Template 相關屬性
@@ -472,7 +505,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         header: '立沖代號',
         textAlign: 'left',
         type: 'dropdown',
-        options: () => [],
+        options: () => this.emptyClearingOptions,
         optionLabel: 'label',
         optionValue: 'value',
       },
@@ -571,6 +604,30 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'txn_date', header: '日期', type: 'date', disabled: () => true },
   ];
 
+  private areDetailMapsReady(): boolean {
+    return this.service.accNoMap().size > 0
+      && this.service.vendorMap().size > 0
+      && this.service.usrMap().size > 0
+      && this.service.noteDescMap().size > 0
+      && this.service.voucherTypeMap().size > 0;
+  }
+
+  /** 僅依 API 明細內容（不含畫面解析名稱），用於避免 maps 就緒後 effect 重複觸發 tableData.set */
+  private buildDetailTableFingerprint(data: QueryFIN53010Detail): string {
+    const rows = (data.Details ?? []).map(d => ({
+      id: d.id,
+      SerNo: d.SerNo,
+      AccNo: d.AccNo,
+      AccDC: d.AccDC,
+      AccAmt: d.AccAmt,
+      DetailNo: d.DetailNo ?? null,
+      ORG_ID: d.ORG_ID ?? null,
+      NoteDesc: d.NoteDesc ?? null,
+      SubDetailNo: d.SubDetailNo ?? null,
+    }));
+    return `${data.id}|${data.VouNo}|${JSON.stringify(rows)}`;
+  }
+
   constructor(
     public readonly service: FIN53010Service,
     private readonly logger: NGXLogger,
@@ -638,18 +695,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public readonly canGoBack = computed(() => this.currentStep() > 1);
   public readonly canGoNext = computed(() => {
-    if (!this.isFormCreateable) return false;
+    if (!this.isFormCreateable && !this.isFormEditable) return false;
     const flow = [1, ...this.activeVoucherSteps()];
     return flow.indexOf(this.currentStep()) < flow.length - 1;
   });
   public readonly isLastStep = computed(() => {
-    if (!this.isFormCreateable) return true;
+    if (this.isFormReadable) return true;
+    if (!this.isFormCreateable && !this.isFormEditable) return true;
     const flow = [1, ...this.activeVoucherSteps()];
     return this.currentStep() === flow[flow.length - 1];
   });
 
   private readonly stepFlowEffect = effect(() => {
-    if (!this.isFormCreateable) return;
+    if (this.isFormReadable) return;
+    if (!this.isFormCreateable && !this.isFormEditable) return;
     const types = new Set<string>();
     for (const row of this.tableData()) {
       const accNo = String(row.AccNo ?? '');
@@ -769,20 +828,21 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   public goNextStep(): void {
-    if (!this.isFormCreateable) return;
+    if (!this.isFormCreateable && !this.isFormEditable) return;
     const flow = [1, ...this.activeVoucherSteps()];
     const idx = flow.indexOf(this.currentStep());
     if (idx < flow.length - 1) this.currentStep.set(flow[idx + 1]);
   }
 
   public goPrevStep(): void {
-    if (!this.isFormCreateable) return;
+    if (!this.isFormCreateable && !this.isFormEditable) return;
     const flow = [1, ...this.activeVoucherSteps()];
     const idx = flow.indexOf(this.currentStep());
     if (idx > 0) this.currentStep.set(flow[idx - 1]);
   }
 
   public goToStep(step: number): void {
+    if (!this.isFormCreateable && !this.isFormEditable) return;
     const flow = [1, ...this.activeVoucherSteps()];
     if (flow.includes(step)) this.currentStep.set(step);
   }
@@ -848,11 +908,46 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.aps4023RelatedRows.set([]);
   }
 
-  /** 依傳票號碼載入應收／應付／進銷項關聯六表（無有效 VouNo 則清空） */
+  private clearEditStepDetailRows(): void {
+    this.stepAPRows.set([]);
+    this.stepARRows.set([]);
+    this.stepSalesRows.set([]);
+    this.stepPurchaseRows.set([]);
+    this.stepBankRows.set([]);
+  }
+
+  /**
+   * 查看：queryFIN53010DetailData_ByVouNo → 六張唯讀表。
+   * 編輯可寫：queryFIN53010DetailData_ByVouNo_forupdate → 步驟表（契約見 Swagger）。
+   */
   private loadRelatedDetailByVouNo(vouNo: string | undefined | null): void {
     const v = typeof vouNo === 'string' ? vouNo.trim() : '';
     if (!v || v === '自動給號') {
       this.clearRelatedDetailTables();
+      this.clearEditStepDetailRows();
+      return;
+    }
+    if (this.isFormEditable) {
+      this.service.queryFIN53010DetailDataByVouNoForUpdate({ VouNo: v }).subscribe({
+        next: res => {
+          if (res.Status !== '0000' || !res.Data) {
+            this.clearRelatedDetailTables();
+            this.clearEditStepDetailRows();
+            return;
+          }
+          const mapped = mapFin53010ForUpdateResponseToStepRows(res.Data);
+          this.stepAPRows.set(mapped.stepAPRows);
+          this.stepARRows.set(mapped.stepARRows);
+          this.stepSalesRows.set(mapped.stepSalesRows);
+          this.stepPurchaseRows.set(mapped.stepPurchaseRows);
+          this.stepBankRows.set(mapped.stepBankRows);
+          this.clearRelatedDetailTables();
+        },
+        error: () => {
+          this.clearRelatedDetailTables();
+          this.clearEditStepDetailRows();
+        },
+      });
       return;
     }
     this.service.queryFIN53010DetailDataByVouNo({ VouNo: v }).subscribe({
@@ -864,8 +959,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         const d = res.Data;
         const pick = <T,>(b: { Details?: T[] | null } | null | undefined): T[] =>
           Array.isArray(b?.Details) && b!.Details!.length ? b!.Details! : [];
+
+        const aps3001: FIN53010Aps3001Row[] = pick(d._APS3001).map(item => ({
+          ...item,
+          VEN_CTRLYN: item.VEN_CTRLYN?.toUpperCase() == 'Y' ? '是' : '否',
+        }));
+
         this.ars3001RelatedRows.set(pick(d._ARS3001));
-        this.aps3001RelatedRows.set(pick(d._APS3001));
+        this.aps3001RelatedRows.set(aps3001);
         this.aps2002_CRelatedRows.set(pick(d._APS2002_C));
         this.aps2002RelatedRows.set(pick(d._APS2002));
         this.aps4023_CRelatedRows.set(pick(d._APS4023_C));
@@ -877,7 +978,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      if (this.isFormCreateable && !this.isLastStep()) {
+      if ((this.isFormCreateable || this.isFormEditable) && !this.isLastStep()) {
         this.messageService.warnBubble('請先完成所有步驟，再進行送出');
         return;
       }
@@ -992,7 +1093,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   /** 銷項步驟表：字軌 2 碼 + 發票號碼 8 碼齊備時查 APS4023 並帶入該列 */
   public onStepSalesInvoiceFieldChange(event: StepFieldChangeEvent): void {
-    if (!this.isFormCreateable || this.isFormReadable) return;
+    if (this.isFormReadable) return;
     const f = event.field;
     if (f !== 'invoice_prefix' && f !== 'invoice_no') return;
     const idx = event.index;
@@ -1029,7 +1130,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   /** 進項步驟表：字軌 2 碼 + 發票號碼 8 碼齊備時查 APS4023 並帶入該列 */
   public onStepPurchaseInvoiceFieldChange(event: StepFieldChangeEvent): void {
-    if (!this.isFormCreateable || this.isFormReadable) return;
+    if (this.isFormReadable) return;
     const f = event.field;
     if (f !== 'track_no' && f !== 'invoice_no') return;
     const idx = event.index;

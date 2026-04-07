@@ -81,7 +81,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly cf = computed(() => this.campaignForm.controls);
 
   public readonly dataForm = this.formBuilder.group({
-    pod_no: [null as string | null, [Validators.maxLength(10)]], // 活動單號
+    pod_no: [null as string | null, [Validators.maxLength(25)]], // 活動單號
     pod_desc: [null as string | null, [Validators.required]], // 活動名稱
     pod_sdate: [{ value: this.service.dateS as Date | null, disabled: true }], // 起始日期(起)
     pod_back_sdate: [null as Date | null, [Validators.required]], // 兌回日期(起)
@@ -265,8 +265,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       pod_desc: selected.CampaignId,
       pod_sdate: new Date(selected.StartTime),
       pod_edate: new Date(selected.EndTime),
-      pod_back_sdate: selected.DiscountStartTime,
-      pod_back_edate: selected.DiscountEndTime,
+      pod_back_sdate: selected.DiscountStartTime ? new Date(selected.DiscountStartTime) : null,
+      pod_back_edate: selected.DiscountEndTime ? new Date(selected.DiscountEndTime) : null,
     };
     this.dataForm.patchValue(patch);
     this.logger.debug(`campaignEffect:`, [podDesc, selected]);
@@ -606,6 +606,18 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       if (!validTableData.length) {
         this.messageService.errorBubble('請至少新增一筆專櫃資料');
         this.tableLoading.set(false);
+        return;
+      }
+
+      // 檢查專櫃編號是否有重複
+      const seen = new Set();
+      const hasDuplicate = validTableData.some(item => {
+        if (seen.has(item.tlt_no)) return true;
+        seen.add(item.id);
+        return false;
+      });
+      if (hasDuplicate) {
+        this.messageService.errorBubble('有重複的專櫃編號，無法儲存');
         return;
       }
 

@@ -72,6 +72,7 @@
 <div class="card">
   <div class="col-12">
     <app-table-report [data]="tableData()" [columns]="columns" [totalRecords]="totalRecords()"
+      [footerData]="footerData" [footerLabelField]="'label'"
       [loading]="tableLoading()" dataKey="ID" tableKey="ASS15020_Data" [showCheckBox]="false" [showEdit]="false"
       [showDetail]="false" [showDelete]="false" [queryFunction]="queryFunction" [showManage]="false"
       [lastQueryBody]="lastQueryBody" (dataChange)="tableData.set($event)"
