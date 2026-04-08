@@ -120,11 +120,29 @@ export class ASS15080Component
   }
 
   private loadDropdownOptions(): void {
+    this.loadAccNoOptions();
     this.loadOrgOptions();
     this.loadBigClassOptions();
     this.loadMidClassOptions();
     this.loadSmallClassOptions();
     this.loadGoodsOptions();
+  }
+
+  private loadAccNoOptions(): void {
+    this.dropdownApiService
+      .queryGls1005AccSubCode()
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res: { value: string | number; label: string }[] | null) => {
+          this.accNoOptions = (res ?? []).map((item) => ({
+            value: String(item.value),
+            label: item.label,
+          }));
+        },
+        error: () => {
+          this.accNoOptions = [];
+        },
+      });
   }
 
   private loadOrgOptions(): void {
