@@ -63,14 +63,13 @@ export class ASS17070Component extends BasicQueryPageComponent<QueryASS17070Deta
   formatAmountWithDecimals = formatAmountWithDecimals;
 
   columns: ReportColumn[] = [
-    { field: 'RowType', header: '列別' },
-    { field: 'GoodsID', header: '品項ID' },
-    { field: 'GoodsName', header: '品項名稱' },
-    { field: 'UnitPrice', header: '品項單價', align: 'right', format: (v) => formatAmountWithDecimals(v, 2) },
-    { field: 'DamageNo', header: '報損單號' },
-    { field: 'WHName', header: 'WHName' },
-    { field: 'Qty', header: '總數量', align: 'right', format: (v) => formatAmountWithDecimals(v, 2) },
-    { field: 'Amt', header: '總金額', align: 'right', format: (v) => formatAmountWithDecimals(v, 2) },
+    { field: 'GoodsID', header: '品項編號', align: 'left' },
+    { field: 'GoodsName', header: '品項名稱', align: 'left' },
+    { field: 'UnitPrice', header: '單價', align: 'right', format: (v) => formatAmountWithDecimals(v, 0) },
+    { field: 'DamageNo', header: '報廢單號', align: 'left' },
+    { field: 'WHName', header: '倉別名稱', align: 'left' },
+    { field: 'Qty', header: '數量', align: 'right', format: (v) => formatAmountWithDecimals(v, 0) },
+    { field: 'Amt', header: '金額', align: 'right', format: (v) => formatAmountWithDecimals(v, 0) },
   ];
 
   constructor(
