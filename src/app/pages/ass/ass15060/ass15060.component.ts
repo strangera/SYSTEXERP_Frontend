@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -58,6 +58,7 @@ export interface ass15060 {
     ButtonComponent,
     ButtonModule,
     AccordionModule,
+    CommonModule,
     CalendarRangeQuickComponent,
     FormsModule,
     ReactiveFormsModule,
@@ -74,7 +75,7 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
     MID: [(this.authService.getUserInfo()?.mid?.toString()) ?? '', [Validators.required, Validators.maxLength(1)]], // 商場編號
     STO_NO: [this.authService.getUserInfo()?.SYS_StoreNo ?? null, [Validators.required, Validators.maxLength(10)]], // 分店編號
 
-    QUERY_MODE: [4, [Validators.min(1), Validators.max(4)]], // 查詢模式
+    QUERY_MODE: [1, [Validators.min(1), Validators.max(4)]], // 查詢模式
 
     MV_TYPE: ['1', [Validators.maxLength(1)]], // 變更類型
     ASSET_ID: [null, [Validators.maxLength(20)]], // 財產編號 (參考 ass15020 的 queryFAASSETChooseList_DropDownList)
@@ -115,10 +116,18 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
   middleOption: apiOption[] = [];
   smallOption: apiOption[] = [];
   QUERY_MODE_OPTIONS: { value: number; label: string }[] = [
-    { value: 1, label: '移轉' },
-    { value: 2, label: '報廢除帳' },
-    { value: 3, label: '變異除障' },
-    { value: 4, label: '新購' },
+    { value: 1, label: '以狀態查詢' },
+    { value: 2, label: '以財產編號查詢' },
+    { value: 3, label: '以財產類型查詢' },
+    { value: 4, label: '以分類查詢' },
+  ];
+  MV_TYPE_OPTIONS: { value: string; label: string }[] = [
+    { value: "1", label: '移轉' },
+    { value: "2", label: '報廢' },
+    { value: "3", label: '變賣' },
+    { value: "4", label: '新購' },
+    { value: "5", label: '維修' },
+    { value: "6", label: '領回' },
   ];
   assetTypeOptions: { value: string; label: string }[] = [
     { value: '1', label: '資產' },
@@ -145,6 +154,62 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
     this.loadOptions();
     //初始導入所有大分類、中分類、小分類表單 (ass11030)
     this.loadCATOptions();
+
+    // 監聽 查詢模式
+    this.queryForm.get('QUERY_MODE')!.valueChanges.subscribe((newValue) => {
+      switch (newValue) {
+        case 1: // 以狀態查詢
+          // 還原MV_TYPE以外的選項
+          this.queryForm.patchValue({
+            // MV_TYPE: '1',
+            ASSET_ID: null,
+            DEPRE_YN: null,
+            B_CLASS_ID: null,
+            M_CLASS_ID: null,
+            S_CLASS_ID: null,
+            GOODS_ID: null,
+          });
+          break;
+        case 2: // 以財產編號查詢
+          // 還原其他選項
+          this.queryForm.patchValue({
+            MV_TYPE: '1',
+            // ASSET_ID: null,
+            DEPRE_YN: null,
+            B_CLASS_ID: null,
+            M_CLASS_ID: null,
+            S_CLASS_ID: null,
+            GOODS_ID: null,
+          });
+          break;
+        case 3: // 以財產類型查詢
+          // 還原其他選項
+          this.queryForm.patchValue({
+            MV_TYPE: '1',
+            ASSET_ID: null,
+            // DEPRE_YN: '1',
+            B_CLASS_ID: null,
+            M_CLASS_ID: null,
+            S_CLASS_ID: null,
+            GOODS_ID: null,
+          });
+          break;
+        case 4: // 以分類查詢
+          // 還原其他選項
+          this.queryForm.patchValue({
+            MV_TYPE: '1',
+            ASSET_ID: null,
+            DEPRE_YN: null
+            // B_CLASS_ID: null,
+            // M_CLASS_ID: null,
+            // S_CLASS_ID: null,
+            // GOODS_ID: null,
+          });
+          break;
+        default:
+          break;
+      }
+    });
 
     // 監聽 大分類 是否為''
     this.queryForm.get('B_CLASS_ID')!.valueChanges.subscribe((newValue) => {
@@ -234,15 +299,9 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      // console.log('原始request:', JSON.stringify(frm.value, null, 2));
-      const request = {
-        ...frm.value,
-        "PageIndex": frm.value.pageIndex,
-        "PageSize": frm.value.pageSize,
-      }
-      console.log('財產變更request:', JSON.stringify(request, null, 2));
+      console.log('財產變更request:', JSON.stringify(frm.value, null, 2));
       this.loading = false;
-      this.ass15060Service.queryASS15060(request).subscribe({
+      this.ass15060Service.queryASS15060(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data.Details || []; // 這邊後端多包了一層 Details
