@@ -142,23 +142,36 @@
         font-family: "Fira Code", "Consolas", monospace !important;
         font-size: 13px !important;
         line-height: 1.5 !important;
-        tab-size: 2 !important; // 縮小 Tab
+        tab-size: 2 !important;
         white-space: pre-wrap !important;
         word-break: break-all !important;
 
-        .sql-keyword {
-          color: #569cd6 !important;
-          font-weight: bold !important;
-        } // 關鍵字藍
-        .sql-func {
-          color: #dcdcaa !important;
-        } // 函數黃
-        .sql-string {
-          color: #ce9178 !important;
-        } // 字串紅
-        .sql-num {
-          color: #b5cea8 !important;
-        } // 數字綠
+        /* 使用嵌套確保正確染色 */
+        span {
+          &.sql-keyword {
+            color: #569cd6 !important;
+            font-weight: bold !important;
+          }
+          &.sql-func {
+            color: #dcdcaa !important;
+          }
+          &.sql-string {
+            color: #ce9178 !important;
+          }
+          &.sql-num {
+            color: #b5cea8 !important;
+          }
+          &.sql-var {
+            color: #9cdcfe !important;
+          }
+          &.sql-op {
+            color: #888888 !important;
+          } // 符號給深灰色，看起來比較高級
+          &.sql-comment {
+            color: #6a9955 !important;
+            font-style: italic !important;
+          }
+        }
       }
     }
   }

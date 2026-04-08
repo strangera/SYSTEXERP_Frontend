@@ -15,19 +15,35 @@ interface FlatSqlDetail {
   timestamp: string;
 }
 
-/** SQL 語法高亮工具 */
+/** SQL 語法高亮工具 - 強化版 */
 const highlightSql = (sql: string): string => {
   if (!sql) return '';
-  const keywords = /\b(SELECT|FROM|WHERE|AND|OR|ORDER BY|GROUP BY|INSERT|UPDATE|SET|DELETE|JOIN|LEFT|INNER|OUTER|ON|AS|WITH\(NOLOCK\)|UNION|ALL|TOP|DISTINCT|IN|BETWEEN|IS|NOT|NULL|OVER|PARTITION BY)\b/gi;
-  const functions = /\b(SUM|COUNT|MAX|MIN|AVG|CONVERT|ISNULL|COALESCE|CAST|GETDATE|DATEFROMPARTS|EOMONTH|LEFT|RIGHT|TRIM|REPLICATE)\b/gi;
-  const strings = /('[^']*')/g;
-  const numbers = /\b(\d+)\b/g;
 
-  return sql
-    .replace(strings, '<span class="sql-string">$1</span>')
-    .replace(keywords, '<span class="sql-keyword">$1</span>')
-    .replace(functions, '<span class="sql-func">$1</span>')
-    .replace(numbers, '<span class="sql-num">$1</span>');
+  // 1. 先處理基礎 HTML 轉義，避免 SQL 裡的 < > 影響渲染
+  let result = sql
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+  // 2. 定義匹配規則
+  const strings = /('[^']*')/g;
+  const keywords = /\b(SELECT|FROM|WHERE|AND|OR|ORDER BY|GROUP BY|INSERT|UPDATE|SET|DELETE|JOIN|LEFT|RIGHT|INNER|OUTER|ON|AS|WITH\(NOLOCK\)|UNION|ALL|TOP|DISTINCT|IN|BETWEEN|IS|NOT|NULL|OVER|PARTITION BY|HAVING|EXISTS|CASE|WHEN|THEN|ELSE|END|INTO|VALUES|ANY|OFFSET|FETCH|NEXT|ROWS|ONLY)\b/gi;
+  const functions = /\b(SUM|COUNT|MAX|MIN|AVG|CONVERT|ISNULL|COALESCE|CAST|GETDATE|DATEFROMPARTS|EOMONTH|LEFT|RIGHT|TRIM|REPLICATE|ABS|CEILING|FLOOR|ROUND|GETUTCDATE|DATEADD|DATEDIFF|DATENAME|DATEPART|ROW_NUMBER|RANK|DENSE_RANK)\b/gi;
+  const variables = /(@\w+)/g;
+  const numbers = /\b(\d+)\b/g;
+  // 修正：Operators 不要動到 <span> 的關鍵字，我們改用簡單的顏色區分
+  const operators = /([\+\-\*\/\=\!\<\>\,.;()])/g;
+
+  // 3. 執行取代 (順序很重要)
+  // 先把符號包起來，但後續的 replace 會把標籤內的內容再包一層，這沒關係
+  result = result.replace(operators, '<span class="sql-op">$1</span>');
+  result = result.replace(strings, '<span class="sql-string">$1</span>');
+  result = result.replace(keywords, '<span class="sql-keyword">$1</span>');
+  result = result.replace(functions, '<span class="sql-func">$1</span>');
+  result = result.replace(variables, '<span class="sql-var">$1</span>');
+  result = result.replace(numbers, '<span class="sql-num">$1</span>');
+
+  return result;
 };
 
 @Component({
