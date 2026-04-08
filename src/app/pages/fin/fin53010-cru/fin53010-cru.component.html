@@ -17,6 +17,8 @@
         btnType="default"
         [label]="stepLabels.get(1) || '傳票資料'"
         [severity]="currentStep() === 1 ? undefined : 'secondary'"
+        [loading]="nextStepBusy()"
+        [disabled]="nextStepBusy()"
         (click)="goToStep(1)"
       ></app-button>
       @for (step of activeVoucherSteps(); track step) {
@@ -24,6 +26,8 @@
           btnType="default"
           [label]="stepLabels.get(step) || ('步驟' + step)"
           [severity]="currentStep() === step ? undefined : 'secondary'"
+          [loading]="nextStepBusy()"
+          [disabled]="nextStepBusy()"
           (click)="goToStep(step)"
         ></app-button>
       }
@@ -199,7 +203,13 @@
             <app-button btnType="submit" [loading]="loading"></app-button>
           }
           @if (canGoNext()) {
-            <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
+            <app-button
+              btnType="next"
+              label="下一步"
+              [loading]="nextStepBusy()"
+              [disabled]="nextStepBusy()"
+              (click)="goNextStep()"
+            ></app-button>
           }
         </div>
       }
@@ -251,7 +261,13 @@
       <div class="flex justify-content-between mt-3">
         <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
         @if (canGoNext()) {
-          <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
+          <app-button
+            btnType="next"
+            label="下一步"
+            [loading]="nextStepBusy()"
+            [disabled]="nextStepBusy()"
+            (click)="goNextStep()"
+          ></app-button>
         } @else {
           <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
         }
@@ -275,7 +291,13 @@
       <div class="flex justify-content-between mt-3">
         <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
         @if (canGoNext()) {
-          <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
+          <app-button
+            btnType="next"
+            label="下一步"
+            [loading]="nextStepBusy()"
+            [disabled]="nextStepBusy()"
+            (click)="goNextStep()"
+          ></app-button>
         } @else {
           <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
         }
@@ -300,7 +322,13 @@
       <div class="flex justify-content-between mt-3">
         <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
         @if (canGoNext()) {
-          <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
+          <app-button
+            btnType="next"
+            label="下一步"
+            [loading]="nextStepBusy()"
+            [disabled]="nextStepBusy()"
+            (click)="goNextStep()"
+          ></app-button>
         } @else {
           <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
         }
@@ -325,7 +353,13 @@
       <div class="flex justify-content-between mt-3">
         <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
         @if (canGoNext()) {
-          <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
+          <app-button
+            btnType="next"
+            label="下一步"
+            [loading]="nextStepBusy()"
+            [disabled]="nextStepBusy()"
+            (click)="goNextStep()"
+          ></app-button>
         } @else {
           <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
         }

@@ -130,7 +130,7 @@ export class FIN53010Service {
     private readonly logger: NGXLogger,
     private readonly dropdownApi: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
-  ) { }
+  ) {}
 
   public loadFIN53010(payload: FIN53010Payload): Observable<BaseQueryResponse<FIN53010Data>> {
     return this.http.post<BaseQueryResponse<FIN53010Data>>(`${apiUrl}/queryFIN53010`, payload).pipe(

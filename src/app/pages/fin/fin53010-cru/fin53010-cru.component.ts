@@ -1,5 +1,5 @@
 import { DatePipe, NgClass } from '@angular/common';
-import { Component, computed, effect, OnInit, signal, TemplateRef, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, effect, Injector, OnInit, signal, TemplateRef, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -131,6 +131,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly tableLoading = signal<boolean>(!1);
   /** 依傳票編號查詢並重載（僅編輯模式） */
   public readonly lookupVouLoading = signal<boolean>(!1);
+  /** 步驟表同步迴圈（setTimeout 內） */
+  private readonly stepRowsSyncBusy = signal<boolean>(!1);
+  /** goNextStep / goToStep 切換步驟 */
+  private readonly stepNavigateBusy = signal<boolean>(!1);
+  /** 下一步／步驟 tab：任一忙碌即顯示 loading */
+  public readonly nextStepBusy = computed(() => this.stepRowsSyncBusy() || this.stepNavigateBusy());
   /** 與表單欄位分離，避免與目前傳票號混淆 */
   public readonly lookupVouNo = new FormControl<string>('', { nonNullable: true });
 
@@ -346,6 +352,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   // 載入資料的 effect（不 destroy，以便刪除明細重載或依傳票編號重載時仍能同步表單）
   public readonly dataEffect = effect(() => {
     if (this.isFormCreateable) return;
+    this.service.noteDescLoading();
     const data = this.fin53010DetailData();
     if (!data?.Details) {
       this._lastAppliedDetailTableFingerprint = null;
@@ -521,18 +528,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly stepAPColumns: EditColumn[] = [
-    { field: 'org_id', header: '組織代號', type: 'dropdown', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'ven_pay_type', header: '付款方式', type: 'dropdown', options: () => this.service.venPayTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'acp_amt', header: '金額', type: 'inputNumber', disabled: () => true },
-    { field: 'acp_expect_pay_date', header: '預計付款日', type: 'date' },
-    { field: 'acp_date', header: '立帳日期', type: 'date', disabled: () => true },
-    { field: 'ven_bnk_no', header: '匯款銀行代號', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'ven_bank_account', header: '銀行帳號/帳戶名稱', type: 'input', disabled: () => true },
-    { field: 'ven_ctrlyn', header: '票據禁止背書轉讓', type: 'dropdown', options: () => this.service.yesNoOptions(), optionLabel: 'label', optionValue: 'value' },
-    { field: 'ven_check_title', header: '票據抬頭', type: 'input', disabled: () => true },
-    { field: 'acc_no', header: '會計科目代號', type: 'dropdown', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'note_desc', header: '摘要', type: 'input' },
+    { field: 'org_id', header: '組織代號', textAlign: 'left', type: 'dropdown', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'ven_no', header: '廠商代號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'ven_pay_type', header: '付款方式', textAlign: 'left', type: 'dropdown', options: () => this.service.venPayTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'acp_amt', header: '金額', textAlign: 'right', type: 'inputNumber', disabled: () => true },
+    { field: 'acp_expect_pay_date', header: '預計付款日', textAlign: 'left', type: 'date' },
+    { field: 'acp_date', header: '立帳日期', textAlign: 'left', type: 'date', disabled: () => true },
+    { field: 'ven_bnk_no', header: '匯款銀行代號', textAlign: 'left', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'ven_bank_account', header: '銀行帳號/帳戶名稱', textAlign: 'left', type: 'input', disabled: () => true },
+    { field: 'ven_ctrlyn', header: '票據禁止背書轉讓', textAlign: 'left', type: 'dropdown', options: () => this.service.yesNoOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'ven_check_title', header: '票據抬頭', textAlign: 'left', type: 'input', disabled: () => true },
+    { field: 'acc_no', header: '會計科目代號', textAlign: 'left', type: 'dropdown', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'note_desc', header: '摘要', textAlign: 'left', type: 'input' },
   ];
 
   public readonly stepARColumns: EditColumn[] = [
@@ -594,7 +601,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return this.service.accNoMap().size > 0
       && this.service.vendorMap().size > 0
       && this.service.usrMap().size > 0
-      && this.service.noteDescMap().size > 0
+      && !this.service.noteDescLoading()
       && this.service.voucherTypeMap().size > 0;
   }
 
@@ -618,6 +625,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     public readonly service: FIN53010Service,
     private readonly logger: NGXLogger,
     private readonly datePipe: DatePipe,
+    private readonly injector: Injector,
   ) {
     super();
     this.user = this.authService.getUserInfo()!;
@@ -673,6 +681,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           if (res.Status !== '0000') return;
           this.fin53010DetailData.set(res.Data);
           this.totalRecords.set(res.TotalCount);
+          const accNos = Array.from(new Set(
+            (res.Data?.Details ?? []).map(d => d.AccNo).filter((a): a is string => !!a && String(a).trim() !== ''),
+          ));
+          if (accNos.length) this.service.getAccDescOptions(accNos);
           this.loadRelatedDetailByVouNo(res.Data?.VouNo);
         },
       });
@@ -739,57 +751,75 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       onCleanup(() => sub.unsubscribe());
     }
 
-    const ap: FIN53010StepAP[] = [];
-    const ar: FIN53010StepAR[] = [];
-    const bk: FIN53010StepBankDeposit[] = [];
-
-    for (const row of table) {
-      const accNo = String(row.AccNo ?? '');
-      const vt = accVt.get(accNo);
-      if (!vt || !['3', '4', '7'].includes(String(vt))) continue;
-
-      const venOpt = getVenOpt(String(row.DetailNo ?? ''));
-      const amt = (row.AccAmtD ?? 0) + (row.AccAmtC ?? 0);
-      const noteDesc = this.resolveNoteDescForStep(row);
-
-      if (vt === '3') {
-        ap.push({
-          org_id: row.ORG_ID ?? '100000',
-          ven_no: row.DetailNo,
-          ven_pay_type: venOpt?.['VEN_PayType'] ?? undefined,
-          acp_amt: amt || undefined,
-          acp_date: vouDate,
-          ven_bnk_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
-          ven_bank_account: this.formatVenBankAccount(venOpt),
-          ven_ctrlyn: venOpt?.['VEN_CTRLYN'] ?? undefined,
-          ven_check_title: row.DetailName ?? venOpt?.['VEN_Name'] ?? undefined,
-          acc_no: row.AccNo,
-          note_desc: noteDesc,
-        });
-      } else if (vt === '4') {
-        ar.push({
-          org_id: row.ORG_ID ?? '100000',
-          ven_no: row.DetailNo,
-          ars_amt: amt || undefined,
-          ars_date: vouDate,
-          acc_no: row.AccNo,
-          note_desc: noteDesc,
-        });
-      } else if (vt === '7') {
-        bk.push({
-          ven_no: row.DetailNo,
-          bank_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
-          deposit_amt: row.AccAmtD ?? undefined,
-          withdraw_amt: row.AccAmtC ?? undefined,
-          note_desc: noteDesc,
-          txn_date: vouDate,
-        });
-      }
+    if (table.length === 0) {
+      this.stepAPRows.set([]);
+      this.stepARRows.set([]);
+      this.stepBankRows.set([]);
+      return;
     }
 
-    this.stepAPRows.set(ap);
-    this.stepARRows.set(ar);
-    this.stepBankRows.set(bk);
+    this.stepRowsSyncBusy.set(!0);
+    const timer = window.setTimeout(() => {
+      try {
+        const ap: FIN53010StepAP[] = [];
+        const ar: FIN53010StepAR[] = [];
+        const bk: FIN53010StepBankDeposit[] = [];
+
+        for (const row of table) {
+          const accNo = String(row.AccNo ?? '');
+          const vt = accVt.get(accNo);
+          if (!vt || !['3', '4', '7'].includes(String(vt))) continue;
+
+          const venOpt = getVenOpt(String(row.DetailNo ?? ''));
+          const amt = (row.AccAmtD ?? 0) + (row.AccAmtC ?? 0);
+          const noteDesc = this.resolveNoteDescForStep(row);
+
+          if (vt === '3') {
+            ap.push({
+              org_id: row.ORG_ID ?? '100000',
+              ven_no: row.DetailNo,
+              ven_pay_type: venOpt?.['VEN_PayType'] ?? undefined,
+              acp_amt: amt || undefined,
+              acp_date: vouDate,
+              ven_bnk_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
+              ven_bank_account: this.formatVenBankAccount(venOpt),
+              ven_ctrlyn: venOpt?.['VEN_CTRLYN'] ?? undefined,
+              ven_check_title: row.DetailName ?? venOpt?.['VEN_Name'] ?? undefined,
+              acc_no: row.AccNo,
+              note_desc: noteDesc,
+            });
+          } else if (vt === '4') {
+            ar.push({
+              org_id: row.ORG_ID ?? '100000',
+              ven_no: row.DetailNo,
+              ars_amt: amt || undefined,
+              ars_date: vouDate,
+              acc_no: row.AccNo,
+              note_desc: noteDesc,
+            });
+          } else if (vt === '7') {
+            bk.push({
+              ven_no: row.DetailNo,
+              bank_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
+              deposit_amt: row.AccAmtD ?? undefined,
+              withdraw_amt: row.AccAmtC ?? undefined,
+              note_desc: noteDesc,
+              txn_date: vouDate,
+            });
+          }
+        }
+
+        this.stepAPRows.set(ap);
+        this.stepARRows.set(ar);
+        this.stepBankRows.set(bk);
+      } finally {
+        this.stepRowsSyncBusy.set(!1);
+      }
+    }, 0);
+    onCleanup(() => {
+      window.clearTimeout(timer);
+      this.stepRowsSyncBusy.set(!1);
+    });
   }, { allowSignalWrites: true });
 
   private formatVenBankAccount(venOpt?: Option): string | undefined {
@@ -813,11 +843,24 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return this.datePipe.transform(d, 'yyyy-MM-dd') ?? undefined;
   }
 
+  private clearStepNavigateBusyAfterRender(): void {
+    afterNextRender(() => {
+      this.stepNavigateBusy.set(!1);
+    }, { injector: this.injector });
+  }
+
   public goNextStep(): void {
     if (!this.isFormCreateable && !this.isFormEditable) return;
+    if (this.nextStepBusy()) return;
     const flow = [1, ...this.activeVoucherSteps()];
     const idx = flow.indexOf(this.currentStep());
-    if (idx < flow.length - 1) this.currentStep.set(flow[idx + 1]);
+    if (idx >= flow.length - 1) return;
+    const nextStep = flow[idx + 1];
+    this.stepNavigateBusy.set(!0);
+    window.setTimeout(() => {
+      this.currentStep.set(nextStep);
+      this.clearStepNavigateBusyAfterRender();
+    }, 0);
   }
 
   public goPrevStep(): void {
@@ -829,8 +872,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public goToStep(step: number): void {
     if (!this.isFormCreateable && !this.isFormEditable) return;
+    if (this.nextStepBusy()) return;
     const flow = [1, ...this.activeVoucherSteps()];
-    if (flow.includes(step)) this.currentStep.set(step);
+    if (!flow.includes(step)) return;
+    if (this.currentStep() === step) return;
+    this.stepNavigateBusy.set(!0);
+    window.setTimeout(() => {
+      this.currentStep.set(step);
+      this.clearStepNavigateBusyAfterRender();
+    }, 0);
   }
 
   /** 依「查詢傳票編號」呼叫 queryFIN53010 → queryFIN53010Detail 並刷新編輯頁 */
