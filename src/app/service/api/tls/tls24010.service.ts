@@ -60,6 +60,7 @@ export interface TLS24010Data {
   tlt_term_type?: string;
   ORG_TXN_Date?: string;
   ORG_ECR_No?: string;
+  Check_Status: string; // 審核狀態 (Y: 已審核, N: 未審核)
 }
 
 export interface POS5007Data {

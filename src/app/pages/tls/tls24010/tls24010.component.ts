@@ -8,7 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { Actions } from '@shared/service/permission-guard.service';
 import { ValidationService } from '@shared/service/validation.service';
@@ -29,12 +29,12 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
-import { AddButton } from './../../../shared/componentkit/table/table.model';
 import { FileExportService } from './../../../shared/service/file-export.service';
 import { C_columns, columns, FIX_TYPE, TXN_GUIPAPER, TXN_GUIPaperOptions, TXN_STATUS, txnStatusOptions } from './tls24010.model';
 @Component({
   selector: 'app-tls24010',
   templateUrl: './tls24010.component.html',
+  styleUrls: ['./tls24010.component.scss'],
   standalone: true,
   imports: [
     ButtonModule,
@@ -185,7 +185,15 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         } else {
           this.addButton = [
             {
-              label: this.isClosed ? '已關帳不可異動資料' : (this.isSpecialPaper ? '取消作廢' : '修正交易資料'),
+              label: (rowData: TLS24010Data) => {
+                if (this.isClosed) return '已關帳不可異動資料';
+
+                if (this.isSpecialPaper) {
+                  return rowData.Check_Status === 'Y' ? '已審核不可取消作廢' : '取消作廢';
+                }
+
+                return '修正交易資料';
+              },
               icon: this.isSpecialPaper ? 'pi pi-undo' : 'pi pi-ellipsis-h',
               action: (rowdata: TLS24010Data, event) => {
                 if (this.isClosed) return;
@@ -200,7 +208,15 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
                   this.openModal(rowdata, event);
                 }
               },
-              disabled: (rowData: TLS24010Data) => this.isClosed || rowData.TXN_Status === TXN_STATUS.作廢交易, // 已關帳或作廢交易不可異動
+              disabled: (rowData: TLS24010Data) => {
+                if (this.isClosed) return true; // 已關帳不可異動
+                if (rowData.TXN_Status === TXN_STATUS.作廢交易) return true;
+                //「取消作廢」模式要多判斷是否已審核
+                if (this.isSpecialPaper) {
+                  return rowData.Check_Status === 'Y';
+                }
+                return false;
+              }
             }
           ]
         }
@@ -320,6 +336,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   updateItems(): void {
     const row = this.selectedRowData;
     const isFixedTerm = row?.tlt_term_type?.toString().trim() === '1';
+    const isCheckStatus = row?.Check_Status === 'Y';
     this.items = [
       {
         label: '專櫃編號修正',
@@ -350,7 +367,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       },
       {
         label: '交易資料作廢', icon: 'pi pi-times-circle',
-        disabled: !this.hasPermission(Actions.InvalidateTransaction),
+        disabled: !this.hasPermission(Actions.InvalidateTransaction) || isCheckStatus, // 沒有作廢權限或有已審核的付款別交易不可作廢
+        styleClass: isCheckStatus ? 'check-status-disabled' : '',
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢),
       }
     ];
@@ -360,12 +378,14 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         label: '刪除',
         icon: 'pi pi-trash',
         disabled: (() => {
+          if (isCheckStatus) return true; // 已審核的付款別交易不可刪除
           if (!this.hasPermission(Actions.Delete)) return true;// 1. 沒有權限，直接禁用
           if (!row) return true; // 2. 如果沒有選中任何列 (row 為空)，應預設為禁用
           // if (isFixedTerm) return true;
           if (row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') return false; // 3. 無發票狀態：可以刪除 (disable = false)
           return !row?.IsCanDel;// 4. 有發票或其他狀態：依據 IsCanDel 欄位決定
         })(),
+        styleClass: isCheckStatus ? 'check-status-disabled' : '',
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.刪除交易),
       });
     }
