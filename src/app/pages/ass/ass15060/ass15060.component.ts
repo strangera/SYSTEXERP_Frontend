@@ -299,13 +299,13 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      console.log('財產變更request:', JSON.stringify(frm.value, null, 2));
+      // console.log('財產變更request:', JSON.stringify(frm.value, null, 2));
       this.loading = false;
       this.ass15060Service.queryASS15060(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data.Details || []; // 這邊後端多包了一層 Details
-            console.log('Result', this.data);
+            // console.log('Result', this.data);
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {

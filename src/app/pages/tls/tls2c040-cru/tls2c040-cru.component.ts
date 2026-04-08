@@ -96,12 +96,12 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
   totalRecords = 0;
   readonly arColumns: ReportColumn[] = [
     { field: 'VOUNO', header: '應收帳款代號', align: 'left' },
-    { field: 'SrcSheetType', header: '專案代號', align: 'left', format: (v) => getSYS1000('ENTRY_TYPE', v) },
+    { field: 'ProjectNo', header: '專案代號', align: 'left', width: '40px'},
     { field: 'org_id', header: '組織代碼', align: 'left', width: '40px' },
     { field: 'org_name', header: '組織名稱', align: 'left' },
     { field: 'CustomerNo', header: '客戶代碼', align: 'left' },
     { field: 'DetailNo', header: '廠商代號', align: 'left' },
-    { field: 'VouType', header: '傳票類型', align: 'left', width: '40px' },
+    { field: 'SrcSheetType', header: '傳票類型', align: 'left', format: (v) => getSYS1000('ENTRY_TYPE', v)},
     { field: 'sam_yyymm', header: '年月', align: 'left', width: '40px' },
     { field: 'sam_termno', header: '帳次', align: 'left', width: '40px' },
     { field: 'ar_amt', header: '應收帳款金額', format: formatAmount, isTotal: true, align: 'right' },
@@ -114,12 +114,12 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
   ];
   readonly apColumns: ReportColumn[] = [
     { field: 'VOUNO', header: '應付帳款代號', align: 'left' },
-    { field: 'SrcSheetType', header: '專案代號', align: 'left', format: (v) => getSYS1000('ENTRY_TYPE', v) },
+    { field: 'ProjectNo', header: '專案代號', align: 'left', width: '40px'},
     { field: 'org_id', header: '組織代碼', align: 'left', width: '40px' },
     { field: 'org_name', header: '組織名稱', align: 'left' },
     { field: 'CustomerNo', header: '客戶代碼', align: 'left' },
     { field: 'DetailNo', header: '廠商代號', align: 'left' },
-    { field: 'VouType', header: '傳票類型', align: 'left', width: '40px' },
+    { field: 'SrcSheetType', header: '傳票類型', align: 'left', format: (v) => getSYS1000('ENTRY_TYPE', v)},
     { field: 'sam_yyymm', header: '年月', align: 'left', width: '40px' },
     { field: 'sam_termno', header: '帳次', align: 'left', width: '40px' },
     { field: 'ap_amt', header: '應付帳款金額', format: formatAmount, isTotal: true, align: 'right' },
