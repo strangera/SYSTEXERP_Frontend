@@ -35,16 +35,18 @@
     <span class="text-white mt-3">資料載入與系統準備中...</span>
   </div>
 
+  <div class="center-logo-container">
+    <div class="center-circle" (click)="$event.stopPropagation()">
+      <img [src]="logo" alt="logo" class="center-img">
+    </div>
+  </div>
+
   <div *ngIf="!loading && !errorMessage" class="slider-viewport">
     <div class="slider-track" [style.transform]="'translateX(' + (currentPage * -100) + 'vw)'">
 
       <div class="page-grid" *ngFor="let page of pagedItems">
 
-        <div class="center-logo-container">
-          <div class="center-circle" (click)="$event.stopPropagation()">
-            <img [src]="logo" alt="logo" class="center-img">
-          </div>
-        </div>
+
 
         <div *ngFor="let item of page; let i = index" class="system-block" [style.background-color]="item.dynamicColor"
           (click)="navigateToUrl(item)">
