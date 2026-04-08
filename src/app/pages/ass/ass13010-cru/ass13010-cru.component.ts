@@ -427,18 +427,8 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     // 由於 ReactiveForms 的 disabled 欄位不參與 validation，因此鎖欄能避免 required 驗證誤擋送出。
     const allowedControls = new Set<string>(
       isAlreadyAmortized
-        ? ['assetsStatus', 'purchaseDate', 'deviceCode', 'remark']
-        : [
-          'purchasePrice',
-          'depreciationLife',
-          'keepingPerson',
-          'user',
-          'amortizationYearMonth',
-          'assetsStatus',
-          'purchaseDate',
-          'deviceCode',
-          'remark',
-        ]
+        ? ['purchasePrice', 'depreciationLife', 'keepingPerson', 'user', 'amortizationYearMonth']
+        : ['assetsStatus', 'purchaseDate', 'deviceCode', 'remark']
     );
 
     // `Object.keys()` 會回傳 `string[]`，但 `controls` 是強型別結構；
@@ -457,10 +447,11 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     return {
       ID: (this.rowdata as any)?.ID as number,
       GET_DATE: this.toDateString(raw['purchaseDate'] as Date | string | null),
+      GET_COST: raw['purchasePrice'] != null && raw['purchasePrice'] !== '' ? Number(raw['purchasePrice']) : null,
       ASSET_STATUS: raw['assetsStatus'] != null && raw['assetsStatus'] !== '' ? String(raw['assetsStatus']) : null,
       EQUIP_ID: raw['deviceCode'] != null && raw['deviceCode'] !== '' ? String(raw['deviceCode']) : null,
       PURCHASE_NOTES: raw['remark'] != null && raw['remark'] !== '' ? String(raw['remark']) : null,
-      // API：RESI_VALUE = 預留殘值（residual）；購入金額 update 無對應欄位，不送
+      // API：RESI_VALUE = 預留殘值（residual）
       RESI_VALUE: raw['residual'] != null && raw['residual'] !== '' ? Number(raw['residual']) : null,
       EXP_YEAR: raw['depreciationLife'] != null && raw['depreciationLife'] !== '' ? Number(raw['depreciationLife']) : null,
       EXP_MONTH:

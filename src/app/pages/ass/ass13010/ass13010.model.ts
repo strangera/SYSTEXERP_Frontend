@@ -237,6 +237,8 @@ export interface InsertASS13010Response {
 export interface UpdateASS13010Request {
   ID: number;
   GET_DATE?: string | null;
+  /** 購入金額（GET_COST） */
+  GET_COST?: number | null;
   ASSET_STATUS?: string | null;
   EQUIP_ID?: string | null;
   PURCHASE_NOTES?: string | null;
