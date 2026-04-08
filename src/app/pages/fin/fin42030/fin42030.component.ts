@@ -17,13 +17,14 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableSubheaderComponent } from './fin42030-table/fin42030-table.component';
 
 @Component({
   selector: 'app-fin42030',
   templateUrl: './fin42030.component.html',
   styleUrl: './fin42030.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule, TableSubheaderComponent]
 })
 export class FIN42030Component extends BasicQueryPageComponent<FIN42030Data> implements OnInit {
   // Upload files
@@ -64,7 +65,7 @@ export class FIN42030Component extends BasicQueryPageComponent<FIN42030Data> imp
 
 
   // Table data
-  data = [];
+  data: FIN42030Data[] = [];
   filteredData = [...this.data];
   columns = [
     { field: 'subjectName', header: '科目名稱', visible: true },
@@ -106,52 +107,315 @@ export class FIN42030Component extends BasicQueryPageComponent<FIN42030Data> imp
 
     this.loading = false;
     this.notificationService.unblockUi();
+
+    this.data = [
+      // 營業收入
+      {
+        subjectName: '營業收入',
+        currentAmount: null,
+        currentRatio: null,
+        budgetAmount: null,
+        budgetRatio: null,
+        growthRate: null,
+        currentTotalAmount: null,
+        currentTotalRatio: null,
+        totalBudgetAmount: null,
+        totalBudgetRatio: null,
+        totalGrowthRate: null
+      },
+      {
+        subjectName: '4101銷貨收入',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '4121銷貨折讓',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '4201營業租金收入',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '4301其他營業收入',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '4304其他營業收入-扣款',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '營業收入合計：',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+
+      // 營業成本
+      {
+        subjectName: '營業成本',
+        currentAmount: null,
+        currentRatio: null,
+        budgetAmount: null,
+        budgetRatio: null,
+        growthRate: null,
+        currentTotalAmount: null,
+        currentTotalRatio: null,
+        totalBudgetAmount: null,
+        totalBudgetRatio: null,
+        totalGrowthRate: null
+      },
+      {
+        subjectName: '5101銷貨成本',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '5111進貨',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '5115進貨退回',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '5201其他營業支出',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '營業成本合計：',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+
+      // 毛利
+      {
+        subjectName: '營業毛利：',
+        currentAmount: 0,
+        currentRatio: null,
+        budgetAmount: 0,
+        budgetRatio: null,
+        growthRate: null,
+        currentTotalAmount: 0,
+        currentTotalRatio: null,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: null,
+        totalGrowthRate: null
+      },
+
+      // 營業費用
+      {
+        subjectName: '營業費用',
+        currentAmount: null,
+        currentRatio: null,
+        budgetAmount: null,
+        budgetRatio: null,
+        growthRate: null,
+        currentTotalAmount: null,
+        currentTotalRatio: null,
+        totalBudgetAmount: null,
+        totalBudgetRatio: null,
+        totalGrowthRate: null
+      },
+      {
+        subjectName: '6101薪資',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '6102租金支出',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '6103文具用品',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '6104旅費',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '6105運費',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '6106郵電費',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '6107修繕費',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      },
+      {
+        subjectName: '6108雜費',
+        currentAmount: 0,
+        currentRatio: 0,
+        budgetAmount: 0,
+        budgetRatio: 0,
+        growthRate: 0,
+        currentTotalAmount: 0,
+        currentTotalRatio: 0,
+        totalBudgetAmount: 0,
+        totalBudgetRatio: 0,
+        totalGrowthRate: 0
+      }
+    ];
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  // onCreate() {
-  //   if (this.canAdd()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Create,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-  //   }
-  // }
-
-  // onEdit(data: any) {
-  //   if (this.canEdit()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Edit,
-  //         rowdata: data,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['/demoCRU'], extras);
-  //   }
-  // }
-
-  // onDetail(data: any) {
-  //   let extras: NavigationExtras = {
-  //     state: {
-  //       crudstatus: CRUDStatus.Read,
-  //       rowdata: data,
-  //       queryform: this.queryForm,
-  //     },
-  //     skipLocationChange: true,
-  //   };
-  //   this.router.navigate(['/demoCRU'], extras);
-  // }
-
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
-  }
 }
