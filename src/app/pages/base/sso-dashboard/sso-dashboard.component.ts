@@ -1,12 +1,11 @@
 // src/app/pages/base/sso-dashboard/sso-dashboard.component.ts
-import { AsyncPipe, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, LocationStrategy, NgClass, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core'; // 新增 OnDestroy
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { SystemDataService } from '@service/system/system-data.service';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { MenuItem, PrimeTemplate } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -16,7 +15,7 @@ import { MenuModule } from 'primeng/menu';
 import { PasswordModule } from 'primeng/password';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TooltipModule } from 'primeng/tooltip';
-import { concatMap, finalize, Subscription, throwError } from 'rxjs'; // 引入 tap
+import { finalize, Subscription } from 'rxjs'; // 引入 tap
 import { LayoutService } from '../../../core/layout/layout.service';
 import type { OuterTokenResponse } from '../../../service/system/auth.service';
 import { AuthService } from '../../../service/system/auth.service';
@@ -104,7 +103,8 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
     private encryptionService: EncryptionService,
     private messageService: NotificationService,
     private userCodeService: UserCodeService,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private locationStrategy: LocationStrategy
   ) {
     this.subscriptions.push(
       this.authService.user.pipe(untilDestroyed(this)).subscribe((x) => {
@@ -207,7 +207,8 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
   }
   private appendOrReplaceParam(url: string, key: string, value: string): string {
     try {
-      const u = new URL(url, window.location.origin);
+      // 這裡不給 base，因為 url 此時已經是完整路徑了
+      const u = new URL(url);
       u.searchParams.set(key, value);
       return u.toString();
     } catch {
@@ -215,63 +216,52 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
       return `${url}${sep}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
     }
   }
-
-
   navigateToUrl(item: ApiItem): void {
     this.loading = true;
 
-    if (this.urlItems.length > 0 && item === this.urlItems[0]) {
-      // 內部系統流程
+    // 判斷是否為內部系統 (ERP / ERP2)
+    if (item.System_Id === 'ERP' || item.System_Id === 'ERP2') {
       this.subscriptions.push(
         this.ssoDashboardService.Inner().pipe(
           untilDestroyed(this),
-          concatMap((innerResponse: ApiResponse<any>) => {
-            if (innerResponse.Status === '0000') {
-              return this.systemDataService.getFunRightsInfo().pipe(
-                concatMap(() => this.systemDataService.queryAllSystemCode())
-              );
-            } else {
-              return throwError(() => new Error(innerResponse.Message || 'Inner API failed'));
-            }
-          })
+          finalize(() => this.loading = false)
         ).subscribe({
           next: () => {
-            const targetPath = item.System_Url.split('/');
-            this.router.navigate(targetPath);
+            // 安全做法：直接傳入路由陣列，Angular 會自動補齊 /tsrdwebdev/
+            this.router.navigate(['account', 'dashboard']);
           },
+          error: () => {
+            this.messageService.errorBubble('進入系統失敗');
+          }
         })
       );
     } else {
-      const userNo = this.user?.user_No || '';
-      if (!userNo) {
-        this.messageService.errorBubble('找不到登入使用者資訊');
-        return;
-      }
-
-      // 讀取 preLoginUrlOnce 的 redirect（若沒有就空字串）
-      const redirect = this.getRedirectFromPreLogin();
-
+      // 外部系統導向
       this.subscriptions.push(
         this.authService.getOuterToken().pipe(
           untilDestroyed(this),
           finalize(() => this.loading = false)
         ).subscribe({
           next: (res: OuterTokenResponse) => {
-            let targetUrl = this.appendOrReplaceParam(item.System_Url, 'token', res.token);
-            if (redirect) {
-              targetUrl = this.appendOrReplaceParam(targetUrl, 'redirectURL', redirect);
-            }
-            window.open(targetUrl, '_blank');
+            // 安全做法：處理 window.open 的路徑
+            let targetUrl = item.System_Url;
 
-            // 若只想用一次，開啟這行：
-            // localStorage.removeItem('preLoginUrlOnce');
+            // 如果路徑不是 http 開頭，代表它是相對路徑，需要手動補上 Base Href
+            if (!targetUrl.startsWith('http')) {
+              const base = this.locationStrategy.getBaseHref(); // 取得 /tsrdwebdev/
+              // 使用 URL 物件自動處理斜線，基準點用當前 window.location.origin
+              const absoluteBase = window.location.origin + base;
+              targetUrl = new URL(item.System_Url, absoluteBase).href;
+            }
+
+            const finalUrl = this.appendOrReplaceParam(targetUrl, 'token', res.token);
+            window.open(finalUrl, '_blank');
           },
-          error: () => this.messageService.errorBubble('無法前往外部系統，請稍後再試')
+          error: () => this.messageService.errorBubble('無法前往外部系統')
         })
       );
     }
   }
-  /** 從 localStorage 的 preLoginUrlOnce 取出 redirecturl/redirectURL，並解碼回原網址 */
   /** 從 localStorage 的 preLoginUrlOnce 取出 redirecturl/redirectURL/redirect，並解碼回原網址 */
   private getRedirectFromPreLogin(): string {
     const raw = localStorage.getItem('preLoginUrlOnce');
