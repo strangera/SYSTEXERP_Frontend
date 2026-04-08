@@ -531,12 +531,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'org_id', header: '組織代號', textAlign: 'left', type: 'dropdown', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ven_no', header: '廠商代號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ven_pay_type', header: '付款方式', textAlign: 'left', type: 'dropdown', options: () => this.service.venPayTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'acp_amt', header: '金額', textAlign: 'right', type: 'inputNumber', disabled: () => true },
-    { field: 'acp_expect_pay_date', header: '預計付款日', textAlign: 'left', type: 'date' },
-    { field: 'acp_date', header: '立帳日期', textAlign: 'left', type: 'date', disabled: () => true },
+    { field: 'acp_amt', header: '金額', textAlign: 'right', width: '7rem', type: 'inputNumber', disabled: () => true },
+    { field: 'acp_expect_pay_date', header: '預計付款日', textAlign: 'left', width: '9rem', type: 'date' },
+    { field: 'acp_date', header: '立帳日期', textAlign: 'left', width: '9rem', type: 'date', disabled: () => true },
     { field: 'ven_bnk_no', header: '匯款銀行代號', textAlign: 'left', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ven_bank_account', header: '銀行帳號/帳戶名稱', textAlign: 'left', type: 'input', disabled: () => true },
-    { field: 'ven_ctrlyn', header: '票據禁止背書轉讓', textAlign: 'left', type: 'dropdown', options: () => this.service.yesNoOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'ven_ctrlyn', header: '票據禁止背書轉讓', textAlign: 'left', width: '8rem', type: 'dropdown', options: () => this.service.yesNoOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'ven_check_title', header: '票據抬頭', textAlign: 'left', type: 'input', disabled: () => true },
     { field: 'acc_no', header: '會計科目代號', textAlign: 'left', type: 'dropdown', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'note_desc', header: '摘要', textAlign: 'left', type: 'input' },
@@ -865,9 +865,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public goPrevStep(): void {
     if (!this.isFormCreateable && !this.isFormEditable) return;
+    if (this.nextStepBusy()) return;
     const flow = [1, ...this.activeVoucherSteps()];
     const idx = flow.indexOf(this.currentStep());
-    if (idx > 0) this.currentStep.set(flow[idx - 1]);
+    if (idx <= 0) return;
+    const prevStep = flow[idx - 1];
+    this.stepNavigateBusy.set(!0);
+    window.setTimeout(() => {
+      this.currentStep.set(prevStep);
+      this.clearStepNavigateBusyAfterRender();
+    }, 0);
   }
 
   public goToStep(step: number): void {

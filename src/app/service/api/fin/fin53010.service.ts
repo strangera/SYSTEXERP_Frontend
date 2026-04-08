@@ -418,8 +418,8 @@ export class FIN53010Service {
   }
 
   public getStepDropdownOptions(): void {
-    this.getSYS1000ByType('VEN_PayType', this.venPayTypeOptions);
-    this.getSYS1000ByType('YES_NO', this.yesNoOptions);
+    this.getSYS1000ByType('VEN_PayType', this.venPayTypeOptions, 'nameOnly');
+    this.getSYS1000ByType('YES_NO', this.yesNoOptions, 'nameOnly');
     this.getSYS1000ByType('PUR_TaxType', this.taxTypeOptions);
     this.getSYS1000ByType('PUR_DiscNo', this.purDiscNoOptions);
     this.getSYS1000ByType('PUR_GUIPaper', this.purGUIPaperOptions);
@@ -428,12 +428,18 @@ export class FIN53010Service {
     this.getSYS1000ByType('AssetType', this.assetTypeOptions);
   }
 
-  private getSYS1000ByType(type: string, target: { set: (v: Option[]) => void; }): void {
+  private getSYS1000ByType(
+    type: string,
+    target: { set: (v: Option[]) => void; },
+    labelMode: 'noAndName' | 'nameOnly' = 'noAndName',
+  ): void {
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: type }).pipe(
       take(1),
       map(res => (res?.Data ?? []).map(item => ({
         value: item.No,
-        label: `${item.No} - ${item.Name}`,
+        label: labelMode === 'nameOnly'
+          ? (item.Name ?? item.No ?? '')
+          : `${item.No} - ${item.Name}`,
       } as Option))),
       tap(list => target.set(list)),
     ).subscribe();
