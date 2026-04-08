@@ -237,30 +237,23 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly aps2002RelatedColumns: ReportColumn[] = [
-    { field: 'PUR_VoucherType', header: '發票格式', visible: true },
+    { field: 'VoucherType', header: '發票格式', visible: true },
     {
-      field: 'PUR_GUINo',
+      field: 'TrackNo',
       header: '字軌／發票號碼',
-      visible: true,
-      format: (_v, _i, row) => {
-        const r = row as FIN53010Aps2002Row;
-        const g = String(r?.PUR_GUINo ?? '').trim();
-        if (g.length >= 10) return `${g.slice(0, 2)} / ${g.slice(2)}`;
-        return g;
-      },
     },
-    { field: 'PUR_GUIDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
-    { field: 'PUR_VenUniform', header: '廠商統一編號', visible: true },
-    { field: 'PUR_DirectType', header: '發票用途', visible: true },
-    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'PUR_TaxType', header: '課稅別', visible: true },
-    { field: 'PUR_Net', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'PUR_DiscNo', header: '扣抵代號', visible: true },
-    { field: 'PUR_Type', header: '類別區分', visible: true },
-    { field: 'Source_Doc_No', header: '憑證單號', visible: true },
-    { field: 'PUR_Comb_Cnt', header: '彙總張數', visible: true },
+    { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'DeclareYM', header: '申報年月', visible: true },
+    { field: 'VendorTaxID', header: '廠商統一編號', visible: true },
+    { field: 'InvoiceUsage', header: '發票用途', visible: true },
+    { field: 'InvoiceAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'TaxType', header: '課稅別', visible: true },
+    { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'DeductionCodeDesc', header: '扣抵代號', visible: true },
+    { field: 'CategoryType', header: '類別區分', visible: true },
+    { field: 'SourceDocNo', header: '憑證單號', visible: true },
+    { field: 'TotalCount', header: '彙總張數', visible: true },
   ];
 
   public readonly aps4023_CRelatedColumns: ReportColumn[] = [
@@ -284,13 +277,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     {
       field: 'InvoiceNumber',
       header: '字軌／發票號碼',
-      visible: true,
-      format: (_v, _i, row) => {
-        const r = row as FIN53010Aps4023Row;
-        const g = String(r?.InvoiceNumber ?? '').trim();
-        if (g.length >= 10) return `${g.slice(0, 2)} / ${g.slice(2)}`;
-        return g;
-      },
     },
     { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'INV_DeclareYM', header: '申報年月', visible: true },
