@@ -36,6 +36,7 @@ import {
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
 interface SortItem {
   field: string;
@@ -140,6 +141,7 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
     private readonly ass16090Service: ASS16090Service,
     private readonly ass11100Service: ASS11100Service,
     private readonly fin11040Service: Fin11040Service,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
     private readonly cdr: ChangeDetectorRef
   ) {
@@ -234,6 +236,22 @@ this.dropDownListService
       label: `${item.No ?? ''} - ${item.Name ?? ''}`,
     }));
   });
+this.dropdownApiService
+  .queryAss11040Dropdown()
+  .pipe(untilDestroyed(this))
+  .subscribe(res => {
+   const list = res ?? [];
+
+  this.goodsIdOptions = (res ?? []).map((item: any) => ({
+  value: item.No ?? item.value ?? '',
+  label:
+    item.Name
+      ? `${item.No ?? ''} - ${item.Name ?? ''}`
+      : item.label ?? '',
+}));
+  });
+
+
   }
 
   private formatDate(val: string | null | undefined): string {

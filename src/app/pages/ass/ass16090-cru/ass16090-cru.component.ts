@@ -19,7 +19,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
+import { Fin11040Service } from '@service/api/fin/fin11040.service';
 import {
   ASS16090Service,
   Ass16090ApproveRequest,
@@ -39,6 +39,7 @@ import {
   EditColumn,
   FieldChangeEvent,
 } from '../../fin/fin32020-cru/fin32020table-edit/fin32020table-edit.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
 @UntilDestroy()
 @Component({
@@ -66,7 +67,10 @@ export class ASS16090CRUComponent
 {
   /** 倉別選項 */
   public readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
-goodsIdOptions: { value: string; label: string }[] = [];
+
+  /** 品項下拉 */
+  goodsIdOptions: { value: string; label: string }[] = [];
+
   /** 申請人下拉 */
   empIdOptions: { value: string; label: string }[] = [];
 
@@ -109,27 +113,27 @@ goodsIdOptions: { value: string; label: string }[] = [];
 
   /** 明細欄位 */
   detailColumns: EditColumn[] = [
-   {
-  field: 'GOODS_ID',
-  header: '品項編號',
-  type: 'dropdown',
-  width: '220px',
-  textAlign: 'left',
-  options: () => this.goodsIdOptions,
-  optionLabel: 'label',
-  optionValue: 'value',
-  placeholder: '請選擇品項編號',
-  showClear: true,
-  validate: [
-    (value, _rowData, _data, _field, header) => {
-      const v = String(value ?? '').trim();
-      return {
-        isValid: !!v,
-        errorMessage: !!v ? [] : [`${header}不可為空白`],
-      };
+    {
+      field: 'GOODS_ID',
+      header: '品項編號',
+      type: 'dropdown',
+      width: '220px',
+      textAlign: 'left',
+      options: () => this.goodsIdOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      placeholder: '請選擇品項編號',
+      showClear: true,
+      validate: [
+        (value, _rowData, _data, _field, header) => {
+          const v = String(value ?? '').trim();
+          return {
+            isValid: !!v,
+            errorMessage: !!v ? [] : [`${header}不可為空白`],
+          };
+        },
+      ],
     },
-  ],
-},
     {
       field: 'GOODS_NAME',
       header: '品項名稱',
@@ -186,7 +190,8 @@ goodsIdOptions: { value: string; label: string }[] = [];
   constructor(
     private readonly ass16090Service: ASS16090Service,
     private readonly ass11100Service: ASS11100Service,
-     private readonly fin11040Service: Fin11040Service,
+    private readonly fin11040Service: Fin11040Service,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly dropDownListService: DropDownListService
   ) {
     super();
@@ -256,23 +261,18 @@ goodsIdOptions: { value: string; label: string }[] = [];
           })
         );
       });
-      /** 品項 */
-this.fin11040Service
-  .queryFIN11040({ PageSize: 9999, PageIndex: 1 })
-  .pipe(untilDestroyed(this))
-  .subscribe({
-    next: (res) => {
-      if (res.Status !== '0000') return;
 
-      const data: TDS1008Data[] = res.Data ?? [];
-      this.goodsIdOptions = data
-        .filter((item) => item.INV_ItemNo != null && item.INV_ItemNo !== '')
-        .map((item) => ({
-          value: item.INV_ItemNo ?? '',
-          label: `${item.INV_ItemNo ?? ''} - ${item.INV_ItemName ?? ''}`,
+    this.dropdownApiService
+      .queryAss11040Dropdown()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.goodsIdOptions = (res ?? []).map((item: any) => ({
+          value: item.No ?? item.value ?? '',
+          label: item.Name
+            ? `${item.No ?? ''} - ${item.Name ?? ''}`
+            : item.label ?? '',
         }));
-    },
-  });
+      });
   }
 
   get totalQty(): number {
@@ -282,6 +282,7 @@ this.fin11040Service
     }, 0);
   }
 
+  /** yyyy-MM-dd */
   private formatDateToYMD(
     date: Date | string | null | undefined
   ): string | null {
@@ -294,6 +295,14 @@ this.fin11040Service
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
+  }
+
+  /** yyyy-MM-ddT00:00:00，符合 Swagger 的 date-time */
+  private formatDateToDateTime(
+    date: Date | string | null | undefined
+  ): string | null {
+    const ymd = this.formatDateToYMD(date);
+    return ymd ? `${ymd}T00:00:00` : null;
   }
 
   private formatDateTimeToIso(date: Date): string {
@@ -390,7 +399,13 @@ this.fin11040Service
       }));
   }
 
-  private buildDetailList(): any[] {
+  /** Insert/Update 明細只送 Swagger 要的欄位 */
+  private buildDetailList(): Array<{
+    LINE_NUM: number;
+    GOODS_ID: string | null;
+    QTY: number | null;
+    NOTES: string | null;
+  }> {
     this.syncDetailDataFromTableEdit();
 
     return (this.detailData || []).map((row, idx) => ({
@@ -427,6 +442,7 @@ this.fin11040Service
     return true;
   }
 
+  /** Insert 依 Swagger */
   private buildInsertPayload(): Ass16090InsertRequest {
     const raw = this.dataForm.getRawValue();
 
@@ -436,27 +452,34 @@ this.fin11040Service
       WH_ID: raw.WH_ID ?? '',
       EMP_ID: raw.EMP_ID ?? '',
       ORG_ID: raw.ORG_ID ?? '',
-      APPLY_DATE: this.formatDateToYMD(raw.APPLY_DATE)!,
+      APPLY_DATE: this.formatDateToDateTime(raw.APPLY_DATE)!,
       NOTES: raw.NOTES || null,
       DetailList: this.buildDetailList(),
+      CRT_USR_No: null,
+      CRT_USR_Name: null,
+      UPD_USR_No: null,
+      UPD_USR_Name: null,
     };
   }
 
-private buildUpdatePayload(): Ass16090UpdateRequest {
-  const raw = this.dataForm.getRawValue();
+  /** Update 依 Swagger */
+  private buildUpdatePayload(): Ass16090UpdateRequest {
+    const raw = this.dataForm.getRawValue();
 
-  return {
-    ID: Number(raw.ID ?? this.rowdata?.ID ?? 0),
-    MID: 0,
-    STO_NO: null,
-    WH_ID: raw.WH_ID ?? '',
-    EMP_ID: raw.EMP_ID ?? '',
-    ORG_ID: raw.ORG_ID ?? '',
-    APPLY_DATE: this.formatDateToYMD(raw.APPLY_DATE)!,
-    NOTES: raw.NOTES || null,
-    DetailList: this.buildDetailList(),
-  };
-}
+    return {
+      ID: Number(raw.ID ?? this.rowdata?.ID ?? 0),
+      MID: 0,
+      STO_NO: null,
+      WH_ID: raw.WH_ID ?? '',
+      EMP_ID: raw.EMP_ID ?? '',
+      ORG_ID: raw.ORG_ID ?? '',
+      APPLY_DATE: this.formatDateToDateTime(raw.APPLY_DATE)!,
+      NOTES: raw.NOTES || null,
+      DetailList: this.buildDetailList(),
+      UPD_USR_No: null,
+      UPD_USR_Name: null,
+    };
+  }
 
   private buildApprovePayload(): Ass16090ApproveRequest {
     const raw = this.dataForm.getRawValue();
