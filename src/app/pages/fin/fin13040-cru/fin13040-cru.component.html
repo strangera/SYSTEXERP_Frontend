@@ -26,7 +26,8 @@
             [readonly]="isInvoiceNumberReadonly"></app-input-text>
         </div>
         <app-year-month class="col-12 md:col-6 lg:col-4" label="申報年月" [control]="dataForm.controls.INV_DeclareYM"
-          [submitted]="submitted" [evenMonth]="true" (valueChanges)="loadGuiTrackOptions($event)"></app-year-month>
+          controlName="INV_DeclareYM" [submitted]="submitted" [evenMonth]="true"
+          (valueChanges)="loadGuiTrackOptions($event)"></app-year-month>
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar label="發票日期" calendarType="dateOne" controlName="InvoiceDate"
             [control]="dataForm.controls.InvoiceDate" [submitted]="submitted"></app-calendar>
@@ -35,8 +36,7 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-auto-complete label="買受人統一編號" controlName="Buyer_Uniform" [control]="dataForm.controls.Buyer_Uniform"
             [options]="Buyer_Uniform_Options" optionLabel="label" optionValue="value" [submitted]="submitted"
-            [forceSelection]="false">
-          </app-auto-complete>
+            [forceSelection]="false" [autoHighlight]="false"> </app-auto-complete>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -78,8 +78,7 @@
       <div class="grid p-fluid">
         <div class="col-12">
           <app-table-edit #tableEdit [tableKey]="'InvoiceSeqNo'" [columns]="columns" [data]="data" [showInsert]="false"
-            [showDelete]="!isFormReadable" [showCheckBox]="!isTableDisabled && !isFormReadable"
-            [disabled]="isTableDisabled || isFormReadable" (dataChange)="data = $event" [autoInsertDefaultRow]="true"
+            [disabled]="isFormReadable" (dataChange)="data = $event" [autoInsertDefaultRow]="true"
             (fieldChange)="updateMasterAmounts()">
 
           </app-table-edit>

@@ -1,0 +1,41 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-calendar class="col-12 md:col-6" label="交易日期" controlName="TXN_Date"
+            [control]="queryForm.controls.TXN_Date" [submitted]="submitted"></app-calendar>
+          <!-- 收銀機號 → POS5006.ECR_No -->
+          <app-auto-complete class="col-12 md:col-6" label="收銀機號" [control]="queryForm.controls.ECR_No"
+            [submitted]="submitted" [options]="ECR_NoOptions$ | async" optionLabel="label" optionValue="value">
+          </app-auto-complete>
+          <!-- 專櫃編號 → POS5006.TLT_No -->
+          <app-dropdown class="col-12 md:col-6" label="專櫃編號" [control]="queryForm.controls.TLT_No"
+            [submitted]="submitted" [options]="TLT_NoOptions$ | async" optionLabel="label" optionValue="value">
+          </app-dropdown>
+          <!-- 交易序號 → POS5006.TXN_No -->
+          <app-input-text class="col-12 md:col-6" label="交易序號" [control]="queryForm.controls.TXN_No"
+            [submitted]="submitted"></app-input-text>
+          <div class="col-12 md:col-6 flex align-items-center">
+            <p-checkbox [binary]="true" label="包含修正特殊條碼交易" formControlName="IncludeSpecialMagNo">
+            </p-checkbox>
+          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table-report [data]="data" [columns]="columns" [showDelete]="false" [totalRecords]="totalRecords"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="tls55020Service.queryTLS55020.bind(tls55020Service)"
+    (detail)="onDetail($event)" (edit)="onEdit($event)" [loading]="loading" emptyMessage="查無特殊交易資料">
+  </app-table-report>
+</div>

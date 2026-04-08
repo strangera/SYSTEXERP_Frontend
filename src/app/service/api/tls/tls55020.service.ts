@@ -155,6 +155,7 @@ export class Tls55020Service {
             ...item,
             tlt_term_type: item.tlt_term_type?.trim(),
             TXN_Time: this.datePipe.transform(item.TXN_Time, 'HH:mm') || '',
+            TXN_PreOrder: item.TXN_PreOrder === null ? 'N' : item.TXN_PreOrder,
           }))
         }
       })

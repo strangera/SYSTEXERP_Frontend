@@ -76,7 +76,8 @@ import {
   Tls55020Query,
   TLTTALENTItem,
   TLTTALENTQuery,
-  TlttalentTltSpaceItem
+  TlttalentTltSpaceItem,
+  Ass13010PurchaseNumberDropDownItem
 } from './dropdown-api.model';
 
 @Injectable({
@@ -405,6 +406,35 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢品項資料下拉選單(ASS11040) */
+  queryASS11040_DropDownList(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>(
+      '/ASS0000/ASS1000/queryASS11040_DropDownList',
+      'No',
+      'Name'
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢採購單號下拉選單(ASS13010) */
+  queryASS13010DropDownList(): Observable<Option[] | null> {
+    return this.queryDropdown<Ass13010PurchaseNumberDropDownItem>(
+      '/ASS0000/ASS1000/queryASS13010DropDownList'
+    ).pipe(
+      map(items => {
+        if (!items) return null;
+        // 下拉顯示僅需 ID；保留 APPLY_DATE 給之後可能的需求
+        return items.map(item => ({
+          ...item,
+          value: String(item.ID),
+          label: String(item.ID),
+        }));
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
   /** 查詢收銀機設定檔(POS1002) (整檔下傳作業TLS47010) */
   queryPos1002Status(): Observable<Pos1002StatusItem[] | null> {
     return this.queryDropdown<Pos1002StatusItem>('/queryPOS1002_Status_DropDownList').pipe(
@@ -702,6 +732,13 @@ export class DropdownApiService {
   /** 查詢專櫃主檔(TLTTALENT) (Store_way=2 and approve_status=2) */
   queryTltTalentStoreWay2Approve(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>('/queryTLTTALENT__StoreWay2_Approve_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  // 專為 TLS41040 使用的專櫃下拉（保留原始回傳 ApiResponse 結構）
+  queryTLTTALENT_TLS41040(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryTLTTALENT_TLS41040_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

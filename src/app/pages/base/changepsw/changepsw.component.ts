@@ -47,8 +47,8 @@ export class ChangepswComponent implements OnInit {
     User_No: [{ value: '', disabled: true }],
     User_Name: [{ value: '', disabled: true }],
     Old_password: ['', Validators.required],
-    New_password: ['', [Validators.required, Validators.minLength(4), this.validationService.passwordStrengthValidator()]],
-    New_password2: ['', Validators.required]
+    New_password: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(8), this.validationService.passwordStrengthValidator()]],
+    New_password2: ['', [Validators.required, Validators.maxLength(8)]]
   }, { validators: this.validationService.passwordsMatchValidator('New_password', 'New_password2') });
 
   constructor(

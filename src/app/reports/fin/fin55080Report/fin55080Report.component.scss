@@ -1,0 +1,16 @@
+.report-title-container {
+  h2 {
+    font-size: 1.5rem;
+    color: #333;
+  }
+  h3 {
+    font-size: 1.25rem;
+    letter-spacing: 0.5rem; // 讓「分類帳」三個字拉開一點更像報表
+  }
+}
+
+.report-info-left {
+  span {
+    color: #4b5563; // 稍微淺一點的灰色，看起來比較專業
+  }
+}
