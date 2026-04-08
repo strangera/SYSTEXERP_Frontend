@@ -95,15 +95,14 @@ export class ASS13010Component extends BasicQueryPageComponent<QueryASS13010Resp
   btnPDFLoading = false;
   columns: ReportColumn[] = [
     { field: 'ASSET_ID', header: '資產代號' },
-    { field: 'GOODS_ID', header: '品項編號' },
+    { field: 'GOODS_ID', header: '品項名稱' },
     { field: 'ASSET_STATUS_NAME', header: '資產狀態' },
-    { field: 'SUBPOENA_ID', header: '傳票編號' },
+    { field: 'DEPRE_YN_NAME', header: '資產類型' },
+    { field: 'SUBPOENA_ID', header: '採購單號' },
     { field: 'GET_DATE', header: '購入日期', format: formatDate },
     { field: 'GET_COST', header: '購入金額', format: (v: unknown) => formatAmount(Number(v ?? 0)) },
     { field: 'BILL_DATE', header: '入帳日期', format: formatDate },
-    { field: 'DEPRE_ID', header: '折舊代號' },
-    { field: 'TAL_DEPRE_AMT', header: '已攤提金額', format: (v: unknown) => formatAmount(Number(v ?? 0)) },
-    { field: 'TAL_DEPRE_MON', header: '已攤提月數' },
+    { field: 'DEPRE_ID', header: '攤提代號' },
   ];
   // ----------------------------------------------------------------
   // 下拉選單（品項編號、採購單號來源待確認，先留空）
