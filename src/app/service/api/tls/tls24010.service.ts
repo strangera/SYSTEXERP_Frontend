@@ -354,4 +354,8 @@ export class Tls24010Service {
   deleteTLS24010(payload: DeleteTLS24010Payload): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/deleteTLS24010`, payload);
   }
+  /** 查詢銷售日期是否已關帳 */
+  queryTLS24010IsClose(TXN_Date: string): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/queryTLS24010IsClose`, { TXN_Date });
+  }
 }
