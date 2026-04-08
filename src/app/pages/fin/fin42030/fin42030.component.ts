@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+// import { NavigationExtras, Router } from '@angular/router';
 // Services
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+// import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+// import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { TranslateModule } from '@ngx-translate/core';
+import { FIN42030Data } from '@service/api/fin/fin42030.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -23,14 +25,14 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
 })
-export class FIN42030Component extends BasicQpageComponent implements OnInit {
+export class FIN42030Component extends BasicQueryPageComponent<FIN42030Data> implements OnInit {
   // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+  // fileType: string = '';
+  // uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
   queryForm = this.formBuilder.group({
     year: [],
     version: [],
-    organizationNumber: [, Validators.required],
+    organizationNumber: ['', Validators.required],
     month: [],
     amountStart: [], // 金額 起
     amountEnd: [], // 金額 迄
@@ -43,31 +45,28 @@ export class FIN42030Component extends BasicQpageComponent implements OnInit {
 
   // Dropdown options
 
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  departmentOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  vendorOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
-  statusOptions: any[] = [{ value: 1, label: '是' },
+  FNCCodeOptions = [];
+  AccountcodeOptions = [];
+  departmentOptions = [];
+  displayOptions2 = [];
+  AnalysisdateCOptions = [];
+  vendorOptions = [];
+  FlippingstateOptions = [];
+  organizationNumberOptions = [];
+  statusOptions = [{ value: 1, label: '是' },
   { value: 2, label: '否' }];
-  unitOptions: any[] = [{ value: 1, label: '元' },
+  unitOptions = [{ value: 1, label: '元' },
   { value: 2, label: '千' },
   { value: 3, label: '萬' }];
-  typeOptions: any[] = [{ value: 1, label: '統制' },
+  typeOptions = [{ value: 1, label: '統制' },
   { value: 2, label: '明細' },];
 
 
 
   // Table data
-  data: any[] = [
-
-    // Other data
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
+  data = [];
+  filteredData = [...this.data];
+  columns = [
     { field: 'subjectName', header: '科目名稱', visible: true },
     { field: 'currentAmount', header: '本期金額', visible: true },
     { field: 'currentRatio', header: '本期佔比(%)', visible: true },
@@ -83,8 +82,8 @@ export class FIN42030Component extends BasicQpageComponent implements OnInit {
 
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
+    // private router: Router,
+    // private formBuilder: FormBuilder,
     private notificationService: NotificationService,
   ) {
     super(); // 呼叫父類建構子
@@ -92,7 +91,7 @@ export class FIN42030Component extends BasicQpageComponent implements OnInit {
 
   ngOnInit(): void {
     this.ProgNo = '140007';
-    // Initialize dropdown options
+    this.initializePage('FIN42030', 'fin/fin42030cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
@@ -101,9 +100,9 @@ export class FIN42030Component extends BasicQpageComponent implements OnInit {
     this.loading = true;
     this.notificationService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
+    // if (frm.valid && this.canQuery()) {
+    //   // Submit logic here
+    // }
 
     this.loading = false;
     this.notificationService.unblockUi();
@@ -113,44 +112,45 @@ export class FIN42030Component extends BasicQpageComponent implements OnInit {
     this.onSubmit(frm);
   }
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
+  // onCreate() {
+  //   if (this.canAdd()) {
+  //     let extras: NavigationExtras = {
+  //       state: {
+  //         crudstatus: CRUDStatus.Create,
+  //         queryform: this.queryForm,
+  //       },
+  //       skipLocationChange: true,
+  //     };
+  //     this.router.navigate(['FIN3000/FIN34030CRU'], extras);
+  //   }
+  // }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
+  // onEdit(data: any) {
+  //   if (this.canEdit()) {
+  //     let extras: NavigationExtras = {
+  //       state: {
+  //         crudstatus: CRUDStatus.Edit,
+  //         rowdata: data,
+  //         queryform: this.queryForm,
+  //       },
+  //       skipLocationChange: true,
+  //     };
+  //     this.router.navigate(['/demoCRU'], extras);
+  //   }
+  // }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
+  // onDetail(data: any) {
+  //   let extras: NavigationExtras = {
+  //     state: {
+  //       crudstatus: CRUDStatus.Read,
+  //       rowdata: data,
+  //       queryform: this.queryForm,
+  //     },
+  //     skipLocationChange: true,
+  //   };
+  //   this.router.navigate(['/demoCRU'], extras);
+  // }
+
   onClearForm() {
     this.queryForm.reset(); // 重置表單
   }
