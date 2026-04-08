@@ -41,7 +41,7 @@
       <div class="page-grid" *ngFor="let page of pagedItems">
 
         <div class="center-logo-container">
-          <div class="center-circle">
+          <div class="center-circle" (click)="$event.stopPropagation()">
             <img [src]="logo" alt="logo" class="center-img">
           </div>
         </div>
