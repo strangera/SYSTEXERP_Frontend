@@ -1,23 +1,23 @@
+import { NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { NgFor, NgIf } from '@angular/common';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { Tls41050Service } from '../../../service/api/tls/tls41050.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { option } from '../../../shared/models/sys/sysb000.model';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { Tls41050Service } from '../../../service/api/tls/tls41050.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface POS1002 {
   ID: number; // decimal(19,0)
@@ -78,10 +78,10 @@ export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
     ECR_Status: [{ value: '', disabled: true }], // 收銀機狀態，A=啟用(預設值)、C=停用、S=強制停用、T=訓練
     ECR_GUI_Type: [{ value: '', disabled: true }, [Validators.required]], // 發票使用類別（不可新增/修改）
     ECR_GUI_PeriodQty: [ // 發票預設配號量，預設值為50，設定值必須為50的倍數
-      50, [this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999999)]
+      50, [Validators.required, this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999950)]
     ],
     ECR_GUI_MinQty: [ // 發票安全存量，預設值為50，設定值必須為50的倍數
-      50, [this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999999)]
+      50, [Validators.required, this.validationService.optionalMultipleOfFiftyValidator(), Validators.min(50), Validators.max(99999950)]
     ],
   });
   //

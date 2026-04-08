@@ -1,19 +1,20 @@
 import { Component, OnInit } from '@angular/core';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { Tls13050Service } from '../../../service/api/tls/tls13050.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs/operators';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { QueryTLS13050Request, TLS13050QueryItem, Tls13050Service } from '../../../service/api/tls/tls13050.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls13050',
   templateUrl: './tls13050.component.html',
@@ -31,28 +32,36 @@ import { untilDestroyed } from '@ngneat/until-destroy';
     TranslateModule,
   ],
 })
-export class TLS13050Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem> implements OnInit {
   queryForm = this.formBuilder.group({
     tlt_floorList: [[]],
-    tlt_bdate_start: [(new Date()), [Validators.required]],
-    tlt_bdate_end: [(new Date()), [Validators.required]],
-    tlt_edate_start: [(new Date()), [Validators.required]],
-    tlt_edate_end: [(new Date()), [Validators.required]],
+    tlt_bdate_start: [(new Date())],
+    tlt_bdate_end: [(new Date())],
+    tlt_edate_end: [(new Date())],
+    tlt_edate_start: [(new Date())],
+    cag_bdate_start: [""],
+    cag_bdate_end: [""],
+    cag_edate_end: [""],
+    cag_edate_start: [""],
     check_day_start: [null],
     check_day_end: [null],
     Building_No: [[]],
     org_idList: [[]],
-    ...createPaginationConfig([{ field: 'apply_no', order: 1 }])
+    ...createPaginationConfig([{ field: 'check_day', order: 0 }]),
+    pageIndex: [0],
+    pageSize: [0],
+    SortBy: [[{ field: 'check_day', order: 0 }]]
   });
-
+  // expansion 明細分頁選項（只在本頁使用）
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   floorOptions: any[] = [];
-  data: any[] = [];
-  selectedItems: any[] = [];
+  data: TLS13050QueryItem[] = [];
+  selectedItems: TLS13050QueryItem[] = [];
   totalRecords = 0;
   BUILDING_NO_Options: any[] = [];
   organizationCodeOptions: any[] = [];
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_building', header: '館別', visible: true, format: (value: string) => this.getBuildingName(value) },
@@ -65,8 +74,8 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
     { field: 'sad_sale_amt_sum', header: '(A)累積營業實績', visible: true, format: formatAmount },
     { field: 'limit_amt', header: '(B)年度包底金額', visible: true, format: formatAmount },
     { field: 'accumulated_diff', header: '(A-B)累積差額', visible: true, format: formatAmount },
-    { field: 'commissionRate', header: '抽成率', visible: true },
-    { field: 'underLimitCommission', header: '包底不足抽成額(含稅)', visible: true, format: formatAmount },
+    { field: 'limit_charge_rate', header: '抽成率', visible: true },
+    { field: 'limit_charge_amt', header: '包底不足抽成額(含稅)', visible: true, format: formatAmount },
     { field: 'finishedrate', header: '年度包底營業額完成率', visible: true },
     { field: 'check_day', header: '月結天數', visible: true },
   ];
@@ -106,7 +115,7 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
       .subscribe(res => {
         this.organizationCodeOptions = (res.Data || []).map(item => ({
           ...item,
-          formLabel: item.No + ' ' + item.Name,
+          formLabel: `${item.No}-${item.Name}`,
           value: item.No
         }));
       });
@@ -126,48 +135,68 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
     return floorText;
   }
 
-  onSubmit(form: any): void {
+  private formatQueryDate(date: unknown): string {
+    if (!date) return '';
+    const parsedDate = date instanceof Date ? date : new Date(String(date));
+    if (isNaN(parsedDate.getTime())) return '';
+
+    const year = parsedDate.getFullYear();
+    const month = String(parsedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(parsedDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private formatNullableNumber(value: unknown): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+
+    const parsedValue = Number(value);
+    return Number.isNaN(parsedValue) ? null : parsedValue;
+  }
+
+  private buildQueryBody(formValue: any): QueryTLS13050Request {
+    return {
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: formValue.OrderBy ?? '',
+      Offset: 0,
+      SortBy: Array.isArray(formValue.SortBy) && formValue.SortBy.length > 0
+        ? formValue.SortBy
+        : [{ field: 'check_day', order: 0 }],
+      tlt_floorList: formValue.tlt_floorList ?? [],
+      tlt_bdate_start: this.formatQueryDate(formValue.tlt_bdate_start),
+      tlt_bdate_end: this.formatQueryDate(formValue.tlt_bdate_end),
+      tlt_edate_start: this.formatQueryDate(formValue.tlt_edate_start),
+      tlt_edate_end: this.formatQueryDate(formValue.tlt_edate_end),
+      cag_bdate_start: this.formatQueryDate(formValue.cag_bdate_start),
+      cag_bdate_end: this.formatQueryDate(formValue.cag_bdate_end),
+      cag_edate_start: this.formatQueryDate(formValue.cag_edate_start),
+      cag_edate_end: this.formatQueryDate(formValue.cag_edate_end),
+      check_day_start: this.formatNullableNumber(formValue.check_day_start),
+      check_day_end: this.formatNullableNumber(formValue.check_day_end),
+    };
+  }
+
+  onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-      const formValue = form.getRawValue();
+      const body = this.buildQueryBody(form.getRawValue());
 
-      // 轉 yyyy-MM-dd
-      const formatDate = (date: any): string => {
-        if (!date) return '';
-        const d = new Date(date);
-        if (isNaN(d.getTime())) return '';
-        const year = d.getFullYear();
-        const month = ('0' + (d.getMonth() + 1)).slice(-2);
-        const day = ('0' + d.getDate()).slice(-2);
-        return `${year}-${month}-${day}`;
-      };
+      this.tls13050Service.queryTLS13050(body)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: (res) => {
+            this.data = res.Data ?? [];
+            this.totalRecords = res.TotalCount ?? this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+          },
 
-      const body = {
-        PageSize: formValue.PageSize ?? 0,
-        PageIndex: formValue.PageIndex ?? 0,
-        OrderBy: formValue.OrderBy ?? '',
-        Offset: formValue.Offset ?? 0,
-        SortBy: formValue.SortBy ?? [{ field: 'apply_no', order: 1 }],
-
-        tlt_floorList: formValue.tlt_floorList || [],
-        tlt_bdate_start: formatDate(formValue.tlt_bdate_start),
-        tlt_bdate_end: formatDate(formValue.tlt_bdate_end),
-        tlt_edate_start: formatDate(formValue.tlt_edate_start),
-        tlt_edate_end: formatDate(formValue.tlt_edate_end),
-        check_day_start: formValue.check_day_start ?? null,
-        check_day_end: formValue.check_day_end ?? null,
-      };
-
-      console.log('送出的查詢 body', body);
-
-      this.tls13050Service.queryTLS13050(body).subscribe({
-        next: (res) => {
-          console.log('查詢成功', res);
-          this.data = res.Data || [];
-          this.totalRecords = res.TotalCount || this.data.length;
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
+        });
     });
   }
 

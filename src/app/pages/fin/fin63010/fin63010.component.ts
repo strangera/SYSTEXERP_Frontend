@@ -26,8 +26,8 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 })
 export class FIN63010Component extends BasicQpageComponent implements OnInit {
   // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+  fileType = '';
+  uploadUrl = 'https://www.primefaces.org/cdn/api/upload.php';
   queryForm = this.formBuilder.group({
     SExpirationDate: [],
     EExpirationDate: [],
@@ -102,7 +102,7 @@ export class FIN63010Component extends BasicQpageComponent implements OnInit {
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'vendorCode', header: '廠商代號', visible: true },
+    { field: 'vendorCode', header: '廠商編號', visible: true },
     { field: 'invoiceNumber', header: '開票單號', visible: true },
     { field: 'ticketNumber', header: '票據號碼', visible: true },
     { field: 'issueDate', header: '開票日', visible: true },
@@ -158,7 +158,7 @@ export class FIN63010Component extends BasicQpageComponent implements OnInit {
 
   onCreate() {
     if (this.canAdd()) {
-      let extras: NavigationExtras = {
+      const extras: NavigationExtras = {
         state: {
           crudstatus: CRUDStatus.Create,
           queryform: this.queryForm,
@@ -171,7 +171,7 @@ export class FIN63010Component extends BasicQpageComponent implements OnInit {
 
   onEdit(data: any) {
     if (this.canEdit()) {
-      let extras: NavigationExtras = {
+      const extras: NavigationExtras = {
         state: {
           crudstatus: CRUDStatus.Edit,
           rowdata: data,
@@ -184,7 +184,7 @@ export class FIN63010Component extends BasicQpageComponent implements OnInit {
   }
 
   onDetail(data: any) {
-    let extras: NavigationExtras = {
+    const extras: NavigationExtras = {
       state: {
         crudstatus: CRUDStatus.Read,
         rowdata: data,

@@ -13,9 +13,9 @@
             [options]="menuTypeOptions" [control]="queryForm.controls.menuType" [submitted]="submitted"
             optionLabel="label" optionValue="value"></app-multi-select>
           <!-- 專櫃編號/名稱 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-6" label="專櫃編號/名稱" controlName="tltNo"
-            [options]="tltNoOptions" [control]="queryForm.controls.tltNo" [submitted]="submitted" optionLabel="label"
-            optionValue="value"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-6" label="專櫃編號/名稱" controlName="TLT_No"
+            [options]="tltNoOptions | async" [control]="queryForm.controls.TLT_No" [submitted]="submitted"
+            optionLabel="label" optionValue="value"></app-multi-select>
           <app-calendar class="col-12 md:col-6 lg:col-6" label="有效起始日期" calendarType="dateOne"
             [control]="queryForm.controls.SBM_BegDate" [submitted]="submitted"></app-calendar>
           <app-calendar class="col-12 md:col-6 lg:col-6" label="有效結束日期" calendarType="dateOne"
@@ -33,26 +33,35 @@
   <app-table tableKey="TLS42020" [data]="data" dataKey="id" [columns]="columns" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [multiSortMeta]="[{ field: 'TLT_No', order: 0 }]" [lazy]="true" [loading]="loading" [showDelete]="true"
-    [expansionColumns]="expansionColumns" expansionDataKey="ID" [expansionShowPaginator]="false"
-    [expansionLoadFn]="loadDetails" [showCheckBox]="true" (delete)="onDelete(selectedItems)" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [showExcel]="true" [showExcelExport]="false" [showExcelImport]="false"
-    [showCustomExcelImport]="true" (importExcel)="onImport($event)">
+    [multiSortMeta]="[{ field: 'TLT_No', order: 0 }]" [lazy]="true" [loading]="loading"
+    [expansionColumns]="expansionColumns" expansionDataKey="ID" [expansionLoadFn]="loadDetails" [showCheckBox]="true"
+    (delete)="onDelete(selectedItems)" (edit)="onEdit($event)" (detail)="onDetail($event)" [showExcel]="true"
+    [showExcelExport]="false" [showExcelImport]="false" [showCustomExcelImport]="true"
+    (importExcel)="dialogVisible = true">
+    <header>
+      <p-button [style]="{ width: '35px', height: '35px', 'border-radius': '50%' }" pTooltip="下傳" tooltipPosition="top"
+        pButton icon="pi pi-upload rotate-180" severity="success" class="p-button-rounded p-button-text"
+        [disabled]="selectedItems.length === 0" (click)="onUpload()" [loading]="btnLoading" />
+    </header>
   </app-table>
 </div>
 
 <app-dialog [visible]="dialogVisible" header="匯入菜單" (visibleChange)="dialogVisible = $event" [showFooter]="false"
   [disable]="false" [height]="'auto'" [width]="'auto'">
   <ul>
-    <li>下載 <a (click)="downloadTemplate()" style="cursor: pointer;">範例檔案</a>，並新增菜單內容。</li>
+    <li>
+      下載
+      <a (click)="downloadTemplate()" style="cursor: pointer">範例檔案</a>
+      ，並新增菜單內容。
+    </li>
     <li>將編輯好的檔案，上傳至此。</li>
   </ul>
   <form [formGroup]="queryForm2">
-    <div class="col-12"><app-radiobutton label="異動方式" controlName="uploadType"
-        [control]="queryForm2.controls.uploadType" [options]="uploadTypeOptions"
-        [submitted]="submitted"></app-radiobutton>
+    <div class="col-12">
+      <app-radiobutton label="異動方式" controlName="uploadType" [control]="queryForm2.controls.uploadType"
+        [options]="uploadTypeOptions" [submitted]="submitted"></app-radiobutton>
     </div>
   </form>
-  <app-file-upload #fileUpload [accept]="'.xlsx,.xls'" [customUpload]="true" (uploadHandler)="onFileUpload($event)"
-    (select)="onFileSelect($event)"></app-file-upload>
+  <app-file-upload #fileUpload [accept]="'.xlsx,.xls'" [customUpload]="true"
+    (uploadHandler)="onFileUpload($event)"></app-file-upload>
 </app-dialog>

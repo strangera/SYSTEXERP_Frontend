@@ -8,21 +8,21 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { TreeDropdownComponent } from '@shared/componentkit/tree-dropdown/tree-dropdown.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { AccDCType, FIN52080Data, FIN52080Query, FIN52080Tree, LedgerMDType, VoucherType } from './fin52080.model';
+
 
 @Component({
   selector: 'app-fin52080',
   templateUrl: './fin52080.component.html',
-  styleUrl: './fin52080.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     AccordionModule,
     ButtonComponent,
@@ -43,8 +43,8 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
   /**
    * 會計科目代號維護
    * - AccNo: 科目代號
-   * - AccCname: 科目名稱
-   * - AccEname: 科目英文名稱 (非必填)
+   * - AccCName: 科目名稱
+   * - AccEName: 科目英文名稱 (非必填)
    * - AccDC: 借/貸
    * - Ledger_MD: 統制/明細
    * - ClassNo: 三碼代號
@@ -58,8 +58,8 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
    */
   public readonly queryForm = this.formBuilder.group({
     AccNo: new FormControl<string | void>(void 0, [Validators.minLength(3), Validators.maxLength(8)]),
-    AccCname: new FormControl<string | void>(void 0, [Validators.maxLength(40)]),
-    AccEname: new FormControl<string | void>(void 0, [Validators.maxLength(50)]),
+    AccCName: new FormControl<string | void>(void 0, [Validators.maxLength(40)]),
+    AccEName: new FormControl<string | void>(void 0, [Validators.maxLength(50)]),
     AccDC: new FormControl<AccDCType | void>(void 0),
     Ledger_MD: new FormControl<LedgerMDType | void>(void 0),
     ClassNo: new FormControl<string | void>(void 0),
@@ -84,14 +84,12 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
-      || this.treeLoading()
-      || this.service.classNoLoading();
-  });
+  }, { allowSignalWrites: true });
 
   /**
    * - AccNo: 科目代號
-   * - AccCname: 科目名稱
-   * - AccEname: 科目英文名稱
+   * - AccCName: 科目名稱
+   * - AccEName: 科目英文名稱
    * - AccDC: 借/貸
    * - Ledger_MD: 統制/明細
    * - ClassNo: 三碼代號
@@ -154,7 +152,37 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
       options: this.service.whetherOption,
       format: v => v === 'Y' ? '是' : v === 'N' ? '否' : v,
     },
+    {
+      field: 'EXP_YEAR',
+      header: '折舊攤提年限',
+      // hidden: true,
+      visible: false,
+    },
+    {
+      field: 'RESI_VALUE',
+      header: '殘值',
+      // hidden: true,
+      visible: false,
+    },
   ];
+
+  public readonly isRowSelectable = (rowData: FIN52080Data): boolean => rowData.CanDel !== false;
+
+  private readonly leaveLabel = 'T30Label';
+  private readonly listTitle = '科目圖';
+  private readonly viewButtonLabel = '查看科目圖';
+  private readonly treeColumn = [
+    { value: 'T10Label', label: '大分類' },
+    { value: 'T20Label', label: '中分類' },
+    { value: 'T30Label', label: '小分類' },
+  ];
+
+  public readonly treeElements = {
+    treeColumn: this.treeColumn,
+    listTitle: this.listTitle,
+    leaveLabel: this.leaveLabel,
+    viewButtonLabel: this.viewButtonLabel,
+  };
 
   constructor(
     public readonly service: FIN52080Service,
@@ -169,15 +197,17 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
 
     this.treeLoading.set(!0);
     this.service.getClassNos();
-    this.service.getFIN52080Tree().pipe(finalize(() => this.treeLoading.set(!1)))
-      .subscribe(res => this.FIN52080Tree.set(res.Data || []));
+    this.service.getFIN52080Tree().pipe(
+      map(res => res.Data || []),
+      finalize(() => this.treeLoading.set(!1)),
+    ).subscribe(res => this.FIN52080Tree.set(res));
 
     this.logger.debug(`init:`, [this.service.classNoOptions(), this.FIN52080Tree()]);
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const raw = <FIN52080Query>{ ...this.queryForm.getRawValue() };
+      const raw = { ...this.queryForm.getRawValue() } as FIN52080Query;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       )) as unknown as FIN52080Query;
@@ -199,5 +229,26 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
 
   public onLevelSelected(selected: any[]): void {
     this.logger.debug(`onLevelSelected:`, [selected]);
+  }
+
+  public onDelete(selected: FIN52080Data[]): void {
+    this.logger.debug(`onDelete:`, [selected]);
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '確定要刪除選取的資料嗎？',
+      accept: () => {
+        const accNos = selected.map(v => v.AccNo);
+        this.tableLoading.set(!0);
+        this.service.deleteFIN52080({ Ids: accNos }).pipe(
+          finalize(() => this.tableLoading.set(!1)),
+        ).subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.messageService.successBubble(res.Message);
+            this.onSubmit();
+          },
+        });
+      },
+    });
   }
 }

@@ -1,6 +1,6 @@
 import { animate, state, style, transition, trigger } from "@angular/animations";
-import { NotificationService } from "../../component/notification-message/notification.service";
 import { SortMeta } from "primeng/api";
+import { NotificationService } from "../../component/notification-message/notification.service";
 export interface Column {
   field: string;     // 欄位名稱
   header: string;    // 欄位標題
@@ -11,6 +11,8 @@ export interface Column {
 
   // 顯示格式
   format?: (value: any, index?: number, rowData?: any) => string | number | null;
+
+
   exportFormat?: Record<string, string>[] | any; // 讓它能放物件/陣列
 
   // 群組/小計/總計
@@ -27,7 +29,7 @@ export interface Column {
   headerRow?: 1 | 2;
 
   /** 樣式（template 有用到 [ngClass]="col.style"） */
-  style?: string | string[] | Set<string> | { [klass: string]: any };
+  style?: string | string[] | Set<string> | Record<string, any>;
 
   /** 必填星號（template 有 col.required） */
   required?: boolean;
@@ -258,7 +260,7 @@ export function convertDateToYYYYMM(date: Date): string {
 
 export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   return {
-    pageSize: [20],
+    pageSize: [30],
     pageIndex: [1],
     SortBy: [defaultSortBy ?? []],
   };

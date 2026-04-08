@@ -1,17 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { Sysbq00Service, Sysbq00Data } from '../../../service/api/sys/sysbq00.service';
-import { finalize } from 'rxjs';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { QuerySysbq00Request, Sysbq00Data, Sysbq00Service } from '../../../service/api/sys/sysbq00.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-sysbq00',
@@ -24,8 +24,8 @@ import { ValidationService } from '@shared/service/validation.service';
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    TableComponent,
     TranslateModule,
+    TableReportComponent
   ],
 })
 export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> implements OnInit {
@@ -38,7 +38,7 @@ export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> imple
   totalRecords = 0;
   data: Sysbq00Data[] = [];
   selectedRows: Sysbq00Data[] = [];
-
+  lastQueryBody: QuerySysbq00Request | null = null;
   columns = [
     { field: 'data_type', header: '資料型態', visible: true },
     { field: 'line1', header: '第一行資料', visible: true },
@@ -56,7 +56,7 @@ export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> imple
 
 
   constructor(
-    private readonly sysbq00Service: Sysbq00Service,
+    public readonly sysbq00Service: Sysbq00Service,
     private readonly validationService: ValidationService
   ) {
     super();
@@ -68,9 +68,9 @@ export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> imple
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = true;
       this.sysbq00Service.querySYSBQ00(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-        this.data = res.Data
+        this.data = res.Data;
+        this.lastQueryBody = frm.value;
         this.totalRecords = res.TotalCount || 0;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
@@ -78,12 +78,18 @@ export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> imple
   }
 
   onDelete(rows: Sysbq00Data[]) {
-    const idList = rows.map(r => r.id).filter((id): id is number => id !== undefined);
-    if (idList.length === 0) return;
-    this.loading = true;
-    this.sysbq00Service.deleteSYSBQ00(idList).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-      this.messageService.successBubble(res.Message);
-      this.onSubmit(this.queryForm); // 重新查詢
-    });
+    this.messageService.confirm({
+      header: '確定刪除？',
+      message: `確定要刪除${rows.length}個選中的項目嗎？`,
+      accept: () => {
+        const idList = rows.map(r => r.id).filter((id): id is number => id !== undefined);
+        if (idList.length === 0) return;
+        this.loading = true;
+        this.sysbq00Service.deleteSYSBQ00(idList).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.onSubmit(this.queryForm); // 重新查詢
+        });
+      }
+    })
   }
 }

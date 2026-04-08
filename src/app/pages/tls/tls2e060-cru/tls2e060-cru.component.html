@@ -31,6 +31,10 @@
         <app-input-number class="col-12 md:col-6 lg:col-4" label="調整金額" controlName="adj_amount"
           [control]="dataForm.controls.adj_amount" [submitted]="submitted"></app-input-number>
       </div>
+      <div class="grid p-fluid">
+        <app-input-textarea class="col-12 md:col-8" label="備註" controlName="remarks"
+          [control]="dataForm.controls.remarks" [submitted]="submitted"></app-input-textarea>
+      </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />

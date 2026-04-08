@@ -3,6 +3,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -15,7 +16,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 
 export interface Potential_Customer {
@@ -36,7 +37,7 @@ export interface Potential_Customer {
   VEN_BossFax?: string; // 廠商聯絡人傳真
   VEN_BossMobile?: string; // 廠商聯絡人行動電話
   VEN_BossEmail?: string; // 廠商聯絡人電子郵件
-  VEN_Addr?: string; // 公司通訊地址
+  VEN_Addr?: string; // 郵寄地址
   VEN_PersonInCharge?: string; // 公司負責人
   business_type?: string; // 經營方式
   demanded_area?: number; // 需求面積 (小數，預設 0)
@@ -67,7 +68,6 @@ export interface POS2013 {
 @Component({
   selector: 'app-tls12010',
   templateUrl: './tls12010.component.html',
-  styleUrl: './tls12010.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
 })
@@ -131,7 +131,8 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     { field: 'VEN_BossFax', header: '廠商聯絡人傳真', visible: true },
     { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true },
     { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
-    { field: 'VEN_Addr', header: '公司通訊地址', visible: true },
+    { field: 'VEN_Addr', header: '郵寄地址', visible: true },
+    { field: 'VEN_Address', header: '公司營登地址', visible: true },
     { field: 'VEN_PersonInCharge', header: '公司負責人', visible: true },
     {
       field: 'business_type', header: '經營方式', visible: true, format: (value: string) =>
@@ -147,6 +148,21 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
     { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
+  ];
+
+  addButton: AddButton[] = [
+    {
+      label: '匯出PDF',
+      icon: 'fa-regular fa-file-pdf',
+      action: (rowData) => this.onReport(rowData, false), // 傳入 rowData 並指定非 Excel
+      loading: () => this.btnPDFLoading
+    },
+    {
+      label: '匯出Excel',
+      icon: 'fa-regular fa-file-lines',
+      action: (rowData) => this.onReport(rowData, true), // 傳入 rowData 並指定為 Excel
+      loading: () => this.btnExcelLoading
+    }
   ];
 
   selectedItems: Potential_Customer[] = [];// 多選項目
@@ -168,7 +184,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         next: (response) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
-            console.log('Result', this.data);
+            console.log('Result', response.Data);
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {
@@ -188,51 +204,52 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
 
   // 刪除項目
   onDelete(data: Potential_Customer | Potential_Customer[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
+    this.messageService.confirm({
+      message: `是否確認刪除選中的潛在客戶?`,
+      header: `確認刪除`,
+      accept: () => {
+        // 1. 準備 ID 陣列
+        const items = Array.isArray(data) ? data : [data];
+        const ids = items
+          .filter(item => item && item.id != null)
+          .map(item => item.id);
 
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-    const deleteBody = {
-      idList: idList, // 符合 API 的 idList 格式
-    };
-
-    console.log('deleteBody', deleteBody);
-
-    this.tls12010Service.deleteTLS12010(deleteBody).pipe(untilDestroyed(this)).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        if (ids.length === 0) {
+          this.messageService.errorBubble('請先選擇要刪除的項目');
+          return;
         }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm);
-      },
-    });
 
-    this.selectedItems = [];
+        // 2. 根據你提供的 API 需求，格式應該是這樣：
+        const deleteBody = {
+          idList: ids  // 直接對應 API 的 {"idList": [0]}
+        };
+
+        console.log('Sending Delete Payload:', deleteBody);
+
+        this.loading = true;
+        this.tls12010Service.deleteTLS12010(deleteBody)
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => this.loading = false)
+          )
+          .subscribe({
+            next: (response) => {
+              if (response.Status === '0000') {
+                this.messageService.successBubble('刪除成功');
+                this.selectedItems = [];
+                this.onSubmit(this.queryForm);
+              } else {
+                // 這裡會抓到 API 回傳的 "idList field is required" 錯誤
+                this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+              }
+            },
+            error: (err) => {
+              console.error('HTTP Error:', err);
+              this.messageService.errorBubble('網路通訊失敗');
+            }
+          });
+      }
+    });
   }
 
   //接待人員變化
@@ -308,5 +325,66 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       }));
       console.log('接待人員代號:', this.contact_USR_Option);
     });
+  }
+
+  // 列印明細
+  btnPDFLoading = false;
+  btnExcelLoading = false;
+  onReport(rowData: Potential_Customer, isExcel: boolean) {
+    if (!rowData || !rowData.id) {
+      this.messageService.errorBubble('找不到該筆資料的 ID');
+      return;
+    }
+
+    // 根據 API 需求包裝參數，對應您原本程式碼中的 PC_id
+    const formValue = { ID: rowData.id };
+
+    if (isExcel) {
+      this.btnExcelLoading = true;
+      this.tls12010Service.exportTLS12010(formValue)
+        .pipe(
+          finalize(() => this.btnExcelLoading = false),
+          untilDestroyed(this)
+        )
+        .subscribe({
+          next: (blob: Blob) => {
+            this.downloadFile(blob, `潛在客戶明細_${rowData.id}_${new Date().getTime()}.xlsx`);
+            this.messageService.successBubble('匯出 Excel 成功');
+          },
+          error: (err) => {
+            console.error(err);
+            this.messageService.errorBubble('匯出失敗');
+          }
+        });
+    } else {
+      this.btnPDFLoading = true;
+      this.tls12010Service.exportTLS12010PDF(formValue)
+        .pipe(
+          finalize(() => this.btnPDFLoading = false),
+          untilDestroyed(this)
+        )
+        .subscribe({
+          next: (blob: Blob) => {
+            this.downloadFile(blob, `潛在客戶明細_${rowData.id}_${new Date().getTime()}.pdf`);
+            this.messageService.successBubble('匯出 PDF 成功');
+          },
+          error: (err) => {
+            console.error(err);
+            this.messageService.errorBubble('匯出失敗');
+          }
+        });
+    }
+  }
+
+  // 輔助方法：處理 Blob 下載
+  private downloadFile(data: Blob, fileName: string) {
+    const url = window.URL.createObjectURL(data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url); // 釋放記憶體
+    document.body.removeChild(a);
   }
 }

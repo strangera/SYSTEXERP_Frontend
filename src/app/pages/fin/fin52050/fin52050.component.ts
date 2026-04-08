@@ -1,19 +1,15 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 import { Fin52050Service } from '@service/api/fin/fin52050.service';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 export interface GLS1003 {
   ClassAttr: string, // 大類代碼
@@ -31,7 +27,6 @@ export interface GLS1003 {
 @Component({
   selector: 'app-fin52050',
   templateUrl: './fin52050.component.html',
-  styleUrl: './fin52050.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -39,10 +34,7 @@ export interface GLS1003 {
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarComponent,
-    DropdownComponent,
     InputTextComponent,
-    InputTextRangeComponent,
     TableComponent,
     TranslateModule
   ]
@@ -55,7 +47,6 @@ export class FIN52050Component extends BasicQueryPageComponent<GLS1003> implemen
     ClassAttr: ['', [Validators.maxLength(1)]], //  大類代碼
     ClassAttrCName: ['', [Validators.maxLength(100)]], // 大類名稱
     ClassAttrEname: ['', [Validators.maxLength(100)]], // 大類英文名稱 (非必填)
-
     ...createPaginationConfig([{ field: 'ClassAttr', order: 1 }]), // 分頁和排序參數
   });
 
@@ -68,17 +59,17 @@ export class FIN52050Component extends BasicQueryPageComponent<GLS1003> implemen
     { field: 'ClassAttrCName', header: '大類名稱', visible: true }, // 大類名稱
     { field: 'ClassAttrEname', header: '大類英文名稱', visible: true }, // 大類英文名稱
 
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
-    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
-    { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
-    { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
-    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
+    // { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+    // { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+    // { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+    // { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+    // { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+    // { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
   ];
 
   constructor(
     private fin52050Service: Fin52050Service,
-    private validationService: ValidationService
+    // private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
   }
@@ -106,17 +97,23 @@ export class FIN52050Component extends BasicQueryPageComponent<GLS1003> implemen
       });
     });
   }
-  // 刪除控制_Grace 9/9: 
+  // 刪除控制_Grace 9/9:
   // 9/9 SA註明: 該作業不可修改/刪除
   onDelete(selectedRows: GLS1003[]) {
-    // const ids = selectedRows.map(row => row.id);
-    // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
-    //   next: () => {
-    //     this.onSubmit(this.queryForm);
-    //     this.selectedRows = [];
-    //   },
-    //   error: () => { this.loading = false; },
-    // });
+    this.messageService.confirm({
+      message: `是否確認刪除選中的科目大分類?`,
+      header: `確認刪除`,
+      accept: () => {
+        const ids = selectedRows.map(row => row.ClassAttr);
+        this.fin52050Service.deleteFIN52050({ ids }).pipe(untilDestroyed(this)).subscribe({
+          next: () => {
+            this.onSubmit(this.queryForm);
+            this.selectedRows = [];
+          },
+          error: () => { this.loading = false; },
+        });
+      },
+    });
   }
 
   isRowSelectable(row: GLS1003) {

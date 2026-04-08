@@ -4,6 +4,7 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { TableRowSelectEvent } from 'primeng/table';
+import { SortMeta } from 'primeng/api';
 import { Column, LazyLoadEvent } from '../table/table.model';
 import { NgFor, NgIf } from '@angular/common';
 import { AutoCompleteModule } from 'primeng/autocomplete';
@@ -52,9 +53,13 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
   @Input() panelTableColumns: Column[] = [];          // 面板表格的欄位設定
   @Output() searchFormChanged = new EventEmitter<any>(); // 搜尋表單變更事件
   @Input() totalDataCount = 0;                        // 總資料筆數
+  multiSortMeta: SortMeta[] = [];                     // 動態排序設定
 
   ngOnInit(): void {
     this.updateControlState(this.valueControl);
+
+    // 初始化排序設定
+    this.multiSortMeta = [{ field: this.valuePropertyName, order: 1 }];
 
     // 監聽搜尋表單變更
     this.searchForm.valueChanges.pipe(
@@ -152,12 +157,9 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
 
   // 處理分頁載入事件
   onPaginationLoad(event: LazyLoadEvent, searchFormGroup: FormGroup) {
-    console.log('📄 SelectorPanel 收到分頁事件:', event);
-    console.log('🚨 DEBUG - event:', event);
-    console.log('🚨 DEBUG - 當前表單值:', searchFormGroup.value);
-
-    // 修正：將 1-based 轉為 0-based，並正確處理 SortBy
-    const pageIndex = Math.max(0, (event.pageIndex || 1) - 1);
+    // table.component.ts 的 loadDataLazy 已將 pageIndex 計算為 1-based
+    // 後端 API 同樣使用 1-based PageIndex，直接傳遞即可
+    const pageIndex = event.pageIndex;
 
     searchFormGroup.patchValue({
       pageSize: event.pageSize || 10,

@@ -5,58 +5,8 @@
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <!-- 不顯示的系統欄位：mid、STO_No -->
-
-        <!-- 應付帳款類型 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="應付帳款類型"
-            controlName="ACP_Type"
-            [options]="ACP_TypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.ACP_Type"
-            [submitted]="submitted">
-          </app-dropdown>
-        </div>
-
-        <!-- 統一編號（供應商） -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="統一編號"
-            controlName="PUR_VenUniform"
-            [options]="PUR_VenUniformOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.PUR_VenUniform"
-            [submitted]="submitted">
-          </app-dropdown>
-        </div>
-
-        <!-- 發票狀態 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="發票狀態"
-            controlName="PUR_GUIStatus"
-            [options]="PUR_GUIStatusOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.PUR_GUIStatus"
-            [submitted]="submitted">
-          </app-dropdown>
-        </div>
-
-        <!-- 已沖金額 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="已沖金額"
-            [control]="dataForm.controls.PUR_GUIBalance"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-
         <!-- 發票格式 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -66,26 +16,18 @@
             optionLabel="label"
             optionValue="value"
             [control]="dataForm.controls.PUR_VoucherType"
-            [submitted]="submitted">
-          </app-dropdown>
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
-        <!-- 字軌 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="字軌"
-            [control]="dataForm.controls.PUR_GUITrack"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-
-        <!-- 發票號碼 -->
+        <!-- 發票號碼（字軌＋數字，共10碼） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="發票號碼"
             [control]="dataForm.controls.PUR_GUINo"
-            [submitted]="submitted">
-          </app-input-text>
+            [submitted]="submitted"
+            placeholder="例：AB12345678"
+          ></app-input-text>
         </div>
 
         <!-- 發票日期 -->
@@ -94,42 +36,44 @@
             label="發票日期"
             calendarType="dateOne"
             [control]="dataForm.controls.PUR_GUIDate"
-            [submitted]="submitted">
-          </app-calendar>
+            [submitted]="submitted"
+          ></app-calendar>
         </div>
 
         <!-- 申報年月 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calenderone
-            controlName="PUR_RepYYYYMM"
-            calendarType="dateMonthOne"
+          <app-year-month
             label="申報年月"
             [control]="dataForm.controls.PUR_RepYYYYMM"
-            [submitted]="submitted">
-          </app-calenderone>
+            [submitted]="submitted"
+            [evenMonth]="true"
+          ></app-year-month>
         </div>
 
         <!-- 金額群組 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-input-number
             label="發票總金額"
+            controlName="PUR_Amt"
             [control]="dataForm.controls.PUR_Amt"
-            [submitted]="submitted">
-          </app-input-text>
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-input-number
             label="發票未稅金額"
+            controlName="PUR_Net"
             [control]="dataForm.controls.PUR_Net"
-            [submitted]="submitted">
-          </app-input-text>
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-input-number
             label="發票稅額"
+            controlName="PUR_Tax"
             [control]="dataForm.controls.PUR_Tax"
-            [submitted]="submitted">
-          </app-input-text>
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
 
         <!-- 發票用途 -->
@@ -140,8 +84,8 @@
             [options]="invoicePurposeOptions"
             optionLabel="label"
             optionValue="value"
-            [submitted]="submitted">
-          </app-dropdown>
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
         <!-- 課稅別 -->
@@ -153,8 +97,8 @@
             optionLabel="label"
             optionValue="value"
             [control]="dataForm.controls.PUR_TaxType"
-            [submitted]="submitted">
-          </app-dropdown>
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
         <!-- 扣抵代號 -->
@@ -165,8 +109,8 @@
             [options]="deductOptions"
             optionLabel="label"
             optionValue="value"
-            [submitted]="submitted">
-          </app-dropdown>
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
         <!-- 類別區分 -->
@@ -177,11 +121,11 @@
             [options]="typeOptions"
             optionLabel="label"
             optionValue="value"
-            [submitted]="submitted">
-          </app-dropdown>
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
-        <!-- ✅ 廠商編號（下拉） -->
+        <!-- 廠商編號 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="廠商編號"
@@ -190,27 +134,27 @@
             optionLabel="label"
             optionValue="value"
             [control]="dataForm.controls.PUR_VenNo"
-            [submitted]="submitted">
-          </app-dropdown>
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
-        <!-- 廠商名稱（唯讀，自動帶） -->
+        <!-- 廠商名稱（唯讀） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="廠商名稱"
             [control]="dataForm.controls.PUR_VenName"
-            [submitted]="submitted">
-          </app-input-text>
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
-        <!-- 憑證單號（Source_Doc_No） -->
+        <!-- 憑證單號 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="憑證單號"
             [control]="dataForm.controls.Source_Doc_No"
             [submitted]="submitted"
-            placeholder="請輸入憑證單號（16 位英數）">
-          </app-input-text>
+            placeholder="請輸入憑證單號（16 位英數）"
+          ></app-input-text>
         </div>
 
         <!-- 傳票號碼（唯讀） -->
@@ -218,32 +162,20 @@
           <app-input-text
             label="傳票號碼"
             [control]="dataForm.controls.Voucher_No"
-            [submitted]="submitted">
-          </app-input-text>
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
-        <!-- 使用別（T205） -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="使用別"
-            [control]="dataForm.controls.SAL_Type"
-            [options]="salTypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [submitted]="submitted">
-          </app-dropdown>
-        </div>
-
-        <!-- 系統別（SYS_ORIGIN） -->
+        <!-- 系統別（SAL_Type） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="系統別"
             [control]="dataForm.controls.SYS_ORIGIN"
-            [options]="sysOriginOptions"
+            [options]="salTypeOptions"
             optionLabel="label"
             optionValue="value"
-            [submitted]="submitted">
-          </app-dropdown>
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
 
         <!-- 備註 -->
@@ -251,12 +183,15 @@
           <app-input-text
             label="備註"
             [control]="dataForm.controls.PUR_Remark"
-            [submitted]="submitted">
-          </app-input-text>
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
 
-      <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
+      <div
+        class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>

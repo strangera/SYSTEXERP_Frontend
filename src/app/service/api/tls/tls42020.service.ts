@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Observable, of } from 'rxjs';
 
 // Query request interface for TLS42020
 export interface TLS42020QueryRequest extends BaseQueryRequest {
@@ -18,7 +18,7 @@ export interface TLS42020Data {
   id: number;                     // ID
   mid: number;                    // MID
   STO_No: string;                 // 店舖編號
-  SBM_Type: number;               // 菜單類別
+  SBM_Type?: string;               // 菜單類別
   TLT_No: string;                 // 專櫃編號
   SBM_BegDate: string;            // 開始日期
   SBM_EndDate: string;            // 結束日期
@@ -33,7 +33,11 @@ export interface TLS42020Data {
 
 // Detail query request interface for TLS42020
 export interface TLS42020DetailQueryRequest {
-  tltNo: string;                  // 專櫃編號
+  MID: number;           // 主檔 ID (對應後端 MID)
+  STO_No: string;       // 門市店號
+  SBM_Type?: string;     // 菜單類別
+  TLT_No: string;        // 專櫃編號 (對應後端 TLT_No)
+  SBM_BegDate: string;  // 有效起始日期
 }
 
 // Detail data result interface for TLS42020 (POS10271資料表)
@@ -47,7 +51,7 @@ export interface TLS42020DetailData {
   ID: number;                     // ID
   MID: number;                    // MID
   STO_No: string;                 // 店舖編號
-  SBM_Type: number;               // 子菜單類別
+  SBM_Type?: string;               // 子菜單類別
   TLT_No: string;                 // 專櫃編號
   SBM_BegDate: string;            // 開始日期
   SBM_EndDate: string;            // 結束日期
@@ -56,72 +60,33 @@ export interface TLS42020DetailData {
   PLU_No: string;                 // 國際條碼
   PLU_Name: string;               // 商品名稱
   PLU_PrnName: string;            // 商品列印名稱
-  PLU_FixPrc: string | number;    // 商品定價
-  PLU_SalePrc: string | number;   // 商品售價
-  SBM_BtnNo: string;              // 菜單按鍵序號
+  PLU_FixPrc: number;    // 商品定價
+  PLU_SalePrc: number;   // 商品售價
+  SBM_BtnNo: number;              // 菜單按鍵序號
 }
 
 // Insert request interface for TLS42020M
-export interface TLS42020InsertRequest {
-  STO_No: string;                 // 店舖編號
-  SBM_Type: number;               // 菜單類別
-  TLT_No: string;                 // 專櫃編號
+export interface TLS42020InsertUpdateRequest {
+  SBM_Type: string;               // 菜單類別
+  TLT_No?: string;                 // 專櫃編號
   SBM_BegDate: string;            // 開始日期
   SBM_EndDate: string;            // 結束日期
-  TLT_Name: string;               // 專櫃名稱
-  POS10271: TLS42020InsertDetailData[];  // POS10271子資料
+  POS10271: TLS42020InsertUpdateDetailData[];  // POS10271子資料
 }
-
-// Insert POS10271 detail data interface
-export interface TLS42020InsertDetailData {
-  MID: number;                    // MID
-  STO_No: string;                 // 店舖編號
-  SBM_Type: number;               // 子菜單類別
-  TLT_No: string;                 // 專櫃編號
-  SBM_BegDate: string;            // 開始日期
-  SBM_EndDate: string;            // 結束日期
-  SBM_SeqNo: string;              // 序號
-  PLU_MagNo: string;              // 商品貨號
-  PLU_No: string;                 // 國際條碼
-  PLU_Name: string;               // 商品名稱
-  PLU_PrnName: string;            // 商品列印名稱
-  PLU_FixPrc: string;             // 商品定價
-  PLU_SalePrc: string;            // 商品售價
-  SBM_BtnNo: string;              // 菜單按鍵序號
-  status: string;                 // 狀態
-}
-
-// Update request interface for TLS42020M
-export interface TLS42020UpdateRequest {
+export interface TLS42020InsertUpdateDetailData {
   ID: number;                     // ID
-  MID: number;                    // MID
-  STO_No: string;                 // 店舖編號
-  SBM_Type: number;               // 菜單類別
+  SBM_Type: string;               // 子菜單類別
   TLT_No: string;                 // 專櫃編號
   SBM_BegDate: string;            // 開始日期
   SBM_EndDate: string;            // 結束日期
-  TLT_Name: string;               // 專櫃名稱
-  POS10271: TLS42020UpdateDetailData[];  // POS10271子資料
-}
-
-// Update POS10271 detail data interface
-export interface TLS42020UpdateDetailData {
-  MID: number;                    // MID
-  STO_No: string;                 // 店舖編號
-  SBM_Type: number;               // 子菜單類別
-  TLT_No: string;                 // 專櫃編號
-  SBM_BegDate: string;            // 開始日期
-  SBM_EndDate: string;            // 結束日期
-  SBM_SeqNo: string;              // 序號
-  PLU_MagNo: string;              // 商品貨號
-  PLU_No: string;                 // 國際條碼
+  SBM_SeqNo?: string;              // 序號
+  PLU_MagNo?: string;              // 商品貨號
+  PLU_No?: string;                 // 國際條碼
   PLU_Name: string;               // 商品名稱
-  PLU_PrnName: string;            // 商品列印名稱
-  PLU_FixPrc: string;             // 商品定價
-  PLU_SalePrc: string;            // 商品售價
-  SBM_BtnNo: string;              // 菜單按鍵序號
-  status: string;                 // 狀態
-  ID: number;                     // ID
+  PLU_PrnName?: string;            // 商品列印名稱
+  PLU_FixPrc?: number;             // 商品定價
+  PLU_SalePrc: number;            // 商品售價
+  SBM_BtnNo: number;              // 菜單按鍵序號
 }
 
 // Delete request interface for TLS42020M
@@ -131,7 +96,12 @@ export interface TLS42020DeleteRequest {
 
 // Dropdown request interface for TLS42020
 export interface TLS42020DropdownRequest {
-  TLT_NO: string[];               // 專櫃編號清單
+  TLT_NO: string; // 專櫃編號清單
+}
+
+// ExecSpFunc request interface for TLS42020
+export interface TLS42020ExecSpFuncRequest {
+  idList: number[];               // ID清單
 }
 
 @Injectable({
@@ -153,12 +123,12 @@ export class TLS42020Service {
   }
 
   // 新增POS1027M資料表
-  insertTLS42020M(data: TLS42020InsertRequest): Observable<any> {
+  insertTLS42020(data: TLS42020InsertUpdateRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertTLS42020`, data);
   }
 
   // 更新POS1027M資料表
-  updateTLS42020(data: TLS42020UpdateRequest): Observable<any> {
+  updateTLS42020(data: TLS42020InsertUpdateRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateTLS42020`, data);
   }
 
@@ -180,8 +150,27 @@ export class TLS42020Service {
     return this.http.post(`${this.apiUrl}/downloadRule`, {});
   }
 
+  // 下傳POS1027M資料表
+  ExecSpFuncTLS42020(data: TLS42020ExecSpFuncRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/ExecSpFuncTLS42020`, data);
+  }
+
   // 專櫃編號下拉選單
   dropdownTLS42020(data: TLS42020DropdownRequest): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/dropdownTLS42020`, data);
+    return this.http.post<any>(`${this.apiUrl}/dropdownTLS42020`, data).pipe(
+      map(res => {
+        return {
+          Data: res.Data.map((item: any) => {
+            return {
+              ...item,
+              label: item.PLU_MagNo + '-' + item.PLU_Name,
+            };
+          }),
+        }
+      })
+    );
+  }
+  QueryPLU_No(data: { TLT_No?: string; PLU_No?: string; PLU_Name?: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/QueryPLU_No`, data);
   }
 }

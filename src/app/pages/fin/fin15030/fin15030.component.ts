@@ -1,16 +1,19 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN15030Data, FIN15030PrintRequest, FIN15030QueryRequest, FIN15030Service } from '@service/api/fin/fin15030.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn, formatAmount, formatDate } from '@shared/componentkit/table-report/table-report.model';
 import { ValidationService } from '@shared/service/validation.service';
+import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -19,7 +22,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 export interface Option {
@@ -44,7 +47,7 @@ export interface Option {
     CalendarComponent,
     MultiSelectComponent,
     CommonModule,
-    CustomFooterTableComponent,
+    TableReportComponent,
     YearMonthComponent
   ]
 })
@@ -76,13 +79,16 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     IsExcel: ['0']   // 預設為 '0' (PDF)
   });
 
-  totalRecords = 0;
-  data: FIN15030Data[] = [];
+  readonly tableData = signal<FIN15030Data[]>([]);
+  readonly totalRecords = signal<number>(0);
+  readonly tableLoading = signal<boolean>(false);
+  lastQueryBody?: FIN15030QueryRequest;
+  footerRow: Record<string, unknown> | null = null;
+
   selectedItems: FIN15030Data[] = [];
   btnLoading = false;
-  footerData: any[] = [];
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'No', header: '序號', visible: false },
     { field: 'INV_Remark', header: '退出/折讓單號', visible: true },
     { field: 'INV_GUIType', header: '發票格式', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? value },
@@ -97,7 +103,8 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
     { field: 'SAL_Type', header: '使用別', visible: true, format: (value: string) => this.salTypeOptions.find(opt => opt.value === value)?.label ?? value },
-    { field: 'TXN_Uniform', header: '統一編號', visible: true }
+    { field: 'TXN_Uniform', header: '統一編號', visible: true },
+    { field: 'TXN_VoidDT', header: '作廢日期', visible: true, format: formatDate }
   ];
 
   //#region
@@ -141,29 +148,75 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     this.queryForm.get('INV_YM')?.setValue(this.datePipe.transform((currentDate), 'yyyyMM'));
   }
 
+  private buildRequest(body?: { pageSize?: number; PageSize?: number; pageIndex?: number; PageIndex?: number; SortBy?: unknown }): FIN15030QueryRequest {
+    const frm = this.queryForm;
+    const pageSize = body?.pageSize ?? body?.PageSize ?? frm.get('pageSize')?.value ?? 30;
+    const pageIndex = body?.pageIndex ?? body?.PageIndex ?? frm.get('pageIndex')?.value ?? 1;
+    const sortBy = body?.SortBy ?? frm.get('SortBy')?.value;
+    const raw = {
+      MID: 0,
+      STO_No: '10',
+      ...frm.getRawValue(),
+      TXN_Date_S: this.datePipe.transform(frm.get('TXN_Date_S')?.value, 'yyyy-MM-dd') ?? '',
+      TXN_Date_E: this.datePipe.transform(frm.get('TXN_Date_E')?.value, 'yyyy-MM-dd') ?? '',
+      INV_Data_YM_S: this.datePipe.transform(frm.get('INV_Data_YM_S')?.value, 'yyyyMM') ?? '',
+      INV_Data_YM_E: this.datePipe.transform(frm.get('INV_Data_YM_E')?.value, 'yyyyMM') ?? '',
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: Array.isArray(sortBy) ? sortBy : undefined,
+    };
+    return removeEmptyValues(raw) as FIN15030QueryRequest;
+  }
+
+  queryFunction = (body: any) => {
+    const request = this.buildRequest(body);
+    return this.fin15030Service.queryFIN15030(request).pipe(
+      tap((response) => {
+        const d = response?.Data;
+        if (d && (d.TotalNet !== undefined || d.TotalTax !== undefined)) {
+          this.footerRow = {
+            group_name: '合計',
+            TXN_Net: d.TotalNet,
+            TXN_Tax: d.TotalTax,
+          };
+        }
+      }),
+      map((response) => ({
+        Data: response.Data?.FIN15030s ?? [],
+        TotalCount: response.Data?.TotalCount ?? 0,
+      }))
+    );
+  };
+
+  isRowSelectable = (_rowData: FIN15030Data): boolean => true;
+
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const requestData: FIN15030QueryRequest = {
-        MID: 0,
-        STO_No: '10',
-        ...frm.value,
-        TXN_Date_S: this.datePipe.transform(frm.get('TXN_Date_S')?.value, 'yyyy-MM-dd') ?? '',
-        TXN_Date_E: this.datePipe.transform(frm.get('TXN_Date_E')?.value, 'yyyy-MM-dd') ?? '',
-        INV_Data_YM_S: this.datePipe.transform(frm.get('INV_Data_YM_S')?.value, 'yyyyMM') ?? '',
-        INV_Data_YM_E: this.datePipe.transform(frm.get('INV_Data_YM_E')?.value, 'yyyyMM') ?? '',
-      };
+      this.lastQueryBody = this.buildRequest({
+        pageSize: frm.get('pageSize')?.value ?? 30,
+        pageIndex: frm.get('pageIndex')?.value ?? 1,
+        SortBy: frm.get('SortBy')?.value,
+      });
 
-      this.fin15030Service.queryFIN15030(requestData)
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe((res) => {
-          this.data = res.Data.FIN15030s;
-          this.footerData = [{
-            group_name: '合計',
-            TXN_Net: res.Data.TotalNet,
-            TXN_Tax: res.Data.TotalTax,
-          }];
-          this.totalRecords = res.Data.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: (res) => {
+            this.tableData.set(res.Data);
+            this.totalRecords.set(res.TotalCount);
+          },
+          error: () => {
+            this.tableData.set([]);
+            this.totalRecords.set(0);
+          },
         });
     });
   }
@@ -230,19 +283,5 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     }).subscribe(r => {
       this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track }));
     });
-
-    // 自動代入資料所屬年月(起迄)
-    if (this.queryForm.controls.INV_YM.valid && event) {
-      const year = parseInt(event.substring(0, 4));
-      const month = parseInt(event.substring(4, 6));
-      const startOfMonth = new Date(year, month - 2, 1);
-      const endOfMonth = new Date(year, month - 1, 1);
-      this.queryForm.controls.INV_Data_YM_S.setValue(this.datePipe.transform(startOfMonth, 'yyyy/MM'));
-      this.queryForm.controls.INV_Data_YM_E.setValue(this.datePipe.transform(endOfMonth, 'yyyy/MM'));
-    }
-    else {
-      this.queryForm.controls.INV_Data_YM_S.setValue('');
-      this.queryForm.controls.INV_Data_YM_E.setValue('');
-    }
   }
 }

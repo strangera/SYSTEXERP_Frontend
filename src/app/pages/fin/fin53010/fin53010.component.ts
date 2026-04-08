@@ -10,9 +10,10 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { AddButton, Column, createPaginationConfig, formatAmount, LazyLoadEvent } from '@shared/componentkit/table/table.model';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
@@ -21,8 +22,7 @@ import { FIN53010Data, FIN53010Payload } from './fin53010.model';
 @Component({
   selector: 'app-fin53010',
   templateUrl: './fin53010.component.html',
-  styleUrl: './fin53010.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     AccordionModule,
     FormsModule,
@@ -34,6 +34,7 @@ import { FIN53010Data, FIN53010Payload } from './fin53010.model';
     InputNumberRangeComponent,
     InputTextComponent,
     MenubarComponent,
+    MultiSelectComponent,
     RadiobuttonComponent,
     TableComponent,
   ],
@@ -46,14 +47,14 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     VouNoStart: new FormControl<number | void>(void 0),
     VouNoEnd: new FormControl<number | void>(void 0),
     /** 傳票類別 1:現金收入 2:現金支出 3:轉帳傳票 */
-    VouType: new FormControl<'0' | '1' | '2' | void>(void 0),
+    VouType: new FormControl<'1' | '2' | '3' | void>('3'),
     VouDateStart: new FormControl<Date | void>(void 0),
     VouDateEnd: new FormControl<Date | void>(void 0),
     /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
     PostFlag: new FormControl<'0' | '1' | '3' | void>(void 0),
     Remark: new FormControl<string | void>(void 0),
-    /** 傳票種類(SYS1000.VoucherType) */
-    VoucherType: new FormControl<string | void>(void 0),
+    /** 傳票型態(SYS1000.VoucherType) (多選) */
+    VoucherType: new FormControl<string[]>([]),
     CRT_USR_No: new FormControl<string | void>(void 0),
     UPD_USR_No: new FormControl<string | void>(void 0),
     CrtDateStart: new FormControl<Date | void>(void 0),
@@ -61,7 +62,7 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     UpdDateStart: new FormControl<Date | void>(void 0),
     UpdDateEnd: new FormControl<Date | void>(void 0),
     /** ROC/IFRS 0:ROC 1:IFRS 2:全部 */
-    VouAccType: new FormControl<'0' | '1' | '2'>('0'),
+    // VouAccType: new FormControl<'0' | '1' | '2'>('2'),
     ...createPaginationConfig(this.multiSortMeta),
   });
   public readonly qf = computed(() => this.queryForm.controls);
@@ -72,26 +73,30 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
   public readonly tableLoading = signal<boolean>(!1);
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.tableLoading()
-      || this.service.accLoading()
-      || this.service.venLoading()
-      || this.service.usrLoading()
-      || this.service.orgNoLoading()
-      || this.service.sys1000Loading()
-      || this.service.voucherTypeLoading()
-      || this.service.refNameLoading()
-      || this.service.noteDescLoading()
-      || this.service.fin52030Loading()
-      || this.service.vocTempLoading();
-  });
+    this.loading = this.tableLoading();
+  }, { allowSignalWrites: true });
+
+  public readonly voidingRowId = signal<number | null>(null);
+
+  public readonly addButton: AddButton[] = [
+    {
+      label: '作廢',
+      icon: 'pi pi-trash text-red-500',
+      action: (rowData: FIN53010Data) => this.onVoid(rowData),
+      disabled: (rowData: FIN53010Data) => rowData.PostFlag !== '1',
+      loading: (rowData: FIN53010Data) => this.voidingRowId() === rowData.id,
+    },
+  ];
 
   public readonly columns: Column[] = [
-    { field: 'VouNo', header: '傳票號碼' },
-    { field: 'VouType', header: '傳票類別', format: d => this.service.vouTypeOptions.find(({ value }) => value === d)?.label ?? d },
-    { field: 'VouDate', header: '傳票日期', format: d => this.date.transform(d, 'yyyy/MM/dd') ?? d },
-    { field: 'Remark', header: '傳票摘要', format: d => this.service.noteDescMap().get(d)?.label ?? d },
-    { field: 'AccAmt', header: '傳票金額' },
-    { field: 'DetailCount', header: '明細筆數' },
+    { field: 'VouNo', header: '傳票號碼', align: 'left' },
+    { field: 'VouType', header: '傳票類別', align: 'left', format: d => this.service.vouTypeOptions.find(({ value }) => value === d)?.label ?? d },
+    { field: 'VouDate', header: '傳票日期', align: 'left', format: d => this.date.transform(d, 'yyyy/MM/dd') ?? d },
+    { field: 'PostFlag', header: '傳票狀態', align: 'left', format: v => this.service.postFlagOptions.find(item => String(item.value) === String(v))?.label ?? v },
+    { field: 'Remark', header: '傳票摘要', align: 'left', format: d => this.service.noteDescMap().get(d)?.label ?? d },
+    { field: 'VouTypeName', header: '傳票型態', align: 'left', format: v => this.service.voucherTypeMap().get(String(v))?.label ?? String(v) },
+    { field: 'AccAmt', header: '傳票金額', align: 'right', format: d => formatAmount(d), style: 'text-right' },
+    { field: 'DetailCount', header: '明細筆數', align: 'right' },
   ];
 
   constructor(
@@ -106,27 +111,15 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
     this.initializePage('FIN53010', '/FIN/FIN53010CRU', this.queryForm, this.onSubmit.bind(this));
 
     this.service.getVoucherTypeOptions();
-    this.service.getAccNoOptions();
     this.service.getUsrOptions();
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const vns = this.qf().VouNoStart.value;
-      const vne = this.qf().VouNoEnd.value;
-
-      const raw = <FIN53010Payload>{
-        ...this.queryForm.getRawValue(),
-        VouNoStart: vns ? String(vns).padEnd(12, '0') : void 0,
-        VouNoEnd: vne ? String(vne).padEnd(12, '9') : void 0,
-      };
-      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
-      )) as unknown as FIN53010Payload;
-
+      const payload = this.buildApiPayload();
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.logger.debug(`onSubmit:`, [vns, vne, payload]);
+      this.logger.debug(`onSubmit:`, [payload]);
       this.service.loadFIN53010(payload).pipe(
         tap(res => this.service.getAccDescOptions(res.Data.map(d => d.Remark).filter(Boolean))),
         finalize(() => this.tableLoading.set(!1)),
@@ -138,5 +131,71 @@ export class FIN53010Component extends BasicQueryPageComponent<FIN53010Data> imp
         },
       });
     });
+  }
+
+  public onVoid(rowData: FIN53010Data): void {
+    if (rowData.PostFlag !== '1') return;
+    this.messageService.confirm({
+      header: '作廢確認',
+      message: `是否作廢傳票 ${rowData.VouNo} ?`,
+      accept: () => {
+        this.voidingRowId.set(rowData.id);
+        this.service.voidFIN53010Data([rowData.id]).pipe(
+          finalize(() => this.voidingRowId.set(null)),
+        ).subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.messageService.successBubble('作廢成功');
+            this.onSubmit();
+          },
+        });
+      },
+    });
+  }
+
+  /**
+   * 給 `<app-table>` 的 LazyLoad 事件。
+   * 會先把分頁/排序參數回填到 queryForm，再觸發查詢維持功能正常。
+   */
+  public onTableLazyLoadData(event: LazyLoadEvent): void {
+    this.onLazyLoadData(event, this.queryForm);
+    this.onSubmit();
+  }
+
+  /**
+   * 輔助函數：將陣列轉換為逗號分隔的字串
+   * 參考功能：TLS32020、TLS32030
+   */
+  private formatListForBackend(list: string[] | null): string | null {
+    if (Array.isArray(list) && list.length > 0) {
+      return list.map(item => String(item)).join(',');
+    }
+    return null;
+  }
+
+  /**
+   * 單一入口：取得可送 API 的 payload。
+   */
+  public buildApiPayload(body?: FIN53010Payload): FIN53010Payload {
+    return body ?? this.buildQueryBodyFromForm();
+  }
+
+  /** 從表單組出查詢條件（含 pageSize/pageIndex/SortBy），過濾空值，不含分頁正規化。 */
+  private buildQueryBodyFromForm(): FIN53010Payload {
+    const vns = this.qf().VouNoStart.value;
+    const vne = this.qf().VouNoEnd.value;
+
+    const raw = {
+      ...this.queryForm.getRawValue(),
+      VouNoStart: String(vns ?? ''),
+      VouNoEnd: String(vne ?? ''),
+      VoucherType: this.formatListForBackend(this.qf().VoucherType.value),
+    };
+
+    const cleanedEntries = Object.entries(raw).filter(([, v]) =>
+      v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0),
+    );
+
+    return Object.fromEntries(cleanedEntries) as FIN53010Payload;
   }
 }

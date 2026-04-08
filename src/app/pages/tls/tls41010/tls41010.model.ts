@@ -1,6 +1,6 @@
 // import { formatDate, formatDateTime } from "../../../shared/componentkit/table/table.model";
 import { getSYS1000, SystemOptionsService } from '../../../service/system/sys1000.service';
-import { Column, formatDate, formatTimeHHMM, formatDateTime, formatYN } from "../../../shared/componentkit/table/table.model";
+import { Column, formatDate, formatDateTime, formatTimeHHMM, formatYN } from "../../../shared/componentkit/table/table.model";
 
 export interface TLS41010QueryParams {
   id: number;
@@ -252,8 +252,8 @@ export const columns: Column[] = [
     visible: true,
     format: (value) => getSYS1000('ECR_Status', value)
   },
-  { field: 'ECR_Group', header: '群組', visible: true },
-  { field: 'ECR_SubGroup', header: '次樓別', visible: true },
+  { field: 'ECR_Group', header: '館別', visible: true },
+  { field: 'ECR_SubGroup', header: '樓層', visible: true },
   { field: 'ECR_AreaNo', header: '區域', visible: true },
   { field: 'ECR_LocNo', header: '位置編號', visible: true },
   { field: 'HOS_No', header: '倉庫編號', visible: true },
@@ -286,9 +286,9 @@ export const columns: Column[] = [
   { field: 'ECR_EdcSettle', header: '信用卡刷卡機連動日結', visible: true, format: formatYN },
   { field: 'ECR_ForceInput', header: '是否強制輸入付款金額', visible: true, format: formatYN },
   { field: 'ECR_CustCntEntry', header: '是否輸入來客數', visible: true, format: formatYN },
-  { field: 'ECR_CustTypeEntry', header: '是否輸入客層數', visible: true, format: formatYN },
-  { field: 'ECR_ClerkEntry', header: '是否強制輸入營業員', visible: true, format: formatYN },
-  { field: 'ECR_ForceMember', header: '是否強制輸入會員編號', visible: true, format: formatYN },
+  // // { field: 'ECR_CustTypeEntry', header: '是否輸入客層數', visible: false, format: formatYN },
+  // { field: 'ECR_ClerkEntry', header: '是否強制輸入營業員', visible: false, format: formatYN },
+  // { field: 'ECR_ForceMember', header: '是否強制輸入會員編號', visible: false, format: formatYN },
   { field: 'ECR_BoxReqCode', header: '開抽屜是否輸入密碼', visible: true, format: formatYN },
   { field: 'ECR_SelfReport', header: '是否執行自我報帳', visible: true, format: formatYN },
   { field: 'ECR_SaleRpt1', header: '是否列印收銀員交班表', visible: true, format: formatYN },

@@ -1,10 +1,12 @@
 import { animate, style, transition, trigger } from '@angular/animations'; // 1. 引入動畫相關函式
-import { TableTypes } from "../table/table.model";
+import { SortMeta } from 'primeng/api';
+import { reportType, TableTypes } from '../table/table.model';
 
 export interface ReportColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
+  width?: string;    // 欄位寬度，例如 '80px'、'10rem'
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
   exportFormat?: Record<string, string>[];
   groupField?: string; //
@@ -13,8 +15,11 @@ export interface ReportColumn {
   showSort?: boolean;
   sortField?: string; // 排序欄位(預設為 field)
   align?: 'left' | 'center' | 'right';
+  reportType?: reportType; // 共通匯出格式類型
   type?: TableTypes; // 欄位類型
-  cellClass?: (rowData: any) => string;// 新增動態樣式 Callback，不影響舊邏輯
+  cellClass?: (rowData: any, field?: string) => string;// 新增動態樣式 Callback，不影響舊邏輯
+  link?: boolean; // 是否為連結
+  linkDisabled?: (rowData: any) => boolean;
 }
 
 export interface ColumnGroup {
@@ -24,9 +29,18 @@ export interface ColumnGroup {
 }
 export interface AddButton {
   label: string;
-  icon: string;
+  icon?: string;
   action: (rowData: any, event?: Event) => void;
   disabled?: (rowData: any) => boolean;
+}
+/**
+ * 通用的表格資料與排序酬載 (Payload)
+ * 常用於匯出報表或向後端發送排序請求
+ */
+export interface TableQueryPayload {
+  data: any;
+  mode: 'single' | 'multiple';
+  multiSortMeta: SortMeta[];
 }
 //formatDate：會輸出 2024/05/27 格式
 export const formatDate = (dateStr: string) => {
@@ -80,6 +94,26 @@ export const formatYYYYMM = (value: string | Date | null): string => {
 
   // 如果輸入格式不符合預期，回傳空字串
   return '';
+};
+
+export const formatTime = (value: any): string => {
+  if (!value) return '';
+
+  // 如果是字串格式 2026-03-10T04:53:00...
+  if (typeof value === 'string' && value.includes('T')) {
+    // 直接取 T 之後的 5 個字元 (HH:mm)
+    const timePart = value.split('T')[1];
+    return timePart.substring(0, 5);
+  }
+
+  // 如果已經是 Date 物件
+  if (value instanceof Date) {
+    const hours = String(value.getHours()).padStart(2, '0');
+    const minutes = String(value.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  }
+
+  return value;
 };
 
 // 000,000,000
@@ -138,6 +172,27 @@ export function formatAmountWithDecimals(value: any, decimals = 2): string {
     useGrouping: true, // 啟用千分位逗號
   }).format(num);
 }
+
+/**
+ * 將 YYYYMMDD (字串或數字) 格式化為 YYYY/MM/DD
+ * 例如: "20250702" -> "2025/07/02"
+ */
+export const formatYYYYMMDD = (value: string | number | null | undefined): string => {
+  if (!value) return '';
+
+  const str = String(value).trim();
+
+  // 檢查是否為 8 位數字字串
+  if (str.length === 8) {
+    const year = str.substring(0, 4);
+    const month = str.substring(4, 6);
+    const day = str.substring(6, 8);
+    return `${year}/${month}/${day}`;
+  }
+
+  // 如果原本就已經帶有分隔符號 (例如 2025-07-02)，則嘗試用原有的 formatDate 處理
+  return formatDate(str);
+};
 
 export const expandAnimation =
   trigger('fadeInOut', [

@@ -17,6 +17,76 @@ export interface IDropdownItem {
 }
 
 /**
+ * 查詢 FACLASSM_DropDownList 時的請求 body
+ */
+export interface FaClassMQuery {
+  CLASS_ID?: string | null;
+  Keyword?: string | null;
+}
+
+/**
+ * queryFACLASSM_DropDownList 回傳的項目型別
+ */
+export interface FaClassMItem {
+  RowNum?: string;
+  M_CLASS_ID: string;
+  M_CLASS_NAME: string;
+  B_CLASS_ID: string;
+  B_CLASS_NAME: string;
+  NOTES?: string | null;
+}
+
+/**
+ * 查詢 FACLASS1_DropDownList 時的請求 body
+ */
+export interface FaClass1Query {
+  M_CLASS_ID?: string | null;
+  M_CLASS_NAME?: string | null;
+  B_CLASS_ID?: string | null;
+  B_CLASS_NAME?: string | null;
+  NOTES_KEYWORD?: string | null;
+}
+
+/**
+ * queryFACLASS1_DropDownList 回傳的項目型別
+ */
+export interface FaClass1Item {
+  RowNum?: string;
+  M_CLASS_ID: string;
+  M_CLASS_NAME: string;
+  B_CLASS_ID: string;
+  B_CLASS_NAME: string;
+  NOTES?: string | null;
+}
+
+/**
+ * 查詢 FACLASS2_DropDownList 時的請求 body
+ */
+export interface FaClass2Query {
+  S_CLASS_ID?: string | null;
+  S_CLASS_NAME?: string | null;
+  M_CLASS_ID?: string | null;
+  M_CLASS_NAME?: string | null;
+  B_CLASS_ID?: string | null;
+  B_CLASS_NAME?: string | null;
+  NOTES_KEYWORD?: string | null;
+}
+
+/**
+ * queryFACLASS2_DropDownList 回傳的項目型別
+ */
+export interface FaClass2Item {
+  RowNum?: string;
+  S_CLASS_ID: string;
+  S_CLASS_NAME: string;
+  M_CLASS_ID: string;
+  M_CLASS_NAME: string;
+  B_CLASS_ID: string;
+  B_CLASS_NAME: string;
+  NOTES?: string | null;
+}
+
+/**
  * 查詢 TLTBUSCLASS 時的請求 body
  */
 export interface BusClassQuery {
@@ -44,9 +114,11 @@ export interface BusSClassItem extends IDropdownItem {
 /**
  * 查詢 TLTBUSSCLASS 時的請求 body
  */
-export interface BusSClassQuery {
-  bus_type: string[];
-  bus_class: string[];
+export interface BusSClassRequest {
+  queryTLTBUSSCLASSInfos: {
+    bus_type: string;
+    bus_class: string;
+  }[];
 }
 
 /**
@@ -171,6 +243,36 @@ export interface Aps1001Item extends IDropdownItem {
 }
 
 /**
+ * 查詢 APS1001_DropDownList 時的請求 body
+ */
+export interface Aps1001Query {
+  SearchKeyword: string;
+}
+
+/**
+ * 查詢 APS1001_DropDownList 回傳的項目型別
+ */
+export interface Aps1001Item extends IDropdownItem {
+  DisplayText: string;
+}
+
+/**
+ * 查詢 APS1001_DropDownList (Combo型態) 回傳的項目型別
+ */
+export interface Aps1001ComboItem {
+  No: string;
+  Name: string;
+  DisplayText: string;
+}
+
+/**
+ * 查詢 APS1001_DropDownList (Combo型態) 時的請求 body
+ */
+export interface Aps1001ComboQuery {
+  SearchKeyword: string;
+}
+
+/**
  * 查詢 TBLUSER_Orgid_DropDownList 回傳的項目型別
  */
 export interface TblUserOrgidItem {
@@ -213,9 +315,36 @@ export interface Pos2004Item {
 }
 
 /**
+ * 查詢 POS2004_ByTalentDropDownList 回傳的擴充項目型別
+ */
+export interface Pos2004WithBrandItem extends Pos2004Item {
+  PLU_OrgPLUNo: string; // 廠商貨號
+  LOGO_No: string;      // 品牌代碼
+}
+
+/**
  * 查詢 TLTTALENT_CHARGE_DropDownList 時的請求 body
  */
 export interface TalentChargeQuery {
+  talent_id: number;
+}
+
+/**
+ * 查詢 TLTTALENT_tlt_openflag_DropDownList 時的請求 body
+ */
+export interface TalentOpenFlagQuery {
+  /** 廠商編號 */
+  VEN_No: string;
+  /** 契約有效起日 */
+  tlt_bdate?: string;
+  /** 契約有效迄日 */
+  tlt_edate?: string;
+}
+
+/**
+ * 查詢 TLTTALENT_tlt_openflag_DropDownList 回傳的項目型別（含 talent_id）
+ */
+export interface TalentOpenFlagItem extends IDropdownItem {
   talent_id: number;
 }
 
@@ -318,6 +447,8 @@ export interface TalentQuery {
   tlt_no?: string;
   tlt_name?: string;
   ven_no?: string;
+  tlt_bdate?: string | null;
+  tlt_edate?: string | null;
 }
 
 /**
@@ -364,14 +495,28 @@ export interface Pos2013Query {
   VEN_Flag: string;
 }
 
+/** 廠商資料表查詢參數介面 */
+export interface Pos2013LogoRequest {
+  LOGO_No?: string; // 改為可選
+  VEN_No?: string;  // 新增可選的廠商編號
+}
 /**
  * 查詢 POS2013_DropDownList 回傳的項目型別
  */
 export interface Pos2013Item extends IDropdownItem {
-  ShortName: string;
+  // --- 廠商欄位 ---
   VEN_No: string;
-  VEN_EngName: string;
-  VEN_Address: string;
+  Name: string;      // 廠商全名
+  ShortName: string; // 廠商簡稱
+  No: string;        // 廠商統編 (VEN_Uniform)
+
+  // --- 新增：品牌欄位 (與後端 Response DTO 一致) ---
+  LOGO_No: string;
+  LOGO_CH_NAME: string;
+
+  // 原有但後端 SQL 若沒抓會是空的欄位
+  VEN_EngName?: string;
+  VEN_Address?: string;
 }
 
 /**
@@ -464,4 +609,68 @@ export interface TlttalentTltSpaceItem {
   ApplyNo: string
   LocationNo: string
   TltSpace: number
+}
+
+/** CSS1003 查詢參數 */
+export interface Css1003Query {
+  KIND_ID: string | null;
+}
+
+/** CSS1005 查詢參數 */
+export interface Css1005Query {
+  ORG_ID: string;
+}
+
+/** CSS 系列通用回傳項 (1002, 1003, 1005) */
+export interface CssDropDownItem {
+  No: string;
+  Name: string;
+}
+
+/**
+ * 查詢 APS1002_DropDownList 回傳的項目型別 (公司銀行科目)
+ */
+export interface Aps1002Item {
+  BNK_DepositAccNo: string; // 科目帳號/代碼
+  ACCCNAME: string;         // 科目名稱
+  BNK_No: string;           // 銀行代碼
+  BNK_BRANCHNAME: string;   // 分行名稱
+  BNK_AccType: string;      // 帳戶類型 (例如: 1-支存, 2-活存...)
+}
+
+/**
+ * 查詢會計科目設定檔(GLS1005)下拉式選單(只顯示 GLS1005.ledger_MD=1)
+ */
+export interface IGLS1005LedgerMDItem extends IDropdownItem {
+  ABAT_YN: string; // 應收廠商
+}
+
+/**
+ * 查詢 SYS5000 子模組下拉選單 (querySYS5000SubModuleNo_DropDownList) 回傳的項目型別
+ * 繼承 IDropdownItem (No, Name) 並擴充完整 SYS5000 屬性
+ */
+export interface Sys5000SubModuleItem extends IDropdownItem {
+  /** 模組代碼 (如: ASS) */
+  module_no: string;
+  /** 模組名稱 */
+  module_name: string;
+  /** 唯一識別碼 */
+  id: number;
+  /** 程式快捷編號 */
+  prog_id: string | null;
+  /** 上層程式代號 */
+  prog_up: string | null;
+  /** 是否可執行的程式 (Y=可執行) */
+  prog_ispage: string;
+  /** 是否停用 (Y=停用) */
+  prog_stopflag: string;
+  /** 排列順序 */
+  prog_sort: number | null;
+}
+
+/** * TLS55020 專用查詢參數
+ */
+export interface Tls55020Query {
+  /** 交易日期 (YYYY-MM-DD) */
+  TXN_Date: string;
 }

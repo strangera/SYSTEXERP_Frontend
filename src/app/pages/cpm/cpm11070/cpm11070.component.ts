@@ -1,149 +1,376 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { CPM11070Data, CPM11070Service, QueryCPM11070Request } from '../../../service/api/cpm/cpm11070.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
-//5.1.1.7 全館店櫃資訊查詢
 @Component({
   selector: 'app-cpm11070',
   templateUrl: './cpm11070.component.html',
-  styleUrl: './cpm11070.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    CalendarRangeQuickComponent,
+    DropdownComponent,
+    TranslateModule,
+    TableReportComponent,
+    RadiobuttonComponent,
+    InputTextareaComponent
+  ],
 })
-export class CPM11070Component extends BasicQpageComponent implements OnInit {
-  //
+export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    counterBrand: [], // 專櫃品牌
-    operatingStatus: [[] as number[]], // 營運狀態
+    SeqId: ['', [Validators.maxLength(11)]],
+    RecDateFrom: [new (Date), [Validators.required,]],
+    RecDateTo: [null as Date | null],
+    LostDateFrom: [null as Date | null],
+    LostDateTo: [null as Date | null],
+    FindDateFrom: [null as Date | null],
+    FindDateTo: [null as Date | null],
+    MsgDateFrom: [null as Date | null],
+    MsgDateTo: [null as Date | null],
+    ReceiveDateFrom: [null as Date | null],
+    ReceiveDateTo: [null as Date | null],
+    TransDateFrom: [null as Date | null],
+    TransDateTo: [null as Date | null],
+    DocType: [''],
+    Goods: [''],
+    SeqType: [''],
+    Notes: ['', [Validators.maxLength(400)]],
+    LocationKeyword: [''],
+    ServiceUser: ['', [Validators.maxLength(20)]],
+    KEY_USER: ['', [Validators.maxLength(20)]],
+    BroadcastFilter: [''],
+    BroadcastSituation: ['', [Validators.maxLength(100)]],
+    RecaptionName: ['', [Validators.maxLength(20)]],
+    RecaptionPhone: ['', [Validators.maxLength(10)]],
+    RegistrantKeyword: ['', [Validators.maxLength(20)]],
+    ProcessingUser: ['', [Validators.maxLength(20)]],
+    IdentityKind: [''],
+    Tel: ['', [Validators.maxLength(10)]],
+    MobilePhone: ['', [Validators.maxLength(10)]],
+    IdNo: ['', [Validators.maxLength(20)]],
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'SeqId', order: 1 }]],
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  totalRecords = 0;
+  data: CPM11070Data[] = [];
+  lastQueryBody: QueryCPM11070Request | null = null;
+  Type1Options = [
+    { No: 'L', Name: '遺失' },
+    { No: 'F', Name: '拾獲' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      'counterNumber': '000001', 'counterBrand': '小騎士', 'vendorName': '騎士堡公司',
-      'industryType': '娛樂', 'floor': 'B1',
-      'area': 'A區', 'location': 'B1A01',
-      'graph': '觀看平面圖', 'operatingStatus': '營運中'
-    },
-    {
-      'counterNumber': '000002', 'counterBrand': '霹靂布袋戲', 'vendorName': '大霹靂公司',
-      'industryType': '物販', 'floor': 'B1',
-      'area': 'A區', 'location': 'B1A02A0',
-      'graph': '觀看平面圖', 'operatingStatus': '營運中'
-    },
-    // 其他資料
+  addButton: AddButton[] = [];
+  Type3Options = [
+    { Name: '登錄', No: '1' },
+    { Name: '已通知', No: '3' },
+    { Name: '領回', No: '4' },
+    { Name: '轉出', No: '6' },
   ];
-  columns: any[] = [
-    { field: 'counterNumber', header: '專櫃編號', visible: true },
-    { field: 'counterBrand', header: '品牌 (櫃位名稱)', visible: true },
-    { field: 'vendorName', header: '廠商名稱', visible: true },
-
-    // { field: 'phone', header: '專櫃電話號碼', visible: false },  // 需求文件要求移除
-    { field: 'industryType', header: '大分類', visible: true }, //名稱: 大分類 -> 大分類
-    { field: 'floor', header: '樓層', visible: true },
-
-    { field: 'area', header: '區域', visible: true },
-    { field: 'location', header: '位置', visible: true },
-
-    { field: 'graph', header: '平面圖', visible: true },
-    { field: 'operatingStatus', header: '營運狀態', visible: true },
-
-    // { field: 'col11', header: '廠商帳戶名稱', visible: true },
-    // { field: 'col12', header: '付款期限', visible: true },
-    // { field: 'col13', header: '票據抬頭', visible: true },
-    // { field: 'col14', header: '審核狀態', visible: true },
-    // 其他欄位
+  Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
+  SPACE3Options = [ //是否廣播
+    { label: '已廣播', value: 'Y' },
+    { label: '不廣播', value: 'N' },
+    { label: '全部', value: 'A' },
   ];
-  // ----------------------------------------------------------------
-  systemTypeOptions: any[] = [
-    { value: 1, label: '營運中' },
-    { value: 2, label: '已撤櫃' },
+  SPACE1Options = getSYS1000Options('LOCATION').map((item: any) => ({ value: item.value ?? item.No ?? '', label: `${item.value ?? item.No ?? ''} - ${item.label ?? item.Name ?? ''}` }));
+  USER5Options = [
+    { Name: '遊客', No: '1' },
+    { Name: '員工', No: '2' },
   ];
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-  ) {
-    super(); // 呼叫父類建構子
+  ProcessingUserOptions: { label: string; value: string }[] = [];
+  // 判斷是否為已結案(已領回/已轉出)案件
+  private isClosed(row: CPM11070Data): boolean {
+    const status = row.SeqStatusName?.trim();
+    return status === '領回' || status === '已領回' || status === '轉出' || status === '已轉出';
   }
+
+  // 提供給 table 綁定用：已結案則停用編輯按鈕
+  editDisabled = (row: CPM11070Data): boolean => {
+    return this.isClosed(row);
+  };
+  columns: ReportColumn[] = [
+    { field: 'SeqId', header: '登錄編號', visible: true },
+    { field: 'GoodsType', header: '物品類別', visible: true },
+    { field: 'GoodsDesc', header: '物品敘述', visible: true },
+    { field: 'RecDate', header: '登錄日期', visible: true, format: formatDate },
+    { field: 'MsgDate', header: '通知日期', visible: true, format: formatDate },
+    { field: 'ReceiveDate', header: '領回日期', visible: true, format: formatDate },
+    { field: 'OffDate', header: '轉出日期', visible: true, format: formatDate },
+    { field: 'DocTypeName', header: '失物類別', visible: true },
+    { field: 'SeqStatusName', header: '失物狀態', visible: true },
+    { field: 'Location', header: '登記點位', visible: true },
+    { field: 'ServiceUser', header: '服務人員', visible: true },
+    { field: 'Registrant', header: '遺失者/拾獲者姓名', visible: true },
+    { field: 'Tel', header: '電話', visible: true },
+    { field: 'Mobile', header: '手機', visible: true },
+
+  ];
+  constructor(
+    public readonly cpm11070Service: CPM11070Service,
+    private readonly datePipe: DatePipe,
+    private readonly dropDownListService: DropDownListService,
+  ) {
+    super();
+  }
+
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510007';
-    this.cruPage = '/CPM1000/CPM11070CRU';
-    //
+    this.initializePage('CPM11070', '/CPM/CPM11070CRU', this.queryForm, (frm) => this.onSubmit(frm));
 
-    //
-    // ----------------------------------------------------------------
+    // 嘗試向後端刷新 LOCATION 的 SYS1000，確保剛在其他頁面新增的選項會顯示
+    try {
+      this.systemDataService.refreshSystemCodeByType('LOCATION')
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: () => {
+            try { SystemOptionsService.refreshCache(); } catch { }
+            this.SPACE1Options = getSYS1000Options('LOCATION').map((item: any) => ({ value: item.value ?? item.No ?? '', label: `${item.value ?? item.No ?? ''} - ${item.label ?? item.Name ?? ''}` }));
+          },
+          error: () => {
+            try { SystemOptionsService.refreshCache(); } catch { }
+            this.SPACE1Options = getSYS1000Options('LOCATION').map((item: any) => ({ value: item.value ?? item.No ?? '', label: `${item.value ?? item.No ?? ''} - ${item.label ?? item.Name ?? ''}` }));
+          }
+        });
+    } catch (e) {
+      try { SystemOptionsService.refreshCache(); } catch { }
+      this.SPACE1Options = getSYS1000Options('LOCATION').map((item: any) => ({ value: item.value ?? item.No ?? '', label: `${item.value ?? item.No ?? ''} - ${item.label ?? item.Name ?? ''}` }));
+    }
+
+    // 載入物品類別下拉（頁面層容錯：若 filter API 失敗則抓全部再過濾）
+    this.loadLostGoodsTypeOptions();
+
+    // 載入協助顧客領回處理人員下拉（共用人員清單）
+    try {
+      this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
+        this.ProcessingUserOptions = (options?.Data || []).map((item: any) => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
+      });
+    } catch (e) {
+      this.ProcessingUserOptions = [];
+    }
+
+    // 設定自訂管理按鈕：領回 -> 開啟編輯頁面以進行領回流程
+    this.addButton = [
+      {
+        label: '領回',
+        icon: 'pi pi-check-circle',
+        action: (row: CPM11070Data) => {
+          if (this.isClosed(row)) {
+            this.messageService.errorBubble('已轉出或已領回資料不可領回');
+            return;
+          }
+          this.onEdit({ ...row, _openMode: 'receive' } as any);
+        },
+        disabled: (row: CPM11070Data) => this.isClosed(row),
+      },
+      {
+        label: '轉出',
+        icon: 'pi pi-arrow-right',
+        action: (row: CPM11070Data) => {
+          if (this.isClosed(row)) {
+            this.messageService.errorBubble('已轉出或已領回資料不可轉出');
+            return;
+          }
+          this.onEdit({ ...row, _openMode: 'transfer' } as any);
+        },
+        disabled: (row: CPM11070Data) => this.isClosed(row),
+      },
+    ];
+
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
+  override onEdit(data: CPM11070Data, queryConditions?: any): void {
+    if (this.isClosed(data)) {
+      this.messageService.errorBubble('已轉出或已領回資料不可編輯');
+      return;
+    }
+    super.onEdit(data, queryConditions);
+  }
+
+
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
+
+      const format = (d: Date | null) => d ? this.datePipe.transform(d, 'yyyy-MM-dd') ?? undefined : undefined;
+
+      const payload: QueryCPM11070Request = {
+        // 分頁與排序（後端欄位需大寫開頭）
+        PageSize: raw.PageSize ?? raw.pageSize ?? 20,
+        PageIndex: raw.PageIndex ?? raw.pageIndex ?? 1,
+        SortBy: raw.SortBy ?? [],
+        OrderBy: '',
+        Offset: 0,
+
+        // 查詢條件
+        SeqId: raw.SeqId ?? undefined,
+        RecDateFrom: format(raw.RecDateFrom),
+        RecDateTo: format(raw.RecDateTo),
+        LostDateFrom: format(raw.LostDateFrom),
+        LostDateTo: format(raw.LostDateTo),
+        FindDateFrom: format(raw.FindDateFrom),
+        FindDateTo: format(raw.FindDateTo),
+        MsgDateFrom: format(raw.MsgDateFrom),
+        MsgDateTo: format(raw.MsgDateTo),
+        ReceiveDateFrom: format(raw.ReceiveDateFrom),
+        ReceiveDateTo: format(raw.ReceiveDateTo),
+        TransDateFrom: format(raw.TransDateFrom),
+        TransDateTo: format(raw.TransDateTo),
+        DocType: raw.DocType ?? undefined,
+        Goods: raw.Goods ?? undefined,
+        SeqType: raw.SeqType ?? undefined,
+        Notes: raw.Notes ?? undefined,
+        LocationKeyword: raw.LocationKeyword ?? undefined,
+        ServiceUser: raw.ServiceUser ?? undefined,
+        KEY_USER: raw.KEY_USER ?? undefined,
+        BroadcastFilter: raw.BroadcastFilter ?? undefined,
+        BroadcastSituation: raw.BroadcastSituation ?? undefined,
+        RecaptionName: raw.RecaptionName ?? undefined,
+        RecaptionPhone: raw.RecaptionPhone ?? undefined,
+        RegistrantKeyword: raw.RegistrantKeyword ?? undefined,
+        ProcessingUser: raw.ProcessingUser ?? undefined,
+        IdentityKind: raw.IdentityKind ?? undefined,
+        Tel: raw.Tel ?? undefined,
+        MobilePhone: raw.MobilePhone ?? undefined,
+        IdNo: raw.IdNo ?? undefined,
+      };
+
+      this.cpm11070Service
+        .queryCPM11070(payload)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (res: any) => {
+            this.data = res.Data || [];
+            this.lastQueryBody = payload;
+            this.totalRecords = res.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          },
+        });
+    });
+  }
+
+  // 匯出「未領取報表」Excel
+  onExportUnreceivedReport(): void {
+    const raw = this.queryForm.getRawValue();
+
+    const format = (d: Date | null) => d ? this.datePipe.transform(d, 'yyyy-MM-dd') ?? undefined : undefined;
+
+    if (!raw.RecDateFrom) {
+      this.messageService.errorBubble('「登錄日期(起)」為必填');
+      return;
+    }
+
+    const payload: QueryCPM11070Request = {
+      PageSize: 0,
+      PageIndex: 0,
+      SortBy: raw.SortBy ?? [],
+      OrderBy: '',
+      Offset: 0,
+
+      SeqId: raw.SeqId ?? undefined,
+      RecDateFrom: format(raw.RecDateFrom),
+      RecDateTo: format(raw.RecDateTo),
+      LostDateFrom: format(raw.LostDateFrom),
+      LostDateTo: format(raw.LostDateTo),
+      FindDateFrom: format(raw.FindDateFrom),
+      FindDateTo: format(raw.FindDateTo),
+      MsgDateFrom: format(raw.MsgDateFrom),
+      MsgDateTo: format(raw.MsgDateTo),
+      ReceiveDateFrom: format(raw.ReceiveDateFrom),
+      ReceiveDateTo: format(raw.ReceiveDateTo),
+      TransDateFrom: format(raw.TransDateFrom),
+      TransDateTo: format(raw.TransDateTo),
+      DocType: raw.DocType ?? undefined,
+      Goods: raw.Goods ?? undefined,
+      SeqType: raw.SeqType ?? undefined,
+      Notes: raw.Notes ?? undefined,
+      LocationKeyword: raw.LocationKeyword ?? undefined,
+      ServiceUser: raw.ServiceUser ?? undefined,
+      KEY_USER: raw.KEY_USER ?? undefined,
+      BroadcastFilter: raw.BroadcastFilter ?? undefined,
+      BroadcastSituation: raw.BroadcastSituation ?? undefined,
+      RecaptionName: raw.RecaptionName ?? undefined,
+      RecaptionPhone: raw.RecaptionPhone ?? undefined,
+      RegistrantKeyword: raw.RegistrantKeyword ?? undefined,
+      ProcessingUser: raw.ProcessingUser ?? undefined,
+      IdentityKind: raw.IdentityKind ?? undefined,
+      Tel: raw.Tel ?? undefined,
+      MobilePhone: raw.MobilePhone ?? undefined,
+      IdNo: raw.IdNo ?? undefined,
+    };
+
     this.loading = true;
-    this.messageService.blockUi();
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+    this.cpm11070Service
+      .exportCPM11070Excel(payload)
+      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+      .subscribe({
+        next: (blob) => {
+          const excelBlob = new Blob([blob], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          });
+          const url = window.URL.createObjectURL(excelBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `CPM11070_未領取報表_${this.datePipe.transform(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        },
+      });
+  }
+
+  private loadLostGoodsTypeOptions(): void {
+    try {
+      this.systemDataService.refreshSystemCodeByType('LOST_GOODS_TYPE')
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (res: any) => {
+            // 若回傳為空，fallback 為 queryAllSystemCode 並過濾
+            const hasData = Array.isArray(res) && res.length > 0;
+            if (hasData) {
+              this.Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
+            } else {
+              this.systemDataService.queryAllSystemCode().pipe(untilDestroyed(this)).subscribe((resp: any) => {
+                const all = resp?.Data ?? [];
+                const items = (all as any[]).filter(i => i.SYS_Type === 'LOST_GOODS_TYPE');
+                this.Type2Options = (items || []).map(i => ({ value: i.SYS_Code, label: i.SYS_Name }));
+              });
+            }
+          },
+          error: () => {
+            // fallback to queryAll
+            this.systemDataService.queryAllSystemCode().pipe(untilDestroyed(this)).subscribe((resp: any) => {
+              const all = resp?.Data ?? [];
+              const items = (all as any[]).filter(i => i.SYS_Type === 'LOST_GOODS_TYPE');
+              this.Type2Options = (items || []).map(i => ({ value: i.SYS_Code, label: i.SYS_Name }));
+            });
+          }
+        });
+    } catch (e) {
+      try { SystemOptionsService.refreshCache(); } catch { }
+      this.Type2Options = getSYS1000Options('LOST_GOODS_TYPE');
     }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
   }
 }

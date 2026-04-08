@@ -1,23 +1,22 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { AccordionModule } from 'primeng/accordion';
+import { finalize, map, Observable } from 'rxjs';
+import { CPM11010Service } from '../../../service/api/cpm/cpm11020.service';
+import { CPM11040Data, CPM11040Service } from '../../../service/api/cpm/cpm11040.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
+import { getSYS1000Options } from '../../../service/system/sys1000.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatDate, formatTimeHHMM } from '../../../shared/componentkit/table/table.model';
 
 //5.1.1.5 設備歸還作業
 @Component({
@@ -25,154 +24,113 @@ import { TranslateModule } from '@ngx-translate/core';
   templateUrl: './cpm11040.component.html',
   styleUrl: './cpm11040.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, InputTextComponent, MultiSelectComponent, DropdownComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, DropdownComponent, TableComponent, TranslateModule, AsyncPipe]
 })
-export class CPM11040Component extends BasicQpageComponent implements OnInit {
-  //
+export class CPM11040Component extends BasicQueryPageComponent<CPM11040Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    recordCode: [, [Validators.maxLength(14)]], // 記錄編號
-    borrowDateFrom: [], // 出借日期
-    borrowDateTo: [], // 出借日期
-    name: ['', [Validators.maxLength(20)]], // 姓名
-    returnDateFrom: [], // 歸還日期
-    returnDateTo: [], // 歸還日期
-    phone: [, [Validators.maxLength(20)]], // 連絡電話
-    paperType: [[] as number[]], // 證件類型
-
-    paperCode: [, [Validators.maxLength(20)]], // 證件編號
-    equipmentName: [[] as number[]], // 設備名稱
-    deviceCode: [, [Validators.maxLength(10)]], // 設備編號
-
-    rentStatus: [[] as number[]], // 出借狀態
-    counterCode: [], // 服務台位置編號
-    staffName: ['', [Validators.maxLength(10)]], // 出借處理人員
+    LoanNo: ['', [Validators.maxLength(14)]], // 借記/歸還編號
+    ServiceId: [null], // 服務中心位置編號
+    LoanDateStart: [null], // 出借日期 - 起
+    LoanDateEnd: [null], // 出借日期 - 迄
+    ReturnDateStart: [null], // 歸還日期 - 起
+    ReturnDateEnd: [null], // 歸還日期 - 迄
+    UserName: ['', [Validators.maxLength(20)]], // 借用人姓名
+    LoanPhone: ['', [Validators.maxLength(20)]], // 連絡電話
+    CertType: [null], // 證件類型
+    CertNo: ['', [Validators.maxLength(20)]], // 證件編號
+    DeviceID: ['', [Validators.maxLength(10)]], // 設備編號
+    DeviceName: [null], // 設備名稱
+    LoanUserName: [null], // 出借處理人員
+    ...createPaginationConfig([{ field: 'LoanDate', order: -1 }]), // 分頁和排序參數
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  totalRecords = 0;
+  data: CPM11040Data[] = [];
+  selectedItems: CPM11040Data[] = [];
+
+  // 服務中心位置下拉選項 - 從 API 載入
+  serviceOptions: Observable<{ label: string; value: string }[]> = this.cpm11010Service.queryCPM10010().pipe(
+    map(response =>
+      response.Data.map(item => ({
+        label: `${item.Service_Id} - ${item.Service_Name}`,
+        value: item.Service_Id
+      }))
+    )
+  );
+
+  // 設備下拉選項 - 從 API 載入
+  deviceOptions: Observable<{ label: string; value: string }[]> = this.cpm11010Service.queryDeviceListCPM11020().pipe(
+    map(response =>
+      response.Data.map(item => ({
+        label: `${item.Device_id} - ${item.Device_Name}`,
+        value: item.Device_Name
+      }))
+    )
+  );
+
+  // 出借處理人員下拉選項 - 從 API 載入
+  loanUserOptions = this.dropdownApiService.queryTblUser();
+
+  // 證件類型選項 (從 SYS1000 取得)
+  certTypeOptions = getSYS1000Options('Cert_Type').map(opt => ({ ...opt, label: `${opt.value}-${opt.label}` }));
+
+  columns: Column[] = [
+    { field: 'LoanNo', header: '出借編號', visible: true },
+    { field: 'LoanDate', header: '出借日期', visible: true, format: formatDate },
+    { field: 'LoanTime', header: '出借時間', visible: true, format: formatTimeHHMM },
+    { field: 'ReturnDate', header: '歸還日期', visible: true, format: formatDate },
+    { field: 'ReturnTime', header: '歸還時間', visible: true },
+    { field: 'UserName', header: '借用人姓名', visible: true },
+    { field: 'LoanPhone', header: '連絡電話', visible: true },
+    { field: 'CertTypeName', header: '證件類型', visible: true },
+    { field: 'CertNo', header: '證件編號', visible: true },
+    { field: 'DeviceID', header: '設備編號', visible: true },
+    { field: 'DeviceName', header: '設備名稱', visible: true },
+    { field: 'ServiceName', header: '服務中心', visible: true },
+    { field: 'LoanUserName', header: '出借處理人員', visible: true },
+    { field: 'LoanStatus', header: '出借狀態', visible: true },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '記錄編號', visible: true },
-    { field: 'col2', header: '出借日期', visible: true },
-    { field: 'col3', header: '歸還日期', visible: true },
-
-    { field: 'col4', header: '姓名', visible: true },
-    { field: 'col5', header: '連絡電話', visible: true },
-    { field: 'col6', header: '出借處理人員', visible: true },
-
-    { field: 'col7', header: '證件類型', visible: true },
-    { field: 'col8', header: '證件編號', visible: true },
-
-    { field: 'col9', header: '出借狀態', visible: true },
-    { field: 'col10', header: '備註', visible: true },
-
-    // { field: 'col11', header: '廠商帳戶名稱', visible: true },
-    // { field: 'col12', header: '付款期限', visible: true },
-    // { field: 'col13', header: '票據抬頭', visible: true },
-    // { field: 'col14', header: '審核狀態', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  paperTypeOptions: any[] = [
-    { value: 1, label: '身分證' },
-    { value: 2, label: '健保卡' },
-    { value: 3, label: '駕照' },
-    { value: 4, label: '護照' },
-    { value: 5, label: '其他' },
-  ]
-
-  equipmentNameOptions: any[] = [
-    { value: 1, label: '奇哥Joie輕便娃娃車' },
-    { value: 2, label: '愛心輪椅' },
-  ]
-
-  counterCodeOptions: any[] = [
-    { value: 1, label: '11A001/服務諮詢台' },
-    { value: 2, label: '12A001/VIP室' },
-    { value: 3, label: '12D001/總機' },
-    { value: 4, label: '15A001/顧客服務中心' },
-  ]
-
-  rentStatusOptions: any[] = [
-    { value: 1, label: '出借' },
-    { value: 2, label: '部分歸還' },
-    { value: 3, label: '全部歸還' },
-  ]
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    private readonly cpm11040Service: CPM11040Service,
+    private readonly cpm11010Service: CPM11010Service,
+    private readonly dropdownApiService: DropdownApiService
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510004';
-    this.cruPage = '/CPM1000/CPM11040CRU';
-    //
-
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('CPM11040', 'cpm/cpm11040cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.cpm11040Service.queryCPM11040(frm.value)
+        .pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        )
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  onDelete(selectedItems: CPM11040Data[]) {
+    this.messageService.confirm({
+      header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
+      accept: () => {
+        const idList = selectedItems.map(item => item.ID);
+        this.cpm11040Service.deleteCPM11040({ IdList: idList })
+          .pipe(untilDestroyed(this))
+          .subscribe(() => {
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit(this.queryForm);
+          });
+      }
+    });
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
 }

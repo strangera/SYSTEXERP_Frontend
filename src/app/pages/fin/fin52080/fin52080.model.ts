@@ -10,6 +10,9 @@ export interface FIN52080Data {
   Ledger_MD: LedgerMDType;
   Org_YN: 'Y' | 'N';
   Voucher_Type: VoucherType;
+  CanDel?: boolean;
+  EXP_YEAR?: number | null;
+  RESI_VALUE?: number | null;
 }
 
 export interface FIN52080Query {
@@ -32,12 +35,44 @@ export interface FIN52080ClassNo {
 }
 
 export interface FIN52080Tree {
-  org_id: string;
-  org10Label: string;
-  org20Label: string;
-  org30Label: string;
-  org40Label: string;
-  org_name: string;
+  T_Id: string;
+  T10Label: string;
+  T20Label: string;
+  T30Label: string;
+  T40Label?: string;
+  T_Name: string;
+}
+
+export interface DeleteFIN52080Request {
+  Ids: string[] | null;
+}
+
+export interface UpdateFIN52080Request {
+  AccNo?: string | null;
+  AccCName?: string | null;
+  AccEName?: string | null;
+  AccDC?: string | null;
+  Ledger_MD?: string | null;
+  ClassNo?: string | null;
+  ABAT_YN?: string | null;
+  Voucher_Type?: string | null;
+  Budget_YN?: string | null;
+  Org_YN?: string | null;
+  Input_YN?: string | null;
+}
+
+export interface UpdateFIN52080Response {
+  AccNo?: string | null;
+  AccCName?: string | null;
+  AccEName?: string | null;
+  AccDC?: string | null;
+  Ledger_MD?: string | null;
+  ClassNo?: string | null;
+  ABAT_YN?: string | null;
+  Voucher_Type?: string | null;
+  Budget_YN?: string | null;
+  Org_YN?: string | null;
+  Input_YN?: string | null;
 }
 
 /** D: 借 C: 貸 */

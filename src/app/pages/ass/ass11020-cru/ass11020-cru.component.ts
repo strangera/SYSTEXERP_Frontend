@@ -1,151 +1,152 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-
-//
-import { NgIf } from '@angular/common';
+import { Component, computed, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { ASS11010Service } from '@service/api/ass/ass11010.service';
+import { ASS11020Service } from '@service/api/ass/ass11020.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { finalize } from 'rxjs';
+import { ASS11020Data, ASS11020InsertRequest, ASS11020UpdateRequest } from '../ass11020/ass11020.model';
 
-//3.1.1.2 中分類維護作業 CRU
+// 3.1.1.2 資產列管品及耗材分類管理作業-中分類維護作業 CRU
 @Component({
   selector: 'app-ass11020-cru',
   templateUrl: './ass11020-cru.component.html',
   styleUrl: './ass11020-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [
+    FormsModule,
+    PanelModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    ButtonComponent,
+    DropdownComponent,
+    InputTextComponent,
+    InputTextareaComponent,
+    MenubarComponent,
+  ]
 })
-export class ASS11020CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
+export class ASS11020CRUComponent extends BasicCruPageComponent<ASS11020Data> implements OnInit {
 
-  //
-  bigCategoryCodeOptions: any[] = [
-    { value: 'A', label: 'A/裝潢工程' },
-    { value: 'B', label: 'B/其他工程' },
-    { value: 'C', label: 'C/電腦及電子零件產品' },
-    { value: 'D', label: 'D/電力及照明系統' },
-    { value: 'E', label: 'E/家電家具設備' },
-    { value: 'F', label: 'F/機消空電水零配件' },
-    { value: 'G', label: 'G/辦公及營運庶務' },
-    { value: 'H', label: 'K/印刷品(非廣告行銷)' },
-  ];
-  // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    midCategoryCode: [, [Validators.required, Validators.maxLength(2)]], // 中分類代碼
-    midCategoryName: ['', [Validators.required, Validators.maxLength(32)]], // 中分類名稱
-    bigCategoryCode: [, [Validators.required]], // 大分類代碼
-    bigCategoryName: ['', [Validators.maxLength(40)]], // 大分類名稱
-    illustrate: [,], // 說明
+  public readonly dataForm = this.formBuilder.nonNullable.group({
+    /** 中分類代碼 */
+    CLASS_ID: new FormControl<string>('', [Validators.required, Validators.maxLength(2)]),
+    /** 中分類名稱 */
+    CLASS_NAME: new FormControl<string>('', [Validators.required, Validators.maxLength(32)]),
+    /** 大分類代碼 */
+    B_CLASS_ID: new FormControl<string>('', [Validators.required]),
+    /** 說明 */
+    NOTES: new FormControl<string>(''),
   });
-  //
-  // ----------------------------------------------------------------
-  //
+  public readonly df = computed(() => this.dataForm.controls);
+
+  public readonly tableLoading = signal<boolean>(false);
+
+  // 大分類代碼/名稱下拉選項
+  public readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
+    public readonly service: ASS11020Service,
+    private readonly ass11010Service: ASS11010Service,
+    private readonly logger: NGXLogger,
+    private readonly notification: NotificationService,
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310002';
-    //
+    this.initializePage('ASS11020', this.dataForm);
+    this.logger.debug(`ASS11020 CRU init:`, [this.user, this.rowdata]);
 
-    //
-    // ----------------------------------------------------------------
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
+    // 手動處理欄位對應：API 回傳 M_CLASS_ID/M_CLASS_NAME，表單使用 CLASS_ID/CLASS_NAME
+    if (this.rowdata) {
+      this.dataForm.patchValue({
+        CLASS_ID: this.rowdata.M_CLASS_ID ?? '',
+        CLASS_NAME: this.rowdata.M_CLASS_NAME ?? '',
+        B_CLASS_ID: this.rowdata.B_CLASS_ID ?? '',
+        NOTES: this.rowdata.NOTES ?? '',
+      });
     }
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    this.loadBigClassOptions();
   }
 
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
+  /**
+   * 載入大分類下拉選項
+   */
+  private loadBigClassOptions(): void {
+    this.ass11010Service.queryASS11010({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
+          value: item.CLASS_ID,
+        }));
+        this.bigClassOptions.set(options);
+      },
+    });
   }
 
-  onCancel() {
-    this.router.navigate(['/ASS1000/ASS11020']);
+  public onSubmit(): void {
+    this.handleSubmit(this.dataForm, () => {
+      const raw = this.dataForm.getRawValue();
+
+      this.tableLoading.set(true);
+
+      if (this.isFormCreateable) {
+        // 新增
+        const insertPayload: ASS11020InsertRequest = {
+          CLASS_ID: raw.CLASS_ID ?? '',
+          CLASS_NAME: raw.CLASS_NAME ?? '',
+          B_CLASS_ID: raw.B_CLASS_ID ?? '',
+          NOTES: raw.NOTES ?? '',
+        };
+        this.logger.debug(`onSubmit insert:`, [insertPayload]);
+
+        this.service.insertASS11020(insertPayload).pipe(
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        ).subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.notification.successBubble('新增成功');
+            this.onCancel();
+          },
+        });
+      } else {
+        // 更新
+        const updatePayload: ASS11020UpdateRequest = {
+          OLD_B_CLASS_ID: this.rowdata?.B_CLASS_ID ?? '',
+          OLD_CLASS_ID: this.rowdata?.M_CLASS_ID ?? '',
+          NEW_B_CLASS_ID: raw.B_CLASS_ID ?? '',
+          NEW_CLASS_ID: raw.CLASS_ID ?? '',
+          NEW_CLASS_NAME: raw.CLASS_NAME ?? '',
+          NEW_NOTES: raw.NOTES ?? '',
+        };
+        this.logger.debug(`onSubmit update:`, [updatePayload]);
+
+        this.service.updateASS11020(updatePayload).pipe(
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        ).subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.notification.successBubble('更新成功');
+            this.onCancel();
+          },
+        });
+      }
+    });
   }
 }

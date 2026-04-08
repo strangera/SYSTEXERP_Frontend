@@ -1,27 +1,22 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Location } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-
-import {
-  FIN55010Service,
-  FIN55010Detail,
-} from '../../../service/api/fin/fin55010.service';
-
+import { FIN55010Detail, FIN55010Service } from '../../../service/api/fin/fin55010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-fin55010',
@@ -43,32 +38,14 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
   ]
 })
 export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> implements OnInit {
-
   constructor(
     private fin55010Service: FIN55010Service,
-    private dropDownListService: DropDownListService,
-  ) {
-    super();
-  }
-
-  readonly yesterday: Date = (() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - 1);
-    return d;
-  })();
-
-  /** 匯出 loading 共用旗標 */
+    private readonly location: Location,
+  ) { super(); }
   btnLoading = false;
-
-  /** 記住上一次查詢的 payload（供匯出使用） */
-  private lastQueryBody: any | null = null;
-
   queryForm = this.formBuilder.group({
-    DateFrom: [this.yesterday, Validators.required],
-    DateTo: [this.yesterday, Validators.required],
-    // DateFrom: ['2025-04-01', Validators.required],
-    // DateTo: ['2025-04-30', Validators.required],
+    DateFrom: [yesterday, Validators.required],
+    DateTo: [yesterday, Validators.required],
     VouNoFrom: [null],
     VouNoTo: [null],
     CRT_USR: [null],
@@ -79,11 +56,10 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
     PrintType: ['A4R'],
     ...createPaginationConfig([])
   });
-
   data: FIN55010Detail[] = [];
   selectedItems: FIN55010Detail[] = [];
   totalRecords = 0;
-
+  private lastQueryBody: any | null = null;
   columns: Column[] = [
     { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
     { field: 'VoucherType_Name', header: '傳票種類', visible: true },
@@ -94,7 +70,6 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
     { field: 'VouAmt', header: '傳票金額', visible: true, format: formatAmount },
     { field: 'DetailCount', header: '明細筆數', visible: true },
   ];
-
   //#region 下拉
   VoucherTypeListOptions: any[] = [];
   VouStatusListOptions: any[] = [
@@ -112,24 +87,17 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
 
   ngOnInit(): void {
     this.initializePage('FIN55010', 'account/fin/fin55010cru', this.queryForm, (form) => this.onSubmit(form));
-    // ✅ 預先把 ProgNo 寫入一次，避免你從其它地方直開 CRU
     try { localStorage.setItem('FIN55010_CRU_PROGNO', 'FIN55010'); } catch { }
-
     this.loadOptions();
-
     const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
     if (saved) {
       this.queryForm.patchValue(this.coerceDates(saved), { emitEvent: false });
       this.lastQueryBody = saved;
     }
-
-    this.queryForm.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe(() => {
-        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      });
+    this.queryForm.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+    });
   }
-
   private coerceDates(raw: any) {
     const fix = (v: any) => {
       if (!v) return v;
@@ -148,28 +116,20 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
 
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
-      this.fin55010Service.queryFIN55010(form.getRawValue())
-        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-        .subscribe((response) => {
-          this.data = response.Data ?? [];
-          this.totalRecords = response.TotalCount ?? this.data.length;
-
-          // 記住本次查詢（匯出用）
-          this.lastQueryBody = form.getRawValue();
-
-          // 保存查詢狀態
-          this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
-        });
+      this.fin55010Service.queryFIN55010(form.getRawValue()).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((response) => {
+        this.data = response.Data ?? [];
+        this.totalRecords = response.TotalCount ?? this.data.length;
+        this.lastQueryBody = form.getRawValue();
+        this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
+      });
     });
   }
-
   override onLazyLoadData(event: any, form: FormGroup) {
     form.patchValue({
       pageSize: event?.pageSize,
       pageIndex: event?.pageIndex,
       SortBy: event?.SortBy
     }, { emitEvent: false });
-
     this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
   }
 
@@ -180,8 +140,8 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
       this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
       return;
     }
-
     // 儲存交接資料到 localStorage（含 ProgNo）
+    // 參考fin54025寫法
     try {
       const handoff = {
         vouNo,
@@ -190,14 +150,15 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
       };
       localStorage.setItem('FIN55010_CRU_HANDOFF', JSON.stringify(handoff));
       localStorage.setItem('FIN55010_CRU_PROGNO', 'FIN55010'); // ✅ 存 ProgNo
+      const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55010cru');
+      const finalUrl = `${window.location.origin}${externalUrl}`;
+      // 開新分頁
+      window.open(finalUrl, '_blank', 'noopener');
       console.log('[FIN55010] 已儲存 handoff:', handoff);
     } catch (err) {
       console.error('[FIN55010] handoff save failed:', err);
       this.messageService?.warnBubble?.('寫入交接資料失敗。');
     }
-
-    // 開新分頁
-    window.open('/account/fin/fin55010cru', '_blank', 'noopener');
   }
 
   loadOptions() {
@@ -227,11 +188,6 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
         next: (r) => this.handleFileExport(r, '.pdf', '傳票列印'),
         error: () => this.messageService?.warnBubble?.('匯出 PDF 失敗。'),
       });
-  }
-
-  // TODO: 待實作 參考fin55050
-  onExportXLSX() {
-
   }
 
   // ========= 本地工具 =========

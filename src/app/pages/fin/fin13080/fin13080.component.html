@@ -3,61 +3,30 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="退回/折讓單號"
-              controlName="No"
-              [control]="queryForm.controls.No"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="退回/折讓單號" controlName="No" [control]="queryForm.controls.No"
+              [submitted]="submitted"></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              label="申報年月"
-              calendarType="dateMonthOne"
-              controlName="GUI_YYMM"
-              [control]="queryForm.controls.GUI_YYMM"
-              [submitted]="submitted"
-              [minDate]="minDate"
-            ></app-calendar>
+            <app-calendar controlName="INV_DeclareYM" calendarType="dateMonthOne" label="申報年月"
+              [control]="queryForm.controls.INV_DeclareYM" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              label="退出/折讓日期"
-              controlName="Date"
-              calendarType="dateOne"
-              [control]="queryForm.controls.Date"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-calendar label="退出/折讓日期" controlName="Date" calendarType="dateOne" [control]="queryForm.controls.Date"
+              [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="發票號碼(起)"
-              controlName="Invoice_No_Start"
-              [control]="queryForm.controls.Invoice_No_Start"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="發票號碼(起)" controlName="Invoice_No_Start"
+              [control]="queryForm.controls.Invoice_No_Start" [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="發票號碼(迄)"
-              controlName="Invoice_No_End"
-              [control]="queryForm.controls.Invoice_No_End"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="發票號碼(迄)" controlName="Invoice_No_End" [control]="queryForm.controls.Invoice_No_End"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
 
@@ -71,28 +40,16 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table
-      tableKey="FIN13080"
-      [data]="data"
-      [columns]="columns"
-      [(selectedItems)]="selectedItems"
-      [showRowEdit]="false"
-      [showEdit]="false"
-      [showManage]="false"
-      [loading]="loading"
-      [showDelete]="false"
-      [showCheckBox]="true"
-      [multiSortMeta]="[{ field: 'No', order: 1 }]"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true"
-      (delete)="onDelete(selectedItems)"
-    >
+    <app-table tableKey="FIN13080" [data]="data" [columns]="columns" [(selectedItems)]="selectedItems"
+      [showRowEdit]="false" [showEdit]="false" [showManage]="false" [loading]="loading" [showDelete]="false"
+      [showCheckBox]="true" [multiSortMeta]="[{ field: 'No', order: 1 }]" [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+      (delete)="onDelete(selectedItems)">
       <header>
         <div class="flex w-full justify-content-end">
           <p-button type="button" label="確認刪除" (onClick)="onDelete(selectedItems)"></p-button>
         </div>
       </header>
-        </app-table>
+    </app-table>
   </div>
 </div>

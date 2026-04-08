@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { FIN52080ClassNo, FIN52080Data, FIN52080Query, FIN52080Tree } from '@pages/fin/fin52080/fin52080.model';
+import { DeleteFIN52080Request, FIN52080ClassNo, FIN52080Data, FIN52080Query, FIN52080Tree, UpdateFIN52080Request, UpdateFIN52080Response } from '@pages/fin/fin52080/fin52080.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
@@ -12,13 +12,13 @@ const apiUrl = environment.ApiUrl + '/FIN0000/GLS1000';
 @Injectable({ providedIn: 'root' })
 export class FIN52080Service {
 
-  public readonly classNoOptions = signal<FIN52080ClassNo[]>([]);
+  public readonly classNoOptions = signal<Option[]>([]);
 
   public readonly classNoLoading = signal<boolean>(!1);
 
   public accNoFilter = /^\d{1,8}$/;
 
-  public readonly classNoMap = computed(() => new Map(this.classNoOptions().map(item => [item.ClassNo, item.ClassCName])));
+  public readonly classNoMap = computed(() => new Map(this.classNoOptions().map(item => [item.value, item])));
   public readonly voucherTypeMap = computed(() => new Map(this.voucherTypeOption.map(item => [item.value, item.label])));
 
   /** 借/貸 */
@@ -58,20 +58,6 @@ export class FIN52080Service {
     { value: 'E', label: '應收保證票據' }
   ];
 
-  private readonly LeaveLabel = 'T_Name';
-  private readonly listTitle = '科目圖';
-  private readonly treeColumn = [
-    { value: 'T10Label', label: '大分類' },
-    { value: 'T20Label', label: '中分類' },
-    { value: 'T30Label', label: '小分類' },
-  ];
-
-  public readonly TreeElements = {
-    treeColumn: this.treeColumn,
-    LeaveLabel: this.LeaveLabel,
-    listTitle: this.listTitle,
-  };
-
   constructor(
     private readonly http: HttpClient,
     private readonly logger: NGXLogger,
@@ -100,8 +86,9 @@ export class FIN52080Service {
     this.classNoLoading.set(!0);
     this.http.post<BaseQueryResponse<FIN52080ClassNo>>(`${apiUrl}/queryClassNoDropdown`, {}).pipe(
       take(1),
+      map(res => res.Data.map(item => ({ value: item.ClassNo, label: `${item.ClassNo} - ${item.ClassCName}`, ...item }))),
       tap(res => {
-        this.classNoOptions.set(res.Data);
+        this.classNoOptions.set(res);
         this.logger.debug('查詢ClassNo結果:', [res]);
       }),
       finalize(() => this.classNoLoading.set(!1))
@@ -125,4 +112,28 @@ export class FIN52080Service {
       tap(res => this.logger.debug(logLabel, [res])),
     );
   };
+
+  /** 更新 */
+  public updateFIN52080(payload: UpdateFIN52080Request): Observable<BaseQueryResponse<UpdateFIN52080Response>> {
+    return this.http.post<BaseQueryResponse<UpdateFIN52080Response>>(`${apiUrl}/updateFIN52080`, payload).pipe(
+      take(1),
+      tap(res => this.logger.debug('更新FIN52080結果:', [res])),
+    );
+  }
+
+  /** 刪除 */
+  public deleteFIN52080(payload: DeleteFIN52080Request): Observable<BaseQueryResponse<unknown>> {
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/deleteFIN52080`, payload).pipe(
+      take(1),
+      tap(res => this.logger.debug('刪除FIN52080結果:', [res])),
+    );
+  };
+
+  /** 檢查科目代號是否已存在 */
+  public checkAccNoExists(accNo: string): Observable<BaseQueryResponse<boolean>> {
+    return this.http.post<BaseQueryResponse<boolean>>(`${apiUrl}/checkAccNoExists`, { AccNo: accNo }).pipe(
+      take(1),
+      tap(res => this.logger.debug('檢查科目代號結果:', [res])),
+    );
+  }
 }

@@ -3,25 +3,25 @@ import { ValidationService } from './../../../shared/service/validation.service'
 import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
+import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
+import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
-
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { Tls12010DetailService } from './tls12010-detail.service';
+
 
 export interface Potential_Customer {
   id: number; // 主鍵，自動編號
@@ -41,7 +41,7 @@ export interface Potential_Customer {
   VEN_BossFax?: string; // 廠商聯絡人傳真
   VEN_BossMobile?: string; // 廠商聯絡人行動電話
   VEN_BossEmail?: string; // 廠商聯絡人電子郵件
-  VEN_Addr?: string; // 公司通訊地址
+  VEN_Addr?: string; // 郵寄地址
   VEN_PersonInCharge?: string; // 公司負責人
   business_type?: string; // 經營方式
   demanded_area?: number; // 需求面積 (小數，預設 0)
@@ -90,7 +90,7 @@ export interface POS2013 {
   templateUrl: './tls12010-cru.component.html',
   styleUrl: './tls12010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, CommonModule, DropdownComponent, RadiobuttonComponent, EditorTextComponent, ExpandableEditTableComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, CommonModule, DropdownComponent, RadiobuttonComponent, EditorTextComponent, ExpandableEditTableComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonComponent, NgIf, TranslateModule, ButtonModule]
 })
 export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Customer> implements OnInit {
   @ViewChild('detailTable') detailTable!: ExpandableEditTableComponent;
@@ -115,20 +115,20 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     VEN_Name: ['', [Validators.required, Validators.maxLength(100)]], // 廠商名稱
     /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
     /*若廠商類型為3=員工id, tblUser.user_name */
-    // 有資料可以用 [烘焙坊] 輸入測試試試
     VEN_EngName: ['', [Validators.maxLength(100), this.validationService.englishNumberSpaceSymbolValidator]], // 廠商英文名稱
     /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
     /*若廠商類型為3=員工id, 由使用者自行輸入 */
     bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
     tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱) --- 20251007: 品牌名稱(中文)應為文字輸入欄位，目前下拉選單取到自營的品牌資料，改為純文字，不卡控
     tlt_EngName: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 品牌英文(專櫃名稱)
-    VEN_Boss: ['', [Validators.required, Validators.maxLength(20)]], // 廠商聯絡人
+    VEN_Boss: ['', [Validators.required, Validators.maxLength(12)]], // 廠商聯絡人
     VEN_BossTel: ['', [Validators.required, Validators.maxLength(20), this.validationService.phoneNumberValidator]], // 廠商聯絡人電話
     VEN_BossTitle: ['', [Validators.maxLength(20)]], // 廠商聯絡人頭銜
     VEN_BossFax: ['', [Validators.maxLength(20), this.validationService.phoneNumberValidator]], // 廠商聯絡人傳真
     VEN_BossMobile: ['', [Validators.maxLength(20), this.validationService.phoneNumberValidator]], // 廠商聯絡人行動電話
     VEN_BossEmail: ['', [Validators.maxLength(60), this.validationService.noChineseValidator]], // 廠商聯絡人電子郵件
-    VEN_Addr: ['', [Validators.maxLength(100)]], // 公司通訊地址
+    VEN_Addr: ['', [Validators.maxLength(100)]], // 郵寄地址
+    VEN_Address: ['', [Validators.maxLength(100)]], // 公司營登地址
     VEN_PersonInCharge: ['', [Validators.maxLength(20)]], // 公司負責人
     business_type: [null, [Validators.maxLength(1)]], // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
 
@@ -144,9 +144,9 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   org_potentialDetail: Potential_Customer_Detail[] = []; // 備份
   //欄位資訊
   Potential_Customer_Detail_Columns: ColumnDef[] = [
-    { field: 'other_shop', header: '其他商場', type: 'text', editable: true, autoWidth: true },
-    { field: 'shop_area', header: '面積', type: 'number', allowDecimal: true, decimalPlaces: 3, editable: true, autoWidth: true },
-    { field: 'total_amt', header: '營業額', type: 'number', allowDecimal: true, editable: true, autoWidth: true }
+    { field: 'other_shop', header: '其他商場', type: 'text', editable: true, autoWidth: true, style: 'width: 40%; min-width: 200px' },
+    { field: 'shop_area', header: '面積', type: 'number', allowDecimal: true, decimalPlaces: 3, editable: true, autoWidth: true, style: 'width: 30%; min-width: 100px' },
+    { field: 'total_amt', header: '營業額', type: 'number', allowDecimal: true, editable: true, autoWidth: true, style: 'width: 30%; min-width: 100px' }
   ];
   // 預設新項目模板
   defaultNewDetail: { id: number, PC_id: number | null; other_shop: string; shop_area: number; total_amt: number; status: string } = {
@@ -225,22 +225,19 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       if (this.skipValueChanges) return;
       this.onCusTypeChange(value);
     });
-
-    //品牌 valueChanges
-    // --- 20251007: 品牌名稱(中文)應為文字輸入欄位，目前下拉選單取到自營的品牌資料，改為純文字，不卡控
-
-    // this.dataForm.get('tlt_name')?.valueChanges.subscribe(value => {
-    //   if (this.skipValueChanges) return;
-    //   const match = this.tlt_name_Option.find(opt => opt.No === value);
-    //   if (match) {
-    //     this.dataForm.get('tlt_EngName')?.setValue(match.LOGO_EN_NAME);
-    //   } else {
-    //     this.dataForm.get('tlt_EngName')?.setValue('');
-    //     // this.messageService.errorBubble('無該廠商名稱資料');
-    //   }
-    // });
-
     console.log('讀取資料', this.dataForm.value);
+
+    // 訂閱 cus_uniform_id 有應到的POS2013就填寫其他欄位
+    this.dataForm.get('cus_uniform_id')?.valueChanges.pipe(
+      untilDestroyed(this)
+    ).subscribe(value => {
+      // Only trigger auto-fill if type is '1' (Tax ID) and we aren't skipping initial value changes
+      if (this.skipValueChanges || this.dataForm.get('cus_type')?.value !== '1') return;
+
+      if (value && value.length >= 8) { // Typical minimum length for Tax ID
+        this.fetchVendorData(value);
+      }
+    });
 
     // 最後設為 false，代表資料已匯入完成，之後就會開始觸發 valueChanges
     this.skipValueChanges = false;
@@ -320,11 +317,13 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   }
 
   onClearForm() {
-    // this.dataForm.reset(); // 重置表單
     if (this.crudstatus == CRUDStatus.Create)
       this.potentialDetail = []; // 清除明細
-    if (this.crudstatus == CRUDStatus.Edit)
-      this.potentialDetail = this.org_potentialDetail; // 還原明細
+    if (this.crudstatus == CRUDStatus.Edit) {
+      console.log('還原明細', this.org_potentialDetail);
+      // ✅ 修改這裡：確保還原回去的是全新的物件複本
+      this.potentialDetail = JSON.parse(JSON.stringify(this.org_potentialDetail));
+    }
   }
 
   // 讀取dopropdown選項
@@ -398,6 +397,11 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       }));
       console.log('接洽人員代號:', this.contact_USR_Option);
     });
+
+    //查 統一編號
+    this.tls12010Service.queryPOS2013_DropDownList({ "VEN_Flag": "1" }).pipe(untilDestroyed(this)).subscribe((response) => {
+      console.log('統一編號', response)
+    });
   }
 
   // 讀取明細資料
@@ -405,11 +409,15 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     console.log('要求PC_id資料:', PC_id);
     this.tls12010Service.queryTLS12010_Detail({ "PC_id": PC_id }).pipe(untilDestroyed(this)).subscribe((response) => {
       if (response.Status === '0000') {
-        this.potentialDetail = response.Data.map((item: any) => ({
+        const data = response.Data.map((item: any) => ({
           ...item,
-          status: 'original', // 有明細資料，讀取明細狀態設定為 'original';
+          status: 'original',
         }));
-        this.org_potentialDetail = [...this.potentialDetail]
+        this.potentialDetail = data;
+
+        // ✅ 修改這裡：使用深拷貝備份，避免物件引用連動
+        this.org_potentialDetail = JSON.parse(JSON.stringify(data));
+
         console.log('取得明細資料:', this.potentialDetail);
       } else {
         this.messageService.errorBubble(`讀取失敗: ${response.Message}`);
@@ -427,6 +435,52 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       // 若找不到，清空欄位或保留原值，看你的需求
       this.dataForm.get('contact_USR_Name')?.setValue('');
     }
+  }
+
+  // 統編變化
+  fetchVendorData(uniformId: string) {
+    const body = {
+      VEN_Flag: "1",
+      VEN_Uniform: uniformId
+    };
+
+    this.tls12010Service.queryTLS12010_POS2013(body).pipe(
+      untilDestroyed(this)
+    ).subscribe({
+      next: (response) => {
+        // Assuming the API returns a list and we take the first match
+        if (response && response.Data && response.Data.length > 0) {
+          const vendor = response.Data[0];
+
+          console.log('統編變化查詢結果', response.Data);
+
+          // 將 API 結果寫入表單對應欄位
+          this.dataForm.patchValue({
+            VEN_Name: vendor.VEN_Name || null, // 廠商名稱(中文) 
+            VEN_EngName: vendor.VEN_EngName || null, // 廠商名稱(英文)
+
+            VEN_BossTel: vendor.VEN_Tel || null,         // 廠商聯絡人電話 (對應 API 的公司電話)
+            VEN_BossTitle: vendor.CHARGE_TITLE || null,         // 廠商聯絡人頭銜
+            VEN_BossFax: vendor.VEN_Fax || null,         // 廠商聯絡人傳真
+            VEN_BossEmail: vendor.VEN_Email || null,     // 廠商聯絡人電子郵件
+
+            VEN_Addr: vendor.VEN_GUIAddr || null,    // 郵寄地址
+            VEN_Address: vendor.VEN_Address || null, // 公司營登地址
+
+          }, { emitEvent: false }); // 使用 emitEvent: false 避免觸發其他連動
+
+          // 更新快取，確保在切換類型時能還原資料
+          this.cachedVendorData = {
+            cus_uniform_id: uniformId,
+            VEN_Name: vendor.VEN_Name || '',
+            VEN_EngName: vendor.VEN_EngName || ''
+          };
+        }
+      },
+      error: (err) => {
+        console.error('Failed to fetch vendor data', err);
+      }
+    });
   }
 
   // 廠商類型 radio button 連動的驗證器變化
@@ -526,6 +580,22 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
   // 批次刪除 潛在明細檔
   onBatchDeleteDetail(selectedItems: any[]): void {
-    this.tls12010DetailService.deletePotential(selectedItems, this.potentialDetail);
+    // this.tls12010DetailService.deletePotential(selectedItems, this.potentialDetail);
+    if (!selectedItems || selectedItems.length === 0) {
+      this.messageService.warnBubble('請先勾選欲刪除的項目');
+      return;
+    }
+
+    this.messageService.confirm({
+      header: '確認刪除',
+      message: `是否確認刪除選中的 ${selectedItems.length} 個其他商場項目？`,
+      accept: () => {
+        // 呼叫 Service 執行刪除邏輯（將狀態改為 deleted 或從陣列移除）
+        this.tls12010DetailService.deletePotential(selectedItems, this.potentialDetail);
+
+        // 刪除成功後提示 (選用)
+        this.messageService.successBubble('已刪除');
+      },
+    });
   }
 }

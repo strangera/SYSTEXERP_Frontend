@@ -290,7 +290,7 @@
       <td class="text-center font-bold">
         {{ subTotalTitle ? subTotalTitle : rowData?.[groupRowsBy] + " 小計" }}
       </td>
-      <td *ngFor="let col of columns" class="text-center font-bold pr-2">
+      <td *ngFor="let col of columns" class="text-center font-bold pr-2" [ngClass]="col.style">
         <ng-container *ngIf="col.isSubTotal">
           {{
           col.format
@@ -314,7 +314,7 @@
           IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'
         "></td>
       <td *ngIf="expansionColumns.length && IsPrint"></td>
-      <td *ngFor="let col of columns" class="text-center font-bold pr-2">
+      <td *ngFor="let col of columns" class="text-center font-bold pr-2" [ngClass]="col.style">
         <ng-container *ngIf="col.isSubTotal">
           {{
           col.format
@@ -335,7 +335,7 @@
           IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'
         "></td>
       <td *ngIf="expansionColumns.length && IsPrint"></td>
-      <td *ngFor="let col of columns" class="text-center font-bold pr-2">
+      <td *ngFor="let col of columns" class="text-center font-bold pr-2" [ngClass]="col.style">
         <ng-container *ngIf="col.isTotal">
           {{ col.format ? col.format(data[col.field]) : data[col.field] }}
         </ng-container>
@@ -361,11 +361,12 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="emptymessage">
-    <tr>
+    <tr *ngIf="hasSearched">
       <td [attr.colspan]="getVisibleHeaderCount">
         <div>
-          <div class="flex justify-content-center align-items-center h-5rem min-h-full p-2 font-bold text-xl">
-            {{ emptyMessage }}
+          <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+            <i class="pi pi-search mr-2"></i>
+            {{ emptyMessage || '查無資料' }}
           </div>
         </div>
       </td>

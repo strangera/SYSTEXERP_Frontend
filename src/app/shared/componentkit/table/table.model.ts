@@ -3,10 +3,13 @@ import { SortMeta } from 'primeng/api';
 export interface Column<T = Record<string, any>> {
   field: keyof T;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
+  /** 對齊方式：預設由元件決定，常見為 'left' | 'center' | 'right' */
+  align?: 'left' | 'center' | 'right';
+  reportType?: reportType; // 共通匯出格式類型
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
-  exportFormat?: Record<string, string>[];
+  exportFormat?: Record<string, string>[]; // transformOptionsForExport(getSYS1000Options('T116'))
   groupField?: string;
   isSubTotal?: boolean; // 是否為小計欄位
   isTotal?: boolean; // 是否為總計欄位
@@ -14,6 +17,7 @@ export interface Column<T = Record<string, any>> {
   sortField?: string; // 排序欄位(預設為 field)
   htmlFormat?: boolean; // 是否為 HTML 格式 (適用於顯示特殊符號或樣式)
   style?: string;
+  cellClass?: (rowData: any, field?: string) => string;
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
 
@@ -24,6 +28,8 @@ export interface Column<T = Record<string, any>> {
   prefix?: string; // 前綴 (適用於 input 類型)
   suffix?: string; // 後綴 (適用於 input 類型)
   fractionDigits?: number;
+  min?: number; // 最小值 (適用於 inputNumber、percent)
+  max?: number; // 最大值 (適用於 inputNumber、percent)
   useGrouping?: boolean;
   required?: boolean; // 是否為必填欄位 (適用於輸入欄位)
 
@@ -79,7 +85,7 @@ export interface LazyLoadEvent {
 
 export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   return {
-    pageSize: [20],
+    pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [defaultSortBy ?? []],
   };
@@ -279,10 +285,24 @@ export function convertYYYYMMToDate(yyyymm: string): Date | null {
 }
 
 // 將 Date 轉為 "YYYYMM" 物件
-export function convertDateToYYYYMM(date: Date): string {
+export function convertDateToYYYYMM(date: any): string {
+  // 1. 基本空值檢查
   if (!date) return '';
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // 月份從 1 開始
+
+  // 2. 如果傳進來的是字串，嘗試轉成 Date 物件
+  let d = date;
+  if (typeof date === 'string') {
+    d = new Date(date);
+  }
+
+  // 3. 檢查是否為有效的 Date 物件 (防止 Invalid Date)
+  if (!(d instanceof Date) || isNaN(d.getTime())) {
+    console.warn('Invalid date provided to convertDateToYYYYMM:', date);
+    return ''; // 或者根據需求回傳原字串或特定格式
+  }
+
+  const year = d.getFullYear();
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
   return `${year}${month}`;
 }
 // formatDateToYYYY_MM_DD：輸出為 YYYY-MM-DD（避免 toISOString 造成減一天）
@@ -298,6 +318,19 @@ export const formatDateToYYYY_MM_DD = (value: string | Date): string | null => {
 
   return `${year}-${month}-${day}`;
 };
+// formatDateToHH_MM_SS：輸出為 HH:MM:SS（避免 toISOString 造成減一天）
+export const formatDateToHH_MM_SS = (value: string | Date): string | null => {
+  if (!value) return null;
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) return '';
+
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${hours}:${minutes}:${seconds}`;
+}
 // addDaysToDate：增加天數後的日期
 export const addDaysToDate = (date: Date, days: number): Date => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
 
@@ -343,6 +376,8 @@ export const formatToSixDigits = (value: string | number | null | undefined): st
   return strValue.padStart(6, '0');
 };
 
+export type reportType =
+  'string'; // string 類型，匯出時直接輸出原始值
 
 export type TableTypes =
   'input' |
@@ -358,7 +393,8 @@ export type TableTypes =
   'dropdownTable' |
   'dropdownTableTemplate' |
   'template' |
-  'detail';
+  'detail' |
+  'link';
 
 /** 可以用來做轉換的 Map */
 export const Maps = {
@@ -366,4 +402,18 @@ export const Maps = {
     ['Y', '是'],
     ['N', '否'],
   ]),
+};
+
+/**
+ * 根據 options 將值轉換為顯示文字
+ * @param value 原始值
+ * @param options 選項陣列，格式為 { value: string, label: string }[]
+ * @returns 對應的 label 或原始值
+ */
+export const formatOptionLabel = (value: any, options: { value: string; label: string }[] | undefined): string => {
+  if (!options || options.length === 0 || value === null || value === undefined) {
+    return value?.toString() || '';
+  }
+  const option = options.find(opt => opt.value === value?.toString());
+  return option ? option.label : value?.toString() || '';
 };

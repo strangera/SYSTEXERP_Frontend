@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin24010Service, QueryFIN24010Response } from '@service/api/fin/fin24010.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -39,11 +40,12 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
   // 下拉選單/多選列表的 Options 宣告 (參考查詢頁面)
   Org_IdOptions = this.dropDown.querySys3100(); // 組織代碼
   PayTypeOptions = [{ label: '電匯', value: '1' }, { label: '開票', value: '2' }, { label: '現金', value: '3' }] // 付款方式 1:電匯,2:開票,3:現金
-  VEN_BNK_No_ParamOptions = this.dropDown.queryAps1001NoBranch(); // 匯款銀行代號
+  VEN_BNK_No_ParamOptions = this.dropDown.queryAps1001_DropDownList(); // 匯款銀行代號
   CTRLYNOptions = [{ label: '是', value: 'Y' }, { label: '否', value: 'N' }]; // 票據禁止背書轉讓 (Y/N)
   AccNoOptions = this.dropDown.queryGls1005(); // 會計科目代號
   SubDetailNoOptions = this.dropDown.queryGLS1016(); // 對象別編號
-  VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商代號
+  VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
+  ACP_StatusOptions = getSYS1000Options('ACP_Status'); // 應付帳款狀態
 
   // 設定欄位狀態：根據 API 判斷，無法修改的欄位設為 disabled: true
   dataForm = this.formBuilder.nonNullable.group({
@@ -52,7 +54,7 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
     ACP_YYYYMM: [{ value: null, disabled: true }], // 應付帳款年月 (唯讀)
     acp_termno: [{ value: null, disabled: true }], // 帳款帳次 (唯讀)
     ACP_Date: [{ value: null, disabled: true }], // 立帳日期 (唯讀)
-    VEN_No: [{ value: null, disabled: true }], // 廠商代號 (唯讀)
+    VEN_No: [{ value: null, disabled: true }], // 廠商編號 (唯讀)
     VEN_Name: [{ value: null, disabled: true }], // 廠商名稱 (唯讀)
     VEN_Uniform: [{ value: null, disabled: true }], // 統一編號 (唯讀)
     AccNo: [{ value: null, disabled: true }], // 會計科目代號 (唯讀)
@@ -63,7 +65,7 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
     ACP_ReserveAmt: [{ value: null, disabled: true }], // 保留款金額 (唯讀)
     RetReserveAmt: [{ value: null, disabled: true }], // 退保留款金額 (唯讀)
     VEN_PayType: [null], // 付款方式 (Editable: PayType)
-    VEN_BNK_No: [null], // 匯款銀行代號 (Editable: BankNo, 對應 `VEN_BNK_No`)
+    Full_VEN_BNK_No: [null], // 匯款銀行代號 (Editable: BankNo, 對應 `VEN_BNK_No`)
     VEN_BNK_BranchNo: [{ value: null, disabled: true }], // 匯款銀行分行代號 (唯讀)
     VEN_BankAccountNo: [null], // 銀行帳號 (Editable: BankAcc, 對應 `VEN_BankAccountNo`)
     VEN_AccountName: [null], // 帳戶名稱 (Editable: AccName, 對應 `VEN_AccountName`)
@@ -105,10 +107,13 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
   ngOnInit(): void {
     this.initializePage('FIN24010', this.dataForm);
     this.route.queryParams.pipe(untilDestroyed(this)).subscribe(params => {
-      const body = { ACP_No: params['acpid'] }
-      this.fin24010Service.queryFIN24010(body).pipe(untilDestroyed(this)).subscribe(response => {
-        this.dataForm.patchValue(response.Data[0] as any);
-      })
+      const acpId = params['acpid'];
+      if (acpId) {
+        const body = { ACP_No: params['acpid'] }
+        this.fin24010Service.queryFIN24010(body).pipe(untilDestroyed(this)).subscribe(response => {
+          this.dataForm.patchValue(response.Data[0] as any);
+        })
+      }
     });
   }
 
@@ -117,7 +122,7 @@ export class FIN24010CRUComponent extends BasicCruPageComponent<QueryFIN24010Res
     const updateBody = {
       ACP_No: form.get('ACP_No')?.value,
       PayType: form.get('VEN_PayType')?.value,
-      BankNo: form.get('VEN_BNK_No')?.value,
+      BankNo: form.get('Full_VEN_BNK_No')?.value,
       BankAcc: form.get('VEN_BankAccountNo')?.value,
       AccName: form.get('VEN_AccountName')?.value,
       ExpectPayDate: this.datePipe.transform(form.get('ACP_ExpectPayDate')?.value, 'yyyy-MM-dd') as string, // 假設後端會處理日期格式

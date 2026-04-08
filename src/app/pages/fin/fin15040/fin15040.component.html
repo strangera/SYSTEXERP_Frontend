@@ -75,6 +75,18 @@
             [submitted]="submitted"
           ></app-calendar-range>
 
+          <!-- 發票狀態 -->
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="發票狀態"
+            controlName="INV_Cancel"
+            [options]="invStatusOptions"
+            [optionLabel]="'label'"
+            [optionValue]="'value'"
+            [control]="queryForm.controls.INV_Cancel"
+            [submitted]="submitted"
+          ></app-dropdown>
+
           <!-- 廠商統一編號 -->
           <app-input-text
             class="col-12 md:col-6 lg:col-4"

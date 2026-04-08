@@ -54,7 +54,7 @@ export class TLS21020Service {
   public getEntryTypes(): Option[] {
     return [
       { value: EntryType['SD銷售日傳票'], label: EntryType.SD },
-      { value: EntryType['WD自營日結傳票'], label: EntryType.WD },
+      // { value: EntryType['WD自營日結傳票'], label: EntryType.WD },
       { value: EntryType['MR租金傳票'], label: EntryType.MR },
       { value: EntryType['MD代扣傳票'], label: EntryType.MD },
       { value: EntryType['PR抽成傳票'], label: EntryType.PR },
@@ -80,7 +80,7 @@ export class TLS21020Service {
 
   public queryTLS21020_GLS1005(query: TLS21020GLS1005Query): void {
     this.gls1005Loading.set(!0);
-    this.http.post<BaseQueryResponse<TLS21020GLS1005Data>>(`${apiUrl}/queryTLS21020_GLS1005`, query).pipe(
+    this.http.post<BaseQueryResponse<TLS21020GLS1005Data>>(`${apiUrl}/GLS1005_ledgerMD_DropDownList`, query).pipe(
       take(1),
       tap(res => {
         this.TLS21020GLS1005Options.set(res.Data ?? []);
@@ -112,7 +112,7 @@ export class TLS21020Service {
 
   public getGLS1005s(): void {
     this.gls1005Loading.set(!0);
-    this.dropdownApi.queryGls1005().pipe(
+    this.dropdownApi.queryGls1005_ledgerMD().pipe(
       take(1),
       map(res => res ?? []),
       tap(res => {

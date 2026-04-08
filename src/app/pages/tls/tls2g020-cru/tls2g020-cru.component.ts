@@ -1,23 +1,23 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
+import { NgFor, NgIf } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { TableModule } from 'primeng/table';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
-import { NgIf, NgFor } from '@angular/common';
-import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
-import { InputNumberModule } from 'primeng/inputnumber';
+import { TranslateModule } from '@ngx-translate/core';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { PanelModule } from 'primeng/panel';
+import { TableModule } from 'primeng/table';
+import { Tls2g020Service } from '../../../service/api/tls/tls2g020.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 // 定義日期資料的類型
 interface DayData {
@@ -53,6 +53,8 @@ interface DayData {
 export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   editMode: 'month' | 'day' = 'month';
   currentMonthData: any = null;
+  // 儲存當前月份日明細的原始複本，用於還原
+  private originalMonthDays: Record<number, any> | null = null;
   daysInMonth: number[] = [];
   weeks: (number | null)[][] = [];
 
@@ -80,8 +82,8 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   /** 月份欄位設定 */
   columns: Column[] = [
     { field: 'Month', header: '月', format: (v: string) => v ? v.slice(-2) : '' },
-    { field: 'budget', header: '月預算', format: formatAmount  },
-    { field: 'avg_cag_charge_rate', header: '平均抽成' , format: formatAmount },
+    { field: 'budget', header: '月預算', format: formatAmount },
+    { field: 'avg_cag_charge_rate', header: '平均抽成', format: formatAmount },
     { field: 'charge_amt', header: '抽成額', format: formatAmount },
   ];
 
@@ -194,6 +196,8 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
 
         this.generateCalendar(year, month);
         this.updateMonthTotals();
+        // 儲存原始複本
+        this.originalMonthDays = JSON.parse(JSON.stringify(this.currentMonthData.days || {}));
       },
     });
   }
@@ -257,6 +261,19 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
     this.currentMonthData = null;
   }
 
+  // 還原當前月份的 day 明細為原始查詢值
+  onRestore(): void {
+    if (!this.currentMonthData) return;
+    if (this.originalMonthDays) {
+      this.currentMonthData.days = JSON.parse(JSON.stringify(this.originalMonthDays));
+    } else {
+      // 沒有原始資料就清空
+      this.currentMonthData.days = {};
+    }
+    this.updateMonthTotals();
+    this.cdr.detectChanges();
+  }
+
   onBudgetChange(day: number) {
     const data = this.currentMonthData.days[day];
     const rate = this.dataForm.controls['avg_cag_charge_rate'].value || 0;
@@ -297,6 +314,14 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
     if (!this.currentMonthData) return;
 
     const formVal = frm.getRawValue();
+
+    // 驗證：預估營業額 (budget) 必須等於 本月預算營業額合計 (BUDGET_Mbudget)
+    const expectedBudget = Number(formVal.budget ?? this.currentMonthData?.budget ?? 0);
+    const totalBudget = Number(formVal.BUDGET_Mbudget ?? 0);
+    if (Math.abs(expectedBudget - totalBudget) > 0.0001) {
+      this.messageService.errorBubble('預估營業額與本月預算營業額合計不相同，請確認後再儲存');
+      return; // 中止儲存，並確保不會停留在 loading
+    }
     const monthID = this.currentMonthData.MonthID ?? 0;
     const budget_yymm = formVal.budget_yymm ?? `${formVal.budget_yy}${formVal.budget_mm}`;
 
@@ -359,6 +384,10 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
 
           this.cdr.detectChanges();
           console.log('已觸發變更偵測，完全替換了 days 物件');
+          // 更新成功後自動返回查詢頁（並保留原本查詢狀態）
+          setTimeout(() => {
+            this.onCancel();
+          }, 800);
         }
       }
     });

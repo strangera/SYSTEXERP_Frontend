@@ -1,23 +1,23 @@
-import { DatePipe } from '@angular/common';
+import { AsyncPipe, DatePipe, Location } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
-import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { FIN29050Data, FIN29050Service, QueryFIN29050Request } from '../../../service/api/fin/fin29050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { DropDownListService } from './../../../service/utility/dropDownList.service';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-fin29050',
@@ -33,31 +33,39 @@ import { DropDownListService } from './../../../service/utility/dropDownList.ser
     ReactiveFormsModule,
     CalendarRangeComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
-    InputNumberRangeComponent
+    InputNumberRangeComponent,
+    RadiobuttonComponent,
+    AsyncPipe
   ]
 })
 export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     VEN_No_From: [null],
     VEN_No_To: [null],
-    ACP_Date_From: ['', Validators.required],
-    ACP_Date_To: ['', Validators.required],
+    ACP_Date_From: [new Date(), Validators.required],
+    ACP_Date_To: [new Date(), Validators.required],
     ACP_Amt_From: [null],
     ACP_Amt_To: [null],
     AccNo_From: [null],
     AccNo_To: [null],
+    ShowZeroBalance: ['N'],
+    UnpaidIncludeReserve: ['N'],
     ...createPaginationConfig([]),
   });
 
-  VendorNoOptions: any[] = []; // 廠商代號選項
-  AccNoOptions: any[] = []; // 科目代號選項
-
+  VendorNoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
+  AccNoOptions = this.dropdown.queryGls1005();
   data: FIN29050Data[] = [];
   totalRecords = 0;
+  totalData: any[] = [];
+  // 是否於查詢後自動載入剩餘頁（不修改共用元件）
+  autoLoadAll = false; // 改為由 table 滾動觸發載入
   pdfBtnLoading = false;
   excelBtnLoading = false;
+  // 提供給子 table 用於滾動載入
+  lastQueryBody: any | null = null;
+  queryFn: ((body: any) => Observable<any>) | null = null;
 
   columns: Column[] = [
     { field: 'VendorNo', header: '廠客代號', visible: true },
@@ -65,50 +73,24 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     { field: 'Summary', header: '摘要', visible: true },
     { field: 'BookDate', header: '立帳日期', visible: true, format: formatDate },
     { field: 'VoucherNo', header: '傳票編號', visible: true, type: 'detail' },
-    { field: 'PayableAmount', header: '應付金額', visible: true, format: formatAmount },
-    { field: 'OffsetAmount', header: '沖帳金額', visible: true, format: formatAmount },
-    { field: 'ReservationAmount', header: '保留款金額', visible: true, format: formatAmount },
-    { field: 'OffsetReservationAmount', header: '沖保留款金額', visible: true, format: formatAmount },
-    { field: 'UnpaidAmount', header: '未付金額', visible: true, format: formatAmount }
+    { field: 'PayableAmount', header: '應付金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'OffsetAmount', header: '沖帳金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'ReservationAmount', header: '保留款金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'OffsetReservationAmount', header: '沖保留款金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'UnpaidAmount', header: '未付金額', visible: true, format: formatAmount, isTotal: true }
   ];
 
   constructor(
-    private dropDownListService: DropDownListService,
     private fin29050Service: FIN29050Service,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private location: Location,
+    private readonly dropdown: DropdownApiService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN29050', '/fin/fin29050cru', this.queryForm, (frm) => this.onSubmit(frm));
-    this.loadOptions();
-  }
-
-  private loadOptions(): void {
-    // 廠商代號
-    this.dropDownListService.queryPOS2013_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: res => {
-          this.VendorNoOptions = (res?.Data || []).map((x) => ({ label: `${x.VEN_No} - ${x.Name}`, value: x.VEN_No }));
-        },
-        error: () => {
-          this.VendorNoOptions = [];
-        }
-      });
-
-    // 科目代號
-    this.dropDownListService.queryGLS1005_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: res => {
-          this.AccNoOptions = (res?.Data || []).map((x) => ({ label: `${x.No} - ${x.Name}`, value: x.No }));
-        },
-        error: () => {
-          this.AccNoOptions = [];
-        }
-      });
   }
 
   override onDetail(row: FIN29050Data) {
@@ -117,73 +99,95 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
       this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
       return;
     }
-
     try {
       const handoff = {
         vouNo,
         fromRoute: window.location.pathname,
         ts: Date.now(),
       };
-      localStorage.setItem('FIN29050_CRU_HANDOFF', JSON.stringify(handoff));
-      localStorage.setItem('FIN29050_CRU_PROGNO', 'FIN29050');
-      console.log('[FIN29050] 已儲存 handoff:', handoff);
+      // 導到 FIN55050 的 CRU，使用 FIN55050 的 localStorage key
+      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
+      console.log('[FIN29050] 已儲存 handoff(for FIN55050):', handoff);
     } catch (err) {
       console.error('[FIN29050] handoff save failed:', err);
       this.messageService?.warnBubble?.('寫入交接資料失敗。');
     }
-
-    window.open('/account/fin/fin29050cru', '_blank', 'noopener');
+    const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
+    const finalUrl = `${window.location.origin}${externalUrl}`;
+    window.open(finalUrl, '_blank', 'noopener');
   }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const formValue = frm.value;
+      const raw = frm.getRawValue();
       this.loading = true;
-
+      const pageSize = Number(raw.pageSize) || 0;
+      const pageIndex = Number(raw.pageIndex) || 0;
       const requestData: QueryFIN29050Request = {
-        ...formValue,
-        VEN_No_From: formValue.VEN_No_From || '',
-        VEN_No_To: formValue.VEN_No_To || '',
-        ACP_Date_From: this.datePipe.transform(formValue.ACP_Date_From!, 'yyyy-MM-dd') || '',
-        ACP_Date_To: this.datePipe.transform(formValue.ACP_Date_To!, 'yyyy-MM-dd') || '',
-        ACP_Amt_From: formValue.ACP_Amt_From ?? undefined,
-        ACP_Amt_To: formValue.ACP_Amt_To ?? undefined,
-        AccNo_From: formValue.AccNo_From || '',
-        AccNo_To: formValue.AccNo_To || ''
-      };
+        PageSize: pageSize,
+        PageIndex: pageIndex,
+        SortBy: raw.SortBy || [],
+        VEN_No_From: raw.VEN_No_From || null,
+        VEN_No_To: raw.VEN_No_To || null,
+        ACP_Date_From: this.datePipe.transform(raw.ACP_Date_From, 'yyyy-MM-dd') || '',
+        ACP_Date_To: this.datePipe.transform(raw.ACP_Date_To, 'yyyy-MM-dd') || '',
+        ACP_Amt_From: raw.ACP_Amt_From ?? undefined,
+        ACP_Amt_To: raw.ACP_Amt_To ?? undefined,
+        AccNo_From: raw.AccNo_From || null,
+        AccNo_To: raw.AccNo_To || null,
+        ShowZeroBalance: raw.ShowZeroBalance === 'N' ? 'N' : 'A',
+        UnpaidIncludeReserve: raw.UnpaidIncludeReserve === 'N' ? 'N' : 'Y'
+      } as QueryFIN29050Request;
 
-      this.fin29050Service
-        .queryFIN29050(requestData)
-        .pipe(
-          untilDestroyed(this),
-          finalize(() => {
-            this.loading = false;
-          })
-        )
-        .subscribe({
-          next: (response) => {
-            if (response && response.Data) {
-              this.data = response.Data;
-              this.totalRecords = response.TotalCount || 0;
-            } else {
-              this.data = [];
-              this.totalRecords = 0;
-            }
-          },
-          error: () => {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService?.warnBubble?.('查詢失敗');
+      this.fin29050Service.queryFIN29050(requestData).pipe(untilDestroyed(this), finalize(() => { this.loading = false; })).subscribe((response) => {
+        if (response && response.Data) {
+          const rows: any[] = response.Data || [];
+          // 檢查是否有後端回傳的頁尾總計列（IsTotal===1 或 VendorNo==='TOTAL' 或 VendorName==='總計'）
+          const totals = rows.filter(r => r?.IsTotal === 1 || String(r?.VendorNo) === 'TOTAL' || String(r?.VendorName) === '總計');
+          if (totals && totals.length) {
+            // 把總計轉成 totalData，並把原本的總計列從 data 中移除
+            this.totalData = totals.map(t => ({ ...t, VendorNo: '' }));
+            this.data = rows.filter(r => !(r?.IsTotal === 1 || String(r?.VendorNo) === 'TOTAL' || String(r?.VendorName) === '總計'));
+          } else {
+            this.totalData = [];
+            this.data = rows;
           }
-        });
+          this.totalRecords = response.TotalCount || 0;
+        } else {
+          this.data = [];
+          this.totalData = [];
+          this.totalRecords = 0;
+        }
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        // 設定給子元件，讓子元件可在滾動時以 queryFunction 載入下一頁
+        // 同時提供 child 常用的 pageSize/pageIndex 小寫欄位供判斷
+        this.lastQueryBody = { ...requestData, pageSize: requestData.PageSize, pageIndex: requestData.PageIndex };
+        // queryFn 會接受 child 傳進來的 body (小寫 pageSize/pageIndex)，這裡把它轉回 API 要求的格式
+        this.queryFn = (body: any) => {
+          const pageSize = body?.pageSize ?? body?.PageSize ?? requestData.PageSize ?? 30;
+          const pageIndex = body?.pageIndex ?? body?.PageIndex ?? 1;
+          const sortFromEvent = body?.SortBy ?? body?.multiSortMeta ?? requestData.SortBy ?? [];
+          const mapped: QueryFIN29050Request = {
+            ...requestData,
+            PageSize: pageSize,
+            PageIndex: pageIndex,
+            SortBy: sortFromEvent,
+          } as QueryFIN29050Request;
+          return this.fin29050Service.queryFIN29050(mapped);
+        };
+      });
     });
   }
 
   private buildExportPayload(): QueryFIN29050Request {
     const raw = this.queryForm.getRawValue();
-
     return {
-      ...raw,
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: raw.SortBy || [],
       VEN_No_From: raw.VEN_No_From || '',
       VEN_No_To: raw.VEN_No_To || '',
       ACP_Date_From: this.datePipe.transform(raw.ACP_Date_From, 'yyyy-MM-dd') || '',
@@ -191,8 +195,57 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
       ACP_Amt_From: raw.ACP_Amt_From ?? undefined,
       ACP_Amt_To: raw.ACP_Amt_To ?? undefined,
       AccNo_From: raw.AccNo_From || '',
-      AccNo_To: raw.AccNo_To || ''
-    };
+      AccNo_To: raw.AccNo_To || '',
+      ShowZeroBalance: raw.ShowZeroBalance === 'N' ? 'N' : 'A',
+      UnpaidIncludeReserve: raw.UnpaidIncludeReserve === 'N' ? 'N' : 'Y'
+    } as QueryFIN29050Request;
+  }
+
+  // 處理共用 table 的 lazyLoadData 事件（pageIndex, pageSize, SortBy）
+  override onLazyLoadData(event: LazyLoadEvent, queryForm?: FormGroup): void {
+    if (!event) return;
+    const pageSize = (event as any).pageSize ?? (event as any).rows ?? 30;
+    const pageIndex = (event as any).pageIndex ?? 1;
+    const body = { pageIndex, pageSize, SortBy: (event as any).SortBy ?? (event as any).multiSortMeta ?? [] };
+    console.log('[FIN29050] onLazyLoadData', { pageIndex, pageSize, body, queryFormExists: !!queryForm });
+
+    // 把目前的分頁與排序回寫到 queryForm，讓匯出/儲存狀態時能保留排序與分頁
+    if (queryForm) {
+      try {
+        queryForm.patchValue({ pageIndex, pageSize, SortBy: body.SortBy || body.SortBy || [] });
+      } catch (e) {
+        // ignore patch errors
+      }
+    }
+
+    if (!this.queryFn) {
+      return;
+    }
+
+    this.loading = true;
+    console.log('[FIN29050] calling queryFn with', body);
+    this.queryFn(body)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe({
+        next: (response) => {
+          console.log('[FIN29050] queryFn response ->', { pageIndex, pageSize, dataLength: response?.Data?.length, totalCount: response?.TotalCount, firstItem: response?.Data?.[0] });
+          if (response && response.Data) {
+            const rows: any[] = response.Data || [];
+            const totals = rows.filter(r => r?.IsTotal === 1 || String(r?.VendorNo) === 'TOTAL' || String(r?.VendorName) === '總計');
+            const payloadRows = rows.filter(r => !(r?.IsTotal === 1 || String(r?.VendorNo) === 'TOTAL' || String(r?.VendorName) === '總計'));
+
+            // 使用共用 table 的 lazy 模式時，p-table 期待收到當前頁的資料（非累積），
+            // 因此每次都以後端回傳的頁資料替換 `data`。
+            this.data = payloadRows;
+
+            this.totalData = totals.map(t => ({ ...t, VendorNo: '' })) || [];
+            this.totalRecords = response.TotalCount || this.totalRecords;
+          }
+        },
+        error: () => {
+          this.messageService?.warnBubble?.('資料載入失敗');
+        }
+      });
   }
 
   onExportExcel() {
@@ -219,7 +272,6 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     }
 
     const payload = this.buildExportPayload();
-
     this.pdfBtnLoading = true;
     this.fin29050Service.exportFIN29050_PDF(payload)
       .pipe(finalize(() => this.pdfBtnLoading = false))

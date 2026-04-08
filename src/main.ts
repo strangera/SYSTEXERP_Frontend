@@ -2,7 +2,7 @@
 import { DatePipe } from '@angular/common';
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { importProvidersFrom } from '@angular/core';
-import { bootstrapApplication, provideClientHydration } from '@angular/platform-browser';
+import { bootstrapApplication } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { PreloadAllModules, provideRouter, UrlSerializer, withPreloading } from '@angular/router';
 import { provideServiceWorker } from '@angular/service-worker';
@@ -43,7 +43,6 @@ const primeNgProviders = [
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideClientHydration(),
     provideAnimations(),
     importProvidersFrom(
       TranslateModule.forRoot({
@@ -70,7 +69,7 @@ bootstrapApplication(AppComponent, {
     ),
     provideRouter(
       routes,
-      withPreloading(PreloadAllModules)
+      ...(environment.production ? [withPreloading(PreloadAllModules)] : [])
     ),
     provideHttpClient(withInterceptors([
       authInterceptor,

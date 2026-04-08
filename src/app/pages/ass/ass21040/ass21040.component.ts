@@ -57,15 +57,25 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
         ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
       };
       this.handleSubmit(frm, () => {
-        this.aSS21040Service.ClearingASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-          if (response.Data.IsClearingSuccess) {
-            if (response.Data.ErrorMsg === '') {
+        this.aSS21040Service.ClearingASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
+          next: (response) => {
+            console.log('結算 API 成功回應:', response);
+            if (response.Data.IsClearingSuccess) {
               this.messageService.successBubble('結算成功');
             } else {
-              this.messageService.errorBubble(response.Data.ErrorMsg);
+              // 業務邏輯失敗
+              this.messageService.errorBubble(response.Data.ErrorMsg || '結算失敗');
             }
-          } else {
-            this.messageService.errorBubble(response.Data.ErrorMsg);
+          },
+          error: (error) => {
+            console.log('Component Error Handler - Error:', error);
+            // 忽略請求取消錯誤
+            if (error.message === 'Request cancelled') {
+              console.log('結算請求被取消,不顯示錯誤訊息');
+              return;
+            }
+            console.error('結算 API 錯誤:', error);
+            this.messageService.errorBubble(error.message || '結算失敗,請稍後再試');
           }
         });
       });
@@ -94,27 +104,40 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   onGenerateReport(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
-      const mid = this.authService.currentUserValue?.mid;
-      if (storeNo && mid !== null && mid !== undefined) {
-        const body = {
-          SYS_StoreNo: storeNo,
-          Mid: mid,
-          EngTypes: frm.value.ENG_Type,
-          ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
-        };
-        console.log(body);
+    if (!frm.valid) {
+      this.submitted = true;
+      this.messageService.errorBubble('請填寫必填欄位');
+      return;
+    }
 
-        this.aSS21040Service.printASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-          if (response.Data.Print_URL) {
-            this.messageService.successBubble('列印成功');
-            window.open(environment.ApiUrl + response.Data.Print_URL);
-          } else {
-            this.messageService.errorBubble(response.Message);
+    const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
+    const mid = this.authService.currentUserValue?.mid;
+    if (storeNo && mid !== null && mid !== undefined) {
+      const body = {
+        SYS_StoreNo: storeNo,
+        Mid: mid,
+        EngTypes: frm.value.ENG_Type,
+        ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
+      };
+      console.log(body);
+
+      this.loading = true;
+      this.aSS21040Service.printASS21040(body)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe({
+          next: (response) => {
+            const url = response.Data?.Print_URL || '';
+            if (url) {
+              window.open(environment.ApiUrl + url, '_blank');
+              this.messageService.successBubble('列印成功');
+            } else {
+              this.messageService.errorBubble('無法取得列印檔案');
+            }
+          },
+          error: (err) => {
+            this.messageService.errorBubble(err.message || '列印失敗');
           }
         });
-      }
-    });
+    }
   }
 }

@@ -1,36 +1,22 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo"
-                 class="flex-1"></app-menubar>
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
 
   <p-accordion>
-    <p-accordionTab [header]="'query-conditions' | translate"
-                    [selected]="!0"
-                    class="line-height-3 m-0"
-                    [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit()">
+    <p-accordionTab [header]="'query-conditions' | translate" [selected]="!0" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <app-calendar class="col-12 md:col-6 lg:col-4"
-                        calendarType="dateMonthOne"
-                        label="關帳年月"
-                        controlName="DisplayYM"
-                        [disabled]="!0"
-                        [control]="qf().DisplayYM"
-                        [submitted]="submitted"></app-calendar>
-          <app-input-number class="col-12 md:col-6 lg:col-4"
-                            label="建立狀態傳票張數"
-                            controlName="CntPostFlag1"
-                            [readonly]="!0"
-                            [control]="qf().CntPostFlag1"
-                            [submitted]="submitted"></app-input-number>
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="關帳年月"
+            controlName="DisplayYM" [disabled]="!0" [control]="qf().DisplayYM" [submitted]="submitted"></app-calendar>
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="建立狀態傳票張數" controlName="CntPostFlag1" [readonly]="!0"
+            [control]="qf().CntPostFlag1" [submitted]="submitted"></app-input-number>
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="過帳狀態傳票張數" controlName="CntPostFlag3" [readonly]="!0"
+            [control]="qf().CntPostFlag3" [submitted]="submitted"></app-input-number>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="submit"
-                      label="關帳"
-                      [loading]="loading"></app-button>
+          <app-button btnType="submit" label="關帳" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>

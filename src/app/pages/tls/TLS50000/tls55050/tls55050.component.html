@@ -1,0 +1,74 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateMonthOne" label="結帳年月" controlName="cls_Month"
+              [control]="queryForm.controls.cls_Month" [submitted]="submitted"></app-calendar>
+          </div>
+          <!-- <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="廠商編號" controlName="VEN_No" [options]="VEN_NoOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
+          </div> -->
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm" [text]="true"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+          <p-divider layout="vertical" />
+          <app-button label="結帳" icon="pi pi-check-square" [loading]="loading"
+            (click)="onSettle(queryForm)"></app-button>
+          <app-button label="反結帳" [outlined]="true" icon="pi pi-undo" [loading]="loading"
+            (click)="onUnSettle(queryForm)"></app-button>
+          <p-divider layout="vertical" />
+          <app-button label="月結鎖定" severity="primary" icon="pi pi-lock" [loading]="loading"
+            (click)="onLock(queryForm)"></app-button>
+          <app-button label="月結反鎖定" [outlined]="true" icon="pi pi-lock-open" [loading]="loading"
+            (click)="onUnlock(queryForm)"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div *ngIf="settleErrors.length > 0" class="my-3">
+  <div class="p-4 border-round bg-red-50 border-left-3 border-red-500 shadow-1">
+    <div class="flex align-items-center mb-2">
+      <i class="pi pi-exclamation-circle text-red-600 mr-2 text-xl"></i>
+      <span class="text-red-900 font-bold text-lg">結帳失敗</span>
+      <p-button icon="pi pi-times" [text]="true" styleClass="ml-auto p-button-sm text-red-500" aria-label="關閉錯誤訊息"
+        (onClick)="settleErrors = []">
+      </p-button>
+    </div>
+    <div [style.max-height]="'200px'" style="overflow-y: auto;">
+      <ul class="m-0 pl-4 text-red-700 line-height-3">
+        <li *ngFor="let err of settleErrors" class="mb-1">
+          <span class="font-medium">{{ err.Cls_Date | date: 'yyyy/MM/dd' }}</span> ，原因： {{ err.Msg }}
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <!-- 廠商請款資料 -->
+  <div class="flex align-items-center mb-3">
+    <span class="text-xl font-bold text-primary">廠商請款資料</span>
+  </div>
+  <app-table-report dataKey="OTA_No" [lastQueryBody]="lastQueryBody" [totalRecords]="totalRecords" [data]="data"
+    [showManage]="false" [columns]="columns" [loading]="loading"
+    [queryFunction]="tls55050Service.queryTLS55050_Up.bind(tls55050Service)" [showDelete]="false"
+    [showSort]="true"></app-table-report>
+  <hr class="my-5 border-top-1 surface-border" />
+
+  <div class="flex align-items-center mb-3">
+    <span class="text-xl font-bold text-primary">傳票明細</span>
+  </div>
+  <!-- 傳票明細 -->
+  <app-table-report dataKey="VouNo" [lastQueryBody]="lastQueryBody2" [totalRecords]="totalRecords2" [data]="data2"
+    (edit)="onEdit($event)" (detail)="onDetail($event)" [columns]="columns2" [loading]="loading" [showEdit]="false"
+    [queryFunction]="tls55050Service.queryTLS55050_Down.bind(tls55050Service)" [showDelete]="false"
+    [showSort]="true"></app-table-report>
+</div>

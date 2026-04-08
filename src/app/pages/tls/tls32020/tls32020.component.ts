@@ -11,6 +11,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CategorySelectComponent } from '@shared/componentkit/category-select/category-select.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -30,7 +31,7 @@ import { TableReportComponent } from './tls32020-table/tls32020-table.component'
     CalendarComponent, DropdownComponent, NgIf, DividerModule,
     ButtonModule, TableReportComponent, AsyncPipe, MenubarComponent,
     ButtonComponent, AccordionModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent,
-    MultiSelectComponent, CalendarRangeQuickComponent
+    MultiSelectComponent, CalendarRangeQuickComponent, CategorySelectComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -64,8 +65,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
     FloorList: [null],
     AreaList: [null],
     BuildingList: [null], // **新增**：館別
-    BusTypeList: [null],
-    BusClassList: [null],
+    category: [null],
     CounterKindList: [null],
     OrgList: [null],
     TalentNoList: [null],
@@ -101,7 +101,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   BusClassListOptions = this.dropdown.queryTltBusType();
   commissionTypeOptions = getSYS1000Options('tlt_term_type');
   // 櫃別 (假設 querySYS1000_DropDownList("TLT_Kind") 是這個)
-  operationsOptions = getSYS1000Options('store_way');
+  operationsOptions = getSYS1000Options('TLT_Kind');
   counterCodeOptions = this.dropdown.queryTltTalent();
   taxOptions = [{ value: 'I', label: '含稅' }, { value: 'N', label: '未稅' }];
 
@@ -211,6 +211,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       this.setWeekOptions(this.queryForm.controls.year.value); // 年份變動時，更新週次選項
       this.calculateDateRanges(this.queryForm.controls.DayType.value)
     });
+    this.calculateDateRanges(this.queryForm.controls.DayType.value);
     this.queryForm.controls.week.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
     this.queryForm.controls.month.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
     this.queryForm.controls.halfYear.valueChanges.pipe(untilDestroyed(this)).subscribe(() => this.calculateDateRanges(this.queryForm.controls.DayType.value));
@@ -230,23 +231,34 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
    * @param compareYearNum 比較年度 (例如 2024)
    */
   private updateColumnGroupHeader(baseYearNum: number, compareYearNum: number): void {
-    // 基準期標頭
-    const baseYearStr = String(baseYearNum);
-    this.columnGroup.find(g => g.field === 'revenue')!.header = `${baseYearStr} 營業額`;
-    this.columnGroup.find(g => g.field === 'atv')!.header = `${baseYearStr} 客單價`;
-    this.columnGroup.find(g => g.field === 'salesPerArea')!.header = `${baseYearStr} 營業坪效`;
+    const baseYearStr = `${baseYearNum}年`;
+    const compareYearStr = `${compareYearNum}年`;
 
-    // 比較期標頭
-    const compareYearStr = String(compareYearNum);
-    this.columnGroup.find(g => g.field === 'compareRevenue')!.header = `${compareYearStr} 營業額`;
-    this.columnGroup.find(g => g.field === 'compareATV')!.header = `${compareYearStr} 客單價`;
-    this.columnGroup.find(g => g.field === 'compareSalesPerArea')!.header = `${compareYearStr} 營業坪效`;
+    this.columnGroup.forEach(group => {
+      switch (group.field) {
+        case 'revenue':
+        case 'atv':
+        case 'salesPerArea':
+          group.header = `${baseYearStr} ${this.getOriginHeader(group.field)}`;
+          break;
+        case 'compareRevenue':
+        case 'compareATV':
+        case 'compareSalesPerArea':
+          group.header = `${compareYearStr} ${this.getOriginHeader(group.field)}`;
+          break;
+      }
+    });
   }
-  /** 根據 Date 物件取得中文星期幾 */
-  private getDayOfWeekInChinese(date: Date): string {
-    const day = date.getDay(); // 0 (Sunday) to 6 (Saturday)
-    const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
-    return weekdays[day];
+  // 輔助方法：保持標頭後半段字串一致
+  private getOriginHeader(field: string): string {
+    if (field.includes('Revenue')) return '營業額';
+    if (field.includes('ATV')) return '客單價';
+    if (field.includes('SalesPerArea')) return '營業坪效';
+    // 根據你原始定義的欄位名稱對應
+    if (field === 'revenue') return '營業額';
+    if (field === 'atv') return '客單價';
+    if (field === 'salesPerArea') return '營業坪效';
+    return '';
   }
   /**
     * 根據報表類型計算基準日期和比較日期區間，並更新表單欄位。
@@ -337,11 +349,28 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         break;
     }
 
-    // 更新表單欄位
-    this.queryForm.controls.BaseDateFrom.setValue(baseRange?.from || null, { emitEvent: false });
-    this.queryForm.controls.BaseDateTo.setValue(baseRange?.to || null, { emitEvent: false });
-    this.queryForm.controls.CompareDateFrom.setValue(compareRange?.from || null, { emitEvent: false });
-    this.queryForm.controls.CompareDateTo.setValue(compareRange?.to || null, { emitEvent: false });
+    this.queryForm.patchValue({
+      BaseDateFrom: baseRange?.from || null,
+      BaseDateTo: baseRange?.to || null,
+      CompareDateFrom: compareRange?.from || null,
+      CompareDateTo: compareRange?.to || null
+    }, { emitEvent: false });
+
+    // 3. 處理標頭顯示年份 (關鍵點)
+    let bYearNum: number;
+    let cYearNum: number;
+
+    if (type === '1') {
+      // 如果日報強制要比「今年」與「去年」
+      bYearNum = new Date().getFullYear();
+      cYearNum = bYearNum - 1;
+    } else {
+      // 其他類型則跟隨下拉選單選取的年份
+      bYearNum = baseYear.getFullYear();
+      cYearNum = compareYear.getFullYear();
+    }
+
+    this.updateColumnGroupHeader(bYearNum, cYearNum);
   }
 
   /**
@@ -560,24 +589,20 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = frm.value;
-
-      // 1. 轉換多選 List 欄位為逗號分隔字串
-      const convertedListBody = {
-        BuildingList: this.formatListForBackend(formValue.BuildingList), // 這裡 BuildingList
-        FloorList: this.formatListForBackend(formValue.FloorList),
-        AreaList: this.formatListForBackend(formValue.AreaList),
-        BusTypeList: this.formatListForBackend(formValue.BusTypeList),
-        BusClassList: this.formatListForBackend(formValue.BusClassList),
-        CounterKindList: this.formatListForBackend(formValue.CounterKindList),
-        TermTypeList: this.formatListForBackend(formValue.TermTypeList),
-        OrgList: this.formatListForBackend(formValue.OrgList),
-        TalentNoList: this.formatListForBackend(formValue.TalentNoList),
-      };
-
+      const cat = formValue.category || { bus_type: [], bus_class: [], bus_sclass: [] };
       // 2. 組裝最終傳輸給後端的 Body
       const body: TLS32020QueryRequest = {
         ...formValue,
-        ...convertedListBody,
+        BuildingList: formValue.BuildingList || null, // 這裡 BuildingList
+        FloorList: formValue.FloorList || null,
+        AreaList: formValue.AreaList || null,
+        CounterKindList: formValue.CounterKindList || null,
+        TermTypeList: formValue.TermTypeList || null,
+        OrgList: formValue.OrgList || null,
+        TalentNoList: formValue.TalentNoList || null,
+        BusTypeList: cat.bus_type || null,
+        BusClassList: cat.bus_class?.map((c: any) => [c.bus_type, c.No]) || null,
+        BusSClassList: cat.bus_sclass?.map((s: any) => [s.bus_type, s.bus_class, s.No]) || null,
         // **變更**：覆蓋四個日期欄位格式化
         BaseDateFrom: this.datePipe.transform(formValue.BaseDateFrom, 'yyyy-MM-dd'),
         BaseDateTo: this.datePipe.transform(formValue.BaseDateTo, 'yyyy-MM-dd'),
@@ -588,6 +613,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         week: undefined,
         month: undefined,
         halfYear: undefined,
+        category: undefined
       } as TLS32020QueryRequest;
 
       this.tls32020Service.queryTLS32020(body).pipe(
@@ -620,29 +646,9 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
         } else {
           this.footerData = null;
         }
-
         this.totalRecords = this.data.length;
-
-        // --- 動態更新欄位標頭 (確保提交成功後更新標頭) ---
-        this.updateYMColumnHeader(formValue.DayType);
-
-        // 【新增】動態更新欄位群組標頭 (YYYY/XXXX)
-        const baseYearNum = formValue.year.getFullYear();
-        const compareYearNum = formValue.CompareYear.getFullYear();
-        this.updateColumnGroupHeader(baseYearNum, compareYearNum);
-
       });
     });
-  }
-
-  /**
-    * 輔助函數：將陣列轉換為逗號分隔的字串
-    */
-  private formatListForBackend(list: any[] | null): string | null {
-    if (Array.isArray(list) && list.length > 0) {
-      return list.map(item => String(item)).join(',');
-    }
-    return null;
   }
 
   onExportPDF() {
@@ -658,7 +664,7 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
       '.pdf',
       (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    );
+    ).subscribe();
   }
 
   onExportXLSX() {
@@ -673,6 +679,6 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
       export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
       '.xlsx',
       (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    );
+    ).subscribe();
   }
 }

@@ -38,10 +38,12 @@
           <app-button
             label="審核"
             (click)="confirmCheck(queryForm)"
+            [disabled]="!hasPermission(Actions.Audit)"
           ></app-button>
           <app-button
             label="反審核"
             (click)="cancelRecheck(queryForm)"
+            [disabled]="!hasPermission(Actions.AntiAudit)"
           ></app-button>
         </ng-container>
         <app-button
@@ -64,21 +66,3 @@
     ></iframe>
   </div>
 </div>
-
-<!-- 彈出視窗 -->
-<!-- <p-dialog
-  header="{{ auditMode }}確認"
-  [(visible)]="showDialog"
-  modal
-  [style]="{ width: '50vw' }"
->
-  <div class="p-3">
-    <h5>申報年月: {{ dialogData?.REP_GUIYM }}</h5>
-    <h5>稅籍編號: {{ dialogData?.REP_TaxNo }}</h5>
-  </div>
-
-  <ng-template pTemplate="footer">
-    <app-button label="審核" (click)="confirmCheck(queryForm)"></app-button>
-    <app-button label="反審核" (click)="cancelRecheck(queryForm)"></app-button>
-  </ng-template>
-</p-dialog> -->

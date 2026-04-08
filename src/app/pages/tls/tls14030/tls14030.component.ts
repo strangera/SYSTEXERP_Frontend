@@ -1,31 +1,36 @@
-import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { AccordionModule } from 'primeng/accordion';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
 
 // 保證傳票
 @Component({
   selector: 'app-tls14030',
   templateUrl: './tls14030.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, CalendarRangeQuickComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, CalendarRangeQuickComponent, DropdownTableComponent, TableComponent, TranslateModule]
 })
 export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> implements OnInit {
   // 查詢表單：保證傳票
   queryForm = this.formBuilder.group({
     // id: [{ value: null, disabled: true }], // read only
+    ven_uniformList: [[]], // 統一編號
     tlt_noList: [[]], // 專櫃編號
+    test: [''], // 測試用的 control 
     tlt_name: [''], // 專櫃名稱
     location_noList: [[]], // 位置
 
@@ -56,7 +61,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   columns: Column[] = [// 表格欄位定義
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'VEN_No', header: '廠商代號', visible: true },
+    { field: 'VEN_No', header: '廠商編號', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
     {
       field: 'ticket_type', header: '保證票型態', visible: true,
@@ -71,7 +76,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
         this.ticket_kindOption.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'ticket_amount', header: '保證票金額', visible: true },
+    { field: 'ticket_amount', header: '保證票金額', visible: true, format: formatAmount },
     { field: 'expiry_date', header: '票據到期日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     {
       field: 'get_ticket_status', header: '票據收票狀態', visible: true,
@@ -87,7 +92,9 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   ];
   selectedItems: Garantee_Ticket[] = [];// 多選項目
 
+  ven_uniformOption: apiOption[] = []; // 統一編號列表
   tlt_noListOption: option[] = []; //專櫃編號列表
+  tlt_no_14030_ListOption: option[] = []; // 專櫃編號列表 (TLS14030)
   locationOption: apiOption[] = []; //位置編號
   areaOption: apiOption[] = []; //區域
   floorOption: apiOption[] = []; //樓層
@@ -134,8 +141,28 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
     { value: '9', label: '其他' },
   ];
 
+  // ===================================================
+  opLoading = false;
+  opForm = this.formBuilder.group({
+    TLT_NO: ['', [Validators.maxLength(12)]], // 專櫃編號
+    ven_uniform: ['', [Validators.maxLength(12)]], // 統一編號
+    ...createPaginationConfig([{ field: 'No', order: 1 }]), // 分頁和排序參數
+  });
+  suggestions: any[] = [];
+  fieldsConfig: FieldsConfig[] = [
+    { field: 'Label', header: '專櫃編號/名稱', mainDataField: true },
+  ];
+  opData: any[] = [];// overlayPanel 裡面的table
+  opColumns: Column[] = [
+    { field: 'No', header: '專櫃編號' },
+    { field: 'Name', header: '專櫃名稱' },
+    { field: 'contract_subno', header: '版次' },
+  ];
+  opTotalRecords = 0;
+
   constructor(
     private tls14030Service: Tls14030Service,
+    private readonly dropDownListService: DropDownListService,
   ) { super(); }
 
   ngOnInit(): void {
@@ -169,37 +196,43 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   }
   // 刪除項目
   onDelete(data: Garantee_Ticket | Garantee_Ticket[]): void {
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) return;
+    this.messageService.confirm({
+      message: `是否確認刪除選中的保證票?`,
+      header: `確認刪除`,
+      accept: () => {
+        const items = Array.isArray(data) ? data : [data];
+        if (items.length === 0) return;
 
-    const idList = items
-      .filter(item => item && item.id != null)
-      .map(item => item.id);
+        const idList = items
+          .filter(item => item && item.id != null)
+          .map(item => item.id);
 
-    if (idList.length === 0) {
-      this.messageService.warnBubble('未找到有效的刪除項目');
-      return;
-    }
-
-    this.tls14030Service.deleteTLS14030({ idList }).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        if (idList.length === 0) {
+          this.messageService.warnBubble('未找到有效的刪除項目');
+          return;
         }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm); // 刷新資料
+
+        this.tls14030Service.deleteTLS14030({ idList }).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+            } else {
+              console.error('API error:', response.Status, response.Message);
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.onSubmit(this.queryForm); // 刷新資料
+          },
+        });
+
+        this.selectedItems = [];
       },
     });
-
-    this.selectedItems = [];
   }
 
 
@@ -218,7 +251,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('locationOption:', this.locationOption);
+        // console.log('locationOption:', this.locationOption);
       });
 
     // 區域下拉
@@ -231,7 +264,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('areaOption:', this.areaOption);
+        // console.log('areaOption:', this.areaOption);
       });
 
     // 樓層下拉
@@ -244,7 +277,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('floorOption:', this.floorOption);
+        // console.log('floorOption:', this.floorOption);
       });
 
     // 大分類下拉
@@ -257,7 +290,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('bus_typeOption:', this.bus_typeOption);
+        // console.log('bus_typeOption:', this.bus_typeOption);
       });
 
     // 組織 下拉
@@ -270,7 +303,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('orgOption:', this.orgOption);
+        // console.log('orgOption:', this.orgOption);
       });
 
     // 專櫃編號 下拉
@@ -282,7 +315,52 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
           Label: item.No + '-' + item.Name,
         }));
 
-        console.log('專櫃編號:', response.Data);
+        // console.log('專櫃編號:', response.Data);
       });
+    //統一編號 下拉
+    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe((response) => {
+      //去除掉重複的統一編號，並且加上 Label 欄位
+      this.ven_uniformOption = response.Data
+        .filter((item: apiOption, index: number, self: apiOption[]) => {
+          return index === self.findIndex((t) => t.No === item.No);
+        })
+        .map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+      // console.log('統一編號:', response.Data);
+    });
+  }
+
+  onAutoCompleteInputChange(event: any) {
+    const body = {
+      ...event,
+      TLT_NO: '',
+      ven_uniform: '',
+      pageSize: 30,
+      pageIndex: 1,
+      SortBy: [{ field: 'TLT_NO', order: 1 }],
+    }
+    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      // 關鍵修正：將資料加工處理，加上 Label 欄位
+      this.suggestions = results.Data.map((item: any) => ({
+        ...item,
+        // 假設 API 回傳編號為 No, 名稱為 Name，組合成您要的 Label
+        Label: `${item.No}-${item.Name}`
+      }));
+    });
+  }
+  onformValueChanged(event: any) {
+    this.opLoading = true;
+    const body = {
+      TLT_NO: event.TLT_NO || '',
+      ven_uniform: event.ven_uniform || '',
+    };
+    this.tls14030Service.queryTLTTALENT_TLS14030_DropDownList(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData = [...results.Data]; // 更新data資料
+      this.opTotalRecords = results.TotalCount;
+      this.opLoading = false;
+    });
   }
 }

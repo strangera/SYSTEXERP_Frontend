@@ -9,8 +9,14 @@ import { CellInput } from './table-edit-cell.model';
 
 @Component({
   selector: 'app-number-cell',
+  host: { 'table-edit-id': '複製時請自行取唯一名' },
   template: `
-    <p-iconField iconPosition="right">
+    <p-iconField iconPosition="left">
+
+      <p-inputIcon *ngIf="cellInput.rowData._validationErrors?.[cellInput.col.field]"
+                   styleClass="pi pi-exclamation-circle text-red-500"
+                   [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
+                   tooltipPosition="bottom" />
       <p-inputNumber class="min-w-max w-full" mode="decimal"
                      [(ngModel)]="cellInput.rowData[cellInput.col.field]"
                      [ngModelOptions]="{ standalone: true }"
@@ -30,11 +36,6 @@ import { CellInput } from './table-edit-cell.model';
                      [inputStyle]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign || 'right'}"
                      [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
                      [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }" />
-
-      <p-inputIcon *ngIf="cellInput.rowData._validationErrors?.[cellInput.col.field]"
-                   styleClass="pi pi-exclamation-circle text-red-500"
-                   [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
-                   tooltipPosition="bottom" />
     </p-iconField>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -87,7 +88,7 @@ export class NumberCellComponent {
   }
   handleEnter(event: Event) {
     event.preventDefault(); // 阻止表單提交
-    event.stopPropagation(); // 阻止事件冒泡
+    // event.stopPropagation(); // !!!客戶需求禁止加上這段
     this.handleBlur();
   }
 }

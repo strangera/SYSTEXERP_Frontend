@@ -1,9 +1,9 @@
+import { NgIf, NgStyle } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { NgIf, NgStyle } from '@angular/common';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputTextModule } from 'primeng/inputtext';
+import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { InputTextComponent } from '../input-text/input-text.component';
 
 @Component({

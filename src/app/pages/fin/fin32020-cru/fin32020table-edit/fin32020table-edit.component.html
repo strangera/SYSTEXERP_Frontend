@@ -31,74 +31,67 @@
   [showCurrentPageReport]="showPaginator"
   currentPageReportTemplate="顯示第 {first} 到 {last} 筆，共 {totalRecords} 筆"
 >
+  <!-- Caption：最上方，新增 + 批次刪除 + Excel -->
   <ng-template pTemplate="caption">
-  <ng-container *ngIf="showCaption">
-    <div class="grid align-items-center justify-content-between mx-0">
-      <div class="caption-left button-group flex gap-2 py-2">
-        <p-button
-          *ngIf="showInsert && !disabled"
-          (click)="insert.emit()"
-          pTooltip="新增"
-          tooltipPosition="top"
-          pButton
-          icon="pi pi-plus"
-          severity="success"
-          class="p-button-rounded p-button-text"
-          [disabled]="insertDisabled"
-        />
-        <p-button
-          *ngIf="showDelete && !disabled"
-          (click)="deleteRow(selectedItems)"
-          pTooltip="刪除"
-          tooltipPosition="top"
-          pButton
-          icon="pi pi-trash"
-          severity="danger"
-          class="p-button-text"
-          [rounded]="true"
-          [disabled]="selectedItems?.length <= 0"
-        />
-      </div>
-      <div class="flex-grow-1 p-2">
-        <ng-content select="header"></ng-content>
-      </div>
-      <div class="flex gap-2 py-2">
-        <div *ngIf="showExcel" class="flex gap-2 align-items-center">
-          <p-button
-            *ngIf="showExcelExport"
-            label="匯出excel範本"
-            severity="success"
-            [icon]="
-              exportExcelLoading
-                ? 'pi pi-spin pi-spinner'
-                : 'pi pi-file-export'
-            "
-            (click)="exportExcel.emit()"
-          />
-          <p-fileUpload
-            *ngIf="showExcelImport"
-            #fileUpload
-            styleClass="p-button-info"
-            mode="basic"
-            [chooseIcon]="
-              exportExcelLoading
-                ? 'pi pi-spin pi-spinner'
-                : 'pi pi-file-import'
-            "
-            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            severity="info"
-            (onSelect)="importExcel.emit($event); fileUpload.clear()"
-            [auto]="true"
-            chooseLabel="Excel匯入"
-          />
+    <ng-container *ngIf="showCaption">
+      <div class="grid align-items-center justify-content-between mx-0">
+        <div class="caption-left button-group flex gap-2 py-2">
+          <button
+            *ngIf="showDelete && !disabled"
+            pButton
+            type="button"
+            icon="pi pi-trash"
+            class="p-button-rounded p-button-danger"
+            (click)="deleteRow(selectedItems)"
+            [disabled]="!selectedItems.length"
+            pTooltip="刪除勾選資料"
+            tooltipPosition="top"
+          ></button>
+        </div>
+
+        <div class="flex-grow-1 p-2">
+          <ng-content select="header"></ng-content>
+        </div>
+
+        <div class="flex gap-2 py-2">
+          <div *ngIf="showExcel" class="flex gap-2 align-items-center">
+            <p-button
+              *ngIf="showExcelExport"
+              label="匯出excel範本"
+              severity="success"
+              [icon]="
+                exportExcelLoading
+                  ? 'pi pi-spin pi-spinner'
+                  : 'pi pi-file-export'
+              "
+              (click)="exportExcel.emit()"
+            ></p-button>
+
+            <p-fileUpload
+              *ngIf="showExcelImport"
+              #fileUpload
+              styleClass="p-button-info"
+              mode="basic"
+              [chooseIcon]="
+                exportExcelLoading
+                  ? 'pi pi-spin pi-spinner'
+                  : 'pi pi-file-import'
+              "
+              accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              severity="info"
+              (onSelect)="importExcel.emit($event); fileUpload.clear()"
+              [auto]="true"
+              chooseLabel="Excel匯入"
+            ></p-fileUpload>
+          </div>
         </div>
       </div>
-    </div>
-
-     </ng-container>
+    </ng-container>
   </ng-template>
 
+  <!-- Header -->
   <ng-template pTemplate="header" let-columns>
+    <!-- 有群組表頭 -->
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
         <!-- Reorder -->
@@ -107,31 +100,23 @@
           rowspan="2"
           class="w-1rem text-center"
         ></th>
-        <!-- 序號 -->
+
+        <!-- Checkbox（在序號左邊） -->
         <th
-          [attr.colspan]="
-            _tableData.length === 1 && canInsert
-              ? disabled
-                ? 1
-                : 2
-              : 1
-          "
+          *ngIf="showCheckBox && !disabled"
           rowspan="2"
-          class="w-1rem text-center"
+          class="w-3rem text-center"
         >
-          {{ serialName }}
-        </th>
-        <!-- CheckBox -->
-        <th
-          *ngIf="showCheckBox && !disabled && data.length"
-          rowspan="2"
-          class="w-1rem text-center"
-        >
-          <p-tableHeaderCheckbox [disabled]="disabled" />
+          <p-tableHeaderCheckbox [disabled]="disabled"></p-tableHeaderCheckbox>
         </th>
 
+        <!-- 序號 -->
+        <th rowspan="2" class="w-1rem text-center">
+          {{ serialName }}
+        </th>
+
+        <!-- 群組欄位標題 -->
         <ng-container *ngFor="let col of columns; let i = index">
-          <!-- 群組表頭 -->
           <ng-container
             *ngIf="tableUtilityService.shouldRenderGroupHeader(col, i, columns)"
           >
@@ -168,7 +153,7 @@
               <p-sortIcon
                 *ngIf="showSort && col.showSort !== false && data.length"
                 [field]="col.field"
-              />
+              ></p-sortIcon>
             </th>
           </ng-container>
         </ng-container>
@@ -195,51 +180,51 @@
             <p-sortIcon
               *ngIf="showSort && col.showSort !== false && data.length"
               [field]="col.field"
-            />
+            ></p-sortIcon>
           </th>
         </ng-container>
       </tr>
     </ng-container>
 
-<!-- 非群組表頭 -->
-<ng-container *ngIf="!columnGroup?.length">
-  <tr>
-    <th
-      *ngIf="_tableData.length && showReorder"
-      class="w-1rem text-center"
-    ></th>
+    <!-- 非群組表頭 -->
+    <ng-container *ngIf="!columnGroup?.length">
+      <tr>
+        <!-- Reorder -->
+        <th
+          *ngIf="_tableData.length && showReorder"
+          class="w-1rem text-center"
+        ></th>
 
-    <!-- ✅ 序號不用再動態 colspan，固定一格 -->
-    <th class="w-1rem text-center">
-      {{ serialName }}
-    </th>
+        <!-- Checkbox（在序號左邊） -->
+        <th *ngIf="showCheckBox && !disabled" class="w-3rem text-center">
+          <p-tableHeaderCheckbox [disabled]="disabled"></p-tableHeaderCheckbox>
+        </th>
 
-    <th
-      *ngIf="showCheckBox && !disabled && data.length"
-      class="w-1rem text-center"
-    >
-      <p-tableHeaderCheckbox [disabled]="disabled" />
-    </th>
+        <!-- 序號 -->
+        <th class="w-1rem text-center">
+          {{ serialName }}
+        </th>
 
-    <th
-      *ngFor="let col of columns"
-      pReorderableColumn
-      pResizableColumn
-      [pSortableColumn]="showSort ? col.field : undefined"
-      [pSortableColumnDisabled]="!showSort || col.showSort === false"
-      class="text-center"
-    >
-      {{ col.header }}
-      <p-sortIcon
-        *ngIf="showSort && col.showSort !== false && data.length"
-        [field]="col.field"
-      />
-    </th>
-  </tr>
-</ng-container>
-
+        <!-- 其他欄位 -->
+        <th
+          *ngFor="let col of columns"
+          pReorderableColumn
+          pResizableColumn
+          [pSortableColumn]="showSort ? col.field : undefined"
+          [pSortableColumnDisabled]="!showSort || col.showSort === false"
+          class="text-center"
+        >
+          {{ col.header }}
+          <p-sortIcon
+            *ngIf="showSort && col.showSort !== false && data.length"
+            [field]="col.field"
+          ></p-sortIcon>
+        </th>
+      </tr>
+    </ng-container>
   </ng-template>
 
+  <!-- Body -->
   <ng-template
     pTemplate="body"
     let-rowIndex="rowIndex"
@@ -260,43 +245,49 @@
         'insert-row': rowData._isAutoInsertCandidate
       }"
     >
-<td *ngIf="_tableData.length && showReorder" class="w-3rem text-center">
-  <!-- 一般資料列：拖曳 + 刪除 -->
-  <ng-container *ngIf="!rowData._isAutoInsertCandidate; else insertRowTpl">
-    <span
-      *ngIf="!disabled"
-      class="pi pi-bars mr-2 cursor-move w-1rem text-center"
-      pReorderableRowHandle
-    ></span>
+      <!-- Reorder + 新增列 + 號 -->
+      <td
+        *ngIf="_tableData.length && showReorder && !disabled"
+        class="w-3rem text-center"
+      >
+        <!-- 一般資料列：拖曳 -->
+        <ng-container
+          *ngIf="!rowData._isAutoInsertCandidate; else insertRowTpl"
+        >
+          <span
+            *ngIf="!disabled"
+            class="pi pi-bars cursor-move w-1rem text-center"
+            pReorderableRowHandle
+          ></span>
+        </ng-container>
 
-    <span
-      *ngIf="showDelete && !disabled"
-      class="pi pi-trash cursor-pointer text-red-500"
-      (click)="onRowDelete(rowData, $event)"
-    ></span>
-  </ng-container>
+        <!-- 自動新增候選列：顯示 +，點擊新增一列 -->
+        <ng-template #insertRowTpl>
+          <span
+            *ngIf="!disabled"
+            class="pi pi-plus cursor-pointer w-1rem text-center text-blue-500"
+            (click)="onInsertFromPlus(rowData, rowIndex, $event)"
+          ></span>
+        </ng-template>
+      </td>
 
-  <!-- 自動新增候選列：顯示 +，點擊時把自己變正式列，再補一筆新的候選列 -->
-  <ng-template #insertRowTpl>
-    <span
-      *ngIf="!disabled"
-      class="pi pi-plus cursor-pointer w-1rem text-center text-blue-500"
-      (click)="onInsertFromPlus(rowData, rowIndex, $event)"
-    ></span>
-  </ng-template>
-</td>
+      <!-- 勾選欄（批次刪除用，序號左邊） -->
+      <td *ngIf="showCheckBox && !disabled" class="w-3rem text-center">
+        <ng-container *ngIf="!rowData._isAutoInsertCandidate">
+          <p-tableCheckbox
+            class="flex justify-content-center pointer-events-none"
+            [pSelectableRow]="rowData"
+            [value]="rowData"
+            [disabled]="
+              !isRowSelectable(rowData, rowIndex, _tableData) || disabled
+            "
+          ></p-tableCheckbox>
+        </ng-container>
+      </td>
 
-
-
+      <!-- 序號欄 -->
       <td
         class="text-center w-1rem"
-        [attr.colspan]="
-          rowData._isAutoInsertCandidate && data.length && showCheckBox
-            ? 2
-            : rowData._isAutoInsertCandidate
-            ? 1
-            : 1
-        "
         [pTooltip]="
           rowData._rowValidationError?.errorMessage
             ? rowData._rowValidationError.errorMessage
@@ -315,32 +306,15 @@
         >
           {{
             rowData._isAutoInsertCandidate
-              ? disabled
-                ? ''
-                : '新增資料'
-              : rowData._rowValidationError?.isValid === false
               ? ''
-              : rowIndex + 1
+              : rowData._rowValidationError?.isValid === false
+                ? ''
+                : rowIndex + 1
           }}
         </span>
       </td>
 
-      <td
-        *ngIf="
-          showCheckBox && !disabled && !rowData._isAutoInsertCandidate
-        "
-        class="w-1rem text-center"
-      >
-        <p-tableCheckbox
-          class="flex justify-content-center pointer-events-none"
-          [pSelectableRow]="rowData"
-          [value]="rowData"
-          [disabled]="
-            !isRowSelectable(rowData, rowIndex, _tableData) || disabled
-          "
-        />
-      </td>
-
+      <!-- 資料欄位 -->
       <td
         *ngFor="let col of columns"
         (click)="onCellClick(col, rowData, rowIndex, $event)"
@@ -361,17 +335,26 @@
           ></ng-container>
         </ng-container>
 
-        <span *ngIf="!col.type">
+        <span
+          *ngIf="!col.type"
+          class="fake-input block w-full"
+          [ngClass]="{
+            'is-placeholder': !rowData[col.field]
+          }"
+        >
           {{
-            col.format
-              ? col.format(rowData[col.field], index, rowData)
-              : rowData[col.field]
+            rowData[col.field]
+              ? (col.format
+                  ? col.format(rowData[col.field], index, rowData)
+                  : rowData[col.field])
+              : '請點擊選擇'
           }}
         </span>
       </td>
     </tr>
   </ng-template>
 
+  <!-- Footer -->
   <ng-template pTemplate="footer">
     <tr
       *ngIf="footerData"
@@ -379,7 +362,9 @@
     >
       <td
         class="text-center"
-        [colSpan]="1 + (showCheckBox ? 1 : 0) + (showReorder ? 1 : 0)"
+        [colSpan]="
+          1 + (showReorder ? 1 : 0) + (showCheckBox && !disabled ? 1 : 0)
+        "
         pFrozenColumn
       >
         <span class="font-bold">總計</span>
@@ -398,6 +383,7 @@
     </tr>
   </ng-template>
 
+  <!-- Summary -->
   <ng-template pTemplate="summary">
     <div class="flex align-items-center justify-content-end p-2">
       總筆數:
@@ -405,9 +391,17 @@
     </div>
   </ng-template>
 
+  <!-- Empty message -->
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td [attr.colspan]="columns.length + 2">
+      <td
+        [attr.colspan]="
+          (columns.length || 0) +
+          1 +
+          (showReorder ? 1 : 0) +
+          (showCheckBox && !disabled ? 1 : 0)
+        "
+      >
         <div>
           <div
             class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl"
@@ -425,7 +419,7 @@
     errorMessage
       ? errorMessage
       : validateOnlySelected
-      ? '請至少選擇一筆資料'
-      : '至少輸入一筆資料'
+        ? '請至少選擇一筆資料'
+        : '至少輸入一筆資料'
   }}
 </span>

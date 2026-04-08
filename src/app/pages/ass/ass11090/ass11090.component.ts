@@ -1,229 +1,198 @@
-import { NeedPayTicketService } from './../../../service/basic/need-pay-ticket.service';
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Component, computed, OnInit, signal, ViewChild } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { ASS11010Service } from '@service/api/ass/ass11010.service';
+import { ASS11020Service } from '@service/api/ass/ass11020.service';
+import { ASS11090Service } from '@service/api/ass/ass11090.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { ASS11090Data, ASS11090QueryRequest } from './ass11090.model';
+import { Option } from '@service/utility/dropdown-api.model';
 
-//3.1.1.9 資材中分類會計科目維護作業
+// 3.1.1.9 資材中分類會計科目維護作業
 @Component({
   selector: 'app-ass11090',
   templateUrl: './ass11090.component.html',
   styleUrl: './ass11090.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    ButtonComponent,
+    DropdownComponent,
+    InputTextComponent,
+    MenubarComponent,
+    TableReportComponent,
+  ],
 })
-export class ASS11090Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    bigCategoryCode: [], // 大分類代碼
-    bigCategoryName: ['', [Validators.maxLength(32)]], // 大分類名稱
-    midCategoryCode: [], // 中分類代碼
-    midCategoryName: ['', [Validators.maxLength(32)]], // 中分類名稱
-    //
-    accounting_Borrow: [], // 所屬會計科目(借)
-    accountName_accBorrow: ['', [Validators.maxLength(40)]], // 會計科目名稱_所屬會計科目(借)
-    accounting_Credit: [], // 所屬會計科目(貸)
-    accountName_accCredit: ['', [Validators.maxLength(40)]], // 會計科目名稱_所屬會計科目(貸)
-    tax_Borrow: [], // 進項稅額科目(借)
-    accountName_taxBorrow: ['', [Validators.maxLength(40)]], // 會計科目名稱_進項稅額科目(借)
-    //
-    cost: [], // 費用科目
-    accountName_cost: ['', [Validators.maxLength(40)]], // 會計科目名稱_費用科目
-    depreciation: [, [Validators.maxLength(8)]], // 折舊科目(借)
-    accountName_depreciation: ['', [Validators.maxLength(40)]], //  會計科目名稱_折舊科目(借)
-    totalDepreciation: [, [Validators.maxLength(8)]], // 累計折舊科目(貸)
-    accountName_totalDepreciation: ['', [Validators.maxLength(40)]], // 會計科目名稱_累計折舊科目(貸)
-    //
-    depreciationLife: [, [Validators.maxLength(2)]], // 折舊年限
-    //
-    remark: [,], // 說明
+export class ASS11090Component extends BasicQueryPageComponent<ASS11090Data> implements OnInit {
+
+  public readonly queryForm = this.formBuilder.group({
+    /** 大分類代碼 */
+    B_CLASS_ID: new FormControl<string | null>(null),
+    /** 中分類代碼 */
+    M_CLASS_ID: new FormControl<string | null>(null),
+    /** 所屬會計科目(借) */
+    STYPE_ACCNO: new FormControl<string | null>(null),
+    /** 所屬會計科目(貸) */
+    STYPE_ACCNO2: new FormControl<string | null>(null),
+    /** 進項稅額科目(借) */
+    STYPE_TAX_ACCNO: new FormControl<string | null>(null),
+    /** 費用科目 */
+    FEES_ACCNO: new FormControl<string | null>(null),
+    /** 折舊科目(借) */
+    DEPRE_ACCNO: new FormControl<string | null>(null),
+    /** 累計折舊科目(貸) */
+    DEPRE_ACCNO2: new FormControl<string | null>(null),
+    /** 折舊年限 */
+    EXP_YEAR: new FormControl<number | null>(null),
+    /** 備注關鍵字 */
+    NOTES_KW: new FormControl<string | null>(null),
+    PageSize: new FormControl<number>(30),
+    PageIndex: new FormControl<number>(1),
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      'bigCategoryCode': 'A', 'bigCategoryName': '裝潢工程', 'midCategoryCode': 23, 'midCategoryName': '室內裝潢工程',
-      'accounting_Borrow': '裝潢設備', 'accounting_Credit': '應負費用-固資', 'tax_Borrow': '進項稅額-固資及費用', 'cost': '-',
-      'depreciation': '折舊-裝潢設備', 'totalDepreciation': '累計折舊-裝潢設備', 'depreciationLife': 5, 'remark': '',
-    },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'bigCategoryCode', header: '大分類代碼', visible: true },
-    { field: 'bigCategoryName', header: '大分類名稱', visible: true },
-    { field: 'midCategoryCode', header: '中分類代碼', visible: true },
-    { field: 'midCategoryName', header: '中分類名稱', visible: true },
+  public readonly qf = computed(() => this.queryForm.controls);
 
-    { field: 'accounting_Borrow', header: '所屬會計科目(借)', visible: true },
-    { field: 'accounting_Credit', header: '所屬會計科目(貸)', visible: true },
-    { field: 'tax_Borrow', header: '進項稅額科目(借)', visible: true },
-    { field: 'cost', header: '費用科目', visible: true },
-    { field: 'depreciation', header: '折舊科目(借)', visible: true },
-    { field: 'totalDepreciation', header: '累計折舊科目(貸)', visible: true },
-    { field: 'depreciationLife', header: '折舊年限', visible: true },
-    { field: 'remark', header: '說明', visible: true },
+  public readonly tableData = signal<ASS11090Data[]>([]);
+  public readonly totalRecords = signal<number>(0);
+  public readonly tableLoading = signal<boolean>(false);
+  public lastQueryBody?: ASS11090QueryRequest;
 
-    // { field: 'col13', header: '公司地址', visible: true },
-    // { field: 'col14', header: '付款方式', visible: true },
-    // { field: 'col15', header: '營運模式', visible: true },
-    // { field: 'col16', header: '票期', visible: true },
-    // { field: 'col17', header: '備註', visible: true },
-    // { field: 'col18', header: '訂貨傳真', visible: true },
+  @ViewChild('tableReport') tableReport?: TableReportComponent;
 
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  bigCategoryCodeOptions: any[] = [
-    { value: 1, label: 'A/裝潢工程' },
-    { value: 2, label: 'B/其他工程' },
-    { value: 3, label: 'C/電腦及電子零件產品' },
-    { value: 4, label: 'D/電力及照明系統' },
-    { value: 5, label: 'E/家電家具設備' },
-    { value: 6, label: 'F/機消空電水零配件' },
-    { value: 7, label: 'G/辦公及營運庶務' },
-    { value: 8, label: 'K/印刷品(非廣告行銷)' },
-  ];
-  //
-  midCategoryCodeOptions: any[] = [
-    { value: 23, label: '室內裝潢工程' },
-    { value: 24, label: '室內裝潢備品' },
-    { value: 21, label: '弱電系統' },
-    { value: 22, label: '房屋和建築設備' },
-    { value: 23, label: '停車場設備' },
-    { value: 24, label: '其他工程' },
-    { value: 25, label: '機電消防工程' },
-    { value: 22, label: '電子產品及零件' },
+  public readonly columns: ReportColumn[] = [
+    { field: 'B_CLASS_ID', header: '大分類代碼' },
+    { field: 'B_CLASS_NAME', header: '大分類名稱' },
+    { field: 'M_CLASS_ID', header: '中分類代碼' },
+    { field: 'M_CLASS_NAME', header: '中分類名稱' },
+    { field: 'STYPE_ACCNO_NAME', header: '所屬會計科目(借)' },
+    { field: 'STYPE_ACCNO2_NAME', header: '所屬會計科目(貸)' },
+    { field: 'STYPE_TAX_ACCNO_NAME', header: '進項稅額科目(借)' },
+    { field: 'FEES_ACCNO_NAME', header: '費用科目' },
+    { field: 'DEPRE_ACCNO_NAME', header: '折舊科目(借)' },
+    { field: 'DEPRE_ACCNO2_NAME', header: '累計折舊科目(貸)' },
+    { field: 'EXP_YEAR', header: '折舊年限' },
+    { field: 'NOTES', header: '備注' },
   ];
 
-  accounting_Borrow_Options: any[] = [
-    { value: 1, label: '150101/土地' },
-    { value: 2, label: '151101/房屋' },
-    { value: 3, label: '151201/累積折舊_房屋' },
-    { value: 4, label: '152101/裝潢設備' },
-    { value: 5, label: '152201/累積折舊_裝潢設備' },
-    { value: 6, label: '153101/運輸設備' },
-  ];
+  // 大分類代碼/名稱下拉選項
+  public readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
+  // 中分類代碼/名稱下拉選項
+  public readonly midClassOptions = signal<{ label: string; value: string }[]>([]);
+  // 會計科目下拉選項
+  public accountingOptions: Option[] = [];
 
-  accounting_Credit_Options: any[] = [
-    { value: 1, label: '213101/應負帳款_專櫃' },
-    { value: 2, label: '213102/應負帳款_自營' },
-    { value: 3, label: '213103/應負帳款_固資及費用' },
-    { value: 4, label: '213104/應負帳款_EC專櫃' },
-    { value: 5, label: '213105/應負帳款_品牌' },
-  ];
-
-  tax_Borrow_Options: any[] = [
-    { value: 1, label: '123201/進項稅額_專櫃' },
-    { value: 2, label: '213102/進項稅額_自營' },
-    { value: 3, label: '213103/進項稅額_固資及費用' },
-    { value: 4, label: '213104/進項稅額_EC' },
-    { value: 5, label: '213105/進項稅額_品牌' },
-  ];
-
-  costOptions: any[] = [];
-
-  //
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private needPayTicketService: NeedPayTicketService,
+    public readonly service: ASS11090Service,
+    private readonly ass11010Service: ASS11010Service,
+    private readonly ass11020Service: ASS11020Service,
+    private readonly dropdownApiService: DropdownApiService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310009';
-    this.cruPage = '/ASS1000/ASS11090CRU';
-    //
+    this.initializePage('ASS11090', '/ASS/ASS11090CRU', this.queryForm, this.onSubmit.bind(this));
+    this.loadBigClassOptions();
+    this.loadMidClassOptions();
+    this.loadAccountingOptions();
+  }
 
-    //
-    this.needPayTicketService.getNeedPayTickets().subscribe(data => {
-      this.costOptions = data;
+  /**
+   * 載入大分類下拉選項
+   */
+  private loadBigClassOptions(): void {
+    this.ass11010Service.queryASS11010({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
+          value: item.CLASS_ID,
+        }));
+        this.bigClassOptions.set(options);
+      },
     });
-    // ----------------------------------------------------------------
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+  /**
+   * 載入中分類下拉選項
+   */
+  private loadMidClassOptions(): void {
+    this.ass11020Service.queryASS11020({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
+          value: item.M_CLASS_ID,
+        }));
+        this.midClassOptions.set(options);
+      },
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  /**
+   * 載入會計科目下拉選項
+   */
+  private loadAccountingOptions(): void {
+    this.dropdownApiService.queryGls1005().subscribe({
+      next: (options) => {
+        if (options) {
+          this.accountingOptions = options;
+        }
+      },
+      error: (err) => {
+        console.error('載入會計科目下拉選單失敗:', err);
+      }
+    });
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
+  public onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const rawFormValue = this.queryForm.getRawValue();
+      const currentSort = this.tableReport?.multiSortMeta ?? [];
+      const payload = {
+        B_CLASS_ID: rawFormValue.B_CLASS_ID || undefined,
+        M_CLASS_ID: rawFormValue.M_CLASS_ID || undefined,
+        STYPE_ACCNO: rawFormValue.STYPE_ACCNO || undefined,
+        STYPE_ACCNO2: rawFormValue.STYPE_ACCNO2 || undefined,
+        STYPE_TAX_ACCNO: rawFormValue.STYPE_TAX_ACCNO || undefined,
+        FEES_ACCNO: rawFormValue.FEES_ACCNO || undefined,
+        DEPRE_ACCNO: rawFormValue.DEPRE_ACCNO || undefined,
+        DEPRE_ACCNO2: rawFormValue.DEPRE_ACCNO2 || undefined,
+        EXP_YEAR: rawFormValue.EXP_YEAR || undefined,
+        NOTES_KW: rawFormValue.NOTES_KW || undefined,
+        PageSize: rawFormValue.PageSize || 30,
+        PageIndex: rawFormValue.PageIndex || 1,
+        SortBy: currentSort.length > 0 ? currentSort : undefined,
+      };
+      const cleanPayload = removeEmptyValues(payload) as ASS11090QueryRequest;
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, rawFormValue);
+      this.service.queryASS11090(cleanPayload).pipe(
+        finalize(() => {
+          this.tableLoading.set(false);
+          this.loading = false;
+        }),
+      ).subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          this.lastQueryBody = cleanPayload;
+          this.tableData.set(res.Data);
+          this.totalRecords.set(res.TotalCount || 0);
+        },
+      });
+    });
   }
 }

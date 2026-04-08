@@ -1,19 +1,20 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { PanelModule } from 'primeng/panel';
-import { AccordionModule } from 'primeng/accordion';
-import { TooltipModule } from 'primeng/tooltip';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { formatAmount, formatDate, formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { formatAmount, formatDate, formatDateTime, formatDateToYYYY_MM_DD, formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { AccordionModule } from 'primeng/accordion';
+import { PanelModule } from 'primeng/panel';
+import { TooltipModule } from 'primeng/tooltip';
+import { finalize } from 'rxjs';
+import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 @Component({
   selector: 'app-tls2a010-cru',
   templateUrl: './tls2a010-cru.component.html',
@@ -115,15 +116,15 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
       header: '備註',
       type: 'input',
       textAlign: 'left',
-      maxLength: 10,
+      maxLength: 100,
       width: '200px',
       validate: [
         (value: any) => {
           if (!value) return { isValid: true, errorMessage: [] };
-          const isValid = value.toString().length <= 10;
+          const isValid = value.toString().length <= 100;
           return {
             isValid,
-            errorMessage: ['備註最多 10 個字'],
+            errorMessage: ['備註最多 100 個字'],
           };
         },
       ],
@@ -217,24 +218,11 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
     return isNaN(d.getTime()) ? null : d;
   }
 
-  onFieldChange(event: any) {
-    const row = event.rowData;
-    if (row.dataStatus === 'original' &&
-      (event.field === 'check_status' || event.field === 'check_remark')) {
-      row.dataStatus = 'modify';
-    }
-  }
-
-
   /** 儲存 */
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    // 篩選 new / modify
-    const selectList = this.data
-      .filter(item => item.dataStatus === 'new' || item.dataStatus === 'modify')
-      .map(item => ({
+    const payload = {
+      PAY_Type: this.PAY_Type ?? '',
+      selectList: this.data.map(item => ({
         id: item.id ?? 0,
         TXN_Date: formatDateToYYYY_MM_DD(item.TXN_Date),
         ECR_No: item.ECR_No ?? '',
@@ -248,32 +236,16 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
         check_status: item.check_status ?? '',
         check_remark: item.check_remark ?? '',
         dataStatus: item.dataStatus
-      }));
-    const payload = {
-      PAY_Type: this.PAY_Type ?? '',
-      selectList
+      })),
     };
-    if (!selectList.length) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    this.loading = true;
-    this.tls2a010Service.insertTLS2A010(payload).subscribe({
-      next: (res) => {
-        console.log('API 回應成功', res);
-        // 更新狀態
-        this.data.forEach(d => {
-          if (d.dataStatus === 'new' || d.dataStatus === 'modify') {
-            d.dataStatus = 'original';
-          }
-        });
-        this.loadAllData();
-        this.messageService.successBubble('儲存成功');
-        this.loading = false;
-        this.messageService.unblockUi();
-        this.onCancel();
-      },
-    });
+    this.handleSubmit(frm, () => {
+      this.tls2a010Service.insertTLS2A010(payload).pipe(finalize(() => this.loading = false)).subscribe({
+        next: () => {
+          this.messageService.successBubble('審核成功');
+          this.messageService.unblockUi();
+          this.onCancel();
+        },
+      });
+    })
   }
 }

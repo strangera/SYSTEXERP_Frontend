@@ -7,69 +7,124 @@
   </div>
 
   <p-panel [header]="formTitle">
-    <form [formGroup]="dataForm" (ngSubmit)="onSubmit()" class="grid formgrid p-fluid">
+    <form
+      [formGroup]="dataForm"
+      (ngSubmit)="onSubmit()"
+      class="grid formgrid p-fluid"
+    >
       <!-- 第一列：扣款代碼、扣款名稱 -->
       <div class="col-12 md:col-6 lg:col-4">
-        <app-input-text label="扣款代碼" [control]="dataForm.controls.CAP_Item" [readonly]="true"></app-input-text>
+        <app-input-text
+          label="扣款代碼"
+          [control]="dataForm.controls.CAP_Item"
+          [readonly]="true"
+        ></app-input-text>
       </div>
 
       <div class="col-12 md:col-6 lg:col-4">
-        <app-input-text label="扣款名稱" [control]="dataForm.controls.CAP_Name"></app-input-text>
+        <app-input-text
+          label="扣款名稱"
+          [control]="dataForm.controls.CAP_Name"
+        ></app-input-text>
       </div>
 
       <!-- 第二列：扣款類別、會計科目 -->
       <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown label="扣款類別" [control]="dataForm.controls.CAP_Type" [options]="deductionCategoryOptions"
-          optionLabel="label" optionValue="value"></app-dropdown>
+        <app-dropdown
+          label="扣款類別"
+          [control]="dataForm.controls.CAP_Type"
+          [options]="deductionCategoryOptions"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
       </div>
 
       <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown label="會計科目" [control]="dataForm.controls.AccNo" [options]="accountOptions"
-          optionLabel="formLabel" optionValue="value"></app-dropdown>
+        <app-dropdown
+          label="會計科目"
+          [control]="dataForm.controls.AccNo"
+          [options]="accountOptions"
+          optionLabel="formLabel"
+          optionValue="value"
+        ></app-dropdown>
       </div>
 
       <!-- 第三列：發票旗標、課稅別、常用否 -->
       <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown label="發票旗標" [control]="dataForm.controls.GUI_FLAG" [options]="[
+        <app-dropdown
+          label="發票旗標"
+          [control]="dataForm.controls.GUI_FLAG"
+          [options]="[
             { label: '是', value: 'Y' },
             { label: '否', value: 'N' }
-          ]" optionLabel="label" optionValue="value"></app-dropdown>
+          ]"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
       </div>
 
       <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown label="課稅別" [control]="dataForm.controls.CAP_TaxType" [options]="[
-            { label: '應稅', value: '1' },
-            { label: '零稅率', value: '2' },
-            { label: '免稅', value: '3' }
-          ]" optionLabel="label" optionValue="value"></app-dropdown>
+        <app-dropdown
+          label="課稅別"
+          [control]="dataForm.controls.CAP_TaxType"
+          [options]="[
+            { label: '1-應稅', value: '1' },
+            { label: '2-零稅率', value: '2' },
+            { label: '3-免稅', value: '3' }
+          ]"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
       </div>
 
       <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown label="是否常用" [control]="dataForm.controls.IsCommonlyUsed" [options]="[
+        <app-dropdown
+          label="是否常用"
+          [control]="dataForm.controls.IsCommonlyUsed"
+          [options]="[
             { label: '是', value: 'Y' },
             { label: '否', value: 'N' }
-          ]" optionLabel="label" optionValue="value"></app-dropdown>
+          ]"
+          optionLabel="label"
+          optionValue="value"
+        ></app-dropdown>
       </div>
 
-      <!-- ✅ 合約列印區分 Print_Area -->
+      <!-- 合約列印區分 / 分攤比率 -->
       <div class="col-12 md:col-6 lg:col-4">
-        <app-input-text label="合約列印區分" [control]="dataForm.controls.Print_Area"
-          placeholder="請輸入合約列印區分"></app-input-text>
+        <app-input-text
+          label="合約列印區分"
+          [control]="dataForm.controls.Print_Area"
+          placeholder="請輸入合約列印區分"
+        ></app-input-text>
       </div>
-            <div class="col-12 md:col-6 lg:col-4">
-        <app-input-text label="分攤比率" [control]="dataForm.controls.CAP_BaseRate"
+
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-input-text
+          label="分攤比率"
+          [control]="dataForm.controls.CAP_BaseRate"
         ></app-input-text>
       </div>
 
       <!-- 備註 -->
       <div class="col-12 md:col-6 lg:col-4">
-        <app-input-text label="備註" [control]="dataForm.controls.CAP_Remark"></app-input-text>
+        <app-input-text
+          label="備註"
+          [control]="dataForm.controls.CAP_Remark"
+        ></app-input-text>
       </div>
 
-      <!-- 底部按鈕列 -->
-      <div class="col-12 flex justify-content-end gap-2 mt-3">
-        <!-- 清除（不傳 form，避免 ButtonComponent 自己 reset，我們用 onClear 控制） -->
-        <app-button btnType="clear" type="button" (clickEvent)="onClear()"></app-button>
+      <!-- 底部按鈕列：只在 非 Read 模式 顯示 -->
+      <div
+        class="col-12 flex justify-content-end gap-2 mt-3"
+        *ngIf="crudstatus !== CRUDStatus.Read"
+      >
+        <!-- 清除 -->
+        <app-button
+          btnType="cancel"
+          type="button"
+          (clickEvent)="onClear()"
+        ></app-button>
 
         <!-- 送出 -->
         <app-button btnType="submit" type="submit"></app-button>

@@ -1,0 +1,69 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="盤點單編號" controlName="PST_No" [control]="queryForm.controls.PST_No"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="倉別" controlName="HOS_No" [options]="HOSNoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="品牌" controlName="LOGO_No" [options]="LOGONoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="盤點基準日期"
+              [startControl]="queryForm.controls.PST_DateStart" [endControl]="queryForm.controls.PST_DateEnd"
+              [submitted]="submitted"></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="盤點狀態" controlName="PST_Status" [options]="PSTStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.PST_Status" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="盤點類型" controlName="PST_Type" [control]="queryForm.controls.PST_Type"
+              [options]="PSTTypeOptions" [submitted]="submitted"></app-radiobutton>
+          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <app-table tableKey="TLS53020" [data]="data" [columns]="columns" [multiSortMeta]="[{ field: 'PST_Date', order: -1 }]"
+    [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" [showManage]="true" [showDetail]="false"
+    [showEdit]="false" [showDelete]="false" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [addButton]="addButton"></app-table>
+</div>
+
+<!-- 匯入視窗 -->
+<app-dialog [visible]="dialogVisible" header="匯入盤點資料" (visibleChange)="dialogVisible = $event" [showFooter]="false"
+  [disable]="false" [height]="'auto'" [width]="'auto'">
+  <form [formGroup]="queryForm2">
+    <div class="grid p-fluid">
+      <div class="col-12">
+        <app-input-text label="盤點單編號" controlName="PST_No" [control]="queryForm2.controls.PST_No"
+          [submitted]="submitted"></app-input-text>
+      </div>
+      <div class="col-12">
+        <app-radiobutton label="盤點類型" controlName="PST_Type" [control]="queryForm2.controls.PST_Type"
+          [options]="PSTTypeOptionsForImport" [submitted]="submitted"></app-radiobutton>
+      </div>
+    </div>
+  </form>
+  <app-file-upload #fileUpload [accept]="'.txt'" [customUpload]="true" (uploadHandler)="onFileUpload($event)"
+    [loading]="fileUploadLoading"></app-file-upload>
+</app-dialog>

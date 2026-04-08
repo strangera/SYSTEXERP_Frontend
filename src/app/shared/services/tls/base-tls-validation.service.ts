@@ -1,6 +1,6 @@
 // shared/services/tls/base-tls-validation.service.ts
 import { Injectable } from '@angular/core';
-import { FormGroup, Validators, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
+import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 
 /**
  * TLS 驗證服務設定介面
@@ -42,7 +42,8 @@ export abstract class BaseTLSValidationService {
   updateAllValidators(form: FormGroup): void {
     this.updateFieldValidators(form);
     this.updatePaymentValidators(form);
-    this.updateDepositValidators(form);
+    // [暫時註解] 保證金驗證
+    // this.updateDepositValidators(form);
   }
 
   /**
@@ -60,7 +61,7 @@ export abstract class BaseTLSValidationService {
   }
 
   /**
-   * 包底類別驗證
+   * 包底類別驗證 (抽成別 4, 6 需要)
    */
   private updateBaodiValidators(form: FormGroup, tltTermType: string): void {
     const baodiControl = form.get('tlt_ctype_mtotal');
@@ -68,7 +69,7 @@ export abstract class BaseTLSValidationService {
 
     baodiControl.clearValidators();
 
-    if (['2', '4', '6'].includes(tltTermType)) {
+    if (['4', '6'].includes(tltTermType)) {
       baodiControl.setValidators([Validators.required]);
     }
 
@@ -190,7 +191,7 @@ export abstract class BaseTLSValidationService {
    * 保證金相關驗證
    */
   updateDepositValidators(form: FormGroup): void {
-    this.validateDepositPair(form, 'open_deposit', 'open_fees', '履約保證金');
+    this.validateDepositPair(form, 'open_deposit', 'open_fees', '準時開業保證金');
     this.validateDepositPair(form, 'construct_deposit', 'construct_fees', '施工保證金');
     this.validateDepositPair(form, 'expiration_deposit', 'expiration_fees', '合約屆滿保證金');
   }
@@ -265,7 +266,7 @@ export abstract class BaseTLSValidationService {
    * 根據欄位取得必填錯誤訊息
    */
   private getRequiredErrorMessage(fieldName: string): string {
-    const requiredMessages: { [key: string]: string } = {
+    const requiredMessages: Record<string, string> = {
       'tlt_ctype_mtotal': '當前抽成別需要選擇包底類別',
       'overall_status': '當前抽成別需要選擇超出部份處理方式',
       'base_rent': '預收租金為是時固定租金為必填',
@@ -274,7 +275,7 @@ export abstract class BaseTLSValidationService {
       'vendor_acct_name': '匯款付款時帳戶名稱為必填',
       'vendor_acct_no': '匯款付款時銀行帳號為必填',
       'credit_card': '配合會員卡時會員卡折數為必填',
-      'open_fees': '履約保證金付款方式有值時此欄位為必填',
+      'open_fees': '準時開業保證金付款方式有值時此欄位為必填',
       'construct_fees': '施工保證金付款方式有值時此欄位為必填',
       'expiration_fees': '合約屆滿保證金付款方式有值時此欄位為必填'
     };

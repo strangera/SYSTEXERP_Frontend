@@ -1,33 +1,32 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls43040Service } from '@service/api/tls/tls43040.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { Column, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
-import { Tls43040Service } from '@service/api/tls/tls43040.service';
-import { Column } from 'src/app/shared/componentkit/table/table.model'; // Ensure this path is correct
-import { finalize } from 'rxjs';
 
 @Component({
   templateUrl: './tls43040.component.html',
-  styleUrls: ['./tls43040.component.scss'],
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
 })
 export class TLS43040Component extends BasicQueryPageComponent<any> implements OnInit {
 
   queryForm = this.formBuilder.group({
-    ECR_GrpNo: ['', [Validators.maxLength(3)]],// 機台群組編號
+    ECR_GrpNo: ['', [Validators.maxLength(13)]],// 機台群組編號
     ECR_GrpName: ['', [Validators.maxLength(30)]], // 機台群組名稱
     ECR_GrpDesc: ['', [Validators.maxLength(100)]], // 機台群組備註
-
     ...createPaginationConfig([{ field: 'ECR_GrpNo', order: 1 }]),
-
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   data: any[] = [];
   totalRecords = 0;
@@ -42,7 +41,6 @@ export class TLS43040Component extends BasicQueryPageComponent<any> implements O
 
   // 展開 (內層 table)
   expansionColumns7: Column[] = [
-    { field: 'ECR_GrpSeqNo', header: '收銀機群組順序號', visible: true },
     { field: 'ECR_GrpNo', header: '收銀機群組編號', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'ECR_Type', header: '機台類型', visible: true },
@@ -87,11 +85,31 @@ export class TLS43040Component extends BasicQueryPageComponent<any> implements O
   }
   // ===== 事件 =====
   onDelete(rows: any[]) {
-    const ECR_GrpNo_List = rows.map(row => row.ECR_GrpNo);
-    this.loading = true;
-    this.tls43040Service.deleteTLS43040({ ECR_GrpNo_List }).pipe(finalize(() => this.loading = false)).subscribe(res => {
-      this.messageService.successBubble(res.Message);
-      this.onSubmit(this.queryForm); // 重新查詢以更新資料
+    const ECR_GrpNo_List = rows.map(row => row.ECR_GrpNo).filter((v: any) => v !== undefined && v !== null);
+    if (!ECR_GrpNo_List.length) {
+      this.messageService.warnBubble('無有效的群組可供刪除');
+      return;
+    }
+
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '是否刪除所選項目?',
+      accept: () => {
+        this.loading = true;
+        this.tls43040Service.deleteTLS43040({ ECR_GrpNo_List })
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe({
+            next: (res) => {
+              this.messageService.successBubble(res.Message);
+              this.selectedItems = [];
+              this.onSubmit(this.queryForm); // 重新查詢以更新資料
+            },
+            error: (err) => {
+              console.error('刪除失敗', err);
+              this.messageService.errorBubble('刪除失敗');
+            }
+          });
+      }
     });
   }
 }

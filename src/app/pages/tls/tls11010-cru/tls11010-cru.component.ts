@@ -1,25 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { NgIf } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import {
-  Validators,
+  AbstractControl,
+  FormGroup,
   FormsModule,
   ReactiveFormsModule,
-  FormGroup,
-  AbstractControl,
   ValidationErrors,
+  Validators,
 } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { HttpClient } from '@angular/common/http';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { PanelModule } from 'primeng/panel';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ValidationService } from '../../../shared/service/validation.service';
 // until-destroy
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
@@ -79,7 +79,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
     LOCATION_Name: ['', [Validators.maxLength(30)]], // 店位說明
     org_id: ['', [Validators.maxLength(20)]], // 組織代碼
     building_no: ['', [Validators.required, Validators.maxLength(1)]], // 館別代碼
-    FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]], // 楼層代碼
+    FLOOR_NO: ['', [Validators.required, Validators.maxLength(2)]], // 樓層代碼
     AREA_NO: ['', [Validators.required, Validators.maxLength(2)]], // 區域代碼
 
     // 簽約坪數
@@ -124,37 +124,38 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
     super();
   }
 
-ngOnInit(): void {
-  this.initializePage('TLS11010', this.dataForm);
+  ngOnInit(): void {
+    // ⭐ 讓 base 幫你帶 crudstatus / rowdata / listRoute 等等
+    this.initializePage('TLS11010', this.dataForm);
 
-  // 🔸簽約坪數：監聽 valueChanges，輸入中文時提示並移除
-  const grossCtrl = this.dataForm.get('GROSS_SPACE') as any;
+    // 🔸簽約坪數：監聽 valueChanges，輸入中文時提示並移除
+    const grossCtrl = this.dataForm.get('GROSS_SPACE') as any;
 
-  grossCtrl?.valueChanges
-    .pipe(untilDestroyed(this))
-    .subscribe((val: any) => {
-      if (val === null || val === undefined || val === '') {
-        return;
-      }
+    grossCtrl?.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((val: any) => {
+        if (val === null || val === undefined || val === '') {
+          return;
+        }
 
-      const str = String(val);
-      const chineseRegex = /[\u4E00-\u9FFF]/g;
+        const str = String(val);
+        const chineseRegex = /[\u4E00-\u9FFF]/g;
 
-      if (!chineseRegex.test(str)) {
-        return;
-      }
+        if (!chineseRegex.test(str)) {
+          return;
+        }
 
-      // 提示使用者（中文對話泡泡）
-      this.messageService.warnBubble('「簽約坪數」不得輸入中文，請改用數字。');
+        // 提示使用者（中文對話泡泡）
+        this.messageService.warnBubble('「簽約坪數」不得輸入中文，請改用數字。');
 
-      // 把所有中文移除
-      const noChinese = str.replace(chineseRegex, '');
+        // 把所有中文移除
+        const noChinese = str.replace(chineseRegex, '');
 
-      // 空字串就設回 null，有值就轉成 number
-      const nextVal = noChinese === '' ? null : Number(noChinese);
+        // 空字串就設回 null，有值就轉成 number
+        const nextVal = noChinese === '' ? null : Number(noChinese);
 
-      grossCtrl.setValue(nextVal, { emitEvent: false });
-    });
+        grossCtrl.setValue(nextVal, { emitEvent: false });
+      });
 
     // --- 使用狀態選單邏輯 ---
     if (this.crudstatus === CRUDStatus.Create) {
@@ -278,7 +279,7 @@ ngOnInit(): void {
       .subscribe((res) => (this.BUILDING_NO_Options = res));
   }
 
-  /** 送出：改成像 FIN13050 一樣，先用中文警告泡泡顯示所有錯誤 */
+  /** 送出：像 FIN13050 一樣，先用中文警告泡泡顯示所有錯誤 */
   onSubmit(form: FormGroup): void {
     this.handleSubmit(null, () => {
       // 觸發 Angular 驗證
@@ -344,7 +345,8 @@ ngOnInit(): void {
               this.messageService.successBubble(
                 this.translate.instant('updated-successfully'),
               );
-              this.router.navigate(['account/tls', 'tls11010']);
+              // ⭐ 交給 base onCancel 回列表（會帶 fromCru: true）
+              this.onCancel();
             },
             error: () => {
               this.messageService.errorBubble(
@@ -418,7 +420,7 @@ ngOnInit(): void {
     return `「${label}」格式有誤，請檢查輸入資料。`;
   }
 
-  // 刪除（這裡原本就是中文 confirm，保留）
+  // 刪除：成功後一樣用 onCancel 回列表（順便 fromCru）
   onDelete(): void {
     const id = this.rowdata?.id;
     if (!id) {
@@ -435,7 +437,7 @@ ngOnInit(): void {
       .subscribe({
         next: () => {
           this.messageService.successBubble('刪除成功');
-          this.router.navigate(['/tls', 'TLS11010']);
+          this.onCancel();
         },
         error: () => {
           this.messageService.errorBubble('刪除失敗');
@@ -443,7 +445,7 @@ ngOnInit(): void {
       });
   }
 
-  // 清除
+  // 清除（CRU 自己的欄位，不影響查詢頁）
   onClear(): void {
     const keepValues = {
       LOCATION_No: this.dataForm.get('LOCATION_No')?.value,

@@ -1,0 +1,73 @@
+:host ::ng-deep {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border: 5px solid transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #9f9f9f;
+    border-radius: 12px;
+    border: 2px solid var(--surface-d);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: #949494;
+  }
+  .p-datatable-header {
+    .p-button.p-fileupload-choose {
+      border: 1px solid var(--surface-border);
+      padding: 0.75rem 1.25rem;
+      height: 100%;
+      width: max-content;
+    }
+  }
+  .p-datatable {
+    &.p-datatable-sm .p-datatable-footer {
+      padding: 0;
+    }
+    .p-datatable-header {
+      background: transparent;
+      border: none;
+      padding: 0;
+      .p-button-icon {
+        font-size: 1.5em;
+      }
+      .button-group .insert-button {
+        width: auto !important;
+      }
+    }
+    .invalid-row {
+      color: var(--red-500) !important;
+      background-color: var(--table-invalid-row) !important;
+    }
+    .insert-row {
+      .p-dropdown.p-component,
+      .p-inputtext {
+        border-style: dashed !important;
+        // border-width: 2px !important;
+        // border-color: var(--blue-400) !important;
+      }
+    }
+    .p-datatable-wrapper {
+      border: 1px solid var(--surface-d);
+    }
+    // 可選行的hover效果
+    .p-selectable-row:not(.p-disabled-row) {
+      &:hover {
+        background-color: var(--p-selectable-row-hover) !important;
+        cursor: pointer;
+      }
+    }
+    .p-datatable-thead > tr > th {
+      background: var(--table-header-bg);
+    }
+    .p-datatable-tfoot > tr > td {
+      background: var(--table-footer-bg);
+    }
+  }
+  .p-component-overlay {
+    background-color: rgb(217 217 217 / 40%) !important; // 轉圈圈的遮罩
+  }
+}

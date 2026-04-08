@@ -1,208 +1,303 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize, Observable } from 'rxjs';
+import { CPM12050Data, CPM12050Service } from '../../../service/api/cpm/cpm12050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-//
 
-//5.1.2.5 顧客意見管理作業
 @Component({
   selector: 'app-cpm12050',
   templateUrl: './cpm12050.component.html',
-  styleUrl: './cpm12050.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, MultiSelectComponent, InputNumberComponent, EditorTextComponent, CalendarRangeComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule,
+    CalendarRangeComponent,
+    CalendarComponent,
+    InputTextareaComponent,
+    DialogComponent
+  ]
 })
-export class CPM12050Component extends BasicQpageComponent implements OnInit {
-  //
+export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    opinionCode: [], // 客戶意見編號
-    customerName: ['', [Validators.maxLength(20)]], // 顧客姓名
-    handlingSituation: [[] as number[]], // 處理情況
-    gender: [[] as number[]], // 性別
-    opinionCategory: [[] as number[]], // 客戶意見類別
-    opinionSource: [[] as number[]], // 客戶意見來源別
-    //
-    contactAddress: ['', [Validators.maxLength(100)]], // 聯絡住址
-    contactPhone: [, [Validators.maxLength(30)]], // 聯絡電話
-    cellPhone: [, [Validators.maxLength(30)]], // 行動電話
-    email: ['', [Validators.maxLength(100)]], // 電子信箱
-    pieces: [, [Validators.maxLength(20)]], // 件號
-    //
-    emailContent: [,], // 顧客意見內容
-    //
-    responsibleUnit: [], // 責任單位
-    builder: ['', [Validators.maxLength(10)]], // 建檔人員
-    receiveDateFrom: [], // 接件日期
-    receiveDateTo: [], // 接件日期
-    notifyDateFrom: [], // 通知相關單位處理日期
-    notifyDateTo: [], // 通知相關單位處理日期
-    object: ['', [Validators.maxLength(20)]], // 對象
+    SEQ_ID: [null, Validators.maxLength(15)],           // 客戶意見編號
+    CUST_NAME: [null, Validators.maxLength(20)],        // 客戶姓名
+    SEX: [null],                                        // 性別
+    STATUS: [null],                                     // 處理狀況
+    KIND_ID: [null],                                    // 意見類型
+    SUGG_SOURCE: [null],                                // 建議來源
+    CONTACT_TEL: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(30)]], // 聯絡電話
+    CELL_PHONE: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(30)]],  // 手機號碼
+    E_MAIL: [null, [this.validationService.emailValidator, Validators.maxLength(100)]],           // Email
+    COMPLAIN_NOTES: [null, Validators.maxLength(1000)], // 顧客意見內容
+    ORG_ID: [null],                                     // 責任單位
+    ORG_ID_QUERY: [null],                               // 組織(查詢責任單位用)
+    CRT_USR_Name: [null, Validators.maxLength(50)],     // 建檔人員
+    COMPLAIN_DATE_F: [null as Date | null],             // 接件日期(起)
+    COMPLAIN_DATE_T: [null as Date | null],             // 接件日期(迄)
+    ...createPaginationConfig([])
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  //#region 下拉選單
+  // 性別選項
+  sexOptions = [
+    { label: '男', value: 'M' },
+    { label: '女', value: 'F' }
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
+
+  // 處理狀況選項
+  statusOptions = [
+    { label: '已建立', value: 'S' },
+    { label: '已派單', value: 'W' },
+    { label: '處理中', value: 'Y' },
+    { label: '結案', value: 'Z' }
+  ];
+
+  // 意見類型選項
+  kindIdOptions: any[] = [];
+  suggSourceOptions = getSYS1000Options('SUGG_SOURCE');
+
+  // 組織選項
+  orgIdQueryOptions: any[] = [];
+
+  // 責任單位選項
+  orgIdOptions: any[] = [];
+  // 全部責任單位備份
+  orgIdAllOptions: any[] = [];
+  //#endregion
+
+  // table設定
+  data: CPM12050Data[] = [];
+  selectedItems: CPM12050Data[] = [];
+  totalRecords = 0;
+
+  columns: Column[] = [
+    { field: 'ID', header: '序號', hidden: true },
+    { field: 'SEQ_ID', header: '客戶意見編號', visible: true },
+    { field: 'COMPLAIN_NOTES', header: '顧客意見內容', visible: true },
+    { field: 'COMPLAIN_DATE', header: '接件日期', visible: true, format: formatDate },
+    { field: 'CRT_USR_Name', header: '建檔人員', visible: true },
+    { field: 'ORG_ID', header: '責任單位', visible: true },
+    { field: 'STATUS', header: '處理狀況', visible: true, format: (value: any) => this.statusOptions.find(option => option.value === value)?.label || value },
+  ];
+
+  expansionColumns: Column[] = [
+    { field: 'ID', header: '序號', hidden: true },
+    { field: 'ANSWER', header: '回覆內容', visible: true },
+    { field: 'ANSWER_ID', header: '回覆人員代碼', visible: true },
+    { field: 'ANSWER_DATE', header: '回覆日期', visible: true, format: formatDate },
+    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: true },
+    { field: 'CRT_Date', header: '建立時間', visible: true, format: formatDate },
+    { field: 'UPD_USR_Name', header: '異動人員名稱', visible: true },
+    { field: 'UPD_Date', header: '異動時間', visible: true, format: formatDate }
+  ]
+
+  addButton: AddButton[] = [
     {
-      'isdelete': false, 'opinionCode': 20190709001, 'id': '', 'emailContent': '內容1', 'receiveDate': '2019/07/09 12:40',
-      'builder': 'Call 小明', 'responsibleUnit': '營運部', 'handlingSituation': '結案', 'object': 'B1 湯姆熊',
+      label: '派單',
+      displayText: '派單',
+      icon: '',
+      action: (rowData: CPM12050Data) => this.onDispatch(rowData),
+      disabled: (rowData: CPM12050Data) => rowData.STATUS !== 'S'
     },
     {
-      'isdelete': false, 'opinionCode': 20190709002, 'id': '', 'emailContent': '內容2', 'receiveDate': '2019/07/09 12:40',
-      'builder': 'Call 小明', 'responsibleUnit': '營運部', 'handlingSituation': '結案', 'object': 'B1 湯姆熊',
+      label: '結案',
+      displayText: '結案',
+      icon: '',
+      action: (rowData: CPM12050Data) => this.onClose(rowData),
+      disabled: (rowData: CPM12050Data) => rowData.STATUS === 'Z'
     },
     {
-      'isdelete': true, 'opinionCode': 20190709003, 'id': '', 'emailContent': '內容3', 'receiveDate': '2019/07/09 12:40',
-      'builder': 'Call 小明', 'responsibleUnit': '營運部', 'handlingSituation': '處理中', 'object': '美食街三明治',
+      label: '高權限',
+      displayText: '高權限',
+      icon: '',
+      action: (rowData: CPM12050Data) => {
+        const extras = {
+          state: {
+            crudstatus: CRUDStatus.Edit,
+            rowdata: rowData,
+            fromRoute: this.router.url,
+            queryConditions: this.queryForm.getRawValue(),
+            forceEditAll: true
+          }
+        };
+        this.router.navigate([`account/${this.cruPage.toLocaleLowerCase()}`], extras);
+      },
+      disabled: () => false
     },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'opinionCode', header: '客戶意見編號', visible: true },
-    { field: 'id', header: '件號', visible: true },
-    { field: 'emailContent', header: '顧客意見內容', visible: true },
-
-    { field: 'receiveDate', header: '接件日期', visible: true },
-    { field: 'builder', header: '建檔人員', visible: true },
-    { field: 'responsibleUnit', header: '責任單位', visible: true },
-    { field: 'handlingSituation', header: '處理情況', visible: true },
-
-    { field: 'object', header: '對象', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  opinionCodeOptions: any[] = [
-    { value: 1, label: '20141230001/陳小姐' },
-    { value: 2, label: '20141230002/李小姐' },
-    { value: 3, label: '20141230003/' },
-    { value: 4, label: '20141230004/' },
-    { value: 5, label: '20141230005/' },
   ];
 
-  handlingOptions: any[] = [
-    { value: 1, label: '已建單' },
-    { value: 2, label: '已派單' },
-    { value: 3, label: '處理中' },
-    { value: 4, label: '結案' },
-  ];
-
-  genderOptions: any[] = [
-    { value: 1, label: '男' },
-    { value: 2, label: '女' },
-  ];
-
-  opinionCategoryOptions: any[] = [
-    { value: 1, label: '意見反映' },
-    { value: 2, label: '廣告業務' },
-    { value: 3, label: '活動、場地洽談' },
-    { value: 4, label: '承租店櫃' },
-    { value: 5, label: '合作提案' },
-  ];
-
-  opinionSourceOptions: any[] = [
-    { value: 1, label: '現場' },
-    { value: 2, label: '來電' },
-    { value: 3, label: 'E-mail' },
-    { value: 4, label: '社群網站' },
-    { value: 5, label: '郵寄信函' },
-  ];
-
-  responsibleUnitOptions: any[] = [
-    { value: 1, label: 'X001/營運部' },
-    { value: 2, label: 'X002/行銷部' },
-    { value: 3, label: 'X003/管理部' },
-    { value: 4, label: 'X004/經企部' },
-    { value: 5, label: 'X005/財務部' },
-  ];
+  // Dialog相關
+  dialogVisible = false;
+  selectedRowDataId = 0;
+  closeForm = this.formBuilder.group({
+    USR_NO: [''],          // 使用者編號
+    USR_NAME: [''],        // 使用者名稱
+    CLOSE_MEMO: ['', [Validators.required, Validators.maxLength(1000)]],  // 結案備註
+    ALERT_DATE: [null, Validators.required] // 通知相關單位處理日期 (必填)
+  });
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
+    private cpm12050Service: CPM12050Service,
     private validationService: ValidationService,
-    //
+    private dropDownListService: DropDownListService,
+    private dropdownApiService: DropdownApiService
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510012';
-    this.cruPage = '/CPM1000/CPM12050CRU';
-    //
-
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('CPM12050', 'cpm/cpm12050cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+  onSubmit(form: FormGroup) {
+    this.handleSubmit(form, () => {
+      this.cpm12050Service.queryCPM12050(form.getRawValue())
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+        });
+    });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+  loadOptions() {
+    // 獲取組織下拉選項
+    this.dropDownListService.querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.orgIdQueryOptions = res.Data.map(item => ({
+          ...item,
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+        }));
+      })
+    // 獲取意見類型下拉選項
+    this.dropDownListService.queryCSS1002DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.kindIdOptions = this.kindIdOptions.concat(
+          res.Data.map(item => ({
+            value: item.No,
+            label: `${item.No} - ${item.Name}`,
+          }))
+        );
+      })
+    // 直接載入責任單位選項，讓使用者不需先選組織即能下拉
+    this.dropdownApiService.queryCss1005()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.orgIdAllOptions = res || [];
+        this.orgIdOptions = this.orgIdAllOptions;
+      });
+  }
+
+  onOrgQueryChange(orgId: string) {
+    // 不影響 ORG_ID 下拉選單：保持 ORG_ID 與 ORG_ID_QUERY 完全獨立
+    // 此處保留為空以供未來擴充（例如僅做查詢條件相關動作），但不會修改 orgIdOptions 或 ORG_ID 控件
+    return;
+  }
+
+  // 判斷是否禁用編輯按鈕: 只有結案（label '結案' 或 value 'Z'）為不可編輯
+  editDisabled = (rowData: any): boolean => {
+    const status = rowData?.STATUS;
+    if (!status) return false;
+    const disabledLabels = ['結案'];
+    const disabledValues = this.statusOptions
+      .filter(o => disabledLabels.includes(o.label))
+      .map(o => o.value);
+    return disabledLabels.includes(status) || disabledValues.includes(status);
+  }
+
+  expansionLoadFn = (rowData: CPM12050Data): Observable<any> => {
+    return this.cpm12050Service.queryCPM12050Detail({ ID: rowData.ID, SEQ_ID: rowData.SEQ_ID! });
+  };
+
+  // 派單
+  onDispatch(rowData: CPM12050Data) {
+    this.messageService.confirm({
+      header: `是否確認派單?`,
+      accept: () => {
+        const usrNo = this.authService.getUserInfo()?.user_No;
+        const usrName = this.authService.getUserInfo()?.user_Name;
+        this.cpm12050Service.dispatchCPM12050({
+          ID: rowData.ID,
+          USR_NO: usrNo,
+          USR_NAME: usrName
+        })
+          .pipe(untilDestroyed(this))
+          .subscribe(() => {
+            this.messageService.successBubble('派單成功');
+            this.onSubmit(this.queryForm);
+          });
+      }
+    });
+  }
+
+  // 結案
+  onClose(rowData: CPM12050Data) {
+    this.dialogVisible = true;
+    this.closeForm.patchValue({
+      USR_NO: this.authService.getUserInfo()?.user_No,
+      USR_NAME: this.authService.getUserInfo()?.user_Name,
+      CLOSE_MEMO: ''
+    });
+    this.closeForm.controls.USR_NO.disable();
+    this.closeForm.controls.USR_NAME.disable();
+    this.selectedRowDataId = rowData.ID!;
+  }
+
+  saveDialog() {
+    const alertVal: any = this.closeForm.get('ALERT_DATE')!.value;
+    let alertIso: string | null = null;
+    try {
+      if ((alertVal as any) instanceof Date) alertIso = (alertVal as Date).toISOString();
+      else if (typeof alertVal === 'string' && alertVal) alertIso = new Date(alertVal).toISOString();
+    } catch (e) {
+      alertIso = null;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+    const req = {
+      ID: this.selectedRowDataId,
+      CLOSE_MEMO: this.closeForm.get('CLOSE_MEMO')!.value || '',
+      USR_NO: this.authService.getUserInfo()?.user_No,
+      USR_NAME: this.authService.getUserInfo()?.user_Name,
+      ALERT_DATE: alertIso
     }
+    console.log('closeCPM12050 req', req);
+    this.cpm12050Service.closeCPM12050(req)
+      .pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.messageService.successBubble('結案成功');
+        this.dialogVisible = false;
+        this.onSubmit(this.queryForm);
+      });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
-  // 高權限查詢
-  onSupremeAuthority() {
-    this.navigateWithState(this.router, CRUDStatus.Read, '/CPM1000/CPM12050HQ');
-  }
 }

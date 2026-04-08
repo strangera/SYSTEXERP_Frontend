@@ -1,7 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button label="複製費率" (click)="onCopyRate()"></app-button>
+    <app-button label="複製費率" (click)="onCopyRate()" [disabled]="!hasPermission(Actions.Copy)"></app-button>
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
@@ -22,16 +22,21 @@
               [endControl]="queryForm.controls.Remit_BAmount_End" [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="廠商負擔電匯手續費" [startControl]="queryForm.controls.Remit_Fee"
-              [endControl]="queryForm.controls.Remit_Fee" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range label="廠商負擔電匯手續費" [startControl]="queryForm.controls.Remit_Fee_Start"
+              [endControl]="queryForm.controls.Remit_Fee_End" [submitted]="submitted">
+            </app-input-number-range>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="公司負擔電匯手續費" [startControl]="queryForm.controls.Comp_Remit_Fee"
-              [endControl]="queryForm.controls.Comp_Remit_Fee" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range label="公司負擔電匯手續費" [startControl]="queryForm.controls.Comp_Remit_Fee_Start"
+              [endControl]="queryForm.controls.Comp_Remit_Fee_End" [submitted]="submitted">
+            </app-input-number-range>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range label="廠商負擔電匯手續費回饋收入" [startControl]="queryForm.controls.Cash_Back_Amt"
-              [endControl]="queryForm.controls.Cash_Back_Amt" [submitted]="submitted"></app-input-number-range>
+            <app-input-number-range label="廠商負擔電匯手續費回饋收入" [startControl]="queryForm.controls.Cash_Back_Amt_Start"
+              [endControl]="queryForm.controls.Cash_Back_Amt_End" [submitted]="submitted">
+            </app-input-number-range>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -53,12 +58,13 @@
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogForm" id="DialogForm">
     <div class="grid p-fluid justify-content-between align-items-end">
-      <app-dropdown class="col-12" label="公司銀行科目代號/名稱" controlName="BNK_No" [control]="dialogForm.controls.BNK_No"
+      <app-dropdown class="col-12" label="來源公司銀行科目代號" controlName="BNK_No" [control]="dialogForm.controls.BNK_No"
         [options]="bankCodeOptions" optionLabel="label" optionValue="No" [submitted]="dialogSubmitted()"></app-dropdown>
     </div>
   </form>
-  <app-table tableKey="Fin21020DialogTable" dataKey="No" [data]="dataDialog" [columns]="columnsDialog"
-    [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
+
+  <app-table *ngIf="dialogForm.get('BNK_No')?.value" tableKey="Fin21020DialogTable" dataKey="No" [data]="dataDialog"
+    [columns]="columnsDialog" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
     (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true">
   </app-table>
 </app-dialog>

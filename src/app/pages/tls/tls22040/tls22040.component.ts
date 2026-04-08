@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { formatDate } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -34,7 +35,9 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
     TXN_DateStart: [yesterday, Validators.required],
     TXN_DateEnd: [yesterday, Validators.required],
     ...createPaginationConfig(this.multiSortMeta),
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   data: any[] = [];
   totalRecords = 0;
@@ -45,7 +48,7 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
   ];
 
   columns: Column[] = [
-    { field: 'TXN_Date', header: '銷售日期', visible: true, groupField: '111' },
+    { field: 'TXN_Date', header: '銷售日期', visible: true, groupField: '111', format: formatDate },
     { field: 'MIG_Type', header: '發票類型', visible: true, groupField: '111' },
     { field: 'MIG_Type_Name', header: '發票類型名稱', visible: false },
     { field: 'InvoiceNum', header: '發票張數', visible: true, groupField: '111' },
@@ -74,6 +77,16 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS22040', 'TLS/TLS22040cru', this.queryForm, (form) => this.onSubmit(form));
+
+    // 若有已存在的查詢狀態，優先還原完整狀態（包含 pageIndex）
+    const saved = this.queryStateService.getQueryStateValue('TLS22040');
+    if (saved) {
+      this.formStatusService.waitForReady(this.ProgNo).subscribe(() => {
+        this.queryForm.patchValue(saved);
+        // 重新送出查詢以確保畫面與資料一致
+        this.onSubmit(this.queryForm);
+      });
+    }
   }
 
   private formatDate(d: any): string {

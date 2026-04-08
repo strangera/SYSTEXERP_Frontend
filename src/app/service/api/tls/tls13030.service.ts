@@ -62,14 +62,21 @@ export class TLS13030Service {
   /**
    * 取得 APS1003 下拉選單資料（原有）
    */
-  getAPS1003DropDownList(): Observable<any[]> {
-    return this.http
-      .post<any[]>(`${this.apiUrl}/queryAPS1003_DropDownList`, {})
-      .pipe(
-        tap((res) => console.log('APS1003 下拉資料:', res)),
-        catchError(this.errorHandler.handleError)
-      );
-  }
+getAPS1003DropDownList(): Observable<Array<{ label: string; value: string }>> {
+  return this.http
+    .post<ApiResponse<DropDownItem[]>>(`${this.apiUrl}/queryAPS1003_DropDownList`, {})
+    .pipe(
+      tap((res) => console.log('APS1003 下拉資料:', res)),
+      map((res) =>
+        (res?.Data ?? []).map((x) => ({
+          label: x?.Name ?? '',
+          value: x?.No ?? ''
+        }))
+      ),
+      catchError(this.errorHandler.handleError)
+    );
+}
+
 
   /**
    * 取得 SYS3100 下拉選單（組織代碼/名稱）

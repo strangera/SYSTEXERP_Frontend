@@ -104,11 +104,22 @@
                   "with": "src/environments/environment.staging.ts"
                 }
               ],
-              "outputHashing": "none",
-              "optimization": false,
-              "sourceMap": true,
-              "extractLicenses": false,
+              "outputHashing": "all",
+              "optimization": true,
+              "aot": true,
               "baseHref": "/tsrdwebdev/",
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                }
+              ],
               "assets": [
                 "src/favicon.ico",
                 "src/assets",
@@ -146,12 +157,24 @@
               ]
             },
             "development": {
-              "optimization": {
-                "scripts": false,
-                "styles": true
-              },
+              "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "leo": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/app/app.routes.ts",
+                  "with": "src/app/app.routes.leo.ts"
+                },
+                {
+                  "replace": "src/app/pages/pages.routes.ts",
+                  "with": "src/app/pages/pages.routes.leo.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -167,6 +190,9 @@
             },
             "staging": {
               "buildTarget": "TSRDERP_Frontend:build:staging"
+            },
+            "leo": {
+              "buildTarget": "TSRDERP_Frontend:build:leo"
             }
           },
           "defaultConfiguration": "development",

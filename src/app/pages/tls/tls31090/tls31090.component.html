@@ -110,6 +110,19 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
+              label="小分類代碼/名稱"
+              controlName="CatSNos"
+              [options]="bus_sclass_Option"
+              optionLabel="label"
+              [control]="queryForm.controls.CatSNos"
+              [submitted]="submitted"
+              optionGroupLabel="label"
+              optionGroupChildren="items"
+              [group]="true"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
               label="櫃別"
               controlName="CabinetKinds"
               [options]="tlt_kind_Option"
@@ -165,6 +178,7 @@
             <app-radiobutton
               label="是否開立業主發票"
               controlName="BizInvFlag"
+              groupname="IncludeTax"
               [control]="queryForm.controls.BizInvFlag"
               [options]="BizInvFlag_Option"
               [submitted]="submitted"

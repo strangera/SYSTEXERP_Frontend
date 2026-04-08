@@ -1,64 +1,114 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" label="遺失" (click)="onCreate({ mode: 'L' })"></app-button>
+    <app-button btnType="create" label="拾獲" (click)="onCreate({ mode: 'F' })"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
-        <div>
-          <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="專櫃品牌"
-                controlName="counterBrand"
-                [control]="queryForm.controls.counterBrand"
-                [submitted]="submitted"
-              ></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-multi-select
-                label="營運狀態"
-                controlName="operatingStatus"
-                [options]="systemTypeOptions"
-                optionLabel="label"
-                optionValue="value"
-                [control]="queryForm.controls.operatingStatus"
-                [submitted]="submitted"
-              ></app-multi-select>
-            </div>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="登錄編號" controlName="SeqId"
+            [control]="queryForm.controls.SeqId" [submitted]="submitted"></app-input-text>
+        </div>
+
+        <div class="grid p-fluid">
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="登錄日期"
+            [startControl]="queryForm.controls.RecDateFrom" [endControl]="queryForm.controls.RecDateTo"
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range-quick>
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="遺失日期"
+            [startControl]="queryForm.controls.LostDateFrom" [endControl]="queryForm.controls.LostDateTo"
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range-quick>
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="拾獲日期"
+            [startControl]="queryForm.controls.FindDateFrom" [endControl]="queryForm.controls.FindDateTo"
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range-quick>
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="通知日期"
+            [startControl]="queryForm.controls.MsgDateFrom" [endControl]="queryForm.controls.MsgDateTo"
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range-quick>
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="領回日期"
+            [startControl]="queryForm.controls.ReceiveDateFrom" [endControl]="queryForm.controls.ReceiveDateTo"
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range-quick>
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="轉出日期"
+            [startControl]="queryForm.controls.TransDateFrom" [endControl]="queryForm.controls.TransDateTo"
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range-quick>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="失物類型" controlName="DocType" [options]="Type1Options" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.DocType" [submitted]="submitted"></app-dropdown>
           </div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="物品類別" controlName="Goods" [options]="Type2Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Goods" [submitted]="submitted"></app-dropdown>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="失物狀態" controlName="SeqType" [options]="Type3Options" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.SeqType" [submitted]="submitted"></app-dropdown>
+          </div>
+          <app-input-textarea class="col-12" label="物品敘述" controlName="Notes" [control]="queryForm.controls.Notes"
+            [submitted]="submitted"></app-input-textarea>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="地點" controlName="LocationKeyword" [options]="SPACE1Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.LocationKeyword" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="服務人員" controlName="ServiceUser" [options]="ProcessingUserOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ServiceUser" [submitted]="submitted"></app-dropdown>
+          </div>
+
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="登錄者" controlName="KEY_USER"
+            [control]="queryForm.controls.KEY_USER" [submitted]="submitted"></app-input-text>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton label="是否廣播" controlName="BroadcastFilter" [control]="queryForm.controls.BroadcastFilter"
+              [options]="SPACE3Options" [submitted]="submitted"></app-radiobutton>
+          </div>
+          <app-input-textarea class="col-12" label="通知/廣播情況" controlName="BroadcastSituation"
+            [control]="queryForm.controls.BroadcastSituation" [submitted]="submitted"></app-input-textarea>
+        </div>
+        <div class="grid p-fluid">
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="領回人姓名" controlName="RecaptionName"
+            [control]="queryForm.controls.RecaptionName" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="領回人聯絡電話" controlName="RecaptionPhone"
+            [control]="queryForm.controls.RecaptionPhone" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="報失者/拾獲者姓名" controlName="RegistrantKeyword"
+            [control]="queryForm.controls.RegistrantKeyword" [submitted]="submitted"></app-input-text>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="協助顧客領回處理人員" controlName="ProcessingUser" [options]="ProcessingUserOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.ProcessingUser"
+              [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="報失者/拾獲者身分別" controlName="IdentityKind" [options]="USER5Options" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.IdentityKind" [submitted]="submitted"></app-dropdown>
+          </div>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="電話" controlName="Tel"
+            [control]="queryForm.controls.Tel" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="手機" controlName="MobilePhone"
+            [control]="queryForm.controls.MobilePhone" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="證件號碼" controlName="IdNo"
+            [control]="queryForm.controls.IdNo" [submitted]="submitted"></app-input-text>
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button label="未領取報表" btnType="default" [loading]="loading"
+            (click)="onExportUnreceivedReport()"></app-button>
         </div>
       </form>
+
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <app-table
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-  ></app-table>
+  <app-table-report [data]="data" [columns]="columns" (edit)="onEdit($event)" [showDelete]="false"
+    (detail)="onDetail($event)" dataKey="SeqId" [totalRecords]="totalRecords" [loading]="loading"
+    [editDisabled]="editDisabled" [lastQueryBody]="lastQueryBody" [addButton]="addButton"
+    [queryFunction]="cpm11070Service.queryCPM11070.bind(cpm11070Service)">
+
+  </app-table-report>
 </div>

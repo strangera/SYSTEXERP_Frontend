@@ -32,7 +32,7 @@ export class FIN54030Service {
     );
   }
 
-  public closeFIN54030(CloseYM: string, CloseType: '1' | '2'): Observable<FIN54030Response> {
+  public closeFIN54030(CloseYM: string, CloseType: 1 | 2): Observable<FIN54030Response> {
     this.closeLoading.set(!0);
     return this.http.post<FIN54030Response>(`${apiUrl}/closeFIN54030`, { CloseYM, CloseType }).pipe(
       take(1),

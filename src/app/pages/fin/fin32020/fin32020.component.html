@@ -4,11 +4,11 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <div>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
+      <app-button
+        btnType="create"
+        (click)="onClickCreate()"
+        label="{{ 'create' | translate }}"
+      ></app-button>
     </div>
   </div>
 
@@ -25,29 +25,25 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <!-- 調整單號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="調整單號"
               controlName="adjust_ID"
               [control]="queryForm.controls.adjust_ID"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
 
-          <!-- 調整日期 起訖 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
-              label="調整日期"
+              label="收款日期"
               [startControl]="queryForm.controls.adjust_Date_From"
               [endControl]="queryForm.controls.adjust_Date_To"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
 
-          <!-- 備註 (模糊) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="備註"
@@ -59,7 +55,6 @@
         </div>
 
         <div class="grid p-fluid">
-          <!-- 傳票單號 起迄 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
               [useGrouping]="false"
@@ -71,7 +66,9 @@
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button
             btnType="clear"
             [type]="'button'"
@@ -88,11 +85,10 @@
   </p-accordion>
 </div>
 
-<!-- 主表：改用 app-table-report -->
 <div class="card">
   <app-table-report
     [tableKey]="'fin32020_' + tableVer"
-    [dataKey]="'_rowKey'"
+    [dataKey]="'ADJ_No'"
     [columns]="columns"
     [data]="data"
     [totalRecords]="viewTotalRecords"
@@ -110,8 +106,12 @@
     (selectionChange)="selectedItems = $event"
     [showDetail]="true"
     (detail)="onDetail($event)"
-    [showEdit]="true"
+    [showEdit]="canShowEdit"
     (edit)="onEdit($event)"
+    [expansionDataKey]="'_Details'"
+    [expansionColumns]="expansionColumns"
+    [expansionMultiSortMeta]="[{ field: 'ARS_No', order: 1 }]"
+    [expansionLoadFn]="loadDetailForExpansion"
   >
   </app-table-report>
 </div>

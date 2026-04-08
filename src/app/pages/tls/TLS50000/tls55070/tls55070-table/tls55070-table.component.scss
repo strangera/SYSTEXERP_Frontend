@@ -1,0 +1,335 @@
+/* =========================================================
+   TLS2B010Table — 與 TableReport 視覺完全一致的完整樣式
+   - 小計列：灰底、主色字、粗體、置中；不吃序號/不高亮
+   - 表頭/群組：與 table-report 同
+   - 游標互動：sortable = pointer、resizer = col-resize、row handle = move
+   - 列高：46px 視覺一致
+   - Caption/工具列按鈕大小一致
+   - 虛擬滾動與 overlay 外觀一致
+   - 字級：table-font-md 可控
+   ========================================================= */
+:host ::ng-deep {
+  /* ===== 捲軸 ===== */
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border: 5px solid transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #9f9f9f;
+    border-radius: 12px;
+    border: 2px solid var(--surface-d);
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: #949494;
+  }
+
+  /* ===== p-table 基本 ===== */
+  .p-datatable {
+    &.p-datatable-sm .p-datatable-footer {
+      padding: 0;
+    }
+
+    /* -------- Header / 工具列 -------- */
+    .p-datatable-header {
+      background: transparent;
+      border: none;
+      padding: 0;
+
+      /* 欄位過濾 Multiselect（圓形齒輪） */
+      p-multiselect {
+        width: 35px;
+        height: 35px;
+
+        .p-multiselect-label {
+          display: none;
+        }
+        .p-multiselect-trigger-icon {
+          font-size: 1.4em;
+          color: var(--surface-card);
+        }
+        .p-multiselect {
+          border-radius: 50%;
+          border: 1px solid var(--surface-400);
+          width: 100%;
+          height: 100%;
+          background-color: var(--surface-400);
+        }
+        .p-multiselect-trigger {
+          flex-shrink: unset;
+        }
+        .ng-trigger-overlayContentAnimation {
+          width: 200px;
+        }
+      }
+
+      .button-group {
+        .p-button {
+          width: 35px !important;
+          height: 35px !important;
+        }
+      }
+      .p-button-icon {
+        font-size: 1.5em;
+      }
+    }
+
+    /* 被選取且 disabled 的列（維持藍底） */
+    .p-datatable-tbody > tr .p-highlight.p-disabled {
+      background-color: #38a8ff !important;
+    }
+
+    /* 可選擇列 hover */
+    .p-selectable-row:not(.p-disabled-row):hover {
+      background-color: #d5edff !important;
+      cursor: pointer;
+    }
+
+    /* disabled 列與禁用 checkbox 樣式（含紅色叉叉） */
+    .p-disabled-row {
+      color: #495057 !important;
+
+      .p-checkbox {
+        opacity: 0.5;
+        cursor: not-allowed !important;
+        position: relative;
+
+        .p-checkbox-box {
+          background-color: #e9ecef !important;
+          border-color: #ced4da !important;
+        }
+        &::before,
+        &::after {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 100%;
+          height: 2px;
+          background-color: #dc3545;
+          transform-origin: center;
+          z-index: 2;
+        }
+        &::before {
+          transform: translate(-50%, -50%) rotate(45deg);
+        }
+        &::after {
+          transform: translate(-50%, -50%) rotate(-45deg);
+        }
+      }
+    }
+
+    /* Footer 區塊（總計） */
+    .table-footer {
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-width: 0 1px 1px 1px;
+    }
+
+    /* 內容外框 */
+    .p-datatable-wrapper {
+      border: 1px solid var(--surface-d);
+    }
+
+    /* 可選列 hover 顏色（變數） */
+    .p-selectable-row:not(.p-disabled-row) {
+      &:hover {
+        background-color: var(--p-selectable-row-hover) !important;
+        cursor: pointer;
+      }
+    }
+
+    /* 分頁條 */
+    .p-paginator {
+      padding: 0.2rem 0.2rem;
+      background: transparent;
+    }
+  }
+
+  /* 虛擬滾動背景（與 table-report 一致） */
+  .p-scroller .p-scroller-inline {
+    background: #cacaca;
+  }
+
+  /* BlockUI / Overlay 半透明背景 */
+  .p-component-overlay {
+    background-color: rgb(217 217 217 / 40%) !important;
+  }
+
+  /* HTML 單格（縮成一行、省略號） */
+  .html-cell,
+  .html-cell * {
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    font-weight: normal !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: -webkit-inline-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 1.2em;
+    white-space: normal;
+    word-break: break-word;
+    max-width: 75px;
+  }
+
+  /* 不換行工具 */
+  .no-wrap {
+    white-space: nowrap;
+    div {
+      display: inline;
+    }
+  }
+
+  /* 群組表頭底色（對齊 table-report） */
+  .group-header {
+    background-color: var(--table-header-bg-group) !important;
+  }
+
+  /* 表頭底色（對齊 table-report） */
+  .p-datatable .p-datatable-thead > tr > th {
+    background: var(--table-header-bg);
+  }
+
+  /* 管理欄按鈕底色（對齊 table-report） */
+  .icon-button button {
+    background-color: var(--icon-button-bg);
+    border-radius: 5px;
+    border: var(--icon-button-border);
+
+    &:hover {
+      background-color: rgba(0, 123, 255, 0.2);
+    }
+    span.p-button-icon.pi {
+      color: var(--icon-button-span);
+    }
+  }
+
+  /* =========================================================
+     表頭游標修正
+     - 可排序：手指游標(pointer)
+     - 欄寬調整把手：col-resize
+     - 列拖拉把手：move
+     - 避免 pReorderableColumn 把整個 th 變成 move
+     ========================================================= */
+
+  /* 預設把表頭游標還原成 default（避免被 pReorderable 設成 move） */
+  .p-datatable .p-datatable-thead > tr > th {
+    cursor: default !important;
+    user-select: none;
+  }
+
+  /* 可排序欄位 → 手指游標 */
+  .p-datatable .p-datatable-thead > tr > th.p-sortable-column,
+  .p-datatable .p-datatable-thead > tr > th.p-sortable-column .p-column-title,
+  .p-datatable
+    .p-datatable-thead
+    > tr
+    > th.p-sortable-column
+    .p-sortable-column-icon {
+    cursor: pointer !important;
+  }
+
+  /* 同時「可排序 + 可拖曳」時，優先用 pointer（覆蓋 move） */
+  .p-datatable
+    .p-datatable-thead
+    > tr
+    > th.p-sortable-column.p-reorderable-column {
+    cursor: pointer !important;
+  }
+
+  /* 欄寬調整把手維持 col-resize */
+  .p-datatable .p-datatable-thead > tr > th .p-column-resizer {
+    cursor: col-resize !important;
+  }
+
+  /* 列的拖曳把手維持 move（不影響表頭） */
+  .p-datatable [pReorderableRowHandle],
+  .p-datatable .pi.pi-bars {
+    cursor: move !important;
+  }
+
+  /* 表頭文字可換行（對齊 table-report） */
+  .wrap-header {
+    white-space: normal;
+  }
+
+  /* =========================================================
+     小計列（subtotal-row）
+     - 與 table-report 相同：灰底、主色字、粗體、置中
+     - 不受 hover/選取高亮影響
+     - 與上一筆有淡邊線
+     ========================================================= */
+  .p-datatable .subtotal-row,
+  .p-datatable .p-datatable-tbody > tr.subtotal-row {
+    background-color: #e5e7eb !important; /* bg-gray-200 */
+    color: var(--primary-color) !important; /* text-primary */
+    font-weight: 700 !important; /* font-bold */
+    font-size: 0.875rem !important; /* text-sm */
+    text-align: center !important;
+  }
+  .p-datatable .subtotal-row td {
+    vertical-align: middle !important;
+    cursor: default !important;
+    border-top: 1px solid var(--surface-d);
+  }
+  .p-datatable .p-selectable-row.subtotal-row:hover {
+    background-color: #e5e7eb !important;
+  }
+  .p-datatable .subtotal-row.p-highlight {
+    background-color: #e5e7eb !important;
+  }
+
+  /* =========================================================
+     行高（對齊 table-report 的 46px 視覺）
+     如不想全域生效，可移除或改成套在特定 class
+     ========================================================= */
+  .p-datatable .p-datatable-tbody > tr > td {
+    height: 46px;
+    line-height: 1.2;
+  }
+
+  /* 冷凍欄位靠右對齊（管理欄）一致 */
+  .p-datatable [alignfrozen="right"],
+  .p-datatable [alignFrozen="right"] {
+    text-align: center !important;
+  }
+}
+
+/* =========================================================
+   字級控制：table-font-md
+   - 讓 table 在套用 table-font-md class 時，字級與 table-report 一致
+   ========================================================= */
+:host ::ng-deep .p-datatable.table-font-md {
+  font-size: 1rem !important;
+  line-height: 1.25rem !important;
+}
+:host ::ng-deep .p-datatable.table-font-md .p-datatable-thead > tr > th,
+:host ::ng-deep .p-datatable.table-font-md .p-datatable-tbody > tr > td,
+:host ::ng-deep .p-datatable.table-font-md .p-datatable-tfoot > tr > td {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+:host
+  ::ng-deep
+  .p-datatable.table-font-md
+  .p-datatable-thead
+  > tr
+  > th
+  .p-column-title,
+:host
+  ::ng-deep
+  .p-datatable.table-font-md
+  .p-datatable-thead
+  > tr
+  > th
+  .p-sortable-column-icon {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}

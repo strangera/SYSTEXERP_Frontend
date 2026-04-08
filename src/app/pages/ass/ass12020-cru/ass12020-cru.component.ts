@@ -1,146 +1,393 @@
-import { NgFor, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import {
+  ASS12010DetailItem,
+  ASS12010DetailResponse,
+  ASS12010QueryRequest,
+} from '@pages/ass/ass12010/ass12010.model';
+import {
+  ApplyPurchaseRequestRow,
+  ASS12020Detail,
+  ASS12020DetailItem,
+  ASS12020InsertRequest,
+} from '@pages/ass/ass12020/ass12020.model';
+import { ASS11100Service } from '@service/api/ass/ass11100.service';
+import { ASS12010Service } from '@service/api/ass/ass12010.service';
+import { ASS12020Service } from '@service/api/ass/ass12020.service';
+import { Fin11040Service } from '@service/api/fin/fin11040.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateMaxLength, validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, formatDate, formatDateToYYYY_MM_DD, LazyLoadEvent } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
+import { finalize, forkJoin } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-
-
-//3.1.2.2 詢價登錄作業 CRU
+/** 3.1.2.2 詢價登錄作業 CRU */
+@UntilDestroy()
 @Component({
   selector: 'app-ass12020-cru',
   templateUrl: './ass12020-cru.component.html',
   styleUrl: './ass12020-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, EditorTextComponent, NgFor, InputNumberComponent, InputTextComponent, NgIf, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    InputTextComponent,
+    DialogComponent,
+    TableComponent,
+    TableEditComponent,
+    TranslateModule,
+  ],
 })
-export class ASS12020CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
+export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> implements OnInit {
+  @ViewChild('tableEdit') tableEditComponent!: TableEditComponent;
 
-  // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    // ----------------------------------------------------------------
-    supplierCode: [, [Validators.required]], // 	供應商編號
-    reportdate: [, [Validators.required]], // 報價期限
-    remark: [,], // 說明
-
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    SUPPLIER_ID: ['', [Validators.required]],
+    EXPDATE: [null as Date | null, [Validators.required]],
+    NOTES: [''],
   });
-  // ----------------------------------------------------------------
-  itemCodeOptions: any[] = [];
-  supplierCodeOptions: any[] = [];
-  itemUnitOptions: any[] = [];
 
-  //
+  /** 明細資料（table-edit 綁定） */
+  data: ASS12020DetailItem[] = [];
+
+  /** 品項編號下拉：queryFIN11040 */
+  itemCodeOptions: { value: string; label: string }[] = [];
+  itemUnitOptions = getSYS1000Options('UNIT');
+  /** 倉別下拉：queryASS11100 */
+  whIdOptions: { value: string; label: string }[] = [];
+
+  /** table-edit 欄位設定 */
+  editColumns: EditColumn[] = [
+    { field: 'NEED_ID', header: '請購單號', type: 'input', maxLength: 12, validate: [validateMaxLength(12)] },
+    {
+      field: 'GOODS_ID',
+      header: '品項編號',
+      type: 'dropdown',
+      optionLabel: 'label',
+      optionValue: 'value',
+      options: () => this.itemCodeOptions,
+      validate: [validateRequired],
+    },
+    {
+      field: 'GOODS_PRICE',
+      header: '單價(未稅)',
+      type: 'inputNumber',
+      placeholder: '輸入數字',
+      validate: [validateRequired, validateMinNumber(0)],
+    },
+    { field: 'PURCHASE_QTY', header: '請購數量', type: 'inputNumber', placeholder: '輸入數字' },
+    { field: 'QTY', header: '數量', type: 'inputNumber', placeholder: '輸入數字', validate: [validateRequired, validateMinNumber(0)] },
+    {
+      field: 'GOODS_UNIT',
+      header: '品項單位',
+      type: 'dropdown',
+      optionLabel: 'label',
+      optionValue: 'value',
+      options: () => this.itemUnitOptions,
+    },
+    { field: 'TOTAL_AMT', header: '總金額', type: 'inputNumber', placeholder: '輸入數字', validate: [validateRequired] },
+    { field: 'EXPIRE_LIMIT', header: '保存期限(月)', type: 'inputNumber', placeholder: '輸入數字' },
+    {
+      field: 'WH_ID',
+      header: '倉別',
+      type: 'dropdown',
+      optionLabel: 'label',
+      optionValue: 'value',
+      options: () => this.whIdOptions,
+    },
+    { field: 'NOTES', header: '說明', type: 'input' },
+  ];
+
+  /** 套用請購申請單：是否顯示 dialog */
+  displayApplyDialog = false;
+  /** 套用請購申請單清單資料 */
+  applyListData: ApplyPurchaseRequestRow[] = [];
+  /** 套用請購申請單：總筆數（供分頁器） */
+  applyTotalRecords = 0;
+  /** 套用請購申請單：已選一筆 */
+  selectedApplyRow: ApplyPurchaseRequestRow | null = null;
+  applyListLoading = false;
+  /** 套用視窗表格欄位 */
+  applyListColumns: Column[] = [
+    { field: 'NEED_ID', header: '需求編號' },
+    { field: 'APPLICANT', header: '申請人' },
+    { field: 'DEPT', header: '申請部門' },
+    { field: 'REQ_DATE', header: '日期', format: formatDate },
+    { field: 'ROW_COUNT', header: '筆數' },
+  ];
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
+    private readonly ass12020Service: ASS12020Service,
+    private readonly ass12010Service: ASS12010Service,
+    private readonly fin11040Service: Fin11040Service,
+    private readonly ass11100Service: ASS11100Service,
+    private readonly dropDownListService: DropDownListService,
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310012';
-    //
-    console.log(this.accordionTabCss);
+    this.initializePage('ASS12020', this.dataForm);
+    this.loadOptions();
+    const id = this.getRowdataId();
+    if (!this.isFormCreateable && id != null) {
+      this.loading = true;
+      this.ass12020Service
+        .getASS12020Detail(id)
+        .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            const d = res.Data;
+            this.dataForm.patchValue({
+              SUPPLIER_ID: d?.SUPPLIER_ID ?? '',
+              EXPDATE: d?.EXPDATE ? new Date(d.EXPDATE) : null,
+              NOTES: d?.NOTES ?? '',
+            });
+            this.data = d?.Details ?? [];
+          },
+        });
+    }
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
+  /** 取得列資料主鍵 (FAQuotationM_ID 或 id)，供 detail/update/export 使用 */
+  private getRowdataId(): number | undefined {
+    const r = this.rowdata
+    return r?.FAQuotationM_ID;
   }
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      requestCode: [, [Validators.maxLength(12)]], // 請購單號 *
-      itemCode: [, [Validators.required]], // 品項編號
-      singlePrice: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(8)]], // 單價(未稅)
-      requestAmount: [, [Validators.maxLength(8)]], // 請購數量	 *
-      amount: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(8)]], // 數量
-      itemUnit: ['', [Validators.required, Validators.maxLength(8)]], // 單位
-
-      totalAmount: [, [Validators.required]], // 總金額
-      warrantyPeriod: [, [Validators.maxLength(8)]], // 保固期限(月)
-      storage: ['', [Validators.maxLength(4)]], // 倉別
-
-      //
-      singleRemark: [,], // 單項說明
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
+  /** 載入品項編號 (queryFIN11040)、倉別 (queryASS11100) 下拉選項 */
+  private loadOptions(): void {
+    forkJoin({
+      items: this.fin11040Service.queryFIN11040({ PageSize: 1000, PageIndex: 1 }),
+      wh: this.ass11100Service.queryASS11100({ PageSize: 100, PageIndex: 1 }),
+    })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: ({ items, wh }) => {
+          if (items.Status === '0000' && Array.isArray(items.Data)) {
+            this.itemCodeOptions = items.Data.map(item => ({
+              value: item.INV_ItemNo,
+              label: `${item.INV_ItemNo} - ${item.INV_ItemName}`,
+            }));
+          }
+          if (wh.Status === '0000' && Array.isArray(wh.Data)) {
+            this.whIdOptions = wh.Data.map(item => ({
+              value: item.WH_ID ?? '',
+              label: `${item.WH_ID ?? ''} - ${item.WH_NAME ?? ''}`,
+            }));
+          }
+        },
+      });
   }
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+  /** 開啟套用請購申請單 dialog */
+  openApplyDialog(): void {
+    this.applyListLoading = true;
+    this.selectedApplyRow = null;
+    const payload: ASS12010QueryRequest = {
+      PageSize: 30,
+      PageIndex: 1,
+    };
+    this.ass12010Service
+      .queryASS12010(payload)
+      .pipe(finalize(() => (this.applyListLoading = false)), untilDestroyed(this))
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          const list = res.Data ?? [];
+          this.applyListData = list.map(row => ({
+            NEED_ID: row.NEED_ID ?? null,
+            APPLICANT: row.EMP_NAME ?? null,
+            DEPT: row.ORG_NAME ?? null,
+            REQ_DATE: row.APPLY_DATE != null ? String(row.APPLY_DATE) : null,
+            ROW_COUNT: row.Detail_CNT ?? null,
+          }));
+          this.applyTotalRecords = res.TotalCount ?? this.applyListData.length;
+          this.displayApplyDialog = true;
+        },
+      });
   }
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
+  /** 套用請購 dialog 內表格 lazy 換頁／排序時呼叫 */
+  onApplyLazyLoad(event: LazyLoadEvent): void {
+    const pageSize = event.pageSize ?? 30;
+    const pageIndex = event.pageIndex ?? 1;
+    const sortBy = event.SortBy;
+
+    this.applyListLoading = true;
+    const payload: ASS12010QueryRequest = {
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: sortBy,
+    };
+
+    this.ass12010Service
+      .queryASS12010(payload)
+      .pipe(finalize(() => (this.applyListLoading = false)), untilDestroyed(this))
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          const list = res.Data ?? [];
+          this.applyListData = list.map(row => ({
+            NEED_ID: row.NEED_ID ?? null,
+            APPLICANT: row.EMP_NAME ?? null,
+            DEPT: row.ORG_NAME ?? null,
+            REQ_DATE: row.APPLY_DATE != null ? String(row.APPLY_DATE) : null,
+            ROW_COUNT: row.Detail_CNT ?? null,
+          }));
+          this.applyTotalRecords = res.TotalCount ?? this.applyListData.length;
+        },
+      });
   }
 
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
+  onApplySelectionChange(rows: ApplyPurchaseRequestRow[]): void {
+    this.selectedApplyRow = rows?.[0] ?? null;
+  }
 
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
+  /** 確認套用請購申請單 */
+  onApplyConfirm(): void {
+    const row = this.selectedApplyRow;
+    if (!row?.NEED_ID) {
+      this.messageService.warnBubble('請選擇一筆請購申請單');
       return;
     }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    this.applyListLoading = true;
+    this.ass12010Service
+      .detailASS12010({ NEED_ID: row.NEED_ID })
+      .pipe(finalize(() => (this.applyListLoading = false)), untilDestroyed(this))
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          const data = res.Data as ASS12010DetailResponse | undefined;
+          if (!data?.Header || !data?.Details) {
+            this.displayApplyDialog = false;
+            return;
+          }
+          const header = data.Header;
+          const needId = header.NEED_ID ?? row.NEED_ID ?? '';
+          const whId = header.WH_ID ?? null;
+          const currentNotes = header.NOTE ?? '';
+          this.dataForm.patchValue({
+            NOTES: currentNotes,
+          });
+          // 明細：ASS12010DetailItem[] → ASS12020DetailItem[]
+          this.data = (data.Details ?? []).map((detail: ASS12010DetailItem) => ({
+            NEED_ID: needId || null,
+            GOODS_ID: detail.GOODS_ID ?? null,
+            GOODS_PRICE: null,
+            PURCHASE_QTY: detail.PURCHASE_QTY ?? null,
+            QTY: detail.QTY ?? null,
+            GOODS_UNIT: null,
+            TOTAL_AMT: null,
+            EXPIRE_LIMIT: null,
+            WH_ID: whId ?? null,
+            NOTES: detail.NOTES ?? null,
+          }));
+          this.displayApplyDialog = false;
+          this.messageService.successBubble('套用成功');
+        },
+      });
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
+  /** table-edit 新增按鈕：新增一列 */
+  onTableInsert(): void {
+    const newItem = this.defaultNewItem() as ASS12020DetailItem;
+    const currentData = this.data;
+    this.data = [...currentData, newItem as ASS12020DetailItem];
+  }
 
-  onCancel() {
-    this.router.navigate(['/ASS1000/ASS12020']);
+  private defaultNewItem(): ASS12020DetailItem {
+    return {
+      NEED_ID: null,
+      GOODS_ID: null,
+      GOODS_PRICE: null,
+      PURCHASE_QTY: null,
+      QTY: null,
+      GOODS_UNIT: null,
+      TOTAL_AMT: null,
+      EXPIRE_LIMIT: null,
+      WH_ID: null,
+      NOTES: null,
+    };
+  }
+
+  /** 從 table-edit data 過濾出 API 用的明細（排除內部欄位） */
+  private toDetails(rows: Record<string, unknown>[]): ASS12020DetailItem[] {
+    return rows.map(row => ({
+      NEED_ID: (row['NEED_ID'] as string) || undefined,
+      GOODS_ID: (row['GOODS_ID'] as string) || undefined,
+      GOODS_PRICE: (row['GOODS_PRICE'] as number | undefined) ?? undefined,
+      PURCHASE_QTY: (row['PURCHASE_QTY'] as number | undefined) ?? undefined,
+      QTY: (row['QTY'] as number | undefined) ?? undefined,
+      GOODS_UNIT: (row['GOODS_UNIT'] as string) || undefined,
+      TOTAL_AMT: (row['TOTAL_AMT'] as number | undefined) ?? undefined,
+      EXPIRE_LIMIT: (row['EXPIRE_LIMIT'] as number | undefined) ?? undefined,
+      WH_ID: (row['WH_ID'] as string) || undefined,
+      NOTES: (row['NOTES'] as string) || undefined,
+    }));
+  }
+
+  onSubmit(): void {
+    this.handleSubmit(this.dataForm, () => {
+      const valid = this.tableEditComponent?.validateAndShowErrors();
+      if (valid === false) {
+        return;
+      }
+      const raw = this.dataForm.getRawValue();
+      const details = this.toDetails(this.data as Record<string, unknown>[]);
+      const basePayload: ASS12020InsertRequest = {
+        SUPPLIER_ID: raw.SUPPLIER_ID,
+        EXPDATE: raw.EXPDATE ? formatDateToYYYY_MM_DD(raw.EXPDATE) ?? "" : "",
+        NOTES: raw.NOTES ?? undefined,
+        Details: details,
+      };
+      if (this.crudstatus !== CRUDStatus.Create) {
+        const id = this.getRowdataId();
+        if (id == null || typeof id !== 'number') {
+          this.messageService.errorBubble('無法更新：缺少主鍵');
+          return;
+        }
+      }
+      this.loading = true;
+      const req =
+        this.crudstatus === CRUDStatus.Create
+          ? this.ass12020Service.insertASS12020(basePayload)
+          : this.ass12020Service.updateASS12020({
+            ...basePayload,
+            FAQuotationM_ID: this.getRowdataId() as number,
+          });
+      req
+        .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') {
+              this.messageService.errorBubble('操作失敗：' + (res.Message ?? ''));
+              return;
+            }
+            this.messageService.successBubble(
+              this.crudstatus === CRUDStatus.Create ? '新增成功' : '編輯成功'
+            );
+            this.onCancel();
+          },
+        });
+    });
   }
 }

@@ -1,20 +1,20 @@
 import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { IDropdownItem } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { CPM11010Service, CPM11010Data } from '../../../service/api/cpm/cpm11010.service';
+import { CPM11010Data, CPM11010Service } from '../../../service/api/cpm/cpm11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { FormsModule, ReactiveFormsModule, FormGroup, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { IDropdownItem, Option } from '@service/utility/dropdown-api.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-cpm11010',
@@ -50,7 +50,7 @@ export class CPM11010Component extends BasicQueryPageComponent<CPM11010Data> imp
   // 下拉選單選項
   buildingNoOptions: IDropdownItem[] = [];
   floorNoOptions: IDropdownItem[] = [];
-  areaNoOptions: IDropdownItem[] = [];
+  areaNoOptions: any[] = [];
   serviceIdOptions: any[] = [];
 
   columns: Column[] = [
@@ -97,7 +97,7 @@ export class CPM11010Component extends BasicQueryPageComponent<CPM11010Data> imp
   }
 
   onDelete(selectedItems: CPM11010Data[]) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
       accept: () => {
         const idList = selectedItems.map(item => item.ID);
@@ -122,11 +122,11 @@ export class CPM11010Component extends BasicQueryPageComponent<CPM11010Data> imp
     });
     // 載入營業區域選項
     this.dropdownApiService.querySys3A00().subscribe(options => {
-      this.areaNoOptions = options ?? [];
+      this.areaNoOptions = options?.map(item => ({ label: item.Name, value: item.No })) || [];
     });
     // 載入服務台位置編號選項
     this.dropDownListService.queryCPM11010_ServiceId_DropDownList().subscribe(response => {
-      this.serviceIdOptions = response.Data?.map(item => ({ label: item.Service_Id, value: item.Service_Id })) || [];
+      this.serviceIdOptions = response.Data?.map(item => ({ label: `${item.Service_Id}-${item.Service_Name}`, value: item.Service_Id })) || [];
     });
   }
 }

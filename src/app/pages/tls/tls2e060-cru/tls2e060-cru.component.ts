@@ -1,5 +1,4 @@
-import { Tls2e060DropDownListData, Tls2e060Service } from './../../../service/api/tls/tls2e060.service';
-import { NgIf } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -13,9 +12,10 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
+import { Tls2e060DropDownListData, Tls2e060Service } from './../../../service/api/tls/tls2e060.service';
 
 @Component({
   selector: 'app-tls2e060-cru',
@@ -29,6 +29,7 @@ import { finalize } from 'rxjs';
     ReactiveFormsModule,
     TranslateModule,
     NgIf,
+    InputTextareaComponent,
     InputTextComponent,
     DropdownComponent,
     CalendarComponent,
@@ -40,51 +41,114 @@ export class TLS2E060CRUComponent extends BasicCruPageComponent<Tls2e060Data> im
     adj_no: [{ value: '系統自動產生', disabled: true }],
     adj_date: [{ value: new Date(), disabled: true }],
     sam_yyymm: [null, [Validators.required]],
-    tlt_no: [null, [Validators.required]],
+    tlt_no: [null as Tls2e060DropDownListData | null, [Validators.required]],
     talent_id: [0],
     sam_termno: [0],
     contract_no: [{ value: '', disabled: true }],
     contract_subno: [{ value: 0, disabled: true }],
     adj_taxtype: [null, [Validators.required]],
-    adj_amount: [null, [Validators.required, Validators.min(1)]],
+    adj_amount: [null, [Validators.required, Validators.max(999999999999)]],
+    remarks: [null, [Validators.maxLength(4000)]],
   });
   tlt_noOptions: Tls2e060DropDownListData[] = [];
   adj_taxtypeOptions = getSYS1000Options('PLU_TaxType');
   constructor(
-    private readonly tls2e060Service: Tls2e060Service
+    private readonly tls2e060Service: Tls2e060Service,
+    private readonly datePipe: DatePipe
   ) {
     super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.initializePage('TLS2E060', this.dataForm);
-    this.tls2e060Service.queryTltTalentDropdownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.tlt_noOptions = res.Data.map(item => ({
-        ...item,
-        label: `${item.tlt_no} - ${item.tlt_name}`
-      }))
-    })
 
+    // 1. 初始化時先禁用專櫃下拉 (如果年月沒值)
+    if (!this.dataForm.controls.sam_yyymm.value) {
+      this.dataForm.controls.tlt_no.disable();
+    }
+
+    // 2. 監聽 結帳年月 的變化
+    this.dataForm.controls.sam_yyymm.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
+      const formattedYYYMM = this.datePipe.transform(val, 'yyyyMM');
+      if (formattedYYYMM) {
+        this.fetchTltOptions(formattedYYYMM);
+      } else {
+        // 沒年月，清空並禁用
+        this.tlt_noOptions = [];
+        this.dataForm.controls.tlt_no.setValue(null);
+        this.dataForm.controls.tlt_no.disable();
+      }
+    });
+
+    // 3. 如果是編輯模式，初始就有年月，直接觸發一次查詢
+    if (!this.isFormCreateable && this.rowdata?.sam_yyymm) {
+      this.fetchTltOptions(this.rowdata?.sam_yyymm);
+    }
   }
-  onTltNoChange(event: Tls2e060DropDownListData | null) {
-    if (event) {
-      const frm = this.dataForm.controls;
-      frm.contract_no.setValue(event.contract_no);
-      frm.contract_subno.setValue(event.contract_subno);
-      frm.sam_termno.setValue(event.sam_termno);
-      frm.talent_id.setValue(event.talent_id);
+  /** 封裝打 API 的邏輯 */
+  private fetchTltOptions(yyyymm: string): void {
+    this.loading = true; // 開啟讀取狀態
+    this.tls2e060Service.queryTltTalentDropdownList(yyyymm)
+      .pipe(
+        finalize(() => this.loading = false),
+        untilDestroyed(this)
+      )
+      .subscribe(res => {
+        this.tlt_noOptions = (res.Data || []).map(item => ({
+          ...item,
+          label: `${item.tlt_no} - ${item.tlt_name}`
+        }));
+
+        // 啟用下拉選單
+        this.dataForm.controls.tlt_no.enable();
+
+        // 編輯模式回填
+        if (!this.isFormCreateable && this.rowdata) {
+          const targetOption = this.tlt_noOptions.find(opt => opt.tlt_no === this.rowdata?.tlt_no);
+          if (targetOption) {
+            this.dataForm.controls.tlt_no.setValue(targetOption);
+            this.dataForm.patchValue({
+              contract_no: targetOption.contract_no,
+              contract_subno: targetOption.contract_subno
+            });
+          }
+        }
+      });
+  }
+  onTltNoChange(event: Tls2e060DropDownListData): void {
+    // 這裡的 event 通常是選中的整個物件 (Tls2e060DropDownListData)
+    const selectedTlt = event;
+    if (selectedTlt) {
+      this.dataForm.patchValue({
+        talent_id: selectedTlt.talent_id,
+        contract_no: selectedTlt.contract_no,
+        contract_subno: selectedTlt.contract_subno,
+        sam_termno: selectedTlt.sam_termno
+      });
+    } else {
+      // 清空時的處理
+      this.dataForm.patchValue({
+        talent_id: undefined,
+        contract_no: '',
+        contract_subno: undefined
+      });
     }
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.getRawValue(),
-        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
-        tlt_no: frm.value.tlt_no.tlt_no,
+        sam_yyymm: this.datePipe.transform(frm.getRawValue().sam_yyymm, 'yyyyMM'),
+        tlt_no: frm.getRawValue().tlt_no.tlt_no,
       }
-      this.tls2e060Service.createTls2e060(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      const request$ = this.isFormCreateable ? this.tls2e060Service.createTls2e060(body) : this.tls2e060Service.updateTls2e060(body);
+      request$.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.messageService.successBubble(res.Message);
-        this.onCancel();
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+        } else {
+          this.onCancel();
+        }
       })
     });
   }

@@ -1,5 +1,5 @@
 import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -9,6 +9,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CategorySelectComponent } from '@shared/componentkit/category-select/category-select.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -28,9 +29,10 @@ import { formatAmount, formatAmountCN } from '../../../shared/componentkit/table
   selector: 'app-tls32010',
   templateUrl: './tls32010.component.html',
   standalone: true,
-  imports: [ButtonModule, CalendarRangeComponent, CalendarComponent, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
+  imports: [CategorySelectComponent, ButtonModule, CalendarRangeComponent, CalendarComponent, TableReportComponent, AsyncPipe, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
 })
 export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> implements OnInit {
+  @ViewChild('dt') tableReport!: TableReportComponent;
   queryForm = this.formBuilder.group({
     // 日期查詢條件
     reportType: ['1'], // 報表類型（預設區間營業報表）
@@ -52,8 +54,7 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     // 合約查詢條件
     FloorList: [null], // 樓層
     AreaList: [null], // 區域
-    BusTypeList: [null], // 大分類
-    BusClassList: [null], // 中分類
+    category: [null],
     CabinetKindList: [null], // 櫃別
     TermTypeList: [null], // 抽成別
     OrgList: [null], // 組織代號
@@ -102,25 +103,18 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
   organizationOptions = this.dropdown.querySys3100();
   regionOptions = this.dropdown.querySys3A00();
   floorOptions = this.dropdown.querySys3900();
-  businessTypeCodeOptions = this.dropdown.queryTltBusType();
-  BusClassListOptions = this.dropdown.queryTltBusType();
   commissionTypeOptions = getSYS1000Options('tlt_term_type');
-  operationsOptions = getSYS1000Options('store_way');
+  operationsOptions = getSYS1000Options('TLT_Kind');
   counterCodeOptions = this.dropdown.queryTltTalent();
   EventIDOptions = this.dropdown.queryTALPORDERM_DropDownListShare().pipe(
     map(data => {
       if (!data) return null;
       return data.map(item => {
-        // 格式化日期為 yyyy/MM/dd
         const sdate = this.datePipe.transform(item['pod_sdate'], 'yyyy/MM/dd');
         const edate = this.datePipe.transform(item['pod_edate'], 'yyyy/MM/dd');
-
         return {
-          // 顯示的 label
           label: `${item['pod_no']}/${item['pod_desc']} ${sdate} ~ ${edate}`,
-          // 傳輸的值
           value: item['pod_no'],
-          // 額外儲存起始和結束日期，用於後續選取時自動帶入 DateFrom/DateTo
           pod_sdate: item['pod_sdate'],
           pod_edate: item['pod_edate'],
         };
@@ -129,16 +123,11 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
   );
   taxOptions = [{ value: '1', label: '含稅' }, { value: '2', label: '未稅' }];
   monthOptions = Array.from({ length: 12 }, (_, i) => ({
-    value: i + 1, // 1 到 12
-    label: `${i + 1} 月`
+    value: i + 1, label: `${i + 1} 月`
   }));
   weekOptions: { value: number, label: string }[] = [];
-  halfYearOptions = [
-    { value: 1, label: '上半年' }, // 1: 上半年
-    { value: 2, label: '下半年' } // 2: 下半年
-  ];
+  halfYearOptions = [{ value: 1, label: '上半年' }, { value: 2, label: '下半年' }];
   btnLoading = false;
-  // 新增屬性：儲存格式化後的活動清單，以便在監聽 eventID 變化時使用
   private formattedEventOptions: Option[] = [];
   constructor(
     private readonly dropdown: DropdownApiService,
@@ -149,7 +138,6 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
 
   ngOnInit(): void {
     this.initializePage('TLS32010');
-
     // 初始化週次選項
     const initialYear = this.queryForm.controls.year.value;
     if (initialYear) {
@@ -189,7 +177,6 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       }
     });
 
-    // ----------------------------------------------------
     // 週報表 (保留原邏輯)
     // 訂閱 year 和 week 欄位變化，當兩者都有值時，觸發日期計算
     this.queryForm.controls.year.valueChanges.pipe(untilDestroyed(this)).subscribe(year => {
@@ -205,35 +192,30 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
         this.calculateYearRange(year);
       }
     });
-    // ----------------------------------------------------
     // 週報表
     this.queryForm.controls.week.valueChanges.pipe(untilDestroyed(this)).subscribe(week => {
       if (this.queryForm.controls.reportType.value === '2') {
         this.calculateWeekRange(this.queryForm.controls.year.value, week);
       }
     });
-    // ----------------------------------------------------
     // 月報表訂閱邏輯
     this.queryForm.controls.month.valueChanges.pipe(untilDestroyed(this)).subscribe(month => {
       if (this.queryForm.controls.reportType.value === '3') {
         this.calculateMonthRange(this.queryForm.controls.year.value, month);
       }
     });
-    // ----------------------------------------------------
     // 新增：半年報表訂閱邏輯
     this.queryForm.controls.halfYear.valueChanges.pipe(untilDestroyed(this)).subscribe(halfYear => {
       if (this.queryForm.controls.reportType.value === '4') {
         this.calculateHalfYearRange(this.queryForm.controls.year.value, halfYear);
       }
     });
-    // ----------------------------------------------------
     // 新增：訂閱 EventIDOptions，儲存格式化後的活動清單
     this.EventIDOptions.pipe(untilDestroyed(this)).subscribe(options => {
       if (options) {
         this.formattedEventOptions = options;
       }
     });
-    // ----------------------------------------------------
     // 新增：監聽 eventID 變化，自動更新 DateFrom 和 DateTo
     this.queryForm.controls.eventID.valueChanges.pipe(untilDestroyed(this)).subscribe(eventID => {
       if (this.queryForm.controls.reportType.value === '7') {
@@ -241,23 +223,19 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       }
     });
   }
-
   /**
      * 根據年份設定週次選項 (1~53)
      * @param year Date object
      */
   setWeekOptions(year: Date | null): void {
     if (!year) return;
-
     // 簡化處理：這裡假設一年最大週數為 53 (需根據您使用的 ISO 或 U.S. 標準調整)
     // 實際精確計算需考慮 ISO 8601 標準，但這裡為了簡單，先取 53
     const maxWeeks = 53;
 
     this.weekOptions = Array.from({ length: maxWeeks }, (_, i) => ({
-      value: i + 1,
-      label: `第 ${i + 1} 週` // 顯示年份增加可讀性
+      value: i + 1, label: `第 ${i + 1} 週`
     }));
-
     // 如果當前選擇的週次大於新年份的最大週數，則重設週次
     if (this.queryForm.controls.week.value && this.queryForm.controls.week.value > maxWeeks) {
       this.queryForm.controls.week.setValue(null, { emitEvent: false }); // 設置值時不觸發 change event 避免循環
@@ -275,38 +253,28 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       this.queryForm.controls.DateTo.setValue(null);
       return;
     }
-
     const yearNum = year.getFullYear();
-
     // === 日期計算邏輯 (假設使用 **星期一** 作為一週的開始 - ISO 標準) ===
-
     // 1. 獲取該年 1 月 4 日，這天肯定在 ISO 週曆的第一週
     const jan4 = new Date(yearNum, 0, 4);
-
     // 2. 找到 Jan 4 所在的星期一（ISO: getDay() 0=日, 1=一... 6=六；ISO: 1=一... 7=日）
     // 透過 (day + 6) % 7 獲得 ISO weekday (1=一, 7=日)
     const dayOfWeek = jan4.getDay() === 0 ? 7 : jan4.getDay(); // 調整為 1=一 ~ 7=日
-
     // 計算該年第一週的星期一
     // jan4 減去 (dayOfWeek - 1) 天，就是第一週的星期一
     const firstMonday = new Date(jan4);
     firstMonday.setDate(jan4.getDate() - dayOfWeek + 1);
-
     // 3. 計算目標週的起始日期 (DateFrom):
     // 從該年第一週的星期一開始，加上 (week - 1) 週
     const dateFrom = new Date(firstMonday);
     dateFrom.setDate(firstMonday.getDate() + (week - 1) * 7);
-
     // 4. 計算目標週的結束日期 (DateTo):
     // 在起始日期的基礎上加上 6 天
     const dateTo = new Date(dateFrom);
     dateTo.setDate(dateFrom.getDate() + 6);
-
     // 更新表單欄位
     this.queryForm.controls.DateFrom.setValue(dateFrom, { emitEvent: false }); // 不觸發 event 避免循環
     this.queryForm.controls.DateTo.setValue(dateTo, { emitEvent: false }); // 不觸發 event 避免循環
-
-    console.log(`選擇 ${yearNum} 年第 ${week} 週: ${this.datePipe.transform(dateFrom, 'yyyy-MM-dd')} ~ ${this.datePipe.transform(dateTo, 'yyyy-MM-dd')}`);
   }
   /**
      * 計算選定月份的起始日期和結束日期，並更新 DateFrom 和 DateTo
@@ -319,21 +287,15 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       this.queryForm.controls.DateTo.setValue(null);
       return;
     }
-
     const yearNum = year.getFullYear();
-
     // 1. 起始日期 (該月 1 日)
     // 注意：JS Date 的月份是 0-11，所以 month 1-12 要減 1
     const dateFrom = new Date(yearNum, month - 1, 1);
-
     // 2. 結束日期 (下個月 0 日，即該月的最後一天)
     const dateTo = new Date(yearNum, month, 0);
-
     // 更新表單欄位
     this.queryForm.controls.DateFrom.setValue(dateFrom, { emitEvent: false });
     this.queryForm.controls.DateTo.setValue(dateTo, { emitEvent: false });
-
-    console.log(`選擇 ${yearNum} 年 ${month} 月: ${this.datePipe.transform(dateFrom, 'yyyy-MM-dd')} ~ ${this.datePipe.transform(dateTo, 'yyyy-MM-dd')}`);
   }
   /**
    * 計算選定半年的起始日期和結束日期，並更新 DateFrom 和 DateTo
@@ -346,11 +308,9 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       this.queryForm.controls.DateTo.setValue(null);
       return;
     }
-
     const yearNum = year.getFullYear();
     let dateFrom: Date;
     let dateTo: Date;
-
     if (halfYear === 1) {
       // 上半年 (1月1日 到 6月30日)
       dateFrom = new Date(yearNum, 0, 1); // 1月 (索引 0) 1日
@@ -360,12 +320,9 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       dateFrom = new Date(yearNum, 6, 1); // 7月 (索引 6) 1日
       dateTo = new Date(yearNum, 12, 0); // 次年 1月 (索引 12) 的第 0 天，即 12月31日
     }
-
     // 更新表單欄位
     this.queryForm.controls.DateFrom.setValue(dateFrom, { emitEvent: false });
     this.queryForm.controls.DateTo.setValue(dateTo, { emitEvent: false });
-
-    console.log(`選擇 ${yearNum} 年第 ${halfYear} 半年: ${this.datePipe.transform(dateFrom, 'yyyy-MM-dd')} ~ ${this.datePipe.transform(dateTo, 'yyyy-MM-dd')}`);
   }
   /**
    * 計算選定年度的起始日期和結束日期，並更新 DateFrom 和 DateTo
@@ -377,15 +334,11 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       this.queryForm.controls.DateTo.setValue(null);
       return;
     }
-
     const yearNum = year.getFullYear();
-
     // 1. 起始日期 (該年 1 月 1 日)
     const dateFrom = new Date(yearNum, 0, 1); // 1月 (索引 0) 1日
-
     // 2. 結束日期 (次年 1 月 0 日，即該年 12 月 31 日)
     const dateTo = new Date(yearNum + 1, 0, 0);
-
     // 更新表單欄位
     this.queryForm.controls.DateFrom.setValue(dateFrom, { emitEvent: false });
     this.queryForm.controls.DateTo.setValue(dateTo, { emitEvent: false });
@@ -402,19 +355,12 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       this.queryForm.controls.DateTo.setValue(null, { emitEvent: false });
       return;
     }
-
-    // 從格式化後的清單中找到對應的活動
     const selectedEvent = this.formattedEventOptions.find(opt => opt.value === eventID);
-
     if (selectedEvent && selectedEvent['pod_sdate'] && selectedEvent['pod_edate']) {
-      // 將日期字串轉換為 Date 物件，然後寫入欄位
       const dateFrom = new Date(selectedEvent['pod_sdate']);
       const dateTo = new Date(selectedEvent['pod_edate']);
-
       this.queryForm.controls.DateFrom.setValue(dateFrom, { emitEvent: false });
       this.queryForm.controls.DateTo.setValue(dateTo, { emitEvent: false });
-
-      console.log(`活動 ${eventID} 日期: ${this.datePipe.transform(dateFrom, 'yyyy-MM-dd')} ~ ${this.datePipe.transform(dateTo, 'yyyy-MM-dd')}`);
     } else {
       this.queryForm.controls.DateFrom.setValue(null, { emitEvent: false });
       this.queryForm.controls.DateTo.setValue(null, { emitEvent: false });
@@ -422,75 +368,47 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      // 1. 取得所有欄位值
-      const formValue = frm.value;
-
-      // 2. 轉換多選 List 欄位為逗號分隔字串
-      const convertedListBody = {
-        FloorList: this.formatListForBackend(formValue.FloorList),
-        AreaList: this.formatListForBackend(formValue.AreaList),
-        BusTypeList: this.formatListForBackend(formValue.BusTypeList),
-        BusClassList: this.formatListForBackend(formValue.BusClassList),
-        CabinetKindList: this.formatListForBackend(formValue.CabinetKindList),
-        TermTypeList: this.formatListForBackend(formValue.TermTypeList),
-        OrgList: this.formatListForBackend(formValue.OrgList),
-        TltNoList: this.formatListForBackend(formValue.TltNoList),
-      };
-
-      // 3. 組裝最終傳輸給後端的 Body
+      const formValue = frm.getRawValue();
+      const cat = formValue.category || { bus_type: [], bus_class: [], bus_sclass: [] };
       const body: TLS32010QueryRequest = {
-        // 基礎欄位
         ...formValue,
-        // 覆蓋：已轉換的 List 欄位
-        ...convertedListBody,
-        // 覆蓋：日期欄位格式化
+        BusTypeList: cat.bus_type,
+        BusClassList: cat.bus_class?.map((c: any) => [c.bus_type, c.No]),
+        BusSClassList: cat.bus_sclass?.map((s: any) => [s.bus_type, s.bus_class, s.No]),
+        FloorList: formValue.FloorList,
+        AreaList: formValue.AreaList,
+        CabinetKindList: formValue.CabinetKindList,
+        TermTypeList: formValue.TermTypeList,
+        OrgList: formValue.OrgList,
+        TltNoList: formValue.TltNoList,
         DateFrom: this.datePipe.transform(formValue.DateFrom, 'yyyy-MM-dd'),
         DateTo: this.datePipe.transform(formValue.DateTo, 'yyyy-MM-dd'),
-        // 移除前端專用的日期計算控制項
-        year: undefined,
-        week: undefined,
-        month: undefined,
-        halfYear: undefined,
-      } as TLS32010QueryRequest; // 確保類型正確
+        year: undefined, week: undefined, month: undefined,
+        halfYear: undefined, category: undefined
+      } as TLS32010QueryRequest;
       this.tls32010Service.queryTLS32010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.historyRequestBody = body;
-        this.data = response.Data.slice(0, response.Data.length - 1);
-        this.totalRecords = response.TotalCount;
-        this.footerData = {
-          ...response.Data[response.Data.length - 1],
-          館別: '',
-        };
+        const rawData = response.Data || []; // 後端回傳的原始資料有包含最後一筆總計
+        if (rawData.length > 0) {
+          this.footerData = { ...rawData[rawData.length - 1], 館別: '' }; // 取最後一筆作為 Footer (總計列)
+          this.data = rawData.slice(0, rawData.length - 1); // 其餘資料作為表格內容
+          this.totalRecords = response.TotalCount;
+        } else {
+          this.data = [];
+          this.totalRecords = 0;
+          this.footerData = null;
+        }
       });
     });
   }
-  /**
-   * 輔助函數：將陣列轉換為逗號分隔的字串
-   * @param list 待轉換的陣列 (例如: ['A', 'B'] 或 null)
-   * @returns 逗號分隔的字串 (例如: 'A,B' 或 null)
-   */
-  private formatListForBackend(list: any[] | null): string | null {
-    if (Array.isArray(list) && list.length > 0) {
-      // 確保所有元素都是字串或數字，並用逗號連接
-      return list.map(item => String(item)).join(',');
-    }
-    return null;
-  }
-
-
   onExportPDF() {
     if (!this.historyRequestBody) {
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-
+    this.updateSortForExport();
     const export$ = this.tls32010Service.exportTLS32010PDF(this.historyRequestBody);
-
-    // 呼叫 Service 執行匯出，並將直到銷毀的邏輯加入
-    this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
-      '.pdf',
-      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    );
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 
   onExportXLSX() {
@@ -498,13 +416,15 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
       this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-
+    this.updateSortForExport();
     const export$ = this.tls32010Service.exportTLS32010Excel(this.historyRequestBody);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
+  }
 
-    this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
-      '.xlsx',
-      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    );
+  private updateSortForExport() {
+    if (this.historyRequestBody && this.tableReport) {
+      const currentSort = this.tableReport.multiSortMeta;
+      this.historyRequestBody.SortBy = currentSort.length > 0 ? currentSort : undefined;
+    }
   }
 }

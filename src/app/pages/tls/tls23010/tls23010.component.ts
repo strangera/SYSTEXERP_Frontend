@@ -11,6 +11,7 @@ import {
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -35,11 +36,10 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextRange2Component } from './input-text-range2/input-text-range2.component';
 
 @UntilDestroy()
 // 型態別報表
@@ -67,10 +67,11 @@ import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/i
     ButtonModule,
     CheckboxModule,
     TableReportComponent,
-    InputTextRangeComponent,
+    InputTextRange2Component,
   ],
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> implements OnInit {
+  private _syncingSortMeta = false;
   private _obsCache = new Map<string, any>();
   private once<T>(key: string, factory: () => import('rxjs').Observable<T>) {
     if (!this._obsCache.has(key)) {
@@ -160,8 +161,11 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   carrierTypeOptions = getSYS1000Options('TXN_GUI_CarrType');
   txnStatusOptions: any[] = [
     { value: '1', label: '正常交易' },
-    { value: '2', label: '作廢' },
-    { value: '3', label: '退貨' },
+    { value: '2', label: '作廢交易' },
+    { value: '3', label: '退貨交易' },
+    { value: '4', label: '預售交易' },
+    { value: '5', label: '預售解約' },
+    { value: '6', label: '預售退貨' },
   ];
   cashierOptions: any[] = [];
   ECRNoOptions: any[] = [];
@@ -177,6 +181,20 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   ) {
     super();
   }
+  private normalizeTxnNo(v: any, maxLen = 6): string {
+  // 1) 轉字串 + trim
+  const s = String(v ?? '').trim();
+  if (!s) return '';
+
+  // 2) 只保留數字（把空白、-、字母等全去掉）
+  const digits = s.replace(/\D+/g, '');
+  if (!digits) return '';
+
+  // 3) 規格：你原本顯示用 6 碼（不足補 0）
+  //    若你想保留原長度就把 padStart 拿掉
+  return digits.padStart(maxLen, '0');
+}
+
 
   ngOnInit(): void {
     this.initializePage('TLS23010', 'tls/tls23010', this.queryForm, (form) => this.onSubmit(form));
@@ -220,116 +238,155 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     ecrs: any[]; cashiers: any[];
   }>;
 
-// ========= 查詢（明細 / 彙總） =========
-onSubmit(frm: FormGroup) {
-  this.handleSubmit(frm, () => {
-    const val = this.queryForm.getRawValue() as any;
-    const isSummary = !!this.queryForm.get('showSummary')?.value;
 
-    const pageSize = 30;
-    const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
-    const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
-      ? val.SortBy
-      : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
-    ).map((s: any) => ({ ...s }));
+  // ========= 查詢（明細 / 彙總） =========
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const val = this.queryForm.getRawValue() as any;
+      const isSummary = !!this.queryForm.get('showSummary')?.value;
 
-    const payload: any = {
-      ...val,
-      TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
-      TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
-    };
-    delete payload.showSummary;
+      const pageSize = 30;
+      const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
 
-    Object.keys(payload).forEach((k) => {
-      const v = payload[k];
-      if (v === null || v === undefined) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
-      if (typeof v === 'string' && v.trim() === '') delete payload[k];
-    });
+      const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
+        ? val.SortBy
+        : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
+      ).map((s: any) => ({ ...s }));
 
-    this.loading = true;
+      // ✅ 基本 payload（先把日期轉 yyyy-MM-dd）
+      const payload: any = {
+        ...val,
+        TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+        TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
+        
+      };
+      payload.TXN_No_Start = this.normalizeTxnNo(payload.TXN_No_Start, 6) || undefined;
+payload.TXN_No_End   = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined; 
 
-    if (!isSummary) {
-      // ===== 明細：後端分頁 + 後端排序 =====
-      Object.assign(payload, { pageSize, pageIndex, SortBy: sortByArr });
-      this.historyRequestBody = { ...payload };
+      // ✅ UI 狀態欄位不送後端
+      delete payload.showSummary;
+
+      // ✅ 清掉空值，避免送一堆 [] / '' / null
+      Object.keys(payload).forEach((k) => {
+        const v = payload[k];
+        if (v === null || v === undefined) delete payload[k];
+        if (Array.isArray(v) && v.length === 0) delete payload[k];
+        if (typeof v === 'string' && v.trim() === '') delete payload[k];
+      });
+
+      this.loading = true;
+
+      // =========================
+      // 明細：後端分頁 + 後端排序
+      // =========================
+      if (!isSummary) {
+        const detailBody = {
+          ...payload,
+          pageSize,
+          pageIndex,
+          SortBy: sortByArr,
+        };
+
+        // ✅ 匯出 / 重新查詢要用
+        this.historyRequestBody = { ...detailBody };
+
+        this.tls23010Service
+          .queryTLS23010(detailBody)
+          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+          .subscribe({
+            next: (resp: any) => {
+              const queryData = Array.isArray(resp?.Data?.QueryData)
+                ? resp.Data.QueryData
+                : Array.isArray(resp?.Data)
+                  ? resp.Data
+                  : [];
+
+              this.data = queryData as TLS23010Data[];
+              this.summaryData = [];
+
+              // ✅ 明細 totals
+              this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
+              this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
+
+              // ✅ 明細模式不該顯示彙總 totals（避免殘留）
+              this.summaryTotals = {};
+
+              this.updatePdfSummary?.();
+              this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
+            },
+            error: () => {
+              this.data = [];
+              this.summaryData = [];
+              this.totalRecords = 0;
+              this.detailTotals = {};
+              this.summaryTotals = {};
+              this.pdfSummary = [];
+            },
+          });
+
+        return;
+      }
+
+      // =========================
+      // 彙總：一次抓回（不送 pageIndex/pageSize）
+      // =========================
+      const summaryBody: any = {
+        ...payload,
+        SortBy: sortByArr,
+      };
+
+      // ✅ 彙總本身不用分頁參數（TableReport 也會自己帶）
+      delete summaryBody.pageIndex;
+      delete summaryBody.pageSize;
 
       this.tls23010Service
-        .queryTLS23010(payload)
+        .queryTLS23010Summary(summaryBody)
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe({
           next: (resp: any) => {
-            const queryData = Array.isArray(resp?.Data?.QueryData)
-              ? resp.Data.QueryData
-              : Array.isArray(resp?.Data)
-                ? resp.Data
-                : [];
+            const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
+            const head = dataArr[0] ?? {};
 
-            this.data = queryData as TLS23010Data[];
-            this.summaryData = [];
+            const details =
+              Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
+                Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+                  [];
 
-            this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
-            this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
+            this.summaryData = details.map((row: any) => ({ ...row }));
+            this.data = [];
+            this.totalRecords = this.summaryData.length;
+
+            // ✅ 取總計（這裡才會有 Total_TXN_TotGUI）
+            this.summaryTotals = this.coerceNumberMap({
+              Total_TXN_TotGUI: head?.Total_TXN_TotGUI,
+              Total_TXN_TotGUI_Inv: head?.Total_TXN_TotGUI_Inv,
+            });
+
+            // ✅ 彙總模式不該顯示明細 totals（避免殘留）
+            this.detailTotals = {};
+
+            // ✅ 給匯出 / 其它 API 用（你原本的邏輯保留）
+            const summaryPageSize = this.summaryData.length || 30;
+            this.historyRequestBody = {
+              ...summaryBody,
+              pageIndex: 1,
+              pageSize: summaryPageSize,
+            };
 
             this.updatePdfSummary?.();
             this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
           },
           error: () => {
-            this.data = [];
             this.summaryData = [];
+            this.data = [];
             this.totalRecords = 0;
             this.detailTotals = {};
+            this.summaryTotals = {};
             this.pdfSummary = [];
           },
         });
-
-      return;
-    }
-
-    // ===== 彙總：一次抓回，畫面上用 summaryData 顯示 =====
-    Object.assign(payload, { SortBy: sortByArr });
-    delete payload.pageIndex;
-    delete payload.pageSize;
-
-    this.tls23010Service
-      .queryTLS23010Summary(payload)
-      .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-      .subscribe({
-        next: (resp: any) => {
-          const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
-          const head = dataArr[0] ?? {};
-
-          const details =
-            Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
-            Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
-            [];
-
-          this.summaryData = details.map((row: any) => ({ ...row }));
-          this.data = [];
-          this.totalRecords = this.summaryData.length;
-
-          // 這個只給匯出 / 其它 API 用，不影響 TableReport 自己的查詢
-          const summaryPageSize = this.summaryData.length || 30;
-          this.historyRequestBody = {
-            ...payload,
-            pageIndex: 1,
-            pageSize: summaryPageSize,
-          };
-
-          this.detailTotals = {};
-          this.updatePdfSummary?.();
-          this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
-        },
-        error: () => {
-          this.summaryData = [];
-          this.data = [];
-          this.totalRecords = 0;
-          this.detailTotals = {};
-          this.pdfSummary = [];
-        },
-      });
-  });
-}
+    });
+  }
 
 
 
@@ -354,33 +411,36 @@ onSubmit(frm: FormGroup) {
       }))
     );
 
-// ========= 提供給 <app-table-report> 的查詢封裝（彙總） =========
-public queryTLS23010SummaryForReport = (body: any) =>
-  this.tls23010Service.queryTLS23010Summary({
-    ...body,
-    TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
-    TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
-  }).pipe(
-    map((resp: any) => {
-      const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
-      const head = dataArr[0] ?? {};
+  // ========= 提供給 <app-table-report> 的查詢封裝（彙總） =========
+  public queryTLS23010SummaryForReport = (body: any) =>
+    this.tls23010Service.queryTLS23010Summary({
+      ...body,
+      TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
+      TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
+    }).pipe(
+      map((resp: any) => {
+        const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
+        const head = dataArr[0] ?? {};
 
-      const all =
-        Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
-        Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
-        [];
+        const all =
+          Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
+            Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+              [];
 
-      // 不在這裡做排序、也不自行切分頁
-      // 排序交給後端依 body.SortBy 處理
-      // 分頁交給 TableReport 透過 pageIndex / pageSize 控制
+        // ✅ 同步總計（讓 footer 會跟著 TableReport 的查詢更新）
+        this.summaryTotals = this.coerceNumberMap({
+          Total_TXN_TotGUI: head?.Total_TXN_TotGUI,
+          Total_TXN_TotGUI_Inv: head?.Total_TXN_TotGUI_Inv,
+        });
 
-      return {
-        Data: all,
-        TotalCount: all.length,
-        GrandTotal: null,
-      };
-    })
-  );
+        return {
+          Data: all,
+          TotalCount: all.length,
+          GrandTotal: null,
+        };
+      })
+    );
+
 
 
 
@@ -627,10 +687,10 @@ public queryTLS23010SummaryForReport = (body: any) =>
       const totalAmt = this.getSum('TXN_TotSaleAmt');
       const totalTxn = this.getSum('TotalTxn');
       this.pdfSummary = [
-        `總金額合計 = ${Number(totalAmt || 0).toLocaleString()}`,
-        `總交易筆數合計 = ${Number(totalTxn || 0).toLocaleString()}`,
-        '=============================',
-        `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`,
+        // `總金額合計 = ${Number(totalAmt || 0).toLocaleString()}`,
+        // `總交易筆數合計 = ${Number(totalTxn || 0).toLocaleString()}`,
+        // '=============================',
+        // `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`,
       ];
       return;
     }
@@ -697,10 +757,10 @@ public queryTLS23010SummaryForReport = (body: any) =>
     };
   }
 
-  private padTxnNo(v: any): string {
-    const s = String(v ?? '').trim();
-    return s ? s.padStart(6, '0') : '';
-  }
+private padTxnNo(v: any): string {
+  return this.normalizeTxnNo(v, 6);
+}
+
 
   // ========= 欄位 =========
   columns = [
@@ -801,4 +861,31 @@ public queryTLS23010SummaryForReport = (body: any) =>
 
   // 若 app-table-report 支援 trackBy，可使用
   trackByTxn = (_: number, r: TLS23010Data) => r?.TXN_No;
+  // 彙總總計（來自 summary API 的 Data[0]）
+  summaryTotals: Record<string, number> = {};
+
+  buildFooterFromSummaryTotals(): Record<string, any> | undefined {
+    if (!this.summaryTotals) return undefined;
+
+    return {
+      // 你 summaryColumns 目前只有 TXN_TotGUI 有 isTotal
+      TXN_TotGUI: this.summaryTotals['Total_TXN_TotGUI'] ?? 0,
+
+      // 如果你之後 summaryColumns 還要加其它欄位，就在這裡一起回傳
+      // 例如：TXN_TotGUI_Inv: this.summaryTotals['Total_TXN_TotGUI_Inv'] ?? 0,
+    };
+  }
+
+  private coerceNumberMap(src: any): Record<string, number> {
+    const out: Record<string, number> = {};
+    if (!src) return out;
+    Object.keys(src).forEach((k) => {
+      const v = src[k];
+      out[k] = typeof v === 'number' ? v : Number(v) || 0;
+    });
+    return out;
+  }
+  get isSummaryMode(): boolean {
+  return !!this.queryForm.get('showSummary')?.value;
+}
 }

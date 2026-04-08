@@ -27,7 +27,7 @@
           </app-calendar-range-quick>
 
           <!-- 支付別 -->
-          <app-dropdown
+          <app-multi-select
             class="col-12 md:col-6 lg:col-4"
             label="支付別"
             controlName="PAY_No"
@@ -37,7 +37,7 @@
             [control]="queryForm.controls.PAY_No"
             [submitted]="submitted"
           >
-          </app-dropdown>
+          </app-multi-select>
 
           <!-- 檢視模式（下拉選單） -->
           <app-dropdown
@@ -67,20 +67,20 @@
 <div class="card">
   <div class="col-12">
     <!-- 全館彙總 -->
-    <app-table-report
-      *ngIf="reportMode === 'ALL'"
-      tableKey="CPM13020_ALL"
-      [lastQueryBody]="historyRequestBody"
-      [data]="rows"
-      [columns]="columnsAll"
-      [totalRecords]="totalRecords"
-      [footerData]="grandTotal"
-      [showDelete]="false"
-      [showManage]="false"
-      [showReportMode]="false"
-      [queryFunction]="queryAllForReport"
-    >
-    </app-table-report>
+<app-table-report
+  *ngIf="reportMode === 'ALL'"
+  tableKey="CPM13020_ALL"
+  [lastQueryBody]="historyRequestBody"
+  [data]="rows"
+  [columns]="columnsAll"
+  [totalRecords]="totalRecords"
+  [footerData]="grandTotal"
+  [showDelete]="false"
+  [showManage]="false"
+  [showReportMode]="true"
+   [apiUrl]="apiUrl"
+>
+</app-table-report>
 
     <!-- 機台彙總 -->
     <app-table-report
@@ -93,9 +93,14 @@
       [footerData]="grandTotal"
       [showDelete]="false"
       [showManage]="false"
-      [showReportMode]="false"
+      [showReportMode]="true"
+      [showCaption]="true"
+       [groupRowsBy]="'groupKey'"
+        [dataKey]="'_rowKey'" 
       [queryFunction]="queryPosForReport"
+      [apiUrl]="apiUrlPOS"
     >
     </app-table-report>
   </div>
 </div>
+本報表金額為含稅金額

@@ -1,0 +1,79 @@
+import { CommonModule } from '@angular/common';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { CalendarModule } from 'primeng/calendar';
+import { IconFieldModule } from 'primeng/iconfield';
+import { InputIconModule } from 'primeng/inputicon';
+import { TooltipModule } from 'primeng/tooltip';
+import { CellInput } from './table-edit-cell.model';
+
+@Component({
+  selector: 'app-date-cell',
+  host: { 'table-edit-id': 'FIN52030-CRU' },
+  template: `
+    <p-iconField iconPosition="right">
+      <p-calendar class="min-w-max" [(ngModel)]="cellInput.rowData[cellInput.col.field]"
+                  [ngModelOptions]="{ standalone: true }" [placeholder]="isDisabled() ? '' : '請輸入' + cellInput.col.header"
+                  [timeOnly]="cellInput.col.timeOnly || false" [showTime]="cellInput.col.showTime || false"
+                  [hourFormat]="cellInput.col.hourFormat || '24'" [showSeconds]="cellInput.col.showSeconds"
+                  [view]="cellInput.col.view || 'date'" [dateFormat]="cellInput.col.dateFormat || 'yy/mm/dd'"
+                  iconDisplay="input" [minDate]="cellInput.col.minDate" [maxDate]="cellInput.col.maxDate" [appendTo]="'body'"
+                  [showIcon]="!isDisabled()"
+                  [disabled]="isDisabled()"
+                  (onInput)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
+                  (onFocus)="cellInput.col.onFocus?.(cellInput.rowData, cellInput.rowData[cellInput.col.field], cellInput.col, cellInput.index)"
+                  (onBlur)="handleBlur()"(keydown.enter)="handleEnter($event)"
+                  [style]="{'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
+                  [inputStyle]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign || 'left'}"
+                  [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
+                  [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }">
+        <ng-template pTemplate="inputicon">
+          <i *ngIf="cellInput.col.timeOnly || false" class="pi pi-clock pointer-events-none"></i>
+          <i *ngIf="!cellInput.col.timeOnly || false" class="pi pi-calendar pointer-events-none"></i>
+        </ng-template>
+      </p-calendar>
+      <p-inputIcon *ngIf="cellInput.rowData._validationErrors?.[cellInput.col.field]"
+                   styleClass="pi pi-exclamation-circle text-red-500"
+                   [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
+                   tooltipPosition="bottom" />
+    </p-iconField>
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    CalendarModule, // 隔離 CalendarModule
+    IconFieldModule,
+    InputIconModule,
+    TooltipModule
+  ]
+})
+export class DateCellComponent {
+  @Input({ required: true }) cellInput!: CellInput;
+
+  isDisabled(): boolean {
+    const col = this.cellInput.col;
+    return (col.disabled && col.disabled(this.cellInput.rowData[col.field], this.cellInput.index, this.cellInput.rowData)) || this.cellInput.disabled;
+  }
+
+  handleBlur() {
+    this.cellInput.col.onBlur?.(
+      this.cellInput.rowData,
+      this.cellInput.rowData[this.cellInput.col.field],
+      this.cellInput.col,
+      this.cellInput.index
+    );
+    this.cellInput.onValueChange(
+      this.cellInput.rowData,
+      this.cellInput.rowData[this.cellInput.col.field],
+      this.cellInput.col,
+      this.cellInput.index
+    );
+  }
+  handleEnter(event: Event) {
+    event.preventDefault(); // 阻止表單提交
+    event.stopPropagation(); // 阻止事件冒泡
+    this.handleBlur();
+  }
+}

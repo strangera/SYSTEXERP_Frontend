@@ -60,32 +60,6 @@ export interface POS2023DAMResponse {
 }
 
 // ----------------------------------------------------
-// 2. /queryPOS2004Detail_TLS56070 - 查詢商品
-// ----------------------------------------------------
-export interface QueryPOS2004DetailRequest {
-  queryNo?: string;
-  PLU_Name?: string;
-  LOGO_No?: string;
-  HOS_No?: string;
-}
-
-export interface POS2004DetailResponse {
-  id: number;
-  PLU_MagNo: string;
-  PLU_Name: string;
-  PLU_No: string;
-  PLU_OrgPLUNo: string;
-  PLU_Unit: string;
-  UNIT_NAME: string;
-  PLU_BoxQty: number;
-  PLU_StockTaxType: string;
-  PLU_SalePrc_UNI: number;
-  PLU_SalePrc: number;
-  PLU_TaxType: string;
-  NowHaveQty: number;
-}
-
-// ----------------------------------------------------
 // 3. /insertTLS56070 - 新增
 // ----------------------------------------------------
 export interface InsertTLS56070Request {
@@ -117,12 +91,13 @@ export interface InsertUpdateDetail {
   PLU_Name: string;
   PLU_StockTaxType: string;
   DAD_ConfirmQty: number;
+  PLU_TaxType: string;
+  PLU_SalePrc: number; // Swagger 預期的欄位
+  DAD_SalePrc: number; // 你的 Request 欄位 (視後端需求保留其一)
   DAD_BuyPrc: number;
   DAD_BuyNet: number;
   DAD_BuyTax: number;
   DAD_BuyAmt: number;
-  PLU_TaxType: string;
-  DAD_SalePrc: number;
   DAD_SaleTax: number;
   DAD_SaleAmt: number;
   DAD_Remark: string;
@@ -168,6 +143,7 @@ export interface POS2024DAMResponse {
   DAD_BuyAmt?: number;
   PLU_TaxType?: string;
   DAD_SalePrc?: number;
+  PLU_SalePrc_UNI?: number;
   DAD_SaleTax?: number;
   DAD_SaleAmt?: number;
   DAD_Remark?: string;
@@ -209,18 +185,6 @@ export class Tls56070Service {
   queryTLS56070(request: QueryTLS56070Request): Observable<ApiResponse<POS2023DAMResponse[]>> {
     return this.http.post<ApiResponse<POS2023DAMResponse[]>>(
       `${this.apiUrl}/queryTLS56070`,
-      request
-    );
-  }
-
-  /**
-   * 查詢商品管理編號/國際條碼/廠商貨號
-   * @param request 查詢條件
-   * @returns Observable<ApiResponse<POS2004DetailResponse[]>>
-   */
-  queryPOS2004Detail(request: QueryPOS2004DetailRequest): Observable<ApiResponse<POS2004DetailResponse[]>> {
-    return this.http.post<ApiResponse<POS2004DetailResponse[]>>(
-      `${this.apiUrl}/queryPOS2004Detail_TLS56070`,
       request
     );
   }

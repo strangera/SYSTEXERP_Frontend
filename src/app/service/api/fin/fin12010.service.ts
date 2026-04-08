@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 路徑是否正確
 import { SortMeta } from 'primeng/api';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
 
 // --- 1.1.2 發票作業(電子式發票各系統配號維護-11220-FIN12010) ---
@@ -85,7 +85,19 @@ export class Fin12010Service {
    * @returns 包含 IFin12010Data 陣列的 API 響應
    */
   queryFIN12010(params: IQueryFin12010Request): Observable<ApiResponse<IFin12010Data[]>> {
-    return this.http.post<ApiResponse<IFin12010Data[]>>(`${this.apiUrl}/queryFIN12010`, params);
+    return this.http.post<ApiResponse<IFin12010Data[]>>(`${this.apiUrl}/queryFIN12010`, params).pipe(
+      map(response => {
+        return {
+          ...response,
+          data: response.Data.map(item => ({
+            ...item,
+            SAL_GUIYYYYMM: item.SAL_GUIYYYYMM
+              ? new Date(+item.SAL_GUIYYYYMM.substring(0, 4), +item.SAL_GUIYYYYMM.substring(4, 6) - 1, 1)
+              : null,
+          }))
+        }
+      })
+    );
   }
 
   /**

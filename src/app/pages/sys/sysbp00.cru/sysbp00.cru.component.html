@@ -15,7 +15,7 @@
         (dataChange)="data = $event;rowReorder()" [tableRequired]="true" [rowValidate]="validateEntireRow"
         [disabled]="isFormReadable" serialName="排序" [showReorder]="!isFormReadable" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onClear()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>

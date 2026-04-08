@@ -1,28 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { AccordionModule } from 'primeng/accordion';
-import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TooltipModule } from 'primeng/tooltip';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Fin13080Service } from 'src/app/service/api/fin/fin13080.service';
-import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-
-export const monthOptions = [
-  { value: '02', label: '二月' },
-  { value: '04', label: '四月' },
-  { value: '06', label: '六月' },
-  { value: '08', label: '八月' },
-  { value: '10', label: '十月' },
-  { value: '12', label: '十二月' },
-];
+import { TooltipModule } from 'primeng/tooltip';
+import { Fin13080Service } from 'src/app/service/api/fin/fin13080.service';
+import { createPaginationConfig, formatAmount, formatDate } from 'src/app/shared/componentkit/table/table.model';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
 @Component({
   selector: 'app-fin13080',
@@ -51,13 +40,12 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
   }
   queryForm = this.formBuilder.group({
     No: [null, Validators.maxLength(16)],
-    Date: [yesterday],
-    GUI_YYMM: [null, [this.validationService.evenMonthValidator]],
+    Date: [new Date(), Validators.required],
+    INV_DeclareYM: [null],
     Invoice_No_Start: ['', Validators.maxLength(10)],
     Invoice_No_End: ['', Validators.maxLength(10)],
     ...createPaginationConfig([{ field: 'No', order: 1 }]),
   });
-  monthOptions = monthOptions;
 
   selectedItems: any[] = [];
   data: any[] = [];
@@ -66,14 +54,15 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
   minDate?: Date;
   columns: any[] = [
     { field: 'No', header: '退回/折讓單號', visible: true },
-    { field: 'Date', header: '退回/折讓日期', visible: true },
+    { field: 'Date', header: '退回/折讓日期', visible: true, format: (v: string) => formatDate(v) },
     { field: 'INV_DeclareYM', header: '發票年月', visible: true },
-    { field: 'Invoice_No', header: '發票號碼', visible: true }
+    { field: 'Invoice_No', header: '發票號碼', visible: true },
+    { field: 'SaleAmt', header: '折讓金額', visible: true, align: 'right', format: (v: number | string) => formatAmount(v) },
+    { field: 'INV_Cancel', header: '折讓狀態', visible: true, format: (v: string) => v === 'Y' ? '作廢' : v === 'N' ? '開立' : v }
   ];
 
   constructor(
     private fin13080Service: Fin13080Service,
-    private validationService: ValidationService,
   ) {
     super();
   }
@@ -87,18 +76,6 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
         endControl?.setValue(start);
       }
     });
-  }
-  setMinDate(): Date | undefined {
-    if (this.queryForm) {
-      const today = new Date();
-      const currentMonth = today.getMonth();
-      if ((currentMonth + 1) % 2 !== 0) {
-        return new Date(today.getFullYear(), currentMonth, 1);
-      } else {
-        return new Date(today.getFullYear(), currentMonth - 1, 1);
-      }
-    }
-    return undefined;
   }
 
   onSubmit(form: FormGroup): void {
@@ -115,9 +92,9 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
       SortBy: raw.SortBy ?? [{ field: 'No', order: 1 }],
       No: raw.No ?? '',
       Date: raw.Date ? this.formatDate(new Date(raw.Date)) : '',
-      GUI_YYMM: raw.GUI_YYMM
-        ? this.formatDate(new Date(raw.GUI_YYMM)).substring(0, 7).replace('-', '') // e.g. "202509"
-        : '', No_Start: null,
+      INV_DeclareYM: raw.INV_DeclareYM
+        ? this.formatDate(new Date(raw.INV_DeclareYM)).substring(0, 7).replace('-', '')
+        : '',
       Invoice_No_Start: raw.Invoice_No_Start !== '' ? raw.Invoice_No_Start : null,
       Invoice_No_End: raw.Invoice_No_End !== '' ? raw.Invoice_No_End : null,
     };
@@ -132,11 +109,7 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
         this.totalRecords = res?.TotalCount ?? this.data.length;
         this.loading = false;
       },
-      error: (err) => {
-        console.error('查詢 FIN13080 失敗:', err);
-        this.messageService.errorBubble('查詢失敗，請稍後再試');
-        this.loading = false;
-      }
+
     });
   }
 

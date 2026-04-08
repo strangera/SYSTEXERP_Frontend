@@ -10,6 +10,7 @@
       (onSelect)="onFileUpload($event); fileUpload.clear()"
       [auto]="true"
       chooseLabel="匯入EXCEL"
+      [disabled]="!hasPermission(Actions.ExcelImport)"
     />
     <app-button
       btnType="create"
@@ -78,7 +79,7 @@
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
-          <app-button btnType="clear"></app-button>
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
         <!-- </div> -->
@@ -87,28 +88,62 @@
   </p-accordion>
 </div>
 <div class="card">
+  <div class="flex justify-content-end align-items-center gap-2 mb-2">
+    <p-button
+      styleClass="p-2"
+      label="下載excel範本"
+      icon="pi pi-file-pdf"
+      (click)="onExportTemplate()"
+      [loading]="btnTemplateLoading"
+    ></p-button>
+    <p-button
+      styleClass="p-2"
+      label="能源抄表作業.PDF"
+      icon="pi pi-file-pdf"
+      (click)="onExportPDF(queryForm)"
+      [disabled]="data.length === 0"
+      [loading]="btnPDFLoading"
+    ></p-button>
+    <p-button
+      styleClass="p-2"
+      label="能源抄表作業.XLSX"
+      icon="pi pi-file-excel"
+      (click)="onExportExcel(queryForm)"
+      [disabled]="data.length === 0"
+      [loading]="btnExcelLoading"
+    ></p-button>
+  </div>
   <div class="col-12">
-    <app-table
-      [showCheckBox]="true"
+    <app-customFooter-table
+      tableKey="ASS21030"
       [data]="data"
-      [dataKey]="'ID'"
-      [tableKey]="'ASS21030'"
       [columns]="columns"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      dataKey="ID"
       [totalRecords]="totalRecords"
-      [showManage]="true"
-      [showCheckBox]="true"
-      [showEdit]="false"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true"
-      [loading]="loading"
       [multiSortMeta]="[
         { field: 'ENG_Type', order: 1 },
         { field: 'ENG_MeterNo', order: 2 },
       ]"
+      [lazy]="true"
+      [loading]="loading"
+      [showManage]="true"
+      [showDelete]="true"
+      [showEdit]="true"
+      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [editDisabled]="editDisabled"
+      [showCheckBox]="true"
+      [showReportMode]="false"
+      [expansionColumns]="expansionColumns"
+      [expansionLoadFn]="loadDetails"
       (edit)="onEdit($event)"
       (delete)="onDelete($event)"
       (detail)="onDetail($event)"
       [isRowSelectable]="isRowSelectable"
-    ></app-table>
+    ></app-customFooter-table>
   </div>
 </div>

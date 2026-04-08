@@ -1,106 +1,169 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
-import { FormGroup,Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { HttpResponse } from '@angular/common/http';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+
+// UI
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ValidationService } from '@shared/service/validation.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import type { AddButton } from '@shared/componentkit/table-report/table-report.model';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-fin13020',
   templateUrl: './fin13020.component.html',
   styleUrls: ['./fin13020.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule,CalendarComponent, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent,  TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextRangeComponent,
+    InputTextComponent,
+    CalendarRangeComponent,
+    DropdownComponent,
+    TranslateModule,
+    YearMonthComponent,
+    TableReportComponent,
+  ],
 })
 export class FIN13020Component extends BasicQueryPageComponent<any> {
-
-  taxNumberOptions: any[] = [
-    { value: '701702007', label: '701702007' },
-    { value: '703902223', label: '703902223' },
-  ];
   PUR_VoucherTypeOptions: any[] = [
-    { value: '33', label: '銷項三聯式銷貨退回或折讓證明單' },
-    { value: '34', label: '銷項二聯式銷貨退回或折讓證明單' },
+    { value: '33', label: '33-銷項三聯式銷貨退回或折讓證明單' },
+    { value: '34', label: '34-銷項二聯式銷貨退回或折讓證明單' },
   ];
 
   queryForm = this.formBuilder.group({
+    TXN_Ret_NoStart: [null, [Validators.maxLength(20)]],
+    TXN_Ret_NoEnd: [null, [Validators.maxLength(20)]],
+    GUI_Track: [null, [Validators.maxLength(2)]],
 
-
-    TXN_Ret_NoStart: [null, [Validators.maxLength(20)]], // 退出/折讓單號(起)
-    TXN_Ret_NoEnd: [null, [Validators.maxLength(20)]],   // 退出/折讓單號(迄)
-    GUI_Track: [null, [Validators.maxLength(2)]], // 字軌
     InvoiceNumberStart: [null, [Validators.maxLength(10)]],
     InvoiceNumberEnd: [null, [Validators.maxLength(10)]],
-    InvoiceDateStart: [null], // 領用日期(起)
-    InvoiceDateEnd: [null],   // 領用日期(迄)
-    InvoiceType: [null], // 發票狀態
-    INV_DeclareYM: [null], // 發票年月
-    Source_Doc_NoStart: [, [Validators.maxLength(16)]], // 憑證單號(起)
-    Source_Doc_NoEnd: [, [Validators.maxLength(16)]],   // 憑證單號(迄)
-    Voucher_NoStart: [, [Validators.maxLength(16)]], // 發票起始號碼
-    Voucher_NoEnd: [, [Validators.maxLength(16)]],   // 發票結束號碼
-    ...createPaginationConfig([{ field: 'id', order: 1 }])
+    InvoiceDateStart: [null],
+    InvoiceDateEnd: [null],
+    InvoiceType: [null],
+
+    INV_DeclareYM: [null as string | null],
+
+    Source_Doc_NoStart: [null, [Validators.maxLength(16)]],
+    Source_Doc_NoEnd: [null, [Validators.maxLength(16)]],
+    Voucher_NoStart: [null, [Validators.maxLength(16)]],
+    Voucher_NoEnd: [null, [Validators.maxLength(16)]],
+
+    ...createPaginationConfig([{ field: 'ID', order: 1 }]),
   });
 
   data: any[] = [];
   totalRecords = 0;
+  selectedItems: any[] = [];
+
+  /** table-report 需要：保留最後一次查詢 body */
+  lastQueryBody: any = null;
+
+  /** 給 table-report 用：由它內部 loadMore / sort 時呼叫 */
+  queryFIN13020Fn = (body: any) => this.fin13020Service.queryFIN13020(body);
 
   columns: any[] = [
     { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
-    { field: 'PUR_GUINo', header: '字軌', visible: true }, //
-    { field: 'InvoiceNumber', header: '發票號碼', visible: true },//
-    { field: 'PUR_GUIDate', header: '退出/折讓日期', visible: true, format: this.formatDateFromBackend },
-    { field: 'PUR_VoucherType', header: '發票格式', visible: true },
-    { field: 'Credit_Type', header: '區別', visible: true, format: this.formatCreditType },  //折讓/退出
-    {
-      field: 'PUR_RepYYYYMM', header: '申報年月', visible: true,
-      format: this.formatRepYYYYMM
-    },
-    { field: 'PUR_Net', header: '退回/折讓金額', visible: true },
-    { field: 'PUR_Tax', header: '退回/折讓稅額', visible: true },
+    { field: 'InvoiceTrack', header: '字軌', visible: true },
+    { field: 'InvoiceNumber', header: '發票號碼', visible: true },
+    { field: 'InvoiceDate', header: '退出/折讓日期', visible: true, format: (v: any) => this.formatDateFromBackend(v) },
+    { field: 'InvoiceType', header: '發票格式', visible: true },
+    { field: 'Credit_Type', header: '區別', visible: true, format: (v: any) => this.formatCreditType(v) },
+    { field: 'INV_DeclareYM', header: '申報年月', visible: true, format: (v: any) => this.formatRepYYYYMM(v) },
+    { field: 'PUR_Net', header: '退回/折讓金額', visible: true, format: (v: number) => this.money(v), exportFormat: 'number:comma2' },
+    { field: 'PUR_Tax', header: '退回/折讓稅額', visible: true, format: (v: number) => this.money(v), exportFormat: 'number:comma2' },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
   ];
 
-  constructor(private fin13020Service: FIN13020Service, private validationService: ValidationService,) {
+  buttonsLoading = false;
+
+  addButtons: AddButton[] = [
+    {
+      label: '列印',
+      icon: 'pi pi-print',
+      action: (rowData: any) => this.onPrintOne(rowData),
+      disabled: (rowData: any) => this.editDisabled(rowData),
+    },
+  ];
+
+  constructor(
+    private fin13020Service: FIN13020Service,
+    private validationService: ValidationService
+  ) {
     super();
   }
-  formatCreditType(value: string): string {
-    switch (value) {
-      case 'C': return '折讓';
-      case 'R': return '退出';
-      default: return value;
+
+  ngOnInit(): void {
+    this.initializePage('FIN13020', '/FIN/FIN13020CRU');
+
+    const fromCru = !!(history.state && history.state['fromCru']);
+    if (fromCru) {
+      this.handleQueryRestore(this.queryForm, this.ProgNo, (f) => this.onSubmit(f));
+    } else {
+      this.setDefaultDeclareYMByToday();
     }
   }
+
+  private setDefaultDeclareYMByToday(): void {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+
+    let evenMonth = month % 2 === 0 ? month : month + 1;
+    if (evenMonth > 12) evenMonth = 12;
+
+    const repYYYYMM = `${year}${String(evenMonth).padStart(2, '0')}`;
+    this.queryForm.patchValue({ INV_DeclareYM: repYYYYMM }, { emitEvent: false });
+  }
+
+  formatCreditType(value: string): string {
+    switch (value) {
+      case 'C':
+        return '折讓';
+      case 'R':
+        return '退出';
+      default:
+        return value;
+    }
+  }
+
   formatDateFromBackend(dateStr: string): string {
     if (!dateStr) return '';
     const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return ''; // 無效日期處理
-    return `${date.getFullYear()}/${(date.getMonth() + 1)
-      .toString()
-      .padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+    if (isNaN(date.getTime())) return '';
+    return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
   }
+
   formatRepYYYYMM(value: string): string {
-    if (!value || value.length !== 6) return value;
-    return `${value.substring(0, 4)}/${value.substring(4, 6)}`;
+    if (!value) return '';
+    const only = String(value).replace(/\D/g, '');
+    if (only.length < 6) return String(value);
+    return `${only.substring(0, 4)}/${only.substring(4, 6)}`;
   }
 
-
-
-  ngOnInit(): void {
-    this.initializePage('FIN13020', '/FIN/FIN13020CRU', this.queryForm);
-
+  money(v: number): string {
+    if (v === null || v === undefined) return '';
+    const n = Number(v);
+    if (isNaN(n)) return '';
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }
 
   onSubmit(form: FormGroup): void {
@@ -110,61 +173,141 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       return;
     }
 
-    const payload = { ...form.value };
+    const raw = form.getRawValue();
+    const payload: any = { ...raw };
+
     for (const key in payload) {
       if (typeof payload[key] === 'string') {
         payload[key] = payload[key].trim();
         if (payload[key] === '') payload[key] = null;
       }
     }
-payload.INV_DeclareYM = this.toYYYYMM(payload.INV_DeclareYM);
+
+    payload.INV_DeclareYM = this.toYYYYMM(payload.INV_DeclareYM);
+    payload.pageIndex = payload.pageIndex ?? 1;
+    payload.pageSize = payload.pageSize ?? 30;
+    payload.SortBy = payload.SortBy ?? [{ field: 'ID', order: 1 }];
+
+    this.lastQueryBody = { ...payload };
+
     this.loading = true;
     this.messageService.blockUi();
 
     this.fin13020Service.queryFIN13020(payload).subscribe({
-      next: (res) => {
-
-        this.data = res.Data || [];
-        this.totalRecords = res.TotalCount || this.data.length;
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-
-
+      next: (res: any) => {
+        this.data = Array.isArray(res?.Data) ? res.Data : [];
+        this.totalRecords = res?.TotalCount ?? this.data.length;
+        this.queryStateService.setQueryState(this.ProgNo, raw);
       },
-      //       next: (res) => {
-      //   if (res.Status === '0000') {
-      //     this.data = res.Data || [];
-      //     this.totalRecords = res.TotalCount || this.data.length;
-      //     this.queryStateService.setQueryState(this.ProgNo, payload);
-      
-      //   } else {
-      //     this.messageService.errorBubble('查詢失敗');
-      //     this.loading = false;
-      //   }
-      // },
       error: () => {
-        
         this.loading = false;
+        this.messageService.unblockUi();
       },
       complete: () => {
         this.loading = false;
         this.messageService.unblockUi();
-      }
+      },
     });
   }
 
-
-
   onClearForm(): void {
     this.queryForm.reset();
+
+    this.queryForm.patchValue(
+      {
+        pageIndex: 1,
+        pageSize: 30,
+        SortBy: [{ field: 'ID', order: 1 }],
+      },
+      { emitEvent: false }
+    );
+
+    this.data = [];
+    this.totalRecords = 0;
+    this.selectedItems = [];
+    this.lastQueryBody = null;
+
+    this.setDefaultDeclareYMByToday();
+    (this.queryStateService as any).clearQueryState?.(this.ProgNo);
   }
 
-private toYYYYMM(input: any): string | null {
-  if (!input) return null;
+  isRowSelectable = (row: any): boolean => {
+    const v = row?.Voucher_No ?? row?.voucher_No ?? row?.VOUCHER_NO;
+    if (v == null) return true;
+    return String(v).trim() === '';
+  };
 
-  // 先處理常見字串：'2025/05'、'2025-05-01T00:00:00'
-  if (typeof input === 'string') {
-    const onlyDigits = input.replace(/\D/g, ''); // 拿掉所有非數字
-    if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6); // '202505'
+  editDisabled = (row: any): boolean => !this.isRowSelectable(row);
+
+  onDelete(selectedRows: any[]): void {
+    if (!selectedRows || !selectedRows.length) {
+      this.messageService.warnBubble('請先勾選要刪除的資料');
+      return;
+    }
+
+    const deletableRows = selectedRows.filter((r) => this.isRowSelectable(r));
+    const blockedRows = selectedRows.length - deletableRows.length;
+
+    if (!deletableRows.length) {
+      this.messageService.warnBubble('已拋轉有傳票號碼的資料不可刪除');
+      return;
+    }
+
+    if (blockedRows > 0) {
+      this.messageService.infoBubble(`已忽略 ${blockedRows} 筆有傳票號碼的資料，僅刪除其餘未拋轉資料`);
+    }
+
+    const idList = deletableRows
+      .map((r) => Number(r.ID ?? r.id ?? r.Id))
+      .filter((id) => Number.isFinite(id) && id > 0);
+
+    if (!idList.length) {
+      this.messageService.warnBubble('找不到可刪除的資料主鍵（ID）。');
+      return;
+    }
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.fin13020Service.deleteFIN13020(idList).subscribe({
+      next: () => {
+        this.messageService.successBubble('刪除成功');
+        this.onSubmit(this.queryForm);
+      },
+      error: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
+  }
+
+  private toYYYYMM(input: any): string | null {
+    if (!input) return null;
+
+    if (typeof input === 'string') {
+      const onlyDigits = input.replace(/\D/g, '');
+      if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6);
+
+      const d = new Date(input);
+      if (!isNaN(d.getTime())) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        return `${y}${m}`;
+      }
+      return null;
+    }
+
+    if (input instanceof Date) {
+      const y = input.getFullYear();
+      const m = String(input.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    }
+
     const d = new Date(input);
     if (!isNaN(d.getTime())) {
       const y = d.getFullYear();
@@ -174,21 +317,70 @@ private toYYYYMM(input: any): string | null {
     return null;
   }
 
-  // Date 物件
-  if (input instanceof Date) {
-    const y = input.getFullYear();
-    const m = String(input.getMonth() + 1).padStart(2, '0');
-    return `${y}${m}`;
+  private onPrintOne(row: any): void {
+    const invYM = String(row?.INV_DeclareYM ?? '').trim();
+    const txn = String(row?.TXN_Ret_No ?? '').trim();
+    const track = String(row?.InvoiceTrack ?? '').trim();
+    const invNo = String(row?.InvoiceNumber ?? '').trim();
+
+    if (!invYM || !txn) {
+      this.messageService.warnBubble('此筆資料缺少申報年月或退出/折讓單號，無法列印');
+      return;
+    }
+
+    const payload = {
+      INV_DeclareYM: invYM,
+      TXN_Ret_NoS: txn,
+      TXN_Ret_NoE: txn,
+      InvoiceTrack: track || '',
+      InvoiceNumberS: invNo || '',
+      InvoiceNumberE: invNo || '',
+    };
+
+    this.buttonsLoading = true;
+
+    this.fin13020Service.printFIN13020(payload).subscribe({
+      next: (resp: HttpResponse<Blob>) => this.openPrintResponse(resp),
+      error: (err) => {
+        const msg = err?.error?.Message || err?.message || '列印失敗';
+        this.messageService.errorBubble(msg);
+        console.error('printFIN13020 error:', err);
+      },
+      complete: () => {
+        this.buttonsLoading = false;
+      },
+    });
   }
 
-  // 其他型別就試著 new Date 看看
-  const d = new Date(input);
-  if (!isNaN(d.getTime())) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    return `${y}${m}`;
-  }
-  return null;
-}
+  private openPrintResponse(resp: HttpResponse<Blob>) {
+    const ct = resp.headers.get('content-type') || '';
 
+    if (ct.includes('application/pdf')) {
+      const url = URL.createObjectURL(resp.body!);
+      window.open(url, '_blank');
+      return;
+    }
+
+    resp.body!.text().then((text) => {
+      let json: any;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        const url = URL.createObjectURL(resp.body!);
+        window.open(url, '_blank');
+        return;
+      }
+
+      const printUrl = json?.Print_URL ?? json?.Data?.Print_URL ?? json?.Data?.[0]?.Print_URL;
+      if (!printUrl) {
+        this.messageService.warnBubble?.('列印回應未包含 Print_URL');
+        return;
+      }
+
+      const base = environment.ApiUrl;
+      const fullUrl = `${base}${printUrl}`;
+
+      window.open(fullUrl, '_blank');
+    });
+  }
 }

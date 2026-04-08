@@ -7,20 +7,21 @@ import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { DropdownOption } from '@shared/constants/business.constants';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { AccordionModule } from 'primeng/accordion';
-import { debounceTime, finalize } from 'rxjs';
-import { TLS26050Data, TLS26050Service } from '../../../service/api/tls/tls26050.service';
+import { Observable, debounceTime, finalize, map, tap } from 'rxjs';
+import { TLS26050Data, TLS26050QueryRequest, TLS26050Service } from '../../../service/api/tls/tls26050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls26050',
@@ -40,7 +41,7 @@ import { Column, createPaginationConfig, formatAmount } from '../../../shared/co
     NgIf,
     MultiSelectComponent,
     CalendarRangeQuickComponent,
-    CustomFooterTableComponent,
+    TableReportComponent,
     DropdownComponent
   ]
 })
@@ -106,7 +107,8 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
   footerData: TLS26050Data[] = [];
   selectedItems: TLS26050Data[] = [];
 
-  columns: Column[] = [];
+  columns: ReportColumn[] = [];
+  lastQueryBody: TLS26050QueryRequest | null = null;
 
   //#region 下拉選項定義
   // 1. 日期查詢條件相關下拉選項
@@ -166,7 +168,7 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
 
   onSubmit(frm: FormGroup) {
     const formValue = frm.getRawValue();
-    const payload = {
+    const payload: TLS26050QueryRequest = {
       ...formValue,
       // 週營業報表 - 年度格式化 (yyyy)
       onedateyy: this.datePipe.transform(formValue.onedateyy, 'yyyy'),
@@ -189,13 +191,35 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.setColumns(frm.value.tax);
-          this.data = response.Data.QueryData;
-          this.footerData = [...response.Data.SumData, ...response.Data.AllData];
+          this.data = (response.Data.QueryData ?? []).map((item: TLS26050Data & { team_no?: string; division_no?: string }) => ({
+            ...item,
+            team_name: `${item.team_no ?? ''}-${item.team_name ?? ''}`,
+            division_name: `${item.division_no ?? ''}-${item.division_name ?? ''}`
+          }));
           this.totalRecords = response.TotalCount;
+          this.footerData = this.buildFooterData(response);
+          this.lastQueryBody = payload;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
   }
+
+  /** 提供給 table-report 使用的查詢函式，支援分頁與排序 */
+  queryFunction = (body: TLS26050QueryRequest): Observable<{ Data: TLS26050Data[]; TotalCount: number }> => {
+    return this.tls26050Service.queryTLS26050(body).pipe(
+      tap(res => {
+        this.footerData = this.buildFooterData(res);
+      }),
+      map(res => ({
+        Data: (res.Data?.QueryData ?? []).map((item: TLS26050Data & { team_no?: string; division_no?: string }) => ({
+          ...item,
+          team_name: `${item.team_no ?? ''}-${item.team_name ?? ''}`,
+          division_name: `${item.division_no ?? ''}-${item.division_name ?? ''}`
+        })),
+        TotalCount: res.TotalCount ?? 0
+      }))
+    );
+  };
 
   // 載入下拉選項
   loadOptions() {
@@ -278,35 +302,59 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
   // 根據銷售金額是否含稅設定顯示Header
   setColumns(tax: boolean) {
     this.columns = [
-      { field: 'talent_id', header: '專櫃編號', hidden: true },
+      { field: 'talent_id', header: '專櫃編號', visible: false },
       { field: 'tlt_building', header: '館別', visible: true },
       { field: 'team_name', header: 'TEAM', visible: true },
       { field: 'division_name', header: '組別', visible: true },
-      { field: 'tlt_kind', header: '櫃別', hidden: true },
-      { field: 'bus_class_name', header: '大分類', hidden: true },
-      { field: 'budget_now', header: '目標', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
-      { field: 'preorder_amt_now', header: '當期預售金額', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
-      { field: 'preorder_namt_now', header: '當期預售金額', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true },
-      { field: 'Achievement_rate_now', header: '目標達成率', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true, isTotal: true },
-      { field: 'nAchievement_rate_now', header: '目標達成率', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true, isTotal: true },
-      { field: 'preorder_custcnt_now', header: '當期交易筆數', visible: true, isSubTotal: true, isTotal: true },
-      { field: 'avg_ordervalue_now', header: '當期客單價', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
-      { field: 'navg_ordervalue_now', header: '當期客單價', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true },
-      { field: 'preorder_amt_last', header: '去年同期預售金額', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
-      { field: 'preorder_namt_last', header: '去年同期預售金額', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true },
-      { field: 'preorder_custcnt_last', header: '去年同期交易筆數', visible: true, isSubTotal: true, isTotal: true },
-      { field: 'avg_ordervalue_last', header: '去年同期客單價', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
-      { field: 'navg_ordervalue_last', header: '去年同期客單價', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true },
-      { field: 'Growth', header: '成長比', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true, isTotal: true },
-      { field: 'nGrowth', header: '成長比', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true, isTotal: true },
-      { field: 'PerformanceDiff', header: '業績差異', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
-      { field: 'nPerformanceDiff', header: '業績差異', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true },
-      { field: 'TransactionsNumber', header: '交易筆數差異', visible: true, isSubTotal: true, isTotal: true },
-      { field: 'OrdervalueDiff', header: '客單差異', hidden: tax, isSubTotal: true, isTotal: true },
-      { field: 'nOrdervalueDiff', header: '客單差異', hidden: !tax, isSubTotal: true, isTotal: true },
-      { field: 'tlt_space', header: '營業坪數', visible: true, isSubTotal: true, isTotal: true },
-      { field: 'MonthlyFloorEffect', header: '月坪效', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
-      { field: 'nMonthlyFloorEffect', header: '月坪效', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true }
+      { field: 'tlt_kind', header: '櫃別', visible: false },
+      { field: 'bus_class_name', header: '大分類', visible: false },
+      { field: 'budget_now', header: '目標', visible: true, format: formatAmount, isTotal: true },
+      { field: 'preorder_amt_now', header: '當期預售金額', visible: !tax, format: formatAmount, isTotal: true },
+      { field: 'preorder_namt_now', header: '當期預售金額', visible: tax, format: formatAmount, isTotal: true },
+      {
+        field: 'Achievement_rate_now',
+        header: '目標達成率',
+        visible: !tax,
+        format: (value: number) => (value ? `${value.toFixed(2)}%` : '0%'),
+        isTotal: true
+      },
+      {
+        field: 'nAchievement_rate_now',
+        header: '目標達成率',
+        visible: tax,
+        format: (value: number) => (value ? `${value.toFixed(2)}%` : '0%'),
+        isTotal: true
+      },
+      { field: 'preorder_custcnt_now', header: '當期交易筆數', visible: true, isTotal: true },
+      { field: 'avg_ordervalue_now', header: '當期客單價', visible: !tax, format: formatAmount, isTotal: true },
+      { field: 'navg_ordervalue_now', header: '當期客單價', visible: tax, format: formatAmount, isTotal: true },
+      { field: 'preorder_amt_last', header: '去年同期預售金額', visible: !tax, format: formatAmount, isTotal: true },
+      { field: 'preorder_namt_last', header: '去年同期預售金額', visible: tax, format: formatAmount, isTotal: true },
+      { field: 'preorder_custcnt_last', header: '去年同期交易筆數', visible: true, isTotal: true },
+      { field: 'avg_ordervalue_last', header: '去年同期客單價', visible: !tax, format: formatAmount, isTotal: true },
+      { field: 'navg_ordervalue_last', header: '去年同期客單價', visible: tax, format: formatAmount, isTotal: true },
+      {
+        field: 'Growth',
+        header: '成長比',
+        visible: !tax,
+        format: (value: number) => (value ? `${value.toFixed(2)}%` : '0%'),
+        isTotal: true
+      },
+      {
+        field: 'nGrowth',
+        header: '成長比',
+        visible: tax,
+        format: (value: number) => (value ? `${value.toFixed(2)}%` : '0%'),
+        isTotal: true
+      },
+      { field: 'PerformanceDiff', header: '業績差異', visible: !tax, format: formatAmount, isTotal: true },
+      { field: 'nPerformanceDiff', header: '業績差異', visible: tax, format: formatAmount, isTotal: true },
+      { field: 'TransactionsNumber', header: '交易筆數差異', visible: true, isTotal: true },
+      { field: 'OrdervalueDiff', header: '客單差異', visible: !tax, isTotal: true },
+      { field: 'nOrdervalueDiff', header: '客單差異', visible: tax, isTotal: true },
+      { field: 'tlt_space', header: '營業坪數', visible: true, isTotal: true },
+      { field: 'MonthlyFloorEffect', header: '月坪效', visible: !tax, format: formatAmount, isTotal: true },
+      { field: 'nMonthlyFloorEffect', header: '月坪效', visible: tax, format: formatAmount, isTotal: true }
     ]
   }
 
@@ -412,5 +460,17 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
         this.queryForm.controls['event_enddate_c'].setValue(this.EventIDOptions.find(x => x.value === event)?.pod_edate ?? null);
         break;
     }
+  }
+
+  /** 建立供 table-report 使用的 footer 多列資料（SumData + AllData） */
+  private buildFooterData(response: { Data?: { AllData?: TLS26050Data[]; SumData?: TLS26050Data[] } }): TLS26050Data[] {
+    const sumData = response.Data?.SumData ?? [];
+    const allData = response.Data?.AllData ?? [];
+    const transform = (arr: TLS26050Data[]) => arr.map((i: TLS26050Data & { team_no?: string; division_no?: string }) => ({
+      ...i,
+      team_name: `${i.team_no ?? ''}-${i.team_name ?? ''}`,
+      division_name: `${i.division_no ?? ''}-${i.division_name ?? ''}`
+    }));
+    return [...transform(sumData), ...transform(allData)];
   }
 }

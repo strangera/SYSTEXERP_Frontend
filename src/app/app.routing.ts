@@ -1,4 +1,3 @@
-// src/app/app.routing.ts
 import { Routes } from '@angular/router';
 import { AuthGuard } from './core/guards/auth.guard';
 import { PublicGuard } from './core/guards/public.guard';
@@ -18,6 +17,11 @@ export const routes: Routes = [
   {
     path: 'account',
     loadChildren: () => import('./pages/pages.routes').then(m => m.pagesRoutes),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'reports',
+    loadChildren: () => import('./reports/reports.routes').then(m => m.reportsRoutes),
     canActivate: [AuthGuard]
   },
   {

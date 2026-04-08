@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { catchError, map, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
-import { CleanSubmitData } from '../../../pages/tls/tls13010/tls13010.model';
+import { CleanSubmitData } from '@pages/tls/tls13010-v2/core/models/workflow/clean-submit.interface';
 
 interface TLS13010FareRequest {
   talentId: string;
@@ -179,12 +179,14 @@ export class TLS13010Service {
     });
 
     // 對應後端 CleanContractRequest 的完整結構
+    // [FromBody] 直接綁定整個 request body
     const requestPayload = {
       contractInfo: cleanData.contractInfo,
       deductions: cleanData.deductions,
       commissions: cleanData.commissions,
       conditions: cleanData.conditions,
-      metadata: cleanData.metadata
+      metadata: cleanData.metadata,
+      commissionTypeChange: cleanData.commissionTypeChange
     };
 
     console.log('🚀 TLS13010Service: 發送 API 請求到:', `${this.apiUrl}/TLS0000/TLS1000/submitFinalTLS13010`);
@@ -245,6 +247,14 @@ export class TLS13010Service {
   voidTLS13010(request: VOID_TLS13010Request) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/voidTLS13010`, request).pipe(
       tap((res) => console.log('作廢結果:', res)),
+    );
+  }
+
+  /** 根據廠商編號查詢POS2013廠商聯絡資訊 */
+  queryVendorInfo(venNo: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryVendorInfo`, { venNo }).pipe(
+      tap((res) => console.log('查詢廠商聯絡資訊結果:', res)),
+      catchError(this.errorHandler.handleError)
     );
   }
 

@@ -1,159 +1,157 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
-  <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
-        <h5>挑選條件</h5>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="變賣傳票是否啟用"
-              controlName="active_SellofSummons"
-              [options]="WhetherOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.active_SellofSummons"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="報廢傳票是否啟用"
-              controlName="active_ScrappedSummons"
-              [options]="WhetherOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.active_ScrappedSummons"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-        </div>
-        <hr />
-        <h5>資產報廢 會計科目設定</h5>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="處分資產損失"
-              controlName="assetsALoss"
-              [options]="payOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.assetsALoss"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-        </div>
-        <hr />
-        <h5>資產變賣 會計科目設定</h5>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="應收帳款"
-              controlName="receiveAccount"
-              [options]="payOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.receiveAccount"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="處分資產損失"
-              controlName="assetsCLoss"
-              [options]="payOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.receiveAccount"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="處分資產收入"
-              controlName="assetsCIncome"
-              [options]="payOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.assetsCIncome"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-        </div>
-        <hr />
-        <h5>資產變賣 會計科目設定</h5>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="耗材報廢會科"
-              controlName="consumables_Scrapped"
-              [options]="payOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.consumables_Scrapped"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-        </div>
-        <hr />
-        <h5>耗材盤點 會計科目設定</h5>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="耗材盤盈會科"
-              controlName="consumables_Income"
-              [options]="payOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.consumables_Income"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="耗材盤損會科"
-              controlName="consumables_Loss"
-              [options]="payOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.consumables_Loss"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-        </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
-        </div>
-      </form>
-    </p-accordionTab>
-  </p-accordion>
-</div>
-<!-- <div class="card">
-    <div class="col-13">
-        <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-        </app-table>
+
+  <form [formGroup]="dataForm" id="dataForm">
+    <!-- 挑選條件 -->
+    <h6>挑選條件</h6>
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="變賣傳票是否啟用"
+          controlName="PS"
+          [options]="yesNoOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.PS"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="報廢傳票是否啟用"
+          controlName="PC"
+          [options]="yesNoOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.PC"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div>
     </div>
-</div> -->
+
+    <hr />
+
+    <!-- 資產報廢 會計科目設定 -->
+    <h6>資產報廢 會計科目設定</h6>
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="處分資產損失"
+          controlName="PC_LOSS"
+          [options]="accountOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.PC_LOSS"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- 資產變賣 會計科目設定 -->
+    <h6>資產變賣 會計科目設定</h6>
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="應收帳款"
+          controlName="AR"
+          [options]="accountOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.AR"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="處分資產損失"
+          controlName="LOSS"
+          [options]="accountOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.LOSS"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="處分資產收入"
+          controlName="GET"
+          [options]="accountOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.GET"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- 耗材報廢 會計科目設定 -->
+    <h6>耗材報廢 會計科目設定</h6>
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="耗材報廢會科"
+          controlName="MTDAM"
+          [options]="accountOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.MTDAM"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div>
+    </div>
+
+    <hr />
+
+    <!-- 耗材盤點 會計科目設定 -->
+    <h6>耗材盤點 會計科目設定</h6>
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="耗材盤盈會科"
+          controlName="MTINVW"
+          [options]="accountOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.MTINVW"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-dropdown
+          label="耗材盤損會科"
+          controlName="MTINVL"
+          [options]="accountOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.MTINVL"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div>
+    </div>
+
+    <!-- 按鈕區 -->
+    <div class="grid justify-content-end gap-2 m-0 mt-3 border-top-1 surface-border pt-3">
+      <app-button
+        label="重新查詢"
+        icon="pi pi-refresh"
+        [type]="'button'"
+        (clickEvent)="onQuery()"
+        [loading]="loading"
+      ></app-button>
+      <app-button
+        label="更新"
+        icon="pi pi-check"
+        [type]="'button'"
+        (clickEvent)="onUpdate()"
+        [loading]="loading"
+      ></app-button>
+    </div>
+  </form>
+</div>

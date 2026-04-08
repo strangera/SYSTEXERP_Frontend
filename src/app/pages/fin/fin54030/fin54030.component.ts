@@ -15,7 +15,6 @@ import { FIN54030Data } from './fin54030.model';
 @Component({
   selector: 'app-fin54030',
   templateUrl: './fin54030.component.html',
-  styleUrl: './fin54030.component.scss',
   standalone: true,
   imports: [
     AccordionModule,
@@ -57,8 +56,7 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
-      || this.service.closeLoading();
-  });
+  }, { allowSignalWrites: true });
 
   constructor(
     public readonly service: FIN54030Service,
@@ -70,10 +68,8 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
   public ngOnInit(): void {
     this.initializePage('FIN54030', void 0, this.queryForm, this.onSubmit.bind(this));
 
-    this.tableLoading.set(!0);
     this.service.loadFIN54030().pipe(
       tap(res => this.logger.debug(`init:`, [res])),
-      finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
@@ -84,14 +80,17 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      if (!this.qf().TargetYM.value?.length) return this.messageService.errorBubble('請選擇目標年月');
+      this.logger.debug(`關帳:`, []);
 
-      this.tableLoading.set(!0);
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.logger.debug(`onSubmit:`, [this.qf().TargetYM.value]);
-      this.qf().CntPostFlag1.value! > 0
-        ? (() => { this.messageService.errorBubble('已建立傳票大於0，不允許關帳'); this.tableLoading.set(!1); })()
-        : this.service.closeFIN54030(this.qf().TargetYM.value!, '1').pipe(
+      if (!this.qf().TargetYM.value?.length) {
+        this.messageService.errorBubble('請選擇目標年月');
+        this.loading = false;
+        return;
+      } else {
+        this.tableLoading.set(!0);
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+        this.logger.debug(`onSubmit:`, [this.qf().TargetYM.value]);
+        this.service.closeFIN54030(this.qf().TargetYM.value!, 1).pipe(
           finalize(() => this.tableLoading.set(!1)),
         ).subscribe({
           next: res => {
@@ -99,6 +98,7 @@ export class FIN54030Component extends BasicQueryPageComponent<FIN54030Data> imp
             this.messageService.successBubble('儲存成功');
           },
         });
+      }
     });
   }
 }

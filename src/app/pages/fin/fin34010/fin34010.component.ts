@@ -1,8 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { map } from 'rxjs/operators';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { finalize, map } from 'rxjs/operators';
+
 import {
   createPaginationConfig,
   formatDateToYYYY_MM_DD,
@@ -10,6 +12,7 @@ import {
 
 // UI
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -18,22 +21,21 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
 // Service & 型別
 import {
-  Fin34010Service,
   ApiResponse,
   Fin34010Row,
-  Fin34010Request,
+  Fin34010Service,
 } from '../../../service/api/fin/fin34010.service';
 
 // until-destroy
-import { HttpResponse } from '@angular/common/http';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 
-// 排序欄位型別（Table 的 order 會是 1 / -1）
-type SortItem = { field: string; order: 1 | -1 };
+interface SortItem { field: string; order: number }
 
 @UntilDestroy()
 @Component({
@@ -42,31 +44,38 @@ type SortItem = { field: string; order: 1 | -1 };
   styleUrl: './fin34010.component.scss',
   standalone: true,
   imports: [
+    AsyncPipe,
     MenubarComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
     CalendarRangeComponent,
     RadiobuttonComponent,
     ButtonComponent,
     TranslateModule,
     TableReportComponent,
+    DropdownComponent,
     ButtonModule,
   ],
 })
-export class FIN34010Component extends BasicQueryPageComponent<any> {
+export class FIN34010Component extends BasicQueryPageComponent<any> implements OnInit {
   /* ----------------- 狀態 ----------------- */
   data: Fin34010Row[] = [];
   totalRecords = 0;
   viewTotalRecords = 0;
   selectedItems: Fin34010Row[] = [];
   lastQueryBody: any = null;
-  footerData: any = undefined; // 總計列會放在這裡
-  tableVer = 0;
+  footerData: any = undefined;
 
-  // 固定欄位 (對應後端回傳欄位)
-  columns: ReportColumn[] = [
+  AccNo_ParamOptions = this.dropDown.queryGls1005();
+  tableVer = 0;
+  venNoOptions: any[] = [];
+
+  readonly pageSizeFixed = 30;
+
+  columns: ReportColumn[] = [];
+
+  private allColumns: ReportColumn[] = [
     {
       field: 'ARS_Date',
       header: '立帳日期',
@@ -76,6 +85,7 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
     { field: 'VEN_Name', header: '客戶名稱' },
     { field: 'ARS_No', header: '帳款單號' },
     { field: 'AccNo', header: '科目代號' },
+    { field: 'AccCName', header: '科目名稱' },
     {
       field: 'ARS_Amt',
       header: '帳款金額',
@@ -102,6 +112,50 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
     },
   ];
 
+  readonly defaultSort: SortItem[] = [{ field: 'ARS_Date', order: 1 }];
+  private _currentSortBy: SortItem[] = this.defaultSort;
+
+  showFlagOptions: any[] = [
+    { value: 'Y', label: '顯示' },
+    { value: 'N', label: '不顯示' },
+  ];
+
+  queryForm = this.formBuilder.group({
+    VEN_No: [null as string | null],
+    AccNo: [null as string | null],
+    ARSDateFrom: [null as Date | null],
+    ARSDateTo: [null as Date | null],
+    ShowArsAmt: ['Y' as string],
+    ShowZeroAmt: ['Y' as string],
+
+    ...createPaginationConfig(this.defaultSort),
+  });
+
+  btnExportExcelLoading = false;
+  btnExportPdfLoading = false;
+
+  constructor(
+    private fin34010Service: Fin34010Service,
+    private dropDownListService: DropDownListService,
+    private readonly dropDown: DropdownApiService,
+    private cdr: ChangeDetectorRef
+  ) {
+    super();
+  }
+
+  /* ----------------- 工具 ----------------- */
+
+  private updateColumns(): void {
+    const showArsAmt = this.queryForm.get('ShowArsAmt')?.value;
+
+    this.columns = this.allColumns.filter((col) => {
+      if (col.field === 'ARS_Amt' && showArsAmt === 'N') {
+        return false;
+      }
+      return true;
+    });
+  }
+
   private moneyFormat(value: number | string): string {
     if (value == null || value === '') return '0';
     const num =
@@ -111,38 +165,6 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
     return Number.isFinite(num) ? num.toLocaleString('en-US') : '0';
   }
 
-  readonly defaultSort: SortItem[] = [{ field: 'ARS_Date', order: 1 }];
-
-  // 單選選項 (字串型別，以後端為主，例如 1:顯示 / 2:不顯示)
-  showFlagOptions: any[] = [
-    { value: '1', label: '顯示' },
-    { value: '2', label: '不顯示' },
-  ];
-
-  /* ----------------- 表單 ----------------- */
-  queryForm = this.formBuilder.group({
-    VEN_No: [null as string | null], // 客戶/廠商代號
-    AccNo: [null as string | null],  // 科目代號
-
-    ARSDateFrom: [null as Date | null],
-    ARSDateTo: [null as Date | null],
-
-    ShowArsAmt: ['1' as string],   // 應收金額是否顯示
-    ShowZeroAmt: ['1' as string],  // 帳款餘額為零是否顯示
-
-    // TableReport 用的分頁/排序控制（使用小寫 pageIndex/pageSize，
-    // buildPayload 裡會轉成後端要的 PageIndex/PageSize，同時保留小寫給 table-report 用）
-    ...createPaginationConfig(this.defaultSort),
-  });
-
-  constructor(
-    private fin34010Service: Fin34010Service,
-    private cdr: ChangeDetectorRef
-  ) {
-    super();
-  }
-
-  /* ----------------- 工具 ----------------- */
   private toYMDOrUndef(
     d: Date | string | null | undefined
   ): string | undefined {
@@ -156,12 +178,18 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
 
   private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
     const asArr = Array.isArray(input) ? input : [];
-    const cleaned = asArr
+    const cleaned: SortItem[] = asArr
       .filter(
         (x) =>
-          x && typeof x.field === 'string' && (x.order === 1 || x.order === -1)
+          x &&
+          typeof x.field === 'string' &&
+          typeof x.order === 'number'
       )
-      .map((x) => ({ field: String(x.field), order: x.order as 1 | -1 }));
+      .map((x) => ({
+        field: String(x.field),
+        order: Number(x.order) || 1,
+      }));
+
     return cleaned.length ? cleaned : fallback;
   }
 
@@ -174,61 +202,83 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
     return `${y}/${m}/${dd}`;
   }
 
-  /** 把畫面上的 form/body 轉成後端需要的 Fin34010Request (命名以後端為主) */
-  private buildPayload(base: any): Fin34010Request {
+  protected loadDropdownOptions(): void {
+    this.dropDownListService
+      .queryPOS2013_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        const list = Array.isArray(res?.Data) ? res.Data : [];
+        this.venNoOptions = list.map((x: any) => ({
+          label: `${x.VEN_No} - ${x.Name}`,
+          value: x.VEN_No,
+        }));
+      });
+  }
+
+  /**
+   * 共用 payload builder
+   * 查詢、table-report lazy load、匯出都走這裡
+   */
+  private buildPayload(base: any): any {
     const pageIndex =
-      Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
-        ? base.pageIndex
+      Number.isFinite(base?.pageIndex) && Number(base.pageIndex) >= 1
+        ? Number(base.pageIndex)
         : 1;
+
     const pageSize =
-      Number.isFinite(base?.pageSize) && base.pageSize > 0
-        ? base.pageSize
-        : 30;
+      Number.isFinite(base?.pageSize) && Number(base.pageSize) > 0
+        ? Number(base.pageSize)
+        : this.pageSizeFixed;
 
-    const payload: Fin34010Request = {
-      // 後端要的大寫欄位
-      PageIndex: pageIndex,
-      PageSize: pageSize,
-
-      // 給 table-report 用的小寫（不影響後端，頂多多傳兩個欄位）
+    const payload: any = {
       pageIndex,
       pageSize,
-
       SortBy: this.normalizeSort(base?.SortBy, this.defaultSort),
 
-      // 查詢條件：完全以後端命名為主
       ARSDateFrom: this.toYMDOrUndef(base?.ARSDateFrom),
       ARSDateTo: this.toYMDOrUndef(base?.ARSDateTo),
+
+      // VEN_No_From: base?.VEN_No || undefined,
       VEN_No: base?.VEN_No || undefined,
+      // AccNoList: base?.AccNo || undefined,
       AccNo: base?.AccNo || undefined,
+
       ShowArsAmt: base?.ShowArsAmt || undefined,
       ShowZeroAmt: base?.ShowZeroAmt || undefined,
     };
 
     Object.keys(payload).forEach((k) => {
-      const v = (payload as any)[k];
-      if (v === '' || v == null) delete (payload as any)[k];
+      const v = payload[k];
+      if (v === '' || v == null) delete payload[k];
     });
 
     return payload;
   }
 
-  /** 匯出用：沿用查詢條件，但移除 PageIndex/PageSize（後端通常不需要分頁） */
-  private buildExportPayload(): Fin34010Request {
-    const base = this.queryForm.getRawValue();
+  /**
+   * 匯出 payload：
+   * 跟查詢傳一樣，只是不傳 pageIndex / pageSize
+   */
+  private buildExportPayload(): any {
+    const base = this.lastQueryBody
+      ? { ...this.lastQueryBody }
+      : {
+        ...this.queryForm.getRawValue(),
+        SortBy: this._currentSortBy || this.defaultSort,
+      };
+
     const payload = this.buildPayload(base);
-    delete payload.PageIndex;
-    delete payload.PageSize;
-    delete (payload as any).pageIndex;
-    delete (payload as any).pageSize;
+
+    delete payload.pageIndex;
+    delete payload.pageSize;
+
     return payload;
   }
 
-  /** 從 Data.Summary 轉成 footerData 物件（第一欄顯示「總計」） */
   private buildFooterFromSummary(summary: any | null | undefined): any {
     if (!summary) return undefined;
+
     return {
-      
       ARS_Amt: summary.SumARS_Amt ?? 0,
       REC_Amt: summary.SumREC_Amt ?? 0,
       ADJ_Amt: summary.SumADJ_Amt ?? 0,
@@ -236,59 +286,81 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
     };
   }
 
-  /** 把後端回傳的 Data.List 轉成 Fin34010Row[]（順便補 _rowKey） */
   private mapRowsFromResponse(res: ApiResponse<any>): Fin34010Row[] {
     const dataAny = res?.Data as any;
     const listRaw = dataAny?.List ?? dataAny ?? [];
     const list = Array.isArray(listRaw) ? listRaw : [];
 
-    const rows: Fin34010Row[] = list.map((r: any, idx: number) => ({
+    return list.map((r: any, idx: number) => ({
       ...r,
       _rowKey: `${r.ARS_No ?? ''}|${r.VEN_No ?? ''}|${idx}`,
     }));
-    return rows;
+  }
+
+  private saveQueryState(): void {
+    this.queryStateService.setQueryState(this.ProgNo, {
+      formValue: this.queryForm.getRawValue(),
+      currentSortBy: this._currentSortBy,
+      lastQueryBody: this.lastQueryBody,
+    });
   }
 
   /* ----------------- 給 <app-table-report> 的查詢函式 ----------------- */
+
   public queryFIN34010ForReport = (body: any) =>
-    this.fin34010Service
-      .queryFIN34010(this.buildPayload(body || {}))
-      .pipe(
-        map((res: ApiResponse<any>) => {
-          const rows = this.mapRowsFromResponse(res);
-          const dataAny = res?.Data as any;
-          const totalCount =
-            Number(res?.TotalCount ?? dataAny?.TotalCount ?? rows.length) ||
-            rows.length;
+    this.fin34010Service.queryFIN34010(this.buildPayload(body || {})).pipe(
+      map((res: ApiResponse<any>) => {
+        const rows = this.mapRowsFromResponse(res);
+        const dataAny = res?.Data as any;
+        const summary = dataAny?.Summary ?? null;
 
-          const summary = dataAny?.Summary ?? null;
+        const idx = Number(body?.pageIndex ?? 1);
+        if (idx === 1) {
+          this.footerData = this.buildFooterFromSummary(summary);
+        }
 
-          // 只有在第一頁時才更新 footerData，避免無限捲動一直重覆設定
-          const isFirstPage =
-            !body?.pageIndex || Number(body.pageIndex) === 1;
-          if (isFirstPage) {
-            this.footerData = this.buildFooterFromSummary(summary);
-          }
+        const totalFromApi =
+          Number(res?.TotalCount ?? dataAny?.TotalCount ?? 0) || 0;
 
-          return {
-            Data: rows,
-            TotalCount: totalCount,
-            GrandTotal: summary, // 目前 table-report 沒用到，但先帶著
-          };
-        })
-      );
+        const totalCount =
+          rows.length === 0
+            ? this.data?.length ?? 0
+            : totalFromApi || rows.length;
+
+        return {
+          Data: rows,
+          TotalCount: totalCount,
+          GrandTotal: summary,
+        };
+      })
+    );
 
   /* ----------------- Init ----------------- */
+
   ngOnInit(): void {
     this.initializePage(
       'FIN34010',
-      '/FIN3000/FIN34010CRU', // 若未來有 CRU 頁，再依實際路徑調整
+      '/FIN3000/FIN34010CRU',
       this.queryForm,
       (form) => this.onSubmit(form)
     );
+
+    this.loadDropdownOptions();
+
+    this.updateColumns();
+
+    this.queryForm
+      .get('ShowArsAmt')
+      ?.valueChanges.pipe(untilDestroyed(this))
+      .subscribe(() => {
+        this.updateColumns();
+        this.tableVer++;
+        this.cdr.detectChanges();
+      });
   }
 
   /* ----------------- Submit ----------------- */
+
   onSubmit(frm: FormGroup) {
     this.submitted = true;
 
@@ -298,9 +370,18 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
     }
 
     const raw = this.queryForm.getRawValue();
-    const payload = this.buildPayload(raw);
-    payload.PageIndex = 1;
-    (payload as any).pageIndex = 1;
+
+    const payload = this.buildPayload({
+      ...raw,
+      pageIndex: 1,
+      pageSize: this.pageSizeFixed,
+      SortBy: raw?.SortBy || this._currentSortBy || this.defaultSort,
+    });
+
+    payload.pageIndex = 1;
+    payload.pageSize = this.pageSizeFixed;
+
+    this._currentSortBy = payload.SortBy ?? this.defaultSort;
 
     this.loading = true;
     this.data = [];
@@ -320,23 +401,27 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
           const summary = dataAny?.Summary ?? null;
 
           this.data = rows;
-          this.viewTotalRecords = this.data.length;
           this.footerData = this.buildFooterFromSummary(summary);
 
-          this.cdr.detectChanges();
-
           const realTotal =
-            Number(response?.TotalCount ?? rows.length) || rows.length;
-          setTimeout(() => {
-            this.totalRecords = realTotal;
-            this.viewTotalRecords = realTotal;
-            this.lastQueryBody = { ...payload };
-          });
+            Number(
+              response?.TotalCount ?? dataAny?.TotalCount ?? rows.length
+            ) || rows.length;
 
-          this.queryStateService.setQueryState(
-            this.ProgNo,
-            this.queryForm.value
-          );
+          this.totalRecords = realTotal;
+          this.viewTotalRecords = realTotal;
+
+          this.lastQueryBody = {
+            ...raw,
+            ...payload,
+            pageIndex: 1,
+            pageSize: this.pageSizeFixed,
+            SortBy: payload.SortBy ?? this.defaultSort,
+          };
+
+          this.saveQueryState();
+
+          this.cdr.detectChanges();
           this.loading = false;
         },
         error: (err: any) => {
@@ -356,8 +441,8 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
       AccNo: null,
       ARSDateFrom: null,
       ARSDateTo: null,
-      ShowArsAmt: '1',
-      ShowZeroAmt: '1',
+      ShowArsAmt: 'Y',
+      ShowZeroAmt: 'Y',
       ...createPaginationConfig(this.defaultSort),
     });
 
@@ -366,9 +451,16 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
     this.totalRecords = 0;
     this.viewTotalRecords = 0;
     this.footerData = undefined;
+    this.selectedItems = [];
+
+    this._currentSortBy = this.defaultSort;
+    this.lastQueryBody = null;
+    this.updateColumns();
+    this.tableVer++;
   }
 
-  /* ----------------- 匯出檔案共用工具 ----------------- */
+  /* ----------------- 匯出工具 ----------------- */
+
   private getFilenameFromResponse(
     res: HttpResponse<Blob>,
     fallback: string
@@ -376,10 +468,14 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
     const cd =
       res.headers.get('Content-Disposition') ||
       res.headers.get('content-disposition');
+
     if (!cd) return fallback;
+
     const match =
       /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(cd);
+
     if (!match || !match[1]) return fallback;
+
     return decodeURIComponent(match[1].replace(/['"]/g, ''));
   }
 
@@ -387,20 +483,18 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
     const blob = new Blob([res.body as Blob], {
       type: res.body?.type || 'application/octet-stream',
     });
+
     const fileName = this.getFilenameFromResponse(res, defaultName);
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
+
     a.href = url;
     a.download = fileName;
     a.click();
+
     window.URL.revokeObjectURL(url);
   }
 
-  // 匯出按鈕 loading 狀態
-  btnExportExcelLoading = false;
-  btnExportPdfLoading = false;
-
-  /* ----------------- 匯出：Excel ----------------- */
   downloadFIN34010Excel(): void {
     const payload = this.buildExportPayload();
     const defaultName = 'FIN34010_應收帳款明細表.xlsx';
@@ -409,21 +503,24 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
 
     this.fin34010Service
       .exportFIN34010Excel(payload)
-      .pipe(untilDestroyed(this))
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.btnExportExcelLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
       .subscribe({
-        next: (res: HttpResponse<Blob>) => {
-          this.saveBlob(res, defaultName);
-        },
+        next: (res: HttpResponse<Blob>) => this.saveBlob(res, defaultName),
         error: (err: any) => {
           console.error('FIN34010 Excel export error:', err);
+          this.messageService?.errorBubble?.(
+            err?.error?.Message || 'Excel 匯出失敗'
+          );
         },
-      })
-      .add(() => {
-        this.btnExportExcelLoading = false;
       });
   }
 
-  /* ----------------- 匯出：PDF ----------------- */
   downloadFIN34010PDF(): void {
     const payload = this.buildExportPayload();
     const defaultName = 'FIN34010_應收帳款明細表.pdf';
@@ -432,17 +529,21 @@ export class FIN34010Component extends BasicQueryPageComponent<any> {
 
     this.fin34010Service
       .exportFIN34010PDF(payload)
-      .pipe(untilDestroyed(this))
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.btnExportPdfLoading = false;
+          this.cdr.detectChanges();
+        })
+      )
       .subscribe({
-        next: (res: HttpResponse<Blob>) => {
-          this.saveBlob(res, defaultName);
-        },
+        next: (res: HttpResponse<Blob>) => this.saveBlob(res, defaultName),
         error: (err: any) => {
           console.error('FIN34010 PDF export error:', err);
+          this.messageService?.errorBubble?.(
+            err?.error?.Message || 'PDF 匯出失敗'
+          );
         },
-      })
-      .add(() => {
-        this.btnExportPdfLoading = false;
       });
   }
 }

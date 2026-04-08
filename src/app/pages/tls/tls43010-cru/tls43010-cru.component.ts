@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IUTls43010Request, QueryTls43010Response, Tls43010Detail, Tls43010Service } from '@service/api/tls/tls43010.service';
-import { SystemOption, SystemOptionsService } from '@service/system/sys1000.service';
+import { getSYS1000Options, SystemOption, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { ImageQueryRequest, ImageService } from '@service/utility/image.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -75,11 +75,7 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
     { value: '1', label: '已審核' },
     { value: '2', label: '已刪除' },
   ];
-  NOT_DtlLimit_Options: { value: string, label: string }[] = [
-    { value: '0', label: '不限制' },
-    { value: '1', label: '符合明細設定的機台才播放' },
-    { value: '2', label: '不符合明細設定的機台才播放' },
-  ];
+  NOT_DtlLimit_Options = getSYS1000Options('NOT_DtlLimit');
   data: Tls43010Detail[] = [];
   selectedItems: Tls43010Detail[] = [];
   // 如果機台群組編號有值那其他要disable，反之亦然
@@ -205,57 +201,38 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
         this.loading = false;
         return;
       }
-      // 檢查是否有選取檔案
       if (this.uploadedFiles.length === 0 && this.mediaItems().length === 0) {
         this.messageService.errorBubble('請選擇要上傳的媒體檔案。');
         this.loading = false;
         return;
       }
-      // 建立 FormData 物件，用於發送 multipart/form-data
       const formData = new FormData();
-      // 將檔案加到 FormData 中
-      this.uploadedFiles.forEach(file => {
-        formData.append('files', file, file.name);
-      });
-      // 將表單資料加到 FormData 中。
-      // 這裡我們將整個 JSON 物件轉成字串，再傳送到後端。
-      // 後端 Controller 負責解析這個字串。
+      this.uploadedFiles.forEach(file => formData.append('files', file, file.name));
+      const allTableData = this.tableEditComponent.data;
       const requestData = {
         ...frm.getRawValue(),
         ID: this.rowdata?.ID || 0,
-        Detail: this.dataForm.get('NOT_DtlLimit')?.value !== '0' ? this.data.filter(item => !item['_isAutoInsertCandidate']).map(item => ({
-          ID: this.isFormCreateable ? 0 : item['ID'],
-          ...item
-        })) : undefined,
+        // 2. 處理 Detail：過濾掉「自動新增候選行」，保留其餘所有資料 (含刪除項)
+        Detail: this.dataForm.get('NOT_DtlLimit')?.value !== '0' ? allTableData
+          .filter(item => !item['_isAutoInsertCandidate'])
+          .map(item => ({
+            ID: this.isFormCreateable ? 0 : (item['ID'] || 0),
+            ...item,
+          }))
+          : undefined,
       } as IUTls43010Request;
-
-      // 將資料物件序列化成 JSON 字串，並附加到 FormData
       formData.append('request', JSON.stringify(requestData));
-
-      this.loading = true;
-
-      // 呼叫新的服務方法
-      const $res = this.isFormCreateable
-        ? this.tls43010Service.insertTLS43010(formData)
-        : this.tls43010Service.updateTLS43010(formData); // 更新不需要上傳檔案，所以保持原樣
-
-      $res.pipe(
-        finalize(() => this.loading = false)
-      ).subscribe({
-        next: res => {
-          this.messageService.successBubble(res.Message || `${this.isFormCreateable ? '新增成功' : '修改成功'}`);
-          if (this.isFormCreateable) {
-            this.dataForm.reset();
-            this.data = [];
-            this.uploadedFiles = [];
-            this.mediaItems.set([]);
-            this.fileUpload.clear();
-          } else {
-            this.onCancel();
-          }
-        },
-        error: err => {
-          this.messageService.errorBubble(err.Message || `${this.isFormCreateable ? '新增失敗' : '修改失敗'}`);
+      const $res = this.isFormCreateable ? this.tls43010Service.insertTLS43010(formData) : this.tls43010Service.updateTLS43010(formData);
+      $res.pipe(finalize(() => this.loading = false)).subscribe(res => {
+        this.messageService.successBubble(res.Message || `${this.isFormCreateable ? '新增成功' : '修改成功'}`);
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+          this.data = [];
+          this.uploadedFiles = [];
+          this.mediaItems.set([]);
+          this.fileUpload.clear();
+        } else {
+          this.onCancel();
         }
       });
     });

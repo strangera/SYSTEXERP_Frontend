@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { distinctUntilChanged, map, startWith } from 'rxjs/operators';
+import { catchError, distinctUntilChanged, finalize, map, startWith } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
@@ -32,12 +32,14 @@ import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { FloorService } from '../../../service/basic/querySYS3900.service';
 import { RegionService } from '../../../service/basic/querySYS3A00.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+
 // Models
 import { PayTypeItem, TLS2B030Row } from './tls2b030.model';
 
 // until-destroy
 import { HttpResponse } from '@angular/common/http';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { Observable, of } from 'rxjs';
 
 type SortItem = { field: string; order: 1 | -1 };
 
@@ -68,9 +70,11 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   data: TLS2B030Row[] = [];
   columnsReady = false;
   totalRecords = 0;
+  viewTotalRecords = 0;
   selectedItems: TLS2B030Row[] = [];
   lastQueryBody: any = null;
   footerData: any = undefined;
+  tableVer = 0;
 
   // 欄位只建一次 → 快取鍵
   private readonly COL_CACHE_KEY = 'TLS2B030_COLS_V1';
@@ -78,9 +82,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   // 欄位/付款清單
   columns: ReportColumn[] = [];
   payTypes: PayTypeItem[] = [];
-
-  viewTotalRecords = 0;
-  tableVer = 0;
 
   // 下拉資料
   floorOptions: any[] = [];
@@ -108,6 +109,39 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     maximumFractionDigits: 4,
   });
 
+  readonly defaultSort: SortItem[] = [{ field: 'TLT_Name', order: 1 }];
+
+  /* ----------------- 表單 ----------------- */
+  queryForm = this.formBuilder.group({
+    TXN_Month: [null as Date | null],
+    TXN_DateStart: [this.yesterday as Date, [Validators.required]],
+    TXN_DateEnd: [this.yesterday as Date, [Validators.required]],
+
+    TLT_No_List: this.formBuilder.control([] as string[]),
+    ECR_No_List: this.formBuilder.control([] as string[]),
+    tlt_floor: this.formBuilder.control([] as string[]),
+    area_no: this.formBuilder.control([] as string[]),
+
+    ECR_Type: ['' as string],
+    tlt_building: ['' as string],
+    OnlyShowOverAmount: [false as boolean],
+
+    ...createPaginationConfig(this.defaultSort),
+  });
+
+  constructor(
+    private tls2b030Service: TLS2B030Service,
+    private floorService: FloorService,
+    private regionService: RegionService,
+    private tls11010Service: Tls11010Service,
+    private ecrNoService: ECRNoService,
+    private cdr: ChangeDetectorRef,
+    private counterNameService: CounterNameService
+  ) {
+    super();
+  }
+
+  /* ----------------- 金額格式 ----------------- */
   moneyFormat = (value: unknown): string => {
     if (value == null || value === '') return '0';
     const num = typeof value === 'string' ? Number(value.replace(/,/g, '')) : Number(value);
@@ -142,38 +176,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     }
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
-  }
-
-  readonly defaultSort: SortItem[] = [{ field: 'TLT_Name', order: 1 }];
-
-  /* ----------------- 表單 ----------------- */
-  queryForm = this.formBuilder.group({
-    TXN_Month: [null as Date | null],
-    TXN_DateStart: [this.yesterday as Date, [Validators.required]],
-    TXN_DateEnd: [this.yesterday as Date, [Validators.required]],
-
-    TLT_No_List: this.formBuilder.control([] as string[]),
-    ECR_No_List: this.formBuilder.control([] as string[]),
-    tlt_floor: this.formBuilder.control([] as string[]),
-    area_no: this.formBuilder.control([] as string[]),
-
-    ECR_Type: ['' as string],
-    tlt_building: ['' as string],
-    OnlyShowOverAmount: [false as boolean],
-
-    ...createPaginationConfig(this.defaultSort),
-  });
-
-  constructor(
-    private tls2b030Service: TLS2B030Service,
-    private floorService: FloorService,
-    private regionService: RegionService,
-    private tls11010Service: Tls11010Service,
-    private ecrNoService: ECRNoService,
-    private cdr: ChangeDetectorRef,
-    private counterNameService: CounterNameService
-  ) {
-    super();
   }
 
   /* ----------------- 工具 ----------------- */
@@ -214,6 +216,11 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     return cleaned.length ? cleaned : fallback;
   }
 
+  /**
+   * ✅ 統一 payload：讓 TableReport 使用
+   * - TableReport 會用 lastQueryBody.pageIndex / pageSize / SortBy
+   * - 你的 API 用 TXN_Date_Start / TXN_Date_End (YMD 字串)
+   */
   private buildPayload(base: any): any {
     let dateStart: Date | null = base?.TXN_DateStart ?? null;
     let dateEnd: Date | null = base?.TXN_DateEnd ?? null;
@@ -232,13 +239,13 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       ECR_No_List: Array.isArray(base?.ECR_No_List) && base.ECR_No_List.length ? base.ECR_No_List : undefined,
       tlt_floor: Array.isArray(base?.tlt_floor) && base.tlt_floor.length ? base.tlt_floor : undefined,
       area_no: Array.isArray(base?.area_no) && base.area_no.length ? base.area_no : undefined,
+
       ECR_Type: base?.ECR_Type || undefined,
       tlt_building: base?.tlt_building || undefined,
-
       OnlyShowOverAmount: !!base?.OnlyShowOverAmount,
 
       pageIndex: Number.isFinite(base?.pageIndex) && base.pageIndex >= 1 ? base.pageIndex : 1,
-      pageSize: Number.isFinite(base?.pageSize) && base.pageSize > 0 ? base.pageSize : 10,
+      pageSize: Number.isFinite(base?.pageSize) && base.pageSize > 0 ? base.pageSize : 30,
       SortBy: this.normalizeSort(base?.SortBy, this.defaultSort),
     };
 
@@ -259,6 +266,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     return payload;
   }
 
+  /* ----------------- 動態欄位 ----------------- */
   private buildColumnsFromPayTypes(payTypes: PayTypeItem[]) {
     const baseCols: ReportColumn[] = [
       { field: 'ECR_No', header: '收銀機號' },
@@ -323,55 +331,159 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  /* ----------------- 提供給 <app-table-report> 的查詢函式（固定 30） ----------------- */
-  public queryTLS2B030ForReport = (body: any) =>
-    this.tls2b030Service.queryTLS2B030({ ...(body || {}), pageSize: 30 }).pipe(
-      map((res: any) => {
-        const dataAny = res?.Data as any;
-        const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
-        const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => {
-          const flat: any = { ...r };
+  /**
+   * ✅ TableReport 用的查詢函式：唯一的查詢入口
+   * - 這裡負責：
+   *   1) 呼叫 API
+   *   2) 把資料回填到父層 state（data/total/footer/loading）
+   * - 讓你 HTML 的 [loading]="loading" 不會卡住
+   */
+private _lastReqKey = '';
 
-          if (r?.PayDiffs) {
-            Object.entries(r.PayDiffs as Record<string, unknown>).forEach(([k, v]) => {
-              flat[k] = this.toNumberLoose(v);
-            });
-          }
-          if (flat.PPay_Dif_sum != null) {
-            flat.PPay_Dif_sum = this.toNumberLoose(flat.PPay_Dif_sum as unknown);
-          }
+public queryTLS2B030ForReport = (body: any): Observable<any> => {
+  const base: any = { ...(this.lastQueryBody || {}) };
 
-          this.formatMoneyFieldsInRow(flat);
+  const pageSize =
+    (Number.isFinite(body?.pageSize) && Number(body.pageSize) > 0
+      ? Number(body.pageSize)
+      : Number.isFinite(base?.pageSize) && Number(base.pageSize) > 0
+        ? Number(base.pageSize)
+        : 30);
 
-          flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
-          return flat;
-        });
+  const loaded = Array.isArray(this.data) ? this.data.length : 0;
 
-        const totalCount =
-          Number(res?.TotalCount ?? dataAny?.TotalCount ?? rows.length) || rows.length;
+  const incomingPageIndex =
+    (Number.isFinite(body?.pageIndex) && Number(body.pageIndex) >= 1
+      ? Number(body.pageIndex)
+      : Number.isFinite(base?.pageIndex) && Number(base.pageIndex) >= 1
+        ? Number(base.pageIndex)
+        : 1);
 
-        const isFirstPage = !body?.pageIndex || Number(body.pageIndex) === 1;
-        if (isFirstPage) {
-          const sumRaw = dataAny?.SumPayDiffs ?? null;
-          if (sumRaw) {
-            const footer: any = {};
-            Object.keys(sumRaw).forEach((k) => {
-              const raw = sumRaw[k] ?? 0;
-              const num = typeof raw === 'string' ? Number(raw.replace(/,/g, '')) : Number(raw);
-              const safe = Number.isFinite(num) ? num : 0;
+  const knownTotal = Number(this.viewTotalRecords || this.totalRecords || 0);
 
-              if (k.startsWith('sum_Pay_Dif_')) footer[k.replace('sum_', '')] = safe;
-              if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = safe;
-            });
-            this.footerData = this.formatMoneyFieldsInFooter(footer);
-          } else {
-            this.footerData = undefined;
-          }
+  // A) 已載滿就不再打
+  if (knownTotal > 0 && loaded >= knownTotal) {
+    return of({ Data: [], TotalCount: knownTotal, GrandTotal: null });
+  }
+
+  // B) 同一頁重覆叫（page=2 常見）
+  if (incomingPageIndex > 1) {
+    const pageStartIndex = (incomingPageIndex - 1) * pageSize;
+    if (loaded > pageStartIndex) {
+      return of({ Data: [], TotalCount: knownTotal || loaded, GrandTotal: null });
+    }
+  }
+
+  const req: any = {
+    ...base,
+    ...body,
+    pageIndex: incomingPageIndex,
+    pageSize,
+    SortBy: this.normalizeSort(body?.SortBy, base?.SortBy ?? this.defaultSort),
+  };
+
+  const hasRange = !!req?.TXN_Date_Start && !!req?.TXN_Date_End;
+  const hasYM = !!req?.TXN_YearMonth;
+  if (!hasRange && !hasYM) {
+    return of({ Data: [], TotalCount: 0, GrandTotal: null });
+  }
+
+  const reqKey = JSON.stringify({
+    TXN_Date_Start: req.TXN_Date_Start,
+    TXN_Date_End: req.TXN_Date_End,
+    TLT_No_List: req.TLT_No_List,
+    ECR_No_List: req.ECR_No_List,
+    tlt_floor: req.tlt_floor,
+    area_no: req.area_no,
+    ECR_Type: req.ECR_Type,
+    tlt_building: req.tlt_building,
+    OnlyShowOverAmount: req.OnlyShowOverAmount,
+    pageIndex: req.pageIndex,
+    pageSize: req.pageSize,
+    SortBy: req.SortBy,
+  });
+
+  if (reqKey === this._lastReqKey) {
+    return of({ Data: [], TotalCount: knownTotal || loaded, GrandTotal: null });
+  }
+  this._lastReqKey = reqKey;
+
+  this.loading = true;
+
+  return this.tls2b030Service.queryTLS2B030(req).pipe(
+    map((res: any) => {
+      const dataAny = res?.Data as any;
+      const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
+      const sumRaw = dataAny?.SumPayDiffs ?? null;
+
+      const rows = (Array.isArray(rowsRaw) ? rowsRaw : []).map((r: any) => {
+        const flat: any = { ...r };
+
+        if (r?.PayDiffs) {
+          Object.entries(r.PayDiffs as Record<string, unknown>).forEach(([k, v]) => {
+            flat[k] = this.toNumberLoose(v);
+          });
         }
 
-        return { Data: rows, TotalCount: totalCount, GrandTotal: dataAny?.SumPayDiffs ?? null };
-      })
-    );
+        if (flat.PPay_Dif_sum != null) {
+          flat.PPay_Dif_sum = this.toNumberLoose(flat.PPay_Dif_sum as unknown);
+        }
+
+        this.formatMoneyFieldsInRow(flat);
+        flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
+        return flat;
+      });
+
+      const totalCount =
+        Number(res?.TotalCount ?? dataAny?.TotalCount ?? 0) ||
+        (knownTotal > 0 ? knownTotal : (loaded + rows.length));
+
+      // ✅ 永遠更新（下一次 loadMore 還有條件）
+      this.lastQueryBody = { ...req };
+
+      // ✅ 第一頁：回填畫面資料（因為你 onSubmit 是手動呼叫，不會走 TableReport append）
+      if (Number(req.pageIndex) === 1) {
+        this.data = rows as any;              // ⭐⭐⭐ 你缺的就是這行
+        this.totalRecords = totalCount;
+        this.viewTotalRecords = totalCount;
+
+        if (sumRaw) {
+          const footer: any = {};
+          Object.keys(sumRaw).forEach((k) => {
+            const raw = (sumRaw as any)[k] ?? 0;
+            const num = typeof raw === 'string' ? Number(raw.replace(/,/g, '')) : Number(raw);
+            const safe = Number.isFinite(num) ? num : 0;
+
+            if (k.startsWith('sum_Pay_Dif_')) footer[k.replace('sum_', '')] = safe;
+            if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = safe;
+          });
+          this.footerData = this.formatMoneyFieldsInFooter(footer);
+        } else {
+          this.footerData = undefined;
+        }
+      }
+
+      // ✅ 回傳給 TableReport 做 append（後續捲動會用到）
+      return { Data: rows, TotalCount: totalCount, GrandTotal: sumRaw ?? null };
+    }),
+    catchError((err) => {
+      console.error('TLS2B030 query error:', err);
+
+      if (Number(req?.pageIndex) === 1) {
+        this.data = [];
+        this.totalRecords = 0;
+        this.viewTotalRecords = 0;
+        this.footerData = undefined;
+      }
+
+      return of({ Data: [], TotalCount: knownTotal || loaded, GrandTotal: null });
+    }),
+    finalize(() => {
+      this.loading = false;
+      this.cdr.detectChanges();
+    }),
+  );
+};
 
   /* ----------------- Init ----------------- */
   ngOnInit(): void {
@@ -409,6 +521,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
           value: x.value,
         })) || [];
     });
+
     this.counterNameService.getCounters().pipe(untilDestroyed(this)).subscribe((res) => {
       this.CounterOptions =
         res?.map((x: any) => ({
@@ -417,12 +530,13 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
           value: x.value,
         })) || [];
     });
+
     this.regionService.getRegionOptions().pipe(untilDestroyed(this)).subscribe((data) => (this.regionOptions = data));
     this.floorService.getFloors().pipe(untilDestroyed(this)).subscribe((data) => (this.floorOptions = data));
     this.tls11010Service.getBuildingOptions().pipe(untilDestroyed(this)).subscribe((data) => (this.BUILDING_NO_Options = data));
   }
 
-  /* ----------------- Submit ----------------- */
+  /* ----------------- Submit（不自己打 API，只觸發 table-report） ----------------- */
   onSubmit(frm: FormGroup) {
     this.submitted = true;
 
@@ -433,106 +547,67 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     }
 
     const raw = this.queryForm.getRawValue();
-    const payload = this.buildPayload(raw);
-    payload.pageIndex = 1;
-    payload.pageSize = 30;
 
-    this.loading = true;
+    const payload = this.buildPayload({
+      ...raw,
+      pageIndex: 1,
+      pageSize: 30,
+      SortBy: this.defaultSort,
+    });
+
+    // 清畫面
     this.data = [];
     this.selectedItems = [];
     this.footerData = undefined;
     this.totalRecords = 0;
     this.viewTotalRecords = 0;
+this._lastReqKey = '';   // ✅ 加這行
+    // ✅ 先把 lastQueryBody 設好（給 table-report 後續捲動/排序用）
+    this.lastQueryBody = { ...payload };
     this.tableVer++;
 
-    this.tls2b030Service
-      .queryTLS2B030(payload)
+    // ✅ 這行是關鍵：第一次查詢要自己觸發
+    this.queryTLS2B030ForReport(payload)
       .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (response) => {
-          const dataAny = response?.Data as any;
-          const rowsRaw = dataAny?.Rows ?? dataAny ?? [];
-          const sumRaw = dataAny?.SumPayDiffs ?? null;
-
-          const rows = (rowsRaw as TLS2B030Row[]).map((r) => {
-            const flat: any = { ...r };
-
-            if (r?.PayDiffs) {
-              Object.entries(r.PayDiffs as Record<string, unknown>).forEach(([k, v]) => {
-                flat[k] = this.toNumberLoose(v);
-              });
-            }
-            if (flat.PPay_Dif_sum != null) {
-              flat.PPay_Dif_sum = this.toNumberLoose(flat.PPay_Dif_sum as unknown);
-            }
-
-            this.formatMoneyFieldsInRow(flat);
-
-            flat._rowKey = `${flat.ECR_No ?? ''}|${flat.TLT_No ?? ''}`;
-            return flat as TLS2B030Row;
-          });
-
-          this.data = rows;
-          this.viewTotalRecords = this.data.length;
-          this.cdr.detectChanges();
-
-          const realTotal = Number(response?.TotalCount ?? rows.length) || rows.length;
-          setTimeout(() => {
-            this.totalRecords = realTotal;
-            this.viewTotalRecords = realTotal;
-            this.lastQueryBody = { ...payload };
-          });
-
-          if (sumRaw) {
-            const footer: any = {};
-            Object.keys(sumRaw).forEach((k) => {
-              const rawv = (sumRaw as any)[k] ?? 0;
-              const num = typeof rawv === 'string' ? Number(rawv.replace(/,/g, '')) : Number(rawv);
-              const safe = Number.isFinite(num) ? num : 0;
-
-              if (k.startsWith('sum_Pay_Dif_')) footer[k.replace('sum_', '')] = safe;
-              if (k === 'sum_PPay_Dif_sum') footer['PPay_Dif_sum'] = safe;
-            });
-
-            this.footerData = this.formatMoneyFieldsInFooter(footer);
-          } else {
-            this.footerData = undefined;
-          }
-
-          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-          this.loading = false;
-        },
-        error: (err) => {
-          console.error('API error:', err);
-          this.data = [];
-          this.totalRecords = 0;
-          this.viewTotalRecords = 0;
-          this.footerData = undefined;
-          this.loading = false;
-        },
-      });
+      .subscribe(); // queryTLS2B030ForReport 裡面會回填 data/total/footer/loading
   }
 
+
+  /* ----------------- Clear ----------------- */
   onClear(frm: FormGroup) {
-    frm.reset({
-      TXN_Month: null,
-      TXN_DateStart: this.yesterday,
-      TXN_DateEnd: this.yesterday,
-      TLT_No_List: [],
-      ECR_No_List: [],
-      tlt_floor: [],
-      area_no: [],
-      ECR_Type: '',
-      tlt_building: '',
-      OnlyShowOverAmount: false,
-      ...createPaginationConfig(this.defaultSort),
-    });
+    frm.reset(
+      {
+        TXN_Month: null,
+        TXN_DateStart: this.yesterday,
+        TXN_DateEnd: this.yesterday,
+        TLT_No_List: [],
+        ECR_No_List: [],
+        tlt_floor: [],
+        area_no: [],
+        ECR_Type: '',
+        tlt_building: '',
+        OnlyShowOverAmount: false,
+        pageIndex: 1,
+        pageSize: 30,
+        SortBy: this.defaultSort as any,
+      },
+      { emitEvent: false }
+    );
 
     this.submitted = false;
+    this.loading = false;
+ this._lastReqKey = '';   // ✅ 加這行
     this.data = [];
-    this.totalRecords = 0;
+    this.selectedItems = [];
     this.footerData = undefined;
+    this.totalRecords = 0;
+    this.viewTotalRecords = 0;
+    this.lastQueryBody = null;
+
+    this.tableVer++;
+    this.cdr.detectChanges();
   }
+
 
   /* ----------------- 匯出：Excel ----------------- */
   private getFilenameFromResponse(res: HttpResponse<Blob>, fallback: string): string {
@@ -555,10 +630,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   }
 
   downloadTLS2B030Excel(): void {
-    // 用與查詢相同的條件，但移除分頁
     const payload = this.buildExportPayload();
-
-    // 預設檔名（你也可以補上日期區間）
     const defaultName = 'TLS2B030_專櫃機台溢欠表.xlsx';
 
     this.btnExportLoading = true;

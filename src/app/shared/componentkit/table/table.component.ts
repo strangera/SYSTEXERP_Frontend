@@ -147,6 +147,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 資料總計
   /** 是否顯示總計 @default false */
   @Input() showTotal = false;
+  /** 外部傳入的總計資料 (用於顯示後端計算的全部資料總計) @default null */
+  @Input() sumData: Record<string, number> | null = null;
 
   // rowEdit 相關
   /** 是否顯示 Row編輯按鈕 @default false */
@@ -245,12 +247,12 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() showPaginator = true;
   /** 記錄總數 @default 0 */
   @Input() totalRecords = 0;
-  /** 分頁選項 @default [20, 40, 60, 80, 100] */
-  @Input() rowsPerPageOptions: any[] | undefined = [20, 40, 60, 80, 100];
+  /** 分頁選項 @default [30, 60, 90, 120, 150] */
+  @Input() rowsPerPageOptions: any[] | undefined = [30, 60, 90, 120, 150];
   /** 共幾頁數 @default 0 */
   totalPages = 0;
   /** 每頁顯示的行數 @default 20 */
-  @Input() rows = 20;
+  @Input() rows = 30;
   /** 當前表格的起始索引 @default 0 */
   first = 0;
   /** (右上)下拉選單 頁數選項 @default [] */
@@ -269,15 +271,19 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 底層匯出
   @Input() apiUrl?: string;                         // table API URL (可選)
   @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
-  @Input() PrintRemark = true;                    // 是否列印備註 (可選)
+  @Input() PrintRemark = true;                      // 是否列印備註 (可選)
+  @Input() PrintColumn?: Column[];                    // 是否列印欄位名稱 (可選)
+  @Input() Conditions?: any;                         // table 條件 (可選)
 
   constructor(
     private readonly sanitizer: DomSanitizer,
     private readonly tableUtilityService: TableUtilityService
   ) { super(); }
   // 當 data 發生變化時，重置分頁與頁碼
+  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
+      this.hasSearched = true;
       setTimeout(() => {
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
         this.selectedItems = [];
@@ -498,12 +504,36 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     const align = this.columnGroup?.find(g => g.field === groupField)?.align;
     return align ? 'text-' + align : 'text-center';
   }
+
+  /**
+   * 資料列儲存格：合併對齊 預設樣式 與 Column.cellClass
+   */
+  getBodyCellNgClass(col: Column, rowData: any): Record<string, boolean> {
+    // 預設樣式
+    const result: Record<string, boolean> = {
+      'text-right': col.align === 'right' || col.style === 'text-right',
+      'text-center': col.align === 'center' || (!col.align && !col.style),
+      'text-left': col.align === 'left',
+    };
+
+    const extra = col.cellClass?.(rowData, col.field);
+    if (typeof extra === 'string' && extra.trim()) {
+      for (const cls of extra.trim().split(/\s+/)) {
+        if (cls) result[cls] = true;
+      }
+    }
+    return result;
+  }
   // 分組總計
   getGroupSubtotal(groupValue: any, field: string): number {
     return this.tableUtilityService.getGroupSubtotal(this.data, this.groupRowsBy, groupValue, field);
   }
   // 全表總計
   getTotal(field: string): number {
+    // 優先使用外部傳入的 sumData
+    if (this.sumData && this.sumData[field] !== undefined) {
+      return this.sumData[field];
+    }
     return this.tableUtilityService.getTotal(this.data, field);
   }
   // 獲取後端圖片

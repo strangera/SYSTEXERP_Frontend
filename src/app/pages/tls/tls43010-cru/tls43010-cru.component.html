@@ -65,7 +65,7 @@
       </div>
       <app-table-edit [hidden]="hiddenTable()" title="廣告資訊設定" tableKey="TLS43010Detail" [data]="data"
         [columns]="columns" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-        (dataChange)="data = $event" [rowValidate]="validateEntireRow" dataStatusField="status"
+        (dataChange)="data = $event" [rowValidate]="validateEntireRow" dataStatusField="status" [keepDeletedData]="true"
         [disabled]="dataForm.controls.NOT_Status.value === '1' || isFormReadable" [loading]="loading"
         [tableRequired]="dataForm.controls.NOT_DtlLimit.value !== '0'" [showSort]="true">
       </app-table-edit>

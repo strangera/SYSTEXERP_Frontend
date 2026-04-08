@@ -137,6 +137,7 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
   @Input() lazy = false;                                      // 是否啟用 Lazy 加載
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>(); // Lazy 加載事件
+  private _lastLazyKey: string | null = null; // 用於避免重複 emit
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
 
@@ -149,12 +150,22 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
     private readonly tableUtilityService: TableUtilityService
   ) { super(); }
   // 當 data 發生變化時，重置分頁與頁碼
+  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
+      this.hasSearched = true;
       setTimeout(() => {
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
         this.selectedItems = []
         this.selectionChange.emit(this.selectedItems);
+        // 當資料改變（例如換頁或後端回傳新頁）時，更新 table 的起始索引以正確顯示該頁
+        try {
+          const calculatedFirst = (this.selectedPage && this.rows) ? ((this.selectedPage - 1) * this.rows) : 0;
+          this.first = calculatedFirst;
+          if (this.dt) this.dt.first = calculatedFirst;
+        } catch (e) {
+          // ignore
+        }
       });
     }
     // 僅在 columns 首次被設定時執行初始化邏輯// 這樣就不會在每次 data 變動時都重置 filter 狀態
@@ -187,8 +198,16 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
     const pageSize = event.rows && event.rows > 0 ? event.rows : 30;
     const pageIndex = (event.first ?? 0) / pageSize + 1;
     this.selectedPage = pageIndex;
+    // 更新 first 以讓 PrimeNG Table 顯示正確頁面
+    this.first = (pageIndex - 1) * pageSize;
     this.multiSortMeta = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
     this.queryState.setQueryState(this.tableKey + 'Sort', this.multiSortMeta);
+    const keyObj = { pageIndex, pageSize, SortBy: this.multiSortMeta };
+    const key = JSON.stringify(keyObj);
+    if (this._lastLazyKey === key) {
+      return; // 已 emit 過相同參數，避免重複呼叫
+    }
+    this._lastLazyKey = key;
     this.lazyLoadData.emit({ pageIndex, pageSize, SortBy: this.multiSortMeta });
   }
   // 行追蹤

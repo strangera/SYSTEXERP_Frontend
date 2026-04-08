@@ -1,21 +1,10 @@
 import { getSYS1000, getSYS1000Options } from "@service/system/sys1000.service";
-import { Column, formatDateTime } from "../../../shared/componentkit/table/table.model";
 import { transformOptionsForExport } from "@shared/componentextends/basic-print/basic-print-data.component";
+import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
+import { formatDateTime } from "../../../shared/componentkit/table/table.model";
 
-export interface TDS1008Data {
-  ID: number,
-  INV_ItemNo: string,
-  INV_ItemName: string,
-  INV_UsageType: string,
-  CRT_Date: string,
-  CRT_USR_No: string,
-  CRT_USR_Name: string,
-  UPD_Date: string,
-  UPD_USR_No: string,
-  UPD_USR_Name: string
-}
 
-export const columns: Column[] = [
+export const columns: ReportColumn[] = [
   { field: 'INV_ItemNo', header: '品項代號', visible: true },
   { field: 'INV_ItemName', header: '品項名稱', visible: true },
   { field: 'INV_UsageType', header: '使用別', visible: true, format: (val: string) => getSYS1000('T205', val), exportFormat: transformOptionsForExport(getSYS1000Options('T205')) },

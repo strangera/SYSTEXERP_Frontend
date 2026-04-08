@@ -1,7 +1,7 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 介面路徑是否正確
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
 
 /** 查詢 POS2018 資料表 (queryTLS52030) 的請求介面 */
@@ -10,7 +10,7 @@ export interface IQueryTLS52030Request {
   LOGO_No?: string; // 品牌代碼
   HOS_No?: string; // 倉庫代碼
   PLU_MagNo?: string; // 商品管理編號
-  VEN_No?: string; // 廠商代號
+  VEN_No?: string; // 廠商編號
   ODM_Status?: string; // 驗收狀態
   ODM_USR?: string; // 申請人員
   ODM_Date_Start?: string; // 申請日期起
@@ -26,7 +26,7 @@ export interface ITLS52030Data {
   id: number;
   ODM_No: string; // 驗收編號
   SYS_StoreNo: string; // 公司編號/店號
-  VEN_No: string; // 廠商代號
+  VEN_No: string; // 廠商編號
   LOGO_No: string; // 品牌代碼
   LOGO_CH_NAME: string; // LOGO中文名稱
   HOS_No: string; // 倉庫代碼
@@ -62,6 +62,7 @@ export interface ITLS52030Data {
   UPD_Date: string; // 變更日期
   UPD_USR_No: string; // 變更人員
   UPD_USR_Name: string; // 變更人員姓名
+  CanAPRV: boolean; // 可否審核
 }
 
 /** 進貨單明細資料介面 (用於 insert/update TLS52030 的 Details 陣列) */
@@ -88,6 +89,9 @@ export interface IODDetail {
   ODD_Remark: string | null; // 明細備註
   PO_No: string | null; // 採購單號 (可能來自採購單)
   id?: number; // 更新時可能包含的明細ID (Swagger update範例有)
+  LOGO_No?: string; // 品牌代碼
+  org_id?: string; // 組織代碼/組織名稱
+  ODM_TaxType?: string; // 單據稅別
 }
 
 /** 新增 POS2018 資料表 (insertTLS52030) 的請求介面 */
@@ -95,11 +99,12 @@ export interface ITLS52030Request {
   id?: number; // ID
   ODM_No?: string; // 進貨單號
   SYS_StoreNo: string; // 公司編號/店號
-  VEN_No: string; // 廠商代號
-  // LOGO_No: string; // 品牌代碼
+  VEN_No: string; // 廠商編號
+  LOGO_No: string; // 品牌代碼
   HOS_No: string; // 倉庫代碼
   org_id: string | null; // 組織代碼/組織名稱
   ODM_Date: string | Date; // 申請日期
+  APRV_Date: string | Date | null; // 審核(驗收)日期
   ODM_USR_No: string; // 申請人員
   ODM_USR_Name: string; // 申請人員姓名
   ODM_TotalBuyNet: number; // 未稅進價小計
@@ -118,7 +123,7 @@ export interface ITLS52030Request {
 export interface IGetPOS2016Request {
   // LOGO_No?: string | null; // 品牌代碼
   HOS_No?: string | null; // 倉庫代碼
-  VEN_No?: string | null; // 廠商代號
+  VEN_No?: string | null; // 廠商編號
 }
 
 /** 取得採購單明細及驗收資料 (GetPOS2017AndPOS2019) 的請求介面 */
@@ -211,7 +216,15 @@ export class Tls52030Service {
    * @returns 包含 IGetPOS2016Data 陣列的 API 響應
    */
   getPOS2016(params: IGetPOS2016Request): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/GetPOS2016`, params);
+    return this.http.post<any>(`${this.apiUrl}/GetPOS2016`, params).pipe(
+      map((response: ApiResponse<any>) => {
+        return {
+          ...response,
+          Data: response.Data.Data,
+          TotalCount: response.Data.TotalCount
+        };
+      })
+    );
   }
 
   /**

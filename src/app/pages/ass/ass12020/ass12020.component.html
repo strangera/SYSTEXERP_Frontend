@@ -1,15 +1,7 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -46,22 +38,24 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              label="品項進價(報價金額)"
-              [startControl]="queryForm.controls.purchaseFrom"
-              [endControl]="queryForm.controls.purchaseTo"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
-              label="品項單價"
-              [startControl]="queryForm.controls.singlePriceFrom"
-              [endControl]="queryForm.controls.singlePriceTo"
+              label="品項進價"
+              [startControl]="queryForm.controls.goodsPriceFrom"
+              [endControl]="queryForm.controls.goodsPriceTo"
               [submitted]="submitted"
+              [useGrouping]="false"
+            ></app-input-number-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range
+              label="品項單價"
+              [startControl]="queryForm.controls.salePriceFrom"
+              [endControl]="queryForm.controls.salePriceTo"
+              [submitted]="submitted"
+              [useGrouping]="false"
             ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -75,78 +69,51 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+        </div>
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
+            <app-calendar-range-quick
               calendarType="dateRange"
               label="報價期限"
-              [startControl]="queryForm.controls.reportFrom"
-              [endControl]="queryForm.controls.reportTo"
+              [startControl]="queryForm.controls.expDateFrom"
+              [endControl]="queryForm.controls.expDateTo"
               [submitted]="submitted"
-            ></app-calendar-range>
+            ></app-calendar-range-quick>
           </div>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="登錄批號"
-              controlName="loginBatches"
-              [control]="queryForm.controls.loginBatches"
+              controlName="batchId"
+              [control]="queryForm.controls.batchId"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
         </div>
-        <hr />
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="新增筆數"
-              controlName="addNumber"
-              [control]="queryForm.controls.addNumber"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="修改筆數"
-              controlName="modifyNumber"
-              [control]="queryForm.controls.modifyNumber"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="項次列印筆數"
-              controlName="printNumber"
-              [control]="queryForm.controls.printNumber"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-        </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report
+    dataKey="FAQuotationM_ID"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction"
+    [addButton]="addButton"
+    [showCheckBox]="true"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    (delete)="onDelete($event)"
+    (selectionChange)="selectedRows = $event"
+    [selectedItems]="selectedRows"
+  ></app-table-report>
 </div>

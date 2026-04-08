@@ -59,6 +59,13 @@ export class ASS21040Service {
   }
 
   /**
+   * 以 Blob 方式取得 PDF 檔案
+   */
+  fetchPdfAsBlob(pdfUrl: string): Observable<Blob> {
+    return this.http.get(pdfUrl, { responseType: 'blob' });
+  }
+
+  /**
    * 取消結算能源攤提計算
    * @param body 包含 SYS_StoreNo, Mid, EngTypes, ClearingYM
    */

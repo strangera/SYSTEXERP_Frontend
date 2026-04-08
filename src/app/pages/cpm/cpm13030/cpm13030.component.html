@@ -19,8 +19,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="組織名稱" controlName="org_idList" [options]="org_id_Options" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.org_idList"
-              [submitted]="submitted"></app-multi-select>
+              optionValue="value" [control]="queryForm.controls.org_idList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="專櫃編號" controlName="tlt_noList" [options]="TLT_No_Options" optionLabel="label"
@@ -35,7 +34,8 @@
               optionValue="value" [control]="queryForm.controls.displayMode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4" *ngIf="queryForm.value.displayMode === 'D'">
-            <app-input-text label="發票號碼" controlName="TXN_GUIBegNo" [submitted]="submitted" [control]="queryForm.controls.TXN_GUIBegNo"></app-input-text>
+            <app-input-text label="發票號碼" controlName="TXN_GUIBegNo" [submitted]="submitted"
+              [control]="queryForm.controls.TXN_GUIBegNo"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4" *ngIf="queryForm.value.displayMode === 'D'">
             <app-input-number-range label="發票金額" [startControl]="queryForm.controls.TXN_TotSaleAmtStart"
@@ -56,16 +56,17 @@
   <div class="card">
     <app-customFooter-table tableKey="CPM13030" [data]="data" [columns]="columns" [columnGroup]="columnGroup"
       [footerData]="footerData" [subTotalData]="subTotalData" [showTotal]="true" [showSubTotal]="true"
-      [totalRecords]="totalRecords" [multiSortMeta]="[{ field: 'ECR_Group', order: 1 }]" [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords" [columnGroup]="columnGroup"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-      [showManage]="false" [showDelete]="false" [showReportMode]="false" [apiUrl]="'queryCPM13030'">
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
+      [rows]="30" [totalRecords]="totalRecords" [multiSortMeta]="[{ field: 'ECR_Group', order: 1 }]"
+      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"
+      [columnGroup]="columnGroup" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+      [loading]="loading" [showManage]="false" [showDelete]="false" [showReportMode]="false" [apiUrl]="'queryCPM13030'">
       <header>
         <div class="flex justify-content-between align-items-center gap-2">
           <div class="flex gap-2">
-            <p-button styleClass="p-2" label="匯出阜爾APS停車抵扣表.PDF" [loading]="btnLoading" icon="pi pi-file-pdf"
+            <p-button styleClass="p-2" label="POS停車抵扣報表.PDF" [loading]="btnLoading" icon="pi pi-file-pdf"
               (click)="onExportPDF()" [disabled]="data.length === 0"></p-button>
-            <p-button styleClass="p-2" label="匯出阜爾APS停車抵扣表.xlsx" [loading]="btnLoading2" icon="pi pi-file-excel"
+            <p-button styleClass="p-2" label="POS停車抵扣報表.xlsx" [loading]="btnLoading2" icon="pi pi-file-excel"
               (click)="onExportExcel()" [disabled]="data.length === 0"></p-button>
           </div>
         </div>

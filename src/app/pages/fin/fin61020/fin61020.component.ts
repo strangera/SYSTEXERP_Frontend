@@ -70,7 +70,7 @@ export class FIN61020Component extends BasicQueryPageComponent<QueryFIN61020Resp
       return;
     }
 
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: '刪除確認',
       message: `您確定要刪除選中的 ${selectedRows.length} 筆業務員資料嗎?`,
       accept: () => {

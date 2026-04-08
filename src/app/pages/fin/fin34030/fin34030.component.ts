@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, Location } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -72,12 +72,14 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
     {
       field: 'ARAP_DocNo',
       header: '應收/應付帳款單號',
-      cellClass: () => 'text-primary cursor-pointer underline'
+      type: 'link',
+      linkDisabled: (row: Fin34030Response) => !row.ARAP_DocNo
     },
     {
       field: 'VoucherNo',
       header: '立帳傳票號碼',
-      cellClass: () => 'text-primary cursor-pointer underline'
+      type: 'link',
+      linkDisabled: (row: Fin34030Response) => !row.VoucherNo
     },
     { field: 'AccNo', header: '會計科目編號' },
     { field: 'AccName', header: '會計科目名稱' },
@@ -164,7 +166,8 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private fin34030Service: Fin34030Service,
-    private dropdown: DropdownApiService
+    private dropdown: DropdownApiService,
+    private location: Location
   ) {
     super();
   }
@@ -401,5 +404,66 @@ export class FIN34030Component extends BasicQueryPageComponent<any> implements O
       .add(() => {
         this.btnExportPdfLoading = false;
       });
+  }
+
+  /* ----------------- 連結點擊 ----------------- */
+  onLinkClick(event: { rowData: Fin34030Response; field: string }): void {
+    const { rowData, field } = event;
+
+    if (field === 'VoucherNo') {
+      this.openVoucherPage(rowData);
+    } else if (field === 'ARAP_DocNo') {
+      this.openARAPPage(rowData);
+    }
+  }
+
+  /** 開啟傳票頁面 FIN55010CRU */
+  private openVoucherPage(rowData: Fin34030Response): void {
+    const vouNo = rowData?.VoucherNo;
+    if (!vouNo) return;
+
+    try {
+      const handoff = {
+        vouNo,
+        fromRoute: window.location.pathname,
+        ts: Date.now(),
+      };
+      localStorage.setItem('FIN55010_CRU_HANDOFF', JSON.stringify(handoff));
+      localStorage.setItem('FIN55010_CRU_PROGNO', 'FIN55010');
+    } catch (err) {
+      console.error('[FIN34030] handoff save failed:', err);
+      return;
+    }
+
+    const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55010cru');
+    const finalUrl = `${window.location.origin}${externalUrl}`;
+    window.open(finalUrl, '_blank', 'noopener');
+  }
+
+  /** 開啟應收/應付帳款頁面 - 收: FIN32010CRU, 付: FIN24010CRU */
+  private openARAPPage(rowData: Fin34030Response): void {
+    const docNo = rowData?.ARAP_DocNo;
+    if (!docNo) return;
+
+    const rpFlag = rowData?.RP_Flag;
+    const isAR = rpFlag === '收';
+    const route = isAR ? '/account/fin/fin32010cru' : '/account/fin/fin24010cru';
+    const localStorageKey = isAR ? 'FIN32010_CRU_HANDOFF' : 'FIN24010_CRU_HANDOFF';
+
+    try {
+      const handoff = {
+        arsId: docNo,
+        fromRoute: window.location.pathname,
+        ts: Date.now(),
+      };
+      localStorage.setItem(localStorageKey, JSON.stringify(handoff));
+    } catch (err) {
+      console.error('[FIN34030] handoff save failed:', err);
+      return;
+    }
+
+    const externalUrl = this.location.prepareExternalUrl(route);
+    const finalUrl = `${window.location.origin}${externalUrl}`;
+    window.open(finalUrl, '_blank', 'noopener');
   }
 }

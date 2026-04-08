@@ -55,7 +55,7 @@
           </div>
 
           <!-- 科目代號(起訖) -->
-          <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-6">
             <app-dropdown-range
               label="科目代號"
               controlName="AccNo"
@@ -68,10 +68,10 @@
             ></app-dropdown-range>
           </div>
 
-          <!-- 廠商代號(起訖) -->
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- 廠商編號(起訖) -->
+          <div class="col-12 md:col-6 lg:col-6">
             <app-dropdown-range
-              label="廠商代號"
+              label="廠商編號"
               controlName="Vendor"
               [options]="DetailNoListOptions"
               optionLabel="label"
@@ -114,6 +114,9 @@
     ></app-button>
   </div>
 
+  <ng-template #accGroupHeader let-row>
+    <span>科目代碼：{{ getAccNoLabel(row.AccNo) }}</span>
+  </ng-template>
   <app-table-subheader
     tableKey="FIN55060"
     dataKey="AccNo4"
@@ -134,5 +137,6 @@
     (detail)="onDetail($event)"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [showSort]="false"
+    [groupHeaderTemplate]="accGroupHeader"
   ></app-table-subheader>
 </div>

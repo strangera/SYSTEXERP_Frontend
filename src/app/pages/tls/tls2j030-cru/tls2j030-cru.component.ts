@@ -7,6 +7,8 @@ import { TLS2j030Service } from '@service/api/tls/tls2j030.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { DropdownModule } from 'primeng/dropdown';
 import { PanelModule } from 'primeng/panel';
@@ -20,6 +22,7 @@ import {
   COLUMNS_DETAIL_VIEW,
   COLUMNS_NATURAL_EDIT,
   COLUMNS_NATURAL_VIEW,
+  GUI_PAPER_OPTIONS,
   TLS2J030Data,
   TLS2J030Source
 } from '../tls2j030/tls2j030.model';
@@ -55,12 +58,12 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   detailEditData: (TLS2J030Data & { _TABLE_KEY?: string; status?: string })[] = [];
 
   sourceInvoiceData: (TLS2J030Source & { TXN_Date?: string; ECR_No?: string }) | null = null;
-  currentEcrNo = '';
+  changeEcrNo = '';
 
   // 欄位定義 (直接使用 model 檔案中的常數)
   columnsnatural = COLUMNS_NATURAL_EDIT;
   columnsNaturalView = COLUMNS_NATURAL_VIEW;
-  columnschange = COLUMNS_CHANGE_EDIT;
+  columnschange: EditColumn[] = [];
   columnsChangeView = COLUMNS_CHANGE_VIEW;
   columnsdetail = COLUMNS_DETAIL_EDIT;
   columnsDetailView = COLUMNS_DETAIL_VIEW;
@@ -68,6 +71,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   isViewMode = false;
   queryLoading = false;
 
+  @ViewChild('changeEdit') tableChangeEdit!: TableEditComponent;
   @ViewChild('detailEdit') tableDetailEdit!: TableEditComponent;
 
   // 儲存 TDS1010 項目對應，用於動態生成下拉選單
@@ -80,7 +84,28 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
   ) {
     super();
   }
+  private updateColumnsChange(): void {
+    // 基礎欄位
+    let baseColumns: EditColumn[] = [
+      { field: 'TXN_Date', header: '發票日期', type: 'date', validate: [validateRequired], width: '150px' },
+      {
+        field: 'TXN_GUIPaper', header: '發票聯式', type: 'dropdown', options: GUI_PAPER_OPTIONS,
+        optionLabel: 'label', optionValue: 'value', validate: [validateRequired],
+        onChange: () => this.updateColumnsChange(),
+      },
+    ];
+    // 判斷是否要顯示發票號碼
+    const paperValue = String(this.changeEditData[0]?.TXN_GUIPaper ?? '');
+    const showGuiNo = ['2', '3'].includes(paperValue);
+    if (showGuiNo) {
+      baseColumns.push({ field: 'TXN_GUINo', header: '發票號碼', type: 'input', maxLength: 10, validate: [validateRequired], });
+    }
 
+    // 加入剩餘欄位
+    baseColumns = [...baseColumns, ...COLUMNS_CHANGE_EDIT]
+
+    this.columnschange = baseColumns;
+  }
   // ===== 生命周期與初始化 =====
 
   ngOnInit(): void {
@@ -91,11 +116,13 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       this.loadDetails(this.rowdata.CHG_No);
       this.isViewMode = true;
     } else {
+      // 新增
+      this.changeEcrNo = this.rowdata?.changeEcrNo || ''; // 目前收銀機號(一進查詢頁面取得)
       this.isViewMode = false;
-      this.initializeEcrNo();
       // 使用 setTimeout 確保 EditTable 相關物件已渲染
       setTimeout(() => this.initializeEditData());
     }
+    this.updateColumnsChange();
   }
 
   /**
@@ -149,14 +176,6 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       });
   }
 
-  /**
-   * 初始化 ECR_No (目前寫死為預設值，保留查詢 ECR No 的方法)
-   */
-  private initializeEcrNo(): void {
-    // 如果不需要 API 查詢，直接給予預設值
-    this.currentEcrNo = '888888';
-    // 若需 API 查詢，可呼叫 queryEcrNo(defaultIP)
-  }
 
   /**
    * 初始化新增模式下的換開發票和商品明細資料
@@ -315,6 +334,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
 
     // 6. 清空輸入欄位
     this.dataForm.get('TXN_GUIBegNo')?.setValue('');
+    this.txnNotesChange(); // 同步更新換開發票的備註欄位
   }
 
   /**
@@ -347,11 +367,23 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     }
   }
 
+  txnNotesChange(): void {
+    const row = this.changeEditData[0] as any;
+    // 換開發票的備註欄位，自動帶入所有來源發票的發票號碼
+    row.TXN_Notes = this.data.map(item => item.TXN_GUIBegNo).join('、');
+  }
 
   // ===== 送出與驗證 =====
 
   /** 送出 (簡化了重複的錯誤判斷，將其提取到 private 方法) */
   onSubmit(frm: FormGroup): void {
+    // 先執行兩個 table-edit 的欄位/列驗證
+    const changeValid = this.tableChangeEdit?.validateAndShowErrors() ?? true;
+    const detailValid = this.tableDetailEdit?.validateAndShowErrors() ?? true;
+    if (!changeValid || !detailValid) {
+      return;
+    }
+
     // 統一進行所有前置驗證
     const { warnings, errors } = this.validateBeforeSubmit();
 
@@ -366,6 +398,15 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     }
 
     this.handleSubmit(frm, () => this.insertData());
+  }
+
+  /** 取消：清空換開發票與商品明細 table 資料 */
+  onCancelDetail(): void {
+    // 表單本身由 app-button 的 [form] 機制還原初始值
+    // 這裡專責處理下方兩個編輯 table 的資料：重置為初始一筆可編輯列
+    this.data = [];
+    this.sourceInvoiceData = null;
+    this.initializeEditData();
   }
 
   /** 集中驗證邏輯，返回錯誤和警告 */
@@ -424,12 +465,11 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
    */
   private formatInsertData(): any {
     const changeItem = this.changeEditData[0];
-    const sourceEcrNo = this.data[0]?.ECR_No || this.currentEcrNo;
 
     // 1. POS2100List: 來源發票資料 (使用更精簡的語法)
     const pos2100List = this.data.map(item => ({
       TXN_Date: item.TXN_Date || new Date().toISOString().split('T')[0],
-      ECR_No: item.ECR_No || sourceEcrNo,
+      ECR_No: item.ECR_No,
       TXN_No: this.formatTxnNo(item.TXN_No),
       TXN_GUIBegNo: item.TXN_GUIBegNo || '',
       TXN_GUIEndNo: item.TXN_GUIEndNo || '',
@@ -443,7 +483,8 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     // 2. POS2101List: 換開發票資料 (簡化日期處理)
     const pos2101List = [{
       TXN_Date: changeItem.TXN_Date ? new Date(changeItem.TXN_Date as string).toISOString() : new Date().toISOString(),
-      ECR_No: sourceEcrNo,
+      ECR_No: this.changeEcrNo,
+      TXN_GUINo: changeItem.TXN_GUIPaper === '2' || changeItem.TXN_GUIPaper === '3' ? changeItem.TXN_GUINo || '' : '', // 根據發票聯式決定是否傳入發票號碼
       TXN_GUIPaper: changeItem.TXN_GUIPaper || '',
       PLU_TaxType: changeItem.PLU_TaxType || '',
       TXN_SaleTax: changeItem.TXN_SaleTax || 0,
@@ -451,9 +492,10 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       TXN_Net: changeItem.TXN_Net || 0,
       TXN_Tax: changeItem.TXN_Tax || 0,
       TXN_SaleAmt: changeItem.TXN_SaleAmt || 0,
-      TXN_Uniform: changeItem.TXN_Uniform || '',
+      TXN_Uniform: changeItem.TXN_Uniform ?? null,
       INV_NoneTax: changeItem.INV_NoneTax || '',
-      BusTaxExmpCard: changeItem.BusTaxExmpCard || '',
+      INV_CompanyName: changeItem.INV_CompanyName ?? null,
+      BusTaxExmpCard: changeItem.BusTaxExmpCard ?? null,
       TXN_Notes: changeItem.TXN_Notes || ''
     }];
 
@@ -528,14 +570,5 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       if (month < 1) month = 1;
       return year.toString() + month.toString().padStart(2, '0');
     }
-  }
-
-  private queryEcrNo(ip: string): void {
-    this.tls2j030Service.queryEcrNo(ip)
-      .subscribe({
-        next: (res: { Status?: string; Data?: { ECR_No?: string } }) => {
-          this.currentEcrNo = (res && res.Status === '0000') ? (res.Data?.ECR_No || '') : '';
-        },
-      });
   }
 }

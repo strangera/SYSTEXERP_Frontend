@@ -12,11 +12,13 @@ export interface IDropdownItem {
   area_no?: string;
   No: string; // 唯一值
   Name: string; // 用於顯示的名稱
+  Display?: string; // 額外顯示欄位，例如 "No-Name"
   ShortName?: string; // 用於顯示的簡稱
   VEN_No?: string;  // 廠商編號
   HOS_No?: string; // 品牌編號
   store_way?: string;
   talent_id?: number;
+  rece_yn?: string;
   PAY_Type?: string;
   label?: string; // 用於顯示的標籤
   CAT_LNo?: string;
@@ -30,6 +32,14 @@ export interface IDropdownItem {
   bus_type_name?: string;
   PAY_OverPay?: string;
   CHG_ItemName_List?: string;
+}
+// APS3001 下拉選單 Item
+export interface IAPS3001Item {
+  ACP_No: string;
+  VEN_No: string;
+  VEN_Name: string;
+  ACP_Amt: number;
+  ACP_Date: string; // yyyy-MM-dd
 }
 
 export interface TLTTALENT_TLT_SPACE extends IDropdownItem {
@@ -106,6 +116,13 @@ export interface ITLTBUSSCLASSInfo {
 //小分類Request-- 新版api
 export interface ITLTBUSSCLASSRequest_new {
   queryTLTBUSSCLASSInfos: ITLTBUSSCLASSInfo[];
+}
+
+// GLS1005 ledgerMD 下拉選單項目
+export interface IGLS1005LedgerMDItem {
+  No: string;
+  Name: string;
+  ABAT_YN: string;
 }
 
 export interface ISYS3100TreeRequest {
@@ -195,6 +212,11 @@ export interface IPOS1018GUITrackRequest {
   GUI_Type: string[];
 }
 
+// ARS4001 收貨單編號請求參數
+export interface IARS4001RCVNORequest {
+  MID: number;
+  STO_No: string;
+}
 export interface IPOS1018GUITrackResponse {
   GuiTracks: string[];
 }
@@ -232,12 +254,16 @@ export interface IAPS1003Item {
   CAP_Item: string;
   CAP_Name: string;
   AccNo?: string;
+  AccCName?: string;
   GUI_FLAG: string;
   CAP_TaxType?: string;
   CAP_Type: string;
   org_id?: string;
 }
-
+export interface TLTTALENTDropDownRequest {
+  tlt_noList?: string[]; // 查指定專櫃編號
+  isNewData?: boolean;   // 是否僅查詢合約有效期內（當日介於契約起迄日）的專櫃資料，後端預設false
+}
 
 @Injectable({
   providedIn: 'root'
@@ -258,6 +284,17 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2034_DropDownList`, {});
   }
 
+  /**
+   * 查詢倉別(FAHOS)下拉選單（ASS17100 等）
+   */
+  queryFAHOS_DropDownList(body: Record<string, unknown> = {}): Observable<
+    ApiResponse<{ WH_ID?: string | null; WH_NAME?: string | null }[]>
+  > {
+    return this.http.post<ApiResponse<{ WH_ID?: string | null; WH_NAME?: string | null }[]>>(
+      `${this.apiUrl}/queryFAHOS_DropDownList`,
+      body,
+    );
+  }
 
   // 查詢上層組織(SYS3000)資料表下拉選單
   querySYS3000_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
@@ -328,6 +365,11 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1005For1103_DropDownList`, {});
   }
 
+  // 查詢會計科目設定檔(GLS1005) ledgerMD 下拉式選單 (含 ABAT_YN 欄位)
+  queryGLS1005_ledgerMD_DropDownList(): Observable<ApiResponse<IGLS1005LedgerMDItem[]>> {
+    return this.http.post<ApiResponse<IGLS1005LedgerMDItem[]>>(`${this.apiUrl}/queryGLS1005_ledgerMD_DropDownList`, {});
+  }
+
   // 查詢扣款代碼檔(APS1003)資料表
   queryAPS1003_DropDownList(params: IAPS1003Request): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryAPS1003_DropDownList`, params);
@@ -368,7 +410,7 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002ECR_TypeDropDownList`, body);
   }
 
-  queryPOS1002Group_SubGroup_AreaNo_DropDownList(body: { building_no: string, floor_no: string, area_no: string }): Observable<ApiResponse<POS1002Item[]>> {
+  queryPOS1002Group_SubGroup_AreaNo_DropDownList(body: { building_no?: string, floor_no?: string, area_no?: string, ecr_no?: string }): Observable<ApiResponse<POS1002Item[]>> {
     return this.http.post<ApiResponse<POS1002Item[]>>(`${this.apiUrl}/queryPOS1002Group_SubGroup_AreaNo_DropDownList`, body);
   }
 
@@ -453,10 +495,16 @@ export class DropDownListService {
   queryTLTTALENT__StoreWay2_Approve_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT__StoreWay2_Approve_DropDownList`, {});
   }
+
+  // 查詢自營專櫃主檔(TLTTALENT)資料表下拉選單(Store_way=2自營and approve_status=2已審核)
+  queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList`, {});
+  }
+
   // 查詢專櫃下拉 (取最新契約，含對應資料，不用傳參數)
-  queryTLTTALENTDropDownList(): Observable<ApiResponse<ITalentOption[]>> {
+  queryTLTTALENTDropDownList(params: TLTTALENTDropDownRequest = {}): Observable<ApiResponse<ITalentOption[]>> {
     return this.http.post<ApiResponse<ITalentOption[]>>(
-      `${this.apiUrl}/TLS0000/TLS2000/queryTLTTALENTDropDownList`, {}
+      `${this.apiUrl}/TLS0000/TLS2000/queryTLTTALENTDropDownList`, params
     );
   }
 
@@ -504,6 +552,10 @@ export class DropDownListService {
   queryTLTTALENT_ByContractDate_DropDownList(tlt_contract_date: string | null): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_ByContractDate_DropDownList`, { tlt_contract_date });
   }
+  // 專為 TLS41040 使用的專櫃下拉（保留原始回傳 ApiResponse 結構）
+  queryTLTTALENT_TLS41040_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_TLS41040_DropDownList`, {});
+  }
   // 查詢付款別(POS1006)資料表下拉選單
   queryPOS1006_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1006_DropDownList`, {});
@@ -522,6 +574,10 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IPOS1018GUITrackResponse>>(`${this.apiUrl}/Share/queryPOS1018_GUI_TRACK_DropDownList`, params);
   }
 
+  // 查詢 ARS4001 收貨單編號 下拉選單
+  queryARS4001RCVNO_DropDownList(params: IARS4001RCVNORequest): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/Share/queryARS4001RCVNO_DropDownList`, params);
+  }
   // 查詢發票格式(TDS1007)資料表下拉選單
   queryTDS1007_DropDownList(params: ITDS1007Request): Observable<ApiResponse<ITDS1007Response>> {
     return this.http.post<ApiResponse<ITDS1007Response>>(`${this.apiUrl}/Share/queryTDS1007_DropDownList`, params);
@@ -533,9 +589,20 @@ export class DropDownListService {
   queryTLS42010DropDownList(): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010`, { USR_Level: [] });
   }
-  queryTLS42010FuncDropDownList(): Observable<any> {
+  queryTLS42010FuncDropDownList(): Observable<{ label: string; value: string }[]> {
     const url = `${this.apiUrl}/TLS0000/TLS4000/dropdownTLS42010Func`;
-    const body = { KB_Func: [] }; return this.http.post<any>(url, body);
+    const body = { KB_Func: [] };
+
+    return this.http.post<any>(url, body).pipe(
+      map(res => {
+        // 在 Service 層就決定好 UI 要顯示的格式
+        const data: any[] = res?.Data ?? [];
+        return data.map(item => ({
+          label: `${item.KB_Func} - ${item.KB_Desc}`,
+          value: item.KB_Func
+        }));
+      })
+    );
   }
   // 載入活動清單 (TALPORDERM)
   getActivityOptions(params: TALPORDERMRequest): Observable<ApiResponse<TALPORDERMResponse[]>> {
@@ -546,8 +613,8 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IAPS1003Item[]>>(`${this.apiUrl}/TLS0000/TLS2000/queryAPS1003DropDownList`, params);
   }
   // 查詢CPM11010 Service_Id資料表下拉選單
-  queryCPM11010_ServiceId_DropDownList(): Observable<ApiResponse<{ Service_Id: string }[]>> {
-    return this.http.post<ApiResponse<{ Service_Id: string }[]>>(`${this.apiUrl}/queryCPM11010_ServiceId_DropDownList`, {});
+  queryCPM11010_ServiceId_DropDownList(): Observable<ApiResponse<{ Service_Id: string, Service_Name: string }[]>> {
+    return this.http.post<ApiResponse<{ Service_Id: string, Service_Name: string }[]>>(`${this.apiUrl}/queryCPM11010_ServiceId_DropDownList`, {});
   }
   // 查詢專屬活動編號(TALPORDERM)資料表下拉選單
   queryTALPORDERM_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
@@ -575,4 +642,24 @@ export class DropDownListService {
   queryTDS1010_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTDS1010_DropDown`, {});
   }
+  // 查詢 CSS1002 下拉選單
+  queryCSS1002DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryCSS1002DropDownList`, {});
+  }
+  // 查詢 CSS1003 下拉選單
+  queryCSS1003DropDownList(KIND_ID: string): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryCSS1003DropDownList`, { KIND_ID });
+  }
+  // 查詢 APS3001 下拉選單
+  queryAPS3001_DropDownList(): Observable<ApiResponse<IAPS3001Item[]>> {
+    return this.http.post<ApiResponse<IAPS3001Item[]>>(
+      `${this.apiUrl}/QueryAPS3001DropDownList`,
+      {}
+    );
+  }
+  //銀行資料表下拉選單 APS1001
+  queryAPS1001NoBranch_DropDownList(params: IBankRequest): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryAPS1001NoBranch_DropDownList`, params);
+  }
+
 }

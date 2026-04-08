@@ -7,6 +7,8 @@ export interface FIN52030Data {
   VouType: string;
   TempName: string;
   DetailCount: number;
+  CRT_USR_Name: string;
+  UPD_USR_Name: string;
 }
 
 /**
@@ -44,10 +46,12 @@ export interface FIN52030Detail {
  * Details: 明細資料陣列
  * CRT_Date: 建立日期
  * CRT_USR_No: 建立人員編號
+ * CRT_USR_Name: 建立人員姓名
  * TempNo: 常用傳票編號
  * TempName: 常用傳票名稱
  * UPD_Date: 更新日期
  * UPD_USR_No: 更新人員編號
+ * UPD_USR_Name: 更新人員姓名
  * VouType: 傳票類別 1:現金收入2:現金支出3:轉帳傳票
  * VouTypeName: 傳票類別名稱
  * id: 主檔 ID
@@ -55,13 +59,17 @@ export interface FIN52030Detail {
 export interface FIN52030DetailData {
   CRT_Date: Date;
   CRT_USR_No: string;
+  CRT_USR_Name: string;
   Details: FIN52030Detail[];
   TempNo: string;
   TempName: string;
   UPD_Date: Date;
   UPD_USR_No: string;
+  UPD_USR_Name: string;
   VouType: '1' | '2' | '3';
   VouTypeName?: string;
+  /** TODO: 待確認後端 GetFIN52030Detail 是否回傳「傳票型態」(SYS1000.VoucherType) code，若有請使用此欄位。 */
+  VoucherType?: string;
   id: number;
 };
 
@@ -118,7 +126,7 @@ export interface AccNoList {
 }
 
 export interface NoteDescList {
-  AccNoNoteDesc: { [key: string]: string[]; };
+  AccNoNoteDesc: Record<string, string[]>;
 }
 
 export type NoteDescResponse = Omit<BaseQueryResponse<NoteDescList>, 'Data'> & {

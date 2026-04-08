@@ -1,23 +1,23 @@
-import { DropDownListService } from './../../../service/utility/dropDownList.service';
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDateTime, formatYN } from '../../../shared/componentkit/table/table.model';
-import { TLS21030Data, Tls21030Service } from '../../../service/api/tls/tls21030.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { TLS21030Data, TLS21030QueryRequest, Tls21030Service } from '../../../service/api/tls/tls21030.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { Base64Service } from '../../../shared/service/base64.service';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { formatDateTime, formatYN } from '../../../shared/componentkit/table/table.model';
 
-/* TALTALENT_BILL_NOTES 對帳單備註檔 */
 @Component({
   selector: 'app-tls21030',
   templateUrl: './tls21030.component.html',
@@ -31,9 +31,10 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
     ReactiveFormsModule,
     RadiobuttonYNComponent,
     InputTextComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
-    MultiSelectComponent
+    MultiSelectComponent,
+    AsyncPipe
   ],
 })
 export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> implements OnInit {
@@ -43,12 +44,15 @@ export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> imp
     rece_yn: [null],        // 是否使用業主發票 (Y=是、N=否)
     bill_remark: [''],     // 說明 存為html格式
     tlt_noList: [null],        // 專櫃編號 (table: TALTALENT_BILL_NOTES_DETALL)
-    ...createPaginationConfig([{ field: 'money_type', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'money_type', order: 1 }]],
   });
   totalRecords = 0;
+  lastQueryBody: TLS21030QueryRequest | null = null;
   data: TLS21030Data[] = [];
   selectedItems: TLS21030Data[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'money_type', header: '結帳方式', visible: true, format: (value: string) => this.settlementMethodOptions.find(option => option.value === value)?.label || '' },
     { field: 'term_no', header: '帳次', visible: true },
     { field: 'rece_yn', header: '是否使用業主發票', visible: true, format: formatYN },
@@ -72,32 +76,24 @@ export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> imp
     { value: 2, label: '2' },
     { value: 3, label: '3' }
   ];
-  TLTTALENT_DropDownList: { No: string, Name: string, label: string }[] = []; // 專櫃編號下拉選單資料
+  TLTTALENT_DropDownList = this.dropdown.queryTltTalent();
+
   constructor(
-    private readonly tls21030Service: Tls21030Service,
-    private readonly dropDownListService: DropDownListService,
+    public readonly tls21030Service: Tls21030Service,
+    private readonly dropdown: DropdownApiService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS21030', 'tls/tls21030cru', this.queryForm, (form) => this.onSubmit(form));
-    this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.TLTTALENT_DropDownList = res.Data.map(item => ({
-        ...item, label: `${item.No} - ${item.Name}`
-      }));
-    });
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls21030Service.queryTLS21030(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data.map(item => ({
-          ...item,
-          bill_remark1: Base64Service.decode(item.bill_remark1) || '',
-          bill_remark2: Base64Service.decode(item.bill_remark2) || '',
-          bill_remark3: Base64Service.decode(item.bill_remark3) || '',
-        }));
+        this.data = res.Data;
+        this.lastQueryBody = frm.value;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
@@ -105,7 +101,7 @@ export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> imp
   }
 
   onDelete(rows: TLS21030Data[]) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `是否確認刪除此對帳單備註?`,
       header: `確認刪除對帳單備註`,
       accept: () => {

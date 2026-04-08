@@ -220,6 +220,19 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
+              label="小分類代碼/名稱"
+              controlName="bus_sclass"
+              [options]="bus_sclass_Option"
+              optionLabel="label"
+              [control]="queryForm.controls.bus_sclass"
+              [submitted]="submitted"
+              optionGroupLabel="label"
+              optionGroupChildren="items"
+              [group]="true"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
               label="櫃別"
               controlName="tlt_kind"
               [options]="tlt_kind_Option"
@@ -273,7 +286,11 @@
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
-          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button
+            btnType="clear"
+            [form]="queryForm"
+            (click)="onClearDate()"
+          ></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -293,6 +310,7 @@
     [showEdit]="false"
     [showManage]="true"
     [showReportMode]="false"
+    [showFilter]="false"
     [queryFunction]="tls31020Service.queryTLS31020.bind(tls31020Service)"
     [footerData]="footershowTotal"
     [footerPercentData]="footershowPercent"
@@ -303,20 +321,20 @@
         <p-button
           styleClass="p-2"
           label="各樓層之營業報表.PDF"
-          [loading]="btnLoading"
+          [loading]="btnPDFLoading"
           icon="pi pi-file"
           (click)="onReport(queryForm, false)"
           [disabled]="data.length === 0"
-          [loading]="btnLoading"
+          [loading]="btnPDFLoading"
         ></p-button>
         <p-button
           styleClass="p-2"
           label="各樓層之營業報表.XLSX"
-          [loading]="btnLoading"
+          [loading]="btnExcelLoading"
           icon="pi pi-file"
           (click)="onReport(queryForm, true)"
           [disabled]="data.length === 0"
-          [loading]="btnLoading"
+          [loading]="btnExcelLoading"
         ></p-button>
       </div>
     </header>

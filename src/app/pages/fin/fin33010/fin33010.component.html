@@ -1,8 +1,6 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -18,46 +16,89 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="收款單號"
-              controlName="receive_ID"
-              [options]="receiveOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.receive_ID"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <div
+              class="flex gap-2"
+              role="button"
+              tabindex="0"
+              aria-label="收款單號 選擇"
+              (click)="rcvDialogVisible = true"
+              (keydown.enter)="$event.preventDefault(); rcvDialogVisible = true"
+            >
+              <app-input-text
+                class="flex-1"
+                label="收款單號"
+                controlName="RCV_No"
+                [control]="queryForm.controls.RCV_No"
+                [submitted]="submitted"
+                [readonly]="true"
+              ></app-input-text>
+            </div>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="傳票日期"
-              [control]="queryForm.controls.summons_Date"
-              [submitted]="submitted"
-            ></app-calendar>
-          </div>
+          <app-calendar
+            class="col-12 md:col-6 lg:col-4"
+            calendarType="dateOne"
+            label="傳票日期"
+            controlName="VouDate"
+            [control]="queryForm.controls.VouDate"
+            [submitted]="submitted"
+          />
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-<div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
-</div>
+
+<app-dialog
+  [visible]="rcvDialogVisible"
+  header="選擇收款單號"
+  (visibleChange)="rcvDialogVisible = $event"
+  (save)="onSelectRCVNo()"
+  [disable]="selectedItemsDialog.length === 0"
+>
+  <form [formGroup]="dialogQueryForm" (ngSubmit)="onQueryRcvNo()">
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-6">
+        <app-input-text
+          class="col-12"
+          label="收款單號"
+          controlName="RCV_No"
+          [control]="dialogQueryForm.controls.RCV_No"
+        ></app-input-text>
+      </div>
+    </div>
+    <div
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+    >
+      <app-button btnType="clear" [form]="dialogQueryForm"></app-button>
+      <app-button btnType="query" [loading]="dialogLoading"></app-button>
+    </div>
+  </form>
+
+  <hr />
+  <app-table
+    tableKey="fin33010RcvDialogTable"
+    dataKey="RCV_No"
+    [showReportMode]="false"
+    [data]="dialogData"
+    [columns]="dialogColumns"
+    [showDelete]="false"
+    [selectedItems]="selectedItemsDialog"
+    [showCaption]="false"
+    (selectionChange)="selectedItemsDialog = $event"
+    [showHeader]="false"
+    [showManage]="false"
+    [showCheckBox]="true"
+    [selectionMode]="'single'"
+    [multiSortMeta]="[{ field: 'RCV_No', order: 1 }]"
+    [totalRecords]="dialogTotalRecords"
+    [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQueryRcvNo()"
+    [loading]="dialogLoading"
+  ></app-table>
+</app-dialog>

@@ -1,158 +1,264 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS12020Service } from '@service/api/ass/ass12020.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberRangeComponent } from "@shared/componentkit/input-number-range/input-number-range.component";
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize, forkJoin } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
+import {
+  ASS12020QueryRow,
+  QueryASS12020Request,
+} from './ass12020.model';
 
-//3.1.2.2 詢價登錄作業
+/** 3.1.2.2 詢價登錄作業 */
+@UntilDestroy()
 @Component({
   selector: 'app-ass12020',
   templateUrl: './ass12020.component.html',
   styleUrl: './ass12020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, CalendarRangeComponent, InputNumberComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    InputNumberComponent,
+    CalendarComponent,
+    InputTextComponent,
+    TableReportComponent,
+    TranslateModule,
+    InputNumberRangeComponent,
+    CalendarRangeQuickComponent
+  ],
 })
-export class ASS12020Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    itemCode: [], // 品項編號
-    supplierCode: [], // 	供應商編號
-    purchaseFrom: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 品項進價(報價金額)
-    purchaseTo: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 品項進價(報價金額)
-    singlePriceFrom: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 品項單價
-    singlePriceTo: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 品項單價
-    itemUnit: [], // 品項單位
-    reportFrom: [], // 報價期限
-    reportTo: [], // 報價期限
-    loginBatches: [, [this.validationService.numberValidator]], // 品項進價(報價金額)
-    addNumber: [, [Validators.required, Validators.maxLength(3)]], // 需求單號
-    modifyNumber: [, [Validators.required, Validators.maxLength(3)]], // 修改筆數
-    printNumber: [, [Validators.required, Validators.maxLength(3)]], // 項次列印筆數
+export class ASS12020Component extends BasicQueryPageComponent<ASS12020QueryRow> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    /** 品項編號 */
+    itemCode: [null as string | null],
+    /** 商品價格(起) */
+    goodsPriceFrom: [null as number | null],
+    /** 商品價格(迄) */
+    goodsPriceTo: [null as number | null],
+    /** 銷售價格(起) */
+    salePriceFrom: [null as number | null],
+    /** 銷售價格(迄) */
+    salePriceTo: [null as number | null],
+    /** 品項單位 */
+    itemUnit: [null as string | null],
+    /** 供應商編號 */
+    supplierCode: [null as string | null],
+    /** 報價期限(起) */
+    expDateFrom: [null as Date | null],
+    /** 報價期限(迄) */
+    expDateTo: [null as Date | null],
+    /** 登錄批號 */
+    batchId: [null as string | null],
+    PageSize: [30],
+    PageIndex: [1],
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  itemCodeOptions: { value: string; label: string }[] = [];
+  supplierCodeOptions: { value: string; label: string }[] = [];
+  itemUnitOptions = getSYS1000Options('UNIT');
+
+  data: ASS12020QueryRow[] = [];
+  selectedRows: ASS12020QueryRow[] = [];
+  totalRecords = 0;
+  lastQueryBody: QueryASS12020Request | null = null;
+  columns: ReportColumn[] = [
+    { field: 'BATCH_ID', header: '登錄批號', visible: true },
+    { field: 'SUPPLIER_ID', header: '供應商編號', visible: true },
+    { field: 'VENDOR_NAME', header: '供應商名稱', visible: true },
+    { field: 'CRT_Date', header: '登錄日期', visible: true, format: formatDate },
+    { field: 'EXPDATE', header: '報價期限', visible: true, format: formatDate },
+    { field: 'NOTES', header: '說明', visible: true },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
+
+  /** 管理列額外按鈕：匯出 PDF */
+  addButton: AddButton[] = [
+    {
+      label: '匯出 PDF',
+      icon: 'pi pi-file-pdf',
+      action: (row: ASS12020QueryRow) => this.onExportPDF(row),
+      disabled: (row: ASS12020QueryRow) =>
+        row.FAQuotationM_ID == null || !this.hasPermission('60'),
+    },
   ];
-  columns: any[] = [
-    { field: 'col1', header: '登錄批號', visible: true },
-    { field: 'col2', header: '供應商編號', visible: true },
-    { field: 'col3', header: '登錄日期', visible: true },
-    { field: 'col4', header: '報價期限', visible: true },
-    { field: 'col5', header: '說明', visible: true },
-    // { field: 'col6', header: '需求日期', visible: true },
-    // { field: 'col7', header: '請購申請狀態', visible: true },
-    // { field: 'col8', header: '新增筆數', visible: true },
-    // { field: 'col9', header: '折舊科目(借)', visible: true },
-    // { field: 'col10', header: '累計折舊科目(貸)', visible: true },
-    // { field: 'col11', header: '折舊年限', visible: true },
-    // { field: 'col12', header: '說明', visible: true },
 
-    // { field: 'col13', header: '公司地址', visible: true },
-    // { field: 'col14', header: '付款方式', visible: true },
-    // { field: 'col15', header: '營運模式', visible: true },
-    // { field: 'col16', header: '票期', visible: true },
-    // { field: 'col17', header: '備註', visible: true },
-    // { field: 'col18', header: '訂貨傳真', visible: true },
-
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  itemCodeOptions: any[] = [];
-  supplierCodeOptions: any[] = [];
-  itemUnitOptions: any[] = [];
-
-  //
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
+    public readonly ass12020Service: ASS12020Service,
+    private readonly dropDownListService: DropDownListService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310012';
-    this.cruPage = '/ASS1000/ASS12020CRU';
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('ASS12020', 'ass/ass12020cru', this.queryForm, () =>
+      this.onSubmit(this.queryForm),
+    );
+    this.loadSupplierOptions();
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+  loadSupplierOptions(): void {
+    this.dropDownListService
+      .queryTBLUSER_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const list = res.Data ?? [];
+        this.supplierCodeOptions = list.map((item: { No?: string; Name?: string }) => ({
+          value: item.No ?? '',
+          label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+        }));
+      });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+  queryFunction = (body: unknown): ReturnType<ASS12020Service['queryASS12020']> => {
+    const raw = this.queryForm.getRawValue();
+    const b = body as Record<string, unknown>;
+    const payload: QueryASS12020Request = {
+      GOODS_ID: raw.itemCode ?? undefined,
+      GOODS_PRICE_S: raw.goodsPriceFrom ?? undefined,
+      GOODS_PRICE_E: raw.goodsPriceTo ?? undefined,
+      SALE_PRICE_S: raw.salePriceFrom ?? undefined,
+      SALE_PRICE_E: raw.salePriceTo ?? undefined,
+      GOODS_UNIT: raw.itemUnit ?? undefined,
+      SUPPLIER_ID: raw.supplierCode ?? undefined,
+      EXPDATE_S: raw.expDateFrom ? this.formatDate(raw.expDateFrom) : undefined,
+      EXPDATE_E: raw.expDateTo ? this.formatDate(raw.expDateTo) : undefined,
+      BATCH_ID: raw.batchId ?? undefined,
+      PageSize: (b?.['PageSize'] ?? b?.['pageSize'] ?? 30) as number,
+      PageIndex: (b?.['PageIndex'] ?? b?.['pageIndex'] ?? 1) as number,
+      SortBy: b?.['SortBy'] as QueryASS12020Request['SortBy'],
+      OrderBy: b?.['OrderBy'] as string | undefined,
+      Offset: b?.['Offset'] as number | undefined,
+      PageNo: b?.['PageNo'] as number | undefined,
+      SortDir: b?.['SortDir'] as string | undefined,
+    };
+    return this.ass12020Service.queryASS12020(payload);
+  };
+
+  private formatDate(d: Date | null): string {
+    if (!d) return '';
+    const x = new Date(d);
+    const y = x.getFullYear();
+    const m = String(x.getMonth() + 1).padStart(2, '0');
+    const day = String(x.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
+      this.lastQueryBody = {
+        GOODS_ID: raw.itemCode ?? undefined,
+        GOODS_PRICE_S: raw.goodsPriceFrom ?? undefined,
+        GOODS_PRICE_E: raw.goodsPriceTo ?? undefined,
+        SALE_PRICE_S: raw.salePriceFrom ?? undefined,
+        SALE_PRICE_E: raw.salePriceTo ?? undefined,
+        GOODS_UNIT: raw.itemUnit ?? undefined,
+        SUPPLIER_ID: raw.supplierCode ?? undefined,
+        EXPDATE_S: raw.expDateFrom ? this.formatDate(raw.expDateFrom) : undefined,
+        EXPDATE_E: raw.expDateTo ? this.formatDate(raw.expDateTo) : undefined,
+        BATCH_ID: raw.batchId ?? undefined,
+        PageSize: 30,
+        PageIndex: 1,
+      };
+      this.loading = true;
+      this.queryFunction(this.lastQueryBody)
+        .pipe(finalize(() => (this.loading = false)))
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.data = res.Data ?? [];
+            this.totalRecords = res.TotalCount ?? 0;
+            this.queryStateService.setQueryState(this.ProgNo, raw);
+          },
+        });
+    });
+  }
+
+  onDelete(selectedItems: ASS12020QueryRow[]): void {
+    if (selectedItems.length === 0) {
+      this.messageService.warnBubble('請先勾選要刪除的資料');
+      return;
     }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.messageService.confirm({
+      header: '確認刪除',
+      message: `是否確認刪除 ${selectedItems.length} 筆資料？`,
+      accept: () => {
+        const rows = selectedItems.filter(
+          row => row.FAQuotationM_ID != null && typeof row.FAQuotationM_ID === 'number'
+        );
+        if (rows.length === 0) {
+          this.messageService.warnBubble('無可刪除的資料');
+          return;
+        }
+        this.loading = true;
+        const deletes = rows.map(row =>
+          this.ass12020Service.deleteASS12020({ FAQuotationM_ID: row.FAQuotationM_ID! })
+        );
+        forkJoin(deletes)
+          .pipe(finalize(() => (this.loading = false)), untilDestroyed(this))
+          .subscribe({
+            next: results => {
+              const failed = results.filter(r => r.Status !== '0000');
+              if (failed.length > 0) {
+                this.messageService.errorBubble(
+                  '操作失敗：' + (failed[0].Message ?? '部分刪除失敗')
+                );
+                return;
+              }
+              this.messageService.successBubble('刪除成功');
+              this.onSubmit(this.queryForm);
+            },
+          });
+      },
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+  onExportPDF(row: ASS12020QueryRow): void {
+    const id = row.FAQuotationM_ID;
+    if (id == null) {
+      this.messageService.warnBubble('無法匯出：缺少主鍵');
+      return;
     }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+    this.ass12020Service
+      .exportPDFASS12020({ FAQuotationM_ID: id })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: response => {
+          const blob = response.body;
+          if (blob && blob.size > 0) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `詢價登錄_${id}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            this.messageService.successBubble('匯出成功');
+          } else {
+            this.messageService.warnBubble('沒有可匯出的資料');
+          }
+        },
+        error: () => this.messageService.errorBubble('匯出 PDF 失敗'),
+      });
   }
 }

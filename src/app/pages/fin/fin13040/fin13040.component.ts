@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin13040Service } from '@service/api/fin/fin13040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -16,16 +17,26 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarModule } from 'primeng/calendar';
-import { Column, formatAmount } from 'src/app/shared/componentkit/table/table.model';
+import { map } from 'rxjs/operators';
+import { AddButton, Column, formatAmount, formatDate } from 'src/app/shared/componentkit/table/table.model';
+import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+/**
+ * 格式化發票狀態
+ */
+const formatInvoiceStatus = (value: any) => {
+  if (value === 'N') return '開立';
+  if (value === 'Y') return '作廢';
+  return value;
+};
 //1.1.4.3 形成申報書
 @Component({
   selector: 'app-fin13040',
   templateUrl: './fin13040.component.html',
-  styleUrl: './fin13040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -36,62 +47,68 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     CalendarComponent,
     CommonModule,
     DropdownComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     InputTextComponent,
     CalendarRangeComponent,
+    YearMonthComponent,
     CalendarModule,
     MultiSelectComponent,
     InputNumberRangeComponent,
-    InputTextRangeComponent
+    InputTextRangeComponent,
+    AutoCompleteComponent
   ],
 })
 export class FIN13040Component extends BasicQueryPageComponent<any> implements OnInit {
-  /**
-   * 取得當前或下一個雙數月的日期物件
-   */
-  private getEvenMonthDate(): Date {
-    const now = new Date();
-    let year = now.getFullYear();
-    let month = now.getMonth() + 1; // 1-12
-    if (month % 2 !== 0) {
-      month += 1;
-      if (month > 12) {
-        month = 2;
-        year += 1;
-      }
-    }
-    // 設定為該月1日
-    return new Date(year, month - 1, 1);
-  }
+  public readonly addButton: AddButton[] = [
+    {
+      label: '列印',
+      icon: 'pi pi-file-pdf',
+      action: (rowData: any) => this.onPrint(rowData),
+      disabled: () => !this.hasPermission(this.Actions.Query),
+    },
+  ];
+
+  // wrapper for table-report's queryFunction shape
+  queryFn = (body: any) => {
+    return this.fin13040Service.queryFIN13040(body).pipe(
+      map((res: any) => ({ Data: res?.Data?.Data ?? [], TotalCount: res?.Data?.TotalCount ?? 0 }))
+    );
+  };
+
+  // Disable edit button for rows with InvoiceType === '35'
+  editDisabled = (rowData: any) => { return rowData?.InvoiceType === '35' }
 
   queryForm = this.formBuilder.group({
-    InvoiceType: [[]],
-    GUI_Track: ['', [Validators.maxLength(2)]],
-    InvoiceNo_S: ['', [Validators.maxLength(8)]],
-    InvoiceNo_E: ['', [Validators.maxLength(8)]],
-    InvoiceDate_S: [''],
-    InvoiceDate_E: [''],
-    InvoiceDateYM: [''],
-    INV_DeclareYM: [this.getEvenMonthDate(), [Validators.required]],
-    INV_Data_YM_S: [''],
-    INV_Data_YM_E: [''],
-    Buyer_Uniform: [''],
+    // InvoiceType UI removed; default query to ['35'] per requirement
+    InvoiceType: [['35']],
+    GUI_Track: [null, [Validators.maxLength(2)]],
+    InvoiceNo_S: [null, [Validators.maxLength(8)]],
+    InvoiceNo_E: [null, [Validators.maxLength(8)]],
+    InvoiceDate_S: [null],
+    InvoiceDate_E: [null],
+    InvoiceDateYM: [null],
+    INV_DeclareYM: [null as string | null, [Validators.required]],
+    INV_Data_YM_S: [null],
+    INV_Data_YM_E: [null],
+    Buyer_Uniform: [null],
     PUR_TaxType: [[]],
     PUR_Amt_S: [null],
     PUR_Amt_E: [null],
     PUR_Tax_S: [null],
     PUR_Tax_E: [null],
-    Voucher_No_S: [''],
-    Voucher_No_E: [''],
-    AssetType: [[]],
-    SAL_Type: [[]],
+    Voucher_No_S: [null],
+    Voucher_No_E: [null],
+    AssetType: [null],
+    SAL_Type: [null],
     ...createPaginationConfig([{ field: 'InvoiceType', order: 1 }]),
   });
   data: any[] = [];
   totalRecords = 0;
+  lastQueryBody: any | null = null;
+  footerData: any = {};
   InvoiceType_Options: { label: string; value: string }[] = [];
-  SAL_Type_Options = getSYS1000Options('SAL_Type');
+  SAL_Type_Options = getSYS1000Options('T205'); //規格更新
   taxTypeOptions = getSYS1000Options('PUR_TaxType');
   AssetNoteOptions = getSYS1000Options('AssetType');
   Buyer_Uniform_Options: { label: string; value: string }[] = [];
@@ -102,12 +119,14 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     { field: 'INV_DeclareYM', header: '申報年月', visible: true },
     { field: 'Buyer_Uniform', header: '買受人統一編號', visible: true },
     { field: 'PUR_TaxType', header: '課稅別', visible: true },
-    { field: 'PUR_Net', header: '未稅金額', visible: true, format: formatAmount },
-    { field: 'PUR_Tax', header: '稅額', visible: true, format: formatAmount },
-    { field: 'PUR_Amt', header: '總金額', visible: true, format: formatAmount },
+    { field: 'PUR_Net', header: '未稅金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'PUR_Tax', header: '稅額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'PUR_Amt', header: '總金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
     { field: 'AssetType', header: '資產註記', visible: true },
     { field: 'SAL_Type', header: '使用別', visible: true },
+    { field: 'INV_Cancel', header: '發票狀態', visible: true, format: formatInvoiceStatus },
+    { field: 'TXN_VoidDT', header: '作廢日期', visible: true, format: formatDate },
   ];
   constructor(
     private dropDownListService: DropDownListService,
@@ -119,7 +138,28 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('FIN13040', '/FIN/FIN13040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadBuyerUniformOptions();
     this.loadInvoiceTypeOptions();
+    // 設定 INV_DeclareYM 預設為最近的雙數月（若當月為單月，跳到下個月）
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1;
+    if (currentMonth % 2 !== 0) {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+    const dp = new DatePipe('en-US');
+    this.queryForm.get('INV_DeclareYM')?.setValue(dp.transform(currentDate, 'yyyyMM'));
 
+  }
+
+  loadGuiTrackOptions(event: any): void {
+    // 根據申報年月載入字軌下拉（參考 FIN15010）
+    this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
+      GUI_YYMM: event,
+      MID: 0,
+      STO_No: '10',
+      GUI_Type: this.queryForm.controls.InvoiceType.value ?? []
+    }).pipe(untilDestroyed(this)).subscribe(r => {
+      const tracks = r?.Data?.GuiTracks ?? r?.Data ?? [];
+      console.log('[loadGuiTrackOptions] tracks', tracks);
+    });
   }
 
   /** 載入買受人統一編號下拉清單 */
@@ -130,7 +170,17 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
       .subscribe({
         next: (res) => {
           const data = res?.Data ?? [];
-          this.Buyer_Uniform_Options = data.map((item: any) => ({
+
+          // 使用 Map 以 No 作為 Key 來去重，後出現的會覆蓋先出現的（或可自行調整邏輯）
+          const uniqueDataMap = new Map();
+          data.forEach((item: any) => {
+            if (item.No) {
+              uniqueDataMap.set(item.No, item);
+            }
+          });
+
+          // 將 Map 的結果轉回 Array 並進行 map 轉換
+          this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map((item: any) => ({
             label: `${item.No} - ${item.Name}`,
             value: item.No,
           }));
@@ -149,12 +199,12 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
         next: (res) => {
           const allowed = ['31', '32', '35'];
           const data = res?.Data?.INV_GUITypes ?? [];
-          this.InvoiceType_Options = data
-            .filter((x: any) => allowed.includes(x.INV_GUIType))
-            .map((x: any) => ({
-              label: `${x.INV_GUIType} - ${x.INV_GUIName}`,
-              value: x.INV_GUIType,
-            }));
+          const filtered = data.filter((x: any) => allowed.includes(x.INV_GUIType));
+          filtered.sort((a: any, b: any) => Number(a.INV_GUIType) - Number(b.INV_GUIType));
+          this.InvoiceType_Options = filtered.map((x: any) => ({
+            label: `${x.INV_GUIType} - ${x.INV_GUIName}`,
+            value: x.INV_GUIType,
+          }));
         },
 
       });
@@ -165,10 +215,18 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
       const v = form.value;
 
       const dp = (d: any, key: string) => {
+        // --- 新增的防呆邏輯 ---
+        // 如果這個欄位不小心變成了物件（例如 AutoComplete 傳回了整個 item）
+        // 我們只取裡面的 value 屬性 (也就是統編 No)
+        if (d !== null && typeof d === 'object' && 'value' in d && !(d instanceof Date)) {
+          d = d.value;
+        }
+        // --------------------
+
         if (!(d instanceof Date)) return d === '' ? null : d;
+
         const date = new Date(d);
         if (key.toLowerCase().includes('ym')) {
-
           const y = date.getFullYear();
           const m = String(date.getMonth() + 1).padStart(2, '0');
           return `${y}${m}`;
@@ -179,17 +237,76 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
       const payload = Object.fromEntries(
         Object.entries(v).map(([k, val]) => [k, dp(val, k)])
       );
+      // Ensure InvoiceType defaults to ['35'] when UI hidden/removed
+      if (!payload['InvoiceType'] || (Array.isArray(payload['InvoiceType']) && payload['InvoiceType'].length === 0)) {
+        (payload as any)['InvoiceType'] = ['35'];
+      }
 
       this.fin13040Service
         .queryFIN13040(payload)
         .pipe(untilDestroyed(this))
         .subscribe({
           next: (res) => {
+            this.lastQueryBody = payload;
             this.data = res?.Data?.Data ?? [];
             this.totalRecords = res?.Data?.TotalCount ?? 0;
+            this.footerData = {};
+            this.footerData['PUR_Net'] = res?.Data?.TotalNet ?? 0;
+            this.footerData['PUR_Tax'] = res?.Data?.TotalTax ?? 0;
+            this.footerData['PUR_Amt'] = res?.Data?.TotalAmt ?? 0;
+            // 保存目前查詢條件，供 CRU 返回時還原
+            this.queryStateService.setQueryState(this.ProgNo, v);
           },
           complete: () => (this.loading = false),
         });
+    });
+  }
+
+  onPrint(row: any): void {
+    if (!row || !row.ID) return;
+
+    const payload = {
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: '',
+      Offset: 0,
+      SortBy: [],
+      MID: 0,
+      STO_No: '10',
+      ID: row.ID,
+    };
+
+    this.fin13040Service.printFIN13040(payload).pipe(untilDestroyed(this)).subscribe({
+      next: async (res: any) => {
+        const contentType = res.headers?.get('Content-Type') || '';
+        const blob = res.body;
+
+        if (contentType.includes('application/json')) {
+          const text = await blob.text();
+          try {
+            const json = JSON.parse(text);
+            if (json?.Status === '0000' && json?.Data?.Print_URL) {
+              const url = `${environment.ApiUrl.replace(/\/$/, '')}${json.Data.Print_URL}`;
+              const filename = decodeURIComponent(json.Data.Print_URL.split('/').pop() ?? 'report.pdf');
+              const a = document.createElement('a');
+              a.href = url;
+              a.setAttribute('download', filename);
+              a.click();
+            }
+          } catch (e) {
+            console.error('解析 JSON 失敗', e);
+          }
+          return;
+        }
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+        a.download = `${row.InvoiceNumber ?? 'report'}.pdf`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+      },
+      error: () => {
+        this.messageService.errorBubble('列印失敗');
+      },
     });
   }
 

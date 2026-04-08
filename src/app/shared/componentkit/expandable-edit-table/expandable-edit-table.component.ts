@@ -13,6 +13,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { CalendarModule } from 'primeng/calendar';
+import { MultiSelectModule } from 'primeng/multiselect';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 // import { DisplayFieldConfig } from '../selector-panel/selector-panel.component';
 // import { Column } from '../table/table.model';
@@ -188,7 +189,7 @@ export interface ColumnDef {
   templateUrl: './expandable-edit-table.component.html',
   styleUrls: ['./expandable-edit-table.component.scss'],
   standalone: true,
-  imports: [NgIf, TableModule, NgClass, PrimeTemplate, ButtonDirective, Ripple, TooltipModule, NgFor, NgStyle, NgSwitch, NgSwitchCase, FormsModule, InputTextModule, InputNumberModule, DropdownModule, CheckboxModule, NgSwitchDefault, DialogModule, CalendarModule, DecimalPipe, ReactiveFormsModule, SelectorPanelComponent, SelectorPanelComponent]
+  imports: [NgIf, TableModule, NgClass, PrimeTemplate, ButtonDirective, Ripple, TooltipModule, NgFor, NgStyle, NgSwitch, NgSwitchCase, FormsModule, InputTextModule, InputNumberModule, DropdownModule, CheckboxModule, NgSwitchDefault, DialogModule, CalendarModule, DecimalPipe, ReactiveFormsModule, SelectorPanelComponent, SelectorPanelComponent, MultiSelectModule]
 })
 export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @ViewChild('dt') dt!: Table;
@@ -233,8 +234,19 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @Input() minColumnWidth = 60;
   @Input() maxColumnWidth = 300;
 
+  // 每一筆資料前是否重複顯示外層表頭（從第二筆開始，適用於有展開功能的表格）
+  @Input() showHeaderInExpansion = false;
+
+  // 欄位顯示切換（齒輪圖示 multiSelect）
+  @Input() showColumnToggle = false;
+
   detailSelectedTabs: { [key: string]: string } = {};
   detailSelectedItems: { [mainRowKey: string]: any[] } = {};
+
+  // 欄位切換相關狀態
+  columnToggleOptions: ColumnDef[] = [];
+  selectedVisibleColumns: ColumnDef[] = [];
+  private _lastMainColumnsRef: ColumnDef[] | null = null;
 
   @Output() edit = new EventEmitter<any>();
   @Output() save = new EventEmitter<{ oldData: any, newData: any }>();
@@ -333,9 +345,15 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (this.enableDynamicWidth) {
       setTimeout(() => this.calculateDynamicWidths(), 100);
     }
+    if (this.showColumnToggle) {
+      this.initColumnToggle();
+    }
   }
 
   ngOnChanges() {
+    if (this.showColumnToggle) {
+      this.initColumnToggle();
+    }
     if (this.data) {
       this.totalRecords = this.data.length;
       this.initializeDetailArrays();
@@ -356,6 +374,29 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       this.widthCalculator.clearCache();
       setTimeout(() => this.calculateDynamicWidths(), 50);
     }
+  }
+
+  // ========== 欄位顯示切換 ==========
+  initColumnToggle(): void {
+    // mainColumns reference 沒換就不重初始化，避免 change detection loop
+    if (this._lastMainColumnsRef === this.mainColumns) return;
+    this._lastMainColumnsRef = this.mainColumns;
+
+    // 排除操作型欄位（checkbox、button）不加入齒輪選單
+    this.columnToggleOptions = this.mainColumns.filter(col =>
+      col.type !== 'button' && col.field !== 'is_selected'
+    );
+    // 初始可見欄位 = 未標記 hidden 的欄位
+    this.selectedVisibleColumns = this.columnToggleOptions.filter(col => !col.hidden);
+  }
+
+  onColumnToggleChange(selected: ColumnDef[]): void {
+    this.columnToggleOptions.forEach(opt => {
+      const col = this.mainColumns.find(c => c.field === opt.field);
+      if (col) {
+        col.hidden = !selected.some(s => s.field === col.field);
+      }
+    });
   }
 
   private calculateDynamicWidths(): void {
@@ -966,6 +1007,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
   }
 
+  isPreviousRowExpanded(ri: number): boolean {
+    if (ri === 0) return false;
+    const prevRow = this.data[ri - 1];
+    return prevRow ? !!this.expandedRows[prevRow[this.dataKey]] : false;
+  }
+
   onRowEditInit(rowData: any, rowIndex: number) {
     this.editingRow = rowIndex;
     this.clonedItems[rowData[this.dataKey]] = { ...rowData };
@@ -1511,6 +1558,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       (!this.readonly && this.showAddButton) ||
       (!this.readonly && this.showBatchDelete) ||
       !!this.detailKey ||
+      this.showColumnToggle ||
       this.hasCaptionLeftContent() ||
       this.hasCaptionRightContent()
     );
@@ -2334,12 +2382,52 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const oldValue = rowData[fieldName];
     rowData[fieldName] = numericValue;
 
-    // 🔥 添加這行：觸發 fieldChange 事件
-    this.fieldChange.emit({
-      fieldName,
-      newValue: numericValue,
-      rowData
-    });
+    // 🔥 根據是否為 detail 項目觸發不同的事件
+    if (isDetail) {
+      // 找到父項目和索引
+      let foundParent = false;
+      for (let rowIndex = 0; rowIndex < this.data.length; rowIndex++) {
+        const mainItem = this.data[rowIndex];
+        if (mainItem[this.detailKey] && Array.isArray(mainItem[this.detailKey])) {
+          const detailIndex = mainItem[this.detailKey].indexOf(rowData);
+          if (detailIndex > -1) {
+            console.log('🔥 Detail 數字變更，觸發 detailFieldChange:', {
+              fieldName,
+              newValue: numericValue,
+              detailId: rowData[this.dataKey],
+              parentId: mainItem[this.dataKey],
+              rowIndex,
+              detailIndex
+            });
+            this.triggerDetailFieldChangeEvent(
+              fieldName,
+              numericValue,
+              rowData,
+              rowIndex,
+              detailIndex,
+              oldValue
+            );
+            foundParent = true;
+            break;
+          }
+        }
+      }
+      if (!foundParent) {
+        console.warn('⚠️ 無法找到 detail 項目的父項目，改用一般 fieldChange');
+        this.fieldChange.emit({
+          fieldName,
+          newValue: numericValue,
+          rowData
+        });
+      }
+    } else {
+      // 一般欄位：觸發 fieldChange 事件
+      this.fieldChange.emit({
+        fieldName,
+        newValue: numericValue,
+        rowData
+      });
+    }
 
     // 🔥 強制變更檢測
     this.cdr.detectChanges();
@@ -2410,12 +2498,50 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     console.log(`Input 事件更新 ${fieldName}: ${oldValue} → ${numericValue}`);
 
-    // 立即觸發欄位變更事件
-    this.fieldChange.emit({
-      fieldName,
-      newValue: numericValue,
-      rowData
-    });
+    // 🔥 根據是否為 detail 項目觸發不同的事件
+    if (isDetail) {
+      // 找到父項目和索引
+      let foundParent = false;
+      for (let rowIndex = 0; rowIndex < this.data.length; rowIndex++) {
+        const mainItem = this.data[rowIndex];
+        if (mainItem[this.detailKey] && Array.isArray(mainItem[this.detailKey])) {
+          const detailIndex = mainItem[this.detailKey].indexOf(rowData);
+          if (detailIndex > -1) {
+            console.log('🔥 Detail Input 事件，觸發 detailFieldChange:', {
+              fieldName,
+              newValue: numericValue,
+              detailId: rowData[this.dataKey],
+              rowIndex,
+              detailIndex
+            });
+            this.triggerDetailFieldChangeEvent(
+              fieldName,
+              numericValue,
+              rowData,
+              rowIndex,
+              detailIndex,
+              oldValue
+            );
+            foundParent = true;
+            break;
+          }
+        }
+      }
+      if (!foundParent) {
+        this.fieldChange.emit({
+          fieldName,
+          newValue: numericValue,
+          rowData
+        });
+      }
+    } else {
+      // 立即觸發欄位變更事件
+      this.fieldChange.emit({
+        fieldName,
+        newValue: numericValue,
+        rowData
+      });
+    }
 
     // 處理直接編輯模式
     this.handleDirectEditForNumber(fieldName, numericValue, rowData, isDetail);
@@ -2870,6 +2996,13 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       return 'error-row';
     }
     return '';
+  }
+
+  /**
+   * 檢查特定欄位是否有錯誤（用於單格錯誤標記）
+   */
+  hasCellError(rowData: any, field: string): boolean {
+    return !!(rowData?._errorFields && Array.isArray(rowData._errorFields) && rowData._errorFields.includes(field));
   }
 
   /**

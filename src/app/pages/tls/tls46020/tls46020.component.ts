@@ -1,24 +1,24 @@
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
-import { finalize } from 'rxjs';
-import { columns, ECR_GUI_Type_Option, ECR_SernoType_Option } from './tls46020.model';
-import { DropdownChangeEvent } from 'primeng/dropdown';
-import { DropDownListService } from '../../../service/utility/dropDownList.service';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownChangeEvent } from 'primeng/dropdown';
+import { finalize } from 'rxjs';
+import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
+import { DropDownListService } from '../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 import { formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { columns, ECR_GUI_Type_Option, ECR_SernoType_Option } from './tls46020.model';
 
 // 2.4.6.2  POS環境變數維護作業
 @Component({
@@ -60,7 +60,8 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
 
   constructor(
     public tls46020Service: TLS46020Service,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
@@ -94,12 +95,10 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
 
   onDelete(selectedRows: TLS46020Item[]) {
     const idList = selectedRows.map(row => row.id).filter((id): id is number => typeof id === 'number');
-    this.tls46020Service.deleteTLS46020(idList).pipe(untilDestroyed(this)).subscribe({
-      next: () => {
-        this.onSubmit(this.queryForm);
-        this.selectedItems = [];
-      },
-      error: () => { this.loading = false; },
+    this.tls46020Service.deleteTLS46020(idList).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      this.messageService.successBubble(res.Message);
+      this.onSubmit(this.queryForm);
+      this.selectedItems = [];
     });
   }
   dialogVisible = false;
@@ -113,22 +112,22 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
   mergedDialogOptions: { No?: string; Name?: string; label?: string }[] = [];
   saveDialog(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = false;
       if (this.isValid) { return; }
       const body = {
         ...this.dialogSelectItem,
+        ECR_SettleHHNN: this.datePipe.transform(this.dialogSelectItem?.ECR_SettleHHNN, 'HHmm'),
         ECR_TmplNo: frm.value.ECR_TmplNo === 'new' ? undefined : frm.value.Target_ECR_No,
         id: frm.value.ECR_TmplNo === 'new' ? undefined : this.dialogSelectTargetItem?.id
       }
       if (frm.value.Target_ECR_No === 'new') {
-        this.tls46020Service.insertTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
-          console.log('新增環境變數成功', res);
+        this.tls46020Service.insertTLS46020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
           this.dialogVisible = false;
           this.onSubmit(this.queryForm);
         });
       } else {
-        this.tls46020Service.updateTLS46020(body).pipe(untilDestroyed(this)).subscribe(res => {
-          console.log('複製環境變數成功', res);
+        this.tls46020Service.updateTLS46020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
           this.dialogVisible = false;
           this.onSubmit(this.queryForm);
         });

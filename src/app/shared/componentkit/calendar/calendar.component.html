@@ -3,14 +3,16 @@
   <span *ngIf="isRequired" class="text-red-500">*</span>
   <ng-content select="header"></ng-content>
 </label>
-<!-- 元件 -->
+
 <ng-container *ngIf="!readonly; else readonlyMode">
   <p-calendar [formControl]="control" [id]="controlName"
-    [placeholder]="control.disabled ? '' : customPlaceholder ? customPlaceholder : placeholder" [timeOnly]="timeOnly"
+    [placeholder]="control.disabled ? '' : (customPlaceholder || placeholder)" [timeOnly]="timeOnly"
     [showTime]="showTime" [hourFormat]="hourFormat" [showSeconds]="showSeconds" [view]="view" [dateFormat]="dateFormat"
-    [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }" [iconDisplay]="'input'"
+    [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }" [iconDisplay]="'input'" [keepInvalid]="true"
     [showIcon]="!control.disabled" [minDate]="minDate" [maxDate]="maxDate" [appendTo]="'body'" (onClose)="onClose()"
-    (onInput)="onInput($event)" (onSelect)="calendarEvent.emit($event)">
+    (onInput)="onInput($event)" (onSelect)="calendarEvent.emit($event)" (onBlur)="onBlur($event)"
+    (keydown.enter)="$event.preventDefault()" [maxlength]="maxLength">
+
     <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
       <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
       <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
@@ -18,13 +20,15 @@
   </p-calendar>
 </ng-container>
 
-<!-- 唯讀模式 -->
 <ng-template #readonlyMode>
   <app-readonly-calendar-display [control]="control" [calendarType]="calendarType" [showSeconds]="showSeconds"
     [placeholder]="placeholder" [submitted]="submitted" [controlName]="controlName">
   </app-readonly-calendar-display>
 </ng-template>
 
-<!-- 錯誤訊息 -->
-<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
-  [control]="control"></app-control-messages>
+<app-control-messages [onerror]="submitted || (control.touched && control.invalid)" [control]="control">
+</app-control-messages>
+
+<small *ngIf="helpMsg || showErrorMessage" [id]="controlName">
+  {{ helpMsg }}
+</small>

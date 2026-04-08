@@ -180,24 +180,23 @@
     </div>
   </form>
 
-  <app-customFooter-table
-    tableKey="FIN15020"
+  <app-table-report
+    [data]="tableData()"
     dataKey="No"
-    [data]="data"
+    tableKey="FIN15020"
     [columns]="columns"
+    [totalRecords]="totalRecords()"
+    [loading]="tableLoading()"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction"
+    [showCheckBox]="true"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[
-      { field: 'PUR_VoucherType', order: 1 },
-      { field: 'InvoiceNo', order: 1 },
-    ]"
-    [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true"
-    [loading]="loading"
     [showManage]="false"
     [showDelete]="false"
     [showCaption]="false"
-    [footerData]="footerData"
-  ></app-customFooter-table>
+    [footerData]="footerRow"
+    [footerLabel]="'合計'"
+    [isRowSelectable]="isRowSelectable"
+  ></app-table-report>
 </div>

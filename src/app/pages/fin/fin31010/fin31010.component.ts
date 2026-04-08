@@ -1,19 +1,19 @@
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Fin31010Service, QueryFin31010Request, QueryFin31010Response } from '@service/api/fin/fin31010.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, formatDateTime } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
-import { Fin31010Service, QueryFin31010Response } from '@service/api/fin/fin31010.service';
-import { finalize } from 'rxjs';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { AsyncPipe } from '@angular/common';
 
 //1.3.1.1 收款項目對照會計科目維護
 @Component({
@@ -27,7 +27,7 @@ import { AsyncPipe } from '@angular/common';
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     MultiSelectComponent,
     AsyncPipe
@@ -39,9 +39,12 @@ export class FIN31010Component extends BasicQueryPageComponent<QueryFin31010Resp
     CAP_Name: [null, [Validators.maxLength(30)]], // 收款項目名稱
     AccNo: [null], // 會計科目代號
     Remark: [null, [Validators.maxLength(100)]], // 備註
-    ...createPaginationConfig([{ field: 'CAP_Item', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'CAP_Item', order: 1 }]],
   });
   totalRecords = 0;
+  lastQueryBody: QueryFin31010Request | null = null;
   data: QueryFin31010Response[] = [];
   columns: Column[] = [
     { field: 'CAP_Item', header: '收款項目代號', visible: true },
@@ -57,9 +60,9 @@ export class FIN31010Component extends BasicQueryPageComponent<QueryFin31010Resp
     { field: 'UPD_USR_Name', header: '變更人員名稱', visible: false },
   ];
   selectedRows: QueryFin31010Response[] = [];
-  AccNoOptions = this.dropdown.queryGls1005();
+  AccNoOptions = this.dropdown.queryGls1005_ledgerMD();
   constructor(
-    private readonly fin31010Service: Fin31010Service,
+    public readonly fin31010Service: Fin31010Service,
     private readonly dropdown: DropdownApiService,
   ) {
     super(); // 呼叫父類建構子
@@ -73,16 +76,22 @@ export class FIN31010Component extends BasicQueryPageComponent<QueryFin31010Resp
     this.handleSubmit(frm, () => {
       this.fin31010Service.queryFin31010(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data
+        this.lastQueryBody = frm.value;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
   onDelete() {
-    const capItems = this.selectedRows.map(item => item.CAP_Item);
-    this.fin31010Service.deleteFin31010(capItems).subscribe(res => {
-      this.messageService.successBubble(res.Message);
-      this.onSubmit(this.queryForm); // 重新載入資料
-    });
+    this.messageService.confirm({
+      header: `是否確定刪除 ${this.selectedRows.length} 筆資料?`,
+      accept: () => {
+        const capItems = this.selectedRows.map(item => item.CAP_Item);
+        this.fin31010Service.deleteFin31010(capItems).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.onSubmit(this.queryForm); // 重新載入資料
+        });
+      }
+    })
   }
 }

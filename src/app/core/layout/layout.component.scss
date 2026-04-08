@@ -131,3 +131,19 @@
     background-color: var(--surface-a); /* 必須與內容區塊的背景色一致 */
   }
 }
+
+.layout-main {
+  min-height: 200px; // 確保沒內容時也有高度
+}
+
+.custom-loading-fixed-mask {
+  position: fixed; /* 必須是 fixed */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  pointer-events: all;
+  overflow: hidden;
+  /* 不要在此處寫 width, height, top, left */
+}

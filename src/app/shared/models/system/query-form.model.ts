@@ -3,6 +3,8 @@
 export const yesterday = (() => {
   const d = new Date();
   d.setDate(d.getDate() - 1);
+  // 將時間設定為 00:00:00.000
+  d.setHours(0, 0, 0, 0);
   return d;
 })();
 // 明天
@@ -117,3 +119,8 @@ export const formatTxnNo = (val: number | string | null | undefined): string => 
   if (val == null) return '';
   return String(val).padStart(6, '0');
 };
+
+// 上一年的今天
+export const lastYearToday = new Date(new Date().getFullYear() - 1, new Date().getMonth(), new Date().getDate());
+// 上上衣年的今天
+export const lastLastYearToday = new Date(new Date().getFullYear() - 2, new Date().getMonth(), new Date().getDate());

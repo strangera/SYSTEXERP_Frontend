@@ -133,24 +133,26 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
 
     const insertRequest = {
       sad_preorder_date: this.datePipe.transform(this.dataForm2.value.sad_preorder_date, 'yyyy-MM-dd') ?? '',
-      idList: this.selectedCheckoutItems.map(item => item.id),
       sad_date_start: this.datePipe.transform(this.dataForm.value.sad_date_start, 'yyyy-MM-dd') ?? '',
       sad_date_end: this.datePipe.transform(this.dataForm.value.sad_date_end, 'yyyy-MM-dd') ?? '',
+      insList: this.selectedCheckoutItems.map(item => ({
+        id: item.id,
+        sad_date: this.datePipe.transform(item.sad_date, 'yyyy-MM-dd') ?? '',
+        talent_id: item.talent_id,
+        tlt_no: item.tlt_no,
+      })),
     };
 
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: `確認結帳 ${this.selectedCheckoutItems.length} 筆資料？`,
       accept: () => {
         this.btnLoading = true;
         this.tls26040Service.insertTLS26040(insertRequest)
-          .pipe(finalize(() => this.btnLoading = false))
-          .subscribe(response => {
-            this.messageService.successBubble('結帳成功');
-            // 重新查詢資料
-            this.onSubmit(this.dataForm);
-            // 清空選取項目
-            this.selectedItems = [];
-            this.selectedCheckoutItems = [];
+          .pipe(untilDestroyed(this), finalize(() => this.btnLoading = false))
+          .subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            // 返回查詢頁
+            this.onCancel();
           });
       },
     });

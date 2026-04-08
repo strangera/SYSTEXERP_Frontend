@@ -1,220 +1,936 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { ImageService } from '@service/utility/image.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { GalleriaModule } from 'primeng/galleria';
 import { PanelModule } from 'primeng/panel';
-import { AuthService } from '../../../service/system/auth.service';
+import { Observable, catchError, finalize, firstValueFrom, forkJoin, of } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { CPM12050Data, CPM12050Service, InsertCPM12050DetailRequest, InsertCPM12050Request, UpdateCPM12050DetailRequest, UpdateCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 
-//5.1.2.5 顧客意見管理作業 CRU
 @Component({
   selector: 'app-cpm12050-cru',
   templateUrl: './cpm12050-cru.component.html',
-  styleUrl: './cpm12050-cru.component.scss',
+  styleUrls: ['./cpm12050-cru.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, DropdownComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [
+    NgIf,
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    InputTextareaComponent,
+    DropdownComponent,
+    TranslateModule,
+    TableEditComponent,
+    CalendarComponent,
+    FileUploadModule,
+    GalleriaModule
+  ]
 })
-export class CPM12050CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
+export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> implements OnInit {
+  // 若觸發高權限編輯，則強制允許編輯 (繞過一般權限判斷)
+  forceEditAll = false;
 
-  // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    opinionCode: [, [Validators.required]], // 客戶意見編號
-    customerName: ['', [Validators.maxLength(20)]], // 顧客姓名
-    handlingSituation: [], // 處理情況
-    gender: [], // 性別
-    opinionCategory: [, [Validators.required]], // 客戶意見類別
-    opinionSource: [[] as number[], [Validators.required]], // 客戶意見來源別
-    subOpinionSource: [[] as number[], [Validators.required]], // 客戶意見子類別
-    //
-    contactAddress: ['', [Validators.maxLength(100)]], // 聯絡住址
-    contactPhone: [, [Validators.maxLength(30)]], // 聯絡電話
-    cellPhone: [, [Validators.maxLength(10)]], // 行動電話
-    email: ['', [Validators.maxLength(100)]], // 電子信箱
-    pieces: [, [Validators.maxLength(20)]], // 件號
-    //
-    emailContent: [, [Validators.required]], // 顧客意見內容
-    //
-    responsibleUnit: [, [Validators.required]], // 責任單位
-    builder: ['', [Validators.required, Validators.maxLength(10)]], // 建檔人員
-    receiveDate: [, [Validators.required]], // 接件日期
-    notifyDate: [], // 通知相關單位處理日期
-    object: ['', [Validators.maxLength(10)]], // 對象
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
-  });
-  // ----------------------------------------------------------------
-  handlingOptions: any[] = [
-    { value: 1, label: '已建單' },
-    { value: 2, label: '已派單' },
-    { value: 3, label: '處理中' },
-    { value: 4, label: '結案' },
-  ];
-
-  genderOptions: any[] = [
-    { value: 1, label: '男' },
-    { value: 2, label: '女' },
-  ];
-
-  opinionCategoryOptions: any[] = [
-    { value: 1, label: '意見反映' },
-    { value: 2, label: '廣告業務' },
-    { value: 3, label: '活動、場地洽談' },
-    { value: 4, label: '承租店櫃' },
-    { value: 5, label: '合作提案' },
-  ];
-
-  opinionSourceOptions: any[] = [
-    { value: 1, label: '現場' },
-    { value: 2, label: '來電' },
-    { value: 3, label: 'E-mail' },
-    { value: 4, label: '社群網站' },
-    { value: 5, label: '郵寄信函' },
-  ];
-
-  responsibleUnitOptions: any[] = [
-    { value: 1, label: 'X001/營運部' },
-    { value: 2, label: 'X002/行銷部' },
-    { value: 3, label: 'X003/管理部' },
-    { value: 4, label: 'X004/經企部' },
-    { value: 5, label: 'X005/財務部' },
-  ];
-
-  //
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
-  ) {
-    super();  // 呼叫父類建構子
-  }
-
-  ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510012';
-    //
-
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
+  // 當需要強制高權限編輯時，覆寫 canEdit 判斷
+  override canEdit(): boolean {
+    if (this.forceEditAll) {
+      return true;
     }
+    return super.canEdit();
+  }
+  dataForm = this.formBuilder.nonNullable.group({
+    KIND_ID: [null as string | null, Validators.required],                        // 意見類型（必填）
+    KIND_ID_SUB: [null as string | null, Validators.required],                    // 意見子類型（必填）
+    SUGG_SOURCE: [null as string | null, Validators.required],                    // 建議來源（必填）
+    ORG_ID_QUERY: [null as string | null, Validators.required],                   // 組織(查詢責任單位用)
+    ORG_ID: [null as string | null, Validators.required],                         // 責任單位（必填）
+    COMPLAIN_NOTES: [null, [Validators.required, Validators.maxLength(1000)]],    // 顧客意見內容（必填）
+    CUST_NAME: [null, Validators.maxLength(20)],                                  // 客戶姓名
+    SEX: [null],                                                                  // 性別
+    CONTACT_ADDR: [null],                                                         // 聯絡地址
+    CONTACT_TEL: [null, Validators.maxLength(30)],                                // 聯絡電話
+    CELL_PHONE: [null, Validators.maxLength(30)],                                 // 手機號碼
+    E_MAIL: [null, [Validators.email, Validators.maxLength(100)]],                // Email
+    // SUGG_SOURCE_OTHER: [null, Validators.required],                               // 其他建議來源
+    MEMBER_ID: [null],                                                            // 會員編號
+    CRT_USR_No: [null as string | null],                                           // 建檔人編號
+    CRT_USR_Name: [null as string | null],
+    COMPLAIN_DATE: [null],
+    ALERT_DATE: [null],
+    ANSWER_YN: [null],
+    STATUS: [null],
+    SUGG_TYPE: [null, Validators.required], // 意見類型（必填）
+    CLASS_EMAIL: [null],
+  });
+  uploadedFiles: any[] = [];
+  mediaItems: { url: string; type: 'image' | 'video'; name: string }[] = [];
+  visible = false;
+  // Galleria items for PrimeNG
+  galleriaItems: { url: string; type: 'image' | 'video'; name: string }[] = [];
+  galleriaActiveIndex = 0;
+  // 三個檔案欄位
+  formFile1?: File | null = null;
+  formFile2?: File | null = null;
+  formFile3?: File | null = null;
 
-    console.log(this.accordionTabCss);
+  @ViewChild('fileUpload1') fileUpload1!: FileUpload;
+  @ViewChild('fileUpload2') fileUpload2!: FileUpload;
+  @ViewChild('fileUpload3') fileUpload3!: FileUpload;
+  // 已存在後端檔案名稱（若後端有紀錄，顯示下載連結）
+  existingFile1: string | null = null;
+  existingFile2: string | null = null;
+  existingFile3: string | null = null;
+  // 後端實際儲存的路徑/檔名（下載/刪除請求需用此值）
+  rawExistingFile1: string | null = null;
+  rawExistingFile2: string | null = null;
+  rawExistingFile3: string | null = null;
+  ANSWER_YNOptions = [
+    { label: '已建立', value: 'S' },
+    { label: '已派單', value: 'W' },
+    { label: '處理中', value: 'Y' },
+    { label: '結案', value: 'Z' }
+  ];
+  SUGG_TYPEOptions = [
+    { label: '客訴', value: '0' },
+    { label: '表揚', value: '1' },
+    // deleteImage API usage removed per request: UI no longer offers delete button.
+
+  ];
+
+  //#region 下拉選單
+  // 性別選項
+  sexOptions = [
+    { label: '男', value: 'M' },
+    { label: '女', value: 'F' }
+  ];
+
+  // 意見類型選項
+  kindIdOptions: any[] = [];
+
+  // 意見子類型選項
+  kindIdSubOptions: any[] = [];
+
+  // 建議來源選項
+  suggSourceOptions = getSYS1000Options('SUGG_SOURCE');
+  // 組織選項
+  orgIdQueryOptions: any[] = [];
+
+  // 責任單位選項
+  orgIdOptions: any[] = [];
+  //#endregion
+
+  // 編輯table設定
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
+  data: any[] = [];
+  private _originalDetails: any[] = [];
+  private _detailCountPrev = 0;
+  private _alertDateInitiallyProvided = false;
+  columns: EditColumn[] = [
+    {
+      field: 'ANSWER',
+      header: '處理記錄',
+      type: 'input',
+      validate: [validateRequired]
+    },
+    {
+      field: 'ANSWER_DATE',
+      header: '處理日期時間',
+      type: 'date',
+      validate: [validateRequired]
+    },
+    {
+      field: 'ANSWER_ID',
+      header: '處理者',
+      type: 'input',
+      validate: [validateRequired]
+    },
+
+  ];
+
+  // 判斷是否為已存在的明細（有 SEQ_ID 的為既有資料，不可編輯）
+  isExistingDetail = (rowData: Record<string, any>): boolean => !!rowData['SEQ_ID'];
+  detailRowSelectable: (rowData: any, rowIndex: number, data: any) => boolean | undefined = (rowData) => {
+    try {
+      if (this.forceEditAll) return true;
+      return !this.isExistingDetail(rowData);
+    } catch (e) {
+      return true;
+    }
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
+  // wrapper for row edit disabled logic that respects high-privilege override
+  rowEditDisabledWrapper: (rowData: any, rowIndex?: number, data?: any) => boolean = (rowData) => {
+    try {
+      // 當 forceEditAll 時允許編輯既有明細
+      if (this.forceEditAll) return false;
+      return this.isExistingDetail(rowData);
+    } catch (e) {
+      return false;
+    }
   }
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // counterPosition: [], // 所屬服務台位置
-      // allocateNumber: [, [this.validationService.numberValidator]], // 分配設備數量
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
+  constructor(
+    private cpm12050Service: CPM12050Service,
+    private dropDownListService: DropDownListService,
+    private dropdownApiService: DropdownApiService,
+    private imageService: ImageService,
+    private http: HttpClient
+  ) {
+    super();
   }
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+  getImageUrl(): string | null {
+    if (this.rowdata && this.rowdata.FileName1) {
+      return environment.ApiUrl + '/' + this.rowdata.FileName1;
+    }
+    return null;
   }
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
+  private openProtectedUrl(url: string) {
+    const token = this.authService.getUserInfo()?.AccessToken;
+    const headers = token ? new HttpHeaders({ Authorization: `Bearer ${token}` }) : undefined;
+    this.http.get(url, { responseType: 'blob', headers: headers as any })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (blob: Blob) => {
+          const objectUrl = window.URL.createObjectURL(blob);
+          window.open(objectUrl, '_blank');
+          // release after a while
+          setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+        },
+
+      });
   }
 
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
+  private openUrlWithAuthIfNeeded(url: string) {
+    try {
+      const apiBase = (environment.ApiUrl || '').replace(/\/$/, '');
+      if (apiBase && url.startsWith(apiBase)) {
+        this.openProtectedUrl(url);
+      } else {
+        window.open(url, '_blank');
+      }
+    } catch (e) {
+      window.open(url, '_blank');
+    }
+  }
 
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
+  // 用於 template 的公開方法：點擊時在新分頁開啟圖片（會依需帶授權）
+  openInNewTab(url: string) {
+    if (!url) return;
+    this.openUrlWithAuthIfNeeded(url);
+  }
+
+  // 嘗試在 galleria 內嵌顯示圖片（先嘗試直接載入，不行再帶授權下載 blob）
+  openInGalleria(rawUrl: string) {
+    if (!rawUrl) return;
+    const makeFull = (u: string) => {
+      if (/^https?:\/\//i.test(u)) return u;
+      return `${environment.ApiUrl.replace(/\/$/, '')}/${String(u).replace(/^\/+/, '')}`;
+    };
+    const full = makeFull(rawUrl);
+
+    // 先用瀏覽器 Image 嘗試載入（不帶 header），成功則直接用該 URL 顯示
+    const img = new Image();
+    img.onload = () => {
+      this.galleriaItems = [{ url: full, type: 'image', name: full.split('/').pop() || '' }];
+      this.visible = true;
+    };
+    img.onerror = () => {
+      // 直接載入失敗（可能為 401/403/404），改用帶授權的 blob 下載
+      const token = this.authService.getUserInfo()?.AccessToken;
+      const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+      this.http.get(full, { responseType: 'blob', headers: headers as any })
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (blob: Blob) => {
+            const objectUrl = window.URL.createObjectURL(blob);
+            this.galleriaItems = [{ url: objectUrl, type: 'image', name: full.split('/').pop() || '' }];
+            this.visible = true;
+            setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+          },
+          error: (err: any) => {
+            const msg = err?.status === 404 ? '找不到檔案' : (err?.status === 401 ? '需要授權存取檔案' : '無法載入檔案');
+            this.messageService.errorBubble(msg);
+          }
+        });
+    };
+    img.src = full;
+  }
+
+  // 為點擊檔名建立 galleria 並顯示（一次處理最多三張，依 slot 順序）
+  async openGalleriaFromSlot(slot: 1 | 2 | 3) {
+    if (!this.rowdata) return;
+    const raws = [this.rawExistingFile1, this.rawExistingFile2, this.rawExistingFile3];
+    const clickedIndex = slot - 1;
+    const candidates = raws.map(r => r ?? null).filter((r, idx) => !!r) as string[];
+    if (candidates.length === 0) {
+      this.messageService.errorBubble('沒有可預覽的檔案');
       return;
     }
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
+    const makeFull = (u: string) => {
+      if (/^https?:\/\//i.test(u)) return u;
+      return `${environment.ApiUrl.replace(/\/$/, '')}/${String(u).replace(/^\/+/, '')}`;
+    };
+
+    const loadOrFetch = (u: string) => new Promise<string>((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(makeFull(u));
+      img.onerror = () => {
+        // try blob with auth
+        const token = this.authService.getUserInfo()?.AccessToken;
+        const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
+        this.http.get(makeFull(u), { responseType: 'blob', headers: headers as any }).pipe(untilDestroyed(this)).subscribe({
+          next: (blob: Blob) => {
+            const objectUrl = window.URL.createObjectURL(blob);
+            // autoset revoke after 60s
+            setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+            resolve(objectUrl);
+          },
+          error: (err: any) => reject(err)
+        });
+      };
+      img.src = makeFull(u);
+    });
+
+    try {
+      // only open the clicked slot's file (single image preview)
+      const rawMap = [this.rawExistingFile1, this.rawExistingFile2, this.rawExistingFile3];
+      const raw = rawMap[clickedIndex];
+      if (!raw) {
+        this.messageService.errorBubble('沒有可預覽的檔案');
+        return;
+      }
+      const full = makeFull(raw);
+      console.log('openGalleriaFromSlot single:', raw, 'full:', full, 'slot', slot);
+
+      // show backend URL immediately
+      this.galleriaItems = [{ url: full, type: 'image', name: String(raw).split('/').pop() || '' }];
+      this.galleriaActiveIndex = 0;
+      this.visible = true;
+
+      // background: if direct load fails, try blob with auth and replace
+      try {
+        const resolved = await loadOrFetch(raw as string);
+        if (resolved && resolved !== full) {
+          this.galleriaItems = [{ url: resolved, type: 'image', name: String(raw).split('/').pop() || '' }];
         }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
+        console.log('openGalleriaFromSlot resolved:', resolved);
+      } catch (err) {
+        console.warn('openGalleriaFromSlot loadOrFetch failed for', raw, err);
+      }
+    } catch (e) {
+      console.error('openGalleriaFromSlot error', e);
+      this.messageService.errorBubble('載入檔案失敗');
+    }
+  }
+
+  private setupAlertDateValidation(): void {
+    const statusCtrl: any = (this.dataForm.controls as any).STATUS;
+    const alertCtrl: any = (this.dataForm.controls as any).ALERT_DATE;
+    if (!statusCtrl || !alertCtrl) return;
+
+    try {
+      alertCtrl.statusChanges.pipe(untilDestroyed(this)).subscribe((s: any) => {
+        console.log('DEBUG ALERT_DATE statusChanges ->', s, 'disabled=', alertCtrl.disabled);
+      });
+    } catch (e) { }
+
+    // 若為新增，預設 STATUS 為 'S'
+    if (this.crudstatus === CRUDStatus.Create) {
+      try { statusCtrl.setValue('S', { emitEvent: false }); } catch (e) { /* ignore */ }
     }
 
-    this.messageService.unblockUi();
-    this.submitted = false;
+    const applyRules = (status: any) => {
+      const key = status ? String(status).toUpperCase() : '';
+      const isRequired = key === 'Y' || key === 'Z';
+      if (isRequired) {
+        alertCtrl.setValidators([Validators.required]);
+        alertCtrl.updateValueAndValidity({ emitEvent: true });
+        // 不在此處改變 enable/disable，以避免在使用者互動時被自動鎖定
+      } else {
+        alertCtrl.clearValidators();
+        alertCtrl.updateValueAndValidity({ emitEvent: true });
+        // 非必填時由後續邏輯決定是否 enable（例如檢視模式）
+      }
+    };
+
+    // 先套用一次當前狀態（只設定驗證規則）
+    applyRules(statusCtrl.value);
+
+    // 當 STATUS 改變時僅更新驗證器，不自動鎖定欄位
+    statusCtrl.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((s: any) => applyRules(s));
+
+    // 不監聽 ALERT_DATE 的 valueChanges 避免在使用者輸入後被自動鎖住
+
+    // 初始化後：若為檢視模式且不允許強制編輯，或是後端載入時已有 ALERT_DATE 且狀態為 Y/Z，則把欄位設為唯讀
+    try {
+      const statusKey = statusCtrl.value ? String(statusCtrl.value).toUpperCase() : '';
+      const isYorZ = statusKey === 'Y' || statusKey === 'Z';
+      if (this.crudstatus === CRUDStatus.Read && !this.forceEditAll) {
+        console.log('DEBUG: init disable ALERT_DATE because Read mode');
+        alertCtrl.disable({ emitEvent: false });
+      } else if (this._alertDateInitiallyProvided && isYorZ) {
+        // 如果後端原本就有 ALERT_DATE 且狀態為 Y/Z，則初始化為唯讀
+        console.log('DEBUG: init disable ALERT_DATE because backend provided + status Y/Z');
+        alertCtrl.disable({ emitEvent: false });
+      } else {
+        // 其他情況（新增、編輯且無後端 ALERT_DATE），保持可編輯
+        console.log('DEBUG: init enable ALERT_DATE');
+        alertCtrl.enable({ emitEvent: false });
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['/CPM1000/CPM12050']);
+  getAnswerYnLabel(code: any): string {
+    if (code === null || code === undefined || code === '') return '';
+    const key = String(code).toUpperCase();
+    const found = this.ANSWER_YNOptions.find(o => String(o.value).toUpperCase() === key);
+    return found ? found.label : String(code);
   }
+
+  // 依據目前模式與狀態回傳 STATUS 下拉選項
+  get statusOptions() {
+    try {
+      const statusCtrl: any = (this.dataForm.controls as any).STATUS;
+      const current = statusCtrl && statusCtrl.value ? String(statusCtrl.value).toUpperCase() : (this.rowdata ? String((this.rowdata as any).STATUS ?? '').toUpperCase() : '');
+      // 編輯模式且目前為處理中（Y）時，僅允許保留 Y 或變更為 Z
+      if (this.crudstatus === CRUDStatus.Edit && current === 'Y') {
+        return this.ANSWER_YNOptions.filter(o => String(o.value).toUpperCase() === 'Y' || String(o.value).toUpperCase() === 'Z');
+      }
+    } catch (e) {
+      // ignore
+    }
+    return this.ANSWER_YNOptions;
+  }
+
+  ngOnInit(): void {
+    this.initializePage('CPM12050', this.dataForm);
+    // 讀取導航 state 是否帶入 forceEditAll
+    const state = this.router.lastSuccessfulNavigation?.extras.state;
+    this.forceEditAll = !!state?.['forceEditAll'];
+    this.loadOptions();
+    // 若為編輯或檢視狀態，帶回資料
+    if (this.rowdata) {
+
+      // 預先載入下拉選項
+      this.onKindChange(this.rowdata.KIND_ID!);
+      this.onOrgQueryChange(this.rowdata.ORG_ID!);
+      // 設定表單值（帶入 master 欄位）
+      this.dataForm.patchValue({
+        KIND_ID: this.rowdata.KIND_ID,
+        KIND_ID_SUB: this.rowdata.KIND_ID_SUB,
+        ORG_ID_QUERY: this.rowdata.ORG_ID,
+        ORG_ID: this.rowdata.CLASS_ID,
+        COMPLAIN_NOTES: this.rowdata.COMPLAIN_NOTES ?? null,
+        CUST_NAME: this.rowdata.CUST_NAME ?? null,
+        SEX: this.rowdata.SEX ?? null,
+        CONTACT_ADDR: this.rowdata.CONTACT_ADDR ?? null,
+        CONTACT_TEL: this.rowdata.CONTACT_TEL ?? null,
+        CELL_PHONE: this.rowdata.CELL_PHONE ?? null,
+        E_MAIL: this.rowdata.E_MAIL ?? null,
+        MEMBER_ID: this.rowdata.MEMBER_ID ?? null,
+        CLASS_EMAIL: (this.rowdata as any).CLASS_EMAIL ?? null,
+        COMPLAIN_DATE: this.rowdata.COMPLAIN_DATE ? new Date(this.rowdata.COMPLAIN_DATE) : null,
+        ALERT_DATE: this.rowdata.ALERT_DATE ? new Date(this.rowdata.ALERT_DATE) : null,
+        ANSWER_YN: (this.rowdata.ANSWER_YN ?? (this.rowdata as any).STATUS)
+          ? String((this.rowdata.ANSWER_YN ?? (this.rowdata as any).STATUS)).toUpperCase()
+          : null,
+        SUGG_TYPE: (this.rowdata as any).SUGG_TYPE ?? null,
+        STATUS: (this.rowdata as any).STATUS ? String((this.rowdata as any).STATUS).toUpperCase() : null
+      } as any);
+      // 設定既有檔案顯示名稱（取最後檔名）
+      const extractName = (p: any) => {
+        try {
+          if (!p) return null;
+          const s = String(p);
+          return s.split('\\').pop()?.split('/').pop() ?? s;
+        } catch (e) { return null; }
+      };
+      const raw1 = (this.rowdata as any).FileName1;
+      const raw2 = (this.rowdata as any).FileName2;
+      const raw3 = (this.rowdata as any).FileName3;
+      this.rawExistingFile1 = raw1 ?? null;
+      this.rawExistingFile2 = raw2 ?? null;
+      this.rawExistingFile3 = raw3 ?? null;
+      this.existingFile1 = extractName(raw1);
+      this.existingFile2 = extractName(raw2);
+      this.existingFile3 = extractName(raw3);
+      // 記錄載入時 ALERT_DATE 是否存在（若存在代表後端預設已填，則可依規則設為唯讀）
+      this._alertDateInitiallyProvided = !!this.rowdata.ALERT_DATE;
+      // 如果是檢視模式（Read），將 ANSWER_YN 與 STATUS 設為唯讀
+      if (this.crudstatus === CRUDStatus.Read && !this.forceEditAll) {
+        try {
+          (this.dataForm.controls as any).ANSWER_YN.disable();
+          (this.dataForm.controls as any).STATUS.disable();
+        } catch (e) {
+          // ignore if controls not exist
+        }
+      }
+      // 帶回明細資料
+      this.cpm12050Service.queryCPM12050Detail({
+        ID: this.rowdata.ID,
+        SEQ_ID: this.rowdata.SEQ_ID!
+      })
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          // 初始化 prev count
+          this._detailCountPrev = Array.isArray(this.data) ? this.data.length : 0;
+          // 保存原始明細快照以便後續判斷有哪些既有明細被修改（high-privilege 可編輯既有明細）
+          this._originalDetails = Array.isArray(this.data) ? JSON.parse(JSON.stringify(this.data)) : [];
+        });
+    }
+
+    // 隱藏的建檔人欄位需自動帶入目前使用者，送出時傳至後端
+    const user = this.authService.getUserInfo();
+    if (user) {
+      this.dataForm.patchValue({
+        CRT_USR_No: user.user_No ?? null,
+        CRT_USR_Name: user.user_Name ?? null
+      });
+    }
+
+    // 設定表單控制項的可編輯狀態：
+    // - 若由高權限打開（forceEditAll），則全部可編輯
+    // - 若為 Edit 模式，僅允許特定欄位可編輯，其餘欄位設為唯讀/disabled
+    this.configureFormControls();
+    // 一般情況也要啟動 ALERT_DATE 與 STATUS 的互動規則
+    this.setupAlertDateValidation();
+  }
+
+  // 當 table-edit 發生 dataChange（clean data）時會觸發此處理
+  // 若從 0 筆變成 >0 筆（使用者新增第一筆處理紀錄），則自動將 STATUS 設為 'Y'（處理中）
+  onTableDataChange(cleanData: any[]) {
+    const prev = this._detailCountPrev || 0;
+    const curr = Array.isArray(cleanData) ? cleanData.length : 0;
+    // 更新本地 data
+    this.data = cleanData || [];
+    // 若先前為 0，且現在大於 0，代表使用者新增了第一筆明細
+    if (prev === 0 && curr > 0) {
+      const statusCtrl: any = (this.dataForm.controls as any).STATUS;
+      try {
+        // 只有在狀態不是 Z（結案）時才改為 Y
+        const cur = statusCtrl && statusCtrl.value ? String(statusCtrl.value).toUpperCase() : '';
+        if (cur !== 'Z') {
+          statusCtrl.setValue('Y');
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+    this._detailCountPrev = curr;
+  }
+
+  // 依照 crudstatus 與 forceEditAll 設定各 form 控制項 enable/disable
+  configureFormControls() {
+    const editableOnEdit = ['CONTACT_ADDR', 'CONTACT_TEL', 'CELL_PHONE', 'E_MAIL', 'ALERT_DATE', 'STATUS'];
+    // 若為高權限，全部啟用
+    if (this.forceEditAll) {
+      const ctrls: any = this.dataForm.controls as any;
+      Object.keys(ctrls).forEach((name: string) => {
+        ctrls[name].enable();
+      });
+      return;
+    }
+    // Create：全部啟用； Read：保持現狀（initializePage 會處理 disable）； Edit：只啟用白名單
+    if (this.crudstatus === CRUDStatus.Create) {
+      const ctrls: any = this.dataForm.controls as any;
+      Object.keys(ctrls).forEach((name: string) => {
+        ctrls[name].enable();
+      });
+      return;
+    }
+    if (this.crudstatus === CRUDStatus.Edit) {
+      const ctrls: any = this.dataForm.controls as any;
+      Object.keys(ctrls).forEach((name: string) => {
+        if (editableOnEdit.includes(name)) {
+          ctrls[name].enable();
+        } else {
+          ctrls[name].disable();
+        }
+      });
+      return;
+    }
+    // Read 模式：由 initializePage 控制是否 disable，這裡不強制修改
+  }
+
+  onSubmit(form: FormGroup): void {
+    const formValue = form.getRawValue();
+
+    if (!(this.isFormCreateable || this.isFormEditable)) {
+      this.messageService.errorBubble('目前不允許執行此操作（非新增或無編輯權限）');
+      return;
+    }
+
+    this.handleSubmit(form, () => {
+      if (this.tableEditComponent) {
+        const valid = this.tableEditComponent.validateAndShowErrors();
+        if (!valid) {
+          this.loading = false;
+          return;
+        }
+      }
+
+      switch (this.crudstatus) {
+        case CRUDStatus.Create: {
+          if (!this.canAdd()) {
+            this.messageService.errorBubble('沒有新增權限');
+            this.loading = false;
+            return;
+          }
+
+          const insertRequest: InsertCPM12050Request = {
+            KIND_ID: formValue.KIND_ID,
+            KIND_ID_SUB: formValue.KIND_ID_SUB,
+            SUGG_SOURCE: formValue.SUGG_SOURCE,
+            ORG_ID: formValue.ORG_ID,
+            COMPLAIN_NOTES: formValue.COMPLAIN_NOTES,
+            CUST_NAME: formValue.CUST_NAME,
+            SEX: formValue.SEX,
+            CONTACT_ADDR: formValue.CONTACT_ADDR,
+            CONTACT_TEL: formValue.CONTACT_TEL,
+            CELL_PHONE: formValue.CELL_PHONE,
+            E_MAIL: formValue.E_MAIL,
+            SUGG_SOURCE_OTHER: (formValue as any).SUGG_SOURCE_OTHER ?? '',
+            MEMBER_ID: formValue.MEMBER_ID,
+            ANSWER_YN: formValue.ANSWER_YN ? String(formValue.ANSWER_YN).toUpperCase() : formValue.ANSWER_YN,
+            STATUS: formValue.STATUS ?? formValue.ANSWER_YN ?? 'S',
+            SUGG_TYPE: formValue.SUGG_TYPE,
+            CLASS_EMAIL: formValue.CLASS_EMAIL,
+            ALERT_DATE: formValue.ALERT_DATE ? (new Date(formValue.ALERT_DATE)).toISOString() : undefined,
+            USR_NO: formValue.CRT_USR_No,
+            USR_NAME: formValue.CRT_USR_Name
+          };
+
+          const hasFilesCreate = !!(this.formFile1 || this.formFile2 || this.formFile3);
+
+          const performInsert = (payload: any) => {
+            this.cpm12050Service.insertCPM12050(payload)
+              .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+              .subscribe((response: any) => {
+                this.messageService.successBubble('新增成功');
+                const seq = response?.Data?.SEQ_ID ?? response?.SEQ_ID;
+                const newId = response?.ID ?? (Array.isArray(response?.Data) ? response.Data[0]?.ID : undefined);
+                if (seq) {
+                  this.cpm12050Service.queryCPM12050({ SEQ_ID: seq }).pipe(untilDestroyed(this)).subscribe(r => this.onCancel());
+                  return;
+                }
+                if (newId) {
+                  this.cpm12050Service.queryCPM12050({ ID: newId }).pipe(untilDestroyed(this)).subscribe(r => this.onCancel());
+                  return;
+                }
+                this.dataForm.reset();
+              });
+          };
+
+          if (hasFilesCreate) {
+            const formData = new FormData();
+            Object.keys(insertRequest || {}).forEach(k => {
+              const v = (insertRequest as any)[k];
+              formData.append(k, v === undefined || v === null ? '' : String(v));
+            });
+            if (this.formFile1) formData.append('formFile1', this.formFile1, this.formFile1.name);
+            if (this.formFile2) formData.append('formFile2', this.formFile2, this.formFile2.name);
+            if (this.formFile3) formData.append('formFile3', this.formFile3, this.formFile3.name);
+            performInsert(formData);
+          } else {
+            performInsert(insertRequest);
+          }
+
+          break;
+        }
+
+        case CRUDStatus.Edit: {
+          // build update request
+          const updateRequest: UpdateCPM12050Request = {
+            ID: this.rowdata?.ID || 0,
+            KIND_ID: formValue.KIND_ID ?? this.rowdata?.KIND_ID,
+            KIND_ID_SUB: formValue.KIND_ID_SUB ?? this.rowdata?.KIND_ID_SUB,
+            CUST_NAME: formValue.CUST_NAME ?? this.rowdata?.CUST_NAME,
+            SEX: formValue.SEX ?? this.rowdata?.SEX,
+            CONTACT_ADDR: formValue.CONTACT_ADDR ?? this.rowdata?.CONTACT_ADDR,
+            CONTACT_TEL: formValue.CONTACT_TEL ?? this.rowdata?.CONTACT_TEL,
+            CELL_PHONE: formValue.CELL_PHONE ?? this.rowdata?.CELL_PHONE,
+            E_MAIL: formValue.E_MAIL ?? this.rowdata?.E_MAIL,
+            COMPLAIN_NOTES: formValue.COMPLAIN_NOTES ?? this.rowdata?.COMPLAIN_NOTES,
+            SUGG_SOURCE: formValue.SUGG_SOURCE ?? this.rowdata?.SUGG_SOURCE,
+            SUGG_SOURCE_OTHER: (formValue as any).SUGG_SOURCE_OTHER ?? this.rowdata?.SUGG_SOURCE_OTHER ?? '',
+            ORG_ID: formValue.ORG_ID ?? this.rowdata?.ORG_ID,
+            MEMBER_ID: formValue.MEMBER_ID ?? this.rowdata?.MEMBER_ID,
+            SUGG_TYPE: formValue.SUGG_TYPE ?? (this.rowdata as any)?.SUGG_TYPE,
+            ANSWER_YN: formValue.ANSWER_YN ? String(formValue.ANSWER_YN).toUpperCase() : this.rowdata?.ANSWER_YN ?? undefined,
+            CLASS_EMAIL: formValue.CLASS_EMAIL ?? (this.rowdata as any)?.CLASS_EMAIL,
+            STATUS: this.forceEditAll ? (formValue.STATUS ?? this.rowdata?.STATUS) : 'Y',
+            ALERT_DATE: formValue.ALERT_DATE ? (new Date(formValue.ALERT_DATE)).toISOString() : (this.rowdata?.ALERT_DATE ? (new Date(this.rowdata.ALERT_DATE)).toISOString() : undefined),
+            USR_NO: formValue.CRT_USR_No ?? this.rowdata?.CRT_USR_No,
+            USR_NAME: formValue.CRT_USR_Name ?? this.rowdata?.CRT_USR_Name
+          };
+
+          const newDetails: InsertCPM12050DetailRequest[] = this.data
+            .filter(item => !item.SEQ_ID)
+            .map(item => ({ ...item, SEQ_ID: this.rowdata?.SEQ_ID || '', USR_NO: formValue.CRT_USR_No, USR_NAME: formValue.CRT_USR_Name }));
+
+          const payload: any = { ...updateRequest } as any;
+          const stringFields = ['KIND_ID', 'KIND_ID_SUB', 'CUST_NAME', 'SEX', 'CONTACT_ADDR', 'CONTACT_TEL', 'CELL_PHONE', 'E_MAIL', 'COMPLAIN_NOTES', 'SUGG_SOURCE', 'SUGG_SOURCE_OTHER', 'ORG_ID', 'MEMBER_ID', 'SUGG_TYPE', 'ANSWER_YN', 'CLASS_EMAIL', 'STATUS', 'ALERT_DATE', 'USR_NO', 'USR_NAME'];
+          stringFields.forEach(f => { if (payload[f] === undefined || payload[f] === '') payload[f] = null; if (payload[f] === null) return; if (f === 'STATUS' || f === 'ANSWER_YN') payload[f] = String(payload[f]).toUpperCase(); });
+
+          const requests: Observable<any>[] = [];
+          const mainFields = ['KIND_ID', 'KIND_ID_SUB', 'CUST_NAME', 'SEX', 'CONTACT_ADDR', 'CONTACT_TEL', 'CELL_PHONE', 'E_MAIL', 'COMPLAIN_NOTES', 'SUGG_SOURCE', 'SUGG_SOURCE_OTHER', 'ORG_ID', 'MEMBER_ID', 'SUGG_TYPE', 'CLASS_EMAIL', 'ALERT_DATE', 'STATUS', 'USR_NO', 'USR_NAME'];
+          const row: any = this.rowdata || {};
+          const normalize = (v: any) => (v === undefined || v === null ? null : String(v));
+          const mainChanged = mainFields.some(f => { if (f === 'ALERT_DATE') { const a = formValue.ALERT_DATE ? new Date(formValue.ALERT_DATE).toISOString() : null; const b = row.ALERT_DATE ? new Date(row.ALERT_DATE).toISOString() : null; return a !== b; } if (f === 'STATUS' && formValue[f] != null) { return String(formValue[f]).toUpperCase() !== String(row[f] ?? '').toUpperCase(); } return normalize(formValue[f]) !== normalize(row[f]); });
+
+          const hasFilesEdit = !!(this.formFile1 || this.formFile2 || this.formFile3);
+          if (hasFilesEdit || mainChanged) {
+            const formData = new FormData();
+            Object.keys(payload || {}).forEach(k => { const v = payload[k]; formData.append(k, v === undefined || v === null ? '' : String(v)); });
+            if (this.formFile1) formData.append('formFile1', this.formFile1, this.formFile1.name);
+            if (this.formFile2) formData.append('formFile2', this.formFile2, this.formFile2.name);
+            if (this.formFile3) formData.append('formFile3', this.formFile3, this.formFile3.name);
+            requests.push(this.cpm12050Service.updateCPM12050(formData));
+          }
+          if (newDetails.length > 0) requests.push(this.cpm12050Service.insertCPM12050Detail(newDetails));
+
+          const updatedDetails: UpdateCPM12050DetailRequest[] = (this.data || []).filter((item: any) => !!item.SEQ_ID).map((item: any) => {
+            const orig = this._originalDetails.find((o: any) => { try { if (o.ID !== undefined && item.ID !== undefined) return String(o.ID) === String(item.ID); return String(o.SEQ_ID) === String(item.SEQ_ID); } catch (e) { return false; } });
+            if (!orig) return null;
+            const sanitize = (obj: any) => { const copy: any = {}; Object.keys(obj || {}).forEach(k => { if (['ID', 'SEQ_ID', 'USR_NO', 'USR_NAME'].includes(k)) return; const v = obj[k]; if (v instanceof Date) copy[k] = v.toISOString(); else copy[k] = v; }); return copy; };
+            const cleanOrig = sanitize(orig); const cleanCur = sanitize(item); if (JSON.stringify(cleanOrig) === JSON.stringify(cleanCur)) return null;
+            return { ID: item.ID !== undefined ? item.ID : 0, MAIN_ID: updateRequest.ID ?? this.rowdata?.ID ?? 0, DETAIL_ID: item.ID !== undefined ? item.ID : 0, SEQ_ID: String(item.SEQ_ID ?? ''), ANSWER: item.ANSWER ?? '', ANSWER_ID: item.ANSWER_ID ?? '', USR_NO: formValue.CRT_USR_No ?? '', USR_NAME: formValue.CRT_USR_Name ?? '' } as UpdateCPM12050DetailRequest;
+          }).filter((d: any) => d !== null) as UpdateCPM12050DetailRequest[];
+          if (updatedDetails.length > 0) requests.push(this.cpm12050Service.updateCPM12050Detail(updatedDetails));
+
+          const wrapped = requests.map((r, idx) => r.pipe(catchError(err => of({ __error: true, __index: idx, err }))));
+          if (wrapped.length === 0) {
+            this.messageService.successBubble('無變更');
+            this.loading = false;
+            return;
+          }
+          forkJoin(wrapped).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((results: any[]) => {
+            const failed = (results || []).find(r => r && r.__error);
+            if (failed) { const err = failed.err; const msg = err?.error?.Message || err?.message || JSON.stringify(err?.error) || '修改失敗（後端錯誤）'; this.messageService.errorBubble(`修改失敗：${msg}`); return; }
+            this.messageService.successBubble('修改成功'); this.onCancel();
+          });
+          break;
+        }
+      }
+    });
+  }
+
+
+  loadOptions() {
+    this.dropDownListService.querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.orgIdQueryOptions = res.Data.map(item => ({
+          ...item,
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+        }));
+      })
+    this.dropDownListService.queryCSS1002DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.kindIdOptions = this.kindIdOptions.concat(
+          res.Data.map(item => ({
+            value: item.No,
+            label: `${item.No} - ${item.Name}`,
+          }))
+        );
+      })
+    this.dropdownApiService.queryCss1005()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.orgIdOptions = res || [];
+      });
+  }
+
+
+  onOrgQueryChange(orgId: string) {
+    // 不更動 orgIdOptions，讓 ORG_ID 與 ORG_ID_QUERY 完全獨立
+    return;
+  }
+
+  onKindChange(kindId: string) {
+    if (!kindId) {
+      this.kindIdSubOptions = [];
+      this.dataForm.patchValue({ KIND_ID_SUB: null });
+      return;
+    }
+    this.dropDownListService.queryCSS1003DropDownList(kindId)
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.kindIdSubOptions = res.Data.map(item => ({
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+        }));
+      })
+  }
+  // 處理三個不同的檔案上傳（各自單檔）
+  onSelectFile1(event: FileSelectEvent) {
+    const files = [...event.files];
+    const picked = files.length > 0 ? files[0] : null;
+    if (picked && this.existingFile1) {
+      const ok = confirm('目前已有檔案，是否依然要上傳，會刪除原本檔案？');
+      if (!ok) {
+        try { this.fileUpload1.clear(); } catch (e) { }
+        return;
+      }
+      this.existingFile1 = null;
+    }
+    this.formFile1 = picked;
+  }
+
+  onSelectFile2(event: FileSelectEvent) {
+    const files = [...event.files];
+    const picked = files.length > 0 ? files[0] : null;
+    if (picked && this.existingFile2) {
+      const ok = confirm('目前已有檔案，是否依然要上傳，會刪除原本檔案？');
+      if (!ok) {
+        try { this.fileUpload2.clear(); } catch (e) { }
+        return;
+      }
+      this.existingFile2 = null;
+    }
+    this.formFile2 = picked;
+  }
+
+  onSelectFile3(event: FileSelectEvent) {
+    const files = [...event.files];
+    const picked = files.length > 0 ? files[0] : null;
+    if (picked && this.existingFile3) {
+      const ok = confirm('目前已有檔案，是否依然要上傳，會刪除原本檔案？');
+      if (!ok) {
+        try { this.fileUpload3.clear(); } catch (e) { }
+        return;
+      }
+      this.existingFile3 = null;
+    }
+    this.formFile3 = picked;
+  }
+
+  removeFile1() {
+    this.formFile1 = null;
+    try { this.fileUpload1.clear(); } catch (e) { }
+  }
+
+  removeFile2() {
+    this.formFile2 = null;
+    try { this.fileUpload2.clear(); } catch (e) { }
+  }
+
+  removeFile3() {
+    this.formFile3 = null;
+    try { this.fileUpload3.clear(); } catch (e) { }
+  }
+
+  // 下載既有檔案：使用 ImageService 下載後觸發瀏覽器下載
+  downloadExistingFile(slot: 1 | 2 | 3) {
+    if (!this.rowdata) return;
+    const seq = (this.rowdata as any).SEQ_ID;
+    const fileName = slot === 1 ? this.existingFile1 : slot === 2 ? this.existingFile2 : this.existingFile3;
+    if (!fileName) return;
+    // 優先使用 rowdata 提供的路徑（FileName1/FileName2/FileName3），避免呼叫舊的 Image API
+    const raw = slot === 1 ? this.rawExistingFile1 : slot === 2 ? this.rawExistingFile2 : this.rawExistingFile3;
+    const rawFromRow = raw ?? (this.rowdata as any).FileName1 ?? (this.rowdata as any).FileName2 ?? (this.rowdata as any).FileName3 ?? null;
+
+    if (rawFromRow) {
+      try {
+        const s = String(rawFromRow);
+        // 如果已經是完整的可用 URL，直接在新分頁開啟
+        if (/^https?:\/\//i.test(s)) {
+          this.openInGalleria(s);
+          return;
+        }
+
+        // 從絕對路徑中擷取 'Uploads/...' 的相對路徑（支援反斜線或斜線），再組成 API 可存取的 URL
+        const m = s.match(/(Uploads[\\/].*)/i);
+        if (m && m[1]) {
+          const rel = m[1].replace(/\\/g, '/'); // 將反斜線轉為正斜線
+          const url = `${environment.ApiUrl.replace(/\/$/, '')}/${rel.replace(/^\/+/, '')}`;
+          this.openInGalleria(url);
+          return;
+        }
+      } catch (e) {
+        console.warn('failed to construct image url from rowdata', e);
+      }
+    }
+
+    // 若 rowdata 未提供路徑，回退到舊的查詢 ImageService 的邏輯
+    const seqCandidates = Array.from(new Set([
+      String(seq || ''),
+      String((this.rowdata as any)?.ID ?? ''),
+      String((this.rowdata as any)?.SEQ_ID ?? ''),
+      String((this.rowdata as any)?.NOT_No ?? '')
+    ].filter(s => s && s !== 'undefined')));
+
+    const tryQuerySequentially = async (): Promise<any[]> => {
+      for (const s of seqCandidates) {
+        try {
+          const res: any = await firstValueFrom(this.imageService.queryImages({ IMG_Type: 'CPM12050', IMG_SeqNo: s }));
+          console.log('queryImages for CPM12050 seq', s, res);
+          if (res && Array.isArray(res.Data) && res.Data.length > 0) return res.Data;
+        } catch (e) {
+          console.warn('queryImages failed for seq', s, e);
+        }
+      }
+      return [];
+    };
+
+    tryQuerySequentially().then(list => {
+      const base = (fileName).split('\\').pop()?.split('/').pop() ?? fileName;
+      const found = list.find((f: any) => String(f.IMG_File) === String(base));
+      if (found) {
+        if (found.IMG_Path) {
+          const url = `${environment.ApiUrl}/${String(found.IMG_Path).replace('~', '')}/${found.IMG_File}`;
+          this.openInGalleria(url);
+          return;
+        }
+        const rawFile = String(found.IMG_File || '');
+        const baseName = rawFile.split('\\').pop()?.split('/').pop() ?? fileName;
+        const uploadsMatch = rawFile.match(/(Uploads|IMAGES)[\\/].*/i);
+        if (uploadsMatch) {
+          const rel = uploadsMatch[0].replace(/\\/g, '/');
+          const relDir = rel.split('/').slice(0, -1).join('/');
+          const url = `${environment.ApiUrl}/${relDir}/${baseName}`;
+          this.openInGalleria(url);
+          return;
+        }
+      }
+      // 無法預覽，提示使用者
+      this.messageService.errorBubble('找不到可預覽的檔案');
+    }).catch(err => {
+      console.error('sequential queryImages failed', err);
+      this.messageService.errorBubble('查詢檔案失敗');
+    });
+  }
+
 }
+

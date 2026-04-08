@@ -52,21 +52,18 @@
               optionValue="value" [control]="queryForm.controls.user_type" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
-        <!-- <div> -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-        <!-- </div> -->
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <app-table apiUrl="queryUser" tableKey="SYS0110" dataKey="id" [data]="data" [columns]="columns"
+  <app-table-report apiUrl="queryUser" tableKey="SYS0110" dataKey="id" [data]="data" [columns]="columns"
     (edit)="onEdit($event)" (detail)="onDetail($event)" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id"
-    [multiSortMeta]="[{ field: 'user_No', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    deleteIcon="pi pi-ban" deletepTooltip="停用"></app-table>
+    [totalRecords]="totalRecords" [loading]="loading" deleteIcon="pi pi-ban" deletepTooltip="停用"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="sys0110Service.queryUser.bind(sys0110Service)"></app-table-report>
 </div>

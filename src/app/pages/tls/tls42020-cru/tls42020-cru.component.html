@@ -10,9 +10,9 @@
         <app-dropdown class="col-12 md:col-6 lg:col-6" label="菜單類別" controlName="SBM_Type" [options]="menuTypeOptions"
           [control]="dataForm.controls.SBM_Type" [submitted]="submitted" [optionLabel]="'label'"
           [optionValue]="'value'"></app-dropdown>
-        <app-dropdown class="col-12 md:col-6 lg:col-6" label="專櫃編號/名稱" controlName="TLT_No" [options]="tltNoOptions"
-          [control]="dataForm.controls.TLT_No" [submitted]="submitted" [optionLabel]="'label'" [optionValue]="'value'"
-          (valueChange)="loadPLU_MagNoOptions($event)"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-6" label="專櫃編號/名稱" controlName="TLT_No"
+          [options]="tltNoOptions | async" [control]="dataForm.controls.TLT_No" [submitted]="submitted"
+          [optionLabel]="'label'" [optionValue]="'value'"></app-dropdown>
         <app-calendar class="col-12 md:col-6 lg:col-6" label="有效起始日期" calendarType="dateOne"
           [control]="dataForm.controls.SBM_BegDate" [submitted]="submitted"></app-calendar>
         <app-calendar class="col-12 md:col-6 lg:col-6" label="有效結束日期" calendarType="dateOne"
@@ -20,12 +20,10 @@
       </div>
 
       <!-- 明細 -->
-      <app-table class="col-12" tableKey="TLS42020Detail" dataKey="ID" [columns]="columns" [data]="data"
-        [showEdit]="false" [showDetail]="false" [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true"
-        (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
-        [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable"
-        [insertRowData]="true" (dataChange)="data = $event" [showReportMode]="false"
-        (fieldChange)="onFieldChange($event)" [showFilter]="false"></app-table>
+      <app-table-edit class="col-12" tableKey="TLS42020Detail" dataKey="ID" [columns]="columns" [data]="data"
+        [showInsert]="false" (dataChange)="data = $event" [disabled]="isFormReadable" [tableRequired]="true"
+        [defaultInsertData]="gridDefaultData">
+      </app-table-edit>
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>

@@ -34,10 +34,10 @@
               [submitted]="submitted"></app-input-text>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商簡稱" controlName="	VEN_SName" [control]="queryForm.controls.VEN_SName"
+          <!-- <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="廠商簡稱" controlName="VEN_SName" [control]="queryForm.controls.VEN_SName"
               [submitted]="submitted"></app-input-text>
-          </div>
+          </div> -->
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="廠商匯款銀行代號" controlName="VEN_BNK_No" [control]="queryForm.controls.VEN_BNK_No"
@@ -117,7 +117,8 @@
 
 <div class="card">
   <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (edit)="onEdit($event)" (selectionChange)="selectedItems = $event" (detail)="onDetail($event)"
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
+    [rows]="30" (edit)="onEdit($event)" (selectionChange)="selectedItems = $event" (detail)="onDetail($event)"
     [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords"
     [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
     (delete)="onDelete($event)" [addButton]="addButton" [loading]="loading" [showDelete]="false"></app-table>

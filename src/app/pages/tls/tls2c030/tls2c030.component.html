@@ -3,6 +3,7 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button label="確定日結" icon="pi pi-check" (click)="defineDateCheckout()"></app-button>
     <app-button label="反日結" icon="pi pi-undo" (click)="undefineDateCheckout()"></app-button>
+    <app-button label="本日重算" icon="pi pi-refresh" (click)="recalculateToday()"></app-button>
   </div>
 
   <p-accordion>
@@ -26,9 +27,10 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="tls2c030" dataKey="id" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showManage]="false" [showDelete]="false" [multiSortMeta]="[{ field: 'cls_date', order: -1 }]">
-  </app-table>
+  <div class="col-12">
+    <app-table-report [data]="tableData()" dataKey="id" tableKey="tls2c030" [columns]="columns"
+      [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFunction" (dataChange)="onTableDataChange($event)" [showManage]="false"
+      [showDelete]="false"></app-table-report>
+  </div>
 </div>

@@ -4,7 +4,10 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button, ButtonDirective } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -15,8 +18,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, convertDateToYYYYMM, convertYYYYMMToDate } from '../../../shared/componentkit/table/table.model';
+import { AddButton, convertDateToYYYYMM } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 import { columns, monthOptions, Pos1018 } from './fin11200.model';
 
@@ -31,7 +33,7 @@ import { columns, monthOptions, Pos1018 } from './fin11200.model';
     FormsModule,
     ReactiveFormsModule,
     MultiSelectComponent,
-    TableComponent,
+    TableReportComponent,
     Button,
     TooltipModule,
     ButtonDirective,
@@ -47,36 +49,39 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
     GUI_YYMM: ['', Validators.required], // 發票年月
     ECR_NoList: [null], // 收銀機號
     GUI_StatusList: [null], // 發票狀態
-    ...createPaginationConfig([{ field: 'GUI_YYMM', order: 1 }, { field: 'GUI_TRACK', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'GUI_YYMM', order: 1 }, { field: 'GUI_TRACK', order: 1 }]],
   });
   totalRecords = 0;
   monthOptions = monthOptions;
   POS_NOSOptions: { value: string; label: string; }[] = [];
   GUI_StatusOptions = getSYS1000Options('GUI_Status');
   data: Pos1018[] = [];
+  lastQueryBody: any;
   selectedRows: Pos1018[] = [];
-  columns: Column[] = columns;
+  columns: ReportColumn[] = columns;
   addButton: AddButton[] = [
     {
       label: '停用',
       icon: 'pi pi-ban text-red-500',
       action: (rowData: Pos1018) => { this.onStop(rowData); },
-      disabled: (rowData: Pos1018) => rowData.GUI_Status === '02' || rowData.GUI_Status === '03',
+      disabled: (rowData: Pos1018) => rowData.GUI_Status === '02' || rowData.GUI_Status === '03' || !this.hasPermission(Actions.Stop),
     }
   ]
   disabledMonthDates: Date[] = [];
 
   constructor(
-    private fin11200Service: Fin11200Service,
-    private eCRNoService: ECRNoService,
-    private datePipe: DatePipe
+    public readonly fin11200Service: Fin11200Service,
+    private readonly eCRNoService: ECRNoService,
+    private readonly datePipe: DatePipe
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.initializePage('FIN11200', '/FIN/FIN11200cru', this.queryForm, (form) => this.onSubmit(form));
-    this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.value} - ${item.label}` })));
+    this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.label}` })));
     // 設定GUI_YYMM預設值
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
@@ -93,10 +98,8 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
         ECR_NoList: frm.get('ECR_NoList')?.value
       }
       this.fin11200Service.queryFIN11200(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
-        this.data = response.Data.map((item: Pos1018) => ({
-          ...item,
-          GUI_YYMM: convertYYYYMMToDate(item.GUI_YYMM)
-        }));
+        this.data = response.Data;
+        this.lastQueryBody = body;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
@@ -146,5 +149,10 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       this.selectedRows = [];
       this.onSubmit(this.queryForm);
     });
+  }
+  onAllocationOfNumber() {
+    if (this.hasPermission(Actions.AllocateNumber)) { // '新增' 的 function_code 是 "20"
+      this.navigateWithState(CRUDStatus.Create);
+    }
   }
 }

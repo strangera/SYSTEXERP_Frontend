@@ -12,6 +12,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { formatAmount } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
@@ -19,7 +20,6 @@ import { finalize, forkJoin } from 'rxjs';
 @Component({
   selector: 'app-fin62030-cru',
   templateUrl: './fin62030-cru.component.html',
-  styleUrl: './fin62030-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -35,18 +35,17 @@ import { finalize, forkJoin } from 'rxjs';
 })
 export class FIN62030CRUComponent extends BasicCruPageComponent<FIN62030Data[]> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    VouNo: [{ value: '自動產生', disabled: true }],        // 傳票號碼
-    VouType: [{ value: '', disabled: true }],      // 傳票種類 1:現金收入2:現金支出3:轉帳傳票 (固定為3)
-    VouTypeName: [{ value: '', disabled: true }],  // 傳票種類名稱
-    VoucherType: [{ value: '', disabled: true }],  // 傳票型態 固定為BT
-    VouDate: [{ value: '', disabled: true }],      // 傳票日期
-    Remark: [''],       // 傳票摘要
-    CRT_USR_No: [{ value: '', disabled: true }],   // 建立者
-    CRT_Date: [{ value: '', disabled: true }]      // 建立日
+    VouNo: [{ value: '自動產生', disabled: true }],
+    VouType: [{ value: '', disabled: true }],
+    VouTypeName: [{ value: '', disabled: true }],
+    VoucherType: [{ value: '', disabled: true }],
+    VouDate: [null as Date | null],
+    Remark: [''],
+    CRT_USR_No: [{ value: '', disabled: true }],
+    CRT_Date: [{ value: null as Date | null, disabled: true }]
   });
 
   //#region 編輯Table相關
-  @ViewChild('editTable') editTable!: TableEditComponent;
   data: VoucherDetail[] = [];
   originalData: VoucherDetail[] = []; // 原始數據 還原用
   selectedItems: VoucherDetail[] = [];
@@ -69,12 +68,73 @@ export class FIN62030CRUComponent extends BasicCruPageComponent<FIN62030Data[]> 
 
   ngOnInit(): void {
     this.initializePage('FIN62030', this.dataForm);
-    this.loadAndSetupColumns();
-    this.loadPreviewData();
+    this.loadAndSetupColumns().add(() => {
+      this.loadPreviewData();
+    });
+    setTimeout(() => {
+      this.data = [
+        {
+          Tran_No: '1',
+          AccDC: '1',
+          SerNo: '1',
+          ACC_No: '1',
+          ACC_Name: '1',
+          DetailNo: '1',
+          NoteDesc: '1',
+          Debit_Amt: 100,
+          Credit_Amt: 0,
+          ORG_ID: '1',
+          ORG_Name: '1',
+          PTA: '1',
+          ProjectNo: '1',
+          SubDetailNo: '1',
+        },
+        {
+          Tran_No: '1',
+          AccDC: '1',
+          SerNo: '1',
+          ACC_No: '1',
+          ACC_Name: '1',
+          DetailNo: '1',
+          NoteDesc: '1',
+          Debit_Amt: 0,
+          Credit_Amt: 200,
+          ORG_ID: '1',
+          ORG_Name: '1',
+          PTA: '1',
+          ProjectNo: '1',
+          SubDetailNo: '1',
+        }
+      ]
+    }, 123);
   }
-
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
+        this.loading = false;
+        return;
+      };
+      // 2. 借貸平衡卡控
+      // 計算借方與貸方的加總 (排除掉新增候選行)
+      const totals = this.data.reduce((acc, curr) => {
+        // 確保數值有效，若為 undefined 或 null 則視為 0
+        const debit = Number(curr.Debit_Amt) || 0;
+        const credit = Number(curr.Credit_Amt) || 0;
+        return {
+          debitSum: acc.debitSum + debit,
+          creditSum: acc.creditSum + credit
+        };
+      }, { debitSum: 0, creditSum: 0 });
+      console.log('totals', totals);
+
+      // 判斷是否平衡 (ERP 系統通常建議使用誤差值判斷，或直接比較)
+      if (totals.debitSum !== totals.creditSum) {
+        this.messageService.errorBubble(`借貸不平衡！借方總計：${totals.debitSum}，貸方總計：${totals.creditSum}`, '驗證失敗');
+        this.loading = false;
+        return;
+      }
       const insertFIN62030Request: InsertFIN62030Request = {
         Tran_Nos: this.rowdata?.map(item => item.Tran_No!) || [],
         Remark: this.dataForm.get('Remark')?.value || '',
@@ -107,18 +167,12 @@ export class FIN62030CRUComponent extends BasicCruPageComponent<FIN62030Data[]> 
     const subDetailNoOptions$ = this.fin55050Service.queryGLS1016_DropDownList()
 
 
-    forkJoin([
+    return forkJoin([
       orgOptions$,
       accNoOptions$,
       projectNoOptions$,
       subDetailNoOptions$
-    ]).pipe(untilDestroyed(this)).subscribe(([
-      orgOptions,
-      accNoOptions,
-      projectNoOptions,
-      subDetailNoOptions
-    ]) => {
-      // 設定下拉選單選項
+    ]).pipe(untilDestroyed(this)).subscribe(([orgOptions, accNoOptions, projectNoOptions, subDetailNoOptions]) => {
       this.SYS3100_Options = orgOptions.Data.map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No }));
       this.AccNoOptions = accNoOptions.Data.map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No }));
       this.ProjectNoOptions = projectNoOptions.Data.map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No }));
@@ -128,17 +182,17 @@ export class FIN62030CRUComponent extends BasicCruPageComponent<FIN62030Data[]> 
         {
           field: 'ACC_No',
           header: '科目代號',
-          type: 'dropdown',
-          options: this.AccNoOptions,
-          optionLabel: 'label',
-          optionValue: 'value',
-          showClear: false,
-          disabled: (value: any, index?: number, rowData?: any) => !(rowData?._originalACC_No?.startsWith('612') && rowData?.AccDC === 'D')
+          // type: 'dropdown',
+          // options: this.AccNoOptions,
+          // optionLabel: 'label',
+          // optionValue: 'value',
+          // showClear: false,
+          // disabled: (value: any, index?: number, rowData?: any) => !(rowData?._originalACC_No?.startsWith('612') && rowData?.AccDC === 'D')
         },
-        { field: 'DetailNo', header: '廠商代號' },
+        { field: 'DetailNo', header: '廠商編號' },
         { field: 'NoteDesc', header: '摘要', type: 'input' },
-        { field: 'Debit_Amt', header: '借方金額', format: formatAmount },
-        { field: 'Credit_Amt', header: '貸方金額', format: formatAmount },
+        { field: 'Debit_Amt', header: '借方金額', format: formatAmount, aggregate: 'sum' },
+        { field: 'Credit_Amt', header: '貸方金額', format: formatAmount, aggregate: 'sum' },
         {
           field: 'ORG_ID',
           header: '組織代號',
@@ -146,7 +200,8 @@ export class FIN62030CRUComponent extends BasicCruPageComponent<FIN62030Data[]> 
           options: this.SYS3100_Options,
           optionLabel: 'label',
           optionValue: 'value',
-          showClear: false
+          showClear: false,
+          validate: [validateRequired]
         },
         { field: 'PTA', header: '立沖代號' },
         {
@@ -173,33 +228,42 @@ export class FIN62030CRUComponent extends BasicCruPageComponent<FIN62030Data[]> 
   // 載入預覽資料
   loadPreviewData() {
     if (this.rowdata && this.rowdata.length > 0) {
+      this.loading = true;
       const Tran_Nos = this.rowdata.map(item => item.Tran_No!);
-      this.fin62030Service.previewFIN62030({ Tran_Nos: Tran_Nos })
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe((response) => {
-          this.dataForm.patchValue({
-            VouType: response.Data?.VouType,
-            VouTypeName: response.Data?.VouTypeName,
-            VoucherType: response.Data?.VoucherType,
-            VouDate: response.Data?.VouDate,
-            Remark: response.Data?.Remark,
-            CRT_USR_No: response.Data?.CRT_USR_No,
-            CRT_Date: response.Data?.CRT_Date
-          });
 
-          this.data = (response.Data?.voucherDetails || []).map(item => ({
-            ...item,
-            // 保存原始 ACC_No 用於判斷是否禁用
-            _originalACC_No: item.ACC_No
-          }));
+      this.fin62030Service.previewFIN62030({ Tran_Nos: Tran_Nos }).pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe((response: any) => { // 先用 any 避開類型檢查
+          // 關鍵點：後端回傳的是陣列，要取第一個物件
+          const responseData = Array.isArray(response.Data) ? response.Data[0] : response.Data;
+          if (responseData) {
+            this.dataForm.patchValue({
+              VouType: responseData.VouType,
+              VouTypeName: responseData.VouTypeName,
+              VoucherType: responseData.VoucherType,
+              // 注意：如果格式是 2026/01/29，new Date() 可能因瀏覽器語系解析失敗，建議確認
+              VouDate: responseData.VouDate ? new Date(responseData.VouDate) : null,
+              Remark: responseData.Remark,
+              CRT_USR_No: responseData.CRT_USR_No,
+              CRT_Date: responseData.CRT_Date ? new Date(responseData.CRT_Date) : null
+            });
+            // 處理表格資料
+            this.data = (responseData.voucherDetails || []).map((item: any) => ({
+              ...item,
+              _originalACC_No: item.ACC_No
+            }));
 
-          this.originalData = JSON.parse(JSON.stringify(this.data)); // 深拷貝保存原始數據
+            this.originalData = JSON.parse(JSON.stringify(this.data));
+
+            // 強制觸發變化偵測（如果 Table 沒出來可加這行）
+            this.data = [...this.data];
+          } else {
+            this.messageService.errorBubble(response.Message || '預覽資料載入失敗');
+          }
         });
     }
   }
 
   onReset() {
-    // 還原表格數據
     this.data = JSON.parse(JSON.stringify(this.originalData));
   }
 }

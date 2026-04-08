@@ -2,11 +2,10 @@ import { ChangeDetectionStrategy, Component, computed, effect, OnInit, signal } 
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN52010Service } from '@service/api/fin/fin52010.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NGXLogger } from 'ngx-logger';
@@ -17,7 +16,6 @@ import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
 @Component({
   selector: 'app-fin52010',
   templateUrl: './fin52010.component.html',
-  styleUrl: './fin52010.component.scss',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -26,8 +24,6 @@ import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
     ReactiveFormsModule,
     TranslateModule,
     ButtonComponent,
-    CalendarComponent,
-    CalendarRangeComponent,
     DropdownComponent,
     InputTextComponent,
     MenubarComponent,
@@ -35,13 +31,26 @@ import { FIN52010Data, FIN52010UpdatePayload } from './fin52010.model';
 })
 export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> implements OnInit {
 
+  private formatYmDisplay(value?: string | null): string | undefined {
+    if (!value) return value as any;
+    const v = value.toString();
+    if (/^\d{6}$/.test(v)) {
+      return `${v.substring(0, 4)}/${v.substring(4, 6)}`;
+    }
+    return v;
+  }
+
+  private normalizeYmPayload(value?: string | null): string | undefined {
+    if (!value) return value as any;
+    const v = value.toString();
+    // 將 yyyy/mm 還原為 yyyymm
+    return v.replace('/', '');
+  }
+
   public readonly dataForm = this.formBuilder.nonNullable.group({
     AccYear: new FormControl<string | void>(void 0, [Validators.required]),
-    OpenDate: new FormControl<Date | void>(void 0, [Validators.required]),
-    OriOpenDate: new FormControl<string | void>(void 0),
-    CloseDate: new FormControl<Date | void>(void 0, [Validators.required]),
-    OriCloseDate: new FormControl<string | void>(void 0),
-    DefaultVouDate: new FormControl<Date | void>(void 0),
+    OpenDate: new FormControl<string | void>(void 0, [Validators.required]),
+    CloseDate: new FormControl<string | void>(void 0, [Validators.required]),
     ORG_ID: new FormControl<string | void>(void 0, [Validators.required]),
     AccNoTotPL: new FormControl<string | void>(void 0, [Validators.required]),
     AccNoCurPL: new FormControl<string | void>(void 0, [Validators.required]),
@@ -52,7 +61,6 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     AccNoOutTax: new FormControl<string | void>(void 0),
     AccNoPost: new FormControl<string | void>(void 0),
     AccNoRemitFee: new FormControl<string | void>(void 0),
-    advanceExpenseAccNo: new FormControl<string | void>(void 0),
     billTransferCon: new FormControl<'N' | 'Y'>('N'),
   });
   public readonly df = computed(() => this.dataForm.controls);
@@ -64,35 +72,32 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
   public readonly tableData = signal<FIN52010Data>(Object.create(null));
   public readonly tableLoading = signal<boolean>(!1);
 
+  public org_id_Options: any[] = [];
+
   public readonly dataEffect = effect(() => {
-    const orgUsr = this.service.orgUsrOptions();
     const gls1005 = this.service.gls1005Options();
-    const { OpenDate, CloseDate, ...rest } = this.tableData();
+    const table = this.tableData();
 
-    if (!orgUsr.length || !gls1005.length) return;
-    const orgLoading = this.service.orgUsrLoading();
-    const gls1005Loading = this.service.gls1005Loading();
+    // 尚未有後端資料或科目下拉尚未載入完成時，不做 patch
+    if (!table || Object.keys(table as any).length === 0 || !gls1005.length) return;
+    if (this.service.gls1005Loading()) return;
 
-    if (orgLoading || gls1005Loading) return;
+    const { OpenDate, CloseDate, ...rest } = table;
+
     this.dataForm.patchValue({
       ...rest,
-      OpenDate: OpenDate ? new Date(+OpenDate.slice(0, 4), +OpenDate.slice(4, 6) - 1, 1) : void 0,
-      CloseDate: CloseDate ? new Date(+CloseDate.slice(0, 4), +CloseDate.slice(4, 6) - 1, 1) : void 0,
-      OriOpenDate: OpenDate,
-      OriCloseDate: CloseDate,
-      // advanceExpenseAccNo: res.advanceExpenseAccNo,
-      // billTransferCon: res.billTransferCon as 'N' | 'Y',
+      OpenDate: this.formatYmDisplay(OpenDate),
+      CloseDate: this.formatYmDisplay(CloseDate),
     });
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
     this.loading = this.tableLoading()
-      || this.service.orgUsrLoading()
-      || this.service.gls1005Loading();
-  });
+  }, { allowSignalWrites: true });
 
   constructor(
     public readonly service: FIN52010Service,
+    private readonly dropDownListService: DropDownListService,
     private readonly logger: NGXLogger,
   ) {
     super();
@@ -103,7 +108,15 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
     this.initializePage('FIN52010', void 0, this.dataForm);
     this.tableLoading.set(!0);
 
-    this.service.getTblUsrOrgOptions();
+    // 組織下拉改用 SYS3100
+    this.dropDownListService.querySYS3100_DropDownList().subscribe(res => {
+      this.org_id_Options = (res.Data || []).map((item: any) => ({
+        ...item,
+        label: `${item.No}-${item.Name}`,
+        value: item.No,
+      }));
+    });
+
     this.service.getGLS1005DropDownOptions();
     this.service.loadFIN52010(this.user!.CompNo).pipe(
       finalize(() => this.tableLoading.set(!1)),
@@ -119,14 +132,13 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const { OriOpenDate, OriCloseDate, ...rest } = this.dataForm.value;
-      const raw = <FIN52010UpdatePayload>{
-        ...rest,
-        AccYear: this.df().AccYear.value,
-        OpenDate: OriOpenDate,
-        CloseDate: OriCloseDate,
+      const data = this.dataForm.getRawValue();
+      const raw = {
+        ...data,
+        OpenDate: this.normalizeYmPayload(data.OpenDate as any),
+        CloseDate: this.normalizeYmPayload(data.CloseDate as any),
         CompNo: this.user!.CompNo,
-      };
+      } as FIN52010UpdatePayload;
       const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
         v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
       ));
@@ -135,9 +147,9 @@ export class FIN52010Component extends BasicQueryPageComponent<FIN52010Data> imp
       this.logger.debug(`onSubmit:`, [raw, payload]);
       this.service.updateFIN52010Data(payload).pipe(
         finalize(() => this.tableLoading.set(!1)),
-      ).subscribe({
-        next: () => this.messageService.successBubble('更新成功'),
-        error: () => this.messageService.errorBubble('更新失敗'),
+      ).subscribe(res => {
+        this.tableData.set(res.Data);
+        this.messageService.successBubble(res.Message || '更新成功');
       });
     });
   };

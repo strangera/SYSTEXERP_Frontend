@@ -11,7 +11,7 @@
         <div class="grid p-fluid">
           <!-- 收銀機號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
+            <app-dropdown label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -42,12 +42,17 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [showCheckBox]="true" tableKey="TLS41040" dataKey="ID" [data]="data"
-      [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-      (detail)="onDetail($event)" (edit)="onEdit($event)" (delete)="onDelete($event)"
+    <app-table-report [showCheckBox]="true" tableKey="TLS41040" dataKey="ID" [data]="data" [totalRecords]="totalRecords"
+      [loading]="loading" (detail)="onDetail($event)" (edit)="onEdit($event)" (delete)="onDelete($event)"
+      [lastQueryBody]="lastQueryBody" [queryFunction]="tls41040Service.queryTLS41040.bind(tls41040Service)"
       [expansionColumns]="expansionColumns7" [columns]="columns7" expansionDataKey="Details"
       [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [isRowSelectable]="isRowSelectable"
-      [editDisabled]="isEditDisabled" [rowEditDisabled]="isRowEditDisabled"></app-table>
+      [editDisabled]="isEditDisabled">
+      <header>
+        <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }"
+          pTooltip="下傳" tooltipPosition="top" pButton icon="pi pi-upload rotate-180" severity="success"
+          class="p-button-rounded p-button-text" [disabled]="selectedItems.length === 0" (click)="onUpload()" />
+      </header>
+    </app-table-report>
   </div>
 </div>

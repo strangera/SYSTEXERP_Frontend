@@ -2,6 +2,7 @@ import { formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
@@ -14,8 +15,8 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   templateUrl: './tls2a020.component.html',
@@ -30,7 +31,7 @@ import { Column, createPaginationConfig, formatAmount } from '../../../shared/co
     DropdownComponent,
     RadiobuttonComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     DropdownComponent
   ],
@@ -43,15 +44,19 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
     tlt_floor: [''],
     ECR_No: [''],
     tlt_building: [''],
-    SortOrder: ['ECR'],
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
   });
 
-
-  columns: Column[] = [];
+  columns: ReportColumn[] = [
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'PAY_Name', header: '未審核工具', visible: true },
+    { field: 'BOOK_PayAmt', header: '系統金額', visible: true, format: formatAmount },
+    { field: 'Actual_ReceivedAmt', header: '實收金額', visible: true, format: formatAmount },
+  ];
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
+  historyRequestBody: any;
   floorOptions: any[] = [];
   ECRNoOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
@@ -59,22 +64,12 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private locationOptionsService: LocationOptionsService,
     private ecrNoService: ECRNoService,
-    private tls2a020Service: TLS2A020Service
+    public tls2a020Service: TLS2A020Service
   ) {
     super();
   }
   ngOnInit(): void {
     this.initializePage('TLS2A020', '/TLS/TLS2A020cru', this.queryForm, (form) => this.onSubmit(form));
-
-    const defaultSortOrder = this.queryForm.get('SortOrder')?.value ?? 'ECR';
-    this.updateColumnsAndSortBy(defaultSortOrder);
-
-    this.queryForm.get('SortOrder')?.valueChanges.subscribe((value) => {
-      if (value) {
-        this.updateColumnsAndSortBy(value);
-      }
-    });
-
 
     // 下拉選單資料載入
     this.ecrNoService.getECRNo().subscribe({
@@ -112,6 +107,9 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
         TXN_Date: formatDate(raw.TXN_Date, 'yyyy-MM-dd', 'en-US'),
       };
 
+      // 設定最後查詢條件給 app-table-report 使用
+      this.historyRequestBody = params;
+
       this.tls2a020Service.queryTLS2A020(params).subscribe({
         next: (res) => {
           this.data = res.Data ?? [];
@@ -128,43 +126,4 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
       });
     });
   }
-
-  updateColumnsAndSortBy(sortOrder: string): { sortBy: string } {
-    this.updateColumns(sortOrder);
-    const sortBy = sortOrder === 'ECR' ? 'ECR_No' : 'PAY_NAME';
-    return { sortBy };
-  }
-
-  updateColumns(sortOrder: string): void {
-    const baseColumns: Column[] = [
-      // {
-      //   field: 'TXN_Date',
-      //   header: '銷售日期',
-      //   visible: true,
-      //   format: (v) => formatDate(v, 'yyyy/MM/dd', 'en-US')
-      // },
-      {
-        field: 'BOOK_PayAmt',
-        header: '系統金額',
-        visible: true,
-        format: formatAmount
-      },
-      {
-        field: 'Actual_ReceivedAmt',
-        header: '實收金額',
-        visible: true,
-        format: formatAmount
-      }
-    ];
-
-    const ecrColumn: Column = { field: 'ECR_No', header: '收銀機號', visible: true };
-    const payToolColumn: Column = { field: 'PAY_NAME', header: '支付工具', visible: true };
-
-    // 根據排序條件決定顯示順序
-    this.columns = sortOrder === 'ECR'
-      ? [baseColumns[0], ecrColumn, payToolColumn, ...baseColumns.slice(1)]
-      : [baseColumns[0], payToolColumn, ecrColumn, ...baseColumns.slice(1)];
-  }
-
-
 }

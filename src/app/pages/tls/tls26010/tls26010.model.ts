@@ -52,6 +52,8 @@ export interface EcrItem {
   talent_id?: number;
   tlt_name: string | null;
   tlt_no: string | null;
+
+  Label?: string; // ECR_No+ecr_name
   /** 操作狀態 */
   Status?: ItemOperationStatus;
 }

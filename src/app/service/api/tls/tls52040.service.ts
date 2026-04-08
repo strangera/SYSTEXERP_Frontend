@@ -1,7 +1,7 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 請確認你的 ApiResponse 介面路徑是否正確
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
 
 /** 查詢 POS2031 資料表 (queryTLS52040) 的請求介面 */
@@ -10,7 +10,7 @@ export interface IQueryTLS52040Request {
   LOGO_NoList?: string[]; // 品牌代碼列表
   HOS_NoList?: string[]; // 倉庫代碼列表
   PLU_MagNo?: string; // 商品管理編號 (用於查詢明細)
-  VEN_No?: string; // 廠商代號
+  VEN_No?: string; // 廠商編號
   RJM_StatusList?: string[]; // 退貨驗收狀態列表
   APPLY_USR?: string; // 申請人員編號
   APPLY_Date_Start?: string; // 申請日期起 (YYYY-MM-DD 或 ISO 格式)
@@ -26,7 +26,7 @@ export interface ITLS52040Data {
   id: number;
   RJM_No: string; // 退貨驗收單號
   SYS_StoreNo: string; // 門店編號 (系統)
-  VEN_No: string; // 廠商代號
+  VEN_No: string; // 廠商編號
   LOGO_No: string; // 品牌代碼
   LOGO_CH_NAME: string; // 品牌中文名稱
   HOS_No: string; // 倉庫代號
@@ -62,6 +62,7 @@ export interface ITLS52040Data {
   UPD_Date: string; // 變更日期 (ISO 格式字串)
   UPD_USR_No: string; // 變更人員編號
   UPD_USR_Name: string; // 變更人員姓名
+  CanAPRV: boolean; // 可否審核
 }
 
 /** 退貨驗收明細資料介面 (用於 insert/update TLS52040 的 Details 陣列，對應 POS2032) */
@@ -89,6 +90,9 @@ export interface ITLS52040Detail {
   RJD_ConfirmQty_Finished?: number; // 已完成確認數量 (累計已驗收數量)
   CRN_No?: string; // 退貨單號 (關聯)
   RJM_No?: string; // 退貨驗收單號 (主檔關聯)
+  LOGO_No?: string; // 品牌代碼
+  org_id?: string; // 組織代碼
+  RJM_TaxType?: string; // 單據稅別
 }
 
 /** 新增 POS2031 資料表 (insertTLS52040) 的請求介面 */
@@ -97,8 +101,8 @@ export interface TLS52040Request {
   RJM_No?: string; // 退貨驗收單號
   SYS_StoreNo?: string; // 門店編號 (系統)
   HOS_No?: string; // 倉庫代碼
-  VEN_No?: string; // 廠商代號
-  // LOGO_No?: string; // 品牌代碼
+  VEN_No?: string; // 廠商編號
+  LOGO_No?: string; // 品牌代碼
   org_id?: string; // 組織代碼
   RJM_TaxType?: string; // 單據稅別
   RJM_Status?: string; // 退貨驗收狀態 (通常為初始狀態，例如 '0' 已申請)
@@ -109,6 +113,7 @@ export interface TLS52040Request {
   RJM_TotalSaleTax?: number; // 售價稅額小計
   RJM_TotalSaleAmt?: number; // 售價合計
   RJM_Remark?: string | null; // 退貨驗收單備註
+  APRV_Date?: string; // 審核日期 (ISO 格式字串)
   APPLY_Date?: string; // 申請日期 (ISO 格式字串)
   APPLY_USR_No?: string; // 申請人員編號
   APPLY_USR_Name?: string; // 申請人員姓名
@@ -119,7 +124,7 @@ export interface TLS52040Request {
 export interface IGetPOS2031PRequest {
   // LOGO_No?: string | null; // 品牌代碼
   HOS_No?: string | null; // 倉庫代碼
-  VEN_No?: string | null; // 廠商代號
+  VEN_No?: string | null; // 廠商編號
 }
 
 /** 取得退貨單明細及驗收資料 (GetPOS2032PAndPOS2032) 的請求介面 */
@@ -187,7 +192,15 @@ export class Tls52040Service {
    * @returns 包含 ITLS52040Data 陣列的 API 響應 (假設返回退貨單主檔列表)
    */
   GetPOS2031P(params: IGetPOS2031PRequest): Observable<ApiResponse<any>> {
-    return this.http.post<any>(`${this.apiUrl}/GetPOS2031P`, params);
+    return this.http.post<any>(`${this.apiUrl}/GetPOS2031P`, params).pipe(
+      map((response: ApiResponse<any>) => {
+        return {
+          ...response,
+          Data: response.Data.Data,
+          TotalCount: response.Data.TotalCount
+        };
+      })
+    );
   }
 
   /**

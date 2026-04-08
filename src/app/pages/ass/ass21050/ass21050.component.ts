@@ -175,7 +175,7 @@ export class ASS21050Component extends BasicQueryPageComponent<ASS21050Item> imp
     }
 
     // 顯示確認對話框
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: `確定要刪除選取的 ${itemsToDelete.length} 筆資料嗎？`,
       header: '確認刪除',
       icon: 'pi pi-exclamation-triangle',

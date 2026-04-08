@@ -4,19 +4,19 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Fin55090Service, QueryFIN55090Request, QueryFIN55090Response } from '@service/api/fin/fin55090.service'; // 假設路徑
-import { DropdownApiService } from '@service/utility/dropdown-api.service'; // 假設路徑
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component'; // 假設路徑
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { Fin55090Service, QueryFIN55090Request, QueryFIN55090Response } from '@service/api/fin/fin55090.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
 import { finalize, Observable } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component'; // 假設路徑
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component'; // 假設路徑
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component'; // 假設路徑
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component'; // 假設路徑
-import { FileExportService } from './../../../shared/service/file-export.service'; // 假設路徑
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { FileExportService } from './../../../shared/service/file-export.service';
 import { TableSubheaderGroupingComponent } from './fin55090-table/fin55090-table.component';
 
 @Component({
@@ -26,7 +26,7 @@ import { TableSubheaderGroupingComponent } from './fin55090-table/fin55090-table
   imports: [
     TableSubheaderGroupingComponent,
     ButtonModule, MenubarComponent, AccordionModule, AsyncPipe,
-    FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, RadiobuttonComponent,
+    FormsModule, ReactiveFormsModule, CalendarRangeComponent, RadiobuttonComponent,
     DropdownComponent, CheckboxModule, ButtonComponent, TranslateModule,
   ]
 })
@@ -40,7 +40,7 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
     OrgId: this.formBuilder.control<string | null>(null),
     ProjectNo: this.formBuilder.control<string | null>(null),
     // 預設不顯示餘額為零的科目 (false)，預設列印簽核欄 (true)
-    // ShowZero: this.formBuilder.nonNullable.control(false),
+    ShowZero: this.formBuilder.nonNullable.control(false),
     PrintSign: this.formBuilder.nonNullable.control(true),
   });
   // 類別選項: '0'=統制(4碼), '1'=明細(全碼)
@@ -80,8 +80,8 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
       // 強轉型為 QueryFIN55090Request
       const requestBody = {
         ...frm.value,
-        DateFrom: this.datePipe.transform(frm.value.DateFrom, 'yyyy-MM-dd'),
-        DateTo: this.datePipe.transform(frm.value.DateTo, 'yyyy-MM-dd'),
+        DateFrom: this.datePipe.transform(frm.value.DateFrom, 'yyyy-MM'),
+        DateTo: this.datePipe.transform(frm.value.DateTo, 'yyyy-MM'),
       } as QueryFIN55090Request;
 
       this.fin55090Service.queryFIN55090(requestBody).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
@@ -120,6 +120,6 @@ export class FIN55090Component extends BasicQueryPageComponent<QueryFIN55090Resp
       export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
       '.' + 'pdf', 			 // 傳遞檔案副檔名
       (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    );
+    ).subscribe();
   }
 }

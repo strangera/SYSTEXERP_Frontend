@@ -7,7 +7,6 @@ import { UserInfo } from '@shared/models/system/userInfo';
 import { FormLabelService } from '@shared/service/form-label.service';
 import { Actions, PermissionGuardService } from '@shared/service/permission-guard.service';
 import { ValidationService } from '@shared/service/validation.service';
-import { ConfirmationService } from 'primeng/api';
 import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
@@ -16,13 +15,13 @@ import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 @UntilDestroy()
 export abstract class BasicCruPageComponent<T> {
+  protected readonly now: Date = new Date();
   // constructor
   authService = inject(AuthService);
   router = inject(Router);
   messageService = inject(NotificationService);
   formBuilder = inject(FormBuilder);
   currentPageService = inject(CurrentPageService);
-  confirmationService = inject(ConfirmationService);
   activatedRoute = inject(ActivatedRoute);
   formLabelService = inject(FormLabelService);
   systemDataService = inject(SystemDataService);
@@ -79,7 +78,9 @@ export abstract class BasicCruPageComponent<T> {
     }
 
     const state = this.router.lastSuccessfulNavigation?.extras.state;
-    this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
+    if (!this.previousRoute) {
+      this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
+    }
     this.rowdata = state?.['rowdata'];
     this.queryData = state?.['queryConditions']
     console.log(state?.['rowdata'])
@@ -139,15 +140,19 @@ export abstract class BasicCruPageComponent<T> {
       }
     });
   }
-  onCancel() {
+  onCancel(returnValue?: any) {
     // 確保返回正確的查詢頁面
     const queryPageRoute = this.previousRoute?.includes('account/')
       ? this.previousRoute
-      : `/account/${this.ProgNo.toLowerCase()}`;
+      : `/account/${this.ProgNo.toLowerCase().slice(0, 3)}/${this.ProgNo.toLowerCase()}`;
 
     const extras: NavigationExtras = {
-      state: { fromRoute: this.router.url },
+      state: {
+        fromRoute: this.router.url,
+        data: returnValue
+      },
     };
+
     this.router.navigate([queryPageRoute], extras);
   }
 

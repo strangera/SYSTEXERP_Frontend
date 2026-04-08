@@ -1,228 +1,85 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
+          <!-- 大分類代碼/名稱 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類代碼"
-              controlName="bigCategoryCode"
-              [options]="bigCategoryCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.bigCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="大分類代碼/名稱" controlName="B_CLASS_ID" [options]="bigClassOptions()" optionLabel="label"
+              optionValue="value" [control]="qf().B_CLASS_ID" [submitted]="submitted">
+            </app-dropdown>
           </div>
+          <!-- 中分類代碼/名稱 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="大分類名稱"
-              controlName="bigCategoryName"
-              [control]="queryForm.controls.bigCategoryName"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-dropdown label="中分類代碼/名稱" controlName="M_CLASS_ID" [options]="midClassOptions()" optionLabel="label"
+              optionValue="value" [control]="qf().M_CLASS_ID" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <!-- 所屬會計科目(借) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="所屬會計科目(借)" controlName="STYPE_ACCNO" [options]="accountingOptions" optionLabel="label"
+              optionValue="value" [control]="qf().STYPE_ACCNO" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <!-- 所屬會計科目(貸) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="所屬會計科目(貸)" controlName="STYPE_ACCNO2" [options]="accountingOptions" optionLabel="label"
+              optionValue="value" [control]="qf().STYPE_ACCNO2" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <!-- 進項稅額科目(借) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="進項稅額科目(借)" controlName="STYPE_TAX_ACCNO" [options]="accountingOptions"
+              optionLabel="label" optionValue="value" [control]="qf().STYPE_TAX_ACCNO" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <!-- 費用科目 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="費用科目" controlName="FEES_ACCNO" [options]="accountingOptions" optionLabel="label"
+              optionValue="value" [control]="qf().FEES_ACCNO" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <!-- 折舊科目(借) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="折舊科目(借)" controlName="DEPRE_ACCNO" [options]="accountingOptions" optionLabel="label"
+              optionValue="value" [control]="qf().DEPRE_ACCNO" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <!-- 累計折舊科目(貸) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="累計折舊科目(貸)" controlName="DEPRE_ACCNO2" [options]="accountingOptions" optionLabel="label"
+              optionValue="value" [control]="qf().DEPRE_ACCNO2" [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <!-- 折舊年限 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="折舊年限" controlName="EXP_YEAR" [control]="qf().EXP_YEAR" [submitted]="submitted">
+            </app-input-text>
+          </div>
+          <!-- 備注關鍵字 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="備注" controlName="NOTES_KW" [control]="qf().NOTES_KW" [submitted]="submitted">
+            </app-input-text>
           </div>
         </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="中分類代碼"
-              controlName="midCategoryCode"
-              [options]="midCategoryCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.midCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="中分類名稱"
-              controlName="midCategoryName"
-              [control]="queryForm.controls.midCategoryName"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-        </div>
-        <hr />
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="所屬會計科目(借)"
-              controlName="accounting_Borrow"
-              [options]="accounting_Borrow_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.accounting_Borrow"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="所屬會計科目(貸)"
-              controlName="accounting_Credit"
-              [options]="accounting_Credit_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.accounting_Credit"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="進項稅額科目(借)"
-              controlName="tax_Borrow"
-              [options]="tax_Borrow_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tax_Borrow"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會計科目名稱"
-              controlName="accountName_accBorrow"
-              [control]="queryForm.controls.accountName_accBorrow"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會計科目名稱"
-              controlName="accountName_accCredit"
-              [control]="queryForm.controls.accountName_accCredit"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會計科目名稱"
-              controlName="accountName_taxBorrow"
-              [control]="queryForm.controls.accountName_taxBorrow"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-        </div>
-        <hr />
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="費用科目"
-              controlName="cost"
-              [options]="costOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.cost"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="折舊科目(借)"
-              controlName="depreciation"
-              [control]="queryForm.controls.depreciation"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="累計折舊科目(貸)"
-              controlName="totalDepreciation"
-              [control]="queryForm.controls.totalDepreciation"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會計科目名稱"
-              controlName="accountName_cost"
-              [control]="queryForm.controls.accountName_cost"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會計科目名稱"
-              controlName="accountName_depreciation"
-              [control]="queryForm.controls.accountName_depreciation"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會計科目名稱"
-              controlName="accountName_totalDepreciation"
-              [control]="queryForm.controls.accountName_totalDepreciation"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-        </div>
-        <hr />
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="折舊年限"
-              controlName="depreciationLife"
-              [control]="queryForm.controls.depreciationLife"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-        </div>
-        <hr />
-        <app-editor-text
-          label="說明"
-          controlName="remark"
-          [control]="queryForm.controls.remark"
-          [style]="{ height: '100px' }"
-          [submitted]="submitted"
-        ></app-editor-text>
-        <hr />
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+  <div class="col-12">
+    <app-table-report [data]="tableData()" dataKey="B_CLASS_ID" tableKey="ASS11090_Data" [columns]="columns"
+      [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
+      [queryFunction]="service.queryASS11090.bind(service)" [showDelete]="false" [showReportMode]="false"
+      (edit)="onEdit($event)" (detail)="onDetail($event)">
+    </app-table-report>
   </div>
 </div>

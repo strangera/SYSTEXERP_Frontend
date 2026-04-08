@@ -1,4 +1,5 @@
 import { Component, computed, effect, OnInit, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN54030Service } from '@service/api/fin/fin54030.service';
@@ -6,6 +7,7 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, tap } from 'rxjs';
@@ -14,7 +16,6 @@ import { FIN54030Data } from '../fin54030/fin54030.model';
 @Component({
   selector: 'app-fin54035',
   templateUrl: './fin54035.component.html',
-  styleUrl: './fin54035.component.scss',
   standalone: true,
   imports: [
     AccordionModule,
@@ -23,6 +24,7 @@ import { FIN54030Data } from '../fin54030/fin54030.model';
     TranslateModule,
     ButtonComponent,
     CalendarComponent,
+    InputNumberComponent,
     MenubarComponent,
   ]
 })
@@ -35,6 +37,7 @@ export class FIN54035Component extends BasicQueryPageComponent<FIN54030Data> imp
     CntPostFlag3: new FormControl<number>(0),
   });
   public readonly qf = computed(() => this.queryForm.controls);
+  public readonly displayYMSignal = toSignal(this.qf().DisplayYM.valueChanges);
 
   public readonly tableData = signal<FIN54030Data>(Object.create(null));
   public readonly tableLoading = signal<boolean>(!1);
@@ -54,10 +57,17 @@ export class FIN54035Component extends BasicQueryPageComponent<FIN54030Data> imp
     });
   });
 
+  public readonly displayYMEffect = effect(() => {
+    const date = this.displayYMSignal();
+    if (!date) return;
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    this.qf().TargetYM.setValue(`${year}${month}`, { emitEvent: !1 });
+  });
+
   public loadingEffect = effect(() => {
     this.loading = this.tableLoading()
-      || this.service.closeLoading();
-  });
+  }, { allowSignalWrites: true });
 
   constructor(
     public readonly service: FIN54030Service,
@@ -67,13 +77,19 @@ export class FIN54035Component extends BasicQueryPageComponent<FIN54030Data> imp
   }
 
   public ngOnInit(): void {
-    this.initializePage('FIN54030', void 0, this.queryForm, this.onSubmit.bind(this));
+    this.initializePage('FIN54035', void 0, this.queryForm, this.onSubmit.bind(this));
+
     this.service.loadFIN54030().pipe(
       tap(res => this.logger.debug(`init:`, [res])),
-      finalize(() => this.tableLoading.set(!1)),
     ).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
+        this.queryForm.patchValue({
+          DisplayYM: new Date(+res.Data?.TargetYM.slice(0, 4), +res.Data?.TargetYM.slice(4, 6) - 1, 1),
+          TargetYM: res.Data?.TargetYM,
+          CntPostFlag1: res.Data?.CntPostFlag1,
+          CntPostFlag3: res.Data?.CntPostFlag3,
+        });
         this.tableData.set(res.Data || Object.create(null));
       },
     });
@@ -81,12 +97,13 @@ export class FIN54035Component extends BasicQueryPageComponent<FIN54030Data> imp
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
+      this.logger.debug(`反關帳:`, []);
       if (!this.qf().TargetYM.value?.length) return this.messageService.errorBubble('請選擇目標年月');
 
       this.tableLoading.set(!0);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.logger.debug(`onSubmit:`, [this.qf().TargetYM.value]);
-      this.service.closeFIN54030(this.qf().TargetYM.value!, '2').pipe(
+      this.service.closeFIN54030(this.qf().TargetYM.value!, 2).pipe(
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
         next: res => {

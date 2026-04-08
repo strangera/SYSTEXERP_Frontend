@@ -1,34 +1,31 @@
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS2G010Service } from '@service/api/tls/tls2g010.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { DividerModule } from 'primeng/divider';
+import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
+import { finalize } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
+import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
-import { DividerModule } from 'primeng/divider';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { finalize, Observable } from 'rxjs';
-import { AsyncPipe } from '@angular/common';
-import { Option } from '@service/utility/dropdown-api.model';
-import { IDropdownItem } from '@service/utility/dropDownList.service';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TLS2G010Service } from '@service/api/tls/tls2g010.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { environment } from 'src/environments/environment';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 
-// 2.2.16.1 專櫃預估業績轉入作業
 @Component({
   selector: 'app-tls2g010',
   templateUrl: './tls2g010.component.html',
   standalone: true,
   imports: [MultiSelectComponent, AsyncPipe, CalendarComponent, DividerModule, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, InputTextComponent, TranslateModule]
 })
-export class TLS2G010Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS2G010Component extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
     worksheetName: [{ value: '系統帶入(excel檔名)', disabled: true }], // 工作表名稱
     BudgetYYMM: [null, [Validators.required]],
@@ -37,9 +34,9 @@ export class TLS2G010Component extends BasicQueryPageComponent<any> implements O
     SectionNos: [null],
   });
   // 館別 樓層 組織代碼 下拉
-  buildingOptions?: Observable<IDropdownItem[] | null>;
-  floorOptions?: Observable<IDropdownItem[] | null>;
-  sectionOptions?: Observable<Option[] | null>;
+  buildingOptions = this.dropdownApiService.querySys3800();
+  floorOptions = this.dropdownApiService.querySys3900();
+  sectionOptions = this.dropdownApiService.querySys3100();
 
   files: File[] = [];
 
@@ -52,9 +49,6 @@ export class TLS2G010Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS2G010', '/TLS/TLS2G010cru', this.queryForm, (form) => this.onSubmit(form));
-    this.buildingOptions = this.dropdownApiService.querySys3800();
-    this.floorOptions = this.dropdownApiService.querySys3900();
-    this.sectionOptions = this.dropdownApiService.querySys3100();
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -62,7 +56,7 @@ export class TLS2G010Component extends BasicQueryPageComponent<any> implements O
         ...frm.value,
         BudgetYYMM: convertDateToYYYYMM(frm.value.BudgetYYMM),
       }
-      this.loading = true;
+      this.messageService.infoBubble('匯出檔產生中，請稍後...');
       this.tls2g010Service.generateExportFile(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         const url = `${environment.ApiUrl}${res.Data.PrintBudgetURL}`;
         window.open(url, '_blank');
@@ -79,8 +73,9 @@ export class TLS2G010Component extends BasicQueryPageComponent<any> implements O
   }
   @ViewChild('fileUpload') fileUploadComponent!: FileUploadComponent;
   handleCustomUpload(event: FileUploadHandlerEvent) {
-    this.loading = true;
     if (event.files && event.files.length > 0) {
+      this.loading = true;
+      this.messageService.infoBubble('上傳中，請稍後...');
       this.tls2g010Service.importBudget(event.files[0]).pipe(untilDestroyed(this)).subscribe(res => {
         if (res.Data.IsImportSuccess) {
           this.messageService.successBubble('上傳成功');
@@ -101,7 +96,7 @@ export class TLS2G010Component extends BasicQueryPageComponent<any> implements O
         ...frm.value,
         BudgetYYMM: convertDateToYYYYMM(frm.value.BudgetYYMM),
       }
-      this.loading = true;
+      this.messageService.infoBubble('組織範本下載中，請稍後...');
       this.tls2g010Service.downloadOrgTemplate(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         const url = `${environment.ApiUrl}${res.Data.PrintTPLURL}`;
         window.open(url, '_blank');
@@ -112,6 +107,7 @@ export class TLS2G010Component extends BasicQueryPageComponent<any> implements O
   // 空白範本下載
   onDownloadBlankTemplate() {
     this.loading = true;
+    this.messageService.infoBubble('空白範本下載中，請稍後...');
     this.tls2g010Service.downloadEmptyTemplate().pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       const url = `${environment.ApiUrl}${res.Data.PrintTPLURL}`;
       window.open(url, '_blank');

@@ -1,36 +1,38 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import {
   Column,
   createPaginationConfig,
   formatDateTime,
 } from '../../../shared/componentkit/table/table.model';
 import { Pos10015 } from '../../../shared/models/tls/tls000.model';
-import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-tls46010',
-    templateUrl: './tls46010.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls46010',
+  templateUrl: './tls46010.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 
 // 2.4.6.1 網路位置設定
@@ -42,8 +44,10 @@ export class TLS46010Component
     SYS_SrvStatus: ['', [Validators.maxLength(2)]], // 主機狀態 A=啟用 C=停用 預設值為A
     SYS_SrvIP: ['', [Validators.maxLength(40)]], // 主機IP
     ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
+    pageSize: [30],
   });
   totalRecords = 0;
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
 
   // 表格
   // ----------------------------------------------------------------
@@ -71,10 +75,10 @@ export class TLS46010Component
     },
     { field: 'SYS_SRVDDir', header: '後台系統下載目錄', visible: false },
     { field: 'SYS_SRVUDir', header: '後台系統上傳目錄', visible: false },
-    { field: 'SYS_MyPOSDDir', header: '傳輸程式下載目', visible: true },
-    { field: 'SYS_MyPOSUDir', header: '傳輸程式上傳目', visible: true },
-    { field: 'SYS_SRVDDirClt', header: '前台系統下載目', visible: true },
-    { field: 'SYS_SRVUDirClt', header: '前台系統上傳目', visible: true },
+    { field: 'SYS_MyPOSDDir', header: '傳輸程式下載目錄', visible: true },
+    { field: 'SYS_MyPOSUDir', header: '傳輸程式上傳目錄', visible: true },
+    { field: 'SYS_SRVDDirClt', header: '前台系統下載目錄', visible: true },
+    { field: 'SYS_SRVUDirClt', header: '前台系統上傳目錄', visible: true },
     {
       field: 'CRT_Date',
       header: '建立日期',
@@ -143,17 +147,27 @@ export class TLS46010Component
       this.messageService.warnBubble('無有效的 ID 可供刪除');
       return;
     }
-    this.tls46010Service.deleteTLS46010({ idList }).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-          this.selectedItems = []; // 清空選中項目
-          this.onSubmit(this.queryForm); // 重新查詢以更新列表
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-        }
-      },
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '是否刪除所選項目?',
+      accept: () => {
+        this.loading = true;
+        this.tls46010Service.deleteTLS46010({ idList })
+          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+          .subscribe({
+            next: (response) => {
+              if (response.Status === '0000') {
+                this.messageService.successBubble('選中項目刪除成功');
+                this.selectedItems = []; // 清空選中項目
+                this.onSubmit(this.queryForm); // 重新查詢以更新列表
+              } else {
+                console.error('API error:', response.Status, response.Message);
+                this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+              }
+            },
+
+          });
+      }
     });
   }
 }

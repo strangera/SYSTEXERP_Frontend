@@ -44,6 +44,8 @@ export interface TLS26080DetailTable {
   tpy_rate_D16: number;        // D16 費用比率 (不含'%')
   cap_item_D17: string;        // D17
   tpy_rate_D17: number;        // D17 費用比率 (不含'%')
+  fare_rate_d16?: number;      // 合約入攤 D16 費用比率
+  fare_rate_d17?: number;      // 合約入攤 D16 費用比率
   cap_item_3?: string;         // 合約建檔 D16
   tpy_rate_3?: number;         // 合約建檔 D16 費用比率
   cap_item_4?: string;         // 合約建檔 D17
@@ -76,6 +78,22 @@ export interface TLS26080DetailResult {
   pod_type?: string;                 // 活動類型
 }
 
+/** Request for queryTLS26080TLTTALENT_D16_D17 */
+export interface QueryTLS26080TLTTALENT_D16_D17Request {
+  tlt_no: string;
+  tlt_id: string;
+}
+
+/** Single row from queryTLS26080TLTTALENT_D16_D17 Data[] (API returns string rates) */
+export interface TLS26080TLTTALENT_D16_D17Row {
+  tlt_id: string;
+  tlt_no: string;
+  cap_item_D16: string;
+  tpy_rate_D16: string;
+  cap_item_D17: string;
+  tpy_rate_D17: string;
+}
+
 export interface TLS26080InsertPayload {
   pod_no: string;             // 活動申請編號
   pod_type: string;           // 活動類型
@@ -83,13 +101,13 @@ export interface TLS26080InsertPayload {
   pod_sdate: Date;            // 活動起始日期
   pod_edate: Date;            // 活動終止日期
   pod_busdate: Date;          // 活動正檔日期
-  pod_back_sdate: Date;      // 兌回起始日期
-  pod_back_edate: Date;      // 兌回結束日期
+  pod_back_sdate: Date;       // 兌回起始日期
+  pod_back_edate: Date;       // 兌回結束日期
   TALPORDERD_VOUCHERDetails: TLS26080DetailTable[]; // 活動專櫃資料
 }
 
 export interface TLS26080UpdatePayload extends TLS26080InsertPayload {
-
+  pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
 }
 
 export interface TLS26080Query extends BaseQueryRequest {
@@ -99,6 +117,16 @@ export interface TLS26080Query extends BaseQueryRequest {
   POD_SDate_end?: Date;       // 活動日期 (迄)
   POD_BusDate?: Date;         // 活動正檔日期
   CAP_ItemList?: string[];    // 活動項目列表
+}
+
+/** POST /TLS0000/TLS2000/exportTLS26080PDF 請求 */
+export interface ExportTLS26080PDFRequest extends BaseQueryRequest {
+  POD_No?: string;
+  POD_Desc?: string;
+  POD_SDate_start?: string;
+  POD_SDate_end?: string;
+  POD_BusDate?: string;
+  CAP_ItemList?: string[];
 }
 
 export interface TLS26080UploadResult {
@@ -153,6 +181,9 @@ export interface DeductionItem {
   displayAmount?: string; // 用於顯示格式化後的金額/比率
 }
 
+export interface QueryCampaignRequest {
+}
+
 export interface CampaignData {
   AccountingType: string;
   CampaignId: string;
@@ -160,6 +191,8 @@ export interface CampaignData {
   EndTime: Date;
   Remark: string;
   StartTime: Date;
+  DiscountStartTime: Date | null;
+  DiscountEndTime: Date | null;
 }
 
 // /** 活動類型 */

@@ -43,30 +43,38 @@ export class TableReportUtilityService {
   }
 
   private safeUrlCache = new Map<string, SafeUrl>();
-  getImage(url: string): SafeUrl | undefined {
-    if (!url) { return undefined; }
+
+  getImage(url: any): SafeUrl | string {
+    // 1. 基本防呆：如果是空值，直接回傳一個透明或佔位圖的 base64，或是一個空字串
+    if (!url || typeof url !== 'string' || url.trim() === '') {
+      return '';
+    }
+
     if (this.safeUrlCache.has(url)) {
-      return this.safeUrlCache.get(url);
+      return this.safeUrlCache.get(url)!;
     }
-    const match = url.match(/(.*\/)([^/]*)/);
-    let finalUrl: string;
 
-    if (match && match.length === 3) {
-      const path = match[1].replace(/~/g, '');
-      const filename = match[2];
-      const baseUrl = environment.ApiUrl.endsWith('/') ? environment.ApiUrl.slice(0, -1) : environment.ApiUrl;
-      const sanitizedPath = path.startsWith('/') ? path.slice(1) : path;
-      finalUrl = `${baseUrl}/${sanitizedPath}${filename}`;
-    } else {
-      const sanitizedUrl = url.replace(/~/g, '');
-      const baseUrl = environment.ApiUrl.endsWith('/') ? environment.ApiUrl.slice(0, -1) : environment.ApiUrl;
-      const imagePath = sanitizedUrl.startsWith('/') ? sanitizedUrl.slice(1) : sanitizedUrl;
-      finalUrl = `${baseUrl}/${imagePath}`;
+    try {
+      const baseUrl = environment.ApiUrl.endsWith('/')
+        ? environment.ApiUrl.slice(0, -1)
+        : environment.ApiUrl;
+
+      // 2. 處理路徑：統一移除 ~ 並確保開頭沒有 /
+      let cleanPath = url.replace(/~/g, '');
+      if (cleanPath.startsWith('/')) {
+        cleanPath = cleanPath.slice(1);
+      }
+
+      // 3. 拼接並處理可能的重複斜線
+      const finalUrl = `${baseUrl}/${cleanPath}`;
+
+      const safeUrl = this.sanitizer.bypassSecurityTrustUrl(finalUrl);
+      this.safeUrlCache.set(url, safeUrl);
+      return safeUrl;
+    } catch (e) {
+      console.error('URL轉換出錯:', e);
+      return '';
     }
-    const safeUrl = this.sanitizer.bypassSecurityTrustUrl(finalUrl);
-    this.safeUrlCache.set(url, safeUrl);
-
-    return safeUrl;
   }
   /**
    * 判斷當前行是否為該分組的最後一筆。
@@ -141,5 +149,34 @@ export class TableReportUtilityService {
         }
       })).subscribe();
     }
+  }
+
+  // 找到第一個被標記為 isSubTotal 的欄位索引
+  getFirstSubtotalIndex(columns: ReportColumn[]): number {
+    const index = columns.findIndex(col => col.isSubTotal);
+    return index === -1 ? 0 : index;
+  }
+
+  // 找到總計資料中第一個有值的欄位索引 (避免前面沒值的欄位也被空著)
+  getFirstFooterIndex(columns: ReportColumn[], footerData: any): number {
+    if (!footerData) return 0;
+    const index = columns.findIndex(col => footerData[col.field] !== undefined && footerData[col.field] !== null && footerData[col.field] !== '');
+    return index === -1 ? 0 : index;
+  }
+
+  /**
+ * 取得當前行的分組顯示名稱
+ */
+  getGroupValue(rowData: any, groupRowsBy: string, columns: ReportColumn[]): string {
+    if (!groupRowsBy) return '';
+
+    const rawValue = rowData[groupRowsBy];
+    const groupColumn = columns.find(c => c.field === groupRowsBy);
+
+    // 如果該分組欄位有定義 format，就用 format 過的值，否則直接轉字串
+    if (groupColumn && groupColumn.format) {
+      return String(groupColumn.format(rawValue, 0, rowData) ?? '');
+    }
+    return String(rawValue ?? '');
   }
 }

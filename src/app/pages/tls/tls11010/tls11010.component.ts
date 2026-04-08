@@ -12,13 +12,13 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 
 // UI
 import { TranslateModule } from '@ngx-translate/core';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 // until-destroy
@@ -36,11 +36,10 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    // DropdownComponent,
     MultiSelectComponent,
     InputTextComponent,
     InputNumberRangeComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ],
 })
@@ -48,6 +47,10 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
+  private lastQuerySig: string | null = null;
+  private lazyTimer: any = null;
+  lastQueryBody: any = null;
+queryTLS11010Fn = (body: any) => this.tls11010Service.queryData(body);
 
   // Options
   floorOptions: any[] = [];
@@ -62,9 +65,10 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     { value: '3', label: '停用' },
   ];
 
+  // 查詢表單：一開始就是「全部沒選 / 沒輸入」的狀態
   queryForm = this.formBuilder.group({
     LOCATION_No: ['', Validators.maxLength(10)],
-    org_id: [[]],
+    org_id: [[]], // Multi-select -> 一開始空陣列
     building_no: [[]],
     FLOOR_NO: [[] as string[]],
     AREA_NO: [[] as string[]],
@@ -107,7 +111,6 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     { field: 'GROSS_SPACE', header: '簽約坪數', visible: true },
     { field: 'NET_SPACE', header: '營業坪數', visible: true },
 
-    // ✅ 用 LOCATION_Status 當排序欄位，畫面顯示 label
     {
       field: 'LOCATION_Status',
       header: '使用狀態',
@@ -127,15 +130,18 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    // 1. 初始化頁面（只負責 ProgNo、權限、cruPage 等，不由它幫你做查詢還原）
-    this.initializePage('TLS11010', 'tls/tls11010cru');
-
-    // 2. 共用查詢條件還原機制
-    this.handleQueryRestore(this.queryForm, this.ProgNo, (f) =>
-      this.onSubmit(f),
+    // ✅ 改成跟 TLS11020 一樣的 initializePage 模式
+    //    讓 BasicQueryPageComponent 自己處理：
+    //    - 初次進入：保持初始條件
+    //    - 從 CRU 回來，有 QueryState 的話自動還原＋自動查詢
+    this.initializePage(
+      'TLS11010',
+      'tls/tls11010cru',
+      this.queryForm,
+      (f) => this.onSubmit(f),
     );
 
-    // 3. 載入各種下拉
+    // 載入各種下拉
     this.tls11010Service
       .getFloorOptions()
       .pipe(untilDestroyed(this))
@@ -176,33 +182,47 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       .subscribe((res) => (this.BUILDING_NO_Options = res));
   }
 
+  /** 給 API 用的 payload 轉換 */
+  private buildApiPayload(formValue: any): any {
+    const payload: any = { ...formValue };
+
+    // 將空字串欄位轉為 null，以符合後端 char? 要求
+    if (payload.building_no === '') payload.building_no = null;
+    if (payload.LOCATION_No === '') payload.LOCATION_No = null;
+
+    // MultiSelect：把可能是物件或字串，統一轉成「代碼字串」陣列
+    const toCodeArray = (arr: any[]): string[] =>
+      (arr || [])
+        .map((x: any) => {
+          if (x == null) return '';
+          if (typeof x === 'string' || typeof x === 'number') return String(x);
+          // 如果是 { value, label } 的物件
+          if (typeof x === 'object' && 'value' in x) return String(x.value);
+          return '';
+        })
+        .filter((v) => v !== '');
+
+    if (Array.isArray(payload.LOCATION_Status)) {
+      payload.LOCATION_Status = toCodeArray(payload.LOCATION_Status);
+    }
+
+    if (Array.isArray(payload.Purpose_no)) {
+      payload.Purpose_no = toCodeArray(payload.Purpose_no);
+    }
+
+    return payload;
+  }
+
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       this.loading = true;
       this.messageService.blockUi();
-
-      const formValue: any = { ...frm.value };
-
-      // 將空字串欄位轉為 null，以符合後端 char? 要求
-      if (formValue.building_no === '') formValue.building_no = null;
-      if (formValue.LOCATION_No === '') formValue.LOCATION_No = null;
-
-      // 將 LOCATION_Status 轉成字串陣列（後端若用 in 查詢較穩）
-      if (Array.isArray(formValue.LOCATION_Status)) {
-        formValue.LOCATION_Status = formValue.LOCATION_Status.map(
-          (x: string | number) => String(x),
-        );
-      }
-
-      // 將 Purpose_no 轉成字串陣列，變成 ["1","2"]
-      if (Array.isArray(formValue.Purpose_no)) {
-        formValue.Purpose_no = formValue.Purpose_no.map(
-          (x: string | number) => String(x),
-        );
-      }
+      const rawFormValue = frm.getRawValue();
+const payload = this.buildApiPayload(rawFormValue);
+this.lastQueryBody = { ...payload };
 
       this.tls11010Service
-        .queryData(formValue)
+        .queryData(payload)
         .pipe(untilDestroyed(this))
         .subscribe({
           next: (res) => {
@@ -210,10 +230,12 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
               const rows = res?.Data || [];
               // 先把 null → ''（避免 table 顯示 null）
               const cleaned = this.convertNullToEmptyString(rows);
-              // 保留裝飾用欄位（雖然目前欄位用不到也沒關係）
+              // 保留裝飾用欄位
               this.data = this.decorateRowsForDisplay(cleaned);
               this.totalRecords = res?.TotalCount || this.data.length;
-              this.queryStateService.setQueryState(this.ProgNo, formValue);
+
+              // ✅ 跟 TLS11020 一樣：存「原始表單值」到查詢還原
+              this.queryStateService.setQueryState(this.ProgNo, rawFormValue);
             }
             this.loading = false;
             this.messageService.unblockUi();
@@ -232,20 +254,43 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
 
   onDelete(selectedItems: any[]) {
     if (!selectedItems.length) return;
-    const confirmDelete = window.confirm('是否確定刪除選取項目？');
-    if (!confirmDelete) return;
 
-    const idList = selectedItems.map((item) => item.id);
-    this.tls11010Service
-      .deleteData(idList)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('刪除成功');
-          this.onSubmit(this.queryForm);
-        },
-        error: () => this.messageService.errorBubble('刪除失敗'),
-      });
+    const idList = selectedItems
+      .filter(item => item && item.id != null)
+      .map(item => item.id);
+
+    if (idList.length === 0) {
+      this.messageService.warnBubble('未找到有效的刪除項目');
+      return;
+    }
+
+    this.messageService.confirm({
+      message: '是否確認刪除所選位置資料?',
+      header: '確認刪除',
+      accept: () => {
+        this.loading = true;
+        this.tls11010Service
+          .deleteData(idList)
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: (response: any) => {
+              if (response?.Status === '0000') {
+                this.messageService.successBubble('刪除成功');
+                this.selectedItems = [];
+                this.onSubmit(this.queryForm);
+              } else {
+                this.messageService.errorBubble(`刪除失敗: ${response?.Message}`);
+              }
+            },
+            error: () => {
+              this.messageService.errorBubble('刪除失敗');
+            },
+            complete: () => {
+              this.loading = false;
+            },
+          });
+      }
+    });
   }
 
   override onEdit(data: any): void {
@@ -302,4 +347,102 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     );
     return found ? found.label : trimmedValue;
   }
+
+  /** 🔹 清除：回到「一開始都沒選、沒輸入」的狀態，並且更新還原用的 state */
+  /** 🔹 清除：回到「一開始都沒選、沒輸入」的狀態，並且更新還原用的 state */
+  onClear(): void {
+    const form = this.queryForm;
+
+    // 保留目前的分頁設定
+    const paging = {
+      pageIndex: form.get('pageIndex')?.value ?? 1,
+      pageSize: form.get('pageSize')?.value ?? 20,
+      SortBy:
+        form.get('SortBy')?.value ?? [{ field: 'LOCATION_No', order: 1 }],
+    };
+
+    // 先全部 reset（型別會回到控制項原本宣告的型別）
+    form.reset();
+
+    // 🔹 Text / number 類欄位：清成「沒輸入」
+    form.get('LOCATION_No')?.setValue('');
+    form.get('GROSS_SPACE_Start')?.setValue(null);
+    form.get('GROSS_SPACE_End')?.setValue(null);
+    form.get('NET_SPACE_Start')?.setValue(null);
+    form.get('NET_SPACE_End')?.setValue(null);
+
+    // 🔹 Multi-select / 陣列欄位：設成 []（用 any 避掉 TS 推斷成 null | undefined 的問題）
+    (form.get('org_id') as any)?.setValue([]);
+    (form.get('building_no') as any)?.setValue([]);
+    (form.get('FLOOR_NO') as any)?.setValue([]);
+    (form.get('AREA_NO') as any)?.setValue([]);
+    (form.get('LOCATION_Status') as any)?.setValue([]);
+    (form.get('Purpose_no') as any)?.setValue([]);
+
+    // 🔹 把分頁設回去
+    form.patchValue(paging);
+
+    this.submitted = false;
+    form.markAsPristine();
+    form.markAsUntouched();
+
+    // 🔥 重點：把「清空後」的條件寫回查詢還原
+    const cleared = form.getRawValue();
+    this.queryStateService.setQueryState(this.ProgNo, cleared);
+  }
+  override onLazyLoadData(event: any, form: FormGroup): void {
+    // event 可能是你自己包的 LazyLoadEvent，也可能是 primeng 的 LazyLoadEvent
+    // 所以這裡做容錯
+    const evPageIndex =
+      Number.isFinite(event?.pageIndex) ? Number(event.pageIndex)
+        : Number.isFinite(event?.first) && Number.isFinite(event?.rows)
+          ? Math.floor(Number(event.first) / Number(event.rows)) + 1
+          : undefined;
+
+    const evPageSize =
+      Number.isFinite(event?.pageSize) ? Number(event.pageSize)
+        : Number.isFinite(event?.rows) ? Number(event.rows)
+          : undefined;
+
+    const nextSort = Array.isArray(event?.SortBy) ? event.SortBy
+      : Array.isArray(event?.multiSortMeta) ? event.multiSortMeta
+        : form.value?.SortBy ?? [];
+
+    const currSortSig = JSON.stringify(form.value?.SortBy ?? []);
+    const nextSortSig = JSON.stringify(nextSort ?? []);
+
+    // 排序改變 => 回到第 1 頁
+    const nextPageIndex =
+      currSortSig !== nextSortSig
+        ? 1
+        : (evPageIndex ?? form.value?.pageIndex ?? 1);
+
+    const nextPageSize = evPageSize ?? form.value?.pageSize ?? 30;
+
+    // 先把 paging/sort 寫回表單（避免你 onSubmit 用到舊值）
+    form.patchValue(
+      {
+        pageIndex: nextPageIndex,
+        pageSize: nextPageSize,
+        SortBy: nextSort ?? [],
+      },
+      { emitEvent: false }
+    );
+
+    // 防止同樣狀態重複查
+    const sig = JSON.stringify({
+      pageIndex: form.value?.pageIndex,
+      pageSize: form.value?.pageSize,
+      SortBy: form.value?.SortBy,
+      // 如果你想「條件變更也算」，可以把其他欄位也帶進來
+    });
+
+    if (sig === this.lastQuerySig) return;
+    this.lastQuerySig = sig;
+
+    // debounce：避免表格瞬間連續丟多次 lazy event
+    if (this.lazyTimer) clearTimeout(this.lazyTimer);
+    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
+  }
+
 }

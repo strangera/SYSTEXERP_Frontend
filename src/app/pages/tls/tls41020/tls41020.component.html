@@ -18,14 +18,12 @@
               label="收銀機號"
               controlName="ECR_No"
               [options]="ECRNoOptions"
-              optionLabel="value"
+              optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.ECR_No"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-
-    
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -35,10 +33,12 @@
               optionLabel="formLabel"
               optionValue="value"
               [control]="queryForm.controls.ECR_TLT_No"
-              [submitted]="submitted">
-            </app-dropdown>
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
-      <div class="col-12 md:col-6 lg:col-4"></div>
+
+          <div class="col-12 md:col-6 lg:col-4"></div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
@@ -58,7 +58,9 @@
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4"></div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="中信刷卡機狀態"
@@ -73,7 +75,6 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-             
               label="中信刷卡機IP"
               controlName="EDC_IP1"
               [control]="queryForm.controls.EDC_IP1"
@@ -83,7 +84,6 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-             
               label="中信刷卡機端末機號"
               controlName="EDC_TmID1"
               [control]="queryForm.controls.EDC_TmID1"
@@ -91,8 +91,7 @@
             ></app-input-text>
           </div>
 
-
-                    <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="聯合刷卡機狀態"
               controlName="EDC_Status2"
@@ -106,7 +105,6 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-             
               label="聯合刷卡機IP"
               controlName="EDC_IP2"
               [control]="queryForm.controls.EDC_IP2"
@@ -116,7 +114,6 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-             
               label="聯合刷卡機端末機號"
               controlName="EDC_TmID2"
               [control]="queryForm.controls.EDC_TmID2"
@@ -128,7 +125,7 @@
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="clear" [form]="queryForm" (click)="onClearForm()"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -137,25 +134,30 @@
 </div>
 
 <div class="card">
-  <app-table
+  <app-table-report
     tableKey="TLS41020"
     [data]="data"
     [columns]="columns"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-
-    dataKey="ECR_No"              
     [totalRecords]="totalRecords"
     [lazy]="true"
-    [showManage]="true"
-    (edit)="onEdit($event)"
     [loading]="loading"
-    [showCheckBox]="true"
-    [showDelete]="true"
-    (delete)="onDelete($event)"
+
+    dataKey="ECR_No"
+
+    [showManage]="true"
+    [showEdit]="true"
+    [showDetail]="true"
+    (edit)="onEdit($event)"
     (detail)="onDetail($event, queryForm.value)"
 
-   
-    (lazyLoadData)="onLazyLoadData($event, queryForm)"
-  ></app-table>
+    [showCheckBox]="true"
+    [selectedItems]="selectedItems"
+    (selectionChange)="onSelectionChange($event)"
+
+    [showDelete]="true"
+    (delete)="onDelete($event)"
+
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction"
+  ></app-table-report>
 </div>

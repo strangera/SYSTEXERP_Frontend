@@ -1,0 +1,85 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
+  </div>
+
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="領用單編號" controlName="SPM_No" [control]="queryForm.controls.SPM_No"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
+            [options]="warehouseOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.HOS_NoList" [submitted]="submitted"></app-multi-select>
+          <!-- 國際條碼/商品管理編號/廠商貨號 -->
+          <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryForm.controls.queryNo"
+            [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
+          </app-dropdown-table>
+
+          <!-- 品牌代碼 (對應 LOGO_No) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
+            [options]="brandOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_NoList"
+            [submitted]="submitted"></app-multi-select>
+          <!-- 廠商編號 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="領用類別" controlName="SPM_TypeList" [options]="issuanceTypeOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.SPM_TypeList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="領用單狀態" controlName="SPM_StatusList" [options]="issuanceNoteStatusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.SPM_StatusList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <hr />
+        </div>
+        <div class="grid p-fluid">
+          <!-- 申請人員 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="APPLY_USR" [options]="userOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.APPLY_USR" [submitted]="submitted" />
+          <!-- 申請日期 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
+            [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
+            [submitted]="submitted" />
+        </div>
+        <div class="grid p-fluid">
+          <!-- 審核人員 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="審核人" controlName="APRV_USR" [options]="userOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.APRV_USR" [submitted]="submitted" />
+          <!-- 審核日期 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
+            [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
+            [submitted]="submitted" />
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading" />
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table tableKey="TLS2A020" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]" [totalRecords]="totalRecords"
+    [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true"
+    [loading]="loading" [showDelete]="false" (selectionChange)="onSelectionChange($event)"
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
+    [rows]="30" [selectedItems]="selectedItems" [buttonsLoading]="btnLoading" [isRowSelectable]="isRowSelectable"
+    [editDisabled]="isEditDisabled.bind(this)">
+    <header>
+      <div class="flex align-items-center gap-2">
+        <p-button label="單據審核" [style]="{ height: '35px' }" pTooltip="僅限【已申請】單據" tooltipPosition="top" [rounded]="true"
+          severity="help" [loading]="auditLoading" (click)="onAuditClick()" [disabled]="!canAuditSelected()" />
+        <p-button label="領用" [style]="{ height: '35px' }" pTooltip="僅限【已審核】單據" tooltipPosition="top" [rounded]="true"
+          severity="success" [loading]="issueLoading" (click)="onIssueClick()" [disabled]="!canIssueSelected()" />
+      </div>
+    </header>
+  </app-table>
+</div>

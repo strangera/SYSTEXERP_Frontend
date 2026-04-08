@@ -1,0 +1,91 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="調撥單編號" controlName="TRD_No" [control]="queryForm.controls.TRD_No"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <!-- 管理碼 -->
+          <app-product-autocomplete class="col-12" optionValue="PLU_MagNo" [control]="queryForm.controls.queryNo"
+            [submitted]="submitted" />
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="品牌代碼/名稱" controlName="LOGO_NoList" [options]="brandOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_NoList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="倉別" controlName="HOS_NoList" [options]="warehouseOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.HOS_NoList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="調撥原因" controlName="TRD_ReasonList" [options]="reasonOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.TRD_ReasonList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="單據狀態" controlName="TRD_StatusList" [options]="transferStatusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.TRD_StatusList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="申請人編號/名稱" controlName="APPLY_USR" [options]="userOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.APPLY_USR" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="審核人編號/名稱" controlName="APRV_USR" [options]="userOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.APRV_USR" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range-quick calendarType="dateRange" label="申請日期"
+              [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
+              [submitted]="submitted"></app-calendar-range-quick>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range-quick calendarType="dateRange" label="審核日期"
+              [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
+              [submitted]="submitted"></app-calendar-range-quick>
+          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table-report dataKey="TRD_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [lastQueryBody]="lastQuery"
+    [queryFunction]="tls56080Service.queryTLS56080.bind(tls56080Service)" [totalRecords]="totalRecords"
+    [showCheckBox]="true" [showDelete]="false" [loading]="loading" [editDisabled]="editDisabled"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
+    <header>
+      <div class="flex justify-content-end gap-2">
+        <p-button styleClass="p-2 p-button-primary" label="確認" [loading]="btnLoading" icon="pi pi-check-circle"
+          (click)="batchUpdateStatus('2')" [disabled]="selectedItems.length === 0 || checkStatus('1')"
+          [loading]="btnLoading"></p-button>
+
+        <p-button styleClass="p-2 p-button-success" label="審核" [loading]="btnLoading" icon="fa-regular fa-square-check"
+          (click)="batchUpdateStatus('3')" [disabled]="selectedItems.length === 0 || checkStatus('2')"
+          [loading]="btnLoading"></p-button>
+
+        <p-button styleClass="p-2 p-button-contrast" label="反審核" [loading]="btnLoading" icon="pi pi-undo"
+          (click)="batchUpdateStatus('2')" [disabled]="selectedItems.length === 0 || checkStatus('3')"
+          [loading]="btnLoading"></p-button>
+
+        <p-button styleClass="p-2 p-button-danger" label="作廢" [loading]="btnLoading" icon="pi pi-trash"
+          (click)="batchUpdateStatus('9')" [disabled]="selectedItems.length === 0 || checkStatus('1')"
+          [loading]="btnLoading"></p-button>
+      </div>
+    </header>
+  </app-table-report>
+</div>

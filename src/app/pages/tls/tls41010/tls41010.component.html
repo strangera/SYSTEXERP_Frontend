@@ -108,11 +108,11 @@
   (save)="saveDialog(dialogQueryForm)" [height]="'auto'">
   <form [formGroup]="dialogQueryForm" class="flex gap-2">
     <app-dropdown (changeEvent)="onDialogChange($event)" class="flex-1" label="來源收銀機號" controlName="Source_ECR_No"
-      [control]="dialogQueryForm.controls.Source_ECR_No" [options]="dialogOptions" optionLabel="label" optionValue="No"
-      [submitted]="submitted" />
+      [control]="dialogQueryForm.controls.Source_ECR_No" [options]="dialogOptions" optionLabel="label"
+      optionValue="value" [submitted]="submitted" />
     <app-dropdown (changeEvent)="onDialogChange2($event)" class="flex-1" label="目標收銀機號" controlName="Target_ECR_No"
-      [control]="dialogQueryForm.controls.Target_ECR_No" [options]="dialogOptions" optionLabel="label" optionValue="No"
-      [submitted]="submitted"></app-dropdown>
+      [control]="dialogQueryForm.controls.Target_ECR_No" [options]="dialogOptions" optionLabel="label"
+      optionValue="value" [submitted]="submitted"></app-dropdown>
   </form>
   <span class="text-red-500" *ngIf="submitted && isValid">
     無法複製到相同的收銀機號

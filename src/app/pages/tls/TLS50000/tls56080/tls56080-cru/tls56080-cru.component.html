@@ -1,0 +1,91 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1" />
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="調撥單編號" controlName="TRD_No" [control]="dataForm.controls.TRD_No"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandOptions | async" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="倉別" controlName="HOS_No" [options]="warehouseOptions| async" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.HOS_No" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions| async" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="調撥(入)金額" controlName="IN_TotBuyAmt" [control]="dataForm.controls.IN_TotBuyAmt"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="調撥(出)金額" controlName="OUT_TotBuyAmt" [control]="dataForm.controls.OUT_TotBuyAmt"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="差異金額" controlName="DIFF_TotBuyAmt" [control]="dataForm.controls.DIFF_TotBuyAmt"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="調撥原因" controlName="TRD_Reason" [options]="reasonOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.TRD_Reason" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-textarea label="調撥單說明" controlName="TRD_Remark" [control]="dataForm.controls.TRD_Remark"
+            [style]="{ height: '100px' }" [submitted]="submitted"></app-input-textarea>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="申請人" controlName="APPLY_USR_No" [control]="dataForm.controls.APPLY_USR_No"
+            [submitted]="submitted" [options]="userOptions | async" optionLabel="label"
+            optionValue="value"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
+            [submitted]="submitted"></app-calendar>
+        </div>
+      </div>
+      <hr />
+
+      <app-table-edit [columns]="editColumns" [data]="data" [disabled]="isFormReadable" [canInsert]="false"
+        (insert)="dialogVisible = true;selectedItemsDialog = [];dialogData = []" [tableRequired]="true"
+        (dataChange)="data = $event;this.calculateTotals()" [loading]="loading" [showInsert]="true"
+        [insertDisabled]="dataForm.controls.HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"></app-table-edit>
+
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" (click)="loadData()" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading" />
+      </div>
+    </form>
+  </p-panel>
+</div>
+<app-dialog [visible]="dialogVisible" header="選擇商品明細" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="selectedItemsDialog.length === 0">
+  <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
+    <div class="grid p-fluid">
+      <app-product-autocomplete class="col-12" [control]="dialogQueryForm.controls.queryNo" [submitted]="submitted"
+        [extraFilters]="{ VEN_No: dataForm.controls.VEN_No.value, LOGO_No: dataForm.controls.LOGO_No.value}" />
+
+      <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
+        [control]="dialogQueryForm.controls.PLU_Name" />
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="clear" (click)="dialogQueryForm.reset()"></app-button>
+      <app-button btnType="query" [loading]="dialogLoading"></app-button>
+    </div>
+  </form>
+  <hr />
+  <app-table-report tableKey="tls56080CruDialogTable" [showReportMode]="false" [data]="dialogData"
+    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
+    (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
+    [queryFunction]="tls52010Service.queryPOS2004Detail.bind(tls52010Service)" [lastQueryBody]="dialogLastQueryBody"
+    [totalRecords]="totalRecords" [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)">
+  </app-table-report>
+</app-dialog>

@@ -1,23 +1,23 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms'; // 這裡已經有了，只是再次確認
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
-import { ECR_GUI_Type_Option, ECR_SernoType_Option, ECR_SettleDD_Option, getToday2330, YN_Option } from '../tls46020/tls46020.model';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { NgIf } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms'; // 這裡已經有了，只是再次確認
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { TLS46020Item, TLS46020Service } from '../../../service/api/tls/tls46020.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { ECR_GUI_Type_Option, ECR_SernoType_Option, ECR_SettleDD_Option, getToday2330, YN_Option } from '../tls46020/tls46020.model';
 
 // 2.4.6.2 POS環境變數維護作業 CRU
 @Component({
@@ -80,13 +80,13 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
     ECR_SelfReport: ['Y', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
     ECR_SaleRpt1: ['Y', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
     ECR_SaleRpt2: ['Y', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
-    ECR_SaleRpt3: ['Y', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
-    ECR_SaleRpt4: ['Y', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
-    ECR_SaleRpt5: ['Y', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
+    ECR_SaleRpt3: ['N', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
+    ECR_SaleRpt4: ['N', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
+    ECR_SaleRpt5: ['N', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
     ECR_SaleRpt6: ['Y', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
     ECR_SaleRpt7: ['Y', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
-    ECR_SaleRpt8: ['Y', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
-    ECR_SaleRpt9: ['Y', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
+    ECR_SaleRpt8: ['N', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
+    ECR_SaleRpt9: ['N', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
     ECR_SaleRpt10: ['N', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
     ECR_PcashValid: ['N', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL
     ECR_PickUpValid: ['N', [Validators.required, Validators.maxLength(1)]], // CHAR(01) NOT NULL

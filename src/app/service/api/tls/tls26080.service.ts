@@ -1,13 +1,15 @@
-import { HttpClient } from '@angular/common/http';
+import { formatDate } from '@angular/common';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { CampaignData, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080InsertPayload, TLS26080KeyInTable, TLS26080Query, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
-import { Option } from '@service/utility/dropdown-api.model';
+import { CampaignData, ExportTLS26080PDFRequest, QueryCampaignRequest, QueryTLS26080TLTTALENT_D16_D17Request, TLS26080Data, TLS26080DetailResult, TLS26080DetailTable, TLS26080EditTable, TLS26080InsertPayload, TLS26080Query, TLS26080TLTTALENT_D16_D17Row, TLS26080UpdatePayload, TLS26080UploadResponse, TLS26080UploadResult } from '@pages/tls/tls26080/tls26080.model';
+import { Option, TalentOpenFlagItem, TalentOpenFlagQuery } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, map, Observable, take, tap } from 'rxjs';
+import { filter, finalize, map, Observable, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = environment.ApiUrl;
@@ -21,21 +23,21 @@ export class TLS26080Service {
   public readonly dateS: Date = this.d.start;
   public readonly dateE: Date = this.d.end;
 
-  // 儲存資料
-  public readonly tltTalentOptions = signal<Option[]>([]);
+  // 儲存資料（專櫃選項含 talent_id，供 saveDialog / executeFieldChange 使用）
+  public readonly tltTalentOptions = signal<(Option & { talent_id: number })[]>([]);
   public readonly tltTalentChargeOptions = signal<Option[]>([]);
 
   public readonly tltTalentMap = computed(() => {
-    return new Map<string, Option>(this.tltTalentOptions().map(item => [item.value, item]));
+    return new Map<string, Option & { talent_id: number }>(this.tltTalentOptions().map(item => [item.value, item]));
   });
   public readonly tltTalentChargeMap = computed(() => {
     return new Map<string, Option>(this.tltTalentChargeOptions().map(item => [item.value, item]));
   });
 
   // 共享資料讀取狀態
-  public readonly capItemsLoading = signal<boolean>(!1);
-  public readonly tltTalentOptionsLoading = signal<boolean>(!1);
-  public readonly tltTalentChargeOptionsLoading = signal<boolean>(!1);
+  public readonly capItemsLoading = signal<boolean>(false);
+  public readonly tltTalentOptionsLoading = signal<boolean>(false);
+  public readonly tltTalentChargeOptionsLoading = signal<boolean>(false);
 
   // 下拉選單資料
   public departmentItems = signal<Option[]>([]);
@@ -63,10 +65,8 @@ export class TLS26080Service {
   }
 
   // 核准狀態檢查
-  private approvalCheck({ pod_status }: TLS26080Data) {
-    return pod_status === ApprovalStatus.未核准
-      ? { api: `approveTLS26080`, confirm: `核准` }
-      : { api: `disapproveTLS26080`, confirm: `反核准` };
+  private approvalCheck({ pod_status }: TLS26080EditTable) {
+    return pod_status === ApprovalStatus.未核准 ? 'approveTLS26080' : 'disapproveTLS26080';
   }
 
   constructor(
@@ -77,20 +77,23 @@ export class TLS26080Service {
   ) { }
 
   public loadAPS1003(cap_typeList: string[]): void {
-    if (this.capItemsLoading()) return void (this.capItemsLoading.set(!1));
-    this.capItemsLoading.set(!0);
+    if (this.capItemsLoading()) {
+      this.capItemsLoading.set(false);
+      return;
+    }
+    this.capItemsLoading.set(true);
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryAPS1003_DropDownList`, { cap_typeList }).pipe(
       take(1),
       tap(res => {
         this.capItems.set(res.Data?.map(item => ({ value: item.No, label: item.Name })) || []);
         this.logger.debug(`APS1003查詢結果:`, [res]);
       }),
-      finalize(() => this.capItemsLoading.set(!1))
+      finalize(() => this.capItemsLoading.set(false))
     ).subscribe();
   }
 
   public queryTltTalentCharge(talent_id: number): Observable<Option[]> {
-    this.tltTalentChargeOptionsLoading.set(!0);
+    this.tltTalentChargeOptionsLoading.set(true);
     return this.dropdown.queryTltTalentCharge({ talent_id }).pipe(
       take(1),
       tap(res => this.logger.debug(`queryTltTalentCharge:`, [res])),
@@ -100,7 +103,7 @@ export class TLS26080Service {
         value: item.tlt_id,
       }) as unknown as Option) || []),
       tap(res => this.tltTalentChargeOptions.set(res)),
-      finalize(() => this.tltTalentChargeOptionsLoading.set(!1)),
+      finalize(() => this.tltTalentChargeOptionsLoading.set(false)),
     );
   }
 
@@ -132,9 +135,19 @@ export class TLS26080Service {
     );
   }
 
+  /** 匯出活動單 PDF（查詢頁管理欄「列印」） */
+  public exportTLS26080PDF(body: ExportTLS26080PDFRequest): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${apiUrl}/TLS0000/TLS2000/exportTLS26080PDF`, body, {
+      observe: 'response',
+      responseType: 'blob',
+    }).pipe(
+      take(1),
+      tap(res => this.logger.debug(`exportTLS26080PDF:`, [res.status, res.body?.size])),
+    );
+  }
 
   /** 查詢環友資料 */
-  public loadCampaignData(query: any = {}): Observable<BaseQueryResponse<CampaignData>> {
+  public loadCampaignData(query: QueryCampaignRequest = {}): Observable<BaseQueryResponse<CampaignData>> {
     return this.http.post<BaseQueryResponse<CampaignData>>(`${apiUrl}/TLS0000/TLS2000/queryCampaign`, query).pipe(
       take(1),
       tap(res => this.logger.debug(`環友資料查詢結果:`, [res]))
@@ -143,27 +156,32 @@ export class TLS26080Service {
 
   /** 專櫃活動 */
   public loadTLS26080Detail(query: string): Observable<BaseQueryResponse<TLS26080DetailTable>> {
-    return this.http.post<BaseQueryResponse<TLS26080DetailTable>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query }).pipe(
+    return this.http.post<BaseQueryResponse<TLS26080DetailTable>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query, pageSize: 1 }).pipe(
       take(1),
       tap(res => this.logger.debug(`專櫃活動細節查詢結果:`, [res]))
     );
-  };
+  }
+
+  /** 查詢專櫃 D16/D17 費用比率 (cap_item、tpy_rate) */
+  public queryTLS26080TLTTALENT_D16_D17(req: QueryTLS26080TLTTALENT_D16_D17Request): Observable<ApiResponse<TLS26080TLTTALENT_D16_D17Row>> {
+    return this.http.post<ApiResponse<TLS26080TLTTALENT_D16_D17Row>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080TLTTALENT_D16_D17`, req).pipe(
+      take(1),
+      tap(res => this.logger.debug(`queryTLS26080TLTTALENT_D16_D17:`, [res]))
+    );
+  }
 
   /** 核准或反核准專櫃活動 */
-  public loadApproval(data: TLS26080Data): Observable<{ newStatus: ApprovalStatus; confirmText: string; }> {
-    const { api, confirm } = this.approvalCheck(data);
-    return this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-      `${apiUrl}/TLS0000/TLS2000/${api}`, { id: data.id }
-    ).pipe(
+  public loadApproval(data: TLS26080EditTable): Observable<{ newStatus: ApprovalStatus; }> {
+    const api = this.approvalCheck(data);
+    return this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(`${apiUrl}/TLS0000/TLS2000/${api}`, { id: data.id }).pipe(
       take(1),
+      filter(res => res.Status === '0000'),
       map(() => ({
-        newStatus: confirm === '核准' ? ApprovalStatus.已核准 : ApprovalStatus.未核准,
-        confirmText: confirm
+        newStatus: api === 'approveTLS26080' ? ApprovalStatus.已核准 : ApprovalStatus.未核准
       })),
-      tap(({ confirmText }) => {
-        this.logger.debug(`核准結果:`, [confirmText]);
-        this.messageService.successBubble(`${confirmText}成功`);
-      })
+      tap(() =>
+        this.messageService.successBubble(`${api === 'approveTLS26080' ? '核准' : '反核准'}成功`)
+      )
     );
   }
 
@@ -175,11 +193,11 @@ export class TLS26080Service {
         const { queryTLS26080_DetailResponses, ...rest } = res.Data;
         return {
           ...rest,
-          queryTLS26080_DetailResponses: queryTLS26080_DetailResponses.map(v => (<TLS26080DetailResult>{
+          queryTLS26080_DetailResponses: queryTLS26080_DetailResponses.map(v => ({
             ...v,
             tpy_rate_D16: Number(v.tpy_rate_D16.replace('%', '')).toFixed(2),
             tpy_rate_D17: Number(v.tpy_rate_D17.replace('%', '')).toFixed(2),
-          })),
+          } as TLS26080DetailResult)),
         };
       })
     );
@@ -190,47 +208,85 @@ export class TLS26080Service {
     if (path && !data.Success) window.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
   }
 
-  public downloadXLSXExample(): Observable<Blob> {
-    return this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080Template`, { responseType: 'blob' }).pipe(
+  /**
+   * `GET downloadTLS26080Template`：query `HaveData` 為 true 時下載含範例資料之檔案，false 為空白範本。
+   */
+  public downloadXLSXExample(
+    haveData: boolean,
+    queryDate?: { tlt_bdate?: Date | null; tlt_edate?: Date | null }
+  ): Observable<Blob> {
+    const bdate = queryDate?.tlt_bdate ?? this.dateS;
+    const edate = queryDate?.tlt_edate ?? this.dateE;
+    let params = new HttpParams();
+    params = params.set('tlt_bdate', this.formatQueryDate(bdate) || '');
+    params = params.set('tlt_edate', this.formatQueryDate(edate) || '');
+    params = params.set('HaveData', haveData ? 'true' : 'false');
+
+    return this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080Template`, {
+      params,
+      responseType: 'blob'
+    }).pipe(
       take(1),
       tap(res => {
-        // 建立下載連結
         const url = window.URL.createObjectURL(res);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'TLS26080_範例檔案.xlsx';
+        link.download = haveData ? 'TLS26080_範例檔案.xlsx' : 'TLS26080_空白範本.xlsx';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-        this.logger.debug(`範例下載`);
+        this.logger.debug(haveData ? `範例下載` : `空白範本下載`);
       })
     );
   }
 
-  public getTLTTalentOptions(): Observable<Option[]> {
-    this.tltTalentOptionsLoading.set(!0);
-    return this.dropdown.queryTltTalent().pipe(
+  private formatQueryDate(value?: Date | string | null): string | undefined {
+    if (!value) return undefined;
+    const date = typeof value === 'string' ? new Date(value) : value;
+    if (isNaN(date.getTime())) return undefined;
+    return formatDate(date, 'yyyy-MM-dd', 'en-US');
+  }
+
+  public getTLTTalentOptions(query: { ven_no: string; tlt_bdate?: Date | null; tlt_edate?: Date | null }): Observable<(Option & { talent_id: number })[] | null> {
+    this.tltTalentOptionsLoading.set(true);
+    const payload: TalentOpenFlagQuery = {
+      VEN_No: query.ven_no,
+      ...(query.tlt_bdate != null && { tlt_bdate: this.formatQueryDate(query.tlt_bdate) }),
+      ...(query.tlt_edate != null && { tlt_edate: this.formatQueryDate(query.tlt_edate) }),
+    };
+
+    return this.dropdown.queryTltTalentOpenFlag(payload).pipe(
       take(1),
-      map(res => res?.map(item => ({
-        ...item,
-        label: `${item['No']} - ${item['Name']}`,
-      })) ?? []),
+      map(res => res?.map((item: TalentOpenFlagItem) => {
+        const raw = item as unknown as Record<string, unknown>;
+        const talentId = typeof item.talent_id === 'number' ? item.talent_id : Number(raw['Talent_ID']) || 0;
+        return {
+          ...item,
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+          talent_id: talentId,
+        } as Option & { talent_id: number };
+      }) ?? []),
       tap(res => {
         this.tltTalentOptions.set(res ?? []);
-        this.logger.debug(`getTLTTalentOptions:`, [res]);
+        this.logger.debug(`getTLTTalentOptions:`, [payload, res]);
       }),
-      finalize(() => this.tltTalentOptionsLoading.set(!1))
+      finalize(() => this.tltTalentOptionsLoading.set(false))
     );
   }
 
-  public keyInTLS26080(data: TLS26080KeyInTable, currentTableData: TLS26080KeyInTable[]): Observable<TLS26080UploadResponse> {
-    return this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/keyInTLS26080`, {
-      queryTLS26080_DetailResponses: currentTableData,
-      keyiInTLS26080: data,
-    }).pipe(
+  public approveApprovalTLS26080(payload: TLS26080EditTable[]): Observable<BaseQueryResponse<unknown>> {
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/approveTLS26080`, { payload }).pipe(
       take(1),
-      finalize(() => this.logger.debug(`單筆鍵入檢查:`, [data]))
+      finalize(() => this.logger.debug(`核准:`, [payload]))
+    );
+  }
+
+  public revokeApprovalTLS26080(payload: TLS26080EditTable[]): Observable<BaseQueryResponse<unknown>> {
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/revokeApprovalTLS26080`, { payload }).pipe(
+      take(1),
+      finalize(() => this.logger.debug(`反核准:`, [payload]))
     );
   }
 }

@@ -1,119 +1,99 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-        <div >
-          <app-button
-            btnType="create"
-            label="產生發票"
-            class="col"
-          ></app-button>
-        </div>
-        <div >
-          <app-button
-            btnType="create"
-            label="重新列印"
-            class="col"
-          ></app-button>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar
-                  calendarType="dateMonthOne"
-                  label="帳款年月"
-                  [control]="queryForm.controls.onedatemm"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="結帳方式"
-                  controlName="checkout"
-                  [options]="checkoutOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.checkout"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number
-                  [useGrouping]="false"
-                  label="專櫃編號"
-                  controlName="money"
-                  [control]="queryForm.controls.serialnumber"
-                  [submitted]="submitted"
-                ></app-input-number>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number-range
-                  [useGrouping]="false"
-                  label="發票號碼"
-                  [startControl]="queryForm.controls.startInvoiceNumber"
-                  [endControl]="queryForm.controls.endInvoiceNumber"
-                  [submitted]="submitted"
-                ></app-input-number-range>
-              </div>
-            </div>
-            <hr />
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-4 lg:col-4">
-                <p-checkbox
-                  label="發票封面是否列印"
-                  formControlName="usagec"
-                ></p-checkbox>
-              </div>
-            </div>
-            <hr />
-            <ul>
-              <li>印表機設定：</li>
-              <ul>
-                <li>紙張大小：A4</li>
-                <li>頁首和頁尾請清空</li>
-                <li>紙張列印方向：直印</li>
-                <li>放紙：請將捲軸靠最左邊</li>
-              </ul>
-            </ul>
-            <div>
-              <div class="grid justify-content-end">
-                <app-button
-                  btnType="clear"
-                  (onClick)="onClearForm()"
-                ></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <!-- <div class="card">
-            <div class="col-13">
-                <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-                </app-table>
-            </div>
-        </div> -->
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button
+      label="產生發票"
+      icon="pi pi-plus"
+      (click)="onCreateInvoice(queryForm)"
+      [loading]="loading"
+    ></app-button>
+    <app-button
+      btnType="create"
+      (click)="onReprint(queryForm)"
+      label="重新列印"
+      [loading]="loading"
+      [disabled]="selectedItems.length === 0"
+    ></app-button>
   </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <app-calendar
+            class="col-12 md:col-6 lg:col-4"
+            calendarType="dateMonthOne"
+            label="帳款年月"
+            controlName="SamYyyymm"
+            [control]="queryForm.controls.SamYyyymm"
+            [submitted]="submitted"
+          />
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="專櫃編號/名稱"
+              controlName="TltNo"
+              [options]="tlt_noOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.TltNo"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="結帳方式"
+              controlName="COMM_MONEY_TYPE"
+              [options]="money_typeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.COMM_MONEY_TYPE"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <app-input-text-range
+            class="col-12 md:col-6 lg:col-4"
+            label="發票號碼"
+            [startControl]="queryForm.controls.GuiNoStart"
+            [endControl]="queryForm.controls.GuiNoEnd"
+            [submitted]="submitted"
+          ></app-input-text-range>
+        </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table-report
+    tableKey="tls2H030"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [addButton]="addButton"
+    [showDetail]="false"
+    [showEdit]="false"
+    [showManage]="true"
+    [lastQueryBody]="lastQueryBody"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [showCheckBox]="true"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [loading]="loading"
+    [isRowSelectable]="isRowSelectable"
+    [queryFunction]="tls2h030Service.queryTLS2H030.bind(tls2h030Service)"
+  ></app-table-report>
 </div>

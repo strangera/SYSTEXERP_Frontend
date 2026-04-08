@@ -7,6 +7,7 @@ import { SystemDataService } from '@service/system/system-data.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { FileExportService } from '@shared/service/file-export.service';
+import { finalize } from 'rxjs';
 import { AuthService } from '../../../service/system/auth.service';
 import { REPORT_TITLES } from '../../componentkit/table/report-titles';
 import { TableService } from '../../componentkit/table/report.service';
@@ -22,6 +23,7 @@ import { CurrentPageService } from './../../../core/layout/app.menulist/current-
 export abstract class BasicPrintDataComponent {
   IsPrint = true;
   exportDialog = false;
+  exportLoading = false;
   exportStatus: 'PDF' | 'Excel' = 'PDF';
 
   cdr = inject(ChangeDetectorRef);
@@ -47,13 +49,14 @@ export abstract class BasicPrintDataComponent {
     }
   }
 
-  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, PrintRemark?: boolean): void {
+  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, PrintRemark?: boolean, Conditions?: any, PrintColumn?: Column[]): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);
     const userInfo = this.authService.currentUserValue;
     const formattedToday = this.datePipe.transform(new Date(), 'yyyyMMdd');
-    const pdfColumns = columns.map(col => {
+    const printColumns = PrintColumn ? PrintColumn : columns;
+    const pdfColumns = printColumns.map(col => {
       const mappingList = SystemOptionsService.getOptions(col.field);
       let exportFormat: any = [];
       if (col.exportFormat) {
@@ -66,15 +69,18 @@ export abstract class BasicPrintDataComponent {
       return {
         field: col.field,
         header: col.header,
+        align: (col as any).align || 'left',
         visible: col.visible ? col.visible : true,
-        exportFormat: exportFormat
+        exportFormat: exportFormat,
+        groupField: col.groupField,
+        reportType: col.reportType || '',
       };
     });
 
     const body = {
       query_condition: {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
-        Conditions: queryState?.value || []
+        Conditions: Conditions || queryState?.value || []
       },
       report_title: REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
       columns: pdfColumns,
@@ -85,21 +91,22 @@ export abstract class BasicPrintDataComponent {
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
       data_key_name: DataKeyName
     };
-
+    this.exportLoading = true;
     const export$ = this.tableService.exportPDF(body)
     this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)),
+      export$.pipe(untilDestroyed(this), finalize(() => this.exportLoading = false)),
       '.pdf',
       (isLoading) => this.exportDialog = isLoading
-    );
+    ).subscribe();
   }
-  exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string): void {
+  exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, Conditions?: any, PrintColumn?: Column[]): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string; // 取得程式編號
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`); // 取得查詢條件
     const userInfo = this.authService.currentUserValue;                                      // 取得使用者
     const formattedToday = this.datePipe.transform(new Date(), 'yyyyMMdd');                   // 格式化日期
-    const excelColumns = columns.map(col => {
+    const printColumns = PrintColumn ? PrintColumn : columns;
+    const excelColumns = printColumns.map(col => {
       const mappingList = SystemOptionsService.getOptions(col.field);
       let exportFormat: any = [];
       if (col.exportFormat) {             // 先檢查是否有 exportFormat
@@ -112,15 +119,18 @@ export abstract class BasicPrintDataComponent {
       return {
         field: col.field,
         header: col.header,
+        align: (col as any).align || 'left',
         visible: col.visible ? col.visible : true,
-        exportFormat: exportFormat
+        exportFormat: exportFormat,
+        groupField: col.groupField,
+        reportType: col.reportType || '',
       };
     });
 
     const body = {
       query_condition: {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
-        Conditions: queryState?.value
+        Conditions: Conditions || queryState?.value || []
       },
       report_title: REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
       columns: excelColumns,
@@ -128,9 +138,9 @@ export abstract class BasicPrintDataComponent {
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
       data_key_name: DataKeyName
     };
-    this.tableService.exportExcel(body)
+    this.exportLoading = true;
     const export$ = this.tableService.exportExcel(body)
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.exportDialog = isLoading);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this), finalize(() => this.exportLoading = false)), '.xlsx', (isLoading) => this.exportDialog = isLoading).subscribe();
   }
   toggleVisibility(): void {
     this.IsPrint = !this.IsPrint;

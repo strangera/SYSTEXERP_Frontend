@@ -1,5 +1,3 @@
-// src/app/core/interceptors/error.interceptor.ts (功能型)
-
 import { HttpErrorResponse, HttpEvent, HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core'; // 使用 inject 導入服務
 import { catchError, Observable, retry, throwError, timeout, TimeoutError, timer } from 'rxjs';
@@ -11,7 +9,7 @@ import { ErrorHandlerService } from 'src/app/core/services/error-handler.service
 const maxRetries = 0;
 // 注意：100000000ms 大約是 27.7 小時，在實際應用中可能過長，這裡保持您原設定。
 const retryDelayMs = 100000000;
-const timeoutMs = 300000; // 5 分鐘，保持您原設定
+const timeoutMs = 1800000;
 
 
 /**

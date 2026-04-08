@@ -12,6 +12,7 @@ import { DropdownChangeEvent } from 'primeng/dropdown';
 import { finalize } from 'rxjs';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { QueryTLS41010Request, TLS41010Service } from '../../../service/api/tls/tls41010.service';
+import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -95,7 +96,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   CashierOptions: IDropdownItem[] = [];
   dialogSelectItem: TLS41010Data | null = null;
   dialogSelectTargetItem: TLS41010Data | null = null;
-  dialogOptions: { No?: string; Name?: string; label?: string }[] = [];
+  dialogOptions: { value: string; label: string }[] = [];
   CounterOptions: any[] = [];
   LocOptions: IDropdownItem[] = [];
 
@@ -118,6 +119,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     private tls14030Service: Tls14030Service,
     private dropDownListService: DropDownListService,
     private dropdownApiService: DropdownApiService,
+    private eCRNoService: ECRNoService,
   ) {
     super();
   }
@@ -134,9 +136,6 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         next: (res) => {
           console.log('呼叫 TLS0000 成功', res.Data);
         },
-        error: (err) => {
-          console.error('呼叫 TLS46010 失敗', err);
-        }
       });
   }
 
@@ -151,12 +150,21 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     this.tls11010Service.queryData(payload).pipe(finalize(() => this.loading = false)).subscribe({
       next: (res) => {
         console.log('查詢 TLS11010 成功', res.Data);
+
+        // 如果有資料，自動帶入館別、樓層、區域
+        if (res?.Data && res.Data.length > 0) {
+          const locationData = res.Data[0];
+          this.queryForm.patchValue({
+            ECR_Group: locationData.building_no ?? '',      // 館別
+            ECR_SubGroup: locationData.FLOOR_NO ?? '',      // 樓層
+            ECR_AreaNo: locationData.AREA_NO?.trim() ?? ''  // 區域（去除空白）
+          }, { emitEvent: false });
+        }
       },
     });
   }
 
   ngOnInit(): void {
-
     this.initializePage('TLS41010', 'TLS/TLS41010cru', this.queryForm, (form) => this.onSubmit(form));
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
@@ -187,7 +195,6 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
           next: (res) => {
             if (res?.Status === '0000' && res.Data) {
               const info = res.Data;
-
               // 對應樓層
               const infoSub = String(info.ECR_SubGroup ?? '').trim();
               const normalizedInfoSub = infoSub.toLowerCase();
@@ -224,7 +231,6 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
               console.warn('查詢櫃位資料失敗:', res?.Message);
             }
           },
-          error: (err) => console.error('呼叫 queryTLT_NoInfo 失敗:', err)
         });
       });
 
@@ -294,12 +300,12 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         this.callTls11010Api(locNo);
       }
     });
-    this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.dialogOptions = res.Data.map(item => ({
-        ...item,
-        label: `${item.Name}`,
-      }));
-    });
+    this.eCRNoService.getECRNo()
+      .pipe(untilDestroyed(this))
+      .subscribe(data => {
+        // 後端已回傳 label 為「000011-小騎士」，這裡直接沿用即可
+        this.dialogOptions = data;
+      });
     //位置編號
 
     this.dropDownListService.queryPOS2002_DropDownList()
@@ -327,9 +333,10 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         .pipe(finalize(() => this.loading = false), untilDestroyed(this))
         .subscribe((res) => {
           this.lastQueryForm = body;
-          this.totalRecords = res.TotalCount;
+          this.totalRecords = res?.TotalCount || 0;
           this.footerTotal = null;
-          this.data = res.Data.map(item => {
+          const resData = Array.isArray(res?.Data) ? res.Data : [];
+          this.data = resData.map(item => {
             let dateValue: Date | null = null;
             if (typeof item.ECR_SettleHHNN === 'string' && item.ECR_SettleHHNN.length === 4) {
               dateValue = new Date(`1970-01-01T${item.ECR_SettleHHNN.substring(0, 2)}:${item.ECR_SettleHHNN.substring(2, 4)}:00`);
@@ -362,10 +369,21 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       };
       // 判斷是否為新增或更新，假設「new」是新增
       // 更新
-      this.tls41010Service.updateTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
-        console.log('更新成功', res);
-        this.dialogVisible = false;
-        this.onSubmit(this.queryForm);
+      this.tls41010Service.updateTLS41010(body).pipe(untilDestroyed(this)).subscribe({
+        next: (res) => {
+          console.log('更新成功', res);
+          if (res?.Status === '0000') {
+            this.messageService.successBubble('複製設定成功');
+            this.dialogVisible = false;
+            this.onSubmit(this.queryForm);
+          } else {
+            this.messageService.errorBubble(`複製失敗: ${res?.Message ?? '未知錯誤'}`);
+          }
+        },
+        error: (err) => {
+          console.error('更新失敗', err);
+          this.messageService.errorBubble('複製失敗');
+        }
       });
     });
   }
@@ -418,24 +436,26 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       this.messageService.warnBubble('無有效的 ID 可供刪除');
       return;
     }
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: '是否刪除所選項目?',
+      accept: () => {
+        this.tls41010Service.deleteTLS41010(idList)
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: (res) => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble('選中項目刪除成功');
+                this.selectedItems = []; // 清空選中項目
+                this.onSubmit(this.queryForm); // 重新查詢刷新列表
+              } else {
+                console.error('API error:', res.Status, res.Message);
+                this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
+              }
+            },
 
-    this.tls41010Service.deleteTLS41010(idList).subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-          this.selectedItems = [];          // 清空選中項目
-          this.onSubmit(this.queryForm);    // 重新查詢刷新列表
-        } else {
-          console.error('API error:', res.Status, res.Message);
-          this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
-        }
-      },
-      error: (err) => {
-        console.error('刪除失敗:', err);
-        this.messageService.errorBubble('刪除過程中發生錯誤');
+          });
       }
     });
   }
-
-
 }

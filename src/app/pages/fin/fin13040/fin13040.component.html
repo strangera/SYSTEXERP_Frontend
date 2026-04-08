@@ -9,11 +9,11 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="發票類型" controlName="InvoiceType" [options]="InvoiceType_Options" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.InvoiceType" [submitted]="submitted">
             </app-multi-select>
-          </div>
+          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="使用別" controlName="SAL_Type" [options]="SAL_Type_Options" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
@@ -32,7 +32,7 @@
               [errorForGroup]="true"></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="發票年月" calendarType="dateYearOne" [control]="queryForm.controls.InvoiceDateYM"
+            <app-calendar label="發票年月" calendarType="dateMonthOne" [control]="queryForm.controls.InvoiceDateYM"
               [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -46,16 +46,14 @@
             </app-calendar>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar controlName="INV_DeclareYM" calendarType="dateMonthOne" label="申報年月"
-              [control]="queryForm.controls.INV_DeclareYM" [submitted]="submitted">
-            </app-calendar>
-          </div>
+          <!-- 申報年月 -->
+          <app-year-month class="col-12 md:col-6 lg:col-4" label="申報年月" [control]="queryForm.controls.INV_DeclareYM"
+            [submitted]="submitted" [evenMonth]="true" (valueChanges)="loadGuiTrackOptions($event)"></app-year-month>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="買受人統一編號" controlName="Buyer_Uniform" [control]="queryForm.controls.Buyer_Uniform"
-              [options]="Buyer_Uniform_Options" optionLabel="label" optionValue="value"
-              [submitted]="submitted"></app-dropdown>
+            <app-auto-complete label="買受人統一編號" controlName="Buyer_Uniform" [control]="queryForm.controls.Buyer_Uniform"
+              [options]="Buyer_Uniform_Options" optionLabel="label" optionValue="value" [submitted]="submitted"
+              [forceSelection]="false" [autoHighlight]="false"></app-auto-complete>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -64,13 +62,13 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="銷售金額" [startControl]="queryForm.controls.PUR_Amt_S"
-              [endControl]="queryForm.controls.PUR_Amt_E">
+            <app-input-number-range label="銷售金額" [allowUnlimited]="true" [useGrouping]="true"
+              [startControl]="queryForm.controls.PUR_Amt_S" [endControl]="queryForm.controls.PUR_Amt_E">
             </app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="稅額" [startControl]="queryForm.controls.PUR_Tax_S"
-              [endControl]="queryForm.controls.PUR_Tax_E">
+            <app-input-number-range label="稅額" [allowUnlimited]="true" [useGrouping]="true"
+              [startControl]="queryForm.controls.PUR_Tax_S" [endControl]="queryForm.controls.PUR_Tax_E">
             </app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -94,10 +92,9 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="FIN13060" [data]="data" [columns]="columns" dataKey="ID" [showDelete]="false"
-    [showReportMode]="false" [multiSortMeta]="[{ field: 'ID', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-    [loading]="loading" (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="true" [showCheckBox]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
-
-  </app-table>
+  <app-table-report tableKey="FIN13040" [data]="data" [columns]="columns" dataKey="ID" [showDelete]="false"
+    [showReportMode]="false" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showManage]="true" [showCheckBox]="false" [footerData]="footerData"
+    [addButton]="addButton" [queryFunction]="queryFn" [lastQueryBody]="lastQueryBody" [editDisabled]="editDisabled">
+  </app-table-report>
 </div>

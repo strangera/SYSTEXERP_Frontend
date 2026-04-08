@@ -60,49 +60,39 @@
   </p-accordion>
 </div>
 <div class="card">
-  <!-- <app-tls2e080-table-report tableKey="tls57090" dataKey="id" [lastQueryBody]="historyRequestBody" [data]="data"
-    [columns]="columns" [totalRecords]="totalRecords" [showManage]="false"
-    [queryFunction]="tls2e080Service.queryTLS2E080.bind(tls2e080Service)" [showCheckBox]="true"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
-    <header>
-      <div class="flex justify-content-between align-items-center gap-2">
-        <div class="flex gap-2">
-          <p-button styleClass="p-2" label="匯出Zip檔" [rounded]="true" [loading]="btnLoading" icon="pi pi-file"
-            (click)="exportZip()" [disabled]="data.length === 0 || selectedItems.length === 0"
-            [loading]="btnLoading"></p-button>
-        </div>
-        <div class="flex gap-2">
-          <p-button styleClass="p-2" label="網路對帳" [rounded]="true" [loading]="btnLoading" icon="pi pi-file"
-            (click)="autoReport('1')" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
-          <p-button styleClass="p-2" label="AUTOMAIL" [rounded]="true" [loading]="btnLoading" icon="pi pi-file"
-            (click)="autoReport('3')" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
-        </div>
-      </div>
-    </header>
-  </app-tls2e080-table-report> -->
   <app-table-report tableKey="tls57090" dataKey="id" [lastQueryBody]="historyRequestBody" [data]="data"
     [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [loading]="loading"
     [queryFunction]="tls2e080Service.queryTLS2E080.bind(tls2e080Service)" [showCheckBox]="true"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [loading]="loading">
+    (selectButton)="onSelectButton($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    (selectAllChange)="isAllSelected = $event">
     <header>
       <div class="flex justify-content-between align-items-center gap-2">
         <div class="flex gap-2">
-          <p-button styleClass="p-2" label="匯出Zip檔" [rounded]="true" [loading]="btnLoading" icon="pi pi-file"
-            (click)="exportZip()" [disabled]="data.length === 0 || selectedItems.length === 0"
+          <p-button styleClass="p-2" label="匯出Zip檔" [rounded]="true" icon="pi pi-file" (click)="exportZip()"
+            [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.ExportZip)"
             [loading]="btnLoading"></p-button>
         </div>
         <div class="flex gap-2">
-          <p-button styleClass="p-2" label="網路對帳" [rounded]="true" [loading]="btnLoading" icon="pi pi-file"
-            (click)="autoReport('1')" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
-          <p-button styleClass="p-2" label="AUTOMAIL" [rounded]="true" [loading]="btnLoading" icon="pi pi-file"
-            (click)="autoReport('3')" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
+          <p-button styleClass="p-2" label="網路對帳" [rounded]="true" icon="pi pi-file" (click)="netReport()"
+            [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.OnlineCheck)"
+            [loading]="btnLoading"></p-button>
+          <p-button styleClass="p-2" label="AUTOMAIL" [rounded]="true" icon="pi pi-file" (click)="dialogVisible = true"
+            [disabled]="data.length === 0 || selectedItems.length === 0 || !hasPermission(Actions.AUTOMAIL)"
+            [loading]="btnLoading"></p-button>
         </div>
       </div>
     </header>
   </app-table-report>
-  <!-- <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [multiSortMeta]="[{ field: 'HOS_NAME', order: 1 }]" [showReportMode]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showManage]="false" [showDelete]="false">
-  </app-table> -->
 </div>
+<app-dialog [visible]="dialogVisible" header="AutoMail" [showFooter]="false" (visibleChange)="dialogVisible = $event"
+  width="400px">
+  <form [formGroup]="dialogForm" (ngSubmit)="autoMail(dialogForm)">
+    <div class="grid p-fluid">
+      <app-dropdown class="col-12" label="寄件者" controlName="SMTP_No" [control]="dialogForm.controls.SMTP_No"
+        [options]="SMTP_NoOptions | async" optionLabel="Name" optionValue="No" [submitted]="submitted" />
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="submit" [loading]="dialogLoading"></app-button>
+    </div>
+  </form>
+</app-dialog>

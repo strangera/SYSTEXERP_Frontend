@@ -323,6 +323,19 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
+              label="小分類代碼/名稱"
+              controlName="BusSClassList"
+              [options]="bus_sclass_Option"
+              optionLabel="label"
+              [control]="queryForm.controls.BusSClassList"
+              [submitted]="submitted"
+              optionGroupLabel="label"
+              optionGroupChildren="items"
+              [group]="true"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
               label="櫃別"
               controlName="TltKindList"
               [options]="tlt_kind_Option"
@@ -356,7 +369,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="專櫃編號"
+              label="專櫃編號/名稱"
               controlName="TltNoList"
               [options]="tlt_no_id_Option"
               optionLabel="label"
@@ -387,14 +400,11 @@
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
-          <app-button btnType="clear" [form]="queryForm"></app-button>
-          <!-- <ng-container *ngIf="dateForm.controls.reportType.value === '5'">
-            <app-button
-              severity="secondary"
-              label="產生年度曲線圖"
-              (click)="onChart(queryForm)"
-            ></app-button>
-          </ng-container> -->
+          <app-button
+            btnType="clear"
+            [form]="queryForm"
+            (click)="onClearDate()"
+          ></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -413,6 +423,7 @@
     [showEdit]="false"
     [showManage]="true"
     [showReportMode]="false"
+    [showSort]="false"
     [queryFunction]="tls32040Service.queryTLS32040.bind(tls32040Service)"
     [loading]="loading"
   >
@@ -420,7 +431,7 @@
       <div class="flex justify-content-end align-items-center gap-2">
         <p-button
           styleClass="p-2"
-          label="組織業績總表.PDF"
+          label="組織業績報表.PDF"
           icon="pi pi-file"
           (click)="onReport(queryForm, false)"
           [disabled]="data.length === 0"
@@ -428,7 +439,7 @@
         ></p-button>
         <p-button
           styleClass="p-2"
-          label="組織業績總表.XLSX"
+          label="組織業績報表.XLSX"
           icon="pi pi-file"
           (click)="onReport(queryForm, true)"
           [disabled]="data.length === 0"

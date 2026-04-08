@@ -1,150 +1,65 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+
+  <p-panel [header]="formTitle" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- 傳票編號 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="傳票編號" controlName="summonsCode" [control]="dataForm.controls.summonsCode"
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="傳票編號" controlName="VouNo" [control]="dataForm.controls.VouNo"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="傳票種類" controlName="Voucher_Name"
+            [control]="dataForm.controls.Voucher_Name"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="傳票型態" controlName="SrcSheetType"
+            [control]="dataForm.controls.SrcSheetType"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar label="傳票日期" controlName="VouDate" [control]="dataForm.controls.VouDate"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6">
+          <app-input-text label="傳票摘要" controlName="Remark" [control]="dataForm.controls.Remark"
             [submitted]="submitted"></app-input-text>
         </div>
-        <!-- 傳票種類 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="傳票種類" controlName="subpoenaType" [control]="dataForm.controls.subpoenaType"
-            [submitted]="submitted"></app-input-text>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="結帳單號" controlName="SettleNo" [control]="dataForm.controls.SettleNo"></app-input-text>
         </div>
-        <!-- 傳票型態 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="傳票型態" controlName="subpoenaForm" [control]="dataForm.controls.subpoenaForm"
-            [submitted]="submitted"></app-input-text>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-dropdown label="狀態" controlName="Trans_Status" [options]="Trans_StatusOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.Trans_Status"></app-dropdown>
         </div>
-        <!-- 傳票日期 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="傳票日期" controlName="subpoenaDate" [control]="dataForm.controls.subpoenaDate"
-            [submitted]="submitted"></app-input-text>
+
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="建立者" controlName="CRT_USR_No"
+            [control]="dataForm.controls.CRT_USR_No"></app-input-text>
         </div>
-        <!-- 傳票摘要 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="傳票摘要" controlName="subpoenaSummary" [control]="dataForm.controls.subpoenaSummary"
-            [submitted]="submitted"></app-input-text>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar calendarType="dateTimeOne" label="建立日" controlName="CRT_Date"
+            [control]="dataForm.controls.CRT_Date"></app-calendar>
         </div>
-        <!-- 結帳單號 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="結帳單號" controlName="checkoutNumber" [control]="dataForm.controls.checkoutNumber"
-            [submitted]="submitted"></app-input-text>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-input-text label="修改/拋轉者" controlName="UPD_USR_No"
+            [control]="dataForm.controls.UPD_USR_No"></app-input-text>
         </div>
-        <!-- 傳票拋轉狀態 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="傳票拋轉狀態" controlName="subpoenaTransferStatus"
-            [control]="dataForm.controls.subpoenaTransferStatus" [submitted]="submitted"></app-input-text>
-        </div>
-        <!-- 建立者 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="建立者" controlName="creator" [control]="dataForm.controls.creator"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <!-- 建立日期 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="建立日期" controlName="creationDate" [control]="dataForm.controls.creationDate"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <!-- 修改/拋轉者 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="修改/拋轉者" controlName="modifier" [control]="dataForm.controls.modifier"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <!-- 修改/拋轉日 -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="修改/拋轉日" controlName="modificationDate" [control]="dataForm.controls.modificationDate"
-            [submitted]="submitted"></app-input-text>
+        <div class="col-12 md:col-6 lg:col-3">
+          <app-calendar calendarType="dateTimeOne" label="修改/拋轉日" controlName="UPD_Date"
+            [control]="dataForm.controls.UPD_Date"></app-calendar>
         </div>
       </div>
 
-      <!-- 動態新增項目 -->
-      <hr />
-      <ng-container formArrayName="items">
-        <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-          <div class="grid align-items-center">
-            <div class="col" style="flex: 1">
-              <p> {{ i + 1 }}</p>
-            </div>
-            <div>
+      <app-table-edit *ngIf="initTable" title="傳票明細" [data]="data" [columns]="columns" [showDelete]="false"
+        class="mt-3 block" [showPaginator]="true" [loading]="loading" [canInsert]="false" [showFooter]="true"
+        [showCheckBox]="false" [disabled]="isFormReadable">
+      </app-table-edit>
 
-            </div>
-          </div>
-          <div class="grid p-fluid">
-            <!-- 科目代號 -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="科目代號" controlName="subjectCode" [control]="getFormControl(i, 'subjectCode')"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <!-- 摘要 -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="摘要" controlName="summary" [control]="getFormControl(i, 'summary')"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <!-- 借方金額 -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="借方金額" controlName="debitAmount" [control]="getFormControl(i, 'debitAmount')"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <!-- 貸方金額 -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="貸方金額" controlName="creditAmount" [control]="getFormControl(i, 'creditAmount')"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <!-- 組織代號 -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="組織代號" controlName="organizationCode"
-                [control]="getFormControl(i, 'organizationCode')" [submitted]="submitted"></app-input-text>
-            </div>
-            <!-- 活動代號 -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="活動代號" controlName="activityCode" [control]="getFormControl(i, 'activityCode')"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <!-- 立沖代號 -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="立沖代號" controlName="reversalCode" [control]="getFormControl(i, 'reversalCode')"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <!-- 廠商編號 -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="廠商編號" controlName="vendorCode" [control]="getFormControl(i, 'vendorCode')"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <!-- 對象別編號 -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="對象別編號" controlName="objectCode" [control]="getFormControl(i, 'objectCode')"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <!-- 對帳KEY值 -->
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="對帳KEY值" controlName="reconciliationKey"
-                [control]="getFormControl(i, 'reconciliationKey')" [submitted]="submitted"></app-input-text>
-            </div>
-          </div>
-          <hr />
-        </ng-container>
-      </ng-container>
-
-      <!-- 動態新增按鈕 -->
-      <div class="pt-1">
-
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm" (click)="onClear()"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
-
-    <!-- 提交和取消按鈕 -->
-    <div class="col pt-4">
-      <div class="grid justify-content-end">
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
-        <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
-      </div>
-    </div>
   </p-panel>
 </div>

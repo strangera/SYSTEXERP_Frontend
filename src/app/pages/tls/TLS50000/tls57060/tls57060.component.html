@@ -1,0 +1,63 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="顯示方式" controlName="displayMode" [options]="displayModeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.displayMode" [filter]="false"
+              [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="銷售單號" controlName="TXN_SaleNoteNo" [control]="queryForm.controls.TXN_SaleNoteNo"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" startLabel="銷售起始日期" endLabel="銷售結束日期"
+              startControlName="TXN_DateStart" endControlName="TXN_DateEnd" [submitted]="submitted"
+              [startControl]="queryForm.controls.TXN_DateStart" [endControl]="queryForm.controls.TXN_DateEnd" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="品牌代碼/名稱" controlName="TLT_Name" [options]="brandCodeOptions" optionLabel="label"
+              optionValue="No" [control]="queryForm.controls.TLT_Name" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown-table [control]="queryForm.controls.PLU_MagNo" [submitted]="submitted" optionLabel="PLU_MagNo"
+              optionValue="PLU_MagNo" templateLabel="label" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+              (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+              [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
+              [totalRecords]="opTotalRecords">
+              <app-input-text class="col-12 md:col-6" label="商品管理編號" controlName="queryNo"
+                [control]="opForm.controls.queryNo" />
+              <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+                [control]="opForm.controls.PLU_Name" />
+            </app-dropdown-table>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="國際條碼" controlName="PLU_No" [control]="queryForm.controls.PLU_No"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="廠商編號/名稱" controlName="VEN_No" [control]="queryForm.controls.VEN_No"
+              [submitted]="submitted" optionLabel="label" optionValue="VEN_No" [options]="vendorOptions"></app-dropdown>
+          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <app-table-report [data]="data" [columns]="columns" [totalRecords]="totalRecords" [loading]="loading"
+    [showManage]="false" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls57040Service.queryTLS57040.bind(tls57040Service)">
+  </app-table-report>
+</div>

@@ -24,6 +24,7 @@ export interface InvoiceDetail {
   ORG_TXN_No: number | null;
   TXN_MemCard: string;
   TXN_TotPayScoreAmt: number | null;
+  TXN_TaxType: string | null;
 }
 
 export interface PaymentDetail {

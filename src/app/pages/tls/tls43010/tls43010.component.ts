@@ -2,10 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { QueryTls43010Response, Tls43010Service } from '@service/api/tls/tls43010.service';
+import { QueryTls43010Request, QueryTls43010Response, Tls43010Service } from '@service/api/tls/tls43010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { Column, createPaginationConfig, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -13,9 +14,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
-// 2.4.3.1 訊息登錄作業
 @Component({
   selector: 'app-tls43010',
   templateUrl: './tls43010.component.html',
@@ -29,7 +29,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     InputTextComponent,
     CalendarComponent,
     DropdownComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     CalendarRangeComponent
   ]
@@ -44,12 +44,15 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
     NOT_EndDate_End: [null as null | Date], // 有效結束日期
     NOT_File: ['', [Validators.maxLength(200)]], // 媒體檔案名稱
     NOT_Status: [null, [Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
-    ...createPaginationConfig([{ field: 'NOT_No', order: -1 }, { field: 'NOT_Date', order: -1 }]), // 分頁和排序參數
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'NOT_No', order: -1 }, { field: 'NOT_Date', order: -1 }]],
   });
   totalRecords = 0;
   data: QueryTls43010Response[] = [];
+  lastQueryBody: QueryTls43010Request | null = null;
   selectedItems: QueryTls43010Response[] = [];
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'NOT_No', header: '通告編號', visible: true },
     { field: 'NOT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'NOT_BegDate', header: '有效開始日期時間', visible: true, format: formatDateTime },
@@ -64,7 +67,7 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
     { value: '2', label: '已刪除' },
   ];
   constructor(
-    private tls43010Service: Tls43010Service
+    public readonly tls43010Service: Tls43010Service,
   ) {
     super();
   }
@@ -74,10 +77,11 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
-        ...frm.value,
+        ...frm.value
       }
       this.tls43010Service.queryTLS43010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-        this.data = res.Data
+        this.data = res.Data;
+        this.lastQueryBody = body;
         this.totalRecords = res.TotalCount || 0;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });

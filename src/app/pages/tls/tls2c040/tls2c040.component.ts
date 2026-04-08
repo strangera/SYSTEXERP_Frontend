@@ -2,9 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { QueryTLS2C040Request } from '@service/api/tls/tls55060.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { TLS2C040Service } from '../../../service/api/tls/tls2c040.service';
@@ -13,12 +16,10 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-tls2c040',
   templateUrl: './tls2c040.component.html',
-  styleUrl: './tls2c040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -29,7 +30,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     InputTextComponent,
     MultiSelectComponent,
     CalendarRangeComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule
   ]
 })
@@ -40,43 +41,48 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
     VouDate_End: [''],                                         // 傳票日期(迄)
     PostFlagList: [[]],                                        // 傳票狀態(多選)
     No: ['', Validators.maxLength(12)],                         // 結帳單號
-    ...createPaginationConfig([])
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[]]                                               // 建議補上 SortBy 欄位以利分頁排序
   });
 
   data: any[] = [];
-  selectedItems: any[] = [];
   totalRecords = 0;
+  lastQueryBody: QueryTLS2C040Request | null = null;
 
+  // 修正 addButton：呼叫底層的 onDetail 並帶入「類型」字串作為 queryConditions
   addButton: AddButton[] = [
     {
       label: '應收',
-      displayText: '應收',
-      icon: '',
       action: (rowData: any) => { this.onDetail(rowData, '應收') },
     },
     {
       label: '應付',
-      displayText: '應付',
-      icon: '',
       action: (rowData: any) => { this.onDetail(rowData, '應付') },
     },
   ];
+  srcSheetTypeOptions = getSYS1000Options('ENTRY_TYPE')
+    .filter(option => option.value !== 'WT' && option.value !== 'WD')
+    .map(option => ({
+      No: option.value,
+      Name: option.label,
+      Display: `${option.value} - ${option.label}`
+    }));
 
-  //#region 下拉選單選項
-  // 傳票種類
-  srcSheetTypeOptions: IDropdownItem[] = [];
-  // 傳票狀態
   postFlagOptions: IDropdownItem[] = [
     { No: '0', Name: '作廢' },
     { No: '1', Name: '建立' },
     { No: '2', Name: '確認' },
     { No: '3', Name: '過帳' }
   ];
-  //#endregion
-
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },
-    { field: 'SrcSheetType', header: '傳票種類', visible: true, format: (value: string) => this.srcSheetTypeOptions.find(item => item.No === value)?.Name || value },
+    {
+      field: 'SrcSheetType', header: '傳票種類', visible: true, format: (value: string) => {
+        const it = this.srcSheetTypeOptions.find(item => item.No === value);
+        return it ? (it.Display ?? `${it.No}-${it.Name}`) : value;
+      }
+    },
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
     { field: 'PostFlag', header: '傳票狀態', visible: true, format: (value: string) => this.postFlagOptions.find(item => item.No === value)?.Name || value },
     { field: 'Remark', header: '傳票摘要', visible: true },
@@ -84,20 +90,13 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
   ];
 
   constructor(
-    private tls2c040Service: TLS2C040Service,
-    private dropDownListService: DropDownListService
+    public readonly tls2c040Service: TLS2C040Service,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS2C040', 'tls/tls2c040cru', this.queryForm, (form) => this.onSubmit(form));
-    // 載入傳票種類
-    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'entry_type' })
-      .pipe(untilDestroyed(this))
-      .subscribe(response => {
-        this.srcSheetTypeOptions = response.Data;
-      });
   }
 
   onSubmit(form: FormGroup) {
@@ -105,24 +104,11 @@ export class TLS2C040Component extends BasicQueryPageComponent<any> implements O
       this.tls2c040Service.queryTLS2C040(form.getRawValue())
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data.map((item: any) => this.restructureData(item));
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+          this.data = response.Data || [];
+          this.totalRecords = response.TotalCount || 0;
+          this.lastQueryBody = form.getRawValue();
+          this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
         });
     });
-  }
-
-  restructureData(item: any) {
-    return {
-      ...item._GLS6001,
-      _GLS6002List: item._GLS6002List?.sort((a: any, b: any) => {
-        // 先以AccDC遞減排序
-        if (b.AccDC !== a.AccDC) {
-          return b.AccDC - a.AccDC;
-        }
-        // 再以SerNo遞增排序
-        return a.SerNo - b.SerNo;
-      })
-    }
   }
 }

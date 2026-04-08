@@ -1,24 +1,24 @@
-import { Tls29010Service } from './../../../service/api/tls/tls29010.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate, AddButton } from '../../../shared/componentkit/table/table.model';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
+import { Tls29010Service } from './../../../service/api/tls/tls29010.service';
 
 // TALPORDERM (主檔)
 export interface TALPORDERM {
@@ -74,7 +74,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
   queryForm = this.formBuilder.group({
     // TALPORDERM
     pod_no: [null],   // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
-    pod_type: [['8']], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣) // 新增規則這裡部定查8
+    pod_type: ['8'], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣) // 新增規則這裡固定查8
+    cag_barcode: [null],   // 折扣別 (多選) 20251217新增
     pod_sdate: [null], // 活動起始日 (Date)
     pod_edate: [null], // 活動終止日 (Date)
     pod_status: [[]], // 活動狀態(0=未核准, 1=已核准, 9=刪除)
@@ -93,7 +94,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
   // 20251016 核准按鈕  (狀態不是未審核都不能點)
   addButton: AddButton[] = [
-    { label: '核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusChange(rowData, '已核准'); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '0' }, // 審核
+    { label: '核准', icon: 'pi pi-check-circle text-green-500', action: (rowData: TALPORDERM) => { this.statusChange(rowData); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '0' && this.hasPermission(this.Actions.Audit) }, // 審核
+    { label: '反核准', icon: 'pi pi-undo text-orange-500', action: (rowData: TALPORDERM) => { this.statusUnChange(rowData); }, disabled: (rowData: TALPORDERM) => rowData.pod_status !== '1' && this.hasPermission(this.Actions.AntiAudit) }, // 反審核
   ]
   // 表格
   // ----------------------------------------------------------------
@@ -110,18 +112,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     { label: '刪除', value: '9' },
   ];
 
-  // 20251015 更新: 本作業固定操作的活動類型為 8=期間開放折扣
-  podTypeOptions = [
-    // { label: '1 預售', value: '1' },
-    // { label: '2 滿千送百(發行)', value: '2' },
-    // { label: '3 滿千送百(兌回)', value: '3' },
-    // { label: '4 會員卡集點-銷售', value: '4' },
-    // { label: '5 會員卡集點-點數', value: '5' },
-    // { label: '6 全館集點-銷售', value: '6' },
-    // { label: '7 全館集點-點數', value: '7' },
-    { label: '8 期間開放折扣', value: '8' }, //新增用這個
-  ];
-
+  // 20251216 更新: 折扣別更改為與tls23020相同
+  cag_barcode_Options = [];
   tlt_id_Options = [
     { label: '類別0', value: '0' },
     { label: '類別1', value: '1' },
@@ -236,60 +228,58 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
   // 刪除項目
   onDelete(data: TALPORDERM | TALPORDERM[]): void {
-    // console.log('Delete data:', JSON.stringify(data, null, 2));
-
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-
-    const deleteBody = {
-      idList: idList, // 符合 API 的 idList 格式
-    };
-
-    console.log('刪除資料', deleteBody);
-    this.tls29010Service.deleteTLS29010M(deleteBody).pipe(untilDestroyed(this)).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
-        } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+    this.messageService.confirm({
+      message: `是否確認刪除選中的折扣開放資料?`,
+      header: `確認刪除`,
+      accept: () => {
+        const items = Array.isArray(data) ? data : [data];
+        if (items.length === 0) {
+          console.error('No items to delete');
+          this.messageService.errorBubble('無法刪除：沒有選中的項目');
+          return;
         }
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm);
+
+        // 收集所有有效的 ID
+        const idList = items
+          .filter((item) => item && item.id != null && item.id !== undefined)
+          .map((item) => item.id);
+
+        if (idList.length === 0) {
+          console.error('No valid IDs to delete');
+          this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+          return;
+        }
+
+        const deleteBody = {
+          idList: idList, // 符合 API 的 idList 格式
+        };
+
+        console.log('刪除資料', deleteBody);
+        this.tls29010Service.deleteTLS29010M(deleteBody).pipe(untilDestroyed(this)).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('選中項目刪除成功');
+            } else {
+              console.error('API error:', response.Status, response.Message);
+              this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+            }
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.onSubmit(this.queryForm);
+          },
+        });
+
+        this.selectedItems = [];
       },
     });
-
-    this.selectedItems = [];
-  }
-
-  isRowSelectable(rowData: TALPORDERM): boolean {
-    return true;
-    // return false; //不予許刪除
   }
 
   // 20251016 核准按鈕狀態切換
-  statusChange(rowData: TALPORDERM, status: string) {
+  statusChange(rowData: TALPORDERM) {
     this.btnLoading = true;
 
     const apprPod_no = rowData.pod_no;
@@ -309,6 +299,27 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     this.btnLoading = false;
   }
 
+  // 20251016 反核准按鈕狀態切換
+  statusUnChange(rowData: TALPORDERM) {
+    this.btnLoading = true;
+
+    const apprPod_no = rowData.pod_no;
+    if (apprPod_no) {
+      const body = {
+        pod_no: rowData.pod_no,
+      }
+      console.log('反核准資料', body)
+      this.tls29010Service.unapprTLS29010(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
+        this.messageService.successBubble(response.Message);
+        this.onSubmit(this.queryForm);
+      });
+    } else {
+      this.messageService.errorBox('反核准失敗，請重新操作')
+    }
+
+    this.btnLoading = false;
+  }
+
   loadOption() {
     // 專櫃編號
     this.dropDownListService
@@ -321,5 +332,21 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
         console.log('專櫃編號 下拉:', response.Data);
       });
+
+    // 折扣別 下拉選單
+    this.tls29010Service.dropdownTLS29010bytalentid({ "talent_id": null }).pipe(untilDestroyed(this)).pipe(untilDestroyed(this)).subscribe((response) => {
+      this.cag_barcode_Options = response.Data;
+    });
   }
+
+  // 邏輯：只有 '0' (未核准) 的資料可以被勾選/刪除
+  isRowSelectable = (rowData: TALPORDERM) => {
+    return rowData.pod_status === '0';
+  };
+
+
+  // *pod_status=1 不可編輯；pod_status=9 列表不顯示；
+  isRowEditDisabled = (rowData: TALPORDERM) => {
+    return rowData.pod_status === '1' || rowData.pod_status === '9';
+  };
 }

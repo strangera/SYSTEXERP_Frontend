@@ -19,13 +19,39 @@ export interface fin55040request {
   IsSubDetail: boolean;
 }
 
+// 攤平後的
 export interface fin55040response {
   PTA: string;
   VouNo: string;
+  AccNo: string;
+  AccCName: string;
   NoteDesc: string;
   PTA1: number;
   PTA2: number;
+  PTA3: number;
 }
+
+// 明細 Row
+export interface FIN55040Detail {
+  Status: string;
+  PTA: string;
+  VouNo: string;
+  AccNo: string;
+  AccCName: string;
+  NoteDesc: string;
+  PTA1: number;
+  PTA2: number;
+  PTA3: number;
+}
+
+// 巢狀父資料（包含 data 與 summary）
+export interface FIN55040Data {
+  AccNo: string;
+  AccCName: string;
+  data: FIN55040Detail[];
+  summary: { PTA1_Total: number; PTA2_Total: number; PTA3_Total: number; };
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -36,8 +62,8 @@ export class Fin55040Service {
   constructor(private http: HttpClient) { }
 
   // 查詢 gls3003 資料表
-  queryFIN55040(body: fin55040request): Observable<ApiResponse<fin55040response[]>> {
-    return this.http.post<ApiResponse<fin55040response[]>>(`${this.apiUrl}/queryFIN55040`, body);
+  queryFIN55040(body: fin55040request): Observable<ApiResponse<FIN55040Data[]>> {
+    return this.http.post<ApiResponse<FIN55040Data[]>>(`${this.apiUrl}/queryFIN55040`, body);
   }
 
   // 匯出 gls3003 資料表 (PDF)

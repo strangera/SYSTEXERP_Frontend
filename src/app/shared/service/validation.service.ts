@@ -13,9 +13,9 @@ export class ValidationService {
       required: '必填',
       pattern: '格式錯誤，請重新輸入。',
       invalidNumber: '只能輸入數字',
-      email: '「電子郵件」，格式錯誤，請重新輸入。',
+      email: '「電子郵件」格式錯誤，請重新輸入。',
       invalidCreditCard: 'Is invalid credit card number',
-      invalidEmailAddress: '「電子郵件」，格式錯誤，請重新輸入。',
+      invalidEmailAddress: '「電子郵件」格式錯誤，請重新輸入。',
       invalidPassword: `密碼無效。密碼長度至少為 6 個字元，且必須包含一個數字。`,
       minlength: `最短長度為 ${validatorValue.requiredLength}`,
       maxlength: `最長長度為 ${validatorValue.requiredLength}`,
@@ -30,7 +30,7 @@ export class ValidationService {
       invalidDateRange: '日期起不可大於日期迄',
       invalidNumberRange: '起始數字不可大於結束數字',
       passwordsMismatch: '兩次輸入的密碼不一致，請重新輸入。',
-      invalidPasswordStrength: '密碼強度不足，至少包含一個大小寫字母、一個數字和一個特殊符號。',
+      invalidPasswordStrength: '密碼強度不足，至少包含一個英文小寫字母與一個數字。',
       invalidGuiTrack: '僅能輸入大寫英文字母',
       invalidGuiBegNo: '起號結尾只能為 00 或 50',
       invalidGuiEndNo: '迄號結尾只能為 49 或 99',
@@ -53,6 +53,8 @@ export class ValidationService {
       textRange: '起號不可大於迄號',
       invalidGuiVehicle: '格式錯誤：需以「/」為開頭，長度8碼，且第2碼後只能包含半形英數字+-.等符號',
       dateNotAfterToday: '日期必須大於等於今日',
+      containsFullWidth: '不可輸入全形字元，請切換為半形輸入。',
+      accNoClassNoMismatch: '「科目代號」與「三碼代號」不符',
     };
     return config[validatorName];
   }
@@ -82,21 +84,24 @@ export class ValidationService {
     return null;
   }
   // 電子信箱
-  emailValidator(control: { value: string | null; }) {
+  emailValidator(control: { value: string | null; }): ValidationErrors | null {
     // [驗證]
-    // 非必填，若有輸入值，檢核輸入資料需為英數字含特殊符號並檢查是否有@符號
-    // 長度限制40個字元，非必填，若有輸入值，檢核輸入資料需為英數字含特殊符號並檢查是否有@符號
+    // 非必填,若有輸入值,檢核輸入資料需為英數字含特殊符號並檢查是否有@符號
+    // 長度限制40個字元,非必填,若有輸入值,檢核輸入資料需為英數字含特殊符號並檢查是否有@符號
     // [回傳]
-    // 若檢核有誤，顯示提示訊息:「電子郵件」，格式錯誤，請重新輸入。
-    // RFC 2822 compliant regex
-    if (control.value !== null) {
-      if (
-        !control.value.match(
-          /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
-        )
-      ) {
-        return { invalidEmailAddress: true };
-      }
+    // 若檢核有誤,顯示提示訊息:「電子郵件」,格式錯誤,請重新輸入。
+    const value = control.value;
+
+    // 如果值為 null 或空字串,則不進行驗證
+    if (value === null || value === '') {
+      return null;
+    }
+
+    // RFC 2822 compliant regex - 檢查電子郵件格式
+    const emailRegex = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i;
+
+    if (!emailRegex.test(value)) {
+      return { invalidEmailAddress: true };
     }
 
     return null;
@@ -130,12 +135,10 @@ export class ValidationService {
         return null;
       }
 
-      const hasUpperCase = /[A-Z]/.test(value);
       const hasLowerCase = /[a-z]/.test(value);
       const hasNumber = /[0-9]/.test(value);
-      const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>\-_+=`~[\]\\;']/.test(value);
 
-      const isValid = hasUpperCase && hasLowerCase && hasNumber && hasSpecialChar;
+      const isValid = hasLowerCase && hasNumber;
 
       return isValid ? null : { invalidPasswordStrength: true };
     };
@@ -521,6 +524,63 @@ export class ValidationService {
       }
 
       // 驗證通過
+      return null;
+    };
+  }
+
+  /**
+ * 檢查是否包含全形字元（包含數字、符號、空格）
+ */
+  containsFullWidth(control: { value: any }) {
+    const value = control.value;
+    if (value === null || value === '' || value === undefined) {
+      return null;
+    }
+
+    // 使用正則表達式檢查是否包含全形字元或全形空格
+    const fullWidthRegex = /[！-～　]/;
+
+    if (fullWidthRegex.test(value.toString())) {
+      return { containsFullWidth: true };
+    }
+
+    return null;
+  }
+
+  // 科目代號與三碼代號是否相符檢核
+  accNoClassNoMatchValidator(accNoControlName: string, classNoControlName: string): ValidatorFn {
+    return (formGroup: AbstractControl): ValidationErrors | null => {
+      if (!(formGroup instanceof FormGroup)) {
+        return null;
+      }
+
+      const accNoControl = formGroup.get(accNoControlName);
+      const classNoControl = formGroup.get(classNoControlName);
+
+      if (!accNoControl || !classNoControl) {
+        return null;
+      }
+
+      const accNo = accNoControl.value;
+      const classNo = classNoControl.value;
+
+      if (accNoControl.hasError('accNoClassNoMismatch')) {
+        const errors = { ...accNoControl.errors };
+        delete errors['accNoClassNoMismatch'];
+        if (Object.keys(errors).length === 0) {
+          accNoControl.setErrors(null);
+        } else {
+          accNoControl.setErrors(errors);
+        }
+      }
+
+      if (accNo && classNo && accNo.length >= 3) {
+        if (accNo.slice(0, 3) !== classNo) {
+          accNoControl.setErrors({ ...accNoControl.errors, accNoClassNoMismatch: true });
+          return { accNoClassNoMismatch: true };
+        }
+      }
+
       return null;
     };
   }

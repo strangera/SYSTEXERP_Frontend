@@ -1,30 +1,30 @@
-import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { CommonModule, DatePipe, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableModule } from 'primeng/table';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
-import { yesterday } from '@shared/models/system/query-form.model';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
-import { ButtonModule } from 'primeng/button';
-import { environment } from 'src/environments/environment';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { footerShowTotal, TLS31020Item, TLS31020PrintRequest, TLS31020Request, TLS31020Response, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { CommonModule, DatePipe, formatDate } from '@angular/common';
-import { TLS26050Service } from '@service/api/tls/tls26050.service';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-tls31020',
@@ -201,9 +201,20 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   ngOnInit(): void {
     this.initializePage('TLS31020', 'TLS/TLS31020cru', this.queryForm, (frm) => this.onSubmit(frm));
 
-    // 日期表單控制
+    // 1. 先處理下拉選單與唯讀設定
     this.onReportTypeChange('1');
     this.setReadOnlyFields();
+
+    // 2. 從 State 讀取資料並「還原」值，而不是替換整個物件
+    const savedDateState = this.queryStateService.getQueryStateValue('tls31020_Date');
+    if (savedDateState) {
+      // 注意：如果是存整個 FormGroup 物件，這裡建議存取它的 .value
+      // 如果你之前存的是 FormGroup，請確保這裡拿到的是純資料
+      const stateValue = savedDateState.value ? savedDateState.value : savedDateState;
+      this.dateForm.patchValue(stateValue, { emitEvent: false });
+      // 強制執行一次同步，確保 queryForm 的日期跟上
+      this.syncDateToQueryForm();
+    }
 
     // 監聽 dateForm 的變化，套用日期到 queryForm
     this.dateForm.valueChanges.subscribe(() => {
@@ -289,8 +300,8 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     ).subscribe(result => {
 
       const groupedData = result.selectedMValues.reduce((accumulator, mValue) => {
-      const groupKey = `${mValue.bus_type}_${mValue.No}`;
-      const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
+        const groupKey = `${mValue.bus_type}_${mValue.No}`;
+        const groupLabel = `${mValue.bus_type_name} - ${mValue.Name}`;
 
         //  過濾小分類資料對應到當前中分類
         const items = result.data
@@ -374,10 +385,15 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
 
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+
+        // ---同步儲存比較表單的query資訊---
+        this.queryStateService.setQueryState('tls31020_Date', this.dateForm);
+        // ------
       })
     })
   }
-  btnLoading = false;
+  btnPDFLoading = false;
+  btnExcelLoading = false;
   onReport(frm: FormGroup, isExcel: boolean) {
     const printData = this.queryStateService.getQueryStateValue(this.ProgNo);
     const formValue = {
@@ -395,15 +411,27 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
 
     console.log('送出print請求', formValue);
 
-    this.btnLoading = true;
-    this.tls31020Service.printTLS31020(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-      .subscribe(res => {
-        this.messageService.successBubble(res.Message);
-        if (res.Data && res.Data.Print_URL) {
-          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-          window.open(downloadUrl, '_blank');
-        }
-      });
+    if (isExcel) {
+      this.btnExcelLoading = true;
+      this.tls31020Service.printTLS31020(formValue).pipe(finalize(() => this.btnExcelLoading = false), untilDestroyed(this))
+        .subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          if (res.Data && res.Data.Print_URL) {
+            const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+            window.open(downloadUrl, '_blank');
+          }
+        });
+    } else {
+      this.btnPDFLoading = true;
+      this.tls31020Service.printTLS31020(formValue).pipe(finalize(() => this.btnPDFLoading = false), untilDestroyed(this))
+        .subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          if (res.Data && res.Data.Print_URL) {
+            const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+            window.open(downloadUrl, '_blank');
+          }
+        });
+    }
   }
 
   // #region 日期選單事件
@@ -549,6 +577,25 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     if (start) this.queryForm.get('TXN_DateS')?.setValue(start);
     if (end) this.queryForm.get('TXN_DateE')?.setValue(end);
   }
+
+  //清除日期查詢條件
+  onClearDate() {
+    //dateForm設定為日營業報，日期今天
+    this.dateForm.reset({
+      reportType: '1',
+      onedatedd: yesterday,
+    });
+
+    //清空查詢資料
+    this.data = [];
+    this.totalRecords = 0;
+    this.footerTotal = null;
+    this.footershowTotal = null;
+
+    this.setReadOnlyFields();
+    this.syncDateToQueryForm();
+  }
+
 
   onDetail1(event: any) {
     const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);

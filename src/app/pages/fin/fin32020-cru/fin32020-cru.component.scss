@@ -1,0 +1,8 @@
+:host ::ng-deep .selected-red-row > td {
+  color: #dc2626 !important;
+  font-weight: 600;
+}
+
+:host ::ng-deep .selected-red-row > td * {
+  color: #dc2626 !important;
+}

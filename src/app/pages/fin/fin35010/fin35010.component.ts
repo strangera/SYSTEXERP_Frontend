@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -8,8 +8,9 @@ import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -40,7 +41,6 @@ import { UpdateType } from './fin35010.model';
   ],
 })
 export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response> implements OnInit {
-  public readonly UpdateType = UpdateType;
   queryForm = this.formBuilder.nonNullable.group({
     VEN_No: [null], // 廠客代號(下拉), POS2013.VEN_NO
     VEN_Name: [null, Validators.maxLength(100)], // "廠客名稱, POS2013.VEN_NAME LIKE %%" (input輸入)
@@ -61,7 +61,8 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
     org_id: [null], // 組織代碼(下拉)
     Remark: [null, Validators.maxLength(160)], // 摘要(input輸入)
     Deposit_Type: [null], // 保證類別(下拉) // 保證金類型 (1=押金 2=履約保證金 3=施工保證金 4=開業保證金)
-    CHK_Amt: [null, Validators.max(9999999999)], // 金額(數字範圍輸入)
+    CHK_AmtFrom: [null, Validators.max(9999999999)], // 金額(數字範圍輸入)
+    CHK_AmtTo: [null, Validators.max(9999999999)], // 金額(數字範圍輸入)
     pageIndex: [1],
     pageSize: [30],
   });
@@ -87,10 +88,49 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
     { field: 'CRT_Date', header: '建檔日期', format: formatDate },
     { field: 'UPD_Date', header: '變更日期', format: formatDate },
   ];
+  addButton: AddButton[] = [
+    {
+      label: '繳票',
+      icon: 'pi pi-check-circle text-green-600',
+      action: (rowData: FIN35010Response) => {
+        this.onEdit({ ...rowData, update_type: UpdateType.Deposit });
+      },
+      // 只有「未繳票」狀態可以執行繳票
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '0' || !this.hasPermission(Actions.PayCheck)
+    },
+    {
+      label: '取消繳票',
+      icon: 'pi pi-undo text-red-600',
+      action: (rowData: FIN35010Response) => {
+        this.onEdit({ ...rowData, update_type: UpdateType.CancelDeposit });
+      },
+      // 只有「已繳票」狀態可以取消繳票
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '1' || !this.hasPermission(Actions.CancelPayCheck)
+    },
+    {
+      label: '退票',
+      icon: 'pi pi-directions-alt text-blue-600',
+      action: (rowData: FIN35010Response) => {
+        this.onEdit({ ...rowData, update_type: UpdateType.Refund });
+      },
+      // 修正點：必須是「已繳票(1)」狀態才能執行退票
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '1' || !this.hasPermission(Actions.ReturnCheck)
+    },
+    {
+      label: '取消退票',
+      icon: 'pi pi-history text-gray-600',
+      action: (rowData: FIN35010Response) => {
+        this.onEdit({ ...rowData, update_type: UpdateType.CancelRefund });
+      },
+      // 只有「已退票(2)」狀態可以取消退票
+      disabled: (rowData: FIN35010Response) => rowData.Status !== '2' || !this.hasPermission(Actions.CancelReturnCheck)
+    },
+  ];
 
   constructor(
     public readonly fin35010Service: Fin35010Service,
-    private readonly dropdown: DropdownApiService
+    private readonly dropdown: DropdownApiService,
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
@@ -100,12 +140,46 @@ export class FIN35010Component extends BasicQueryPageComponent<FIN35010Response>
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.fin35010Service.queryFIN35010(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      const rawValue = frm.value;
+      const body: FIN35010QueryRequest = {
+        ...rawValue,
+        // 組織代碼
+        OrgId: rawValue.org_id,
+
+        // 合約起日
+        TLT_BDateFrom: this.datePipe.transform(rawValue.tlt_bdateStart, 'yyyy-MM-dd'),
+        TLT_BDateTo: this.datePipe.transform(rawValue.tlt_bdateEnd, 'yyyy-MM-dd'),
+
+        // 合約迄日
+        TLT_EDateFrom: this.datePipe.transform(rawValue.tlt_edateStart, 'yyyy-MM-dd'),
+        TLT_EDateTo: this.datePipe.transform(rawValue.tlt_edateEnd, 'yyyy-MM-dd'),
+
+        // 收票日期
+        DepositDateFrom: this.datePipe.transform(rawValue.Deposit_DateStart, 'yyyy-MM-dd'),
+        DepositDateTo: this.datePipe.transform(rawValue.Deposit_DateEnd, 'yyyy-MM-dd'),
+
+        // 到期日
+        CHK_ExpireDateFrom: this.datePipe.transform(rawValue.CHK_ExpireDateStart, 'yyyy-MM-dd'),
+        CHK_ExpireDateTo: this.datePipe.transform(rawValue.CHK_ExpireDateEnd, 'yyyy-MM-dd'),
+
+        // 變更日期
+        UPD_DateFrom: this.datePipe.transform(rawValue.UPD_DateStart, 'yyyy-MM-dd'),
+        UPD_DateTo: this.datePipe.transform(rawValue.UPD_DateEnd, 'yyyy-MM-dd'),
+      };
+
+      this.fin35010Service.queryFIN35010(body).pipe(
+        finalize(() => this.loading = false),
+        untilDestroyed(this)
+      ).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
-        this.lastQuery = frm.value;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      })
+        this.lastQuery = body;
+        this.queryStateService.setQueryState(this.ProgNo, body);
+      });
     });
+  }
+
+  onCreateData_Source(Data_Source: string): void {
+    this.onCreate({ Data_Source: Data_Source });
   }
 }

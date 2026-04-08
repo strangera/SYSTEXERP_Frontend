@@ -168,15 +168,8 @@
               optionValue="No" [control]="queryForm.controls.AreaList" [submitted]="submitted"></app-multi-select>
           </div>
 
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="大分類" controlName="BusTypeList" [options]="businessTypeCodeOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.BusTypeList"
-              [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="中分類" controlName="BusClassList" [options]="BusClassListOptions | async"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.BusClassList"
-              [submitted]="submitted"></app-multi-select>
+          <div class="col-12">
+            <app-category-select formControlName="category"></app-category-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="櫃別" controlName="CounterKindList" [options]="operationsOptions" optionLabel="label"
@@ -227,10 +220,10 @@
     [queryFunction]="tls32020Service.queryTLS32020.bind(tls32020Service)" groupRowsBy="YM">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
-        <p-button styleClass="p-2" label="產出銷售排名分析報表.PDF" [loading]="btnLoading" icon="pi pi-file"
-          (click)="onExportPDF()" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
-        <p-button styleClass="p-2" label="產出銷售排名分析報表.XLSX" [loading]="btnLoading" icon="pi pi-file"
-          (click)="onExportXLSX()" [disabled]="data.length === 0" [loading]="btnLoading"></p-button>
+        <p-button styleClass="p-2" label="產出期間業績分析報表.PDF" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onExportPDF()" [disabled]="data.length === 0 || !hasPermission(Actions.Print)"></p-button>
+        <p-button styleClass="p-2" label="產出期間業績分析報表.XLSX" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onExportXLSX()" [disabled]="data.length === 0 || !hasPermission(Actions.ExportExcel)"></p-button>
       </div>
     </header>
   </app-table-report>

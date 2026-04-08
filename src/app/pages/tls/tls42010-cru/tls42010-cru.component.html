@@ -19,8 +19,8 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="鍵盤型態" controlName="ECR_KBType" [options]="ECR_KBTypeOptions" optionLabel="Name"
-            optionValue="No" [control]="dataForm.controls.ECR_KBType" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="鍵盤型態" controlName="ECR_KBType" [options]="ECR_KBTypeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.ECR_KBType" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12">
@@ -35,149 +35,31 @@
         <div class="col-12 md:col-8">
           <p-panel header="鍵盤設定明細">
             <div class="flex justify-content-end gap-2 mb-2">
-              <app-button label="新增頁數" btnType="create" (click)="addPage()" class="btn-small"
+              <app-button label="新增頁數" btnType="create" (click)="addPage()" class="btn-small" styleClass="py-2"
                 icon="pi pi-plus"></app-button>
-              <app-button label="刪除頁數" btnType="delete" (click)="deletePage()" class="btn-small"
-                icon="pi pi-minus"></app-button>
+              <app-button label="刪除頁數" btnType="delete" (click)="deletePage()" class="btn-small" styleClass="py-2"
+                icon="pi pi-minus" [disabled]="pages.length <= 1"></app-button>
             </div>
-            <p-tabView [activeIndex]="activeIndex" (activeIndexChange)="onPageChange($event)" class="kb-tabview">
-              <p-tabPanel *ngFor="let page of pages; index as i" [header]="(i + 1).toString()">
-                <div class="kb-grid" [style.gridTemplateColumns]="'repeat(' + xCount + ', 1fr)'"
-                  [style.gridTemplateRows]="'repeat(' + yCount + ', 60px)'">
-                  <ng-container *ngFor="let k of page">
-                    <button *ngIf="!isKeyHidden(k, page)" type="button" class="kb-key"
-                      [class.active]="selected?.code === k.code" [ngClass]="'type-' + (k.type || 'normal')"
-                      [style.background-color]="k.KB_Color ? convertRGBToCss(k.KB_Color) : ''"
-                      [style.color]="k.KB_FontColor ? convertRGBToCss(k.KB_FontColor) : ''"
-                      [style.font-size]="k.KB_Size ? k.KB_Size + 'px' : ''"
-                      [style.font-weight]="k.KB_Fonttyped?.[0] === 'Y' ? 'bold' : 'normal'"
-                      [style.font-style]="k.KB_Fonttyped?.[1] === 'Y' ? 'italic' : 'normal'"
-                      [style.text-decoration]="k.KB_Fonttyped?.[2] === 'Y' ? 'underline' : 'none'"
-                      [style.grid-column]="getKeyGridStyle(k)['grid-column']"
-                      [style.grid-row]="getKeyGridStyle(k)['grid-row']" (click)="selectKey(k, $event)">
-
-                      <div class="kb-line" *ngIf="k.KB_Display1">
-                        {{ k.KB_Display1 }}
-                      </div>
-                      <div class="kb-line" *ngIf="k.KB_Display2">
-                        {{ k.KB_Display2 }}
-                      </div>
-
-                      <div class="kb-sub" *ngIf="!k.KB_Display1 && !k.KB_Display2">
-                        &nbsp;
-                      </div>
-                    </button>
-                  </ng-container>
-                </div>
-              </p-tabPanel>
-            </p-tabView>
+            <app-tls42010-grid [pages]="pages" [activeIndex]="activeIndex" [selected]="selected" [xCount]="xCount"
+              [yCount]="yCount" (activeIndexChange)="onPageChange($event)"
+              (keyClick)="selectKey($event.key, $event.event)">
+            </app-tls42010-grid>
           </p-panel>
         </div>
 
         <!-- 右：設定區 -->
         <div class="col-12 md:col-4">
-          <div class="grid">
-            <div class="col-12">
-              <p-selectButton [options]="tabOptions" [ngModel]="selectedTab" (onChange)="onTabChangeTab($event)"
-                [multiple]="false" [unselectable]="false" [ngModelOptions]="{ standalone: true }"></p-selectButton>
-            </div>
-
-            <!-- 功能分頁 -->
-            <div class="col-12" *ngIf="selectedTab === 'func'">
-              <app-dropdown label="功能代碼/名稱" [control]="getControl('KB_Func')" [options]="KB_FuncOptions"
-                optionLabel="label" optionValue="value" [showClear]="true"></app-dropdown>
-              <!-- 其他分頁 -->
-              <div class="col-12" *ngIf="selectedTab === 'func'">
-                <app-input-text label="參數1" [control]="getControl('KB_Arg1')"></app-input-text>
-              </div>
-              <div class="col-12" *ngIf="selectedTab === 'func'">
-                <app-input-text label="參數2" [control]="getControl('KB_Arg2')"></app-input-text>
-              </div>
-              <div class="col-12" *ngIf="selectedTab === 'func'">
-                <app-input-text label="參數3" [control]="getControl('KB_Arg3')"></app-input-text>
-              </div>
-            </div>
-
-            <!-- 按鈕分頁 -->
-            <div class="col-12" *ngIf="selectedTab === 'button'">
-              <app-dropdown label="是否啟用" [control]="getControl('KB_Switch')" [options]="KB_SwitchOptions"
-                optionLabel="label" optionValue="value" [showClear]="true"></app-dropdown>
-            </div>
-
-            <div class="col-12" *ngIf="selectedTab === 'button'">
-              <app-input-text label="案鍵顯示(第一行)" [control]="getControl('KB_Display1')"></app-input-text>
-            </div>
-
-            <div class="col-12" *ngIf="selectedTab === 'button'">
-              <app-input-text label="案鍵顯示(第二行)" [control]="getControl('KB_Display2')"></app-input-text>
-            </div>
-
-            <div class="col-12" *ngIf="selectedTab === 'button'">
-              <label for="kb-color">按鍵顏色</label>
-              <div class="flex align-items-center gap-2">
-                <input id="kb-color" type="text" class="p-inputtext p-component"
-                  [formControl]="getControl('KB_Color')" />
-                <p-colorPicker [formControl]="getControl('color')" appendTo="body" format="rgb"></p-colorPicker>
-              </div>
-            </div>
-
-            <div class="col-12" *ngIf="selectedTab === 'button'">
-              <app-dropdown label="按鍵形狀" [control]="getControl('KB_Style')" [options]="KB_StyleOptions"
-                optionLabel="Name" optionValue="No"></app-dropdown>
-            </div>
-
-            <!-- 字型分頁 -->
-            <div class="col-12" *ngIf="selectedTab === 'font'">
-              <app-dropdown label="顯示字型" [control]="getControl('KB_Font')" [options]="KB_FontOptions"
-                optionLabel="label" optionValue="value" [showClear]="true"></app-dropdown>
-            </div>
-
-            <div class="col-12" *ngIf="selectedTab === 'font'">
-              <app-input-number label="顯示字型大小" [control]="getControl('KB_Size')" [showButtons]="true" [min]="8"
-                [max]="72" [step]="1" [submitted]="submitted"></app-input-number>
-            </div>
-
-            <div class="col-12" *ngIf="selectedTab === 'font'">
-              <label for="KB_FontColor">字型顏色</label>
-              <div class="flex align-items-center gap-2">
-                <input id="KB_FontColor" type="text" class="p-inputtext p-component"
-                  [formControl]="getControl('KB_FontColor')" />
-                <p-colorPicker [formControl]="getControl('FontColor')" appendTo="body" format="rgb"></p-colorPicker>
-              </div>
-            </div>
-            <div class="col-12" *ngIf="selectedTab === 'font'">
-              <label for="KB_Fonttyped">字型樣式</label>
-              <div class="flex flex-row gap-3">
-                <p-checkbox *ngFor="let opt of KB_FonttypedOptions" [binary]="true" [inputId]="'ft-' + opt.index"
-                  [label]="opt.label" [ngModel]="
-                    getControl('KB_Fonttyped').value[opt.index] === 'Y'
-                  " (onChange)="toggleFonttyped(opt.index, $event.checked)"
-                  [ngModelOptions]="{ standalone: true }"></p-checkbox>
-              </div>
-            </div>
-
-            <!-- 其他分頁 -->
-            <div class="col-12" *ngIf="selectedTab === 'other'">
-              <div class="flex flex-row justify-content-center gap-2 mt-3">
-                <p-button *ngFor="let opt of KB_MergeOptions" [label]="getMergeButtonLabel(opt)"
-                  [severity]="isMergeOptionSelected(opt.value) ? 'primary' : null"
-                  [outlined]="!isMergeOptionSelected(opt.value)" size="small" (click)="toggleMergeOption(opt.value)"
-                  class="flex-1"></p-button>
-              </div>
-              <div class="flex flex-row justify-content-center gap-2 mt-3">
-                <p-button *ngFor="let opt of KB_AttrOptions" [label]="opt.label" size="small" outlined="true"
-                  class="flex-1" (click)="handleAttrAction(opt.value, $event)">
-                </p-button>
-              </div>
-
-            </div>
-          </div>
+          <app-tls42010-editor [form]="selectedKeyForm" [funcOptions$]="KB_FuncOptions$"
+            [styleOptions]="KB_StyleOptions" [selectedKey]="selected" (mergeAction)="toggleMergeOption($event)"
+            (attrAction)="handleAttrAction($event.action, $event.event)"
+            (fontTypeChange)="toggleFonttyped($event.index, $event.checked)">
+          </app-tls42010-editor>
         </div>
       </div>
 
-      <!-- 底部按鈕 -->
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
+      <!-- 底部按鈕（編輯/建立模式可見；檢視模式隱藏） -->
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onCancelClicked()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>

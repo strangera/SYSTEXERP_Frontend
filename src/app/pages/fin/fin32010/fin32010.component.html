@@ -8,8 +8,8 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="應收ID" controlName="ARS_No"
-              [control]="queryForm.controls.ARS_No" [submitted]="submitted"></app-input-number>
+            <app-input-text label="應收ID" controlName="ARS_No" [control]="queryForm.controls.ARS_No"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="組織代碼" controlName="ORG_ID" [options]="Org_IdOptions | async" optionLabel="label"
@@ -59,8 +59,8 @@
               optionValue="value" [control]="queryForm.controls.CustNo" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="統一編號" controlName="Uniform_No"
-              [control]="queryForm.controls.Uniform_No" [submitted]="submitted"></app-input-number>
+            <app-input-text label="統一編號" controlName="Uniform_No" [control]="queryForm.controls.Uniform_No"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="會計科目代號" controlName="AccNo" [options]="AccNo_ParamOptions | async" optionLabel="label"
@@ -70,21 +70,20 @@
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="帳款來源單號" controlName="ARS_SourceNo"
-              [control]="queryForm.controls.ARS_SourceNo" [submitted]="submitted"></app-input-number>
+            <app-input-text label="帳款來源單號" controlName="ARS_SourceNo" [control]="queryForm.controls.ARS_SourceNo"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="傳票號碼" controlName="VouNo"
-              [control]="queryForm.controls.VouNo" [submitted]="submitted"></app-input-number>
+            <app-input-text label="傳票號碼" controlName="VouNo" [control]="queryForm.controls.VouNo"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="傳票狀態" controlName="PostFlag" [options]="VouStatusOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.PostFlag" [submitted]="submitted"></app-dropdown>
           </div>
-
         </div>
 
-        <!-- 欄位組 6 (立帳日期範圍, 廠商代號, 統一編號) -->
+        <!-- 欄位組 6 (立帳日期範圍, 廠商編號, 統一編號) -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="應收狀態" controlName="ARS_Status" [options]="ACP_Status_ParamOptions" optionLabel="label"
@@ -110,8 +109,8 @@
 </div>
 <div class="card">
   <app-table-report apiUrl="queryFIN32010" tableKey="FIN32010query" dataKey="RowNo" [lastQueryBody]="lastQueryBody"
-    [showReportMode]="false" [totalRecords]="totalRecords" [data]="data" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [columns]="columns" [loading]="loading" [showDelete]="false"
+    [showReportMode]="true" [totalRecords]="totalRecords" [data]="data" [footerData]="footerData"
+    (edit)="onEdit($event)" (detail)="onDetail($event)" [columns]="columns" [loading]="loading" [showDelete]="false"
     [editDisabled]="editDisabledByVouNo"
     [queryFunction]="fin32010Service.queryFIN32010.bind(fin32010Service)"></app-table-report>
 </div>

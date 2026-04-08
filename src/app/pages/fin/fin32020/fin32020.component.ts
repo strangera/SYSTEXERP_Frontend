@@ -1,48 +1,45 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import {
-  ChangeDetectorRef,
-  Component,
-  OnInit,
-} from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-
-// UI
 import { TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { Observable, of } from 'rxjs';
+import { map, take } from 'rxjs/operators';
+
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 
-// 共用
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   createPaginationConfig,
   formatDateToYYYY_MM_DD,
 } from '../../../shared/componentkit/table/table.model';
 
-// Service & 型別
 import {
+  ApiResponse,
   FIN32020Service,
   Fin32020Row,
-  Fin32020QueryRequest,
-  ApiResponse,
+  Fin32020DetailRow,
 } from '../../../service/api/fin/fin32020.service';
 
-type SortItem = { field: string; order: number };
+interface SortItem {
+  field: string;
+  order: number;
+}
 
 @UntilDestroy()
 @Component({
@@ -61,100 +58,125 @@ type SortItem = { field: string; order: number };
     ButtonComponent,
     CalendarRangeComponent,
     InputTextComponent,
-    InputNumberComponent,
     InputNumberRangeComponent,
     TableReportComponent,
   ],
 })
-/**
- * 1.3.2.2 應收帳款調整作業 – 查詢頁
- * 繼承 BasicQueryPageComponent，表格用 app-table-report
- */
-export class FIN32020Component
-  extends BasicQueryPageComponent<Fin32020Row>
-  implements OnInit
-{
-  /* ----------------- 主表狀態 ----------------- */
+export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
   data: Fin32020Row[] = [];
-  totalRecords = 0;       // 後端真實總筆數
-  viewTotalRecords = 0;   // 當前顯示總筆數（for table-report）
+  totalRecords = 0;
+  viewTotalRecords = 0;
   selectedItems: Fin32020Row[] = [];
-  lastQueryBody: any = null;   // 給 table-report 做 lazy load / sort 用
-  footerData: any = undefined;
-  tableVer = 0;                // 讓 table key 變化，強制重繪
 
-  /* ----------------- 欄位定義 (app-table-report) ----------------- */
-  // 先只顯示主檔欄位（ADJ_No / ADJ_Date / Remark）
+  lastQueryBody: any = null;
+  private _currentSortBy: SortItem[] = [];
+  footerData: any = undefined;
+  tableVer = 0;
+  moneyFormat = (value: any): string => {
+    const num = Number(value ?? 0);
+    if (!Number.isFinite(num)) return '0';
+    return num.toLocaleString('en-US');
+  };
   columns: ReportColumn[] = [
     { field: 'ADJ_No', header: '調整單號' },
     {
       field: 'ADJ_Date',
-      header: '調整日期',
+      header: '收款日期',
       format: (v: string) => this.formatDate(v),
+    },
+    {
+      field: 'TotalAmt',
+      header: '調整金額',
+      align: 'right',
+      format: this.moneyFormat,
     },
     { field: 'Remark', header: '備註' },
   ];
 
-  /** 預設排序：調整日期 DESC, 調整單號 ASC */
+  expansionColumns: ReportColumn[] = [
+    { field: 'ARS_No', header: '應收帳款單號' },
+    { field: 'AccNo', header: '調整科目' },
+    { field: 'AccCName', header: '科目名稱' },
+    {
+      field: 'ADJ_Amt',
+      header: '調整金額',
+      align: 'right',
+      format: this.moneyFormat,
+    },
+    { field: 'Detail_Remark', header: '備註' },
+    { field: 'VouNo', header: '傳票單號' },
+  ];
+
   readonly defaultSort: SortItem[] = [
     { field: 'ADJ_Date', order: -1 },
     { field: 'ADJ_No', order: 1 },
   ];
 
-  /* ----------------- 查詢表單 ----------------- */
   queryForm = this.formBuilder.group({
-    // 調整單號（對應 @ADJ_No）
     adjust_ID: [null as string | null, [Validators.maxLength(14)]],
-
-    // 調整日期 起訖（對應 @ADJ_Date_From / @ADJ_Date_To）
     adjust_Date_From: [null as Date | null],
     adjust_Date_To: [null as Date | null],
-
-    // 備註 (模糊, 對應 @Remark)
     remark: ['', [Validators.maxLength(30)]],
-
-    // 傳票單號 起迄（對應 @VouNo_From / @VouNo_To）
     summons_ID_From: [null as string | null],
     summons_ID_To: [null as string | null],
-
-    // 分頁 + 排序（給 table-report 用）
-    ...createPaginationConfig([{ field: 'ADJ_Date', order: -1 }]),
+    ...createPaginationConfig([
+      { field: 'ADJ_Date', order: -1 },
+      { field: 'ADJ_No', order: 1 },
+    ]),
   });
 
   constructor(
-    private fin32020Service: FIN32020Service,
-    private cdr: ChangeDetectorRef
+    private readonly fin32020Service: FIN32020Service,
+    private readonly cdr: ChangeDetectorRef
   ) {
     super();
   }
 
-  /* ----------------- LifeCycle ----------------- */
-  ngOnInit(): void {
-    this.ProgNo = 'FIN32020';
-    this.cruPage = '/fin/fin32020cru';
-
-    // 回到查詢頁時如果有歷史條件就自動帶入 + 查一次
+  override ngOnInit(): void {
     this.initializePage(
-      this.ProgNo,
-      this.cruPage,
+      'FIN32020',
+      'fin/fin32020cru',
       this.queryForm,
       (form) => this.onSubmit(form)
     );
+
+    this._currentSortBy = this.defaultSort;
+
+    const fromCru = !!(history.state && history.state['fromCru']);
+
+    this.formStatusService
+      .waitForReady(this.ProgNo)
+      .pipe(untilDestroyed(this), take(1))
+      .subscribe(() => {
+        if (fromCru) {
+          this.handleQueryRestore(this.queryForm, this.ProgNo, (f) =>
+            this.onSubmit(f)
+          );
+        } else {
+          this.onClear(this.queryForm);
+          this.data = [];
+          this.selectedItems = [];
+          this.totalRecords = 0;
+          this.viewTotalRecords = 0;
+          this.footerData = undefined;
+          this.lastQueryBody = null;
+          this.tableVer++;
+        }
+      });
   }
 
-  /* ----------------- Utility ----------------- */
-  private formatDate(val: string): string {
+
+
+  private formatDate(val: string | null | undefined): string {
     if (!val) return '';
     const d = new Date(val);
-    if (isNaN(d.getTime())) return val;
-    return `${d.getFullYear()}/${(d.getMonth() + 1)
-      .toString()
-      .padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
+    if (Number.isNaN(d.getTime())) return String(val);
+    return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(
+      d.getDate()
+    ).padStart(2, '0')}`;
   }
 
-  private toYMDOrNull(
-    d: Date | string | null | undefined
-  ): string | null {
+  private toYMDOrNull(d: Date | string | null | undefined): string | null {
     if (d == null) return null;
     const s = formatDateToYYYY_MM_DD(d as Date | string) as
       | string
@@ -168,95 +190,125 @@ export class FIN32020Component
     const cleaned = asArr
       .filter(
         (x) =>
-          x && typeof x.field === 'string' && typeof x.order === 'number'
+          x &&
+          typeof x.field === 'string' &&
+          typeof x.order === 'number'
       )
       .map((x) => ({ field: String(x.field), order: x.order as number }));
+
     return cleaned.length ? cleaned : fallback;
   }
 
-  /** 把表單 & table-report body 組成 queryFIN32020Request */
-  private buildPayload(base: any): Fin32020QueryRequest {
+  private initRows(rows: Fin32020Row[]): Fin32020Row[] {
+    rows.forEach((r, idx) => {
+      (r as any)._rowKey = idx + 1;
+
+      // 一開始不要用主查詢 queryFIN32020 回來的 _Details
+      r._Details = [];
+      (r as any)._detailLoaded = false;
+    });
+
+    return rows;
+  }
+
+  private saveQueryState(): void {
+    this.queryStateService.setQueryState(
+      this.ProgNo,
+      this.queryForm.getRawValue()
+    );
+
+    this.queryStateService.setQueryState(`${this.ProgNo}_ext`, {
+      currentSortBy: this._currentSortBy?.length
+        ? this._currentSortBy
+        : this.defaultSort,
+      lastQueryBody: this.lastQueryBody,
+    } as any);
+  }
+
+  private buildPayload(base: any): any {
     const raw = this.queryForm.getRawValue();
 
     const pageIndex =
       Number.isFinite(base?.pageIndex) && base.pageIndex >= 1
         ? base.pageIndex
         : 1;
-    const pageSize =
-      Number.isFinite(base?.pageSize) && base.pageSize > 0
-        ? base.pageSize
-        : 30;
 
     const sort = this.normalizeSort(base?.SortBy, this.defaultSort);
 
-    const orderBy =
-      sort && sort.length
-        ? sort
-            .map((s) => {
-              const dir = s.order === -1 ? 'DESC' : 'ASC';
-              return `${s.field} ${dir}`;
-            })
-            .join(', ')
-        : null;
-
-    const req: Fin32020QueryRequest = {
-      PageIndex: pageIndex,
-      PageSize: pageSize,
+    const req: any = {
+      pageIndex,
+      pageSize: 30,
       SortBy: sort,
-      OrderBy: orderBy,
-      Offset: (pageIndex - 1) * pageSize,
-
       ADJ_No: raw.adjust_ID ? String(raw.adjust_ID) : null,
-
       ADJ_Date_From: this.toYMDOrNull(raw.adjust_Date_From),
       ADJ_Date_To: this.toYMDOrNull(raw.adjust_Date_To),
-
       Remark: raw.remark || null,
-
       VouNo_From: raw.summons_ID_From ? String(raw.summons_ID_From) : null,
       VouNo_To: raw.summons_ID_To ? String(raw.summons_ID_To) : null,
     };
 
     Object.keys(req).forEach((k) => {
-      const v = (req as any)[k];
+      const v = req[k];
       if (v === '' || v === null || v === undefined) {
-        delete (req as any)[k];
+        delete req[k];
       }
     });
 
     return req;
   }
 
-  /** 給 <app-table-report> 用的查詢函式（分頁載入） */
+  public loadDetailForExpansion = (
+    row: Fin32020Row
+  ): Observable<{ Data: Fin32020DetailRow[]; TotalCount: number }> => {
+    if (!row?.ADJ_No) {
+      row._Details = [];
+      (row as any)._detailLoaded = true;
+      return of({ Data: [], TotalCount: 0 });
+    }
+
+    if ((row as any)._detailLoaded) {
+      return of({
+        Data: Array.isArray(row._Details) ? row._Details : [],
+        TotalCount: Array.isArray(row._Details) ? row._Details.length : 0,
+      });
+    }
+
+    return this.fin32020Service.queryFIN32020Detail(row.ADJ_No).pipe(
+      map((res: ApiResponse<Fin32020DetailRow[]>) => {
+        const details = Array.isArray(res?.Data) ? res.Data : [];
+        row._Details = details;
+        (row as any)._detailLoaded = true;
+
+        this.data = [...this.data];
+        this.cdr.detectChanges();
+
+        return {
+          Data: details,
+          TotalCount: details.length,
+        };
+      })
+    );
+  };
+
   public queryFIN32020ForReport = (body: any) =>
-    this.fin32020Service
-      .queryFIN32020(this.buildPayload(body || {}))
-      .pipe(
-        map((res: ApiResponse<Fin32020Row[] | Fin32020Row>) => {
-          const src = res?.Data as any;
-          const rows: Fin32020Row[] = Array.isArray(src)
-            ? src
-            : src
-            ? [src]
-            : [];
-          const totalCount =
-            Number((res as any)?.TotalCount ?? rows.length) ||
-            rows.length;
+    this.fin32020Service.queryFIN32020(this.buildPayload(body || {})).pipe(
+      map((res: ApiResponse<Fin32020Row[] | Fin32020Row>) => {
+        const src = res?.Data as any;
+        const rows: Fin32020Row[] = Array.isArray(src) ? src : src ? [src] : [];
+        const totalCount =
+          Number((res as any)?.TotalCount ?? rows.length) || rows.length;
 
-          rows.forEach(
-            (r, idx) => ((r as any)._rowKey = idx + 1)
-          );
+        this.initRows(rows);
 
-          return {
-            Data: rows,
-            TotalCount: totalCount,
-            GrandTotal: null,
-          };
-        })
-      );
+        return {
+          Data: rows,
+          TotalCount: totalCount,
+          GrandTotal: null,
+        };
+      })
+    );
 
-  /* ----------------- Submit（主表查詢） ----------------- */
-  onSubmit(frm: FormGroup) {
+  onSubmit(frm: FormGroup): void {
     this.submitted = true;
 
     if (this.queryForm.invalid) {
@@ -264,20 +316,15 @@ export class FIN32020Component
       return;
     }
 
-    if (!this.hasPermission(this.Actions.Query)) {
-      return;
-    }
+    if (!this.hasPermission(this.Actions.Query)) return;
 
-    const raw = this.queryForm.getRawValue();
+    const raw: any = this.queryForm.getRawValue();
+
     const payload = this.buildPayload({
-      ...raw,
       pageIndex: 1,
-      pageSize: raw.pageSize || 30,
-      SortBy: raw.SortBy || this.defaultSort,
+      pageSize: 30,
+      SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
     });
-
-    payload.PageIndex = 1;
-    payload.Offset = 0;
 
     this.loading = true;
     this.data = [];
@@ -292,32 +339,22 @@ export class FIN32020Component
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (res: ApiResponse<Fin32020Row[]>) => {
-          const rows: Fin32020Row[] = Array.isArray(res?.Data)
-            ? res.Data
-            : [];
+          const rows: Fin32020Row[] = Array.isArray(res?.Data) ? res.Data : [];
 
-          rows.forEach(
-            (r, idx) => ((r as any)._rowKey = idx + 1)
-          );
-
+          this.initRows(rows);
           this.data = rows;
-          this.viewTotalRecords = this.data.length;
           this.cdr.detectChanges();
 
           const realTotal =
-            Number(res?.TotalCount ?? rows.length) || rows.length;
+            Number((res as any)?.TotalCount ?? rows.length) || rows.length;
+
           setTimeout(() => {
             this.totalRecords = realTotal;
             this.viewTotalRecords = realTotal;
-            this.lastQueryBody = {
-              ...payload,
-            };
+            this.lastQueryBody = { ...payload };
+            this._currentSortBy = payload.SortBy ?? this.defaultSort;
+            this.saveQueryState();
           });
-
-          this.queryStateService.setQueryState(
-            this.ProgNo,
-            this.queryForm.value
-          );
 
           this.loading = false;
         },
@@ -332,35 +369,61 @@ export class FIN32020Component
       });
   }
 
-  /* ----------------- 清除 ----------------- */
-  onClear(frm: FormGroup) {
-    frm.reset({
-      adjust_ID: null,
-      adjust_Date_From: null,
-      adjust_Date_To: null,
-      remark: '',
-      summons_ID_From: null,
-      summons_ID_To: null,
-      ...createPaginationConfig(this.defaultSort),
-    });
+  onClear(frm: FormGroup): void {
+    frm.reset(
+      {
+        adjust_ID: null,
+        adjust_Date_From: null,
+        adjust_Date_To: null,
+        remark: '',
+        summons_ID_From: null,
+        summons_ID_To: null,
+        ...createPaginationConfig([
+          { field: 'ADJ_Date', order: -1 },
+          { field: 'ADJ_No', order: 1 },
+        ]),
+      } as any,
+      { emitEvent: false }
+    );
 
     this.submitted = false;
     this.data = [];
+    this.selectedItems = [];
     this.totalRecords = 0;
     this.viewTotalRecords = 0;
     this.footerData = undefined;
+    this.lastQueryBody = null;
+    this._currentSortBy = this.defaultSort;
+
+    this.queryStateService.clearQueryState(this.ProgNo);
+    this.queryStateService.clearQueryState(`${this.ProgNo}_ext`);
   }
 
-  /* ----------------- 建立 / 編輯 / 明細 ----------------- */
-  onClickCreate() {
+  onClickCreate(): void {
+    this.saveQueryState();
     this.onCreate(undefined, this.queryForm.value);
   }
 
-  override onEdit(row: Fin32020Row, queryConditions?: any): void {
-    super.onEdit(row, this.queryForm.value);
+  override onDetail(row: Fin32020Row, queryConditions?: any): void {
+    this.saveQueryState();
+    super.onDetail(row, this.queryForm.value);
   }
 
-  override onDetail(row: Fin32020Row, queryConditions?: any): void {
-    super.onDetail(row, this.queryForm.value);
+  get canShowEdit(): boolean {
+    return (
+      Array.isArray(this.data) &&
+      this.data.some((r) => (r as any)?.['CanEdit'] === true)
+    );
+  }
+
+  override onEdit(row: Fin32020Row, queryConditions?: any): void {
+    this.saveQueryState();
+
+    if ((row as any)?.['CanEdit'] !== true) {
+      super.onDetail(row, this.queryForm.value);
+      return;
+    }
+
+    super.onEdit(row, this.queryForm.value);
   }
 }

@@ -32,16 +32,16 @@
 </div>
 
 <div class="card">
-  <app-customFooter-table [data]="data" [columns]="columns" [selectedItems]="selectedItems" apiUrl="queryTLS2A030"
+  <app-tls2f010-table-report [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" [showCheckBox]="false" dataKey="PAY_NO" tableKey="tls2a030"
-    [multiSortMeta]="[{ field: 'PAY_NO', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)" [showManage]="false" [showDelete]="false"
-    [showReportMode]="false" [footerData]="footerData" [showTotal]="true">
+    [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="historyRequestBody"
+    [queryFunction]="tls2a030Service.queryTLS2A030.bind(tls2a030Service)" [showManage]="false" [showDelete]="false"
+    [showReportMode]="false" [footerData]="footerData" [showFooterTotal]="true" [allowFooterHtml]="true">
     <header>
       <div class="flex justify-content-between align-items-center gap-2">
         <p-button styleClass="p-2" label="匯出溢欠彙總表.XLSX" [loading]="btnLoading2" icon="pi pi-file-excel"
           (click)="onExportExcel()" [disabled]="data.length === 0"></p-button>
       </div>
     </header>
-  </app-customFooter-table>
+  </app-tls2f010-table-report>
 </div>

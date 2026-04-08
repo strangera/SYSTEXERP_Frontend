@@ -1,50 +1,53 @@
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls2e070Data, Tls2e070QueryBody, Tls2e070QueryRecEstBody, Tls2e070Service, Tls2e070UpdateBody } from '@service/api/tls/tls2e070.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatDate, formatDateTime, formatYN, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { formatDateTime, formatYN, formatYYYYMM, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Tls2e070Data, Tls2e070QueryBody, Tls2e070QueryRecEstBody, Tls2e070Service, Tls2e070UpdateBody } from '@service/api/tls/tls2e070.service';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { AsyncPipe, NgStyle } from '@angular/common';
-import { ButtonModule } from 'primeng/button';
 
 // 2.2.14.7 專櫃帳款結算作業
 @Component({
   selector: 'app-tls2e070',
   templateUrl: './tls2e070.component.html',
   standalone: true,
-  imports: [NgStyle, ButtonModule, AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
+  imports: [ButtonModule, AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
 })
 export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> implements OnInit {
   /** 1. 查詢結果 (Query) 欄位 */
   readonly queryColumns: ReportColumn[] = [
     { field: 'cls_Month', header: '結算年月', visible: true, format: formatYYYYMM },
+    { field: 'money_type', header: '結帳方式', visible: true, format: (value) => getSYS1000('money_type', value) },
     { field: 'cls_termno', header: '結算期別', visible: true },
     { field: 'sale_proc_date', header: '結帳日期', visible: true, format: formatDateTime },
     { field: 'sale_proc_USR_Name', header: '結帳人員', visible: true },
     { field: 'sale_lock', header: '是否鎖定', visible: true, format: formatYN },
-    { field: 'sale_lock_date', header: '鎖定日期', visible: true },
+    { field: 'sale_lock_date', header: '鎖定日期', visible: true, format: formatDate },
     { field: 'sale_lock_USR_Name', header: '鎖定人員', visible: true },
   ];
 
-  /** 2. 試算紀錄 (Record) 欄位 */
+  /** 2. 結算紀錄 (Record) 欄位 */
   readonly recordColumns: ReportColumn[] = [
-    { field: 'CRT_Date', header: '試算日期', visible: true, format: formatDateTime },
-    { field: 'sam_yyymm', header: '試算年月', visible: true, format: formatYYYYMM },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'remarks', header: '試算說明', visible: true },
+    { field: 'CRT_Date', header: '結算日期', visible: true, format: formatDateTime },
+    { field: 'sam_yyymm', header: '結算年月', visible: true, format: formatYYYYMM },
+    { field: 'sam_termno', header: '結算帳次', visible: true },
+    { field: 'money_type', header: '結帳方式', visible: true, format: (value) => getSYS1000('money_type', value) },
+    { field: 'sam_num', header: '資料筆數', visible: true },
+    { field: 'remarks', header: '說明', visible: true },
     { field: 'CRT_USR_No', header: '執行者', visible: true },
+    { field: 'CRT_USR_Name', header: '執行者姓名', visible: true },
   ];
 
   /** 3. 結算檢查 (Settle) 欄位 */
@@ -63,7 +66,6 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
 
   // 將 data 型別改為 any[] 以容納不同結構的資料
   data: any = [];
-  selectedItems: any = [];
   // columns 不再固定，初始化為空或預設查詢欄位
   columns: ReportColumn[] = [];
 
@@ -71,20 +73,19 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     PageSize: [30],
     PageIndex: [1],
     sam_yyymm: [new Date(), Validators.required],
-    // 試算
-    money_type: [this.money_typeOptions[2]?.value || null as string | null, [Validators.required]],
-    sam_termno: [1, [Validators.required]],
+    // 結算
+    money_type: [null as string | null],
+    sam_termno: [null as number | null],
     tlt_no: [null],
   });
   totalRecords = 0;
   historyRequestBody: any;
-  loading2 = false; // onSettle 專屬 loading
-  loading3 = false; // onQueryRecord 專屬 loading
-  showCheckBox = false;
+  isSettle = false;
 
   constructor(
     public readonly tls2e070Service: Tls2e070Service,
     private readonly dropdown: DropdownApiService,
+    private readonly datePipe: DatePipe
   ) {
     super();
     // 預設欄位為查詢結果欄位
@@ -118,7 +119,6 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     '15': [1, 2],
     '30': [1]
   };
-
   /**
    * 根據 money_type 更新 sam_termno 的選項
    * @param moneyType 結帳方式的值 (e.g., "10", "15", "30")
@@ -127,7 +127,6 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
     if (moneyType && this.SAM_TERMNO_MAP[moneyType as keyof typeof this.SAM_TERMNO_MAP]) {
       // 根據 money_type 取得對應的期數陣列 (e.g., [1, 2, 3])
       const termNumbers = this.SAM_TERMNO_MAP[moneyType as keyof typeof this.SAM_TERMNO_MAP];
-
       // 轉換成 Dropdown 需要的格式 { label: string, value: number }
       this.sam_termnoOptions = termNumbers.map(num => ({
         label: `${num}`,
@@ -143,21 +142,14 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
    * @param frm 表單
    */
   onSubmit(frm: FormGroup) {
-    // 1. 設定欄位為查詢結果欄位
     this.columns = this.queryColumns;
-    this.showCheckBox = true;
-
+    this.isSettle = false;
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM'),
       } as Tls2e070QueryBody;
-
-      // 2. 呼叫服務並更新資料
-      this.tls2e070Service.queryTLS2E070(body).pipe(
-        finalize(() => this.loading = false),
-        untilDestroyed(this)
-      ).subscribe(res => {
+      this.tls2e070Service.queryTLS2E070(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.historyRequestBody = body;
@@ -167,84 +159,133 @@ export class TLS2E070Component extends BasicQueryPageComponent<Tls2e070Data> imp
 
   /**
    * 2. 執行結算 (onSettle) - 顯示結算檢查結果
-   * * 注意：此方法通常只執行後端邏輯並回傳檢查結果。
-   * 我們假設 estTLS2E070 服務會回傳 Tls2e070CheckResult[] 列表以顯示在表格中。
-   * * @param frm 表單
    */
   onSettle(frm: FormGroup) {
-    // 1. 設定欄位為結算檢查欄位
-    this.columns = this.settleColumns;
-    this.showCheckBox = false;
-    this.loading2 = true;
+    this.handleSubmit(frm, () => {
+      if (!frm.value.money_type || !frm.value.sam_termno) {
+        this.messageService.errorBubble('請選擇結帳方式與帳次');
+        this.loading = false;
+        return;
+      }
+      // 1. 設定欄位為結算檢查欄位
+      this.columns = this.settleColumns;
+      this.isSettle = true;
+      this.loading = true;
+      const body = {
+        ...frm.value,
+        sam_yyymm: this.datePipe.transform(frm.value.sam_yyymm, 'yyyyMM'),
+        sam_termno: frm.value.sam_termno as number,
+        money_type: frm.value.money_type
+      } as Tls2e070QueryRecEstBody;
 
-    const body = {
-      ...frm.value,
-      sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
-      sam_termno: frm.value.sam_termno as number,
-      money_type: frm.value.money_type
-    } as Tls2e070QueryRecEstBody;
-
-    // 2. 呼叫服務並更新資料 (假設服務回傳 QueryResponse<Tls2e070CheckResult>)
-    // **注意：您需要確保 tls2e070Service.estTLS2E070 能夠回傳列表資料**
-    // 為了編譯，我們模擬一個服務調用
-    this.tls2e070Service.estTLS2E070(body).pipe(
-      finalize(() => this.loading2 = false),
-      untilDestroyed(this)
-    ).subscribe(res => {
-      // 成功執行結算後，顯示檢查結果
-      this.data = res.Data;
-      this.totalRecords = res.TotalCount;
-      // 結算成功後的其他邏輯...
+      this.tls2e070Service.estTLS2E070(body).pipe(finalize(() => { this.loading = false; this.loading = false }), untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        if (res.Status === '0000') {
+          this.messageService.successBubble(res.Message || '結算成功');
+        } else if (res.Status === '9999') {
+          this.messageService.errorBubble(res.Message || '結算失敗');
+        }
+      });
     });
   }
 
   /**
-   * 3. 查詢試算紀錄 (onQueryRecord) - 顯示試算紀錄列表
+   * 3. 查詢結算紀錄 (onQueryRecord) - 顯示結算紀錄列表
    * * @param frm 表單
    */
   onQueryRecord(frm: FormGroup) {
-    // 1. 設定欄位為試算紀錄欄位
-    this.columns = this.recordColumns;
-    this.showCheckBox = false;
+    this.handleSubmit(frm, () => {
+      if (!frm.value.money_type || !frm.value.sam_termno) {
+        this.messageService.errorBubble('請選擇結帳方式與帳次');
+        this.loading = false;
+        return;
+      }
+      // 1. 設定欄位為結算紀錄欄位
+      this.columns = this.recordColumns;
+      this.isSettle = false;
+      this.loading = true;
+      const body = {
+        ...frm.value,
+        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_termno: frm.value.sam_termno as number,
+        money_type: frm.value.money_type
+      } as Tls2e070QueryRecEstBody;
 
-    this.loading3 = true;
-
-    const body = {
-      ...frm.value,
-      sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
-      sam_termno: frm.value.sam_termno as number,
-      money_type: frm.value.money_type
-    } as Tls2e070QueryRecEstBody;
-
-    // 2. 呼叫服務並更新資料 (假設服務回傳 QueryResponse<Tls2e070RecEstData>)
-    // **注意：您需要確保 tls2e070Service.queryRecTLS2E070 能夠回傳列表資料**
-    // 為了編譯，我們模擬一個服務調用
-    this.tls2e070Service.queryRecTLS2E070(body).pipe(
-      finalize(() => this.loading3 = false),
-      untilDestroyed(this)
-    ).subscribe(res => {
-      // 顯示試算紀錄
-      this.data = res.Data;
-      this.totalRecords = res.TotalCount;
+      this.tls2e070Service.queryRecTLS2E070(body).pipe(finalize(() => { this.loading = false; this.loading = false }), untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.historyRequestBody = body;
+      });
     });
   }
+  onUpdate(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      if (!frm.value.money_type || !frm.value.sam_termno) {
+        this.messageService.errorBubble('請選擇結帳方式與帳次');
+        this.loading = false;
+        return;
+      }
 
-  btnLoading = false;
-  onUpdate() {
-    const body = {
-      idList: this.selectedItems.map((item: any) => item.id)
-    } as Tls2e070UpdateBody;
-    this.tls2e070Service.updateTLS2E070(body).pipe(
-      finalize(() => this.btnLoading = false),
-      untilDestroyed(this)
-    ).subscribe(res => {
-      this.messageService.successBubble(res.Message);
-      this.selectedItems = [];
-      this.onSubmit(this.queryForm);
+      this.loading = true; // 開啟讀取中狀態
+
+      const body: Tls2e070UpdateBody = {
+        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_termno: frm.value.sam_termno as number,
+        money_type: frm.value.money_type,
+        tlt_no: frm.value.tlt_no
+      };
+
+      this.tls2e070Service.updateTLS2E070(body)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
+        .subscribe(res => {
+          // 根據後端回傳的 ReturnCode 判斷
+          if (res.Status === '0000') {
+            this.messageService.successBubble(res.Message || '鎖定完成');
+            this.onSubmit(this.queryForm); // 鎖定後重新查詢，刷新列表狀態
+          } else {
+            // 處理 SP 回傳的錯誤訊息 (例如：資料已鎖定、查無結算資料)
+            this.messageService.errorBubble(res.Message || '鎖定失敗');
+          }
+        });
     });
   }
+  /**
+   * 4. 結算反鎖定 (onUnlock)
+   */
+  onUnlock(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      if (!frm.value.money_type || !frm.value.sam_termno) {
+        this.messageService.errorBubble('請選擇結帳方式與帳次');
+        this.loading = false;
+        return;
+      }
 
-  isRowSelectable(row: any) {
-    return row.sale_lock !== 'Y';
+      this.loading = true;
+
+      const body: Tls2e070UpdateBody = {
+        sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
+        sam_termno: frm.value.sam_termno as number,
+        money_type: frm.value.money_type,
+        tlt_no: frm.value.tlt_no
+      };
+
+      this.tls2e070Service.unLockTLS2E070(body)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
+        .subscribe(res => {
+          if (res.Status === '0000') {
+            this.messageService.successBubble(res.Message || '反鎖定完成');
+            this.onSubmit(this.queryForm); // 重新查詢刷新列表
+          } else {
+            this.messageService.errorBubble(res.Message || '反鎖定失敗');
+          }
+        });
+    });
   }
 }

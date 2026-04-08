@@ -3,35 +3,19 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             選擇館別
-            <app-dropdown
-              [options]="dropdown1"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.building_no"
-            ></app-dropdown>
+            <app-dropdown [options]="dropdown1" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.building_no"></app-dropdown>
           </div>
           <div class="col-12 md:col-10 lg:col-6">
             選擇樓層
-            <app-dropdown
-              [options]="dropdown2"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.FLOOR_NO"
-            ></app-dropdown>
+            <app-dropdown [options]="dropdown2" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.FLOOR_NO"></app-dropdown>
           </div>
         </div>
       </form>
@@ -41,25 +25,32 @@
   <div class="card mt-5">
     <div style="display: flex; flex-wrap: wrap; gap: 10px">
       <!-- 左圖區塊 -->
-      <div style="flex: 2 1 0; min-width: 400px">
-        <p-image
-          *ngIf="selectedImage"
-          [src]="selectedImage"
-          (onImageError)="onImageError($event)"
-          [attr.alt]="'目前選擇樓層：' + selectedFloor"
-          [preview]="true"
-          imageClass="w-full h-auto max-w-full"
-        />
+      <div style="flex: 2 1 0; min-width: 300px">
+        <div class="image-container" #imageContainer (mousemove)="onImageMouseMove($event, imageContainer)"
+          (mouseleave)="onImageMouseLeave()" (click)="onImageClick($event, imageContainer)"
+          (keydown.enter)="onImageKeyboardSelect(imageContainer)"
+          (keydown.space)="onImageKeyboardSelect(imageContainer)" tabindex="0">
+          <p-image *ngIf="selectedImage" [src]="selectedImage" (onImageError)="onImageError($event)"
+            [attr.alt]="'目前選擇樓層：' + selectedFloor" [preview]="false" imageClass="w-full h-auto max-w-full"></p-image>
+
+          <div *ngIf="markerVisible" class="marker" [style.left.px]="markerLeft" [style.top.px]="markerTop"></div>
+        </div>
+
+        <div class="image-footer">
+          <div class="coord-row">
+            <span class="coord-label">目前座標</span>
+            <span class="coord-value">&nbsp;{{ mouseX }},{{ mouseY }}</span>
+          </div>
+          <div class="coord-row" style="margin-left: 18px">
+            <span class="coord-label">標定座標</span>
+            <span class="coord-value">&nbsp;{{ markerVisible ? (markerLeft + ',' + markerBottom) : '—' }}</span>
+          </div>
+        </div>
       </div>
 
       <!-- 右側營運資訊 -->
       <div style="flex: 1 1 0; min-width: 300px; margin-top: 100px">
-        <table
-          style="width: 100%; border-collapse: collapse"
-          border="1"
-          cellspacing="10"
-          cellpadding="10"
-        >
+        <table style="width: 100%; border-collapse: collapse" border="1" cellspacing="10" cellpadding="10">
           <tbody>
             <tr>
               <td colspan="2"><b>目前營運資訊</b></td>
@@ -100,7 +91,7 @@
               <td style="background-color: rgb(185, 236, 219)">{{ All_Count }}</td>
             </tr>
             <tr>
-              <td ><b>狀態</b></td>
+              <td><b>狀態</b></td>
               <td>
                 <b>佔比 (%)</b>
               </td>
@@ -125,5 +116,12 @@
         </table>
       </div>
     </div>
+  </div>
+  <div class="card">
+    <app-table-report dataKey="LOCATION_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+      [showReportMode]="false" [showManage]="false" (detail)="onDetail($event)" [totalRecords]="totalRecords"
+      [loading]="loading" [lastQueryBody]="lastQuery" [showDelete]="false" [lazy]="false"
+      [queryFunction]="queryTableData">
+    </app-table-report>
   </div>
 </div>

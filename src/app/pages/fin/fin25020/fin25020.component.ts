@@ -1,20 +1,32 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+import { FIN25020Service, QueryBankAccountResponse } from '../../../service/api/fin/fin25020.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AddButton, Column, formatDate } from '../../../shared/componentkit/table/table.model';
+
+// 定義資料介面 (對應後端 Response)
+export interface FIN25020Data {
+  WSLIP_NO: string;
+  D_Date: string | null;
+  RMT_Date: string | null;
+  BNK_id: number | null;
+  BNK_AccName: string | null;
+  VouStatus: string | null;
+  VouNo: string | null;
+  RemitCount: number | null;
+  TotalRemitAmt: number | null;
+}
 
 //1.2.5.2 形成電匯明細資料
 @Component({
@@ -22,113 +34,206 @@ import { TranslateModule } from '@ngx-translate/core';
   templateUrl: './fin25020.component.html',
   styleUrl: './fin25020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, InputNumberComponent, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    CalendarRangeComponent,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+    AsyncPipe
+  ]
 })
-export class FIN25020Component extends BasicQpageComponent implements OnInit {
-  //
+export class FIN25020Component extends BasicQueryPageComponent<FIN25020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    transferSource: [], //匯款單號
-    buildDateFrom: [], // 建立日期
-    buildDateTo: [], // 建立日期
-    transferDateFrom: [], // 匯款日期
-    transferDateTo: [], // 匯款日期
-    bankCode: [, [Validators.maxLength(8)]], // 銀行代號
-    bankName: ['', [Validators.maxLength(40)]], // 銀行名稱
-    tossSummon: [[] as number[]], // 拋轉傳票
-    SummonNumber: [, [Validators.maxLength(11)]], // 	傳票編號
+    WSLIP_NO: [null], // 匯款來源單號
+    D_Date_Start: [null], // 建立日期起
+    D_Date_End: [null], // 建立日期迄
+    RMT_Date_Start: [null], // 匯款日期起
+    RMT_Date_End: [null], // 匯款日期迄
+    BNK_id: [null as number | null], // 銀行帳戶
+    VouStatus: [''], // 轉傳票狀態
+    pageSize: [20], // 每頁筆數 (小寫,配合 onLazyLoadData)
+    pageIndex: [1], // 頁碼 (小寫,配合 onLazyLoadData)
+    SortBy: [[{ field: 'WSLIP_NO', order: 1 }]], // 排序參數
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '匯款單號', visible: true },
-    { field: 'col2', header: '建立日期', visible: true },
-    { field: 'col3', header: '匯款日期', visible: true },
-    { field: 'col4', header: '銀行代號', visible: true },
-    { field: 'col5', header: '銀行名稱', visible: true },
-    { field: 'col6', header: '拋轉傳票', visible: true },
-    { field: 'col7', header: '傳票編號', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  transferSourceOptions: any[] = [
-    { value: 1, label: 'D20140106001/2014/0106/Y' },
-    { value: 2, label: 'D20140106002/2014/0106/Y' },
-    { value: 3, label: 'D20140106003/2014/0106/Y' },
+
+  totalRecords = 0;
+  data: FIN25020Data[] = [];
+  selectedItems: FIN25020Data[] = [];
+
+  // 銀行帳戶下拉選項
+  bankOptions: (QueryBankAccountResponse & { displayLabel: string })[] = [];
+
+  // 轉傳票狀態選項
+  vouStatusOptions: { label: string; value: string }[] = [
+    { label: '全部', value: '' },
+    { label: '已轉', value: 'Y' },
+    { label: '未轉', value: 'N' },
   ];
 
-  whetherOptions: any[] = [];
+  columns: Column[] = [
+    { field: 'WSLIP_NO', header: '匯款來源單號', visible: true },
+    { field: 'D_Date', header: '建立日期', visible: true, format: formatDate },
+    { field: 'RMT_Date', header: '匯款日期', visible: true, format: formatDate },
+    { field: 'BNK_id', header: '銀行代號', visible: true },
+    { field: 'BNK_AccName', header: '銀行帳戶名稱', visible: true },
+    { field: 'VouStatus', header: '轉傳票狀態', visible: true },
+    { field: 'VouNo', header: '傳票號碼', visible: true },
+    // { field: 'RemitCount', header: '匯款筆數', visible: true },
+    // { field: 'TotalRemitAmt', header: '匯款總金額', visible: true },
+  ];
+
+  // 管理欄位自定義按鈕
+  addButton: AddButton[] = [
+    {
+      label: '匯出PDF',
+      icon: 'pi pi-file-pdf text-red-500',
+      displayText: '',
+      action: (rowData: FIN25020Data) => this.onExportPDF(rowData)
+    },
+    {
+      label: '匯出Excel',
+      icon: 'pi pi-file-excel text-green-500',
+      displayText: '',
+      action: (rowData: FIN25020Data) => this.onExportExcel(rowData)
+    }
+  ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
+    private readonly fin25020Service: FIN25020Service
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120018';
-    this.cruPage = '/FIN2000/FIN25020CRU';
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('FIN25020', 'fin/fin25020cru', this.queryForm, (form) => this.onSubmit(form));
+
+    // 載入銀行帳戶選項
+    this.fin25020Service.queryBankAccount({})
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.bankOptions = response.Data.map(item => ({
+          ...item,
+          displayLabel: `${item.BNK_id || item.id} - ${item.BNK_AccName}`
+        }));
+      });
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      const formValue = frm.value;
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+      // 準備 API 請求參數 (表單用小寫,後端用大寫)
+      const queryParams = {
+        D_Date_Start: formValue.D_Date_Start,
+        D_Date_End: formValue.D_Date_End,
+        RMT_Date_Start: formValue.RMT_Date_Start,
+        RMT_Date_End: formValue.RMT_Date_End,
+        WSLIP_NO: formValue.WSLIP_NO,
+        BNK_id: formValue.BNK_id,
+        VouStatus: formValue.VouStatus,
+        // 分頁和排序參數 (轉換為大寫給後端)
+        PageIndex: formValue.pageIndex,
+        PageSize: formValue.pageSize,
+        SortBy: formValue.SortBy,
+      };
+
+      this.fin25020Service.queryFIN25020(queryParams)
+        .pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        )
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, formValue);
+        });
+    });
+  }
+
+
+  onDelete(selectedItems: FIN25020Data[]) {
+    // 檢查是否有已轉傳票的資料
+    const hasTransferred = selectedItems.some(item => item.VouStatus === '已轉');
+
+    if (hasTransferred) {
+      this.messageService.errorBubble('只能刪除未轉傳票的資料');
+      return;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.messageService.confirm({
+      header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
+      accept: () => {
+        const wslipNoList = selectedItems.map(item => item.WSLIP_NO);
+
+        this.fin25020Service.deleteRemit({ PAM_NoList: wslipNoList })
+          .pipe(untilDestroyed(this))
+          .subscribe(() => {
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit(this.queryForm);
+          });
+      }
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  /**
+   * 匯出單筆資料為 PDF
+   */
+  onExportPDF(rowData: FIN25020Data) {
+    this.messageService.infoBubble(`正在匯出 PDF: ${rowData.WSLIP_NO}`);
+
+    this.fin25020Service.exportFIN25020ToPdf({ WSLIP_NO: rowData.WSLIP_NO })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (blob) => {
+          this.downloadFile(blob, `FIN25020_${rowData.WSLIP_NO}.pdf`);
+          this.messageService.successBubble('PDF 匯出成功');
+        },
+        error: (error) => {
+          console.error('PDF 匯出失敗:', error);
+          this.messageService.errorBubble('PDF 匯出失敗');
+        }
+      });
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
+  /**
+   * 匯出單筆資料為 Excel
+   */
+  onExportExcel(rowData: FIN25020Data) {
+    this.messageService.infoBubble(`正在匯出 Excel: ${rowData.WSLIP_NO}`);
+
+    this.fin25020Service.exportFIN25020ToExcel({ WSLIP_NO: rowData.WSLIP_NO })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (blob) => {
+          this.downloadFile(blob, `FIN25020_${rowData.WSLIP_NO}.xlsx`);
+          this.messageService.successBubble('Excel 匯出成功');
+        },
+        error: (error) => {
+          console.error('Excel 匯出失敗:', error);
+          this.messageService.errorBubble('Excel 匯出失敗');
+        }
+      });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
+  /**
+   * 下載檔案通用方法
+   */
+  private downloadFile(blob: Blob, fileName: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    window.URL.revokeObjectURL(url);
   }
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  isRowSelectable(rowData: FIN25020Data): boolean {
+    return rowData.VouStatus !== '已轉';
   }
 }

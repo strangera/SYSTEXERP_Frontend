@@ -1,5 +1,5 @@
 import { DecimalPipe, NgIf } from '@angular/common';
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -32,7 +32,7 @@ import { STORE_WAY } from '../tls24010-cru.model';
 })
 export class Tls24010Pos5007Component implements OnChanges {
   @Input() type?: string;
-  @Input() TXN_GUIPaper?: string // 補登類別 補原機台='E' 手開二聯式發票='2'
+  @Input() TXN_GUIPaper?: string // 補登類別 補原機台='E' 手開發票='2'
   @Input() TLT_No?: string//專櫃編號
   @Input() TLT_Name?: string//專櫃名稱
   @Input() TXN_Date?: string//專櫃名稱
@@ -70,6 +70,7 @@ export class Tls24010Pos5007Component implements OnChanges {
           PLU_SalePrc: item.PLU_SalePrc,
           label: item.PLU_Name ? `${item.PLU_MagNo} - ${item.PLU_Name}` : undefined
         } as POS2004Item,
+        PLU_Name: item.PLU_Name,
         tlt_id: item.tlt_id ? item.tlt_id : undefined
       }))];
       this.calculateLastYearTotal();
@@ -92,6 +93,9 @@ export class Tls24010Pos5007Component implements OnChanges {
                   ...item,
                   label: `${item.PLU_MagNo} - ${item.PLU_Name}`
                 }));
+                if (this.isFormCreateable) {
+                  this.insertRow();
+                }
               } else {
                 this.messageService.errorBubble('此專櫃無銷售商品', '無法新增');
               }
@@ -108,21 +112,30 @@ export class Tls24010Pos5007Component implements OnChanges {
             }
           ];
           this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
-            // 1. 先進行去重處理
-            const uniqueData = data.Data.reduce((acc: TltTalentChargeData[], current) => {
-              if (!acc.find((item: TltTalentChargeData) => item.tlt_id === current.tlt_id)) {
-                acc.push(current);
-              }
-              return acc;
-            }, []);
-            this.tlt_idOptions = uniqueData.map((item) => ({
-              ...item,
-              label: `${item.tlt_id} - ${item.tlt_id_desc}`
-            }));
+            if (data.Data && data.Data.length > 0) {
+              // 1. 正常有資料：進行去重處理
+              const uniqueData = data.Data.reduce((acc: TltTalentChargeData[], current) => {
+                if (!acc.find((item: TltTalentChargeData) => item.tlt_id === current.tlt_id)) {
+                  acc.push(current);
+                }
+                return acc;
+              }, []);
+              this.tlt_idOptions = uniqueData.map((item) => ({
+                ...item,
+                label: `${item.tlt_id} - ${item.tlt_id_desc}`,
+                tlt_id: item.tlt_id // 確保 optionValue 用的到
+              }));
+            } else {
+              // 2. ★ 沒資料時：直接賦予您要求的預設值
+              this.tlt_idOptions = [
+                { label: "0 - 應稅", tlt_id: "0", tlt_id_desc: "應稅", cag_taxtype: "1", cag_barcode: "000", cag_barcode_name: "正品" } as any,
+                { label: "1 - 免稅", tlt_id: "1", tlt_id_desc: "免稅", cag_taxtype: "0", cag_barcode: "000", cag_barcode_name: "正品" } as any
+              ];
+            }
             if (this.isFormCreateable) {
               this.insertRow();
             }
-          })
+          });
           break;
         default: break;
       }
@@ -130,26 +143,44 @@ export class Tls24010Pos5007Component implements OnChanges {
   }
 
   getPLU_Name(rowData: POS5007Data): string {
+    if (this.store_way === STORE_WAY.專櫃) {
+      return this.TLT_Name || '';
+    }
     return this.TLT_NoOptions.find(item => item.No === rowData.PLU_No)?.Name || '';
   }
 
   insertRow(): void {
-    this.POS5007Data.push({
-      id: this.index + 1,
+    // 修正 index 累加
+    this.index++;
+
+    // 1. 決定基礎資料 (自營/專櫃共通)
+    const newRow: POS5007Data = {
+      id: this.index,
       PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? this.POS2004Options[0] : undefined,
-      PLU_No: this.store_way === STORE_WAY.專櫃 ? this.POS2004Options[0].PLU_No : undefined,
+      PLU_No: this.store_way === STORE_WAY.專櫃 ? (this.TLT_No || '') : undefined,
       PLU_Name: this.store_way === STORE_WAY.專櫃 ? this.TLT_Name : undefined,
       TXN_Qty: 1,
       PLU_SalePrc: 0,
       TXN_Amt: 0,
       TXN_Disc: 0,
       TXN_SaleAmt: 0,
-      tlt_id: this.tlt_idOptions[0]?.tlt_id,
-      PLU_TaxType: this.tlt_idOptions[0]?.cag_taxtype ?? '0',
-      TXN_DiscCode: this.tlt_idOptions[0]?.cag_barcode,
-      TXN_DiscCode_Name: this.tlt_idOptions[0]?.cag_barcode_name
-    });
-    this.index++;
+    };
+
+    // 2. 處理類別與稅別相關邏輯 (主要針對專櫃模式)
+    if (this.store_way === STORE_WAY.專櫃) {
+      // 檢查是否有選項（包含我們在 ngOnChanges 塞入的預設值）
+      if (this.tlt_idOptions && this.tlt_idOptions.length > 0) {
+        const defaultOption = this.tlt_idOptions[0];
+        newRow.tlt_id = defaultOption.tlt_id;
+        newRow.tlt_id_desc = defaultOption.tlt_id_desc;
+        newRow.PLU_TaxType = defaultOption.cag_taxtype || '1';
+        newRow.TXN_DiscCode = defaultOption.cag_barcode || '000';
+        newRow.TXN_DiscCode_Name = defaultOption.cag_barcode_name || '正品';
+      }
+    }
+
+    this.POS5007Data = [...this.POS5007Data, newRow];
+    this.calculateLastYearTotal();
   }
 
   deleteRow(rowData: POS5007Data[]): void {
@@ -164,10 +195,13 @@ export class Tls24010Pos5007Component implements OnChanges {
     this.calculateLastYearTotal();
   }
   onChangeTLT_ID(rowData: POS5007Data) {
-    const item = this.tlt_idOptions.find((item) => item.tlt_id === rowData.tlt_id);
-    rowData.PLU_TaxType = item?.cag_taxtype;
-    rowData.TXN_DiscCode = item?.cag_barcode;
-    rowData.TXN_DiscCode_Name = item?.cag_barcode_name;
+    const selected = this.tlt_idOptions.find((item) => item.tlt_id === rowData.tlt_id);
+    if (selected) {
+      rowData.tlt_id_desc = selected.tlt_id_desc;
+      rowData.PLU_TaxType = selected.cag_taxtype;
+      rowData.TXN_DiscCode = selected.cag_barcode;
+      rowData.TXN_DiscCode_Name = selected.cag_barcode_name;
+    }
   }
   onChangePLU_MagNo(rowData: POS5007Data) {
     if (!rowData.PLU_MagNo) {
@@ -180,12 +214,14 @@ export class Tls24010Pos5007Component implements OnChanges {
     rowData.PLU_SalePrc = show.PLU_SalePrc;
   }
   TXN_SaleAmtTotal = 0;
+  @Output() totalChange = new EventEmitter<number>();
   calculateLastYearTotal() {
     let total = 0;
     for (const row of this.POS5007Data) {
       total += row.TXN_SaleAmt || 0;
     }
     this.TXN_SaleAmtTotal = total;
+    this.totalChange.emit(this.TXN_SaleAmtTotal);
   }
 
   getTXN_SaleAmtLength(row: POS5007Data): number {

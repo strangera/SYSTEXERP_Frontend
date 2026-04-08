@@ -4,13 +4,14 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // options services
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { FloorService } from '../../../service/basic/querySYS3900.service';
 import { RegionService } from '../../../service/basic/querySYS3A00.service';
 import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
+import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 
 // api service
 import { TLS13040Service } from '../../../service/api/tls/tls13040.service';
@@ -20,10 +21,10 @@ import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 // untilDestroyed
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -40,23 +41,19 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
     MultiSelectComponent,
     MultiLocationFilterComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
+    DropdownComponent,
+    TableReportComponent,
   ],
 })
 export class TLS13040Component extends BasicQueryPageComponent<any> {
   // ▼ 多欄位排序狀態
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [{ field: 'tlt_no', order: 1 }];
-
-  // ▼ 防抖＋去重
-  private lastQuerySig: string | null = null;
-  private lazyTimer: any = null;
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -68,6 +65,11 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
+  CounterOptions: any[] = [];
+
+  /** table-report 需要 */
+  lastQueryBody: any = null;
+  queryTLS13040Fn = (body: any) => this.TLS13040Service.queryTLS13040(body);
 
   queryForm = this.formBuilder.group({
     tlt_no: [''],
@@ -78,14 +80,14 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     area_noList: [[] as string[]],
     building_no: [''],
     floor_noList: [[] as string[]], // ✅ 給共通元件用
-    tlt_building: [''],            // ✅ 給共通元件用
+    tlt_building: [''],             // ✅ 給共通元件用
 
     // 商務/狀態/類別
     bus_typeList: [[] as string[]],
     tlt_openflagList: [[] as string[]],
     tlt_term_typeList: [[] as string[]], // 抽成別
     tlt_idList: [[] as string[]],        // 抽成類別
-    cag_barcodeList: [[] as string[]],   // 折扣（正品/95/90/.../特價）
+    cag_barcodeList: [[] as string[]],   // 折扣
     org_idList: [[] as string[]],
 
     // 合約日期
@@ -108,6 +110,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     { value: 9, label: '核准時合約尚未開始' },
   ];
   commissionTypeOptions = getSYS1000Options('tlt_term_type');
+
   DeductionbigCategoryOptions = [
     { value: 0, label: '類別0' },
     { value: 1, label: '類別1' },
@@ -120,6 +123,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     { value: 8, label: '類別8' },
     { value: 9, label: '類別9' },
   ];
+
   discountOptions = [
     { value: '000', label: '正品' },
     { value: '095', label: '95折' },
@@ -134,27 +138,26 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     { value: '050', label: '50折' },
     { value: '999', label: '特價' },
   ];
-  organizationOptions: any[] = [];
+
   bus_typeOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
 
-  // 欄位：依後端中文定義，並把「大/中」分類緊鄰放一起
   columns: any[] = [
     {
       field: 'tlt_building',
       header: '館別',
       visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.BUILDING_NO_Options),
+      format: (value: any) =>
+        this.getLabelFromOptions(value, this.BUILDING_NO_Options),
     },
     { field: 'floor_desc', header: '樓層', visible: true },
-    { field: 'area_no', header: '區域', visible: true },
+    { field: 'area_desc', header: '區域', visible: true },
 
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'location_no', header: '位置編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
 
-    // 大/中分類緊鄰排列
     { field: 'bus_type', header: '大分類編號', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'bus_class', header: '中分類編號', visible: true },
@@ -168,7 +171,6 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     { field: 'tlt_id_desc', header: '抽成別', visible: true },
     { field: 'cag_taxtype', header: '稅別', visible: true },
 
-    // 折扣群
     { field: 'cag_barcode', header: '正品', visible: true },
     { field: 'cag_barcode_95', header: '95折', visible: true },
     { field: 'cag_barcode_90', header: '90折', visible: true },
@@ -185,7 +187,9 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
       header: '組織代碼',
       visible: true,
       format: (value: any) => {
-        const found = this.OrganizationCodeOptions.find(opt => String(opt.value) === String(value));
+        const found = this.OrganizationCodeOptions.find(
+          (opt) => String(opt.value) === String(value)
+        );
         return found ? `${found.value}` : (value ?? '');
       },
     },
@@ -198,6 +202,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     private floorService: FloorService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private tls11010Service: Tls11010Service,
+    private counterNameService: CounterNameService
   ) {
     super();
   }
@@ -206,36 +211,47 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS13040', '', this.queryForm, (f) => this.onSubmit(f));
 
     // 預設排序
-    this.sortMeta = this.defaultSort.map(x => ({ ...x }));
+    this.sortMeta = this.defaultSort.map((x) => ({ ...x }));
 
-    // ▼ 選項載入（全部加 untilDestroyed）
-    this.bigCategoryCodeService.getSystemTypes()
+    // ▼ 選項載入
+    this.bigCategoryCodeService
+      .getSystemTypes()
       .pipe(untilDestroyed(this))
-      .subscribe(data => this.bus_typeOptions = data);
+      .subscribe((data) => (this.bus_typeOptions = data));
 
-    this.floorService.getFloors()
+    this.counterNameService
+      .getCounters()
       .pipe(untilDestroyed(this))
-      .subscribe(data => this.floorOptions = data);
+      .subscribe((v) => {
+        this.CounterOptions = (v || []).map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        }));
+      });
 
-    this.RegionService.getRegionOptions()
+    this.floorService
+      .getFloors()
       .pipe(untilDestroyed(this))
-      .subscribe(data => this.regionOptions = data);
+      .subscribe((data) => (this.floorOptions = data));
 
-    // TODO: 請改打API
-    // this.businessTypeCodeService.getBusinessTypeCodes()
-    //   .pipe(untilDestroyed(this))
-    //   .subscribe(data => this.businessTypeCodeOptions = data);
-
-    this.tls11010Service.getBuildingOptions()
+    this.RegionService
+      .getRegionOptions()
       .pipe(untilDestroyed(this))
-      .subscribe(res => (this.BUILDING_NO_Options = res));
+      .subscribe((data) => (this.regionOptions = data));
 
-    this.tls11010Service.getOrgOptions()
+    this.tls11010Service
+      .getBuildingOptions()
       .pipe(untilDestroyed(this))
-      .subscribe(res => {
+      .subscribe((res) => (this.BUILDING_NO_Options = res));
+
+    this.tls11010Service
+      .getOrgOptions()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
         this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
-          label: x.label,                       // table 顯示
-          formLabel: `${x.value} - ${x.label}`, // 下拉顯示
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
           value: x.value,
         }));
       });
@@ -243,7 +259,8 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
 
   private toYMD(v: any): string {
     if (!v) return '';
-    const d = typeof v === 'string' ? new Date(v.replace(/\//g, '-')) : new Date(v);
+    const d =
+      typeof v === 'string' ? new Date(v.replace(/\//g, '-')) : new Date(v);
     if (isNaN(d.getTime())) return String(v ?? '');
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -251,103 +268,98 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  // 合併 key：tlt_no + tlt_bdate(YYYY-MM-DD)
   private buildRowKey(row: any): string {
     return `${row?.tlt_no ?? ''}__${this.toYMD(row?.tlt_bdate)}`;
   }
 
   getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
+    const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
+  }
+
+  /** 給 API 用的 payload 轉換：維持你原本邏輯，但把結果存進 lastQueryBody 給 table-report 用 */
+  private buildApiPayload(raw: any): any {
+    const formValue: any = { ...raw };
+
+    // 空字串 -> null
+    for (const k in formValue) {
+      if (formValue[k] === '') formValue[k] = null;
+    }
+
+    // 明確轉 string[]
+    const listFieldsToConvert = [
+      'tlt_idList',
+      'tlt_term_typeList',
+      'cag_barcodeList',
+      'bus_typeList',
+      'tlt_openflagList',
+      'org_idList',
+      'tlt_floorList',
+      'area_noList',
+      'floor_noList',
+    ];
+    for (const key of listFieldsToConvert) {
+      if (Array.isArray(formValue[key])) {
+        formValue[key] = formValue[key].map((v: any) => String(v));
+      }
+    }
+
+    // 共通欄位轉換（維持你的邏輯）
+    formValue.tlt_floorList = formValue.floor_noList;
+
+    // 排序預設（table-report 內部排序會覆寫 lastQueryBody.SortBy）
+    if (!Array.isArray(formValue.SortBy) || formValue.SortBy.length === 0) {
+      formValue.SortBy = this.sortMeta.length ? this.sortMeta : this.defaultSort;
+    }
+
+    // pageSize 預設（table-report 內部用 lastQueryBody.pageSize 判斷虛擬滾動/載入更多）
+    formValue.pageSize = formValue.pageSize ?? 30;
+    formValue.pageIndex = formValue.pageIndex ?? 1;
+
+    return formValue;
   }
 
   onSubmit(form: FormGroup): void {
     if (this.loading) return;
 
     this.handleSubmit(form, () => {
-      const formValue: any = { ...form.value };
+      const raw = form.getRawValue();
+      const payload = this.buildApiPayload(raw);
 
-      // 空字串 -> null
-      for (const k in formValue) {
-        if (formValue[k] === '') formValue[k] = null;
-      }
-
-      // 明確轉 string[]
-      const listFieldsToConvert = [
-        'tlt_idList', 'tlt_term_typeList', 'cag_barcodeList', 'bus_typeList', 'tlt_openflagList',
-        'org_idList', 'tlt_floorList', 'area_noList', 'floor_noList',
-      ];
-      for (const key of listFieldsToConvert) {
-        if (Array.isArray(formValue[key])) formValue[key] = formValue[key].map((v: any) => String(v));
-      }
-
-      // 共通欄位轉換（維持你的邏輯）
-      formValue.tlt_floorList = formValue.floor_noList;
-
-      // 排序預設
-      if (!Array.isArray(formValue.SortBy) || formValue.SortBy.length === 0) {
-        formValue.SortBy = this.sortMeta.length ? this.sortMeta : this.defaultSort;
-      }
+      // ✅ 給 table-report 用（lazy/排序/載入更多都靠它）
+      this.lastQueryBody = { ...payload };
 
       this.loading = true;
       this.messageService.blockUi();
 
-      this.TLS13040Service.queryTLS13040(formValue)
+      this.TLS13040Service.queryTLS13040(payload)
         .pipe(untilDestroyed(this))
         .subscribe({
-          next: (res) => {
+          next: (res: any) => {
             if (res.Status === '0000') {
               const rows = Array.isArray(res?.Data) ? res.Data : [];
               this.data = rows.map((r: any, i: number) => ({
                 ...r,
-                _key: this.buildRowKey(r) || `row_${i}`, // 確保唯一
+                _key: this.buildRowKey(r) || `row_${i}`,
               }));
+
               this.totalRecords = res.TotalCount || this.data.length;
-              this.queryStateService.setQueryState(this.ProgNo, formValue);
-            } else {
-              // 可依專案訊息規格顯示錯誤
+
+              // ✅ QueryState 建議存 raw（還原 UI 比較準）
+              this.queryStateService.setQueryState(this.ProgNo, raw);
+
+              // 同步目前排序狀態（UI/匯出用）
+              this.sortMeta = Array.isArray(payload.SortBy)
+                ? payload.SortBy.map((s: any) => ({ ...s }))
+                : this.defaultSort.map((s: any) => ({ ...s }));
             }
           },
-          error: () => {
-            // 可依專案訊息規格顯示錯誤
-          },
+          error: () => {},
           complete: () => {
             this.loading = false;
             this.messageService.unblockUi();
           },
         });
     });
-  }
-
-  override onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup) {
-    // 1) 是否更換排序？若有更換，回到第 1 頁
-    const currentSort = JSON.stringify(queryForm.value?.SortBy ?? []);
-    const nextSort = JSON.stringify(event.SortBy ?? []);
-    const nextPageIdx = currentSort !== nextSort ? 1 : (event.pageIndex ?? queryForm.value.pageIndex);
-
-    // 2) 只 patch 分頁/排序
-    queryForm.patchValue(
-      {
-        pageSize: event.pageSize ?? queryForm.value.pageSize,
-        pageIndex: nextPageIdx,
-        SortBy: event.SortBy ?? queryForm.value.SortBy,
-      },
-      { emitEvent: false },
-    );
-
-    // 3) 同步 table UI 的多欄位排序
-    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
-
-    // 4) 去重＋0ms 防抖
-    const sig = JSON.stringify({
-      pageIndex: nextPageIdx,
-      pageSize: event.pageSize ?? queryForm.value.pageSize,
-      SortBy: event.SortBy ?? queryForm.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
-
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(queryForm), 0);
   }
 }

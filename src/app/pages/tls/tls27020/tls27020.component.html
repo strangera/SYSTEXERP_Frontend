@@ -11,9 +11,9 @@
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="銷售日期"
             [control]="queryForm.controls.TXN_Date" [submitted]="submitted" [maxDate]="now"></app-calendar>
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="專櫃編號/名稱" [control]="queryForm.controls.TLT_NOList"
-            [submitted]="submitted" [options]="TLTTALENT_DropDownList" optionLabel="label" optionValue="No" />
+            [submitted]="submitted" [options]="TLTTALENT_DropDownList | async" optionLabel="label" optionValue="No" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機號/名稱" [control]="queryForm.controls.ECR_NoList"
-            [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label" optionValue="No" />
+            [submitted]="submitted" [options]="ECR_NoOptions | async" optionLabel="label" optionValue="No" />
           <app-input-number class="col-12 md:col-6 lg:col-4" label="金額" controlName="ACT_PayAmt"
             [control]="queryForm.controls.ACT_PayAmt" [submitted]="submitted" [max]="99999999"
             [maxFractionDigits]="4"></app-input-number>
@@ -27,9 +27,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" [editDisabled]="editDisabled"
-    (detail)="onDetail($event)" [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [isRowSelectable]="isRowSelectable" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    (delete)="onDelete($event)" [showCheckBox]="true"></app-table>
+  <app-table-report dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" [editDisabled]="editDisabled"
+    (detail)="onDetail($event)" [totalRecords]="totalRecords" [loading]="loading" [isRowSelectable]="isRowSelectable"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
+    [showCheckBox]="true" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls27020Service.queryTLS27020.bind(tls27020Service)"></app-table-report>
 </div>

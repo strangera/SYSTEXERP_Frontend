@@ -8,7 +8,7 @@ import { ErrorHandlerService } from '../../../core/services/error-handler.servic
 // 每列資料型別 (對應後端回傳)
 export interface Fin34010Row {
   ARS_Date: string;      // 立帳日期
-  VEN_No: string;        // 客戶/廠商代號
+  VEN_No: string;        // 客戶/廠商編號
   VEN_Name: string;      // 客戶/廠商名稱
   ARS_No: string;        // 應收帳款單號
   AccNo: string;         // 科目代號
@@ -43,7 +43,7 @@ export class Fin34010Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) {}
+  ) { }
 
   /** 查詢應收帳款明細表 */
   queryFIN34010(

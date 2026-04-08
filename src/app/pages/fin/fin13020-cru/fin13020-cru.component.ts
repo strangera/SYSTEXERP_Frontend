@@ -1,21 +1,26 @@
-import { Component, OnInit, EventEmitter, Output } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
-import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgIf } from '@angular/common';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { HttpResponse } from '@angular/common/http';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
+import { PanelModule } from 'primeng/panel';
+import { environment } from 'src/environments/environment';
+import { finalize, map, switchMap } from 'rxjs';
+
+import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
+import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
 @Component({
   selector: 'app-fin13020-cru',
@@ -31,22 +36,20 @@ import { ValidationService } from '@shared/service/validation.service';
     InputTextComponent,
     DropdownComponent,
     CalendarComponent,
-
     InputNumberComponent,
     NgIf,
     TableComponent,
     TranslateModule,
-
+    YearMonthComponent,
   ],
 })
-export class FIN13020CRUComponent
-  extends BasicCruPageComponent<any>
-  implements OnInit {
-  readonly CRUD = CRUDStatus; // ← 這行很關鍵
+export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  readonly CRUD = CRUDStatus;
+
   guiNumberOptions: { label: string; value: string }[] = [];
   voucherTypeOptions = [
-    { label: '23 - 三聯式/電子計算機/三聯收銀', value: '23' },
-    { label: '24 - 二聯收銀/載有稅額之憑證', value: '24' },
+    { label: '33 - 三聯式收銀專用發票', value: '33' },
+    { label: '34 - 二聯式收銀專用發票', value: '34' },
   ];
 
   taxTypeOptions = [
@@ -60,278 +63,913 @@ export class FIN13020CRUComponent
     { label: '退出', value: 'R' },
   ];
 
+  /**
+   * 原始剩餘總金額
+   * = 銷售額 + 稅額 - 已退出/折讓歷史總金額
+   */
+  private originalRemainingAmt: number | null = null;
+
+  /**
+   * 避免同一組字軌+發票號碼重複打 API
+   */
+  private lastLoadedInvoiceKey = '';
+
   dataForm = this.formBuilder.nonNullable.group({
-    GUI_Track: [null as string | null, Validators.required], // 字軌
-    PUR_GUINo: ['', Validators.required], // 發票號碼
-    InvoiceNumber_Correspond: [''], // 發票號碼
-    PUR_GUIDate: ['', Validators.required], // 領用日期
-    PUR_VoucherType: [''], // 發票格式
-    PUR_RepYYYYMM: ['', Validators.required, this.validationService.oddMonthValidator, this.validationService.minMonthValidator], // 發票年月
-    Credit_Type: ['', Validators.required], // 區別（折讓/退出）
-    PUR_TaxType: ['', Validators.required], // 稅別
+    id: [null as number | null],
+
+    GUI_Track: [null as string | null, Validators.required],
+    PUR_GUINo: ['', Validators.required],
+    InvoiceNumber_Correspond: [''],
+    PUR_GUIDate: [null as any, Validators.required],
+    PUR_RepYYYYMM: [null as string | null],
+    PUR_VoucherType: ['', Validators.required],
+    Credit_Type: ['', Validators.required],
+    PUR_TaxType: ['', Validators.required],
     PUR_Net: [undefined as any],
     PUR_Tax: [undefined as any],
-    PUR_Amt: [undefined as any], // 退回/折讓總金額
-    Inv_Date: [undefined as any], // 發票日期
-    Total_hitory_PUR_Amt: [undefined as any], // 已退出/折讓歷史總金額
-    Total_Amt: [undefined as any], // 剩餘總金額
-    TXN_Ret_No: ['系統自動帶入', Validators.required], // 退出/折讓單號
-    Inv_Net: [undefined as any], // 銷售額
-    Inv_Tax: [undefined as any], // 稅額
-    Source_Doc_No: [''], // 憑證單號
-    Voucher_No: [''], // 傳票編號
+    PUR_Amt: [undefined as any],
+    Inv_Date: [undefined as any],
+    Total_hitory_PUR_Amt: [undefined as any],
+    Total_Amt: [undefined as any],
+    TXN_Ret_No: ['系統自動帶入', Validators.required],
+    Inv_Net: [undefined as any],
+    Inv_Tax: [undefined as any],
+    Source_Doc_No: [''],
+    Voucher_No: [''],
   });
+
+  detailRows: any[] = [];
 
   constructor(
     private apiService: FIN13010Service,
     private fin13020Service: FIN13020Service,
-    private validationService: ValidationService,
+    private validationService: ValidationService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN13020', this.dataForm);
+
+    const row: any = (this as any).rowdata;
+
+    if (row) {
+      const masterId = row.id ?? row.ID ?? null;
+
+      const repRaw =
+        row.PUR_RepYYYYMM ??
+        row.INV_DeclareYM ??
+        this.dataForm.get('PUR_RepYYYYMM')?.value;
+
+      this.dataForm.patchValue(
+        {
+          id: masterId,
+          TXN_Ret_No: row.TXN_Ret_No ?? this.dataForm.get('TXN_Ret_No')?.value,
+
+          GUI_Track: row.GUI_Track ?? row.InvoiceTrack ?? this.dataForm.get('GUI_Track')?.value,
+          PUR_GUINo: this.normalizeInvoiceNumber(
+            row.PUR_GUINo ?? row.InvoiceNumber ?? this.dataForm.get('PUR_GUINo')?.value,
+            row.GUI_Track ?? row.InvoiceTrack ?? this.dataForm.get('GUI_Track')?.value
+          ),
+          PUR_GUIDate: row.PUR_GUIDate ?? row.InvoiceDate ?? this.dataForm.get('PUR_GUIDate')?.value,
+          PUR_VoucherType: row.PUR_VoucherType ?? row.InvoiceType ?? this.dataForm.get('PUR_VoucherType')?.value,
+
+          PUR_RepYYYYMM: this.normalizeYYYYMMForControl(repRaw),
+          // Credit_Type: row.Credit_Type ?? this.dataForm.get('Credit_Type')?.value,
+          PUR_TaxType: row.PUR_TaxType ?? this.dataForm.get('PUR_TaxType')?.value,
+
+          PUR_Net: row.PUR_Net ?? this.dataForm.get('PUR_Net')?.value,
+          PUR_Tax: row.PUR_Tax ?? this.dataForm.get('PUR_Tax')?.value,
+          PUR_Amt: row.PUR_Amt ?? this.dataForm.get('PUR_Amt')?.value,
+
+          Source_Doc_No: row.Source_Doc_No ?? this.dataForm.get('Source_Doc_No')?.value,
+          Voucher_No: row.Voucher_No ?? this.dataForm.get('Voucher_No')?.value,
+        },
+        { emitEvent: false }
+      );
+
+      const details = (row.APS40235List ?? row.Details ?? []) as any[];
+      this.detailRows = details.map((d) => ({
+        ID: d.ID ?? null,
+        PLU_Name: d.PLU_Name,
+        TXN_Qty: d.TXN_Qty,
+        PLU_SalePrc: d.PLU_SalePrc,
+        TXN_SaleAmt: d.TXN_SaleAmt,
+      }));
+
+      this.syncPurAmtFromDetails();
+    }
+
     this.updateDisabledState();
-    this.setupAutoAmountCalculation(); // ⬅️ 新增這行
-    this.setupRemainAmountCalculation();
+    this.setupTrackNoWatcher();
+    this.setupGuiNoChangeWatcher();
+    this.setupAmountRelations();
+
     this.dataForm.get('TXN_Ret_No')?.disable();
-    this.dataForm.get('PUR_VoucherType')?.disable();
     this.dataForm.get('PUR_TaxType')?.disable();
     this.dataForm.get('Inv_Tax')?.disable();
-
     this.dataForm.get('Inv_Net')?.disable();
     this.dataForm.get('Inv_Date')?.disable();
-
     this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
     this.dataForm.get('Total_Amt')?.disable();
-    this.setupTrackNoWatcher(); // ← 加這行：監聽字軌
+    this.dataForm.get('PUR_Tax')?.disable();
+    this.dataForm.get('Credit_Type')?.disable();
+    this.dataForm.get('PUR_VoucherType')?.disable();
+    this.dataForm.get('Voucher_No')?.disable();
 
-    this.setupGuiNoAndCorrespondWatcher(); // ← 加這行：監聽發票號碼和對應欄位
+    if (this.crudstatus === CRUDStatus.Create) {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth() + 1;
+
+      let evenMonth = month % 2 === 0 ? month : month + 1;
+      if (evenMonth > 12) evenMonth = 12;
+
+      const repYYYYMM = `${year}${String(evenMonth).padStart(2, '0')}`;
+      this.dataForm.patchValue(
+        {
+          PUR_GUIDate: today,
+          PUR_RepYYYYMM: repYYYYMM,
+        },
+        { emitEvent: false }
+      );
+    }
+
+    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
+      this.loadInvoiceInfoByCurrentGUINo();
+    }
   }
+
+  /* ----------------- 編輯/檢視：依目前 GUI_Track + PUR_GUINo 撈 FIN13020 ----------------- */
+
+  private loadInvoiceInfoByCurrentGUINo(): void {
+    const track = (this.dataForm.get('GUI_Track')?.value as string | null)?.trim();
+    const noRaw = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
+    const no = this.normalizeInvoiceNumber(noRaw, track);
+
+    if (!track || !no) return;
+
+    const key = `EDIT|${track}|${no}`;
+    if (this.lastLoadedInvoiceKey === key) return;
+    this.lastLoadedInvoiceKey = key;
+
+    this.dataForm.patchValue(
+      { InvoiceNumber_Correspond: `${track}${no}` },
+      { emitEvent: false }
+    );
+
+    this.clearLoadedInvoiceFields(false);
+
+    this.fin13020Service
+      .queryFIN13020ByTrackNo({ InvoiceTrack: track, InvoiceNumber: no })
+      .subscribe((res: any) => {
+        const dto = res?.Data?.[0];
+        if (!dto) return;
+
+        this.applyInvoiceDto(dto, track, no);
+      });
+  }
+
+  /* ----------------- 新增：依字軌+發票號碼查對應資料 ----------------- */
+
+  private loadCorrespondInvoiceInfo(): void {
+    const track = (this.dataForm.get('GUI_Track')?.value as string | null)?.trim();
+    const noRaw = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
+    const no = this.normalizeInvoiceNumber(noRaw, track);
+
+    if (!track || !no) return;
+
+    const key = `CREATE|${track}|${no}`;
+    if (this.lastLoadedInvoiceKey === key) return;
+    this.lastLoadedInvoiceKey = key;
+
+    const full = `${track}${no}`;
+    this.dataForm.patchValue(
+      {
+        PUR_GUINo: no,
+        InvoiceNumber_Correspond: full,
+      },
+      { emitEvent: false }
+    );
+
+    this.clearLoadedInvoiceFields(false);
+
+    this.fin13020Service
+      .queryCorrespondByGUINoCorrespond({
+        InvoiceNumber_Correspond: full,
+        Source: 'APS',
+      })
+      .subscribe((res: any) => {
+        const dto = res?.Data?.[0];
+        if (!dto) return;
+
+        this.applyInvoiceDto(dto, track, no);
+      });
+  }
+
+  /**
+   * 共用：把 API 回來的資料套進畫面
+   */
+private applyInvoiceDto(dto: any, track: string, no: string): void {
+  const invoiceType = String(dto.InvoiceType ?? '');
+  let voucherType = invoiceType;
+  if (invoiceType === '31' || invoiceType === '35') voucherType = '33';
+  else if (invoiceType === '32') voucherType = '34';
+
+  this.originalRemainingAmt = this.buildOriginalRemainingAmt(dto);
+
+  const dtoPurAmt = this.toIntOrNull(dto.PUR_Amt);
+  const dtoCreditType = this.calcCreditTypeByRemainingAmt(dtoPurAmt, this.originalRemainingAmt);
+
+  this.dataForm.patchValue(
+    {
+      GUI_Track: dto.InvoiceTrack ?? track,
+      PUR_GUINo: this.normalizeInvoiceNumber(dto.InvoiceNumber ?? no, dto.InvoiceTrack ?? track),
+      Inv_Date: dto.InvoiceDate ?? null,
+      PUR_VoucherType: voucherType,
+      PUR_TaxType: dto.PUR_TaxType ?? '',
+      Inv_Net: dto.PUR_Net ?? null,
+      Inv_Tax: dto.PUR_Tax ?? null,
+      Total_hitory_PUR_Amt: dto.Total_hitory_PUR_Amt ?? null,
+      Total_Amt: this.originalRemainingAmt,
+      Credit_Type: dtoCreditType,
+      Source_Doc_No: dto.Source_Doc_No ?? '',
+      Voucher_No: dto.Voucher_No ?? '',
+    },
+    { emitEvent: false }
+  );
+
+  const details = Array.isArray(dto.Details) ? dto.Details : [];
+  this.detailRows = details.map((d: any) => ({
+    ID: d.ID ?? null,
+    PLU_Name: d.PLU_Name ?? '',
+    TXN_Qty: d.TXN_Qty ?? null,
+    PLU_SalePrc: d.PLU_SalePrc ?? null,
+    TXN_SaleAmt: d.TXN_SaleAmt ?? null,
+  }));
+
+  this.syncPurAmtFromDetails();
+
+  if (
+    this.crudstatus === CRUDStatus.Create &&
+    this.originalRemainingAmt !== null &&
+    this.originalRemainingAmt <= 0
+  ) {
+    this.messageService.errorBubble('此發票已無可退出/折讓金額，不可新增');
+  }
+
+  if (!this.detailRows.length) {
+    const purAmt = this.toIntOrNull(dto.PUR_Amt);
+    const purNet = this.toIntOrNull(dto.PUR_Net);
+    const purTax = this.toIntOrNull(dto.PUR_Tax);
+
+    this.dataForm.patchValue(
+      {
+        PUR_Net: purNet,
+        PUR_Tax: purTax,
+        PUR_Amt: purAmt,
+      },
+      { emitEvent: false }
+    );
+
+    this.updateCreditTypeByRemainingAmt(purAmt);
+  }
+}
+
+  /**
+   * 剩餘總金額優先自己算，不直接相信 API Total_Amt
+   * 公式：銷售額 + 稅額 - 已退出/折讓歷史總金額
+   */
+  private buildOriginalRemainingAmt(dto: any): number | null {
+    const invNet = this.toIntOrNull(dto?.PUR_Net);
+    const invTax = this.toIntOrNull(dto?.PUR_Tax);
+    const historyAmt = this.toIntOrNull(dto?.Total_hitory_PUR_Amt) ?? 0;
+    const apiTotalAmt = this.toIntOrNull(dto?.Total_Amt);
+
+    const calcAmt =
+      invNet !== null && invTax !== null
+        ? this.roundToInt(invNet + invTax - historyAmt)
+        : null;
+
+    if (calcAmt !== null) {
+      return calcAmt;
+    }
+
+    return apiTotalAmt;
+  }
+
+  /* ----------------- 字軌 / 發票號碼 ----------------- */
+
   private setupTrackNoWatcher(): void {
     const trackControl = this.dataForm.get('GUI_Track');
+    if (!trackControl) return;
 
-    if (trackControl) {
-      trackControl.valueChanges.subscribe((trackNo) => {
-        if (typeof trackNo === 'string' && trackNo.trim().length >= 2) {
-          this.fin13020Service
-            .queryINV1000List({ GUI_Track: trackNo.trim() })
-            .subscribe((res) => {
-              this.guiNumberOptions = res.Data.map((item: any) => ({
-                label: item.PUR_GUINo,
-                value: item.PUR_GUINo,
-              }));
-              //
-            });
-        } else {
-          this.guiNumberOptions = [];
-        }
-      });
-    }
-  }
-  private setupGuiNoAndCorrespondWatcher(): void {
-    const trackControl = this.dataForm.get('GUI_Track');
-    const noControl = this.dataForm.get('PUR_GUINo');
+    trackControl.valueChanges.subscribe((trackNo) => {
+      const track = typeof trackNo === 'string' ? trackNo.trim() : '';
 
-    if (trackControl && noControl) {
-      const trigger = () => {
-        const track = trackControl.value?.trim();
-        const guiNo = noControl.value?.trim();
+      this.lastLoadedInvoiceKey = '';
 
-        if (track && guiNo) {
-          const full = `${track}${guiNo}`;
+      if (track.length >= 2) {
+        this.fin13020Service.queryINV1000List({ GUI_Track: track }).subscribe((res) => {
+          this.guiNumberOptions = (res.Data || []).map((item: any) => {
+            const pureNo = this.normalizeInvoiceNumber(item.InvoiceNumber, track);
+            return {
+              label: pureNo,
+              value: pureNo,
+            };
+          });
 
           this.dataForm.patchValue(
-            { InvoiceNumber_Correspond: full },
-            { emitEvent: false },
+            {
+              PUR_GUINo: '',
+              InvoiceNumber_Correspond: '',
+            },
+            { emitEvent: false }
           );
 
-          this.fin13020Service
-            .queryCorrespondByGUINoCorrespond({ InvoiceNumber_Correspond: full })
-            .subscribe((res) => {
-              const detail = res?.Data?.[0];
-              if (detail) {
-                let voucherType: number | string = '';
-                if (detail.PUR_VoucherType === '31' || detail.PUR_VoucherType === '35') {
-                  voucherType = 33;
-                } else if (detail.PUR_VoucherType === '32') {
-                  voucherType = 34;
-                } else {
-                  voucherType = 'OK'; // 👉 若無符合，就填 OK（測試用）
-                }
-
-                this.dataForm.get('PUR_VoucherType')?.enable(); // 👈先打開
-
-                this.dataForm.patchValue(
-                  {
-                    Inv_Date: detail.PUR_GUIDate,
-                    PUR_VoucherType: voucherType ? String(voucherType) : '',
-                    PUR_TaxType: detail.PUR_TaxType,
-                    Inv_Net: detail.PUR_Net,
-                    Inv_Tax: detail.PUR_Tax,
-                    Total_hitory_PUR_Amt: detail.Total_hitory_PUR_Amt,
-                    Total_Amt: detail.Total_Amt,
-                  },
-                  { emitEvent: false },
-                );
-
-                this.dataForm.get('PUR_VoucherType')?.disable(); // 👈再關掉
-              } else {
-                this.dataForm.patchValue(
-                  {
-                    Inv_Date: null,
-                    PUR_VoucherType: '',
-                    PUR_TaxType: '',
-                    Inv_Net: null,
-                    Inv_Tax: null,
-                    PUR_Amt: null,
-                    Total_hitory_PUR_Amt: null,
-                    Total_Amt: null,
-                  },
-                  { emitEvent: false },
-                );
-              }
-            });
-        }
-      };
-
-      trackControl.valueChanges.subscribe(trigger);
-      noControl.valueChanges.subscribe(trigger);
-    }
+          this.clearLoadedInvoiceFields();
+        });
+      } else {
+        this.guiNumberOptions = [];
+        this.dataForm.patchValue(
+          {
+            PUR_GUINo: '',
+            InvoiceNumber_Correspond: '',
+          },
+          { emitEvent: false }
+        );
+        this.clearLoadedInvoiceFields();
+      }
+    });
   }
 
+  private setupGuiNoChangeWatcher(): void {
+    const noControl = this.dataForm.get('PUR_GUINo');
+    if (!noControl) return;
 
-  // ✅ 僅允許特定欄位可編輯
+    noControl.valueChanges.subscribe((value) => {
+      const track = (this.dataForm.get('GUI_Track')?.value as string | null)?.trim();
+      const no = this.normalizeInvoiceNumber(value, track);
+
+      if (!track || !no) return;
+
+      if (!this.isValidSelectedGuiNo(no)) {
+        return;
+      }
+
+      if (String(value ?? '') !== no) {
+        this.dataForm.patchValue({ PUR_GUINo: no }, { emitEvent: false });
+      }
+
+      if (this.crudstatus === CRUDStatus.Create) {
+        this.loadCorrespondInvoiceInfo();
+      } else {
+        this.loadInvoiceInfoByCurrentGUINo();
+      }
+    });
+  }
+
+  private isValidSelectedGuiNo(no: string): boolean {
+    const pureNo = this.normalizeInvoiceNumber(no, this.dataForm.get('GUI_Track')?.value);
+    return this.guiNumberOptions.some(
+      (opt) => this.normalizeInvoiceNumber(opt.value, this.dataForm.get('GUI_Track')?.value) === pureNo
+    );
+  }
+
+  private clearLoadedInvoiceFields(clearDetailRows = true): void {
+    if (clearDetailRows) {
+      this.detailRows = [];
+    }
+
+    this.originalRemainingAmt = null;
+
+    this.dataForm.patchValue(
+      {
+        Inv_Date: null,
+        PUR_VoucherType: '',
+        PUR_TaxType: '',
+        Inv_Net: null,
+        Inv_Tax: null,
+        Total_hitory_PUR_Amt: null,
+        Total_Amt: null,
+        PUR_Net: null,
+        PUR_Tax: null,
+        PUR_Amt: null,
+        Credit_Type: '',
+        Source_Doc_No: '',
+        Voucher_No: '',
+      },
+      { emitEvent: false }
+    );
+  }
+
+  onDetailRowsChange(rows: any[]): void {
+    this.detailRows = Array.isArray(rows) ? rows : [];
+    this.syncPurAmtFromDetails();
+  }
+
   private updateDisabledState(): void {
     if (this.crudstatus === CRUDStatus.Edit) {
-      const editableFields = [
-        'PUR_GUIDate',
-        'PUR_RepYYYYMM',
-        'PUR_Tax',
-        'Source_Doc_No',
-        'Credit_Type',
-        'PUR_Net',
-        'PUR_Amt',
-        'Voucher_No',
-      ];
+      const editableFields = ['PUR_GUIDate', 'PUR_RepYYYYMM', 'Source_Doc_No'];
       Object.keys(this.dataForm.controls).forEach((key) => {
         const control = this.dataForm.get(key);
-        if (editableFields.includes(key)) {
-          control?.enable();
-        } else {
-          control?.disable();
-        }
+        if (editableFields.includes(key)) control?.enable();
+        else control?.disable();
       });
     } else if (this.crudstatus === CRUDStatus.Read) {
       this.dataForm.disable();
     } else {
-      this.dataForm.enable(); // Create 模式
+      this.dataForm.enable();
     }
-  }
-  detailRows: any[] = [];
-  onSubmit(form: FormGroup): void {
 
+    this.dataForm.get('PUR_Net')?.disable();
+    this.dataForm.get('PUR_Amt')?.disable();
+    this.dataForm.get('PUR_Tax')?.disable();
+    this.dataForm.get('TXN_Ret_No')?.disable();
+    this.dataForm.get('PUR_TaxType')?.disable();
+    this.dataForm.get('Inv_Tax')?.disable();
+    this.dataForm.get('Inv_Net')?.disable();
+    this.dataForm.get('Inv_Date')?.disable();
+    this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
+    this.dataForm.get('Total_Amt')?.disable();
+    this.dataForm.get('Credit_Type')?.disable();
+    this.dataForm.get('PUR_VoucherType')?.disable();
+    this.dataForm.get('Voucher_No')?.disable();
+  }
+
+  onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const formValue = form.getRawValue();
 
-      const payload =
-        this.crudstatus === CRUDStatus.Edit
-          ? {
-            id: formValue.id,
-            TXN_Ret_No: formValue.TXN_Ret_No,
-            GUI_Track: formValue.GUI_Track,
-            InvoiceNumber: formValue.PUR_GUINo,
-            InvoiceDate: formValue.PUR_GUIDate,
-            INV_DeclareYM: formValue.PUR_RepYYYYMM,
-            Credit_Type: formValue.Credit_Type,
-            PUR_Net: formValue.PUR_Net,
-            PUR_Tax: formValue.PUR_Tax,
-            PUR_Amt: formValue.PUR_Amt,
-            Source_Doc_No: formValue.Source_Doc_No,
-            APS40235List: this.detailRows.map(row => ({
-              PLU_Name: row.PLU_Name,
-              TXN_Qty: row.TXN_Qty,
-              PLU_SalePrc: row.PLU_SalePrc,
-              TXN_SaleAmt: row.TXN_SaleAmt,
-            })),
-          }
-          : {
-            GUI_Track: formValue.GUI_Track,
-            PUR_GUINo: formValue.PUR_GUINo,
-            PUR_GUIDate: formValue.PUR_GUIDate,
-            PUR_VoucherType: formValue.PUR_VoucherType,
-            PUR_RepYYYYMM: formValue.PUR_RepYYYYMM,
-            Credit_Type: formValue.Credit_Type,
-            PUR_TaxType: formValue.PUR_TaxType,
-            PUR_Net: formValue.PUR_Net,
-            PUR_Tax: formValue.PUR_Tax,
-            PUR_Amt: formValue.PUR_Amt,
-            Source_Doc_No: formValue.Source_Doc_No,
-            Voucher_No: formValue.Voucher_No,
-            APS40235List: this.detailRows.map(row => ({
-              PLU_Name: row.PLU_Name,
-              TXN_Qty: row.TXN_Qty,
-              PLU_SalePrc: row.PLU_SalePrc,
-              TXN_SaleAmt: row.TXN_SaleAmt,
-            })),
-          };
-      payload.PUR_RepYYYYMM = this.toYYYYMM(payload.PUR_RepYYYYMM);
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (this.canAdd()) {
-            this.fin13020Service.insertFIN13020(payload).subscribe(() => {
-              this.messageService.successBubble('新增成功');
-              this.dataForm.reset();
-            });
-          }
-          break;
+      const purDate = formValue.PUR_GUIDate ? new Date(formValue.PUR_GUIDate) : null;
+      const invDate = formValue.Inv_Date ? new Date(formValue.Inv_Date) : null;
+      if (purDate && invDate && purDate < invDate) {
+        this.messageService.errorBubble('退出/折讓日期不可小於發票日期');
+        return;
+      }
 
-        case CRUDStatus.Edit:
-          if (this.canEdit()) {
-            this.fin13020Service.updateFIN13020(payload).subscribe(() => {
+      const detailTotalRaw = this.detailRows.reduce((sum, row) => {
+        const v = Number(row?.TXN_SaleAmt);
+        return sum + (isNaN(v) ? 0 : v);
+      }, 0);
+      const detailTotal = this.roundToInt(detailTotalRaw);
+
+const purAmtInt = this.toIntOrNull(formValue.PUR_Amt);
+if (this.detailRows.length > 0 && purAmtInt !== null && purAmtInt !== detailTotal) {
+  this.messageService.errorBubble('明細的金額加總必須等於「退回/折讓總金額」');
+  return;
+}
+
+const remainingAmt = this.toIntOrNull(formValue.Total_Amt);
+if (remainingAmt !== null && purAmtInt !== null && purAmtInt > remainingAmt) {
+  this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
+  return;
+}
+
+if (this.crudstatus === CRUDStatus.Create) {
+  if (remainingAmt !== null && remainingAmt <= 0) {
+    this.messageService.errorBubble('此發票已無可退出/折讓金額，不可新增');
+    return;
+  }
+}
+
+const creditType = this.calcCreditTypeByRemainingAmt(
+  formValue.PUR_Amt,
+  remainingAmt
+);
+
+      const intNet = this.toIntOrNull(formValue.PUR_Net);
+      const intTax = this.toIntOrNull(formValue.PUR_Tax);
+      const intAmt = this.toIntOrNull(formValue.PUR_Amt);
+
+      const invoiceDate = formValue.PUR_GUIDate ? new Date(formValue.PUR_GUIDate) : null;
+      const invDeclareYM = this.toYYYYMM(formValue.PUR_RepYYYYMM);
+      const pureInvoiceNumber = this.normalizeInvoiceNumber(formValue.PUR_GUINo, formValue.GUI_Track);
+
+      this.loading = true;
+      this.messageService.blockUi();
+
+      if (this.crudstatus === CRUDStatus.Edit) {
+        const payload: any = {
+          id: formValue.id,
+          TXN_Ret_No: formValue.TXN_Ret_No,
+          GUI_Track: formValue.GUI_Track,
+          InvoiceNumber: pureInvoiceNumber,
+          InvoiceDate: invoiceDate,
+          InvoiceType: formValue.PUR_VoucherType,
+          INV_DeclareYM: invDeclareYM,
+          Credit_Type: creditType,
+          PUR_TaxType: formValue.PUR_TaxType,
+          PUR_Net: intNet,
+          PUR_Tax: intTax,
+          PUR_Amt: intAmt,
+          Source_Doc_No: formValue.Source_Doc_No,
+          APS40235List: this.detailRows.map((row) => ({
+            ID: typeof row.ID === 'number' ? row.ID : 0,
+            PLU_Name: row.PLU_Name,
+            TXN_Qty: row.TXN_Qty,
+            PLU_SalePrc: row.PLU_SalePrc,
+            TXN_SaleAmt: row.TXN_SaleAmt,
+          })),
+        };
+
+        if (this.canEdit()) {
+          this.fin13020Service.updateFIN13020(payload).pipe(
+            finalize(() => {
+              this.loading = false;
+              this.messageService.unblockUi();
+            })
+          ).subscribe({
+            next: () => {
               this.messageService.successBubble('更新成功');
               this.onCancel();
-            });
-          }
-          break;
+            },
+            error: (err) => {
+              this.messageService.errorBubble(err?.error?.Message || '更新失敗，請聯絡系統管理員');
+            },
+          });
+        } else {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
+      } else {
+        const insertPayload: any = {
+          Source: 'APS',
+          GUI_Track: formValue.GUI_Track,
+          InvoiceNumber: pureInvoiceNumber,
+          InvoiceDate: invoiceDate,
+          InvoiceType: formValue.PUR_VoucherType,
+          INV_DeclareYM: invDeclareYM,
+          Credit_Type: creditType,
+          PUR_TaxType: formValue.PUR_TaxType,
+          PUR_Net: intNet,
+          PUR_Tax: intTax,
+          PUR_Amt: intAmt,
+          Source_Doc_No: formValue.Source_Doc_No,
+          APS40235List: this.detailRows.map((row) => ({
+            PLU_Name: row.PLU_Name,
+            TXN_Qty: row.TXN_Qty,
+            PLU_SalePrc: row.PLU_SalePrc,
+            TXN_SaleAmt: row.TXN_SaleAmt,
+          })),
+        };
+
+        if (this.canAdd()) {
+          this.fin13020Service.insertFIN13020(insertPayload).pipe(
+            switchMap(() => {
+              return this.queryInsertedRecordAndPrint(
+                formValue.GUI_Track,
+                pureInvoiceNumber,
+                invDeclareYM
+              );
+            }),
+            finalize(() => {
+              this.loading = false;
+              this.messageService.unblockUi();
+            })
+          ).subscribe({
+            next: () => {
+              this.messageService.successBubble('新增成功並列印完成');
+
+              this.dataForm.reset();
+              this.detailRows = [];
+              this.originalRemainingAmt = null;
+              this.lastLoadedInvoiceKey = '';
+
+              const today = new Date();
+              const year = today.getFullYear();
+              const month = today.getMonth() + 1;
+              let evenMonth = month % 2 === 0 ? month : month + 1;
+              if (evenMonth > 12) evenMonth = 12;
+
+              this.dataForm.patchValue(
+                {
+                  PUR_GUIDate: today,
+                  PUR_RepYYYYMM: `${year}${String(evenMonth).padStart(2, '0')}`,
+                  TXN_Ret_No: '系統自動帶入',
+                },
+                { emitEvent: false }
+              );
+
+              this.updateDisabledState();
+            },
+            error: (err) => {
+              this.messageService.errorBubble(
+                err?.error?.Message || err?.message || '新增或列印失敗，請聯絡系統管理員'
+              );
+            },
+          });
+        } else {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }
       }
     });
   }
-  private setupAutoAmountCalculation(): void {
+
+  /**
+   * 新增成功後：
+   * 1. 先查 queryFIN13020 抓到 TXN_Ret_No
+   * 2. 再用 TXN_Ret_No 去列印
+   */
+  private queryInsertedRecordAndPrint(
+    guiTrack: string,
+    pureInvoiceNumber: string,
+    invDeclareYM: string | null
+  ) {
+    const queryPayload = {
+      TXN_Ret_NoStart: null,
+      TXN_Ret_NoEnd: null,
+      GUI_Track: guiTrack,
+      InvoiceNumberStart: pureInvoiceNumber,
+      InvoiceNumberEnd: pureInvoiceNumber,
+      InvoiceDateStart: null,
+      InvoiceDateEnd: null,
+      InvoiceType: null,
+      INV_DeclareYM: invDeclareYM,
+      Source_Doc_NoStart: null,
+      Source_Doc_NoEnd: null,
+      Voucher_NoStart: null,
+      Voucher_NoEnd: null,
+      pageIndex: 1,
+      pageSize: 30,
+      SortBy: [{ field: 'ID', order: -1 }],
+    };
+
+    return this.fin13020Service.queryFIN13020(queryPayload).pipe(
+      map((res: any) => {
+        const list = Array.isArray(res?.Data) ? res.Data : [];
+        if (!list.length) {
+          throw new Error('新增成功，但查不到剛新增的折讓單資料');
+        }
+
+        const hit =
+          list.find((x: any) =>
+            String(x?.InvoiceTrack ?? '').trim() === String(guiTrack ?? '').trim() &&
+            this.normalizeInvoiceNumber(x?.InvoiceNumber, x?.InvoiceTrack) === pureInvoiceNumber
+          ) ?? list[0];
+
+        const txnRetNo = String(hit?.TXN_Ret_No ?? '').trim();
+        const invYM = String(hit?.INV_DeclareYM ?? invDeclareYM ?? '').trim();
+        const track = String(hit?.InvoiceTrack ?? guiTrack ?? '').trim();
+        const invNo = this.normalizeInvoiceNumber(hit?.InvoiceNumber ?? pureInvoiceNumber, track);
+
+        if (!txnRetNo) {
+          throw new Error('新增成功，但查到的資料沒有退出/折讓單號（TXN_Ret_No）');
+        }
+
+        this.dataForm.patchValue(
+          {
+            TXN_Ret_No: txnRetNo,
+          },
+          { emitEvent: false }
+        );
+
+        return {
+          INV_DeclareYM: invYM,
+          TXN_Ret_NoS: txnRetNo,
+          TXN_Ret_NoE: txnRetNo,
+          InvoiceTrack: track,
+          InvoiceNumberS: invNo,
+          InvoiceNumberE: invNo,
+        };
+      }),
+      switchMap((printPayload) => this.fin13020Service.printFIN13020(printPayload)),
+      switchMap((resp: HttpResponse<Blob>) => this.openPrintResponse$(resp))
+    );
+  }
+
+  /**
+   * 改成 Observable 版本，讓外面可以串接 loading 到真正開啟列印完成為止
+   */
+  private openPrintResponse$(resp: HttpResponse<Blob>) {
+    return new Promise<void>((resolve, reject) => {
+      const ct = resp.headers.get('content-type') || '';
+
+      if (ct.includes('application/pdf')) {
+        try {
+          const url = URL.createObjectURL(resp.body!);
+          window.open(url, '_blank');
+          resolve();
+        } catch (e) {
+          reject(e);
+        }
+        return;
+      }
+
+      resp.body!.text().then((text) => {
+        let json: any;
+        try {
+          json = JSON.parse(text);
+        } catch {
+          try {
+            const url = URL.createObjectURL(resp.body!);
+            window.open(url, '_blank');
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+          return;
+        }
+
+        const printUrl = json?.Print_URL ?? json?.Data?.Print_URL ?? json?.Data?.[0]?.Print_URL;
+        if (!printUrl) {
+          reject(new Error('列印回應未包含 Print_URL'));
+          return;
+        }
+
+        const base = environment.ApiUrl;
+        const fullUrl = `${base}${printUrl}`;
+
+        window.open(fullUrl, '_blank');
+        resolve();
+      }).catch((err) => reject(err));
+    }).then(() => void 0);
+  }
+
+  override onCancel(): void {
+    this.router.navigate(['/account/fin', 'fin13020'], {
+      state: { fromCru: true },
+    });
+  }
+
+  /* ------- 金額互算 + 剩餘總金額 + 區別判斷 ------- */
+
+  private setupAmountRelations(): void {
     const netControl = this.dataForm.get('PUR_Net');
     const taxControl = this.dataForm.get('PUR_Tax');
     const amtControl = this.dataForm.get('PUR_Amt');
+    const remainingControl = this.dataForm.get('Total_Amt');
 
-    if (netControl && taxControl && amtControl) {
-      netControl.valueChanges.subscribe(() => this.calculateTXN_SaleAmt());
-      taxControl.valueChanges.subscribe(() => this.calculateTXN_SaleAmt());
+    if (!netControl || !taxControl || !amtControl || !remainingControl) return;
+
+    let updatingFromNet = false;
+    let updatingFromAmt = false;
+
+    netControl.valueChanges.subscribe((value) => {
+      if (updatingFromAmt) return;
+      updatingFromNet = true;
+
+      if (value === null || value === undefined || value === '') {
+        taxControl.setValue(null, { emitEvent: false });
+        amtControl.setValue(null, { emitEvent: false });
+        remainingControl.setValue(this.originalRemainingAmt, { emitEvent: false });
+        this.updateCreditTypeByRemainingAmt(null);
+        updatingFromNet = false;
+        return;
+      }
+
+      let netInt = this.roundToInt(Number(value));
+      if (isNaN(netInt)) {
+        updatingFromNet = false;
+        return;
+      }
+
+      let taxInt = this.roundToInt(netInt * 0.05);
+      let totalInt = this.roundToInt(netInt + taxInt);
+
+      if (
+        this.originalRemainingAmt !== null &&
+        !isNaN(this.originalRemainingAmt) &&
+        this.originalRemainingAmt > 0 &&
+        totalInt > this.originalRemainingAmt
+      ) {
+        this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
+        totalInt = this.roundToInt(this.originalRemainingAmt);
+        const approxNet = totalInt / 1.05;
+        netInt = this.roundToInt(approxNet);
+        taxInt = totalInt - netInt;
+      }
+
+      netControl.setValue(netInt, { emitEvent: false });
+      taxControl.setValue(taxInt, { emitEvent: false });
+      amtControl.setValue(totalInt, { emitEvent: false });
+
+      const remaining =
+        this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
+          ? this.roundToInt(this.originalRemainingAmt)
+          : null;
+      remainingControl.setValue(remaining, { emitEvent: false });
+
+      this.updateCreditTypeByRemainingAmt(totalInt);
+      updatingFromNet = false;
+    });
+
+    amtControl.valueChanges.subscribe((value) => {
+      if (updatingFromNet) return;
+      updatingFromAmt = true;
+
+      if (value === null || value === undefined || value === '') {
+        netControl.setValue(null, { emitEvent: false });
+        taxControl.setValue(null, { emitEvent: false });
+        remainingControl.setValue(this.originalRemainingAmt, { emitEvent: false });
+        this.updateCreditTypeByRemainingAmt(null);
+        updatingFromAmt = false;
+        return;
+      }
+
+      let totalInt = this.roundToInt(Number(value));
+      if (isNaN(totalInt)) {
+        updatingFromAmt = false;
+        return;
+      }
+
+      if (
+        this.originalRemainingAmt !== null &&
+        !isNaN(this.originalRemainingAmt) &&
+        this.originalRemainingAmt > 0 &&
+        totalInt > this.originalRemainingAmt
+      ) {
+        this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
+        totalInt = this.roundToInt(this.originalRemainingAmt);
+      }
+
+      const approxNet = totalInt / 1.05;
+      const netInt = this.roundToInt(approxNet);
+      const taxInt = totalInt - netInt;
+
+      amtControl.setValue(totalInt, { emitEvent: false });
+      netControl.setValue(netInt, { emitEvent: false });
+      taxControl.setValue(taxInt, { emitEvent: false });
+
+      const remaining =
+        this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
+          ? this.roundToInt(this.originalRemainingAmt)
+          : null;
+      remainingControl.setValue(remaining, { emitEvent: false });
+
+      this.updateCreditTypeByRemainingAmt(totalInt);
+      updatingFromAmt = false;
+    });
+  }
+
+private updateCreditTypeByRemainingAmt(purAmt: number | null): void {
+  const creditControl = this.dataForm.get('Credit_Type');
+  const remainingControl = this.dataForm.get('Total_Amt');
+
+  if (!creditControl || !remainingControl) return;
+
+  const remainingRaw = remainingControl.value;
+  const remaining =
+    remainingRaw === null || remainingRaw === undefined || remainingRaw === ''
+      ? null
+      : this.roundToInt(Number(remainingRaw));
+
+  if (
+    purAmt === null ||
+    purAmt === undefined ||
+    isNaN(Number(purAmt)) ||
+    Number(purAmt) <= 0 ||
+    remaining === null ||
+    isNaN(remaining) ||
+    remaining <= 0
+  ) {
+    creditControl.setValue('', { emitEvent: false });
+    return;
+  }
+
+  const p = this.roundToInt(Number(purAmt));
+  const r = this.roundToInt(remaining);
+
+  if (p === r) creditControl.setValue('R', { emitEvent: false });
+  else if (p < r) creditControl.setValue('C', { emitEvent: false });
+  else creditControl.setValue('', { emitEvent: false });
+}
+
+private calcCreditTypeByRemainingAmt(purAmt: any, remainingAmt: any): 'R' | 'C' | '' {
+  const p = this.toIntOrNull(purAmt);
+  const r = this.toIntOrNull(remainingAmt);
+
+  if (p === null || r === null || p <= 0 || r <= 0) return '';
+
+  if (p === r) return 'R';   // 全退 = 退出
+  if (p < r) return 'C';     // 部分退 = 折讓
+
+  return '';
+}
+  private roundToInt(value: number): number {
+    return Math.round(value);
+  }
+
+  private toIntOrNull(value: any): number | null {
+    if (value === null || value === undefined || value === '') return null;
+    const n = Number(value);
+    if (isNaN(n)) return null;
+    return this.roundToInt(n);
+  }
+
+  private normalizeInvoiceNumber(value: any, track?: any): string {
+    if (value === null || value === undefined) return '';
+    let str = String(value).trim();
+    const trackStr = track ? String(track).trim() : '';
+
+    if (trackStr && str.toUpperCase().startsWith(trackStr.toUpperCase())) {
+      str = str.slice(trackStr.length);
     }
+
+    return str.trim();
   }
 
-  private calculateTXN_SaleAmt(): void {
-    const net = this.dataForm.get('PUR_Net')?.value || 0;
-    const tax = this.dataForm.get('PUR_Tax')?.value || 0;
-    this.dataForm.get('PUR_Amt')?.setValue(net + tax, { emitEvent: false });
-  }
-  private setupRemainAmountCalculation(): void {
-    const amtControl = this.dataForm.get('PUR_Amt');
-    const historyControl = this.dataForm.get('History_RetAmt');
-    const remainControl = this.dataForm.get('Remain_Amt');
-
-    if (amtControl && historyControl && remainControl) {
-      amtControl.valueChanges.subscribe(() => this.calculateRemainAmount());
-      historyControl.valueChanges.subscribe(() => this.calculateRemainAmount());
-    }
-  }
-
-  private calculateRemainAmount(): void {
-    const amt = this.dataForm.get('PUR_Amt')?.value || 0;
-    const history = this.dataForm.get('Total_hitory_PUR_Amt')?.value || 0;
-    this.dataForm
-      .get('Total_hitory_PUR_Amt')
-      ?.setValue(amt - history, { emitEvent: false });
-  }
   clearFormExcept(): void {
     const keepValues = ['PUR_GUINo'];
     const patch: any = {};
@@ -339,46 +977,61 @@ export class FIN13020CRUComponent
       patch[key] = this.dataForm.get(key)?.value;
     });
 
-    this.dataForm.reset(); // 先清除
-    this.dataForm.patchValue(patch); // 再補回保留的值
-    this.updateDisabledState(); // 最後重新套用 disabled 狀態 ✅
+    this.dataForm.reset();
+    this.dataForm.patchValue(patch);
+    this.originalRemainingAmt = null;
+    this.lastLoadedInvoiceKey = '';
+    this.updateDisabledState();
   }
+
   @Output() fieldChange = new EventEmitter<any>();
 
   columns: any[] = [
     { field: 'PLU_Name', header: '品名', type: 'input', editable: true },
     { field: 'TXN_Qty', header: '數量', type: 'inputNumber', editable: true },
     {
-      field: 'PLU_SalePrc', header: '單價', type: 'inputNumber', editable: true,
-      format: (value: any) => this.moneyFormat(value), style: 'text-right'
+      field: 'PLU_SalePrc',
+      header: '單價',
+      type: 'inputNumber',
+      editable: true,
+      format: (value: any) => this.moneyFormat(value),
+      style: 'text-right',
     },
     {
-      field: 'TXN_SaleAmt', header: '金額',
-      format: (value: any) => this.moneyFormat(value), style: 'text-right'
+      field: 'TXN_SaleAmt',
+      header: '金額',
+      format: (value: any) => this.moneyFormat(value),
+      style: 'text-right',
     },
   ];
+
   onFieldChange(event: { rowData: any; field: string; value: any }) {
     const { rowData, field, value } = event;
     rowData[field] = value;
 
-    // 自動計算金額
     if (field === 'TXN_Qty' || field === 'PLU_SalePrc') {
       const TXN_Qty = parseFloat(rowData.TXN_Qty) || 0;
       const PLU_SalePrc = parseFloat(rowData.PLU_SalePrc) || 0;
-      rowData.TXN_SaleAmt = TXN_Qty * PLU_SalePrc;
+
+      rowData.TXN_SaleAmt = this.roundToInt(TXN_Qty * PLU_SalePrc);
+      this.syncPurAmtFromDetails();
+    }
+
+    if (field === 'TXN_SaleAmt') {
+      this.syncPurAmtFromDetails();
     }
   }
 
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
+
   private toYYYYMM(input: any): string | null {
     if (!input) return null;
 
-    // 先處理常見字串：'2025/05'、'2025-05-01T00:00:00'
     if (typeof input === 'string') {
-      const onlyDigits = input.replace(/\D/g, ''); // 拿掉所有非數字
-      if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6); // '202505'
+      const onlyDigits = input.replace(/\D/g, '');
+      if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6);
       const d = new Date(input);
       if (!isNaN(d.getTime())) {
         const y = d.getFullYear();
@@ -388,14 +1041,12 @@ export class FIN13020CRUComponent
       return null;
     }
 
-    // Date 物件
     if (input instanceof Date) {
       const y = input.getFullYear();
       const m = String(input.getMonth() + 1).padStart(2, '0');
       return `${y}${m}`;
     }
 
-    // 其他型別就試著 new Date 看看
     const d = new Date(input);
     if (!isNaN(d.getTime())) {
       const y = d.getFullYear();
@@ -404,25 +1055,34 @@ export class FIN13020CRUComponent
     }
     return null;
   }
+
+  private normalizeYYYYMMForControl(raw: any): string | null {
+    if (!raw) return null;
+    const only = String(raw).replace(/\D/g, '');
+    if (only.length < 6) return null;
+    return only.slice(0, 6);
+  }
+
   get isRead(): boolean {
     return this.crudstatus === CRUDStatus.Read;
   }
+
   private optionLabelOf(opts: Array<{ label: string; value: any }>, value: any): string {
-    const hit = opts?.find(o => String(o.value) === String(value));
+    const hit = opts?.find((o) => String(o.value) === String(value));
     return hit?.label ?? (value ?? '');
   }
-  // 3) 常用格式化（日期 / 年月）
+
   formatDate(d: any): string {
     if (!d) return '';
     const dt = new Date(d);
     if (isNaN(dt.getTime())) return String(d);
     const y = dt.getFullYear();
     const m = String(dt.getMonth() + 1).padStart(2, '0');
-    const day = String(dt.getDate()).padStart(2, '0');
+    const day = String(dt.getDate()).toString().padStart(2, '0');
     return `${y}/${m}/${day}`;
   }
+
   formatRepYYYYMM(v: any): string {
-    // 後端回 '202505'、或 Date、或 '2025/05' 都能處理
     if (!v) return '';
     if (typeof v === 'string') {
       const only = v.replace(/\D/g, '');
@@ -434,12 +1094,80 @@ export class FIN13020CRUComponent
     }
     return String(v);
   }
+
   readonly columnsRead = [
     { field: 'PLU_Name', header: '品名' },
     { field: 'TXN_Qty', header: '數量', format: (v: any) => v },
-    { field: 'PLU_SalePrc', header: '單價', format: (v: any) => this.moneyFormat(v), style: 'text-right' },
-    { field: 'TXN_SaleAmt', header: '金額', format: (v: any) => this.moneyFormat(v), style: 'text-right' },
+    {
+      field: 'PLU_SalePrc',
+      header: '單價',
+      format: (v: any) => this.moneyFormat(v),
+      style: 'text-right',
+    },
+    {
+      field: 'TXN_SaleAmt',
+      header: '金額',
+      format: (v: any) => this.moneyFormat(v),
+      style: 'text-right',
+    },
   ];
-  get columnsForView() { return this.isRead ? this.columnsRead : this.columns; }
 
+  get columnsForView() {
+    return this.isRead ? this.columnsRead : this.columns;
+  }
+
+  private syncPurAmtFromDetails(): void {
+    const sumRaw = (this.detailRows ?? []).reduce((sum, r) => {
+      const v = Number(r?.TXN_SaleAmt);
+      return sum + (isNaN(v) ? 0 : v);
+    }, 0);
+
+    let sum = this.roundToInt(sumRaw);
+const hasDetails = (this.detailRows ?? []).length > 0;
+
+if (
+  hasDetails &&
+  this.originalRemainingAmt !== null &&
+  !isNaN(this.originalRemainingAmt) &&
+  sum > this.roundToInt(this.originalRemainingAmt)
+) {
+  this.messageService.errorBubble('明細加總不可大於剩餘總金額');
+  sum = this.roundToInt(this.originalRemainingAmt);
+}
+
+    this.dataForm.get('PUR_Amt')?.setValue(hasDetails ? sum : null, { emitEvent: true });
+
+    if (hasDetails) {
+      const approxNet = this.roundToInt(sum / 1.05);
+      const tax = sum - approxNet;
+
+      this.dataForm.patchValue(
+        {
+          PUR_Net: approxNet,
+          PUR_Tax: tax,
+          Total_Amt:
+            this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
+              ? this.roundToInt(this.originalRemainingAmt)
+              : null,
+        },
+        { emitEvent: false }
+      );
+
+      this.updateCreditTypeByRemainingAmt(sum);
+    } else {
+      this.dataForm.patchValue(
+        {
+          PUR_Net: null,
+          PUR_Tax: null,
+          Total_Amt:
+            this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
+              ? this.roundToInt(this.originalRemainingAmt)
+              : null,
+        },
+        { emitEvent: false }
+      );
+
+      this.updateCreditTypeByRemainingAmt(null);
+    }
+  }
 }

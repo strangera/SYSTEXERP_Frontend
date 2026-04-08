@@ -1,16 +1,29 @@
-import { Component } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Component, OnInit } from '@angular/core';
+import {
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+
 import { TranslateModule } from '@ngx-translate/core';
-import { Table2Component } from '@shared/componentkit/table2/table2.component';
 import { AccordionModule } from 'primeng/accordion';
-import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
-import { AccountingaccountService } from '../../../service/basic/queryGLS1005.service';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { TLS11020Service } from '../../../service/api/tls/tls11020.service';
+import { AccountingaccountService } from '../../../service/basic/queryGLS1005.service';
 
 @Component({
   selector: 'app-tls11020',
@@ -25,31 +38,43 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     InputTextComponent,
     MultiSelectComponent,
     TranslateModule,
-    Table2Component,
+    TableReportComponent,
   ],
 })
-export class TLS11020Component extends BasicQueryPageComponent<any> {
-  queryForm = this.formBuilder.group({
-    CAP_Item: ['', [Validators.maxLength(3)]],
-    CAP_Name: ['', [Validators.maxLength(40)]],
-    CAP_BaseRate: ['', [Validators.maxLength(5)]],
-    CAP_Type: [[] as string[]],
-    CAP_Remark: ['', [Validators.maxLength(160)]],
-    ...createPaginationConfig([{ field: 'CAP_Item', order: 1 }]), // 分頁與排序
-  });
-
-  totalRecords = 0;
+export class TLS11020Component extends BasicQueryPageComponent<any> implements OnInit {
   data: any[] = [];
-
   selectedItems: any[] = [];
+  totalRecords = 0;
+
+  lastQueryBody: any = null;
+  private lastQuerySig: string | null = null;
+  private lazyTimer: any = null;
+
+  // 給 table-report 用：由它內部呼叫（lazy 分頁/排序用）
+  queryTLS11020Fn = (body: any) => this.tls11020Service.queryTLS11020(body);
+  /** 023 這筆不允許勾選、不允許編輯 */
+  private isBlockedRow = (row: any): boolean => String(row?.CAP_Item ?? '').trim() === '023';
+
+  /** 給 app-table-report 用：控制 checkbox 是否可勾 */
+  isRowSelectable = (row: any): boolean => !this.isBlockedRow(row);
+
+  /** 給 app-table-report 用：控制「編輯」按鈕 disabled */
+  editDisabled = (row: any): boolean => this.isBlockedRow(row);
+
+  // 如果你也想讓「查看/明細」一起鎖：
+  // detailDisabled = (row: any): boolean => this.isBlockedRow(row);
+
+
+  // 下拉
   deductionCategoryOptions = [
-    { value: 'A', label: '一次扣款' },
-    { value: 'B', label: '每月扣款' },
-    { value: 'C', label: '平均分攤' },
-    { value: 'D', label: '比率分攤' },
-    { value: 'E', label: '活動扣款' },
-    { value: 'Z', label: '其他扣款' },
+    { value: 'A', label: 'A-一次扣款' },
+    { value: 'B', label: 'B-每月扣款' },
+    { value: 'C', label: 'C-平均分攤' },
+    { value: 'D', label: 'D-比率分攤' },
+    { value: 'E', label: 'E-活動扣款' },
+    { value: 'Z', label: 'Z-其他扣款' },
   ];
+
   guiFlagOptions = [
     { label: '開立', value: 'Y' },
     { label: '不開立', value: 'N' },
@@ -64,137 +89,195 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
     { label: '常用', value: 'Y' },
     { label: '不常用', value: 'N' },
   ];
+
   accountOptions: any[] = [];
-  constructor(
-    private tls11020Service: TLS11020Service,
-    private accountingaccountService: AccountingaccountService
 
-  ) {
-    super();
-  }
+  queryForm = this.formBuilder.group({
+    CAP_Item: ['', [Validators.maxLength(3)]],
+    CAP_Name: ['', [Validators.maxLength(40)]],
+    CAP_BaseRate: ['', [Validators.maxLength(5)]],
+    CAP_Type: [[] as string[]],
+    CAP_Remark: ['', [Validators.maxLength(160)]],
+    GUI_FLAG: [[] as string[]],
+    AccNo: [[] as string[]],
+    IsCommonlyUsed: [[] as string[]],
+    ...createPaginationConfig([{ field: 'CAP_Item', order: 1 }]),
+  });
 
-  ngOnInit(): void {
-    this.initializePage('TLS11020', 'tls/tls11020cru', this.queryForm, (f) => this.onSubmit(f));
-    const map = this.deductionCategoryOptions.map((o: any) => ({ [String(o.value)]: String(o.label) }));
-    this.columns = this.columns.map(c =>
-      c.field === 'CAP_Type' ? { ...c, exportFormat: map } : c
-    );
-    this.accountingaccountService.getOptions().subscribe((data) => {
-      this.accountOptions = (data || []).map(x => ({
-        label: x.Name,
-        formLabel: `${x.No} - ${x.Name}`,
-        value: x.No
-      }));
-      const mapAcc = this.accountOptions.map(o => ({ [String(o.value)]: String(o.label) }));
-      this.columns = this.columns.map(c =>
-        c.field === 'AccNo' && c.header === '會計科目名稱'
-          ? { ...c, exportFormat: mapAcc }
-          : c
-      );
-    });
-  }
-
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      this.loading = true;
-      this.messageService.blockUi();
-
-      const formValue = { ...form.value };
-
-      // 將空字串轉為 null（配合後端 char? 欄位處理）
-      if (formValue.CAP_Item === '') formValue.CAP_Item = null;
-      if (formValue.CAP_Name === '') formValue.CAP_Name = null;
-       if (formValue.CAP_BaseRate === '') formValue.CAP_BaseRate = null;
-      if (formValue.CAP_Remark === '') formValue.CAP_Remark = null;
-
-
-      console.log('🔍 查詢條件 request payload:', formValue);
-
-      this.tls11020Service.queryTLS11020(formValue).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res?.Data || [];
-            this.totalRecords = res?.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, formValue);
-
-          } else {
-
-          }
-        },
-        error: () => {
-          this.loading = false;
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
-    });
-    console.log('📦 回傳資料 sample：', this.data?.[0]);
-  }
-
-
-  onDelete(selectedItems: any[]) {
-    if (!selectedItems.length) return;
-    const confirm = window.confirm('是否確定刪除選取項目？');
-    if (!confirm) return;
-
-    const idList = selectedItems.map((item) => item.id);
-
-    this.tls11020Service.deleteTLS11020(idList).subscribe({
-      next: () => {
-        this.messageService.successBubble('刪除成功');
-        this.onSubmit(this.queryForm);
-      },
-      error: () => {
-        this.messageService.errorBubble('刪除失敗');
-      },
-    });
-  }
-  getLabelFromOptions(value: any, options: any[]): string {
-    return options.find(opt => opt.value === value)?.label ?? value;
-  }
   columns: any[] = [
     { field: 'CAP_Item', header: '扣款項目編號', visible: true },
     {
       field: 'CAP_Type',
       header: '扣款類別',
       visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.deductionCategoryOptions),
+      format: (value: any) =>
+        this.getLabelFromOptions(value, this.deductionCategoryOptions),
+      exportFormat: this.deductionCategoryOptions.map((o) => ({
+        [o.value]: o.label,
+      })),
     },
     { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
     { field: 'AccNo', header: '會計科目代碼', visible: true },
-    {
-      field: 'AccCName',
-      header: '會計科目名稱',
-      visible: true,
+    { field: 'AccCName', header: '會計科目名稱', visible: true },
 
-    },
     {
       field: 'GUI_FLAG',
       header: '是否開立發票',
       visible: true,
       format: (value: any) => this.getLabelFromOptions(value, this.guiFlagOptions),
-      exportFormat: this.guiFlagOptions.map(o => ({ [o.value]: o.label })),
+      exportFormat: this.guiFlagOptions.map((o) => ({ [o.value]: o.label })),
     },
     {
       field: 'CAP_TaxType',
       header: '課稅別',
       visible: true,
       format: (value: any) => this.getLabelFromOptions(value, this.taxTypeOptions),
-      exportFormat: this.taxTypeOptions.map(o => ({ [o.value]: o.label })),
+      exportFormat: this.taxTypeOptions.map((o) => ({ [o.value]: o.label })),
     },
     {
       field: 'IsCommonlyUsed',
       header: '是否常用',
       visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.isCommonlyUsedOptions),
-      exportFormat: this.isCommonlyUsedOptions.map(o => ({ [o.value]: o.label })),
+      format: (value: any) =>
+        this.getLabelFromOptions(value, this.isCommonlyUsedOptions),
+      exportFormat: this.isCommonlyUsedOptions.map((o) => ({
+        [o.value]: o.label,
+      })),
     },
     { field: 'Print_Area', header: '扣款項目合約列印區分', visible: true },
     { field: 'CAP_Remark', header: '備註', visible: true },
-
   ];
 
+  constructor(
+    private tls11020Service: TLS11020Service,
+    private accountingaccountService: AccountingaccountService
+  ) {
+    super();
+  }
 
+  ngOnInit(): void {
+    this.initializePage(
+      'TLS11020',
+      'tls/tls11020cru',
+      this.queryForm,
+      (f) => this.onSubmit(f)
+    );
+
+    // 會計科目下拉（若你 table 需要 exportFormat 對照）
+    this.accountingaccountService.getOptions().subscribe((data) => {
+      this.accountOptions = (data || []).map((x: any) => ({
+        label: x.Name,
+        formLabel: `${x.No} - ${x.Name}`,
+        value: x.No,
+      }));
+
+      const mapAcc = this.accountOptions.map((o: any) => ({
+        [String(o.value)]: String(o.label),
+      }));
+
+      // 如果你欄位是 AccNo / AccCName 之類，依你實際欄位調整
+      this.columns = this.columns.map((c) =>
+        c.field === 'AccNo' ? { ...c, exportFormat: mapAcc } : c
+      );
+    });
+  }
+
+  /** 給 API 用的 payload 轉換 */
+  private buildApiPayload(formValue: any): any {
+    const payload: any = { ...formValue };
+
+    // 空字串 -> null
+    if (payload.CAP_Item === '') payload.CAP_Item = null;
+    if (payload.CAP_Name === '') payload.CAP_Name = null;
+    if (payload.CAP_BaseRate === '') payload.CAP_BaseRate = null;
+    if (payload.CAP_Remark === '') payload.CAP_Remark = null;
+    // MultiSelect：統一轉成代碼陣列
+    const toCodeArray = (arr: any[]): string[] =>
+      (arr || [])
+        .map((x: any) => {
+          if (x == null) return '';
+          if (typeof x === 'string' || typeof x === 'number') return String(x);
+          if (typeof x === 'object' && 'value' in x) return String(x.value);
+          return '';
+        })
+        .filter((v) => v !== '');
+
+    if (Array.isArray(payload.CAP_Type)) {
+      payload.CAP_Type = toCodeArray(payload.CAP_Type);
+    }
+    // 單選語意：只有選 1 個才有意義，0 個或全選皆視為不篩選
+    const toSingleOrNull = (arr: any[]): string | null => {
+      const codes = toCodeArray(arr);
+      return codes.length === 1 ? codes[0] : null;
+    };
+
+    payload.GUI_FLAG = toSingleOrNull(payload.GUI_FLAG);
+    payload.IsCommonlyUsed = toSingleOrNull(payload.IsCommonlyUsed);
+
+    if (Array.isArray(payload.AccNo)) {
+      payload.AccNo = toCodeArray(payload.AccNo);
+    }
+
+    return payload;
+  }
+
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const raw = form.getRawValue();
+      const payload = this.buildApiPayload(raw);
+
+      this.lastQueryBody = { ...payload };
+      this.tls11020Service.queryTLS11020(payload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
+        next: (res: any) => {
+          if (res.Status === '0000') {
+            this.data = res?.Data || [];
+            this.totalRecords = res?.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, raw);
+          }
+        },
+      });
+    });
+  }
+
+  onDelete(selectedItems: any[]) {
+    if (!selectedItems?.length) return;
+
+    const idList = selectedItems
+      .filter(item => item && item.id != null)
+      .map(item => item.id);
+
+    if (idList.length === 0) {
+      this.messageService.warnBubble('未找到有效的刪除項目');
+      return;
+    }
+
+    this.messageService.confirm({
+      message: '是否確認刪除所選扣款項目資料?',
+      header: '確認刪除',
+      accept: () => {
+        this.loading = true;
+        this.tls11020Service.deleteTLS11020(idList).subscribe({
+          next: (response: any) => {
+            if (response?.Status === '0000') {
+              this.messageService.successBubble('刪除成功');
+              this.selectedItems = [];
+              this.onSubmit(this.queryForm);
+            } else {
+              this.messageService.errorBubble(`刪除失敗: ${response?.Message}`);
+            }
+          },
+          error: () => {
+            this.messageService.errorBubble('刪除失敗');
+          },
+          complete: () => {
+            this.loading = false;
+          },
+        });
+      }
+    });
+  }
+
+  getLabelFromOptions(value: any, options: any[]): string {
+    return options.find((opt) => String(opt.value) === String(value))?.label ?? String(value ?? '');
+  }
 }

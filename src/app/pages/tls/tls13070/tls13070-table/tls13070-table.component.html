@@ -1,10 +1,8 @@
-<p-table #dt [value]="totalRecords < 30 ? data : virtualData" [scrollable]="true" [dataKey]="dataKey"
-  scrollHeight="700px" [rows]="30" sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true"
+<p-table #dt [value]="virtualData.length > 0 ? virtualData : data" [scrollable]="true" [dataKey]="dataKey"
+  scrollHeight="450px" sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true"
   [reorderableColumns]="true" [loading]="isLoading" [totalRecords]="totalRecords"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" [virtualScrollItemSize]="24"
-  [lazy]="totalRecords < 30 ? false : true" [virtualScrollOptions]="{
-      delay: 50,
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [virtualScroll]="false" [loading]="loading"
+  [virtualScrollItemSize]="46" [lazy]="true" [virtualScrollDelay]="0" [virtualScrollOptions]="{
       inline: true,
       trackBy: trackByFn,
       onScroll: onScroll,
@@ -31,7 +29,7 @@
       <th class="break-word text-center" [attr.colspan]="(aps1003_D | async)?.length">比率分攤</th>
 
       <th class="break-word text-center" rowspan="3">結帳後幾天匯款</th>
-      <th class="w-10rem break-word text-center" rowspan="3">備註</th>
+      <!-- <th class="w-17rem break-word text-center" rowspan="3">備註</th> -->
     </tr>
     <tr>
       <!-- 店櫃資料 -->
@@ -101,7 +99,7 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-index="rowIndex">
-    <tr [pSelectableRow]="rowData" [style]="{'height': '24px'}" [pSelectableRowIndex]="rowIndex">
+    <tr [pSelectableRow]="rowData" [style]="{'height': '46px'}" [pSelectableRowIndex]="rowIndex">
 
       <td class="text-center" [ngStyle]="{'min-width': '20px'}" pFrozenColumn [attr.rowspan]="rowData.rowspanCount"
         *ngIf="rowData.isMainRow">
@@ -133,12 +131,15 @@
         date:'yyyy/MM/dd'}}</td>
       <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{ rowData.contract_term
         }}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.open_fees|
-        number}}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.construct_fees|
-        number}}</td>
-      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.expiration_fees|
-        number}}</td>
+      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
+        {{(rowData.open_fees ?? 0) | number}}
+      </td>
+      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
+        {{(rowData.construct_fees ?? 0) | number}}
+      </td>
+      <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
+        {{(rowData.expiration_fees ?? 0) | number}}
+      </td>
       <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">
         {{rowData.tlt_term_type_Name}}</td>
 
@@ -169,25 +170,25 @@
       <ng-container *ngFor="let item of aps1003_A | async">
         <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
           *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']] | number}}</td>
+          {{rowData.fareList[item['No']]}}</td>
       </ng-container>
       <ng-container *ngFor="let item of aps1003_B | async">
         <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
           *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']] | number}}</td>
+          {{rowData.fareList[item['No']]}}</td>
       </ng-container>
       <ng-container *ngFor="let item of aps1003_C | async">
         <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
           *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']]?.tpy_totalamt | number}}
+          {{rowData.fareList[item['No']]?.tpy_totalamt}}
         </td>
         <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
           *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']]?.month_payment | number}}
+          {{rowData.fareList[item['No']]?.month_payment}}
         </td>
         <td class="text-center" [ngStyle]="{'min-width': '42px'}" [attr.rowspan]="rowData.rowspanCount"
           *ngIf="rowData.isMainRow">
-          {{rowData.fareList[item['No']]?.down_payment | number}}
+          {{rowData.fareList[item['No']]?.down_payment}}
         </td>
       </ng-container>
       <ng-container *ngFor="let item of aps1003_D | async">
@@ -197,9 +198,9 @@
       </ng-container>
 
       <td class="text-center" [attr.rowspan]="rowData.rowspanCount" *ngIf="rowData.isMainRow">{{rowData.check_day}}</td>
-      <td class="break-word text-center" [ngStyle]="{'min-width': '150px'}" [attr.rowspan]="rowData.rowspanCount"
+      <!-- <td class="break-word text-center" [ngStyle]="{'min-width': '150px'}" [attr.rowspan]="rowData.rowspanCount"
         *ngIf="rowData.isMainRow">
-        {{rowData.tlt_remark}}</td>
+        {{rowData.tlt_remark}}</td> -->
     </tr>
   </ng-template>
   <ng-template pTemplate="summary">
@@ -208,9 +209,10 @@
     </div>
   </ng-template>
   <ng-template pTemplate="emptymessage" let-columns>
-    <tr>
+    <tr *ngIf="hasSearched">
       <td [attr.colspan]="totalColspan">
-        <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+        <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+          <i class="pi pi-search mr-2"></i>
           查無資料
         </div>
       </td>

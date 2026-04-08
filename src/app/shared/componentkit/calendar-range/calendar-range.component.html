@@ -1,28 +1,64 @@
-<div class="flex" style="height: 18px;">
-  <label class="col p-0 m-0 pr-2" [for]="startControlName">{{ label === '' ? startLabel : label + descLabel }}
+<div *ngIf="label; else dualLabel" class="flex align-items-center" style="height: 18px;">
+  <label class="col p-0 m-0 pr-2" [for]="startControlName">
+    {{ label + descLabel }}
     <span *ngIf="isRequired" class="text-red-500">*</span>
-  </label>
-  <div class="col-fixed py-0">
-    <span class="text-center"></span>
-  </div>
-  <label class="col p-0 m-0" [hidden]="label!==''" [for]="endControlName">{{ endLabel }}
-    <span *ngIf="isRequired" class="text-red-500">*</span>
+    <p-button icon="pi pi-cog" [rounded]="true" [raised]="true" size="small" styleClass="p-0 ml-1"
+      [style]="{'width': '16px','height':'16px'}" (onClick)="op.toggle($event)"
+      [disabled]="isStartDisabled || isEndDisabled" />
   </label>
 </div>
+<ng-template #dualLabel>
+  <div class="grid p-fluid mb-1">
+    <div class="col pb-0 flex align-items-center">
+      <label class="m-0" [for]="startControlName">
+        {{ startLabel }}
+        <span *ngIf="isRequired" class="text-red-500">*</span>
+        <p-button icon="pi pi-cog" [rounded]="true" [raised]="true" size="small" styleClass="p-0 ml-1"
+          [style]="{'width': '16px','height':'16px'}" (onClick)="op.toggle($event)"
+          [disabled]="isStartDisabled || isEndDisabled" />
+      </label>
+    </div>
+    <div style="width: 20px;"></div>
+    <div class="col pb-0">
+      <label class="m-0" [for]="endControlName">
+        {{ endLabel }}
+        <span *ngIf="isRequired" class="text-red-500">*</span>
+      </label>
+    </div>
+  </div>
+</ng-template>
+<p-overlayPanel #op styleClass="p-0">
+  <div class="flex flex-column gap-3">
+    <div class="flex justify-content-between align-items-center">
+      <span class="font-medium text-900 block mb-2">快速選擇</span>
+      <i class="pi pi-times text-sm cursor-pointer" (click)="op.hide()"></i>
+    </div>
+    <div class="flex flex-column gap-2">
+      <p-selectButton [options]="availableUnitOptions" [(ngModel)]="timeUnit" (ngModelChange)="onTimeUnitChange($event)"
+        optionLabel="label" optionValue="value" />
+      <p-selectButton [options]="filteredTimeRangeOptions" [(ngModel)]="timeRange"
+        (onChange)="onTimeRangeChange($event)" optionLabel="label" />
+    </div>
+  </div>
+</p-overlayPanel>
 <ng-content select="header"></ng-content>
-<div class="grid p-fluid">
-  <div class="col pb-0">
+<div class="grid p-fluid" [class]="label ? 'pt-2' : 'pt-1'">
+  <div class="col pb-0 pt-0">
     <app-calendar class="w-full" [controlName]="startControlName" [control]="startControl" [submitted]="submitted"
       [calendarType]="calendarOneType" [minDate]="startMinDate" [maxDate]="startMaxDate" [disabled]="isEndDisabled"
-      (calendarEvent)="startDateChange.emit($event)"></app-calendar>
+      (calendarEvent)="startDateChange.emit($event)" (focusout)="fixStartOfDay()"></app-calendar>
   </div>
-  <div class="flex flex-column justify-content-center align-items-center pt-3" [ngStyle]="{ 'height': '33.56px' }">
+  <div class="flex flex-column justify-content-center align-items-center pt-1" [ngStyle]="{ 'height': '33.56px' }">
     <span class="text-center" [ngStyle]="{ 'line-height': '2.8' }">~</span>
   </div>
-  <div class="col pb-0">
+  <div class="col pb-0 pt-0">
     <app-calendar class="w-full" [controlName]="endControlName" [control]="endControl" [submitted]="submitted"
-      [calendarType]="calendarOneType" [minDate]="endMinDate" [maxDate]="endMaxDate"
-      [disabled]="isEndDisabled"></app-calendar>
+      [calendarType]="calendarOneType" [minDate]="endMinDate" [maxDate]="endMaxDate" [disabled]="isEndDisabled"
+      (calendarEvent)="endDateChange.emit($event)" (focusout)="fixEndOfDay()"></app-calendar>
   </div>
 </div>
 <ng-content select="footer"></ng-content>
+
+<small *ngIf="helpMsg || showErrorMessage" [id]="controlName">
+  {{helpMsg}}
+</small>

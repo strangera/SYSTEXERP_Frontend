@@ -1,0 +1,48 @@
+<!-- 抽成設定表格 -->
+<p-accordion class="mt-2">
+  <p-accordionTab [header]="headerText" [selected]="true">
+    <!-- 載入中或無資料提示 -->
+    <ng-container *ngIf="!dataLoaded">
+      <div class="text-center p-5 surface-ground border-round">
+        <i class="pi pi-spin pi-spinner text-2xl mb-2 block"></i>
+        <span>載入中...</span>
+      </div>
+    </ng-container>
+
+    <!-- 表格內容 -->
+    <ng-container *ngIf="dataLoaded">
+      <app-expandable-edit-table
+        [data]="visibleCommissionData"
+        [mainColumns]="commissionColumns"
+        [showHeaderInExpansion]="true"
+        [showColumnToggle]="true"
+        [detailKey]="'detailItems'"
+        [dataKey]="'id'"
+        [showPaginator]="false"
+        [showCheckBox]="!isViewMode"
+        [showDetailTabs]="true"
+        [detailTabOptions]="settingTabs"
+        [defaultDetailTab]="defaultDetailTab"
+        [detailColumnsMap]="detailColumnsMap"
+        [emptyMessage]="'尚未設定抽成項目，請點擊新增按鈕開始設定'"
+        [autoAddRowOnTab]="true"
+        [autoAddDetailRowOnTab]="true"
+        [forceEditMode]="!isViewMode"
+        [showAddButton]="!isViewMode"
+        [showBatchDelete]="!isViewMode"
+        [showDetailAddButton]="!isViewMode"
+        [showDetailBatchDelete]="!isViewMode"
+        [showActionColumn]="false"
+        [showDetailActionColumn]="false"
+        (fieldChange)="onFieldChange($event)"
+        (detailFieldChange)="onDetailFieldChange($event)"
+        (detailTabChange)="onDetailTabChange($event)"
+        (addMainItem)="onAddMainItem()"
+        (addDetailItem)="onAddDetailItem($event)"
+        (batchDelete)="onBatchDelete($event)"
+        (detailBatchDelete)="onDetailBatchDelete($event)"
+        (detailButtonClick)="onDetailButtonClick($event)"
+      ></app-expandable-edit-table>
+    </ng-container>
+  </p-accordionTab>
+</p-accordion>

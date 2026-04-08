@@ -1,7 +1,8 @@
-<label *ngIf="label" [for]="endControl" class="flex align-content-center gap-1">{{ label }}(起迄)
+<label *ngIf="label" [for]="endControl" class="flex align-content-center gap-1">
+  {{ label }}{{ descLabel }}
   <span *ngIf="isRequired" class="text-red-500">*</span>
   <p-button icon="pi pi-cog" [rounded]="true" [raised]="true" size="small" styleClass="p-0"
-    [style]="{'width': '1.3rem','height':'1.3rem'}" (onClick)="op.toggle($event)"
+    [style]="{'width': '16px','height':'16px'}" (onClick)="op.toggle($event)"
     [disabled]="startControl.disabled || endControl.disabled" />
 </label>
 <p-overlayPanel #op styleClass="p-0">
@@ -29,7 +30,7 @@
     <p-calendar [formControl]="startControl" [placeholder]="startControl.disabled ? '' : placeholder"
       [timeOnly]="timeOnly" [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view"
       [ngClass]="{'ng-invalid ng-dirty': submitted && startControl.errors}" [showIcon]="!startControl.disabled"
-      [iconDisplay]="'input'" [appendTo]="'body'" (onInput)="onInput($event)">
+      [iconDisplay]="'input'" [appendTo]="'body'" (onInput)="onInput($event)" (keydown.enter)="$event.preventDefault()">
       <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
         <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
         <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
@@ -49,7 +50,8 @@
     <p-calendar [formControl]="endControl" [placeholder]="endControl.disabled ? '' : placeholder2" [timeOnly]="timeOnly"
       [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view" [iconDisplay]="'input'"
       [ngClass]="{'ng-invalid ng-dirty': submitted && endControl.errors}" [showIcon]="!endControl.disabled"
-      [appendTo]="'body'" (onInput)="onInput($event)">
+      [appendTo]="'body'" (onInput)="onInput($event)" (keydown.enter)="$event.preventDefault()"
+      (onBlur)="fixEndOfDay()">
       <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
         <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
         <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>

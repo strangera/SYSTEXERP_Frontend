@@ -1,25 +1,24 @@
-import { saveAs } from 'file-saver';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownModule } from 'primeng/dropdown';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { Tls2A050Service } from 'src/app/service/api/tls/tls2a050.service';
-import { ColumnGroup } from 'src/app/shared/componentkit/table/table.model';
-import { ButtonModule } from 'primeng/button';
-import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
-import { yesterday } from '@shared/models/system/query-form.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ColumnGroup, ReportColumn, formatAmount, formatDate as reportFormatYMD } from '@shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { formatAmount } from '@shared/componentkit/table2/table2.model';
-import { HttpResponse } from '@angular/common/http';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { saveAs } from 'file-saver';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { DropdownModule } from 'primeng/dropdown';
+import { finalize, map } from 'rxjs';
+import { Tls2A050Service } from 'src/app/service/api/tls/tls2a050.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-tls2a050',
@@ -35,18 +34,21 @@ import { HttpResponse } from '@angular/common/http';
     CalendarRangeComponent,
     DropdownModule,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     ButtonModule,
     MultiSelectComponent
   ],
 })
 export class TLS2A050Component extends BasicQueryPageComponent<any> implements OnInit {
+  // 總計列型別：key 為欄位名稱，value 為數值或顯示文字
+  private static readonly emptyFooter: Record<string, number | string | null> = { TXN_Date: null };
+
   formatDate(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    return `${year}/${month}/${day}`;
   }
 
   queryForm = this.formBuilder.group({
@@ -67,9 +69,11 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
 
   salesMinDate: Date | null = null;
   salesMaxDate: Date | null = null;
-  columns: any[] = [];
+  columns: ReportColumn[] = [];
   columnGroup: ColumnGroup[] = [];
-  sumData: any = {};   // 🔹 新增: 存放後端的總計資料
+  sumData: Record<string, number> = {};   // 存放後端的總計資料
+  footerData: Record<string, number | string | null> | null = null; // app-table-report 總計列資料
+  lastQueryBody: any = null; // 給 app-table-report lazy 載入使用
   exportExcelLoading = false;
 
   constructor(
@@ -99,13 +103,20 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const raw = frm.value;
+      // 儲存查詢條件給 app-table-report 做 lazy 載入
+      this.lastQueryBody = {
+        ...raw,
+        pageIndex: 1,
+        pageSize: raw.pageSize ?? 30,
+      };
+
       const params = {
-        PageSize: raw.pageSize ?? 20,
-        PageIndex: raw.pageIndex ?? 1,
-        SortBy: raw.SortBy ?? [],
-        TXN_DateStart: raw.TXN_DateStart ? this.formatDate(raw.TXN_DateStart) : null,
-        TXN_DateEnd: raw.TXN_DateEnd ? this.formatDate(raw.TXN_DateEnd) : null,
-        POS_TypeList: raw.POS_TypeList?.includes('all') ? [] : raw.POS_TypeList
+        PageSize: this.lastQueryBody.pageSize,
+        PageIndex: this.lastQueryBody.pageIndex,
+        SortBy: this.lastQueryBody.SortBy ?? [],
+        TXN_DateStart: this.lastQueryBody.TXN_DateStart ? this.formatDate(this.lastQueryBody.TXN_DateStart) : null,
+        TXN_DateEnd: this.lastQueryBody.TXN_DateEnd ? this.formatDate(this.lastQueryBody.TXN_DateEnd) : null,
+        POS_TypeList: this.lastQueryBody.POS_TypeList?.includes('all') ? [] : this.lastQueryBody.POS_TypeList
       };
 
       this.tls2A050Service.queryTLS2A050(params).pipe(
@@ -113,50 +124,17 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
         finalize(() => this.loading = false)
       ).subscribe({
         next: (res) => {
-          const flatData: any[] = [];
-          const payNameSet = new Set<string>();
+          const { flatData, payNames } = this.buildFlatData(res);
+          const { columns, columnGroup } = this.buildColumnsAndGroups(payNames);
 
-          (res.Data?.QueryData ?? []).forEach((entry: any) => {
-            const row: any = { TXN_Date: entry.TXN_Date };
-
-            (entry._DetailList ?? []).forEach((detail: any, index: number) => {
-              const name = detail.PAY_Name;
-              payNameSet.add(name);
-              const formattedAmt = formatAmount(detail.OVER_PayAmt);
-              row[`${index}_BOOK_PayCnt`] = detail.BOOK_PayCnt;
-              row[`${index}_ACT_PayCnt`] = detail.ACT_PayCnt;
-              row[`${index}_BOOK_PayAmt`] = detail.BOOK_PayAmt;
-              row[`${index}_ACT_PayAmt`] = detail.ACT_PayAmt;
-              row[`${index}_OVER_PayAmt`] =
-                detail.OVER_PayAmt !== 0
-                  ? `<span class="OVER_PayAmt_RED">${formattedAmt}</span>`
-                  : `<span>${formattedAmt}</span>`;
-            });
-
-            flatData.push(row);
-          });
-          const payNames = Array.from(payNameSet);
-          const columns: any[] = [{ field: 'TXN_Date', header: '交易日期', visible: true }];
-          const columnGroup: ColumnGroup[] = [];
-
-          payNames.forEach((name, index) => {
-            columns.push(
-              { field: `${index}_BOOK_PayCnt`, header: '系統筆數', visible: true, groupField: name, format: formatAmount },
-              { field: `${index}_ACT_PayCnt`, header: '實收筆數', visible: true, groupField: name, format: formatAmount },
-              { field: `${index}_BOOK_PayAmt`, header: '系統金額', visible: true, groupField: name, format: formatAmount },
-              { field: `${index}_ACT_PayAmt`, header: '實收金額', visible: true, groupField: name, format: formatAmount },
-              {
-                field: `${index}_OVER_PayAmt`, header: '帳差 (實收-系統)', visible: true, groupField: name, htmlFormat: true,
-              },
-            );
-            columnGroup.push({ field: name, header: `[${name}] 行動支付` });
-          });
-
-          this.columns = [...columns];
+          this.columns = columns;
           this.columnGroup = columnGroup;
           this.data = flatData;
 
           this.sumData = res.Data?.SumData ?? {};
+
+          // 依照動態欄位與 SumData 建立總計列資料，給 app-table-report 顯示 footer
+          this.footerData = this.buildFooterData(payNames, this.sumData);
 
           this.totalRecords = res.TotalCount ?? 0;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -164,6 +142,123 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
       });
     });
   }
+
+  /**
+   * 將後端回傳的 QueryData 攤平成 table-report 需要的 flat 資料 + 支付名稱清單
+   */
+  private buildFlatData(res: any): { flatData: any[]; payNames: string[] } {
+    const flatData: any[] = [];
+    const payNameSet = new Set<string>();
+
+    (res.Data?.QueryData ?? []).forEach((entry: any) => {
+      const row: any = { TXN_Date: entry.TXN_Date };
+
+      (entry._DetailList ?? []).forEach((detail: any, index: number) => {
+        const name = detail.PAY_Name;
+        payNameSet.add(name);
+        const formattedAmt = formatAmount(detail.OVER_PayAmt);
+        row[`${index}_BOOK_PayCnt`] = detail.BOOK_PayCnt;
+        row[`${index}_ACT_PayCnt`] = detail.ACT_PayCnt;
+        row[`${index}_BOOK_PayAmt`] = detail.BOOK_PayAmt;
+        row[`${index}_ACT_PayAmt`] = detail.ACT_PayAmt;
+        row[`${index}_OVER_PayAmt`] =
+          detail.OVER_PayAmt !== 0
+            ? `<span class="OVER_PayAmt_RED">${formattedAmt}</span>`
+            : `<span>${formattedAmt}</span>`;
+      });
+
+      flatData.push(row);
+    });
+
+    const payNames = Array.from(payNameSet);
+    return { flatData, payNames };
+  }
+
+  /**
+   * 依支付名稱清單建立動態欄位與群組表頭
+   */
+  private buildColumnsAndGroups(payNames: string[]): { columns: ReportColumn[]; columnGroup: ColumnGroup[] } {
+    const columns: ReportColumn[] = [{ field: 'TXN_Date', header: '交易日期', visible: true, format: reportFormatYMD }];
+    const columnGroup: ColumnGroup[] = [];
+
+    payNames.forEach((name, index) => {
+      columns.push(
+        { field: `${index}_BOOK_PayCnt`, header: '系統筆數', visible: true, groupField: name, format: formatAmount, align: 'right' },
+        { field: `${index}_ACT_PayCnt`, header: '實收筆數', visible: true, groupField: name, format: formatAmount, align: 'right' },
+        { field: `${index}_BOOK_PayAmt`, header: '系統金額', visible: true, groupField: name, format: formatAmount, align: 'right' },
+        { field: `${index}_ACT_PayAmt`, header: '實收金額', visible: true, groupField: name, format: formatAmount, align: 'right' },
+        {
+          field: `${index}_OVER_PayAmt`,
+          header: '帳差 (實收-系統)',
+          visible: true,
+          groupField: name,
+          format: formatAmount,
+          align: 'right',
+          type: 'html',
+        },
+      );
+      columnGroup.push({ field: name, header: `[${name}] 行動支付` });
+    });
+
+    return { columns, columnGroup };
+  }
+
+  /**
+   * 將後端回傳的 SumData 轉成 app-table-report 需要的 footerData 結構
+   * key 需對應到 columns 裡的 field
+   */
+  private buildFooterData(payNames: string[], sumData: Record<string, number>): Record<string, number | string | null> | null {
+    if (!sumData) {
+      return null;
+    }
+
+    const footer: Record<string, number | string | null> = { ...TLS2A050Component.emptyFooter };
+
+    payNames.forEach((name, index) => {
+      footer[`${index}_BOOK_PayCnt`] = sumData[`BOOK_PayCnt_${name}`] ?? 0;
+      footer[`${index}_ACT_PayCnt`] = sumData[`ACT_PayCnt_${name}`] ?? 0;
+      footer[`${index}_BOOK_PayAmt`] = sumData[`BOOK_PayAmt_${name}`] ?? 0;
+      footer[`${index}_ACT_PayAmt`] = sumData[`ACT_PayAmt_${name}`] ?? 0;
+      footer[`${index}_OVER_PayAmt`] = sumData[`OVER_PayAmt_${name}`] ?? 0;
+    });
+
+    return footer;
+  }
+
+  /**
+   * 給 app-table-report 做 lazy 載入 / 重新排序 使用的查詢函式
+   */
+  public queryTLS2A050ForReport = (body: any) =>
+    this.tls2A050Service
+      .queryTLS2A050({
+        PageSize: body.pageSize ?? 30,
+        PageIndex: body.pageIndex ?? 1,
+        SortBy: body.SortBy ?? [],
+        TXN_DateStart: body.TXN_DateStart ? this.formatDate(body.TXN_DateStart) : null,
+        TXN_DateEnd: body.TXN_DateEnd ? this.formatDate(body.TXN_DateEnd) : null,
+        POS_TypeList: body.POS_TypeList?.includes('all') ? [] : body.POS_TypeList
+      })
+      .pipe(
+        map((res) => {
+          const { flatData, payNames } = this.buildFlatData(res);
+          const totalCount = res.TotalCount ?? flatData.length;
+
+          // 只有第一頁時更新 columns / footerData，避免無限捲動時一直重算
+          const isFirstPage = !body?.pageIndex || Number(body.pageIndex) === 1;
+          if (isFirstPage) {
+            const { columns, columnGroup } = this.buildColumnsAndGroups(payNames);
+            this.columns = columns;
+            this.columnGroup = columnGroup;
+            this.sumData = res.Data?.SumData ?? {};
+            this.footerData = this.buildFooterData(payNames, this.sumData);
+          }
+
+          return {
+            Data: flatData,
+            TotalCount: totalCount,
+          };
+        })
+      );
 
 
   exportReport = () => {
@@ -184,10 +279,10 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
       queryTLS2A050Request: {
         ...raw,
         TXN_DateStart: raw.TXN_DateStart
-          ? `${raw.TXN_DateStart.getFullYear()}-${(raw.TXN_DateStart.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateStart.getDate().toString().padStart(2, '0')}`
+          ? `${raw.TXN_DateStart.getFullYear()}/${(raw.TXN_DateStart.getMonth() + 1).toString().padStart(2, '0')}/${raw.TXN_DateStart.getDate().toString().padStart(2, '0')}`
           : null,
         TXN_DateEnd: raw.TXN_DateEnd
-          ? `${raw.TXN_DateEnd.getFullYear()}-${(raw.TXN_DateEnd.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateEnd.getDate().toString().padStart(2, '0')}`
+          ? `${raw.TXN_DateEnd.getFullYear()}/${(raw.TXN_DateEnd.getMonth() + 1).toString().padStart(2, '0')}/${raw.TXN_DateEnd.getDate().toString().padStart(2, '0')}`
           : null,
       },
     }

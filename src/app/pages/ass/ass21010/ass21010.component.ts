@@ -19,7 +19,6 @@ import { ASS2100ENGMeterType, ASS21010Data, ASS21010Payload, EngType } from './a
 @Component({
   selector: 'app-ass21010',
   templateUrl: './ass21010.component.html',
-  styleUrl: './ass21010.component.scss',
   standalone: true,
   imports: [
     AccordionModule,
@@ -81,11 +80,8 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
   }, { allowSignalWrites: !0 });
 
   public readonly loadingEffect = effect(() => {
-    this.loading = this.tableLoading()
-      || this.service.engMeterNoLoading()
-      || this.service.locationLoading()
-      || this.service.exportLoading();
-  });
+    this.loading = this.tableLoading() || this.service.exportLoading();
+  }, { allowSignalWrites: true });
 
   public readonly columns: (Omit<Column, 'field'> & { field: keyof ASS21010Data; exportFormat?: unknown[]; })[] = [
     {
@@ -141,20 +137,25 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
   }
 
   public onDelete(data: ASS21010Data[]): void {
-    this.logger.debug(`Deleting ASS21010:`, [data, this.user, this.queryForm.getRawValue(), this.usrData()]);
-    this.tableLoading.set(!0);
-    for (let i = 0; i < data.length; i++) {
-      this.service.deleteASS21010({ ...data[i], ...this.usrData() }).pipe(
-      ).subscribe({
-        next: res => {
-          if (res.Status !== '0000') return;
-          this.tableData.update(table =>
-            table.filter(value => data.some(item => value.ID !== item.ID)));
-          this.messageService.successBubble('刪除成功');
-        },
-      });
-      if (i === data.length - 1) this.onSubmit();
-    }
+    this.messageService.confirm({
+      header: `是否確認刪除 ${data.length} 筆資料?`,
+      accept: () => {
+        this.logger.debug(`Deleting ASS21010:`, [data, this.user, this.queryForm.getRawValue(), this.usrData()]);
+        this.tableLoading.set(!0);
+        for (let i = 0; i < data.length; i++) {
+          this.service.deleteASS21010({ ...data[i], ...this.usrData() }).pipe(
+          ).subscribe({
+            next: res => {
+              if (res.Status !== '0000') return;
+              this.tableData.update(table =>
+                table.filter(value => data.some(item => value.ID !== item.ID)));
+              this.messageService.successBubble('刪除成功');
+            },
+          });
+          if (i === data.length - 1) this.onSubmit();
+        }
+      }
+    });
   }
 
   public onExport(type: string): void {

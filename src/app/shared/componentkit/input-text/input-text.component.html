@@ -19,7 +19,7 @@
           (errorForGroup && control.parent?.errors),
       }" pInputText [attr.aria-label]="label || placeholder" [title]="label || placeholder"
       (compositionstart)="onCompositionStart()" (compositionend)="onCompositionEnd($event)" (input)="onInput($event)"
-      (blur)="onBlur($event)" [pKeyFilter]="keyFilter" />
+      (blur)="onBlur($event)" (keydown.enter)="$event.preventDefault()" [pKeyFilter]="keyFilter" />
   </ng-container>
 
   <ng-template #starredInput>
@@ -35,3 +35,6 @@
 
 <app-control-messages [hidden]="!showErrorMessage" [onerror]="submitted || (control.touched && control.invalid)"
   [control]="control" [errorForGroup]="errorForGroup"></app-control-messages>
+<small *ngIf="helpMsg || showErrorMessage" [id]="controlName">
+  {{helpMsg}}
+</small>

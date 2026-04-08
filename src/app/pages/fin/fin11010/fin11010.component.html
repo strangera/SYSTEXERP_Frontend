@@ -43,10 +43,21 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="FIN11010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showDelete]="false"
-    [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{field: 'REP_BegGUIYM', order: 1}]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [addButton]="addButton" [buttonsLoading]="btnLoading" [editDisabled]="editDisabled">
-  </app-table>
+  <div class="col-12">
+    <app-table-report [data]="data"
+                      dataKey="id"
+                      tableKey="FIN11010"
+                      [columns]="columns"
+                      [totalRecords]="totalRecords"
+                      [loading]="loading"
+                      [lastQueryBody]="lastQueryBody"
+                      [queryFunction]="queryFunction"
+                      [showCheckBox]="false"
+                      [showDelete]="false"
+                      (edit)="onEdit($event)"
+                      (detail)="onDetail($event)"
+                      [addButton]="addButton"
+                      [buttonsLoading]="btnLoading"
+                      [editDisabled]="editDisabled"></app-table-report>
+  </div>
 </div>

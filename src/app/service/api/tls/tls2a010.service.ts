@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -17,10 +17,7 @@ export class Tls2a010Service {
       map(res => {
         if (res?.Data?.mainData) {
           res.footerData = res?.Data?.totalData ? res.Data.totalData[0] : {};
-          res.Data = res.Data.mainData.map((item: any) => ({
-            ...item,
-            OVER_Status: item.OVER_PayAmt
-          }));
+          res.Data = res.Data.mainData;
         }
         console.log('queryTLS2A010 處理後的 res:', res);
         return res; // 保持原結構，只改 Data.mainData
@@ -45,5 +42,12 @@ export class Tls2a010Service {
   }
   updateModPayAmt(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateModPayAmt`, data);
+  }
+
+  exportTLS2A010Excel(data: any): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS2A010Excel`, data, {
+      responseType: 'blob',
+      observe: 'response'
+    });
   }
 }

@@ -1,131 +1,76 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo"
-                 class="flex-1"></app-menubar>
-    <app-button btnType="back"
-                (click)="onCancel()"></app-button>
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-  <p-panel [header]="formTitle | translate"
-           class="line-height-3 m-0">
-    <form [formGroup]="dataForm"
-          id="dataForm"
-          (ngSubmit)="onSubmit()">
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 lg:col-4"
-                        label="科目代號"
-                        controlName="AccNo"
-                        [control]="df().AccNo"
-                        [keyFilter]="service.accNoFilter"
-                        [submitted]="submitted"></app-input-text>
+        <div class="col-12 md:col-6 lg:col-4">
+          <label [for]="isFormCreateable ? 'AccNoPrefix' : 'AccNo'">
+            科目代號
+            <span class="text-red-500">*</span>
+          </label>
+          @if (isFormCreateable) {
+          <app-input-text label="科目代號" controlName="AccNo" [control]="df().AccNo" [keyFilter]="accNoFilter"
+                [submitted]="submitted" [showLabel]="false" [showErrorMessage]="true"></app-input-text>
+          @if (accNoExists()) {
+            <small class="p-error">科目代號已存在</small>
+          }
+          } @else {
+          <!-- 編輯/檢視模式：只顯示一個欄位（AccNo） -->
+          <app-input-text controlName="AccNo" [control]="df().AccNo" [submitted]="submitted" [showLabel]="false"
+            [showErrorMessage]="true" [readonly]="!isFormReadable"></app-input-text>
+          }
+        </div>
 
-        <app-input-text class="col-12 md:col-6 lg:col-4"
-                        label="科目名稱"
-                        controlName="AccCname"
-                        [control]="df().AccCname"
-                        [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="科目名稱" controlName="AccCName" [control]="df().AccCName"
+          [submitted]="submitted"></app-input-text>
 
-        <app-input-text class="col-12 md:col-6 lg:col-4"
-                        label="科目英文名稱"
-                        controlName="AccEname"
-                        [control]="df().AccEname"
-                        [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="科目英文名稱" controlName="AccEName" [control]="df().AccEName"
+          [submitted]="submitted"></app-input-text>
 
-        <app-dropdown class="col-12 md:col-6 lg:col-4"
-                      label="借/貸"
-                      controlName="AccDC"
-                      [options]="service.accDCOption"
-                      optionLabel="label"
-                      optionValue="value"
-                      [showClear]="false"
-                      [control]="df().AccDC"
-                      [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="借/貸" controlName="AccDC" [options]="service.accDCOption"
+          optionLabel="label" optionValue="value" [showClear]="false" [control]="df().AccDC"
+          [submitted]="submitted"></app-dropdown>
 
-        <app-dropdown class="col-12 md:col-6 lg:col-4"
-                      label="統制/明細"
-                      controlName="Ledger_MD"
-                      [options]="service.ledgerMDOption"
-                      optionLabel="label"
-                      optionValue="value"
-                      [showClear]="false"
-                      [control]="df().Ledger_MD"
-                      [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="統制/明細" controlName="Ledger_MD"
+          [options]="service.ledgerMDOption" optionLabel="label" optionValue="value" [showClear]="false"
+          [control]="df().Ledger_MD" [submitted]="submitted"></app-dropdown>
 
-        <app-dropdown class="col-12 md:col-6 lg:col-4"
-                      label="三碼代號"
-                      controlName="ClassNo"
-                      [options]="service.classNoOptions()"
-                      optionLabel="ClassCName"
-                      optionValue="ClassNo"
-                      [showClear]="false"
-                      [loading]="service.classNoLoading()"
-                      [control]="df().ClassNo"
-                      [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="三碼代號" controlName="ClassNo"
+          [options]="service.classNoOptions()" optionLabel="label" optionValue="value" [showClear]="false"
+          [loading]="service.classNoLoading()" [control]="df().ClassNo" [submitted]="submitted"
+          [readonly]="isFormEditable"></app-dropdown>
 
-        <app-dropdown class="col-12 md:col-6 lg:col-4"
-                      label="是否為沖帳代號"
-                      controlName="ABAT_YN"
-                      [options]="service.whetherOption"
-                      optionLabel="label"
-                      optionValue="value"
-                      [showClear]="false"
-                      [control]="df().ABAT_YN"
-                      [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否為沖帳代號" controlName="ABAT_YN"
+          [options]="service.whetherOption" optionLabel="label" optionValue="value" [showClear]="false"
+          [control]="df().ABAT_YN" [submitted]="submitted"></app-dropdown>
 
-        <app-dropdown class="col-12 md:col-6 lg:col-4"
-                      label="傳票格式"
-                      controlName="Voucher_Type"
-                      [options]="service.voucherTypeOption"
-                      optionLabel="label"
-                      optionValue="value"
-                      [showClear]="false"
-                      [control]="df().Voucher_Type"
-                      [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="傳票格式" controlName="Voucher_Type"
+          [options]="service.voucherTypeOption" optionLabel="label" optionValue="value" [showClear]="false"
+          [control]="df().Voucher_Type" [submitted]="submitted"></app-dropdown>
 
-        <app-dropdown class="col-12 md:col-6 lg:col-4"
-                      label="是否為預算科目"
-                      controlName="Budget_YN"
-                      [options]="service.whetherOption"
-                      optionLabel="label"
-                      optionValue="value"
-                      [showClear]="false"
-                      [control]="df().Budget_YN"
-                      [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否為預算科目" controlName="Budget_YN"
+          [options]="service.whetherOption" optionLabel="label" optionValue="value" [showClear]="false"
+          [control]="df().Budget_YN" [submitted]="submitted"></app-dropdown>
 
-        <app-dropdown class="col-12 md:col-6 lg:col-4"
-                      label="是否設定部門代號"
-                      controlName="Org_YN"
-                      [options]="service.whetherOption"
-                      optionLabel="label"
-                      optionValue="value"
-                      [showClear]="false"
-                      [control]="df().Org_YN"
-                      [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否設定部門代號" controlName="Org_YN"
+          [options]="service.whetherOption" optionLabel="label" optionValue="value" [showClear]="false"
+          [control]="df().Org_YN" [submitted]="submitted"></app-dropdown>
 
-        <app-dropdown class="col-12 md:col-6 lg:col-4"
-                      label="是否可輸"
-                      controlName="Input_YN"
-                      [options]="service.whetherOption"
-                      optionLabel="label"
-                      optionValue="value"
-                      [showClear]="false"
-                      [control]="df().Input_YN"
-                      [submitted]="submitted"></app-dropdown>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否可輸" controlName="Input_YN"
+          [options]="service.whetherOption" optionLabel="label" optionValue="value" [showClear]="false"
+          [control]="df().Input_YN" [submitted]="submitted"></app-dropdown>
       </div>
       @if (!isFormReadable) {
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-tree-dropdown [members]="FIN52080Tree()"
-                           [Columns]="service.TreeElements.treeColumn"
-                           [LeaveColumnLabel]="service.TreeElements.LeaveLabel"
-                           (confirmSelected)="onLevelSelected($event)"
-                           [SelectbleCheckBox]="!1"
-                           [card]="!1"
-                           [loading]="treeLoading()"
-                           [listTitle]="service.TreeElements.listTitle"></app-tree-dropdown>
-        <app-button btnType="cancel"
-                    [form]="dataForm"></app-button>
-        <app-button btnType="submit"
-                    [loading]="loading"
-                    [disabled]="dataForm.invalid"></app-button>
+        <app-tree-dropdown [members]="FIN52080Tree()" [Columns]="treeElements.treeColumn"
+          [LeaveColumnLabel]="treeElements.leaveLabel" [listTitle]="treeElements.listTitle" [viewButtonLabel]="treeElements.viewButtonLabel"
+          (confirmSelected)="onLevelSelected($event)" [SelectbleCheckBox]="!1" [card]="!1"
+          [loading]="treeLoading()"></app-tree-dropdown>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
       }
     </form>

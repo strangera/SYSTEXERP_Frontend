@@ -1,0 +1,155 @@
+<p-table #dt [columns]="columns" [value]="data" [scrollable]="true" [dataKey]="dataKey" scrollHeight="85vh"
+  sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true" [reorderableColumns]="true"
+  (onColReorder)="onColReorder($event)" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
+  [loading]="loading" rowGroupMode="subheader" [groupRowsBy]="groupRowsBy">
+
+  <ng-template pTemplate="header" let-columns>
+    <ng-container *ngIf="columnGroup && columnGroup.length > 0">
+      <tr>
+        <ng-container *ngFor="let col of columns; let i = index">
+          <!-- 如果是第一次出現這個群組 -->
+          <ng-container *ngIf="tableUtility.shouldRenderGroupHeader(col, i, columns)">
+            <th [attr.colspan]="tableUtility.getColumnSpan(columns, col.groupField!)" class="group-header text-center"
+              pReorderableColumn pResizableColumn>
+              {{ getGroupHeader(col.groupField!) }}
+            </th>
+          </ng-container>
+          <!-- 如果是沒群組的欄位 -->
+          <ng-container *ngIf="!col.groupField">
+            <th rowspan="2" class="text-center" pResizableColumn [pSortableColumn]="col.sortField ?? col.field"
+              [pSortableColumnDisabled]="col.showSort === false" pFrozenColumn [frozen]="!!col.frozen"
+              [alignFrozen]="col.alignFrozen || 'right'">
+              {{ col.header }}
+              <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.sortField ?? col.field" />
+            </th>
+          </ng-container>
+        </ng-container>
+      </tr>
+      <!-- 第二層：實際欄位標題 -->
+      <tr>
+        <ng-container *ngFor="let col of columns">
+          <th *ngIf="col.groupField" class="text-center" pReorderableColumn pResizableColumn [pSortableColumn]="
+             col.sortField ?? col.field
+            " [pSortableColumnDisabled]="col.showSort === false" style="min-width: 55px">
+            {{ col.header }}
+            <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.field" />
+          </th>
+        </ng-container>
+      </tr>
+    </ng-container>
+    <!-- 非群組表頭 -->
+    <ng-container *ngIf="!columnGroup?.length">
+      <tr>
+        <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
+          [pSortableColumn]="col.sortField ?? col.field" [pSortableColumnDisabled]="col.showSort === false"
+          class="text-center wrap-header" style="min-width: 55px">
+          {{ col.header }}
+          <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.field" />
+        </th>
+      </tr>
+    </ng-container>
+  </ng-template>
+
+  <ng-template pTemplate="groupheader" let-rowData>
+    <tr pRowGroupHeader class="bg-bluegray-50">
+      <td [attr.colspan]="columns.length" class="py-3">
+        <span class="font-bold text-xl text-bluegray-800">[{{rowData.ItemTitle}}]</span>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="groupfooter" let-rowData>
+    <tr class="font-semibold bg-gray-50">
+      <td *ngFor="let col of columns"
+        [ngStyle]="{'text-align': col.align || 'center', 'border-top': '2px solid #3b82f6'}" class="py-2">
+
+        <ng-container *ngIf="col.isSubTotal; else otherCell">
+          <span class="text-blue-700 font-bold">
+            {{ getGroupSubtotal(rowData, col) }}
+          </span>
+        </ng-container>
+
+        <ng-template #otherCell>
+          <span *ngIf="col.field === 'AccNo'" class="text-600 italic">
+            {{ rowData.ItemTitle }} 合計：
+          </span>
+        </ng-template>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns">
+    <tr *ngIf="shouldShowClassRow(data, rowIndex)" class="bg-white">
+      <td [attr.colspan]="columns.length" class="py-2 pl-4 border-bottom-1 border-gray-100">
+        <div class="flex align-items-center">
+          <span class="font-bold text-700" style="color: #495057;">
+            {{ rowData.ClassCName }}
+          </span>
+        </div>
+      </td>
+    </tr>
+
+    <tr [style]="{ height: '28px' }">
+      <ng-container *ngFor="let col of columns">
+        <td *ngIf="col.field === 'AccNo' || col.field === 'AccCName'; else regularCell"
+          [ngStyle]="{'text-align': col.align ? col.align : 'center'}" class="report-link"
+          (click)="openDetail(rowData)">
+          {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+        </td>
+        <ng-template #regularCell>
+          <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}">
+            {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+          </td>
+        </ng-template>
+      </ng-container>
+    </tr>
+    <tr *ngIf="shouldShowClassFooter(data, rowIndex)" class="bg-blue-50/30">
+      <td *ngFor="let col of columns" class="py-1"
+        [ngStyle]="{'text-align': col.align || 'center', 'border-top': col.isSubTotal ? '1px solid #93c5fd' : ''}">
+
+        <span *ngIf="col.field === 'AccNo'" class="text-500 text-sm font-medium italic pl-4">
+          {{ rowData.ClassCName }} 合計
+        </span>
+
+        <span *ngIf="col.isSubTotal" class="font-bold text-blue-600">
+          <ng-container [ngSwitch]="col.field">
+
+            <ng-container *ngSwitchCase="'DiffPct'">
+              {{ col.format ? col.format(calculateClassDiffPct(data, rowIndex)) : (calculateClassDiffPct(data, rowIndex)
+              | number:'1.2-2') }}
+            </ng-container>
+
+            <ng-container *ngSwitchDefault>
+              {{ col.format ? col.format(calculateClassTotal(data, rowIndex, col.field)) : (calculateClassTotal(data,
+              rowIndex, col.field) | number:'1.0-0') }}
+            </ng-container>
+
+          </ng-container>
+        </span>
+      </td>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="footer" let-columns>
+    <tr *ngIf="footerData" class="bg-bluegray-700 text-white font-bold border-top-2 border-bluegray-900">
+      <ng-container *ngFor="let col of columns">
+        <td [ngStyle]="{'text-align': col.align || 'center'}" class="py-3">
+          <span>
+            {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }}
+          </span>
+        </td>
+      </ng-container>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="columns.length">
+        <div class="flex flex-column justify-content-center align-items-center p-5 text-400">
+          <i class="pi pi-search text-4xl mb-2"></i>
+          <span class="font-bold text-xl">目前查無報表資料</span>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

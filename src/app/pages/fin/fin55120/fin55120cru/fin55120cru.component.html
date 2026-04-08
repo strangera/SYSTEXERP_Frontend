@@ -1,0 +1,35 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1" />
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <div class="grid p-fluid">
+      <ng-container *ngFor="let data of dataList">
+        <div class="flex flex-column gap-2 p-2">
+          <span class="font-bold text-500">
+            日期 : {{ dateFrom | date: 'yyyy/MM/dd' }} ~ {{ dateTo | date: 'yyyy/MM/dd' }}
+          </span>
+          <span class="text-600">部門別: 全部</span>
+          <span class="font-bold">會計科目: {{ data.AccNo }} {{ data.AccCName }}</span>
+        </div>
+        <app-table-report *ngIf="data.displayDetails && data.displayDetails.length > 0; else simpleTable" class="col-12"
+          [columns]="columns" [loading]="loading" [showCaption]="false" [showManage]="false"
+          (linkClick)="onCellLinkClick($event)" [data]="data.displayDetails" [footerData]="data.lastDetail"
+          [totalRecords]="data.displayDetails.length">
+        </app-table-report>
+        <ng-template #simpleTable>
+          <app-table-report class="col-12" [columns]="columns" [loading]="loading" [data]="data._Details"
+            [showCaption]="false" [showManage]="false" [totalRecords]="0">
+          </app-table-report>
+        </ng-template>
+      </ng-container>
+      <div *ngIf="dataList.length === 0 && !loading" class="col-12 text-center p-5 text-500">
+        <i class="pi pi-info-circle"></i> 此區間無明細資料
+      </div>
+      <div class="col-12 flex justify-content-center">
+        <p-progressSpinner *ngIf="loading" ariaLabel="loading" />
+      </div>
+    </div>
+  </p-panel>
+</div>

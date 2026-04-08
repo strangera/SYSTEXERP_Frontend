@@ -1,27 +1,29 @@
-import { ExcelColumn, ExcelExportService } from './../../../shared/service/excel-export.service';
+import { NgIf } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Fin21020Service, IFin21020Data, IQueryFin21020Request } from '@service/api/fin/fin21020.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { Actions } from '@shared/service/permission-guard.service';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { Fin21020Service, IFin21020Data, IQueryFin21020Request } from '@service/api/fin/fin21020.service';
-import { finalize } from 'rxjs';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ExcelColumn, ExcelExportService } from './../../../shared/service/excel-export.service';
 // 1.2.1.2 費率對照維護
 @Component({
   selector: 'app-fin21020',
   templateUrl: './fin21020.component.html',
   standalone: true,
-  imports: [TableReportComponent, DialogComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  imports: [TableReportComponent, DialogComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule, NgIf]
 })
 export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -30,23 +32,27 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     Remit_BAmount_End: [null as number | null, [Validators.max(9999999999)]], // 金額下限 - 轉帳最低金額(迄)
     Remit_UAmount_Start: [null as number | null, [Validators.max(9999999999)]], // 金額上限 - 轉帳最高金額(起)
     Remit_UAmount_End: [null as number | null, [Validators.max(9999999999)]], // 金額上限 - 轉帳最高金額(迄)
-    Remit_Fee: [null as number | null, [Validators.max(999999)]], // 廠商負擔電匯手續費
-    Comp_Remit_Fee: [null as number | null, [Validators.max(999999)]], // 公司負擔電匯手續費
-    Cash_Back_Amt: [null as number | null, [Validators.max(999999)]], // 廠商負擔電匯手續費回饋收入
+    Remit_Fee_Start: [null as number | null, [Validators.max(999999)]],
+    Remit_Fee_End: [null as number | null, [Validators.max(999999)]],
+    Comp_Remit_Fee_Start: [null as number | null, [Validators.max(999999)]],
+    Comp_Remit_Fee_End: [null as number | null, [Validators.max(999999)]],
+    Cash_Back_Amt_Start: [null as number | null, [Validators.max(999999)]],
+    Cash_Back_Amt_End: [null as number | null, [Validators.max(999999)]],
     ...createPaginationConfig([{ field: 'BNK_No', order: 1 }, { field: 'Remit_BAmount', order: 1 }])
   });
   selectedItems: IFin21020Data[] = [];
   columns: Column[] = [
     { field: 'BNK_No', header: '公司銀行科目代號' },
+    { field: 'BNK_Name', header: '公司銀行科目名稱' },
     { field: 'Remit_BAmount', header: '金額下限', format: formatAmount },
     { field: 'Remit_UAmount', header: '金額上限', format: formatAmount },
     { field: 'Remit_Fee', header: '廠商負擔電匯手續費', format: formatAmount },
-    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', format: formatAmount },
     { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', format: formatAmount },
+    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', format: formatAmount },
   ];
   bankCodeOptions: IDropdownItem[] = [];
   addButton: AddButton[] = [
-    { label: '匯出單筆銀行科目', icon: 'pi pi-file-export', action: (rowData: IFin21020Data) => this.onExport(rowData) },
+    { label: '匯出單筆銀行科目', icon: 'pi pi-file-export', action: (rowData: IFin21020Data) => this.onExport(rowData), disabled: () => !this.hasPermission(Actions.ExportExcel) },
   ]
   btnLoading = false;
   lastQueryBody?: IQueryFin21020Request;
@@ -83,7 +89,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
         this.totalRecords = res.TotalCount;
         this.data = res.Data;
 
-        
+
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
@@ -94,7 +100,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     const uniqueBnkNos = [...new Set(selectedRows.map(row => row.BNK_No))];
     // 將不重複的 BNK_No 列表用逗號串接成字串
     const bnkNosDisplay = uniqueBnkNos.join('<br>');
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       // 在訊息中顯示不重複的 BNK_No 列表，並加上總筆數
       message: `<div class="flex flex-column justify-content-center align-items-center">
       是否確定要刪除<br><b>公司銀行科目代號為：</b> ${bnkNosDisplay}<br>
@@ -115,8 +121,8 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     { field: 'Remit_BAmount', header: '金額下限', width: 15 },
     { field: 'Remit_UAmount', header: '金額上限', width: 15 },
     { field: 'Remit_Fee', header: '廠商負擔電匯手續費', width: 25 },
-    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', width: 25 },
     { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', width: 30 },
+    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', width: 25 },
   ];
   onExport(rowData: IFin21020Data) {
     this.btnLoading = true;
@@ -144,7 +150,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     this.dataDialog = [];
   }
   saveDialog() {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: '是否將被選擇的公司銀行科目代號資料全數刪除，並且將來源公司銀行科目代號的資料複製寫入?',
       accept: () => {
         this.loading = true;

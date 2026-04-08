@@ -1,18 +1,17 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS5008Data } from '@service/api/tls/tls24010.service';
+import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
-import { CRD_TypeOptions } from '../tls24010-cru.model';
-import { SystemOptionsService } from '@service/system/sys1000.service';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 
 @UntilDestroy()
 @Component({
   selector: 'app-tls24010-payno',
   standalone: true,
   imports: [
-    TableComponent
+    TableEditComponent
   ],
   templateUrl: './tls24010-payno.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,14 +20,12 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
   @Input() data: POS5008Data[] = [];
   payNoData: POS5008Data[] = [];
   private previousData: POS5008Data[] = [];
-
-  columns: Column[] = [
-    { field: 'ID', header: 'ID', hidden: true },
-    { field: 'PAY_No', header: '付款別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'PAY_No', onChange: (data) => this.handlePayNoChange(data) },
+  columns: EditColumn[] = [
+    { field: 'PAY_No', header: '付款別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'PAY_No', onChange: (rowData: any, value: any, col: EditColumn, index: number) => this.handlePayNoChange(rowData) },
     { field: 'TXN_PayAmt', header: '金額', type: 'inputNumber', disabled: () => true },
-    { field: 'CRD_Type', header: '信用卡別', type: 'dropdown', options: CRD_TypeOptions, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => rowData.PAY_Type !== "0" },
-    { field: 'CRD_NoTXN_CouponNoTXN_PayDesc', header: '信用卡卡號/券號/應收付款對象', type: 'input' },
-    { field: 'TERM_No', header: '分期數', type: 'dropdown', options: SystemOptionsService.getOptions('T109'), optionLabel: 'SYS_Name', optionValue: 'SYS_Code', disabled: (rowData) => rowData.PAY_Type !== "0" || rowData.PAY_No === "12" || rowData.PAY_No === "14" },
+    { field: 'CRD_Type', header: '信用卡別', type: 'dropdown', options: getSYS1000Options('CRD_Type'), optionLabel: 'label', optionValue: 'value', disabled: (value: any, index?: number, rowData?: any) => rowData.PAY_Type !== "0" },
+    { field: 'CRD_NoTXN_CouponNoTXN_PayDesc', header: '信用卡卡號/券號/應收付款對象', type: 'input', disabled: (value: any, index?: number, rowData?: any) => rowData.PAY_No === "10" },
+    { field: 'TERM_No', header: '分期數', type: 'dropdown', options: SystemOptionsService.getOptions('T109'), optionLabel: 'SYS_Name', optionValue: 'SYS_Code', disabled: (value: any, index?: number, rowData?: any) => rowData.PAY_Type !== "0" || rowData.PAY_No === "12" || rowData.PAY_No === "14" },
   ];
 
   PAY_TypeOptions: IDropdownItem[] = [];

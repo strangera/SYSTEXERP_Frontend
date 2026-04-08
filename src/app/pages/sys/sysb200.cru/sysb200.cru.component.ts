@@ -1,25 +1,25 @@
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { Validators, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { PanelModule } from 'primeng/panel';
+import { finalize, map, Observable } from 'rxjs';
+import { Sysb200Service } from '../../../service/api/sys/sysb200.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Tlsb200Model } from './tlsb200.model';
-import { map, Observable, finalize } from 'rxjs';
-import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import {
   validateMaxLength,
   validateNoChinese,
 } from '../../../shared/componentkit/table/validate-field.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { NgIf, AsyncPipe } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { Sysb200Service } from '../../../service/api/sys/sysb200.service';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
+import { Tlsb200Model } from './tlsb200.model';
 function safeValidator(
   validator: (value: any, ...args: any[]) => { isValid: boolean; errorMessage: string[] }
 ) {
@@ -37,7 +37,6 @@ function safeValidator(
 @Component({
   selector: 'app-sysb200-cru',
   templateUrl: './sysb200.cru.component.html',
-  styleUrls: ['./sysb200.cru.component.scss'],
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, RadiobuttonComponent, TableComponent, NgIf, AsyncPipe, TranslateModule, InputNumberComponent]
 })
@@ -80,6 +79,8 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
   contacts: any[] = [];
   selectedRows: any[] = [];
+  private originalContacts: any[] = [];
+  private originalForm: any = null;
   isReadonly = false;
 
   columns: Column[] = [
@@ -106,9 +107,9 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   ];
 
   payTypeOptions = [
-    { value: '1', label: '電匯' },
-    { value: '2', label: '發票' },
-    { value: '3', label: '現金' }
+    { value: '1', label: '1-電匯' },
+    { value: '2', label: '2-發票' },
+    { value: '3', label: '3-現金' }
   ];
 
   statusOptions = [
@@ -129,6 +130,14 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
   ngOnInit(): void {
     this.initializePage('SYSB200', this.dataForm);
+    // 若路由 state 或 rowdata 包含 VEN_BNK_No，帶入到表單的 VEN_BankNo（後端欄位 VEN_BNK_No -> 前端 VEN_BankNo）
+    const rd: any = this.rowdata as any;
+    if (rd && rd.VEN_BNK_No) {
+      this.dataForm.get('VEN_BankNo')?.setValue(rd.VEN_BNK_No);
+    }
+
+    // 儲存表單原始值快照（供取消還原用）
+    this.originalForm = this.dataForm.getRawValue();
 
     this.dataForm.get('VEN_Flag')?.valueChanges.subscribe(value => {
       if (value === '1') {
@@ -155,12 +164,11 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
         next: (res) => {
           if (res.Data) {
             this.contacts = res.Data;
+            this.originalContacts = JSON.parse(JSON.stringify(res.Data || []));
           }
           this.messageService.successBubble('資料載入完成');
         },
-        error: () => {
-          this.messageService.errorBubble('載入明細失敗');
-        }
+
       });
 
     }
@@ -211,15 +219,30 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     this.selectedRows = [];
   }
 
+  // 取消：還原表單與 contacts（不導回查詢頁）
+  override onCancel(returnValue?: any) {
+    // 還原表單值
+    if (this.originalForm) {
+      this.dataForm.reset(this.originalForm);
+    } else {
+      this.dataForm.reset();
+    }
+    // 還原 contacts
+    this.contacts = JSON.parse(JSON.stringify(this.originalContacts || []));
+    // 重置狀態
+    this.submitted = false;
+    this.loading = false;
+  }
+
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-    console.log("表單 valid 狀態：", form.valid);
-    if (!form.valid) {
-      this.messageService.warnBubble("請確認所有必填欄位皆已正確填寫");
-      return;
-    }
+      console.log("表單 valid 狀態：", form.valid);
+      if (!form.valid) {
+        this.messageService.warnBubble("請確認所有必填欄位皆已正確填寫");
+        return;
+      }
 
-    this.loading = true;
+      this.loading = true;
     });
 
 
@@ -301,9 +324,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
           this.onCancel(); // 返回列表
         },
-        error: () => {
-          this.messageService.errorBubble('送出失敗，請稍後再試');
-        }
+
       });
   }
   onDataChange(event: any) {

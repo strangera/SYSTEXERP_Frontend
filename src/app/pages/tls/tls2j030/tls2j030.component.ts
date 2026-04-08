@@ -45,7 +45,9 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   data: any[] = [];
   selectedItems: any[] = [];
-  isNotECR = false;
+  isNotECR = true;
+  changeEcrNo = ''; // 目前使用的換開收銀機號
+  clientIP = ''; // 目前電腦IP
   lastQueryBody: any = {};
   btnLoading2 = false;
   TXN_Uniform_noOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
@@ -71,7 +73,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
     { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員編號', visible: true },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-    { field: 'UPD_Date', header: '變更日期', visible: true },
+    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate },
     { field: 'UPD_USR_No', header: '變更人員編號', visible: true },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];
@@ -93,7 +95,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
 
   // 控制 checkbox 是否可選 - 當 GUI_Status 為 "1" 時不可選
   isRowSelectable = (rowData: TLS2J030Data): boolean => {
-    return rowData?.GUI_Status !== "1";
+    return rowData?.GUI_Status !== "1" && !this.isNotECR;
   }
 
   ngOnInit(): void {
@@ -107,27 +109,16 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
   }
 
   private checkECRMachine() {
-    const ip = this.authService.currentUserValue?.client_ip;
-    if (!ip) {
-      this.isNotECR = true;
-      return;
-    }
-    // this.tls2j030Service.queryEcrNo(ip).subscribe({
-    //   next: (res: any) => {
-    //     this.isNotECR = (res.Data === null);
-
-    //     if (this.isNotECR) {
-    //       this.queryForm.disable();
-    //     } else {
-    //       this.queryForm.enable();
-    //     }
-    //   }
-    // });
-
+    this.tls2j030Service.queryEcrNo().subscribe({
+      next: (res: any) => {
+        this.isNotECR = (res.Data.ECR_No === null);
+        this.changeEcrNo = res.Data.ECR_No; // 目前使用的換開收銀機
+        this.clientIP = res.Data.IP; // 目前電腦IP
+      }
+    });
   }
 
   onSubmit(frm: FormGroup) {
-    if (this.isNotECR) return;
     this.handleSubmit(frm, () => {
       const req = {
         PageSize: frm.value.pageSize || 30,
@@ -151,7 +142,12 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
           if (response.Status === '0000') {
             this.data = response.Data || [];
             this.totalRecords = response.TotalCount || 0;
-            this.lastQueryBody = req;
+            const last = { ...req } as any;
+            delete last.PageIndex;
+            delete last.PageSize;
+            last.pageIndex = req.PageIndex;
+            last.pageSize = req.PageSize;
+            this.lastQueryBody = last;
             this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
           } else {
             // API 回傳錯誤狀態

@@ -46,4 +46,12 @@ export class ASS21030Service {
   getPreviousReading(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/getPreviousReading`, body);
   }
+
+  exportASS21030(body: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportASS21030`, body, { responseType: 'blob' });
+  }
+
+  exportASS21030PDF(body: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportASS21030PDF`, body, { responseType: 'blob' });
+  }
 }

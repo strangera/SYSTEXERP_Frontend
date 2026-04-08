@@ -1,28 +1,30 @@
 
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { Fin21030Service } from 'src/app/service/api/fin/fin21030.service';
+import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 //1.2.1.3 廠客資料維護
 @Component({
   selector: 'app-fin21030',
   templateUrl: './fin21030.component.html',
-  styleUrl: './fin21030.component.scss',
   standalone: true,
   imports: [MenubarComponent, DropdownComponent,
-    AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, InputTextComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
+    AccordionModule, FormsModule, ReactiveFormsModule,
+    InputTextComponent, MultiSelectComponent, ButtonComponent, TranslateModule, TableReportComponent]
 })
 
 export class FIN21030Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -36,19 +38,21 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     VEN_Tel: ['', [Validators.maxLength(20)]],                             // 電話
     VEN_Fax: ['', [Validators.maxLength(20)]],                             // 傳真
     VEN_Uniform: [''],                         // 統一編號
-    VEN_RemitFeeMode: [''],                    // 郵電負擔模式
-    VEN_DiscYN: [''],                          // 貼現廠商 (單一字串)
-    VEN_CTRLYN: [''],                          // 禁止背書轉讓 (單一字串)
-    VEN_PayType: [''],                         // 付款方式 (單一字串)
+    VEN_RemitFeeMode: [[]],                    // 郵電負擔模式
+    VEN_DiscYN: [[]],                          // 貼現廠商 (單一字串)
+    VEN_CTRLYN: [[]],                          // 禁止背書轉讓 (單一字串)
+    VEN_PayType: [[]],                         // 付款方式 (單一字串)
     VEN_BNK_No: ['', [Validators.maxLength(5)]],                          // 廠商匯款銀行代號
     VEN_BankAccountNo: ['', [Validators.maxLength(50)]],                   // 廠商銀行帳號
     VEN_AccountName: ['', [Validators.maxLength(80)]],                     // 廠商帳戶名稱
     VEN_PayConditionDay: [''],                  // 付款期限
     VEN_CheckTitle: [''],                      // 票據抬頭
-    VEN_Status: [''],                          // 審核狀態 (dropdown)
+    VEN_Status: [[]],                          // 審核狀態 (dropdown)
     ...createPaginationConfig([{ field: 'VEN_No', order: 1 }]),
-
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
+
   VEN_FLAG_MAP: Record<string, string> = {
     '1': '廠商統一編號',
     '2': '個人身分證字號',
@@ -76,11 +80,12 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
   VEN_UniformOptions: IDropdownItem[] = [];
   data: any[] = [];
   totalRecords = 0;
+  lastQueryBody: any;
   // ----------------------------------------------------------------
   venderOptions: any[] = [];
   remitFeeOptions = [
-    { value: '1', label: '廠商負擔' },
-    { value: '2', label: '公司負擔' }
+    { value: '0', label: '廠商負擔' },
+    { value: '1', label: '公司負擔' }
   ];
   // ====== Table / Options ======
   approvalOptions: { label: string; value: string }[] = [
@@ -130,17 +135,17 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     { field: 'VEN_PayConditionDay', header: '付款期限(天數)', visible: true },
     { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true },
     { field: 'VEN_Status', header: '審核狀態', visible: true, format: (value: string) => this.VEN_STATUS_MAP[value] || value, },
-    { field: 'Approved_Date', header: '審核日期', visible: true, format: (v: any) => this.formatDate(v), },
+    { field: 'Approved_Date', header: '審核日期', visible: true, format: formatDate },
     { field: 'VEN_DiscYN', header: '貼現廠商', visible: true, format: (value: string) => this.VEN_YN_MAP[value] || value, },
     { field: 'VEN_CTRLYN', header: '禁止背書轉讓', visible: true, format: (value: string) => this.VEN_YN_MAP[value] || value, },
-    { field: 'VEN_DiscDateB', header: '貼現起日', visible: true, format: (v: any) => this.formatDate(v), },
-    { field: 'VEN_DiscDateE', header: '貼現迄日', visible: true, format: (v: any) => this.formatDate(v), },
+    { field: 'VEN_DiscDateB', header: '貼現起日', visible: true, format: formatDate },
+    { field: 'VEN_DiscDateE', header: '貼現迄日', visible: true, format: formatDate },
     { field: 'GUI_ID_WIRE', header: '匯款統一編號', visible: true },
     { field: 'VEN_Remark', header: '備註', visible: true },
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: (v: any) => this.formatDate(v), },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員', visible: true },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-    { field: 'UPD_Date', header: '變更日期', visible: true, format: (v: any) => this.formatDate(v), },
+    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate },
     { field: 'UPD_USR_No', header: '變更人員', visible: true },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
   ];
@@ -155,7 +160,7 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private dropDownListService: DropDownListService,
-    private fin21030Service: Fin21030Service
+    public fin21030Service: Fin21030Service
   ) {
     super();
   }
@@ -164,20 +169,32 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('FIN21030', 'fin/fin21030cru', this.queryForm, form => this.onSubmit(form));
     this.dropDownListService.queryPOS2013_DropDownList({}).subscribe(res => {
       this.venderOptions = (res.Data ?? []).map((item: any) => ({
-        label: `${item.No} - ${item.Name}`,
+        label: `${item.VEN_No} - ${item.Name}`,
         value: item.VEN_No,
       }));
     });
     this.dropDownListService.queryPOS2013_DropDownList().subscribe(res => {
       if (res?.Data) {
-        this.VEN_UniformOptions = res.Data.map(item => ({
-          value: item.No,
-          label: `${item.No} - ${item.Name} - ${item.VEN_No}`,
-          No: item.No,
-          Name: item.Name,
-          VEN_No: item.VEN_No,
-          ShortName: item.ShortName,
-        }));
+        const uniqueMap = new Map<string, any>();
+
+        res.Data.forEach(item => {
+          // 組合 No 和 Name 作為唯一鍵
+          const key = `${item.No}-${item.Name}`;
+
+          // 如果唯一鍵尚未存在,則將項目加入 uniqueMap
+          if (!uniqueMap.has(key)) {
+            uniqueMap.set(key, {
+              value: item.No,
+              label: `${item.No} - ${item.Name}`,
+              No: item.No,
+              Name: item.Name,
+              VEN_No: item.VEN_No,
+              ShortName: item.ShortName,
+            });
+          }
+        });
+
+        this.VEN_UniformOptions = Array.from(uniqueMap.values());
       }
     });
 
@@ -188,18 +205,49 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     this.loading = true;
     this.messageService.blockUi();
     const raw = frm.getRawValue();
-    const payload = {
-      ...raw,
-      VEN_PayConditionDay: raw.VEN_PayConditionDay ? Number(raw.VEN_PayConditionDay) : 0
-    };
-    this.fin21030Service.queryFIN21030(payload).subscribe({
-      next: (res) => {
+    const payload: any = { ...raw };
+    // 保持多選欄位為陣列送出；若為單一值則轉為陣列；若為空則移除該欄位
+    const multiSelectFields = ['VEN_RemitFeeMode', 'VEN_DiscYN', 'VEN_CTRLYN', 'VEN_PayType', 'VEN_Status'];
+    multiSelectFields.forEach(field => {
+      const val = (raw as any)[field];
+      if (Array.isArray(val)) {
+        if (val.length) {
+          payload[field] = val;
+        } else {
+          delete payload[field];
+        }
+      } else if (val === null || val === undefined || val === '') {
+        delete payload[field];
+      } else {
+        payload[field] = [String(val)];
+      }
+    });
+    if (raw.VEN_PayConditionDay !== null && raw.VEN_PayConditionDay !== undefined && raw.VEN_PayConditionDay !== '') {
+      payload.VEN_PayConditionDay = Number(raw.VEN_PayConditionDay);
+    } else {
+      delete payload.VEN_PayConditionDay;
+    }
+
+    // 清理 VEN_Uniform：trim，若為空或全為 0 則移除該欄位
+    if (payload.VEN_Uniform !== undefined && payload.VEN_Uniform !== null) {
+      const u = String(payload.VEN_Uniform).trim();
+      if (u === '' || /^0+$/.test(u)) {
+        delete payload.VEN_Uniform;
+      } else {
+        payload.VEN_Uniform = u;
+      }
+    }
+
+    this.fin21030Service.queryFIN21030(payload)
+      .pipe(untilDestroyed(this), finalize(() => {
+        this.loading = false;
+      }))
+      .subscribe(res => {
         this.data = res?.Data || [];
         this.totalRecords = res?.TotalCount || 0;
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
-    });
+        this.lastQueryBody = payload;
+        this.queryStateService.setQueryState(this.ProgNo, payload);
+      });
   }
 }
 

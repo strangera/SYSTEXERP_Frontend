@@ -10,6 +10,7 @@ import { CellInput } from './table-edit-cell.model';
 
 @Component({
   selector: 'app-checkbox-cell',
+  host: { 'table-edit-id': '複製時請自行取唯一名' },
   template: `
     <div class="flex justify-content-center align-items-center h-full w-full">
       <p-checkbox
@@ -89,6 +90,6 @@ export class CheckboxCellComponent {
   }
   handleEnter(event: Event) {
     event.preventDefault(); // 阻止表單提交
-    event.stopPropagation(); // 阻止事件冒泡
+    // event.stopPropagation(); // !!!客戶需求禁止加上這段
   }
 }

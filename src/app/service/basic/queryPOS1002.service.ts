@@ -19,7 +19,8 @@ export class ECRNoService {
       map(response =>
         (response?.Data ?? []).map((item: any) => ({
           value: item.No,
-          label: item.Name
+          // 顯示「編號-名稱」
+          label: `${item.No} - ${item.Name}`
         }))
       ),
     );

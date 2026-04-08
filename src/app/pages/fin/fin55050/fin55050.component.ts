@@ -1,13 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Location } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { finalize } from 'rxjs';
-
-import {
-  ExportFIN55050Payload,
-  FIN55050Detail,
-  FIN55050Service
-} from '../../../service/api/fin/fin55050.service';
-
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -19,14 +11,16 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TableSubheaderComponent } from '@shared/componentkit/table/table-subheader/table-subheader.component';
 import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { finalize } from 'rxjs';
+import { ExportFIN55050Payload, FIN55050Detail, FIN55050Service } from '../../../service/api/fin/fin55050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-
+import { TableSubheaderComponent } from './table-subheader/table-subheader.component';
 export interface FIN55050Data {
   AccNo: string;
   AccCName: string;
@@ -58,7 +52,8 @@ export interface GroupedFIN55050Detail extends FIN55050Detail {
     TableSubheaderComponent,
     InputTextRangeComponent,
     DropdownRangeComponent,
-    DropdownComponent
+    DropdownComponent,
+    ButtonModule
   ]
 })
 export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> implements OnInit {
@@ -66,6 +61,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   constructor(
     private fin55050Service: FIN55050Service,
     private dropDownListService: DropDownListService,
+    private location: Location
   ) {
     super();
   }
@@ -80,9 +76,6 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   /** 匯出 loading 共用旗標 */
   PDFBtnLoading = false;
   XLSXBtnLoading = false;
-
-  /** 記住上一次查詢的 payload（供匯出使用） */
-  private lastQueryBody: any | null = null;
 
   queryForm = this.formBuilder.group({
     DateFrom: [this.yesterday, Validators.required],
@@ -112,16 +105,16 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
 
   columns: Column[] = [
     { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
-    { field: 'Ven_Name', header: '廠商代號/簡稱', visible: true },
+    { field: 'Ven_Name', header: '廠商編號/簡稱', visible: true },
     { field: 'VouStatus', header: '狀態', visible: true },
     { field: 'ORG_ID', header: '部門', visible: true },
     { field: 'Org_Name', header: '部門名稱', visible: true },
     { field: 'ProjectNo', header: '活動', visible: true },
     { field: 'PTA', header: '立沖代號', visible: true },
     { field: 'NoteDesc', header: '摘要', visible: true },
-    { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount },
-    { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount },
-    { field: 'OpeningBal', header: '餘額', visible: true, format: formatAmount },
+    { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount, style: 'text-right' },
+    { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount, style: 'text-right' },
+    { field: 'OpeningBal', header: '餘額', visible: true, format: formatAmount, style: 'text-right' },
   ];
 
   //#region 下拉
@@ -140,36 +133,11 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
 
   ngOnInit(): void {
     this.initializePage('FIN55050', 'account/fin/fin55050cru', this.queryForm, (form) => this.onSubmit(form));
-    // ✅ 預先把 ProgNo 寫入一次，避免你從其它地方直開 CRU
     try { localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050'); } catch { }
-
     this.loadOptions();
-
-    const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
-    if (saved) {
-      this.queryForm.patchValue(this.coerceDates(saved), { emitEvent: false });
-      this.lastQueryBody = saved;
-    }
-
-    this.queryForm.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe(() => {
-        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      });
-  }
-
-  private coerceDates(raw: any) {
-    const fix = (v: any) => {
-      if (!v) return v;
-      if (v instanceof Date) return v;
-      const d = new Date(v);
-      return isNaN(d.getTime()) ? v : d;
-    };
-    return {
-      ...raw,
-      DateFrom: fix(raw?.DateFrom),
-      DateTo: fix(raw?.DateTo),
-    };
+    this.queryForm.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+    });
   }
 
   onSubmit(form: FormGroup) {
@@ -181,11 +149,8 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
           this.data = this.restructureData(response.Data);
           this.totalRecords = response.TotalCount ?? this.data.length;
 
-          // 記住本次查詢（匯出用）
-          this.lastQueryBody = form.getRawValue();
-
           // 保存查詢狀態
-          this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
         });
     });
   }
@@ -223,8 +188,10 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
       this.messageService?.warnBubble?.('寫入交接資料失敗。');
     }
 
+    const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
+    const finalUrl = `${window.location.origin}${externalUrl}`;
     // 開新分頁
-    window.open('/account/fin/fin55050cru', '_blank', 'noopener');
+    window.open(finalUrl, '_blank', 'noopener');
   }
 
   loadOptions() {
@@ -262,8 +229,32 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   /** 從巢狀資料展平成清單 */
   restructureData(data: FIN55050Data[]): GroupedFIN55050Detail[] {
     const grouped: GroupedFIN55050Detail[] = [];
+
     (data ?? []).forEach(parent => {
-      (parent._Details ?? []).forEach(detail => {
+      const details = parent._Details ?? [];
+
+      // --- 1. 插入期初餘額列 ---
+      // 假設後端 parent 有提供初始餘額，若無，則取第一筆明細的 OpeningBal 減去其借貸變動
+      const firstDetail = details[0];
+      grouped.push({
+        AccNo: parent.AccNo,
+        AccCName: parent.AccCName,
+        VouDate: parent.VouDate,
+        VouNo: '', // 虛擬列不給傳票號碼，避免點擊進入明細
+        NoteDesc: '【期初餘額】',
+        OpeningBal: firstDetail?.OpeningBal ?? 0, // 這裡需視後端 API 實際給值邏輯調整
+        VouStatus: '',
+        isVirtual: true // 新增標記，用於 CSS 樣式區隔
+      } as any);
+
+      // --- 2. 插入實際明細 ---
+      let totalD = 0;
+      let totalC = 0;
+
+      details.forEach(detail => {
+        totalD += (detail.AccAmt_D ?? 0);
+        totalC += (detail.AccAmt_C ?? 0);
+
         grouped.push({
           ...detail,
           AccNo: parent.AccNo,
@@ -271,7 +262,23 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
           VouDate: parent.VouDate
         });
       });
+
+      // --- 3. 插入本期合計列 ---
+      const lastDetail = details[details.length - 1];
+      grouped.push({
+        AccNo: parent.AccNo,
+        AccCName: parent.AccCName,
+        VouDate: '',
+        VouNo: '',
+        NoteDesc: '【本期合計】',
+        AccAmt_D: totalD,
+        AccAmt_C: totalC,
+        OpeningBal: lastDetail?.OpeningBal ?? 0, // 最終餘額
+        VouStatus: '',
+        isVirtual: true
+      } as any);
     });
+
     return grouped;
   }
 
@@ -306,7 +313,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
 
   /** 產生匯出 payload（不再使用 VOUDATE_*） */
   private buildExportBody(): ExportFIN55050Payload | null {
-    const raw = this.lastQueryBody ?? this.queryForm.getRawValue();
+    const raw = this.queryForm.getRawValue();
 
     const from = this.toDateOnly(raw?.DateFrom);
     const to = this.toDateOnly(raw?.DateTo);
@@ -369,5 +376,9 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     a.download = fileName;
     a.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  getAccNoLabel(accNo: any): string {
+    return this.AccNoListOptions.find(x => x.value === accNo)?.label ?? accNo;
   }
 }

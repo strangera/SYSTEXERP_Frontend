@@ -9,6 +9,7 @@
       [selected]="true"
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
+
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <app-calendar-range-quick
@@ -24,7 +25,7 @@
               label="收銀機號"
               controlName="ECR_No"
               [options]="ECRNoOptions"
-              optionLabel="value"
+              optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.ECR_No"
               [submitted]="submitted">
@@ -33,7 +34,6 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
-              
               label="交易序號"
               controlName="TXN_No_Start"
               [startControl]="queryForm.controls.TXN_No_Start"
@@ -138,6 +138,23 @@
               [submitted]="submitted">
             </app-multi-select>
           </div>
+
+          <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="原交易日期"
+            [startControl]="queryForm.controls.ORG_TXN_DateStart"
+            [endControl]="queryForm.controls.ORG_TXN_DateEnd"
+            [submitted]="submitted">
+          </app-calendar-range-quick>
+
+          <div *ngIf="viewMode === 'invoice'" class="col-12 md:col-6 lg:col-4 flex align-items-center gap-2" style="padding-top: 1.75rem;">
+            <p-checkbox
+              inputId="ExcludeNoGUI"
+              formControlName="ExcludeNoGUI"
+              [binary]="true">
+            </p-checkbox>
+            <label for="ExcludeNoGUI" class="cursor-pointer">排除無發票號碼交易</label>
+          </div>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -152,16 +169,34 @@
 <!-- 檢視模式切換 -->
 <div class="card mb-2">
   <div class="flex gap-4 align-items-center">
-    <p-radioButton name="viewMode" inputId="vm-invoice" label="發票明細"  value="invoice"
-      [(ngModel)]="viewMode" [ngModelOptions]="{ standalone: true }" (onClick)="onViewChange()">
+    <p-radioButton
+      name="viewMode"
+      inputId="vm-invoice"
+      label="發票明細"
+      value="invoice"
+      [(ngModel)]="viewMode"
+      [ngModelOptions]="{ standalone: true }"
+      (onClick)="onViewChange()">
     </p-radioButton>
 
-    <p-radioButton name="viewMode" inputId="vm-payment" label="付款明細" value="payment"
-      [(ngModel)]="viewMode" [ngModelOptions]="{ standalone: true }" (onClick)="onViewChange()">
+    <p-radioButton
+      name="viewMode"
+      inputId="vm-payment"
+      label="付款明細"
+      value="payment"
+      [(ngModel)]="viewMode"
+      [ngModelOptions]="{ standalone: true }"
+      (onClick)="onViewChange()">
     </p-radioButton>
 
-    <p-radioButton name="viewMode" inputId="vm-discount" label="折扣/金額明細" value="discount"
-      [(ngModel)]="viewMode" [ngModelOptions]="{ standalone: true }" (onClick)="onViewChange()">
+    <p-radioButton
+      name="viewMode"
+      inputId="vm-discount"
+      label="折扣/金額明細"
+      value="discount"
+      [(ngModel)]="viewMode"
+      [ngModelOptions]="{ standalone: true }"
+      (onClick)="onViewChange()">
     </p-radioButton>
   </div>
 </div>
@@ -180,28 +215,31 @@
     [showReportMode]="false"
     [queryFunction]="queryTLS23040ForReport"
     [footerData]="activeFooter"
-    [groupRowsBy]="'_grpKey'"
-    >
+    [groupRowsBy]="'_grpKey'">
+
     <header>
       <div class="flex justify-content-end gap-2">
+        <!-- ✅ type="button"：避免被當成 submit 導頁 -->
+<p-button
+  type="button"
+  label="發票報表.PDF"
+   styleClass="p-2"
+  [loading]="btnLoading"
+  icon="pi pi-file"
+  (click)="onExportPDFClick($event)"
+  [disabled]="!historyRequestBody || lastTotalCount === 0">
+</p-button>
         <p-button
+          type="button"
           styleClass="p-2"
-          label="匯出發票報表.PDF"
-          [loading]="btnLoading"
-          icon="pi pi-file"
-          (click)="onExportPDF()"
-          [disabled]="invoiceRows.length === 0">
-        </p-button>
-
-        <p-button
-          styleClass="p-2"
-          label="匯出發票報表.XLSX"
+          label="發票報表.XLSX"
           [loading]="btnLoading"
           icon="pi pi-file-excel"
           (click)="onExportXLSX()"
-          [disabled]="invoiceRows.length === 0">
+          [disabled]="!historyRequestBody || lastTotalCount === 0">
         </p-button>
       </div>
     </header>
+
   </app-table-report>
 </div>

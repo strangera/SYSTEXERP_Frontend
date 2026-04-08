@@ -42,8 +42,19 @@ export class Tls51070Service {
   }
 
   // excel匯入並且產生錯誤檔
-  uploadTLS51070(formData: FormData): Observable<any> {
+  uploadTLS51070(file: File, sheetNames?: string): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (sheetNames) {
+      formData.append('SheetNames', sheetNames);
+    }
+
     return this.http.post<any>(`${this.apiUrl}/uploadTLS51070`, formData);
+  }
+
+  //上傳圖檔
+  uploadTLS51070Image(formData: FormData): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/uploadTLS51070Image`, formData);
   }
 
   // ---圖片處理---
@@ -69,7 +80,7 @@ export class Tls51070Service {
       headers: { 'Content-Type': 'application/json' },
       body: body
     });
-}
+  }
 
   // --- 標籤檔 ---
 
@@ -80,8 +91,15 @@ export class Tls51070Service {
 
   //產生標籤檔資料
   exportLabel(data: any[]): Observable<string> {
-      return this.http.post(`${environment.ApiUrl}/ExportLabel/ExportLabel`, data, {
+    return this.http.post(`${environment.ApiUrl}/ExportLabel/ExportLabel_Other`, data, {
       responseType: 'text'  // 後端回傳的是純文字
+    });
+  }
+
+  //下載excel範本
+  downloadTLS51070Template(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/downloadTLS51070Template`, {
+      responseType: 'blob',
     });
   }
 
@@ -112,9 +130,14 @@ export class Tls51070Service {
     return this.http.post<any>(`${environment.ApiUrl}/queryPLULOGO_DropDownList`, body);
   }
 
-  // 查詢 專櫃主檔(TLTTALENT) 設定檔
-  queryTLTTALENT_DropDownList(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`, body);
+  // 查詢 自營 專櫃主檔(TLTTALENT) 設定檔
+  queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_ByStoreWay2AndApprove2_DropDownList`, body);
+  }
+
+  // 查詢 專櫃主檔(TLTTALENT) 設定檔 (VEN_No篩選)
+  queryTLTTALENT_ByStoreWay2AndApprove2WithVenNo_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLTTALENT_ByStoreWay2AndApprove2WithVenNo_DropDownList`, body);
   }
 
   // 查詢 廠商(POS2013) 設定檔

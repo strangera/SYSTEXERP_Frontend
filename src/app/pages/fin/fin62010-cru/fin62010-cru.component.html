@@ -12,8 +12,8 @@
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="建立者" controlName="CRT_USR_Name" [control]="dataForm.controls.CRT_USR_Name"
-            [submitted]="submitted"></app-input-text>
+          <app-dropdown label="建立者代號/名稱" controlName="CRT_USR_No" [options]="userOptions | async" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.CRT_USR_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar calendarType="dateOne" label="建立日期" controlName="CRT_Date"

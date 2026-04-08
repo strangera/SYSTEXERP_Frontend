@@ -4,19 +4,25 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls11010Service } from '@service/api/tls/tls11010.service';
-import { Tls51080Service } from '@service/api/tls/tls51080.service';
 import { FloorService } from '@service/basic/querySYS3900.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, Observable } from 'rxjs';
-import { TLS26020Data, TLS26020Service } from '../../../service/api/tls/tls26020.service';
+import { finalize, map, Observable, tap } from 'rxjs';
+import {
+  TLS26020Data,
+  TLS26020DetailData,
+  TLS26020QueryRequest,
+  TLS26020Service
+} from '../../../service/api/tls/tls26020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
-import { Column, createPaginationConfig, formatAmount, formatDate, formatToSixDigits } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, formatToSixDigits } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls26020',
@@ -31,7 +37,7 @@ import { Column, createPaginationConfig, formatAmount, formatDate, formatToSixDi
     TranslateModule,
     CalendarRangeComponent,
     MultiSelectComponent,
-    CustomFooterTableComponent
+    TableReportComponent
   ]
 })
 export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> implements OnInit {
@@ -63,10 +69,11 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
   totalRecords = 0;
   data: TLS26020Data[] = [];
   selectedItems: TLS26020Data[] = [];
-  footerData: any[] = [];
+  footerData: Record<string, unknown> = {};
+  lastQueryBody: TLS26020QueryRequest | null = null;
 
   // 修正 columns 根據實際 API 回應
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'txn_TotGUI', header: '發票金額', visible: true, format: formatAmount, isTotal: true },
@@ -74,7 +81,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
   ];
 
   // 展開詳細資料的欄位定義
-  expansionColumns: Column[] = [
+  expansionColumns: ReportColumn[] = [
     { field: 'TXN_DATE', header: '銷售日期', visible: true, format: formatDate },
     { field: 'ECR_NO', header: '機號', visible: true },
     { field: 'TXN_NO', header: '交易序號', visible: true, format: formatToSixDigits },
@@ -86,17 +93,16 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
   ];
 
   // 下拉選單選項
-  floorOptions: any[] = [];
-  buildingOptions: any[] = [];
-  orgOptions: any[] = [];
-  ecrOptions: any[] = [];
-  tltOptions: any[] = [];
+  floorOptions: { label: string; value: string }[] = [];
+  buildingOptions: { label: string; value: string }[] = [];
+  orgOptions: { Name: string; No: string }[] = [];
+  ecrOptions: { label: string; value: string }[] = [];
+  tltOptions: { label: string; value: string }[] = [];
 
   constructor(
     private tls26020Service: TLS26020Service,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
-    private tls51080Service: Tls51080Service,
     private datePipe: DatePipe,
     private dropDownListService: DropDownListService,
   ) {
@@ -110,19 +116,37 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls26020Service.queryTLS26020(frm.value)
+      const body = frm.getRawValue();
+      this.tls26020Service.queryTLS26020(body)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data.mainData;
-          this.footerData = [{
+          this.footerData = {
             txn_TotGUI: response.Data.totalData[0]?.txn_Total_TotGUI,
             txn_TotSaleAmt: response.Data.totalData[0]?.txn_Total_TotSaleAmt
-          }]
+          };
           this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          this.lastQueryBody = body as TLS26020QueryRequest;
+          this.queryStateService.setQueryState(this.ProgNo, body);
         });
     });
   }
+
+  /** 供 table-report 分頁/排序時呼叫，回傳符合 { Data, TotalCount } 的 Observable 並更新 footerData */
+  queryFunction = (body: TLS26020QueryRequest): Observable<{ Data: TLS26020Data[]; TotalCount: number }> => {
+    return this.tls26020Service.queryTLS26020(body).pipe(
+      tap(res => {
+        this.footerData = {
+          txn_TotGUI: res.Data?.totalData?.[0]?.txn_Total_TotGUI,
+          txn_TotSaleAmt: res.Data?.totalData?.[0]?.txn_Total_TotSaleAmt
+        };
+      }),
+      map(res => ({
+        Data: res.Data?.mainData ?? [],
+        TotalCount: res.TotalCount ?? 0
+      }))
+    );
+  };
 
   loadOptions() {
     // 加載館別選項
@@ -148,7 +172,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     // 收銀機號下拉
     this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       this.ecrOptions = options.Data.map(item => ({
-        label: item.Name,
+        label: `${item.No} - ${item.Name}`,
         value: item.No
       }));
     });
@@ -162,7 +186,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     });
   }
 
-  loadDetails = (rowData: TLS26020Data): Observable<any> => {
+  loadDetails = (rowData: TLS26020Data): Observable<BaseQueryResponse<TLS26020DetailData>> => {
     return this.tls26020Service.queryTLS26020Detail({
       tlt_no: rowData.tlt_no,
       Sale_DateStart: this.datePipe.transform(this.queryForm.controls.Sale_DateStart.value, 'yyyy-MM-dd') ?? '',

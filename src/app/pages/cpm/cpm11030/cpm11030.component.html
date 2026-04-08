@@ -2,181 +2,127 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
 
-    <!-- 新增按鈕 -->
-    <app-button
-      btnType="create"
-      [type]="'button'"
-      (clickEvent)="onCreate()">
-    </app-button>
+    <!-- 每日設備可出借量維護 -->
+    <app-button [type]="'button'" label="每日設備可出借量維護" (clickEvent)="openDailyDialog()"></app-button>
+
+    <!-- 新增 -->
+    <app-button btnType="create" [type]="'button'" (clickEvent)="onCreate()"></app-button>
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
-
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)">
-
-        <!-- 第一排：記錄編號 + 出借日期 -->
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <!-- 第一排 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="記錄編號"
-              controlName="recordCode"
-              [control]="queryForm.controls.recordCode"
-              [submitted]="submitted">
-            </app-input-number>
+            <app-input-text label="出借編號" controlName="Loan_No" [control]="queryForm.controls.Loan_No"
+              [submitted]="submitted"></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="出借日期"
-              [startControl]="queryForm.controls.borrowDateFrom"
-              [endControl]="queryForm.controls.borrowDateTo"
-              [submitted]="submitted">
-            </app-calendar-range>
+            <app-calendar-range-quick label="出借日期" [startControl]="queryForm.controls.Loan_BDate"
+              [endControl]="queryForm.controls.Loan_EDate" [submitted]="submitted"></app-calendar-range-quick>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="借用人姓名" controlName="User_Name" [control]="queryForm.controls.User_Name"
+              [submitted]="submitted"></app-input-text>
+          </div>
+        </div>
+
+        <!-- 第二排 -->
+        <div class="grid p-fluid">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="姓名"
-              controlName="name"
-              [control]="queryForm.controls.name"
-              [submitted]="submitted">
-            </app-input-text>
+              label="出借處理人員(工號)"
+              controlName="Loan_USR_No"
+              [control]="queryForm.controls.Loan_USR_No"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div> -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="出借處理人員(工號)" controlName="Loan_USR_No" [options]="Loan_USR_NoOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.Loan_USR_No"
+              [submitted]="submitted"></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="連絡電話" controlName="Loan_Phone" [control]="queryForm.controls.Loan_Phone"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="證件類型" controlName="Cert_Type" [options]="certTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Cert_Type" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
 
-        <!-- 第二排：出借處理人員 / 連絡電話 / 證件類型 -->
+        <!-- 第三排 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="出借處理人員"
-              controlName="staffName"
-              [control]="queryForm.controls.staffName"
-              [submitted]="submitted">
-            </app-input-text>
+            <app-input-text label="證件編號" controlName="Cert_No" [control]="queryForm.controls.Cert_No"
+              [submitted]="submitted"></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="連絡電話"
-              controlName="phone"
-              [control]="queryForm.controls.phone"
-              [submitted]="submitted">
-            </app-input-number>
+            <app-multi-select label="設備編號/名稱" controlName="Device_Name" [options]="deviceNameOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.Device_Name"
+              [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="證件類型"
-              controlName="paperType"
-              [options]="paperTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.paperType"
-              [submitted]="submitted">
-            </app-multi-select>
+            <app-multi-select label="服務中心位置編號" controlName="Service_Id" [options]="counterCodeOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.Service_Id"
+              [submitted]="submitted"></app-multi-select>
           </div>
         </div>
-
-        <!-- 第三排：證件編號 / 設備名稱 / 設備編號 -->
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="證件編號"
-              controlName="paperCode"
-              [control]="queryForm.controls.paperCode"
-              [submitted]="submitted">
-            </app-input-number>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="設備名稱"
-              controlName="equipmentName"
-              [options]="equipmentNameOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.equipmentName"
-              [submitted]="submitted">
-            </app-multi-select>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="設備編號"
-              controlName="deviceCode"
-              [control]="queryForm.controls.deviceCode"
-              [submitted]="submitted">
-            </app-input-number>
-          </div>
-        </div>
-
-        <!-- 第四排：服務台位置編號 -->
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="服務台位置編號"
-              controlName="counterCode"
-              [options]="counterCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.counterCode"
-              [submitted]="submitted">
-            </app-dropdown>
-          </div>
-        </div>
-
-        <!-- 按鈕列 -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button
-            btnType="clear"
-            [type]="'button'"
-            (clickEvent)="onClear(queryForm)">
-          </app-button>
-
-          <app-button
-            btnType="query"
-            [loading]="loading">
-          </app-button>
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 
-<!-- 列表 -->
 <div class="card">
-  <app-table-report
-    [tableKey]="'cpm11030_' + tableVer"
-    [dataKey]="'_rowKey'"
-    [columns]="columns"
-    [data]="data"
-    [totalRecords]="viewTotalRecords"
-    [loading]="loading"
-    [showManage]="false"
-    [showFilter]="true"
-    [showExcel]="false"
-    [footerData]="footerData"
-    [queryFunction]="queryCPM11030ForReport"
-    [lastQueryBody]="lastQueryBody"
-    [showDelete]="false"
-    [showReportMode]="false"
-    [showCheckBox]="false"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [showDetail]="true"
-    (detail)="onDetail($event)">
+  <app-table-report [columns]="columns" [data]="data" [totalRecords]="totalRecords" [loading]="loading"
+    [queryFunction]="cpm11030Service.queryCPM11030.bind(cpm11030Service)" [lastQueryBody]="lastQueryBody"
+    [showDelete]="false" [showReportMode]="false" (detail)="onDetail($event)" (edit)="onEdit($event)">
+    <header>
+      <div class="flex justify-content-end align-items-center w-full">
+        <div class="flex gap-2">
+          <p-button styleClass="p-2" label="設備出借作業.PDF" [loading]="btnLoading" icon="pi pi-file-pdf"
+            (click)="onExportPDF()" [disabled]="data.length === 0"></p-button>
+
+          <p-button styleClass="p-2" label="設備出借作業.XLSX" [loading]="btnLoading" icon="pi pi-file-excel"
+            (click)="onExportXLSX()" [disabled]="data.length === 0"></p-button>
+        </div>
+      </div>
+    </header>
   </app-table-report>
 </div>
+<!-- Dialog：每日設備可出借量維護 -->
+<app-dialog [(visible)]="dailyDialogVisible" header="每日設備可出借量維護" [loading]="dailyLoading" [disable]="cannotSaveDaily"
+  [showFooter]="true" (save)="onDailySave()" (visibleChange)="dailyDialogVisible = $event">
+  <form [formGroup]="dailyForm" class="p-fluid" (ngSubmit)="onDailyQuery(dailyForm)">
+    <div class="grid p-fluid">
+      <app-dropdown class="col-12 md:col-6 lg:col-4" label="服務台位置編號" controlName="Service_Id"
+        [options]="counterCodeOptions | async" optionLabel="label" optionValue="value"
+        [control]="dailyForm.controls.Service_Id" [submitted]="dailySubmitted"></app-dropdown>
+      <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="營業日期" controlName="CSS_Date"
+        [control]="dailyForm.controls.CSS_Date" [disabled]="true" [submitted]="dailySubmitted"></app-calendar>
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="clear" [form]="dailyForm"></app-button>
+      <app-button btnType="query" [loading]="dailyLoading"></app-button>
+    </div>
+  </form>
+
+  <div class="mt-3">
+    <app-table-edit [tableRequired]="true" [data]="dailyRows" [columns]="dailyColumns" [loading]="dailyLoading"
+      (dataChange)="dailyRows = $event" [disabled]="isAllInitialized" [showCheckBox]="false" [showDelete]="false"
+      [canInsert]="false" [rowValidate]="validateRow"></app-table-edit>
+  </div>
+</app-dialog>

@@ -6,13 +6,13 @@ import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { POS5008Data } from '../../../../service/api/tls/tls24010.service';
-import { SystemOption, SystemOptionsService } from '../../../../service/system/sys1000.service';
+import { getSYS1000Options } from '../../../../service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '../../../../service/utility/dropDownList.service';
 import { DropdownComponent } from '../../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../../shared/componentkit/input-text/input-text.component';
 import { Column } from '../../../../shared/componentkit/table/table.model';
-import { CRD_TypeOptions, POS5008Columns } from '../tls24010-cru.model';
+import { POS5008Columns } from '../tls24010-cru.model';
 
 @UntilDestroy()
 @Component({
@@ -35,12 +35,23 @@ import { CRD_TypeOptions, POS5008Columns } from '../tls24010-cru.model';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Tls24010Pos5008Component implements OnInit, OnChanges {
+  @Input() rece_yn?: string // 是否開立業主發票 'Y':是 'N':否
   @Input() data: POS5008Data[] = [];
   @Input() type?: string;
   @Input() isFormCreateable?: boolean;
   @Input() isFormEditable?: boolean;
   @Input() isFormReadable?: boolean;
   @Input() submitted?: boolean;
+  @Input() totalSaleAmt = 0; // 接收父層傳來的銷售總金額
+  get currentTotalPaid(): number {
+    return this.posFormArrayControls.reduce((sum, group, index) => {
+      // 如果該行被勾選，則計入其金額
+      if (this.POS5008Data[index].selected) {
+        return sum + (Number(group.get('TXN_PayAmt')?.value) || 0);
+      }
+      return sum;
+    }, 0);
+  }
 
   form?: FormGroup;
   POS5008FormArray: FormArray = this.fb.array([]);
@@ -50,9 +61,9 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
   isOptionsLoaded = false;
   trackByRow = (index: number, item: POS5008Data) => { return item?.id || index; }
 
-  CRD_TypeOptions = CRD_TypeOptions;
+  CRD_TypeOptions = getSYS1000Options('CRD_Type');
   PAY_TypeOptions: IDropdownItem[] = [];
-  sys_typeOptions: SystemOption[] = [];
+  sys_typeOptions = getSYS1000Options('T109');
 
   constructor(
     private readonly dropDownListService: DropDownListService,
@@ -85,7 +96,6 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
         return row;
       });
       this.POS5008Data = rows;
-      this.sys_typeOptions = SystemOptionsService.getOptions('T109');
 
       this.isOptionsLoaded = true;
       this.applyInputData();
@@ -118,17 +128,43 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
 
   private applyInputData(): void {
     if (!this.isOptionsLoaded || !this.data?.length || !this.POS5008Data.length) return;
+
     this.POS5008SelectedItems = [...this.data];
     this.POS5008SelectedItems.forEach(item => {
       const rowIndex = this.POS5008Data.findIndex(d => d.PAY_No === item.PAY_No);
       if (rowIndex !== -1) {
         const formGroup = this.POS5008FormArray.at(rowIndex) as FormGroup;
+
+        // --- 關鍵修正：計算顯示用的複合欄位值 ---
+        // 先找出該支付方式的 PAY_Type (從預載的選項中找)
+        const selectedOption = this.PAY_TypeOptions.find(opt => opt.No === item.PAY_No);
+        const payType = selectedOption?.PAY_Type || item.PAY_Type;
+
+        let compositeValue = '';
+        if (payType === '0') {
+          compositeValue = item.CRD_No || '';
+        } else if (payType === 'A') {
+          compositeValue = item.TXN_PayDesc || '';
+        } else {
+          compositeValue = item.TXN_CouponNo || '';
+        }
+        console.log(compositeValue);
+
+        // ------------------------------------
+
         const patchedData = {
           ...item,
-          TERM_No: String(item.TERM_No),
+          TERM_No: item.TERM_No != null ? String(item.TERM_No) : null,
+          // 賦值給 Form 中對應的複合控制項名稱
+          CRD_NoTXN_CouponNoTXN_PayDesc: compositeValue
         };
+
         formGroup.patchValue(patchedData, { emitEvent: false });
         this.POS5008Data[rowIndex].selected = true;
+
+        // 更新 Data 狀態，確保 PAY_Type 也被存入 Data 物件
+        this.POS5008Data[rowIndex].PAY_Type = payType;
+
         formGroup.updateValueAndValidity({ emitEvent: false });
       }
     });
@@ -179,36 +215,65 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
     rowData.selected = true;
     const rowIndex = this.POS5008Data.findIndex(d => d.PAY_No === rowData.PAY_No);
     if (rowIndex === -1) return;
+
     const formGroup = this.posFormArrayControls[rowIndex];
-    // 獲取所有相關控制項
     const txnPayAmtControl = formGroup.get('TXN_PayAmt');
     const crdTypeControl = formGroup.get('CRD_Type');
     const crdNoControl = formGroup.get('CRD_No');
+    const termNoControl = formGroup.get('TERM_No');
     const txnPayDescControl = formGroup.get('TXN_PayDesc');
     const txnCouponNoControl = formGroup.get('TXN_CouponNo');
-    // 1. 通用驗證：TXN_PayAmt 必須
+
+    // --- 新增自動帶入金額邏輯 ---
+    // 剩餘應付 = 總金額 - 目前已填寫的支付總額 (此時這筆剛勾選，金額還是 null 或 0)
+    const remaining = this.totalSaleAmt - this.currentTotalPaid;
+    const currentVal = txnPayAmtControl?.value;
+    if ((currentVal === null || currentVal === undefined || currentVal === 0) && Math.abs(remaining) > 0.001) {
+      txnPayAmtControl?.setValue(remaining, { emitEvent: false });
+    }
+    // -------------------------
+
+    // A. 通用：金額必填
     txnPayAmtControl?.setValidators([Validators.required]);
 
-    // 2. 條件驗證
-    if (rowData.PAY_Type === '0') {
-      // 信用卡
-      crdNoControl?.setValidators([Validators.required, Validators.maxLength(20)]);
-      crdTypeControl?.setValidators([Validators.required]);
-    } else if (rowData.PAY_Type === 'A') {
-      // 應收付款對象
-      txnPayDescControl?.setValidators([Validators.required, Validators.maxLength(100)]);
+    // B. 根據 rece_yn 決定是否允許輸入及必填卡控
+    if (this.rece_yn === 'N') {
+      // 如果不開立業主發票，禁止輸入以下欄位
+      crdTypeControl?.disable();
+      crdNoControl?.disable();
+      termNoControl?.disable();
+      txnPayDescControl?.disable();
+      txnCouponNoControl?.disable();
+
+      // 清除可能殘留的驗證
+      crdNoControl?.clearValidators();
+      crdTypeControl?.clearValidators();
     } else {
-      // 其他券號
-      txnCouponNoControl?.setValidators([Validators.maxLength(50)]);
+      // 如果 rece_yn === 'Y'，啟用欄位
+      crdTypeControl?.enable();
+      crdNoControl?.enable();
+      termNoControl?.enable();
+      txnPayDescControl?.enable();
+      txnCouponNoControl?.enable();
+
+      // 條件必填卡控
+      if (rowData.PAY_Type === '0') {
+        // 信用卡：卡號必填，卡別保持不選則不控 (依您需求)
+        // crdNoControl?.setValidators([Validators.required, Validators.maxLength(20)]);
+        crdNoControl?.setValidators([Validators.maxLength(20)]);
+        // 如果信用卡別也需要必填，可取消下行註解
+        // crdTypeControl?.setValidators([Validators.required]);
+      } else if (rowData.PAY_Type === 'A') {
+        // 應收付款對象：保持目前必填
+        txnPayDescControl?.setValidators([Validators.required, Validators.maxLength(100)]);
+      }
     }
-    // 3. 【修正點】：強制重新檢查控制項的有效性 (關鍵)
-    // 在設置了 required 驗證器後，必須呼叫 updateValueAndValidity 讓控制項立即驗證當前的 null 值
-    txnPayAmtControl?.updateValueAndValidity();
-    crdTypeControl?.updateValueAndValidity();
-    crdNoControl?.updateValueAndValidity();
-    txnPayDescControl?.updateValueAndValidity();
-    txnCouponNoControl?.updateValueAndValidity();
-    formGroup.updateValueAndValidity({ emitEvent: false });
+
+    // C. 強制重新驗證
+    [txnPayAmtControl, crdTypeControl, crdNoControl, termNoControl, txnPayDescControl, txnCouponNoControl].forEach(ctrl => {
+      ctrl?.updateValueAndValidity({ emitEvent: false });
+    });
+
     this.cdr.markForCheck();
   }
   onRowUnselect(event: TableRowUnSelectEvent): void {

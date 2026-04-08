@@ -1,0 +1,52 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateMonthOne" label="年月" controlName="YearMonth"
+              [control]="queryForm.controls.STK_YM" [submitted]="submitted"></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="倉別" controlName="HOS_No" [options]="HOSOptions" optionLabel="label"
+              optionValue="No" [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="品牌" controlName="LOGO_No" [options]="LOGOOptions" optionLabel="label"
+              optionValue="No" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-multi-select>
+          </div>
+          <!-- 國際條碼/商品管理編號/廠商貨號 -->
+          <app-dropdown-table class="col-12" [showOverlay]="false" [control]="queryForm.controls.PLU_MagNo"
+            [submitted]="submitted" optionLabel="label" optionValue="PLU_No" [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)">
+          </app-dropdown-table>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="顯示方式" controlName="ShowType" [options]="showTypeOptions" optionLabel="label"
+              optionValue="value" [filter]="false" [control]="queryForm.controls.ShowType"
+              [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number label="顯示行數" controlName="pageSize" [control]="queryForm.controls.pageSize"
+              [submitted]="submitted"></app-input-number>
+          </div>
+        </div>
+        <div class="grid align-items-center gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <span class="text-500 font-medium flex-1">此報表為月結後查詢</span>
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <app-table-report tableKey="tls57140" [lastQueryBody]="lastQueryBody" [data]="data" [columns]="columns"
+    [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false" [loading]="loading"
+    [queryFunction]="tls57140Service.queryTLS57140.bind(tls57140Service)" [showEdit]="false"
+    [showDetail]="false"></app-table-report>
+</div>

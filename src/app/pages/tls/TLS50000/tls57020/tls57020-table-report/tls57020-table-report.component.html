@@ -1,0 +1,114 @@
+<p-table #dt [columns]="columns" [value]="PaymentDetails" [scrollable]="true" [dataKey]="dataKey" scrollHeight="600px"
+  sortMode="multiple" [rowTrackBy]="trackByFn" rowGroupMode="subheader" groupRowsBy="VEN_NO"
+  styleClass="p-datatable-sm p-datatable-gridlines" [loading]="loading">
+  <ng-template pTemplate="caption">
+    <div class="grid align-items-center justify-content-between mx-0">
+      <div class="p-2 w-full">
+        <ng-content select="header"></ng-content>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template pTemplate="groupheader" let-rowData>
+    <tr pRowGroupHeader>
+      <td [attr.colspan]="columns.length + 1" class="font-bold" [style.background]="'var(--table-header-bg)'">
+        <span class="text-lg text-blue-700">
+          廠商：{{ rowData.VEN_NO }} / {{ getVenName(rowData.VEN_NO) }}
+        </span>
+      </td>
+    </tr>
+    <tr>
+      <th class="w-3rem text-center bg-gray-100">序號</th>
+      <th *ngFor="let col of columns" class="text-center bg-gray-100" style="min-width: 55px">
+        {{ col.header }}
+      </th>
+    </tr>
+  </ng-template>
+
+  <ng-template pTemplate="groupfooter" let-rowData>
+    <tr class="font-bold">
+      <td class="text-center" colspan="4">總計：</td>
+      <td class="text-right font-bold">{{ getGroupFooterData(rowData.VEN_NO)?.TotalTotAmt | number }}</td>
+      <td class="text-right font-bold">{{ getGroupFooterData(rowData.VEN_NO)?.TotalTotNet | number }}</td>
+      <td class="text-right font-bold">{{ getGroupFooterData(rowData.VEN_NO)?.TotalTotTax | number }}</td>
+    </tr>
+    <tr class="font-bold bg-gray-100">
+      <td [attr.colspan]="1 + columns.length">單據資料</td>
+    </tr>
+    <tr class="font-bold">
+      <td [attr.colspan]="1 + columns.length">
+        <p-table #dt [columns]="subColumns" [value]="getGroupInvoiceDetails(rowData.VEN_NO)" [scrollable]="true"
+          [dataKey]="dataKey" scrollHeight="1000px" [rowTrackBy]="trackByFn"
+          styleClass="p-datatable-sm p-datatable-gridlines">
+          <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th class="w-3rem text-center" [style.background]="'var(--surface-300)'" ]>序號</th>
+      <th *ngFor="let col of columns" class="text-center" style="min-width: 55px"
+        [style.background]="'var(--surface-300)'" ]>
+        {{ col.header }}
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns">
+    <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined">
+      <td class="text-center w-3rem">{{ rowIndex + 1 }}</td>
+      <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
+        style="text-overflow: ellipsis; min-width: 55px">
+        <span>
+          {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+        </span>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<div class="mt-3 p-3 border-top-1 surface-border">
+  <div class="flex mb-4 gap-2">
+    <div class="text-lg">
+      <span class="font-bold">廠商應收(付)金額：</span>
+      <span class="px-2">
+        $ {{ getGroupFooterData(rowData.VEN_NO)?.TotalTotAmt | number }}
+      </span>
+    </div>
+    <div class="text-lg">
+      <span class="font-bold">預計付款日：</span>
+      <span class="px-2">
+        {{ getHeaderInfo(rowData.VEN_NO)?.ACP_PayDate | date: 'yyyy/MM/dd' }}
+      </span>
+    </div>
+  </div>
+
+  <div class="signatory-section mt-2 text-sm line-height-3">
+    <div *ngIf="data?.Signatories?.Line1">{{ data?.Signatories?.Line1 }}</div>
+    <div *ngIf="data?.Signatories?.Line2">{{ data?.Signatories?.Line2 }}</div>
+    <div *ngIf="data?.Signatories?.Line3">{{ data?.Signatories?.Line3 }}</div>
+    <div *ngIf="data?.Signatories?.Line4">{{ data?.Signatories?.Line4 }}</div>
+    <div *ngIf="data?.Signatories?.Line5">{{ data?.Signatories?.Line5 }}</div>
+  </div>
+</div>
+</td>
+</tr>
+</ng-template>
+<ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
+  <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [style]="{ height: '20px' }">
+    <td class="text-center w-3rem">
+      {{ getGroupIndex(PaymentDetails, rowData) }}
+    </td>
+    <td *ngFor="let col of columns" [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
+      style="text-overflow: ellipsis; min-width: 55px">
+      <span>
+        {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+      </span>
+    </td>
+  </tr>
+</ng-template>
+<ng-template pTemplate="emptymessage">
+  <tr *ngIf="hasSearched">
+    <td [attr.colspan]="1 + columns.length">
+      <div class="flex justify-content-center align-items-center min-h-full p-5 font-bold text-xl text-500">
+        <i class="pi pi-search mr-2"></i>
+        查無資料
+      </div>
+    </td>
+  </tr>
+</ng-template>
+</p-table>

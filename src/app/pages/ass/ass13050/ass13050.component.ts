@@ -1,168 +1,319 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+import { AsyncPipe } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11010Service } from '@service/api/ass/ass11010.service';
+import { ASS11020Service } from '@service/api/ass/ass11020.service';
+import { ASS11030Service } from '@service/api/ass/ass11030.service';
+import { ASS13050Service } from '@service/api/ass/ass13050.service';
+import { TblUserOrgidItem } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ColumnGroup, formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
+import { ButtonModule } from 'primeng/button';
+import { combineLatest, finalize, map, Observable, startWith } from 'rxjs';
+import { ASS13050QueryRow, QueryASS13050Request } from './ass13050.model';
 
-//3.1.3.5  移轉交接表
+// 3.1.3.5 移轉交接表
+@UntilDestroy()
 @Component({
   selector: 'app-ass13050',
   templateUrl: './ass13050.component.html',
   styleUrl: './ass13050.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, MultiSelectComponent, RadiobuttonComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    AsyncPipe,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    ButtonModule,
+    ButtonComponent,
+    CalendarComponent,
+    DropdownComponent,
+    MultiSelectComponent,
+    RadiobuttonComponent,
+    MenubarComponent,
+    TableReportComponent,
+  ],
 })
-export class ASS13050Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    transferDate: [, [Validators.required]], // 移轉日期
-    newStorage_Unit: [, [Validators.required]], // 新保管單位
-    newStorage_Person: [''], // 新保管人
-    newUsage_Unit: [, [Validators.required]], // 新保管單位
-    newUsage_Person: [''], // 新使用人
-    //
-    purchaseType: [[] as number[]], // 進貨類型
-    bigCategoryCode: [], // 大分類編號
-    propertyCode: [], // 財產編號
-    midCategoryCode: [], // 中分類編號
-    tiltle: [1, []], // 標題
-    smlCategoryCode: [], // 小分類編號
-    //
-    keeperUnit: [], // 保管單位
-    keeper: [], // 保管人
-    userUnit: [], // 使用單位
-    user: [], // 使用人
+export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow> implements OnInit {
+
+  readonly queryForm = this.formBuilder.nonNullable.group({
+    TRANSFER_DATE: new FormControl<Date | null>(null, [Validators.required]),
+    NEW_HOLD_ORG_ID: new FormControl<string | null>(null, [Validators.required]),
+    NEW_HOLD_EMP_ID: new FormControl<string | null>(null),
+    NEW_USE_ORG_ID: new FormControl<string | null>(null, [Validators.required]),
+    NEW_USE_EMP_ID: new FormControl<string | null>(null),
+    PURCHASE_TYPE: new FormControl<string[]>([]),
+    B_CLASS_ID: new FormControl<string | null>(null),
+    M_CLASS_ID: new FormControl<string | null>(null),
+    S_CLASS_ID: new FormControl<string | null>(null),
+    ASSET_ID: new FormControl<string | null>(null),
+    TITLE: new FormControl<number | null>(null),
+    HOLD_ORG_ID: new FormControl<string | null>(null),
+    HOLD_EMP_ID: new FormControl<string | null>(null),
+    USE_ORG_ID: new FormControl<string | null>(null),
+    USE_EMP_ID: new FormControl<string | null>(null),
+    PageSize: new FormControl<number>(30),
+    PageIndex: new FormControl<number>(1),
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  readonly tableData = signal<ASS13050QueryRow[]>([]);
+  readonly totalRecords = signal<number>(0);
+  readonly tableLoading = signal<boolean>(false);
+  lastQueryBody?: QueryASS13050Request;
+
+  btnReportLoading = false;
+
+  // 下拉選單資料來源
+  readonly orgOptions$ = this.dropdownApi.querySys3100();
+  readonly userOrgidOptions$ = this.dropdownApi.queryTblUserOrgid();
+
+  readonly newHoldEmpOptions$ = combineLatest([
+    this.queryForm.controls.NEW_HOLD_ORG_ID.valueChanges.pipe(
+      startWith(this.queryForm.controls.NEW_HOLD_ORG_ID.value),
+    ),
+    this.userOrgidOptions$,
+  ]).pipe(
+    map(([orgId, options]) =>
+      !orgId
+        ? []
+        : (options ?? []).filter(o => (o as unknown as TblUserOrgidItem).Org_ID === orgId),
+    ),
+  );
+
+  readonly newUseEmpOptions$ = combineLatest([
+    this.queryForm.controls.NEW_USE_ORG_ID.valueChanges.pipe(
+      startWith(this.queryForm.controls.NEW_USE_ORG_ID.value),
+    ),
+    this.userOrgidOptions$,
+  ]).pipe(
+    map(([orgId, options]) =>
+      !orgId
+        ? []
+        : (options ?? []).filter(o => (o as unknown as TblUserOrgidItem).Org_ID === orgId),
+    ),
+  );
+
+  readonly oldHoldEmpOptions$ = combineLatest([
+    this.queryForm.controls.HOLD_ORG_ID.valueChanges.pipe(
+      startWith(this.queryForm.controls.HOLD_ORG_ID.value),
+    ),
+    this.userOrgidOptions$,
+  ]).pipe(
+    map(([orgId, options]) =>
+      !orgId
+        ? []
+        : (options ?? []).filter(o => (o as unknown as TblUserOrgidItem).Org_ID === orgId),
+    ),
+  );
+
+  readonly oldUseEmpOptions$ = combineLatest([
+    this.queryForm.controls.USE_ORG_ID.valueChanges.pipe(
+      startWith(this.queryForm.controls.USE_ORG_ID.value),
+    ),
+    this.userOrgidOptions$,
+  ]).pipe(
+    map(([orgId, options]) =>
+      !orgId
+        ? []
+        : (options ?? []).filter(o => (o as unknown as TblUserOrgidItem).Org_ID === orgId),
+    ),
+  );
+
+  readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
+  readonly midClassOptions = signal<{ label: string; value: string }[]>([]);
+  readonly smallClassOptions = signal<{ label: string; value: string }[]>([]);
+  // 進貨類型（DEPRE_YN 財產類型）
+  readonly purchaseTypeOptions: { label: string; value: string }[] = [
+    { value: '1', label: '資產' },
+    { value: '2', label: '列管品' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '項目(財產編號)', visible: true },
-    { field: 'col2', header: '項目(品項)', visible: true },
-    { field: 'col3', header: '項目(數量)', visible: true },
-    { field: 'col4', header: '項目(單位)', visible: true },
-    { field: 'col5', header: '確定交接', visible: true },
-
-    { field: 'col6', header: '原保管(保管單位)', visible: true },
-    { field: 'col7', header: '原保管(保管人)', visible: true },
-    { field: 'col8', header: '原保管(使用單位	)', visible: true },
-    { field: 'col9', header: '原保管(使用人)', visible: true },
-
-    { field: 'col10', header: '新保管(保管單位)', visible: true },
-    { field: 'col11', header: '新保管(保管人)', visible: true },
-    { field: 'col12', header: '新保管(使用單位)', visible: true },
-    { field: 'col13', header: '新保管(使用人)', visible: true },
-
-    { field: 'col14', header: '資產狀態', visible: true },
-    { field: 'col15', header: '原始取得金額', visible: true },
-    { field: 'col16', header: '備註', visible: true },
-
-    // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
-    // { field: 'col18', header: '報廢損失', visible: true },
-
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  purchaseTypeOptions: any[] = [];
-  titleOptions: any[] = [
+  /** 財產編號下拉選項 */
+  readonly assetOptions$ = this.dropdownApi.queryFAASSETChooseList_DropDownList();
+  readonly titleOptions = [
     { value: 1, label: '交接' },
     { value: 2, label: '移轉' },
   ];
-  organizationOptions: any[] = [];
-  userCodeOptions: any[] = [];
-  //
+
+  readonly columnGroup: ColumnGroup[] = [
+    { field: 'item', header: '項目' },
+    { field: 'oldKeeper', header: '原保管' },
+    { field: 'newKeeper', header: '新保管' },
+  ];
+
+  readonly columns: ReportColumn[] = [
+    { field: 'ASSET_ID', header: '財產編號', groupField: 'item' },
+    { field: 'GOODS_ID', header: '品項代碼', groupField: 'item' },
+    { field: 'GOODS_NAME', header: '品項名稱', groupField: 'item' },
+    { field: 'QTY', header: '數量', groupField: 'item' },
+    { field: 'UNIT', header: '單位', groupField: 'item' },
+    { field: 'CONFIRM_TRANSFER', header: '確定交接' },
+    { field: 'ORI_HOLD_ORG_NAME', header: '保管單位', groupField: 'oldKeeper' },
+    { field: 'ORI_HOLD_EMP_NAME', header: '保管人', groupField: 'oldKeeper' },
+    { field: 'ORI_USE_ORG_NAME', header: '使用單位', groupField: 'oldKeeper' },
+    { field: 'ORI_USE_EMP_NAME', header: '使用者', groupField: 'oldKeeper' },
+    { field: 'HOLD_ORG_NAME', header: '保管單位', groupField: 'newKeeper' },
+    { field: 'HOLD_EMP_NAME', header: '保管人', groupField: 'newKeeper' },
+    { field: 'USE_ORG_NAME', header: '使用單位', groupField: 'newKeeper' },
+    { field: 'USE_EMP_NAME', header: '使用者', groupField: 'newKeeper' },
+    { field: 'ASSET_STATUS_NAME', header: '資產狀態' },
+    { field: 'FIR_GET_COST', header: '原始取得金額', format: formatAmount },
+    { field: 'NOTES', header: '備註' },
+  ];
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
+    private readonly ass13050Service: ASS13050Service,
+    private readonly ass11010Service: ASS11010Service,
+    private readonly ass11020Service: ASS11020Service,
+    private readonly ass11030Service: ASS11030Service,
+    private readonly dropdownApi: DropdownApiService,
+    private readonly fileExportService: FileExportService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310020';
-    this.cruPage = '/ASS1000/ASS13050CRU';
-    // ----------------------------------------------------------------
+    this.initializePage('ASS13050', '', this.queryForm, () => this.onSubmit());
+    this.loadBigClassOptions();
+    this.loadMidClassOptions();
+    this.loadSmallClassOptions();
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+  queryFunction = (body: QueryASS13050Request): Observable<ApiResponse<ASS13050QueryRow[]>> => {
+    const rawValue = this.queryForm.getRawValue();
+    const payload: QueryASS13050Request = {
+      ...this.buildQueryPayload(rawValue),
+      PageSize: (body as Record<string, unknown>)['PageSize'] as number ?? body.PageSize,
+      PageIndex: (body as Record<string, unknown>)['PageIndex'] as number ?? body.PageIndex,
+      SortBy: body.SortBy,
+    };
+    return this.ass13050Service.queryASS13050(removeEmptyValues(payload) as QueryASS13050Request);
+  };
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
+  onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const rawValue = this.queryForm.getRawValue();
+      const payload: QueryASS13050Request = {
+        ...this.buildQueryPayload(rawValue),
+        PageSize: rawValue.PageSize || 30,
+        PageIndex: 1,
+      };
+      const cleanPayload = removeEmptyValues(payload) as QueryASS13050Request;
 
-    this.loading = false;
-    this.messageService.unblockUi();
+      this.lastQueryBody = cleanPayload;
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, rawValue);
+
+      this.ass13050Service.queryASS13050(cleanPayload).pipe(
+        finalize(() => {
+          this.tableLoading.set(false);
+          this.loading = false;
+        }),
+        untilDestroyed(this),
+      ).subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          console.log("Data: ", res.Data);
+          this.tableData.set(res.Data);
+          this.totalRecords.set(res.TotalCount || 0);
+        },
+      });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  onDownloadReport(): void {
+    const rawValue = this.queryForm.getRawValue();
+    const payload = removeEmptyValues({
+      ...this.buildQueryPayload(rawValue),
+      PageSize: rawValue.PageSize || 30,
+      PageIndex: 1,
+    }) as QueryASS13050Request;
+
+    const download$ = this.ass13050Service.downloadReportASS13050(payload);
+    this.fileExportService.executeFileExport(
+      download$,
+      '.pdf',
+      (isLoading) => this.loading = isLoading
+    ).subscribe();
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
+  private buildQueryPayload(rawValue: ReturnType<typeof this.queryForm.getRawValue>): QueryASS13050Request {
+    return {
+      TRANSFER_DATE: rawValue.TRANSFER_DATE ? this.formatDateToString(rawValue.TRANSFER_DATE) : undefined,
+      NEW_HOLD_ORG_ID: rawValue.NEW_HOLD_ORG_ID || undefined,
+      NEW_HOLD_EMP_ID: rawValue.NEW_HOLD_EMP_ID || undefined,
+      NEW_USE_ORG_ID: rawValue.NEW_USE_ORG_ID || undefined,
+      NEW_USE_EMP_ID: rawValue.NEW_USE_EMP_ID || undefined,
+      PURCHASE_TYPE: rawValue.PURCHASE_TYPE?.length ? rawValue.PURCHASE_TYPE : undefined,
+      B_CLASS_ID: rawValue.B_CLASS_ID || undefined,
+      M_CLASS_ID: rawValue.M_CLASS_ID || undefined,
+      S_CLASS_ID: rawValue.S_CLASS_ID || undefined,
+      ASSET_ID: rawValue.ASSET_ID || undefined,
+      TITLE: rawValue.TITLE ?? undefined,
+      HOLD_ORG_ID: rawValue.HOLD_ORG_ID || undefined,
+      HOLD_EMP_ID: rawValue.HOLD_EMP_ID || undefined,
+      USE_ORG_ID: rawValue.USE_ORG_ID || undefined,
+      USE_EMP_ID: rawValue.USE_EMP_ID || undefined,
+    };
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
+  private formatDateToString(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  private loadBigClassOptions(): void {
+    this.ass11010Service.queryASS11010({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
+          value: item.CLASS_ID,
+        }));
+        this.bigClassOptions.set(options);
+      },
+    });
+  }
+
+  private loadMidClassOptions(): void {
+    this.ass11020Service.queryASS11020({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
+          value: item.M_CLASS_ID,
+        }));
+        this.midClassOptions.set(options);
+      },
+    });
+  }
+
+  private loadSmallClassOptions(): void {
+    this.ass11030Service.queryASS11030({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.S_CLASS_ID} - ${item.S_CLASS_NAME}`,
+          value: item.S_CLASS_ID,
+        }));
+        this.smallClassOptions.set(options);
+      },
+    });
   }
 }

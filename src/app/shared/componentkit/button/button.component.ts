@@ -1,11 +1,13 @@
 import { AfterViewInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output, signal } from '@angular/core';
-import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
-import { Subject, combineLatest, timer } from 'rxjs';
-import { takeUntil, filter } from 'rxjs/operators';
 import { FormGroup } from '@angular/forms';
-import { Button } from 'primeng/button';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { SystemDataService } from '@service/system/system-data.service';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { FormStatusService } from '@shared/service/form-status.service';
+import { PermissionGuardService } from '@shared/service/permission-guard.service';
+import { Button } from 'primeng/button';
+import { combineLatest, Subject, timer } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
+import { CurrentPageService } from '../../../core/layout/app.menulist/current-page.service';
 interface ButtonConfig {
   label: string;
   icon?: string;
@@ -44,6 +46,8 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private systemDataService: SystemDataService = inject(SystemDataService);
   private currentPageService: CurrentPageService = inject(CurrentPageService);
+  private permissionGuard = inject(PermissionGuardService);
+  private formStatusService = inject(FormStatusService);
   private ngUnsubscribe = new Subject<void>();
   private readonly buttonConfig: Record<string, ButtonConfig> = {
     default: { label: '標籤', icon: undefined, class: '', disabled: false, type: 'button', severity: undefined },           // 預設
@@ -97,12 +101,21 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void { // 這個寫法有點爛，但是目前想到最簡單的解法了
     // 在這裡使用 timer 延遲儲存初始值
     if (this.btnType === 'cancel' || this.btnType === 'clear') {
-      // 延遲 300 毫秒，確保大多數情況下非同步資料已載入
       timer(1000).pipe(takeUntil(this.ngUnsubscribe)).subscribe(() => {
         this.initialFormValue = this.form?.getRawValue();
         this.showButton.set(true);
+        const progNo = this.currentPageService.getCurrentProgNo();
+        if (progNo) {
+          // console.log(`按鈕元件(${this.btnType})通知表單(${progNo})已截取初始值`);
+          this.formStatusService.notifyReady(progNo);
+        }
       });
     }
+  }
+
+  hasPermission(action: string): boolean {
+    const progNo = this.currentPageService.getCurrentProgNo();
+    return this.permissionGuard.hasPermission(progNo as string, action);
   }
 
   ngOnDestroy(): void {

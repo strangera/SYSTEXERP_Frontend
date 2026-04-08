@@ -36,8 +36,8 @@ export interface TLS24010Data {
   TXN_TaxType: string,
   TXN_TaxFreeCertNo: string,
   GUI_Track: string,
-  TXN_GUIBegNo: string,
-  TXN_GUIEndNo: string,
+  TXN_GUIBegNo: string, // 發票號碼起號
+  TXN_GUIEndNo: string, // 發票號碼訖號
   TXN_CustCnt: number,
   TXN_MemCard: string,
   TXN_Uniform: string,
@@ -52,8 +52,14 @@ export interface TLS24010Data {
   TXN_GUILoveCode: string
   store_way?: string; // 櫃位類型
   talent_id?: number; // 專櫃合約編號
+  rece_yn?: string; // 是否開立業主發票
   TXN_GUIPaper?: string; // 補登類別
   type?: string; // 修正類型
+  IsCanDel?: boolean; // 有發票的是否可刪除
+  TXN_Ret_No?: string; // 折讓單號
+  tlt_term_type?: string;
+  ORG_TXN_Date?: string;
+  ORG_ECR_No?: string;
 }
 
 export interface POS5007Data {
@@ -196,6 +202,10 @@ export interface UpdateTLS24010Payload {
     Talent_ID: number;
     TXN_PreOrder: string;
   };
+  VoidEdit?: {
+    Void_Date: string,
+    Void_Time: string
+  }
 }
 
 export interface QueryPOS2004ForUpdatePayload {
@@ -246,6 +256,13 @@ export interface TltInfo {
   talent_id: number;
 }
 
+export interface DeleteTLS24010Payload {
+  SYS_StoreNo: string,
+  TXN_Date: string,
+  ECR_No: string,
+  TXN_No: number
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -262,33 +279,23 @@ export class Tls24010Service {
    * @returns 包含 ITLS24010Data 陣列的 API 響應
    */
   queryTLS24010(params: TLS24010Request, tltOptions: IDropdownItem[]): Observable<ApiResponse<TLS24010Data[]>> {
-
-    // 建立一個 Map 方便查找，以 No (TLT_No) 作為鍵
     const tltMap = new Map(tltOptions.map(tlt => [tlt.No, tlt]));
 
-    return this.http.post<ApiResponse<TLS24010Data[]>>(`${this.apiUrl}/queryTLS24010`, params)
-      .pipe(
-        map(res => {
-          if (res.Data) {
-            res.Data = res.Data.map(item => {
-              const newItem: TLS24010Data = {
-                ...item,
-                TXN_No: item.TXN_No.toString(),
-              };
-
-              // 查找並賦值 store_way 和 talent_id
-              const data = tltMap.get(newItem.TLT_No);
-              if (data?.store_way && data?.talent_id) {
-                newItem.store_way = data.store_way;
-                newItem.talent_id = data.talent_id;
-              }
-
-              return newItem;
-            });
-          }
-          return res;
+    return this.http.post<ApiResponse<TLS24010Data[]>>(`${this.apiUrl}/queryTLS24010`, params).pipe(
+      map(res => ({
+        ...res,
+        Data: res.Data?.map(item => {
+          const tltInfo = tltMap.get(item.TLT_No);
+          return {
+            ...item,
+            TXN_No: item.TXN_No.toString(),
+            // 使用 Optional Chaining 簡化賦值
+            store_way: tltInfo?.store_way ?? item.store_way,
+            talent_id: tltInfo?.talent_id ?? item.talent_id
+          };
         })
-      );
+      }))
+    );
   }
   /**
    * 查詢 POS2007 POS2008 資料表
@@ -303,8 +310,8 @@ export class Tls24010Service {
  * @param payload 請參考 Swagger insertTLS24010 API 格式
  * @returns 成功訊息或錯誤訊息
  */
-  insertTLS24010(payload: InsertTLS24010Payload): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertTLS24010`, payload);
+  insertTLS24010(payload: InsertTLS24010Payload): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/insertTLS24010`, payload);
   }
   /**
    * 更新交易補登資料（修正用）
@@ -342,5 +349,9 @@ export class Tls24010Service {
 
   printTLS24010(TXN_Ret_No: string): Observable<ApiResponse<{ Print_URL: string }>> {
     return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS24010`, { TXN_Ret_No })
+  }
+
+  deleteTLS24010(payload: DeleteTLS24010Payload): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/deleteTLS24010`, payload);
   }
 }

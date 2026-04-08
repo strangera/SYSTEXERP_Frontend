@@ -83,12 +83,18 @@ export interface QueryFIN24010Response {
   UPD_USR_No: string,
   UPD_USR_Name: string,
   POS_VEN_BNK_No: string,
+  POS_VEN_BNK_BranchNo: string, // <-- 補上這筆
   POS_VEN_BankAccountNo: string,
   POS_VEN_AccountName: string,
   Diff_BNK_No: string,
   Diff_BankAccountNo: string,
   Diff_AccountName: string,
   TotalRows: number,
+  // --- 新增後端組合欄位 ---
+  Full_VEN_BNK_No?: string;      // 匯款銀行代號 (帳款檔)
+  Full_Bank_Name?: string;       // 匯款銀行名稱 (帳款檔)
+  Full_POS_VEN_BNK_No?: string;  // 廠商主檔匯款銀行代號
+  Full_POS_Bank_Name?: string;   // 廠商主檔匯款銀行名稱
 }
 
 export interface UpdateFIN24010Request {
@@ -105,6 +111,14 @@ export interface UpdateFIN24010Request {
 
 export interface UpdateFIN24010RemitRequest {
   ACP_No_List: string[]; // 應付帳款編號清單
+}
+
+export interface QueryBankAccountRequest {
+  BNK_id: string,
+  BNK_No: string,
+  BNK_AccNo: string,
+  BNK_AccName: string,
+  DisplayText: string
 }
 
 @Injectable({
@@ -124,5 +138,10 @@ export class Fin24010Service {
   /** 應付帳款維護-異動檢核-更新匯款檔資料 */
   updateFIN24010Remit(params: UpdateFIN24010RemitRequest): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/updateFIN24010Remit`, params);
+  }
+
+  // FIN25020
+  queryBankAccount(): Observable<ApiResponse<QueryBankAccountRequest[]>> {
+    return this.http.post<ApiResponse<QueryBankAccountRequest[]>>(`${this.apiUrl}/queryBankAccount`, {});
   }
 }

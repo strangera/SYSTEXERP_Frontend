@@ -1,16 +1,19 @@
 import { getSYS1000, getSYS1000Options } from "@service/system/sys1000.service";
-import { Column, formatAmount, formatDateTime, formatYN, formatYYYYMM } from "../../../shared/componentkit/table/table.model";
 import { transformOptionsForExport } from "@shared/componentextends/basic-print/basic-print-data.component";
+import { ReportColumn } from "@shared/componentkit/table-report/table-report.model";
+import { formatAmount, formatDateTime, formatYN, formatYYYYMM } from "../../../shared/componentkit/table/table.model";
 
 export interface APS2001Data {
-  id: number;
-  SAL_GUIYYYYMM: string; // 發票年月
+  id?: number;
+  rowKey?: string;
+  SAL_GUIYYYYMM: string | Date | null; // 發票年月
   SAL_GUIBegMM: string; // 起始月份
   SAL_GUIEndMM: string; // 終止月份
   SAL_GUITrack: string; // 字軌
   SAL_GUIBegNo: string; // 發票起始號碼
   SAL_GUIEndNo: string; // 發票結束號碼
   SAL_GUIPaper: string; // 發票類別
+  CanDel?: boolean; // 是否可刪除
   SAL_LastUsedGUINo?: string; // 已使用的發票號 (可為空)
   SAL_VoidGUICnt?: number; // 作廢發票張數 (可為空)
   SAL_BlankCnt?: number; // 發票張數 (可為空)
@@ -30,7 +33,7 @@ export interface APS2001Data {
   UPD_USR_Name?: string; // 變更人員姓名 (可為空)
 }
 
-export const columns: Column[] = [
+export const columns: ReportColumn[] = [
   // { field: 'id', header: '序號', visible: true },
   { field: 'SAL_GUIYYYYMM', header: '發票年月', visible: true, format: formatYYYYMM },
   { field: 'SAL_GUIBegMM', header: '起始月份', visible: false },

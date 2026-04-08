@@ -5,17 +5,13 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Tls12060Service } from '@service/api/tls/tls12060.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 import { createPaginationConfig, formatDateTime } from '@shared/componentkit/table2/table2.model';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -53,7 +49,7 @@ export interface POS2013 {
   selector: 'app-tls12060',
   templateUrl: './tls12060.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, InputNumberRangeComponent, AccordionModule, FormsModule, ReactiveFormsModule, ReportTableGroupComponent, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, InputNumberRangeComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
 })
 export class TLS12060Component extends BasicQueryPageComponent<response10260> implements OnInit {
   // 查詢
@@ -172,7 +168,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       this.contact_USR_Option = response.Data.map((item: any) => ({
         No: item.No, // 接待人員 代碼
         Name: item.Name, // 接待人員 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       console.log('接待人員代號:', this.contact_USR_Option);
     });
@@ -190,7 +186,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       this.floor_Option = response.Data.map((item: any) => ({
         No: item.No, // 樓層 號
         Name: item.Name, // 樓層 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       console.log('大分類代號:', this.floor_Option);
     });
@@ -199,7 +195,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       this.location_Option = response.Data.map((item: any) => ({
         No: item.No, // 位置編號
         Name: item.Name, // 位置 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       console.log('location_Option:', this.location_Option);
     });
@@ -208,7 +204,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       this.area_Option = response.Data.map((item: any) => ({
         No: item.No, // 區域代碼
         Name: item.Name, // 區域 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       console.log('area_Option:', this.area_Option);
     });
@@ -217,7 +213,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
       this.TLTTalent_Option = response.Data.map((item: any) => ({
         No: item.No, // 櫃編 代碼
         Name: item.Name, // 櫃編 名稱
-        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
       console.log('area_Option:', this.TLTTalent_Option);
     });
@@ -239,7 +235,7 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
         ShortName: item.ShortName,
         VEN_No: item.VEN_No,
         VEN_EngName: item.VEN_EngName,
-        Label: item.No + '/' + item.Name,
+        Label: item.No + '-' + item.Name,
       }));
 
       console.log('統編代號(去重):', this.cus_uniform_Option);

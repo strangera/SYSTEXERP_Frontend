@@ -1,14 +1,12 @@
-import { ChangeDetectionStrategy, Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Column } from '../table.model';
-import { TableModule } from 'primeng/table';
+import { CommonModule, NgFor, NgIf } from '@angular/common';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
 import { PrimeTemplate, SortMeta } from 'primeng/api';
-import { NgFor, NgIf, CommonModule } from '@angular/common';
-import { expandAnimation } from './table-expansion.model';
+import { TableModule } from 'primeng/table';
+import { Column } from '../table.model';
 
 @Component({
   selector: 'app-table-expansion',
   templateUrl: './table-expansion.component.html',
-  animations: [expandAnimation],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [TableModule, PrimeTemplate, NgFor, NgIf, CommonModule]
@@ -18,16 +16,15 @@ export class TableExpansionComponent implements OnInit {
   @Input() expansionColumns: Column[] = [];
   @Input() rowData: any;
   @Input() expansionMultiSortMeta: SortMeta[] = [{ field: this.expansionDataKey, order: 1 }];
-
+  @Input() expansionShowSort = true;
+  @Input() expansionShowReorder = false;
   // 新增分頁相關參數
   @Input() showPaginator = false;          // 是否顯示分頁器
-  @Input() rows = 20;                     // 每頁顯示行數
-  @Input() rowsPerPageOptions = [20, 40, 60, 80, 100]; // 分頁選項
+  @Input() rows = 30;                     // 每頁顯示行數
+  @Input() rowsPerPageOptions = [30, 60, 90, 120, 150]; // 分頁選項
   @Input() scrollHeight = '300px';        // 表格高度
-
   localRowData: any[] = [];
   isExpanded = false;
-
   // 分頁相關屬性
   totalRecords = 0;                       // 總記錄數
   first = 0;                              // 當前起始索引

@@ -1,16 +1,18 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { FIN11050Data, FIN11050QueryRequest, Fin11050Service } from '../../../service/api/fin/fin11050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { removeEmptyValues } from '../../../shared/utils/object-utils';
 
 @Component({
   selector: 'app-fin11050',
@@ -24,7 +26,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
   ]
 })
@@ -35,11 +37,14 @@ export class FIN11050Component extends BasicQueryPageComponent<FIN11050Data> imp
     ...createPaginationConfig([{ field: 'INV_GUIType', order: 1 }]) // 分頁和排序參數
   });
 
-  totalRecords = 0;
-  data: FIN11050Data[] = [];
+  readonly tableData = signal<FIN11050Data[]>([]);
+  readonly totalRecords = signal<number>(0);
+  readonly tableLoading = signal<boolean>(false);
+  lastQueryBody?: FIN11050QueryRequest;
+
   selectedItems: FIN11050Data[] = [];
 
-  columns: Column[] = [
+  readonly columns: ReportColumn[] = [
     { field: 'id', header: '序號', visible: false },
     { field: 'INV_GUIType', header: '發票格式代號', visible: true },
     { field: 'INV_GUIName', header: '發票格式名稱', visible: true },
@@ -59,31 +64,61 @@ export class FIN11050Component extends BasicQueryPageComponent<FIN11050Data> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN11050', 'fin/fin11050cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN11050', 'fin/fin11050cru', this.queryForm, () => this.onSubmit());
   }
 
-  onSubmit(frm: FormGroup) {
-    const queryRequest: FIN11050QueryRequest = {
-      ...frm.value,
+  queryFunction = (body: any) => {
+    const raw = this.queryForm.getRawValue();
+    const pageSize = body?.pageSize ?? body?.PageSize ?? raw?.pageSize ?? 30;
+    const pageIndex = body?.pageIndex ?? body?.PageIndex ?? raw?.pageIndex ?? 1;
+    const payload: FIN11050QueryRequest = {
+      INV_GUIType: raw.INV_GUIType || undefined,
+      INV_GUIName: raw.INV_GUIName || undefined,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: body?.SortBy ?? raw?.SortBy,
     };
+    const clean = removeEmptyValues(payload) as FIN11050QueryRequest;
+    return this.fin11050Service.queryFIN11050(clean);
+  };
 
+  onSubmit(): void {
+    const frm = this.queryForm;
     this.handleSubmit(frm, () => {
-      this.fin11050Service.queryFIN11050(queryRequest)
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(response => {
+      const raw = frm.getRawValue();
+      this.lastQueryBody = {
+        INV_GUIType: raw.INV_GUIType || undefined,
+        INV_GUIName: raw.INV_GUIName || undefined,
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1,
+        SortBy: raw.SortBy,
+      } as FIN11050QueryRequest;
+
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody).pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.tableLoading.set(false);
+          this.loading = false;
+        })
+      ).subscribe({
+        next: response => {
           if (response.Status === '0000') {
-            this.data = response.Data || [];
-            this.totalRecords = response.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+            this.tableData.set(response.Data || []);
+            this.totalRecords.set(response.TotalCount ?? 0);
           } else {
             this.messageService.errorBubble(`查詢失敗: ${response.Message}`);
           }
-        });
+        }
+      });
     });
   }
 
+  isRowSelectable = (_rowData: FIN11050Data): boolean => true;
+
   onDelete(selectedItems: FIN11050Data[]) {
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
       accept: () => {
         const INV_GUITypeList = selectedItems.map(item => item.INV_GUIType);
@@ -91,7 +126,8 @@ export class FIN11050Component extends BasicQueryPageComponent<FIN11050Data> imp
           .pipe(untilDestroyed(this))
           .subscribe(() => {
             this.messageService.successBubble('刪除成功');
-            this.onSubmit(this.queryForm);
+            this.selectedItems = [];
+            this.onSubmit();
           });
       }
     });

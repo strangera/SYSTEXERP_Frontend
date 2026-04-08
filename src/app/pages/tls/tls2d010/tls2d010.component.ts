@@ -6,9 +6,12 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
+import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { finalize } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { Tls2d010Service } from '../../../service/api/tls/tls2d010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -20,8 +23,6 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IAPS1003Item, IDropdownItem } from './../../../service/utility/dropDownList.service';
-
-import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 @Component({
   selector: 'app-tls2d010',
   templateUrl: './tls2d010.component.html',
@@ -50,12 +51,15 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     CAP_ItemList: [[]],
     AccNoList: [[]], // 會計科目代號
     org_idList: [[] as number[]], // 組織
-    tpy_date: [], // 扣款年月
+    tpy_YYYYMM: [], // 扣款年月
+    tpy_date: [], // 扣款日期
     pod_noList: [[]], // 維護日
-    CRT_USR_No: [this.authService.currentUserValue?.user_No],
+    CRT_USR_No: [''],
     GUI_FLAG: [''],
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
+  //     CRT_USR_No: [this.authService.currentUserValue?.user_No], 預設為登入者
+
 
   columns: any[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -71,6 +75,10 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     { field: 'GUI_FLAG', header: '是否開立發票', visible: true, format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : '' },
     { field: 'tpy_net', header: '扣款(未稅)', visible: true, format: formatAmount, align: 'right' },
     { field: 'remarks', header: '備註', visible: true },
+    { field: 'CRT_USR_Name', header: '建立者', visible: true },
+    { field: 'CRT_Date', header: '建立時間', visible: true, format: formatDate },
+    { field: 'UPD_USR_Name', header: '修改者', visible: true },
+    { field: 'UPD_Date', header: '修改時間', visible: true, format: formatDate },
   ];
 
   totalRecords = 0;
@@ -93,6 +101,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     private tls2d010Service: Tls2d010Service,
     private dropDownListService: DropDownListService,
     public sharedDropdownService: SharedDropdownService,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }
@@ -109,21 +118,19 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
       }));
     });
 
-    this.dropDownListService.queryAPS1003DropDownList({ CAP_ItemList: [] }) // 參數照 interface
-      .subscribe((res) => {
-        this.CAP_ItemOptions = (res?.Data || []).map((item: any) => ({
-          CAP_Item: item.CAP_Item, // 扣款項目代碼
-          CAP_Name: item.CAP_Name, // 顯示名稱
-          value: item.CAP_Item,    // 綁定值
-          label: `${item.CAP_Item}-${item.CAP_Name}`, // 顯示文字
-          No: item.CAP_Item,       // 必須的屬性
-          Name: item.CAP_Name,     // 必須的屬性
-          AccNo: item.AccNo,       // 會計科目
-          GUI_FLAG: item.GUI_FLAG, // 是否開立發票
-          CAP_TaxType: item.CAP_TaxType, // 課稅別
-          CAP_Type: item.CAP_Type,       // 扣款類型
+    this.dropDownListService.queryAPS1003DropDownList({ CAP_ItemList: [] }).subscribe((res) => {
+      this.CAP_ItemOptions = (res?.Data || [])
+        .filter((item: any) => item.CAP_Type !== '0')
+        .map(({ CAP_Item, CAP_Name, ...rest }) => ({
+          ...rest,
+          CAP_Item,
+          CAP_Name,
+          value: CAP_Item,
+          label: `${CAP_Item}-${CAP_Name}`,
+          No: CAP_Item,
+          Name: CAP_Name
         }));
-      });
+    });
 
     this.dropDownListService.queryGLS1005_DropDownList().subscribe((res) => {
       this.AccNoOptions = (res?.Data || []).map((item: any) => ({
@@ -161,7 +168,36 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(frm: FormGroup) {
-    const payload = { ...frm.value };
+    const formValue = frm.value;
+    const payload: any = { ...formValue };
+
+    // 專櫃編號：MultiSelect 綁的是 talent_id，需要轉成後端要的 tlt_no
+    if (Array.isArray(payload.tlt_noList) && payload.tlt_noList.length) {
+      payload.tlt_noList = payload.tlt_noList
+        .map((val: any) => {
+          const match = this.tlt_noOptions.find(opt =>
+            opt?.value === val || opt?.No === val || (opt as any)?.tlt_no === val
+          );
+          return match?.No ?? val;
+        })
+        .filter((val: any) => val !== null && val !== undefined && val !== '');
+    }
+
+    // 分頁欄位：後端使用 PageSize/PageIndex/Offset
+    const pageSize = Number(formValue.pageSize ?? 20);
+    const pageIndex = Number(formValue.pageIndex ?? 1);
+    payload.PageSize = pageSize;
+    payload.PageIndex = pageIndex;
+    payload.Offset = (pageIndex - 1) * pageSize;
+
+    if (!Array.isArray(payload.SortBy) || !payload.SortBy.length) {
+      payload.SortBy = [{ field: 'tlt_no', order: 1 }];
+    }
+
+    // 給可能使用的 OrderBy
+    if (!payload.OrderBy && payload.SortBy[0]?.field) {
+      payload.OrderBy = payload.SortBy[0].field;
+    }
     // 若 tpy_date 有值且為 Date，轉成 yyyy-MM-dd 字串
     if (payload.tpy_date instanceof Date) {
       const yyyy = payload.tpy_date.getFullYear();
@@ -169,12 +205,26 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
       const dd = String(payload.tpy_date.getDate()).padStart(2, '0');
       payload.tpy_date = `${yyyy}-${mm}-${dd}`;
     }
+    // 若 tpy_YYYYMM 有值且為 Date，轉成 yyyymm 字串
+    if (payload.tpy_YYYYMM instanceof Date) {
+      const yyyy = payload.tpy_YYYYMM.getFullYear();
+      const mm = String(payload.tpy_YYYYMM.getMonth() + 1).padStart(2, '0');
+      payload.tpy_YYYYMM = `${yyyy}${mm}`;
+    } else if (typeof payload.tpy_YYYYMM === 'string') {
+      // 如果是像 2026-01 或 2026/01 或 202601 等字串，嘗試轉為 yyyymm
+      const s = String(payload.tpy_YYYYMM).replace(/[^0-9]/g, '');
+      if (s.length === 6) {
+        payload.tpy_YYYYMM = `${s.substring(0, 4)}${s.substring(4, 6)}`;
+      }
+    }
     this.loading = true;
     this.tls2d010Service.queryTLS2D010(payload).subscribe({
       next: (res) => {
         this.data = res?.Data || [];
         // 支援後端回傳不同的總數欄位名稱 (TotalCount / Total / TotalRecords)
         this.totalRecords = res?.TotalCount ?? res?.Total ?? res?.TotalRecords ?? this.data.length;
+        // 查詢成功後，記錄當前查詢條件，供返回本頁時還原
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       },
       complete: () => {
         this.loading = false;
@@ -184,11 +234,39 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   setCounterType(row: any) {
     return { ...row, type: 'counter' };
   }
-  onDelete(event: any) {
-    const idList = event.map((item: any) => item.id);
-    this.tls2d010Service.deleteTLS2D010({ idList }).subscribe(() => {
-      this.onSubmit(this.queryForm);
+  onDelete(selectedItems: any[]): void {
+    if (!selectedItems || selectedItems.length === 0) {
+      alert('請先選擇要刪除的項目');
+      return;
+    }
+
+    const idList = selectedItems.map((item: any) => item.id);
+
+    this.messageService.confirm({
+      message: `確定要刪除 ${idList.length} 筆資料嗎？`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.loading = true;
+        this.tls2d010Service.deleteTLS2D010({ idList })
+          .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+          .subscribe({
+            next: () => {
+              this.messageService.successBubble('刪除成功');
+              this.onSubmit(this.queryForm);
+            },
+          });
+      },
+      reject: () => {
+        // 使用者取消刪除，不做任何事
+      }
     });
+  }
+  btnLoading = false;
+  excelLoading = false;
+  downloadTemplate() {
+    const export$ = this.tls2d010Service.downloadTLS2D010Template();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 
   /** 匯入 Excel 並產生錯誤檔 */
@@ -196,24 +274,35 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     const file = event.files[0];
     const formData = new FormData();
     formData.append('file', file);
+    this.excelLoading = true;
+    this.tls2d010Service.uploadExcel(formData)
+      .pipe(untilDestroyed(this), finalize(() => (this.excelLoading = false)))
+      .subscribe({
+        next: (res) => {
+          const data = res?.Data;
 
-    this.tls2d010Service.uploadExcel(formData).pipe(untilDestroyed(this)).subscribe({
-      next: (res) => {
-        const data = res?.Data;
-
-        if (data) {
-          if (data.ErrorFilePath) {
-            // 有錯誤檔：顯示錯誤提示
-            this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
-            // 自動下載錯誤檔
-            this.downloadErrorFile(data.ErrorFilePath);
-          } else {
-            // 沒有錯誤檔：顯示成功筆數
-            this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+          if (data) {
+            if (data.ErrorFilePath) {
+              // 有錯誤檔：顯示錯誤提示
+              this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+              // 自動下載錯誤檔
+              this.downloadErrorFile(data.ErrorFilePath);
+            } else if (data.Success === false) {
+              // 匯入失敗但沒有錯誤檔：直接顯示錯誤訊息
+              const backendMessage = res?.Message || '';
+              const errorDetail = Array.isArray(data.Errors) && data.Errors.length
+                ? data.Errors.join('\n')
+                : '';
+              const finalMessage = backendMessage || errorDetail || '匯入失敗，請聯絡系統管理員';
+              this.messageService.errorBubble(finalMessage);
+            } else {
+              // 成功：顯示成功筆數並重新查詢
+              this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+              this.onSubmit(this.queryForm);
+            }
           }
-        }
-      },
-    });
+        },
+      });
   }
 
   /** 自動下載錯誤檔 */

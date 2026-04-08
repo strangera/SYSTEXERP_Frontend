@@ -1,12 +1,8 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-        <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-      </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -20,7 +16,7 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
-          <!-- 票據號碼 -->
+          <!-- 第1列 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="票據號碼"
@@ -30,12 +26,11 @@
             ></app-input-text>
           </div>
 
-          <!-- 廠客代號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="廠客代號"
               controlName="vendorCode"
-              [options]="vendorCodeOptions"
+              [options]="VendorNoOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.vendorCode"
@@ -43,12 +38,11 @@
             ></app-dropdown>
           </div>
 
-          <!-- 公司銀行科目代號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="公司銀行科目代號"
               controlName="bankAccountCode"
-              [options]="bankAccountCodeOptions"
+              [options]="BankCodeOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.bankAccountCode"
@@ -56,55 +50,48 @@
             ></app-dropdown>
           </div>
 
-          <!-- 開票日期 -->
+          <!-- 第2列 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
-              label="開票日期"
-              controlName="issueDate"
+              label="開票日"
               [startControl]="queryForm.controls.issueDateStart"
               [endControl]="queryForm.controls.issueDateEnd"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
 
-          <!-- 到期日 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="到期日"
-              controlName="dueDate"
               [startControl]="queryForm.controls.dueDateStart"
               [endControl]="queryForm.controls.dueDateEnd"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
 
-          <!-- 兌現日 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="兌現日"
-              controlName="cashDate"
               [startControl]="queryForm.controls.cashDateStart"
               [endControl]="queryForm.controls.cashDateEnd"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
 
-          <!-- 票面金額 -->
+          <!-- 第3列 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range
               [useGrouping]="false"
               label="票面金額"
-              controlName="amount"
               [startControl]="queryForm.controls.amountStart"
               [endControl]="queryForm.controls.amountEnd"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
 
-          <!-- 票據抬頭 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="票據抬頭"
@@ -114,7 +101,6 @@
             ></app-input-text>
           </div>
 
-          <!-- 票據禁止背書轉讓 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="票據禁止背書轉讓"
@@ -127,7 +113,7 @@
             ></app-dropdown>
           </div>
 
-          <!-- 備註 -->
+          <!-- 第4列 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="備註"
@@ -137,7 +123,6 @@
             ></app-input-text>
           </div>
 
-          <!-- 組織代號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="組織代號"
@@ -150,7 +135,6 @@
             ></app-dropdown>
           </div>
 
-          <!-- 活動代號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="活動代號"
@@ -163,7 +147,7 @@
             ></app-dropdown>
           </div>
 
-          <!-- 票據狀態 -->
+          <!-- 第5列 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="票據狀態"
@@ -176,7 +160,6 @@
             ></app-dropdown>
           </div>
 
-          <!-- 狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="狀態"
@@ -189,52 +172,48 @@
             ></app-dropdown>
           </div>
 
-          <!-- 領取狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="領取狀態"
-              controlName="collectionStatus"
-              [options]="collectionStatusOptions"
+              controlName="pickupType"
+              [options]="pickupTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.collectionStatus"
+              [control]="queryForm.controls.pickupType"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
 
-          <!-- 領取日期 -->
+          <!-- 第6列 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range
               calendarType="dateRange"
               label="領取日期"
-              controlName="collectionDate"
-              [startControl]="queryForm.controls.collectionDateStart"
-              [endControl]="queryForm.controls.collectionDateEnd"
+              [startControl]="queryForm.controls.pickupDateStart"
+              [endControl]="queryForm.controls.pickupDateEnd"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
 
-          <!-- 應付票據開票單號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="應付票據開票單號"
-              controlName="paymentBillNumber"
-              [control]="queryForm.controls.paymentBillNumber"
+              controlName="pamNo"
+              [control]="queryForm.controls.pamNo"
               [submitted]="submitted"
             ></app-input-text>
           </div>
 
-          <!-- 應付票據會計科目 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="應付票據會計科目"
-              controlName="paymentAccount"
-              [control]="queryForm.controls.paymentAccount"
+              controlName="apCheckAccNo"
+              [control]="queryForm.controls.apCheckAccNo"
               [submitted]="submitted"
             ></app-input-text>
           </div>
 
-          <!-- 傳票號碼 -->
+          <!-- 第7列 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="傳票號碼"
@@ -244,54 +223,154 @@
             ></app-input-text>
           </div>
 
-          <!-- 對象別編號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="對象別編號"
-              controlName="targetCode"
+              controlName="partyTypeNo"
               [options]="targetCodeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.targetCode"
+              [control]="queryForm.controls.partyTypeNo"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
 
-          <!-- 對帳KEY值 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="對帳KEY值"
-              controlName="reconciliationKey"
-              [control]="queryForm.controls.reconciliationKey"
+              controlName="reconKey"
+              [control]="queryForm.controls.reconKey"
               [submitted]="submitted"
             ></app-input-text>
           </div>
         </div>
-      </form>
 
-      <!-- Buttons -->
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
+            [type]="'button'"
+            label="支票領取"
+            (clickEvent)="onPickup()"
           ></app-button>
+
+          <app-button
+            btnType="clear"
+            [type]="'button'"
+            (clickEvent)="onClear(queryForm)"
+          ></app-button>
+
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-      </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 
-<!-- Table -->
+<!-- ✅ 工具列：匯出放在 table 上方（不依賴 table-report 內建報表按鈕） -->
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+  <div class="flex justify-content-between align-items-center w-full mb-2">
+    <div></div>
+
+    <div class="flex gap-2">
+      <p-button
+        styleClass="p-2"
+        label="應付票據明細表.PDF"
+        [loading]="btnLoading"
+        icon="pi pi-file"
+        (click)="onExportPDF()"
+        [disabled]="data.length === 0"
+      ></p-button>
+
+      <p-button
+        styleClass="p-2"
+        label="應付票據明細表.XLSX"
+        [loading]="btnLoading"
+        icon="pi pi-file"
+        (click)="onExportXLSX()"
+        [disabled]="data.length === 0"
+      ></p-button>
+    </div>
   </div>
+
+  <!-- ✅ 列表：改用 app-table-report -->
+  <app-table-report
+    [tableKey]="'FIN63020_TABLE'"
+    [dataKey]="'CheckNo'"
+    [columns]="columns"
+    [data]="data"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [lazy]="true"
+
+    [showCheckBox]="true"
+    [selectedItems]="selectedItems"
+    (selectionChange)="onSelectionChange($event)"
+    (selectAllChange)="onSelectAllChange($event)"
+    [isRowSelectable]="isRowSelectable"
+
+    [showManage]="true"
+    [showDetail]="true"
+    [showEdit]="true"
+    [editDisabled]="editDisabled"
+    
+    (detail)="onDetail($event)"
+    (edit)="onEdit($event)"
+
+    [showReportMode]="false"
+    [showDelete]="false"
+
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFIN63020ForReport"
+  >
+  </app-table-report>
 </div>
+
+<!-- ✅ 支票領取 Dialog -->
+<p-dialog
+  header="支票領取"
+  [(visible)]="pickupDialogVisible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '520px' }"
+>
+  <form [formGroup]="pickupForm" class="p-fluid">
+    <div class="grid">
+      <div class="col-12">
+        <app-input-text
+          label="領取人姓名"
+          controlName="PickName"
+          [control]="pickupForm.controls.PickName"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+
+      <div class="col-12">
+        <app-calendar
+          calendarType="dateOne"
+          label="領取日期"
+          controlName="PickupDate"
+          [control]="pickupForm.controls.PickupDate"
+          [submitted]="submitted"
+        ></app-calendar>
+      </div>
+
+
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        label="取消"
+        severity="secondary"
+        (onClick)="onPickupCancel()"
+      ></p-button>
+
+      <p-button
+        label="確認領取"
+        [loading]="btnLoading"
+        (onClick)="onPickupConfirm()"
+      ></p-button>
+    </div>
+  </ng-template>
+</p-dialog>

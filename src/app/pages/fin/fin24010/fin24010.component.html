@@ -78,8 +78,8 @@
           </div>
           <!-- BankAccountNo: 銀行帳號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="銀行帳號" controlName="BankAccountNo"
-              [control]="queryForm.controls.BankAccountNo" [submitted]="submitted"></app-input-number>
+            <app-input-text label="銀行帳號" controlName="BankAccountNo" [control]="queryForm.controls.BankAccountNo"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
 
@@ -98,12 +98,12 @@
           <!-- CheckTitle: 票據抬頭 -->
           <div class="col-12 md:col-6 lg:col-4">
             <!-- 票據抬頭通常是文字，但沿用您原來的 app-input-number，並設定 useGrouping=false -->
-            <app-input-number [useGrouping]="false" label="票據抬頭" controlName="CheckTitle"
-              [control]="queryForm.controls.CheckTitle" [submitted]="submitted"></app-input-number>
+            <app-input-text label="票據抬頭" controlName="CheckTitle" [control]="queryForm.controls.CheckTitle"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
 
-        <!-- 欄位組 6 (預計付款日範圍, 立帳日期範圍, 廠商代號) -->
+        <!-- 欄位組 6 (預計付款日範圍, 立帳日期範圍, 廠商編號) -->
         <div class="grid p-fluid">
           <!-- ExpectPayDate_From / ExpectPayDate_To: 預計付款日 -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -128,8 +128,8 @@
         <div class="grid p-fluid">
           <!-- VEN_Uniform_Param: 統一編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="統一編號" controlName="VEN_Uniform_Param"
-              [control]="queryForm.controls.VEN_Uniform_Param" [submitted]="submitted"></app-input-number>
+            <app-input-text label="統一編號" controlName="VEN_Uniform_Param"
+              [control]="queryForm.controls.VEN_Uniform_Param" [submitted]="submitted"></app-input-text>
           </div>
           <!-- AccNo_Param: 會計科目代號 (dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -139,8 +139,8 @@
           </div>
           <!-- ACP_SourceNo_Param: 帳款來源單號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="帳款來源單號" controlName="ACP_SourceNo_Param"
-              [control]="queryForm.controls.ACP_SourceNo_Param" [submitted]="submitted"></app-input-number>
+            <app-input-text label="帳款來源單號" controlName="ACP_SourceNo_Param"
+              [control]="queryForm.controls.ACP_SourceNo_Param" [submitted]="submitted"></app-input-text>
           </div>
         </div>
 
@@ -153,8 +153,8 @@
           </div>
           <!-- VouNo_Param: 傳票號碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="傳票號碼" controlName="VouNo_Param"
-              [control]="queryForm.controls.VouNo_Param" [submitted]="submitted"></app-input-number>
+            <app-input-text label="傳票號碼" controlName="VouNo_Param" [control]="queryForm.controls.VouNo_Param"
+              [submitted]="submitted"></app-input-text>
           </div>
           <!-- VouStatus: 傳票狀態 (dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -183,11 +183,11 @@
               optionValue="value" [control]="queryForm.controls.HasUnpaid" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
-        <!-- 欄位組 10 (異動帳號檢核) -->
+        <!-- 欄位組 10 (是否只顯示銀行資料有差異) -->
         <div class="grid p-fluid">
-          <!-- CheckChangedUser: 異動帳號檢核 (dropdown) -->
+          <!-- CheckChangedUser: 是否只顯示銀行資料有差異 (dropdown) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="異動帳號檢核" controlName="CheckChangedUser" [options]="CheckChangedUserOptions"
+            <app-dropdown label="是否只顯示銀行資料有差異" controlName="CheckChangedUser" [options]="CheckChangedUserOptions"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.CheckChangedUser"
               [submitted]="submitted"></app-dropdown>
           </div>
@@ -195,7 +195,8 @@
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
-          <app-button label="異動帳號檢核" [loading]="loading" (click)="onCheckChangedUser(queryForm)"></app-button>
+          <app-button label="異動帳號檢核" [loading]="loading" (click)="onCheckChangedUser(queryForm)"
+            [disabled]="!hasPermission(Actions.Check)"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -206,11 +207,12 @@
     [totalRecords]="totalRecords" [data]="data" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [showManage]="!isCheckChangedUserMode" [columns]="isCheckChangedUserMode ? checkChangedUserColumns : columns"
     [loading]="loading" [showDelete]="false" [queryFunction]="fin24010Service.queryFIN24010.bind(fin24010Service)"
-    [showCheckBox]="isCheckChangedUserMode" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event">
+    [showCheckBox]="isCheckChangedUserMode" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [editDisabled]="editDisabled">
     <header>
       <div class="flex align-items-center gap-2">
         <p-button *ngIf="isCheckChangedUserMode" styleClass="p-2" label="更新匯款檔資料" [loading]="btnLoading"
-          icon="pi pi-file" (click)="onUpdateRemit()" [disabled]="!selectedItems || selectedItems.length === 0"  
+          icon="pi pi-file" (click)="onUpdateRemit()" [disabled]="!selectedItems || selectedItems.length === 0"
           [loading]="btnLoading"></p-button>
       </div>
     </header>

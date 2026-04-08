@@ -1,22 +1,27 @@
-import { DatePipe, NgStyle } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { NgStyle } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Fin11200Service } from '@service/api/fin/fin11200.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { ExecSpFuncService } from '@service/utility/execSpFunc.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { Button, ButtonDirective } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { finalize } from 'rxjs';
-import { FIN11210Data, FIN11210Service } from '../../../service/api/fin/fin11210.service';
+import {
+  FIN11210Data,
+  FIN11210Service,
+  QueryFIN11210Request
+} from '../../../service/api/fin/fin11210.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-fin11210',
@@ -29,95 +34,140 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
     MultiSelectComponent,
-    ButtonComponent,
     Button,
     ButtonDirective,
-    NgStyle
+    NgStyle,
+    TooltipModule
   ]
 })
 export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    ECR_No: [null],     // 收銀機號
-    ARG_No: [null],     // 參數代號
-    ARG_Desc: [null],  // 參數說明
-    ...createPaginationConfig([])
+    ECR_No: [null as string[] | null],
+    ARG_No: [null as string[] | null],
+    ARG_Desc: [null as string | null],
+    pageSize: new FormControl<number>(30),
+    pageIndex: new FormControl<number>(1)
   });
 
-  data: FIN11210Data[] = [];
-  selectedItems: FIN11210Data[] = [];
-  totalRecords = 0;
-  btnLoading = false; // 下傳按鈕載入狀態
+  readonly tableData = signal<FIN11210Data[]>([]);
+  readonly totalRecords = signal(0);
+  readonly tableLoading = signal(false);
+  lastQueryBody?: QueryFIN11210Request;
 
-  ECR_No_Options: any[] = [
-    { Name: '全機台', No: 'ALL' }
-  ];
+  selectedItems: FIN11210Data[] = [];
+  btnLoading = false;
+
+  ECR_No_Options: any[] = [];
   ARG_No_Options: any[] = [];
 
-  columns: Column[] = [
-    { field: 'ID', header: '序號', hidden: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'ARG_No', header: '參數代號', visible: true },
-    { field: 'ARG_Data', header: '參數內容', visible: true },
-    { field: 'ARG_Desc', header: '參數說明', visible: true },
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
-    { field: 'CRT_USR_No', header: '建立人員', visible: true },
-    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: true },
-    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDate },
-    { field: 'UPD_USR_No', header: '變更人員', visible: true },
-    { field: 'UPD_USR_Name', header: '變更人員名稱', visible: true },
+  columns: ReportColumn[] = [
+    { field: 'ID', header: '序號' },
+    { field: 'ECR_No', header: '收銀機號' },
+    { field: 'ARG_No', header: '參數代號' },
+    { field: 'ARG_Data', header: '參數內容' },
+    { field: 'ARG_Desc', header: '參數說明' },
+    { field: 'CRT_Date', header: '建立日期', format: formatDate },
+    { field: 'CRT_USR_No', header: '建立人員' },
+    { field: 'CRT_USR_Name', header: '建立人員名稱' },
+    { field: 'UPD_Date', header: '變更日期', format: formatDate },
+    { field: 'UPD_USR_No', header: '變更人員' },
+    { field: 'UPD_USR_Name', header: '變更人員名稱' }
   ];
 
   constructor(
     private fin11210Service: FIN11210Service,
-    private fin11200Service: Fin11200Service,
     private dropDownListService: DropDownListService,
-    private datePipe: DatePipe,
     private execSpFuncService: ExecSpFuncService
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN11210', 'fin/fin11210cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN11210', 'fin/fin11210cru', this.queryForm, this.onSubmit.bind(this));
     this.loadOptions();
   }
 
-  onSubmit(form: FormGroup) {
-    this.handleSubmit(form, () => {
-      this.fin11210Service.queryFIN11210(form.getRawValue())
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.data = response.Data;
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+  queryFunction = (body: any) => {
+    const raw = this.queryForm.getRawValue();
+    const pageSize = body.pageSize ?? body.PageSize ?? 30;
+    const pageIndex = body.pageIndex ?? body.PageIndex ?? 1;
+    const payload: QueryFIN11210Request = {
+      ECR_No: toStringArray(raw.ECR_No),
+      ARG_No: toStringArray(raw.ARG_No),
+      ARG_Desc: raw.ARG_Desc ?? undefined,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: body.SortBy
+    };
+    const cleanPayload = removeEmptyValues(payload) as QueryFIN11210Request;
+    return this.fin11210Service.queryFIN11210(cleanPayload);
+  };
+
+  onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const raw = this.queryForm.getRawValue();
+      this.lastQueryBody = {
+        ECR_No: toStringArray(raw.ECR_No),
+        ARG_No: toStringArray(raw.ARG_No),
+        ARG_Desc: raw.ARG_Desc ?? undefined,
+        PageSize: raw.pageSize ?? 30,
+        PageIndex: raw.pageIndex ?? 1
+      } as QueryFIN11210Request;
+
+      this.tableLoading.set(true);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          })
+        )
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.tableData.set(res.Data ?? []);
+            this.totalRecords.set(res.TotalCount ?? 0);
+          }
         });
     });
   }
 
-  onDelete(selectedItems: FIN11210Data[]) {
-    this.confirmationService.confirm({
-      header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
+  onDelete(data: FIN11210Data | FIN11210Data[]): void {
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) return;
+    this.messageService.confirm({
+      header: `是否確認刪除 ${items.length} 筆資料？`,
       accept: () => {
-        const idList = selectedItems.map(item => item.ID);
-        this.fin11210Service.deleteFIN11210({ idList })
+        const idList = items.map(item => item.ID);
+        this.fin11210Service
+          .deleteFIN11210({ idList })
           .pipe(untilDestroyed(this))
           .subscribe(() => {
             this.messageService.successBubble('刪除成功');
-            this.onSubmit(this.queryForm);
+            this.onSubmit();
+            this.selectedItems = [];
           });
       }
     });
   }
 
+  isRowSelectable = (_row: FIN11210Data): boolean => true;
+
   loadOptions() {
-    // 取得收銀機號下拉選單資料
+    // 取得收銀機號下拉選單資料（顯示格式 {No}-{Name}，API 仍只傳 No）
     this.dropDownListService.queryPOS1002_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
-        this.ECR_No_Options.push(...response.Data);
+        const data = response.Data ?? [];
+        this.ECR_No_Options = data.map((item: { No?: string; Name?: string }) => ({
+          No: item.No ?? '',
+          Name: `${item.No ?? ''}-${item.Name ?? ''}`
+        }));
       });
     // 取得參數代號下拉選單資料
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ARG_NO' })
@@ -153,4 +203,13 @@ export class FIN11210Component extends BasicQueryPageComponent<FIN11210Data> imp
         }
       });
   }
+}
+
+function toStringArray(value: unknown): string[] | undefined {
+  if (value == null) return undefined;
+  if (Array.isArray(value)) {
+    const flat = value.flat().filter((x): x is string => typeof x === 'string');
+    return flat.length ? flat : undefined;
+  }
+  return undefined;
 }

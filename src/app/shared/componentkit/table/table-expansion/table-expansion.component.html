@@ -1,6 +1,6 @@
-<div [@expandAnimation]="isExpanded ? 'expanded' : 'collapsed'" class="transition-all duration-300">
+<div>
   <p-table class="w-full" [value]="localRowData" [columns]="getFilterColumns(expansionColumns)"
-    [multiSortMeta]="expansionMultiSortMeta" [scrollHeight]="scrollHeight" sortMode="multiple"
+    [multiSortMeta]="expansionMultiSortMeta" [scrollable]="true" [scrollHeight]="scrollHeight" sortMode="multiple"
     [paginator]="showPaginator" [rows]="rows" [totalRecords]="totalRecords" [(first)]="first"
     (onPage)="onPageChange($event)" [rowsPerPageOptions]="rowsPerPageOptions" [showCurrentPageReport]="true"
     currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
@@ -10,10 +10,11 @@
     <!-- 表頭 -->
     <ng-template pTemplate="header" let-columns>
       <tr>
-        <th class="w-1rem">序號</th>
-        <th *ngFor="let col of getFilterColumns(expansionColumns)" [pSortableColumn]="col.field" class="text-center">
+        <th *ngIf="expansionShowReorder" class="w-1rem">序號</th>
+        <th *ngFor="let col of getFilterColumns(expansionColumns)" [pSortableColumn]="col.field"
+          [pSortableColumnDisabled]="expansionShowSort === false" class="text-center">
           {{ col.header }}
-          <p-sortIcon [field]="col.field"></p-sortIcon>
+          <p-sortIcon *ngIf="expansionShowSort" [field]="col.field"></p-sortIcon>
         </th>
       </tr>
     </ng-template>
@@ -21,7 +22,7 @@
     <!-- 表身 -->
     <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
       <tr>
-        <td class="text-center">{{ first + rowIndex + 1 }}</td>
+        <td *ngIf="expansionShowReorder" class="text-center">{{ first + rowIndex + 1 }}</td>
         <td *ngFor="let col of getFilterColumns(expansionColumns)" class="text-center">
           <span *ngIf="rowData[col.field] !== undefined && rowData[col.field] !== null && !col.type">
             {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field] }}
@@ -29,15 +30,24 @@
         </td>
       </tr>
     </ng-template>
-
-    <!-- 空資料訊息 -->
-    <ng-template pTemplate="emptymessage">
-      <div class="flex justify-content-center min-h-full" [ngStyle]="{ height: '62px' }">
-        <p class="empty-message text-xl font-bold text-center">
-          查無展開資料
-        </p>
+    <ng-template pTemplate="summary">
+      <div class="flex align-items-center justify-content-between p-1" [style.background]="'var(--table-header-bg)'">
+        <div class="flex align-items-center">
+          <span>
+            明細總筆數: {{ totalRecords }} 筆
+          </span>
+        </div>
       </div>
     </ng-template>
-
+    <!-- 空資料訊息 -->
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td [attr.colspan]="getFilterColumns(expansionColumns).length + (expansionShowReorder ? 1 : 0)">
+          <div class="flex justify-content-center align-items-center" [style.height]="scrollHeight">
+            <p class="text-xl font-bold">查無展開資料</p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
   </p-table>
 </div>

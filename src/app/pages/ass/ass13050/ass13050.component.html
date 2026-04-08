@@ -1,11 +1,6 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-            <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -14,111 +9,158 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
+        <!-- 第一區塊：必填欄位 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-2">
             <app-calendar
               calendarType="dateOne"
               label="移轉日期"
-              [control]="queryForm.controls.transferDate"
+              [control]="queryForm.controls.TRANSFER_DATE"
               [submitted]="submitted"
             ></app-calendar>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- <app-input-two-dialog label="新保管單位" controlName="newStorage_Unit" [control]="queryForm.controls.newStorage_Unit" [submitted]="submitted">
-                        </app-input-two-dialog> -->
+            <app-dropdown
+              label="新保管單位"
+              controlName="NEW_HOLD_ORG_ID"
+              [options]="orgOptions$ | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.NEW_HOLD_ORG_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-dropdown
               label="新保管人"
-              controlName="newStorage_Person"
-              [control]="queryForm.controls.newStorage_Person"
+              controlName="NEW_HOLD_EMP_ID"
+              [options]="newHoldEmpOptions$ | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.NEW_HOLD_EMP_ID"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- <app-input-two-dialog label="新使用單位" controlName="newUsage_Unit" [control]="queryForm.controls.newUsage_Unit" [submitted]="submitted">
-                        </app-input-two-dialog> -->
+            <app-dropdown
+              label="新使用單位"
+              controlName="NEW_USE_ORG_ID"
+              [options]="orgOptions$ | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.NEW_USE_ORG_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-dropdown
               label="新使用人"
-              controlName="newUsage_Person"
-              [control]="queryForm.controls.newUsage_Person"
+              controlName="NEW_USE_EMP_ID"
+              [options]="newUseEmpOptions$ | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.NEW_USE_EMP_ID"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-dropdown>
           </div>
         </div>
         <hr />
+        <!-- 第二區塊：分類/進貨 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="進貨類型"
-              controlName="purchaseType"
+              controlName="PURCHASE_TYPE"
               [options]="purchaseTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.purchaseType"
+              [control]="queryForm.controls.PURCHASE_TYPE"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- <app-input-two-dialog label="大分類編號" controlName="bigCategoryCode" [control]="queryForm.controls.bigCategoryCode" [submitted]="submitted">
-                        </app-input-two-dialog> -->
+            <app-dropdown
+              label="財產編號"
+              controlName="ASSET_ID"
+              [options]="assetOptions$ | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ASSET_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- <app-input-two-dialog label="財產編號" controlName="propertyCode" [control]="queryForm.controls.propertyCode" [submitted]="submitted">
-                        </app-input-two-dialog> -->
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <!-- <app-input-two-dialog label="中分類編號" controlName="midCategoryCode" [control]="queryForm.controls.midCategoryCode" [submitted]="submitted">
-                        </app-input-two-dialog> -->
-          </div>
-          <div class="col-12 md:col-4 lg:col-4">
             <app-radiobutton
               label="標題"
-              groupname="tiltle"
-              [control]="queryForm.controls.tiltle"
+              groupname="TITLE"
+              [control]="queryForm.controls.TITLE"
               [options]="titleOptions"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
+        </div>
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- <app-input-two-dialog label="小分類編號" controlName="smlCategoryCode" [control]="queryForm.controls.smlCategoryCode" [submitted]="submitted">
-                        </app-input-two-dialog> -->
+            <app-dropdown
+              label="大分類代碼/名稱"
+              controlName="B_CLASS_ID"
+              [options]="bigClassOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.B_CLASS_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-4 lg:col-4">
+            <app-dropdown
+              label="中分類代碼/名稱"
+              controlName="M_CLASS_ID"
+              [options]="midClassOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.M_CLASS_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="小分類代碼/名稱"
+              controlName="S_CLASS_ID"
+              [options]="smallClassOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.S_CLASS_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
         <hr />
+        <!-- 第三區塊：保管/使用 -->
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="保管單位"
-              controlName="keeperUnit"
-              [options]="organizationOptions"
+              controlName="HOLD_ORG_ID"
+              [options]="orgOptions$ | async"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.keeperUnit"
+              [control]="queryForm.controls.HOLD_ORG_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="保管人"
-              controlName="keeper"
-              [options]="userCodeOptions"
+              controlName="HOLD_EMP_ID"
+              [options]="oldHoldEmpOptions$ | async"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.keeper"
+              [control]="queryForm.controls.HOLD_EMP_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -127,47 +169,63 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="使用單位"
-              controlName="userUnit"
-              [options]="organizationOptions"
+              controlName="USE_ORG_ID"
+              [options]="orgOptions$ | async"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.userUnit"
+              [control]="queryForm.controls.USE_ORG_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="使用人"
-              controlName="user"
-              [options]="userCodeOptions"
+              controlName="USE_EMP_ID"
+              [options]="oldUseEmpOptions$ | async"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.user"
+              [control]="queryForm.controls.USE_EMP_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report
+    tableKey="ASS13050"
+    [data]="tableData()"
+    [columns]="columns"
+    [columnGroup]="columnGroup"
+    [totalRecords]="totalRecords()"
+    [loading]="tableLoading()"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction"
+    [showReportMode]="false"
+    [showDelete]="false"
+    [showEdit]="false"
+    [showDetail]="false"
+    [showManage]="false"
+  >
+    <header>
+      <div class="flex justify-content-end gap-2">
+        <p-button
+          styleClass="p-2"
+          label="下載報表"
+          icon="pi pi-download"
+          [loading]="btnReportLoading"
+          (click)="onDownloadReport()"
+          [disabled]="tableData().length === 0"
+        ></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

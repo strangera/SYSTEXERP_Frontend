@@ -1,0 +1,34 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <!-- 專櫃編號 → POS5006.TLT_No -->
+          <app-multi-select class="col-12 md:col-6" label="專櫃編號/名稱" controlName="TLT_NO"
+            [control]="queryForm.controls.TLT_NO" [submitted]="submitted" [options]="TLT_NoOptions | async"
+            optionLabel="label" optionValue="value" />
+          <!-- 收銀機號 → POS5006.ECR_No -->
+          <app-multi-select class="col-12 md:col-6" label="收銀機號/名稱" controlName="ECR_No"
+            [control]="queryForm.controls.ECR_No" [submitted]="submitted" [options]="ECR_NoOptions | async"
+            optionLabel="label" optionValue="value" />
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table-report tableKey="TLS45030Table" dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)"
+    (edit)="onEdit($event)" [totalRecords]="totalRecords" [loading]="loading" [showCheckBox]="true"
+    (delete)="onDelete($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls51140Service.queryTLS51140.bind(tls51140Service)"></app-table-report>
+</div>

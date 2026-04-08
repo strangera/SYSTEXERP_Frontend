@@ -1,8 +1,10 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from "@shared/componentkit/dropdown/dropdown.component";
+import { QueryStateService } from '@shared/service/query-state.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -17,9 +19,8 @@ import { DropDownListService } from './../../../service/utility/dropDownList.ser
 @Component({
   selector: 'app-fin31020-cru',
   templateUrl: './fin31020-cru.component.html',
-  styleUrl: './fin31020-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, TranslateModule, DropdownComponent]
+  imports: [NgIf, MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, TranslateModule, DropdownComponent]
 })
 
 export class FIN31020CRUComponent extends BasicCruPageComponent<FIN31020Data> implements OnInit {
@@ -55,7 +56,8 @@ export class FIN31020CRUComponent extends BasicCruPageComponent<FIN31020Data> im
   }
   constructor(
     private DropDownListService: DropDownListService,
-    private fin31020Service: FIN31020Service
+    private fin31020Service: FIN31020Service,
+    private queryStateService: QueryStateService
   ) {
     super();  // 呼叫父類建構子
   }
@@ -106,7 +108,7 @@ export class FIN31020CRUComponent extends BasicCruPageComponent<FIN31020Data> im
   }
   private loadOptions(): void {
     // 科目代號
-    this.DropDownListService.queryGLS1005_DropDownList()
+    this.DropDownListService.queryGLS1005_ledgerMD_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => this.AccNoOptions = res.Data.map((x: { No: string; Name: string }) => ({ label: `${x.No} - ${x.Name}`, value: x.No })));
 
@@ -134,7 +136,9 @@ export class FIN31020CRUComponent extends BasicCruPageComponent<FIN31020Data> im
             next: (response) => {
               if (response.Status === '0000') {
                 this.messageService.successBubble('新增成功');
-                this.router.navigate(['/account/fin/fin31020']);
+                // 儲存來自 list 的查詢條件以便返回時還原並重新查詢
+                try { this.queryStateService.setQueryState(this.ProgNo, this.queryData ?? {}); } catch { }
+                this.router.navigate(['/account/fin/fin31020'], { state: { fromRoute: this.router.url } });
               } else {
                 this.messageService.errorBubble('新增失敗: ' + response.Message);
               }
@@ -158,7 +162,8 @@ export class FIN31020CRUComponent extends BasicCruPageComponent<FIN31020Data> im
             next: (response) => {
               if (response.Status === '0000') {
                 this.messageService.successBubble('更新成功');
-                this.router.navigate(['/account/fin/fin31020']);
+                try { this.queryStateService.setQueryState(this.ProgNo, this.queryData ?? {}); } catch { }
+                this.router.navigate(['/account/fin/fin31020'], { state: { fromRoute: this.router.url } });
               } else {
                 this.messageService.errorBubble('更新失敗: ' + response.Message);
               }
@@ -217,5 +222,11 @@ export class FIN31020CRUComponent extends BasicCruPageComponent<FIN31020Data> im
       const control = formGroup.get(field);
       control?.markAsTouched({ onlySelf: true });
     });
+  }
+
+  // 覆寫取消返回，儲存原查詢條件再返回列表
+  override onCancel(returnValue?: any) {
+    try { this.queryStateService.setQueryState(this.ProgNo, this.queryData ?? {}); } catch { }
+    super.onCancel(returnValue);
   }
 }

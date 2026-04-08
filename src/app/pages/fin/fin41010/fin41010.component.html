@@ -1,48 +1,97 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form [formGroup]="queryForm" id="queryForm">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <label class="red">檔案名稱*</label>
-            <app-file-upload></app-file-upload>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="轉入年度" controlName="year" [control]="queryForm.controls.year"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="轉入版本" controlName="year" [control]="queryForm.controls.year"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="轉入之部門" controlName=" organizationNumber" [options]="organizationNumberOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.organizationNumber"
-              [submitted]="submitted"></app-dropdown>
-          </div>
+          <app-file-upload
+            #fileUpload
+            class="col-12"
+            name="file"
+            accept=".csv"
+            [multiple]="false"
+            chooseLabel="選擇 CSV 檔案"
+            [auto]="false"
+            [customUpload]="true"
+            [showUploadButton]="false"
+            mode="advanced"
+            (select)="onFileSelect($event)"
+            [loading]="loading"
+            (remove)="onFileRemove()"
+            label="檔案名稱"
+            emptyMessage="拖曳檔案到此處或點擊「選擇 CSV 檔案」按鈕。"
+            [disabled]="false"
+          ></app-file-upload>
+
+          <app-input-text
+            class="col-12 md:col-4"
+            label="傳入年度"
+            controlName="year"
+            [control]="queryForm.controls.year"
+            [submitted]="submitted"
+          ></app-input-text>
+
+          <app-input-text
+            class="col-12 md:col-4"
+            label="傳入版本"
+            controlName="version"
+            [control]="queryForm.controls.version"
+            [submitted]="submitted"
+          ></app-input-text>
+
+          <app-dropdown
+            class="col-12 md:col-4"
+            label="轉入之部門"
+            controlName="orgId"
+            [options]="orgOptions | async"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.orgId"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div
+          class="flex flex-wrap justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
+        >
+          <app-button
+            label="範本下載"
+            icon="pi pi-download"
+            [loading]="loading"
+            [disabled]="false"
+            (clickEvent)="onDownloadTemplate()"
+          ></app-button>
+          <app-button
+            label="轉檔"
+            icon="pi pi-sync"
+            [loading]="loading"
+            [disabled]="false"
+            (clickEvent)="onConvert()"
+          ></app-button>
+          <app-button
+            label="審核"
+            icon="pi pi-check-circle"
+            [loading]="loading"
+            [disabled]="false"
+            (clickEvent)="onApprove()"
+          ></app-button>
+          <app-button
+            label="反審核"
+            icon="pi pi-undo"
+            [loading]="loading"
+            severity="danger"
+            [disabled]="false"
+            (clickEvent)="onAntiApprove()"
+          ></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- <div class="card">
-    <div class="col-12">
-      <app-table
-        [data]="data"
-        [columns]="columns"
-        (edit)="onEdit($event)"
-        (detail)="onDetail($event)"
-      ></app-table>
-    </div>
-  </div> -->

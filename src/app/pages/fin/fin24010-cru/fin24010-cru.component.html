@@ -9,124 +9,66 @@
         <!-- ---------------------------------------------------- -->
         <!-- 應付帳款資料 (第一組) -->
         <!-- ---------------------------------------------------- -->
-        <div
-          class="col-12 text-xl font-bold border-bottom-1 surface-border mb-3 mt-1"
-        >
+        <div class="col-12 text-xl font-bold border-bottom-1 surface-border mb-3 mt-1">
           應付帳款資料
         </div>
 
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="應付ID"
-            [control]="dataForm.controls.ACP_No"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="應付ID" [control]="dataForm.controls.ACP_No" [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown
-            label="組織代碼"
-            [options]="Org_IdOptions | async"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.org_id"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="組織代碼" [options]="Org_IdOptions | async" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.org_id" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar
-            calendarType="dateMonthOne"
-            label="帳款年月"
-            [control]="dataForm.controls.ACP_YYYYMM"
-            [submitted]="submitted"
-          ></app-calendar>
+          <app-calendar calendarType="dateMonthOne" label="帳款年月" [control]="dataForm.controls.ACP_YYYYMM"
+            [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-number
-            [useGrouping]="false"
-            label="帳款帳次"
-            [control]="dataForm.controls.acp_termno"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number [useGrouping]="false" label="帳款帳次" [control]="dataForm.controls.acp_termno"
+            [submitted]="submitted"></app-input-number>
         </div>
 
         <!-- ---------------------------------------------------- -->
         <!-- 帳戶資料 (第二組) -->
         <!-- ---------------------------------------------------- -->
-        <div
-          class="col-12 text-xl font-bold border-bottom-1 surface-border mb-3 mt-4"
-        >
+        <div class="col-12 text-xl font-bold border-bottom-1 surface-border mb-3 mt-4">
           帳戶資料
         </div>
 
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown
-            label="付款方式"
-            [options]="PayTypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.VEN_PayType"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="付款方式" [options]="PayTypeOptions" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.VEN_PayType" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown
-            label="廠客代號"
-            controlName="VEN_No"
-            [options]="VEN_No_Options | async"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.VEN_No"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="廠客代號" controlName="VEN_No" [options]="VEN_No_Options | async" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown
-            label="匯款銀行代號"
-            [options]="VEN_BNK_No_ParamOptions | async"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.VEN_BNK_No"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="匯款銀行代號" [options]="VEN_BNK_No_ParamOptions | async" optionLabel="label"
+            optionValue="value" controlName="Full_VEN_BNK_No" [control]="dataForm.controls.Full_VEN_BNK_No"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="銀行帳號"
-            [control]="dataForm.controls.VEN_BankAccountNo"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="銀行帳號" [control]="dataForm.controls.VEN_BankAccountNo"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="帳戶名稱"
-            [control]="dataForm.controls.VEN_AccountName"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="帳戶名稱" [control]="dataForm.controls.VEN_AccountName"
+            [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="統一編號"
-            [control]="dataForm.controls.VEN_Uniform"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="統一編號" [control]="dataForm.controls.VEN_Uniform"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown
-            label="票據禁止背書轉讓"
-            [options]="CTRLYNOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.VEN_CTRLYN"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="票據禁止背書轉讓" [options]="CTRLYNOptions" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.VEN_CTRLYN" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="票據抬頭"
-            [control]="dataForm.controls.VEN_CheckTitle"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="票據抬頭" [control]="dataForm.controls.VEN_CheckTitle"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
           <!-- 預留位置 -->
@@ -135,60 +77,36 @@
         <!-- ---------------------------------------------------- -->
         <!-- 帳款資料 (第三組) -->
         <!-- ---------------------------------------------------- -->
-        <div
-          class="col-12 text-xl font-bold border-bottom-1 surface-border mb-3 mt-4"
-        >
+        <div class="col-12 text-xl font-bold border-bottom-1 surface-border mb-3 mt-4">
           帳款資料
         </div>
 
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-number
-            label="應付金額"
-            [control]="dataForm.controls.ACP_Amt"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="應付金額" [control]="dataForm.controls.ACP_Amt"
+            [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-number
-            label="沖帳金額"
-            [control]="dataForm.controls.PTA_Amt"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="沖帳金額" [control]="dataForm.controls.PTA_Amt"
+            [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-number
-            label="應付帳款餘額"
-            [control]="dataForm.controls.ACP_Balance"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="應付帳款餘額" [control]="dataForm.controls.ACP_Balance"
+            [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-number
-            label="保留款金額"
-            [control]="dataForm.controls.ACP_ReserveAmt"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="保留款金額" [control]="dataForm.controls.ACP_ReserveAmt"
+            [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-number
-            label="退保留款金額"
-            [control]="dataForm.controls.RetReserveAmt"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="退保留款金額" [control]="dataForm.controls.RetReserveAmt"
+            [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar
-            label="預計付款日"
-            [control]="dataForm.controls.ACP_ExpectPayDate"
-            [submitted]="submitted"
-          ></app-calendar>
+          <app-calendar label="預計付款日" [control]="dataForm.controls.ACP_ExpectPayDate"
+            [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar
-            label="立帳日期"
-            [control]="dataForm.controls.ACP_Date"
-            [submitted]="submitted"
-          ></app-calendar>
+          <app-calendar label="立帳日期" [control]="dataForm.controls.ACP_Date" [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-6">
           <!-- 預留位置 -->
@@ -197,73 +115,39 @@
         <!-- ---------------------------------------------------- -->
         <!-- 其他 (第四組) -->
         <!-- ---------------------------------------------------- -->
-        <div
-          class="col-12 text-xl font-bold border-bottom-1 surface-border mb-3 mt-4"
-        >
+        <div class="col-12 text-xl font-bold border-bottom-1 surface-border mb-3 mt-4">
           其他
         </div>
 
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown
-            label="會計科目代號"
-            [options]="AccNoOptions | async"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.AccNo"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="會計科目代號" [options]="AccNoOptions | async" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.AccNo" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="帳款來源單號"
-            [control]="dataForm.controls.ACP_SourceNo"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="帳款來源單號" [control]="dataForm.controls.ACP_SourceNo"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="摘要"
-            [control]="dataForm.controls.NoteDesc"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="摘要" [control]="dataForm.controls.NoteDesc" [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="傳票號碼"
-            [control]="dataForm.controls.VouNo"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="傳票號碼" [control]="dataForm.controls.VouNo" [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="傳票狀態"
-            [control]="dataForm.controls.Vou_PostFlagName"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="傳票狀態" [control]="dataForm.controls.Vou_PostFlagName"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text
-            label="應付狀態"
-            [control]="dataForm.controls.ACP_Status"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-dropdown label="應付狀態" [control]="dataForm.controls.ACP_Status" [submitted]="submitted"
+            [options]="ACP_StatusOptions" optionLabel="label" optionValue="value"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
-          <app-dropdown
-            label="對象別編號"
-            [options]="SubDetailNoOptions | async"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.SubDetailNo"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="對象別編號" [options]="SubDetailNoOptions | async" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.SubDetailNo" [submitted]="submitted"></app-dropdown>
         </div>
       </div>
-      <div
-        *ngIf="!isFormReadable"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
         <app-button btnType="submit" [loading]="loading" />
       </div>

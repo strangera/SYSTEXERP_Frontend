@@ -1,0 +1,43 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="廠商編號" controlName="VEN_NoList" [options]="VEN_NoOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.VEN_NoList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="請款維護單號" controlName="OTA_No" [control]="queryForm.controls.OTA_No"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="發票/收據號碼" controlName="PUR_GUINo" [control]="queryForm.controls.PUR_GUINo"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateMonthOne" label="結帳年月" controlName="ACP_YYYYMM"
+              [control]="queryForm.controls.ACP_YYYYMM" [submitted]="submitted"></app-calendar>
+          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table-report apiUrl="queryTLS55040" tableKey="TLS55040query" dataKey="OTA_No" [lastQueryBody]="lastQueryBody"
+    [totalRecords]="totalRecords" [data]="data" (edit)="onEdit($event)" (detail)="onDetail($event)" [columns]="columns"
+    [loading]="loading" [queryFunction]="tls55040Service.queryTLS55040.bind(tls55040Service)" [showCheckBox]="true"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showSort]="true"
+    (delete)="onDelete($event)" [isRowSelectable]="isRowSelectable" [editDisabled]="editDisabled"></app-table-report>
+</div>

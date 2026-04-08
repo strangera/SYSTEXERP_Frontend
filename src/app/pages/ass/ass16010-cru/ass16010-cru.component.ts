@@ -1,18 +1,14 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { ASS16010Data } from '@service/api/ass/ass16010.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { PanelModule } from 'primeng/panel';
-import { AuthService } from '../../../service/system/auth.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-// Services
 
 @Component({
   selector: 'app-ass16010-cru',
@@ -21,46 +17,45 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
   standalone: true,
   imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, RadiobuttonComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class ASS16010CRUComponent
+export class ASS16010CRUComponent extends BasicCruPageComponent<ASS16010Data> implements OnInit {
 
-  implements OnInit {
   ngOnInit(): void {
     // 初始化
-    this.ProgNo = '310040';
-
-    // 下拉選單--------------------------------------------------------
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
+    this.initializePage('ASS16010', this.dataForm);
   }
+
+  // 下拉選單--------------------------------------------------------
+  // ----------------------------------------------------------------
+  // const state = this.router.lastSuccessfulNavigation?.extras.state as {
+  //   crudstatus: CRUDStatus;
+  //   rowdata: any;
+  // };
+
+  // switch (state.crudstatus) {
+  //   // 創建
+  //   case CRUDStatus.Create:
+  //     this.formTitle = 'create-conditions';
+  //     this.accordionTabCss = 'create-accordionTab';
+  //     this.crudstatus = CRUDStatus.Create;
+
+  //     break;
+  //   // 修改
+  //   case CRUDStatus.Edit:
+  //     this.formTitle = 'edit-conditions';
+  //     this.accordionTabCss = 'edit-accordionTab';
+  //     this.crudstatus = CRUDStatus.Edit;
+
+  //     this.Edit(state.rowdata);
+  //     break;
+  //   // 讀檔
+  //   case CRUDStatus.Read:
+  //     this.formTitle = 'display-conditions';
+  //     this.crudstatus = CRUDStatus.Read;
+  //     this.Read(state.rowdata);
+  //     break;
+  // }
+
+  // console.log(this.accordionTabCss);
 
   //動態新增----------------------------------------------------------
   createItem(): FormGroup {
@@ -77,16 +72,17 @@ export class ASS16010CRUComponent
     // ----------------------------------------------------------------
     items: this.formBuilder.array([this.createItem()]),
   });
+
   // Dropdown options
-  whCategory: any[] = [
+  whCategory = [
     { value: 1, label: '總公司' },
     { value: 2, label: '測試' },
   ];
-  invType: any[] = [
+  invType = [
     { value: 1, label: '全盤(不分類)' },
     { value: 2, label: '部份盤(以中分類)' },
   ];
-  categoryOptions: any[] = [
+  categoryOptions = [
     { value: 1, label: '裝潢工程' },
     { value: 2, label: '其他工程' },
     { value: 3, label: '電腦及電子零件產品' },
@@ -103,19 +99,9 @@ export class ASS16010CRUComponent
     { value: 14, label: '其他財物用品' },
     { value: 15, label: '環境衛生及安全維護' },
   ];
-  status: any[] = [
-    { value: 1, label: '停用' },
-    { value: 2, label: '手開' },
-    { value: 3, label: '電腦' },
-  ];
-
 
   // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private translate: TranslateService,
 
   ) {
@@ -136,6 +122,7 @@ export class ASS16010CRUComponent
     this.items.removeAt(index);
   }
   // ----------------------------------------------------------------
+
   Edit(rowdata: any) {
     this.dataForm.patchValue(rowdata);
   }
@@ -149,9 +136,9 @@ export class ASS16010CRUComponent
     this.items.push(this.createItem());
   }
 
+
   onSubmit(frm: FormGroup) {
     this.messageService.blockUi();
-    this.submitted = true;
 
     if (this.dataForm.invalid) {
       this.messageService.errorBubble(
@@ -161,35 +148,8 @@ export class ASS16010CRUComponent
       return;
     }
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('success_message')
-          );
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('updated-successfully')
-          );
-        }
-        break;
-    }
-
     this.messageService.unblockUi();
-    this.submitted = false;
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  } //CRU
-
-  onCancel() {
-    this.router.navigate(['ASS1000/ASS16010']);
-  }
 }
+

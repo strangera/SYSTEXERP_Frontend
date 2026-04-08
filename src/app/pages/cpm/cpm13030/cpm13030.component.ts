@@ -1,29 +1,27 @@
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { CPM13030Service } from '@service/api/cpm/cpm13030.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { Column, ColumnGroup, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatAmount, ColumnGroup } from '@shared/componentkit/table/table.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { ButtonModule } from 'primeng/button';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
-import { CPM13030Service } from '@service/api/cpm/cpm13030.service';
-import { finalize } from 'rxjs';
-import { DatePipe, NgIf } from '@angular/common';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-cpm13030',
   templateUrl: './cpm13030.component.html',
-  styleUrls: ['./cpm13030.component.scss'],
   standalone: true,
   imports: [
     DropdownComponent,
@@ -36,10 +34,8 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
     ReactiveFormsModule,
     InputNumberRangeComponent,
     TranslateModule,
-    InputNumberComponent,
     CustomFooterTableComponent,
     MultiSelectComponent,
-    DatePipe,
     NgIf,
     InputTextComponent
   ]
@@ -57,7 +53,10 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
     TXN_TotSaleAmtEnd: [null],
     displayMode: ['M', [Validators.required]],
     ...createPaginationConfig([{ field: 'ECR_Group', order: 1 }]),
+    pageSize: [30],
   });
+  expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
+
   selectedItems: any[] = [];
   totalRecords = 0;
   data: any[] = [];
@@ -101,7 +100,7 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
       .subscribe(res => {
         this.org_id_Options = (res.Data || []).map(item => ({
           ...item,
-          label: `${item.No} ${item.Name}`,
+          label: `${item.No}-${item.Name}`,
           value: item.No
         }));
       });
@@ -236,7 +235,8 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
           if (blob) {
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
-            link.download = 'CPM13030_非業主POS停車費折抵補登報表.xlsx';
+            const filename = this.getFilenameFromResponse(res, 'CPM13030_POS停車抵扣報表.xlsx');
+            link.download = filename;
             link.click();
           }
         },
@@ -277,11 +277,35 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
           if (blob) {
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
-            link.download = 'CPM13030_非業主POS停車費折抵補登報表.pdf';
+            const filename = this.getFilenameFromResponse(res, 'CPM13030_POS停車抵扣報表.pdf');
+            link.download = filename;
             link.click();
           }
         },
       });
+  }
+  private getFilenameFromResponse(response: any, defaultName: string): string {
+    try {
+      const cd = response?.headers?.get?.('content-disposition') || response?.headers?.get?.('Content-Disposition');
+      if (!cd) return defaultName;
+      // filename*=UTF-8''encoded-name or filename="name"
+      const fnStarMatch = cd.match(/filename\*=(?:UTF-8'')?([^;\n\r]+)/i);
+      if (fnStarMatch && fnStarMatch[1]) {
+        let name = fnStarMatch[1].trim();
+        // remove surrounding quotes
+        if (name.startsWith("\"") && name.endsWith("\"")) {
+          name = name.substring(1, name.length - 1);
+        }
+        try { return decodeURIComponent(name); } catch { return name; }
+      }
+      const fnMatch = cd.match(/filename="?([^";]+)"?/i);
+      if (fnMatch && fnMatch[1]) {
+        return fnMatch[1];
+      }
+      return defaultName;
+    } catch (e) {
+      return defaultName;
+    }
   }
   private downloadFile(blob: Blob, filename: string): void {
     if (!blob || blob.size === 0) {

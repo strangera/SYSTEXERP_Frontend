@@ -4,7 +4,6 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angul
 import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { InputTextModule } from 'primeng/inputtext';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
-import { TableRowSelectEvent } from 'primeng/table';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
@@ -40,7 +39,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   @Input() showOverlay = true;// 控制是否顯示 Overlay Panel，預設為 true (打開)
   @ViewChild('op') op: OverlayPanel | undefined;
   private destroy$ = new Subject<void>();      // 訂閱，為了監聽表單改變
-  @Input() formGroup!: FormGroup;          // 下拉要輸入的form 必填
+  @Input() formGroup?: FormGroup;          // 下拉要輸入的form 必填
   @Input() dialogData: any = [];           // 下拉table 的資料 必填
   @Input() loading = false;
   selectedItems: any;
@@ -52,18 +51,16 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   private inputChangeSubject = new Subject<Record<string, string>>();
   // 新增標記，判斷是否為第一次點擊
   private initialLoadDone = false;
+
   ngOnInit(): void {
     this.updateControlState(this.control);
-    this.formGroup.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(value => {
-      this.formValueChanged.emit(value);
-    });
-
-    // 訂閱 inputChangeSubject，並應用 debounceTime
-    this.inputChangeSubject.pipe(
-      debounceTime(300), // 設定 300 毫秒的延遲
-      takeUntil(this.destroy$) // 確保組件銷毀時取消訂閱
-    ).subscribe(value => {
-      this.inputValueChanged.emit(value); // 延遲後才觸發 EventEmitter
+    if (this.formGroup) {
+      this.formGroup.valueChanges.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(value => {
+        this.formValueChanged.emit(value);
+      });
+    }
+    this.inputChangeSubject.pipe(debounceTime(300), takeUntil(this.destroy$)).subscribe(value => {
+      this.inputValueChanged.emit(value);
     });
   }
 
@@ -74,22 +71,14 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
 
   onInputChange() {
     const inputValue = this.control.value || '';
-    // 使用 optionLabel 作為 key，傳遞輸入的字串
     this.inputChangeSubject.next({ [this.optionLabel]: inputValue });
-    // 只有當 showOverlay 為 true 時，才隱藏 Overlay Panel
-    if (this.showOverlay) {
-      this.op?.hide();
-    }
+    if (this.showOverlay) this.op?.hide();
   }
 
   getFieldValue(field: FieldsConfig): string {
     // 新增空值檢查
-    if (this.control.value === null || this.control.value === undefined) {
-      return '';
-    }
-
+    if (this.control.value === null || this.control.value === undefined) return '';
     let selectedData: any;
-
     if (typeof this.control.value === 'object' && this.control.value !== null) {
       // 情況一：如果 optionValue 未傳入（為空字串），control.value 就是選取的完整物件。
       if (!this.optionValue) {
@@ -123,17 +112,32 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     return '';
   }
 
-  onSelectionChange(event: TableRowSelectEvent) {
-    this.selectedItems = event.data;
-    this.select.emit(event.data);
-    this.suggestions = [...this.dialogData]
+  onSelectionChange(event: any) {
+    console.log('dropdown-table selectionChange event =', event);
+    const rowData = Array.isArray(event) ? event[0] : event;
+    if (!rowData) {
+      return;
+    }
+    this.handleRowSelected(rowData);
+  }
 
-    // 【修改處】當 optionValue 為空時，設定完整的物件
-    this.control.setValue(this.optionValue ? this.selectedItems[this.optionValue] : this.selectedItems);
+  // 直接點整列（itemClick）時觸發
+  onRowClick(rowData: any) {
+    console.log('dropdown-table rowClick rowData =', rowData);
+    if (!rowData) return;
+    this.handleRowSelected(rowData);
+  }
 
+  private handleRowSelected(rowData: any) {
+    console.log('dropdown-table handleRowSelected rowData =', rowData);
+    this.selectedItems = rowData;
+    this.select.emit(rowData);
+    this.suggestions = [...this.dialogData];
+    // 當 optionValue 為空時，設定完整的物件
+    this.control.setValue(this.optionValue ? rowData[this.optionValue] : rowData);
     this.op?.hide();
     this.selectedItems = [];
-    this.formGroup.reset();
+    this.formGroup?.reset();
   }
 
   onLazyLoadData(event: LazyLoadEvent, dataForm: FormGroup) {
@@ -151,8 +155,9 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     }
     // 如果表格資料為空，且尚未載入過，則發送一次空的查詢請求，讓父元件載入所有資料
     if (!this.initialLoadDone && (!this.dialogData || this.dialogData.length === 0)) {
-      // 發出一個空值事件，讓父元件觸發初始載入 (loadVenData())
-      this.formValueChanged.emit(this.formGroup.value);
+      // 修改：如果沒有 formGroup，就傳空物件或目前的 control 值
+      const emitValue = this.formGroup ? this.formGroup.value : { [this.optionLabel]: this.control.value };
+      this.formValueChanged.emit(emitValue);
     }
     this.initialLoadDone = true;
   }

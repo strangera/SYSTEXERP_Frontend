@@ -16,6 +16,8 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { finalize } from 'rxjs';
 
+import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+
 //1.2.9.4 AP及ARNET之報表
 @Component({
   selector: 'app-fin29040',
@@ -41,11 +43,11 @@ export class FIN29040Component extends BasicQueryPageComponent<any> implements O
     { field: 'PartyNo', header: '廠客代號', visible: true },
     { field: 'PartyName', header: '廠客名稱', visible: true },
     { field: 'SourceType', header: '資料來源別', visible: true },
-    { field: 'PaymentAmount', header: '付款金額', visible: true },
+    { field: 'PaymentAmount', header: '付款金額', visible: true, format: formatAmount },
     { field: 'APAR_ID', header: '應收/付ID', visible: true },
-    { field: 'BookDate', header: '立帳日期', visible: true },
-    { field: 'ExpectedPayDate', header: '預計收/付款日', visible: true },
-    { field: 'ReturnReserveDate', header: '退保留款/貼現日', visible: true },
+    { field: 'BookDate', header: '立帳日期', visible: true, format: formatDate },
+    { field: 'ExpectedPayDate', header: '預計收/付款日 退保留款/貼現日', visible: true, format: formatDate },
+    // { field: 'ReturnReserveDate', header: '退保留款/貼現日', visible: true },
     { field: 'Remark', header: '備註', visible: true },
     { field: 'AccountNo', header: '會計科目', visible: true },
     // 其他欄位
@@ -72,7 +74,7 @@ export class FIN29040Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('FIN29040', '/FIN/FIN29040cru', this.queryForm, (form) => this.onSubmit(form));
 
     this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.factoryIDOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, No: item.No }));
+      this.factoryIDOptions = response.Data.map(item => ({ ...item, label: `${item.VEN_No} - ${item.Name}`, value: item.VEN_No }));
     });
   }
 
@@ -92,7 +94,7 @@ export class FIN29040Component extends BasicQueryPageComponent<any> implements O
   // ========= 匯出 =========
   onExportPDF(form: FormGroup) {
     const formValue = form.getRawValue();
-    if (!formValue.ACP_Date_From || !formValue.ACP_Date_To) {
+    if (!formValue.startdate || !formValue.enddate) {
       this.messageService?.warnBubble?.('請輸入立帳日期（起訖）');
       return;
     }
@@ -108,7 +110,7 @@ export class FIN29040Component extends BasicQueryPageComponent<any> implements O
 
   onExportExcel(form: FormGroup) {
     const formValue = form.getRawValue();
-    if (!formValue.ACP_Date_From || !formValue.ACP_Date_To) {
+    if (!formValue.startdate || !formValue.enddate) {
       this.messageService?.warnBubble?.('請輸入立帳日期（起訖）');
       return;
     }

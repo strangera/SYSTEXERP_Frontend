@@ -8,8 +8,8 @@ import { environment } from '../../../../environments/environment';
 })
 export class Tls29010Service {
   // POS2004 TALPORDERD_OPENDisc 折扣開放維護作業
-    apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
-    constructor(private http: HttpClient) { }
+  apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
+  constructor(private http: HttpClient) { }
 
   // 查詢 TALPORDERM 資料表
   queryTLS29010(body: any): Observable<any> {
@@ -52,27 +52,32 @@ export class Tls29010Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLTTALENT_Data`, body);
   }
 
+  // ---20251216 SA新增需求---
+  // 查詢 主檔(TLTTALENT_CHARGEM) + 明細(TLTTALENT_CHARGED)的資料表下拉選單
+  queryTLTTALENT_CHARGE_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_CHARGE_DropDownList`, body);
+  }
+
   // 核准 主檔
   apprTLS29010(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/apprTLS29010`, body);
   }
 
+  // 反審核 主檔
+  unapprTLS29010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/unapprTLS29010`, body);
+  }
+
   // ---dropDown下拉---
 
-  // 查詢 專櫃編號 (舊版)
-  queryTLTTALENT_Status_DropDownList(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_Status_DropDownList`, body);
-  }
+  // ---20251216 SA新增需求---
+  // 活動申請編號 下拉選單)(取消使用，由用戶自行輸入活動名稱與啟日迄日)
+  // dropdownTLS29010bypodno(body: any): Observable<any> {
+  //   return this.http.post<any>(`${this.apiUrl}/dropdownTLS29010bypodno`, body);
+  // }
 
-
-  // 查詢 專櫃編號 (新版)
-  queryTLTTALENT_Status_DropDownList_new(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_Status_DropDownList`, body);
-  }
-
-
-  // 查詢 部門編號(SYS3100)
-  querySYS3100_DropDownList(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/querySYS3100_DropDownList`, body);
+  // 折扣別 下拉選單
+  dropdownTLS29010bytalentid(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/dropdownTLS29010bytalentid`, body);
   }
 }

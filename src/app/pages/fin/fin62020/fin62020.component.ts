@@ -9,7 +9,9 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -20,7 +22,7 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
   selector: 'app-fin62020',
   templateUrl: './fin62020.component.html',
   standalone: true,
-  imports: [AsyncPipe, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeQuickComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TranslateModule]
+  imports: [ButtonModule, AsyncPipe, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeQuickComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TranslateModule]
 })
 export class FIN62020Component extends BasicQueryPageComponent<Fin62020QueryResponseItem> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -34,7 +36,7 @@ export class FIN62020Component extends BasicQueryPageComponent<Fin62020QueryResp
     IsLoadRemark: [false],
     pageSize: [30],
     pageIndex: [1],
-    SortBy: [[{ field: 'Tran_Date', order: -1 }]],
+    SortBy: [[{ field: 'Tran_Date', order: 1 }]],
   });
   BNK_NoOptions = this.dropdown.queryGls1005_BNK_DepositAcc();
   ifOptions = [
@@ -63,12 +65,21 @@ export class FIN62020Component extends BasicQueryPageComponent<Fin62020QueryResp
 
   constructor(
     public readonly fin62020Service: Fin62020Service,
-    private readonly dropdown: DropdownApiService
+    private readonly dropdown: DropdownApiService,
+    private readonly fileExportService: FileExportService
   ) {
     super();
   }
   ngOnInit(): void {
     this.initializePage('FIN62020');
+    this.queryForm.controls.IsLoadRemark.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
+      if (this.lastQueryBody) {
+        this.lastQueryBody = {
+          ...this.lastQueryBody,
+          IsLoadRemark: val
+        };
+      }
+    });
   }
 
   onSubmit(frm: FormGroup) {
@@ -81,5 +92,24 @@ export class FIN62020Component extends BasicQueryPageComponent<Fin62020QueryResp
         this.lastQueryBody = frm.value;
       })
     })
+  }
+  btnLoading = false;
+  onExportPDF() {
+    if (!this.lastQueryBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    const export$ = this.fin62020Service.exportFIN62020PDF(this.lastQueryBody);
+
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
+  }
+
+  onExportXLSX() {
+    if (!this.lastQueryBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    const export$ = this.fin62020Service.exportFIN62020Excel(this.lastQueryBody);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 }

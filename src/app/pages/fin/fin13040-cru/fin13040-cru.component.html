@@ -6,11 +6,11 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
+        <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="發票類型" controlName="InvoiceType" [options]="InvoiceType_Options" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.InvoiceType" [submitted]="submitted">
           </app-dropdown>
-        </div>
+        </div> -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="使用別" controlName="SAL_Type" [options]="SAL_Type_Options" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.SAL_Type" [submitted]="submitted">
@@ -18,22 +18,25 @@
         </div>
       </div>
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
+        <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="字軌" [control]="dataForm.controls.GUI_Track" [submitted]="submitted"></app-input-text>
+        </div> -->
+        <div class="col-12 md:col-6 lg:col-4" *ngIf="showInvoiceNumberField">
+          <app-input-text label="發票號碼" [control]="dataForm.controls.INV_GUINumber" [submitted]="submitted"
+            [readonly]="isInvoiceNumberReadonly"></app-input-text>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="發票號碼" [control]="dataForm.controls.INV_GUINumber"
-            [submitted]="submitted"></app-input-text>
-        </div>
+        <app-year-month class="col-12 md:col-6 lg:col-4" label="申報年月" [control]="dataForm.controls.INV_DeclareYM"
+          controlName="INV_DeclareYM" [submitted]="submitted" [evenMonth]="true"
+          (valueChanges)="loadGuiTrackOptions($event)"></app-year-month>
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar label="發票日期" calendarType="dateOne" controlName="InvoiceDate"
             [control]="dataForm.controls.InvoiceDate" [submitted]="submitted"></app-calendar>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="買受人統一編號" controlName="Buyer_Uniform" [control]="dataForm.controls.Buyer_Uniform"
-            [options]="Buyer_Uniform_Options" optionLabel="label" optionValue="value"
-            [submitted]="submitted"></app-dropdown>
+          <app-auto-complete label="買受人統一編號" controlName="Buyer_Uniform" [control]="dataForm.controls.Buyer_Uniform"
+            [options]="Buyer_Uniform_Options" optionLabel="label" optionValue="value" [submitted]="submitted"
+            [forceSelection]="false" [autoHighlight]="false"> </app-auto-complete>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -42,8 +45,13 @@
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text-range label="傳票號碼 " [startControl]="dataForm.controls.startVoucher_No"
-            [endControl]="dataForm.controls.endVoucher_No"></app-input-text-range>
+          <app-dropdown label="是否作廢" controlName="Invoice_Cancel" [options]="Invoice_CancelOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.Invoice_Cancel" [submitted]="submitted">
+          </app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="傳票號碼 " [control]="dataForm.controls.Voucher_No"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="資產註記" [control]="dataForm.controls.AssetType" [options]="AssetNoteOptions"
@@ -53,29 +61,33 @@
           <app-input-text label="發票抬頭" [control]="dataForm.controls.PUR_InvoiceTitle"
             [submitted]="submitted"></app-input-text>
         </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number label="未稅金額" [control]="dataForm.controls.PUR_Net" [submitted]="submitted"
+            [useGrouping]="true" [readonly]="true"></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number label="稅額" [control]="dataForm.controls.PUR_Tax" [submitted]="submitted"
+            [useGrouping]="true" [readonly]="true"></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number label="含稅金額" [control]="dataForm.controls.PUR_Amt" [submitted]="submitted"
+            [useGrouping]="true" [readonly]="true"></app-input-number>
+        </div>
       </div>
+      <br />
       <div class="grid p-fluid">
         <div class="col-12">
-          <app-table-edit #tableEdit [tableKey]="'InvoiceSeqNo'" [columns]="columns" [data]="data"
-            [showInsert]="!isTableDisabled" [showDelete]="true" [showCheckBox]="!isTableDisabled"
-            [disabled]="isTableDisabled" (dataChange)="data = $event" [autoInsertDefaultRow]="true"
+          <app-table-edit #tableEdit [tableKey]="'InvoiceSeqNo'" [columns]="columns" [data]="data" [showInsert]="false"
+            [disabled]="isFormReadable" (dataChange)="data = $event" [autoInsertDefaultRow]="true"
             (fieldChange)="updateMasterAmounts()">
-            <header>
-              <div class="flex justify-content-between align-items-center gap-2">
-                <div class="flex gap-2">
-                  <p-button styleClass="p-2" label="非二聯式收銀機發票調整作業.PDF" [loading]="btnLoading" icon="pi pi-file-pdf"
-                    (click)="onExportPDF()" [disabled]="!currentDetailId"></p-button>
-                </div>
-              </div>
-            </header>
 
           </app-table-edit>
         </div>
       </div>
 
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit" [loading]="loading" />
+        <app-button btnType="submit" [loading]="loading" [form]="dataForm"></app-button>
       </div>
     </form>
   </p-panel>

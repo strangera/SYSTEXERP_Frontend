@@ -9,7 +9,7 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
  * 對應 FIN26010Response.queryFIN26010Response
  */
 export interface Fin26010Row {
-  PAM_No?: string | null;          // 匯款單號
+  WSLIP_NO?: string | null;        // 匯款單號
   CRT_Date?: string | null;        // 建立日期
   RMT_Date?: string | null;        // 匯款日期
   ACCNO?: string | null;           // 銀行代號(APS3007.BNK_id=GLS1005.ACCNO)
@@ -30,7 +30,7 @@ export interface Fin26010Request {
   PageIndex?: number;
   SortBy?: { field: string; order: number }[];
 
-  PamNo?: string;        // 匯款單號
+  WSLIP_NO?: string;     // 匯款單號
   CRT_DateFrom?: string; // 建立日期(起)
   CRT_DateTo?: string;   // 建立日期(迄)
   RMT_DateFrom?: string; // 匯款日期(起)
@@ -46,9 +46,14 @@ export interface Fin26010Request {
 /**
  * 匯出 FIN26010 TXT 檔 Request 型別
  * 對應 API: /ExportLabel/ExportFIN26010TXT
+ *
+ * body:
+ * {
+ *   "WSLIP_NOList": ["xxx", "yyy"]
+ * }
  */
 export interface ExportFin26010TxtRequest {
-  PamNoList: string[];
+  WSLIP_NOList: string[];
 }
 
 /**
@@ -57,9 +62,11 @@ export interface ExportFin26010TxtRequest {
  */
 export interface Aps1002BankDropDownRow {
   BNK_DepositAccNo: string; // 公司銀行科目代號 (對應 BNK_id)
-  ACCCNAME: string;         // 科目名稱
+  BNK_AccName: string;         // 科目名稱
   BNK_No: string;           // 銀行代號
   BNK_BRANCHNAME: string;   // 銀行名稱
+  BNK_id: string;         // 銀行代號 (同 BNK_DepositAccNo) 
+ BNK_AccNo: string;       // 銀行帳號
 }
 
 @Injectable({ providedIn: 'root' })
@@ -67,6 +74,8 @@ export class Fin26010Service {
   /**
    * 依後端 namespace（FIN0000.APS1000）推斷 Controller 路徑為 /FIN0000/APS1000
    * 若實際 Controller Route 不同，再調整這裡即可。
+   *
+   * ⚠ 匯出 TXT 不走這個 Route，另用 /ExportLabel/ExportFIN26010TXT
    */
   private apiUrl = `${environment.ApiUrl}/FIN0000/APS1000`;
 
@@ -83,7 +92,9 @@ export class Fin26010Service {
   /**
    * 匯出 FIN26010 TXT 檔
    * API: POST /ExportLabel/ExportFIN26010TXT
-   * body: { PamNoList: string[] }
+   * body: { WSLIP_NOList: string[] }
+   *
+   * 注意：這個 API 開頭沒有 /FIN0000/APS1000
    */
   exportFIN26010TXT(
     body: ExportFin26010TxtRequest
@@ -98,7 +109,7 @@ export class Fin26010Service {
   /** 銀行代號下拉：/queryAPS1002_DropDownList，POST {} */
   queryAPS1002DropDownList(): Observable<ApiResponse<Aps1002BankDropDownRow[]>> {
     return this.http.post<ApiResponse<Aps1002BankDropDownRow[]>>(
-      `${environment.ApiUrl}/queryAPS1002_DropDownList`,
+      `${environment.ApiUrl}/FIN0000/APS1000/queryBankAccount`,
       {}
     );
   }

@@ -11,8 +11,9 @@ import { environment } from 'src/environments/environment'; // 確保路徑正�
 export interface Tls2e030EstBody {
   sam_yyymm: string;
   sam_termno: number;
-  money_type: string; // 注意：Schema 範例中 money_type 是 string
+  money_type: string;
   tlt_no: string;
+  isForce?: boolean; // 新增：是否強制重算
 }
 
 // 定義 queryTLS2E030 (查詢) 的 Request Body (包含分頁和排序)

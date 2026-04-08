@@ -1,35 +1,25 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS42020Data, TLS42020DetailData, TLS42020InsertUpdateDetailData, TLS42020Service } from '@service/api/tls/tls42020.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { PanelModule } from 'primeng/panel';
+import { finalize, map, Observable, of, shareReplay } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { NgIf } from '@angular/common';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, FieldChangeEvent } from '@shared/componentkit/table/table.model';
-import { TLS42020Data, TLS42020DetailData, TLS42020InsertDetailData, TLS42020InsertRequest, TLS42020Service, TLS42020UpdateRequest } from '@service/api/tls/tls42020.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-
-// 介面定義
-interface DropdownOption {
-  label: string;
-  value: string | number;
-}
-
-interface TLTOption extends DropdownOption {
-  name: string; // 專櫃名稱
-}
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-tls42020-cru',
   templateUrl: './tls42020-cru.component.html',
-  styleUrl: './tls42020-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -41,331 +31,203 @@ interface TLTOption extends DropdownOption {
     CalendarComponent,
     TranslateModule,
     NgIf,
-    TableComponent
+    TableEditComponent,
+    AsyncPipe
   ]
 })
 export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> implements OnInit {
-  // 表單定義
   dataForm = this.formBuilder.nonNullable.group({
-    SBM_Type: [null as number | null, Validators.required],
-    TLT_No: [null as string | null, Validators.required],
+    MID: [{ value: this.authService.currentUserValue?.mid, disabled: true }],
+    STO_No: [{ value: this.authService.currentUserValue?.SYS_StoreNo, disabled: true }],
+    SBM_Type: ['' as string, Validators.required],
+    TLT_No: ['' as string, Validators.required],
+    TLT_Name: [{ value: '', disabled: true }],
     SBM_BegDate: ['', Validators.required],
     SBM_EndDate: ['', Validators.required]
   });
-
-  private readonly STORE_NO = '10';
   data: TLS42020DetailData[] = [];
-  selectedRows: TLS42020DetailData[] = [];
-  // 原始明細資料
+  gridDefaultData = { TLT_No: '' };
   private originalDetailData: TLS42020DetailData[] = [];
-
-  // 菜單類型下拉選項
-  menuTypeOptions: DropdownOption[] = [
-    { label: '一般菜單', value: 1 },
-    { label: '員工菜單', value: 2 }
-  ];
-  // 專櫃編號下拉選項
-  tltNoOptions: TLTOption[] = [];
-
-  //#region 明細資料
-  // 商品貨號下拉選項
-  PLU_MagNoOptions: any[] = [];
-
-  // 明細資料欄位定義
-  columns: Column[] = [
-    {
-      field: 'SBM_BtnNo',
-      header: '菜單按鍵序號',
-      type: 'input',
-      validate: [this.requiredValidator('菜單按鍵序號為必填欄位')],
-      required: true
-    },
+  menuTypeOptions = getSYS1000Options('SBM_Type');
+  tltNoOptions = this.dropDown.queryTltTalent();
+  private pluOptionsCache = new Map<string, Observable<any[]>>();
+  private latestPluData = new Map<string, any[]>();
+  columns: EditColumn[] = [
+    { field: 'SBM_BtnNo', header: '菜單按鍵序號', type: 'input', validate: [validateRequired] },
     {
       field: 'PLU_MagNo',
-      header: '商品貨號',
+      header: '商品管理碼',
       type: 'dropdown',
-      options: () => this.PLU_MagNoOptions, // 使用函數動態返回選項
-      optionLabel: 'label',
-      optionValue: 'PLU_MagNo',
+      optionsAsync: true,
+      triggerFields: ['TLT_No'],
+      options: () => {
+        const tltNo = this.dataForm.get('TLT_No')?.value;
+        if (!tltNo) return of([]);
+        if (!this.pluOptionsCache.has(tltNo)) {
+          const obs = this.tls42020Service.dropdownTLS42020({ TLT_NO: tltNo }).pipe(
+            map(res => res?.Data || []),
+            map(data => {
+              this.latestPluData.set(tltNo, data);
+              return data;
+            }),
+            shareReplay({ bufferSize: 1, refCount: true })
+          );
+          this.pluOptionsCache.set(tltNo, obs);
+        }
+        return this.pluOptionsCache.get(tltNo)!;
+      },
+      optionLabel: 'PLU_MagNo',
+      optionValue: 'PLU_MagNo', // 🎯 使用者要求的字串值
+      templateLabel: 'label',
+      showClear: true,
+      onBlur: (rowData) => this.syncProductData(rowData, 'PLU_MagNo') // 🎯 失焦觸發偵測
     },
     {
-      field: 'PLU_No',
-      header: '國際條碼',
-      type: 'input',
-      validate: [this.requiredValidator('國際條碼為必填欄位')],
-      required: true
+      field: 'PLU_No', header: '國際條碼', type: 'input',
+      onBlur: (rowData) => this.syncProductData(rowData, 'PLU_No')
     },
     {
-      field: 'PLU_Name',
-      header: '商品名稱',
-      type: 'input',
-      validate: [this.requiredValidator('商品名稱為必填欄位')],
-      required: true
+      field: 'PLU_Name', header: '商品名稱', type: 'input', validate: [validateRequired],
+      onBlur: (rowData) => {
+        if (rowData.PLU_Name && !rowData.PLU_PrnName) {
+          rowData.PLU_PrnName = rowData.PLU_Name;
+        }
+      }
     },
+    { field: 'PLU_PrnName', header: '商品列印名稱', type: 'input' },
+    { field: 'PLU_FixPrc', header: '商品定價', type: 'inputNumber' },
     {
-      field: 'PLU_PrnName',
-      header: '商品列印名稱',
-      type: 'input',
-      validate: [this.requiredValidator('商品列印名稱為必填欄位')],
-      required: true
-    },
-    {
-      field: 'PLU_FixPrc',
-      header: '商品定價',
-      type: 'inputNumber',
-      validate: [this.requiredValidator('商品定價為必填欄位')],
-      required: true,
-    },
-    {
-      field: 'PLU_SalePrc',
-      header: '商品售價',
-      type: 'inputNumber',
-      validate: [this.requiredValidator('商品售價為必填欄位')],
-      required: true,
+      field: 'PLU_SalePrc', header: '商品售價', type: 'inputNumber', validate: [validateRequired],
+      onBlur: (rowData) => {
+        if (rowData.PLU_SalePrc !== null && rowData.PLU_SalePrc !== undefined && !rowData.PLU_FixPrc) {
+          rowData.PLU_FixPrc = rowData.PLU_SalePrc;
+        }
+      }
     }
   ];
-  //#endregion
+  /**
+   * 🎯 核心連動邏輯：根據目前輸入的欄位值，去商品清單找對應項目並填入
+   */
+  private syncProductData(rowData: any, triggerField: string) {
+    const tltNo = this.dataForm.get('TLT_No')?.value;
+    if (!tltNo) return;
+    const productList = this.latestPluData.get(tltNo);
+    const inputValue = rowData[triggerField];
 
-  constructor(
-    private dropDownListService: DropDownListService,
-    private tls42020Service: TLS42020Service,
-    private changeDetectorRef: ChangeDetectorRef
+    if (!productList || !inputValue) return;
 
-  ) {
-    super();
+    // 尋找匹配的商品
+    const found = productList.find(item => String(item[triggerField]) === String(inputValue));
+
+    if (found) {
+      rowData.PLU_MagNo = found.PLU_MagNo;
+      rowData.PLU_No = found.PLU_No;
+      rowData.PLU_Name = found.PLU_Name;
+      rowData.PLU_PrnName = found.PLU_PrnName || found.PLU_Name;
+      rowData.PLU_FixPrc = found.PLU_FixPrc;
+      rowData.PLU_SalePrc = found.PLU_SalePrc;
+      this.cdr.markForCheck();
+    }
   }
+  constructor(
+    private readonly tls42020Service: TLS42020Service,
+    private readonly datePipe: DatePipe,
+    private readonly dropDown: DropdownApiService,
+    private readonly cdr: ChangeDetectorRef
+  ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS42020', this.dataForm);
-    this.loadOptions();
-
-    // 代回明細資料
-    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
-      if (this.rowdata) {
-        this.tls42020Service.queryTLS42020Detail({ tltNo: this.rowdata.TLT_No })
-          .pipe(untilDestroyed(this))
-          .subscribe(res => {
-            this.data = res.Data;
-            this.originalDetailData = res.Data;
-          });
+    this.dataForm.get('TLT_No')?.valueChanges.pipe(untilDestroyed(this)).subscribe(newTltNo => {
+      this.pluOptionsCache.clear();
+      this.gridDefaultData = { ...this.gridDefaultData, TLT_No: newTltNo };
+      if (this.data) {
+        this.data = this.data.map(row => ({
+          ...row,
+          TLT_No: newTltNo,
+        }));
       }
+      this.cdr.markForCheck();
+    });
+    this.loadDetail();
+  }
+  private loadDetail() {
+    if (this.rowdata && !this.isFormCreateable) {
+      this.dataForm.controls['TLT_No'].disable();
+      const detailReq = {
+        MID: this.rowdata.mid,
+        STO_No: this.rowdata.STO_No,
+        SBM_Type: this.rowdata.SBM_Type?.toString() ?? '',
+        TLT_No: this.rowdata.TLT_No,
+        SBM_BegDate: this.datePipe.transform(this.rowdata.SBM_BegDate, 'yyyy-MM-ddTHH:mm:ss') ?? '',
+      };
+      this.tls42020Service.queryTLS42020Detail(detailReq).pipe(untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data;
+        this.originalDetailData = [...this.data];
+        this.cdr.markForCheck();
+      });
     }
   }
-
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      // 檢核 data 至少要有一筆
-      if (this.data.length === 0) {
-        this.messageService.errorBubble('請新增至少一筆明細資料');
+      const valid = this.tableEditComponent.validateAndShowErrors();
+      if (!valid) {
         this.loading = false;
         return;
       }
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          // 新增邏輯
-          const payload = this.createInsertRequestBody();
-          this.performInsert(payload);
-          break;
-        case CRUDStatus.Edit:
-          // 編輯邏輯
-          const updatePayload = this.createUpdateRequestBody();
-          this.performUpdate(updatePayload);
-          break;
-      }
-    });
-  }
+      const formValue = this.dataForm.getRawValue();
+      // 🎯 處理明細資料與自動補值
+      const detailData: TLS42020InsertUpdateDetailData[] = this.data.map((item) => {
+        // 若提交前沒輸入，自動給值
+        const finalFixPrc = (item.PLU_FixPrc === null || item.PLU_FixPrc === undefined) ? item.PLU_SalePrc : item.PLU_FixPrc;
+        const finalPrnName = (!item.PLU_PrnName || item.PLU_PrnName.trim() === '') ? item.PLU_Name : item.PLU_PrnName;
 
-  // 刪除明細資料
-  onDelete(rows: TLS42020InsertDetailData[]): void {
-    const idsToDelete = new Set(rows.map(item => item.SBM_SeqNo));
-    this.data = this.data.filter(item => !idsToDelete.has(item.SBM_SeqNo));
-    this.selectedRows = [];
-  }
-
-  // 選擇 PLU_MagNo (商品貨號) 後自動帶出其他欄位的資料
-  onFieldChange(event: FieldChangeEvent): void {
-    if (event.field === 'PLU_MagNo' && event.index !== undefined) {
-      const selectedProduct = this.PLU_MagNoOptions.find(item => item.PLU_MagNo === event.value);
-      if (selectedProduct) {
-        // 更新該行的其他欄位
-        const rowData = this.data[event.index];
-        if (rowData) {
-          rowData.PLU_No = selectedProduct.PLU_No || '';
-          rowData.PLU_Name = selectedProduct.PLU_Name || '';
-          rowData.PLU_PrnName = selectedProduct.PLU_PrnName || '';
-          rowData.PLU_FixPrc = selectedProduct.PLU_FixPrc || '';
-          rowData.PLU_SalePrc = selectedProduct.PLU_SalePrc || '';
-          // 觸發變更檢測
-          this.changeDetectorRef.detectChanges();
-        }
-      }
-    }
-  }
-
-  // 載入專櫃編號選項
-  private loadOptions(): void {
-    this.dropDownListService.queryTLTTALENT_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        this.tltNoOptions = res.Data.map((item: any) => ({
-          label: `${item.No}-${item.Name}`,
-          value: item.No,
-          name: item.Name
-        }));
+        return {
+          ID: item.ID.toString()?.startsWith('temp-') ? 0 : item.ID ?? 0,
+          MID: formValue.MID ?? 0,
+          STO_No: formValue.STO_No ?? '',
+          SBM_Type: formValue.SBM_Type?.toString() ?? '',
+          TLT_No: formValue.TLT_No ?? '',
+          TLT_Name: formValue.TLT_Name ?? '',
+          SBM_BegDate: formValue.SBM_BegDate ? new Date(formValue.SBM_BegDate).toISOString() : '',
+          SBM_EndDate: formValue.SBM_EndDate ? new Date(formValue.SBM_EndDate).toISOString() : '',
+          SBM_SeqNo: item.SBM_SeqNo ?? 0,
+          PLU_MagNo: item.PLU_MagNo ?? '',
+          PLU_No: item.PLU_No || item.PLU_MagNo, // 依照後端邏輯，若 PLU_No 為空則補 MagNo
+          PLU_Name: item.PLU_Name,
+          PLU_PrnName: finalPrnName,
+          PLU_FixPrc: finalFixPrc,
+          PLU_SalePrc: item.PLU_SalePrc,
+          SBM_BtnNo: item.SBM_BtnNo
+        };
       });
-  }
 
-  //#region CRUD 操作
-  private performInsert(payload: TLS42020InsertRequest): void {
-    this.tls42020Service.insertTLS42020M(payload)
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => (this.loading = false))
-      )
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('新增成功');
+      const payload = {
+        ID: this.rowdata?.id ?? undefined,
+        MID: formValue.MID ?? 0,
+        STO_No: formValue.STO_No ?? '',
+        TLT_No: formValue.TLT_No ?? undefined,
+        TLT_Name: formValue.TLT_Name ?? '',
+        SBM_Type: formValue.SBM_Type?.toString() ?? '',
+        SBM_BegDate: formValue.SBM_BegDate ? new Date(formValue.SBM_BegDate).toISOString() : '',
+        SBM_EndDate: formValue.SBM_EndDate ? new Date(formValue.SBM_EndDate).toISOString() : '',
+        POS10271: detailData
+      };
+
+      const req = this.isFormCreateable
+        ? this.tls42020Service.insertTLS42020(payload)
+        : this.tls42020Service.updateTLS42020(payload);
+
+      req.pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe(res => {
+        this.messageService.successBubble(res.Message ?? '更新成功');
+        if (this.isFormCreateable) {
           this.dataForm.reset();
-          this.data = []; // 清空明細資料
-        }
-      });
-  }
-
-  private performUpdate(payload: TLS42020UpdateRequest): void {
-    this.tls42020Service.updateTLS42020(payload)
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => (this.loading = false))
-      )
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('更新成功');
+          this.data = [];
+        } else {
           this.onCancel();
         }
       });
-  }
-
-  private createInsertRequestBody(): TLS42020InsertRequest {
-    const formValue = this.dataForm.getRawValue();
-    // 主檔資料
-    const mainData = {
-      STO_No: this.STORE_NO,
-      SBM_Type: formValue.SBM_Type!,
-      TLT_No: formValue.TLT_No!,
-      TLT_Name: this.tltNoOptions.find(item => item.value === formValue.TLT_No)?.name ?? '',
-      SBM_BegDate: formValue.SBM_BegDate!,
-      SBM_EndDate: formValue.SBM_EndDate!
-    };
-    // 深拷貝明細資料並加上主檔欄位，符合 TLS42020InsertDetailData 格式
-    const detailData: TLS42020InsertDetailData[] = this.data.map((item) => ({
-      // 必要欄位
-      MID: 0,
-      status: '',
-      // 複合主鍵
-      STO_No: this.STORE_NO,
-      SBM_Type: mainData.SBM_Type,
-      TLT_No: mainData.TLT_No,
-      SBM_BegDate: mainData.SBM_BegDate,
-      SBM_EndDate: mainData.SBM_EndDate,
-      // 明細資料
-      SBM_SeqNo: item.SBM_SeqNo ?? '',  // 後端處理
-      PLU_MagNo: item.PLU_MagNo ?? '',  // 若為空則由後端產生
-      PLU_No: item.PLU_No,
-      PLU_Name: item.PLU_Name,
-      PLU_PrnName: item.PLU_PrnName,
-      PLU_FixPrc: String(item.PLU_FixPrc),
-      PLU_SalePrc: String(item.PLU_SalePrc),
-      SBM_BtnNo: item.SBM_BtnNo
-    }));
-
-    return {
-      ...mainData,
-      POS10271: detailData
-    };
-  }
-
-  private createUpdateRequestBody(): TLS42020UpdateRequest {
-    const formValue = this.dataForm.getRawValue();
-    // 主檔資料
-    const mainData = {
-      ID: this.rowdata!.id, // 從原始資料取得 ID
-      MID: 0,
-      STO_No: this.STORE_NO,
-      SBM_Type: formValue.SBM_Type!,
-      TLT_No: formValue.TLT_No!,
-      TLT_Name: this.tltNoOptions.find(item => item.value === formValue.TLT_No)?.name ?? '',
-      SBM_BegDate: formValue.SBM_BegDate!,
-      SBM_EndDate: formValue.SBM_EndDate!
-    };
-    // 取得目前明細資料的 ID 集合
-    const currentDetailIds = new Set(this.data.map(item => item.ID).filter(id => id));
-    // 明細資料 - 轉換為 TLS42020UpdateDetailData 格式
-    const detailData = this.data.map((item) => ({
-      // 必要欄位
-      MID: 0,
-      STO_No: this.STORE_NO,
-      // 複合主鍵
-      SBM_Type: mainData.SBM_Type,
-      TLT_No: mainData.TLT_No,
-      SBM_BegDate: mainData.SBM_BegDate,
-      SBM_EndDate: mainData.SBM_EndDate,
-      // 明細資料
-      SBM_SeqNo: item.SBM_SeqNo ?? '',  // 後端處理
-      PLU_MagNo: item.PLU_MagNo ?? '',  // 若為空則由後端產生
-      PLU_No: item.PLU_No,
-      PLU_Name: item.PLU_Name,
-      PLU_PrnName: item.PLU_PrnName,
-      PLU_FixPrc: String(item.PLU_FixPrc),
-      PLU_SalePrc: String(item.PLU_SalePrc),
-      SBM_BtnNo: item.SBM_BtnNo,
-      status: '',
-      ID: typeof item.ID === 'number' ? item.ID : 0
-    }));
-    // 找出被刪除的資料 (原始資料中有，但目前資料中沒有的項目)
-    const deletedDetailData = this.originalDetailData
-      .filter(originalItem => originalItem.ID && !currentDetailIds.has(originalItem.ID))
-      .map(item => ({
-        MID: 0,
-        STO_No: this.STORE_NO,
-        SBM_Type: mainData.SBM_Type,
-        TLT_No: mainData.TLT_No,
-        SBM_BegDate: mainData.SBM_BegDate,
-        SBM_EndDate: mainData.SBM_EndDate,
-        SBM_SeqNo: item.SBM_SeqNo ?? '',
-        PLU_MagNo: item.PLU_MagNo ?? '',
-        PLU_No: item.PLU_No,
-        PLU_Name: item.PLU_Name,
-        PLU_PrnName: item.PLU_PrnName,
-        PLU_FixPrc: String(item.PLU_FixPrc),
-        PLU_SalePrc: String(item.PLU_SalePrc),
-        SBM_BtnNo: item.SBM_BtnNo,
-        status: 'deleted', // 被刪除的資料狀態設為 'deleted'
-        ID: item.ID
-      }));
-
-    return {
-      ...mainData,
-      POS10271: [...detailData, ...deletedDetailData] // 合併現有資料和被刪除的資料
-    };
-  }
-  //#endregion
-
-
-  private requiredValidator(errorMessage: string) {
-    return (value: string) => ({
-      isValid: !!value,
-      errorMessage: [errorMessage]
     });
-  }
-
-  // 載入 PLU_MagNo 選項
-  loadPLU_MagNoOptions(tltNo: string): void {
-    this.tls42020Service.dropdownTLS42020({ TLT_NO: [tltNo ?? ''] })
-      .pipe(
-        untilDestroyed(this)
-      )
-      .subscribe(res => {
-        this.PLU_MagNoOptions = res.Data;
-      });
   }
 }

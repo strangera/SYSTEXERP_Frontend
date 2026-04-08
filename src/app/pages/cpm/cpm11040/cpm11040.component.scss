@@ -1,0 +1,11 @@
+// ¿tè_M„	#
+app-input-text {
+  ::ng-deep .input-group {
+    gap: 0.5rem;
+
+    input {
+      flex: 1;
+      width: auto;
+    }
+  }
+}

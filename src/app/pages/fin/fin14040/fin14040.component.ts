@@ -97,29 +97,20 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
         next: (response) => {
           const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
           this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string; STO_Status: string }) => ({
-            Label: item.STO_TaxNo + "/" + item.STO_TaxName + "/" + item.REP_BegGUIYM + "~" + item.REP_EndGUIYM,
+            Label: item.STO_TaxNo + "-" + item.STO_TaxName,
             No: item.STO_TaxNo,
             STO_Status: item.STO_Status
           }));
+
+          // 規格更新， 只使用STO_Status === '1' 的REP_TaxNo_Options
+          this.REP_TaxNo_Options = this.REP_TaxNo_Options.filter(x => x.STO_Status === '1');
           console.log('稅籍編號 options', this.REP_TaxNo_Options);
 
-          // 找出 STO_Status === '1' 的稅籍
-          const active = this.REP_TaxNo_Options.find(x => x.STO_Status === '1');
-
-          // 排序：使用中(1) 的排在未使用中(2) 前面，但保持其他順序
-          this.REP_TaxNo_Options.sort((a, b) => {
-            if (a.STO_Status === '1' && b.STO_Status !== '1') return -1;
-            if (a.STO_Status !== '1' && b.STO_Status === '1') return 1;
-            return 0; // 都一樣就保持原順序
-          });
-
-          if (active) { //如果有使用中的設定為稅及編號預設值
-            console.log('當期使用中的稅籍編號', active);
+          // 預設第一筆 作為表單內容
+          if (this.REP_TaxNo_Options.length > 0) {
             this.queryForm.patchValue({
-              Tax_No: active.No as any,
+              Tax_No: this.REP_TaxNo_Options[0].No as any,
             });
-          } else {
-            console.log('當期無使用中的稅籍編號', active);
           }
         },
         error: (error) => {
@@ -133,15 +124,8 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
       const body = {
         ...frm.value,
         Mid: Number(frm.value.Mid),
-
-        // "Mid": 0,
-        // "STO_No": "10",
-        // "INV_DeclareYM": "202506",
-        // "Tax_No": "703902225"
       }
       console.log('形成媒體申報檔request', body);
-
-      // TDS1001沒資料所以txt都是空的
 
       this.fin14040Service.printFIN14040(body)
         .pipe(untilDestroyed(this)).subscribe({

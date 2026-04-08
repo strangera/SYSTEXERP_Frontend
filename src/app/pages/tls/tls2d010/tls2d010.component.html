@@ -28,7 +28,7 @@
               [control]="queryForm.controls.org_idList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="扣款年月" calendarType="dateMonthOne" [control]="queryForm.controls.tpy_date"
+            <app-calendar label="扣款年月" calendarType="dateMonthOne" [control]="queryForm.controls.tpy_YYYYMM"
               [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -66,10 +66,9 @@
 
 <div class="card">
   <app-table [showDelete]="true" [data]="data" [columns]="columns" (edit)="onEdit(setCounterType($event))"
-    (detail)="onDetail(setCounterType($event))" [showCheckBox]="true" dataKey="id"
+    (detail)="onDetail(setCounterType($event))" [showCheckBox]="true" dataKey="id" [showReportMode]="false"
     [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true" [loading]="loading"
-    [showExcelExport]="true" [showExcel]="true" (importExcel)="onImportExcel($event)" (delete)="onDelete($event)">
-
-  </app-table>
+    [showExcelExport]="true" [showExcel]="true" [exportExcelLoading]="excelLoading" (exportExcel)="downloadTemplate()"
+    (importExcel)="onImportExcel($event)" (delete)="onDelete($event)"></app-table>
 </div>

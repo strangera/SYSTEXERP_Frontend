@@ -1,0 +1,56 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button *ngIf="!dataForm.controls.IsFinished.value && isFormEditable" label="重新廣播" (click)="onRebroadcast()"
+      [loading]="RebroadcastLoading"></app-button>
+    <app-button *ngIf="!dataForm.controls.IsFinished.value && isFormEditable" label="已結案" (click)="onClose()"
+      [loading]="CloseLoading"></app-button>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="被尋人姓名" controlName="BY_MISSING_PEOPLE" [control]="dataForm.controls.BY_MISSING_PEOPLE"
+            [submitted]="submitted">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="集合地點" controlName="COLLECTION_SITES" [control]="dataForm.controls.COLLECTION_SITES"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="被尋人稱謂" controlName="SalutationCode" [control]="dataForm.controls.SalutationCode"
+            [submitted]="submitted" [options]="SALUTATIONOPTIONS" optionLabel="label"
+            optionValue="value"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="尋人者" controlName="MISSING_PEOPLE" [control]="dataForm.controls.MISSING_PEOPLE"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="與被尋人關係" controlName="RelationsCode" [control]="dataForm.controls.RelationsCode"
+            [submitted]="submitted" [options]="RELATIONSOPTIONS" optionLabel="label" optionValue="value"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar label="登錄日期" controlName="REC_DATE" [control]="dataForm.controls.REC_DATE"
+            [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-radiobutton groupname="BROADCAST_YN" label="是否廣播" controlName="BROADCAST_YN"
+            [control]="dataForm.controls.BROADCAST_YN" [submitted]="submitted"
+            [options]="broadcastOptions"></app-radiobutton>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-radiobutton groupname="IsFinished" label="是否結案" controlName="IsFinished"
+            [control]="dataForm.controls.IsFinished" [submitted]="submitted"
+            [options]="[{ label: '是', value: true }, { label: '否', value: false }]"></app-radiobutton>
+        </div>
+      </div>
+      <div *ngIf=" !isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-panel>
+</div>

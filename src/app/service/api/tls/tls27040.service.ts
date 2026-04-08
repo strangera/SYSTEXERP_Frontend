@@ -154,6 +154,11 @@ export interface POS6118Update {
   NCML_TxnTime: string
 }
 
+export interface POS6118HUpdate {
+  ID: number,
+  ECR_No: string,
+}
+
 export interface POS6119Update {
   ID: number,
   ECR_No: string,
@@ -222,22 +227,22 @@ export class TLS27040Service {
   /**
    * 新增 POS6118（聯合 - 實收信用卡調整作業）
    */
-  insertPOS6118(body: POS6118Insert): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertPOS6118`, body);
+  insertPOS6118(body: POS6118Insert): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/insertPOS6118`, body);
   }
 
   /**
    * 新增 POS6119（中信 - 實收信用卡調整作業）
    */
-  insertPOS6119(body: POS6119Insert): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertPOS6119`, body);
+  insertPOS6119(body: POS6119Insert): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/insertPOS6119`, body);
   }
 
   /**
    * 新增 POS6119P（中信停車場 - 實收信用卡調整作業）
    */
-  insertPOS6119P(body: POS6119PInsert): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertPOS6119P`, body);
+  insertPOS6119P(body: POS6119PInsert): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/insertPOS6119P`, body);
   }
 
   // --- 刪除 API (更新請求介面) ---
@@ -263,22 +268,29 @@ export class TLS27040Service {
   /**
    * 更新 POS6118
    */
-  updatePOS6118(body: POS6118Update): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updatePOS6118`, body);
+  updatePOS6118(body: POS6118Update): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/updatePOS6118`, body);
+  }
+
+  /**
+  * 更新 POS6118H
+  */
+  updatePOS6118H(body: POS6118HUpdate): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/updatePOS6118H`, body);
   }
 
   /**
    * 更新 POS6119
    */
-  updatePOS6119(body: POS6119Update): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updatePOS6119`, body);
+  updatePOS6119(body: POS6119Update): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/updatePOS6119`, body);
   }
 
   /**
    * 更新 POS6119P
    */
-  updatePOS6119P(body: POS6119PUpdate): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updatePOS6119P`, body);
+  updatePOS6119P(body: POS6119PUpdate): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/updatePOS6119P`, body);
   }
 
   /**

@@ -1,0 +1,28 @@
+.step3-container {
+  padding: 1rem;
+}
+
+// 專櫃契約書資訊表格樣式 (與 step2 一致)
+::ng-deep .custom-table-red {
+  .p-datatable {
+    thead th {
+      background-color: #1a252f !important;
+      color: #ffffff !important;
+      font-weight: 600 !important;
+      text-align: center !important;
+      border: 1px solid #2c3e50 !important;
+      padding: 0.75rem 0.5rem !important;
+    }
+
+    thead th:hover {
+      background-color: #243642 !important;
+    }
+  }
+}
+
+// 更具體的選擇器
+::ng-deep .custom-table-red .p-datatable-thead > tr > th {
+  background-color: #1a252f !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}

@@ -48,8 +48,8 @@ export class FIN62010Component extends BasicQueryPageComponent<QueryFIN62010Resp
     { field: 'BNK_No_Out', header: '轉出公司銀行科目代號' },
     { field: 'BNK_No_Out_Name', header: '轉出銀行名稱' },
     { field: 'VouNo', header: '傳票號碼' },
-    { field: 'Tran_Amt', header: '金額', format: formatAmount },
-    { field: 'Fee_Amt', header: '手續費', format: formatAmount },
+    { field: 'Tran_Amt', header: '金額', format: formatAmount, align: 'right' },
+    { field: 'Fee_Amt', header: '手續費', format: formatAmount, align: 'right' },
     { field: 'Remark', header: '備註' }
   ];
   constructor(
@@ -73,13 +73,19 @@ export class FIN62010Component extends BasicQueryPageComponent<QueryFIN62010Resp
     });
   }
   onDelete(selectedRows: QueryFIN62010Response[]) {
-    const idList = selectedRows.map(row => row.ID);
-    this.loading = true;
-    this.fin62010Service.deleteFIN62010({ IdList: idList }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-      this.onSubmit(this.queryForm);
-      this.selectedItems = [];
-      this.messageService.successBubble(res.Message);
-    });
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: `是否刪除${selectedRows.length}筆已選擇項目?`,
+      accept: () => {
+        const idList = selectedRows.map(row => row.ID);
+        this.loading = true;
+        this.fin62010Service.deleteFIN62010({ IdList: idList }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+          this.onSubmit(this.queryForm);
+          this.selectedItems = [];
+          this.messageService.successBubble(res.Message);
+        });
+      }
+    })
   }
   isRowSelectable(row: QueryFIN62010Response): boolean {
     return row.Tran_Status !== '2';

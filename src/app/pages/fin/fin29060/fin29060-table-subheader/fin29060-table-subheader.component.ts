@@ -115,6 +115,8 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   groupedDataCache = new Map();
   /** 是否顯示群組小計 @default false */
   @Input() showSubTotal = false;
+  /** 群組小計顯示文字，預設 '小計' */
+  @Input() subtotalLabel = '小計';
   groupTotals: Record<string, Record<string, number>> = {};
   // 資料總計
   /** 是否顯示總計 @default false */
@@ -137,6 +139,14 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   @Input() addButton: AddButton[] = [];
   /** 按鈕們 loading @default false */
   @Input() buttonsLoading = false;
+
+  // select 選擇Row相關（支援外部勾選與 selection 綁定）
+  @Input() showCheckBox = false;
+  @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';
+  @Input() selectedItems: any[] = [];
+  @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true;
+  @Output() selectionChange = new EventEmitter<any>();
+  @Output() selectedItemsChange = new EventEmitter<any>();
   // body
   /** 是否顯示 排序欄位 @default false */
   @Input() showReorder = false;
@@ -147,8 +157,8 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   @Input() totalRecords = 0;
   /** 共幾頁數 @default 0 */
   totalPages = 0;
-  /** 每頁顯示的行數 @default 20 */
-  @Input() rows = 20;
+  /** 每頁顯示的行數 @default 30 */
+  @Input() rows = 30;
   /** 當前表格的起始索引 @default 0 */
   first = 0;
   /** (右上)下拉選單 頁數選項 @default [] */
@@ -156,9 +166,12 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   /** (右上)下拉選單 當前選擇的頁數 @default 1 */
   selectedPage: number | null = 1;
   /** 是否啟用 Lazy 加載 @default false */
-  @Input() lazy = false;
+  @Input() lazy = true;
   /** Lazy 加載事件 */
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>();
+
+  /** 是否啟用 PrimeNG virtualScroll，預設啟用（與 groupRowsBy 搭配） */
+  @Input() enableVirtualScroll = true;
 
   // 其他
   /** table 無資料時顯示文字 @default '查無資料' */
@@ -166,6 +179,10 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
 
   @Input() fullData: any[] = [];  // << 新增：全部資料
   @Input() lazyBatchSize = 30;
+  /** 後端回傳的群組/總計資料 (例如 totalData) */
+  @Input() totalData: any[] = [];
+  /** 若為 true，會在每次從後端載入分頁時，過濾掉可能為「頁尾總計」之列（例如 VendorNo === 'TOTAL' 或 VendorName === '總計'） */
+  @Input() skipPageTotalRows = false;
 
   constructor(
     private readonly sanitizer: DomSanitizer,
@@ -174,14 +191,50 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   ) { super(); }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['lazyBatchSize']) {
+      this.rows = this.lazyBatchSize;
+    }
+
     if (changes['data']) {
       this.virtualData = [...this.data];
+
+      console.log('[ngOnChanges] data 改變', {
+        dataLength: this.data.length,
+        virtualDataLength: this.virtualData.length,
+        totalRecords: this.totalRecords,
+        fullDataLength: this.fullData.length,
+        rows: this.rows,
+        lazyBatchSize: this.lazyBatchSize
+      });
 
       if (this.dt) {
         // totalRecords 正常更新
         this.dt.totalRecords = this.totalRecords;
+        this.dt.rows = this.lazyBatchSize;
       }
       this.cd.detectChanges();
+    }
+
+    // 如果 parent 更新 fullData，但沒有同步 data，則用 fullData 初始化 data（僅在 data 為空時）
+    if (changes['fullData']) {
+      console.log('[ngOnChanges] fullData 改變', { fullDataLength: this.fullData?.length });
+      if (this.fullData && this.fullData.length) {
+        // deterministic sort to avoid random order between requests when backend returns unsorted data
+        this.sortFullDataIfNeeded();
+        if ((!this.data || this.data.length === 0)) {
+          const batch = this.lazyBatchSize || (this.lastQueryBody?.pageSize) || 30;
+          this.data = this.fullData.slice(0, batch);
+          this.virtualData = [...this.data];
+          this.totalRecords = this.totalRecords || this.fullData.length;
+          console.log('[ngOnChanges] 使用 fullData 初始化 data', { initLength: this.data.length });
+          this.dataChange.emit(this.data);
+          if (this.dt) {
+            this.dt.totalRecords = this.totalRecords;
+            this.dt.rows = batch;
+          }
+          this.cd.detectChanges();
+        }
+      }
     }
 
     if (changes['columns'] && this.columns.length > 0) {
@@ -193,7 +246,22 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
     }
   }
 
+  // 資料勾選
+  onSelectionChange(event: any) {
+    const selected = Array.isArray(event) ? event : event ? [event] : [];
+    this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
+    this.selectionChange.emit(this.selectedItems);
+    this.selectedItemsChange.emit(this.selectedItems);
+  }
+
   loadMoreData() {
+    console.log('[loadMoreData] 開始載入更多資料', {
+      dataLength: this.data.length,
+      fullDataLength: this.fullData.length,
+      totalRecords: this.totalRecords,
+      lazyBatchSize: this.lazyBatchSize
+    });
+
     // 判斷是「一頁式載入模式」
     const isLocalMode = !this.queryFunction;
 
@@ -205,10 +273,18 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
 
       const more = this.fullData.slice(currentLength, next);
 
+      console.log('[loadMoreData] 本地模式載入', {
+        batch,
+        currentLength,
+        next,
+        moreLength: more.length
+      });
+
       if (more.length) {
         this.data = [...this.data, ...more];
         this.virtualData = this.data;
         this.dataChange.emit(this.data);
+        console.log('[loadMoreData] 資料已更新', { newDataLength: this.data.length });
       }
 
       return;
@@ -241,10 +317,28 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
       .pipe(finalize(() => (this._loading = false)))
       .subscribe((res) => {
         if (res?.Data?.length) {
-          this.data = [...this.data, ...res.Data];
-          this.virtualData = this.data;
-          this.totalRecords = res.TotalCount || this.totalRecords;
-          this.dataChange.emit(this.data);
+          let incoming = res.Data as any[];
+          if (this.skipPageTotalRows) {
+            incoming = incoming.filter(r => {
+              try {
+                const vals = Object.values(r || {});
+                for (const v of vals) {
+                  if (v === 'TOTAL' || v === '總計') return false;
+                  if (typeof v === 'string' && v.trim().toUpperCase() === 'TOTAL') return false;
+                }
+              } catch (e) {
+                // ignore and keep row
+              }
+              return true;
+            });
+          }
+
+          if (incoming.length) {
+            this.data = [...this.data, ...incoming];
+            this.virtualData = this.data;
+            this.totalRecords = res.TotalCount || this.totalRecords;
+            this.dataChange.emit(this.data);
+          }
         }
       });
   }
@@ -279,12 +373,19 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
     }
     // 一頁式模式（fullData 模式）
     else {
-      if (this.data.length >= this.fullData.length) return;
+      if (this.data.length >= this.fullData.length) {
+        console.log('[onScroll] 已載入所有資料，不再載入');
+        return;
+      }
     }
 
     if (event?.originalEvent?.target) {
       const target = event.originalEvent.target;
-      if (target.scrollHeight - target.scrollTop - target.clientHeight <= 2) {
+      const scrollBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+      console.log('[onScroll] 滾動事件', { scrollBottom, scrollHeight: target.scrollHeight, scrollTop: target.scrollTop, clientHeight: target.clientHeight });
+
+      if (scrollBottom <= 2) {
+        console.log('[onScroll] 接近底部，觸發載入更多');
         this.loadMoreData();
       }
     }
@@ -330,6 +431,105 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
       .subscribe(() => {
         this.cd.detectChanges();
       });
+
+    // 手動監聽表格的滾動事件（嘗試多個 selector，兼容不同 PrimeNG 版本）
+    setTimeout(() => {
+      if (this.dt?.el?.nativeElement) {
+        const selectors = [
+          '.p-datatable-scrollable-body',
+          '.p-datatable-scrollable-body-wrapper',
+          '.p-datatable-wrapper',
+          '.p-datatable-scrollable-view',
+          '.p-datatable-scrollable-body-table'
+        ];
+
+        const elements: any[] = [];
+        for (const s of selectors) {
+          const nodeList = this.dt.el.nativeElement.querySelectorAll(s);
+          if (nodeList && nodeList.length) {
+            nodeList.forEach((n: any) => elements.push({ el: n, selector: s }));
+          }
+        }
+
+        // 若找不到預設 selector，嘗試尋找可滾動的子元素
+        if (elements.length === 0) {
+          const all = this.dt.el.nativeElement.querySelectorAll('*');
+          all.forEach((n: any) => {
+            try {
+              const style = window.getComputedStyle(n);
+              if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && n.clientHeight > 0) {
+                elements.push({ el: n, selector: 'computed-overflow' });
+              }
+            } catch (e) {
+              // ignore
+            }
+          });
+        }
+
+        if (elements.length) {
+          console.log('[ngAfterViewInit] 找到滾動容器數量=', elements.length);
+          elements.forEach(({ el, selector }: any, idx: number) => {
+            fromEvent(el, 'scroll')
+              .pipe(debounceTime(100))
+              .subscribe((event: any) => {
+                const target = event.target;
+                const scrollBottom = target.scrollHeight - target.scrollTop - target.clientHeight;
+
+                console.log('[滾動監聽] 滾動狀態', {
+                  idx,
+                  selector,
+                  scrollBottom,
+                  scrollHeight: target.scrollHeight,
+                  scrollTop: target.scrollTop,
+                  clientHeight: target.clientHeight,
+                  dataLength: this.data.length,
+                  fullDataLength: this.fullData.length
+                });
+
+                if (scrollBottom <= 50 && !this._loading) {
+                  const hasMoreData = this.queryFunction
+                    ? this.data.length < this.totalRecords
+                    : this.data.length < this.fullData.length;
+
+                  if (hasMoreData) {
+                    console.log('[滾動監聽] 觸發載入更多資料 (idx=' + idx + ', selector=' + selector + ')');
+                    this.loadMoreData();
+                  }
+                }
+              });
+          });
+        } else {
+          console.warn('[ngAfterViewInit] 找不到滾動容器（含 computed overflow 探測）');
+        }
+      }
+    }, 500);
+
+    // 監聽整頁滾動（處理使用者在整頁滾動而非 table 內部滾動的情況）
+    fromEvent(window, 'scroll')
+      .pipe(debounceTime(150))
+      .subscribe(() => {
+        try {
+          const tableEl = this.dt?.el?.nativeElement as HTMLElement | undefined;
+          if (!tableEl) return;
+
+          const rect = tableEl.getBoundingClientRect();
+          const threshold = 200; // 距離視窗底部 threshold
+
+          console.log('[window scroll] table rect', { top: rect.top, bottom: rect.bottom, innerHeight: window.innerHeight });
+
+          // 如果 table 的底部接近或低於視窗底部，嘗試載入更多
+          if (rect.bottom <= window.innerHeight + threshold && rect.top < window.innerHeight) {
+            if (this._loading) return;
+            const hasMoreData = this.queryFunction ? (this.data.length < this.totalRecords) : (this.data.length < this.fullData.length);
+            if (hasMoreData) {
+              console.log('[window scroll] 接近 table 底部，觸發載入更多資料');
+              this.loadMoreData();
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      });
   }
   // 行追蹤
   trackByRow = (index: number, item: any) => { return item?.[this.dataKey] || index; };
@@ -339,7 +539,12 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
     if (!this.showSubTotal && this.data.length && this.showReorder) {
       count += 1;
     }
+    // 序號欄
     count += 1;
+    // 勾選欄
+    if (this.showCheckBox && this.selectionMode === 'multiple') {
+      count += 1;
+    }
     const visibleColumnCount = this.tableUtilityService.getVisibleColumnCount(this.selectedColumns);
     count += visibleColumnCount;
     if (this.showManage) count += 1;
@@ -394,12 +599,106 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
 
   // 分組總計
   getGroupSubtotal(groupValue: any, field: string): number {
+    // 優先使用後端傳來的 totalData（若有）
+    try {
+      if (this.totalData && this.totalData.length) {
+        const keyCandidates = [
+          `${field}_Subtotal`,
+          `${field}Subtotal`,
+          `${field.replace(/Amt$/, 'Amy')}_Subtotal`,
+          `${field.replace(/Amt$/, 'Amy')}Subtotal`
+        ];
+
+        const entry = this.totalData.find(td => String(td?.VendorNo ?? '') === String(groupValue ?? ''));
+        if (entry) {
+          for (const k of keyCandidates) {
+            if (k in entry) {
+              return Number(entry[k]) || 0;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // ignore and fallback
+    }
+
+    // fallback: 計算目前 data 的小計
     return this.tableUtilityService.getGroupSubtotal(this.data, this.groupRowsBy, groupValue, field);
   }
 
   // 全表總計
   getTotal(field: string): number {
+    // 優先使用後端傳來的總計（VendorNo === '' 為全表總計）
+    try {
+      if (this.totalData && this.totalData.length) {
+        const totalEntry = this.totalData.find(td => (td?.VendorNo ?? '') === '');
+        if (totalEntry) {
+          const keyCandidates = [
+            `${field}_Total`,
+            `${field}Total`,
+            `${field.replace(/Amt$/, 'Amy')}_Total`,
+            `${field.replace(/Amt$/, 'Amy')}Total`
+          ];
+          for (const k of keyCandidates) {
+            if (k in totalEntry) {
+              return Number(totalEntry[k]) || 0;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // ignore and fallback
+    }
+
     return this.tableUtilityService.getTotal(this.data, field);
+  }
+  // 計算單一 ACP_No 的未沖餘額小計（優先用 fullData，fallback 到 data）
+  getACPSubtotal(acpNo: string): number {
+    try {
+      const source = (this.fullData && this.fullData.length) ? this.fullData : this.data;
+      return (source || [])
+        .filter(d => String(d?.ACP_No ?? '') === String(acpNo ?? ''))
+        .reduce((s, r) => s + (Number(r?.NotPayAmy ?? r?.NotPayAmy === 0 ? r.NotPayAmy : 0) || 0), 0);
+    } catch (e) {
+      return 0;
+    }
+  }
+  // 若 fullData 存在且沒有後端排序要求，對 fullData 做 deterministic sort
+  private sortFullDataIfNeeded() {
+    try {
+      const groupField = this.groupRowsBy || 'VendorNo';
+      // 印出前 5 筆原始樣本供 debug
+      try {
+        const sampleBefore = (this.fullData || []).slice(0, 5).map((r: any) => ({ ACP_No: r?.ACP_No, VendorNo: r?.VendorNo }));
+        console.log('[sortFullDataIfNeeded] fullData sample BEFORE sort', sampleBefore);
+      } catch (e) { /* ignore */ }
+
+      // 使用穩定排序（強制排序，忽略 server SortBy），把 index 當作最後的 tiebreaker
+      const mapped = this.fullData.map((item: any, idx: number) => ({ item, idx }));
+      mapped.sort((x: any, y: any) => {
+        const a = x.item;
+        const b = y.item;
+        const ga = String(a?.[groupField] ?? '').localeCompare(String(b?.[groupField] ?? ''));
+        if (ga !== 0) return ga;
+        const pa = a?.PostDate ? new Date(a.PostDate).getTime() : 0;
+        const pb = b?.PostDate ? new Date(b.PostDate).getTime() : 0;
+        if (pa !== pb) return pa - pb;
+        const aa = String(a?.ACP_No ?? '');
+        const ab = String(b?.ACP_No ?? '');
+        const ca = aa.localeCompare(ab);
+        if (ca !== 0) return ca;
+        return x.idx - y.idx;
+      });
+      this.fullData = mapped.map(m => m.item);
+
+      try {
+        const sampleAfter = (this.fullData || []).slice(0, 5).map((r: any) => ({ ACP_No: r?.ACP_No, VendorNo: r?.VendorNo }));
+        console.log('[sortFullDataIfNeeded] fullData sample AFTER sort', sampleAfter);
+      } catch (e) { /* ignore */ }
+    } catch (e) {
+      // ignore sort errors
+      console.warn('[sortFullDataIfNeeded] 排序失敗', e);
+    }
   }
   // 欄位調整
   onColReorder(event: TableColumnReorderEvent) {

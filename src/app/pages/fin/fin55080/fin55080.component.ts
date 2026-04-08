@@ -34,8 +34,8 @@ import { TableSubheaderGroupingComponent } from './fin55080-table/fin55080-table
 export class FIN55080Component extends BasicQueryPageComponent<QueryFIN55080Response> implements OnInit {
   // 由於 FIN55080 的資料結構與 FIN55090 類似，這裡使用 QueryFIN5508Response 介面
   queryForm = this.formBuilder.group({
-    DateFrom: this.formBuilder.nonNullable.control(new Date('2025-09-01'), [Validators.required]),
-    DateTo: this.formBuilder.nonNullable.control(new Date('2025-10-31'), [Validators.required]),
+    DateFrom: this.formBuilder.nonNullable.control(new Date(), [Validators.required]),
+    DateTo: this.formBuilder.nonNullable.control(new Date(), [Validators.required]),
     // 類別預設為 '1' (明細)
     Ledger_MD: this.formBuilder.nonNullable.control('0' as '0' | '1', [Validators.required]),
     // 部門/活動代碼為選填
@@ -85,8 +85,8 @@ export class FIN55080Component extends BasicQueryPageComponent<QueryFIN55080Resp
       // 強轉型為 QueryFIN5508Request，並格式化日期
       const requestBody = {
         ...frm.value,
-        DateFrom: this.datePipe.transform(frm.value.DateFrom, 'yyyy-MM-dd'),
-        DateTo: this.datePipe.transform(frm.value.DateTo, 'yyyy-MM-dd'),
+        DateFrom: this.datePipe.transform(frm.value.DateFrom, 'yyyy-MM'),
+        DateTo: this.datePipe.transform(frm.value.DateTo, 'yyyy-MM'),
       } as QueryFIN55080Request;
 
       this.fin55080Service.queryFIN55080(requestBody).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
@@ -139,7 +139,7 @@ export class FIN55080Component extends BasicQueryPageComponent<QueryFIN55080Resp
       export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
       '.' + 'pdf',        // 傳遞檔案副檔名
       (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    );
+    ).subscribe();
   }
   // 匯出 Excel 事件處理
   onExportExcel() {
@@ -155,6 +155,6 @@ export class FIN55080Component extends BasicQueryPageComponent<QueryFIN55080Resp
       export$.pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)), // 傳遞 Observable 並加入銷毀處理
       '.' + 'xlsx',        // 傳遞檔案副檔名
       (isLoading: boolean) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    );
+    ).subscribe();
   }
 }

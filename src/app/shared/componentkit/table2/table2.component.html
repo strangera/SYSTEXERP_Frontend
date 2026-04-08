@@ -350,7 +350,7 @@
         [attr.rowspan]="hasTwoHeaderRows ? 2 : 1"
         [ngClass]="{'flex justify-content-center gap-2': IsPrint && showManage}" class="no-wrap icon-button"
         alignFrozen="right" pFrozenColumn [frozen]="IsPrint" [style.text-align]="'center'">
-        <p-button *ngIf="showDetail" icon="pi pi-search" text pTooltip="檢視" tooltipPosition="top"
+        <p-button *ngIf="showDetail" icon="pi pi-eye" text pTooltip="檢視" tooltipPosition="top"
           (click)="detailRow(rowData)"></p-button>
         <p-button *ngIf="showEdit" icon="pi pi-pencil" text severity="warning" pTooltip="編輯" tooltipPosition="top"
           [disabled]="editDisabled(rowData)" (click)="editRow(rowData)"></p-button>

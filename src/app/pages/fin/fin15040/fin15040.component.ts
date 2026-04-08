@@ -74,6 +74,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     AssetType: [null],                                      // 資產註記
     HasUniform: [null],                                     // 是否有統一編號
     PUR_DiscNo: [null],                                         // 折抵代號 (dropdown)
+    INV_Cancel: [null],                                      // 發票狀態
     ...createPaginationConfig([{ field: 'INV_GUIType', order: 1 }, { field: 'INV_GUINumber', order: 1 }])
   });
 
@@ -93,6 +94,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     { field: 'INV_GUITrack', header: '字軌', visible: true },
     { field: 'INV_GUINumber', header: '發票號碼', visible: true },
     { field: 'TXN_Date', header: '發票日期', visible: true, format: formatDate },
+    { field: 'INV_Cancel', header: '發票狀態', visible: true },
     { field: 'INV_YM1', header: '資料所屬年月', visible: true },
     { field: 'INV_YM2', header: '申報年月', visible: true },
     { field: 'TXN_Uniform', header: '統一編號', visible: true },
@@ -131,6 +133,12 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
   exportOptions: Option[] = [
     { label: 'PDF', value: '0' },
     { label: 'Excel', value: '1' }
+  ];
+
+  // 發票狀態
+  invStatusOptions: Option[] = [
+    { label: '開立', value: 'N' },
+    { label: '作廢', value: 'Y' }
   ];
   //#endregion
 
@@ -245,19 +253,5 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     }).subscribe(r => {
       this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track }));
     });
-
-    // 自動代入資料所屬年月(起迄)
-    if (this.queryForm.controls.INV_YM2.valid && event) {
-      const year = parseInt(event.substring(0, 4));
-      const month = parseInt(event.substring(4, 6));
-      const startOfMonth = new Date(year, month - 2, 1);
-      const endOfMonth = new Date(year, month - 1, 1);
-      this.queryForm.controls.INV_YM1_S.setValue(this.datePipe.transform(startOfMonth, 'yyyy/MM'));
-      this.queryForm.controls.INV_YM1_E.setValue(this.datePipe.transform(endOfMonth, 'yyyy/MM'));
-    }
-    else {
-      this.queryForm.controls.INV_YM1_S.setValue('');
-      this.queryForm.controls.INV_YM1_E.setValue('');
-    }
   }
 }

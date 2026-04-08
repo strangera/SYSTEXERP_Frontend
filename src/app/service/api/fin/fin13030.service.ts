@@ -1,8 +1,8 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseDeleteRequest, BaseQueryRequest, BaseQueryResponse, DropdownOption } from '../../../shared/models/api/base-api.interface';
-import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { BaseDeleteRequest, BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 
 // --- FIN13030 查詢參數 Model 定義 ---
 export interface FIN13030QueryRequest extends BaseQueryRequest {
@@ -35,6 +35,7 @@ export interface FIN13030QueryRequest extends BaseQueryRequest {
 // --- FIN13030 回應資料 Model 定義 ---
 export interface FIN13030Data {
   ID: number;                         // 資料識別碼
+  INV_GUITrack: string;               // 發票字軌
   INV_GUINo: string;                  // 發票號碼
   INV_GUIDate: string;                // 發票日期 (ISO字串)
   INV_YM: string;                     // 資料所屬年月
@@ -150,73 +151,6 @@ export class FIN13030Service {
   // 查詢
   queryFIN13030(data: FIN13030QueryRequest): Observable<BaseQueryResponse<FIN13030Data>> {
     return this.http.post<BaseQueryResponse<FIN13030Data>>(`${this.apiUrl}/queryFIN13030`, data);
-
-    // 回傳假資料
-    return new Observable<BaseQueryResponse<FIN13030Data>>(observer => {
-      const Data: BaseQueryResponse<FIN13030Data> = {
-        TotalCount: 1,
-        Data: [{
-          ID: 0,
-          INV_GUINo: '12345678',
-          INV_GUIDate: '2023-10-01T00:00:00Z',
-          INV_YM: '202310',
-          INV_DeclareYM: '202310',
-          INV_SAL_Uniform: '12345678',
-          INV_Uniform: '87654321',
-          GoodsOrServicesName: 'Sample Goods',
-          GoodsQty: 100,
-          ExportMethod: '1',
-          INV_DocName: 'Sample Document',
-          INV_DocNo: 'DOC123456',
-          NonCustomsExportAmt: 1000,
-          INV_ExportType: '1',
-          INV_ExportNo: 'EXP123456',
-          CustomsExportAmt: 2000,
-          ExportDate: '2023-10-02T00:00:00Z',
-          INV_Remark: 'Sample Remark',
-          INV_PassType: '1',
-          INV_Name: 'Sample Buyer',
-          CRT_Date: '2023-10-01T00:00:00Z',
-          CRT_USR_No: 'USR001',
-          CRT_USR_Name: 'User One',
-          UPD_Date: '2023-10-01T00:00:00Z',
-          UPD_USR_No: 'USR001',
-          UPD_USR_Name: 'User One',
-        }, {
-          ID: 1,
-          INV_GUINo: '87654321',
-          INV_GUIDate: '2023-10-02T00:00:00Z',
-          INV_YM: '202310',
-          INV_DeclareYM: '202310',
-          INV_SAL_Uniform: '87654321',
-          INV_Uniform: '12345678',
-          GoodsOrServicesName: 'Sample Goods 2',
-          GoodsQty: 200,
-          ExportMethod: '2',
-          INV_DocName: 'Sample Document 2',
-          INV_DocNo: 'DOC654321',
-          NonCustomsExportAmt: 2000,
-          INV_ExportType: '2',
-          INV_ExportNo: 'EXP654321',
-          CustomsExportAmt: 4000,
-          ExportDate: '2023-10-03T00:00:00Z',
-          INV_Remark: 'Sample Remark 2',
-          INV_PassType: '2',
-          INV_Name: 'Sample Buyer 2',
-          CRT_Date: '2023-10-01T00:00:00Z',
-          CRT_USR_No: 'USR001',
-          CRT_USR_Name: 'User One',
-          UPD_Date: '2023-10-01T00:00:00Z',
-          UPD_USR_No: 'USR001',
-          UPD_USR_Name: 'User One',
-        }],
-        Status: '',
-        Message: '',
-        TotalPage: 0
-      };
-      observer.next(Data);
-      observer.complete();
-    });
   }
 
   // 取得零稅率發票
@@ -261,5 +195,15 @@ export class FIN13030Service {
   // 刪除TDS10012資料
   deleteFIN13030(data: BaseDeleteRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteFIN13030`, data);
+  }
+
+  // 匯出 Excel
+  exportExcelFIN13030(data: FIN13030QueryRequest): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportExcelFIN13030`, data, { responseType: 'blob' });
+  }
+
+  // 匯出 PDF
+  exportPDFFIN13030(data: FIN13030QueryRequest): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportPDFFIN13030`, data, { responseType: 'blob' });
   }
 }

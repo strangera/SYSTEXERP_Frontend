@@ -1,4 +1,4 @@
-import { DatePipe, NgIf, NgStyle } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -13,7 +13,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount } from '@shared/componentkit/table/table.model';
-import { ValidationService } from '@shared/service/validation.service';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -40,7 +40,6 @@ yesterday.setDate(yesterday.getDate() - 1);
     DropdownComponent,
     CalendarComponent,
     Button,
-    NgStyle,
     NgIf,
     TooltipModule,
     DropdownRangeComponent,
@@ -58,8 +57,9 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     ECR_No_End: [''],
     PAY_NO: ['', Validators.required],
     Building_No: [''],
+    invoice: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
-    pageSize: [100],
+    pageSize: [30],
     pageIndex: [1],
     SortBy: [[{ field: 'ECR_No', order: 1 }]],
   });
@@ -69,9 +69,12 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   paymentToolOptions: IDropdownItem[] = [];
   contact_USR_NameOptions: IDropdownItem[] = [];
   buildingNoOptions: IDropdownItem[] = [];
+  invoiceOptions: any[] = [
+    { label: '電子發票', value: '35' },
+    { label: '折讓單', value: '33' }
+  ];
   payNoToTypeMap = new Map<string, string>();
   selectedItems: any[] = [];
-  selectionMode = 'single';
   data: any[] = [];
   footerData: any = [];
   totalRecords = 0;
@@ -85,7 +88,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   dialogVisible = false;
   dialogData: any[] = [];
   dialogColumns: EditColumn[] = [];
-  isFormReadable = false; // 控制表單是否只讀
 
   addButtons = [
     {
@@ -118,6 +120,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     return rowData.isClose !== 'Y';
   }
 
+  isAllSelected = false; // 是否全選
   IsPrint = true;
   selectedColumns: Column[] = [];     // 顯示哪些資料欄位
   columnGroup: ColumnGroup[] = [];    // 顯示上層群組欄位（分組標題）
@@ -128,8 +131,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private dropDownListService: DropDownListService,
     public readonly tls2a010Service: Tls2a010Service,
-    private readonly validationService: ValidationService
-
+    private readonly fileExportService: FileExportService
   ) {
     super();
   }
@@ -246,8 +248,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     this.handleSubmit(frm, () => {
       const raw = frm.value;
       const payload = {
-        PageSize: raw.pageSize ?? 0,
-        PageIndex: raw.pageIndex ?? 0,
+        pageSize: raw.pageSize ?? 0,
+        pageIndex: raw.pageIndex ?? 0,
         SortBy: raw.SortBy ?? [],
         TXN_Date: raw.TXN_Date && raw.TXN_Date instanceof Date
           ? `${raw.TXN_Date.getFullYear()}-${String(raw.TXN_Date.getMonth() + 1).padStart(2, '0')}-${String(raw.TXN_Date.getDate()).padStart(2, '0')}`
@@ -258,19 +260,19 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         PAY_NO: raw.PAY_NO ?? '',
         Building_No: raw.Building_No ?? ''
       };
-      this.tls2a010Service.queryTLS2A010(payload)
-        .pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-          this.data = response.Data ? response.Data : [];
-          this.footerData = response.footerData;
-          this.totalRecords = response.TotalCount;
-          this.selectedItems = [];
-          this.onPayNoChange(payload.PAY_NO);
-          this.historyRequestBody = payload;
-          const first = this.data[0];
-          this.PAY_NO = this.queryForm.value.PAY_NO || '';
-          this.TXN_Date = first?.TXN_Date || '';
-          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-        });
+      this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.data = response.Data ? response.Data : [];
+        this.footerData = response.footerData;
+        this.totalRecords = response.TotalCount;
+        this.selectedItems = [];
+        this.onPayNoChange(payload.PAY_NO);
+        this.historyRequestBody = payload;
+        const first = this.data[0];
+        this.PAY_NO = this.queryForm.value.PAY_NO || '';
+        this.TXN_Date = first?.TXN_Date || '';
+        this.isAllSelected = false;
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      });
     });
   }
 
@@ -280,19 +282,28 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       return;
     }
 
-    const hasReviewedItems = selectedItems.some(item => item.check_status === 'Y');
-    if (hasReviewedItems) {
-      this.messageService.warnBubble('您選取包含已審核的資料，無法進行審核完成。');
-      return;
-    }
-    const payload = {
+    const raw = this.queryForm.value;
+    const payload: any = {
       PAY_Type: this.PAY_Type,
       isCheck: true,
-      selectList: selectedItems.map(item => ({
+      selectList: [],
+      // === 全選時後端會用查詢條件重查所有資料，selectList直接給[] ===
+      TXN_Date: raw.TXN_Date && raw.TXN_Date instanceof Date
+        ? `${raw.TXN_Date.getFullYear()}-${String(raw.TXN_Date.getMonth() + 1).padStart(2, '0')}-${String(raw.TXN_Date.getDate()).padStart(2, '0')}`
+        : '',
+      Floor_No: raw.Floor_No ?? '',
+      ECR_No_Start: raw.ECR_No_Start ?? '',
+      ECR_No_End: raw.ECR_No_End ?? '',
+      PAY_NO: raw.PAY_NO ?? '',
+      Building_No: raw.Building_No ?? ''
+    };
+    if (!this.isAllSelected || (this.selectedItems.length === this.totalRecords)) {
+      // 沒全選或勾到全部資料 給入選擇的資料
+      payload.selectList = selectedItems.map(item => ({
         ID: item.ID,
         PAY_NO: item.PAY_NO,
       }))
-    };
+    }
     this.loading = true;
     this.tls2a010Service
       .updateTLS2A010(payload)
@@ -311,20 +322,28 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       return;
     }
 
-    const hasUnreviewedItems = selectedItems.some(item => item.check_status === 'N');
-    if (hasUnreviewedItems) {
-      this.messageService.warnBubble('您選取包含未審核的資料，無法進行反審核。');
-      return;
-    }
-
-    const payload = {
+    const raw = this.queryForm.value;
+    const payload: any = {
       PAY_Type: this.PAY_Type,
       isCheck: false,
-      selectList: selectedItems.map(item => ({
+      selectList: [],
+      // === 全選時後端會用查詢條件重查所有資料，selectList直接給[] ===
+      TXN_Date: raw.TXN_Date && raw.TXN_Date instanceof Date
+        ? `${raw.TXN_Date.getFullYear()}-${String(raw.TXN_Date.getMonth() + 1).padStart(2, '0')}-${String(raw.TXN_Date.getDate()).padStart(2, '0')}`
+        : '',
+      Floor_No: raw.Floor_No ?? '',
+      ECR_No_Start: raw.ECR_No_Start ?? '',
+      ECR_No_End: raw.ECR_No_End ?? '',
+      PAY_NO: raw.PAY_NO ?? '',
+      Building_No: raw.Building_No ?? ''
+    };
+    if (!this.isAllSelected || (this.selectedItems.length === this.totalRecords)) {
+      // 沒全選或勾到全部資料 給入選擇的資料
+      payload.selectList = selectedItems.map(item => ({
         ID: item.ID,
         PAY_NO: item.PAY_NO,
       }))
-    };
+    }
     this.loading = true;
 
     this.tls2a010Service.updateTLS2A010(payload)
@@ -359,9 +378,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       { field: 'ACT_PayAmt', header: '實收帳', format: formatAmount },
       { field: 'MOD_PayAmt', header: '調整後實收帳', format: formatAmount, type: 'inputNumber', min: -999999999 },
       { field: 'OVER_PayAmt', header: '系統/實收帳差異', format: formatAmount },
-      {
-        header: '狀況', field: 'OVER_Status', format: (v: any) => { if (typeof v === 'string') return v; if (v < 0) return '欠'; if (v === 0) return '平'; if (v > 0) return '溢'; return v; },
-      },
+      { field: 'OVER_Status', header: '狀況' },
     ];
   }
   calculateAdjustedAmounts(rowData: any): void {
@@ -431,5 +448,18 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       this.calculateAdjustedAmounts(row);
     });
     this.dialogData = [...data];
+  }
+  btnLoading = false;
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    const export$ = this.tls2a010Service.exportTLS2A010Excel(this.historyRequestBody);
+    this.fileExportService.executeFileExport(
+      export$.pipe(untilDestroyed(this)),
+      '.xlsx',
+      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
+    ).subscribe();
   }
 }

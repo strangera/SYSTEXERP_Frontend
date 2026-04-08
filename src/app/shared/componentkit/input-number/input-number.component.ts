@@ -39,7 +39,7 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit {
 
   // Primeng 相關屬性
   @Input() min: number | null = 0; // 最小值
-  @Input() max = 99999999999; // 最大值
+  @Input() max: number | null = 999999999999; // 最大值 (預設 12 位數整數)
   @Input() minFractionDigits = 0; // 最小小數位數
   @Input() maxFractionDigits = 0; // 最大小數位數
   @Input() useGrouping = true; // 是否使用千分位
@@ -49,6 +49,7 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit {
   @Input() showButtons = false; // 是否顯示按鈕
   @Input() keyFilter: KeyFilterPattern | RegExp | undefined; // 輸入過濾規則
   @Input() disabled = false;
+  @Input() allowUnlimited = false; // 若 true，放寬 maxlength/max 限制
   // 自訂屬性
   @Input() customPlaceholder: string | undefined; // 自訂提示
   @Input() showErrorMessage = true;
@@ -58,6 +59,9 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit {
 
   ngOnInit(): void {
     this.initControl(this.control);
+    if (this.disabled) {
+      this.control.disable();
+    }
   }
   onInputChange(event: InputNumberInputEvent) {
     this.changeEvent.emit(event);

@@ -134,7 +134,7 @@ export class TLS2J020Component extends BasicQueryPageComponent<any> implements O
     const selectedIds = this.selectedItems.map(item => item.id);
     const confirmMessage = `確定要刪除所選的 ${this.selectedItems.length} 筆資料嗎？`;
 
-    this.confirmationService.confirm({
+    this.messageService.confirm({
       message: confirmMessage,
       header: '確認刪除',
       icon: 'pi pi-exclamation-triangle',

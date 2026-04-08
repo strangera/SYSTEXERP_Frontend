@@ -4,29 +4,58 @@
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="中類代號" controlName="ClassNo" [control]="queryForm.controls.ClassNo"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="中類代號"
+              controlName="ClassNo"
+              [control]="queryForm.controls.ClassNo"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="中類名稱" controlName="ClassCName" [control]="queryForm.controls.ClassCName"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="中類名稱"
+              controlName="ClassCName"
+              [control]="queryForm.controls.ClassCName"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="中類英文名稱" controlName="ClassEname" [control]="queryForm.controls.ClassEname"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="中類英文名稱"
+              controlName="ClassEname"
+              [control]="queryForm.controls.ClassEname"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="大類代號" controlName="ClassAttr" [options]="ClassAttr_Option" optionLabel="ClassAttrCName"
-              optionValue="ClassAttr" [control]="queryForm.controls.ClassAttr" [submitted]="submitted"></app-dropdown>  
+            <app-dropdown
+              label=" 大類代號/名稱"
+              controlName="ClassAttr"
+              [options]="ClassAttr_Option"
+              optionLabel="Label"
+              optionValue="ClassAttr"
+              [control]="queryForm.controls.ClassAttr"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -35,9 +64,24 @@
   </p-accordion>
 </div>
 <div class="card">
-    <app-table tableKey="FIN52060" dataKey="ClassNo" [data]="data" [columns]="columns"
-        (detail)="onDetail($event)" [showCheckBox]="false" [showEdit]="false" [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]"
-        [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-        [lazy]="true" [loading]="loading">
-    </app-table>
+  <app-table
+    tableKey="FIN52060"
+    dataKey="ClassNo"
+    [data]="data"
+    [columns]="columns"
+    (detail)="onDetail($event)"
+    [showCheckBox]="true"
+    [showEdit]="true"
+    [showDelete]="true"
+    (edit)="onEdit($event)"
+    (delete)="onDelete($event)"
+    [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
+    [rows]="30"
+    [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+    [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]"
+    [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lazy]="true"
+    [loading]="loading"
+  ></app-table>
 </div>

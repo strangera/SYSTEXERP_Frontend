@@ -18,8 +18,12 @@ export interface TreeNode {
   IsEnable: boolean | null;
   partialSelected?: boolean;
   isOpen?: boolean;
+  isHidden?: boolean;
   children: TreeNode[];
   actions: TreeNode[];
   parent?: TreeNode;
   isDisable?: boolean | string
+  enabledCount?: number;
+  totalCount?: number;
+  remark?: string
 }

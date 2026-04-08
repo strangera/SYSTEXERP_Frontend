@@ -10,6 +10,7 @@
  */
 export function getTodayDate(addDays: number = 0): Date {
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
   if (addDays !== 0) {
     today.setDate(today.getDate() + addDays);
   }
@@ -118,7 +119,7 @@ export const TLS_COMMON_FORM_DEFAULTS = {
   // ========== 活動參與 ==========
   cap_saletype1: '',                 // 滿仟送佰（會被 SPECIFIC_DEFAULTS 覆蓋）
   cap_saletype2: '',                 // 會員卡集點（會被 SPECIFIC_DEFAULTS 覆蓋）
-  cap_saletype3: '',                 // 收取禮卷（會被 SPECIFIC_DEFAULTS 覆蓋）
+  cap_saletype3: '',                 // 收取禮劵（會被 SPECIFIC_DEFAULTS 覆蓋）
   cap_saletype4: '',                 // 會員卡（會被 SPECIFIC_DEFAULTS 覆蓋）
   cap_saletype5: '',                 // 參加提貨單（會被 SPECIFIC_DEFAULTS 覆蓋）
 
@@ -191,7 +192,7 @@ export const TLS13010_SPECIFIC_DEFAULTS = {
   credit_card: '',                   // 會員卡折數：空字串
   cap_saletype1: '',                 // 滿仟送佰：空字串
   cap_saletype2: '',                 // 會員卡集點：空字串
-  cap_saletype3: '',                 // 收取禮卷：空字串
+  cap_saletype3: '',                 // 收取禮劵：空字串
   cap_saletype4: '',                 // 會員卡：空字串
   cap_saletype5: '',                 // 參加提貨單：空字串
 } as const;
@@ -213,7 +214,7 @@ export const TLS12040_SPECIFIC_DEFAULTS = {
   credit_card: 0,                    // 會員卡折數：0
   cap_saletype1: 'N',                // 滿仟送佰：否
   cap_saletype2: 'N',                // 會員卡集點：否
-  cap_saletype3: 'N',                // 收取禮卷：否
+  cap_saletype3: 'N',                // 收取禮劵：否
   cap_saletype4: 'N',                // 會員卡：否
   cap_saletype5: 'N',                // 參加提貨單：否
 } as const;
@@ -238,4 +239,46 @@ export function getTLS12040FormDefaults() {
     ...TLS12040_SPECIFIC_DEFAULTS,
     ...TLS_CREATE_MODE_DEFAULTS
   };
+}
+
+/**
+ * 日期欄位清單（需要從 ISO 字串轉回 Date 物件的欄位）
+ */
+const DATE_FIELDS = [
+  'apply_date', 'tlt_bdate', 'tlt_edate',
+  'tlt_contract_bdate', 'tlt_contract_edate',
+  'feedback_date', 'due_date', 'contact_Date'
+];
+
+/**
+ * 將 ISO 日期字串轉換為不含時間的 Date 物件
+ * 用於從 sessionStorage 載入的暫存資料，避免日期欄位顯示時間戳
+ * @param data 從暫存載入的資料物件
+ * @returns 處理過的資料物件（日期字串已轉為 Date）
+ */
+export function sanitizeDateFields<T extends Record<string, any>>(data: T): T {
+  if (!data) return data;
+  const result = { ...data };
+  for (const field of DATE_FIELDS) {
+    const val = result[field];
+    if (val && typeof val === 'string') {
+      // 處理 ISO 格式 "2026-01-30T15:57:51.833Z" 或一般日期 "2026-01-30"
+      const datePart = val.split(/[T\s]/)[0];
+      const match = datePart.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+      if (match) {
+        (result as any)[field] = new Date(
+          parseInt(match[1], 10),
+          parseInt(match[2], 10) - 1,
+          parseInt(match[3], 10)
+        );
+      }
+    } else if (val instanceof Date) {
+      // 確保 Date 物件也移除時間
+      const dateOnly = new Date(val.getFullYear(), val.getMonth(), val.getDate());
+      if (dateOnly.getTime() !== val.getTime()) {
+        (result as any)[field] = dateOnly;
+      }
+    }
+  }
+  return result;
 }

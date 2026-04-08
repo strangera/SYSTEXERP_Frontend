@@ -19,9 +19,11 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableModule, TableRowReorderEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
+import { debounceTime, Subject } from 'rxjs';
 import { TableEditDataService } from './services/table-edit-data.service';
 import { TableUtilityService } from './services/table-edit-utility.service';
 import { TableValidationService } from './services/table-validation.service';
+import { AutoCompleteCellComponent } from './table-edit-cell/auto-complete-cell.component';
 import { CheckboxCellComponent } from './table-edit-cell/checkbox-cell.component';
 import { DateCellComponent } from './table-edit-cell/date-cell.component';
 import { DropdownCellComponent } from './table-edit-cell/dropdown-cell.component';
@@ -33,6 +35,7 @@ import { TemplateCellComponent } from './table-edit-cell/template-cell.component
 import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
 @Component({
   selector: 'app-table-edit',
+  host: { 'table-edit-id': '複製時請自行取唯一名' },
   templateUrl: './table-edit.component.html',
   styleUrl: './table-edit.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -86,6 +89,7 @@ export class TableEditComponent implements OnChanges {
   @Input() showDelete = true;                 // 是否顯示 刪除按鈕
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   @Input() showInsert = false;                // 是否顯示 新增按鈕
+  @Input() insertText: string | undefined;               // 新增按鈕文字
   @Input() insertDisabled = false;            // 新增按鈕是否禁用
   @Output() insert = new EventEmitter<any>(); // 新增事件
   // Header(右) 相關
@@ -114,11 +118,14 @@ export class TableEditComponent implements OnChanges {
   @Input() errorMessage: string | undefined; // 錯誤訊息
   // Footer
   @Input() footerData: any;
+  private footerUpdateSubject = new Subject<void>();
   protected _calculatedFooterData: any = {}; // 用於儲存計算結果
   @Input() footerSummaryLabel = '總計'; // 新增：Footer 摘要行的標籤名稱
   @Input() showFooter = false;
   @Input() scrollable = false; // 是否要滾輪
   @Input() showPaginator = false; // 是否顯示 分頁器
+  // 鍵盤操作相關
+  @Input() enableTabInsert = false; // 是否在最後一列最後一個欄位按 Tab 觸發新增
 
   protected readonly tableUtilityService = inject(TableUtilityService);
   protected readonly cdr = inject(ChangeDetectorRef);
@@ -135,6 +142,13 @@ export class TableEditComponent implements OnChanges {
     return this.isRowSelectable(data, index, this.data) && !data._isAutoInsertCandidate;// 不允許選擇新增中的列
   };
   public tableDataEmpty = false;                    // table 資料是否為空
+
+  constructor() {
+    this.footerUpdateSubject.pipe(debounceTime(300)).subscribe(() => {
+      this._calculatedFooterData = this.calculateFooterData();
+      this.cdr.markForCheck();
+    });
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     // 檢查 'data' 是否有變動
@@ -156,6 +170,12 @@ export class TableEditComponent implements OnChanges {
           this.cdr.detectChanges();
         }
       }
+    }
+
+    // 新增：當 columns 改變時也重新計算 footer
+    if (changes['columns'] && !changes['columns'].firstChange) {
+      this._calculatedFooterData = this.calculateFooterData();
+      this.cdr.markForCheck();
     }
 
     // 處理 defaultInsertData 改變的邏輯：更新現有的新增候選行
@@ -218,6 +238,159 @@ export class TableEditComponent implements OnChanges {
       }
     }
   }
+  /**
+   * 儲存格 keydown 事件處理：
+   * - 一律阻止事件往外傳（維持原本行為）
+   * - 若有啟用 enableTabInsert，且在最後一列最後一欄按下 Tab，則自動觸發新增。
+   */
+  onCellKeydown(event: KeyboardEvent, rowIndex: number, colIndex: number): void {
+    event.stopPropagation();
+
+    const isTab = event.key === 'Tab';
+    const isEnter = event.key === 'Enter';
+
+    if (!isTab && !isEnter) return;
+    if (this.disabled) return;
+
+    // --- 關鍵修正：動態判斷這是否為該行最後一個可編輯欄位 ---
+    const rowData = this._tableData[rowIndex];
+    const isLastEditableCol = this.isLastEditableColumn(rowData, rowIndex, colIndex);
+    const isLastRow = rowIndex === this._tableData.length - 1;
+
+    if (isEnter) {
+      event.preventDefault();
+
+      if (isLastEditableCol) {
+        if (isLastRow) {
+          // 如果是全表格最後一格，觸發轉正與自動新增
+          this.handleEnterAtLastCell(rowIndex);
+        } else {
+          // 如果只是該行最後一格，跳到下一行第一格
+          this.focusFirstInput(rowIndex + 1);
+        }
+      } else {
+        // 一般跳格
+        this.focusNextCell(rowIndex, colIndex);
+      }
+    } else if (isTab && !event.shiftKey && isLastEditableCol && isLastRow && this.enableTabInsert) {
+      this.handleEnterAtLastCell(rowIndex);
+    }
+  }
+  /**
+   * 判斷當前 colIndex 是否為該 row 邏輯上的最後一個可編輯欄位
+   */
+  private isLastEditableColumn(rowData: any, rowIndex: number, currentColIndex: number): boolean {
+    // 從最後一個欄位開始往前找
+    for (let i = this.columns.length - 1; i >= 0; i--) {
+      const col = this.columns[i];
+      const isHidden = typeof col.hidden === 'function' ? col.hidden(rowData, rowIndex) : col.hidden;
+
+      // 只要有 type 且沒被隱藏，它就是一個「可編輯欄位」
+      if (col.type && !isHidden) {
+        // 如果找到的第一個（也就是最後一個）索引等於當前索引，就是最後一格
+        return i === currentColIndex;
+      }
+    }
+    return false;
+  }
+  private handleEnterAtLastCell(rowIndex: number) {
+    const rowData = this._tableData[rowIndex];
+
+    // 1. 如果目前這筆是候選行，按下 Enter 表示完成輸入，將其轉正
+    if (rowData._isAutoInsertCandidate) {
+      rowData._isAutoInsertCandidate = false;
+      rowData[this.dataStatusField] = this.dataStatusValue.New;
+
+      // 發射事件讓父元件同步資料
+      this.dataChange.emit(this._tableData.filter(item => !item._isAutoInsertCandidate));
+    }
+
+    // 2. 檢查是否能新增，並執行新增
+    if (this.canInsert && !this.disabled) {
+      this.insertRow();
+      this.cdr.detectChanges(); // 強制渲染新 Row DOM
+    }
+
+    // 3. 聚焦到新行
+    setTimeout(() => {
+      this.focusFirstInput(rowIndex + 1);
+    }, 50);
+  }
+  /**
+ * 核心方法：手動計算並聚焦下一個輸入框
+ * @param rowIndex 目前行索引
+ * @param colIndex 目前列(欄位)索引
+ */
+  private focusNextCell(rowIndex: number, colIndex: number): void {
+    let nextRow = rowIndex;
+    let nextCol = colIndex + 1;
+
+    // 1. 如果這一列已經到最後一欄了，換到下一列的第一欄
+    if (nextCol >= this.columns.length) {
+      nextCol = 0;
+      nextRow++;
+    }
+
+    // 2. 檢查是否超出表格總行數
+    if (nextRow < this._tableData.length) {
+      const nextColDef = this.columns[nextCol];
+      const rowData = this._tableData[nextRow];
+
+      // 3. 判斷下一個儲存格是否為「隱藏」或「不可編輯」
+      // 如果該欄位有 hidden 邏輯且結果為 true，或者該欄位根本沒定義 type (純文字)
+      const isHidden = typeof nextColDef.hidden === 'function'
+        ? nextColDef.hidden(rowData, nextRow)
+        : nextColDef.hidden;
+
+      if (isHidden || !nextColDef.type) {
+        // 遞迴尋找再下一個可用的 Cell
+        this.focusNextCell(nextRow, nextCol);
+        return;
+      }
+
+      // 4. 執行聚焦動作
+      setTimeout(() => {
+        if (!this.table || !this.table.el) return;
+
+        const tbody = this.table.el.nativeElement.querySelector('.p-datatable-tbody');
+        if (tbody) {
+          const targetRow = tbody.children[nextRow];
+          if (targetRow) {
+            // 使用 calculateActualTdIndex 修正因 Checkbox/Reorder 產生的偏移
+            const tdIndex = this.calculateActualTdIndex(nextCol);
+            const targetTd = targetRow.children[tdIndex];
+
+            if (targetTd) {
+              // 尋找該 Td 內可聚焦的元素
+              const focusable = targetTd.querySelector(
+                'input, select, textarea, .p-dropdown-label, [tabindex="0"]'
+              ) as HTMLElement;
+
+              if (focusable) {
+                focusable.focus();
+                // 如果是 Input 順便全選內容 (ERP 使用者通常喜歡這樣，方便直接覆蓋輸入)
+                if (focusable instanceof HTMLInputElement) {
+                  focusable.select();
+                }
+              } else {
+                // 雖然有 type 但找不到可聚焦元素，繼續找下一個
+                this.focusNextCell(nextRow, nextCol);
+              }
+            }
+          }
+        }
+      });
+    }
+  }
+  /**
+ * 輔助方法：計算真實的 td index (因為前面有序號、Checkbox、Reorder 欄位)
+ */
+  private calculateActualTdIndex(colIndex: number): number {
+    let offset = 1; // 基礎序號欄位
+    if (this.showReorder && this._tableData.length) offset++;
+    if (this.showCheckBox && !this.disabled && this.data.length) offset++;
+    return colIndex + offset;
+  }
   onSelectionChange(event: any) {
     if (this.disabled) { return; }
     // 使用 zone. runOutsideAngular 優化效能
@@ -254,22 +427,33 @@ export class TableEditComponent implements OnChanges {
     this.tableDataEmpty = false;
     if ((col as any).isUserInput === true && rowData._isAutoInsertCandidate) {
       rowData._isAutoInsertCandidate = false;
-      // 標示這筆為 New（避免共通把它當成舊資料）
-      rowData[this.dataStatusField] = this.dataStatusValue.New;
+      rowData[this.dataStatusField] = this.dataStatusValue.New;// 標示這筆為 New（避免共通把它當成舊資料）
     }
-    this.validationService.validateField(rowData, col, value, this._tableData);
-    // 執行所有狀態轉換、計算、驗證和自動新增邏輯
+    // 1. 先更新 rowData 當下的值 (這很重要，否則 Service 拿不到最新值去計算)
+    rowData[col.field] = value;
+    // 新增邏輯：自動清空因隱藏而失效的欄位值
+    this.columns.forEach(column => {
+      // 如果該欄位有定義 hidden 邏輯，且執行結果為 true (隱藏)
+      if ((typeof column.hidden === 'function' ? column.hidden(rowData, index) : column.hidden) === true) {
+        // 且該欄位目前還有值，則清空它
+        if (rowData[column.field] !== null && rowData[column.field] !== undefined) {
+          rowData[column.field] = null;
+
+          // 如果隱藏的欄位也有驗證錯誤，清空值後一併移除該欄位的錯誤標記
+          if (rowData._validationErrors && rowData._validationErrors[column.field]) {
+            delete rowData._validationErrors[column.field];
+          }
+        }
+      }
+    });
+    // 2. 呼叫 Service 進行「該欄位」引發的計算與狀態更新
     const { shouldInsertNewRow, cleanData } = this.dataService.updateRowOnValueChange(
       rowData, value, col, index,
-      this.columns,
-      this.dataKey,
-      this.dataStatusField,
-      this.dataStatusValue,
-      this.keepDeletedData,
-      this.canInsert,
-      this.rowValidate,
-      this.defaultInsertData
+      this.columns, this.dataKey, this.dataStatusField, this.dataStatusValue,
+      this.keepDeletedData, this.canInsert, this.rowValidate, this.defaultInsertData
     );
+    // 3. 執行驗證 (計算完後驗證才準確)
+    this.validationService.validateField(rowData, col, value, this._tableData);
     // 確保空表時也能插入新增行（這是舊邏輯，保持在 Component 端）
     if (this._tableData.length === 0 && this.canInsert) {
       this.insertRow();
@@ -277,7 +461,9 @@ export class TableEditComponent implements OnChanges {
 
     // 觸發 fieldChange 事件
     this.fieldChange.emit({ rowData, field: col.field, value, index });
-    this._calculatedFooterData = this.calculateFooterData(); // 新增
+    // 將原本直接計算改為發送訊號
+    // this._calculatedFooterData = this.calculateFooterData();
+    this.footerUpdateSubject.next();
     // 發射 cleanData 給父層
     this.dataChange.emit(cleanData);
     this.cdr.markForCheck();
@@ -309,10 +495,15 @@ export class TableEditComponent implements OnChanges {
     this.cdr.markForCheck();
   }
   /** // !!! 整筆欄位使用，父層使用方法：
+  / * // !!! @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   /* // !!! 1. 宣告 const tableEditComponent = inject(TableEditComponent);
   /* // !!! 1. 或者宣告 @ViewChild('tableEdit') tableEditComponent!: TableEditComponent;
   /* // !!! 2. 在提交呼叫共通元件：const valid = this.tableEditComponent.validateAndShowErrors();
   /* // !!! 3. 使用 valid 來判斷是否通過
+      if (!valid) {
+        this.loading = false;
+        return;
+      }
 /** 執行完整的驗證並處理錯誤提示
    * @returns {boolean} 整個表格是否有效
    */
@@ -369,6 +560,8 @@ export class TableEditComponent implements OnChanges {
         return NumberCellComponent;
       case 'dropdown':
         return DropdownCellComponent;
+      case 'autoComplete':
+        return AutoCompleteCellComponent;
       case 'date':
         return DateCellComponent;
       case 'checkbox':
@@ -385,8 +578,13 @@ export class TableEditComponent implements OnChanges {
       rowData,
       col,
       index,
-      disabled: this.disabled,
+      disabled: this.disabled || !!this.rowEditDisabled(rowData),
       onValueChange: this.onValueChange.bind(this),
+      onFilterComplete: (event: any, rowData: any, col: EditColumn, index: number) => {
+        if (col.onFilterComplete) {
+          col.onFilterComplete(event, rowData, col, index);
+        }
+      }
     };
   }
   /**
@@ -464,5 +662,29 @@ export class TableEditComponent implements OnChanges {
       return baseColspan; // 僅合併前面幾個非資料欄位
     }
     return baseColspan + firstAggregateIndex;// 合併數為：基礎 colspan + 第一個有總計值的資料欄位索引
+  }
+
+  focusFirstInput(rowIndex: number) {
+    if (!this.table || !this.table.el) return;
+
+    setTimeout(() => {
+      const el = this.table.el.nativeElement;
+      const rows = el.querySelectorAll('.p-datatable-tbody tr');
+      const targetRow = rows[rowIndex];
+
+      if (targetRow) {
+        // 尋找該行內第一個「可見且非禁用」的輸入控制項
+        const input = targetRow.querySelector(
+          'input:not([disabled]):not([hidden]), .p-dropdown-label, .p-inputnumber-input, .p-autocomplete-input, [tabindex="0"]'
+        ) as HTMLElement;
+
+        if (input) {
+          input.focus();
+          if (input.tagName === 'INPUT') {
+            (input as HTMLInputElement).select();
+          }
+        }
+      }
+    }, 50);
   }
 }

@@ -1,4 +1,4 @@
-import { ValidationErrors } from "@angular/forms";
+import { AbstractControl, ValidationErrors } from "@angular/forms";
 import { Column } from "../../../shared/componentkit/table/table.model";
 
 export const txnStatusOptions = [
@@ -11,15 +11,7 @@ export const TXN_GUI_CarrTypeOptions = [
   { label: '自然人憑證', value: 'CQ0001' },
 ]
 // 付款信用卡卡別，V=VISA、M=MASTER、J=JCB、A=AE、D=DINVER、S=銀聯卡、O=其他
-export const CRD_TypeOptions = [
-  { label: 'VISA', value: 'V' },
-  { label: 'MASTER', value: 'M' },
-  { label: 'JCB', value: 'J' },
-  { label: 'AE', value: 'A' },
-  { label: 'DINVER', value: 'D' },
-  { label: '銀聯卡', value: 'S' },
-  { label: '其他', value: 'O' },
-]
+
 // 將所有支付別(pos1006)預先放入，若需要的則要使用者打 v，若有打v 需傳送給後端
 // 信用卡卡號/券號/應收帳款對象 對應到 付款卡號、券號、付款註記 欄位(欄位 (可利用 pos1006，付款別型態判斷要怎麼傳送給後端)
 // 信用卡別 對應 付款信用卡卡別 欄位，下拉選單 (可利用 pos1006，付款別型態判斷)
@@ -63,40 +55,14 @@ export enum TLS24010_EDIT_TYPE {
  * 2. 第 1 碼為 '/'
  * 3. 第 2 碼後只允許 [0-9 A-Z a-z + - .]
  */
-export function guiVehicleValidator(control: { value: string | null }): ValidationErrors | null {
+export function guiVehicleValidator(control: AbstractControl): ValidationErrors | null {
   const value = control.value;
+  if (!value) return null;
 
-  // 1. 如果值為空，則不進行驗證，交由 required 處理
-  if (value === null || value === undefined || value === '') {
-    return null;
-  }
+  const vehicle = String(value).trim();
 
-  // 將值轉換為字串並 trim
-  const vehicle = value.toString().trim();
+  // 優化後的正則：總長8碼，第1碼 /，後7碼為指定字元
+  const vehicleRegex = /^\/[0-9A-Z+-.]{7}$/i; // 加上 'i' flag 可同時支援大小寫，或依需求移除
 
-  // 2. 檢核長度必須為 8 碼
-  if (vehicle.length !== 8) {
-    return { invalidGuiVehicle: true };
-  }
-
-  // 3. 檢核第 1 碼必須是 '/'
-  if (vehicle.charAt(0) !== '/') {
-    return { invalidGuiVehicle: true };
-  }
-
-  // 4. 檢核第 2 碼到第 8 碼的字元內容
-  // Regex 解讀:
-  // ^: 字串開頭
-  // \/: 第一個字元必須是 /
-  // [0-9A-Za-z+-\.] 會匹配 0-9, A-Z, a-z, +, -, .
-  // {7}: 緊接著必須是 7 個符合前面字元集的字元
-  // $: 字串結尾
-  const vehicleBodyRegex = /^\/([0-9A-Za-z+\-.]){7}$/;
-
-  if (!vehicleBodyRegex.test(vehicle)) {
-    return { invalidGuiVehicle: true };
-  }
-
-  // 驗證通過
-  return null;
+  return vehicleRegex.test(vehicle) ? null : { invalidGuiVehicle: true };
 }

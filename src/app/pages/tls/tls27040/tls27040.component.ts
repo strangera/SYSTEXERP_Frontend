@@ -50,7 +50,7 @@ import { columns, POS611XOptions, queryCrdTxnFgOptions, queryFilterOptions, quer
 })
 export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    tableNameList: [null],
+    tableNameList: [null, [Validators.required]],
     ECR_No: [null, [Validators.maxLength(10)]], // ECR編號
     TXN_No: [null, [Validators.maxLength(8)]], // 交易編號
     TLT_No: [null, [Validators.maxLength(12)]], // 專櫃編號
@@ -127,16 +127,31 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     });
   }
   onDelete(selectedItems: TLS27040Data[]) {
-    this.loading = true;
     const body = {
       selectList: selectedItems.map(item => ({
         id: item.ID,
-        tableName: item.tableName
+        tableName: item.tableName,
+        TxnAmt: item.TxnAmt,
+        ECR_No: item.ECR_No,
+        TXN_Date: new Date(item.TxnDate),
       })),
     }
-    this.tls27040Service.deleteTLS27040(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-      this.messageService.successBubble(res.Message);
-      this.onSubmit(this.queryForm);
+    const idList = selectedItems.map((item: TLS27040Data) => item.ID);
+
+    this.messageService.confirm({
+      message: `確定要刪除 ${idList.length} 筆資料嗎？`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.loading = true;
+        this.tls27040Service.deleteTLS27040(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.onSubmit(this.queryForm);
+        });
+      },
+      reject: () => {
+        // 使用者取消刪除，不做任何事
+      }
     });
   }
 
@@ -243,6 +258,14 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
   };
 
   isRowSelectable(rowData: TLS27040Data): boolean {
+    // 優先判斷：如果是 POS6118H，則不可選取
+    if (rowData.tableName === 'POS6118H') {
+      return false;
+    }
+    // 非手動新增的不可刪除(需求待確認)
+    // if (rowData.FileName !== 'ManualInput') {
+    //   return false;
+    // }
     return rowData.isClose === 'N' && rowData.Check_Status === 'N';
   }
 }

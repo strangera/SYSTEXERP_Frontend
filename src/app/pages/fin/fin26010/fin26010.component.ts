@@ -29,8 +29,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { forkJoin, EMPTY } from 'rxjs';
-
+import { forkJoin } from 'rxjs';
 
 // Service & 型別
 import {
@@ -45,8 +44,8 @@ import {
 type SortItem = { field: string; order: number };
 
 interface BankDropdownOption {
-  label: string;   // 顯示：BNK_No-BNK_BRANCHNAME
-  value: string;   // BNK_DepositAccNo (公司銀行科目代號)
+  label: string; // 顯示：BNK_No-BNK_BRANCHNAME
+  value: string; // BNK_DepositAccNo (公司銀行科目代號)
   raw: Aps1002BankDropDownRow;
 }
 
@@ -86,7 +85,7 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
 
   /* ----------------- 欄位定義（對應 queryFIN26010Response） ----------------- */
   columns: ReportColumn[] = [
-    { field: 'PAM_No', header: '匯款單號' },
+    { field: 'WSLIP_NO', header: '匯款單號' },
     {
       field: 'CRT_Date',
       header: '建立日期',
@@ -103,11 +102,9 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
     { field: 'BNK_BRANCHNAME', header: '全省銀行名稱' }, // BNK_BRANCHNAME
   ];
 
-  /* ----------------- 預設排序 ----------------- */
-  readonly defaultSort: SortItem[] = [{ field: 'PAM_No', order: 1 }];
-
-  /* ----------------- 匯款單號下拉（暫時 mock） ----------------- */
-
+  /* ----------------- 預設排序（與欄位 WSLIP_NO 一致） ----------------- */
+  readonly defaultSort: SortItem[] = [{ field: 'WSLIP_NO', order: 1 }];
+  private _currentSortBy: SortItem[] = this.defaultSort;
 
   // 拋轉傳票：Y=已拋轉, N=未拋轉（後端 Status 單值）
   statusOptions: any[] = [
@@ -120,7 +117,7 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
 
   /* ----------------- 表單 ----------------- */
   queryForm = this.formBuilder.group({
-    // 匯款單號 PamNo
+    // 匯款單號 WSLIP_NO
     transferSource: [null as string | null],
 
     // 建立日期(起迄) CRT_DateFrom / CRT_DateTo
@@ -146,7 +143,8 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
     // 檔案名稱 File_Name
     fileName: [null as string | null, [Validators.maxLength(100)]],
 
-    ...createPaginationConfig([{ field: 'PAM_No', order: 1 }]),
+    // 分頁＋排序（欄位 WSLIP_NO）
+    ...createPaginationConfig([{ field: 'WSLIP_NO', order: 1 }]),
   });
 
   constructor(
@@ -218,8 +216,8 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
           : 30,
       SortBy: this.normalizeSort(base?.SortBy, this.defaultSort),
 
-      // PamNo
-      PamNo: base?.transferSource ?? fromForm.transferSource ?? undefined,
+      // WSLIP_NO
+      WSLIP_NO: base?.transferSource ?? fromForm.transferSource ?? undefined,
 
       // 建立日期
       CRT_DateFrom: this.toYMDOrUndef(
@@ -239,9 +237,8 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
 
       // 銀行代號：值為 BNK_DepositAccNo -> 對應 BNK_id
       BNK_id:
-        (base?.bankCode ??
-          fromForm.bankCode ??
-          '')?.toString().trim() || undefined,
+        (base?.bankCode ?? fromForm.bankCode ?? '')?.toString().trim() ||
+        undefined,
 
       // 拋轉傳票 Status (Y/N)
       Status:
@@ -277,8 +274,8 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
         next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
           const list = Array.isArray(res?.Data) ? res.Data : [];
           this.bankOptions = list.map((x) => ({
-            label: `${x.BNK_No}-${x.BNK_BRANCHNAME}`,
-            value: x.BNK_DepositAccNo,
+            label: `${x.BNK_id}-${x.BNK_AccName}`,
+            value: x.BNK_id,
             raw: x,
           }));
         },
@@ -307,6 +304,15 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
       })
     );
 
+  /* ----------------- 儲存查詢條件（還原用） ----------------- */
+  private saveQueryState(): void {
+    this.queryStateService.setQueryState(this.ProgNo, {
+      formValue: this.queryForm.getRawValue(),
+      currentSortBy: this._currentSortBy,
+      lastQueryBody: this.lastQueryBody,
+    });
+  }
+
   /* ----------------- Init ----------------- */
   ngOnInit(): void {
     const today = new Date();
@@ -324,6 +330,17 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
       this.queryForm,
       (form) => this.onSubmit(form)
     );
+
+    // // 🔄 還原查詢條件（參考 FIN64010 寫法）
+    // const saved = this.queryStateService.getQueryStateValue('FIN26010');
+    // if (saved?.formValue) {
+    //   this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+    //   this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+    //   this.lastQueryBody = saved.lastQueryBody ?? null;
+
+    //   // 等變更套用後再自動查一次
+    //   Promise.resolve().then(() => this.onSubmit(this.queryForm));
+    // }
   }
 
   /* ----------------- Submit（主表查詢） ----------------- */
@@ -338,6 +355,9 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
     const raw = this.queryForm.getRawValue();
     const payload = this.buildPayload(raw);
     payload.PageIndex = 1;
+
+    // 更新目前 SortBy 狀態
+    this._currentSortBy = payload.SortBy ?? this.defaultSort;
 
     this.loading = true;
     this.data = [];
@@ -368,12 +388,11 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
             this.totalRecords = realTotal;
             this.viewTotalRecords = realTotal;
             this.lastQueryBody = { ...payload };
+
+            // ✅ 成功查詢後，統一存查詢條件 & 狀態
+            this.saveQueryState();
           });
 
-          this.queryStateService.setQueryState(
-            this.ProgNo,
-            this.queryForm.value
-          );
           this.loading = false;
         },
         error: (err: any) => {
@@ -409,9 +428,11 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
     this.totalRecords = 0;
     this.viewTotalRecords = 0;
     this.footerData = undefined;
+
+    this.lastQueryBody = null;
+    this._currentSortBy = this.defaultSort;
   }
 
-  /* ----------------- 產生匯款檔 (TXT)：多列 → 多檔 ----------------- */
   /* ----------------- 產生匯款檔 (TXT)：依匯款日期(RMT_Date) 分批 → 多檔 ----------------- */
   generateRemitFile(): void {
     if (!this.selectedItems || this.selectedItems.length === 0) {
@@ -419,12 +440,12 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
       return;
     }
 
-    // 依「匯款日期 RMT_Date」分組，把每組內的 PAM_No 集合起來
+    // 依「匯款日期 RMT_Date」分組，把每組內的 WSLIP_NO 集合起來
     const dateGroups = new Map<string, Set<string>>();
 
     this.selectedItems.forEach((row) => {
-      const pamNo = (row.PAM_No ?? '').toString().trim();
-      if (!pamNo) return;
+      const slipNo = (row.WSLIP_NO ?? '').toString().trim();
+      if (!slipNo) return;
 
       const rawDate = row.RMT_Date ?? ''; // 用匯款日期 RMT_Date 當 key
       let dateKey = 'NO_DATE';
@@ -446,20 +467,20 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
       if (!dateGroups.has(dateKey)) {
         dateGroups.set(dateKey, new Set<string>());
       }
-      dateGroups.get(dateKey)!.add(pamNo);
+      dateGroups.get(dateKey)!.add(slipNo);
     });
 
     if (dateGroups.size === 0) {
-      console.warn('產生匯款檔：選取資料沒有可用的 PAM_No');
+      console.warn('產生匯款檔：選取資料沒有可用的 WSLIP_NO');
       return;
     }
 
     this.btnGenerateFileLoading = true;
 
-    // 每個日期一個 request，PamNoList 裡面放該日期的所有 PAM_No
-    const requests = Array.from(dateGroups.entries()).map(([dateKey, pamSet]) => {
+    // 每個日期一個 request，WSLIP_NOList 裡面放該日期的所有 WSLIP_NO
+    const requests = Array.from(dateGroups.entries()).map(([dateKey, set]) => {
       const payload: ExportFin26010TxtRequest = {
-        PamNoList: Array.from(pamSet),
+        WSLIP_NOList: Array.from(set),
       };
 
       return this.fin26010Service
@@ -512,7 +533,4 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
         this.btnGenerateFileLoading = false;
       });
   }
-
-
-
 }

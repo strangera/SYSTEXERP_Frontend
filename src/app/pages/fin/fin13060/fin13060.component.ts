@@ -1,10 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnInit, Renderer2 } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 
+// UI
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -12,13 +16,15 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { FIN13050Service } from '@service/api/fin/fin13050.service';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
-import { FIN13060Service, QueryResponse } from '../../../service/api/fin/fin13060.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { FIN13060Service } from '../../../service/api/fin/fin13060.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
+
+type SortMeta = { field: string; order: 1 | -1 | number };
 
 @Component({
   selector: 'app-fin13060',
@@ -32,57 +38,66 @@ import { CounterNameService } from '../../../service/basic/queryTLTTALENT.servic
     InputTextComponent,
     CalendarRangeComponent,
     DropdownComponent,
-    TableComponent,
     MultiSelectComponent,
     TranslateModule,
     CalendarComponent,
     InputNumberRangeComponent,
+    YearMonthComponent,
+    TableReportComponent,
   ],
   templateUrl: './fin13060.component.html',
   styleUrls: ['./fin13060.component.scss'],
 })
-export class FIN13060Component extends BasicQueryPageComponent<any> {
+export class FIN13060Component extends BasicQueryPageComponent<any> implements OnInit, AfterViewInit {
   totalRecords = 0;
   data: any[] = [];
   selectedItems: any[] = [];
+
   CounterOptions: any[] = [];
   INV_GUITypeOptions: any[] = [];
   taxTypeOptions: any[] = [];
   System_IDOptions: any[] = [];
   AssetNoteOptions: any[] = [];
+  venNoOptions: any[] = [];
 
-  /** 記錄最後一次查詢用的條件（供分頁/排序沿用） */
-  private lastQueryPayload: any | null = null;
+  /** table-report 用：最後一次查詢 body（分頁/排序沿用） */
+  lastQueryBody: any = null;
+
+  /** table-report 需要：queryFunction(body) => Observable */
+  queryFIN13060Fn = (body: any) => this.fin13060Service.queryFIN13060(body);
+
+  /** 先都開放（需要規則再補） */
+  editDisabled = (_row: any): boolean => false;
+  detailDisabled = (_row: any): boolean => false;
 
   // 查詢表單：鍵名與後端一模一樣
   queryForm = this.formBuilder.group({
-    // 分頁/排序（pageIndex 從 1 開始；預設依 INV_GUINumber 升冪）
-    pageSize: [20],
+    pageSize: [30],
     pageIndex: [1],
-    SortBy: this.formBuilder.control<Array<{ field: string; order: number }>>([
-      { field: 'INV_GUINumber', order: 1 },
-    ]),
+    SortBy: this.formBuilder.control<SortMeta[]>([{ field: 'INV_GUINumber', order: 1 }]),
 
-    // 條件
     INV_GUIType: this.formBuilder.control<string[] | null>(null),
     INV_GUITrack: [null, [Validators.maxLength(2)]],
     INV_GUINumber: [null, [Validators.maxLength(8)]],
     TXN_GUINo: [null],
 
-    TXN_Date_Start: [null], // Date
-    TXN_Date_End: [null],   // Date
+    TXN_Date_Start: [null as Date | null],
+    TXN_Date_End: [null as Date | null],
 
-    INV_YM: [null],           // Date (月曆)
-    INV_DeclareYM: [null],    // Date (月曆)
+    // dateMonthOne 回 Date
+    INV_YM: [null as Date | null],
+
+    // year-month 回 'YYYYMM'
+    INV_DeclareYM: [null as string | null],
 
     TXN_Uniform: [null],
 
-    TXN_SaleAmt_Small: [null as number | null],
-    TXN_SaleAmt_Big: [null as number | null],
-    TXN_Net_Small: [null as number | null],
-    TXN_Net_Big: [null as number | null],
-    TXN_Tax_Small: [null as number | null],
-    TXN_Tax_Big: [null as number | null],
+    TXN_SaleAmt_Small: [null as number | null, [Validators.maxLength(10)]],
+    TXN_SaleAmt_Big: [null as number | null, [Validators.maxLength(10)]],
+    TXN_Net_Small: [null as number | null, [Validators.maxLength(10)]],
+    TXN_Net_Big: [null as number | null, [Validators.maxLength(10)]],
+    TXN_Tax_Small: [null as number | null, [Validators.maxLength(10)]],
+    TXN_Tax_Big: [null as number | null, [Validators.maxLength(10)]],
 
     PLU_TaxType: this.formBuilder.control<string[] | null>(null),
 
@@ -97,13 +112,13 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
 
     CRT_USR_No: [null],
     CRT_USR_Name: [null],
-    CRT_Date_Start: [null], // Date
-    CRT_Date_End: [null],
+    CRT_Date_Start: [null as Date | null],
+    CRT_Date_End: [null as Date | null],
 
     UPD_USR_No: [null],
     UPD_USR_Name: [null],
-    UPD_Date_Start: [null],
-    UPD_Date_End: [null],
+    UPD_Date_Start: [null as Date | null],
+    UPD_Date_End: [null as Date | null],
 
     Tlt_No: [null],
     Ven_No: [null],
@@ -112,68 +127,217 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
   constructor(
     private readonly fin13060Service: FIN13060Service,
     private readonly counterNameService: CounterNameService,
-    private readonly fin13050Service: FIN13050Service
+    private readonly dropDownListService: DropDownListService,
+    private readonly fin13050Service: FIN13050Service,
+    private readonly elRef: ElementRef,
+    private readonly renderer: Renderer2,
   ) {
     super();
   }
 
+  // ──────────────────────────────────────────────────────────
+  // 金額欄位 DOM 限制（第 11 碼直接吃掉）
+  // ──────────────────────────────────────────────────────────
+  ngAfterViewInit(): void {
+    this.setupAmountInputDomLimit();
+  }
+
+  private setupAmountInputDomLimit(): void {
+    const controlNames = [
+      'TXN_SaleAmt_Small',
+      'TXN_SaleAmt_Big',
+      'TXN_Net_Small',
+      'TXN_Net_Big',
+      'TXN_Tax_Small',
+      'TXN_Tax_Big',
+    ];
+
+    const hostElem: HTMLElement = this.elRef.nativeElement;
+    const selector = controlNames.map(name => `input[formcontrolname="${name}"]`).join(',');
+    const inputs = hostElem.querySelectorAll<HTMLInputElement>(selector);
+
+    inputs.forEach(input => {
+      this.renderer.listen(input, 'input', (event: Event) => {
+        const target = event.target as HTMLInputElement;
+        if (!target) return;
+
+        let digits = (target.value || '').replace(/\D/g, '');
+        if (digits.length > 10) digits = digits.slice(0, 10);
+
+        target.value = digits;
+
+        const controlName = target.getAttribute('formcontrolname');
+        if (!controlName) return;
+
+        const ctrl = this.queryForm.get(controlName);
+        if (!ctrl) return;
+
+        const num = digits ? Number(digits) : null;
+        ctrl.setValue(num, { emitEvent: false });
+      });
+    });
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // 初始化
+  // ──────────────────────────────────────────────────────────
   ngOnInit(): void {
-    // ✅ 不自動打 API：只用 initializePage 設定 ProgNo/權限/麵包屑等，不傳 onSubmit callback
     this.initializePage('FIN13060', '/FIN/FIN13060CRU', this.queryForm);
 
-    // ✅ 回填但不查詢：把已儲存的 UI 狀態轉回 Date 後 patch 進表單
-    const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
-    if (saved) {
-      this.queryForm.patchValue(
-        {
-          ...saved,
-          INV_YM: this.asMonthDate(saved?.INV_YM),
-          INV_DeclareYM: this.asMonthDate(saved?.INV_DeclareYM),
+    // 下拉
+    this.loadDropdownOptions();
 
-          TXN_Date_Start: this.asDate(saved?.TXN_Date_Start),
-          TXN_Date_End: this.asDate(saved?.TXN_Date_End),
-
-          CRT_Date_Start: this.asDate(saved?.CRT_Date_Start),
-          CRT_Date_End: this.asDate(saved?.CRT_Date_End),
-          UPD_Date_Start: this.asDate(saved?.UPD_Date_Start),
-          UPD_Date_End: this.asDate(saved?.UPD_Date_End),
-        },
-        { emitEvent: false }
-      );
-      // 不呼叫 onSubmit()，維持純回填
-    }
-
-    // 下拉資料
+    // 專櫃
     this.counterNameService.getCounters().subscribe((res: any) => {
       this.CounterOptions =
-        res?.map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) ?? [];
+        res?.map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        })) ?? [];
     });
 
+    // 發票格式
     this.fin13060Service.queryAPS2002DropDownList().subscribe((res: any) => {
       const list = res?.Data ?? [];
-      this.INV_GUITypeOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
+
+      const allow = new Set(['31', '32']); // ✅只顯示這兩種
+
+      this.INV_GUITypeOptions = list
+        .filter((x: any) => allow.has(String(x?.No)))
+        .map((x: any) => ({
+          value: String(x.No),
+          label: `${x.No}-${x.Name}`,
+        }));
     });
 
-    this.fin13050Service.querySYS1000DropDownList('PLU_TaxType').subscribe((res: any) => {
+    // SYS1000
+    // 如果 fin13050Service 的方法型別吃不到 string，你可以比照 FIN13050 用 any：
+    // const sys1000 = (type: string) => (this.fin13050Service as any).querySYS1000DropDownList(type);
+    const sys1000 = (type: string) => this.fin13050Service.querySYS1000DropDownList(type as any);
+
+    sys1000('PLU_TaxType').subscribe((res: any) => {
       const list = res?.Data ?? [];
-      this.taxTypeOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
+      this.taxTypeOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
 
-    this.fin13050Service.querySYS1000DropDownList('AssetType').subscribe((res: any) => {
+    sys1000('AssetType').subscribe((res: any) => {
       const list = res?.Data ?? [];
-      this.AssetNoteOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
+      this.AssetNoteOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
     });
 
-    this.fin13050Service.querySYS1000DropDownList('SYS_ORIGIN').subscribe((res: any) => {
+    sys1000('SYS_ORIGIN').subscribe((res: any) => {
       const list = res?.Data ?? [];
-      this.System_IDOptions = list.map((x: any) => ({ value: String(x.No), label: String(x.Name) }));
+      this.System_IDOptions = list.map((x: any) => ({ value: String(x.No), label: `${x.No}-${x.Name}` }));
+    });
+
+    // FormControl 保險：最多 10 碼
+    this.setupAmountMaxDigitsLimit();
+
+    // ✅ 只從 CRU 回來才還原
+    const fromCru = !!(history.state && history.state['fromCru']);
+
+    if (fromCru) {
+      const saved = this.queryStateService.getQueryStateValue(this.ProgNo);
+      if (saved) {
+        this.queryForm.patchValue(
+          {
+            ...saved,
+            TXN_Date_Start: this.asDate(saved?.TXN_Date_Start),
+            TXN_Date_End: this.asDate(saved?.TXN_Date_End),
+            CRT_Date_Start: this.asDate(saved?.CRT_Date_Start),
+            CRT_Date_End: this.asDate(saved?.CRT_Date_End),
+            UPD_Date_Start: this.asDate(saved?.UPD_Date_Start),
+            UPD_Date_End: this.asDate(saved?.UPD_Date_End),
+            INV_YM: this.asMonthDate(saved?.INV_YM),
+            INV_DeclareYM: this.normalizeYm(saved?.INV_DeclareYM),
+          },
+          { emitEvent: false },
+        );
+
+        // ✅ 先設好 lastQueryBody，讓 table-report 的 lazy mode 可使用
+        const payload = this.buildPayload(this.queryForm);
+        this.lastQueryBody = { ...payload };
+
+        // ✅ 等 Angular 完成初始渲染後再查詢，避免與 table-report 初始化競爭
+        setTimeout(() => this.onSubmit(this.queryForm), 0);
+      }
+    } else {
+      this.queryStateService.clearQueryState(this.ProgNo);
+      this.queryForm.patchValue(
+        {
+          pageSize: 30,
+          pageIndex: 1,
+          SortBy: [{ field: 'INV_GUINumber', order: 1 }],
+        },
+        { emitEvent: false },
+      );
+      this.setDefaultDeclareYmForQuery();
+    }
+  }
+
+  /** 下拉：廠客代號 */
+  protected loadDropdownOptions(): void {
+    this.dropDownListService
+      .queryPOS2013_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.venNoOptions = (res?.Data ?? []).map((x: any) => ({
+          label: `${x.VEN_No} - ${x.Name}`,
+          value: x.VEN_No,
+        }));
+      });
+  }
+
+  /** 查詢頁：申報年月預設帶入系統年月（偶數月 YYYYMM） */
+  private setDefaultDeclareYmForQuery(): void {
+    const now = new Date();
+    let year = now.getFullYear();
+    let month = now.getMonth() + 1;
+
+    if (month % 2 !== 0) {
+      month += 1;
+      if (month > 12) {
+        month = 2;
+        year += 1;
+      }
+    }
+
+    const yyyymm = `${year}${String(month).padStart(2, '0')}`;
+    this.queryForm.patchValue({ INV_DeclareYM: yyyymm }, { emitEvent: false });
+  }
+
+  /** ⭐ 金額欄位限制最多 10 碼（FormControl 保險） */
+  private setupAmountMaxDigitsLimit(): void {
+    const controls = [
+      'TXN_SaleAmt_Small',
+      'TXN_SaleAmt_Big',
+      'TXN_Net_Small',
+      'TXN_Net_Big',
+      'TXN_Tax_Small',
+      'TXN_Tax_Big',
+    ] as const;
+
+    controls.forEach((name) => {
+      const ctrl = this.queryForm.get(name);
+      if (!ctrl) return;
+
+      ctrl.valueChanges.pipe(untilDestroyed(this)).subscribe((val) => {
+        if (val === null || val === undefined) return;
+
+        let s = String(val).replace(/\D/g, '');
+        if (s.length <= 10) return;
+
+        const limited = s.slice(0, 10);
+        ctrl.setValue(Number(limited), { emitEvent: false });
+      });
     });
   }
 
   /** 金額格式 */
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
-  }
+  moneyFormat = (value: number): string => {
+    return value != null ? Number(value).toLocaleString('en-US') : '0';
+  };
 
   /** 表格欄位 */
   columns: any[] = [
@@ -187,29 +351,37 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
     { field: 'Ven_No', header: '廠客代號', visible: true },
     { field: 'TXN_Uniform', header: '買受人統一編號', visible: true },
     { field: 'TXN_SaleAmt', header: '發票總金額', visible: true, format: this.moneyFormat },
-    { field: 'PLU_TaxType', header: '課稅別', visible: true },
+    { field: 'PLU_TaxTypeDesc', header: '課稅別', visible: true },
     { field: 'TXN_Net', header: '發票未稅金額', visible: true, format: this.moneyFormat },
     { field: 'TXN_Tax', header: '稅額', visible: true, format: this.moneyFormat },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
     { field: 'AssetType', header: '資產註記', visible: true },
-    { field: 'SYS_ORIGIN', header: '系統別', visible: true },
+    { field: 'SYS_ORIGIN', header: '系統別', visible: true, exportFormat: [] },
+    { field: 'SYS_ORIGINDesc', header: '系統別名稱', visible: true },
   ];
 
-  /** 工具：Date → yyyy-MM-dd（給 API 用） */
+  // ──────────────────────────────────────────────────────────
+  // 工具：時間 / 字串處理
+  // ──────────────────────────────────────────────────────────
   private toDateOnlyString(d?: Date | string | null): string | null {
     if (!d) return null;
     const date = typeof d === 'string' ? new Date(d) : d;
     if (isNaN(date.getTime())) return null;
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const day = String(date.getDate()).toString().padStart(2, '0');
     return `${y}-${m}-${day}`;
   }
 
-  /** 工具：Date → 'yyyyMM'（月份欄位） */
   private dateToYM(d: any): string | null {
     if (!d) return null;
+
+    if (typeof d === 'string') {
+      const digits = d.replace(/\D/g, '');
+      return digits.length >= 6 ? digits.slice(0, 6) : null;
+    }
+
     const dt = d instanceof Date ? d : new Date(d);
     if (isNaN(dt.getTime())) return null;
     const y = dt.getFullYear();
@@ -217,23 +389,61 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
     return `${y}${m}`;
   }
 
-  /** 去頭尾空白；空字串 -> null */
   private normalizeString(v: any): string | null {
     if (v === null || v === undefined) return null;
     const s = String(v).trim();
     return s === '' ? null : s;
   }
 
-  /** 將表單值轉為後端 queryFIN13060Request（鍵名 1:1） */
+  private normalizeYm(v: any): string | null {
+    if (!v) return null;
+    if (typeof v === 'string') {
+      const digits = v.replace(/\D/g, '');
+      return digits.length >= 6 ? digits.slice(0, 6) : null;
+    }
+    return this.dateToYM(v);
+  }
+
+  private asDate(v: any): Date | null {
+    if (!v) return null;
+    if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
+    const d = new Date(v);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  private asMonthDate(v: any): Date | null {
+    if (!v) return null;
+
+    if (v instanceof Date && !isNaN(v.getTime())) {
+      return new Date(v.getFullYear(), v.getMonth(), 1);
+    }
+
+    const s = String(v).trim();
+    const digits = s.replace(/[^0-9]/g, '');
+
+    if (digits.length >= 6) {
+      const y = Number(digits.slice(0, 4));
+      const m = Number(digits.slice(4, 6));
+      if (Number.isFinite(y) && Number.isFinite(m) && m >= 1 && m <= 12) {
+        return new Date(y, m - 1, 1);
+      }
+    }
+
+    const d = new Date(s);
+    if (!isNaN(d.getTime())) return new Date(d.getFullYear(), d.getMonth(), 1);
+
+    return null;
+  }
+
+  /** 將表單值轉成後端 payload（鍵名 1:1） */
   private buildPayload(form: FormGroup): any {
     const v: any = form.value;
 
     const sortBy = Array.isArray(v.SortBy) ? v.SortBy : [];
-    const sortForApi = (sortBy.length > 0) ? sortBy : null;
+    const sortForApi = sortBy.length ? sortBy : [{ field: 'INV_GUINumber', order: 1 }];
 
-    const pageSize = (typeof v.pageSize === 'number' && v.pageSize > 0) ? v.pageSize : 20;
-    // ✅ pageIndex 1-based（若異常則回 1）
-    const pageIndex = (typeof v.pageIndex === 'number' && v.pageIndex >= 1) ? v.pageIndex : 1;
+    const pageSize = typeof v.pageSize === 'number' && v.pageSize > 0 ? v.pageSize : 30;
+    const pageIndex = typeof v.pageIndex === 'number' && v.pageIndex >= 1 ? v.pageIndex : 1;
 
     const payload: any = {
       pageSize,
@@ -248,8 +458,8 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
       TXN_Date_Start: this.toDateOnlyString(v.TXN_Date_Start),
       TXN_Date_End: this.toDateOnlyString(v.TXN_Date_End),
 
-      INV_YM: this.dateToYM(v.INV_YM),                 // Date -> yyyyMM
-      INV_DeclareYM: this.dateToYM(v.INV_DeclareYM),   // Date -> yyyyMM
+      INV_YM: this.dateToYM(v.INV_YM),
+      INV_DeclareYM: this.normalizeYm(v.INV_DeclareYM),
 
       TXN_Uniform: this.normalizeString(v.TXN_Uniform),
 
@@ -294,103 +504,61 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
     return payload;
   }
 
-  private runQuery(payload: any): void {
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.fin13060Service.queryFIN13060(payload).subscribe({
-      next: (res: QueryResponse<any>) => {
-        const raw = res?.Data ?? [];
-        this.data = raw.map(row => ({ ...row, TXN_Date: this.toSlashDateDisplay(row?.TXN_Date) }));
-        this.totalRecords = res?.TotalCount ?? this.data.length;
-
-        // 記錄這次 payload
-        this.lastQueryPayload = payload;
-
-        // 同步保存 UI 狀態（直接存 RawValue，不轉字串）
-        const uiState = this.queryForm.getRawValue();
-        this.queryStateService.setQueryState(this.ProgNo, uiState);
-      },
-      error: () => { this.loading = false; },
-      complete: () => { this.loading = false; this.messageService.unblockUi(); },
-    });
-  }
-
   private toSlashDateDisplay(d: any): string {
     if (!d) return '';
     const date = typeof d === 'string' ? new Date(d) : d;
     if (isNaN((date as any).getTime?.())) return String(d ?? '');
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const day = String(date.getDate()).toString().padStart(2, '0');
     return `${y}/${m}/${day}`;
   }
 
-  /** 查詢（按鈕 submit） */
+  // ──────────────────────────────────────────────────────────
+  // 查詢 / 刪除 / 清除
+  // ──────────────────────────────────────────────────────────
   onSubmit(form: FormGroup): void {
     this.submitted = true;
     if (form.invalid) {
       this.messageService.warnBubble('請完整填寫查詢條件');
       return;
     }
-    // ✅ 重新查詢從第 1 頁
-    form.patchValue({ pageIndex: 1 });
 
-    // 先把 UI 狀態存起來（保留 Date 物件）
-    this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+    // 按查詢：回第一頁
+    form.patchValue({ pageIndex: 1 }, { emitEvent: false });
 
     const payload = this.buildPayload(form);
-    this.runQuery(payload);
-  }
 
-  /** 懶加載（翻頁/排序）— 若尚未查詢過，就不自動打 API */
-  override onLazyLoadData(event: any, form: FormGroup): void {
-    if (!this.lastQueryPayload) return;
+    // ✅ 給 table-report 沿用（排序/分頁/滾動載入）
+    this.lastQueryBody = { ...payload };
 
-    const currPageSize = (this.lastQueryPayload.pageSize && this.lastQueryPayload.pageSize > 0)
-      ? this.lastQueryPayload.pageSize : 20;
-
-    const pageSize = event?.rows ?? event?.pageSize ?? currPageSize;
-
-    // ✅ 支援兩種事件：
-    // 1) TableComponent.emit: { pageIndex(1-based), pageSize, SortBy }
-    // 2) PrimeNG TableLazyLoadEvent: { first(0-based), rows, multiSortMeta }
-    const pageIndex =
-      Number.isFinite(event?.pageIndex)
-        ? Number(event.pageIndex) // 已是 1-based
-        : Math.floor((event?.first ?? 0) / pageSize) + 1; // 轉為 1-based
-
-    const sortByFromEvent =
-      Array.isArray(event?.SortBy) ? event.SortBy :
-        Array.isArray(event?.multiSortMeta) ? event.multiSortMeta :
-          (this.lastQueryPayload.SortBy ?? []);
-
-    const nextPayload = {
-      ...this.lastQueryPayload,
-      pageSize,
-      pageIndex,
-      SortBy: (Array.isArray(sortByFromEvent) && sortByFromEvent.length > 0)
-        ? sortByFromEvent
-        : [{ field: 'INV_GUINumber', order: 1 }], // 保底預設
-    };
-
-    // 同步 UI
-    form.patchValue(
-      {
-        pageSize,
-        pageIndex,
-        SortBy: nextPayload.SortBy,
-      },
-      { emitEvent: false }
-    );
-
-    // 存 UI 狀態（依然保留 Date）
+    // ✅ 存 UI 還原用（只存表單）
     this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
 
-    this.runQuery(nextPayload);
+    // ✅ 主動查一次（也可只靠 table-report，但這樣一按查詢就有資料）
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.fin13060Service.queryFIN13060(payload).subscribe({
+      next: (res: any) => {
+        const raw = res?.Data ?? [];
+        this.data = raw.map((row: any) => ({
+          ...row,
+          TXN_Date: this.toSlashDateDisplay(row?.TXN_Date),
+        }));
+        this.totalRecords = res?.TotalCount ?? this.data.length;
+      },
+      error: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
   }
 
-  /** 刪除（表格 toolbar） */
   onDelete(event: any): void {
     const ids = this.normalizeIds(event);
     if (!ids.length) {
@@ -398,113 +566,133 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
       return;
     }
 
-    this.messageService.blockUi();
-    this.fin13060Service.deleteFIN13060(ids).subscribe({
-      next: () => {
-        this.messageService.successBubble('刪除成功');
-        if (this.lastQueryPayload) {
-          this.runQuery(this.lastQueryPayload);
-        }
+    // ✅ 確認框：只傳 1 個參數（options 物件）
+    this.messageService.confirm({
+      message: `確定要刪除選取的 ${ids.length} 筆資料嗎？`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: '確定',
+      rejectLabel: '取消',
+      accept: () => {
+        this.messageService.blockUi();
+
+        this.fin13060Service.deleteFIN13060(ids).subscribe({
+          next: () => {
+            this.messageService.successBubble('刪除成功');
+
+            if (this.lastQueryBody) {
+              const pageSize =
+                Number(this.lastQueryBody?.pageSize) > 0 ? this.lastQueryBody.pageSize : 30;
+
+              const body = { ...this.lastQueryBody, pageSize };
+              this.lastQueryBody = body;
+
+              this.fin13060Service.queryFIN13060(body).subscribe({
+                next: (res: any) => {
+                  const raw = res?.Data ?? [];
+                  this.data = raw.map((row: any) => ({
+                    ...row,
+                    TXN_Date: this.toSlashDateDisplay(row?.TXN_Date),
+                  }));
+                  this.totalRecords = res?.TotalCount ?? this.data.length;
+                },
+                error: () => this.messageService.unblockUi(),
+                complete: () => this.messageService.unblockUi(),
+              });
+              return;
+            }
+
+            this.messageService.unblockUi();
+          },
+          error: () => {
+            this.messageService.errorBubble('刪除失敗，請稍後再試');
+            this.messageService.unblockUi();
+          },
+        });
       },
-      error: () => {
-        this.messageService.errorBubble('刪除失敗，請稍後再試');
-        this.messageService.unblockUi();
-      },
-      complete: () => {
-        this.messageService.unblockUi();
-      },
+      reject: () => { },
     });
   }
 
-  /** 清除（確保清掉 UI、快取、表格、分頁） */
+
+
+
   onClear(): void {
     this.submitted = false;
 
-    // reset 表單到初始（保留分頁預設值 & 預設排序）
-    this.queryForm.reset({
-      pageSize: 20,
-      pageIndex: 1,
-      SortBy: [{ field: 'INV_GUINumber', order: 1 }],
-      INV_GUIType: null,
-      INV_GUITrack: null,
-      INV_GUINumber: null,
-      TXN_GUINo: null,
-      TXN_Date_Start: null,
-      TXN_Date_End: null,
-      INV_YM: null,
-      INV_DeclareYM: null,
-      TXN_Uniform: null,
-      TXN_SaleAmt_Small: null,
-      TXN_SaleAmt_Big: null,
-      TXN_Net_Small: null,
-      TXN_Net_Big: null,
-      TXN_Tax_Small: null,
-      TXN_Tax_Big: null,
-      PLU_TaxType: null,
-      Source_Doc_No: null,
-      Voucher_No: null,
-      SAL_Type: null,
-      SYS_ORIGIN: null,
-      AssetType: null,
-      INV_Remark: null,
-      CRT_USR_No: null,
-      CRT_USR_Name: null,
-      CRT_Date_Start: null,
-      CRT_Date_End: null,
-      UPD_USR_No: null,
-      UPD_USR_Name: null,
-      UPD_Date_Start: null,
-      UPD_Date_End: null,
-      Tlt_No: null,
-      Ven_No: null,
-    }, { emitEvent: false });
+    this.queryForm.reset(
+      {
+        pageSize: 30,
+        pageIndex: 1,
+        SortBy: [{ field: 'INV_GUINumber', order: 1 }],
 
-    // 清掉已保存的查詢狀態
+        INV_GUIType: null,
+        INV_GUITrack: null,
+        INV_GUINumber: null,
+        TXN_GUINo: null,
+
+        TXN_Date_Start: null,
+        TXN_Date_End: null,
+
+        INV_YM: null,
+        INV_DeclareYM: null,
+
+        TXN_Uniform: null,
+
+        TXN_SaleAmt_Small: null,
+        TXN_SaleAmt_Big: null,
+        TXN_Net_Small: null,
+        TXN_Net_Big: null,
+        TXN_Tax_Small: null,
+        TXN_Tax_Big: null,
+
+        PLU_TaxType: null,
+
+        Source_Doc_No: null,
+        Voucher_No: null,
+
+        SAL_Type: null,
+        SYS_ORIGIN: null,
+        AssetType: null,
+
+        INV_Remark: null,
+
+        CRT_USR_No: null,
+        CRT_USR_Name: null,
+        CRT_Date_Start: null,
+        CRT_Date_End: null,
+
+        UPD_USR_No: null,
+        UPD_USR_Name: null,
+        UPD_Date_Start: null,
+        UPD_Date_End: null,
+
+        Tlt_No: null,
+        Ven_No: null,
+      },
+      { emitEvent: false },
+    );
+
     this.queryStateService.clearQueryState(this.ProgNo);
 
-    // 清空表格與分頁狀態
     this.data = [];
     this.totalRecords = 0;
-    this.lastQueryPayload = null;
+    this.selectedItems = [];
+
+    this.lastQueryBody = null;
+
+    // 清掉後預設再帶一次偶數月
+    this.setDefaultDeclareYmForQuery();
   }
 
-  /** 將各種型別安全轉成 number[] (ID) */
   private normalizeIds(input: any): number[] {
     if (Array.isArray(input)) {
       return input
-        .map(x => (typeof x === 'number' ? x : Number(x?.ID)))
-        .filter(n => Number.isFinite(n));
+        .map((x) => (typeof x === 'number' ? x : Number(x?.ID)))
+        .filter((n) => Number.isFinite(n));
     }
     if (typeof input === 'number') return [input];
     const id = Number(input?.ID);
     return Number.isFinite(id) ? [id] : [];
-  }
-
-  /** ISO / yyyy-MM-dd / Date 轉 Date；不合法則回 null */
-  private asDate(v: any): Date | null {
-    if (!v) return null;
-    if (v instanceof Date) return isNaN(v.getTime()) ? null : v;
-    const d = new Date(v);
-    return isNaN(d.getTime()) ? null : d;
-  }
-
-  /** '202508' / '2025/08' / '2025-08' / Date / ISO → Date(YYYY-MM-01) */
-  private asMonthDate(v: any): Date | null {
-    if (!v) return null;
-    if (v instanceof Date && !isNaN(v.getTime())) {
-      return new Date(v.getFullYear(), v.getMonth(), 1);
-    }
-    const s = String(v);
-    const d = new Date(s);
-    if (!isNaN(d.getTime())) return new Date(d.getFullYear(), d.getMonth(), 1);
-    const digits = s.replace(/[^0-9]/g, '');
-    if (digits.length >= 6) {
-      const y = Number(digits.slice(0, 4));
-      const m = Number(digits.slice(4, 6));
-      if (Number.isFinite(y) && Number.isFinite(m) && m >= 1 && m <= 12) {
-        return new Date(y, m - 1, 1);
-      }
-    }
-    return null;
   }
 }
