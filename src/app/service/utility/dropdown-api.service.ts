@@ -705,6 +705,13 @@ export class DropdownApiService {
     );
   }
 
+  // 專為 TLS41040 使用的專櫃下拉（保留原始回傳 ApiResponse 結構）
+  queryTLTTALENT_TLS41040(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryTLTTALENT_TLS41040_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
   /** 查詢專櫃主檔(TLTTALENT) (依照契約日期tlt_contract_date取得合約資料) */
   queryTltTalentByContractDate(body: TalentByContractDateQuery): Observable<TalentByContractDateItem[] | null> {
     return this.queryDropdownWithParams<TalentByContractDateItem, TalentByContractDateQuery>('/queryTLTTALENT_ByContractDate_DropDownList', body).pipe(
