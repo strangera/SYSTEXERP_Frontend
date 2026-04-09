@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgIf } from '@angular/common';
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, signal } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -16,10 +16,11 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { Fin11040Service } from '@service/api/fin/fin11040.service';
+
 import {
   ASS16090Service,
   Ass16090ApproveRequest,
@@ -28,18 +29,23 @@ import {
   Ass16090Row,
   Ass16090UpdateRequest,
   Ass16090VoidRequest,
+  QueryDDLASS16090Request,
+  QueryDDLASS16090Response,
 } from '../../../service/api/ass/ass16090.service';
 
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 
-/** 直接共用 FIN32020 的 table-edit */
+/** 共用 FIN32020 的 table-edit */
 import { FIN32020TableEditComponent } from '../../fin/fin32020-cru/fin32020table-edit/fin32020table-edit.component';
 import {
   EditColumn,
   FieldChangeEvent,
 } from '../../fin/fin32020-cru/fin32020table-edit/fin32020table-edit.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
+
+/** Dialog 查詢結果 table */
+import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
+import { Column } from '../../../shared/componentkit/table2/table2.model';
 
 @UntilDestroy()
 @Component({
@@ -59,6 +65,8 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
     ButtonComponent,
     TranslateModule,
     FIN32020TableEditComponent,
+    DialogComponent,
+    Table2Component,
   ],
 })
 export class ASS16090CRUComponent
@@ -67,9 +75,6 @@ export class ASS16090CRUComponent
 {
   /** 倉別選項 */
   public readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
-
-  /** 品項下拉 */
-  goodsIdOptions: { value: string; label: string }[] = [];
 
   /** 申請人下拉 */
   empIdOptions: { value: string; label: string }[] = [];
@@ -88,7 +93,7 @@ export class ASS16090CRUComponent
     NOTES: ['', [Validators.maxLength(200)]],
   });
 
-  /** 明細資料（table-edit 綁定用） */
+  /** 明細資料 */
   detailData: any[] = [];
   detailLoading = false;
 
@@ -100,7 +105,41 @@ export class ASS16090CRUComponent
     GOODS_UNIT_NAME: null,
     QTY: null,
     NOTES: '',
+
+    /** 這些不顯示，但可以保留在 row 裡 */
+    APPLYABLE_QTY: null,
+    ACTUAL_STOCK_QTY: null,
+    SAFE_QTY: null,
+    STOCK_SAFE: null,
   };
+
+  /** Dialog 狀態 */
+  goodsDialogVisible = false;
+  goodsLoading = false;
+  goodsList: QueryDDLASS16090Response[] = [];
+  goodsSelectedRows: QueryDDLASS16090Response[] = [];
+
+  /** 記錄目前點到哪一列，跟 FIN32020 一樣 */
+  currentDetailIndex: number | null = null;
+  currentDetailRowData: any = null;
+
+  /** Dialog 搜尋表單 */
+  goodsSearchForm = this.formBuilder.nonNullable.group({
+    GoodsPrefix: [''],
+    Keyword: [''],
+  });
+
+  /** Dialog table 欄位 */
+  goodsColumns: Column[] = [
+   
+    { field: 'GOODS_ID', header: '品項編號' },
+    { field: 'GOODS_NAME', header: '品項名稱' },
+    { field: 'UNIT', header: '單位' },
+    { field: 'APPLYABLE_QTY', header: '可申請數量' },
+    { field: 'ACTUAL_STOCK_QTY', header: '實際庫存量' },
+    { field: 'SAFE_QTY', header: '安全庫存量' },
+    { field: 'STOCK_SAFE', header: '庫存安全' },
+  ];
 
   qtyFormat(value: any): string {
     const num = Number(value ?? 0);
@@ -111,19 +150,15 @@ export class ASS16090CRUComponent
     });
   }
 
-  /** 明細欄位 */
+  /** 表格欄位維持原本顯示 */
   detailColumns: EditColumn[] = [
     {
       field: 'GOODS_ID',
       header: '品項編號',
-      type: 'dropdown',
+      type: 'input',
       width: '220px',
       textAlign: 'left',
-      options: () => this.goodsIdOptions,
-      optionLabel: 'label',
-      optionValue: 'value',
-      placeholder: '請選擇品項編號',
-      showClear: true,
+      placeholder: '點擊後搜尋帶入',
       validate: [
         (value, _rowData, _data, _field, header) => {
           const v = String(value ?? '').trim();
@@ -140,8 +175,7 @@ export class ASS16090CRUComponent
       type: 'input',
       width: '220px',
       textAlign: 'left',
-      maxLength: 100,
-      placeholder: '請輸入品項名稱',
+      placeholder: '點擊後搜尋帶入',
     },
     {
       field: 'GOODS_UNIT_NAME',
@@ -149,8 +183,7 @@ export class ASS16090CRUComponent
       type: 'input',
       width: '120px',
       textAlign: 'left',
-      maxLength: 20,
-      placeholder: '請輸入單位',
+      disabled: () => true,
     },
     {
       field: 'QTY',
@@ -163,12 +196,31 @@ export class ASS16090CRUComponent
       maxFractionDigits: 2,
       format: this.qtyFormat,
       validate: [
-        (value, _rowData, _data, _field, header) => {
+        (value, rowData, _data, _field, header) => {
           const num = Number(value ?? 0);
+          const applyableQty = Number(rowData?.APPLYABLE_QTY ?? 0);
+
+          if (!(Number.isFinite(num) && num > 0)) {
+            return {
+              isValid: false,
+              errorMessage: [`${header}需大於 0`],
+            };
+          }
+
+          if (
+            Number.isFinite(applyableQty) &&
+            applyableQty > 0 &&
+            num > applyableQty
+          ) {
+            return {
+              isValid: false,
+              errorMessage: [`${header}不可大於可申請數量`],
+            };
+          }
+
           return {
-            isValid: Number.isFinite(num) && num > 0,
-            errorMessage:
-              Number.isFinite(num) && num > 0 ? [] : [`${header}需大於 0`],
+            isValid: true,
+            errorMessage: [],
           };
         },
       ],
@@ -190,8 +242,6 @@ export class ASS16090CRUComponent
   constructor(
     private readonly ass16090Service: ASS16090Service,
     private readonly ass11100Service: ASS11100Service,
-    private readonly fin11040Service: Fin11040Service,
-    private readonly dropdownApiService: DropdownApiService,
     private readonly dropDownListService: DropDownListService
   ) {
     super();
@@ -215,6 +265,10 @@ export class ASS16090CRUComponent
 
   get isEditMode(): boolean {
     return this.crudstatus === CRUDStatus.Edit;
+  }
+
+  onBack(): void {
+    this.router.navigate(['account/ass/ass16090']);
   }
 
   private loadDropdownOptions(): void {
@@ -261,52 +315,6 @@ export class ASS16090CRUComponent
           })
         );
       });
-
-    this.dropdownApiService
-      .queryAss11040Dropdown()
-      .pipe(untilDestroyed(this))
-      .subscribe((res) => {
-        this.goodsIdOptions = (res ?? []).map((item: any) => ({
-          value: item.No ?? item.value ?? '',
-          label: item.Name
-            ? `${item.No ?? ''} - ${item.Name ?? ''}`
-            : item.label ?? '',
-        }));
-      });
-  }
-
-  get totalQty(): number {
-    return (this.detailData || []).reduce((sum: number, row: any) => {
-      const n = Number(row?.QTY ?? 0);
-      return sum + (Number.isFinite(n) ? n : 0);
-    }, 0);
-  }
-
-  /** yyyy-MM-dd */
-  private formatDateToYMD(
-    date: Date | string | null | undefined
-  ): string | null {
-    if (!date) return null;
-
-    const d = date instanceof Date ? date : new Date(date);
-    if (Number.isNaN(d.getTime())) return null;
-
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  }
-
-  /** yyyy-MM-ddT00:00:00，符合 Swagger 的 date-time */
-  private formatDateToDateTime(
-    date: Date | string | null | undefined
-  ): string | null {
-    const ymd = this.formatDateToYMD(date);
-    return ymd ? `${ymd}T00:00:00` : null;
-  }
-
-  private formatDateTimeToIso(date: Date): string {
-    return date.toISOString();
   }
 
   private patchFromDetail(data: Ass16090DetailResponse): void {
@@ -326,10 +334,14 @@ export class ASS16090CRUComponent
       LINE_NUM: d.LINE_NUM ?? idx + 1,
       GOODS_ID: d.GOODS_ID ?? null,
       GOODS_NAME: d.GOODS_NAME ?? null,
-      GOODS_UNIT: d.GOODS_UNIT ?? null,
-      GOODS_UNIT_NAME: d.GOODS_UNIT_NAME ?? null,
+      GOODS_UNIT_NAME: d.GOODS_UNIT_NAME ?? d.GOODS_UNIT ?? null,
       QTY: d.QTY ?? null,
       NOTES: d.NOTES ?? '',
+
+      APPLYABLE_QTY: d.APPLYABLE_QTY ?? null,
+      ACTUAL_STOCK_QTY: d.ACTUAL_STOCK_QTY ?? null,
+      SAFE_QTY: d.SAFE_QTY ?? null,
+      STOCK_SAFE: d.STOCK_SAFE ?? null,
     }));
 
     if (this.crudstatus === CRUDStatus.Read) {
@@ -388,159 +400,189 @@ export class ASS16090CRUComponent
     }));
   }
 
-  private syncDetailDataFromTableEdit(): void {
-    if (!this.detailTableEdit) return;
+  onDetailCellClick(e: {
+    col: EditColumn;
+    rowData: any;
+    index: number;
+    event: MouseEvent;
+  }): void {
+    if (this.isFormReadable) return;
 
-    this.detailData = this.detailTableEdit._tableData
-      .filter((item: any) => !item._isAutoInsertCandidate)
-      .map((item: any, idx: number) => ({
-        ...item,
-        LINE_NUM: idx + 1,
-      }));
-  }
+    const field = String(e?.col?.field ?? '');
 
-  /** Insert/Update 明細只送 Swagger 要的欄位 */
-  private buildDetailList(): Array<{
-    LINE_NUM: number;
-    GOODS_ID: string | null;
-    QTY: number | null;
-    NOTES: string | null;
-  }> {
-    this.syncDetailDataFromTableEdit();
+    if (field !== 'GOODS_ID' && field !== 'GOODS_NAME') return;
 
-    return (this.detailData || []).map((row, idx) => ({
-      LINE_NUM: idx + 1,
-      GOODS_ID: row?.GOODS_ID ? String(row.GOODS_ID).trim() : null,
-      QTY:
-        row?.QTY !== null && row?.QTY !== undefined && row?.QTY !== ''
-          ? Number(row.QTY)
-          : null,
-      NOTES: row?.NOTES ?? null,
-    }));
-  }
+    this.currentDetailIndex = e.index;
+    this.currentDetailRowData = e.rowData;
 
-  private validateDetailData(): boolean {
-    this.syncDetailDataFromTableEdit();
+    this.resetGoodsDialogState();
 
-    const rows = this.detailData || [];
-    if (!rows.length) {
-      this.messageService?.warnBubble?.('請至少輸入一筆明細');
-      return false;
-    }
-
-    const validRows = rows.filter((r) => {
-      const goodsId = String(r?.GOODS_ID ?? '').trim();
-      const qty = Number(r?.QTY ?? 0);
-      return goodsId && Number.isFinite(qty) && qty > 0;
+    this.goodsSearchForm.patchValue({
+      GoodsPrefix: String(e.rowData?.GOODS_ID ?? '').trim(),
+      Keyword: String(e.rowData?.GOODS_NAME ?? '').trim(),
     });
 
-    if (!validRows.length) {
-      this.messageService?.warnBubble?.('請至少輸入一筆完整明細');
-      return false;
-    }
-
-    return true;
+    this.goodsDialogVisible = true;
+    this.onSearchGoods();
   }
 
-  /** Insert 依 Swagger */
+  private resetGoodsDialogState(): void {
+    this.goodsSelectedRows = [];
+    this.goodsList = [];
+  }
+
+  onSearchGoods(): void {
+    const whId = this.dataForm.controls.WH_ID.value;
+
+    if (!whId) {
+      this.messageService?.warnBubble?.('請先選擇倉別');
+      return;
+    }
+
+    const raw = this.goodsSearchForm.getRawValue();
+
+    const payload: QueryDDLASS16090Request = {
+      Keyword: String(raw.Keyword ?? '').trim(),
+      WH_ID: String(whId ?? '').trim(),
+      GoodsPrefix: String(raw.GoodsPrefix ?? '').trim(),
+    };
+
+    this.goodsLoading = true;
+
+    this.ass16090Service
+      .queryASS16090_DropDownList(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          this.goodsList = Array.isArray(res?.Data) ? res.Data : [];
+          this.goodsLoading = false;
+        },
+        error: (err) => {
+          console.error('queryASS16090_DropDownList error:', err);
+          this.goodsLoading = false;
+        },
+      });
+  }
+
+  onGoodsSelectionChange(rows: QueryDDLASS16090Response[]): void {
+    this.goodsSelectedRows = rows ?? [];
+  }
+
+  onGoodsRowDetail(row: QueryDDLASS16090Response): void {
+    this.goodsSelectedRows = row ? [row] : [];
+    this.confirmGoodsSelection();
+  }
+
+  onGoodsCancel(): void {
+    this.goodsSelectedRows = [];
+    this.goodsDialogVisible = false;
+  }
+
+  confirmGoodsSelection(): void {
+    if (
+      this.currentDetailIndex === null ||
+      !this.goodsSelectedRows ||
+      !this.goodsSelectedRows.length
+    ) {
+      return;
+    }
+
+    const selected = this.goodsSelectedRows[0];
+
+    this.detailData = (this.detailData || []).map((row, idx) => {
+      if (idx !== this.currentDetailIndex) {
+        return {
+          ...row,
+          LINE_NUM: idx + 1,
+        };
+      }
+
+      return {
+        ...row,
+        LINE_NUM: idx + 1,
+        GOODS_ID: selected.GOODS_ID ?? null,
+        GOODS_NAME: selected.GOODS_NAME ?? null,
+        GOODS_UNIT_NAME: selected.UNIT ?? null,
+
+        /** 不顯示，但保留在 row 讓 QTY 驗證可用 */
+        APPLYABLE_QTY: selected.APPLYABLE_QTY ?? null,
+        ACTUAL_STOCK_QTY: selected.ACTUAL_STOCK_QTY ?? null,
+        SAFE_QTY: selected.SAFE_QTY ?? null,
+        STOCK_SAFE: selected.STOCK_SAFE ?? null,
+      };
+    });
+
+    this.goodsDialogVisible = false;
+  }
+
+  private formatDateToYMD(
+    date: Date | string | null | undefined
+  ): string | null {
+    if (!date) return null;
+
+    const d = typeof date === 'string' ? new Date(date) : new Date(date);
+    if (Number.isNaN(d.getTime())) return null;
+
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  private formatDateToDateTime(
+    date: Date | string | null | undefined
+  ): string | null {
+    const ymd = this.formatDateToYMD(date);
+    return ymd ? `${ymd}T00:00:00` : null;
+  }
+
+  private buildDetailList() {
+    return (this.detailData || [])
+      .map((row, idx) => {
+        const goodsId = String(row?.GOODS_ID ?? '').trim();
+        const qty = Number(row?.QTY ?? 0);
+
+        return {
+          LINE_NUM: idx + 1,
+          GOODS_ID: goodsId || null,
+          QTY: Number.isFinite(qty) ? qty : 0,
+          NOTES: String(row?.NOTES ?? '').trim() || null,
+        };
+      })
+      .filter((d) => !!d.GOODS_ID);
+  }
+
   private buildInsertPayload(): Ass16090InsertRequest {
     const raw = this.dataForm.getRawValue();
 
     return {
       MID: 0,
       STO_NO: null,
-      WH_ID: raw.WH_ID ?? '',
-      EMP_ID: raw.EMP_ID ?? '',
-      ORG_ID: raw.ORG_ID ?? '',
-      APPLY_DATE: this.formatDateToDateTime(raw.APPLY_DATE)!,
-      NOTES: raw.NOTES || null,
+      WH_ID: String(raw.WH_ID ?? '').trim(),
+      EMP_ID: String(raw.EMP_ID ?? '').trim(),
+      ORG_ID: String(raw.ORG_ID ?? '').trim(),
+      APPLY_DATE: this.formatDateToDateTime(raw.APPLY_DATE) ?? '',
+      NOTES: String(raw.NOTES ?? '').trim() || null,
       DetailList: this.buildDetailList(),
-      CRT_USR_No: null,
-      CRT_USR_Name: null,
-      UPD_USR_No: null,
-      UPD_USR_Name: null,
     };
   }
 
-  /** Update 依 Swagger */
   private buildUpdatePayload(): Ass16090UpdateRequest {
     const raw = this.dataForm.getRawValue();
 
     return {
       ID: Number(raw.ID ?? this.rowdata?.ID ?? 0),
+      DAMAGEM_ID:
+        String(raw.DAMAGEM_ID ?? this.rowdata?.DAMAGEM_ID ?? '').trim() || null,
       MID: 0,
       STO_NO: null,
-      WH_ID: raw.WH_ID ?? '',
-      EMP_ID: raw.EMP_ID ?? '',
-      ORG_ID: raw.ORG_ID ?? '',
-      APPLY_DATE: this.formatDateToDateTime(raw.APPLY_DATE)!,
-      NOTES: raw.NOTES || null,
+      WH_ID: String(raw.WH_ID ?? '').trim(),
+      EMP_ID: String(raw.EMP_ID ?? '').trim(),
+      ORG_ID: String(raw.ORG_ID ?? '').trim(),
+      APPLY_DATE: this.formatDateToDateTime(raw.APPLY_DATE) ?? '',
+      NOTES: String(raw.NOTES ?? '').trim() || null,
       DetailList: this.buildDetailList(),
-      UPD_USR_No: null,
-      UPD_USR_Name: null,
     };
-  }
-
-  private buildApprovePayload(): Ass16090ApproveRequest {
-    const raw = this.dataForm.getRawValue();
-
-    return {
-      MID: 0,
-      STO_NO: null,
-      ID: Number(raw.ID ?? this.rowdata?.ID ?? 0),
-      APRV_EMP_ID: raw.EMP_ID ?? null,
-      APRV_DATE: this.formatDateTimeToIso(new Date()),
-      UPD_USR_No: null,
-      UPD_USR_Name: null,
-    };
-  }
-
-  private buildVoidPayload(): Ass16090VoidRequest {
-    const raw = this.dataForm.getRawValue();
-
-    return {
-      MID: 0,
-      STO_NO: null,
-      ID: Number(raw.ID ?? this.rowdata?.ID ?? 0),
-      UPD_USR_No: null,
-      UPD_USR_Name: null,
-    };
-  }
-
-  onApprove(): void {
-    if (!this.isEditMode) return;
-
-    const payload = this.buildApprovePayload();
-    this.loading = true;
-
-    this.ass16090Service
-      .approveASS16090(payload)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: () => this.afterSaveSuccess(),
-        error: (err) => {
-          console.error('ASS16090 approve error:', err);
-          this.loading = false;
-        },
-      });
-  }
-
-  onVoid(): void {
-    if (!this.isEditMode) return;
-
-    const payload = this.buildVoidPayload();
-    this.loading = true;
-
-    this.ass16090Service
-      .voidASS16090(payload)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: () => this.afterSaveSuccess(),
-        error: (err) => {
-          console.error('ASS16090 void error:', err);
-          this.loading = false;
-        },
-      });
   }
 
   private afterSaveSuccess(): void {
@@ -553,58 +595,95 @@ export class ASS16090CRUComponent
     });
   }
 
-  onBack(): void {
-    this.router.navigate(['account/ass/ass16090'], {
-      state: { fromCru: true },
-    });
-  }
-
   onSubmit(frm: FormGroup): void {
-    this.submitted = true;
-
-    if (frm.invalid) {
-      frm.markAllAsTouched();
-      return;
+    if (this.detailTableEdit) {
+      const tableValid = this.detailTableEdit.validateAndShowErrors();
+      if (!tableValid) return;
     }
 
-    if (!this.validateDetailData()) {
-      return;
-    }
+    this.handleSubmit(frm, () => {
+      if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+        const payload = this.buildInsertPayload();
 
-    this.loading = true;
-
-    if (this.crudstatus === CRUDStatus.Create) {
-      const payload = this.buildInsertPayload();
-
-      this.ass16090Service
-        .insertASS16090(payload)
-        .pipe(untilDestroyed(this))
-        .subscribe({
+        this.ass16090Service.insertASS16090(payload).subscribe({
           next: () => this.afterSaveSuccess(),
           error: (err) => {
             console.error('ASS16090 insert error:', err);
             this.loading = false;
           },
         });
-      return;
-    }
+        return;
+      }
 
-    if (this.crudstatus === CRUDStatus.Edit) {
-      const payload = this.buildUpdatePayload();
+      if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+        const payload = this.buildUpdatePayload();
 
-      this.ass16090Service
-        .updateASS16090(payload)
-        .pipe(untilDestroyed(this))
-        .subscribe({
+        this.ass16090Service.updateASS16090(payload).subscribe({
           next: () => this.afterSaveSuccess(),
           error: (err) => {
             console.error('ASS16090 update error:', err);
             this.loading = false;
           },
         });
+      }
+    });
+  }
+
+  override onCancel(): void {
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.dataForm.reset();
+      this.dataForm.patchValue({
+        APPLY_DATE: new Date(),
+      });
+      this.detailData = [{ ...this.defaultDetailRow, LINE_NUM: 1 }];
+      this.submitted = false;
       return;
     }
 
-    this.loading = false;
+    if (this.crudstatus === CRUDStatus.Edit) {
+      if (this.rowdata?.ID || this.rowdata?.DAMAGEM_ID) {
+        this.loadDetail();
+      }
+      this.submitted = false;
+      return;
+    }
+
+    super.onCancel();
+  }
+
+  onApprove(): void {
+    const raw = this.dataForm.getRawValue();
+    const payload: Ass16090ApproveRequest = {
+      MID: 0,
+      STO_NO: null,
+      ID: Number(raw.ID ?? this.rowdata?.ID ?? 0) || null,
+    };
+
+    this.loading = true;
+    this.ass16090Service.approveASS16090(payload).subscribe({
+      next: () => this.afterSaveSuccess(),
+      error: (err) => {
+        console.error('ASS16090 approve error:', err);
+        this.loading = false;
+      },
+    });
+  }
+
+  onVoid(): void {
+    const raw = this.dataForm.getRawValue();
+    const payload: Ass16090VoidRequest = {
+      MID: 0,
+      STO_NO: null,
+      ID: Number(raw.ID ?? this.rowdata?.ID ?? 0) || null,
+    };
+
+    this.loading = true;
+    this.ass16090Service.voidASS16090(payload).subscribe({
+      next: () => this.afterSaveSuccess(),
+      error: (err) => {
+        console.error('ASS16090 void error:', err);
+        this.loading = false;
+      },
+    });
   }
 }
