@@ -52,6 +52,8 @@
       [data]="data"
       [totalRecords]="totalRecords"
       [loading]="loading"
+      [queryFunction]="cpm11100Service.queryCPM11100.bind(cpm11100Service)"
+      [lastQueryBody]="historyRequestBody"
       [showManage]="false"
       [showExcel]="false"
       [showDelete]="false"

@@ -3,6 +3,11 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
+export interface Cpm11100Request {
+  Keyword: string;
+  TLT_OPENFLAG: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -14,7 +19,7 @@ export class Cpm11100Service {
   constructor(private http: HttpClient) { }
 
   // 查詢 全館店櫃資訊
-  queryCPM11100(body: any): Observable<any> {
+  queryCPM11100(body: Cpm11100Request): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryCPM11100`, body);
   }
 }

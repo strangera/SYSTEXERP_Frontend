@@ -13,7 +13,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { Cpm11100Service } from './../../../service/api/cpm/cpm11100.service';
+import { Cpm11100Request, Cpm11100Service } from './../../../service/api/cpm/cpm11100.service';
 
 // 財產變更記錄查詢
 export interface cpm11100 {
@@ -57,6 +57,7 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
     //分頁查詢
     ...createPaginationConfig([{ field: 'TLT_NO', order: 1 }]), // 分頁和排序參數
   });
+  historyRequestBody: Cpm11100Request | null = null; //歷史查詢條件
   // 表格
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
@@ -88,7 +89,7 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
 
   // ----------------------------------------------------------------
   constructor(
-    private readonly cpm11100Service: Cpm11100Service,
+    public readonly cpm11100Service: Cpm11100Service,
   ) {
     super();
   }
@@ -114,6 +115,7 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
             console.log('Result', this.data);
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
+            this.historyRequestBody = payload; // 儲存歷史查詢條件
           } else {
             console.error('API error:', response.Status, response.Message);
           }
