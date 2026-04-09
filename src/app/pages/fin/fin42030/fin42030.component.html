@@ -55,27 +55,19 @@
             ></app-radiobutton>
           </div>
         </div>
-      </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
-      </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+    <app-table-subheader-report [data]="data"></app-table-subheader-report>
+    <!-- <app-table [data]="data" [columns]="columns"></app-table> -->
   </div>
 </div>

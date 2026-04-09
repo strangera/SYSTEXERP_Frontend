@@ -213,7 +213,7 @@ export const finRoutes: Routes = [
   // 預算、實績比較表
   { path: 'fin42020', loadComponent: () => import('./fin42020/fin42020.component').then(m => m.FIN42020Component), data: { progNo: 'FIN42020' } },
   // 預算同期比較表
-  // { path: 'fin42030', loadComponent: () => import('./fin42030/fin42030.component').then(m => m.FIN42030Component),data:{progNo:'FIN42030'} },
+  { path: 'fin42030', loadComponent: () => import('./fin42030/fin42030.component').then(m => m.FIN42030Component), data: { progNo: 'FIN42030' } },
   // 去年同期比較表
   // { path: 'fin42040', loadComponent: () => import('./fin42040/fin42040.component').then(m => m.FIN42040Component),data:{progNo:'FIN42040'} },
   // 預算版本比較表

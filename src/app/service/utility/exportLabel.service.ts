@@ -63,8 +63,9 @@ export class ExportLabelService {
     private readonly fileExportService: FileExportService
   ) { }
 
+  // ExportLabel改用ExportLabel_Other
   ExportLabel(data: IExportLabelRequest[], btnLoadingSetter?: (state: boolean) => void): Observable<HttpResponse<Blob>> {
-    const obs = this.http.post<Blob>(`${this.apiUrl}/ExportLabel/ExportLabel`, data, { responseType: 'blob' as 'json', observe: 'response' });
+    const obs = this.http.post<Blob>(`${this.apiUrl}/ExportLabel/ExportLabel_Other`, data, { responseType: 'blob' as 'json', observe: 'response' });
     return this.fileExportService.executeFileExport(obs, '.txt', btnLoadingSetter);
   }
 
