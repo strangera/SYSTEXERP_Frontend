@@ -62,6 +62,7 @@ export interface ASS13070TransferRequest {
   NEW_HOLD_EMP_ID: string;
   NEW_USE_ORG_ID: string;
   NEW_USE_EMP_ID: string;
+  HANDLE_DATE: string;
 }
 
 /** 轉移財產結果查詢請求 */

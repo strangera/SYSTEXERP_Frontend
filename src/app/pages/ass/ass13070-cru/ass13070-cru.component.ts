@@ -1,4 +1,4 @@
-import { AsyncPipe } from '@angular/common';
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -17,6 +17,7 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import {
   ASS13070QueryRow,
+  ASS13070TransferRequest,
   ASS13070TransferResultRow,
 } from '../ass13070/ass13070.model';
 
@@ -26,6 +27,7 @@ import {
   templateUrl: './ass13070-cru.component.html',
   styleUrl: './ass13070-cru.component.scss',
   standalone: true,
+  providers: [DatePipe],
   imports: [
     AsyncPipe,
     MenubarComponent,
@@ -123,6 +125,7 @@ export class ASS13070CRUComponent extends BasicCruPageComponent<unknown> impleme
     private readonly dropdownApi: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
     private readonly fileExportService: FileExportService,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
@@ -168,12 +171,17 @@ export class ASS13070CRUComponent extends BasicCruPageComponent<unknown> impleme
     }
 
     const raw = this.dataForm.getRawValue();
-    const payload = {
+    const handleDateStr =
+      raw.TRANSFER_DATE != null
+        ? this.datePipe.transform(raw.TRANSFER_DATE, 'yyyy-MM-dd') ?? ''
+        : '';
+    const payload: ASS13070TransferRequest = {
       ID_LIST: this.idList,
       NEW_HOLD_ORG_ID: String(raw.NEW_HOLD_ORG_ID ?? ''),
       NEW_HOLD_EMP_ID: String(raw.NEW_HOLD_EMP_ID ?? ''),
       NEW_USE_ORG_ID: String(raw.NEW_USE_ORG_ID ?? ''),
       NEW_USE_EMP_ID: String(raw.NEW_USE_EMP_ID ?? ''),
+      HANDLE_DATE: handleDateStr,
     };
 
     this.loading = true;
