@@ -28,7 +28,7 @@ export interface ColumnGroup {
   align?: 'left' | 'center' | 'right';
 }
 export interface AddButton {
-  label: string;
+  label: string | ((rowData: any) => string);
   icon?: string;
   action: (rowData: any, event?: Event) => void;
   disabled?: (rowData: any) => boolean;
