@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { BehaviorSubject, catchError, map, Observable, shareReplay, tap, throwError } from 'rxjs';
+import { BehaviorSubject, catchError, EMPTY, map, Observable, shareReplay, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { SystemOptionsService } from './sys1000.service';
 
@@ -71,6 +71,10 @@ export class SystemDataService {
    * @returns 包含權限資訊的 API 響應 Observable
    */
   getFunRightsInfo(): Observable<ApiResponse<string>> {
+    if (!localStorage.getItem('UserInfo')) {
+      console.warn('[SystemDataService] 無使用者資訊，取消 GetUserDashboard 請求');
+      return EMPTY; // 記得從 'rxjs' 引入 EMPTY
+    }
     return this.http.post<ApiResponse<string>>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
       tap((response: ApiResponse<any>) => {
         if (response.Status === '0000' && response.Data?.funright_info) {
@@ -96,6 +100,10 @@ export class SystemDataService {
    * @returns 包含系統代碼的 API 響應 Observable
    */
   queryAllSystemCode(): Observable<ApiResponse<QuerySystemCodeResponse[]>> {
+    if (!localStorage.getItem('UserInfo')) {
+      console.warn('[SystemDataService] 無使用者資訊，取消 queryAllSystemCode 請求');
+      return EMPTY;
+    }
     return this.http.post<ApiResponse<QuerySystemCodeResponse[]>>(`${this.apiUrl}/User/queryAllSystemCode`, {}).pipe(
       tap((response: ApiResponse<QuerySystemCodeResponse[]>) => {
         if (response.Status === '0000' && response.Data) {
@@ -182,5 +190,29 @@ export class SystemDataService {
       }),
       // 系統通知通常會經常變動，這裡暫時不使用 shareReplay(1)，保持每次呼叫都發出請求
     );
+  }
+
+  /**
+   * 重置所有權限與系統代碼資料
+   * 用於使用者登出時，確保記憶體與 localStorage 中的舊資料被徹底清除。
+   */
+  resetData(): void {
+    console.log('[SystemDataService] 執行資料重置...');
+
+    // 1. 清除 BehaviorSubject 中的狀態，恢復為空陣列
+    this._menuUpdated.next([]);
+    this._sys1000.next([]);
+
+    // 2. 清除 localStorage 中的特定快取項目
+    // 這裡只刪除與權限相關的，不建議使用 localStorage.clear() 以免誤刪其他設定
+    localStorage.removeItem('FunRightsInfo');
+    localStorage.removeItem('SYS1000');
+
+    // 如果有使用到 SystemOptionsService 的快取，也一併通知它
+    try {
+      SystemOptionsService.refreshCache();
+    } catch (e) {
+      console.warn('[SystemDataService] SystemOptionsService 刷新失敗', e);
+    }
   }
 }

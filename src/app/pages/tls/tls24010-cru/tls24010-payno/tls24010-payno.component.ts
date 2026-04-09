@@ -1,10 +1,12 @@
+import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { POS5008Data } from '@service/api/tls/tls24010.service';
+import { POS5008Data, Tls24010Service } from '@service/api/tls/tls24010.service';
 import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { forkJoin } from 'rxjs';
 
 @UntilDestroy()
 @Component({
@@ -33,6 +35,8 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly cdr: ChangeDetectorRef,
+    public readonly tls24010Service: Tls24010Service,
+    private readonly datePipe: DatePipe,
   ) { }
 
   ngOnInit(): void {
@@ -53,29 +57,39 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
   }
 
   private loadPayTypeOptions(callback?: () => void): void {
-    if (this.PAY_TypeOptions.length > 0) {
-      if (callback) {
-        callback();
-      }
-      return;
-    }
+    if (this.PAY_TypeOptions.length > 0 && !callback) return; // 如果已經載入過且沒有 callback，直接返回（避免重複觸發）
 
-    this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe((res) => {
-      const newPAY_TypeOptions = res.Data.map(item => ({
+    if (!this.data || this.data.length === 0) return; // 取到付款別資料才做查詢，避免不必要的 API 呼叫
+
+    const payload = {
+      TXN_Date: this.datePipe.transform(this.data[0]?.TXN_Date, 'yyyy-MM-dd') || '',
+      ECR_No: this.data[0]?.ECR_No || '',
+      Talent_ID: this.data[0]?.Talent_ID || 0,
+    }
+    forkJoin({
+      CheckResult: this.tls24010Service.queryTLS24010CheckStatus(payload),
+      POS1006Result: this.dropDownListService.queryPOS1006_DropDownList()
+    }).pipe(untilDestroyed(this)).subscribe(({ CheckResult, POS1006Result }) => {
+
+      const payNoList = CheckResult.Data?.payNoList || [];
+
+      this.PAY_TypeOptions = POS1006Result.Data.map(item => ({
         ...item,
         PAY_No: item.No,
         PAY_Name: item.Name,
         label: item.Name
       }));
 
-      this.PAY_TypeOptions = newPAY_TypeOptions;
+      // 下拉選單排除掉已被審核的項目
+      const filteredOptions = this.PAY_TypeOptions.filter(
+        item => !payNoList.includes(item.No)
+      );
 
-      // Immutable 更新 columns 參考
       this.columns = this.columns.map(col => {
         if (col.field === 'PAY_No') {
           return {
             ...col,
-            options: newPAY_TypeOptions
+            options: filteredOptions
           };
         }
         return col;
@@ -194,5 +208,12 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
       // Immutable 更新 payNoData，確保父元件讀取時能偵測到變動
       this.payNoData = [...this.payNoData];
     }
+  }
+  rowEditDisabled = (row: any): boolean => row.Check_Status === 'Y'; // 已審核disabled資料
+  isRowSelectable = (row: any): boolean => row.Check_Status !== 'Y'; // 已審核禁用選取
+
+  /** 有已審核資料才顯示提示訊息 */
+  get hasCheckedData(): boolean {
+    return this.payNoData?.some(row => row.Check_Status === 'Y') ?? false;
   }
 }
