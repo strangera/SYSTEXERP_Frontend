@@ -5,77 +5,33 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="統計日期"
-              [startControl]="queryForm.controls.Sdate"
-              [endControl]="queryForm.controls.Edate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="統計日期" [startControl]="queryForm.controls.Sdate"
+              [endControl]="queryForm.controls.Edate" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="部門代號"
-              controlName="OrgID"
-              [options]="orgOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.OrgID"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="部門代號" controlName="OrgID" [options]="orgOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.OrgID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類代碼"
-              controlName="BClassID"
-              [options]="bigCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.BClassID"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="大分類代碼" controlName="BClassID" [options]="bigCategoryOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.BClassID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="中分類代碼"
-              controlName="MClassID"
-              [options]="midCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.MClassID"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="中分類代碼" controlName="MClassID" [options]="midCategoryOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.MClassID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="小分類代碼"
-              controlName="SClassID"
-              [options]="smallCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.SClassID"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="小分類代碼" controlName="SClassID" [options]="smallCategoryOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.SClassID" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品項編號"
-              controlName="GoodsID"
-              [options]="goodsOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.GoodsID"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="品項編號" controlName="GoodsID" [options]="goodsOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.GoodsID" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -89,18 +45,9 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table-report
-      dataKey="_pk"
-      tableKey="ASS17060_Data"
-      [data]="data"
-      [columns]="columns"
-      [totalRecords]="totalRecords"
-      [loading]="loading"
-      [lastQueryBody]="lastQueryBody"
-      [queryFunction]="queryFunction"
-      [showDelete]="false"
-      [showEdit]="false"
-      [showDetail]="false"
-    ></app-table-report>
+    <app-table-report dataKey="_pk" tableKey="ASS17060_Data" [data]="data" [columns]="columns"
+      [totalRecords]="totalRecords" [loading]="loading" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction"
+      [showDelete]="false" [showEdit]="false" [showDetail]="false" [showManage]="false"
+      [showReorder]="false"></app-table-report>
   </div>
 </div>

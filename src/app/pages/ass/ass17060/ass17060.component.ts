@@ -11,7 +11,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
@@ -62,16 +62,14 @@ export class ASS17060Component extends BasicQueryPageComponent<QueryASS17060Deta
   lastQueryBody: (QueryASS17060Request & { pageSize?: number; pageIndex?: number }) | null = null;
 
   columns: ReportColumn[] = [
-    { field: 'sort_no', header: '序號', align: 'right' },
-    { field: 'row_type', header: '列類別' },
-    { field: 'goods_id', header: '品項ID' },
-    { field: 'goods_name', header: '品項名稱' },
-    { field: 'unit_price', header: '品項單價', align: 'right' },
-    { field: 'whmove_id', header: 'WHMOVE_ID' },
-    { field: 'whmove_status_name', header: 'WHMOVE_STATUS_NAME' },
-    { field: 'wh_name', header: 'WH_NAME' },
-    { field: 'qty', header: '調撥數量', align: 'right' },
-    { field: 'move_amt', header: '調撥金額', align: 'right' },
+    { field: 'goods_id', header: '品項編號', align: 'left' },
+    { field: 'goods_name', header: '品項名稱', align: 'left' },
+    { field: 'unit_price', header: '單價', align: 'right', format: (value) => formatAmountWithDecimals(value, 0) },
+    { field: 'whmove_id', header: '調撥單號', align: 'center' },
+    { field: 'whmove_status_name', header: '調撥狀態', align: 'center' },
+    { field: 'wh_name', header: '倉別', align: 'center' },
+    { field: 'qty', header: '數量', align: 'right', format: (value) => formatAmountWithDecimals(value, 0) },
+    { field: 'move_amt', header: '調撥金額', align: 'right', format: (value) => formatAmountWithDecimals(value, 0) },
   ];
 
   constructor(
