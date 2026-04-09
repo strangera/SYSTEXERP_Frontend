@@ -1,6 +1,10 @@
 <p-divider align="left" type="solid" styleClass="pb-2">
   <span class="text-center text-xl font-bold text-primary">支付工具</span>
 </p-divider>
+@if (hasCheckedData) {
+<i class="pi pi-info-circle" style="margin-right: 0.5rem; font-size: 1.2rem; color: red;"></i>
+<span style="color: red; font-weight: bold; font-size: 1.2rem;">已審核付款別不可異動</span>
+}
 <p-table [value]="!isFormCreateable ? POS5008SelectedItems: POS5008Data" [(selection)]="POS5008SelectedItems"
   dataKey="PAY_No" [rowTrackBy]="trackByRow" [resizableColumns]="true"
   styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines" (onRowSelect)="onRowSelect($event)"
@@ -21,7 +25,11 @@
       <td class="text-center">{{ i + 1 }}</td>
 
       <td class="text-center">
+        @if (rowData.isLocked) {
+        <i class="pi pi-info-circle" style="font-size: 1.2rem; color: #f44336;" pTooltip="此支付工具已審核，不可修改"></i>
+        } @else {
         <p-tableCheckbox [pSelectableRow]="rowData" [value]="rowData" [disabled]="!isFormCreateable" />
+        }
       </td>
 
       <td class="text-center">
@@ -36,7 +44,8 @@
       <td class="text-right">
         <app-input-number *ngIf="isFormCreateable" controlName="TXN_PayAmt"
           [control]="getFormControl(posFormArrayControls[i], 'TXN_PayAmt')" [submitted]="submitted && rowData.selected"
-          [showLabel]="false" [showErrorMessage]="false" [max]="9999999999" customPlaceholder="請輸入金額" />
+          [showLabel]="false" [showErrorMessage]="false" [max]="9999999999"
+          [customPlaceholder]="rowData.isLocked ? '' : '請輸入金額'" />
         <span *ngIf="!isFormCreateable">
           $ {{ rowData.TXN_PayAmt }}
         </span>

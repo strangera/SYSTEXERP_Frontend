@@ -52,11 +52,11 @@
       <!-- 第三列：發票旗標、課稅別、常用否 -->
       <div class="col-12 md:col-6 lg:col-4">
         <app-dropdown
-          label="發票旗標"
+          label="是否開立發票"
           [control]="dataForm.controls.GUI_FLAG"
           [options]="[
             { label: '是', value: 'Y' },
-            { label: '否', value: 'N' }
+            { label: '否', value: 'N' },
           ]"
           optionLabel="label"
           optionValue="value"
@@ -68,9 +68,8 @@
           label="課稅別"
           [control]="dataForm.controls.CAP_TaxType"
           [options]="[
+            { label: '0-免稅', value: '0' },
             { label: '1-應稅', value: '1' },
-            { label: '2-零稅率', value: '2' },
-            { label: '3-免稅', value: '3' }
           ]"
           optionLabel="label"
           optionValue="value"
@@ -83,7 +82,7 @@
           [control]="dataForm.controls.IsCommonlyUsed"
           [options]="[
             { label: '是', value: 'Y' },
-            { label: '否', value: 'N' }
+            { label: '否', value: 'N' },
           ]"
           optionLabel="label"
           optionValue="value"

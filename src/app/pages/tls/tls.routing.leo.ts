@@ -374,4 +374,10 @@ export const tlsRoutes: Routes = [
   { path: 'tls56020cru', loadComponent: () => import('./TLS50000/tls56020/tls56020-cru/tls56020-cru.component').then(m => m.TLS56020CRUComponent), data: { progNo: 'TLS56020' } },
   // 商品退回(內部)作業 CRU
   { path: 'tls56030cru', loadComponent: () => import('./TLS50000/tls56030/tls56030-cru/tls56030-cru.component').then(m => m.TLS56030CRUComponent), data: { progNo: 'TLS56030' } },
+
+  // 專櫃預估業績維護作業
+  { path: 'tls2g020', loadComponent: () => import('./tls2g020/tls2g020.component').then(m => m.TLS2G020Component), data: { progNo: 'TLS2G020' } },
+  // 專櫃預估業績維護作業 CRU
+  { path: 'tls2g020cru', loadComponent: () => import('./tls2g020-cru/tls2g020-cru.component').then(m => m.TLS2G020CRUComponent), data: { progNo: 'TLS2G020' } },
+
 ];

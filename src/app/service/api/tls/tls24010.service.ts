@@ -60,6 +60,7 @@ export interface TLS24010Data {
   tlt_term_type?: string;
   ORG_TXN_Date?: string;
   ORG_ECR_No?: string;
+  Check_Status: string; // 審核狀態 (Y: 已審核, N: 未審核)
 }
 
 export interface POS5007Data {
@@ -89,6 +90,9 @@ export interface POS5007Data {
 export interface POS5008Data {
   ID?: number;
   id?: number; // 唯一識別碼
+  TXN_Date?: string; // 銷售日期
+  ECR_No?: string; // 收銀機號
+  Talent_ID?: number; // 專櫃合約編號
   PAY_No?: string; // 付款編號          // 傳給後端
   PAY_Name?: string; // 付款名稱
   PAY_Type?: string; // 付款別
@@ -101,6 +105,8 @@ export interface POS5008Data {
   selected?: boolean,
   PAY_OverPay?: string;
   CRD_NoTXN_CouponNoTXN_PayDesc?: string | null;
+  Check_Status?: string; // 審核狀態 (Y: 已審核, N: 未審核)
+  isLocked?: boolean; // 是否鎖定 (已審核的資料將被鎖定，無法編輯)
 }
 
 export interface InsertTLS24010Payload {
@@ -263,6 +269,12 @@ export interface DeleteTLS24010Payload {
   TXN_No: number
 }
 
+export interface queryTLS24010CheckStatusPayload {
+  TXN_Date: string,
+  ECR_No: string,
+  Talent_ID: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -353,5 +365,13 @@ export class Tls24010Service {
 
   deleteTLS24010(payload: DeleteTLS24010Payload): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/deleteTLS24010`, payload);
+  }
+  /** 查詢銷售日期是否已關帳 */
+  queryTLS24010IsClose(TXN_Date: string): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(`${this.apiUrl}/queryTLS24010IsClose`, { TXN_Date });
+  }
+  /** 查詢銷售日期是否已關帳 */
+  queryTLS24010CheckStatus(payload: queryTLS24010CheckStatusPayload): Observable<ApiResponse<{ payNoList: string[] }>> {
+    return this.http.post<ApiResponse<{ payNoList: string[] }>>(`${this.apiUrl}/queryTLS24010CheckStatus`, payload);
   }
 }

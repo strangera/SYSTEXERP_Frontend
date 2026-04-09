@@ -17,8 +17,17 @@ export interface IDropdownItem {
 }
 
 /**
- * 查詢 FACLASSM_DropDownList 時的請求 body
+ * 查詢採購單號下拉選單(ASS13010)
+ * 後端回傳欄位：ID、APPLY_DATE
+ * 前端下拉顯示僅需 ID
  */
+export interface Ass13010PurchaseNumberDropDownItem {
+  ID: string;
+  APPLY_DATE: string;
+}
+/** 
+ * 查詢 FACLASSM_DropDownList 時的請求 body
+*/
 export interface FaClassMQuery {
   CLASS_ID?: string | null;
   Keyword?: string | null;

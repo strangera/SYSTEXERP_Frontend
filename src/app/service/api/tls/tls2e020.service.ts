@@ -40,6 +40,9 @@ export interface Tls2e020Data {
   CRT_Date: string;
   CRT_USR_No: string;
   CRT_USR_Name: string;
+  Final_Date: string;
+  Final_USR_No: string;
+  Final_USR_Name: string;
   salm_id: number;
 }
 

@@ -536,4 +536,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     const { PageSize, PageIndex, ...rest } = body;
     return { ...rest, pageSize, pageIndex };
   }
+
+  getBtnLabel(btn: any, rowData: any): string {
+    if (typeof btn.label === 'function') {
+      return btn.label(rowData);
+    }
+    return btn.label;
+  }
 }
