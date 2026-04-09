@@ -1,158 +1,108 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import {
-  FunsrightInfo
-} from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { IQueryRequest, IQueryResponse, Sys0792Service } from '@service/api/sys/sys0792.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-sys0792',
   templateUrl: './sys0792.component.html',
-  styleUrl: './sys0792.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
     ButtonComponent,
-    TableComponent,
+    TableReportComponent,
     TranslateModule,
+    InputTextComponent
   ],
 })
 // 在線人員查詢作業
-export class SYS0792Component {
-  ProgNo: string = '420017';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+export class SYS0792Component extends BasicQueryPageComponent<IQueryResponse> implements OnInit {
   queryForm = this.formBuilder.group({
-    UserCodeOptions: [], // DropDown
+    user_No: ['', [Validators.maxLength(16)]], // 後端 varchar(16)
+    user_Name: ['', [Validators.maxLength(20)]], // 後端 nvarchar(20)
+    pageSize: [30],
+    pageIndex: [1],
+    SortBy: [[{ field: 'Login_time', order: 2 }]],
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
 
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'sessionId', header: 'Session ID', visible: true },
-    { field: 'ipAddress', header: 'IP位址', visible: true },
-    { field: 'userCode', header: '使用者編號', visible: true },
-    { field: 'userName', header: '使用者名稱', visible: true },
-    { field: 'lastOnlineTime', header: '最近在線時間', visible: true },
+  totalRecords = 0;
+  lastQueryBody: IQueryRequest | null = null;
+  // 2. 修正資料型別
+  data: IQueryResponse[] = [];
+
+  // 3. 修正顯示欄位：改為在線人員相關資訊
+  columns: ReportColumn[] = [
+    { field: 'User_No', header: '使用者編號', visible: true },
+    { field: 'User_Name', header: '使用者名稱', visible: true },
+    { field: 'From_IP', header: '登入來源 IP', visible: true },
+    { field: 'Login_time', header: '登入時間', visible: true, format: formatDateTime },
   ];
 
-  // ----------------------------------------------------------------
-  UserCodeOptions: any[] = [];
+  addButtons: AddButton[] = [
+    {
+      label: '強制登出',
+      icon: 'pi pi-sign-out',
+      action: (rowData) => this.onKick(rowData),
+    }
+  ]
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-  ) { }
+    public readonly sys0792Service: Sys0792Service,
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
+    this.initializePage('SYS0792');
   }
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
+  // 4. 表單提交邏輯
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.loading = true; // 啟動讀取狀態
+      this.sys0792Service.querySYS0792(frm.value)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
+        .subscribe((response) => {
+          if (response.Data) {
+            this.data = response.Data;
+            // 優先使用後端回傳的總筆數
+            this.totalRecords = response.TotalCount !== undefined ? response.TotalCount : response.Data.length;
+            this.lastQueryBody = frm.value;
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+          }
+        });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/SYSB000/SYS0310CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-
-      this.router.navigate(['/SYSB000/SYS0310CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-
-    this.router.navigate(['/SYSB000/SYS0310CRU'], extras);
+  // 執行強制登出
+  onKick(rowData: IQueryResponse) {
+    this.messageService.confirm({
+      message: `確定要強制登出使用者 ${rowData.User_No} ${rowData.User_Name} 嗎？`,
+      accept: () => {
+        this.sys0792Service.kickUser(rowData.GUID).subscribe(res => {
+          if (res.Data) {
+            this.messageService.successBubble('強制登出成功');
+            this.onSubmit(this.queryForm); // 重新整理清單
+          }
+        });
+      }
+    });
   }
 }

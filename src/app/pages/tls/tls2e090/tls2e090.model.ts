@@ -41,7 +41,7 @@ export const columns1: ReportColumn[] = [
   { field: 'sam_rent_tax', header: '租金稅額', isTotal: true, format: formatAmount, groupField: '應收帳款' },
   { field: 'acc_receivable', header: '應收合計', isTotal: true, format: formatAmount, groupField: '應收帳款' },
   // 最終合計
-  { field: 'sam_under_limit_amt', header: '包底抽成不足(含稅)', isTotal: true, format: formatAmount },
+  { field: 'sam_under_limit_ttl', header: '包底抽成不足(含稅)', isTotal: true, format: formatAmount },
   { field: 'acc_payable', header: '應付帳款(含稅)', isTotal: true, format: formatAmount },
 ];
 

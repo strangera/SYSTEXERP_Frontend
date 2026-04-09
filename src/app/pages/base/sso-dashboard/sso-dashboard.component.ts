@@ -1,8 +1,8 @@
 // src/app/pages/base/sso-dashboard/sso-dashboard.component.ts
-import { AsyncPipe, NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
+import { AsyncPipe, LocationStrategy, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core'; // 新增 OnDestroy
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { SystemDataService } from '@service/system/system-data.service';
@@ -16,7 +16,7 @@ import { MenuModule } from 'primeng/menu';
 import { PasswordModule } from 'primeng/password';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TooltipModule } from 'primeng/tooltip';
-import { concatMap, finalize, Subscription, throwError } from 'rxjs'; // 引入 tap
+import { concatMap, finalize, forkJoin, Subscription, throwError } from 'rxjs'; // 引入 tap
 import { LayoutService } from '../../../core/layout/layout.service';
 import type { OuterTokenResponse } from '../../../service/system/auth.service';
 import { AuthService } from '../../../service/system/auth.service';
@@ -26,17 +26,21 @@ import { UserInfo } from '../../../shared/models/system/userInfo';
 import { EncryptionService } from '../../../shared/service/encryption.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
-
+const SYSTEM_CONFIG: Record<string, { color: string, order: number }> = {
+  'ERP': { color: '#e98ab1', order: 1 }, // 商場營運 (左上)
+  'CRM': { color: '#f3bc18', order: 2 }, // 行銷管理 (右上)
+  'HR': { color: '#c6d914', order: 3 }, // 人資系統 (左下)
+  'EIP': { color: '#4fbcec', order: 4 }, // EIP (右下)
+  'ERP2': { color: '#e98ab1', order: 5 }, // 商場營運 (左上)
+};
 @UntilDestroy()
 @Component({
   selector: 'app-sso-dashboard',
   templateUrl: './sso-dashboard.component.html',
+  styleUrls: ['./sso-dashboard.component.scss'],
   standalone: true,
   imports: [
     NgIf,
-    RouterLink,
-    NgClass,
-    NgStyle,
     TooltipModule,
     MenuModule,
     PrimeTemplate,
@@ -54,7 +58,9 @@ import { ApiItem, SsoDashboardService } from './sso-dashboard.service';
   ],
 })
 export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDestroy
-  logo = 'assets/layout/images/logo.webp';
+  currentPage = 0;
+  pagedItems: ApiItem[][] = [];
+  logo = 'assets/layout/images/logo-main.svg';
   user: UserInfo | null = null;
   private subscriptions: Subscription[] = [];
   items: MenuItem[] = [
@@ -90,14 +96,15 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
   constructor(
     public layoutService: LayoutService,
     public authService: AuthService,
-    private systemDataService: SystemDataService,
     public router: Router,
     private ssoDashboardService: SsoDashboardService,
     private formBuilder: FormBuilder,
     private encryptionService: EncryptionService,
     private messageService: NotificationService,
     private userCodeService: UserCodeService,
-    private validationService: ValidationService
+    private validationService: ValidationService,
+    private locationStrategy: LocationStrategy,
+    private readonly systemDataService: SystemDataService
   ) {
     this.subscriptions.push(
       this.authService.user.pipe(untilDestroyed(this)).subscribe((x) => {
@@ -111,6 +118,10 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
   }
 
   ngOnInit() {
+    // 增加判斷：如果沒有 UserInfo，直接不打 API
+    if (!this.authService.isLoggedIn()) {
+      return;
+    }
     this.fetchUrlList();
     // 密碼過期檢查移到 AuthService 的 isLoggedIn 或 AuthGuard
     // 或者在 SsoDashboardComponent 初始化時只讀取並顯示通知，不強制打開對話框
@@ -130,37 +141,75 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
     }
   }
 
+  /**
+ * 強制從後端刷新權限與系統代碼
+ */
+  private refreshPermissionsAndData(): void {
+    this.subscriptions.push(
+      // 同時發出請求
+      forkJoin([
+        this.systemDataService.getFunRightsInfo(),
+        this.systemDataService.queryAllSystemCode()
+      ]).pipe(
+        untilDestroyed(this)
+      ).subscribe({
+        next: () => console.log('[SsoDashboard] 權限與代碼檔已強制刷新'),
+        error: (err) => console.error('[SsoDashboard] 刷新失敗', err)
+      })
+    );
+  }
+
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   fetchUrlList(): void {
+    if (!this.authService.currentUserValue) return;
     this.loading = true; // 在開始請求前設置為 true
-    this.urlItems = [
-      {
-        System_Id: 'ERP',
-        System_Name: '商場營運管理系統',
-        System_Url: '/account/dashboard',
-        System_ImgFile: 'TSRDERP',
-      },
-    ];
     this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
       this.ssoDashboardService.fetchUrlList().pipe(
         untilDestroyed(this),
         finalize(() => this.loading = false) // 無論成功失敗，在所有請求完成後將 loading 設為 false
       ).subscribe({
         next: (data) => {
-          const sortedAndFilteredData = data.Data
-            .sort((a: any, b: any) => {
-              const seqNoA = Number(a.Seq_No);
-              const seqNoB = Number(b.Seq_No);
-              if (seqNoA === undefined || seqNoA === null) return 1;
-              if (seqNoB === undefined || seqNoB === null) return -1;
-              return seqNoA - seqNoB;
-            })
-            .filter((item: any) => item.IsEnable === 'Y');
-          this.urlItems = [...this.urlItems, ...sortedAndFilteredData];
+          const processedData = data.Data.map((item: any) => {
+            // 根據 System_Id 取得配置，若找不到則給預設灰色
+            const config = SYSTEM_CONFIG[item.System_Id] || { color: '#95a5a6', order: 99 };
+            return {
+              ...item,
+              dynamicColor: config.color,
+              customOrder: config.order
+            };
+          });
+          const allItems = [
+            // 加入原本寫死的 ERP (如果是從 API 回來就不用這段)
+            {
+              System_Id: 'ERP',
+              System_Name: '商場營運管理系統',
+              System_Url: 'account/dashboard',
+              System_ImgFile: 'TSRDERP',
+              IsEnable: 'Y',
+              Seq_No: 1,
+              dynamicColor: SYSTEM_CONFIG['ERP'].color,
+              customOrder: SYSTEM_CONFIG['ERP'].order,
+            },
+            {
+              System_Id: 'ERP2',
+              System_Name: '測試如果未來有第五個系統顯示在此處',
+              System_Url: 'account/dashboard',
+              System_ImgFile: 'TSRDERP',
+              IsEnable: 'Y',
+              Seq_No: 1,
+              dynamicColor: SYSTEM_CONFIG['ERP2'].color,
+              customOrder: SYSTEM_CONFIG['ERP2'].order,
+            },
+            ...processedData
+          ].sort((a, b) => a.customOrder - b.customOrder).filter((item: any) => item.IsEnable === 'Y'); // 強制按我們定義的順序排
           // this.loading = false; // 這裡不需要設置 false，由 finalize 處理
+          this.pagedItems = [];
+          for (let i = 0; i < allItems.length; i += 4) {
+            this.pagedItems.push(allItems.slice(i, i + 4));
+          }
         },
         error: (error) => {
           this.errorMessage = '無法載入 URL 清單。請稍後再試。';
@@ -170,9 +219,19 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
       })
     );
   }
+  // 導覽功能
+  nextPage() { if (this.hasMorePages()) this.currentPage++; }
+  prevPage() { if (this.currentPage > 0) this.currentPage--; }
+  hasMorePages() { return this.currentPage < this.pagedItems.length - 1; }
+
+  // 填充空白 block 讓佈局不崩壞
+  getFillerArray(page: any[]) {
+    return new Array(4 - page.length);
+  }
   private appendOrReplaceParam(url: string, key: string, value: string): string {
     try {
-      const u = new URL(url, window.location.origin);
+      // 這裡不給 base，因為 url 此時已經是完整路徑了
+      const u = new URL(url);
       u.searchParams.set(key, value);
       return u.toString();
     } catch {
@@ -180,60 +239,67 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
       return `${url}${sep}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
     }
   }
-
-
   navigateToUrl(item: ApiItem): void {
     this.loading = true;
 
-    if (this.urlItems.length > 0 && item === this.urlItems[0]) {
-      // 內部系統流程
+    // 判斷是否為內部系統 (ERP )
+    if (item.System_Id === 'ERP') {
+
+      // 🎯 關鍵修正：在打 API 前先清空舊權限快取
+      this.systemDataService.resetData();
+
       this.subscriptions.push(
         this.ssoDashboardService.Inner().pipe(
           untilDestroyed(this),
           concatMap((innerResponse: ApiResponse<any>) => {
             if (innerResponse.Status === '0000') {
+              // 這裡抓取最新權限，會重新存入 localStorage 並更新 Subject
               return this.systemDataService.getFunRightsInfo().pipe(
                 concatMap(() => this.systemDataService.queryAllSystemCode())
               );
             } else {
               return throwError(() => new Error(innerResponse.Message || 'Inner API failed'));
             }
-          })
+          }),
+          finalize(() => this.loading = false)
         ).subscribe({
-          next: () => { this.router.navigate([item.System_Url]); },
+          next: () => {
+            // 權限抓完後，再執行導向
+            this.router.navigate(['account', 'dashboard']);
+          },
+          error: (err) => {
+            console.error('進入內部系統失敗:', err);
+            this.messageService.errorBubble('權限取得失敗，請重新登入');
+          }
         })
       );
     } else {
-      const userNo = this.user?.user_No || '';
-      if (!userNo) {
-        this.messageService.errorBubble('找不到登入使用者資訊');
-        return;
-      }
-
-      // 讀取 preLoginUrlOnce 的 redirect（若沒有就空字串）
-      const redirect = this.getRedirectFromPreLogin();
-
+      // 外部系統導向
       this.subscriptions.push(
         this.authService.getOuterToken().pipe(
           untilDestroyed(this),
           finalize(() => this.loading = false)
         ).subscribe({
           next: (res: OuterTokenResponse) => {
-            let targetUrl = this.appendOrReplaceParam(item.System_Url, 'token', res.token);
-            if (redirect) {
-              targetUrl = this.appendOrReplaceParam(targetUrl, 'redirectURL', redirect);
-            }
-            window.open(targetUrl, '_blank');
+            // 安全做法：處理 window.open 的路徑
+            let targetUrl = item.System_Url;
 
-            // 若只想用一次，開啟這行：
-            // localStorage.removeItem('preLoginUrlOnce');
+            // 如果路徑不是 http 開頭，代表它是相對路徑，需要手動補上 Base Href
+            if (!targetUrl.startsWith('http')) {
+              const base = this.locationStrategy.getBaseHref(); // 取得 /tsrdwebdev/
+              // 使用 URL 物件自動處理斜線，基準點用當前 window.location.origin
+              const absoluteBase = window.location.origin + base;
+              targetUrl = new URL(item.System_Url, absoluteBase).href;
+            }
+
+            const finalUrl = this.appendOrReplaceParam(targetUrl, 'token', res.token);
+            window.open(finalUrl, '_blank');
           },
-          error: () => this.messageService.errorBubble('無法前往外部系統，請稍後再試')
+          error: () => this.messageService.errorBubble('無法前往外部系統')
         })
       );
     }
   }
-  /** 從 localStorage 的 preLoginUrlOnce 取出 redirecturl/redirectURL，並解碼回原網址 */
   /** 從 localStorage 的 preLoginUrlOnce 取出 redirecturl/redirectURL/redirect，並解碼回原網址 */
   private getRedirectFromPreLogin(): string {
     const raw = localStorage.getItem('preLoginUrlOnce');

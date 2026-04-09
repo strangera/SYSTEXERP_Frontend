@@ -8,7 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { Actions } from '@shared/service/permission-guard.service';
 import { ValidationService } from '@shared/service/validation.service';
@@ -18,7 +18,7 @@ import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { Menu, MenuModule } from 'primeng/menu';
-import { finalize, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter, finalize, forkJoin, map, Observable, startWith, switchMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { TLS24010Data, TLS24010Request, Tls24010Service } from '../../../service/api/tls/tls24010.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
@@ -29,12 +29,12 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
-import { AddButton } from './../../../shared/componentkit/table/table.model';
 import { FileExportService } from './../../../shared/service/file-export.service';
 import { C_columns, columns, FIX_TYPE, TXN_GUIPAPER, TXN_GUIPaperOptions, TXN_STATUS, txnStatusOptions } from './tls24010.model';
 @Component({
   selector: 'app-tls24010',
   templateUrl: './tls24010.component.html',
+  styleUrls: ['./tls24010.component.scss'],
   standalone: true,
   imports: [
     ButtonModule,
@@ -86,6 +86,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   selectedRowData?: TLS24010Data;
   addButton: AddButton[] = [];
   items: MenuItem[] = [];
+  isClosed = false;
   get isSpecialPaper(): boolean { // 交易作廢取消 || 折讓單交易取消
     const paper = this.queryForm.get('TXN_GUIPaper')?.value;
     return paper === TXN_GUIPAPER.交易作廢取消 || paper === TXN_GUIPAPER.折讓單交易取消;
@@ -105,12 +106,43 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(this.datePipe.transform(yesterday, 'yyyy-MM-dd')).pipe(untilDestroyed(this)).subscribe(options => {
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
-    this.queryForm.get('TXN_Date')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
-      const dateString = value ? this.datePipe.transform(value, 'yyyy-MM-dd') : '';
-      if (!dateString) { return; }
-      this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(dateString).pipe(untilDestroyed(this)).subscribe(options => {
-        this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-      });
+    // 監聽日期變化來連動專櫃編下拉選單
+    this.queryForm.get('TXN_Date')?.valueChanges.pipe(
+      startWith(this.queryForm.get('TXN_Date')?.value || yesterday), // 初始值處理
+      debounceTime(500),         // 等使用者停手 0.5 秒
+      distinctUntilChanged(),    // 只有值變動才執行
+      filter(value => {
+        if (!value) return false;
+        // 先轉成字串檢查長度，避免 datePipe 噴錯
+        const str = value instanceof Date ? value.toISOString() : String(value);
+        return str.length >= 10;
+      }),
+      map(value => {
+        // 第二道防線：轉換日期未成功時(日期輸入格式錯誤)，傳入null
+        try {
+          return this.datePipe.transform(value, 'yyyy-MM-dd');
+        } catch {
+          return null;
+        }
+      }),
+      filter(dateString => !!dateString),
+      switchMap(dateString =>
+        forkJoin({
+          options: this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(dateString!),
+          closeData: this.tls24010Service.queryTLS24010IsClose(dateString!)
+        })
+      ),
+      untilDestroyed(this)
+    ).subscribe(({ options, closeData }) => {
+      // 下拉選單處理
+      this.TLT_NoOptions = options.Data.map(item => ({
+        ...item,
+        label: `${item.No} - ${item.Name}`,
+        value: item.No
+      }));
+
+      // 已關帳=Y，不可異動
+      this.isClosed = (closeData.Data === 'Y');
     });
   }
   onECRNoChanged(ecrNo: string): void {
@@ -153,9 +185,18 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         } else {
           this.addButton = [
             {
-              label: this.isSpecialPaper ? '取消作廢' : '修正交易資料',
+              label: (rowData: TLS24010Data) => {
+                if (this.isClosed) return '已關帳不可異動資料';
+
+                if (this.isSpecialPaper) {
+                  return rowData.Check_Status === 'Y' ? '已審核不可取消作廢' : '取消作廢';
+                }
+
+                return '修正交易資料';
+              },
               icon: this.isSpecialPaper ? 'pi pi-undo' : 'pi pi-ellipsis-h',
               action: (rowdata: TLS24010Data, event) => {
+                if (this.isClosed) return;
                 const data = this.TLT_NoOptions.find(option => option.No === rowdata.TLT_No);
                 if (data?.store_way && data?.Name && data?.talent_id) {
                   rowdata.store_way = data.store_way;
@@ -167,7 +208,15 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
                   this.openModal(rowdata, event);
                 }
               },
-              disabled: (rowData: TLS24010Data) => rowData.TXN_Status === TXN_STATUS.作廢交易
+              disabled: (rowData: TLS24010Data) => {
+                if (this.isClosed) return true; // 已關帳不可異動
+                if (rowData.TXN_Status === TXN_STATUS.作廢交易) return true;
+                //「取消作廢」模式要多判斷是否已審核
+                if (this.isSpecialPaper) {
+                  return rowData.Check_Status === 'Y';
+                }
+                return false;
+              }
             }
           ]
         }
@@ -287,6 +336,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   updateItems(): void {
     const row = this.selectedRowData;
     const isFixedTerm = row?.tlt_term_type?.toString().trim() === '1';
+    const isCheckStatus = row?.Check_Status === 'Y';
     this.items = [
       {
         label: '專櫃編號修正',
@@ -317,7 +367,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       },
       {
         label: '交易資料作廢', icon: 'pi pi-times-circle',
-        disabled: !this.hasPermission(Actions.InvalidateTransaction),
+        disabled: !this.hasPermission(Actions.InvalidateTransaction) || isCheckStatus, // 沒有作廢權限或有已審核的付款別交易不可作廢
+        styleClass: isCheckStatus ? 'check-status-disabled' : '',
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢),
       }
     ];
@@ -327,12 +378,14 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         label: '刪除',
         icon: 'pi pi-trash',
         disabled: (() => {
+          if (isCheckStatus) return true; // 已審核的付款別交易不可刪除
           if (!this.hasPermission(Actions.Delete)) return true;// 1. 沒有權限，直接禁用
           if (!row) return true; // 2. 如果沒有選中任何列 (row 為空)，應預設為禁用
-          if (isFixedTerm) return true;
+          // if (isFixedTerm) return true;
           if (row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') return false; // 3. 無發票狀態：可以刪除 (disable = false)
           return !row?.IsCanDel;// 4. 有發票或其他狀態：依據 IsCanDel 欄位決定
         })(),
+        styleClass: isCheckStatus ? 'check-status-disabled' : '',
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.刪除交易),
       });
     }
@@ -439,5 +492,18 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
 
     // 年度或期數不同即為跨期
     return orgYear !== voidYear || orgPeriod !== voidPeriod;
+  }
+
+  /** 提示訊息 */
+  getTooltipMessage(): string {
+    // 補登類別檢查
+    if (this.checkTXN_GUIPaper) {
+      return '新增時，請將補登類別改為「補原機台」「手開發票」';
+    }
+    // 已關帳提示
+    if (this.isClosed) {
+      return '已關帳不可異動資料';
+    }
+    return '';
   }
 }

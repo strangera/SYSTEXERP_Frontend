@@ -1,74 +1,32 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo"
-                 class="flex-1"></app-menubar>
-    <app-button btnType="back"
-                (click)="onCancel()"></app-button>
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
 
-  <p-panel [header]="formTitle | translate"
-           class="line-height-3 m-0 mb-3">
-    <form [formGroup]="dataForm"
-          id="dataForm"
-          (ngSubmit)="onSubmit()">
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0 mb-3">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 lg:col-4"
-                        label="活動編號"
-                        controlName="pod_no"
-                        [control]="df().pod_no"
-                        [disabled]="true"
-                        [submitted]="submitted"></app-input-text>
-        <app-dropdown-table class="col-12 md:col-6 lg:col-8"
-                            label="活動名稱"
-                            controlName="pod_desc"
-                            [formGroup]="campaignForm"
-                            [dialogData]="campaignData()"
-                            [dialogColumns]="campaignColumns"
-                            optionLabel="CampaignName"
-                            optionValue="CampaignId"
-                            [fieldsConfig]="fieldsConfig"
-                            (inputValueChanged)="onAutoCompleteInputChange($event)"
-                            (formValueChanged)="onformValueChanged($event)"
-                            [control]="df().pod_desc"
-                            [loading]="loading"
-                            [submitted]="submitted"></app-dropdown-table>
-        <app-dropdown class="col-12 md:col-6 lg:col-4"
-                      label="活動類型"
-                      controlName="pod_type"
-                      [options]="service.podTypeItems"
-                      optionLabel="label"
-                      optionValue="value"
-                      [disabled]="true"
-                      [control]="df().pod_type"
-                      [loading]="loading"
-                      [submitted]="submitted"></app-dropdown>
-        <app-calendar-range-quick class="col-12 md:col-6 lg:col-4"
-                                  label="活動起始日期"
-                                  [startControl]="df().pod_sdate"
-                                  [endControl]="df().pod_edate"
-                                  [submitted]="submitted">
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="活動編號" controlName="pod_no" [control]="df().pod_no"
+          [disabled]="true" [submitted]="submitted"></app-input-text>
+        <app-dropdown-table class="col-12 md:col-6 lg:col-8" label="活動名稱" controlName="pod_desc"
+          [formGroup]="campaignForm" [dialogData]="campaignData()" [dialogColumns]="campaignColumns"
+          optionLabel="CampaignName" optionValue="CampaignId" [fieldsConfig]="fieldsConfig"
+          (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+          [control]="df().pod_desc" [loading]="loading" [submitted]="submitted"></app-dropdown-table>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="活動類型" controlName="pod_type"
+          [options]="service.podTypeItems" optionLabel="label" optionValue="value" [disabled]="true"
+          [control]="df().pod_type" [loading]="loading" [submitted]="submitted"></app-dropdown>
+        <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="活動起始日期" [startControl]="df().pod_sdate"
+          [endControl]="df().pod_edate" [submitted]="submitted">
         </app-calendar-range-quick>
-        <app-calendar class="col-12 md:col-6 lg:col-4"
-                      label="活動正檔日期"
-                      controlName="pod_busdate"
-                      [control]="df().pod_busdate"
-                      [disabled]="false"
-                      [submitted]="submitted"></app-calendar>
-        <app-dropdown class="col-12 md:col-6 lg:col-4"
-                      label="活動類型"
-                      controlName="pod_type"
-                      [options]="service.podTypeItems"
-                      optionLabel="label"
-                      optionValue="value"
-                      [disabled]="true"
-                      [control]="df().pod_type2"
-                      [loading]="loading"
-                      [submitted]="submitted"></app-dropdown>
-        <app-calendar-range-quick class="col-12 md:col-6 lg:col-4"
-                                  label="活動兌回日期"
-                                  [startControl]="df().pod_back_sdate"
-                                  [endControl]="df().pod_back_edate"
-                                  [submitted]="submitted">
+        <app-calendar class="col-12 md:col-6 lg:col-4" label="活動正檔日期" controlName="pod_busdate"
+          [control]="df().pod_busdate" [disabled]="false" [submitted]="submitted"></app-calendar>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="活動類型" controlName="pod_type"
+          [options]="service.podTypeItems" optionLabel="label" optionValue="value" [disabled]="true"
+          [control]="df().pod_type2" [loading]="loading" [submitted]="submitted"></app-dropdown>
+        <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="活動兌回日期" [startControl]="df().pod_back_sdate"
+          [endControl]="df().pod_back_edate" [submitted]="submitted">
         </app-calendar-range-quick>
 
         <!-- 日期驗證錯誤提示 -->
@@ -92,25 +50,13 @@
 
       @if(!isFormReadable) {
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel"
-                    [form]="dataForm"></app-button>
-        <p-fileUpload #fileUpload
-                      [styleClass]="'p-3'"
-                      [mode]="'basic'"
-                      [accept]="'.xlsx,.xls,.csv,.ods'"
-                      chooseLabel="選擇 Excel 檔案"
-                      [auto]="true"
-                      [customUpload]="true"
-                      (uploadHandler)="handleUpload($event)"></p-fileUpload>
-        <app-button btnType="CSV"
-                    label="匯出 Excel 樣本"
-                    (click)="onExportExcelTemplate()"></app-button>
-        <app-button btnType="CSV"
-                    label="匯出空白Excel範本"
-                    (click)="onExportBlankExcelTemplate()"></app-button>
-        <app-button btnType="submit"
-                    label="存檔"
-                    [loading]="loading"></app-button>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <p-fileUpload #fileUpload [styleClass]="'p-3'" [mode]="'basic'" [accept]="'.xlsx,.xls,.csv,.ods'"
+          chooseLabel="選擇 Excel 檔案" [auto]="true" [customUpload]="true"
+          (uploadHandler)="handleUpload($event)"></p-fileUpload>
+        <app-button btnType="CSV" label="匯出 Excel 樣本" (click)="onExportExcelTemplate()"></app-button>
+        <app-button btnType="CSV" label="匯出空白Excel範本" (click)="onExportBlankExcelTemplate()"></app-button>
+        <app-button btnType="submit" label="存檔" [loading]="loading"></app-button>
       </div>
       }
     </form>
@@ -121,8 +67,7 @@
 <div class="card">
   <div class="grid p-fluid">
     <div class="col-12">
-      <p-panel header="專櫃資料"
-               class="line-height-3 m-0 mb-3">
+      <p-panel header="專櫃資料" class="line-height-3 m-0 mb-3">
         <!-- <app-table-edit #dt
                         [tableKey]="'TLS26080_Counter'"
                         [data]="tableData()"
@@ -140,44 +85,25 @@
                         [showReorder]="false"
                         [disabled]="isFormReadable"
                         [loading]="tableLoading()"></app-table-edit> -->
-        <app-table #dt
-                   [tableKey]="'TLS26080_Counter'"
-                   [dataKey]="'id'"
-                   [data]="tableData()"
-                   (dataChange)="tableData.set($event)"
-                   (fieldChange)="fieldChanges.set($event)"
-                   [selectedItems]="selectedItems()"
-                   (selectionChange)="selectedItems.set($event)"
-                   [isRowSelectable]="isRowSelectable"
-                   [columns]="counterColumns()"
-                   [columnGroup]="counterColumnsGroup()"
-                   [showInsert]="!isFormReadable"
-                   [showDelete]="!isFormReadable"
-                   [showEdit]="!isFormReadable"
-                   [showCheckBox]="!isFormReadable"
-                   [showRowEdit]="!isFormReadable"
-                   [alwaysEdit]="!isFormReadable"
-                   (insert)="displayDialog.set(true)"
-                   [disabled]="isFormReadable"
-                   (delete)="onDelete()"
-                   (lazyLoadData)="onLazyLoadData($event, dataForm); service.loadTLS26080Detail(df().pod_no.value ?? '')"
-                   [lazy]="true"
-                   [loading]="tableLoading()">
+        <app-table #dt [tableKey]="'TLS26080_Counter'" [dataKey]="'id'" [data]="tableData()"
+          (dataChange)="tableData.set($event)" (fieldChange)="fieldChanges.set($event)"
+          [selectedItems]="selectedItems()" (selectionChange)="selectedItems.set($event)"
+          [isRowSelectable]="isRowSelectable" [columns]="counterColumns()" [columnGroup]="counterColumnsGroup()"
+          [showInsert]="!isFormReadable" [showDelete]="!isFormReadable" [showEdit]="!isFormReadable"
+          [showCheckBox]="!isFormReadable" [showRowEdit]="!isFormReadable" [alwaysEdit]="!isFormReadable"
+          (insert)="displayDialog.set(true)" [disabled]="isFormReadable" (delete)="onDelete()"
+          [loading]="tableLoading()">
           <header>
             <div class="flex align-items-center mb-4">
-              <p-button label="審核"
-                        severity="primary"
-                        (click)="toggleApprovalStatus(selectedItems(), ApprovalAction.Approve); loading = true"
-                        [disabled]="!selectedItems().length"
-                        [ngStyle]="{ height: '18px',
+              <p-button label="審核" severity="primary"
+                (click)="toggleApprovalStatus(selectedItems(), ApprovalAction.Approve); loading = true"
+                [disabled]="!selectedItems().length" [ngStyle]="{ height: '18px',
                                      fontSize: '12px',
                                      padding: '0 4px',
                                      marginRight: '7px' }"></p-button>
-              <p-button label="反審核"
-                        severity="danger"
-                        (click)="toggleApprovalStatus(selectedItems(), ApprovalAction.Revoke); loading = true"
-                        [disabled]="!selectedItems().length"
-                        [ngStyle]="{ height: '18px',
+              <p-button label="反審核" severity="danger"
+                (click)="toggleApprovalStatus(selectedItems(), ApprovalAction.Revoke); loading = true"
+                [disabled]="!selectedItems().length" [ngStyle]="{ height: '18px',
                                      fontSize: '12px',
                                      padding: '0 4px',
                                      marginRight: '7px' }"></p-button>
@@ -190,37 +116,18 @@
 </div>
 
 
-<app-dialog [visible]="displayDialog()"
-            header="選擇專櫃"
-            (visibleChange)="displayDialog.set($event)"
-            (save)="saveDialog()"
-            [disable]="!selectedItemsDialog().length">
+<app-dialog [visible]="displayDialog()" header="選擇專櫃" (visibleChange)="displayDialog.set($event)" (save)="saveDialog()"
+  [disable]="!selectedItemsDialog().length">
   <form [formGroup]="dialogQueryForm">
     <div class="grid p-fluid">
-      <app-input-text class="col-6"
-                      label="專櫃編號"
-                      controlName="No"
-                      [control]="dqf().No"></app-input-text>
-      <app-input-text class="col-6"
-                      label="專櫃名稱"
-                      controlName="Name"
-                      [control]="dqf().Name"></app-input-text>
+      <app-input-text class="col-6" label="專櫃編號" controlName="No" [control]="dqf().No"></app-input-text>
+      <app-input-text class="col-6" label="專櫃名稱" controlName="Name" [control]="dqf().Name"></app-input-text>
     </div>
   </form>
-  <app-table-report tableKey="tls26080_dialogTable"
-                    [showReportMode]="false"
-                    [showDelete]="false"
-                    [showCaption]="false"
-                    [showManage]="false"
-                    [showCheckBox]="true"
-                    [data]="filteredDialogData()"
-                    [columns]="dialogColumns()"
-                    [selectedItems]="selectedItemsDialog()"
-                    (selectionChange)="selectedItemsDialog.set($event)"
-                    [isRowSelectable]="isRowSelectable.bind(this)"
-                    [totalRecords]="dialogTotalRecords()"
-                    [loading]="dialogLoading()"
-                    [lastQueryBody]="getDialogQueryBody()"
-                    [queryFunction]="fetchTltTalentOptions.bind(this)">
+  <app-table-report tableKey="tls26080_dialogTable" dataKey="No" [showReportMode]="false" [showDelete]="false"
+    [showCaption]="false" [showManage]="false" [showCheckBox]="true" [data]="filteredDialogData()"
+    [columns]="dialogColumns()" [selectedItems]="selectedItemsDialog()" [lazy]="false"
+    (selectionChange)="selectedItemsDialog.set($event)" [isRowSelectable]="isRowSelectable.bind(this)"
+    [totalRecords]="dialogTotalRecords()" [loading]="dialogLoading()" [lastQueryBody]="getDialogQueryBody()">
   </app-table-report>
 </app-dialog>
