@@ -7,16 +7,16 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -71,8 +71,8 @@ import { Column } from '../../../shared/componentkit/table2/table2.model';
 })
 export class ASS16090CRUComponent
   extends BasicCruPageComponent<Ass16090Row>
-  implements OnInit
-{
+  implements OnInit {
+  isSelectingCandidateRow = false;
   /** 倉別選項 */
   public readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
 
@@ -131,7 +131,7 @@ export class ASS16090CRUComponent
 
   /** Dialog table 欄位 */
   goodsColumns: Column[] = [
-   
+
     { field: 'GOODS_ID', header: '品項編號' },
     { field: 'GOODS_NAME', header: '品項名稱' },
     { field: 'UNIT', header: '單位' },
@@ -255,7 +255,9 @@ export class ASS16090CRUComponent
     if (this.rowdata?.ID || this.rowdata?.DAMAGEM_ID) {
       this.loadDetail();
     } else {
-      this.detailData = [{ ...this.defaultDetailRow, LINE_NUM: 1 }];
+      this.detailData = [
+  { ...this.defaultDetailRow, LINE_NUM: 1, _isAutoInsertCandidate: true },
+];
 
       if (this.crudstatus === CRUDStatus.Create) {
         this.dataForm.patchValue({ APPLY_DATE: new Date() });
@@ -387,7 +389,7 @@ export class ASS16090CRUComponent
     }));
   }
 
-  onDetailFieldChange(_event: FieldChangeEvent): void {}
+  onDetailFieldChange(_event: FieldChangeEvent): void { }
 
   onDetailDelete(_: any): void {
     this.reCalcLineNum();
@@ -414,7 +416,7 @@ export class ASS16090CRUComponent
 
     this.currentDetailIndex = e.index;
     this.currentDetailRowData = e.rowData;
-
+    this.isSelectingCandidateRow = !!e.rowData?._isAutoInsertCandidate;
     this.resetGoodsDialogState();
 
     this.goodsSearchForm.patchValue({
@@ -478,42 +480,66 @@ export class ASS16090CRUComponent
     this.goodsDialogVisible = false;
   }
 
-  confirmGoodsSelection(): void {
-    if (
-      this.currentDetailIndex === null ||
-      !this.goodsSelectedRows ||
-      !this.goodsSelectedRows.length
-    ) {
-      return;
-    }
+ confirmGoodsSelection(): void {
+  if (!this.goodsSelectedRows || !this.goodsSelectedRows.length) {
+    return;
+  }
 
-    const selected = this.goodsSelectedRows[0];
+  const selected = this.goodsSelectedRows[0];
 
-    this.detailData = (this.detailData || []).map((row, idx) => {
+  const selectedRow = {
+    ...this.defaultDetailRow,
+    GOODS_ID: selected.GOODS_ID ?? null,
+    GOODS_NAME: selected.GOODS_NAME ?? null,
+    GOODS_UNIT_NAME: selected.UNIT ?? null,
+    APPLYABLE_QTY: selected.APPLYABLE_QTY ?? null,
+    ACTUAL_STOCK_QTY: selected.ACTUAL_STOCK_QTY ?? null,
+    SAFE_QTY: selected.SAFE_QTY ?? null,
+    STOCK_SAFE: selected.STOCK_SAFE ?? null,
+    _isAutoInsertCandidate: false,
+  };
+
+  let finalList: any[] = [];
+
+  // 1. 如果點的是新增候選列，不要 map 蓋資料，直接新增正式列
+  if (this.isSelectingCandidateRow) {
+    finalList = [
+      ...(this.detailData || []),
+      selectedRow,
+      { ...this.defaultDetailRow, _isAutoInsertCandidate: true },
+    ];
+  } else {
+    // 2. 一般列才用 index 回填
+    finalList = (this.detailData || []).map((row, idx) => {
       if (idx !== this.currentDetailIndex) {
-        return {
-          ...row,
-          LINE_NUM: idx + 1,
-        };
+        return row;
       }
 
       return {
         ...row,
-        LINE_NUM: idx + 1,
         GOODS_ID: selected.GOODS_ID ?? null,
         GOODS_NAME: selected.GOODS_NAME ?? null,
         GOODS_UNIT_NAME: selected.UNIT ?? null,
-
-        /** 不顯示，但保留在 row 讓 QTY 驗證可用 */
         APPLYABLE_QTY: selected.APPLYABLE_QTY ?? null,
         ACTUAL_STOCK_QTY: selected.ACTUAL_STOCK_QTY ?? null,
         SAFE_QTY: selected.SAFE_QTY ?? null,
         STOCK_SAFE: selected.STOCK_SAFE ?? null,
+        _isAutoInsertCandidate: false,
       };
     });
-
-    this.goodsDialogVisible = false;
   }
+
+  this.detailData = finalList.map((row, idx) => ({
+    ...row,
+    LINE_NUM: idx + 1,
+  }));
+
+  this.goodsSelectedRows = [];
+  this.goodsDialogVisible = false;
+  this.currentDetailIndex = null;
+  this.currentDetailRowData = null;
+  this.isSelectingCandidateRow = false;
+}
 
   private formatDateToYMD(
     date: Date | string | null | undefined
