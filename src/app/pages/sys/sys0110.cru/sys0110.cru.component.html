@@ -34,13 +34,13 @@
           optionLabel="label" optionValue="value" [control]="dataForm.controls.title" [submitted]="submitted" />
         <app-calendar *ngIf="!isFormCreateable" class="col-12 md:col-6 lg:col-4" label="密碼到期日"
           controlName="USER_PwdExpireDate" [control]="dataForm.controls.USER_PwdExpireDate" [submitted]="submitted" />
-        <app-table-edit #table class="col-12" [columns]="columns" [data]="data"
+        <app-table-edit title="專櫃權限清單" #table class="col-12" [columns]="columns" [data]="data"
           (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" (dataChange)="data = $event"
           [disabled]="isFormReadable"></app-table-edit>
         <hr />
 
         <div class="col-12">
-          <app-table-edit #table2 title="所屬專櫃清單" [columns]="columnsReportRole" [data]="reportRoleData"
+          <app-table-edit #table2 title="系統權限清單" [columns]="columnsReportRole" [data]="reportRoleData"
             (selectionChange)="selectedReportRoleRows = $event" [selectedItems]="selectedReportRoleRows"
             (dataChange)="reportRoleData = $event" [disabled]="isFormReadable">
             <div class="grid mt-2 border-top-1 surface-border">
@@ -66,7 +66,7 @@
                 [optionLabel]="col.optionLabel" [optionValue]="col.optionValue" [(ngModel)]="rowData[col.field]"
                 (onChange)="onRoleValueChange(rowData, col, $event.value, index)" [placeholder]="'請選擇'"
                 [showClear]="true" [filter]="true" appendTo="body" [style]="{'width': '100%'}"
-                [ngModelOptions]="{standalone: true}" [maxSelectedLabels]="3">
+                [ngModelOptions]="{standalone: true}" [maxSelectedLabels]="3" [disabled]="isFormReadable">
               </p-multiSelect>
             </ng-template>
           </app-table-edit>
