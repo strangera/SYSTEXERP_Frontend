@@ -190,15 +190,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly aps4023RelatedRows = signal<FIN53010Aps4023Row[]>([]);
 
   public readonly ars3001RelatedColumns: ReportColumn[] = [
-    { field: 'ORG_ID', header: '組織代號', visible: true },
-    { field: 'VEN_No', header: '廠商代號', visible: true },
-    { field: 'ARS_Amt', header: '金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'PTA_Date', header: '預計收款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'ARS_Date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'AccNo', header: '會計科目代號', visible: true },
-    { field: 'NoteDesc', header: '摘要', visible: true },
-    { field: 'SubDetailNo', header: '對象別編號', visible: true },
-    { field: 'PTA', header: '對帳KEY值', visible: true },
+    { field: 'org_id', header: '組織代號', visible: true },
+    { field: 'ven_no', header: '廠商代號', visible: true },
+    { field: 'ars_amt', header: '金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'pta_date', header: '預計收款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'ars_date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
+    { field: 'acc_no', header: '會計科目代號', visible: true },
+    { field: 'note_desc', header: '摘要', visible: true },
+    { field: 'sub_detail_no', header: '對象別編號', visible: true },
+    { field: 'match_key', header: '對帳KEY值', visible: true },
   ];
 
   public readonly aps3001RelatedColumns: ReportColumn[] = [
@@ -281,20 +281,24 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly aps4023RelatedColumns: ReportColumn[] = [
     { field: 'InvoiceType', header: '發票格式', visible: true },
     {
-      field: 'InvoiceNumber',
+      field: 'InvoiceNo',
       header: '字軌／發票號碼',
+      format: (_v, _i, row) => {
+        const r = row as Record<string, unknown>;
+        return `${String(r['InvoicePrefix'] ?? '')}${String(r['InvoiceNo'] ?? '')}`;
+      },
     },
     { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'INV_DeclareYM', header: '申報年月', visible: true },
-    { field: 'Buyer_Uniform', header: '買受人統一編號', visible: true },
-    { field: 'PUR_Amt', header: '發票總金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'PUR_TaxType', header: '課稅別', visible: true },
-    { field: 'PUR_Net', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'Source_Doc_No', header: '憑證單號', visible: true },
-    { field: 'Group_Mark', header: '彙開註記', visible: true },
-    { field: 'AssetType', header: '資產註記', visible: true },
-    { field: 'SAL_Type', header: '發票使用別', visible: true },
+    { field: 'DeclareYM', header: '申報年月', visible: true },
+    { field: 'BuyerUniform', header: '買受人統一編號', visible: true },
+    { field: 'TotalAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'TaxType', header: '課稅別', visible: true },
+    { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'SourceDocNo', header: '憑證單號', visible: true },
+    { field: 'SummaryCount', header: '彙開註記', visible: true },
+    { field: 'AssetFlag', header: '資產註記', visible: true },
+    { field: 'InvoiceType', header: '發票使用別', visible: false },
   ];
 
   public selectedItems: FIN53010Data[] = [];

@@ -24,10 +24,11 @@ export interface TLS2A010Query {
   ECR_No_End?: string;
   PAY_NO?: string;
   Building_No?: string;
+  OVER_Status?: string[];
 }
 
 
-export const defaultColumns = [
+export const defaultColumns: Column[] = [
   { header: '總計', field: 'group_name', hidden: true },
   { header: '收銀機代號', field: 'ECR_No' },
   { header: '專櫃編號', field: 'TLT_NO' },
@@ -49,6 +50,7 @@ export const defaultColumns = [
   {
     header: '狀況',
     field: 'OVER_Status',
+    cellClass: (row) => getStatusColor(row)
   },
   { header: '審核人員', field: 'check_usr_name' },
 
@@ -92,6 +94,7 @@ export const creditCardColumns: Column[] = [
   {
     header: '狀況',
     field: 'OVER_Status',
+    cellClass: (row) => getStatusColor(row)
   },
   { header: '審核人員', field: 'check_usr_name' },
   { header: '是否有缺單', field: 'lose_doc' }
@@ -103,3 +106,29 @@ export const creditCardGroup: ColumnGroup[] = [
   { field: 'MOD', header: '調整後實收帳' },
   { field: 'OVER', header: '實收帳 - 系統帳' },
 ];
+
+export const overStatusOptions = [
+  {
+    label: '平',
+    value: '0'
+  },
+  {
+    label: '溢',
+    value: '1'
+  },
+  {
+    label: '欠',
+    value: '-1'
+  }
+];
+
+export function getStatusColor(row: any): string {
+  switch (row.OVER_Status) {
+    case '欠': // 粉紅：欠
+      return 'bg-pink-100 text-red-600';
+    case '溢': // 綠：溢
+      return 'bg-green-100 text-green-700';
+    default:
+      return '';
+  }
+}
