@@ -1,4 +1,4 @@
-import { registerLocaleData } from '@angular/common';
+import { LocationStrategy, registerLocaleData } from '@angular/common';
 import { HttpBackend, HttpClient } from '@angular/common/http';
 import zhHant from '@angular/common/locales/zh-Hant';
 import { inject, Injectable, Injector } from '@angular/core';
@@ -9,11 +9,10 @@ import { ApiResponse, validateApiResponse } from '@shared/utils/rxjs-operators/v
 import {
   BehaviorSubject,
   catchError,
-  EMPTY,
+  finalize,
   map,
   Observable,
   of,
-  switchMap,
   tap,
   throwError
 } from 'rxjs';
@@ -23,6 +22,7 @@ import { NotificationService } from '../../shared/component/notification-message
 import { UserInfo, userLogin } from '../../shared/models/system/userInfo';
 import { EncryptionService } from '../../shared/service/encryption.service';
 import { QueryStateService } from '../../shared/service/query-state.service';
+import { SystemDataService } from './system-data.service';
 
 registerLocaleData(zhHant, 'zh-Hant-TW');
 
@@ -45,6 +45,8 @@ export class AuthService {
   private readonly queryStateService = inject(QueryStateService);
   private readonly httpBackend = inject(HttpBackend);
   private readonly injector = inject(Injector);
+  private readonly systemDataService = inject(SystemDataService);
+  private readonly locationStrategy = inject(LocationStrategy);
 
   private inactivityService?: InactivityService;
 
@@ -53,6 +55,7 @@ export class AuthService {
   private readonly userSubject: BehaviorSubject<UserInfo | null>;
   public readonly user: Observable<UserInfo | null>;
   private client_ip = '0.0.0.0';
+  private isLoggingOut = false; // 新增防抖標記
 
   constructor() {
     const userStorage = this.getUserInfo();
@@ -163,51 +166,48 @@ export class AuthService {
   }
 
   // 共用登出流程
-  private logoutToBackendAndClear(options: {
-    body: unknown;
-    redirectToLogin: boolean;
-    showMessage: boolean;
-    message?: string;
-  }): void {
+  private logoutToBackendAndClear(options: { body: unknown; redirectToLogin: boolean; showMessage: boolean; message?: string; }): void {
+    if (this.isLoggingOut) return; // 如果正在登出中，直接攔截
+    this.isLoggingOut = true;
+
     const user = this.getUserInfo();
     const token = user?.AccessToken;
 
-    of(token).pipe(
-      switchMap(t =>
-        t
-          ? this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/User/userLogout`, options.body).pipe(
-              catchError(err => {
-                console.warn('[AuthService] logout API failed:', err);
-                return EMPTY;
-              })
-            )
-          : of(null)
-      )
-    ).subscribe({
-      complete: () => {
-        this.clearSessionAndLocalStorage({
-          redirectToLogin: options.redirectToLogin,
-          showMessage: options.showMessage,
-          message: options.message
-        });
-      }
-    });
+    // 先把前端狀態清掉，防止組件偵測到 User 變更而發送其他請求
+    // 這一步能解決「登出時又去打 GetUserDashboard」的問題
+    if (token) {
+      this.http.post<ApiResponse<unknown>>(`${this.apiUrl}/User/userLogout`, options.body).pipe(
+        catchError(err => {
+          console.warn('[AuthService] logout API failed:', err);
+          return of(null);
+        }),
+        finalize(() => {
+          this.isLoggingOut = false;
+          this.clearSessionAndLocalStorage(options);
+        })
+      ).subscribe();
+    } else {
+      this.isLoggingOut = false;
+      this.clearSessionAndLocalStorage(options);
+    }
   }
 
   // 清除 SessionStorage 和 LocalStorage
-  private clearSessionAndLocalStorage(options?: {
-    redirectToLogin?: boolean;
-    showMessage?: boolean;
-    message?: string;
-  }): void {
+  private clearSessionAndLocalStorage(options?: { redirectToLogin?: boolean; showMessage?: boolean; message?: string; }): void {
+    // 順序很重要：先重置資料，再跳轉
     sessionStorage.clear();
     localStorage.removeItem('UserInfo');
-    this.userSubject.next(null);
 
+    // 關鍵：先讓 UserSubject 變 null
+    this.userSubject.next(null);
     this.queryStateService.clearAllQueryStates();
 
+    // 清空權限緩存
+    this.systemDataService.resetData();
+
     if (options?.redirectToLogin) {
-      this.router.navigate(['/login'], { replaceUrl: true });
+      // 不要只用 navigate，改用這個可以 100% 銷毀所有 Service 記憶體殘留
+      window.location.href = window.location.origin + (this.locationStrategy.prepareExternalUrl('/login'));
     }
 
     if (options?.showMessage) {

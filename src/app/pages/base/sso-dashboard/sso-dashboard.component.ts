@@ -1,11 +1,12 @@
 // src/app/pages/base/sso-dashboard/sso-dashboard.component.ts
-import { AsyncPipe, LocationStrategy, NgClass, NgFor, NgIf } from '@angular/common';
+import { AsyncPipe, LocationStrategy, NgFor, NgIf } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core'; // 新增 OnDestroy
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { SystemDataService } from '@service/system/system-data.service';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { MenuItem, PrimeTemplate } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -15,7 +16,7 @@ import { MenuModule } from 'primeng/menu';
 import { PasswordModule } from 'primeng/password';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TooltipModule } from 'primeng/tooltip';
-import { finalize, Subscription } from 'rxjs'; // 引入 tap
+import { concatMap, finalize, forkJoin, Subscription, throwError } from 'rxjs'; // 引入 tap
 import { LayoutService } from '../../../core/layout/layout.service';
 import type { OuterTokenResponse } from '../../../service/system/auth.service';
 import { AuthService } from '../../../service/system/auth.service';
@@ -40,7 +41,6 @@ const SYSTEM_CONFIG: Record<string, { color: string, order: number }> = {
   standalone: true,
   imports: [
     NgIf,
-    NgClass,
     TooltipModule,
     MenuModule,
     PrimeTemplate,
@@ -96,7 +96,6 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
   constructor(
     public layoutService: LayoutService,
     public authService: AuthService,
-    private systemDataService: SystemDataService,
     public router: Router,
     private ssoDashboardService: SsoDashboardService,
     private formBuilder: FormBuilder,
@@ -104,7 +103,8 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
     private messageService: NotificationService,
     private userCodeService: UserCodeService,
     private validationService: ValidationService,
-    private locationStrategy: LocationStrategy
+    private locationStrategy: LocationStrategy,
+    private readonly systemDataService: SystemDataService
   ) {
     this.subscriptions.push(
       this.authService.user.pipe(untilDestroyed(this)).subscribe((x) => {
@@ -118,6 +118,10 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
   }
 
   ngOnInit() {
+    // 增加判斷：如果沒有 UserInfo，直接不打 API
+    if (!this.authService.isLoggedIn()) {
+      return;
+    }
     this.fetchUrlList();
     // 密碼過期檢查移到 AuthService 的 isLoggedIn 或 AuthGuard
     // 或者在 SsoDashboardComponent 初始化時只讀取並顯示通知，不強制打開對話框
@@ -137,11 +141,30 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
     }
   }
 
+  /**
+ * 強制從後端刷新權限與系統代碼
+ */
+  private refreshPermissionsAndData(): void {
+    this.subscriptions.push(
+      // 同時發出請求
+      forkJoin([
+        this.systemDataService.getFunRightsInfo(),
+        this.systemDataService.queryAllSystemCode()
+      ]).pipe(
+        untilDestroyed(this)
+      ).subscribe({
+        next: () => console.log('[SsoDashboard] 權限與代碼檔已強制刷新'),
+        error: (err) => console.error('[SsoDashboard] 刷新失敗', err)
+      })
+    );
+  }
+
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
   fetchUrlList(): void {
+    if (!this.authService.currentUserValue) return;
     this.loading = true; // 在開始請求前設置為 true
     this.subscriptions.push( // 將訂閱添加到 subscriptions 陣列
       this.ssoDashboardService.fetchUrlList().pipe(
@@ -219,19 +242,34 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
   navigateToUrl(item: ApiItem): void {
     this.loading = true;
 
-    // 判斷是否為內部系統 (ERP / ERP2)
-    if (item.System_Id === 'ERP' || item.System_Id === 'ERP2') {
+    // 判斷是否為內部系統 (ERP )
+    if (item.System_Id === 'ERP') {
+
+      // 🎯 關鍵修正：在打 API 前先清空舊權限快取
+      this.systemDataService.resetData();
+
       this.subscriptions.push(
         this.ssoDashboardService.Inner().pipe(
           untilDestroyed(this),
+          concatMap((innerResponse: ApiResponse<any>) => {
+            if (innerResponse.Status === '0000') {
+              // 這裡抓取最新權限，會重新存入 localStorage 並更新 Subject
+              return this.systemDataService.getFunRightsInfo().pipe(
+                concatMap(() => this.systemDataService.queryAllSystemCode())
+              );
+            } else {
+              return throwError(() => new Error(innerResponse.Message || 'Inner API failed'));
+            }
+          }),
           finalize(() => this.loading = false)
         ).subscribe({
           next: () => {
-            // 安全做法：直接傳入路由陣列，Angular 會自動補齊 /tsrdwebdev/
+            // 權限抓完後，再執行導向
             this.router.navigate(['account', 'dashboard']);
           },
-          error: () => {
-            this.messageService.errorBubble('進入系統失敗');
+          error: (err) => {
+            console.error('進入內部系統失敗:', err);
+            this.messageService.errorBubble('權限取得失敗，請重新登入');
           }
         })
       );

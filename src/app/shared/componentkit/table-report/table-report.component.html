@@ -177,9 +177,10 @@
           [loading]="buttonsLoading" [disabled]="detailDisabled(rowData) || !hasPermission('10')" />
         <ng-container *ngIf="addButton.length">
           <div [ngStyle]="{ border: '1px solid var(--surface-border)', 'border-left': '0'}"></div>
-          <p-button *ngFor="let btn of addButton" [pTooltip]="btn.label" tooltipPosition="top" [icon]="btn.icon"
-            (click)="btn.action(rowData, $event)" [disabled]="btn.disabled ? btn.disabled(rowData) : false"
-            [loading]="buttonsLoading" [label]="btn.icon ? undefined : btn.label" styleClass="p-button-text" />
+          <p-button *ngFor="let btn of addButton" [pTooltip]="getBtnLabel(btn, rowData)" tooltipPosition="top"
+            [icon]="btn.icon" (click)="btn.action(rowData, $event)"
+            [disabled]="btn.disabled ? btn.disabled(rowData) : false" [loading]="buttonsLoading"
+            [label]="btn.icon ? undefined : getBtnLabel(btn, rowData)" styleClass="p-button-text" />
         </ng-container>
       </td>
     </tr>

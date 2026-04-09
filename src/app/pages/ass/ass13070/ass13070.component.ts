@@ -1,156 +1,280 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+import { AsyncPipe } from '@angular/common';
+import { Component, computed, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11010Service } from '@service/api/ass/ass11010.service';
+import { ASS11020Service } from '@service/api/ass/ass11020.service';
+import { ASS11030Service } from '@service/api/ass/ass11030.service';
+import { ASS12040Service } from '@service/api/ass/ass12040.service';
+import { ASS13070Service } from '@service/api/ass/ass13070.service';
+import { TblUserOrgidItem } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
+import { combineLatest, finalize, map, Observable, startWith } from 'rxjs';
+import { ASS12040QueryRequest } from '../ass12040/ass12040.model';
+import { ASS13070QueryRequest, ASS13070QueryRow } from './ass13070.model';
 
-//3.1.3.7  財產保管單位設定作業
+/** 3.1.3.7 財產保管單位設定／移轉作業（查詢） */
 @Component({
   selector: 'app-ass13070',
   templateUrl: './ass13070.component.html',
   styleUrl: './ass13070.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, CalendarRangeComponent, DropdownComponent, TableComponent, TranslateModule]
+  imports: [
+    AsyncPipe,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    ButtonComponent,
+    DropdownComponent,
+    CalendarRangeQuickComponent,
+    MenubarComponent,
+    TableReportComponent,
+  ],
 })
-export class ASS13070Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    purchaseType: [[] as number[]], // 進貨類型
-    bigCategoryCode: [], // 大分類編號
-    purchaseDateFrom: [], // 購入日期
-    purchaseDateTo: [], // 購入日期
-    midCategoryCode: [], // 中分類編號
-    purchaseNumber: [], // 進貨單號
-    smlCategoryCode: [], // 小分類編號
-    keeper: [], // 保管人
-    keeperUnit: [], // 保管單位
-    propertyCode: [], // 財產編號
+export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow> implements OnInit {
+  public readonly queryForm = this.formBuilder.group({
+    DEPRE_YN: new FormControl<string | null>(null),
+    SUBPOENA_ID: new FormControl<string | null>(null),
+    GET_DATE_S: new FormControl<Date | null>(null),
+    GET_DATE_E: new FormControl<Date | null>(null),
+    B_CLASS_ID: new FormControl<string | null>(null),
+    M_CLASS_ID: new FormControl<string | null>(null),
+    S_CLASS_ID: new FormControl<string | null>(null),
+    ASSET_ID: new FormControl<string | null>(null),
+    HOLD_ORG_ID: new FormControl<string | null>(null),
+    HOLD_EMP_ID: new FormControl<string | null>(null),
+    USE_ORG_ID: new FormControl<string | null>(null),
+    PageSize: new FormControl<number>(30),
+    PageIndex: new FormControl<number>(1),
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  public readonly qf = computed(() => this.queryForm.controls);
+
+  public readonly tableData = signal<ASS13070QueryRow[]>([]);
+  public readonly totalRecords = signal<number>(0);
+  public readonly tableLoading = signal<boolean>(false);
+  public lastQueryBody?: ASS13070QueryRequest;
+  public selectedItems: ASS13070QueryRow[] = [];
+
+  public readonly depreYnOptions: { label: string; value: string }[] = [
+    { value: '1', label: '資產' },
+    { value: '2', label: '列管品' },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
+
+  public readonly subpoenaOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly midClassOptions = signal<{ label: string; value: string }[]>([]);
+  public readonly smallClassOptions = signal<{ label: string; value: string }[]>([]);
+  readonly assetOptions$ = this.dropdownApi.queryFAASSETChooseList_DropDownList();
+  readonly orgOptions$ = this.dropdownApi.querySys3100();
+  readonly userOrgidOptions$ = this.dropdownApi.queryTblUserOrgid();
+
+  readonly holdEmpOptions$ = combineLatest([
+    this.queryForm.controls.HOLD_ORG_ID.valueChanges.pipe(
+      startWith(this.queryForm.controls.HOLD_ORG_ID.value),
+    ),
+    this.userOrgidOptions$,
+  ]).pipe(
+    map(([orgId, options]) =>
+      !orgId
+        ? []
+        : (options ?? []).filter(
+          o => (o as unknown as TblUserOrgidItem).Org_ID === orgId,
+        ),
+    ),
+  );
+
+  public readonly columns: ReportColumn[] = [
+    { field: 'DEPRE_YN_NAME', header: '財產類型' },
+    { field: 'SUBPOENA_ID', header: '進貨單號' },
+    { field: 'ASSET_ID', header: '財產編號' },
     {
-      'propertyType': '資產', 'purchaseNumber': 20150128003, 'propertyCode': '1C263800000010000142', 'itemCode': '桌上型電腦 ',
-      'purchaseDateFrom': '2024/06/13', 'purchaseAmount': 18950, 'keeperUnit': '會員Team', 'keeper': '朱先生',
-      'user': '會員Team', 'userUnit': '朱先生',
+      field: 'GOODS_NAME',
+      header: '品項',
+      format: (_v, _i, row: ASS13070QueryRow) =>
+        row?.GOODS_NAME ?? (row?.GOODS_ID ? `${row.GOODS_ID}` : ''),
     },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
+    { field: 'GET_DATE', header: '購入日期', format: formatDate },
+    { field: 'FIR_GET_COST', header: '原購入金額', format: formatAmount },
+    { field: 'ORI_ORG_NAME', header: '原保管單位' },
+    { field: 'ORI_EMP_NAME', header: '原保管人' },
+    { field: 'USE_ORG_NAME', header: '原使用單位' },
+    { field: 'USE_EMP_NAME', header: '原使用人' },
   ];
-  columns: any[] = [
-    { field: 'propertyType', header: '財產類型', visible: true },
-    { field: 'purchaseNumber', header: '進貨單號', visible: true },
-    { field: 'propertyCode', header: '財產編號', visible: true },
-    { field: 'itemCode', header: '品項', visible: true },
-    { field: 'purchaseDateFrom', header: '購入日期', visible: true },
-    { field: 'purchaseAmount', header: '原購入金額', visible: true },
 
-    { field: 'keeperUnit', header: '原保管單位', visible: true },
-    { field: 'keeper', header: '原保管人', visible: true },
-    { field: 'user', header: '原使用單位', visible: true },
-    { field: 'userUnit', header: '原使用人', visible: true },
-
-    { field: 'bigCategory', header: '大分類編號', visible: false },
-    { field: 'midCategory', header: '中分類編號', visible: false },
-    { field: 'smlCategory', header: '小分類編號', visible: false },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  //
-  purchaseTypeOptions: any[] = [];
-  purchaseNumberOptions: any[] = [
-    { value: 1, label: '201410300001' },
-    { value: 2, label: '201410310001' },
-    { value: 3, label: '201410310002' },
-    { value: 4, label: '201410310004' },
-    { value: 5, label: '201410310005' },
-    { value: 6, label: '201410310006' },
-    { value: 7, label: '201411010001' },
-    { value: 8, label: '201411010002' },
-    { value: 9, label: '201411010003' },
-    { value: 10, label: '201411150001' },
-  ];
-  userCodeOptions: any[] = [];
-  organizationOptions: any[] = [];
-  //
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
+    public readonly service: ASS13070Service,
+    private readonly ass11010Service: ASS11010Service,
+    private readonly ass11020Service: ASS11020Service,
+    private readonly ass11030Service: ASS11030Service,
+    private readonly ass12040Service: ASS12040Service,
+    private readonly dropdownApi: DropdownApiService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310022';
-    this.cruPage = '/ASS1000/ASS13070CRU';
-    //
-
-    // ----------------------------------------------------------------
+    this.initializePage('ASS13070', 'ass/ass13070cru', this.queryForm, this.onSubmit.bind(this));
+    this.loadClassOptions();
+    this.loadSubpoenaOptions();
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+  private formatDateStr(d: Date | null): string | undefined {
+    if (!d) return undefined;
+    const x = new Date(d);
+    const y = x.getFullYear();
+    const m = String(x.getMonth() + 1).padStart(2, '0');
+    const day = String(x.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  private loadClassOptions(): void {
+    this.ass11010Service.queryASS11010({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.bigClassOptions.set(
+          (res.Data ?? []).map(item => ({
+            label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
+            value: item.CLASS_ID,
+          })),
+        );
+      },
+    });
+    this.ass11020Service.queryASS11020({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.midClassOptions.set(
+          (res.Data ?? []).map(item => ({
+            label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
+            value: item.M_CLASS_ID,
+          })),
+        );
+      },
+    });
+    this.ass11030Service.queryASS11030({}).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.smallClassOptions.set(
+          (res.Data ?? []).map(item => ({
+            label: `${item.S_CLASS_ID} - ${item.S_CLASS_NAME}`,
+            value: item.S_CLASS_ID,
+          })),
+        );
+      },
+    });
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
+  /** 進貨單號下拉：由採購單審核查詢結果去重取得 */
+  private loadSubpoenaOptions(): void {
+    const body: ASS12040QueryRequest = { PageSize: 1000, PageIndex: 1 };
+    this.ass12040Service.queryASS12040(removeEmptyValues(body) as ASS12040QueryRequest).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const seen = new Set<string>();
+        const opts: { label: string; value: string }[] = [];
+        for (const row of res.Data ?? []) {
+          const id = row.SUBPOENA_ID?.trim();
+          if (!id || seen.has(id)) continue;
+          seen.add(id);
+          opts.push({ label: id, value: id });
+        }
+        this.subpoenaOptions.set(opts);
+      },
+    });
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
+  public queryFunction = (
+    body: ASS13070QueryRequest & { pageSize?: number; pageIndex?: number },
+  ): Observable<ApiResponse<ASS13070QueryRow[]>> => {
+    const raw = this.queryForm.getRawValue();
+    const payload: ASS13070QueryRequest = {
+      DEPRE_YN: raw.DEPRE_YN || undefined,
+      SUBPOENA_ID: raw.SUBPOENA_ID || undefined,
+      GET_DATE_S: raw.GET_DATE_S ? this.formatDateStr(raw.GET_DATE_S) : undefined,
+      GET_DATE_E: raw.GET_DATE_E ? this.formatDateStr(raw.GET_DATE_E) : undefined,
+      B_CLASS_ID: raw.B_CLASS_ID || undefined,
+      M_CLASS_ID: raw.M_CLASS_ID || undefined,
+      S_CLASS_ID: raw.S_CLASS_ID || undefined,
+      ASSET_ID: raw.ASSET_ID || undefined,
+      HOLD_ORG_ID: raw.HOLD_ORG_ID || undefined,
+      HOLD_EMP_ID: raw.HOLD_EMP_ID || undefined,
+      USE_ORG_ID: raw.USE_ORG_ID || undefined,
+      PageSize: body.PageSize ?? (body as { pageSize?: number }).pageSize ?? 30,
+      PageIndex: body.PageIndex ?? (body as { pageIndex?: number }).pageIndex ?? 1,
+      SortBy: body.SortBy,
+    };
+    const clean = removeEmptyValues(payload) as ASS13070QueryRequest;
+    return this.service.queryASS13070(clean);
+  };
+
+  public onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      const raw = this.queryForm.getRawValue();
+      this.lastQueryBody = {
+        DEPRE_YN: raw.DEPRE_YN || undefined,
+        SUBPOENA_ID: raw.SUBPOENA_ID || undefined,
+        GET_DATE_S: raw.GET_DATE_S ? this.formatDateStr(raw.GET_DATE_S) : undefined,
+        GET_DATE_E: raw.GET_DATE_E ? this.formatDateStr(raw.GET_DATE_E) : undefined,
+        B_CLASS_ID: raw.B_CLASS_ID || undefined,
+        M_CLASS_ID: raw.M_CLASS_ID || undefined,
+        S_CLASS_ID: raw.S_CLASS_ID || undefined,
+        ASSET_ID: raw.ASSET_ID || undefined,
+        HOLD_ORG_ID: raw.HOLD_ORG_ID || undefined,
+        HOLD_EMP_ID: raw.HOLD_EMP_ID || undefined,
+        USE_ORG_ID: raw.USE_ORG_ID || undefined,
+        PageSize: raw.PageSize ?? 30,
+        PageIndex: raw.PageIndex ?? 1,
+      } as ASS13070QueryRequest;
+
+      this.tableLoading.set(true);
+      this.loading = true;
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          finalize(() => {
+            this.tableLoading.set(false);
+            this.loading = false;
+          }),
+        )
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.tableData.set(res.Data ?? []);
+            this.totalRecords.set(res.TotalCount ?? 0);
+          },
+        });
+    });
   }
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  /** 進入移轉頁（需勾選至少一筆） */
+  public onGoTransfer(): void {
+    // if (this.selectedItems.length === 0) {
+    //   this.messageService.warnBubble('請至少勾選一筆資料');
+    //   return;
+    // }
+    // const missingId = this.selectedItems.some(r => r.ID == null);
+    // if (missingId) {
+    //   this.messageService.warnBubble('勾選資料缺少主鍵 ID，無法移轉');
+    //   return;
+    // }
+    this.router.navigate([`account/ass/ass13070cru`], {
+      state: {
+        crudstatus: CRUDStatus.Create,
+        fromRoute: this.router.url,
+        ass13070Rows: this.tableData(),
+      },
+    });
   }
 }

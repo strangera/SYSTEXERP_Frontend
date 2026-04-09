@@ -1,60 +1,61 @@
-<div class="fixed bottom-0 right-0 z-5 p-3" *ngIf="isDebugEnabled()"  
-  style="position: fixed; display: flex; align-items: flex-end; justify-content: flex-end;">
-
-  <div style="position: relative;">
-
-    <p-button (onClick)="onToggle($event, op)" icon="pi pi-database"  
-      styleClass="p-button-rounded p-button-lg p-button-secondary">
+<div class="fixed bottom-0 right-0 z-5 p-3 tls-sql-debug-panel" *ngIf="isDebugEnabled()">
+  <div class="position-relative">
+    <p-button (onClick)="onToggle($event, op)" icon="pi pi-database"
+      styleClass="p-button-rounded p-button-lg p-button-help p-shadow-4">
     </p-button>
-
-    <p-badge [value]="sqlCount()" severity="danger" [hidden]="sqlCount() === 0" class="debug-badge-override">
-    </p-badge>
-
+    <p-badge [value]="sqlCount()" severity="danger" [hidden]="sqlCount() === 0"></p-badge>
   </div>
 
-  <p-overlayPanel #op [style]="{ width: '70vw', maxWidth: '1200px' }" [showCloseIcon]="true">
+  <p-overlayPanel #op [style]="{ width: '75vw', maxWidth: '1200px' }" [showCloseIcon]="true"
+    styleClass="tls-sql-debug-overlay">
     <ng-template pTemplate="content">
-      <h4 class="mt-0 mb-3">
-        <i class="pi pi-history mr-2"></i> 即時 SQL 執行紀錄 (共 {{ sqlCount() }} 筆)
-      </h4>
-      <p-button icon="pi pi-trash" label="清除全部" (onClick)="onClearHistory()"  
-        styleClass="p-button-danger p-button-sm p-button-outlined" [disabled]="sqlCount() === 0">
-      </p-button>
-      <p-scrollPanel [style]="{width: '100%', height: '400px'}">
-        <p-table [value]="tableData()" selectionMode="single" (onRowSelect)="onRowSelect($event)" [scrollable]="true"
-          responsiveLayout="scroll">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>#</th>
-              <th [style]="{minWidth: '300px'}">API 請求路徑</th>
-              <th [style]="{minWidth: '900px'}">SQL 語法 (點擊列可複製)</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-sqlDetail let-i="rowIndex">
-            <tr [pSelectableRow]="sqlDetail">
-              <td>{{ i + 1 }}</td>
-              <td>
-                <span class="p-0 m-0 text-xs overflow-auto" style="max-height: 200px; word-break: break-all;">
-                  {{ sqlDetail.apiUrl }}
-                </span>
-              </td>
-              <td>
-                 
-                <pre class="p-0 m-0 text-xs overflow-auto" style="max-height: 200px; white-space: pre-wrap;">
-                {{ sqlDetail.sql }}
-                </pre>
-                 
-              </td>
-               
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="3" class="text-center">目前沒有累積的 SQL 記錄。</td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </p-scrollPanel>
+
+      <div class="debug-header flex align-items-center justify-content-between">
+        <h4 class="m-0 flex align-items-center" style="color: #818cf8;">
+          <i class="pi pi-bolt mr-2 text-xl"></i>
+          <span>SQL Monitor ({{ sqlCount() }})</span>
+        </h4>
+        <p-button icon="pi pi-trash" label="Clear Logs" (onClick)="onClearHistory()"
+          styleClass="p-button-danger p-button-text p-button-sm" [disabled]="sqlCount() === 0">
+        </p-button>
+      </div>
+
+      <p-table [value]="tableData()" [scrollable]="true" scrollHeight="450px" styleClass="p-datatable-sm debug-table"
+        responsiveLayout="scroll">
+        <ng-template pTemplate="body" let-sqlDetail let-i="rowIndex">
+          <tr class="debug-row">
+            <td>
+              <div class="flex flex-column gap-2">
+                <div class="flex align-items-center justify-content-between">
+                  <div class="flex align-items-center gap-2">
+                    <span class="api-tag">ENDPOINT</span>
+                    <code class="endpoint-code">{{ sqlDetail.apiUrl }}</code>
+                  </div>
+                  <span class="text-xs font-mono text-500">{{ sqlDetail.timestamp }}</span>
+                </div>
+
+                <div class="sql-code-wrapper" (click)="copySql(sqlDetail.sql)">
+                  <div class="sql-header flex justify-content-between">
+                    <span class="sql-title">Structured Query Language</span>
+                    <div class="flex align-items-center gap-2">
+                      <span class="copy-hint">CLICK TO COPY</span>
+                      <i class="pi pi-copy"></i>
+                    </div>
+                  </div>
+                  <pre class="sql-content" [innerHTML]="sqlDetail.displaySql"></pre>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <div class="p-5 text-center text-500">
+            <i class="pi pi-inbox block mb-2 text-2xl"></i>
+            目前沒有累積的 SQL 記錄
+          </div>
+        </ng-template>
+      </p-table>
+
     </ng-template>
   </p-overlayPanel>
 </div>

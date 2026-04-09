@@ -1,51 +1,29 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo"
-                 class="flex-1"></app-menubar>
-    <app-button btnType="create"
-                (click)="onCreate()"></app-button>
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
 
   <p-accordion>
-    <p-accordionTab [header]="'query-conditions' | translate"
-                    [selected]="true"
-                    class="line-height-3 m-0"
-                    [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit()">
+    <p-accordionTab [header]="'query-conditions' | translate" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4"
-                          label="活動單號"
-                          controlName="pod_no"
-                          [control]="qf().pod_no"
-                          [disabled]="false"
-                          [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-8"
-                          label="活動名稱"
-                          controlName="pod_desc"
-                          [control]="qf().pod_desc"
-                          [disabled]="false"
-                          [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="活動單號" controlName="pod_no" [control]="qf().pod_no"
+            [disabled]="false" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-8" label="活動名稱" controlName="pod_desc" [control]="qf().pod_desc"
+            [disabled]="false" [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="grid p-fluid">
-          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4"
-                                    label="活動起始日期"
-                                    [startControl]="qf().pod_sdate"
-                                    [endControl]="qf().pod_edate"
-                                    [submitted]="submitted"></app-calendar-range-quick>
-          <app-calendar class="col-12 md:col-6 lg:col-4"
-                        label="活動正檔日期"
-                        controlName="pod_busdate"
-                        [control]="qf().pod_busdate"
-                        [submitted]="submitted"></app-calendar>
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="活動起始日期" [startControl]="qf().pod_sdate"
+            [endControl]="qf().pod_edate" [submitted]="submitted"></app-calendar-range-quick>
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="活動正檔日期" controlName="pod_busdate"
+            [control]="qf().pod_busdate" [submitted]="submitted"></app-calendar>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear"
-                      [form]="queryForm"></app-button>
-          <app-button btnType="query"
-                      [loading]="loading"></app-button>
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -53,25 +31,10 @@
 </div>
 
 <div class="card">
-  <app-table-report tableKey="TLS26080"
-                   dataKey="pod_no"
-                   [data]="tableData()"
-                   [columns]="columns"
-                   [totalRecords]="totalRecords()"
-                   [lastQueryBody]="lastQueryBody"
-                   [queryFunction]="queryFunction"
-                   [loading]="loading"
-                   [showCheckBox]="true"
-                   [showEdit]="true"
-                   [showDetail]="true"
-                   [showDelete]="true"
-                   [editDisabled]="editDisabled"
-                   [isRowSelectable]="isRowSelectable"
-                   [selectedItems]="selectedItems()"
-                   (selectionChange)="selectedItems.set($event)"
-                   (edit)="onEdit($event)"
-                   (detail)="onDetail($event)"
-                   (delete)="onDelete($event)"
-                   [addButton]="addButton"
-                   [buttonsLoading]="printLoading()"></app-table-report>
+  <app-table-report tableKey="TLS26080" dataKey="pod_no" [data]="tableData()" [columns]="columns"
+    [totalRecords]="totalRecords()" [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction" [loading]="loading"
+    [showCheckBox]="true" [showEdit]="true" [showDetail]="true" [showDelete]="true" [isRowSelectable]="isRowSelectable"
+    [selectedItems]="selectedItems()" (selectionChange)="selectedItems.set($event)" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" (delete)="onDelete($event)" [addButton]="addButton"
+    [buttonsLoading]="printLoading()"></app-table-report>
 </div>
