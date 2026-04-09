@@ -1,26 +1,178 @@
-/* 容器樣式: 確保定位上下文 */
-.fixed {
-  position: fixed;
-  /* PrimeFlex class: bottom-3 (1.5rem), right-3 (1.5rem) */
-}
+::ng-deep {
+  /* --- 樣式鎖 1: 按鈕面板區 --- */
+  .tls-sql-debug-panel {
+    .position-relative {
+      position: relative !important;
+      display: inline-block !important;
+    }
 
-/* 針對 PrimeNG 按鈕容器的樣式 */
-:host ::ng-deep .p-button {
-  /* 確保按鈕本身是定位容器 */
-  position: relative;
-}
+    /* 只影響除錯按鈕上的 Badge */
+    .p-badge {
+      position: absolute !important;
+      top: 0 !important;
+      right: 0 !important;
+      transform: translate(30%, -30%) !important;
+      z-index: 100 !important;
+      border: 2px solid #fff !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
+    }
+  }
 
-/* 針對 PrimeNG 徽章的樣式 */
-:host ::ng-deep .p-badge {
-  position: absolute; /* 相對於按鈕容器定位 */
-  top: -5px; /* 向上微調 */
-  right: -5px; /* 向右微調 */
-  z-index: 10; /* 確保徽章在按鈕之上 */
-  border: 2px solid white; /* 可選：加個白色邊框讓它更突出 */
-}
+  /* --- 樣式鎖 2: 彈窗主體區 (透過 styleClass 綁定) --- */
+  .tls-sql-debug-overlay {
+    background: #1e1e1e !important;
+    border: 1px solid #444 !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6) !important;
 
-/* 讓 SQL 語法區塊在表格內可滾動 */
-pre {
-  word-break: break-all;
-  white-space: pre-wrap; /* 允許自動換行 */
+    .p-overlaypanel-content {
+      padding: 0 !important;
+      background: #1e1e1e !important;
+    }
+
+    /* 彈窗關閉按鈕 */
+    .p-overlaypanel-close {
+      background: #333 !important;
+      color: #999 !important;
+      &:hover {
+        background: #444 !important;
+        color: #fff !important;
+      }
+    }
+
+    /* 內部的標題欄 */
+    .debug-header {
+      background: #252526 !important;
+      padding: 1rem !important;
+      border-bottom: 1px solid #333 !important;
+    }
+
+    /* 深色表格自訂 */
+    .debug-table {
+      .p-datatable-tbody > tr {
+        background: #1e1e1e !important;
+        border-bottom: 1px solid #333 !important;
+        transition: background 0.2s;
+        &:hover {
+          background: #252526 !important;
+        }
+        td {
+          padding: 1.25rem 1rem !important;
+          border: none !important;
+        }
+      }
+    }
+
+    /* API 標籤與 Endpoint 字體 */
+    .api-tag {
+      background: #3e3e42 !important;
+      color: #00bcd4 !important;
+      font-size: 10px !important;
+      font-weight: 800 !important;
+      padding: 2px 6px !important;
+      border-radius: 4px !important;
+      border: 1px solid #555 !important;
+    }
+
+    .endpoint-code {
+      color: #fbbf24 !important;
+      background: rgba(251, 191, 36, 0.1) !important;
+      font-size: 12px !important;
+      padding: 2px 8px !important;
+      border-radius: 4px !important;
+      font-family: "Fira Code", "Consolas", monospace !important;
+    }
+
+    /* --- SQL 語法塊與「物理點選感」互動 --- */
+    .sql-code-wrapper {
+      background-color: #0d0d0d !important;
+      border: 1px solid #333 !important;
+      border-left: 4px solid #6366f1 !important;
+      border-radius: 6px !important;
+      padding: 1rem !important;
+      cursor: pointer !important;
+      position: relative !important;
+      transition: all 0.1s ease-out !important;
+      user-select: none !important;
+
+      &:hover {
+        background-color: #161616 !important;
+        transform: translateY(-2px) !important; // 浮起
+        border-color: #6366f1 !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5) !important;
+        .copy-hint {
+          color: #818cf8 !important;
+        }
+        .pi-copy {
+          color: #fff !important;
+          transform: scale(1.15);
+        }
+      }
+
+      /* 重點：按下時的物理觸感 (下陷 + 縮小) */
+      &:active {
+        transform: translateY(1px) scale(0.96) !important;
+        background-color: #000 !important;
+        box-shadow: inset 0 4px 15px rgba(0, 0, 0, 1) !important; // 深層內陰影
+        border-color: #4f46e5 !important;
+      }
+
+      .sql-header {
+        margin-bottom: 10px !important;
+        .sql-title {
+          color: #6366f1 !important;
+          font-size: 10px !important;
+          font-weight: bold !important;
+          opacity: 0.8;
+        }
+        .copy-hint {
+          color: #555 !important;
+          font-size: 9px !important;
+          font-weight: bold !important;
+        }
+        .pi-copy {
+          color: #444 !important;
+          transition: 0.2s !important;
+        }
+      }
+
+      /* SQL 語法高亮配色與 Tab 縮排 */
+      .sql-content {
+        margin: 0 !important;
+        color: #d4d4d4 !important;
+        font-family: "Fira Code", "Consolas", monospace !important;
+        font-size: 13px !important;
+        line-height: 1.5 !important;
+        tab-size: 2 !important;
+        white-space: pre-wrap !important;
+        word-break: break-all !important;
+
+        /* 使用嵌套確保正確染色 */
+        span {
+          &.sql-keyword {
+            color: #569cd6 !important;
+            font-weight: bold !important;
+          }
+          &.sql-func {
+            color: #dcdcaa !important;
+          }
+          &.sql-string {
+            color: #ce9178 !important;
+          }
+          &.sql-num {
+            color: #b5cea8 !important;
+          }
+          &.sql-var {
+            color: #9cdcfe !important;
+          }
+          &.sql-op {
+            color: #888888 !important;
+          } // 符號給深灰色，看起來比較高級
+          &.sql-comment {
+            color: #6a9955 !important;
+            font-style: italic !important;
+          }
+        }
+      }
+    }
+  }
 }

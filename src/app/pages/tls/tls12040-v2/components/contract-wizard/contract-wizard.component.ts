@@ -1222,9 +1222,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
         const successMessage = [
           `異動訊息:${isInsert ? '新增成功' : '修改成功'}`,
-          `招募編號為:${formData.apply_no || response.talentId || ''}`,
+          `招募編號為:${formData.apply_no || response.applyNo || ''}`,
           `版本編號為:${formData.contract_subno || ''}`,
-          `專櫃編號為:${response.contractNo || formData.tlt_no || ''}`,
+          `專櫃編號為:${formData.tlt_no || response.tltNo || ''}`,
           `廠商編號:${formData.ven_uniform || ''}`,
           `品牌(專櫃名稱):${formData.tlt_name || ''}`
         ].join('\n');

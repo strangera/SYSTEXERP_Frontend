@@ -1,9 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreateData(queryForm)"
-      [pTooltip]="checkTXN_GUIPaper? '新增時，請將補登類別改為「補原機台」「手開發票」' : ''" tooltipPosition="bottom"
-      [disabled]="checkTXN_GUIPaper" />
+    <app-button btnType="create" (click)="onCreateData(queryForm)" [pTooltip]="getTooltipMessage()"
+      tooltipPosition="bottom" [disabled]="checkTXN_GUIPaper || isClosed" />
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"

@@ -28,6 +28,7 @@ export const sysRoutes: Routes = [
   { path: 'sys0750', loadComponent: () => import('./sys0750/sys0750.component').then(m => m.SYS0750Component), data: { progNo: 'SYS0750' } }, // 角色之使用者列表
   { path: 'sys0770', loadComponent: () => import('./sys0770/sys0770.component').then(m => m.SYS0770Component), data: { progNo: 'SYS0770' } }, // 作業權限統計表
   { path: 'sys0780', loadComponent: () => import('./sys0780/sys0780.component').then(m => m.SYS0780Component), data: { progNo: 'SYS0780' } }, // 作業權限申請表
+  { path: 'sys0792', loadComponent: () => import('./sys0792/sys0792.component').then(m => m.SYS0792Component), data: { progNo: 'SYS0792' } }, // 在線人員查詢作業
   { path: 'sysbq00', loadComponent: () => import('./sysbq00/sysbq00.component').then(m => m.SYSBQ00Component), data: { progNo: 'SYSBQ00' } }, // 簽核權限設定維護
   { path: 'sysbq00cru', loadComponent: () => import('./sysbq00.cru/sysbq00.cru.component').then(m => m.SYSBQ00CRUComponent), data: { progNo: 'SYSBQ00' } }, // 簽核權限設定維護 CRU
   { path: 'sysbr00', loadComponent: () => import('./sysbr00/sysbr00.component').then(m => m.SYSBR00Component), data: { progNo: 'SYSBR00' } }, // 縣市區域資料維護作業
