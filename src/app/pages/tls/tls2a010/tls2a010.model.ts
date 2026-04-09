@@ -24,6 +24,7 @@ export interface TLS2A010Query {
   ECR_No_End?: string;
   PAY_NO?: string;
   Building_No?: string;
+  OVER_Status?: string[];
 }
 
 
@@ -104,6 +105,21 @@ export const creditCardGroup: ColumnGroup[] = [
   { field: 'ACT', header: '實收帳' },
   { field: 'MOD', header: '調整後實收帳' },
   { field: 'OVER', header: '實收帳 - 系統帳' },
+];
+
+export const overStatusOptions = [
+  {
+    label: '平',
+    value: '0'
+  },
+  {
+    label: '溢',
+    value: '1'
+  },
+  {
+    label: '欠',
+    value: '-1'
+  }
 ];
 
 export function getStatusColor(row: any): string {

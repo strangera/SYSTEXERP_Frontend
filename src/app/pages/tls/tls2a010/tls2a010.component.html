@@ -37,6 +37,11 @@
             <app-dropdown label="館別" controlName="Building_No" [options]="buildingNoOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.Building_No" [submitted]="submitted"></app-dropdown>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="狀況" controlName="OVER_Status" [options]="overStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.OVER_Status" [submitted]="submitted" />
+          </div>
+
           <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="發票格式" controlName="invoice" [options]="invoiceOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.invoice" [submitted]="submitted"></app-dropdown>
