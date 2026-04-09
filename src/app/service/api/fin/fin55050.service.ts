@@ -23,6 +23,8 @@ export interface QueryFIN55050Request extends BaseQueryRequest {
   VouStatusList?: string[];
   IsTarget?: string;
   ReportMode?: string;
+
+  OrgId?: string;
 }
 
 // 明細 Row

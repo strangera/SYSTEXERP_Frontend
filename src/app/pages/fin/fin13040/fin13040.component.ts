@@ -215,10 +215,18 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
       const v = form.value;
 
       const dp = (d: any, key: string) => {
+        // --- 新增的防呆邏輯 ---
+        // 如果這個欄位不小心變成了物件（例如 AutoComplete 傳回了整個 item）
+        // 我們只取裡面的 value 屬性 (也就是統編 No)
+        if (d !== null && typeof d === 'object' && 'value' in d && !(d instanceof Date)) {
+          d = d.value;
+        }
+        // --------------------
+
         if (!(d instanceof Date)) return d === '' ? null : d;
+
         const date = new Date(d);
         if (key.toLowerCase().includes('ym')) {
-
           const y = date.getFullYear();
           const m = String(date.getMonth() + 1).padStart(2, '0');
           return `${y}${m}`;

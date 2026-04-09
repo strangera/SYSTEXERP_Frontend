@@ -27,7 +27,7 @@ export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
   optionLabel = input<string | undefined>(undefined);
   optionValue = input<string | undefined>(undefined);
   showClear = input<boolean>(true);
-  forceSelection = input<boolean>(true);
+  forceSelection = input<boolean>(false);
   autofocus = input<boolean>(true);
   optionSelected = output<AutoCompleteSelectEvent>();
   valueChange = output<any>();
@@ -38,6 +38,8 @@ export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
   // 用於顯示在 PrimeNG AutoComplete 中的過濾後選項
   filteredOptions = signal<any[]>([]);
   loading = signal<boolean>(false);
+  // 如果設為 false，我們將透過邏輯避免它自動匹配
+  autoHighlight = input<boolean>(true);
 
   // 使用 effect 來處理 options 變化時的副作用 (更新 _options 和 loading 狀態)
   constructor() {
@@ -48,6 +50,7 @@ export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
         // 當 options 收到資料時，停止載入
         this.loading.set(false);
         this._options.set(value);
+        this.filteredOptions.set(value); // 當 API 資料回來時，預設把過濾後的清單先填滿
       } else {
         // 當 options 收到 null 時，表示開始載入
         this.loading.set(true);
@@ -69,13 +72,13 @@ export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
    * @param event PrimeNG AutoCompleteCompleteEvent 包含使用者輸入的查詢字串。
    */
   filterOptions(event: AutoCompleteCompleteEvent): void {
-    const query = event.query.toLowerCase();
+    const query = event.query; // 保持原始輸入，不要急著 toLowerCase
+    if (!query && query !== '') return;
+
     const availableOptions = this._options();
 
-    // 如果正在載入且沒有資料
     if (this.loading() || availableOptions.length === 0) {
       this.filteredOptions.set([]);
-      this.tryRefreshVirtualScroll();
       return;
     }
 
@@ -83,13 +86,13 @@ export class AutoCompleteComponent extends BasicKitComponent implements OnInit {
     const valueKey = this.optionValue();
 
     const filtered = availableOptions.filter(option => {
-      const textToMatch = option[labelKey];
-      const valueToMatch = valueKey ? option[valueKey] : null;
-      const isLabelMatch = String(textToMatch).toLowerCase().includes(query);
-      const isValueMatch = valueToMatch ? String(valueToMatch).toLowerCase().includes(query) : false;
-      return isLabelMatch || isValueMatch;
+      const textToMatch = String(option[labelKey]).toLowerCase();
+      const queryLower = query.toLowerCase();
+      return textToMatch.includes(queryLower);
     });
 
+    // 如果使用者關閉了自動功能，且目前的輸入完全等於某個選項
+    // 有時候 PrimeNG 會強制選中，我們確保 filteredOptions 不會只有「精確唯一」的一個
     this.filteredOptions.set(filtered);
     this.tryRefreshVirtualScroll();
   }

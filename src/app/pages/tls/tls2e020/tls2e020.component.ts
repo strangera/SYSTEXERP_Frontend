@@ -44,9 +44,9 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
     { field: 'money_type', header: '結帳方式', visible: true, format: (value) => getSYS1000('money_type', value) },
     { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'sam_type', header: '費用型態', visible: true, format: (value) => getSYS1000('sam_type', value) },
-    { field: 'CRT_Date', header: '關帳時間', visible: true, format: formatDate },
-    { field: 'CRT_USR_No', header: '關帳者', visible: true },
-    { field: 'CRT_USR_Name', header: '關帳者姓名', visible: true },
+    { field: 'Final_Date', header: '關帳時間', visible: true, format: formatDate },
+    { field: 'Final_USR_No', header: '關帳者', visible: true },
+    { field: 'Final_USR_Name', header: '關帳者姓名', visible: true },
   ];
   sam_termnoOptions: { value: number, label: string }[] = []; // 期別選項
 
