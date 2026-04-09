@@ -28,7 +28,6 @@ import { RadiobuttonComponent } from './../../../shared/componentkit/radiobutton
 
 
 // 財產變更記錄查詢
-
 export interface ass15060 {
   ROW_NO: number; // 行號
   ASSET_ID: string; // 財產編號
@@ -161,7 +160,7 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
         case 1: // 以狀態查詢
           // 還原MV_TYPE以外的選項
           this.queryForm.patchValue({
-            // MV_TYPE: '1',
+            MV_TYPE: '1',
             ASSET_ID: null,
             DEPRE_YN: null,
             B_CLASS_ID: null,
@@ -174,7 +173,7 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
           // 還原其他選項
           this.queryForm.patchValue({
             MV_TYPE: '1',
-            // ASSET_ID: null,
+            ASSET_ID: null,
             DEPRE_YN: null,
             B_CLASS_ID: null,
             M_CLASS_ID: null,
@@ -187,7 +186,7 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
           this.queryForm.patchValue({
             MV_TYPE: '1',
             ASSET_ID: null,
-            // DEPRE_YN: '1',
+            DEPRE_YN: '1',
             B_CLASS_ID: null,
             M_CLASS_ID: null,
             S_CLASS_ID: null,
@@ -199,11 +198,11 @@ export class ASS15060Component extends BasicQueryPageComponent<ass15060> impleme
           this.queryForm.patchValue({
             MV_TYPE: '1',
             ASSET_ID: null,
-            DEPRE_YN: null
-            // B_CLASS_ID: null,
-            // M_CLASS_ID: null,
-            // S_CLASS_ID: null,
-            // GOODS_ID: null,
+            DEPRE_YN: null,
+            B_CLASS_ID: null,
+            M_CLASS_ID: null,
+            S_CLASS_ID: null,
+            GOODS_ID: null,
           });
           break;
         default:
