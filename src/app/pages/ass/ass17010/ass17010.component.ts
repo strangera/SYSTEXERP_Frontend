@@ -15,7 +15,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
@@ -80,15 +80,25 @@ export class ASS17010Component extends BasicQueryPageComponent<QueryASS17010Deta
   public goodsOptions: Array<{ label: string; value: string }> = [];
 
   public readonly columns: ReportColumn[] = [
-    { field: 'GoodsID', header: '品項編號', visible: true },
-    { field: 'GoodsName', header: '品項名稱', visible: true },
-    { field: 'GoodsPrice', header: '品項單價', visible: true, align: 'right' },
-    { field: 'DocNo', header: '領用單號', visible: true },
-    { field: 'DeptName', header: '部門', visible: true },
-    { field: 'Qty', header: '數量', visible: true, align: 'right' },
-    { field: 'Amt', header: '總金額', visible: true, align: 'right' },
-    { field: 'RowType', header: '行類別', visible: true },
-    { field: 'RowTypeName', header: '行類別名稱', visible: true },
+    { field: 'GoodsID', header: '品項編號', visible: true, align: 'left' },
+    { field: 'GoodsName', header: '品項名稱', visible: true, align: 'left' },
+    { field: 'GoodsPrice', header: '品項單價', visible: true, align: 'left' },
+    { field: 'DocNo', header: '單號', visible: true, align: 'left' },
+    { field: 'DeptName', header: '部門', visible: true, align: 'left' },
+    {
+      field: 'Qty',
+      header: '數量',
+      visible: true,
+      align: 'right',
+      format: (v) => formatAmountWithDecimals(v, 0),
+    },
+    {
+      field: 'Amt',
+      header: '金額',
+      visible: true,
+      align: 'right',
+      format: (v) => formatAmountWithDecimals(v, 0),
+    },
   ];
 
   constructor(
