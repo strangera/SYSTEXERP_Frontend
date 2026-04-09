@@ -13,12 +13,13 @@ import {
   QueryASS17020Request,
 } from '@pages/ass/ass17020/ass17020.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import {
   ColumnGroup,
   ReportColumn,
   formatAmount,
-} from '@shared/componentkit/table-report/table-report.model';
+  formatAmountWithDecimals,
+} from './ass17020-table-report.model';
+import { ASS17020TableReportComponent } from './ass17020-table-report.component';
 import { SortOption } from '@shared/models/api/base-api.interface';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { removeEmptyValues } from '@shared/utils/object-utils';
@@ -46,7 +47,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
     CalendarRangeComponent,
     DropdownComponent,
     ButtonComponent,
-    TableReportComponent,
+    ASS17020TableReportComponent,
     TranslateModule,
     ButtonModule,
   ],
@@ -83,28 +84,28 @@ export class ASS17020Component
   summaryFooter: Record<string, unknown> | null = null;
 
   private readonly baseColumns: ReportColumn[] = [
-    { field: 'RowNo', header: '列號', sortField: 'RowNo' },
-    { field: 'Goods', header: '品名或物品描述', sortField: 'Goods' },
+    { field: 'RowNo', header: '序號', sortField: 'RowNo' },
+    { field: 'Goods', header: '品名', sortField: 'Goods' },
     {
       field: 'UnitPrice',
-      header: '單價',
+      header: '品項單價',
       align: 'right',
       sortField: 'UnitPrice',
-      format: (v) => formatAmount(v as number),
+      format: (v) => formatAmountWithDecimals(v, 2),
     },
   ];
 
   private readonly tailColumns: ReportColumn[] = [
     {
       field: 'TotalQty',
-      header: '總數量',
+      header: '總計數量',
       align: 'right',
       sortField: 'TotalQty',
       format: (v) => formatAmount(v as number),
     },
     {
       field: 'TotalAmt',
-      header: '總金額',
+      header: '總計金額',
       align: 'right',
       sortField: 'TotalAmt',
       format: (v) => formatAmount(v as number),
@@ -259,16 +260,17 @@ export class ASS17020Component
     if (!summary) {
       return null;
     }
+    /** 前綴三欄留空，第一個有值欄為部門數量，使 footer 合併格涵蓋序號+品名+品項單價並顯示 footerLabel「小計」 */
     const row: Record<string, unknown> = {
       RowNo: '',
-      Goods: '總計',
+      Goods: '',
       UnitPrice: '',
       __rowUid: 'summary',
     };
     for (const d of deptInfos) {
       const det = summary.Depts?.[d.Key];
-      row[this.deptQtyField(d.Key)] = det?.Qty ?? '';
-      row[this.deptAmtField(d.Key)] = det?.Amt ?? '';
+      row[this.deptQtyField(d.Key)] = det?.Qty ?? 0;
+      row[this.deptAmtField(d.Key)] = det?.Amt ?? 0;
     }
     row['TotalQty'] = summary.TotalQty;
     row['TotalAmt'] = summary.TotalAmt;

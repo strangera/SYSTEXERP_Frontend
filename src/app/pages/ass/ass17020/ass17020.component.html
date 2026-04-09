@@ -104,17 +104,18 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table-report
+    <app-ass17020-table-report
       [data]="tableData()"
       [columns]="columns"
+      outerGroupHeader="單位領用數量"
       [columnGroup]="columnGroup.length ? columnGroup : undefined"
       [totalRecords]="totalRecords()"
       [footerData]="summaryFooter"
-      footerLabel="總計"
-      footerLabelField="Goods"
+      footerLabel="小計"
       [loading]="tableLoading()"
       dataKey="__rowUid"
       tableKey="ASS17020_Data"
+      [showReorder]="false"
       [showCheckBox]="false"
       [showEdit]="false"
       [showDetail]="false"
@@ -124,6 +125,6 @@
       [lastQueryBody]="lastQueryBody"
       (dataChange)="tableData.set($event)"
     >
-    </app-table-report>
+    </app-ass17020-table-report>
   </div>
 </div>
