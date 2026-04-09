@@ -86,7 +86,7 @@ export class ASS16090CRUComponent
   dataForm = this.formBuilder.nonNullable.group({
     ID: [null as number | null],
     DAMAGEM_ID: [{ value: '系統自動帶入', disabled: true } as any],
-    WH_ID: [null as string | null, [Validators.required, Validators.maxLength(20)]],
+    WH_ID: ['001' as string | null, [Validators.required, Validators.maxLength(20)]],
     EMP_ID: [null as string | null, [Validators.required, Validators.maxLength(20)]],
     ORG_ID: [null as string | null, [Validators.required, Validators.maxLength(20)]],
     APPLY_DATE: [null as Date | null, [Validators.required]],
