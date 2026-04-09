@@ -120,6 +120,9 @@ export class TableEditComponent implements OnChanges {
   @Input() footerSummaryLabel = '總計'; // 新增：Footer 摘要行的標籤名稱
   @Input() showFooter = false;
   @Input() scrollable = false; // 是否要滾輪
+  /** 大量列時與 scrollable 併用以僅渲染可視列（本機 FIN53010 明細表可選用） */
+  @Input() virtualScroll = false;
+  @Input() virtualScrollItemSize: number | undefined = undefined;
   @Input() showPaginator = false; // 是否顯示 分頁器
 
   protected readonly tableUtilityService = inject(TableUtilityService);

@@ -1,0 +1,270 @@
+:host {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sso-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* 懸浮選單樣式 */
+.user-profile-float {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+
+  .profile-btn {
+    background: rgba(0, 0, 0, 0.6); /* 改深色背景，字體白色 */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: all 0.3s;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.4);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .user-info {
+      text-align: right;
+      .user-no {
+        display: block;
+        font-size: 0.75rem;
+        opacity: 0.9;
+      }
+      .user-name {
+        display: block;
+        font-size: 1rem;
+        font-weight: bold;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+      }
+    }
+
+    i {
+      font-size: 1.2rem;
+    }
+  }
+}
+
+/* 全螢幕 Grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  // 4個(含)以下：維持四象限
+  &:not(.more-than-four) {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+
+  // 5個以上：自動排列
+  &.more-than-four {
+    grid-template-columns: repeat(auto-fit, minmax(25%, 1fr));
+    overflow-y: auto; // 允許滾動
+    padding: 40px;
+    gap: 20px;
+
+    .system-block {
+      height: 45vh; // 縮小高度
+      border-radius: 20px; // 變成圓角塊狀比較好看
+    }
+    .icon-circle {
+      width: 140px;
+      height: 140px;
+      border: 4px solid transparent;
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+  }
+}
+/* 視口容器：隱藏溢出 */
+.slider-viewport {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 滑動軌道：關鍵在於 transition */
+.slider-track {
+  display: flex;
+  width: auto;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.645, 0.045, 0.355, 1); /* 平滑滑動感 */
+}
+/* 每一頁都是全螢幕的四象限 Grid */
+.page-grid {
+  min-width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  position: relative;
+}
+
+/* 左右按鈕樣式 */
+/* 左右按鈕樣式優化 */
+.nav-btn {
+  position: fixed;
+  top: 50%; /* 絕對中心點 */
+  transform: translateY(-50%); /* 向上回推自己的一半高度，達成完美置中 */
+  z-index: 200; /* 確保在最上層 */
+
+  /* 視覺增強：讓按鈕更明顯 */
+  background: rgba(0, 0, 0, 0.4); /* 改用深色半透明 */
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  color: #ffffff;
+
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+
+  i {
+    font-size: 2.5rem; /* 加大 Icon */
+    font-weight: bold;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: translateY(-50%) scale(1.1); /* 懸浮時輕微放大 */
+    border-color: #fff;
+  }
+  /* 加入發光效果，增加識別度 */
+  &:active {
+    transform: translateY(-50%) scale(0.95); /* 按下時的縮小反饋 */
+  }
+  &.prev {
+    left: 40px;
+  }
+  &.next {
+    right: 40px;
+  }
+}
+/* 處理空白區塊 (第 5 個出現時，第 6,7,8 個位置的底色) */
+.system-block.empty {
+  background-color: #f8f9fa; /* 或者給一個預設背景色 */
+  cursor: default;
+}
+.system-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    filter: brightness(1.1);
+    z-index: 2;
+    .icon-circle {
+      transform: scale(1.1);
+    }
+  }
+}
+
+/* 顏色設定保持不變 */
+.block-0 {
+  background-color: #e98ab1;
+}
+.block-1 {
+  background-color: #f3bc18;
+}
+.block-2 {
+  background-color: #c6d914;
+}
+.block-3 {
+  background-color: #4fbcec;
+}
+
+.icon-circle {
+  background: white;
+  width: clamp(120px, 15vw, 180px); /* 響應式大小 */
+  height: clamp(120px, 15vw, 180px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s;
+
+  img {
+    width: 60%;
+    height: auto;
+  }
+}
+
+.system-label {
+  background: white;
+  padding: 10px 40px;
+  border-radius: 30px;
+  font-size: 1.4rem; // 字體加大
+  font-weight: 800; // 加粗
+  color: #555;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 中央圓圈優化 */
+.center-logo-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.center-circle {
+  background: white;
+  /* 稍微加大圓圈基底，確保新 Logo 放得下 */
+  width: clamp(220px, 28vw, 300px);
+  height: clamp(220px, 28vw, 300px);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
+  padding: 20px; /* 加入內距，防止 Logo 貼到圓邊 */
+  /* 關鍵：明確設定這個圓圈會消耗掉點擊事件 */
+  pointer-events: auto;
+  cursor: default; /* 讓滑鼠移到中間時不要變手指 */
+  .center-img {
+    /* 從 35% 調大至 75% ~ 85% */
+    width: 85%;
+    height: auto;
+    max-height: 80%; /* 防止高度過高溢出圓圈 */
+    object-fit: contain; /* 確保圖片比例不失真地縮放 */
+    display: block;
+  }
+}
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}

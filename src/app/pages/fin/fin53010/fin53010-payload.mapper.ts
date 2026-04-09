@@ -275,8 +275,8 @@ function mapStepArToUpdate(row: FIN53010StepAR, deps: Fin53010PayloadDepsWithVou
 
 function mapStepSalesToUpdate4023(row: FIN53010StepSalesInvoiceRow): UpdateAPS4023DataBody {
   const n = row.id;
-  const id = typeof n === 'number' && !Number.isNaN(n) ? n : undefined;
-  return id !== undefined ? { ID: id, id } : { ID: 0, id: 0 };
+  const id = typeof n === 'number' && !Number.isNaN(n) ? n : 0;
+  return { ID: id };
 }
 
 function mapStepPurchaseToUpdate2002(
@@ -303,23 +303,25 @@ function buildUpdateNext(
 ): UpdateFIN53010DetailDataNextBody | null {
   const next: UpdateFIN53010DetailDataNextBody = {};
   if (activeSteps.includes(3) && stepAP.length) {
-    next.updateAPS3001Data = mapStepApToUpdate(stepAP[0], deps, undefined);
+    const r = stepAP[0];
+    next.updateAPS3001Datas = [mapStepApToUpdate(r, deps, r.id)];
   }
   if (activeSteps.includes(4) && stepAR.length) {
-    next.updateARS3001Data = mapStepArToUpdate(stepAR[0], deps, undefined);
+    const r = stepAR[0];
+    next.updateARS3001Datas = [mapStepArToUpdate(r, deps, r.id)];
   }
   if (activeSteps.includes(5) && stepSales.length) {
     next.updateAPS4023Datas = stepSales.map(r => mapStepSalesToUpdate4023(r));
   }
   if (activeSteps.includes(6) && stepPurchase.length) {
-    next.updateAPS2002Datas = stepPurchase.map((r, i) => mapStepPurchaseToUpdate2002(r, i, deps, undefined));
+    next.updateAPS2002Datas = stepPurchase.map((r, i) => mapStepPurchaseToUpdate2002(r, i, deps, r.id));
   }
   if (activeSteps.includes(7) && stepBank.length) {
-    next.updateAPS4002Datas = stepBank.map(r => mapStepBankToUpdate4002(r, deps, undefined));
+    next.updateAPS4002Datas = stepBank.map(r => mapStepBankToUpdate4002(r, deps, r.id));
   }
   if (
-    !next.updateAPS3001Data
-    && !next.updateARS3001Data
+    !(next.updateAPS3001Datas?.length)
+    && !(next.updateARS3001Datas?.length)
     && !(next.updateAPS4023Datas?.length)
     && !(next.updateAPS2002Datas?.length)
     && !(next.updateAPS4002Datas?.length)

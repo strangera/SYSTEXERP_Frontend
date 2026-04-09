@@ -2,182 +2,71 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     @if (isFormCreateable) {
-      <app-button
-        btnType="query"
-        label="套用常用傳票"
-        [loading]="service.fin52030Loading() || loading"
-        (click)="getVocherTemplate()"
-      ></app-button>
+    <app-button btnType="query" label="套用常用傳票" [loading]="service.fin52030Loading() || loading"
+      (click)="getVocherTemplate()"></app-button>
     }
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-  @if (isFormCreateable) {
-    <div class="flex gap-2 mb-2">
-      <app-button
-        btnType="default"
-        [label]="stepLabels.get(1) || '傳票資料'"
-        [severity]="currentStep() === 1 ? undefined : 'secondary'"
-        (click)="goToStep(1)"
-      ></app-button>
-      @for (step of activeVoucherSteps(); track step) {
-        <app-button
-          btnType="default"
-          [label]="stepLabels.get(step) || ('步驟' + step)"
-          [severity]="currentStep() === step ? undefined : 'secondary'"
-          (click)="goToStep(step)"
-        ></app-button>
-      }
-    </div>
+  @if (isFormCreateable || isFormEditable) {
+  <div class="flex gap-2 mb-2">
+    <app-button btnType="default" [label]="stepLabels.get(1) || '傳票資料'"
+      [severity]="currentStep() === 1 ? undefined : 'secondary'" (click)="goToStep(1)"></app-button>
+    @for (step of activeVoucherSteps(); track step) {
+    <app-button btnType="default" [label]="stepLabels.get(step) || ('步驟' + step)"
+      [severity]="currentStep() === step ? undefined : 'secondary'" (click)="goToStep(step)"></app-button>
+    }
+  </div>
   }
 
-  <div
-    class="flex flex-column"
-    [class.gap-3]="!isFormCreateable"
-  >
+  <div class="flex flex-column" [class.gap-3]="!isFormCreateable && !isFormEditable">
     @if (!isFormCreateable) {
-      <p-panel header="查詢傳票" class="line-height-3 m-0">
-        <div class="grid p-fluid align-items-end">
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="查詢傳票編號"
-            controlName="lookupVouNo"
-            [control]="lookupVouNo"
-            [submitted]="false"
-          ></app-input-text>
-          <div class="col-12 md:col-6 lg:col-2">
-            <app-button
-              btnType="default"
-              label="載入傳票"
-              icon="pi pi-search"
-              [disabled]="isLookupVouNoEmpty()"
-              [loading]="lookupVouLoading()"
-              (click)="onLookupVoucherByVouNo()"
-            ></app-button>
-          </div>
+    <p-panel header="查詢傳票" class="line-height-3 m-0">
+      <div class="grid p-fluid align-items-end">
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="查詢傳票編號" controlName="lookupVouNo"
+          [control]="lookupVouNo" [submitted]="false"></app-input-text>
+        <div class="col-12 md:col-6 lg:col-2">
+          <app-button btnType="default" label="載入傳票" icon="pi pi-search" [disabled]="isLookupVouNoEmpty()"
+            [loading]="lookupVouLoading()" (click)="onLookupVoucherByVouNo()"></app-button>
         </div>
-      </p-panel>
+      </div>
+    </p-panel>
     }
 
-    @if (!isFormCreateable || currentStep() === 1) {
+    @if (!isFormCreateable && !isFormEditable || currentStep() === 1) {
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
-      <div class="grid p-fluid">
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="傳票號碼"
-          controlName="VouNo"
-          [control]="df().VouNo"
-          [disabled]="!0"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="傳票種類"
-          controlName="VouType"
-          [showClear]="!1"
-          [disabled]="!isFormCreateable"
-          [options]="service.vouTypeOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().VouType"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="傳票型態"
-          controlName="VoucherType"
-          [showClear]="!1"
-          [disabled]="!0"
-          [control]="df().VoucherType"
-          [options]="service.voucherTypeOptions()"
-          optionLabel="label"
-          optionValue="value"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="傳票日期"
-          controlName="VouDate"
-          [disabled]="!isFormCreateable"
-          [control]="df().VouDate"
-          [submitted]="submitted"
-        ></app-calendar>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="傳票狀態"
-          controlName="PostFlag"
-          [options]="service.postFlagOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().PostFlag"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="傳票摘要"
-          controlName="Remark"
-          [control]="df().Remark"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="補發票"
-          controlName="INVOptions"
-          [showClear]="!1"
-          [filter]="!1"
-          [disabled]="!isFormCreateable"
-          [options]="service.INVOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="df().INV_YN"
-          [submitted]="submitted"
-        ></app-dropdown>
-        @if (!isFormCreateable) {
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="建立者"
-            controlName="CRT_USR_No"
-            [control]="df().CRT_USR_No"
-            [disabled]="!0"
-            [options]="service.usrOptions()"
-            optionLabel="label"
-            optionValue="value"
-            [loading]="service.usrLoading()"
-            [submitted]="submitted"
-          ></app-dropdown>
-          <app-calendar
-            class="col-12 md:col-6 lg:col-4"
-            calendarType="dateOne"
-            label="建立日期"
-            controlName="CRT_Date"
-            [control]="df().CRT_Date"
-            [disabled]="!0"
-            [submitted]="submitted"
-          ></app-calendar>
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="修改者"
-            controlName="UPD_USR_No"
-            [control]="df().UPD_USR_No"
-            [disabled]="!0"
-            [options]="service.usrOptions()"
-            optionLabel="label"
-            optionValue="value"
-            [loading]="service.usrLoading()"
-            [submitted]="submitted"
-          ></app-dropdown>
-          <app-calendar
-            class="col-12 md:col-6 lg:col-4"
-            calendarType="dateOne"
-            label="修改日期"
-            controlName="UPD_Date"
-            [control]="df().UPD_Date"
-            [disabled]="!0"
-            [submitted]="submitted"
-          ></app-calendar>
-        }
-        <!--
+      <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+        <div class="grid p-fluid">
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="傳票號碼" controlName="VouNo" [control]="df().VouNo"
+            [disabled]="!0" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="傳票種類" controlName="VouType" [showClear]="!1"
+            [disabled]="!isFormCreateable" [options]="service.vouTypeOptions" optionLabel="label" optionValue="value"
+            [control]="df().VouType" [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="傳票型態" controlName="VoucherType" [showClear]="!1"
+            [disabled]="!0" [control]="df().VoucherType" [options]="service.voucherTypeOptions()" optionLabel="label"
+            optionValue="value" [submitted]="submitted"></app-dropdown>
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="傳票日期" controlName="VouDate"
+            [disabled]="!isFormCreateable" [control]="df().VouDate" [submitted]="submitted"></app-calendar>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="傳票狀態" controlName="PostFlag"
+            [options]="service.postFlagOptions" optionLabel="label" optionValue="value" [control]="df().PostFlag"
+            [submitted]="submitted"></app-dropdown>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="傳票摘要" controlName="Remark" [control]="df().Remark"
+            [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="補發票" controlName="INVOptions" [showClear]="!1"
+            [filter]="!1" [disabled]="!isFormCreateable" [options]="service.INVOptions" optionLabel="label"
+            optionValue="value" [control]="df().INV_YN" [submitted]="submitted"></app-dropdown>
+          @if (!isFormCreateable) {
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="建立者" controlName="CRT_USR_No"
+            [control]="df().CRT_USR_No" [disabled]="!0" [options]="service.usrOptions()" optionLabel="label"
+            optionValue="value" [loading]="service.usrLoading()" [submitted]="submitted"></app-dropdown>
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="建立日期" controlName="CRT_Date"
+            [control]="df().CRT_Date" [disabled]="!0" [submitted]="submitted"></app-calendar>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="修改者" controlName="UPD_USR_No"
+            [control]="df().UPD_USR_No" [disabled]="!0" [options]="service.usrOptions()" optionLabel="label"
+            optionValue="value" [loading]="service.usrLoading()" [submitted]="submitted"></app-dropdown>
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="修改日期" controlName="UPD_Date"
+            [control]="df().UPD_Date" [disabled]="!0" [submitted]="submitted"></app-calendar>
+          }
+          <!--
         <app-radiobutton
           class="col-12 md:col-6 lg:col-4"
           label="ROC/IFRS"
@@ -188,24 +77,23 @@
           [submitted]="submitted"
         ></app-radiobutton>
         -->
-      </div>
+        </div>
 
-      @if (!isFormReadable) {
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        @if (!isFormReadable) {
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="cancel" [form]="dataForm"></app-button>
-          @if (!isFormCreateable || isLastStep()) {
-            <app-button btnType="submit" [loading]="loading"></app-button>
+          @if (isLastStep()) {
+          <app-button btnType="submit" [loading]="loading"></app-button>
           }
-          @if (isFormCreateable && canGoNext()) {
-            <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
+          @if (canGoNext()) {
+          <app-button btnType="next" label="下一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+            (click)="goNextStep()"></app-button>
           }
         </div>
-      }
-    </form>
-  </p-panel>
-  }
+        }
+      </form>
+    </p-panel>
+    }
   </div>
 </div>
 
@@ -213,310 +101,204 @@
   <div class="grid p-fluid">
     <div class="col-12">
       <p-panel header="資料" class="line-height-3 m-0 mb-3">
-        <app-table-edit
-          [showCheckBox]="!isFormReadable"
-          [showReorder]="!isFormReadable"
-          [disabled]="isFormReadable"
-          (fieldChange)="onFieldChange($event)"
-          (dataChange)="onDataChange($event)"
-          (rowReorderData)="onRowReorder($event)"
-          [data]="tableData()"
-          [defaultInsertData]="defaultInsertData()"
-          [footerData]="footerData()"
-          [loading]="tableLoading()"
-          [tableKey]="'FIN52030_detail'"
-          [tableRequired]="true"
-          [columns]="columns()"
-        ></app-table-edit>
+        <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="!isFormReadable" [disabled]="isFormReadable"
+          (fieldChange)="onFieldChange($event)" (dataChange)="onDataChange($event)"
+          (rowReorderData)="onRowReorder($event)" [data]="tableData()" [defaultInsertData]="defaultInsertData()"
+          [footerData]="footerData()" [loading]="tableLoading()" [tableKey]="'FIN52030_detail'" [tableRequired]="true"
+          [columns]="columns()" [scrollable]="true" [virtualScroll]="true"
+          [virtualScrollItemSize]="46"></app-table-edit>
       </p-panel>
     </div>
   </div>
 </div>
 
-@if (isFormCreateable && currentStep() === 3) {
-  <div class="card">
-    <p-panel header="應付帳款" class="line-height-3 m-0">
-      <app-table-edit
-        [showCheckBox]="false"
-        [showReorder]="false"
-        [disabled]="isFormReadable"
-        [data]="stepAPRows()"
-        [columns]="stepAPColumns"
-        [tableKey]="'FIN53010_step_ap'"
-        (dataChange)="onStepAPDataChange($event)"
-      ></app-table-edit>
-      <div class="flex justify-content-between mt-3">
-        <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
-        @if (canGoNext()) {
-          <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
-        } @else {
-          <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
-        }
-      </div>
-    </p-panel>
-  </div>
+@if ((isFormCreateable || isFormEditable) && currentStep() === 3) {
+<div class="card">
+  <p-panel header="應付帳款" class="line-height-3 m-0">
+    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepAPRows()"
+      [columns]="stepAPColumns" [tableKey]="'FIN53010_step_ap'"
+      (dataChange)="onStepAPDataChange($event)"></app-table-edit>
+    <div class="flex justify-content-between mt-3">
+      <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goPrevStep()"></app-button>
+      @if (canGoNext()) {
+      <app-button btnType="next" label="下一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goNextStep()"></app-button>
+      } @else {
+      <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+      }
+    </div>
+  </p-panel>
+</div>
 }
 
-@if (isFormCreateable && currentStep() === 4) {
-  <div class="card">
-    <p-panel header="應收帳款" class="line-height-3 m-0">
-      <app-table-edit
-        [showCheckBox]="false"
-        [showReorder]="false"
-        [disabled]="isFormReadable"
-        [data]="stepARRows()"
-        [columns]="stepARColumns"
-        [tableKey]="'FIN53010_step_ar'"
-        (dataChange)="onStepARDataChange($event)"
-      ></app-table-edit>
-      <div class="flex justify-content-between mt-3">
-        <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
-        @if (canGoNext()) {
-          <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
-        } @else {
-          <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
-        }
-      </div>
-    </p-panel>
-  </div>
+@if ((isFormCreateable || isFormEditable) && currentStep() === 4) {
+<div class="card">
+  <p-panel header="應收帳款" class="line-height-3 m-0">
+    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepARRows()"
+      [columns]="stepARColumns" [tableKey]="'FIN53010_step_ar'"
+      (dataChange)="onStepARDataChange($event)"></app-table-edit>
+    <div class="flex justify-content-between mt-3">
+      <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goPrevStep()"></app-button>
+      @if (canGoNext()) {
+      <app-button btnType="next" label="下一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goNextStep()"></app-button>
+      } @else {
+      <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+      }
+    </div>
+  </p-panel>
+</div>
 }
 
-@if (isFormCreateable && currentStep() === 5) {
-  <div class="card">
-    <p-panel header="銷項發票" class="line-height-3 m-0">
-      <app-table-edit
-        [showCheckBox]="false"
-        [showReorder]="false"
-        [disabled]="isFormReadable"
-        [data]="stepSalesRows()"
-        [columns]="stepSalesColumns"
-        [tableKey]="'FIN53010_step_sales'"
-        (dataChange)="onStepSalesDataChange($event)"
-        (fieldChange)="onStepSalesInvoiceFieldChange($event)"
-      ></app-table-edit>
-      <div class="flex justify-content-between mt-3">
-        <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
-        @if (canGoNext()) {
-          <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
-        } @else {
-          <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
-        }
-      </div>
-    </p-panel>
-  </div>
+@if ((isFormCreateable || isFormEditable) && currentStep() === 5) {
+<div class="card">
+  <p-panel header="銷項發票" class="line-height-3 m-0">
+    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepSalesRows()"
+      [columns]="stepSalesColumns" [tableKey]="'FIN53010_step_sales'" (dataChange)="onStepSalesDataChange($event)"
+      (fieldChange)="onStepSalesInvoiceFieldChange($event)"></app-table-edit>
+    <div class="flex justify-content-between mt-3">
+      <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goPrevStep()"></app-button>
+      @if (canGoNext()) {
+      <app-button btnType="next" label="下一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goNextStep()"></app-button>
+      } @else {
+      <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+      }
+    </div>
+  </p-panel>
+</div>
 }
 
-@if (isFormCreateable && currentStep() === 6) {
-  <div class="card">
-    <p-panel header="進項發票" class="line-height-3 m-0">
-      <app-table-edit
-        [showCheckBox]="false"
-        [showReorder]="false"
-        [disabled]="isFormReadable"
-        [data]="stepPurchaseRows()"
-        [columns]="stepPurchaseColumns"
-        [tableKey]="'FIN53010_step_purchase'"
-        (dataChange)="onStepPurchaseDataChange($event)"
-        (fieldChange)="onStepPurchaseInvoiceFieldChange($event)"
-      ></app-table-edit>
-      <div class="flex justify-content-between mt-3">
-        <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
-        @if (canGoNext()) {
-          <app-button btnType="next" label="下一步" (click)="goNextStep()"></app-button>
-        } @else {
-          <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
-        }
-      </div>
-    </p-panel>
-  </div>
+@if ((isFormCreateable || isFormEditable) && currentStep() === 6) {
+<div class="card">
+  <p-panel header="進項發票" class="line-height-3 m-0">
+    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
+      [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'"
+      (dataChange)="onStepPurchaseDataChange($event)"
+      (fieldChange)="onStepPurchaseInvoiceFieldChange($event)"></app-table-edit>
+    <div class="flex justify-content-between mt-3">
+      <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goPrevStep()"></app-button>
+      @if (canGoNext()) {
+      <app-button btnType="next" label="下一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goNextStep()"></app-button>
+      } @else {
+      <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+      }
+    </div>
+  </p-panel>
+</div>
 }
 
-@if (isFormCreateable && currentStep() === 7) {
-  <div class="card">
-    <p-panel header="銀行存款" class="line-height-3 m-0">
-      <app-table-edit
-        [showCheckBox]="false"
-        [showReorder]="false"
-        [disabled]="isFormReadable"
-        [data]="stepBankRows()"
-        [columns]="stepBankColumns"
-        [tableKey]="'FIN53010_step_bank'"
-        (dataChange)="onStepBankDataChange($event)"
-      ></app-table-edit>
-      <div class="flex justify-content-between mt-3">
-        <app-button btnType="back" label="上一步" (click)="goPrevStep()"></app-button>
-        <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
-      </div>
-    </p-panel>
-  </div>
+@if ((isFormCreateable || isFormEditable) && currentStep() === 7) {
+<div class="card">
+  <p-panel header="銀行存款" class="line-height-3 m-0">
+    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepBankRows()"
+      [columns]="stepBankColumns" [tableKey]="'FIN53010_step_bank'"
+      (dataChange)="onStepBankDataChange($event)"></app-table-edit>
+    <div class="flex justify-content-between mt-3">
+      <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goPrevStep()"></app-button>
+      <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+    </div>
+  </p-panel>
+</div>
 }
 
-@if (!isFormCreateable && service.detailByVouNoLoading()) {
-  <div class="card flex justify-content-center p-4">
-    <p-progressSpinner ariaLabel="loading" />
-  </div>
+@if (!isFormCreateable && (service.detailByVouNoLoading() || service.detailByVouNoForUpdateLoading())) {
+<div class="card flex justify-content-center p-4">
+  <p-progressSpinner ariaLabel="loading" />
+</div>
 }
 
-@if (!isFormCreateable && ars3001RelatedRows().length > 0) {
-  <div class="card">
-    <p-panel header="應收帳款" class="line-height-3 m-0">
-      <app-table-report
-        tableKey="FIN53010_ARS3001_related"
-        [columns]="ars3001RelatedColumns"
-        [data]="ars3001RelatedRows()"
-        [totalRecords]="ars3001RelatedRows().length"
-        [loading]="service.detailByVouNoLoading()"
-        [lazy]="false"
-        [showCaption]="false"
-        [showManage]="false"
-        [showReportMode]="false"
-        [showCheckBox]="false"
-      ></app-table-report>
-    </p-panel>
-  </div>
+@if (isFormReadable && !isFormCreateable && ars3001RelatedRows().length > 0) {
+<div class="card">
+  <p-panel header="應收帳款" class="line-height-3 m-0">
+    <app-table-report tableKey="FIN53010_ARS3001_related" [columns]="ars3001RelatedColumns"
+      [data]="ars3001RelatedRows()" [totalRecords]="ars3001RelatedRows().length"
+      [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
+      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+  </p-panel>
+</div>
 }
 
-@if (!isFormCreateable && aps3001RelatedRows().length > 0) {
-  <div class="card">
-    <p-panel header="應付帳款" class="line-height-3 m-0">
-      <app-table-report
-        tableKey="FIN53010_APS3001_related"
-        [columns]="aps3001RelatedColumns"
-        [data]="aps3001RelatedRows()"
-        [totalRecords]="aps3001RelatedRows().length"
-        [loading]="service.detailByVouNoLoading()"
-        [lazy]="false"
-        [showCaption]="false"
-        [showManage]="false"
-        [showReportMode]="false"
-        [showCheckBox]="false"
-      ></app-table-report>
-    </p-panel>
-  </div>
+@if (isFormReadable && !isFormCreateable && aps3001RelatedRows().length > 0) {
+<div class="card">
+  <p-panel header="應付帳款" class="line-height-3 m-0">
+    <app-table-report tableKey="FIN53010_APS3001_related" [columns]="aps3001RelatedColumns"
+      [data]="aps3001RelatedRows()" [totalRecords]="aps3001RelatedRows().length"
+      [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
+      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+  </p-panel>
+</div>
 }
 
-@if (!isFormCreateable && aps2002_CRelatedRows().length > 0) {
-  <div class="card">
-    <p-panel header="進項折讓發票" class="line-height-3 m-0">
-      <app-table-report
-        tableKey="FIN53010_APS2002_C_related"
-        [columns]="aps2002_CRelatedColumns"
-        [data]="aps2002_CRelatedRows()"
-        [totalRecords]="aps2002_CRelatedRows().length"
-        [loading]="service.detailByVouNoLoading()"
-        [lazy]="false"
-        [showCaption]="false"
-        [showManage]="false"
-        [showReportMode]="false"
-        [showCheckBox]="false"
-      ></app-table-report>
-    </p-panel>
-  </div>
+@if (isFormReadable && !isFormCreateable && aps2002_CRelatedRows().length > 0) {
+<div class="card">
+  <p-panel header="進項折讓發票" class="line-height-3 m-0">
+    <app-table-report tableKey="FIN53010_APS2002_C_related" [columns]="aps2002_CRelatedColumns"
+      [data]="aps2002_CRelatedRows()" [totalRecords]="aps2002_CRelatedRows().length"
+      [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
+      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+  </p-panel>
+</div>
 }
 
-@if (!isFormCreateable && aps2002RelatedRows().length > 0) {
-  <div class="card">
-    <p-panel header="進項發票" class="line-height-3 m-0">
-      <app-table-report
-        tableKey="FIN53010_APS2002_related"
-        [columns]="aps2002RelatedColumns"
-        [data]="aps2002RelatedRows()"
-        [totalRecords]="aps2002RelatedRows().length"
-        [loading]="service.detailByVouNoLoading()"
-        [lazy]="false"
-        [showCaption]="false"
-        [showManage]="false"
-        [showReportMode]="false"
-        [showCheckBox]="false"
-      ></app-table-report>
-    </p-panel>
-  </div>
+@if (isFormReadable && !isFormCreateable && aps2002RelatedRows().length > 0) {
+<div class="card">
+  <p-panel header="進項發票" class="line-height-3 m-0">
+    <app-table-report tableKey="FIN53010_APS2002_related" [columns]="aps2002RelatedColumns"
+      [data]="aps2002RelatedRows()" [totalRecords]="aps2002RelatedRows().length"
+      [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
+      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+  </p-panel>
+</div>
 }
 
-@if (!isFormCreateable && aps4023_CRelatedRows().length > 0) {
-  <div class="card">
-    <p-panel header="銷項折讓發票" class="line-height-3 m-0">
-      <app-table-report
-        tableKey="FIN53010_APS4023_C_related"
-        [columns]="aps4023_CRelatedColumns"
-        [data]="aps4023_CRelatedRows()"
-        [totalRecords]="aps4023_CRelatedRows().length"
-        [loading]="service.detailByVouNoLoading()"
-        [lazy]="false"
-        [showCaption]="false"
-        [showManage]="false"
-        [showReportMode]="false"
-        [showCheckBox]="false"
-      ></app-table-report>
-    </p-panel>
-  </div>
+@if (isFormReadable && !isFormCreateable && aps4023_CRelatedRows().length > 0) {
+<div class="card">
+  <p-panel header="銷項折讓發票" class="line-height-3 m-0">
+    <app-table-report tableKey="FIN53010_APS4023_C_related" [columns]="aps4023_CRelatedColumns"
+      [data]="aps4023_CRelatedRows()" [totalRecords]="aps4023_CRelatedRows().length"
+      [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
+      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+  </p-panel>
+</div>
 }
 
-@if (!isFormCreateable && aps4023RelatedRows().length > 0) {
-  <div class="card">
-    <p-panel header="銷項發票" class="line-height-3 m-0">
-      <app-table-report
-        tableKey="FIN53010_APS4023_related"
-        [columns]="aps4023RelatedColumns"
-        [data]="aps4023RelatedRows()"
-        [totalRecords]="aps4023RelatedRows().length"
-        [loading]="service.detailByVouNoLoading()"
-        [lazy]="false"
-        [showCaption]="false"
-        [showManage]="false"
-        [showReportMode]="false"
-        [showCheckBox]="false"
-      ></app-table-report>
-    </p-panel>
-  </div>
+@if (isFormReadable && !isFormCreateable && aps4023RelatedRows().length > 0) {
+<div class="card">
+  <p-panel header="銷項發票" class="line-height-3 m-0">
+    <app-table-report tableKey="FIN53010_APS4023_related" [columns]="aps4023RelatedColumns"
+      [data]="aps4023RelatedRows()" [totalRecords]="aps4023RelatedRows().length"
+      [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
+      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+  </p-panel>
+</div>
 }
 
-<ng-template
-  #venUsrTemplate
-  let-rowData
-  let-col="col"
-  let-overlayPanel="overlayPanel"
->
+<ng-template #venUsrTemplate let-rowData let-col="col" let-overlayPanel="overlayPanel">
   <div class="col-12">
     <div class="flex justify-content-between align-items-center mb-3">
       <h6 class="mb-0">選擇廠商/員工</h6>
-      <p-dropdown
-        [options]="templateOptions"
-        [(ngModel)]="selectedTemplateType"
-        [ngModelOptions]="{ standalone: true }"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="選擇類型"
-        [disabled]="service.usrLoading() || service.venLoading()"
-        (onChange)="onTemplateTypeChange($event)"
-        styleClass="w-10rem"
-      ></p-dropdown>
+      <p-dropdown [options]="templateOptions" [(ngModel)]="selectedTemplateType" [ngModelOptions]="{ standalone: true }"
+        optionLabel="label" optionValue="value" placeholder="選擇類型"
+        [disabled]="service.usrLoading() || service.venLoading()" (onChange)="onTemplateTypeChange($event)"
+        styleClass="w-10rem"></p-dropdown>
     </div>
 
     <div class="mb-3">
-      <input
-        pInputText
-        class="w-full"
-        [(ngModel)]="templateSearchTerm"
-        [ngModelOptions]="{ standalone: true }"
-        placeholder="搜尋..."
-      />
+      <input pInputText class="w-full" [(ngModel)]="templateSearchTerm" [ngModelOptions]="{ standalone: true }"
+        placeholder="搜尋..." />
     </div>
 
     <div class="max-h-30rem">
-      <p-table
-        [value]="getFilteredTemplateData()"
-        [scrollable]="true"
-        scrollHeight="400px"
-        selectionMode="single"
-        dataKey="value"
-        styleClass="p-datatable-sm"
-        [paginator]="!0"
-        [rows]="10"
-        [showCurrentPageReport]="!0"
-        currentPageReportTemplate="顯示 {first} 到 {last} 筆，共 {totalRecords} 筆"
-        [loading]="loading"
-      >
+      <p-table [value]="getFilteredTemplateData()" [scrollable]="true" scrollHeight="400px" selectionMode="single"
+        dataKey="value" styleClass="p-datatable-sm" [paginator]="!0" [rows]="10" [showCurrentPageReport]="!0"
+        currentPageReportTemplate="顯示 {first} 到 {last} 筆，共 {totalRecords} 筆" [loading]="loading">
         <ng-template pTemplate="header">
           <tr>
             <th>代號</th>
@@ -524,10 +306,8 @@
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-item>
-          <tr
-            class="cursor-pointer hover:surface-hover"
-            (click)="selectTemplateItem(rowData, item); overlayPanel.hide()"
-          >
+          <tr class="cursor-pointer hover:surface-hover"
+            (click)="selectTemplateItem(rowData, item); overlayPanel.hide()">
             <td>{{ item.value }}</td>
             <td>{{ item.label }}</td>
           </tr>
@@ -540,54 +320,24 @@
       </p-table>
     </div>
 
-    <div
-      class="flex justify-content-end gap-2 mt-3 pt-2 border-top-1 surface-border"
-    >
-      <button
-        pButton
-        label="取消"
-        class="p-button-text"
-        (click)="overlayPanel.hide()"
-      ></button>
-      <button
-        pButton
-        label="清除"
-        class="p-button-outlined"
-        (click)="templateSearchTerm = ''"
-      ></button>
+    <div class="flex justify-content-end gap-2 mt-3 pt-2 border-top-1 surface-border">
+      <button pButton label="取消" class="p-button-text" (click)="overlayPanel.hide()"></button>
+      <button pButton label="清除" class="p-button-outlined" (click)="templateSearchTerm = ''"></button>
     </div>
   </div>
 </ng-template>
 
-<app-dialog
-  [(visible)]="displayDialog"
-  header="選擇常用傳票"
-  [disable]="!selectedDetail().length"
-  [loading]="service.vocTempLoading()"
-  (save)="onApplyTemplate()"
->
+<app-dialog [(visible)]="displayDialog" header="選擇常用傳票" [disable]="!selectedDetail().length"
+  [loading]="service.vocTempLoading()" (save)="onApplyTemplate()">
   <div class="grid p-fluid mt-3 mb-3">
-    <app-input-text
-      class="col-12 md:col-6 lg:col-6"
-      label="傳票號碼/代號"
-      (inputChange)="vouTermChange($event)"
-    ></app-input-text>
+    <app-input-text class="col-12 md:col-6 lg:col-6" label="傳票號碼/代號"
+      (inputChange)="vouTermChange($event)"></app-input-text>
   </div>
 
   <div [style]="{ 'min-height': '50vh', 'max-height': '75vh' }">
-    <app-table
-      [showReportMode]="!1"
-      [showCaption]="!1"
-      [showHeader]="!1"
-      [showManage]="!1"
-      [showDelete]="!1"
-      [showCheckBox]="!0"
-      [selectionMode]="'single'"
-      [dataKey]="'id'"
-      [tableKey]="'FIN53010_VocherTemplate'"
-      [data]="filteredVoucherTemplateOptions()"
-      [columns]="templateColumns"
-      (selectionChange)="selectedDetail.set($event)"
-    ></app-table>
+    <app-table [showReportMode]="!1" [showCaption]="!1" [showHeader]="!1" [showManage]="!1" [showDelete]="!1"
+      [showCheckBox]="!0" [selectionMode]="'single'" [dataKey]="'id'" [tableKey]="'FIN53010_VocherTemplate'"
+      [data]="filteredVoucherTemplateOptions()" [columns]="templateColumns"
+      (selectionChange)="selectedDetail.set($event)"></app-table>
   </div>
 </app-dialog>
