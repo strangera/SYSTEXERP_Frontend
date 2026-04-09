@@ -57,6 +57,7 @@ export class ASS17070Component extends BasicQueryPageComponent<QueryASS17070Deta
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(false);
   public lastQueryBody?: QueryASS17070Request;
+  public footerData?: QueryASS17070Detail;
 
   @ViewChild(TableReportComponent) tableReport!: TableReportComponent;
 
@@ -66,8 +67,8 @@ export class ASS17070Component extends BasicQueryPageComponent<QueryASS17070Deta
     { field: 'GoodsID', header: '品項編號', align: 'left' },
     { field: 'GoodsName', header: '品項名稱', align: 'left' },
     { field: 'UnitPrice', header: '單價', align: 'right', format: (v) => formatAmountWithDecimals(v, 0) },
-    { field: 'DamageNo', header: '報廢單號', align: 'left' },
-    { field: 'WHName', header: '倉別名稱', align: 'left' },
+    { field: 'DamageNo', header: '報廢單號' },
+    { field: 'WHName', header: '倉別名稱' },
     { field: 'Qty', header: '數量', align: 'right', format: (v) => formatAmountWithDecimals(v, 0) },
     { field: 'Amt', header: '金額', align: 'right', format: (v) => formatAmountWithDecimals(v, 0) },
   ];
@@ -134,6 +135,26 @@ export class ASS17070Component extends BasicQueryPageComponent<QueryASS17070Deta
     return d.toISOString();
   }
 
+  private splitRowTypeData(rows: QueryASS17070Detail[]): {
+    detailRows: QueryASS17070Detail[];
+    footer?: QueryASS17070Detail;
+  } {
+    const detailRows: QueryASS17070Detail[] = [];
+    let footer: QueryASS17070Detail | undefined;
+
+    rows.forEach((item) => {
+      const rowType = String(item?.RowType ?? '').toUpperCase();
+      if (rowType === 'TOTAL') {
+        footer = { ...item };
+        return;
+      }
+
+      detailRows.push(item);
+    });
+
+    return { detailRows, footer };
+  }
+
   public queryFunction = (body: QueryASS17070Request): Observable<ApiResponse<QueryASS17070Detail[]>> => {
     const raw = this.queryForm.getRawValue();
     const pageSize = (body as QueryASS17070Request & { pageSize?: number }).pageSize ?? body.PageSize;
@@ -156,11 +177,16 @@ export class ASS17070Component extends BasicQueryPageComponent<QueryASS17070Deta
 
     const cleanPayload = removeEmptyValues(payload) as QueryASS17070Request;
     return this.ass17070Service.queryASS17070(cleanPayload).pipe(
-      map((res: ApiResponse<QueryASS17070DataWrapper>) => ({
-        ...res,
-        Data: res.Data?.Details ?? [],
-        TotalCount: res.Data?.TotalRows ?? res.TotalCount ?? 0,
-      })),
+      map((res: ApiResponse<QueryASS17070DataWrapper>) => {
+        const details = res.Data?.Details ?? [];
+        const transformed = this.splitRowTypeData(details);
+        this.footerData = transformed.footer;
+        return {
+          ...res,
+          Data: transformed.detailRows,
+          TotalCount: res.Data?.TotalRows ?? transformed.detailRows.length,
+        };
+      }),
     );
   };
 
