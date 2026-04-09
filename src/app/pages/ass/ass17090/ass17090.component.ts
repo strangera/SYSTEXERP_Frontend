@@ -71,13 +71,12 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
   goodsOptions: { value: string; label: string }[] = [];
 
   columns: ReportColumn[] = [
-    { field: 'RowNo', header: '項次', visible: true },
     { field: 'GoodsID', header: '品項編號', visible: true },
     { field: 'GoodsName', header: '品項名稱', visible: true },
-    { field: 'SafeQty', header: '安全庫存', visible: true, align: 'right' },
-    { field: 'StocksQty', header: '安全庫存(目前日15小時)', visible: true, align: 'right' },
-    { field: 'ProjectQty', header: '庫存數量', visible: true, align: 'right' },
-    { field: 'ExamineQty', header: '調撥中數量', visible: true, align: 'right' },
+    { field: 'StocksQty', header: '目前庫存數量', visible: true, align: 'right' },
+    { field: 'SafeQty', header: '安全庫存數量', visible: true, align: 'right' },
+    { field: 'ProjectQty', header: '請購數量', visible: true, align: 'right' },
+    { field: 'ExamineQty', header: '驗收數量', visible: true, align: 'right' },
   ];
 
   constructor(
@@ -185,12 +184,14 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
   }): Observable<{ Data: ASS17090QueryRow[]; TotalCount: number }> => {
     const request = this.buildRequest(body);
     this.lastQueryBody = request;
+    const requestPageIndex = request.PageIndex ?? 1;
     return this.ass17090Service.queryASS17090(request).pipe(
       map((res: ApiResponse<ASS17090QueryRow[]>) => {
         const rows = res.Status === '0000' ? (res.Data ?? []) : [];
         const mapped = rows.map((row, idx) => ({
           ...row,
-          ID: row.ID ?? `${row.GoodsID ?? 'row'}-${row.RowNo ?? idx + 1}`,
+          // ASS17090 專用：確保 loadMore 跨頁時 dataKey 不重複，避免虛擬滾動重建
+          ID: row.ID ?? `${row.GoodsID ?? 'row'}-p${requestPageIndex}-r${row.RowNo ?? idx + 1}`,
         }));
         return {
           Data: mapped,

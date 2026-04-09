@@ -5,88 +5,38 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="資料顯示"
-              [control]="queryForm.controls.queryType"
-              [options]="queryTypeOptions"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-radiobutton label="資料顯示" [control]="queryForm.controls.queryType" [options]="queryTypeOptions"
+              [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="倉別"
-              controlName="warehouseId"
-              [options]="warehouseOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.warehouseId"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="倉別" controlName="warehouseId" [options]="warehouseOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.warehouseId" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="庫存日期"
-              [control]="queryForm.controls.stockDate"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-calendar calendarType="dateOne" label="庫存日期" [control]="queryForm.controls.stockDate"
+              [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類編號"
-              controlName="bigCategoryId"
-              [options]="bigCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.bigCategoryId"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="大分類編號" controlName="bigCategoryId" [options]="bigCategoryOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.bigCategoryId" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="中分類編號"
-              controlName="midCategoryId"
-              [options]="midCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.midCategoryId"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="中分類編號" controlName="midCategoryId" [options]="midCategoryOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.midCategoryId" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="小分類編號"
-              controlName="smallCategoryId"
-              [options]="smallCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.smallCategoryId"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="小分類編號" controlName="smallCategoryId" [options]="smallCategoryOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.smallCategoryId"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品項編號"
-              controlName="goodsId"
-              [options]="goodsOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.goodsId"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="品項編號" controlName="goodsId" [options]="goodsOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.goodsId" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div>
@@ -101,31 +51,14 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table-report
-      [data]="tableData()"
-      [columns]="columns"
-      [totalRecords]="totalRecords()"
-      [loading]="tableLoading()"
-      dataKey="ID"
-      tableKey="ASS17090_Data"
-      [showCheckBox]="false"
-      [showEdit]="false"
-      [showDetail]="false"
-      [showDelete]="false"
-      [showManage]="false"
-      [queryFunction]="queryFunction"
-      [lastQueryBody]="lastQueryBody"
-      (dataChange)="tableData.set($event)"
-    >
+    <app-table-report [data]="tableData()" [columns]="columns" [totalRecords]="totalRecords()"
+      [loading]="tableLoading()" dataKey="GoodsID" tableKey="ASS17090_Data" [showCheckBox]="false" [showEdit]="false"
+      [showDetail]="false" [showDelete]="false" [showManage]="false" [queryFunction]="queryFunction"
+      [lastQueryBody]="lastQueryBody">
       <header>
         <div class="flex justify-content-end gap-2">
-          <p-button
-            label="匯出 Excel"
-            icon="pi pi-file-excel"
-            [loading]="exportExcelLoading"
-            [disabled]="tableData().length === 0"
-            (click)="onExportExcel()"
-          ></p-button>
+          <p-button label="匯出 Excel" icon="pi pi-file-excel" [loading]="exportExcelLoading"
+            [disabled]="tableData().length === 0" (click)="onExportExcel()"></p-button>
         </div>
       </header>
     </app-table-report>
