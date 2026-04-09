@@ -45,6 +45,27 @@
 </div>
 <div class="card">
   <div class="col-13">
+    <app-table-report
+      [tableKey]="'CPM11100'"
+      [dataKey]="'TLT_NO'"
+      [columns]="columns"
+      [data]="data"
+      [totalRecords]="totalRecords"
+      [loading]="loading"
+      [showManage]="false"
+      [showExcel]="false"
+      [showDelete]="false"
+      [showReportMode]="false"
+      [showCheckBox]="false"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      (linkClick)="onLinkClick($event)"
+    ></app-table-report>
+  </div>
+</div>
+
+<!-- <div class="card">
+  <div class="col-13">
     <app-table
       tableKey="CPM11100"
       [data]="data"
@@ -59,12 +80,12 @@
       [showDelete]="false"
       [showCheckBox]="false"
       [showManage]="false"
-      dataKey="id"
-      [multiSortMeta]="[{ field: 'ROW_NO', order: 1 }]"
+      dataKey="TLT_NO"
+      [multiSortMeta]="[{ field: 'TLT_NO', order: 1 }]"
       [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
       [loading]="loading"
     ></app-table>
   </div>
-</div>
+</div> -->
