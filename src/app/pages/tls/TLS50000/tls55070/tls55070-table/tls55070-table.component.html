@@ -77,7 +77,8 @@
       <!-- Left 固定欄 -->
       <th *ngFor="let col of leftFixedHeaderColumns; trackBy: trackByCol" class="text-center wrap-header"
         pReorderableColumn pResizableColumn [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
-        [pSortableColumnDisabled]="!showSort || col.showSort === false" [style.minWidth]="getColMinWidth(col)">
+        [pSortableColumnDisabled]="!showSort || col.showSort === false" [style.width]="getColWidth(col)"
+        [style.minWidth]="getColWidth(col)">
         {{ col.header }}
         <span *ngIf="col.required" class="text-red-500">*</span>
         <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.sortField ?? col.field">
@@ -87,7 +88,8 @@
       <!-- 其他欄位 -->
       <th *ngFor="let col of headerRow1Columns; trackBy: trackByCol" class="text-center wrap-header" pReorderableColumn
         pResizableColumn [pSortableColumn]="showSort ? col.sortField ?? col.field : undefined"
-        [pSortableColumnDisabled]="!showSort || col.showSort === false" [style.minWidth]="getColMinWidth(col)">
+        [pSortableColumnDisabled]="!showSort || col.showSort === false" [style.width]="getColWidth(col)"
+        [style.minWidth]="getColWidth(col)">
         {{ col.header }}
         <span *ngIf="col.required" class="text-red-500">*</span>
         <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.sortField ?? col.field">
@@ -129,8 +131,8 @@
         </td>
 
         <!-- Left 固定欄 -->
-        <td *ngFor="let col of leftFixedHeaderColumns; trackBy: trackByCol" class="text-center" [ngClass]="col.style"
-          [style.minWidth]="getColMinWidth(col)">
+        <td *ngFor="let col of leftFixedHeaderColumns; trackBy: trackByCol" class="text-center wrap-cell"
+          [ngClass]="col.style" [style.width]="getColWidth(col)" [style.minWidth]="getColWidth(col)">
           <span *ngIf="!col.type">
             {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
           </span>
@@ -140,8 +142,8 @@
         <ng-container *ngFor="let col of headerRow1Columns; trackBy: trackByCol">
 
           <!-- 非合併欄位 -->
-          <td *ngIf="!mergedColumns.includes(col.field)" class="text-center" [ngClass]="col.style"
-            [style.minWidth]="getColMinWidth(col)" (dblclick)="detailRow(rowData)">
+          <td *ngIf="!mergedColumns.includes(col.field)" class="text-center wrap-cell" [ngClass]="col.style"
+            [style.width]="getColWidth(col)" [style.minWidth]="getColWidth(col)" (dblclick)="detailRow(rowData)">
             <span *ngIf="!col.type">
               {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
             </span>
@@ -150,8 +152,9 @@
           <!-- 合併欄位：只在群組首列輸出，rowspan = 該群組筆數 -->
           <ng-container *ngIf="mergedColumns.includes(col.field)">
             <td *ngIf="isFirstInGroup(rowIndex, getGroupKeyValue(rowData, rowIndex))"
-              [attr.rowspan]="getPageRowSpan(rowIndex, getGroupKeyValue(rowData, rowIndex))" class="text-center"
-              [ngClass]="col.style" [style.minWidth]="getColMinWidth(col)" (dblclick)="detailRow(rowData)">
+              [attr.rowspan]="getPageRowSpan(rowIndex, getGroupKeyValue(rowData, rowIndex))"
+              class="text-center wrap-cell" [ngClass]="col.style" [style.width]="getColWidth(col)"
+              [style.minWidth]="getColWidth(col)" (dblclick)="detailRow(rowData)">
               <span *ngIf="!col.type">
                 {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
               </span>
@@ -183,12 +186,14 @@
         <td *ngIf="showCheckBox" class="w-1rem"></td>
 
         <!-- Left 固定欄佔位 -->
-        <td *ngFor="let col of leftFixedHeaderColumns; trackBy: trackByCol" [style.minWidth]="getColMinWidth(col)">
+        <td *ngFor="let col of leftFixedHeaderColumns; trackBy: trackByCol" [style.width]="getColWidth(col)"
+          [style.minWidth]="getColWidth(col)">
         </td>
 
         <!-- 其他欄位 -->
         <ng-container *ngFor="let col of headerRow1Columns; trackBy: trackByCol">
-          <td class="text-center" [ngClass]="col.style" [style.minWidth]="getColMinWidth(col)">
+          <td class="text-center wrap-cell" [ngClass]="col.style" [style.width]="getColWidth(col)"
+            [style.minWidth]="getColWidth(col)">
             <ng-container *ngIf="col.field === 'TXN_SaleAmt'; else blankSubtotalCell">
               銷售金額：
               {{ getSubtotalValue(rowData) | number : '1.0-0' }}

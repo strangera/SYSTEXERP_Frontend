@@ -8,6 +8,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { NavigationHelperService } from 'src/app/reports/services/navigation-helper.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -45,7 +46,8 @@ export class SYS0780Component extends BasicQueryPageComponent<unknown> implement
 
   constructor(
     public readonly sys0780Service: Sys0780Service,
-    private readonly dropdown: DropdownApiService
+    private readonly dropdown: DropdownApiService,
+    private readonly navHelper: NavigationHelperService
   ) { super(); }
 
   ngOnInit(): void {
@@ -75,19 +77,9 @@ export class SYS0780Component extends BasicQueryPageComponent<unknown> implement
       return;
     }
 
-    // 2. 組裝參數 (根據你的需求，可能需要傳送 user_No, prog_no 等)
-    const queryParams = new URLSearchParams({
-      // userNo: formValue.user_No || '',
-      progNo: formValue.prog_no.No || '',
-      // 如果有其他需要傳給報表的參數可以在此增加
-    }).toString();
-
-    // 3. 設定路徑 (reports/sys/sys0780Report)
-    // 使用 window.location.origin 確保在不同環境（開發/正式）都能抓到正確的基底網址
-    const reportUrl = `${window.location.origin}/reports/sys/sys0780report?${queryParams}`;
-
-    // 4. 開啟新分頁
-    // '_blank' 表示開啟新分頁
-    window.open(reportUrl, '_blank');
+    // 使用 navHelper，它會自動處理 base-href
+    this.navHelper.openInNewTab('reports/sys/sys0780report', {
+      progNo: formValue.prog_no.No || ''
+    });
   }
 }

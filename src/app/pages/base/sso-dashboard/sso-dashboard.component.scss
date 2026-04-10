@@ -231,7 +231,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 10;
-  pointer-events: none; /* 確保不影響後方點擊 */
+  pointer-events: auto;
 }
 
 .center-circle {
@@ -245,7 +245,9 @@
   justify-content: center;
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.2);
   padding: 20px; /* 加入內距，防止 Logo 貼到圓邊 */
-
+  /* 關鍵：明確設定這個圓圈會消耗掉點擊事件 */
+  pointer-events: auto;
+  cursor: default; /* 讓滑鼠移到中間時不要變手指 */
   .center-img {
     /* 從 35% 調大至 75% ~ 85% */
     width: 85%;

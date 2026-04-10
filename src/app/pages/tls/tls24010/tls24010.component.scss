@@ -1,0 +1,56 @@
+::ng-deep {
+  li.p-menuitem.p-disabled.check-status-disabled {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    overflow: visible !important;
+
+    .p-menuitem-content {
+      opacity: 0.6;
+      pointer-events: none !important;
+      overflow: visible !important;
+    }
+
+    /* 3. Tooltip 本體 - 緊貼在箭頭下方 */
+    &:hover::after {
+      content: "交易有已審核的付款別不可異動資料";
+      position: absolute;
+      /* 箭頭高度是 6px，所以文字框從 100% + 6px 開始 */
+      top: calc(100% + 5px);
+      left: 50%;
+      transform: translateX(-50%);
+
+      background-color: #4b5563 !important;
+      color: #ffffff !important;
+      padding: 0.25em 0.5rem;
+      border-radius: 4px;
+      font-size: 100%;
+      white-space: nowrap;
+      z-index: 10001;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      opacity: 1 !important;
+      display: block !important;
+    }
+
+    /* 4. 箭頭 - 緊貼在選單邊緣 */
+    &:hover::before {
+      content: "";
+      position: absolute;
+      /* 尖端直接從選單底部 (100%) 開始 */
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+
+      width: 0;
+      height: 0;
+      border-style: solid;
+      /* 製作朝上的三角形，高度為 6px */
+      border-width: 0 6px 6px 6px;
+      border-color: transparent transparent #4b5563 transparent;
+
+      z-index: 10001;
+      opacity: 1 !important;
+      display: block !important;
+    }
+  }
+}

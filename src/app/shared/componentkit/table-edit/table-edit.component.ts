@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, EventEmitter, inject, Input, NgZone, OnChanges, Output, SimpleChanges, Type, ViewChild } from '@angular/core';
+import { AfterContentInit, ChangeDetectionStrategy, ChangeDetectorRef, Component, ContentChild, EventEmitter, inject, Input, NgZone, OnChanges, Output, SimpleChanges, TemplateRef, Type, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { SortMeta } from 'primeng/api';
@@ -61,8 +61,9 @@ import { ColumnGroup, EditColumn, FieldChangeEvent } from './table-edit.model';
   ],
   providers: [TableEditDataService, TableValidationService]
 })
-export class TableEditComponent implements OnChanges {
+export class TableEditComponent implements OnChanges, AfterContentInit {
   @ViewChild('dt') private readonly table!: Table;
+  @ContentChild('customCell') customCellTemp!: TemplateRef<any>;
   // 基本設置
   @Input() title: string | undefined = undefined;       // table 標題
   @Input() tableKey: string | undefined = undefined;    // table 唯一標識 (必填)
@@ -236,6 +237,15 @@ export class TableEditComponent implements OnChanges {
           }
         }
       }
+    }
+  }
+  ngAfterContentInit(): void {
+    // 當外部傳入的 <ng-template #customCell> 準備好時
+    if (this.customCellTemp) {
+      // 使用 setTimeout 避開「單向資料流」的檢測錯誤
+      setTimeout(() => {
+        this.cdr.markForCheck(); // 告訴 Angular：樣板來了，請重新渲染儲存格
+      }, 0);
     }
   }
   /**

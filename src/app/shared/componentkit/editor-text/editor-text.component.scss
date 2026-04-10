@@ -1,7 +1,8 @@
-::ng-deep {
-  .ng-invalid.ng-dirty > * {
-    border-color: #f44336 !important;
-  }
+// 限定在 :host 內，避免影響其他畫面的 form 子元素（如 hr）
+:host ::ng-deep .ng-invalid.ng-dirty > * {
+  border-color: #f44336 !important;
+}
+:host ::ng-deep {
 
   .p-editor-toolbar {
     display: none;
