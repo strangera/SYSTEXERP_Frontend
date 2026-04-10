@@ -192,7 +192,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly ars3001RelatedColumns: ReportColumn[] = [
     { field: 'org_id', header: '組織代號', visible: true },
     { field: 'ven_no', header: '廠商代號', visible: true },
-    { field: 'ars_amt', header: '金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'ars_amt', header: '金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'pta_date', header: '預計收款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'ars_date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'acc_no', header: '會計科目代號', visible: true },
@@ -210,7 +210,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         return String(v ?? r?.VEN_PayType ?? '');
       }
     },
-    { field: 'ACP_Amt', header: '金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'ACP_Amt', header: '金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'ACP_ExpectPayDate', header: '預計付款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'ACP_Date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'VEN_BNK_No', header: '匯款銀行代號', visible: true },
@@ -219,7 +219,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'VEN_CTRLYN', header: '票據禁止背書轉讓', visible: true },
     { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true },
     { field: 'AccNo', header: '會計科目代號', visible: true },
-    { field: 'AccName', header: '會計科目名稱', visible: true },
+    { field: 'AccCName', header: '會計科目名稱', visible: true },
     { field: 'NoteDesc', header: '摘要', visible: true },
     { field: 'SubDetailNo', header: '對象別編號', visible: true },
     { field: 'PTA', header: '對帳KEY值', visible: true },
@@ -233,13 +233,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'CreditDate', header: '退出/折讓日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'RepYYYYMM', header: '申報年月', visible: true },
     { field: 'CreditTypeDesc', header: '區別', visible: true },
-    { field: 'Orig_Amount', header: '原發票總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'Orig_Amount', header: '原發票總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'BuyerUniformNo', header: '銷受人統一編號', visible: true },
-    { field: 'ReturnedAmount', header: '已退回/折讓總金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'CreditAmount', header: '退回/折讓總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'ReturnedAmount', header: '已退回/折讓總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'CreditAmount', header: '退回/折讓總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'TaxTypeDesc', header: '課稅別', visible: true },
-    { field: 'CreditNetAmount', header: '退回/折讓未稅金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'CreditTaxAmount', header: '退回/折讓稅額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'CreditNetAmount', header: '退回/折讓未稅金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'CreditTaxAmount', header: '退回/折讓稅額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
   ];
 
   public readonly aps2002RelatedColumns: ReportColumn[] = [
@@ -252,10 +252,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'DeclareYM', header: '申報年月', visible: true },
     { field: 'VendorTaxID', header: '廠商統一編號', visible: true },
     { field: 'InvoiceUsage', header: '發票用途', visible: true },
-    { field: 'InvoiceAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'InvoiceAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'TaxType', header: '課稅別', visible: true },
-    { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'DeductionCodeDesc', header: '扣抵代號', visible: true },
     { field: 'CategoryType', header: '類別區分', visible: true },
     { field: 'SourceDocNo', header: '憑證單號', visible: true },
@@ -271,11 +271,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'DeclareYM', header: '申報年月', visible: true },
     { field: 'Credit_Type_Flag', header: '區別', visible: true },
     { field: 'Buyer_Uniform_No', header: '買受人統一編號', visible: true },
-    { field: 'Returned_Amount_Zero', header: '已退回/折讓總金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'Returned_Amount', header: '退回/折讓總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'Returned_Amount_Zero', header: '已退回/折讓總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'Returned_Amount', header: '退回/折讓總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'Tax_Type', header: '課稅別', visible: true },
-    { field: 'pur_net', header: '退回/折讓未稅金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'pur_tax', header: '退回/折讓稅額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'pur_net', header: '退回/折讓未稅金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'pur_tax', header: '退回/折讓稅額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
   ];
 
   public readonly aps4023RelatedColumns: ReportColumn[] = [
@@ -291,10 +291,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
     { field: 'DeclareYM', header: '申報年月', visible: true },
     { field: 'BuyerUniform', header: '買受人統一編號', visible: true },
-    { field: 'TotalAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'TotalAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'TaxType', header: '課稅別', visible: true },
-    { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v) },
-    { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v) },
+    { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
+    { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'SourceDocNo', header: '憑證單號', visible: true },
     { field: 'SummaryCount', header: '彙開註記', visible: true },
     { field: 'AssetFlag', header: '資產註記', visible: true },
@@ -397,7 +397,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       ...v,
       AccAmtC: v.AccDC === 'C' ? v.AccAmt : void 0,
       AccAmtD: v.AccDC === 'D' ? v.AccAmt : void 0,
-      AccName: this.service.accNoMap().get(String(v.AccNo))?.label,
+      AccCName: this.service.accNoMap().get(String(v.AccNo))?.label,
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
         ?? this.service.usrMap().get(String(v.DetailNo))?.label,
       NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
@@ -1428,7 +1428,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             id: v.id!,
             AccAmtC: isCredit ? v.AccAmt : void 0,
             AccAmtD: isDebit ? v.AccAmt : void 0,
-            AccName: this.service.accNoMap().get(String(v.AccNo))?.label,
+            AccCName: this.service.accNoMap().get(String(v.AccNo))?.label,
             DetailName:
               this.service.vendorMap().get(String(v.DetailNo))?.label
               ?? this.service.usrMap().get(String(v.DetailNo))?.label
