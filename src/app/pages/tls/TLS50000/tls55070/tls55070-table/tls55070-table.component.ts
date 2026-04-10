@@ -452,12 +452,18 @@ export class TLS55070TableComponent
 
   /* ======================= 樣板輔助 ======================= */
 
-  /** 依欄名長度估算最小寬度，避免標題擠在一起 */
-  getColMinWidth(col: any): string {
+  /** 欄位固定寬度：可由 col.width 覆寫，否則以欄名長度估算 */
+  getColWidth(col: any): string {
+    if (col?.width) return col.width;
     const text = (col?.header ?? '').toString();
     const len = [...text].length;
     const ch = Math.max(6, Math.min(40, len + 2));
     return `calc(${ch}ch + 1.25rem)`;
+  }
+
+  /** 與既有 template 相容 */
+  getColMinWidth(col: any): string {
+    return this.getColWidth(col);
   }
 
   /** 現在可視欄位（selectedColumns > columns），排除 hidden/visible=false */
