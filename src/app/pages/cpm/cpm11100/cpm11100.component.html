@@ -109,12 +109,3 @@
     ></app-table>
   </div>
 </div> -->
-
-<p-image
-  *ngIf="selectedImage"
-  [src]="selectedImage"
-  (onImageError)="onImageError($event)"
-  [attr.alt]="'目前選擇樓層：' + selectedFloor"
-  [preview]="false"
-  imageClass="w-full h-auto max-w-full"
-></p-image>

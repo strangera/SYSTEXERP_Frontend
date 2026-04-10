@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls11010Service } from '@service/api/tls/tls11010.service';
-import { TLS12050Service, TLS12050Summary } from '@service/api/tls/tls12050.service';
+import { TLS12050Service } from '@service/api/tls/tls12050.service';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton } from '@shared/componentkit/table-report/table-report.model';
@@ -199,7 +199,7 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
           const buildingNo = res.Data && res.Data.length > 0 ? res.Data[0].building_no : '';
           this.selectedBuildingLabel = buildingNo;
 
-          console.log('成功抓到館別:', buildingNo);
+          console.log('row館別:', buildingNo);
 
           // 2. 建立第二個 API 的 Payload (查平面圖細節)
           const payload = {
@@ -214,42 +214,39 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
       )
       .subscribe({
         next: (res) => {
-          if (res && res.Summary) {
-            // 3. 處理平面圖資料
-            this.applyFloorPlanData(res.Summary, row.FLOOR_DESC);
-            this.showFloorPlan = true;
+          if (res && res.Summary && res.Summary.Image_Url) {
+            // 組合完整圖片網址
+            const imageUrl = `${environment.ApiUrl}/${res.Summary.Image_Url}`;
 
-            // 滾動到圖表區塊
-            setTimeout(() => {
-              const element = document.getElementById('floorPlanSection');
-              if (element) {
-                element.scrollIntoView({ behavior: 'smooth' });
-              }
-            }, 100);
+            // 在新視窗開啟圖片
+            // 如果你想要更精緻的顯示，建議開一個專門的 Angular Route 頁面
+            const win = window.open('', '_blank');
+            if (win) {
+              // 寫入簡單的 HTML 讓圖片在新分頁置中且美觀
+              win.document.write(`
+              <html>
+                <head>
+                  <title>平面圖- ${this.selectedBuildingLabel}/${row.FLOOR_DESC}</title>
+                  <style>
+                    body { margin: 0; background: #333; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                    img { max-width: 100%; max-height: 100%; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+                  </style>
+                </head>
+                <body>
+                  <img src="${imageUrl}" onerror="this.src='${this.blank}'">
+                </body>
+              </html>
+            `);
+              win.document.close();
+            }
           } else {
-            console.warn('查無平面圖摘要資料');
+            this.messageService.add({ severity: 'warn', summary: '提醒', detail: '查無平面圖路徑' });
           }
         },
         error: (err) => {
           console.error('取得資料流程失敗:', err);
         }
       });
-  }
-
-  private applyFloorPlanData(summary: TLS12050Summary, floor: string): void {
-    const total = summary.All_Count ?? 0;
-    this.selectedImage = summary.Image_Url ? `${environment.ApiUrl}/${summary.Image_Url}` : this.blank;
-    this.selectedFloor = floor;
-    this.All_Count = total;
-    this.Idle = this.calculatePercent(summary.Idle ?? 0, total);
-    this.Under_Negotiation = this.calculatePercent(summary.Under_Negotiation ?? 0, total);
-    this.In_Operation = this.calculatePercent(summary.In_Operation ?? 0, total);
-    this.Outof_Service = this.calculatePercent(summary.Outof_Service ?? 0, total);
-  }
-
-  private calculatePercent(value: number, total: number): string {
-    if (!total) return '0%';
-    return ((value / total) * 100).toFixed(1) + '%';
   }
 
   onImageError(event: Event): void {
