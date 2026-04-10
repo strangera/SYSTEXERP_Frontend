@@ -3,7 +3,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { CPM12030Data, Cpm12030Service, CSS1004Data } from '@service/api/cpm/cpm12030.service';
+import { CPM12030Data, Cpm12030Service, CSS10031Data, CSS1004Data } from '@service/api/cpm/cpm12030.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
@@ -31,6 +31,8 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
   KIND_IDOptions$ = this.dropdown.queryCss1002();
   CLASS_IDOptions$ = this.dropdown.queryCss1005();
   ORG_IDOptions$ = this.dropdown.querySys3100();
+
+  // 責任單位 (CSS1004) table
   columns: EditColumn[] = [
     {
       field: 'ORG_ID',
@@ -65,6 +67,18 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
     },
   ];
   data: CSS1004Data[] = [];
+
+  // 意見類別細項 (CSS10031) table
+  kindColumns: EditColumn[] = [
+    {
+      field: 'KIND_Name',
+      header: '類別資訊名稱',
+      type: 'input',
+      validate: [validateRequired]
+    }
+  ];
+  kindData: CSS10031Data[] = [];
+
   constructor(
     private readonly cpm12030Service: Cpm12030Service,
     private readonly dropdown: DropdownApiService
@@ -76,16 +90,24 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
     this.initializePage('CPM12030', this.dataForm);
     if (!this.isFormCreateable && this.rowdata) {
       const id = this.rowdata.ID;
-      this.cpm12030Service.queryCPM12030Detail({ ID: id }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.data = response.Data
-      });
+      const kindSubId = this.rowdata.KIND_SubID;
+      this.cpm12030Service.queryCPM12030Detail({ ID: id, KIND_SubID: kindSubId })
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data.ClassItems;
+          this.kindData = response.Data.KindItems;
+        });
     }
   }
-  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
+
+  @ViewChild('classTable') classTableComponent!: TableEditComponent;
+  @ViewChild('kindTable') kindTableComponent!: TableEditComponent;
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const valid = this.tableEditComponent.validateAndShowErrors();
-      if (!valid) {
+      const classValid = this.classTableComponent.validateAndShowErrors();
+      const kindValid = this.kindTableComponent.validateAndShowErrors();
+      if (!classValid || !kindValid) {
         this.loading = false;
         return;
       }
@@ -94,7 +116,8 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
         KIND_ID: frm.get('KIND_ID')?.value,
         KIND_SubID: this.isFormCreateable ? undefined : frm.getRawValue().KIND_SubID,
         KIND_SubName: frm.get('KIND_SubName')?.value,
-        CLASS_IDs: this.data.map(item => item.CLASS_ID)
+        CLASS_IDs: this.data.map(item => item.CLASS_ID),
+        CSS10031Items: this.kindData.map(item => ({ ID: item.ID ?? 0, KIND_Name: item.KIND_Name }))
       }
       const $request = this.isFormCreateable ? this.cpm12030Service.createCPM12030(params) : this.cpm12030Service.updateCPM12030(params);
       $request.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
@@ -102,6 +125,7 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
         if (this.isFormCreateable) {
           this.dataForm.reset();
           this.data = [];
+          this.kindData = [];
         } else {
           this.onCancel();
         }
@@ -111,5 +135,6 @@ export class CPM12030CRUComponent extends BasicCruPageComponent<CPM12030Data> im
   onClear() {
     this.dataForm.reset();
     this.data = [];
+    this.kindData = [];
   }
 }

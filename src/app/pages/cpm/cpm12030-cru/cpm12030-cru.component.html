@@ -7,28 +7,64 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="子類別編號" controlName="KIND_SubID" [control]="dataForm.controls.KIND_SubID"
-            [submitted]="submitted">
-          </app-input-text>
+          <app-input-text
+            label="子類別編號"
+            controlName="KIND_SubID"
+            [control]="dataForm.controls.KIND_SubID"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="子類別名稱" controlName="KIND_SubName" [control]="dataForm.controls.KIND_SubName"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="子類別名稱"
+            controlName="KIND_SubName"
+            [control]="dataForm.controls.KIND_SubName"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="客戶意見主類別" controlName="KIND_ID" [options]="KIND_IDOptions$ | async" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.KIND_ID" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            label="客戶意見主類別"
+            controlName="KIND_ID"
+            [options]="KIND_IDOptions$ | async"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.KIND_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
-        <!-- <div class="col-12">
-          <app-input-textarea label="備註" controlName="remark" [control]="dataForm.controls.remark"
-            [submitted]="submitted">
-          </app-input-textarea>
-        </div> -->
       </div>
-      <app-table-edit [columns]="columns" [data]="data" [tableRequired]="true" [disabled]="isFormReadable"
-        (dataChange)="data = $event" [loading]="loading"></app-table-edit>
-      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm" (click)="onClear()"></app-button>
+
+      <p class="font-semibold mt-3 mb-1">責任單位</p>
+      <app-table-edit
+        #classTable
+        [columns]="columns"
+        [data]="data"
+        [tableRequired]="true"
+        [disabled]="isFormReadable"
+        (dataChange)="data = $event"
+        [loading]="loading"
+      ></app-table-edit>
+
+      <p class="font-semibold mt-3 mb-1">類別資訊細項</p>
+      <app-table-edit
+        #kindTable
+        [columns]="kindColumns"
+        [data]="kindData"
+        [disabled]="isFormReadable"
+        (dataChange)="kindData = $event"
+        [loading]="loading"
+      ></app-table-edit>
+
+      <div
+        *ngIf="!isFormReadable"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button
+          btnType="cancel"
+          [form]="dataForm"
+          (click)="onClear()"
+        ></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
