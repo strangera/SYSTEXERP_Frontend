@@ -149,6 +149,12 @@ export class Tls24010Pos5007Component implements OnChanges {
     return this.TLT_NoOptions.find(item => item.No === rowData.PLU_No)?.Name || '';
   }
 
+  /** 預設補登業績類別：優先帶 tlt_id='1'，找不到才取第一筆 */
+  private getDefaultTltIdOption(): TltTalentChargeData | undefined {
+    if (!this.tlt_idOptions?.length) return undefined;
+    return this.tlt_idOptions.find(item => String(item.tlt_id) === '1') ?? this.tlt_idOptions[0];
+  }
+
   insertRow(): void {
     // 修正 index 累加
     this.index++;
@@ -170,7 +176,12 @@ export class Tls24010Pos5007Component implements OnChanges {
     if (this.store_way === STORE_WAY.專櫃) {
       // 檢查是否有選項（包含我們在 ngOnChanges 塞入的預設值）
       if (this.tlt_idOptions && this.tlt_idOptions.length > 0) {
-        const defaultOption = this.tlt_idOptions[0];
+        const defaultOption = this.getDefaultTltIdOption();
+        if (!defaultOption) {
+          this.POS5007Data = [...this.POS5007Data, newRow];
+          this.calculateLastYearTotal();
+          return;
+        }
         newRow.tlt_id = defaultOption.tlt_id;
         newRow.tlt_id_desc = defaultOption.tlt_id_desc;
         newRow.PLU_TaxType = defaultOption.cag_taxtype || '1';
