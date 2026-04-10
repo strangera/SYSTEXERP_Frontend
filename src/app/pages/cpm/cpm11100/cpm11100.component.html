@@ -43,7 +43,7 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-<div class="card">
+<!-- <div class="card">
   <div class="col-13">
     <app-table-report
       [tableKey]="'CPM11100'"
@@ -64,6 +64,24 @@
       (linkClick)="onLinkClick($event)"
     ></app-table-report>
   </div>
+</div> -->
+
+<div class="card">
+  <app-table-report
+    tableKey="CPM11100"
+    [data]="data"
+    [columns]="columns"
+    [showCheckBox]="false"
+    [showDelete]="false"
+    [showEdit]="false"
+    (detail)="onEdit($event)"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [showReportMode]="false"
+    [showDetail]="false"
+    [addButton]="addButton"
+    [lastQueryBody]="lastQueryBody"
+  ></app-table-report>
 </div>
 
 <!-- <div class="card">
