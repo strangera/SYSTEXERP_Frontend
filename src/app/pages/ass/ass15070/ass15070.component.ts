@@ -58,8 +58,8 @@ export class ASS15070Component extends BasicQueryPageComponent<QueryASS15070Row>
   public readonly tableLoading = signal<boolean>(false);
   public lastQueryBody?: QueryASS15070Request;
 
-  /** 進貨單號下拉：來源待補 */
-  public readonly subpoenaOptions: { label: string; value: string }[] = [];
+  /** 進貨單號下拉：queryFAASSCHKMASS15070_DropDownList */
+  public subpoenaOptions: { label: string; value: string }[] = [];
   /** 廠商編號下拉：queryPOS2013_DropDownList */
   public supplierOptions: { label: string; value: string }[] = [];
   /** 申請人代號下拉：queryTBLUSER_DropDownList */
@@ -93,6 +93,16 @@ export class ASS15070Component extends BasicQueryPageComponent<QueryASS15070Row>
   }
 
   private loadDropdowns(): void {
+    this.dropdownApi
+      .queryFAASSCHKMASS15070_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(options => {
+        this.subpoenaOptions = (options ?? []).map(x => ({
+          label: x.label,
+          value: x.value,
+        }));
+      });
+
     this.dropdownApi
       .queryPos2013({ VEN_Flag: '' })
       .pipe(untilDestroyed(this))

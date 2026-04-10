@@ -76,7 +76,8 @@ import {
   TLTTALENTItem,
   TLTTALENTQuery,
   TlttalentTltSpaceItem,
-  Ass13010PurchaseNumberDropDownItem
+  Ass13010PurchaseNumberDropDownItem,
+  FAASSCHKMASS15070DropDownItem
 } from './dropdown-api.model';
 
 @Injectable({
@@ -429,6 +430,29 @@ export class DropdownApiService {
           value: String(item.ID),
           label: String(item.ID),
         }));
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  /** 查詢進貨單號下拉選單(ASS15070) */
+  queryFAASSCHKMASS15070_DropDownList(): Observable<Option[] | null> {
+    return this.queryDropdown<FAASSCHKMASS15070DropDownItem>(
+      '/ASS0000/ASS1000/queryFAASSCHKMASS15070_DropDownList'
+    ).pipe(
+      map(items => {
+        if (!items) return null;
+        return items
+          .map(item => {
+            const id = item.SUBPOENA_ID?.trim() ?? '';
+            if (!id) return null;
+            return {
+              ...item,
+              value: id,
+              label: id,
+            };
+          })
+          .filter((x): x is Option => x !== null);
       }),
       shareReplay({ bufferSize: 1, refCount: true })
     );
