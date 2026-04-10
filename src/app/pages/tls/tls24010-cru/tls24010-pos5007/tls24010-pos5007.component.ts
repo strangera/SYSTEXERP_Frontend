@@ -171,11 +171,11 @@ export class Tls24010Pos5007Component implements OnChanges {
       // 檢查是否有選項（包含我們在 ngOnChanges 塞入的預設值）
       if (this.tlt_idOptions && this.tlt_idOptions.length > 0) {
         const defaultoption = this.tlt_idOptions[0];
-        newRow.tlt_id = defaultOption.tlt_id;
-        newRow.tlt_id_desc = defaultOption.tlt_id_desc;
-        newRow.PLU_TaxType = defaultOption.cag_taxtype || '1';
-        newRow.TXN_DiscCode = defaultOption.cag_barcode || '000';
-        newRow.TXN_DiscCode_Name = defaultOption.cag_barcode_name || '正品';
+        newRow.tlt_id = defaultoption.tlt_id;
+        newRow.tlt_id_desc = defaultoption.tlt_id_desc;
+        newRow.PLU_TaxType = defaultoption.cag_taxtype || '1';
+        newRow.TXN_DiscCode = defaultoption.cag_barcode || '000';
+        newRow.TXN_DiscCode_Name = defaultoption.cag_barcode_name || '正品';
       }
     }
 
