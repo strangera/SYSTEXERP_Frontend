@@ -128,7 +128,7 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
       //這邊預設是pageSize但後端是PageSize要先轉型
       const payload = {
         ...frm.value,
-        PageSize: frm.value.pageSize,
+        PageSize: 999,
         PageIndex: frm.value.pageIndex,
       };
       console.log('全館店櫃request:', JSON.stringify(payload, null, 2));
