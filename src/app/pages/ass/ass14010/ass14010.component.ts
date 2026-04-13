@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls51080Service } from '@service/api/tls/tls51080.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -77,32 +79,23 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010sample> i
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  supplierId_Options: apiOption[] = [ // 供應商編號 下拉選項
-    { No: 'SUP001', Name: '供應商A', Label: 'SUP001 - 供應商A' },
-    { No: 'SUP002', Name: '供應商B', Label: 'SUP002 - 供應商B' },
-    { No: 'SUP003', Name: '供應商C', Label: 'SUP003 - 供應商C' }
-  ];
-  invoice_type_Options: apiOption[] = [ // 請款單據種類 下拉選項
-    { No: 'IT001', Name: '請款單據種類A', Label: 'IT001 - 請款單據種類A' },
-    { No: 'IT002', Name: '請款單據種類B', Label: 'IT002 - 請款單據種類B' },
-    { No: 'IT003', Name: '請款單據種類C', Label: 'IT003 - 請款單據種類C' }
-  ];
+  supplierId_Options: apiOption[] = []; // 供應商編號 下拉選項 (ass12020)
+  invoice_type_Options: { value: string; label: string }[] = getSYS1000Options('invoice_type'); // 請款單據種類 下拉選項 (tls2e050)
   ODM_No_Options: apiOption[] = [ // 驗收單號 下拉選項
     { No: 'ODM001', Name: '驗收單號A', Label: 'ODM001 - 驗收單號A' },
     { No: 'ODM002', Name: '驗收單號B', Label: 'ODM002 - 驗收單號B' },
     { No: 'ODM003', Name: '驗收單號C', Label: 'ODM003 - 驗收單號C' }
   ];
-  INV_GUIType_Options: apiOption[] = [ // 發票格式 下拉選項
-    { No: 'GUI001', Name: '發票格式A', Label: 'GUI001 - 發票格式A' },
-    { No: 'GUI002', Name: '發票格式B', Label: 'GUI002 - 發票格式B' },
-    { No: 'GUI003', Name: '發票格式C', Label: 'GUI003 - 發票格式C' }
+  INV_GUIType_Options: { value: number; label: string }[] = [ // 發票格式 下拉選項 (fin23040)
+    { value: 1, label: '21-進項三聯式、電子計算機統一發票' },
+    { value: 2, label: '22-進項二聯式收銀機統一發票、載有稅額之其他憑證' },
+    { value: 3, label: '25-進向三連式收銀機統一發票及一般稅額計算之電子發票' },
+    { value: 4, label: '26-彙總登陸每張稅額五百元以下之盡項三聯式、電子計算機之統一發票' },
+    { value: 5, label: '27-彙總登陸每張稅額五百元以下之盡項二聯式收銀雞統一發票、載有稅額之其他憑證' },
+    { value: 6, label: '28-進項海關代徵營業稅繳納證' },
   ];
-  PUR_TaxType_Options: apiOption[] = [ // 課稅別 下拉選項
-    { No: 'TAX001', Name: '課稅別A', Label: 'TAX001 - 課稅別A' },
-    { No: 'TAX002', Name: '課稅別B', Label: 'TAX002 - 課稅別B' },
-    { No: 'TAX003', Name: '課稅別C', Label: 'TAX003 - 課稅別C' }
-  ];
-  PUR_DedType_Options: apiOption[] = [ // 扣抵別 下拉選項
+  PUR_TaxType_Options = getSYS1000Options('PUR_TaxType'); // 課稅別 下拉選項 (fin13040)
+  PUR_DedType_Options: apiOption[] = [ // 扣抵別 下拉選項 (無api，範例資料)
     { No: 'DED001', Name: '扣抵別A', Label: 'DED001 - 扣抵別A' },
     { No: 'DED002', Name: '扣抵別B', Label: 'DED002 - 扣抵別B' },
     { No: 'DED003', Name: '扣抵別C', Label: 'DED003 - 扣抵別C' }
@@ -110,16 +103,17 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010sample> i
 
   data: ass14010sample[] = [];
   columns: Column[] = [
-    { field: 'INV_GUINo', header: '發票/收據號碼', visible: false },
-    { field: 'ODM_No', header: '驗收單號', visible: false },
-    { field: 'maintenanceID', header: '發票維護單號', visible: false },
-    { field: 'supplierId', header: '供應商編號', visible: false },
-    { field: 'invoice_type', header: '請款單據種類', visible: false },
-    { field: 'INV_GUIType', header: '發票格式', visible: false },
-    { field: 'PUR_TaxType', header: '課稅別', visible: false },
+    { field: 'INV_GUINo', header: '發票/收據號碼', visible: true },
+    { field: 'ODM_No', header: '驗收單號', visible: true },
+    { field: 'maintenanceID', header: '發票維護單號', visible: true },
+    { field: 'supplierId', header: '供應商編號', visible: true },
+    { field: 'invoice_type', header: '請款單據種類', visible: true },
+    { field: 'INV_GUIType', header: '發票格式', visible: true },
+    { field: 'PUR_TaxType', header: '課稅別', visible: true },
     { field: 'NTAX_AMT', header: '未稅金額', visible: true, format: formatAmount },
-    { field: 'TAX_AMT', header: '金額', visible: true, format: formatAmount },
-    { field: 'PUR_DedType', header: '扣抵別', visible: false },
+    { field: 'TAX_AMT', header: '稅額', visible: true, format: formatAmount },
+    { field: 'TOT_AMT', header: '金額', visible: true, format: formatAmount },
+    { field: 'PUR_DedType', header: '扣抵別', visible: true },
 
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
@@ -141,11 +135,13 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010sample> i
 
   ngOnInit(): void {
     this.initializePage('ASS14010', 'ASS/ASS14010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log(' 進貨發票request:', JSON.stringify(frm.value, null, 2));
+      this.loading = false;
       // this.tls51080Service.queryTLS51080(frm.value).subscribe({
       //   next: (response) => {
       //     if (response.Status === '0000') {
@@ -221,6 +217,21 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010sample> i
     // });
 
     this.selectedItems = [];
+  }
+
+  loadOptions() {
+    // 供應商編號 下拉 (ass12020)
+    this.dropDownListService
+      .queryTBLUSER_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const list = res.Data ?? [];
+        this.supplierId_Options = list.map((item: { No?: string; Name?: string }) => ({
+          No: item.No ?? '',
+          Name: item.Name ?? '',
+          Label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+        }));
+      });
   }
 
   isRowSelectable(rowData: ass14010sample): boolean {
