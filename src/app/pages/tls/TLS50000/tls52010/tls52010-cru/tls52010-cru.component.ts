@@ -366,6 +366,32 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     this.selectedItems = [];
     this.dialogData = [];
   }
+
+  /** 新增成功後選擇「繼續新增」時，還原表單與明細（不含重整整頁） */
+  private resetFormForContinueNew(): void {
+    this.dataForm.patchValue({
+      PO_No: '系統自動產生',
+      VEN_No: null,
+      LOGO_No: null,
+      HOS_No: null,
+      remainingBudgetAmount: 0,
+      PO_TotalBuyNet: 0,
+      PO_TotalBuyTax: 0,
+      PO_TotalBuyAmt: 0,
+      PO_TotalSaleAmt: 0,
+      APPLY_USR_No: this.user?.user_No ?? null,
+      APPLY_USR_Name: this.user?.user_Name ?? null,
+      APPLY_Date: new Date(),
+      PO_Remark: null,
+    });
+    this.remainingBudgetAmount = 0;
+    this.resetDetails();
+    this.originalData = [];
+    this.filteredLogoOptions = this.fullLogoOptions;
+    this.filteredWarehouseOptions = this.fullWarehouseOptions;
+    this.vendorOptions = this.dropdown.queryPos2013TltTalent();
+    this.cdr.detectChanges();
+  }
   /**
  * 根據選定的品牌代碼 (LOGO_No) 過濾倉別 (HOS_No) 選項
  * @param logoNo 選定的 LOGO_No
@@ -680,10 +706,20 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       // 處理提交邏輯 (呼叫 insert 或 update)
       const request$ = this.isFormCreateable ? this.tls52010Service.insertTLS52010(submitData) : this.tls52010Service.updateTLS52010(submitData);
       request$.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.messageService.successBubble(res.Message);
         if (this.isFormCreateable) {
-          this.dataForm.reset();
+          const poNo = (res.Message ?? '').trim();
+          this.messageService.confirm({
+            header: '新增成功',
+            message: `採購單號：<strong>${poNo || '—'}</strong>`,
+            icon: 'check',
+            showIcon: true,
+            acceptLabel: '返回',
+            accept: () => this.onCancel(),
+            rejectLabel: '繼續新增',
+            reject: () => this.resetFormForContinueNew(),
+          });
         } else {
+          this.messageService.successBubble(res.Message);
           this.onCancel();
         }
       });

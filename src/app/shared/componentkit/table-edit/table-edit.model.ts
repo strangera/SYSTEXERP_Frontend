@@ -8,7 +8,7 @@ export interface EditColumn {
   disabled?: (value: any, index?: number, rowData?: any) => boolean;  // 是否禁用 (是否為禁用欄位)
   hidden?: boolean | ((rowData: any, index?: number) => boolean); // 是否隱藏 (是否為隱藏欄位)
   validate?: ((value: any, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[];
-  type?: 'input' | 'inputNumber' | 'percent' | 'dropdown' | 'autoComplete' | 'date' | 'template' | 'checkbox' | 'dropdownTable';
+  type?: 'input' | 'inputNumber' | 'percent' | 'dropdown' | 'autoComplete' | 'date' | 'template' | 'checkbox' | 'dropdownTable' | 'custom';
   groupField?: string;
   width?: string;
   textAlign?: 'left' | 'right' | 'center' | 'justify' | 'match-parent' | 'initial' | 'inherit' | 'unset' | 'revert' | 'revert-layer' | 'unset';

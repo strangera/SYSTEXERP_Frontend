@@ -18,7 +18,6 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -50,7 +49,6 @@ type SubtotalFieldMap = typeof SUBTOTAL_FIELD_MAP;
     MenubarComponent,
     AccordionModule,
     CalendarRangeQuickComponent,
-    InputNumberRangeComponent,
     InputTextComponent,
     DropdownComponent,
     ButtonComponent,
@@ -120,7 +118,7 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements A
 
   /** 欄位設定：把「銷售單號」設為置中，並做為 merged column */
   columns: any[] = [
-    { field: 'TXN_SaleNoteNo', header: '銷售單號', visible: true, style: 'text-center' },
+    { field: 'TXN_SaleNoteNo', header: '銷售單號', visible: true, width: '11rem', style: 'text-center' },
     { field: this.groupByField, header: 'grp', visible: false, hidden: true }, // 群組鍵
     {
       field: 'TXN_Date',
