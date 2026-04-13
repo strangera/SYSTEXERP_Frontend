@@ -29,6 +29,7 @@ import {
   FaClass2Query,
   FaClassMItem,
   FaClassMQuery,
+  GLS1005AccSubCodeItem,
   IDropdownItem,
   IGLS1005LedgerMDItem,
   LogoAccorHosItem,
@@ -302,6 +303,27 @@ export class DropdownApiService {
     return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1005_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
     );
+  }
+
+  /** 查詢會計科目子科目設定檔(GLS1005 AccSubCode) */
+  queryGls1005AccSubCode(): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<GLS1005AccSubCodeItem[]>>(`${this.apiUrl}/queryGLS1005AccSubCode_DropDownList`, {})
+      .pipe(
+        map(response => {
+          const data = response?.Data ?? [];
+          return data.map(item => ({
+            ...item,
+            value: item.AccNo,
+            label: `${item.AccNo} - ${item.AccCName}`,
+          }));
+        }),
+        catchError(err => {
+          console.error('API /queryGLS1005AccSubCode_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
   }
 
   // 查詢會計科目設定檔(GLS1005)下拉式選單(只顯示 GLS1005.ledger_MD=1)
