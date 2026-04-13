@@ -74,29 +74,30 @@
         </div>
       </div>
 
-      <app-fin32020table-edit
-        [title]="'報廢明細'"
-        [tableKey]="'ass16090Detail'"
-        dataKey="LINE_NUM"
-        [data]="detailData"
-        [columns]="detailColumns"
-        [loading]="detailLoading"
-        [disabled]="isFormReadable"
-        [showReorder]="!isFormReadable"
-        [showCheckBox]="!isFormReadable"
-        [showInsert]="false"
-        [insertDisabled]="isFormReadable"
-        [canInsert]="!isFormReadable"
-        [showDelete]="!isFormReadable"
-        [keepDeletedData]="false"
-        [defaultInsertData]="defaultDetailRow"
-        [showPaginator]="false"
-        [scrollable]="false"
-        [showCaption]="!isFormReadable"
-        (dataChange)="onDetailDataChange($event)"
-        (fieldChange)="onDetailFieldChange($event)"
-        (delete)="onDetailDelete($event)"
-      ></app-fin32020table-edit>
+<app-fin32020table-edit
+  [title]="'報廢明細'"
+  [tableKey]="'ass16090Detail'"
+  dataKey="LINE_NUM"
+  [data]="detailData"
+  [columns]="detailColumns"
+  [loading]="detailLoading"
+  [disabled]="isFormReadable"
+  [showReorder]="!isFormReadable"
+  [showCheckBox]="!isFormReadable"
+  [showInsert]="true"
+  [insertDisabled]="isFormReadable"
+  [canInsert]="!isFormReadable"
+  [showDelete]="!isFormReadable"
+  [keepDeletedData]="false"
+  [defaultInsertData]="defaultDetailRow"
+  [showPaginator]="false"
+  [scrollable]="false"
+  [showCaption]="!isFormReadable"
+  (dataChange)="onDetailDataChange($event)"
+  (fieldChange)="onDetailFieldChange($event)"
+  (delete)="onDetailDelete($event)"
+  (cellClick)="onDetailCellClick($event)"
+></app-fin32020table-edit>
 
     
 
@@ -126,6 +127,75 @@
 
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
+      <app-dialog
+  [(visible)]="goodsDialogVisible"
+  [header]="'選擇品項'"
+  [showFooter]="false"
+>
+  <form
+    [formGroup]="goodsSearchForm"
+    (ngSubmit)="onSearchGoods()"
+    class="grid p-fluid mb-3"
+  >
+    <div class="col-12 md:col-4">
+      <app-input-text
+        label="品項編號"
+        controlName="GoodsPrefix"
+        [control]="goodsSearchForm.controls.GoodsPrefix"
+        [submitted]="submitted"
+      ></app-input-text>
+    </div>
+
+    <div class="col-12 md:col-6">
+      <app-input-text
+        label="品項名稱"
+        controlName="Keyword"
+        [control]="goodsSearchForm.controls.Keyword"
+        [submitted]="submitted"
+      ></app-input-text>
+    </div>
+
+    <div class="col-12 md:col-2 flex justify-content-end mt-2">
+      <app-button btnType="query" [type]="'submit'"></app-button>
+    </div>
+  </form>
+
+  <app-table2
+    [tableKey]="'ass16090GoodsDialog'"
+    dataKey="GOODS_ID"
+    [columns]="goodsColumns"
+    [data]="goodsList"
+    [loading]="goodsLoading"
+    [showCheckBox]="false"
+    [showManage]="false"
+    [showDetail]="true"
+    [showEdit]="false"
+    [showHeader]="true"
+    [showFilter]="false"
+    [showReportMode]="false"
+    [showPaginator]="false"
+    [showCaption]="false"
+    selectionMode="single"
+    [(selectedItems)]="goodsSelectedRows"
+    (selectionChange)="onGoodsSelectionChange($event)"
+    (detail)="onGoodsRowDetail($event)"
+  ></app-table2>
+
+  <div class="flex justify-content-end gap-2 mt-3">
+    <app-button
+      btnType="cancel"
+      [type]="'button'"
+      label="清除"
+      (click)="onGoodsCancel()"
+    ></app-button>
+    <app-button
+      btnType="submit"
+      [type]="'button'"
+      [disabled]="!goodsSelectedRows || !goodsSelectedRows.length"
+      (click)="confirmGoodsSelection()"
+    ></app-button>
+  </div>
+</app-dialog>
     </form>
   </p-panel>
 </div>

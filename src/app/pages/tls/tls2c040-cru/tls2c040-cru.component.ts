@@ -101,7 +101,8 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'org_name', header: '組織名稱', align: 'left' },
     { field: 'CustomerNo', header: '客戶代碼', align: 'left' },
     { field: 'DetailNo', header: '廠商代號', align: 'left' },
-    { field: 'SrcSheetType', header: '傳票類型', align: 'left', format: (v) => getSYS1000('ENTRY_TYPE', v)},
+    // 後端回傳 VouType = GLS1010.Voucher_Name（依傳票型態/種類對應的中文名稱）
+    { field: 'VouType', header: '傳票類型', align: 'left' },
     { field: 'sam_yyymm', header: '年月', align: 'left', width: '40px' },
     { field: 'sam_termno', header: '帳次', align: 'left', width: '40px' },
     { field: 'ar_amt', header: '應收帳款金額', format: formatAmount, isTotal: true, align: 'right' },
@@ -119,7 +120,8 @@ export class TLS2C040CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'org_name', header: '組織名稱', align: 'left' },
     { field: 'CustomerNo', header: '客戶代碼', align: 'left' },
     { field: 'DetailNo', header: '廠商代號', align: 'left' },
-    { field: 'SrcSheetType', header: '傳票類型', align: 'left', format: (v) => getSYS1000('ENTRY_TYPE', v)},
+    // 後端回傳 VouType = GLS1010.Voucher_Name（依傳票型態/種類對應的中文名稱）
+    { field: 'VouType', header: '傳票類型', align: 'left' },
     { field: 'sam_yyymm', header: '年月', align: 'left', width: '40px' },
     { field: 'sam_termno', header: '帳次', align: 'left', width: '40px' },
     { field: 'ap_amt', header: '應付帳款金額', format: formatAmount, isTotal: true, align: 'right' },

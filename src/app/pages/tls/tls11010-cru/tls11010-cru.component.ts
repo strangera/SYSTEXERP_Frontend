@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgIf } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   AbstractControl,
   FormGroup,
@@ -41,7 +41,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
     TranslateModule,
   ],
 })
-export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
+export class TLS11010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   // 欄位中文名稱（用在錯誤泡泡）
   private labelOf: Record<string, string> = {
     LOCATION_No: '店位代碼',
@@ -100,10 +100,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
     Purpose_no: [null, [Validators.required]], // 用途代碼
     Draw_X: ['', [Validators.maxLength(255)]], // X 座標
     Draw_Y: ['', [Validators.maxLength(255)]], // Y 座標
-    LOCATION_No: [
-      { value: '由系統帶入', disabled: true },
-      [Validators.required, Validators.maxLength(10)],
-    ], // 店位代碼
+    LOCATION_No: ['', [Validators.required, Validators.maxLength(10)]], // 店位代碼
   });
 
   floorOptions: any[] = [];
@@ -335,7 +332,6 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
       } else if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
         // 編輯
         raw.id = this.rowdata?.id;
-        raw.LOCATION_No = this.rowdata?.LOCATION_No;
 
         this.tls11010Service
           .updateData(raw)

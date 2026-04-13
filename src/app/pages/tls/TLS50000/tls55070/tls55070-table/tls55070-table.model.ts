@@ -4,6 +4,7 @@ import { SortMeta } from "primeng/api";
 export interface Column {
   field: string;     // 欄位名稱
   header: string;    // 欄位標題
+  width?: string;    // 欄位固定寬度（例如: '10rem', '140px'）
 
   // 顯示/隱藏
   visible?: boolean; // 是否顯示（可被 MultiSelect 篩掉）

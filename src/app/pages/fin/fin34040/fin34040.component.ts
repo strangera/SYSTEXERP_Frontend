@@ -132,8 +132,8 @@ export class FIN34040Component extends BasicQueryPageComponent<any> implements O
   /* ----------------- 下拉選項 ----------------- */
   /** 分析日期別 */
   analysisDateTypeOptions = [
-    { value: '1', label: '預計收款日' },
-    { value: '2', label: '立帳日' },
+    { value: 'P', label: '預計收款日' },
+    { value: 'A', label: '立帳日' },
   ];
 
   /** 廠客代號（從 API 載入） */

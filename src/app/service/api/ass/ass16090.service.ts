@@ -64,6 +64,13 @@ export interface Ass16090DetailRow {
   GOODS_UNIT_NAME?: string | null;
   QTY?: number | null;
   NOTES?: string | null;
+
+  /** queryASS16090_DropDownList 帶回欄位 */
+  APPLYABLE_QTY?: number | null;
+  ACTUAL_STOCK_QTY?: number | null;
+  SAFE_QTY?: number | null;
+  STOCK_SAFE?: string | null;
+
   [key: string]: any;
 }
 
@@ -111,16 +118,12 @@ export interface Ass16090InsertRequest {
   UPD_USR_Name?: string | null;
 }
 
-/** 更新 Request
- * 這裡先依常見寫法假設 update 需要帶主檔 ID
- * 若你後端是帶 DAMAGEM_ID，改這裡和 buildUpdatePayload 即可
- */
+/** 更新 Request */
 export interface Ass16090UpdateRequest extends Ass16090InsertRequest {
   ID: number;
   DAMAGEM_ID?: string | null;
 }
 
-/** 審核 Request（先預留） */
 /** 審核 Request */
 export interface Ass16090ApproveRequest {
   MID?: number | null;
@@ -140,6 +143,26 @@ export interface Ass16090VoidRequest {
   UPD_USR_No?: string | null;
   UPD_USR_Name?: string | null;
 }
+
+/** ASS16090 品項下拉 Request */
+export interface QueryDDLASS16090Request {
+  Keyword?: string | null;
+  WH_ID?: string | null;
+  GoodsPrefix?: string | null;
+}
+
+/** ASS16090 品項下拉 Response */
+export interface QueryDDLASS16090Response {
+  GOODS_ID?: string | null;
+  GOODS_NAME?: string | null;
+  UNIT?: string | null;
+  APPLYABLE_QTY?: number | null;
+  ACTUAL_STOCK_QTY?: number | null;
+  SAFE_QTY?: number | null;
+  STOCK_SAFE?: string | null;
+  [key: string]: any;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ASS16090Service {
   private apiUrl = `${environment.ApiUrl}/ASS0000/ASS1000`;
@@ -194,6 +217,16 @@ export class ASS16090Service {
   voidASS16090(body: Ass16090VoidRequest): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(
       `${this.apiUrl}/voidASS16090`,
+      body
+    );
+  }
+
+  /** 品項下拉 / 搜尋 */
+  queryASS16090_DropDownList(
+    body: QueryDDLASS16090Request
+  ): Observable<ApiResponse<QueryDDLASS16090Response[]>> {
+    return this.http.post<ApiResponse<QueryDDLASS16090Response[]>>(
+      `${this.apiUrl}/queryASS16090_DropDownList`,
       body
     );
   }

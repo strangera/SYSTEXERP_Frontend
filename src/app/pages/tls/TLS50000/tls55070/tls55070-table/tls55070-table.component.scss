@@ -187,6 +187,13 @@
     }
   }
 
+  /* 預設欄位內容可換行，避免資料撐寬欄位造成跳動 */
+  .wrap-cell {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
   /* 群組表頭底色（對齊 table-report） */
   .group-header {
     background-color: var(--table-header-bg-group) !important;
@@ -222,6 +229,7 @@
   /* 預設把表頭游標還原成 default（避免被 pReorderable 設成 move） */
   .p-datatable .p-datatable-thead > tr > th {
     cursor: default !important;
+    -webkit-user-select: none;
     user-select: none;
   }
 

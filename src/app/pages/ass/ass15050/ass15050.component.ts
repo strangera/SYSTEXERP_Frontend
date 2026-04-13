@@ -1,173 +1,328 @@
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { ASS15050Service } from '@service/api/ass/ass15050.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { CheckboxComponent } from '@shared/componentkit/checkbox/checkbox.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { FileExportService } from '@shared/service/file-export.service';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize, map } from 'rxjs/operators';
+import {
+  QueryASS15050ApiResponse,
+  QueryASS15050Request,
+  QueryASS15050Response,
+} from './ass15050.model';
 
-//3.1.5.5 折舊攤提表
+/** 合併報表彙總列之 ACCNO（後端最後一筆） */
+const SUMMARY_ACCNO_MERGED = '總計';
+/** 展開報表彙總列之 ACCNO（後端最後一筆） */
+const SUMMARY_ACCNO_EXPANDED = '總合計';
+
+/** 折舊攤提表（查詢＋匯出 PDF） */
+@UntilDestroy()
 @Component({
   selector: 'app-ass15050',
   templateUrl: './ass15050.component.html',
   styleUrl: './ass15050.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarRangeComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  providers: [DatePipe],
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeQuickComponent,
+    DropdownComponent,
+    RadiobuttonComponent,
+    CheckboxComponent,
+    ButtonComponent,
+    TableReportComponent,
+    TranslateModule,
+    ButtonModule,
+  ],
 })
-export class ASS15050Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    accountcode: [], // 會計科目代碼
-    depreciationYYmmFrom: [, [Validators.required]], // 折舊年限
-    depreciationYYmmTo: [, [Validators.required]], // 折舊年限
-    paperType: [, [Validators.required]], // 報表型式
+export class ASS15050Component extends BasicQueryPageComponent<QueryASS15050Response> implements OnInit {
+  readonly queryForm = this.formBuilder.group({
+    STYPE_D: [null as string | null],
+    DEPRE_YM_S: [null as Date | null, Validators.required],
+    DEPRE_YM_E: [null as Date | null, Validators.required],
+    ReportType: ['1' as '1' | '2', Validators.required],
+    ShowZero: [true],
+    ...createPaginationConfig([]),
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '會計科目編號/名稱', visible: true },
-    { field: 'col2', header: '累計折舊金額', visible: true },
 
-    // { field: 'col3', header: '品項名稱', visible: true },
-    // { field: 'col4', header: '耐用年數', visible: true },
-    // { field: 'col5', header: '購入日期', visible: true },
-    // { field: 'col6', header: '取得成本', visible: true },
-    // { field: 'col7', header: '預留殘值', visible: true },
+  data: QueryASS15050Response[] = [];
+  totalRecords = 0;
+  exportLoading = false;
 
-    // { field: 'col8', header: '年初累計折舊', visible: true },
-    // { field: 'col9', header: '本期折舊金額', visible: true },
-    // { field: 'col10', header: '本月折舊金額', visible: true },
-    // { field: 'col11', header: '累計折舊金額', visible: true },
+  /** 供 app-table-report 捲動載入／排序重查（含查詢條件與分頁鍵） */
+  lastQueryBody: Record<string, unknown> | null = null;
 
-    // { field: 'col12', header: '帳面價值', visible: true },
-    // { field: 'col13', header: '保管單位', visible: true },
+  accountOptions: Option[] = [];
 
-    // { field: 'col14', header: '入帳日期', visible: true },
-    // { field: 'col15', header: '條件篩選', visible: true },
-    // { field: 'col16', header: '顯示筆數', visible: true },
-
-    // { field: 'col17', header: '報廢日期前之帳面價值', visible: true },
-    // { field: 'col18', header: '報廢損失', visible: true },
-
-    // { field: 'col19', header: '工廠地址', visible: true },
-    // { field: 'col20', header: '工廠電話', visible: true },
-    // { field: 'col21', header: '工廠傳真', visible: true },
-
-    // { field: 'col22', header: '送貨方式', visible: true },
-    // { field: 'col23', header: '退貨處理方式', visible: true },
-    // { field: 'col24', header: '廠商送貨期限', visible: true },
-
-    // { field: 'col25', header: '附註', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  AccountcodeOptions: any[] = [
-    { value: 1, label: '1501' },
-    { value: 2, label: '150101' },
-    { value: 3, label: '1511' },
-    { value: 4, label: '151101' },
-    { value: 5, label: '1512' },
-    { value: 6, label: '151201' },
-    { value: 7, label: '1521' },
-    { value: 8, label: '152101' },
-    { value: 9, label: '1522' },
-    { value: 10, label: '152201' },
+  readonly reportTypeOptions: { value: '1' | '2'; label: string }[] = [
+    { value: '1', label: '合併' },
+    { value: '2', label: '展開' },
   ];
 
-  paperTypeOptions: any[] = [
-    { value: 1, label: '合併' },
-    { value: 2, label: '展開' },
+  /** 表格 footer 綁定（避免範本重複呼叫方法） */
+  footerData: Record<string, unknown> | undefined;
+
+  readonly columns: ReportColumn[] = [
+    { field: 'ACCNO', header: '會計科目編號', visible: true, align: 'left' },
+    { field: 'ACCNO_NAME', header: '會計科目名稱', visible: true, align: 'left' },
+    {
+      field: 'ACCUM_DEPRE_AMOUNT',
+      header: '累計折舊金額',
+      visible: true,
+      align: 'right',
+      isTotal: true,
+      format: (v) => (v == null || v === '' ? '' : Number(v).toLocaleString('zh-TW')),
+    },
   ];
 
-
-  //
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    private readonly service: ASS15050Service,
+    private readonly dropdownApi: DropdownApiService,
+    private readonly datePipe: DatePipe,
+    private readonly fileExportService: FileExportService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310036';
-    this.cruPage = '/ASS1000/ASS15050CRU';
-    //
-
-    //
-    // ----------------------------------------------------------------
+    this.initializePage('ASS15050', '', this.queryForm, (frm) => this.onSubmit(frm));
+    this.dropdownApi
+      .queryGls1005()
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.accountOptions = opts ?? [];
+      });
   }
 
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+  /** 組 lastQueryBody（業務條件 + 大小寫分頁鍵，供 table-report 合併） */
+  private buildLastQueryBodyFromForm(): Record<string, unknown> {
+    const raw = this.queryForm.getRawValue();
+    const ymS = raw.DEPRE_YM_S ? this.datePipe.transform(raw.DEPRE_YM_S, 'yyyyMM') : null;
+    const ymE = raw.DEPRE_YM_E ? this.datePipe.transform(raw.DEPRE_YM_E, 'yyyyMM') : null;
+    const pageIndex = Number(raw.pageIndex) || 1;
+    const pageSize = Number(raw.pageSize) || 30;
+    const st = raw.STYPE_D != null ? String(raw.STYPE_D).trim() : '';
+    const body: Record<string, unknown> = {
+      DEPRE_YM_S: ymS ? parseInt(ymS, 10) : undefined,
+      DEPRE_YM_E: ymE ? parseInt(ymE, 10) : undefined,
+      ReportType: raw.ReportType ?? '1',
+      ShowZero: raw.ShowZero ?? true,
+      pageIndex: pageIndex,
+      pageSize: pageSize,
+      PageIndex: pageIndex,
+      PageSize: pageSize,
+      SortBy: raw.SortBy ?? [],
+    };
+    if (st) {
+      body['STYPE_D'] = st;
     }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    return body;
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+  /** 轉成後端 QueryASS15050Request */
+  private bodyToApiRequest(body: Record<string, unknown>): QueryASS15050Request {
+    const pageIndex = Number(body['pageIndex'] ?? body['PageIndex'] ?? 1) || 1;
+    const pageSize = Number(body['pageSize'] ?? body['PageSize'] ?? 30) || 30;
+    const req: QueryASS15050Request = {
+      DEPRE_YM_S: body['DEPRE_YM_S'] as number,
+      DEPRE_YM_E: body['DEPRE_YM_E'] as number,
+      ReportType: (body['ReportType'] as string) ?? '1',
+      ShowZero: (body['ShowZero'] as boolean) ?? true,
+      PageIndex: pageIndex,
+      PageSize: pageSize,
+    };
+    const st = body['STYPE_D'] != null ? String(body['STYPE_D']).trim() : '';
+    if (st) {
+      req.STYPE_D = st;
     }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
+    const sortBy = body['SortBy'] as QueryASS15050Request['SortBy'];
+    if (sortBy && Array.isArray(sortBy) && sortBy.length > 0) {
+      req.SortBy = sortBy;
     }
+    return req;
   }
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  /** 將 API 回應轉成表格列、總筆數、footer（彙總列僅在目前頁有資料時顯示） */
+  private mapResponseToTableData(
+    res: QueryASS15050ApiResponse,
+    reportType: '1' | '2',
+  ): {
+    rows: QueryASS15050Response[];
+    totalCount: number;
+    footerData: Record<string, unknown> | undefined;
+  } {
+    if (res?.Status !== '0000' || !res.Data) {
+      return { rows: [], totalCount: 0, footerData: undefined };
+    }
+    const details = res.Data.Details ?? [];
+    const mapped = details.map((row, i) => {
+      const amt = row.TOTAL_DEPRE_AMOUNT ?? row.PERIOD_DEPRE_AMOUNT ?? null;
+      return {
+        ...row,
+        ROW_UID: `${row.ACCNO ?? ''}_${row.ASSET_ID ?? ''}_${i}`,
+        ACCUM_DEPRE_AMOUNT: amt,
+      };
+    });
+    const summaryRow = this.findSummaryRow(mapped, reportType);
+    const rows = this.filterSummaryRows(mapped).map((row, i) => ({
+      ...row,
+      ROW_UID: `${row.ACCNO ?? ''}_${row.ASSET_ID ?? ''}_${i}`,
+    }));
+    const totalCount =
+      typeof res.Data.TotalRows === 'number'
+        ? res.Data.TotalRows
+        : typeof res.TotalCount === 'number'
+          ? res.TotalCount
+          : rows.length;
+    const footerData = this.buildFooterFromSummaryRow(summaryRow?.TOTAL_DEPRE_AMOUNT);
+    return { rows, totalCount, footerData };
+  }
+
+  /** 供 app-table-report：捲動載入更多／排序後重查 */
+  queryASS15050ForReport = (body: Record<string, unknown>) => {
+    const req = this.bodyToApiRequest(body);
+    return this.service.queryASS15050(req).pipe(
+      map((res: QueryASS15050ApiResponse) => {
+        const rt = (body?.['ReportType'] ?? this.queryForm.getRawValue().ReportType ?? '1') as '1' | '2';
+        if (res?.Status !== '0000' || !res.Data) {
+          this.footerData = undefined;
+          return { Data: [] as QueryASS15050Response[], TotalCount: 0 };
+        }
+        const { rows, totalCount, footerData } = this.mapResponseToTableData(res, rt);
+        this.footerData = footerData;
+        return { Data: rows, TotalCount: totalCount };
+      }),
+    );
+  };
+
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      this.queryForm.patchValue({ pageIndex: 1 });
+      const body = this.buildLastQueryBodyFromForm();
+      this.lastQueryBody = { ...body };
+      this.loading = true;
+      this.service
+        .queryASS15050(this.bodyToApiRequest(body))
+        .pipe(finalize(() => (this.loading = false)))
+        .subscribe((res: QueryASS15050ApiResponse) => {
+          const reportType = (frm.getRawValue().ReportType ?? '1') as '1' | '2';
+          if (res?.Status === '0000' && res.Data) {
+            const { rows, totalCount, footerData } = this.mapResponseToTableData(res, reportType);
+            this.data = rows;
+            this.totalRecords = totalCount;
+            this.footerData = footerData;
+            this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+            this.footerData = undefined;
+            this.lastQueryBody = null;
+            if (res?.Status && res.Status !== '0000') {
+              this.messageService.warnBubble(res.Message || '查無資料或查詢失敗');
+            }
+          }
+        });
+    });
+  }
+
+  /** 與 table-report 內部資料同步（捲動載入後父層 data 才會更新） */
+  onTableDataChange(rows: QueryASS15050Response[]): void {
+    this.data = rows;
+  }
+
+  /** PDF 匯出不帶分頁／排序參數 */
+  private buildExportBodyFromLastQuery(): QueryASS15050Request | null {
+    if (!this.lastQueryBody) {
+      return null;
+    }
+    const lastQueryBody = this.lastQueryBody as Record<string, unknown>;;
+    const out: QueryASS15050Request = {
+      DEPRE_YM_S: lastQueryBody['DEPRE_YM_S'] as number,
+      DEPRE_YM_E: lastQueryBody['DEPRE_YM_E'] as number,
+      ReportType: (lastQueryBody['ReportType'] as string) ?? '1',
+      ShowZero: (lastQueryBody['ShowZero'] as boolean) ?? true,
+    };
+    const st = lastQueryBody['STYPE_D'] != null ? String(lastQueryBody['STYPE_D']).trim() : '';
+    if (st) {
+      out.STYPE_D = st;
+    }
+    return out;
+  }
+
+  /**
+   * 尋找 API 回傳之彙總列：優先由後往前比對目前報表型式對應之 ACCNO，找不到再全陣列搜尋。
+   */
+  private findSummaryRow(rows: QueryASS15050Response[], reportType: '1' | '2'): QueryASS15050Response | undefined {
+    const expected = reportType === '1' ? SUMMARY_ACCNO_MERGED : SUMMARY_ACCNO_EXPANDED;
+    const matchExpected = (r: QueryASS15050Response) => (r.ACCNO ?? '').trim() === expected;
+
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (matchExpected(rows[i])) {
+        return rows[i];
+      }
+    }
+    for (const r of rows) {
+      if (matchExpected(r)) {
+        return r;
+      }
+    }
+    return undefined;
+  }
+
+  /** 表格本體不顯示彙總列（與 footer 分離） */
+  private filterSummaryRows(rows: QueryASS15050Response[]): QueryASS15050Response[] {
+    return rows.filter((r) => {
+      const a = (r.ACCNO ?? '').trim();
+      return a !== SUMMARY_ACCNO_MERGED && a !== SUMMARY_ACCNO_EXPANDED;
+    });
+  }
+
+  private buildFooterFromSummaryRow(totalDepre: number | null | undefined): Record<string, unknown> | undefined {
+    if (totalDepre === null || totalDepre === undefined) {
+      return undefined;
+    }
+    const footer: Record<string, unknown> = {};
+    for (const col of this.columns) {
+      if (col?.isTotal) {
+        footer[col.field] = totalDepre;
+      }
+    }
+    return footer;
+  }
+
+  onExportPdf(): void {
+    if (this.queryForm.invalid) {
+      this.submitted = true;
+      this.messageService.warnBubble('請填寫折舊年限起訖與報表型式');
+      return;
+    }
+    const body = this.buildExportBodyFromLastQuery();
+    if (!body) {
+      this.messageService.warnBubble('請先執行查詢');
+      return;
+    }
+    const export$ = this.service.exportPDFASS15050(body);
+    this.fileExportService
+      .executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (v) => (this.exportLoading = v))
+      .subscribe();
   }
 }
