@@ -5,96 +5,39 @@
     </div>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="統計日期"
-              [startControl]="queryForm.controls.startDate"
-              [endControl]="queryForm.controls.endDate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="統計日期" [startControl]="queryForm.controls.startDate"
+              [endControl]="queryForm.controls.endDate" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="部門代號"
-              controlName="orgId"
-              [options]="orgOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.orgId"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="部門代號" controlName="orgId" [options]="orgOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.orgId" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類代碼"
-              controlName="bClassId"
-              [options]="bigClassOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.bClassId"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="大分類代碼" controlName="bClassId" [options]="bigClassOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.bClassId" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="中分類代碼"
-              controlName="mClassId"
-              [options]="midClassOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.mClassId"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="中分類代碼" controlName="mClassId" [options]="midClassOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.mClassId" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="小分類代碼"
-              controlName="sClassId"
-              [options]="smallClassOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.sClassId"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="小分類代碼" controlName="sClassId" [options]="smallClassOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.sClassId" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品項編碼"
-              controlName="goodsId"
-              [options]="goodsOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.goodsId"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="品項編碼" controlName="goodsId" [options]="goodsOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.goodsId" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div>
-          <div
-            class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-          >
-            <app-button
-              btnType="clear"
-              [form]="queryForm"
-              (onClick)="onClearForm()"
-            ></app-button>
-            <app-button
-              btnType="query"
-              [loading]="loading"
-            ></app-button>
+          <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+            <app-button btnType="clear" [form]="queryForm" (onClick)="onClearForm()"></app-button>
+            <app-button btnType="query" [loading]="loading"></app-button>
           </div>
         </div>
       </form>
@@ -104,27 +47,11 @@
 
 <div class="card">
   <div class="col-12">
-    <app-ass17020-table-report
-      [data]="tableData()"
-      [columns]="columns"
-      outerGroupHeader="單位領用數量"
-      [columnGroup]="columnGroup.length ? columnGroup : undefined"
-      [totalRecords]="totalRecords()"
-      [footerData]="summaryFooter"
-      footerLabel="小計"
-      [loading]="tableLoading()"
-      dataKey="__rowUid"
-      tableKey="ASS17020_Data"
-      [showReorder]="false"
-      [showCheckBox]="false"
-      [showEdit]="false"
-      [showDetail]="false"
-      [showDelete]="false"
-      [queryFunction]="queryFunction"
-      [showManage]="false"
-      [lastQueryBody]="lastQueryBody"
-      (dataChange)="tableData.set($event)"
-    >
+    <app-ass17020-table-report [data]="tableData()" [columns]="columns" outerGroupHeader="單位領用數量"
+      [columnGroup]="columnGroup.length ? columnGroup : undefined" [totalRecords]="totalRecords()"
+      [footerData]="summaryFooter" footerLabel="小計" [loading]="tableLoading()" dataKey="__rowUid"
+      tableKey="ASS17020_Data" [showReorder]="false" [showCheckBox]="false" [showEdit]="false" [showDetail]="false"
+      [showDelete]="false" [queryFunction]="queryFunction" [showManage]="false" [lastQueryBody]="lastQueryBody">
     </app-ass17020-table-report>
   </div>
 </div>
