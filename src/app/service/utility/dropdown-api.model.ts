@@ -25,6 +25,17 @@ export interface Ass13010PurchaseNumberDropDownItem {
   ID: string;
   APPLY_DATE: string;
 }
+
+/**
+ * 查詢進貨單號下拉選單(ASS15070) queryFAASSCHKMASS15070_DropDownList
+ * 前端下拉僅使用 SUBPOENA_ID
+ */
+export interface FAASSCHKMASS15070DropDownItem {
+  SUBPOENA_ID?: string | null;
+  NTAX_AMT?: number;
+  CHECK_DATE?: string | null;
+}
+
 /** 
  * 查詢 FACLASSM_DropDownList 時的請求 body
 */
@@ -645,6 +656,17 @@ export interface Aps1002Item {
   BNK_No: string;           // 銀行代碼
   BNK_BRANCHNAME: string;   // 分行名稱
   BNK_AccType: string;      // 帳戶類型 (例如: 1-支存, 2-活存...)
+}
+
+/**
+ * 查詢會計科目子科目設定檔(GLS1005 AccSubCode)下拉式選單
+ */
+export interface GLS1005AccSubCodeItem {
+  CompNo: string;
+  AccNo: string;
+  AccCName: string;
+  AccEName: string;
+  AccDC: string;
 }
 
 /**

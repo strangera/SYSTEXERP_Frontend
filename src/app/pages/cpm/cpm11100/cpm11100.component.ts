@@ -1,12 +1,18 @@
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS12050Service } from '@service/api/tls/tls12050.service';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton } from '@shared/componentkit/table-report/table-report.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { ImageModule } from 'primeng/image';
+import { finalize, map } from 'rxjs';
+import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -26,6 +32,7 @@ export interface cpm11100 {
   LOCATION_NO: string; // 位置
   TLT_OPENFLAG: string; // 營運狀態
   TLT_OPENSTATUS: string; // 營運狀態說明
+  BUILDING_NO: string; // 館別
 }
 
 // CPM11000-全館店櫃資訊查詢
@@ -44,20 +51,42 @@ export interface cpm11100 {
     ReactiveFormsModule,
     InputTextComponent,
     InputNumberRangeComponent,
+    ImageModule,
     DropdownComponent,
     TableReportComponent,
     TableComponent,
     TranslateModule]
 })
 export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> implements OnInit {
-  // 查詢 (
+  //---queyfunction撥接轉換---
+  wrappedQueryFunction = (params: any) => {
+    const payload = {
+      ...params,
+      PageIndex: params.pageIndex, // 轉型：小寫變大寫
+      PageSize: params.pageSize    // 轉型：小寫變大寫
+    };
+
+    // 呼叫原始 Service 並回傳 Observable
+    return this.cpm11100Service.queryCPM11100(payload).pipe(
+      map(response => {
+        // 將 API 格式轉換為 app-table-report 底層 loadMoreData 期望的格式
+        return {
+          Data: response.Data.QueryData,     // Table 期望 Data 直接是陣列
+          TotalCount: response.Data.TotalCount // Table 期望 TotalCount 放在最外層
+        };
+      })
+    );
+  };
+  //------
+  // 查詢 ( tls2c040
   queryForm = this.formBuilder.group({
     KEYWORD: ["", [Validators.maxLength(100)]], // 專櫃品牌
     TLT_OPENFLAG: [null, [Validators.maxLength(1)]], // 營運狀態 (NULL=全部、0=已撤櫃、1=營運中)
     //分頁查詢
     ...createPaginationConfig([{ field: 'TLT_NO', order: 1 }]), // 分頁和排序參數
   });
-  historyRequestBody: Cpm11100Request | null = null; //歷史查詢條件
+  lastQueryBody: Cpm11100Request | null = null;
+
   // 表格
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
@@ -67,17 +96,19 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
     { field: 'TLT_NO', header: '專櫃編號' },
     { field: 'TLT_NAME', header: '專櫃名稱' },
     { field: 'BUS_TYPE_NAME', header: '大分類' },
+    // { field: 'TLT_FLOOR', header: '樓層代碼', visible: false },
     { field: 'FLOOR_DESC', header: '樓層' },
     { field: 'LOCATION_NO', header: '位置' },
-    {
-      field: 'TLT_FLOOR', header: '平面圖', type: 'link',
-      format: (value: any) => {
-        // 如果該列有資料才顯示「觀看平面圖」，否則可以回傳空字串或原值
-        return value ? '觀看平面圖' : '';
-      }
-    },
     // { field: 'TLT_OPENFLAG', header: '營運狀態代碼' },
-    { field: 'TLT_OPENSTATUS', header: '營運狀態' },
+    { field: 'TLT_OPENSTATUS', header: '營運狀態名稱' },
+  ];
+
+  // 修正 addButton：呼叫底層的 onDetail 並帶入「類型」字串作為 queryConditions
+  addButton: AddButton[] = [
+    {
+      label: '觀看平面圖',
+      action: (rowData: any) => { this.onLinkClick({ rowData, field: 'TLT_FLOOR' }) },
+    }
   ];
 
   selectedItems: cpm11100[] = [];// 多選項目
@@ -87,9 +118,21 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
     { value: '1', label: '營運中' },
   ];
 
+  // --- 平面圖相關變數 ---
+  selectedImage?: string;
+  selectedFloor = '';
+  All_Count = 0;
+  Idle = '';
+  Under_Negotiation = '';
+  In_Operation = '';
+  Outof_Service = '';
+  blank = environment.ApiUrl + '/images/blank.jpg';
+  showFloorPlan = false; // 控制是否顯示平面圖區塊
+
   // ----------------------------------------------------------------
   constructor(
     public readonly cpm11100Service: Cpm11100Service,
+    public readonly tls12050Service: TLS12050Service, // 平面圖api
   ) {
     super();
   }
@@ -100,56 +143,60 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      //這邊預設是pageSize但後端是PageSize要先轉型
-      const payload = {
-        ...frm.value,
-        PageSize: frm.value.pageSize,
-        PageIndex: frm.value.pageIndex,
-      };
-      console.log('全館店櫃request:', JSON.stringify(payload, null, 2));
-      this.loading = false;
-      this.cpm11100Service.queryCPM11100(payload).subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.data = response.Data || [];
-            console.log('Result', this.data);
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-            this.historyRequestBody = payload; // 儲存歷史查詢條件
-          } else {
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
+      this.wrappedQueryFunction(frm.value)
+        .pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        )
+        .subscribe(res => {
+          // wrappedQueryFunction 已經幫忙剝殼了，這裡直接讀取 res.Data
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount;
+          this.lastQueryBody = frm.value;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        });
     });
   }
 
   //點擊查看平面圖事件(參考TLS12050
-  onLinkClick(event: { rowData: any; field: string }): void {
-    console.log('rowData:', event.rowData);
+  onLinkClick(event: { rowData: cpm11100; field: string }): void {
+    const row = event.rowData;
+    this.loading = true; // 開始讀取
 
-    // // 找到對應的 Bucket
-    // const bucket = this.findBucketByFieldName(field);
-    // if (!bucket) {
-    //   console.warn(`找不到對應的 Bucket: ${field}`);
-    //   return;
-    // }
+    this.tls12050Service.queryTLS12050Details({ building_no: row.BUILDING_NO, FLOOR_NO: row.FLOOR_DESC })
+      .pipe(
+        finalize(() => this.loading = false),
+        untilDestroyed(this)
+      )
+      .subscribe(res => {
+        if (res && res.Summary && res.Summary.Image_Url) {
+          // 組合完整圖片網址
+          const imageUrl = `${environment.ApiUrl}/${res.Summary.Image_Url}`;
 
-    // // 取得廠客代號
-    // const venNo = rowData?.VEN_No;
-    // if (!venNo) {
-    //   console.warn('找不到廠客代號 (VEN_No)');
-    //   return;
-    // }
-
-    // // 開啟明細 Dialog
-    // this.openDetail(venNo, bucket);
+          // 在新視窗開啟圖片
+          // 如果你想要更精緻的顯示，建議開一個專門的 Angular Route 頁面
+          const win = window.open('', '_blank');
+          if (win) {
+            // 寫入簡單的 HTML 讓圖片在新分頁置中且美觀
+            win.document.write(`
+              <html>
+                <head>
+                  <title>平面圖- ${row.BUILDING_NO}/${row.FLOOR_DESC}</title>
+                  <style>
+                    body { margin: 0; background: #333; display: flex; justify-content: center; align-items: center; height: 100vh; }
+                    img { max-width: 100%; max-height: 100%; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+                  </style>
+                </head>
+                <body>
+                  <img src="${imageUrl}" onerror="this.src='${this.blank}'">
+                </body>
+              </html>
+            `);
+            win.document.close();
+          }
+        } else {
+          this.messageService.add({ severity: 'warn', summary: '提醒', detail: '查無平面圖路徑' });
+        }
+      });
   }
 }

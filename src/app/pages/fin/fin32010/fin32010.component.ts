@@ -92,9 +92,9 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
     super();
   }
 
-  // 禁止編輯的判斷：已改為永遠允許編輯（不以 VouNo 判斷）
-  editDisabledByVouNo = (_rowData: any): boolean => {
-    return false;
+  // 禁止編輯的判斷：當應收帳款餘額 (ARS_BalAmt) 為 0 時，禁止編輯
+  editDisabledByVouNo = (rowData: any): boolean => {
+    return rowData?.ARS_BalAmt === 0;
   }
 
   ngOnInit(): void {
