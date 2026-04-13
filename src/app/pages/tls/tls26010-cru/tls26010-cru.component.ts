@@ -1114,7 +1114,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       const rawData = await excelImportService.importExcel(file, importExcelColumn);
 
       // 將中文標題映射到欄位名稱（專櫃名稱設為空白）
-      const data: TltItemWithStatus[] = rawData.map((item: Record<string, string | number | undefined>) => ({
+      const data: TltItemWithStatus[] = rawData.data.map((item: Record<string, string | number | undefined>) => ({
         id: undefined,
         tlt_no: (item['專櫃編號'] || item['tlt_no'] || '').toString().trim(),
         tlt_name: '',  // 不匯入專櫃名稱，保持空白
