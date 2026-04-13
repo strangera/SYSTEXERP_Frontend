@@ -1,32 +1,31 @@
 import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { QueryASS17030Detail, QueryASS17030Request } from '@pages/ass/ass17030/ass17030.model';
+import {
+  QueryASS17030DeptInfo,
+  QueryASS17030Detail,
+  QueryASS17030Request,
+  QueryASS17030Summary,
+} from '@pages/ass/ass17030/ass17030.model';
 import { ASS17030Service } from '@service/api/ass/ass17030.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import {
+  Ass17030DeptHeader,
+  Ass17030TableReportComponent,
+} from '@shared/componentkit/ass17030-table-report/ass17030-table-report.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, Observable } from 'rxjs';
+import { finalize, map, Observable } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-
-function formatOrgDetailsValue(v: unknown): string {
-  if (v == null || typeof v !== 'object') {
-    return '';
-  }
-  return Object.entries(v as Record<string, unknown>)
-    .map(([k, val]) => `${k}: ${val ?? ''}`)
-    .join('；');
-}
 
 @UntilDestroy()
 @Component({
@@ -42,7 +41,7 @@ function formatOrgDetailsValue(v: unknown): string {
     CalendarRangeComponent,
     DropdownComponent,
     ButtonComponent,
-    TableReportComponent,
+    Ass17030TableReportComponent,
     TranslateModule,
   ],
 })
@@ -66,22 +65,18 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
   public readonly tableData = signal<QueryASS17030Detail[]>([]);
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(false);
+  public readonly deptHeaders = signal<Ass17030DeptHeader[]>([]);
+  public readonly footerData = signal<Record<string, unknown> | undefined>(undefined);
   lastQueryBody?: QueryASS17030Request & { pageSize?: number; pageIndex?: number };
+  private currentDeptData: QueryASS17030DeptInfo[] = [];
 
-  @ViewChild(TableReportComponent) tableReport!: TableReportComponent;
+  @ViewChild(Ass17030TableReportComponent) tableReport!: Ass17030TableReportComponent;
 
   columns: ReportColumn[] = [
-    { field: 'RowNo', header: '序號', visible: true },
-    { field: 'Goods', header: '品項名稱', visible: true },
-    { field: 'UnitPrice', header: '品項單價', visible: true },
-    { field: 'TotalQty', header: '總數量', visible: true },
-    { field: 'TotalAmt', header: '總金額', visible: true },
-    {
-      field: 'OrgDetails',
-      header: '部門明細',
-      visible: true,
-      format: (v: unknown) => formatOrgDetailsValue(v),
-    },
+    { field: 'Goods', header: '品名', visible: true },
+    { field: 'UnitPrice', header: '品項單價', visible: true, format: this.money, align: 'right' },
+    { field: 'TotalQty', header: '總計數量', visible: true, format: this.money, align: 'right' },
+    { field: 'TotalAmt', header: '總計金額', visible: true, format: this.money, align: 'right' },
   ];
 
   constructor(
@@ -219,7 +214,24 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
     if (payload.SortBy?.length) {
       clean.SortBy = payload.SortBy;
     }
-    return this.ass17030Service.queryASS17030(clean);
+    return this.ass17030Service.queryASS17030(clean).pipe(
+      map(res => {
+        const deptData = res.DeptData ?? this.currentDeptData;
+        if (res.DeptData?.length) {
+          this.currentDeptData = res.DeptData;
+          this.deptHeaders.set(this.toDeptHeaders(res.DeptData));
+          this.columns = this.buildColumns(res.DeptData);
+        }
+        if (res.Summary) {
+          this.footerData.set(this.buildFooterData(res.Summary, deptData));
+        }
+        const rows = (res.Data ?? []).map(row => this.flattenRow(row, deptData));
+        return {
+          ...res,
+          Data: rows,
+        };
+      }),
+    );
   };
 
   onSubmit(frm: FormGroup): void {
@@ -261,5 +273,86 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
           },
         });
     });
+  }
+
+  private toDeptHeaders(deptData: QueryASS17030DeptInfo[]): Ass17030DeptHeader[] {
+    return deptData.map(item => ({
+      key: item.Key ?? '',
+      name: item.Name || item.Key || '',
+    }));
+  }
+
+  private buildColumns(deptData: QueryASS17030DeptInfo[]): ReportColumn[] {
+    const baseColumns: ReportColumn[] = [
+      { field: 'Goods', header: '品名', visible: true },
+      { field: 'UnitPrice', header: '品項單價', visible: true, format: this.money, align: 'right' },
+    ];
+    const deptColumns: ReportColumn[] = deptData.flatMap(item => {
+      const key = item.Key ?? '';
+      return [
+        {
+          field: this.getDeptQtyField(key),
+          header: '數量',
+          visible: true,
+          format: this.money,
+          align: 'right',
+        },
+        {
+          field: this.getDeptAmtField(key),
+          header: '金額',
+          visible: true,
+          format: this.money,
+          align: 'right',
+        },
+      ];
+    });
+    const totalColumns: ReportColumn[] = [
+      { field: 'TotalQty', header: '總計數量', visible: true, format: this.money, align: 'right' },
+      { field: 'TotalAmt', header: '總計金額', visible: true, format: this.money, align: 'right' },
+    ];
+    return [...baseColumns, ...deptColumns, ...totalColumns];
+  }
+
+  private flattenRow(row: QueryASS17030Detail, deptData: QueryASS17030DeptInfo[]): QueryASS17030Detail {
+    const flat: QueryASS17030Detail = { ...row };
+    deptData.forEach(dept => {
+      const key = dept.Key ?? '';
+      const deptValue = row.Depts?.[key];
+      flat[this.getDeptQtyField(key)] = Number(deptValue?.Qty ?? 0);
+      flat[this.getDeptAmtField(key)] = Number(deptValue?.Amt ?? 0);
+    });
+    return flat;
+  }
+
+  private buildFooterData(
+    summary: QueryASS17030Summary,
+    deptData: QueryASS17030DeptInfo[],
+  ): Record<string, unknown> {
+    const footer: Record<string, unknown> = {
+      TotalQty: Number(summary.TotalQty ?? 0),
+      TotalAmt: Number(summary.TotalAmt ?? 0),
+    };
+    deptData.forEach(dept => {
+      const key = dept.Key ?? '';
+      const deptSummary = summary.Depts?.[key];
+      footer[this.getDeptQtyField(key)] = Number(deptSummary?.Qty ?? 0);
+      footer[this.getDeptAmtField(key)] = Number(deptSummary?.Amt ?? 0);
+    });
+    return footer;
+  }
+
+  private getDeptQtyField(key: string): string {
+    return `dept_${key}_qty`;
+  }
+
+  private getDeptAmtField(key: string): string {
+    return `dept_${key}_amt`;
+  }
+
+  private money(value: unknown): string {
+    if (value === null || value === undefined || value === '') return '';
+    const num = Number(value);
+    if (Number.isNaN(num)) return String(value);
+    return num.toLocaleString();
   }
 }

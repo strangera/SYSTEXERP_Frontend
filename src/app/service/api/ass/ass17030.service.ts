@@ -2,7 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
   QueryASS17030DataWrapper,
+  QueryASS17030DeptInfo,
   QueryASS17030Detail,
+  QueryASS17030Summary,
   QueryASS17030Request,
 } from '@pages/ass/ass17030/ass17030.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
@@ -15,7 +17,10 @@ export class ASS17030Service {
 
   constructor(private readonly http: HttpClient) {}
 
-  queryASS17030(body: QueryASS17030Request): Observable<ApiResponse<QueryASS17030Detail[]>> {
+  queryASS17030(body: QueryASS17030Request): Observable<ApiResponse<QueryASS17030Detail[]> & {
+    DeptData?: QueryASS17030DeptInfo[];
+    Summary?: QueryASS17030Summary;
+  }> {
     const pageIndex = body.PageIndex ?? 1;
     return this.http
       .post<ApiResponse<QueryASS17030DataWrapper | QueryASS17030Detail[]>>(
@@ -31,17 +36,30 @@ export class ASS17030Service {
               ...res,
               Data: list,
               TotalCount: res.TotalCount ?? list.length,
-            } as ApiResponse<QueryASS17030Detail[]>;
+              DeptData: [],
+              Summary: undefined,
+            } as ApiResponse<QueryASS17030Detail[]> & {
+              DeptData?: QueryASS17030DeptInfo[];
+              Summary?: QueryASS17030Summary;
+            };
           }
           const wrapper = data as QueryASS17030DataWrapper;
-          const rawList = wrapper?.Details ?? [];
+          const queryData = wrapper?.QueryData;
+          const rawList = queryData?.Data ?? wrapper?.Details ?? [];
+          const deptData = queryData?.DeptData ?? [];
+          const summary = queryData?.Summary;
           const list = rawList.map((row, i) => this.withRowKey(row, pageIndex, i));
           const total = wrapper?.TotalRows ?? res.TotalCount ?? list.length;
           return {
             ...res,
             Data: list,
             TotalCount: total,
-          } as ApiResponse<QueryASS17030Detail[]>;
+            DeptData: deptData,
+            Summary: summary,
+          } as ApiResponse<QueryASS17030Detail[]> & {
+            DeptData?: QueryASS17030DeptInfo[];
+            Summary?: QueryASS17030Summary;
+          };
         })
       );
   }
