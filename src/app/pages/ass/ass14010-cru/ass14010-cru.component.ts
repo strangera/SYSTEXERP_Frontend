@@ -1,21 +1,41 @@
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
-import { NgFor, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
+import { Component, OnInit, } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { Tls51080Service } from '@service/api/tls/tls51080.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { apiOption } from '@shared/models/sys/sysb000.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { POS2034 } from '@shared/models/tls/tls000.model';
+import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { ValidationService } from '../../../shared/service/validation.service';
 
+//ass14010sample 倉庫設定檔
+export interface ass14010sample {
+  'id': string;
+  'STO_No': string; // 公司編號/店號
+  'HOS_No': string; // 倉庫代碼 STO_NO+HOS_NO唯一值 STO_NO+HOS_NO唯一值
+  'HOS_NAME': string; // 倉庫名稱
+  'org_id': string; // 組織代碼/組織名稱
+  'org_name': string; // 部門名稱
+  'building_no': string; // 館別代碼
+  'HOS_Remark'?: string; // 備註說明
 
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+
+  'CanDel': boolean; //能否刪除(僅顯示)
+}
 
 //3.1.4.1  進貨發票建檔作業 CRU
 @Component({
@@ -23,175 +43,78 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
   templateUrl: './ass14010-cru.component.html',
   styleUrl: './ass14010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, NgFor, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf, TranslateModule]
 })
-export class ASS14010CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
-
-  supplierCodeOptions: any[] = [];
-  requestTypeOptions: any[] = [];
-  invoiceFormatOptions: any[] = [
-    { value: 1, label: '21/進項三聯式、電子計算機統一發票' },
-    { value: 2, label: '22/進項二聯式收銀機統一發票、載有稅額之其他憑證' },
-    { value: 3, label: '25/進向三連式收銀機統一發票及一般稅額計算之電子發票' },
-    { value: 4, label: '26/彙總登陸每張稅額五百元以下之盡項三聯式、電子計算機之統一發票' },
-    { value: 5, label: '27/彙總登陸每張稅額五百元以下之盡項二聯式收銀雞統一發票、載有稅額之其他憑證' },
-    { value: 6, label: '28/進項海關代徵營業稅繳納證' },
-  ];
-  taxTypeOptions: any[] = [
-    { value: 1, label: '應稅' },
-    { value: 2, label: '免稅' },
-  ];
-  deductionsTypeOptions: any[] = [
-    { value: 1, label: '代表近項可扣抵之進貨及費用' },
-    { value: 2, label: '代表近項可扣抵之固定資產' },
-    { value: 3, label: '代表近項不可扣抵之進貨及費用' },
-    { value: 4, label: '代表近項不可扣抵之固定資產' },
-  ];
+export class ASS14010CRUComponent extends BasicCruPageComponent<POS2034> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    // 供應商資料
-    supplierCode: [, [Validators.required]], // 供應商編號
-    paymentDays: [], // 付款天數
-    totalAmount: [, [Validators.maxLength(10)]], // 總金額
-    noTaxAmount: [, [Validators.maxLength(8)]], // 未稅(含免稅)金額
-    taxAmount: [, [Validators.maxLength(8)]], // 稅額
-    //
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    id: [null], // 主鍵ID，新增時為null，編輯時為存在的ID
+    // POS2034 倉庫設定檔
+    STO_No: [{ value: null, disabled: true }], // 公司編號/店號
+    HOS_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.numberValidator]], // 倉庫代碼 STO_NO+HOS_NO唯一值
+    HOS_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 倉庫名稱
+    org_id: ['', [Validators.required, Validators.maxLength(20)]], // 部門編號/分店
+    building_no: ['', [Validators.maxLength(1), Validators.required]], // 館別
+    HOS_Remark: ['', [Validators.maxLength(100)]], // 備註說明
   });
+  //
+  SYS3100_Options: apiOption[] = [];
+  building_noOptions: apiOption[] = [];
+  STO_NoOptions: apiOption[] = [];
   // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private translate: TranslateService,
+    private tls51080Service: Tls51080Service,
     private validationService: ValidationService,
+    private readonly dropDownListService: DropDownListService,
   ) {
-    super();  // 呼叫父類建構子
+    super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310028';
-    //
+    this.initializePage('ASS14010', this.dataForm);
+    this.loadOptions();
 
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // 單據資料
-      orderNumber: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(10)]], // 驗收單號
-      totalAmount: [, [Validators.maxLength(10)]], // 總金額
-      noTaxAmount: [, [Validators.maxLength(8)]], // 未稅(含免稅)金額
-      taxAmount: [, [Validators.maxLength(8)]], // 稅額
-      // 發票資料
-      invoiceNumber: [, [this.validationService.numberValidator, Validators.required, Validators.maxLength(16)]], // 發票/收據號碼
-      requestType: [, [Validators.required]], // 請款單據種類
-      invoiceDate: [, [Validators.required]], // 發票/收據日期
-      payDatedd: [, [Validators.required]], // 付款日期
-      declareYm: [, [Validators.required]], // 申報年月
-      invoiceFormat: [, [Validators.required]], // 發票格式
-      taxType: [, [Validators.required]], // 稅別
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
+    console.log('讀取資料', this.dataForm.value);
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    this.handleSubmit(frm, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            const formValue = frm.getRawValue();
+            this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.dataForm.reset();
+            });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            const formValue = frm.getRawValue();
+            this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
+              this.onCancel();
+            });
+          }
+          break;
+      }
+    });
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
+  // 讀取dopropdown選項
+  loadOptions() {
+    {
+      // 組織代碼 下拉
+      this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+        this.SYS3100_Options = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
+        console.log('SYS3100_Options', this.SYS3100_Options);
+      })
 
-  onCancel() {
-    this.router.navigate(['/ASS1000/ASS14010']);
+      // 館別 下拉
+      this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+        this.building_noOptions = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
+        console.log('館別', this.building_noOptions);
+      })
+    }
   }
 }
