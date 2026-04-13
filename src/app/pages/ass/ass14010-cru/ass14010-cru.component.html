@@ -1,176 +1,67 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <h5>供應商資料</h5>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="供應商編號" controlName="supplierCode" [options]="supplierCodeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.supplierCode" [submitted]="submitted">
-          </app-dropdown>
+          <app-input-text
+            label="倉庫代碼"
+            controlName="HOS_No"
+            [control]="dataForm.controls.HOS_No"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="付款天數" controlName="paymentDays" [control]="dataForm.controls.paymentDays"
-            [submitted]="submitted">
-          </app-input-number>
+          <app-input-text
+            label="倉庫名稱"
+            controlName="HOS_NAME"
+            [control]="dataForm.controls.HOS_NAME"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="總金額" controlName="totalAmount"
-            [control]="dataForm.controls.totalAmount" [submitted]="submitted">
-          </app-input-number>
+          <app-dropdown
+            label="所屬部門"
+            controlName="org_id"
+            [options]="SYS3100_Options"
+            optionLabel="Label"
+            optionValue="No"
+            [control]="dataForm.controls.org_id"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="未稅(含免稅)金額" controlName="noTaxAmount"
-            [control]="dataForm.controls.noTaxAmount" [submitted]="submitted">
-          </app-input-number>
+          <app-dropdown
+            label="館別"
+            controlName="building_no"
+            [options]="building_noOptions"
+            optionLabel="Name"
+            optionValue="No"
+            [control]="dataForm.controls.building_no"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="稅額" controlName="taxAmount"
-            [control]="dataForm.controls.taxAmount" [submitted]="submitted">
-          </app-input-number>
+          <app-input-text
+            label="備註說明"
+            controlName="HOS_Remark"
+            [control]="dataForm.controls.HOS_Remark"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
-      <hr>
-      <div class="card">
-        <h5>單據資料</h5>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number [useGrouping]="false" label="總金額" controlName="totalAmount"
-              [control]="dataForm.controls.totalAmount" [submitted]="submitted">
-            </app-input-number>
-          </div>
-        </div>
-        <hr>
-        <ng-container formArrayName="items">
-          <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-            <div class="grid align-items-center">
-              <div class="col" style="flex: 1">
-                <h5>單據 {{ i + 1 }}</h5>
-              </div>
-              <div>
-
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number [useGrouping]="false" label="驗收單號" controlName="orderNumber"
-                  [control]="getFormControl(i, 'orderNumber')" [submitted]="submitted">
-                </app-input-number>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number [useGrouping]="false" label="未稅(含免稅)金額" controlName="noTaxAmount"
-                  [control]="getFormControl(i, 'noTaxAmount')" [submitted]="submitted">
-                </app-input-number>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number [useGrouping]="false" label="稅額" controlName="taxAmount"
-                  [control]="getFormControl(i, 'taxAmount')" [submitted]="submitted">
-                </app-input-number>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number [useGrouping]="false" label="總金額" controlName="totalAmount"
-                  [control]="getFormControl(i, 'totalAmount')" [submitted]="submitted">
-                </app-input-number>
-              </div>
-            </div>
-            <hr />
-          </ng-container>
-        </ng-container>
-        <div class="pt-1">
-
-        </div>
-      </div>
-      <div class="card">
-        <ng-container formArrayName="items">
-          <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-            <div class="grid align-items-center">
-              <div class="col" style="flex: 1">
-                <h5>單據 {{ i + 1 }}</h5>
-              </div>
-              <div>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown label="請款單據種類" controlName="requestType" [options]="requestTypeOptions"
-                  optionLabel="label" optionValue="value" [control]="getFormControl(i, 'requestType')"
-                  [submitted]="submitted">
-                </app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number [useGrouping]="false" label="發票/收據號碼" controlName="invoiceNumber"
-                  [control]="getFormControl(i, 'invoiceNumber')" [submitted]="submitted">
-                </app-input-number>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar calendarType="dateOne" label="發票/收據日期" controlName="invoiceDate"
-                  [control]="getFormControl(i, 'invoiceDate')" [submitted]="submitted">
-                </app-calendar>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar calendarType="dateOne" label="付款日期" [control]="getFormControl(i, 'payDatedd')"
-                  [submitted]="submitted">
-                </app-calendar>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar calendarType="dateMonthOne" label="申報年月" [control]="getFormControl(i, 'declareYm')"
-                  [submitted]="submitted">
-                </app-calendar>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown label="發票格式" controlName="invoiceFormat" [options]="invoiceFormatOptions"
-                  optionLabel="label" optionValue="value" [control]="getFormControl(i, 'invoiceFormat')"
-                  [submitted]="submitted">
-                </app-dropdown>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown label="稅別" controlName="taxType" [options]="taxTypeOptions" optionLabel="label"
-                  optionValue="value" [control]="getFormControl(i, 'taxType')" [submitted]="submitted">
-                </app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number [useGrouping]="false" label="未稅(含免稅)金額" controlName="noTaxAmount"
-                  [control]="getFormControl(i, 'noTaxAmount')" [submitted]="submitted">
-                </app-input-number>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number [useGrouping]="false" label="稅額" controlName="taxAmount"
-                  [control]="getFormControl(i, 'taxAmount')" [submitted]="submitted">
-                </app-input-number>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number [useGrouping]="false" label="總金額" controlName="totalAmount"
-                  [control]="getFormControl(i, 'totalAmount')" [submitted]="submitted">
-                </app-input-number>
-              </div>
-            </div>
-            <hr />
-          </ng-container>
-        </ng-container>
-        <!-- <div class="pt-1">
-                    
-                </div> -->
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit"></app-button>
       </div>
     </form>
-    <div class="col pt-4">
-      <div class="grid justify-content-end">
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
-        <app-button btnType="submit" (click)="submitForm(dataForm)"></app-button>
-      </div>
-    </div>
   </p-panel>
 </div>
