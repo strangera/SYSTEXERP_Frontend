@@ -82,7 +82,7 @@ export abstract class BasicPrintDataComponent {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
         Conditions: Conditions || queryState?.value || []
       },
-      report_title: REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
+      report_title: apiUrl ? REPORT_TITLES[`${apiUrl}`] : REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
       columns: pdfColumns,
       config: {
         ...event,
@@ -132,7 +132,7 @@ export abstract class BasicPrintDataComponent {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
         Conditions: Conditions || queryState?.value || []
       },
-      report_title: REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
+      report_title: apiUrl ? REPORT_TITLES[`${apiUrl}`] : REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
       columns: excelColumns,
       config: event,
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,

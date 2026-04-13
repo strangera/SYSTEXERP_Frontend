@@ -1,4 +1,4 @@
-// report-titles.ts
+// API名稱
 export const REPORT_TITLES: Record<string, string> = {
   queryTLS13030: '專櫃契約代扣款報表',
   queryTLS13040: '專櫃契約抽成報表',
@@ -16,6 +16,7 @@ export const REPORT_TITLES: Record<string, string> = {
   queryTLS23120: '專櫃日對帳單',
   queryTLS23130: '信用卡銷貨月報表',
 
+  query_addFIN25010: '電匯付款明細',
   queryFIN52090: '會計科目摘要明細表',
   queryFIN52050: '科目大分類代號表',
   queryFIN52060: '科目中分類代號表',
