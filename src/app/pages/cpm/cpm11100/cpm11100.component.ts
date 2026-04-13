@@ -12,7 +12,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { ImageModule } from 'primeng/image';
-import { finalize, switchMap } from 'rxjs';
+import { finalize, map, switchMap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -58,6 +58,27 @@ export interface cpm11100 {
     TranslateModule]
 })
 export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> implements OnInit {
+  //---queyfunction撥接轉換---
+  // 在 class 內部定義這個變數/函式
+  wrappedQueryFunction = (params: any) => {
+    const payload = {
+      ...params,
+      PageIndex: params.pageIndex, // 轉型：小寫變大寫
+      PageSize: params.pageSize    // 轉型：小寫變大寫
+    };
+
+    // 呼叫原始 Service 並回傳 Observable
+    return this.cpm11100Service.queryCPM11100(payload).pipe(
+      map(response => {
+        // 將 API 格式轉換為 app-table-report 底層 loadMoreData 期望的格式
+        return {
+          Data: response.Data.QueryData,     // Table 期望 Data 直接是陣列
+          TotalCount: response.Data.TotalCount // Table 期望 TotalCount 放在最外層
+        };
+      })
+    );
+  };
+  //------
   // 查詢 ( tls2c040
   queryForm = this.formBuilder.group({
     KEYWORD: ["", [Validators.maxLength(100)]], // 專櫃品牌
@@ -76,10 +97,10 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
     { field: 'TLT_NO', header: '專櫃編號' },
     { field: 'TLT_NAME', header: '專櫃名稱' },
     { field: 'BUS_TYPE_NAME', header: '大分類' },
+    // { field: 'TLT_FLOOR', header: '樓層代碼'},
     { field: 'FLOOR_DESC', header: '樓層' },
     { field: 'LOCATION_NO', header: '位置' },
-    { field: 'TLT_FLOOR', header: '平面圖' },
-    { field: 'TLT_OPENFLAG', header: '營運狀態代碼' },
+    // { field: 'TLT_OPENFLAG', header: '營運狀態代碼' },
     { field: 'TLT_OPENSTATUS', header: '營運狀態名稱' },
   ];
 
@@ -126,42 +147,34 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       //這邊預設是pageSize但後端是PageSize要先轉型
-      const payload = {
-        ...frm.value,
-        PageSize: 999,
-        PageIndex: frm.value.pageIndex,
-      };
-      console.log('全館店櫃request:', JSON.stringify(payload, null, 2));
-      this.loading = false;
-      this.cpm11100Service.queryCPM11100(payload).subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.data = response.Data || [];
-            console.log('Result', this.data);
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.lastQueryBody = frm.getRawValue();
-            this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
+      // const payload = {
+      //   ...frm.value,
+      //   PageSize: frm.value.pageSize,
+      //   PageIndex: frm.value.pageIndex,
+      // };
+      // console.log('全館店櫃request:', JSON.stringify(payload, null, 2));
+      // this.loading = false;
 
-      // this.cpm11100Service.queryCPM11100(frm.getRawValue())
-      //   .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-      //   .subscribe(response => {
-      //     this.data = response.Data || [];
-      //     this.totalRecords = response.TotalCount || 0;
-      //     this.lastQueryBody = frm.getRawValue();
-      //     this.queryStateService.setQueryState(this.ProgNo, this.lastQueryBody);
-      //   });
+      // this.cpm11100Service.queryCPM11100(payload).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+      //   this.data = response.Data.QueryData;
+      //   this.totalRecords = response.Data.TotalCount;
+      //   this.lastQueryBody = payload;
+      //   this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      // });
+
+      // 直接使用包裝好的 function
+      this.wrappedQueryFunction(frm.value)
+        .pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        )
+        .subscribe(res => {
+          // ⚠️ 注意：因為 wrappedQueryFunction 已經幫忙剝殼了，這裡直接讀取 res.Data
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount;
+          this.lastQueryBody = frm.value;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        });
     });
   }
 
