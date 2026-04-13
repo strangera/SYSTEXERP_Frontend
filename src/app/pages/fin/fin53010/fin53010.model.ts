@@ -498,6 +498,7 @@ export interface APS3001 {
   VEN_Name?: string | null;
   VEN_Uniform?: string | null;
   AccNo?: string | null;
+  AccCName?: string | null;
   ACP_SourceNo?: string | null;
   ACP_Amt?: number | null;
   PTA_Amt?: number | null;

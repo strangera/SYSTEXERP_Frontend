@@ -1,11 +1,11 @@
-import { NgClass, NgIf } from '@angular/common';
+import { DatePipe, NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
-import { POS5008Data } from '../../../../service/api/tls/tls24010.service';
+import { POS5008Data, Tls24010Service } from '../../../../service/api/tls/tls24010.service';
 import { getSYS1000Options } from '../../../../service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '../../../../service/utility/dropDownList.service';
 import { DropdownComponent } from '../../../../shared/componentkit/dropdown/dropdown.component';
@@ -43,6 +43,7 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
   @Input() isFormReadable?: boolean;
   @Input() submitted?: boolean;
   @Input() totalSaleAmt = 0; // 接收父層傳來的銷售總金額
+  @Input() queryInfo?: { TXN_Date?: string | Date, ECR_No?: string, Talent_ID?: number }; // 接收父層傳來的查詢條件資訊
   get currentTotalPaid(): number {
     return this.posFormArrayControls.reduce((sum, group, index) => {
       // 如果該行被勾選，則計入其金額
@@ -60,6 +61,7 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
   POS5008Columns: Column[] = POS5008Columns;
   isOptionsLoaded = false;
   trackByRow = (index: number, item: POS5008Data) => { return item?.id || index; }
+  checkPayNoList: string[] = [];
 
   CRD_TypeOptions = getSYS1000Options('CRD_Type');
   PAY_TypeOptions: IDropdownItem[] = [];
@@ -68,7 +70,9 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly fb: FormBuilder,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly datePipe: DatePipe,
+    private readonly tls24010Service: Tls24010Service
   ) {
     this.form = this.fb.group({
       POS5008: this.POS5008FormArray
@@ -76,36 +80,23 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
   }
 
   ngOnInit(): void {
-    this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe((res) => {
-      this.PAY_TypeOptions = res.Data.map(item => ({ ...item, label: item.Name }));
-      const rows = res.Data.map(item => {
-        const row: POS5008Data = {
-          PAY_No: item.No,
-          PAY_Name: item.Name,
-          TXN_PayAmt: 0,
-          CRD_Type: '',
-          CRD_No: '',
-          TXN_CouponNo: '',
-          TXN_PayDesc: '',
-          TERM_No: '',
-          PAY_Type: item.PAY_Type,
-          selected: false,
-          PAY_OverPay: item.PAY_OverPay,
-        };
-        this.POS5008FormArray.push(this.createRowForm(row));
-        return row;
-      });
-      this.POS5008Data = rows;
-
-      this.isOptionsLoaded = true;
-      this.applyInputData();
-      this.cdr.markForCheck();
-    });
+    // 預先加載下拉選單基礎資料
+    this.loadInitialOptions();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if ((changes['isFormCreateable'] || changes['rece_yn']) && this.POS5008FormArray?.length > 0) {
+      this.updateRowDisableStatus();
+    }
+    if (this.isFormCreateable && changes['queryInfo'] && this.queryInfo?.ECR_No) {
+      // 新增的時候要卡已審核的付款別disable，所以只要查詢條件有變化就重新撈一次已審核的付款別清單
+      this.fetchCheckStatusAndReload();
+    }
     if (changes['data'] && changes['data'].currentValue?.length > 0 && !this.isFormCreateable) {
       this.applyInputData();
+    }
+    if (changes['isFormCreateable'] && this.POS5008FormArray?.length > 0) {
+      this.updateRowDisableStatus();
     }
 
     if (changes['isFormCreateable'] && this.POS5008FormArray?.length > 0) {
@@ -124,6 +115,92 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
       });
       this.cdr.markForCheck();
     }
+  }
+
+  private fetchCheckStatusAndReload(): void {
+    const payload = {
+      TXN_Date: this.datePipe.transform(this.queryInfo?.TXN_Date, 'yyyy-MM-dd') || '',
+      ECR_No: this.queryInfo?.ECR_No || '',
+      Talent_ID: this.queryInfo?.Talent_ID || 0,
+    };
+
+    this.tls24010Service.queryTLS24010CheckStatus(payload).pipe(untilDestroyed(this)).subscribe(res => {
+      this.checkPayNoList = res.Data?.payNoList || [];
+      if (this.isOptionsLoaded && this.posFormArrayControls.length > 0) {
+        this.updateRowDisableStatus();
+      }
+      this.cdr.markForCheck();
+    });
+  }
+
+  private loadInitialOptions(): void {
+    this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe((res) => {
+      this.PAY_TypeOptions = res.Data.map(item => ({ ...item, label: item.Name }));
+      this.initFormRows(res.Data);
+      this.isOptionsLoaded = true;
+      this.updateRowDisableStatus();
+
+      if (this.data?.length > 0 && !this.isFormCreateable) {
+        this.applyInputData();
+      }
+      this.cdr.markForCheck();
+    });
+  }
+
+  private initFormRows(options: any[]): void {
+    this.POS5008FormArray.clear();
+    this.POS5008Data = options.map(item => {
+      const row: POS5008Data = {
+        PAY_No: item.No,
+        PAY_Name: item.Name,
+        TXN_PayAmt: 0,
+        CRD_Type: '',
+        CRD_No: '',
+        TXN_CouponNo: '',
+        TXN_PayDesc: '',
+        TERM_No: '',
+        PAY_Type: item.PAY_Type,
+        selected: false,
+        PAY_OverPay: item.PAY_OverPay,
+        isLocked: false // 自定義屬性標示是否已審核
+      };
+      this.POS5008FormArray.push(this.createRowForm(row));
+      return row;
+    });
+  }
+
+  private updateRowDisableStatus(): void {
+    if (!this.posFormArrayControls || this.posFormArrayControls.length === 0) return;
+    this.posFormArrayControls.forEach((group, index) => {
+      const rowData = this.POS5008Data[index];
+      if (!rowData) return;
+      // 判斷是否有已審核的付款別
+      const isApiLocked = rowData.PAY_No ? this.checkPayNoList.includes(rowData.PAY_No) : false;
+      rowData.isLocked = isApiLocked;
+      const shouldDisable = !this.isFormCreateable || isApiLocked;
+
+      if (shouldDisable) {
+        group.disable({ emitEvent: false });
+      } else {
+        group.enable({ emitEvent: false });
+
+        // 2. 處理固定唯讀欄位
+        group.get('PAY_Name')?.disable({ emitEvent: false });
+        group.get('PAY_No')?.disable({ emitEvent: false });
+        group.get('PAY_OverPay')?.disable({ emitEvent: false });
+
+        // 3. 處理「信用卡/券號」欄位 (根據 rece_yn)
+        // 如果還沒勾選該行，且 rece_yn 為 N，則應維持 disable
+        if (this.rece_yn === 'N') {
+          group.get('CRD_Type')?.disable({ emitEvent: false });
+          group.get('CRD_No')?.disable({ emitEvent: false });
+          group.get('TERM_No')?.disable({ emitEvent: false });
+          group.get('TXN_CouponNo')?.disable({ emitEvent: false });
+          group.get('TXN_PayDesc')?.disable({ emitEvent: false });
+        }
+      }
+    });
+    this.cdr.markForCheck();
   }
 
   private applyInputData(): void {
@@ -212,6 +289,11 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
   onRowSelect(event: TableRowSelectEvent): void {
     this.submitted = false;
     const rowData = event.data as POS5008Data;
+    // --- 如果這筆資料已審核被鎖定，直接跳出，不做任何 enable 動作 ---
+    if (rowData.isLocked) {
+      return;
+    }
+
     rowData.selected = true;
     const rowIndex = this.POS5008Data.findIndex(d => d.PAY_No === rowData.PAY_No);
     if (rowIndex === -1) return;
@@ -324,5 +406,8 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
       rowData.CRD_No : rowData.TXN_CouponNo && rowData.TXN_CouponNo !== '' ?
         rowData.TXN_CouponNo : rowData.TXN_PayDesc && rowData.TXN_PayDesc !== '' ?
           rowData.TXN_PayDesc : '';
+  }
+  get hasCheckedData(): boolean { // 控制已審核提示字樣
+    return this.checkPayNoList && this.checkPayNoList.length > 0;
   }
 }

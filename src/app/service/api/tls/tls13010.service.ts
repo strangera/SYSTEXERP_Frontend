@@ -213,6 +213,8 @@ export class TLS13010Service {
             message: response.Message || '契約資料提交成功',
             data: response.Data,
             talentId: response.Data?.TalentId,
+            applyNo: response.Data?.ApplyNo,
+            tltNo: response.Data?.TltNo,
             contractNo: response.Data?.ContractNo,
             totalProcessed: response.Data?.TotalProcessed || 0,
             processingTime: response.Data?.ProcessingTime,
