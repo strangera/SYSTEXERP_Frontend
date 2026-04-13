@@ -39,6 +39,7 @@ import {
   FIN53010Aps4023Row,
   FIN53010Ars3001Row,
   FIN53010Data,
+  FIN53010Detail,
   FIN53010DetailTable,
   FIN53010InsertResult,
   FIN53010Payload,
@@ -625,6 +626,20 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return `${data.id}|${data.VouNo}|${JSON.stringify(rows)}`;
   }
 
+  /** 初次載入明細：借方在前、貸方在後；同側依會計科目代號遞增（與 onApplyTemplate 之 D/1、C/0 一致） */
+  private sortInitialLoadFin53010Details(details: FIN53010Detail[]): FIN53010Detail[] {
+    const isDebit = (dc: string | undefined): boolean => {
+      const s = String(dc ?? '').trim();
+      return s === 'D' || s === '1';
+    };
+    return [...details].sort((a, b) => {
+      const aD = isDebit(a.AccDC);
+      const bD = isDebit(b.AccDC);
+      if (aD !== bD) return aD ? -1 : 1;
+      return String(a.AccNo ?? '').localeCompare(String(b.AccNo ?? ''), void 0, { numeric: true });
+    });
+  }
+
   constructor(
     public readonly service: FIN53010Service,
     private readonly logger: NGXLogger,
@@ -683,13 +698,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       ).subscribe({
         next: res => {
           if (res.Status !== '0000') return;
-          this.fin53010DetailData.set(res.Data);
+          const raw = res.Data;
+          if (!raw) return;
+          const details = this.sortInitialLoadFin53010Details(raw.Details ?? []);
+          this.fin53010DetailData.set({ ...raw, Details: details });
           this.totalRecords.set(res.TotalCount);
           const accNos = Array.from(new Set(
-            (res.Data?.Details ?? []).map(d => d.AccNo).filter((a): a is string => !!a && String(a).trim() !== ''),
+            details.map(d => d.AccNo).filter((a): a is string => !!a && String(a).trim() !== ''),
           ));
           if (accNos.length) this.service.getAccDescOptions(accNos);
-          this.loadRelatedDetailByVouNo(res.Data?.VouNo);
+          this.loadRelatedDetailByVouNo(raw.VouNo);
         },
       });
     }
