@@ -866,7 +866,24 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   }
 
   public handleUpload(event: FileUploadHandlerEvent): void {
+    const { pod_sdate, pod_edate } = this.dataForm.getRawValue();
+    if (pod_sdate == null || pod_edate == null) {
+      this.messageService.errorBubble('請先選擇活動起始日期');
+      this.fileUpload().clear();
+      return;
+    }
+
+    const tlt_bdate = this.datePipe.transform(pod_sdate, 'yyyy-MM-dd');
+    const tlt_edate = this.datePipe.transform(pod_edate, 'yyyy-MM-dd');
+    if (!tlt_bdate || !tlt_edate) {
+      this.messageService.errorBubble('請先選擇活動起始日期');
+      this.fileUpload().clear();
+      return;
+    }
+
     const formData = new FormData();
+    formData.append('tlt_bdate', tlt_bdate);
+    formData.append('tlt_edate', tlt_edate);
     formData.append('file', event.files[0]);
     this.logger.debug(`handleUpload:`, [event, formData]);
 
