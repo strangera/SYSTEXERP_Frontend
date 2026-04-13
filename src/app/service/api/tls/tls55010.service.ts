@@ -124,7 +124,7 @@ export class Tls55010Service {
    * @returns 僅包含狀態碼和訊息的 API Response
    */
   unLockTLS55010(request: Tls55010DateRequest): Observable<ApiResponse<number>> {
-    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/unLockTLS55010`, { TXN_Date: request });
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/unLockTLS55010`, request);
   }
 
   queryTLS55010(request: Tls55010DateRequest): Observable<ApiResponse<InsertTls55010Data>> {
