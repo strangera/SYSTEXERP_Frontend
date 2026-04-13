@@ -617,26 +617,34 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
 
   // 總計計算邏輯
   calculateTotals(): void {
-    let totalBuyNet = 0; // 採購金額(即所有明細的「小計」加總)
-    let totalBuyTax = 0; // 稅額
-    let totalSaleAmt = 0; // 售價總計(即所有明細的「售價小計」加總)
+    let totalBuyNet = 0;
+    let totalBuyTax = 0; // 總額彙總
+    let totalSaleAmt = 0;
+
     try {
       this.data.forEach(item => {
         const buyNet = Number(item.POD_BuyNet) || 0;
-        const buyTax = Number(item.POD_BuyTax) || 0; // 從明細項中取得已計算的稅額
-        const saleAmt = Number(item.POD_SaleAmt) || 0;
+        // 在加總時，即時根據該行的「未稅小計」算出應有的稅額
+        // 確保 PLU_StockTaxType 為 '1' (應稅)
+        const rowTax = item.PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;
+
+        // 更新回該行物件，讓 UI 同步顯示
+        item.POD_BuyTax = rowTax;
+        item.POD_BuyAmt = buyNet + rowTax;
+
         totalBuyNet += buyNet;
-        totalBuyTax += buyTax; // 簡單加總明細稅額
-        totalSaleAmt += saleAmt;
+        totalBuyTax += rowTax;
+        totalSaleAmt += (Number(item.POD_SaleAmt) || 0);
       });
     } catch (e) {
       console.error(e);
       totalBuyNet = totalBuyTax = totalSaleAmt = 0;
     }
-    const totalBuyAmt = totalBuyNet + totalBuyTax; // 採購合計
-    // ... 後續的 setValue 保持不變
+
+    const totalBuyAmt = totalBuyNet + totalBuyTax;
+
     this.dataForm.controls.PO_TotalBuyNet.setValue(Math.round(totalBuyNet));
-    this.dataForm.controls.PO_TotalBuyTax.setValue(Math.round(totalBuyTax));
+    this.dataForm.controls.PO_TotalBuyTax.setValue(Math.round(totalBuyTax)); // 這裡現在會是 65,033
     this.dataForm.controls.PO_TotalBuyAmt.setValue(Math.round(totalBuyAmt));
     this.dataForm.controls.PO_TotalSaleAmt.setValue(Math.round(totalSaleAmt));
     this.cdr.detectChanges();
@@ -674,6 +682,8 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         POD_SubQty: item.POD_SubQty || 0, // 確保有值，使用之前計算好的 POD_SubQty
         POD_BuyPrc: item.PLU_SalePrc_UNI || 0, // 採購單價 (未稅進價)
         POD_BuyNet: item.POD_BuyNet || 0, // 採購淨額 (已計算過並取整數)
+        POD_BuyTax: item.PLU_StockTaxType === '1' ? Math.round(Number(item.POD_BuyNet || 0) * 0.05) : 0, // 採購稅額 (已計算過並取整數)
+        POD_BuyAmt: Math.round(Number(item.POD_BuyNet || 0) + Number(item.POD_BuyTax || 0)), // 採購金額 (已計算過並取整數)
         POD_SalePrc: item.PLU_SalePrc || 0, // 銷售單價 (含稅售價)
         POD_SaleAmt: item.POD_SaleAmt || 0, // 銷售金額 (已計算過並取整數)
         POD_Remark: item.POD_Remark || '', // 如果有明細備註欄位，請從 item 中取值

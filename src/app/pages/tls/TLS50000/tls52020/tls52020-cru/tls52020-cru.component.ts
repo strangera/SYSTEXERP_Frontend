@@ -629,33 +629,47 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
         this.loading = false;
         return;
       }
+
       const valid = this.tableEditComponent.validateAndShowErrors();
       if (!valid) {
         this.loading = false;
         return;
       }
-      const formData = frm.getRawValue(); // 獲取所有表單值，包括 disabled 的
-      const details: TLS52020Detail[] = this.data.map((item) => ({
-        id: this.isFormCreateable ? 0 : item.id,
-        CRN_No: this.dataForm.controls.CRN_No.value,
-        SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
-        HOS_No: this.dataForm.controls.HOS_No.value,
-        PLU_MagNo: item.PLU_MagNo,
-        PLU_No: item.PLU_No, // 國際條碼
-        PLU_Name: item.PLU_Name,
-        PLU_Unit: item.PLU_Unit,
-        PLU_BoxQty: item.PLU_BoxQty || 0,
-        PLU_StockTaxType: item.PLU_StockTaxType,
-        PLU_TaxType: item.PLU_TaxType,
-        CRN_SubQty: item.CRN_SubQty || 0, // 確保有值，使用之前計算好的 POD_SubQty
-        CRN_BuyPrc: item.CRN_BuyPrc || 0, // 採購單價 (未稅進價)
-        CRN_BuyNet: item.CRN_BuyNet || 0, // 採購淨額 (已計算過並取整數)
-        CRN_SalePrc: item.CRN_SalePrc || 0, // 銷售單價 (含稅售價)
-        CRN_SaleAmt: item.CRN_SaleAmt || 0, // 銷售金額 (已計算過並取整數)
-        CRN_Remark: item.CRN_Remark || '', // 如果有明細備註欄位，請從 item 中取值
-      }));
-      // 再次計算總數量，或者從 calculateTotals 中取得
+
+      const formData = frm.getRawValue();
+
+      // 關鍵修正：確保 Details 轉換時帶入計算後的稅額與進價合計
+      const details: TLS52020Detail[] = this.data.map((item) => {
+        // 即時確保稅額有被算出 (防禦性計算)
+        const buyNet = item.CRN_BuyNet || 0;
+        const buyTax = item.PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;
+        const buyAmt = buyNet + buyTax;
+
+        return {
+          id: this.isFormCreateable ? 0 : item.id,
+          CRN_No: this.dataForm.controls.CRN_No.value,
+          SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+          HOS_No: this.dataForm.controls.HOS_No.value,
+          PLU_MagNo: item.PLU_MagNo,
+          PLU_No: item.PLU_No,
+          PLU_Name: item.PLU_Name,
+          PLU_Unit: item.PLU_Unit,
+          PLU_BoxQty: item.PLU_BoxQty || 0,
+          PLU_StockTaxType: item.PLU_StockTaxType,
+          PLU_TaxType: item.PLU_TaxType,
+          CRN_SubQty: item.CRN_SubQty || 0,
+          CRN_BuyPrc: item.CRN_BuyPrc || 0,
+          CRN_BuyNet: buyNet,            // 傳送未稅小計
+          CRN_BuyTax: buyTax,            // 修正：補上傳送稅額
+          CRN_BuyAmt: buyAmt,            // 修正：補上傳送進價合計 (含稅)
+          CRN_SalePrc: item.CRN_SalePrc || 0,
+          CRN_SaleAmt: item.CRN_SaleAmt || 0,
+          CRN_Remark: item.CRN_Remark || '',
+        };
+      });
+
       const totalSubQty = details.reduce((sum, item) => sum + (item.CRN_SubQty || 0), 0);
+
       const submitData: TLS52020Request = {
         id: this.isFormCreateable ? undefined : this.rowdata?.id,
         CRN_No: formData.CRN_No,
@@ -666,37 +680,36 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
         HOS_No: formData.HOS_No,
         CRN_TaxType: this.rowdata?.CRN_TaxType || '1',
         CRN_Status: this.rowdata?.CRN_Status || '0',
-        CRN_TotalSubQty: totalSubQty, // 使用計算後的總數量
+        CRN_TotalSubQty: totalSubQty,
         CRN_TotalBuyNet: this.dataForm.controls.CRN_TotalBuyNet.value,
         CRN_TotalBuyTax: this.dataForm.controls.CRN_TotalBuyTax.value,
         CRN_TotalBuyAmt: this.dataForm.controls.CRN_TotalBuyAmt.value,
         CRN_TotalSaleAmt: this.dataForm.controls.CRN_TotalSaleAmt.value,
         APPLY_Date: this.dataForm.controls.APPLY_Date.value,
         APPLY_USR_No: this.authService.currentUserValue?.user_No || '',
-        APPLY_USR_Name: this.authService.currentUserValue?.user_Name || '', // 確保取到用戶姓名
+        APPLY_USR_Name: this.authService.currentUserValue?.user_Name || '',
         CRN_Remark: formData.CRN_Remark || '',
         YYYYMM: `${formData.APPLY_Date.getFullYear()}${(formData.APPLY_Date.getMonth() + 1).toString().padStart(2, '0')}`,
-        Details: details, // 帶入轉換後的明細資料陣列
+        Details: details,
       };
-      // 處理提交邏輯 (呼叫 insert 或 update)
-      this.handleSubmit(frm, () => {
-        const request$ = this.isFormCreateable
-          ? this.tls52020Service.insertTLS52020(submitData)
-          : this.tls52020Service.updateTLS52020(submitData);
 
-        request$
-          .pipe(finalize(() => this.loading = false), untilDestroyed(this))
-          .subscribe({
-            next: () => {
-              this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
-              if (this.isFormCreateable) {
-                this.dataForm.reset();
-              } else {
-                this.onCancel();
-              }
+      // 執行請求
+      const request$ = this.isFormCreateable
+        ? this.tls52020Service.insertTLS52020(submitData)
+        : this.tls52020Service.updateTLS52020(submitData);
+
+      request$
+        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+        .subscribe({
+          next: () => {
+            this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
+            if (this.isFormCreateable) {
+              this.onCancel(); // 或者調用 reset 邏輯
+            } else {
+              this.onCancel();
             }
-          });
-      });
+          }
+        });
     });
   }
   onReset() {

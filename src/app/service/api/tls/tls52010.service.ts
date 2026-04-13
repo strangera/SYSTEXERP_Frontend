@@ -101,6 +101,7 @@ export interface IPOS2004DetailData {
   POD_SubQty?: number; // 採購數量
   POD_BuyTax?: number; // 採購稅額
   POD_BuyNet?: number; // 採購淨額
+  POD_BuyAmt?: number;
   POD_SaleAmt?: number; // 銷售金額
   POD_Remark?: string; // 備註
   _TABLE_KEY?: string;
