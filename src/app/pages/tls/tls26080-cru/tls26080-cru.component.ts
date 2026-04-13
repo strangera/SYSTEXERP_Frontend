@@ -621,6 +621,16 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         return;
       }
 
+      const tltTalentMap = this.service.tltTalentMap();
+      const hasUnknownTlt = validTableData.some(
+        item => !tltTalentMap.has(String(item.tlt_no)),
+      );
+      if (hasUnknownTlt) {
+        this.messageService.errorBubble('專案編號不存在，無法儲存');
+        this.tableLoading.set(false);
+        return;
+      }
+
       // 逐筆驗證表格資料
       for (const item of validTableData) {
         if (!item.tlt_no || !item.calc_date_type) {
