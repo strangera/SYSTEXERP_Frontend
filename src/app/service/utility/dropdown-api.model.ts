@@ -659,6 +659,17 @@ export interface Aps1002Item {
 }
 
 /**
+ * 查詢會計科目子科目設定檔(GLS1005 AccSubCode)下拉式選單
+ */
+export interface GLS1005AccSubCodeItem {
+  CompNo: string;
+  AccNo: string;
+  AccCName: string;
+  AccEName: string;
+  AccDC: string;
+}
+
+/**
  * 查詢會計科目設定檔(GLS1005)下拉式選單(只顯示 GLS1005.ledger_MD=1)
  */
 export interface IGLS1005LedgerMDItem extends IDropdownItem {
