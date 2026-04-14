@@ -45,7 +45,7 @@
           [control]="POS6118dataForm.controls.NCML_TXN_Date" [submitted]="submitted" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
           [control]="POS6118dataForm.controls.ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
-          optionValue="value" [submitted]="submitted" />
+          optionValue="value" [submitted]="submitted" (valueChange)="onECRNoChange(POS6118dataForm)" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
           [control]="POS6118dataForm.controls.TXN_No" [submitted]="submitted"></app-input-text>
         <app-calendar class="col-12 md:col-6 lg:col-4" label="銷售日期" controlName="NCML_TxnDate"
@@ -102,7 +102,7 @@
           [control]="POS6118HdataForm.controls.NCML_TXN_Date" [submitted]="submitted" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
           [control]="POS6118HdataForm.controls.ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
-          optionValue="value" [submitted]="submitted" />
+          optionValue="value" [submitted]="submitted" (valueChange)="onECRNoChange(POS6118HdataForm)" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
           [control]="POS6118HdataForm.controls.TXN_No" [submitted]="submitted"></app-input-text>
         <app-calendar class="col-12 md:col-6 lg:col-4" label="銷售日期" controlName="NCML_TxnDate"
@@ -156,7 +156,7 @@
           [control]="POS6119dataForm.controls.CTBC_TXN_Date" [submitted]="submitted" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
           [control]="POS6119dataForm.controls.ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
-          optionValue="value" [submitted]="submitted" />
+          optionValue="value" [submitted]="submitted" (valueChange)="onECRNoChange(POS6119dataForm)" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
           [control]="POS6119dataForm.controls.TXN_No" [submitted]="submitted"></app-input-text>
         <app-calendar class="col-12 md:col-6 lg:col-4" label="銷售日期" controlName="CTBC_TxnTime"
@@ -208,7 +208,7 @@
           [control]="POS6119PdataForm.controls.CTBC_TXN_Date" [submitted]="submitted" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
           [control]="POS6119PdataForm.controls.ECR_No" [options]="ECR_NoOptions | async" optionLabel="label"
-          optionValue="value" [submitted]="submitted" />
+          optionValue="value" [submitted]="submitted" (valueChange)="onECRNoChange(POS6119PdataForm)" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
           [control]="POS6119PdataForm.controls.TXN_No" [submitted]="submitted"></app-input-text>
         <app-calendar class="col-12 md:col-6 lg:col-4" label="銷售日期" controlName="CTBC_TxnDate"

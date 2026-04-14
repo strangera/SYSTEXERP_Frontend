@@ -9,7 +9,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { formatTxnNo } from '@shared/models/system/query-form.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'; // 確保 AuthService 被導入
 import { PanelModule } from 'primeng/panel';
-import { finalize, Observable } from 'rxjs';
+import { finalize, Observable, take } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -279,6 +279,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
             } else {
               form.get('TXN_No')?.disable({ emitEvent: false });
             }
+            this.onECRNoChange(form);
           }
 
           // Read 模式下需手動 disable 所有欄位
@@ -398,6 +399,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
             } else {
               form.get('TXN_No')?.disable({ emitEvent: false });
             }
+            this.onECRNoChange(form);
           }
 
           if (this.isFormReadable) form.disable();
@@ -468,6 +470,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
             } else {
               form.get('TXN_No')?.disable({ emitEvent: false });
             }
+            this.onECRNoChange(form);
           }
 
           if (this.isFormReadable) form.disable();
@@ -638,5 +641,21 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
         });
       }
     });
+  }
+
+  /** 當收銀機號變更時，根據選項自動帶入專櫃編號 */
+  onECRNoChange(frm: FormGroup) {
+    const selectedEcrNo = frm.get('ECR_No')?.value;
+    if (selectedEcrNo) {
+      this.ECR_NoOptions.pipe(take(1)).subscribe(options => {
+        if (options) {
+          // 1. 尋找對應的選項物件
+          const selectedOption = options.find(opt => opt.value === selectedEcrNo);
+          if (selectedOption && selectedOption['ECR_TLT_No']) {
+            frm.patchValue({ TLT_No: selectedOption['ECR_TLT_No'] });
+          }
+        }
+      });
+    }
   }
 }

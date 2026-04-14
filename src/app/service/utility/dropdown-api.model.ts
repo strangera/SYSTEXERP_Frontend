@@ -36,7 +36,7 @@ export interface FAASSCHKMASS15070DropDownItem {
   CHECK_DATE?: string | null;
 }
 
-/** 
+/**
  * 查詢 FACLASSM_DropDownList 時的請求 body
 */
 export interface FaClassMQuery {
@@ -704,4 +704,13 @@ export interface Sys5000SubModuleItem extends IDropdownItem {
 export interface Tls55020Query {
   /** 交易日期 (YYYY-MM-DD) */
   TXN_Date: string;
+}
+
+/**
+ * 收銀機下拉選單項目型別
+ */
+export interface queryPOS1002_DropDownListItem {
+  No: string;
+  Name: string;
+  ECR_TLT_No?: string;
 }
