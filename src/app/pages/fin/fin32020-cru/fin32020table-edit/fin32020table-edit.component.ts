@@ -49,7 +49,7 @@ import {
   FieldChangeEvent,
 } from './fin32020table-edit.model';
 import { FIN32020TemplateCellComponent } from './fin32020table-edit-cell/FIN32020template-cell.component';
-
+import { RadioButtonModule } from 'primeng/radiobutton';
 @Component({
   selector: 'app-fin32020table-edit',
   templateUrl: './fin32020table-edit.component.html',
@@ -74,6 +74,7 @@ import { FIN32020TemplateCellComponent } from './fin32020table-edit-cell/FIN3202
     SkeletonModule,
     TableModule,
     TooltipModule,
+    RadioButtonModule,
   ],
   providers: [TableEditDataService, TableValidationService],
 })
@@ -163,7 +164,23 @@ export class FIN32020TableEditComponent implements OnChanges {
   @Input() showFooter = false;
   @Input() scrollable = false;
   @Input() showPaginator = false;
+  @Input() selectionMode: 'single' | 'multiple' | null = null;
 
+  //radioBTN
+@Input() selectedItem: any = null;
+@Output() selectedItemChange = new EventEmitter<any>();
+
+@Input() showSingleSelect = false;
+
+/** 某列是否應顯示 X（不可選） */
+@Input() isRowMarked: (rowData: any, rowIndex: number, data: any[]) => boolean = () => false;
+
+/** 點 radio 時是否直接觸發 detail / confirm 類行為 */
+@Output() singleSelect = new EventEmitter<any>();
+@Output() rowDoubleClick = new EventEmitter<{
+  rowData: any;
+  index: number;
+}>();
   protected readonly tableUtilityService = inject(TableUtilityService);
   protected readonly cdr = inject(ChangeDetectorRef);
   protected readonly messageService = inject(NotificationService);
@@ -567,4 +584,33 @@ deleteRow(selectedItems: any[]) {
   this.dataChange.emit(cleanData);
   this.cdr.detectChanges();
 }
+onSingleSelect(rowData: any, rowIndex: number, event?: MouseEvent): void {
+  if (this.disabled) return;
+  if (event) {
+    event.stopPropagation();
+  }
+
+  if (rowData?._isAutoInsertCandidate) return;
+  if (this.isRowMarked(rowData, rowIndex, this._tableData)) return;
+
+  this.selectedItem = rowData;
+  this.selectedItemChange.emit(rowData);
+  this.singleSelect.emit(rowData);
+  this.cdr.detectChanges();
+}
+onRowDoubleClick(rowData: any, rowIndex: number, event?: MouseEvent): void {
+  if (this.disabled) return;
+  if (event) {
+    event.stopPropagation();
+  }
+
+  if (rowData?._isAutoInsertCandidate) return;
+
+  this.rowDoubleClick.emit({
+    rowData,
+    index: rowIndex,
+  });
+}
+
+
 }
