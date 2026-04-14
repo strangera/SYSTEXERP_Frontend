@@ -10,32 +10,25 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { POS2034 } from '@shared/models/tls/tls000.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 
-//ass14010sample 倉庫設定檔
-export interface ass14010sample {
-  'id': string;
-  'STO_No': string; // 公司編號/店號
-  'HOS_No': string; // 倉庫代碼 STO_NO+HOS_NO唯一值 STO_NO+HOS_NO唯一值
-  'HOS_NAME': string; // 倉庫名稱
-  'org_id': string; // 組織代碼/組織名稱
-  'org_name': string; // 部門名稱
-  'building_no': string; // 館別代碼
-  'HOS_Remark'?: string; // 備註說明
-
-  'CRT_Date': Date;
-  'CRT_USR_No': string;
-  'CRT_USR_Name': string;
-  'UPD_Date': Date;
-  'UPD_USR_No': string;
-  'UPD_USR_Name': string;
-
-  'CanDel': boolean; //能否刪除(僅顯示)
+export interface Label {
+  id: number,
+  PLU_MagNo: string, // 商品管理碼
+  PLU_Name: string,// 商品名稱
+  Label_Qty: number // 標籤數量
+  PLU_SalePrc: number // 商品售價
+  PLU_Unit: string,// 商品單位
+  PLU_OrgPLUNo: string,// 廠商貨號
+  PLU_No: string,// 國際條碼
 }
+
 
 //3.1.4.1  進貨發票建檔作業 CRU
 @Component({
@@ -43,7 +36,8 @@ export interface ass14010sample {
   templateUrl: './ass14010-cru.component.html',
   styleUrl: './ass14010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf, TableEditComponent, TranslateModule]
+
 })
 export class ASS14010CRUComponent extends BasicCruPageComponent<POS2034> implements OnInit {
   // ----------------------------------------------------------------
@@ -61,6 +55,17 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<POS2034> impleme
   SYS3100_Options: apiOption[] = [];
   building_noOptions: apiOption[] = [];
   STO_NoOptions: apiOption[] = [];
+  // ---------標籤檔 (label) 編輯表格 至少要一筆-------------------------------------------------------
+  labelData: Label[] = [];
+  labelColumn: EditColumn[] = [
+    { field: 'PLU_No', header: '國際條碼', width: '150px', type: 'input' },
+    { field: 'PLU_MagNo', header: '商品管理碼' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'Label_Qty', header: '標籤數量', width: '150px', type: 'inputNumber' },
+    { field: 'PLU_SalePrc', header: '商品售價' },
+    { field: 'PLU_Unit', header: '商品單位' },
+    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
+  ];
   // ----------------------------------------------------------------
   constructor(
     private tls51080Service: Tls51080Service,
@@ -73,8 +78,6 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<POS2034> impleme
   ngOnInit(): void {
     this.initializePage('ASS14010', this.dataForm);
     this.loadOptions();
-
-    console.log('讀取資料', this.dataForm.value);
   }
 
   onSubmit(frm: FormGroup) {
@@ -82,19 +85,19 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<POS2034> impleme
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            const formValue = frm.getRawValue();
-            this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
-              this.messageService.successBubble('新增成功');
-              this.dataForm.reset();
-            });
+            // const formValue = frm.getRawValue();
+            // this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
+            //   this.messageService.successBubble('新增成功');
+            //   this.dataForm.reset();
+            // });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            const formValue = frm.getRawValue();
-            this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
-              this.onCancel();
-            });
+            // const formValue = frm.getRawValue();
+            // this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
+            //   this.onCancel();
+            // });
           }
           break;
       }
@@ -116,5 +119,10 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<POS2034> impleme
         console.log('館別', this.building_noOptions);
       })
     }
+  }
+
+  //清除明細內容
+  clearSubForm() {
+    this.labelData = []; // 清空表格資料
   }
 }

@@ -55,11 +55,26 @@
           ></app-input-text>
         </div>
       </div>
+      <div class="grid p-fluid">
+        <div class="col-12">
+          <app-table-edit
+            #labelTable
+            [columns]="labelColumn"
+            [data]="labelData"
+            [loading]="loading"
+            (dataChange)="labelData = $event"
+          ></app-table-edit>
+        </div>
+      </div>
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
       >
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button
+          btnType="cancel"
+          [form]="dataForm"
+          (click)="clearSubForm()"
+        ></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>
