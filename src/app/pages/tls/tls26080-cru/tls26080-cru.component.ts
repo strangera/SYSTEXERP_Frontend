@@ -609,15 +609,17 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         return;
       }
 
-      // 檢查專櫃編號是否有重複
-      const seen = new Set();
+      // 檢查專櫃編號是否有重複（須以 tlt_no 為鍵；若以 id 會漏掉同編號不同 id）
+      const seenTlt = new Set<string>();
       const hasDuplicate = validTableData.some(item => {
-        if (seen.has(item.tlt_no)) return true;
-        seen.add(item.id);
+        const key = String(item.tlt_no ?? '');
+        if (seenTlt.has(key)) return true;
+        seenTlt.add(key);
         return false;
       });
       if (hasDuplicate) {
         this.messageService.errorBubble('有重複的專櫃編號，無法儲存');
+        this.tableLoading.set(false);
         return;
       }
 
@@ -942,7 +944,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     switch (event.field) {
       case 'tlt_no': {
         if (!this.duplicateVal(event.value, rowData).isValid) {
-          rowData.tlt_no = tableData[event.index ?? 0].tlt_no;
+          this.messageService.errorBubble('專櫃編號不可重複');
+          this.fieldChanges.set(undefined);
+          this.tableData.update(td => [...td]);
           return;
         }
         const newTalentId = this.service.tltTalentOptions().find(o => o.value === event.value)?.talent_id;
