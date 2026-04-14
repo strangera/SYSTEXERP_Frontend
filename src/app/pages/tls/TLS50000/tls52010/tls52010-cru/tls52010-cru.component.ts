@@ -24,7 +24,7 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, formatAmount, formatAmountRoundToInteger } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, distinctUntilChanged, finalize, forkJoin, map, of } from 'rxjs';
 
@@ -101,9 +101,9 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       width: '100px',
       calculate: (row) => {
         // 採購金額計算
-        const buyNet = Math.round(Number(row.POD_SubQty ?? 0) * Number(row.PLU_SalePrc_UNI ?? 0)); // 採購淨額 (未稅小計)
-        const buyTax = row.PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0; // 採購稅額
-        const buyAmt = buyNet + buyTax; // 採購合計 (含稅小計)
+        const buyNet = Number(row.POD_SubQty ?? 0) * Number(row.PLU_SalePrc_UNI ?? 0); // 採購淨額 (未稅小計) - 不做四捨五入
+        const buyTax = row.PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0; // 採購稅額 - 做四捨五入
+        const buyAmt = Math.round(buyNet + buyTax); // 採購合計 (含稅小計) - 做四捨五入
 
         // 售價小計計算 (PLU_SalePrc 是含稅售價，假設無需再次計算稅額)
         const saleAmt = Math.round(Number(row.POD_SubQty ?? 0) * Number(row.PLU_SalePrc ?? 0));
@@ -121,7 +121,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         };
       }
     }, { field: 'PLU_SalePrc_UNI', header: '單價', format: (v) => formatAmountWithDecimals(v, 2) },
-    { field: 'POD_BuyNet', header: '小計', format: formatAmount },
+    { field: 'POD_BuyNet', header: '小計', format: formatAmountRoundToInteger },
     { field: 'PLU_SalePrc', header: '售價', format: formatAmount },
     { field: 'POD_SaleAmt', header: '售價小計', format: formatAmount },
     { field: 'POD_Remark', header: '備註', type: 'input', width: '150px' },
@@ -173,9 +173,9 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           const taxType = newData.PLU_StockTaxType;
           const subQty = 0; // 預設數量為 1
 
-          const buyNet = Math.round(subQty * buyPrc);
+          const buyNet = subQty * buyPrc;
           const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;
-          const buyAmt = buyNet + buyTax;
+          const buyAmt = Math.round(buyNet + buyTax);
           const saleAmt = Math.round(subQty * salePrc);
           const saleTax = newData.PLU_TaxType === '1' ? Math.round((salePrc * subQty) / 21) : 0;
           const updatedRow: IQueryPOS2004DetailResponse = {
@@ -583,9 +583,9 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       const taxType = item.PLU_StockTaxType;
       const subQty = 0; // 預設數量為 1
 
-      const buyNet = Math.round(subQty * buyPrc);
+      const buyNet = subQty * buyPrc;
       const buyTax = taxType === '1' ? Math.round(buyNet * 0.05) : 0;
-      const buyAmt = buyNet + buyTax;
+      const buyAmt = Math.round(buyNet + buyTax);
       const saleAmt = Math.round(subQty * salePrc);
       const saleTax = item.PLU_TaxType === '1' ? Math.round((salePrc * subQty) / 21) : 0;
       return {
@@ -683,7 +683,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         POD_BuyPrc: item.PLU_SalePrc_UNI || 0, // 採購單價 (未稅進價)
         POD_BuyNet: item.POD_BuyNet || 0, // 採購淨額 (已計算過並取整數)
         POD_BuyTax: item.PLU_StockTaxType === '1' ? Math.round(Number(item.POD_BuyNet || 0) * 0.05) : 0, // 採購稅額 (已計算過並取整數)
-        POD_BuyAmt: Math.round(Number(item.POD_BuyNet || 0) + Number(item.POD_BuyTax || 0)), // 採購金額 (已計算過並取整數)
+        POD_BuyAmt: Math.round(Number(item.POD_BuyNet || 0) + Number(item.POD_BuyTax || 0)), // 採購金額 (含稅合計，做四捨五入)
         POD_SalePrc: item.PLU_SalePrc || 0, // 銷售單價 (含稅售價)
         POD_SaleAmt: item.POD_SaleAmt || 0, // 銷售金額 (已計算過並取整數)
         POD_Remark: item.POD_Remark || '', // 如果有明細備註欄位，請從 item 中取值
@@ -700,9 +700,9 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
         VEN_No: formData.VEN_No,
         LOGO_No: formData.LOGO_No,
         HOS_No: formData.HOS_No,
-        PO_TotalBuyAmt: formData.PO_TotalBuyAmt,
-        PO_TotalBuyTax: formData.PO_TotalBuyTax,
         PO_TotalBuyNet: formData.PO_TotalBuyNet,
+        PO_TotalBuyTax: formData.PO_TotalBuyTax,
+        PO_TotalBuyAmt: formData.PO_TotalBuyAmt,
         PO_TotalSubQty: totalSubQty, // 使用計算後的總數量
         PO_TotalSaleAmt: formData.PO_TotalSaleAmt,
         APPLY_Date: formData.APPLY_Date,
