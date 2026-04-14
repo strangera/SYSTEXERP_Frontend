@@ -1,5 +1,5 @@
 import { AsyncPipe, CommonModule, DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -129,6 +129,7 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
   ];
   btnExportExcelLoading = false;
   btnExportPdfLoading = false;
+  private _lastClickedField = '';
 
   constructor(
     private readonly fin29110Service: Fin29110Service,
@@ -196,37 +197,64 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
 
     return footer as Fin29110Row;
   }
-  openDetail(row: Fin29110Row, col?: ReportColumn): void {
-    const field = col?.field || '';
-    // 排除點擊「廠商編號」、「廠商名稱」或「總計」
-    if (field === 'VendorNo' || field === 'VendorName' || field === 'SumAmount') return;
+  @HostListener('click', ['$event'])
+  onDblClick(event: MouseEvent): void {
+    let target = event.target as HTMLElement | null;
+    while (target && target.tagName !== 'TD') {
+      target = target.parentElement;
+    }
+    if (target) {
+      const fieldClass = Array.from(target.classList).find(c => c.startsWith('col-field-'));
+      this._lastClickedField = fieldClass ? fieldClass.replace('col-field-', '') : '';
+    }
+  }
 
-    const side = field.startsWith('Overdue') ? 'O' : 'N';
-    const match = field.match(/_(?<n>\d+)_/);
+  openDetail(row: Fin29110Row): void {
+    const field = this._lastClickedField;
 
-    // 1. 取得欄位中的數字 (1, 2, 3...)
-    const nFromField = match ? parseInt(match.groups?.['n'] || '1') : 1;
+    // 排除非金額欄位
+    if (!field || field === 'VendorNo' || field === 'VendorName' || field === 'SumAmount') return;
 
-    // 2. 轉換為 SP 要求的 0-based BucketN
-    // SP 規定 0~4 是區間，5 是「301天以上」
-    let bucketN = nFromField - 1;
+    const isOverdue = field.startsWith('Overdue');
+    const match = field.match(/(?:Overdue|NotDue)_(\d+)_/);
+    if (!match) return;
 
-    // 如果欄位名稱包含 "Over_Days" (即最後一期)，或者 n > 5，強制設為 5
-    if (field.includes('Over_Days') || bucketN > 5) {
-      bucketN = 5;
+    const n = parseInt(match[1]);  // 1-based bucket number
+    const bucketN = n - 1;         // 0-based
+    const bucketDays = this.queryForm.controls.BucketDays.value || 60;
+    const periods = this.queryForm.controls.Periods.value || 6;
+    const analysisDate = this.queryForm.controls.AnalysisDate.value!;
+    const isLastBucket = (n === periods);
+
+    const addDaysStr = (date: Date, days: number): string => {
+      const d = new Date(date);
+      d.setDate(d.getDate() + days);
+      return this.datePipe.transform(d, 'yyyy-MM-dd') || '';
+    };
+
+    let ACP_DATE_S: string;
+    let ACP_DATE_E: string;
+
+    if (isOverdue) {
+      // 已到期 bucket n: AgeDays 範圍 (n-1)*bd+1 ~ n*bd (最後一期無上限)
+      // RefDate = AnalysisDate - AgeDays → 越早的日期 AgeDays 越大
+      ACP_DATE_E = addDaysStr(analysisDate, -(bucketN * bucketDays + 1));      // AnalysisDate - (n-1)*bd - 1
+      ACP_DATE_S = isLastBucket ? '0001-01-01' : addDaysStr(analysisDate, -((bucketN + 1) * bucketDays)); // AnalysisDate - n*bd
+    } else {
+      // 未到期 bucket n: DaysUntilDue 範圍 (n-1)*bd+1 ~ n*bd (最後一期無上限)
+      // RefDate = AnalysisDate + DaysUntilDue → 越晚的日期 DaysUntilDue 越大
+      ACP_DATE_S = addDaysStr(analysisDate, bucketN * bucketDays + 1);         // AnalysisDate + (n-1)*bd + 1
+      ACP_DATE_E = isLastBucket ? '9999-12-31' : addDaysStr(analysisDate, (bucketN + 1) * bucketDays); // AnalysisDate + n*bd
     }
 
-    this.dialogLoading = true; // 開啟 Loading
+    this.dialogLoading = true;
 
     const body: Fin29110DetailRequest = {
-      AnalysisDate: this.datePipe.transform(this.queryForm.controls.AnalysisDate.value, 'yyyy-MM-dd') || '',
-      BucketDays: this.queryForm.controls.BucketDays.value || 0,
-      DateType: this.queryForm.controls.DateType.value || 'E',
-      PayDate: this.datePipe.transform(this.queryForm.controls.PayDate.value, 'yyyy-MM-dd') || '',
-      Side: side,
-      BucketN: bucketN,
       VEN_No: row.VendorNo || '',
-      // 如果你有分頁需求，記得補上 PageIndex / PageSize
+      ACP_DATE_S,
+      ACP_DATE_E,
+      PayDate: this.datePipe.transform(this.queryForm.controls.PayDate.value, 'yyyy-MM-dd') || '',
+      AnalysisDate: this.datePipe.transform(analysisDate, 'yyyy-MM-dd') || '',
       PageIndex: 0,
       PageSize: 1000
     };
@@ -285,13 +313,11 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
       { field: 'VendorName', header: '廠商名稱' },
     ];
 
-    // 抽出共用的樣式判斷邏輯
+    // 抽出共用的樣式判斷邏輯（同時帶入 col-field-xxx 讓 HostListener 能辨識欄位）
     const getAmountClass = (rowData: any, field: string) => {
       const val = rowData[field];
-      if (val !== 0 && val !== null && val !== undefined) {
-        return 'text-amount-active';
-      }
-      return '';
+      const isActive = val !== 0 && val !== null && val !== undefined;
+      return `col-field-${field}${isActive ? ' text-amount-active' : ''}`;
     };
 
     // --- 1. 已到期 (Overdue) ---
@@ -326,12 +352,12 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
       if (i === periods) {
         const fromDays = (periods - 1) * bucketDays + 1;
         field = `NotDue_${periods}_Over_Days`;
-        header = `${fromDays}天以上\n${this.getRelativeDate(analysisDate, fromDays - 1)}\n以後`;
+        header = `${fromDays}天以上\n${this.getRelativeDate(analysisDate, fromDays)}\n以後`;
       } else {
         const from = (i - 1) * bucketDays + 1;
         const to = i * bucketDays;
         field = `NotDue_${i}_${from}_${to}_Days`;
-        header = `${from}~${to}天\n${this.getRelativeDate(analysisDate, from - 1)}\n${this.getRelativeDate(analysisDate, to - 1)}`;
+        header = `${from}~${to}天\n${this.getRelativeDate(analysisDate, from)}\n${this.getRelativeDate(analysisDate, to)}`;
       }
 
       cols.push({
