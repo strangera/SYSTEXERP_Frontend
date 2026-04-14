@@ -852,7 +852,7 @@ export class FIN32020CRUComponent
       CAR_type: raw.CAR_type?.trim() || null,
       pageIndex: pageIndex,
       pageSize: this.adjAccPageSize,
-      SortBy: [],
+      SortBy: [{ field: 'CAR_AccNo', order: 1 }],
     };
   }
   loadMoreAdjAcc(container?: HTMLElement): void {
@@ -867,9 +867,13 @@ export class FIN32020CRUComponent
       next: (res) => {
         const rawList = Array.isArray(res.Data) ? res.Data : [];
 
-        if (this.adjAccPageIndex === 1) {
-          this.adjAccList = rawList;
-        } else {
+       if (this.adjAccPageIndex === 1) {
+  this.adjAccList = rawList.sort((a: any, b: any) => {
+    const aNo = String(a?.CAR_AccNo ?? '');
+    const bNo = String(b?.CAR_AccNo ?? '');
+    return aNo.localeCompare(bNo, 'zh-Hant', { numeric: true });
+  });
+}else {
           const existingKeys = new Set(
             (this.adjAccList || []).map((x: any) =>
               String(x.CAR_AccNo ?? '').trim()
@@ -881,7 +885,11 @@ export class FIN32020CRUComponent
             return key && !existingKeys.has(key);
           });
 
-          this.adjAccList = [...this.adjAccList, ...appendList];
+          this.adjAccList = this.adjAccList.sort((a: any, b: any) => {
+  const aNo = String(a?.CAR_AccNo ?? '');
+  const bNo = String(b?.CAR_AccNo ?? '');
+  return aNo.localeCompare(bNo, 'zh-Hant', { numeric: true });
+});
         }
 
         if (rawList.length < this.adjAccPageSize) {
