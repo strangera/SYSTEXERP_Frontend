@@ -265,10 +265,10 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     if (rowData.tableName === 'POS6118H') {
       return false;
     }
-    // 非手動新增的不可刪除(需求待確認)
-    // if (rowData.FileName !== 'ManualInput') {
-    //   return false;
-    // }
+    // 非手動新增的不可刪除
+    if (rowData.FileName !== 'ManualInput') {
+      return false;
+    }
     return rowData.isClose === 'N' && rowData.Check_Status === 'N';
   }
 }
