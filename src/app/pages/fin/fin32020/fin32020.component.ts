@@ -81,7 +81,7 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
     { field: 'ADJ_No', header: '調整單號' },
     {
       field: 'ADJ_Date',
-      header: '收款日期',
+      header: '調整日期',
       format: (v: string) => this.formatDate(v),
     },
     {
