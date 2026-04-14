@@ -4,7 +4,6 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin21020Service, IFin21020Data, IFin21020Detail } from '@service/api/fin/fin21020.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
@@ -13,10 +12,13 @@ import { ExcelColumn, ExcelExportService } from '@shared/service/excel-export.se
 import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-import.service';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { ErrorReportService } from '@shared/service/error-report.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 @Component({
   selector: 'app-fin21020-cru',
   templateUrl: './fin21020-cru.component.html',
@@ -38,7 +40,7 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
   dataForm = this.formBuilder.nonNullable.group({
     BNK_No: [null as string | null, [Validators.required]], // 公司銀行科目代號
   });
-  bankCodeOptions: IDropdownItem[] = [];
+  aps1002Options = signal<Option[]>([]);
   data: IFin21020Detail[] = [];
   selectedItems: IFin21020Detail[] = [];
   columns: EditColumn[] = [
@@ -50,24 +52,31 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
   ];
   excelBtnLoading = signal(false);
   constructor(
-    private readonly dropDownListService: DropDownListService,
     private readonly fin21020Service: Fin21020Service, // 注入服務
     private readonly excelExportService: ExcelExportService,
-    private readonly excelImportService: ExcelImportService
+    private readonly excelImportService: ExcelImportService,
+    private readonly errorReportService: ErrorReportService,
+    private readonly dropdownApiService: DropdownApiService
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.initializePage('FIN21020', this.dataForm);
-    this.dropDownListService.queryGLS1005For1103_DropDownList().pipe(untilDestroyed(this)).subscribe(data => {
-      this.bankCodeOptions = data.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+    this.dropdownApiService.queryAps1002().pipe(
+      map(options => options?.filter(opt => opt['ACCCNAME'] !== null && opt['ACCCNAME'] !== undefined) ?? []),
+      untilDestroyed(this)
+    ).subscribe(options => {
+      this.aps1002Options.set(options);
     });
     if (!this.isFormCreateable) {
       this.dataForm.get('BNK_No')?.disable();
       this.loading = true;
       const bnkNo = this.dataForm.value.BNK_No || '';
-      this.fin21020Service.queryByBnkNo(bnkNo).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      this.fin21020Service.queryByBnkNo(bnkNo).pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      ).subscribe(res => {
         this.data = res.Data;
       });
     }
@@ -207,7 +216,7 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
     { field: 'Remit_BAmount', header: '金額下限', width: 15 },
     { field: 'Remit_UAmount', header: '金額上限', width: 15 },
     { field: 'Remit_Fee', header: '廠商負擔電匯手續費', width: 25 },
-    { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', width: 30 },
+    { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', width: 35 },
     { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', width: 25 },
   ];
   async onExportExcel() {
@@ -233,9 +242,14 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
         await this.excelExportService.exportTemplate(this.excelColumns, '費率對照維護');
       }
       this.messageService.successBubble('匯出成功');
-    } catch (error: any) {
-      console.error('匯出失敗:', error);
-      this.messageService.errorBubble(`匯出失敗：${error.message}`);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('匯出失敗:', error);
+        this.messageService.errorBubble(`匯出失敗：${error.message}`);
+      } else {
+        console.error('匯出失敗:', error);
+        this.messageService.errorBubble('匯出失敗：未知錯誤');
+      }
     } finally {
       this.excelBtnLoading.set(false);
     }
@@ -251,56 +265,84 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
   async onImportExcel(event: FileSelectEvent) {
     const file = event.files[0];
     this.excelBtnLoading.set(true);
-    try {
-      const importedData = await this.excelImportService.importExcel(file, this.importExcelColumn);
+    let errorUrl: string | null = null;
 
-      // 如果匯入資料為空，直接返回
-      if (!importedData || importedData.length === 0) {
+    try {
+      // 1. 建立一個暫存陣列，用來模擬匯入後的資料狀態，以便檢查區間連續性
+      // 如果你希望「匯入」是完全取代現有畫面資料，這裡就用空陣列開始
+      const tempImportData: IFin21020Detail[] = [];
+
+      const customValidator = (rowData: IFin21020Detail): string => {
+        let err = '';
+        // --- A. 銀行科目檢核 ---
+        if (rowData.BNK_No) {
+          const exists = this.aps1002Options().some(opt => String(opt.value) === String(rowData.BNK_No));
+          if (!exists) err += `[公司銀行科目代號] ${rowData.BNK_No} 不存在; `;
+        } else {
+          err += `[公司銀行科目代號] 必填; `;
+        }
+
+        // --- B. 單欄位必填 ---
+        if (rowData.Remit_BAmount == null) err += `[金額下限] 必填; `;
+        if (rowData.Remit_UAmount == null) err += `[金額上限] 必填; `;
+        if (rowData.Remit_Fee == null) err += `[廠商負擔電匯手續費] 必填; `;
+        if (rowData.Comp_Remit_Fee == null) err += `[公司負擔電匯手續費] 必填; `;
+
+        // --- C. 區間與連續性檢查 (關鍵！) ---
+        // 為了讓 validateEntireRow 能在匯入時檢查「Excel 內部的連續性」
+        // 我們暫時把 rowData 加入 tempImportData，並讓 validate 針對這個暫存檔跑
+        tempImportData.push(rowData);
+
+        // 這裡我們需要暫時修改 validateEntireRow 指向的對象，或是直接在這裡寫邏輯
+        // 為了不改動原有 function，我們透過變換 this.data 達成
+        const originalData = this.data;
+        this.data = tempImportData;
+
+        const rowResult = this.validateEntireRow(rowData);
+
+        this.data = originalData; // 檢查完立刻還原，避免污染畫面
+
+        if (!rowResult.isValid) {
+          err += `${rowResult.errorMessage}; `;
+        }
+
+        return err;
+      };
+
+      const result = await this.excelImportService.importExcel(
+        file, this.importExcelColumn, customValidator
+      );
+
+      // --- 核心修正點：只要有錯誤，絕對不准更新畫面 ---
+      if (result.hasErrors && result.errorBlob) {
+        errorUrl = window.URL.createObjectURL(result.errorBlob);
+        this.errorReportService.showImportError(errorUrl, '匯入失敗：Excel 資料含有邏輯錯誤，請下載報告修正全部紅字後重新匯入。');
+        // 這裡直接中斷，不執行下方的 this.data = result.data
+        this.excelBtnLoading.set(false);
         return;
       }
 
-      // 取得所有匯入資料的 BNK_No，並檢查是否都相同
-      const firstBnkNo = importedData[0].BNK_No;
-      const isAllBnkNoSame = importedData.every((item: any) => item.BNK_No === firstBnkNo);
+      if (!result.data || result.data.length === 0) {
+        this.messageService.warnBubble('Excel 內無有效資料。');
+        return;
+      }
 
+      // --- D. 批次一致性檢查 ---
+      const firstBnkNo = result.data[0]?.BNK_No;
+      const isAllBnkNoSame = result.data.every(item => item.BNK_No === firstBnkNo);
       if (!isAllBnkNoSame) {
         this.messageService.warnBubble('匯入失敗：Excel 檔案中的「公司銀行科目代號」不一致。');
         return;
       }
 
-      // 檢查BNK_No是否為字串
-      if (typeof firstBnkNo !== 'string') {
-        this.messageService.warnBubble('匯入失敗：Excel 檔案中的「公司銀行科目代號」格式不正確，必須為字串。');
-        return;
-      }
+      // 全部檢查都通過了，才一次性更新畫面
+      this.data = result.data;
+      this.dataForm.get('BNK_No')?.setValue(firstBnkNo);
+      this.messageService.successBubble(`成功匯入 ${result.data.length} 筆資料`);
 
-      if (this.isFormCreateable) {
-        // 處於新增模式時的驗證
-        const isBnkNoValid = this.bankCodeOptions.some(item => item.No === firstBnkNo);
-        if (!isBnkNoValid) {
-          this.messageService.warnBubble('匯入失敗：「公司銀行科目代號」不在下拉選單中。');
-          return;
-        }
-
-        // 驗證成功，更新表單和表格資料
-        this.dataForm.get('BNK_No')?.setValue(firstBnkNo);
-        this.data = importedData;
-        this.messageService.successBubble(`成功匯入 ${importedData.length} 筆資料`);
-
-      } else {
-        // 處於編輯模式時的驗證
-        const currentBnkNo = this.dataForm.get('BNK_No')?.value || '';
-        if (firstBnkNo !== currentBnkNo) {
-          this.messageService.warnBubble(`匯入失敗：匯入檔案的「公司銀行科目代號」(${firstBnkNo}) 與目前頁面不符 (${currentBnkNo})。`);
-          return;
-        }
-
-        // 驗證成功，更新表格資料
-        this.data = importedData;
-        this.messageService.successBubble(`成功匯入 ${importedData.length} 筆資料`);
-      }
-    } catch (error: any) {
-      this.messageService.warnBubble(error.message);
+    } catch (error: unknown) {
+      console.error('匯入系統異常:', error);
+      this.messageService.errorBubble('匯入失敗：發生系統預料之外的錯誤');
     } finally {
       this.excelBtnLoading.set(false);
     }

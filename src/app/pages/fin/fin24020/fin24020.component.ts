@@ -50,11 +50,8 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
   lastQueryBody: any | null = null;
   expansionRowsPerPageOptions: number[] = [30, 60, 90, 120, 150];
   detailColumns: ReportColumn[] = [
-    // { field: 'ACP_No', header: '應付ID' },
     { field: 'ACP_YYYYMM', header: '應付帳款年月', format: formatYYYYMM },
     { field: 'acp_termno', header: '帳次' },
-    // { field: 'VEN_No', header: '廠商編號' },
-    // { field: 'VEN_Name', header: '廠商名稱' },
     { field: 'ACP_Amt', header: '應付金額', format: formatAmount, align: 'right' },
     { field: 'ACP_BalanceAmt', header: '應付帳款餘額', format: formatAmount, align: 'right' },
     { field: 'RET_Amt', header: '退保留款金額', format: formatAmount, align: 'right' },
@@ -66,7 +63,6 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
     { field: 'VEN_No', header: '廠商編號' },
     { field: 'VEN_Name', header: '廠商名稱' },
     { field: 'ACP_YYYYMM', header: '應付帳款年月', format: formatYYYYMM },
-
   ];
   VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
   PTA_KeyOptions = [
@@ -84,12 +80,8 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
   }
 
   editDisabledByVouNo = (rowData: any): boolean => {
-    if (!rowData) {
-      return false;
-    }
-    const hasVouNo = !!rowData.VouNo;
-    const isPayGeneratedYes = rowData.STATUS === '是';
-    return hasVouNo || isPayGeneratedYes;
+    if (!rowData) return false;
+    return rowData.Details?.some((detail: any) => detail.STATUS === 'Y');
   }
 
   ngOnInit(): void {

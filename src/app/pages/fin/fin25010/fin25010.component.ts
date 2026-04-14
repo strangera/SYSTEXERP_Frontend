@@ -54,7 +54,6 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
   totalRecords = 0;
   lastQueryBody: QueryFIN25010Request | null = null;
   columns: Column[] = [
-    { field: 'ID', header: '序號', hidden: true },
     { field: 'PAM_No', header: '匯款來源單號', visible: true },
     { field: 'D_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'PTA_Date', header: '收/付款日', visible: true, format: formatDate },

@@ -188,26 +188,48 @@ export class NotificationMessageComponent implements OnInit {
  * 取得錯誤檔並觸發下載
  * @param filePath 後端回傳的相對路徑
  */
+  /**
+ * 取得錯誤檔並觸發下載
+ * @param filePath 後端回傳的相對路徑 或 前端產生的 Blob URL
+ */
   onDownloadErrorFile(filePath: string): void {
     if (!filePath) return;
-    // 1. 組合完整的下載網址
-    const fileUrl = `${environment.ApiUrl}/${filePath}`;
-    // 2. 取得檔名（從路徑中切出最後一段）
-    const fileName = filePath.split('/').pop() || 'ErrorData.xlsx';
-    // 3. 建立隱藏的 <a> 標籤
+
+    let fileUrl = '';
+    let fileName = '';
+
+    // 檢查是否為前端產生的 Blob URL (以 blob: 開頭)
+    if (filePath.startsWith('blob:')) {
+      fileUrl = filePath;
+      fileName = `匯入錯誤報告_${new Date().getTime()}.xlsx`;
+    } else {
+      // 原始邏輯：處理後端傳回的相對路徑
+      fileUrl = `${environment.ApiUrl}/${filePath}`;
+      fileName = filePath.split('/').pop() || 'ErrorData.xlsx';
+    }
+
+    // 執行下載
     const link = document.createElement('a');
     link.href = fileUrl;
-    // 4. 指定 download 屬性可以嘗試強制瀏覽器下載而非開啟
-    // 注意：跨網域時 download 屬性可能失效，但搭配 _blank 仍能正常下載
+
+    // 指定下載檔名
     link.setAttribute('download', fileName);
-    link.target = '_blank';
+
+    // 如果是 Blob URL，不要用 _blank，直接在本頁觸發下載即可
+    if (!filePath.startsWith('blob:')) {
+      link.target = '_blank';
+    }
+
     link.style.display = 'none';
-    // 5. 加入 DOM、觸發點擊後移除
     document.body.appendChild(link);
     link.click();
-    // 延遲移除以確保某些瀏覽器能正確處理
+
     setTimeout(() => {
       document.body.removeChild(link);
+      // 如果是 Blob URL，下載完後建議釋放記憶體
+      if (filePath.startsWith('blob:')) {
+        window.URL.revokeObjectURL(filePath);
+      }
     }, 100);
   }
 }

@@ -161,6 +161,13 @@ export interface QueryCPM12050DetailRequest {
   SEQ_ID: string;            // 客戶意見編號
 }
 
+// CSS10031 意見類別細項
+export interface CSS10031Item {
+  ID: number;
+  KIND_ItemID: string;
+  KIND_Name: string;
+}
+
 // 客戶意見明細 Response 資料結構
 export interface CPM12050DetailData {
   ID: number;                // 主鍵ID
@@ -238,5 +245,10 @@ export class CPM12050Service {
   // 結案
   closeCPM12050(req: CloseCPM12050Request): Observable<any> {
     return this.http.post(`${this.apiUrl}/closeCPM12050`, req);
+  }
+
+  // 依意見子類型取得類別資訊細項 (CSS10031)
+  queryCPM12050CSS10031(kindSubId: string): Observable<BaseQueryResponse<CSS10031Item>> {
+    return this.http.post<BaseQueryResponse<CSS10031Item>>(`${this.apiUrl}/queryCPM12050CSS10031`, { KIND_SubID: kindSubId });
   }
 }
