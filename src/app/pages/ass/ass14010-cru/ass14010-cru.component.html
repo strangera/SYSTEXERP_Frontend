@@ -6,60 +6,75 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="倉庫代碼"
-            controlName="HOS_No"
-            [control]="dataForm.controls.HOS_No"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="倉庫名稱"
-            controlName="HOS_NAME"
-            [control]="dataForm.controls.HOS_NAME"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="供應商編號"
+          controlName="supplierId"
+          [options]="supplierId_Options"
+          optionLabel="Label"
+          optionValue="No"
+          [control]="dataForm.controls.supplierId"
+          [submitted]="submitted"
+        ></app-dropdown>
+        <app-input-number
+          class="col-12 md:col-6 lg:col-4"
+          label="付款天數"
+          controlName="payDays"
+          [control]="dataForm.controls.payDays"
+          [submitted]="submitted"
+        ></app-input-number>
       </div>
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="所屬部門"
-            controlName="org_id"
-            [options]="SYS3100_Options"
-            optionLabel="Label"
-            optionValue="No"
-            [control]="dataForm.controls.org_id"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="館別"
-            controlName="building_no"
-            [options]="building_noOptions"
-            optionLabel="Name"
-            optionValue="No"
-            [control]="dataForm.controls.building_no"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="備註說明"
-            controlName="HOS_Remark"
-            [control]="dataForm.controls.HOS_Remark"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
+        <app-input-number
+          class="col-12 md:col-6 lg:col-4"
+          label="總金額"
+          controlName="totalAmount"
+          [control]="dataForm.controls.totalAmount"
+          [submitted]="submitted"
+        ></app-input-number>
+        <app-input-number
+          class="col-12 md:col-6 lg:col-4"
+          label="未稅金額"
+          controlName="NTAX_AMT"
+          [control]="dataForm.controls.NTAX_AMT"
+          [submitted]="submitted"
+        ></app-input-number>
+        <app-input-number
+          class="col-12 md:col-6 lg:col-4"
+          label="稅額"
+          controlName="TAX_AMT"
+          [control]="dataForm.controls.TAX_AMT"
+          [submitted]="submitted"
+        ></app-input-number>
+      </div>
+      <hr />
+      <div class="grid p-fluid">
+        <app-table-edit
+          title="單據資料"
+          class="col-12"
+          [columns]="serialColumn"
+          [data]="serialData"
+          [loading]="loading"
+          (dataChange)="serialData = $event"
+        ></app-table-edit>
+        <app-table-edit
+          title="發票資料"
+          class="col-12"
+          [columns]="invoiceColumn"
+          [data]="invoiceData"
+          [loading]="loading"
+          (dataChange)="invoiceData = $event"
+        ></app-table-edit>
       </div>
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
       >
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button
+          btnType="cancel"
+          [form]="dataForm"
+          (click)="clearSubForm()"
+        ></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>

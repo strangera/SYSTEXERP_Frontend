@@ -128,26 +128,31 @@
           </div>
         </form>
 
-        <app-table2
-          [tableKey]="'fin32020Ars'"
-          dataKey="ARS_No"
-          [columns]="arsColumns"
-          [data]="arsList"
-          [loading]="arsLoading"
-          [showCheckBox]="false"
-          [showManage]="false"
-          [showDetail]="true"
-          [showEdit]="false"
-          [showHeader]="true"
-          [showFilter]="false"
-          [showReportMode]="false"
-          [showPaginator]="false"
-          [showCaption]="false"
-          selectionMode="single"
-          [(selectedItems)]="arsSelectedRows"
-          (selectionChange)="onARSSelectionChange($event)"
-          (detail)="onARSRowDetail($event)"
-        ></app-table2>
+<div
+  style="max-height: 420px; overflow-y: auto;"
+  (scroll)="onARSScroll($event)"
+>
+  <app-fin32020table-edit
+    [tableKey]="'fin32020ArsDialog'"
+    dataKey="ARS_No"
+    [data]="arsList"
+    [columns]="arsDialogColumns"
+    [loading]="arsLoading"
+    [disabled]="false"
+    [showReorder]="false"
+    [showCheckBox]="false"
+    [showSingleSelect]="true"
+    [selectedItem]="arsSelectedRow"
+    (selectedItemChange)="arsSelectedRow = $event"
+    (rowDoubleClick)="onARSDoubleClick($event)"
+    [isRowMarked]="arsRowMarkedFn"
+    [canInsert]="false"
+    [showDelete]="false"
+    [showCaption]="false"
+    [showPaginator]="false"
+    [scrollable]="false"
+  ></app-fin32020table-edit>
+</div>
 
         <div class="flex justify-content-end gap-2 mt-3">
           <app-button
@@ -204,27 +209,31 @@
           </div>
         </form>
 
-        <app-table2
-          [tableKey]="'fin32020AdjAccReport'"
-          dataKey="CAR_AccNo"
-          [columns]="adjAccReportColumns"
-          [data]="adjAccList"
-          [loading]="adjAccLoading"
-          [showCheckBox]="false"
-          [showManage]="false"
-          [showDetail]="true"
-          [showEdit]="false"
-          [showHeader]="true"
-          [showFilter]="false"
-          [showReportMode]="false"
-          [showPaginator]="false"
-          [showCaption]="false"
-          selectionMode="single"
-          [(selectedItems)]="adjAccSelectedRows"
-          (selectionChange)="onAdjAccSelectionChange($event)"
-          (detail)="onAdjAccRowDetail($event)"
-        ></app-table2>
-
+   <div
+  style="max-height: 420px; overflow-y: auto;"
+  (scroll)="onAdjAccScroll($event)"
+>
+  <app-fin32020table-edit
+    [tableKey]="'fin32020AdjAccDialog'"
+    dataKey="CAR_AccNo"
+    [data]="adjAccList"
+    [columns]="adjAccDialogColumns"
+    [loading]="adjAccLoading"
+    [disabled]="false"
+    [showReorder]="false"
+    [showCheckBox]="false"
+    [showSingleSelect]="true"
+    [selectedItem]="adjAccSelectedRow"
+    (selectedItemChange)="adjAccSelectedRow = $event"
+    (rowDoubleClick)="onAdjAccDoubleClick($event)"
+    [isRowMarked]="adjAccRowMarkedFn"
+    [canInsert]="false"
+    [showDelete]="false"
+    [showCaption]="false"
+    [showPaginator]="false"
+    [scrollable]="false"
+  ></app-fin32020table-edit>
+</div>
         <div class="flex justify-content-end gap-2 mt-3">
           <app-button
             btnType="cancel"
@@ -235,7 +244,7 @@
           <app-button
             btnType="submit"
             [type]="'button'"
-            [disabled]="!adjAccSelectedRows || !adjAccSelectedRows.length"
+            [disabled]="!adjAccSelectedRow"
             (click)="confirmAdjAccSelection()"
           ></app-button>
         </div>

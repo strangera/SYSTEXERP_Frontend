@@ -115,6 +115,15 @@
           {{ serialName }}
         </th>
 
+        <!-- 單選欄 -->
+        <th
+          *ngIf="showSingleSelect"
+          rowspan="2"
+          class="w-5rem text-center"
+        >
+          是否已選擇
+        </th>
+
         <!-- 群組欄位標題 -->
         <ng-container *ngFor="let col of columns; let i = index">
           <ng-container
@@ -205,6 +214,11 @@
           {{ serialName }}
         </th>
 
+        <!-- 單選欄 -->
+        <th *ngIf="showSingleSelect" class="w-5rem text-center">
+          是否已選擇
+        </th>
+
         <!-- 其他欄位 -->
         <th
           *ngFor="let col of columns"
@@ -232,19 +246,20 @@
     let-columns="columns"
     let-index="rowIndex"
   >
-    <tr
-      [attr.data-key]="rowData[dataKey]"
-      [pSelectableRowIndex]="rowIndex"
-      [pSelectableRowDisabled]="
-        !isRowSelectable(rowData, rowIndex, _tableData) || disabled
-      "
-      [pSelectableRow]="rowData"
-      [pReorderableRow]="!rowData._isAutoInsertCandidate ? rowIndex : -1"
-      [ngClass]="{
-        'invalid-row': this.validationService.hasRowError(rowData),
-        'insert-row': rowData._isAutoInsertCandidate
-      }"
-    >
+ <tr
+  [attr.data-key]="rowData[dataKey]"
+  [pSelectableRowIndex]="rowIndex"
+  [pSelectableRowDisabled]="
+    !isRowSelectable(rowData, rowIndex, _tableData) || disabled
+  "
+  [pSelectableRow]="rowData"
+  [pReorderableRow]="!rowData._isAutoInsertCandidate ? rowIndex : -1"
+  [ngClass]="{
+    'invalid-row': this.validationService.hasRowError(rowData),
+    'insert-row': rowData._isAutoInsertCandidate
+  }"
+  (dblclick)="onRowDoubleClick(rowData, rowIndex, $event)"
+>
       <!-- Reorder + 新增列 + 號 -->
       <td
         *ngIf="_tableData.length && showReorder && !disabled"
@@ -314,6 +329,26 @@
         </span>
       </td>
 
+      <!-- 單選欄 -->
+      <td *ngIf="showSingleSelect" class="w-5rem text-center">
+        <ng-container *ngIf="!rowData._isAutoInsertCandidate">
+          <ng-container
+            *ngIf="isRowMarked(rowData, rowIndex, _tableData); else radioTpl"
+          >
+            <span class="font-bold">X</span>
+          </ng-container>
+
+          <ng-template #radioTpl>
+            <p-radioButton
+              name="tableSingleSelect"
+              [value]="rowData"
+              [ngModel]="selectedItem"
+              (onClick)="onSingleSelect(rowData, rowIndex)"
+            ></p-radioButton>
+          </ng-template>
+        </ng-container>
+      </td>
+
       <!-- 資料欄位 -->
       <td
         *ngFor="let col of columns"
@@ -363,7 +398,10 @@
       <td
         class="text-center"
         [colSpan]="
-          1 + (showReorder ? 1 : 0) + (showCheckBox && !disabled ? 1 : 0)
+          1 +
+          (showReorder ? 1 : 0) +
+          (showCheckBox && !disabled ? 1 : 0) +
+          (showSingleSelect ? 1 : 0)
         "
         pFrozenColumn
       >
@@ -399,7 +437,8 @@
           (columns.length || 0) +
           1 +
           (showReorder ? 1 : 0) +
-          (showCheckBox && !disabled ? 1 : 0)
+          (showCheckBox && !disabled ? 1 : 0) +
+          (showSingleSelect ? 1 : 0)
         "
       >
         <div>

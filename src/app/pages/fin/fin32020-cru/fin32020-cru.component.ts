@@ -21,17 +21,11 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 import {
   FIN32020Service,
-  Fin32020ARSRow,
-  Fin32020AdjAccRow,
   Fin32020DetailRow,
   Fin32020InsertRequest,
   Fin32020Row,
   Fin32020UpdateRequest,
 } from '../../../service/api/fin/fin32020.service';
-
-// ⭐ Table2
-import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
-import { Column } from '../../../shared/componentkit/table2/table2.model';
 
 // 專屬 table-edit
 import { FIN32020TableEditComponent } from './fin32020table-edit/fin32020table-edit.component';
@@ -62,7 +56,6 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
     InputTextComponent,
     ButtonComponent,
     TranslateModule,
-    Table2Component,
     DialogComponent,
     DropdownComponent,
     CalendarRangeComponent,
@@ -72,44 +65,17 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 })
 export class FIN32020CRUComponent
   extends BasicCruPageComponent<Fin32020Row>
-  implements OnInit
-{
-  // ================== 調整科目 Dialog table2 ==================
-  adjAccReportColumns: Column[] = [
-    {
-      field: 'selectedFlag',
-      header: '狀態',
-
-    },
-    {
-      field: 'CAR_AccNo',
-      header: '調整科目代號',
-    },
-    {
-      field: 'AccCName',
-      header: '科目名稱',
-    },
-    {
-      field: 'CAR_type',
-      header: '加減項',
-      format: (v: any) =>
-        String(v) === '1'
-          ? '加項'
-          : String(v) === '2'
-            ? '減項'
-            : (v ?? ''),
-    },
-  ];
-
+  implements OnInit {
   /** 主檔表單 */
   dataForm = this.formBuilder.nonNullable.group({
     adjust_ID: [{ value: '系統自動帶入', disabled: true } as any],
     adjust_Date: [null as Date | null, [Validators.required]],
     remark: ['', [Validators.maxLength(30)]],
   });
-
+  private readonly scrollBounceOffset = 80;
   /** 明細資料（畫面用 model） */
   detailData: any[] = [];
+
 
   // GLS1005 科目下拉（只顯示 value 六位）
   adjAccNoOptions$ = this.fin32020Service.getGLS1005DropDown().pipe(
@@ -211,34 +177,64 @@ export class FIN32020CRUComponent
   arsDialogVisible = false;
   arsLoading = false;
   arsList: any[] = [];
-  arsSelectedRows: any[] = [];
+  arsSelectedRow: any = null;
+
+  // ✅ 新增這 4 個
+  arsPageIndex = 1;
+  arsPageSize = 20;
+  arsHasMore = true;
+  arsQuerying = false;
+  adjAccSelectedRow: any = null;
+  adjAccPageIndex = 1;
+  adjAccPageSize = 20;
+  adjAccHasMore = true;
+  adjAccQuerying = false;
   VEN_No_Options = this.dropDown.queryPos2013({ VEN_Flag: '' });
 
-  arsColumns: Column[] = [
+  arsDialogColumns: EditColumn[] = [
     {
-      field: 'selectedFlag',
-      header: '狀態',
-
+      field: 'ARS_No',
+      header: '應收帳款單號',
+      width: '180px',
+      textAlign: 'left',
     },
-    { field: 'ARS_No', header: '應收帳款單號' },
-    { field: 'VEN_No', header: '廠客代號' },
+    {
+      field: 'VEN_No',
+      header: '廠客代號',
+      width: '140px',
+      textAlign: 'left',
+    },
     {
       field: 'ARS_Date',
       header: '立帳日',
+      width: '120px',
+      textAlign: 'center',
       format: (v: any) => this.formatYMD(v),
     },
     {
       field: 'PTA_Date',
       header: '預計收款日',
+      width: '120px',
+      textAlign: 'center',
       format: (v: any) => this.formatYMD(v),
     },
     {
       field: 'ARS_Amt',
       header: '應收金額',
+      width: '120px',
+      textAlign: 'right',
       format: (v: any) => this.moneyFormat(v),
     },
-    { field: 'NoteDesc', header: '備註' },
+    {
+      field: 'NoteDesc',
+      header: '備註',
+      width: '180px',
+      textAlign: 'left',
+    },
   ];
+
+  arsRowMarkedFn = (row: any, _rowIndex: number, _data: any[]) =>
+    this.isARSAlreadySelected(row);
 
   /** 後端可能回 yyyy-MM-dd / yyyy-MM-ddTHH:mm:ss / Date，都統一顯示 yyyy/MM/dd */
   formatYMD = (v: any): string => {
@@ -272,7 +268,37 @@ export class FIN32020CRUComponent
   adjAccDialogVisible = false;
   adjAccLoading = false;
   adjAccList: any[] = [];
-  adjAccSelectedRows: any[] = [];
+
+
+  adjAccDialogColumns: EditColumn[] = [
+    {
+      field: 'CAR_AccNo',
+      header: '調整科目代號',
+      width: '160px',
+      textAlign: 'left',
+    },
+    {
+      field: 'AccCName',
+      header: '科目名稱',
+      width: '200px',
+      textAlign: 'left',
+    },
+    {
+      field: 'CAR_type',
+      header: '加減項',
+      width: '100px',
+      textAlign: 'center',
+      format: (v: any) =>
+        String(v) === '1'
+          ? '加項'
+          : String(v) === '2'
+            ? '減項'
+            : (v ?? ''),
+    },
+  ];
+
+  adjAccRowMarkedFn = (row: any, _rowIndex: number, _data: any[]) =>
+    this.isAdjAccAlreadySelected(row);
 
   // 1=加 2=減
   carTypeOptions = [
@@ -361,7 +387,7 @@ export class FIN32020CRUComponent
     this.refreshDialogSelectedFlags();
   }
 
-  onDetailFieldChange(_event: FieldChangeEvent): void {}
+  onDetailFieldChange(_event: FieldChangeEvent): void { }
 
   onDetailCellClick(e: {
     col: EditColumn;
@@ -428,63 +454,14 @@ export class FIN32020CRUComponent
       .trim();
 
     this.resetARSDialogState(current);
-    this.refreshARSListSelectedFlag();
     this.arsDialogVisible = true;
   }
 
   onSearchARS(): void {
-    const raw = this.arsSearchForm.getRawValue();
-
-    const venNo = raw.VEN_No?.trim() || null;
-    const arsNo = raw.ARS_No?.trim() || null;
-    const arsDateFrom = raw.ARS_Date_From
-      ? this.toYMD(raw.ARS_Date_From as Date)
-      : null;
-    const arsDateTo = raw.ARS_Date_To
-      ? this.toYMD(raw.ARS_Date_To as Date)
-      : null;
-
-    this.arsLoading = true;
-
-    const req = {
-      VEN_No: venNo,
-      ARS_No: arsNo,
-      ARS_Date_From: arsDateFrom,
-      ARS_Date_To: arsDateTo,
-      PageIndex: 1,
-      PageSize: 50,
-      SortBy: [],
-    };
-
-    this.fin32020Service.getARS(req).subscribe({
-      next: (res) => {
-        const rawList = Array.isArray(res.Data) ? res.Data : [];
-        this.arsList = rawList.map((x: any) => ({
-          ...x,
-          selectedFlag: this.isARSAlreadySelected(x) ? '⚠ 已選' : '',
-        }));
-        this.arsLoading = false;
-      },
-      error: (err) => {
-        console.error('FIN32020 getARS error:', err);
-        this.arsList = [];
-        this.arsLoading = false;
-      },
-    });
-  }
-
-  onARSSelectionChange(selected: any[] | any): void {
-    this.arsSelectedRows = Array.isArray(selected)
-      ? selected
-      : selected
-        ? [selected]
-        : [];
-  }
-
-  onARSRowDetail(row: any): void {
-    if (!row) return;
-    this.arsSelectedRows = [row];
-    this.confirmARSSelection();
+    this.arsPageIndex = 1;
+    this.arsHasMore = true;
+    this.arsList = [];
+    this.loadMoreARS();
   }
 
   confirmARSSelection(): void {
@@ -495,14 +472,14 @@ export class FIN32020CRUComponent
       this.arsDialogVisible = false;
       this.currentDetailIndex = null;
       this.currentDetailRowData = null;
-      this.arsSelectedRows = [];
+      this.arsSelectedRow = null;
       return;
     }
 
     let arsNoToFill: string | null = null;
 
-    if (this.arsSelectedRows && this.arsSelectedRows.length) {
-      arsNoToFill = (this.arsSelectedRows[0].ARS_No ?? '').trim() || null;
+    if (this.arsSelectedRow) {
+      arsNoToFill = (this.arsSelectedRow.ARS_No ?? '').trim() || null;
     }
 
     if (!arsNoToFill) {
@@ -531,8 +508,7 @@ export class FIN32020CRUComponent
     this.arsDialogVisible = false;
     this.currentDetailIndex = null;
     this.currentDetailRowData = null;
-    this.arsSelectedRows = [];
-    this.refreshARSListSelectedFlag();
+    this.arsSelectedRow = null;
   }
 
   private isDuplicateARSNo(arsNo: string, currentIndex: number): boolean {
@@ -555,58 +531,20 @@ export class FIN32020CRUComponent
       .trim();
 
     this.resetAdjAccDialogState(current);
-    this.refreshAdjAccListSelectedFlag();
     this.adjAccDialogVisible = true;
   }
 
   onSearchAdjAcc(): void {
-    const raw = this.adjAccSearchForm.getRawValue();
-
-    const body = {
-      CAR_AccNo: raw.CAR_AccNo?.trim() || null,
-      CAR_type: raw.CAR_type?.trim() || null,
-      pageIndex: 1,
-      pageSize: 30,
-      SortBy: [],
-    };
-
-    this.adjAccLoading = true;
-
-    this.fin32020Service.getAdjAcc(body).subscribe({
-      next: (res) => {
-        const rawList = Array.isArray(res.Data) ? res.Data : [];
-        this.adjAccList = rawList.map((x: any) => ({
-          ...x,
-          selectedFlag: this.isAdjAccAlreadySelected(x) ? '⚠ 已選' : '',
-        }));
-        this.adjAccLoading = false;
-      },
-      error: (err) => {
-        console.error('FIN32020 getAdjAcc error:', err);
-        this.adjAccList = [];
-        this.adjAccLoading = false;
-      },
-    });
-  }
-
-  onAdjAccSelectionChange(selected: any[] | any): void {
-    this.adjAccSelectedRows = Array.isArray(selected)
-      ? selected
-      : selected
-        ? [selected]
-        : [];
-  }
-
-  onAdjAccRowDetail(row: any): void {
-    if (!row) return;
-    this.adjAccSelectedRows = [row];
-    this.confirmAdjAccSelection();
+    this.adjAccPageIndex = 1;
+    this.adjAccHasMore = true;
+    this.adjAccList = [];
+    this.loadMoreAdjAcc();
   }
 
   confirmAdjAccSelection(): void {
-    if (!this.adjAccSelectedRows.length) return;
+    if (!this.adjAccSelectedRow) return;
 
-    const row = this.adjAccSelectedRows[0];
+    const row = this.adjAccSelectedRow;
     const idx = this.currentDetailIndex ?? 0;
     const targetRow = this.currentDetailRowData;
 
@@ -614,7 +552,7 @@ export class FIN32020CRUComponent
       this.adjAccDialogVisible = false;
       this.currentDetailIndex = null;
       this.currentDetailRowData = null;
-      this.adjAccSelectedRows = [];
+      this.adjAccSelectedRow = null;
       return;
     }
 
@@ -632,8 +570,7 @@ export class FIN32020CRUComponent
     this.adjAccDialogVisible = false;
     this.currentDetailIndex = null;
     this.currentDetailRowData = null;
-    this.adjAccSelectedRows = [];
-    this.refreshAdjAccListSelectedFlag();
+    this.adjAccSelectedRow = null;
   }
 
   override onCancel(): void {
@@ -756,8 +693,12 @@ export class FIN32020CRUComponent
     });
 
     this.arsList = [];
-    this.arsSelectedRows = [];
+    this.arsSelectedRow = null;
     this.arsLoading = false;
+
+    this.arsPageIndex = 1;
+    this.arsHasMore = true;
+    this.arsQuerying = false;
   }
 
   private resetAdjAccDialogState(defaultAccNo?: string): void {
@@ -767,10 +708,13 @@ export class FIN32020CRUComponent
     });
 
     this.adjAccList = [];
-    this.adjAccSelectedRows = [];
+    this.adjAccSelectedRow = null;
     this.adjAccLoading = false;
-  }
 
+    this.adjAccPageIndex = 1;
+    this.adjAccHasMore = true;
+    this.adjAccQuerying = false;
+  }
   onARSCancel(): void {
     this.resetARSDialogState();
   }
@@ -799,22 +743,191 @@ export class FIN32020CRUComponent
     });
   }
 
-  private refreshARSListSelectedFlag(): void {
-    this.arsList = (this.arsList || []).map((row: any) => ({
-      ...row,
-      selectedFlag: this.isARSAlreadySelected(row) ? '⚠ 已選' : '',
-    }));
+  private refreshARSListSelectedFlag(): void { }
+  private refreshAdjAccListSelectedFlag(): void { }
+  private refreshDialogSelectedFlags(): void { }
+  onARSDoubleClick(event: { rowData: any; index: number }): void {
+    if (!event?.rowData) return;
+    this.arsSelectedRow = event.rowData;
+    this.confirmARSSelection();
   }
 
-  private refreshAdjAccListSelectedFlag(): void {
-    this.adjAccList = (this.adjAccList || []).map((row: any) => ({
-      ...row,
-      selectedFlag: this.isAdjAccAlreadySelected(row) ? '⚠ 已選' : '',
-    }));
+  onAdjAccDoubleClick(event: { rowData: any; index: number }): void {
+    if (!event?.rowData) return;
+    this.adjAccSelectedRow = event.rowData;
+    this.confirmAdjAccSelection();
   }
+  private buildARSQuery(pageIndex: number) {
+    const raw = this.arsSearchForm.getRawValue();
 
-  private refreshDialogSelectedFlags(): void {
-    this.refreshARSListSelectedFlag();
-    this.refreshAdjAccListSelectedFlag();
+    const venNo = raw.VEN_No?.trim() || null;
+    const arsNo = raw.ARS_No?.trim() || null;
+    const arsDateFrom = raw.ARS_Date_From
+      ? this.toYMD(raw.ARS_Date_From as Date)
+      : null;
+    const arsDateTo = raw.ARS_Date_To
+      ? this.toYMD(raw.ARS_Date_To as Date)
+      : null;
+
+    return {
+      VEN_No: venNo,
+      ARS_No: arsNo,
+      ARS_Date_From: arsDateFrom,
+      ARS_Date_To: arsDateTo,
+      PageIndex: pageIndex,
+      PageSize: this.arsPageSize,
+      SortBy: [],
+    };
+  }
+  loadMoreARS(container?: HTMLElement): void {
+    if (this.arsLoading || this.arsQuerying || !this.arsHasMore) return;
+
+    this.arsLoading = true;
+    this.arsQuerying = true;
+
+    const req = this.buildARSQuery(this.arsPageIndex);
+
+    this.fin32020Service.getARS(req).subscribe({
+      next: (res) => {
+        const rawList = Array.isArray(res.Data) ? res.Data : [];
+
+        if (this.arsPageIndex === 1) {
+          this.arsList = rawList;
+        } else {
+          const existingKeys = new Set(
+            (this.arsList || []).map((x: any) => String(x.ARS_No ?? '').trim())
+          );
+
+          const appendList = rawList.filter((x: any) => {
+            const key = String(x?.ARS_No ?? '').trim();
+            return key && !existingKeys.has(key);
+          });
+
+          this.arsList = [...this.arsList, ...appendList];
+        }
+
+        if (rawList.length < this.arsPageSize) {
+          this.arsHasMore = false;
+        } else {
+          this.arsPageIndex += 1;
+        }
+
+        this.arsLoading = false;
+        this.arsQuerying = false;
+
+        if (container && rawList.length > 0) {
+          requestAnimationFrame(() => {
+            const maxScrollTop = container.scrollHeight - container.clientHeight;
+            container.scrollTop = Math.max(
+              0,
+              maxScrollTop - this.scrollBounceOffset
+            );
+          });
+        }
+      },
+      error: (err) => {
+        console.error('FIN32020 getARS error:', err);
+        this.arsLoading = false;
+        this.arsQuerying = false;
+      },
+    });
+  }
+  onARSScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target) return;
+
+    const threshold = 80;
+    const reachedBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - threshold;
+
+    if (reachedBottom) {
+      this.loadMoreARS(target);
+    }
+  }
+  private buildAdjAccQuery(pageIndex: number) {
+    const raw = this.adjAccSearchForm.getRawValue();
+
+    return {
+      CAR_AccNo: raw.CAR_AccNo?.trim() || null,
+      CAR_type: raw.CAR_type?.trim() || null,
+      pageIndex: pageIndex,
+      pageSize: this.adjAccPageSize,
+      SortBy: [{ field: 'CAR_AccNo', order: 1 }],
+    };
+  }
+  loadMoreAdjAcc(container?: HTMLElement): void {
+    if (this.adjAccLoading || this.adjAccQuerying || !this.adjAccHasMore) return;
+
+    this.adjAccLoading = true;
+    this.adjAccQuerying = true;
+
+    const body = this.buildAdjAccQuery(this.adjAccPageIndex);
+
+    this.fin32020Service.getAdjAcc(body).subscribe({
+      next: (res) => {
+        const rawList = Array.isArray(res.Data) ? res.Data : [];
+
+       if (this.adjAccPageIndex === 1) {
+  this.adjAccList = rawList.sort((a: any, b: any) => {
+    const aNo = String(a?.CAR_AccNo ?? '');
+    const bNo = String(b?.CAR_AccNo ?? '');
+    return aNo.localeCompare(bNo, 'zh-Hant', { numeric: true });
+  });
+}else {
+          const existingKeys = new Set(
+            (this.adjAccList || []).map((x: any) =>
+              String(x.CAR_AccNo ?? '').trim()
+            )
+          );
+
+          const appendList = rawList.filter((x: any) => {
+            const key = String(x?.CAR_AccNo ?? '').trim();
+            return key && !existingKeys.has(key);
+          });
+
+          this.adjAccList = this.adjAccList.sort((a: any, b: any) => {
+  const aNo = String(a?.CAR_AccNo ?? '');
+  const bNo = String(b?.CAR_AccNo ?? '');
+  return aNo.localeCompare(bNo, 'zh-Hant', { numeric: true });
+});
+        }
+
+        if (rawList.length < this.adjAccPageSize) {
+          this.adjAccHasMore = false;
+        } else {
+          this.adjAccPageIndex += 1;
+        }
+
+        this.adjAccLoading = false;
+        this.adjAccQuerying = false;
+
+        if (container && rawList.length > 0) {
+          requestAnimationFrame(() => {
+            const maxScrollTop = container.scrollHeight - container.clientHeight;
+            container.scrollTop = Math.max(
+              0,
+              maxScrollTop - this.scrollBounceOffset
+            );
+          });
+        }
+      },
+      error: (err) => {
+        console.error('FIN32020 getAdjAcc error:', err);
+        this.adjAccLoading = false;
+        this.adjAccQuerying = false;
+      },
+    });
+  }
+  onAdjAccScroll(event: Event): void {
+    const target = event.target as HTMLElement;
+    if (!target) return;
+
+    const threshold = 80;
+    const reachedBottom =
+      target.scrollTop + target.clientHeight >= target.scrollHeight - threshold;
+
+    if (reachedBottom) {
+      this.loadMoreAdjAcc(target);
+    }
   }
 }
