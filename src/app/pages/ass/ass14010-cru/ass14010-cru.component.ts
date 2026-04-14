@@ -3,32 +3,49 @@ import { Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls51080Service } from '@service/api/tls/tls51080.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { POS2034 } from '@shared/models/tls/tls000.model';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 
 export interface Label {
   id: number,
-  PLU_MagNo: string, // 商品管理碼
-  PLU_Name: string,// 商品名稱
-  Label_Qty: number // 標籤數量
-  PLU_SalePrc: number // 商品售價
-  PLU_Unit: string,// 商品單位
-  PLU_OrgPLUNo: string,// 廠商貨號
-  PLU_No: string,// 國際條碼
+  ODM_No: string, // 驗收單號
+  NTAX_AMT: string,// 未稅(含免稅)金額
+  TAX_AMT: number // 稅額
+  TOT_AMT: number // 總金額
 }
 
+//ass14010sample
+export interface ass14010sample {
+  'id': string;
+  'STO_No': string; // 公司編號/店號
+  'HOS_No': string; // 倉庫代碼 STO_NO+HOS_NO唯一值 STO_NO+HOS_NO唯一值
+  'HOS_NAME': string; // 倉庫名稱
+  'org_id': string; // 組織代碼/組織名稱
+  'org_name': string; // 部門名稱
+  'building_no': string; // 館別代碼
+  'HOS_Remark'?: string; // 備註說明
+
+  'CRT_Date': Date;
+  'CRT_USR_No': string;
+  'CRT_USR_Name': string;
+  'UPD_Date': Date;
+  'UPD_USR_No': string;
+  'UPD_USR_Name': string;
+
+  'CanDel': boolean; //能否刪除(僅顯示)
+}
 
 //3.1.4.1  進貨發票建檔作業 CRU
 @Component({
@@ -36,39 +53,73 @@ export interface Label {
   templateUrl: './ass14010-cru.component.html',
   styleUrl: './ass14010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf, TableEditComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    InputNumberComponent,
+    DropdownComponent,
+    NgIf,
+    TableEditComponent,
+    TranslateModule]
 
 })
-export class ASS14010CRUComponent extends BasicCruPageComponent<POS2034> implements OnInit {
+export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010sample> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    id: [null], // 主鍵ID，新增時為null，編輯時為存在的ID
-    // POS2034 倉庫設定檔
-    STO_No: [{ value: null, disabled: true }], // 公司編號/店號
-    HOS_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.numberValidator]], // 倉庫代碼 STO_NO+HOS_NO唯一值
-    HOS_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 倉庫名稱
-    org_id: ['', [Validators.required, Validators.maxLength(20)]], // 部門編號/分店
-    building_no: ['', [Validators.maxLength(1), Validators.required]], // 館別
-    HOS_Remark: ['', [Validators.maxLength(100)]], // 備註說明
+    // ass14010sample
+    supplierId: ['', [Validators.maxLength(50)]], // 供應商編號
+    payDays: [null, [Validators.max(10), this.validationService.numberValidator]], // 付款天數
+    totalAmount: [null, [Validators.max(999999999), this.validationService.numberValidator]], // 總金額
+    NTAX_AMT: [null, [Validators.max(999999999), this.validationService.numberValidator]], // 未稅金額
+    TAX_AMT: [null, [Validators.max(999999999), this.validationService.numberValidator]], // 稅額
   });
   //
-  SYS3100_Options: apiOption[] = [];
-  building_noOptions: apiOption[] = [];
-  STO_NoOptions: apiOption[] = [];
-  // ---------標籤檔 (label) 編輯表格 至少要一筆-------------------------------------------------------
-  labelData: Label[] = [];
-  labelColumn: EditColumn[] = [
-    { field: 'PLU_No', header: '國際條碼', width: '150px', type: 'input' },
-    { field: 'PLU_MagNo', header: '商品管理碼' },
-    { field: 'PLU_Name', header: '商品名稱' },
-    { field: 'Label_Qty', header: '標籤數量', width: '150px', type: 'inputNumber' },
-    { field: 'PLU_SalePrc', header: '商品售價' },
-    { field: 'PLU_Unit', header: '商品單位' },
-    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
+  supplierId_Options: apiOption[] = []; // 供應商編號 下拉選項 (ass12020)
+  invoice_type_Options: { value: string; label: string }[] = getSYS1000Options('invoice_type'); // 請款單據種類 下拉選項 (tls2e050)
+  ODM_No_Options: apiOption[] = [ // 驗收單號 下拉選項
+    { No: 'ODM001', Name: '驗收單號A', Label: 'ODM001 - 驗收單號A' },
+    { No: 'ODM002', Name: '驗收單號B', Label: 'ODM002 - 驗收單號B' },
+    { No: 'ODM003', Name: '驗收單號C', Label: 'ODM003 - 驗收單號C' }
+  ];
+  INV_GUIType_Options: { value: number; label: string }[] = [ // 發票格式 下拉選項 (fin23040)
+    { value: 1, label: '21-進項三聯式、電子計算機統一發票' },
+    { value: 2, label: '22-進項二聯式收銀機統一發票、載有稅額之其他憑證' },
+    { value: 3, label: '25-進向三連式收銀機統一發票及一般稅額計算之電子發票' },
+    { value: 4, label: '26-彙總登陸每張稅額五百元以下之盡項三聯式、電子計算機之統一發票' },
+    { value: 5, label: '27-彙總登陸每張稅額五百元以下之盡項二聯式收銀雞統一發票、載有稅額之其他憑證' },
+    { value: 6, label: '28-進項海關代徵營業稅繳納證' },
+  ];
+  PUR_TaxType_Options = getSYS1000Options('PUR_TaxType'); // 課稅別 下拉選項 (fin13040)
+  PUR_DedType_Options: apiOption[] = [ // 扣抵別 下拉選項 (無api，範例資料)
+    { No: 'DED001', Name: '扣抵別A', Label: 'DED001 - 扣抵別A' },
+    { No: 'DED002', Name: '扣抵別B', Label: 'DED002 - 扣抵別B' },
+    { No: 'DED003', Name: '扣抵別C', Label: 'DED003 - 扣抵別C' }
+  ];
+  // ---------單據serialData (參考tls51070) 編輯表格 至少要一筆-------------------------------------------------------
+  serialData: Label[] = [];
+  serialColumn: EditColumn[] = [
+    { field: 'ODM_No', header: '驗收單號', type: 'input' },
+    { field: 'NTAX_AMT', header: '未稅(含免稅)金額', type: 'inputNumber' },
+    { field: 'PLU_Name', header: '商品名稱', type: 'input' },
+    { field: 'TAX_AMT', header: '稅額', type: 'inputNumber' },
+    { field: 'TOT_AMT', header: '總金額', type: 'inputNumber' },
+  ];
+  // ---------發票serialData (參考tls51070) 編輯表格 至少要一筆-------------------------------------------------------
+  invoiceData: Label[] = [];
+  invoiceColumn: EditColumn[] = [
+    { field: 'invoice_type', header: '請款單據種類', type: 'input' },
+    { field: 'INV_GUINo', header: '發票/收據號碼', type: 'inputNumber' },
+    { field: 'INV_GUIDate', header: '發票/收據日期', type: 'input' },
+    { field: 'Pay_Date', header: '付款日期', type: 'date' },
+    { field: 'REP_GUIYM', header: '申報年月', type: 'input' },
+    { field: 'INV_GUIType', header: '發票格式', type: 'input' }
   ];
   // ----------------------------------------------------------------
   constructor(
-    private tls51080Service: Tls51080Service,
     private validationService: ValidationService,
     private readonly dropDownListService: DropDownListService,
   ) {
@@ -106,23 +157,22 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<POS2034> impleme
 
   // 讀取dopropdown選項
   loadOptions() {
-    {
-      // 組織代碼 下拉
-      this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-        this.SYS3100_Options = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
-        console.log('SYS3100_Options', this.SYS3100_Options);
-      })
-
-      // 館別 下拉
-      this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-        this.building_noOptions = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
-        console.log('館別', this.building_noOptions);
-      })
-    }
+    // 供應商編號 下拉 (ass12020)
+    this.dropDownListService
+      .queryTBLUSER_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const list = res.Data ?? [];
+        this.supplierId_Options = list.map((item: { No?: string; Name?: string }) => ({
+          No: item.No ?? '',
+          Name: item.Name ?? '',
+          Label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+        }));
+      });
   }
 
   //清除明細內容
   clearSubForm() {
-    this.labelData = []; // 清空表格資料
+    this.serialData = []; // 清空表格資料
   }
 }
