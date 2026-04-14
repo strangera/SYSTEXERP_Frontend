@@ -16,6 +16,7 @@ export const REPORT_TITLES: Record<string, string> = {
   queryTLS23120: '專櫃日對帳單',
   queryTLS23130: '信用卡銷貨月報表',
 
+  queryForExportFIN24020: '保留款沖款明細',
   query_addFIN25010: '電匯付款明細',
   queryFIN52090: '會計科目摘要明細表',
   queryFIN52050: '科目大分類代號表',
