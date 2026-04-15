@@ -14,7 +14,6 @@ import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AddButton, Column, ColumnGroup, createPaginationConfig, FieldChangeEvent } from '@shared/componentkit/table/table.model';
@@ -55,7 +54,7 @@ import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, T
 export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> implements OnInit {
 
   public readonly ApprovalAction = ApprovalAction;
-  public readonly dt = viewChild.required<TableEditComponent>('dt');
+  public readonly dt = viewChild.required<TableComponent>('dt');
   public readonly fileUpload = viewChild.required<FileUpload>('fileUpload');
 
   private fieldChangeDebounceTimer: ReturnType<typeof setTimeout> | undefined = undefined;
@@ -137,6 +136,20 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly dialogLoading = signal<boolean>(false);
 
   public readonly isRowSelectable = (rowData: TLS26080EditTable) => rowData.pod_status !== '9';
+  public readonly validateEntireRow = (rowData: TLS26080EditTable, rowIndex?: number): { isValid: boolean, errorMessage: string; } => {
+    const tltNo = String(rowData?.tlt_no ?? '').trim();
+    if (!tltNo) {
+      return { isValid: true, errorMessage: '' };
+    }
+    const hasDuplicate = this.tableData().some((item, index) => {
+      if (index === rowIndex) return false;
+      if (item?._isAutoInsertCandidate) return false;
+      return String(item?.tlt_no ?? '').trim() === tltNo;
+    });
+    return hasDuplicate
+      ? { isValid: false, errorMessage: '專櫃編號重複' }
+      : { isValid: true, errorMessage: '' };
+  };
 
   public readonly tltIdList = signal(new Map<number, Option[]>());
   private readonly lastOpenFlagCampaignId = signal<string | undefined>(undefined);
@@ -389,7 +402,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         optionLabel: 'label',
         optionValue: 'No',
         templateLabel: 'label',
-        validate: [validateRequired, this.duplicateVal.bind(this)],
+        validate: [validateRequired],
         disabled: (r) => r.pod_status !== '0',
       },
       {
@@ -587,7 +600,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       this.tableLoading.set(true);
-      // if (!this.dt().validateAndShowErrors()) { this.tableLoading.set(false); return; }
+      if (!this.dt().validateAndShowErrors()) {
+        this.tableLoading.set(false);
+        return;
+      }
 
       const rowData = this.rowdata!;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- 排除 pod_type2，僅用於表單不送 API
@@ -605,20 +621,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
       if (!validTableData.length) {
         this.messageService.errorBubble('請至少新增一筆專櫃資料');
-        this.tableLoading.set(false);
-        return;
-      }
-
-      // 檢查專櫃編號是否有重複（須以 tlt_no 為鍵；若以 id 會漏掉同編號不同 id）
-      const seenTlt = new Set<string>();
-      const hasDuplicate = validTableData.some(item => {
-        const key = String(item.tlt_no ?? '');
-        if (seenTlt.has(key)) return true;
-        seenTlt.add(key);
-        return false;
-      });
-      if (hasDuplicate) {
-        this.messageService.errorBubble('有重複的專櫃編號，無法儲存');
         this.tableLoading.set(false);
         return;
       }
@@ -943,12 +945,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   ): void {
     switch (event.field) {
       case 'tlt_no': {
-        if (!this.duplicateVal(event.value, rowData).isValid) {
-          this.messageService.errorBubble('專櫃編號不可重複');
-          this.fieldChanges.set(undefined);
-          this.tableData.update(td => [...td]);
-          return;
-        }
+        // if (!this.duplicateVal(event.value, rowData).isValid) {
+        //   this.messageService.errorBubble('專櫃編號重複');
+        //   this.fieldChanges.set(undefined);
+        //   this.tableData.update(td => [...td]);
+        //   return;
+        // }
         const newTalentId = this.service.tltTalentOptions().find(o => o.value === event.value)?.talent_id;
         if (newTalentId == null) {
           rowData._err = true;
@@ -1081,7 +1083,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   /** 檢查專櫃編號是否重複 */
   private duplicateVal(value: string, rowData: TLS26080EditTable): ValidationResult {
     return this.tableData().some(item => item.tlt_no === value && rowData !== item)
-      ? { isValid: false, errorMessage: ['專櫃編號不可重複'] }
+      ? { isValid: false, errorMessage: ['專櫃編號重複'] }
       : { isValid: true, errorMessage: [] };
   }
 
