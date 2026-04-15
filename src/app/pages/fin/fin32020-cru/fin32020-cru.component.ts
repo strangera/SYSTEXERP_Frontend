@@ -779,71 +779,59 @@ export class FIN32020CRUComponent
       SortBy: [],
     };
   }
-  loadMoreARS(container?: HTMLElement): void {
-    if (this.arsLoading || this.arsQuerying || !this.arsHasMore) return;
+ loadMoreARS(container?: HTMLElement): void {
+  if (this.arsLoading || this.arsQuerying || !this.arsHasMore) return;
 
-    this.arsLoading = true;
-    this.arsQuerying = true;
+  this.arsLoading = true;
+  this.arsQuerying = true;
 
-    const req = this.buildARSQuery(this.arsPageIndex);
+  const req = this.buildARSQuery(this.arsPageIndex);
 
-    this.fin32020Service.getARS(req).subscribe({
-      next: (res) => {
-        const rawList = Array.isArray(res.Data) ? res.Data : [];
+  this.fin32020Service.getARS(req).subscribe({
+    next: (res) => {
+      const rawList = Array.isArray(res.Data) ? res.Data : [];
 
-        if (this.arsPageIndex === 1) {
-          this.arsList = rawList;
-        } else {
-          const existingKeys = new Set(
-            (this.arsList || []).map((x: any) => String(x.ARS_No ?? '').trim())
-          );
+      if (this.arsPageIndex === 1) {
+        this.arsList = rawList;
+      } else {
+        const existingKeys = new Set(
+          (this.arsList || []).map((x: any) => String(x.ARS_No ?? '').trim())
+        );
 
-          const appendList = rawList.filter((x: any) => {
-            const key = String(x?.ARS_No ?? '').trim();
-            return key && !existingKeys.has(key);
-          });
+        const appendList = rawList.filter((x: any) => {
+          const key = String(x?.ARS_No ?? '').trim();
+          return key && !existingKeys.has(key);
+        });
 
-          this.arsList = [...this.arsList, ...appendList];
-        }
+        this.arsList = [...this.arsList, ...appendList];
+      }
 
-        if (rawList.length < this.arsPageSize) {
-          this.arsHasMore = false;
-        } else {
-          this.arsPageIndex += 1;
-        }
+      if (rawList.length < this.arsPageSize) {
+        this.arsHasMore = false;
+      } else {
+        this.arsPageIndex += 1;
+      }
 
-        this.arsLoading = false;
-        this.arsQuerying = false;
+      this.arsLoading = false;
+      this.arsQuerying = false;
 
-        if (container && rawList.length > 0) {
-          requestAnimationFrame(() => {
-            const maxScrollTop = container.scrollHeight - container.clientHeight;
-            container.scrollTop = Math.max(
-              0,
-              maxScrollTop - this.scrollBounceOffset
-            );
-          });
-        }
-      },
-      error: (err) => {
-        console.error('FIN32020 getARS error:', err);
-        this.arsLoading = false;
-        this.arsQuerying = false;
-      },
-    });
-  }
-  onARSScroll(event: Event): void {
-    const target = event.target as HTMLElement;
-    if (!target) return;
+      // 資料 append 後，如果使用者還停在底部附近，就繼續下一頁
+      if (container && this.arsHasMore) {
+        requestAnimationFrame(() => {
+          if (this.isNearBottom(container)) {
+            this.loadMoreARS(container);
+          }
+        });
+      }
+    },
+    error: (err) => {
+      console.error('FIN32020 getARS error:', err);
+      this.arsLoading = false;
+      this.arsQuerying = false;
+    },
+  });
+}
 
-    const threshold = 80;
-    const reachedBottom =
-      target.scrollTop + target.clientHeight >= target.scrollHeight - threshold;
-
-    if (reachedBottom) {
-      this.loadMoreARS(target);
-    }
-  }
   private buildAdjAccQuery(pageIndex: number) {
     const raw = this.adjAccSearchForm.getRawValue();
 
@@ -856,78 +844,74 @@ export class FIN32020CRUComponent
     };
   }
   loadMoreAdjAcc(container?: HTMLElement): void {
-    if (this.adjAccLoading || this.adjAccQuerying || !this.adjAccHasMore) return;
+  if (this.adjAccLoading || this.adjAccQuerying || !this.adjAccHasMore) return;
 
-    this.adjAccLoading = true;
-    this.adjAccQuerying = true;
+  this.adjAccLoading = true;
+  this.adjAccQuerying = true;
 
-    const body = this.buildAdjAccQuery(this.adjAccPageIndex);
+  const body = this.buildAdjAccQuery(this.adjAccPageIndex);
 
-    this.fin32020Service.getAdjAcc(body).subscribe({
-      next: (res) => {
-        const rawList = Array.isArray(res.Data) ? res.Data : [];
+  this.fin32020Service.getAdjAcc(body).subscribe({
+    next: (res) => {
+      const rawList = Array.isArray(res.Data) ? res.Data : [];
 
-       if (this.adjAccPageIndex === 1) {
-  this.adjAccList = rawList.sort((a: any, b: any) => {
-    const aNo = String(a?.CAR_AccNo ?? '');
-    const bNo = String(b?.CAR_AccNo ?? '');
-    return aNo.localeCompare(bNo, 'zh-Hant', { numeric: true });
+      if (this.adjAccPageIndex === 1) {
+        this.adjAccList = rawList.sort((a: any, b: any) => {
+          const aNo = String(a?.CAR_AccNo ?? '');
+          const bNo = String(b?.CAR_AccNo ?? '');
+          return aNo.localeCompare(bNo, 'zh-Hant', { numeric: true });
+        });
+      } else {
+        const existingKeys = new Set(
+          (this.adjAccList || []).map((x: any) =>
+            String(x.CAR_AccNo ?? '').trim()
+          )
+        );
+
+        const appendList = rawList.filter((x: any) => {
+          const key = String(x?.CAR_AccNo ?? '').trim();
+          return key && !existingKeys.has(key);
+        });
+
+        this.adjAccList = [...this.adjAccList, ...appendList].sort(
+          (a: any, b: any) => {
+            const aNo = String(a?.CAR_AccNo ?? '');
+            const bNo = String(b?.CAR_AccNo ?? '');
+            return aNo.localeCompare(bNo, 'zh-Hant', { numeric: true });
+          }
+        );
+      }
+
+      if (rawList.length < this.adjAccPageSize) {
+        this.adjAccHasMore = false;
+      } else {
+        this.adjAccPageIndex += 1;
+      }
+
+      this.adjAccLoading = false;
+      this.adjAccQuerying = false;
+
+      if (container && this.adjAccHasMore) {
+        requestAnimationFrame(() => {
+          if (this.isNearBottom(container)) {
+            this.loadMoreAdjAcc(container);
+          }
+        });
+      }
+    },
+    error: (err) => {
+      console.error('FIN32020 getAdjAcc error:', err);
+      this.adjAccLoading = false;
+      this.adjAccQuerying = false;
+    },
   });
-}else {
-          const existingKeys = new Set(
-            (this.adjAccList || []).map((x: any) =>
-              String(x.CAR_AccNo ?? '').trim()
-            )
-          );
+}
+private isNearBottom(container?: HTMLElement, threshold = 80): boolean {
+  if (!container) return false;
 
-          const appendList = rawList.filter((x: any) => {
-            const key = String(x?.CAR_AccNo ?? '').trim();
-            return key && !existingKeys.has(key);
-          });
-
-          this.adjAccList = this.adjAccList.sort((a: any, b: any) => {
-  const aNo = String(a?.CAR_AccNo ?? '');
-  const bNo = String(b?.CAR_AccNo ?? '');
-  return aNo.localeCompare(bNo, 'zh-Hant', { numeric: true });
-});
-        }
-
-        if (rawList.length < this.adjAccPageSize) {
-          this.adjAccHasMore = false;
-        } else {
-          this.adjAccPageIndex += 1;
-        }
-
-        this.adjAccLoading = false;
-        this.adjAccQuerying = false;
-
-        if (container && rawList.length > 0) {
-          requestAnimationFrame(() => {
-            const maxScrollTop = container.scrollHeight - container.clientHeight;
-            container.scrollTop = Math.max(
-              0,
-              maxScrollTop - this.scrollBounceOffset
-            );
-          });
-        }
-      },
-      error: (err) => {
-        console.error('FIN32020 getAdjAcc error:', err);
-        this.adjAccLoading = false;
-        this.adjAccQuerying = false;
-      },
-    });
-  }
-  onAdjAccScroll(event: Event): void {
-    const target = event.target as HTMLElement;
-    if (!target) return;
-
-    const threshold = 80;
-    const reachedBottom =
-      target.scrollTop + target.clientHeight >= target.scrollHeight - threshold;
-
-    if (reachedBottom) {
-      this.loadMoreAdjAcc(target);
-    }
-  }
+  return (
+    container.scrollTop + container.clientHeight >=
+    container.scrollHeight - threshold
+  );
+}
 }

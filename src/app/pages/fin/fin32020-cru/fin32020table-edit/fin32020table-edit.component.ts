@@ -1,14 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   EventEmitter,
   inject,
   Input,
   NgZone,
   OnChanges,
+  OnDestroy,
   Output,
   SimpleChanges,
   Type,
@@ -78,9 +81,14 @@ import { RadioButtonModule } from 'primeng/radiobutton';
   ],
   providers: [TableEditDataService, TableValidationService],
 })
-export class FIN32020TableEditComponent implements OnChanges {
+export class FIN32020TableEditComponent
+  implements OnChanges, AfterViewInit, OnDestroy
+{
   @ViewChild('dt') private readonly table!: Table;
+@ViewChild('tableHost', { read: ElementRef })
+private readonly tableHost?: ElementRef<HTMLElement>;
 
+@Output() tableScrollBottom = new EventEmitter<HTMLElement>();
   // 基本設置
   @Input() title: string | undefined = undefined; // table 標題
   @Input() tableKey: string | undefined = undefined; // table 唯一標識 (必填)
@@ -163,6 +171,7 @@ export class FIN32020TableEditComponent implements OnChanges {
   @Input() footerData: any;
   @Input() showFooter = false;
   @Input() scrollable = false;
+  @Input() scrollHeight = '420px';
   @Input() showPaginator = false;
   @Input() selectionMode: 'single' | 'multiple' | null = null;
 
@@ -187,7 +196,9 @@ export class FIN32020TableEditComponent implements OnChanges {
   protected readonly validationService = inject(TableValidationService);
   protected readonly dataService = inject(TableEditDataService);
   protected readonly zone = inject(NgZone);
-
+private scrollContainer?: HTMLElement;
+private boundScrollHandler?: EventListener;
+private hasEmittedBottom = false;
   public get _tableData(): any[] {
     return this.dataService.tableData;
   }
@@ -210,6 +221,9 @@ export class FIN32020TableEditComponent implements OnChanges {
   public tableDataEmpty = false;
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['data']) {
+  this.hasEmittedBottom = false;
+}
     if (changes['data']) {
       const dataChange = changes['data'];
       const isDataReferenceDifferent =
@@ -236,6 +250,11 @@ export class FIN32020TableEditComponent implements OnChanges {
           );
           this.cdr.detectChanges();
         }
+            if (changes['scrollable'] || changes['data']) {
+      setTimeout(() => {
+        this.bindScrollableBody();
+      });
+    }
       }
     }
 
@@ -611,6 +630,60 @@ onRowDoubleClick(rowData: any, rowIndex: number, event?: MouseEvent): void {
     index: rowIndex,
   });
 }
+ngAfterViewInit(): void {
+  setTimeout(() => {
+    this.bindScrollableBody();
+  });
+}
 
+ngOnDestroy(): void {
+  this.unbindScrollableBody();
+}
+
+private bindScrollableBody(): void {
+  this.unbindScrollableBody();
+
+  const host = this.tableHost?.nativeElement;
+  if (!host || !this.scrollable) return;
+
+  const container =
+    host.querySelector('.p-datatable-wrapper') ||
+    host.querySelector('.p-datatable-table-container') ||
+    host.querySelector('.p-datatable-scrollable-body');
+
+  if (!(container instanceof HTMLElement)) return;
+
+  this.scrollContainer = container;
+  this.boundScrollHandler = () => this.onInternalScroll(container);
+  container.addEventListener('scroll', this.boundScrollHandler, {
+    passive: true,
+  });
+}
+
+private unbindScrollableBody(): void {
+  if (this.scrollContainer && this.boundScrollHandler) {
+    this.scrollContainer.removeEventListener('scroll', this.boundScrollHandler);
+  }
+  this.scrollContainer = undefined;
+  this.boundScrollHandler = undefined;
+}
+
+private onInternalScroll(target: HTMLElement): void {
+  const threshold = 80;
+  const reachedBottom =
+    target.scrollTop + target.clientHeight >= target.scrollHeight - threshold;
+
+  // 只有第一次碰到底部才觸發
+  if (reachedBottom) {
+    if (!this.hasEmittedBottom) {
+      this.hasEmittedBottom = true;
+      this.tableScrollBottom.emit(target);
+    }
+    return;
+  }
+
+  // 離開底部區域後，才允許下次再次觸發
+  this.hasEmittedBottom = false;
+}
 
 }

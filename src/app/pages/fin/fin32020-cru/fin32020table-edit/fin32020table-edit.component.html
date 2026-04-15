@@ -4,33 +4,34 @@
   </span>
 </p-divider>
 
-<p-table
-  #dt
-  [value]="_tableData"
-  [columns]="columns"
-  [selection]="selectedItems"
-  (selectionChange)="onSelectionChange($event)"
-  [selectionMode]="showCheckBox ? 'multiple' : undefined"
-  sortMode="multiple"
-  [multiSortMeta]="multiSortMeta"
-  [dataKey]="dataKey"
-  [rowTrackBy]="trackByRow"
-  [resizableColumns]="true"
-  [reorderableColumns]="true"
-  (onColReorder)="columns = tableUtilityService.onColReorder($event)"
-  (onRowReorder)="onRowReorder(); rowReorderData.emit($event)"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  [rowSelectable]="rowSelectableWrapper"
-  [loading]="loading"
-  [scrollable]="scrollable"
-  scrollHeight="867px"
-  [virtualScroll]="false"
-  [paginator]="showPaginator"
-  [rows]="20"
-  [rowsPerPageOptions]="[20, 40, 60, 80, 100]"
-  [showCurrentPageReport]="showPaginator"
-  currentPageReportTemplate="顯示第 {first} 到 {last} 筆，共 {totalRecords} 筆"
->
+<div #tableHost class="fin32020-table-host">
+  <p-table
+    #dt
+    [value]="_tableData"
+    [columns]="columns"
+    [selection]="selectedItems"
+    (selectionChange)="onSelectionChange($event)"
+    [selectionMode]="showCheckBox ? 'multiple' : undefined"
+    sortMode="multiple"
+    [multiSortMeta]="multiSortMeta"
+    [dataKey]="dataKey"
+    [rowTrackBy]="trackByRow"
+    [resizableColumns]="true"
+    [reorderableColumns]="true"
+    (onColReorder)="columns = tableUtilityService.onColReorder($event)"
+    (onRowReorder)="onRowReorder(); rowReorderData.emit($event)"
+    styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
+    [rowSelectable]="rowSelectableWrapper"
+    [loading]="loading"
+    [scrollable]="scrollable"
+    [scrollHeight]="scrollHeight"
+    [virtualScroll]="false"
+    [paginator]="showPaginator"
+    [rows]="20"
+    [rowsPerPageOptions]="[20, 40, 60, 80, 100]"
+    [showCurrentPageReport]="showPaginator"
+    currentPageReportTemplate="顯示第 {first} 到 {last} 筆，共 {totalRecords} 筆"
+  >
   <!-- Caption：最上方，新增 + 批次刪除 + Excel -->
   <ng-template pTemplate="caption">
     <ng-container *ngIf="showCaption">
@@ -452,7 +453,7 @@
     </tr>
   </ng-template>
 </p-table>
-
+</div>
 <span *ngIf="tableDataEmpty" class="block w-full text-right text-red-500">
   {{
     errorMessage
