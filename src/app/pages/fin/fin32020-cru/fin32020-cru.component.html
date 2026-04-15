@@ -127,34 +127,32 @@
             <app-button btnType="query" [type]="'submit'"></app-button>
           </div>
         </form>
-
-<div
-  style="max-height: 420px; overflow-y: auto;"
-  (scroll)="onARSScroll($event)"
->
-  <app-fin32020table-edit
-    [tableKey]="'fin32020ArsDialog'"
-    dataKey="ARS_No"
-    [data]="arsList"
-    [columns]="arsDialogColumns"
-    [loading]="arsLoading"
-    [disabled]="false"
-    [showReorder]="false"
-    [showCheckBox]="false"
-    [showSingleSelect]="true"
-    [selectedItem]="arsSelectedRow"
-    (selectedItemChange)="arsSelectedRow = $event"
-    (rowDoubleClick)="onARSDoubleClick($event)"
-    [isRowMarked]="arsRowMarkedFn"
-    [canInsert]="false"
-    [showDelete]="false"
-    [showCaption]="false"
-    [showPaginator]="false"
-    [scrollable]="false"
-  ></app-fin32020table-edit>
+<div class="dialog-table-wrapper">
+<app-fin32020table-edit
+  [tableKey]="'fin32020ArsDialog'"
+  dataKey="ARS_No"
+  [data]="arsList"
+  [columns]="arsDialogColumns"
+  [loading]="arsLoading"
+  [disabled]="false"
+  [showReorder]="false"
+  [showCheckBox]="false"
+  [showSingleSelect]="true"
+  [selectedItem]="arsSelectedRow"
+  (selectedItemChange)="arsSelectedRow = $event"
+  (rowDoubleClick)="onARSDoubleClick($event)"
+  [isRowMarked]="arsRowMarkedFn"
+  [canInsert]="false"
+  [showDelete]="false"
+  [showCaption]="false"
+  [showPaginator]="false"
+  [scrollable]="true"
+  [scrollHeight]="'420px'"
+  (tableScrollBottom)="loadMoreARS($event)"
+></app-fin32020table-edit>
 </div>
 
-        <div class="flex justify-content-end gap-2 mt-3">
+        <div class="flex justify-content-end gap-2 mt-5">
           <app-button
             btnType="cancel"
             [type]="'button'"
@@ -209,32 +207,33 @@
           </div>
         </form>
 
-   <div
-  style="max-height: 420px; overflow-y: auto;"
-  (scroll)="onAdjAccScroll($event)"
->
-  <app-fin32020table-edit
-    [tableKey]="'fin32020AdjAccDialog'"
-    dataKey="CAR_AccNo"
-    [data]="adjAccList"
-    [columns]="adjAccDialogColumns"
-    [loading]="adjAccLoading"
-    [disabled]="false"
-    [showReorder]="false"
-    [showCheckBox]="false"
-    [showSingleSelect]="true"
-    [selectedItem]="adjAccSelectedRow"
-    (selectedItemChange)="adjAccSelectedRow = $event"
-    (rowDoubleClick)="onAdjAccDoubleClick($event)"
-    [isRowMarked]="adjAccRowMarkedFn"
-    [canInsert]="false"
-    [showDelete]="false"
-    [showCaption]="false"
-    [showPaginator]="false"
-    [scrollable]="false"
-  ></app-fin32020table-edit>
+<div class="dialog-table-wrapper">
+<app-fin32020table-edit
+  [tableKey]="'fin32020AdjAccDialog'"
+  dataKey="CAR_AccNo"
+  [data]="adjAccList"
+  [columns]="adjAccDialogColumns"
+  [loading]="adjAccLoading"
+  [disabled]="false"
+  [showReorder]="false"
+  [showCheckBox]="false"
+  [showSingleSelect]="true"
+  [selectedItem]="adjAccSelectedRow"
+  (selectedItemChange)="adjAccSelectedRow = $event"
+  (rowDoubleClick)="onAdjAccDoubleClick($event)"
+  [isRowMarked]="adjAccRowMarkedFn"
+  [canInsert]="false"
+  [showDelete]="false"
+  [showCaption]="false"
+  [showPaginator]="false"
+  [scrollable]="true"
+  [scrollHeight]="'420px'"
+  [showSort]="true"
+  [multiSortMeta]="[{ field: 'CAR_AccNo', order: 1 }]"
+  (tableScrollBottom)="loadMoreAdjAcc($event)"
+></app-fin32020table-edit>
 </div>
-        <div class="flex justify-content-end gap-2 mt-3">
+        <div class="flex justify-content-end gap-2 mt-5">
           <app-button
             btnType="cancel"
             [type]="'button'"

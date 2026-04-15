@@ -107,23 +107,23 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
     { field: 'VouNo', header: '傳票單號' },
   ];
 
-  readonly defaultSort: SortItem[] = [
-    { field: 'ADJ_Date', order: -1 },
-    { field: 'ADJ_No', order: 1 },
-  ];
+readonly defaultSort: SortItem[] = [
+  { field: 'ADJ_No', order: 1 },
+  { field: 'ADJ_Date', order: -1 },
+];;
 
   queryForm = this.formBuilder.group({
-    adjust_ID: [null as string | null, [Validators.maxLength(14)]],
-    adjust_Date_From: [null as Date | null],
-    adjust_Date_To: [null as Date | null],
-    remark: ['', [Validators.maxLength(30)]],
-    summons_ID_From: [null as string | null],
-    summons_ID_To: [null as string | null],
-    ...createPaginationConfig([
-      { field: 'ADJ_Date', order: -1 },
-      { field: 'ADJ_No', order: 1 },
-    ]),
-  });
+  adjust_ID: [null as string | null, [Validators.maxLength(14)]],
+  adjust_Date_From: [null as Date | null],
+  adjust_Date_To: [null as Date | null],
+  remark: ['', [Validators.maxLength(30)]],
+  summons_ID_From: [null as string | null],
+  summons_ID_To: [null as string | null],
+  ...createPaginationConfig([
+    { field: 'ADJ_No', order: 1 },
+    { field: 'ADJ_Date', order: -1 },
+  ]),
+});
 
   constructor(
     private readonly fin32020Service: FIN32020Service,
@@ -341,22 +341,22 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
         next: (res: ApiResponse<Fin32020Row[]>) => {
           const rows: Fin32020Row[] = Array.isArray(res?.Data) ? res.Data : [];
 
-          this.initRows(rows);
-          this.data = rows;
-          this.cdr.detectChanges();
+this.initRows(rows);
 
-          const realTotal =
-            Number((res as any)?.TotalCount ?? rows.length) || rows.length;
+const realTotal =
+  Number((res as any)?.TotalCount ?? rows.length) || rows.length;
 
-          setTimeout(() => {
-            this.totalRecords = realTotal;
-            this.viewTotalRecords = realTotal;
-            this.lastQueryBody = { ...payload };
-            this._currentSortBy = payload.SortBy ?? this.defaultSort;
-            this.saveQueryState();
-          });
+// 先給排序狀態，再給 data
+this.lastQueryBody = { ...payload };
+this._currentSortBy = payload.SortBy ?? this.defaultSort;
+this.totalRecords = realTotal;
+this.viewTotalRecords = realTotal;
 
-          this.loading = false;
+this.data = rows;
+this.cdr.detectChanges();
+
+this.saveQueryState();
+this.loading = false;
         },
         error: (err: any) => {
           console.error('FIN32020 API error:', err);
@@ -370,34 +370,34 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
   }
 
   onClear(frm: FormGroup): void {
-    frm.reset(
-      {
-        adjust_ID: null,
-        adjust_Date_From: null,
-        adjust_Date_To: null,
-        remark: '',
-        summons_ID_From: null,
-        summons_ID_To: null,
-        ...createPaginationConfig([
-          { field: 'ADJ_Date', order: -1 },
-          { field: 'ADJ_No', order: 1 },
-        ]),
-      } as any,
-      { emitEvent: false }
-    );
+  frm.reset(
+    {
+      adjust_ID: null,
+      adjust_Date_From: null,
+      adjust_Date_To: null,
+      remark: '',
+      summons_ID_From: null,
+      summons_ID_To: null,
+      ...createPaginationConfig([
+        { field: 'ADJ_No', order: 1 },
+        { field: 'ADJ_Date', order: -1 },
+      ]),
+    } as any,
+    { emitEvent: false }
+  );
 
-    this.submitted = false;
-    this.data = [];
-    this.selectedItems = [];
-    this.totalRecords = 0;
-    this.viewTotalRecords = 0;
-    this.footerData = undefined;
-    this.lastQueryBody = null;
-    this._currentSortBy = this.defaultSort;
+  this.submitted = false;
+  this.data = [];
+  this.selectedItems = [];
+  this.totalRecords = 0;
+  this.viewTotalRecords = 0;
+  this.footerData = undefined;
+  this.lastQueryBody = null;
+  this._currentSortBy = this.defaultSort;
 
-    this.queryStateService.clearQueryState(this.ProgNo);
-    this.queryStateService.clearQueryState(`${this.ProgNo}_ext`);
-  }
+  this.queryStateService.clearQueryState(this.ProgNo);
+  this.queryStateService.clearQueryState(`${this.ProgNo}_ext`);
+}
 
   onClickCreate(): void {
     this.saveQueryState();
