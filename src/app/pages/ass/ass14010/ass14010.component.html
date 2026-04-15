@@ -23,30 +23,30 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="發票/收據號碼"
-              controlName="INV_GUINo"
-              [control]="queryForm.controls.INV_GUINo"
+              controlName="RECEIPT_NO"
+              [control]="queryForm.controls.RECEIPT_NO"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="供應商編號"
-              controlName="supplierId"
-              [options]="supplierId_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.supplierId"
+              label="供應商代碼/名稱"
+              controlName="SUPPLIER_ID"
+              [options]="SUPPLIER_ID_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.SUPPLIER_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="請款單據種類"
-              controlName="invoice_type"
-              [options]="invoice_type_Options"
+              label="單據種類"
+              controlName="RECEIPT_TYPE"
+              [options]="RECEIPT_TYPE_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.invoice_type"
+              [control]="queryForm.controls.RECEIPT_TYPE"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -54,31 +54,31 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="驗收單號"
-              controlName="ODM_No"
-              [options]="ODM_No_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.ODM_No"
+              label="進貨單號"
+              controlName="TOKEN_NO"
+              [options]="TOKEN_NO_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.TOKEN_NO"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="發票維護單號"
-              controlName="maintenanceID"
-              [control]="queryForm.controls.maintenanceID"
+              controlName="RECEIPT_INS_ID"
+              [control]="queryForm.controls.RECEIPT_INS_ID"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="發票格式"
-              controlName="INV_GUIType"
-              [options]="INV_GUIType_Options"
+              controlName="INV_FORMAT"
+              [options]="INV_FORMAT_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.INV_GUIType"
+              [control]="queryForm.controls.INV_FORMAT"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -86,31 +86,31 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="課稅別"
-              controlName="PUR_TaxType"
-              [options]="PUR_TaxType_Options"
+              label="稅別"
+              controlName="TAX_CODE"
+              [options]="TAX_CODE_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.PUR_TaxType"
+              [control]="queryForm.controls.TAX_CODE"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="扣抵別"
-              controlName="PUR_DedType"
-              [options]="PUR_DedType_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.PUR_DedType"
+              controlName="REDU_CODE"
+              [options]="REDU_CODE_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.REDU_CODE"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="發票/收據日期"
-            [startControl]="queryForm.controls.PUR_GUIDate_From"
-            [endControl]="queryForm.controls.PUR_GUIDate_To"
+            [startControl]="queryForm.controls.RECEIPT_DATE_S"
+            [endControl]="queryForm.controls.RECEIPT_DATE_E"
             [submitted]="submitted"
           ></app-calendar-range-quick>
         </div>
@@ -141,10 +141,10 @@
       [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
       [rows]="30"
       [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [showDelete]="false"
-      [showCheckBox]="false"
-      dataKey="id"
-      [multiSortMeta]="[{ field: 'HOS_No', order: 1 }]"
+      [showDelete]="true"
+      [showCheckBox]="true"
+      dataKey="ID"
+      [multiSortMeta]="[{ field: 'RECEIPT_NO', order: 1 }]"
       [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
