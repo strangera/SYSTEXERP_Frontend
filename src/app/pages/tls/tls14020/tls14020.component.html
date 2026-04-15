@@ -19,8 +19,9 @@
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃編號" controlName="tlt_no" [control]="queryForm.controls.tlt_no"
-              [submitted]="submitted"></app-input-text>
+            <app-multi-select label="專櫃編號" controlName="tlt_no" [options]="tlt_noListOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.tlt_no"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="櫃位名稱" controlName="tlt_name" [control]="queryForm.controls.tlt_name"
