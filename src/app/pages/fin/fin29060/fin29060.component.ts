@@ -70,7 +70,7 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     { field: 'PayRefDate', header: '開票/匯款日期', format: formatDate, align: 'left' },
     { field: 'VoucherNo', header: '傳票號碼', type: 'detail', align: 'left' },
     { field: 'PayAmt', header: '付款金額', format: formatAmount, align: 'right', isSubTotal: true, isTotal: true },
-    { field: 'NotPayAmy', header: '未沖餘額', format: formatAmount, align: 'right', isSubTotal: true, isTotal: true },
+    { field: 'NotPayAmt', header: '未沖餘額', format: formatAmount, align: 'right', isSubTotal: true, isTotal: true },
   ];
   constructor(
     public readonly fin29060Service: FIN29060Service,
@@ -118,9 +118,9 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
         pageIndex: 1,
         pageSize: 30,
         SortBy: [
+          { field: 'VendorNo', order: 1 },
           { field: 'ACP_No', order: 1 },
           { field: 'PostDate', order: 1 },
-          { field: 'VendorNo', order: 1 }
         ]
       };
       this.fin29060Service.queryFIN29060(this.lastQueryBody).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((res) => {
