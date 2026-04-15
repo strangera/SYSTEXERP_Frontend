@@ -89,6 +89,8 @@
           (dataChange)="tableData.set($event)" (fieldChange)="fieldChanges.set($event)"
           [selectedItems]="selectedItems()" (selectionChange)="selectedItems.set($event)"
           [isRowSelectable]="isRowSelectable" [columns]="counterColumns()" [columnGroup]="counterColumnsGroup()"
+          [rowValidate]="validateEntireRow" [showRowValidationHint]="true" [tableRequired]="true"
+          errorMessage="請至少新增一筆專櫃資料"
           [showInsert]="!isFormReadable" [showDelete]="!isFormReadable" [showEdit]="!isFormReadable"
           [showCheckBox]="!isFormReadable" [showRowEdit]="!isFormReadable" [alwaysEdit]="!isFormReadable"
           (insert)="displayDialog.set(true)" [disabled]="isFormReadable" (delete)="onDelete()"
