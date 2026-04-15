@@ -1,5 +1,5 @@
 import { DatePipe, NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, OnInit, signal, untracked, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, OnInit, signal, untracked, viewChild, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -19,6 +19,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AddButton, Column, ColumnGroup, createPaginationConfig, FieldChangeEvent } from '@shared/componentkit/table/table.model';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { ErrorReportService } from '@shared/service/error-report.service';
 import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
@@ -58,6 +59,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly fileUpload = viewChild.required<FileUpload>('fileUpload');
 
   private fieldChangeDebounceTimer: ReturnType<typeof setTimeout> | undefined = undefined;
+
+  private readonly erroreportService = inject(ErrorReportService);
 
   private readonly usrData = computed(() => ({
     ...this.authService.currentUserValue,
@@ -895,12 +898,21 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.service.uploadFile(formData).pipe(
       map(res => {
         if (res.Success) return res;
-        this.service.dealErrorFilePath(res);
+        if (res.ErrorFilePath) return res;
         throw new Error('上傳失敗 發生錯誤');
       }),
       finalize(() => this.uploadLoading.set(false))
     ).subscribe({
       next: res => {
+
+        if (res.ErrorFilePath) {
+          this.erroreportService.showImportError(
+            res.ErrorFilePath,
+            `匯入失敗：成功 ${res.SuccessCount} 筆，失敗 ${res.ErrorCount} 筆`
+          );
+          return;
+        }
+
         const data = res.queryTLS26080_DetailResponses;
         this.tableData.update(td => {
           if (td.length === 0) return data.map(item => ({
