@@ -41,7 +41,7 @@ export interface FIN29060Data {
   PayRefDate: string;                 // 開票/匯款日期
   BalanceAmt: number;                 // 帳款餘額
   PaymentNo: string;                  // 電匯/開票/單號
-  VoucherNo: string;                  // 傳票號碼
+  PayVoucherNo: string;                  // 傳票號碼
   NotPayAmt: number;                  // 未付金額
 }
 

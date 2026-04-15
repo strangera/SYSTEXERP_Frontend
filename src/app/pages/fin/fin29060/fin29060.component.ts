@@ -68,7 +68,7 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     { field: 'ACP_Amt', header: '立帳金額', format: formatAmount, align: 'right', isSubTotal: true, isTotal: true },
     { field: 'WireOrBillNo', header: '電匯/開票/單號', align: 'left' },
     { field: 'PayRefDate', header: '開票/匯款日期', format: formatDate, align: 'left' },
-    { field: 'VoucherNo', header: '傳票號碼', type: 'detail', align: 'left' },
+    { field: 'PayVoucherNo', header: '傳票號碼', type: 'detail', align: 'left' },
     { field: 'PayAmt', header: '付款金額', format: formatAmount, align: 'right', isSubTotal: true, isTotal: true },
     { field: 'NotPayAmt', header: '未沖餘額', format: formatAmount, align: 'right', isSubTotal: true, isTotal: true },
   ];
@@ -95,8 +95,8 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       const externalUrl = this.location.prepareExternalUrl(`/account/fin/fin24010cru?acpid=${encodeURIComponent(acpNo ?? '')}`);
       const finalUrl = `${window.location.origin}${externalUrl}`;
       window.open(finalUrl, '_blank', 'noopener');
-    } else if (event.col.field === 'VoucherNo') {
-      const vouNo = event.row?.VoucherNo;
+    } else if (event.col.field === 'PayVoucherNo') {
+      const vouNo = event.row?.PayVoucherNo;
       const handoff = {
         vouNo,
         fromRoute: window.location.pathname,
