@@ -83,7 +83,7 @@
   <app-table-report [data]="data" [columns]="columns" dataKey="TXN_SaleNoteNo" [totalRecords]="totalRecords"
     [loading]="loading" [lastQueryBody]="historyRequestBody" [showDelete]="false" [showManage]="false"
     [showReportMode]="false" [queryFunction]="tls55070Service.queryTLS55070.bind(tls55070Service)"
-    groupRowsBy="TXN_SaleNoteNo">
+    groupRowsBy="TXN_SaleNoteNo" [footerData]="footerData">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
         <p-button styleClass="p-2" label="匯出銷售明細.PDF" icon="pi pi-file" (click)="onExportPDF()"

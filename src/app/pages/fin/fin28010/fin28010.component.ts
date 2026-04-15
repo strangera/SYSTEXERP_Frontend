@@ -66,7 +66,7 @@ export class FIN28010Component extends BasicQueryPageComponent<any> implements O
         PageIndex: 1,
         OrderBy: '',
         Offset: 0,
-        SortBy: [{ field: 'AccNo', order: 1 }],
+        SortBy: [],
         WSLIP_NO: v.WSLIP_NO || '',
         VouDate: this.datePipe.transform(v.VouDate, 'yyyy-MM-dd') || ''
       };
