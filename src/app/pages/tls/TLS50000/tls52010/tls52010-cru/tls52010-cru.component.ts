@@ -258,6 +258,8 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           PLU_SalePrc: item.POD_SalePrc
         }));
         this.originalData = [...this.data];
+        this.calculateTotals();
+        this.cdr.detectChanges();
       });
       this.GetBudgetAmount();
       this.loadDropdownOptions();
@@ -623,30 +625,49 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
 
     try {
       this.data.forEach(item => {
-        const buyNet = Number(item.POD_BuyNet) || 0;
-        // 在加總時，即時根據該行的「未稅小計」算出應有的稅額
-        // 確保 PLU_StockTaxType 為 '1' (應稅)
+        const subQty = Number(item.POD_SubQty) || 0;
+        const buyPrc = Number(item.PLU_SalePrc_UNI) || 0;
+        const salePrc = Number(item.PLU_SalePrc) || 0;
+
+        // 重新計算明細行的小計（未稅）
+        const buyNet = subQty * buyPrc;
+
+        // 重新計算明細行的稅額（應稅 = 5%，免稅 = 0）
         const rowTax = item.PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;
 
-        // 更新回該行物件，讓 UI 同步顯示
-        item.POD_BuyTax = rowTax;
-        item.POD_BuyAmt = buyNet + rowTax;
+        // 重新計算明細行的含稅合計
+        const rowBuyAmt = buyNet + rowTax;
 
-        totalBuyNet += buyNet;
+        // 重新計算銷售小計
+        const rowSaleAmt = Math.round(subQty * salePrc);
+
+        // 更新回物件，確保 TableEditComponent 顯示的是重算後的數值
+        item.POD_BuyNet = buyNet;
+        item.POD_BuyTax = rowTax;
+        item.POD_BuyAmt = rowBuyAmt;
+        item.POD_SaleAmt = rowSaleAmt;
+
+        // 累加到表單總計
+        totalBuyNet += Math.round(buyNet);
         totalBuyTax += rowTax;
-        totalSaleAmt += (Number(item.POD_SaleAmt) || 0);
+        totalSaleAmt += rowSaleAmt;
       });
     } catch (e) {
       console.error(e);
       totalBuyNet = totalBuyTax = totalSaleAmt = 0;
     }
-
-    const totalBuyAmt = totalBuyNet + totalBuyTax;
-
-    this.dataForm.controls.PO_TotalBuyNet.setValue(Math.round(totalBuyNet));
-    this.dataForm.controls.PO_TotalBuyTax.setValue(Math.round(totalBuyTax)); // 這裡現在會是 65,033
-    this.dataForm.controls.PO_TotalBuyAmt.setValue(Math.round(totalBuyAmt));
-    this.dataForm.controls.PO_TotalSaleAmt.setValue(Math.round(totalSaleAmt));
+    // 採購金額 = 小計總和 (取整)
+    const finalBuyNet = totalBuyNet;
+    // 總稅額 = 稅額總和 (因為 rowTax 已經 round，所以這一定是整數)
+    const finalBuyTax = totalBuyTax;
+    // 合計金額 = 採購金額 + 總稅額
+    const finalTotalAmt = finalBuyNet + finalBuyTax;
+    this.dataForm.patchValue({
+      PO_TotalBuyNet: finalBuyNet,
+      PO_TotalBuyTax: finalBuyTax,
+      PO_TotalBuyAmt: finalTotalAmt,
+      PO_TotalSaleAmt: Math.round(totalSaleAmt)
+    });
     this.cdr.detectChanges();
   }
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent

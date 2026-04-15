@@ -230,6 +230,8 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
         });
         this.dataForm.controls.CRN_TotalSaleAmt.setValue(Math.round(totalSaleAmt));
         this.originalData = [...this.data];
+        this.calculateTotals();
+        this.cdr.detectChanges();
       });
     }
     this.loadDialogData();
@@ -560,16 +562,50 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     let totalBuyNet = 0;
     let totalBuyTax = 0;
     let totalSaleAmt = 0;
-    this.data.forEach(item => {
-      totalBuyNet += item.CRN_BuyNet || 0;
-      totalBuyTax += item.CRN_BuyTax || 0;
-      totalSaleAmt += item.CRN_SaleAmt || 0;
+
+    try {
+      this.data.forEach(item => {
+        // 確保取得數值
+        const subQty = Number(item.CRN_SubQty) || 0;
+        const buyPrc = Number(item.CRN_BuyPrc) || 0;
+        const salePrc = Number(item.CRN_SalePrc) || 0;
+
+        // 明細小計 (不在此處 round，保留原始計算值給顯示或後續用)
+        const buyNet = subQty * buyPrc;
+        // 明細稅額 (依據稅別四捨五入)
+        const rowTax = item.PLU_StockTaxType === '1' ? Math.round(buyNet * 0.05) : 0;
+        // 明細含稅小計
+        const rowBuyAmt = buyNet + rowTax;
+        // 銷售小計
+        const rowSaleAmt = Math.round(subQty * salePrc);
+
+        // 回填明細物件
+        item.CRN_BuyNet = buyNet;
+        item.CRN_BuyTax = rowTax;
+        item.CRN_BuyAmt = rowBuyAmt;
+        item.CRN_SaleAmt = rowSaleAmt;
+
+        // === 核心修正點：逐行取整後累加 ===
+        totalBuyNet += Math.round(buyNet);
+        totalBuyTax += rowTax; // rowTax 已經 round 過了
+        totalSaleAmt += rowSaleAmt;
+      });
+    } catch (e) {
+      console.error(e);
+    }
+
+    // 更新表單總計
+    const finalBuyNet = totalBuyNet;
+    const finalBuyTax = totalBuyTax;
+    const finalBuyAmt = finalBuyNet + finalBuyTax;
+
+    this.dataForm.patchValue({
+      CRN_TotalBuyNet: finalBuyNet,
+      CRN_TotalBuyTax: finalBuyTax,
+      CRN_TotalBuyAmt: finalBuyAmt,
+      CRN_TotalSaleAmt: Math.round(totalSaleAmt)
     });
-    const totalBuyAmt = totalBuyNet + totalBuyTax;
-    this.dataForm.controls.CRN_TotalBuyNet.setValue(Math.round(totalBuyNet));
-    this.dataForm.controls.CRN_TotalBuyTax.setValue(Math.round(totalBuyTax));
-    this.dataForm.controls.CRN_TotalBuyAmt.setValue(Math.round(totalBuyAmt));
-    this.dataForm.controls.CRN_TotalSaleAmt.setValue(Math.round(totalSaleAmt));
+
     this.cdr.detectChanges();
   }
   onSubmit(frm: FormGroup) {
