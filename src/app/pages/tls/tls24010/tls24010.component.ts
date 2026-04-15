@@ -416,9 +416,9 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       frm.get('talent_id')?.setValue(data?.talent_id);
       frm.get('rece_yn')?.setValue(data?.rece_yn);
     }
-    const inertData = { ...frm.value, TXN_No: '系統自動產生' };
+    const inertData = { ...frm.getRawValue(), TXN_No: '系統自動產生' };
     this.queryStateService.setQueryState(this.ProgNo, frm.value);
-    this.onCreate(inertData, frm.value);
+    this.onCreate(inertData, frm.getRawValue());
   }
 
   onCancel(rowdata: TLS24010Data): void {
