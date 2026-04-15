@@ -1,5 +1,5 @@
 import { DatePipe, NgStyle } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, OnInit, signal, untracked, viewChild, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, untracked, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -905,7 +905,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     ).subscribe({
       next: res => {
 
-        if (res.ErrorFilePath) {
+        if (!res.Success) { // Success = true 代表全部成功
           this.erroreportService.showImportError(
             res.ErrorFilePath,
             `匯入失敗：成功 ${res.SuccessCount} 筆，失敗 ${res.ErrorCount} 筆`
