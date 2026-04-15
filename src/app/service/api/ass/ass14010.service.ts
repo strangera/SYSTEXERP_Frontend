@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
+//主查詢API回應
 export interface ass14010MainResponse {
   Status: string;
   Data: {
@@ -19,9 +20,27 @@ export interface ass14010MainResponse {
   TotalPage: number;
 }
 
-//ass14010mainData
+//明細API回應
+export interface ass14010DetailResponse {
+  Status: string;
+  Data: {
+    QueryData: ass14010detailData[]; // 資料列陣列
+    TotalRows: number;
+    TotalPages: number;
+  };
+  Error: {
+    Code: string;
+    Message: string;
+    Details: string;
+  };
+  Message: string;
+  TotalCount: number;
+  TotalPage: number;
+}
+
+//查詢頁 主檔
 export interface ass14010mainData {
-  'ID': string;
+  'ID': number;
   'RECEIPT_NO': string; // 發票/收據號碼
   'TOKEN_NO': string; // 進貨單號
   'RECEIPT_INS_ID': string; // 發票維護單號
@@ -42,6 +61,44 @@ export interface ass14010mainData {
   'RowNumber': number; // 分頁序號
 }
 
+//明細頁 主檔 + 明細
+export interface ass14010detailData {
+  'RECEIPT_TYPE': string; // 單據種類(0發票 1收據)
+  'RECEIPT_TYPE_NAME'?: string; // 單據種類名稱
+  'RECEIPT_NO': string; // 發票號碼
+  'RECEIPT_DATE': Date; // 發票日期
+  'TICKET_DATE': Date; // 票據到期日
+  'DEC_YM': string; // 申報年月(YYYYMM)
+  'INV_FORMAT': string; // 發票格式
+  'TAX_CODE': string; // 稅別
+  'TAX_CODE_NAME'?: string; // 稅別名稱
+  'REDU_CODE': string; // 扣抵別
+  'REDU_CODE_NAME'?: string; // 扣抵別名稱
+  'NTX_AMT': number; // 未稅金額
+  'TX_AMT': number; // 稅額
+  'AMT': number; // 含稅金額
+  'Supplier': Ass14010Supplier[]; // 供應商資料
+  'Details': Ass14010Items[]; //單據明細
+}
+
+// 供應商資料
+export interface Ass14010Supplier {
+  'SUPPLIER_ID': string; // 供應商代碼
+  'SUPPLIER_NAME': string; // 供應商名稱
+  'TICKET_BE': number; // 付款天數
+  'TOTAL_AMT': number; // 發票總金額
+  'TOTAL_NTX_AMT': number; // 未稅總金額
+  'TOTAL_TX_AMT': number; // 稅額總金額
+}
+
+// 單據明細
+export interface Ass14010Items {
+  'TOKEN_NO': string; // 進貨單號 / 採購單號
+  'NTX_AMT': number; // 單據未稅金額
+  'TX_AMT': number; // 單據稅額
+  'AMT': number; // 單據含稅金額
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -56,8 +113,8 @@ export class Ass14010Service {
   }
 
   // 查詢發票作業 明細
-  queryDetailASS14010(body: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryASS14010`, body);
+  queryDetailASS14010(body: any): Observable<ass14010DetailResponse> {
+    return this.http.post<ass14010DetailResponse>(`${this.apiUrl}/queryASS14010`, body);
   }
 
   // 新增 發票建檔作業

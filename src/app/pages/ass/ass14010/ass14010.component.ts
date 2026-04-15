@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FIN13050Service } from '@service/api/fin/fin13050.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -44,7 +43,7 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
 
     RECEIPT_NO: ['', [Validators.maxLength(10)]], // 發票/收據號碼
     SUPPLIER_ID: ['', [Validators.maxLength(50)]], // 供應商代碼
-    RECEIPT_TYPE: ['', [Validators.maxLength(100)]], // 單據種類(0發票 1收據)
+    RECEIPT_TYPE: ['', [Validators.maxLength(1)]], // 單據種類(0發票 1收據)
     TOKEN_NO: ['', [Validators.maxLength(20)]], // 進貨單號
     RECEIPT_INS_ID: ['', [Validators.maxLength(20)]], // 發票維護單號
     INV_FORMAT: ['', [Validators.maxLength(20)]], // 發票格式
@@ -66,16 +65,13 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
     { value: "0", label: '發票' },
     { value: "1", label: '單據' },
   ];
-
   TOKEN_NO_Options: { value: string; label: string }[] = []; // 進貨單號 下拉選項 (ass15070: queryFAASSCHKMASS15070_DropDownList)
   INV_FORMAT_Options: { value: string; label: string }[] = []; // 發票格式 下拉選項 (fin15030: queryTDS1007_DropDownList)
   TAX_CODE_Options: { value: string; label: string }[] = [
     { value: "1", label: '應稅' },
     { value: "3", label: '免稅' },
   ];
-
-  REDU_CODE_Options: { value: string; label: string }[] = [ // 扣抵別 下拉選項 (querySys1000({ SYS_Type: 'PUR_DiscNo' }))
-  ];
+  REDU_CODE_Options: { value: string; label: string }[] = []; // 扣抵別 下拉選項 (querySys1000({ SYS_Type: 'PUR_DiscNo' }))
 
   data: ass14010mainData[] = [];
   columns: Column[] = [
@@ -99,7 +95,6 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
   // ----------------------------------------------------------------
   constructor(
     private ass14010Service: Ass14010Service,
-    private fin13050Service: FIN13050Service, //扣抵別
     private readonly dropDownListService: DropDownListService,
     private readonly dropdownApiService: DropdownApiService,
   ) {
@@ -113,7 +108,12 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      console.log(' 進貨發票request:', JSON.stringify(frm.value, null, 2));
+      const payload = {
+        ...frm.value,
+        PageIndex: frm.value.pageIndex, // 轉型：小寫變大寫
+        PageSize: frm.value.pageSize    // 轉型：小寫變大寫
+      }
+      console.log(' 進貨發票request:', JSON.stringify(payload, null, 2));
       this.loading = false;
       this.ass14010Service.queryASS14010(frm.value).subscribe({
         next: (response) => {
@@ -121,7 +121,7 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
             this.data = response.Data.QueryData || [];
             console.log('Result', this.data);
             this.totalRecords = response.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+            this.queryStateService.setQueryState(this.ProgNo, payload);
           } else {
             console.error('API error:', response.Error.Message);
           }

@@ -8,62 +8,117 @@
       <div class="grid p-fluid">
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
-          label="供應商編號"
-          controlName="supplierId"
-          [options]="supplierId_Options"
-          optionLabel="Label"
-          optionValue="No"
-          [control]="dataForm.controls.supplierId"
+          label="供應商代碼/名稱"
+          controlName="SUPPLIER_ID"
+          [options]="SUPPLIER_ID_Options"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.SUPPLIER_ID"
           [submitted]="submitted"
         ></app-dropdown>
         <app-input-number
           class="col-12 md:col-6 lg:col-4"
           label="付款天數"
-          controlName="payDays"
-          [control]="dataForm.controls.payDays"
+          controlName="TICKET_BE"
+          [control]="dataForm.controls.TICKET_BE"
           [submitted]="submitted"
         ></app-input-number>
       </div>
       <div class="grid p-fluid">
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          label="總金額"
-          controlName="totalAmount"
-          [control]="dataForm.controls.totalAmount"
-          [submitted]="submitted"
-        ></app-input-number>
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          label="未稅金額"
-          controlName="NTAX_AMT"
-          [control]="dataForm.controls.NTAX_AMT"
-          [submitted]="submitted"
-        ></app-input-number>
-        <app-input-number
-          class="col-12 md:col-6 lg:col-4"
-          label="稅額"
-          controlName="TAX_AMT"
-          [control]="dataForm.controls.TAX_AMT"
-          [submitted]="submitted"
-        ></app-input-number>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="發票/收據號碼"
+            controlName="RECEIPT_NO"
+            [control]="dataForm.controls.RECEIPT_NO"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="單據種類"
+            controlName="RECEIPT_TYPE"
+            [options]="RECEIPT_TYPE_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.RECEIPT_TYPE"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
       </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="進貨單號"
+            controlName="TOKEN_NO"
+            [options]="TOKEN_NO_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.TOKEN_NO"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="發票格式"
+            controlName="INV_FORMAT"
+            [options]="INV_FORMAT_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.INV_FORMAT"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="稅別"
+            controlName="TAX_CODE"
+            [options]="TAX_CODE_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.TAX_CODE"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="扣抵別"
+            controlName="REDU_CODE"
+            [options]="REDU_CODE_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.REDU_CODE"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
+          calendarType="dateOne"
+          label="發票/收據日期"
+          [control]="dataForm.controls.RECEIPT_DATE"
+          [submitted]="submitted"
+        ></app-calendar>
+      </div>
+
       <hr />
       <div class="grid p-fluid">
         <app-table-edit
-          title="單據資料"
+          title="供應商資料"
           class="col-12"
-          [columns]="serialColumn"
-          [data]="serialData"
+          [columns]="supplierColumn"
+          [data]="supplierData"
           [loading]="loading"
-          (dataChange)="serialData = $event"
+          (dataChange)="supplierData = $event"
         ></app-table-edit>
         <app-table-edit
-          title="發票資料"
+          title="單據資料"
           class="col-12"
-          [columns]="invoiceColumn"
-          [data]="invoiceData"
+          [columns]="itemColumn"
+          [data]="itemData"
           [loading]="loading"
-          (dataChange)="invoiceData = $event"
+          (dataChange)="itemData = $event"
         ></app-table-edit>
       </div>
       <div
