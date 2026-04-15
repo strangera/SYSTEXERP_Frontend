@@ -56,6 +56,7 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements O
   btnLoadingExcel = false;
   btnLoadingPDF = false;
   data: any[] = [];
+  footerData: any = null;
   totalRecords = 0;
   historyRequestBody: any = null;
   queryForm = this.formBuilder.group({
@@ -120,6 +121,8 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements O
       };
       this.tls55070Service.queryTLS55070(payload).pipe(finalize(() => (this.loading = false)),).subscribe((res: any) => {
         this.data = res?.Data || [];
+        console.log(res);
+        this.footerData = { TXN_SaleAmt: res.TotalData };
         this.totalRecords = res?.TotalCount || 0;
         this.historyRequestBody = payload;
       })

@@ -26,6 +26,7 @@ export class TLS55070Service {
       map(res => {
         const headers = res.Data?.Data || [];
         const rawDetails = res.Data?._DetailList || [];
+        const TotalData = res.Data?.TXN_SaleAmt || [];
 
         // 計算分頁偏移量 (讓第二頁的序號從 31 開始)
         const pageSize = body.pageSize || 30;
@@ -49,6 +50,7 @@ export class TLS55070Service {
 
         return {
           ...res,
+          TotalData: TotalData,
           Data: enrichedDetails, // 這裡給 Table 用的資料現在每筆都有 PageRank
           TotalCount: res.TotalCount,
           Details: processedHeaders // 主檔列表
