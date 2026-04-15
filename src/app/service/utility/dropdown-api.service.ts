@@ -13,6 +13,7 @@ import {
   Aps1001Query,
   Aps1002Item,
   Aps1003Query,
+  Ass13010PurchaseNumberDropDownItem,
   BusClassItem,
   BusClassQuery,
   BusSClassItem,
@@ -23,6 +24,7 @@ import {
   EcrItem,
   EcrQuery,
   ENG1001Item,
+  FAASSCHKMASS15070DropDownItem,
   FaClass1Item,
   FaClass1Query,
   FaClass2Item,
@@ -57,6 +59,7 @@ import {
   Pos2013Item,
   Pos2013LogoRequest,
   Pos2013Query,
+  queryPOS1002_DropDownListItem,
   Sys1000Query,
   Sys5000SubModuleItem,
   TalentByContractDateItem,
@@ -77,8 +80,6 @@ import {
   TLTTALENTItem,
   TLTTALENTQuery,
   TlttalentTltSpaceItem,
-  Ass13010PurchaseNumberDropDownItem,
-  FAASSCHKMASS15070DropDownItem
 } from './dropdown-api.model';
 
 @Injectable({
@@ -423,7 +424,7 @@ export class DropdownApiService {
 
   /** 查詢收銀機設定檔(POS1002) */
   queryPos1002(): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS1002_DropDownList', 'No', 'Name').pipe(
+    return this.queryAndMapDropdown<queryPOS1002_DropDownListItem>('/queryPOS1002_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

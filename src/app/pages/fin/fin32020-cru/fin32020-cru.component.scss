@@ -6,3 +6,7 @@
 :host ::ng-deep .selected-red-row > td * {
   color: #dc2626 !important;
 }
+.dialog-table-wrapper {
+  height: 420px;
+  margin-bottom: 16px;
+}

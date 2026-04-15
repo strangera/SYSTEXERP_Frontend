@@ -1,4 +1,4 @@
-import { AsyncPipe, formatDate, Location } from '@angular/common';
+import { formatDate, Location } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -9,7 +9,6 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { Column, createPaginationConfig, formatAmount, formatDate as tableFormatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -19,10 +18,8 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Fin29060TableSubheaderComponent } from '../fin29060/fin29060-table-subheader/fin29060-table-subheader.component';
+import { Fin29060TableSubheaderComponent } from '../fin55040/fin29060-table-subheader/fin29060-table-subheader.component';
 import { FIN55030Detail, fin55030request, fin55030response, Fin55030Service } from './../../../service/api/fin/fin55030.service';
 
 export interface GroupedFIN55030Detail extends FIN55030Detail {
@@ -37,11 +34,9 @@ export interface GroupedFIN55030Detail extends FIN55030Detail {
   styleUrl: './fin55030.component.scss',
   standalone: true,
   imports: [
-    AsyncPipe,
     AccordionModule,
     ButtonComponent,
     ButtonModule,
-    MultiSelectComponent,
     MenubarComponent,
     FormsModule,
     Fin29060TableSubheaderComponent,
@@ -49,11 +44,9 @@ export interface GroupedFIN55030Detail extends FIN55030Detail {
     CalendarRangeComponent,
     DropdownComponent,
     DropdownRangeComponent,
-    InputNumberRangeComponent,
     InputTextRangeComponent,
     InputTextComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule
   ]
 })
