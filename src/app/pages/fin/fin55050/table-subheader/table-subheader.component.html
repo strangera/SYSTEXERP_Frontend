@@ -22,7 +22,7 @@
     </tr>
   </ng-template>
   <!-- 群組表頭 -->
-  <ng-template pTemplate="groupheader" let-rowData *ngIf="showGroupheader">
+  <ng-template pTemplate="groupheader" let-rowData>
     <tr pRowGroupHeader style="height: 40.8px" class="custom-group-header">
       <td [attr.colspan]="getVisibleHeaderCount">
         <ng-container *ngIf="groupHeaderTemplate; else defaultGroupHeader">
@@ -40,32 +40,30 @@
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-ri="rowIndex"
     let-index="rowIndex">
     <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" [pReorderableRow]="index"
-      [ngClass]="{
-      'virtual-row-opening': rowData.NoteDesc === '【期初餘額】',
-      'virtual-row-total': rowData.NoteDesc === '【本期合計】'
-    }" [pSelectableRowIndex]="rowIndex">
-      <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis" style="min-width: 55px"
-        [ngClass]="col.style">
-        <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="false"
-          (dpTableSelected)="rowData[col.field] = $event"></app-table-input>
+      [pSelectableRowIndex]="rowIndex" [ngClass]="{
+        'bg-gray-100 font-bold text-color-secondary': rowData.VouNo === '【期初餘額】',
+        'bg-blue-50 font-bold text-blue-800 shadow-2': rowData.Org_Name === '【總計】'
+    }">
+
+      <td *ngFor="let col of columns" style="text-overflow: ellipsis; min-width: 55px"
+        [ngClass]="[col.style || '', 'text-center']">
+
+        <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="false"></app-table-input>
+
         <ng-container *ngIf="col.type === 'detail'">
-          <ng-container *ngIf="rowData[col.field] === '期初餘額'; else detailLink">
-            <span>
-              {{
-              col.format
-              ? col.format(rowData[col.field], rowIndex, rowData)
-              : rowData[col.field]
-              }}
-            </span>
+          <ng-container *ngIf="rowData[col.field]?.toString().includes('【'); else detailLink">
+            <span class="font-bold">{{ rowData[col.field] }}</span>
           </ng-container>
           <ng-template #detailLink>
-            <a (click)="detailRow(rowData, col, rowData[col.field])">
-              {{col.format? col.format(rowData[col.field], rowIndex, rowData): rowData[col.field]}}
+            <a (click)="detailRow(rowData, col, rowData[col.field])"
+              class="text-blue-600 cursor-pointer hover:underline">
+              {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field] }}
             </a>
           </ng-template>
         </ng-container>
+
         <span *ngIf="!col.type && !col.htmlFormat">
-          {{col.format? col.format(rowData[col.field], rowIndex, rowData): rowData[col.field]}}
+          {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field] }}
         </span>
       </td>
     </tr>

@@ -4,7 +4,7 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Out
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { COMMON_IMPORTS } from '@shared/componentkit/table/import-table';
 import { TableUtilityService } from '@shared/componentkit/table/table-utility.service';
-import { Column, ColumnGroup } from '@shared/componentkit/table/table.model';
+import { Column, ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
 import { MultiSelectChangeEvent } from 'primeng/multiselect';
 import { Table, TableColumnReorderEvent } from 'primeng/table';
 
@@ -19,17 +19,28 @@ import { Table, TableColumnReorderEvent } from 'primeng/table';
 export class TableSubheaderComponent extends BasicPrintDataComponent implements OnChanges {
   @Input() groupHeaderTemplate?: TemplateRef<any>;
   @ViewChild('dt', { static: false }) dt!: Table;
-  @Input() dataKey = 'ID';
-  @Input() tableKey: string | undefined = undefined;
-  @Input() columns!: Column[];
+  dataKey = 'ID';
+  tableKey = 'FIN55050';
+  columns: Column[] = [
+    { field: 'VouNo', header: '傳票號碼', type: 'detail', style: 'text-left' },
+    { field: 'Ven_Name', header: '廠商編號/簡稱', style: 'text-left' },
+    { field: 'VouStatus', header: '狀態', style: 'text-left' },
+    { field: 'ORG_ID', header: '部門', style: 'text-left' },
+    { field: 'Org_Name', header: '部門名稱', style: 'text-left' },
+    { field: 'ProjectNo', header: '活動', style: 'text-left' },
+    { field: 'PTA', header: '立沖代號', style: 'text-left' },
+    { field: 'NoteDesc', header: '摘要', style: 'text-left' },
+    { field: 'AccAmt_D', header: '借方金額', format: formatAmount, style: 'text-right' },
+    { field: 'AccAmt_C', header: '貸方金額', format: formatAmount, style: 'text-right' },
+    { field: 'OpeningBal', header: '餘額', format: formatAmount, style: 'text-right' },
+  ];
   originalColumns!: Column[];
   selectedColumns!: Column[];
   @Input() data: any[] = [];
   @Output() dataChange = new EventEmitter<any[]>();
   @Input() loading = false;
-  @Input() groupRowsBy = '';
-  @Input() groupRowsByName = '';
-  @Input() showGroupheader = true;
+  groupRowsBy = 'AccNo';
+  groupRowsByName = 'AccCName';
   @Input() totalRecords = 0;
   @Output() detail = new EventEmitter<any>();
   @Output() detailWithColValue = new EventEmitter<{ row: any, col: Column, value: any }>();
@@ -42,9 +53,7 @@ export class TableSubheaderComponent extends BasicPrintDataComponent implements 
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
       });
     }
-    if (changes['columns'] && this.columns.length > 0) {
-      this.originalColumns = this.columns;
-    }
+    this.originalColumns = this.columns;
   }
   // 行追蹤
   trackByRow = (index: number, item: any) => { return item?.[this.dataKey] || index; };
