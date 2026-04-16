@@ -25,6 +25,30 @@
         ></app-input-number>
       </div>
       <div class="grid p-fluid">
+        <app-input-number
+          class="col-12 md:col-6 lg:col-4"
+          label="未稅金額"
+          controlName="NTX_AMT"
+          [control]="dataForm.controls.NTX_AMT"
+          [submitted]="submitted"
+        ></app-input-number>
+        <app-input-number
+          class="col-12 md:col-6 lg:col-4"
+          label="稅額"
+          controlName="TX_AMT"
+          [control]="dataForm.controls.TX_AMT"
+          [submitted]="submitted"
+        ></app-input-number>
+        <app-input-number
+          class="col-12 md:col-6 lg:col-4"
+          label="含稅金額"
+          controlName="AMT"
+          [control]="dataForm.controls.AMT"
+          [submitted]="submitted"
+        ></app-input-number>
+      </div>
+
+      <!-- <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="發票/收據號碼"
@@ -48,15 +72,12 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
+          <app-input-text
             label="進貨單號"
             controlName="TOKEN_NO"
-            [options]="TOKEN_NO_Options"
-            optionLabel="label"
-            optionValue="value"
             [control]="dataForm.controls.TOKEN_NO"
             [submitted]="submitted"
-          ></app-dropdown>
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -100,18 +121,10 @@
           [control]="dataForm.controls.RECEIPT_DATE"
           [submitted]="submitted"
         ></app-calendar>
-      </div>
+      </div> -->
 
       <hr />
       <div class="grid p-fluid">
-        <app-table-edit
-          title="供應商資料"
-          class="col-12"
-          [columns]="supplierColumn"
-          [data]="supplierData"
-          [loading]="loading"
-          (dataChange)="supplierData = $event"
-        ></app-table-edit>
         <app-table-edit
           title="單據資料"
           class="col-12"
@@ -119,6 +132,14 @@
           [data]="itemData"
           [loading]="loading"
           (dataChange)="itemData = $event"
+        ></app-table-edit>
+        <app-table-edit
+          title="供應商資料"
+          class="col-12"
+          [columns]="supplierColumn"
+          [data]="supplierData"
+          [loading]="loading"
+          (dataChange)="supplierData = $event"
         ></app-table-edit>
       </div>
       <div

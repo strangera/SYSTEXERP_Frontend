@@ -54,7 +54,7 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="進貨單號"
+              label="驗收單號"
               controlName="TOKEN_NO"
               [options]="TOKEN_NO_Options"
               optionLabel="label"
@@ -86,7 +86,7 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="稅別"
+              label="課稅別"
               controlName="TAX_CODE"
               [options]="TAX_CODE_Options"
               optionLabel="label"
@@ -133,6 +133,7 @@
       tableKey="ASS14010"
       [data]="data"
       [columns]="columns"
+      [addButton]="addButton"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
       [selectedItems]="selectedItems"
@@ -143,6 +144,7 @@
       [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
       [showDelete]="true"
       [showCheckBox]="true"
+      [showReportMode]="false"
       dataKey="ID"
       [multiSortMeta]="[{ field: 'RECEIPT_NO', order: 1 }]"
       [totalRecords]="totalRecords"
@@ -150,6 +152,19 @@
       [lazy]="true"
       [loading]="loading"
       [isRowSelectable]="isRowSelectable"
-    ></app-table>
+    >
+      <header>
+        <div class="flex justify-content-end align-items-center gap-2">
+          <p-button
+            styleClass="p-2"
+            label="進貨發票建檔.PDF"
+            [loading]="btnInvoiceLoading"
+            icon="pi pi-file"
+            (click)="onReport(queryForm, 'Invoice')"
+            [disabled]="data.length === 0"
+          ></p-button>
+        </div>
+      </header>
+    </app-table>
   </div>
 </div>

@@ -96,13 +96,34 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
   queryFIN24020WithStatusLabel(body: any) {
     return this.fin24020Service.queryFIN24020(body).pipe(
       map((res: any) => {
-        const wrappers = res?.Data ?? [];
-        const mappedRows = wrappers.map((w: any) => {
-          const row = { ...(w.Data ?? {}), Details: w.Details ?? [] } as any;
-          row.STATUS = this.PTA_KeyOptions.find(opt => String(opt.value) === String(row.STATUS))?.label ?? row.STATUS;
-          return row;
+        // const wrappers = res?.Data ?? [];
+        // const mappedRows = wrappers.map((w: any) => {
+        //   const row = { ...(w.Data ?? {}), Details: w.Details ?? [] } as any;
+        //   row.STATUS = this.PTA_KeyOptions.find(opt => String(opt.value) === String(row.STATUS))?.label ?? row.STATUS;
+        //   return row;
+        // });
+        // return { ...res, Data: mappedRows };
+
+        const rawData = res?.Data ?? [];
+
+        // 根據 ACP_No 進行群組化
+        const groupedMap = new Map();
+
+        rawData.forEach((item: any) => {
+          if (!groupedMap.has(item.ACP_No)) {
+            // 建立主層資料，並初始化 Details 陣列
+            groupedMap.set(item.ACP_No, {
+              ...item,
+              // 轉換狀態標籤
+              STATUS_Label: this.PTA_KeyOptions.find(opt => String(opt.value) === String(item.STATUS))?.label ?? item.STATUS,
+              Details: []
+            });
+          }
+          // 將當前項目加入對應主層的 Details
+          groupedMap.get(item.ACP_No).Details.push(item);
         });
-        return { ...res, Data: mappedRows };
+
+        return { ...res, Data: Array.from(groupedMap.values()) };
       })
     );
   }
@@ -149,6 +170,7 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
       this.queryFIN24020WithStatusLabel(body)
         .pipe(finalize(() => this.loading = false), untilDestroyed(this))
         .subscribe(response => {
+          console.log('response回應', response);
           const rows = response.Data ?? [];
           this.data = rows;
           this.totalRecords = response.TotalCount ?? 0;
