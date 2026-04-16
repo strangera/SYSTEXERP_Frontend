@@ -325,7 +325,6 @@
           icon="pi pi-file"
           (click)="onReport(queryForm, false)"
           [disabled]="data.length === 0"
-          [loading]="btnPDFLoading"
         ></p-button>
         <p-button
           styleClass="p-2"
@@ -334,7 +333,6 @@
           icon="pi pi-file"
           (click)="onReport(queryForm, true)"
           [disabled]="data.length === 0"
-          [loading]="btnExcelLoading"
         ></p-button>
       </div>
     </header>
