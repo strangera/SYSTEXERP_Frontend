@@ -1,4 +1,9 @@
+import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
+import { IDropdownItem } from "@service/utility/dropDownList.service";
+import { ApiResponse } from "@shared/utils/rxjs-operators/validate-api-response";
+import { Observable } from "rxjs";
+import { environment } from "src/environments/environment";
 
 // Response 資料結構
 export interface ASS16020Data {
@@ -51,7 +56,12 @@ export enum PageMode {
     providedIn: 'root'
 })
 export class Ass16020Service {
-    constructor() { }
+    private apiUrl = environment.ApiUrl + '/ASS0000/ASS1000';
+    constructor(private http: HttpClient) { }
 
-    pageType = '';
+
+    // 查詢盤點人員下拉選單
+    queryTBLUSER_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+        return this.http.post<ApiResponse<IDropdownItem[]>>(`${environment.ApiUrl}/queryTBLUSER_DropDownList`, {});
+    }
 }
