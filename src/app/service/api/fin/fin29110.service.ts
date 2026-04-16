@@ -30,13 +30,13 @@ export interface Fin29110Request {
 }
 // ==== 明細每列型別（對應 SP_FIN29110QueryDetail 回傳欄位） ====
 export interface Fin29110DetailRow {
-  RowNo: string;
+  RowNo: number;
   ACP_No: string;
-  STO_No: string; // 注意：SP 裡 SELECT 了 A.STO_No，模型中要有
+  org_id: string;
   ACP_YYYYMM: string;
   ACP_TermNo: string;
   ACP_Amt: number;
-  PTA_Amt: number; // 沖帳金額
+  PTA_Amt: number;
   ACP_BalanceAmt: number;
   ACP_Date: string;
   ACP_ExpectPayDate: string;
@@ -46,7 +46,7 @@ export interface Fin29110DetailRow {
   AccNo: string;
   ACP_SourceNo: string;
   VouNo: string;
-  Status: string; // 已被 SP 轉為中文
+  Status: string;
   AgeDays: number;
 }
 
@@ -55,13 +55,11 @@ export interface Fin29110DetailRequest {
   PageSize?: number;
   PageIndex?: number;
   SortBy?: { field: string; order: number }[];
-  AnalysisDate: string;
-  BucketDays: number;
-  DateType: string;
+  VEN_No: string;
+  ACP_DATE_S: string;  // '0001-01-01' = 無下限
+  ACP_DATE_E: string;  // '9999-12-31' = 無上限
   PayDate: string;
-  Side: string;      // 'O' / 'N'
-  BucketN: number;   // 0~5
-  VEN_No?: string | null;
+  AnalysisDate: string;
 }
 
 @Injectable({ providedIn: 'root' })

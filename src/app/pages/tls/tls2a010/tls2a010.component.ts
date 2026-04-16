@@ -9,6 +9,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -22,7 +23,7 @@ import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { Column, ColumnGroup } from 'src/app/shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { creditCardColumns, creditCardGroup, defaultColumns, TLS2A010Query } from './tls2a010.model';
+import { creditCardColumns, creditCardGroup, defaultColumns, overStatusOptions, TLS2A010Query } from './tls2a010.model';
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
 
@@ -46,7 +47,8 @@ yesterday.setDate(yesterday.getDate() - 1);
     DatePipe,
     TableReportComponent,
     TableEditComponent,
-    DialogComponent
+    DialogComponent,
+    MultiSelectComponent
   ],
 })
 export class TLS2A010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -57,7 +59,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     ECR_No_End: [''],
     PAY_NO: ['', Validators.required],
     Building_No: [''],
-    invoice: [''],
+    OVER_Status: [null],
+    // invoice: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
     pageSize: [30],
     pageIndex: [1],
@@ -69,6 +72,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   paymentToolOptions: IDropdownItem[] = [];
   contact_USR_NameOptions: IDropdownItem[] = [];
   buildingNoOptions: IDropdownItem[] = [];
+  overStatusOptions = overStatusOptions;
   invoiceOptions: any[] = [
     { label: '電子發票', value: '35' },
     { label: '折讓單', value: '33' }
@@ -258,7 +262,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         ECR_No_Start: raw.ECR_No_Start ?? '',
         ECR_No_End: raw.ECR_No_End ?? '',
         PAY_NO: raw.PAY_NO ?? '',
-        Building_No: raw.Building_No ?? ''
+        Building_No: raw.Building_No ?? '',
+        OVER_Status: raw.OVER_Status ?? null
       };
       this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data ? response.Data : [];
@@ -295,7 +300,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       ECR_No_Start: raw.ECR_No_Start ?? '',
       ECR_No_End: raw.ECR_No_End ?? '',
       PAY_NO: raw.PAY_NO ?? '',
-      Building_No: raw.Building_No ?? ''
+      Building_No: raw.Building_No ?? '',
+      OVER_Status: raw.OVER_Status ?? null
     };
     if (!this.isAllSelected || (this.selectedItems.length === this.totalRecords)) {
       // 沒全選或勾到全部資料 給入選擇的資料
@@ -335,7 +341,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       ECR_No_Start: raw.ECR_No_Start ?? '',
       ECR_No_End: raw.ECR_No_End ?? '',
       PAY_NO: raw.PAY_NO ?? '',
-      Building_No: raw.Building_No ?? ''
+      Building_No: raw.Building_No ?? '',
+      OVER_Status: raw.OVER_Status ?? null
     };
     if (!this.isAllSelected || (this.selectedItems.length === this.totalRecords)) {
       // 沒全選或勾到全部資料 給入選擇的資料

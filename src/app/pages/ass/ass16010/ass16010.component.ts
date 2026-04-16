@@ -1,12 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS16010Data } from '@service/api/ass/ass16010.service';
+import { ASS16010Data, ASS16010Service, QueryASS16010Request, QueryFAINVENTORYMRequest } from '@service/api/ass/ass16010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -16,25 +20,40 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
   templateUrl: './ass16010.component.html',
   styleUrl: './ass16010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, TableComponent, TranslateModule, ButtonModule, TableReportComponent]
 })
 export class ASS16010Component extends BasicQueryPageComponent<ASS16010Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    inventoryNo: [],   // 盤點單號
+    INV_ID: [],   // 盤點單號
     ...createPaginationConfig([])
   });
 
   data: ASS16010Data[] = [];
   selectedItems: ASS16010Data[] = [];
-  totalRecords = 0;
+  public readonly totalRecords = signal<number>(0);
+
+  // 列印按鈕載入狀態
+  exportPdfLoading = false;
 
   columns: Column[] = [
-    { field: 'inventoryNo', header: '盤點單號', visible: true },
-    { field: 'inventoryDate', header: '盤點日期', visible: true }
+    { field: 'INV_ID', header: '盤點單號', visible: true },
+    { field: 'INV_DATE', header: '盤點日期', visible: true, format: formatDate },
+  ];
+
+  /** 管理列額外按鈕：匯出 PDF */
+  addButton: AddButton[] = [
+    {
+      label: '匯出 PDF',
+      icon: 'pi pi-file-pdf',
+      action: (row: QueryASS16010Request) => this.onExportPDF(row),
+      disabled: (row: QueryASS16010Request) =>
+        row.INV_ID == null || !this.hasPermission('60'),
+    },
   ];
 
   constructor(
-    private notificationService: NotificationService,
+    private ass16010Service: ASS16010Service,
+    private readonly fileExportService: FileExportService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -42,51 +61,62 @@ export class ASS16010Component extends BasicQueryPageComponent<ASS16010Data> imp
   ngOnInit(): void {
     this.ProgNo = '310040';
     this.initializePage('ASS16010', '/ass/ass16010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadDropdownOptions();
   }
 
-  inventoryNoOptions = [
-    { label: '202201001', value: '20220101' },
-    { label: '202201002', value: '20220102' },
-    { label: '202201003', value: '20220103' },
-    { label: '202201004', value: '20220104' },
-    { label: '202201005', value: '20220105' }
-  ]
+  INV_ID_Options = signal<{ label: string | undefined; value: string | undefined }[]>([]);
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+  onSubmit(form: FormGroup) {
+    console.log(form.value);
 
-    // 查詢假資料
-    this.data = [
-      { inventoryNo: '202201001', inventoryDate: '2022/01/01' },
-      { inventoryNo: '202201002', inventoryDate: '2022/01/02' },
-      { inventoryNo: '202201003', inventoryDate: '2022/01/03' },
-      { inventoryNo: '202201004', inventoryDate: '2022/01/04' },
-      { inventoryNo: '202201005', inventoryDate: '2022/01/05' }
-    ];
-
-    this.loading = false;
-    this.notificationService.unblockUi();
+    this.handleSubmit(form, () => {
+      this.ass16010Service.queryASS16010(form.value)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords.set(response.TotalCount);
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+        });
+    });
   }
 
-  // onDelete(selectedItems: ASS16010Data[]) {
-  //     this.messageService.confirm({
-  //       header: `是否確認刪除 ${selectedItems.length} 筆資料？`,
-  //       accept: () => {
-  //         const idList = selectedItems.map(item => item.ID);
-  //         this.ass16010Service.deleteASS16010({ idList })
-  //           .pipe(untilDestroyed(this))
-  //           .subscribe(() => {
-  //             this.messageService.successBubble('刪除成功');
-  //             this.onSubmit(this.queryForm);
-  //           });
-  //       }
-  //     });
-  //   }
+  isEditDisabled = (): boolean => {
+  return true;
+};
 
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+  isDetailDisabled = (): boolean => {
+  return true;
+};
+
+  onExportPDF(selectedItems: QueryASS16010Request): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+
+    const req$ = this.ass16010Service.exportPDFASS16010({ ...selectedItems });
+    this.fileExportService
+      .executeFileExport(req$, '.pdf', v => (this.exportPdfLoading = v))
+      .subscribe();
+  }
+
+
+  /**
+     * 載入下拉選單選項
+     */
+  private loadDropdownOptions(): void {
+    // 申請人代號
+    const req: QueryFAINVENTORYMRequest = { IS_ALL_STATUS: 'Y' };
+    this.ass16010Service.queryFAINVENTORYM_DropDownList(req).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.INV_ID}`,
+          value: item.INV_ID,
+        }));
+        this.INV_ID_Options.set(options);
+      },
+    });
+
+
   }
 }

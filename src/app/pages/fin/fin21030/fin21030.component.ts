@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -24,7 +24,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
   standalone: true,
   imports: [MenubarComponent, DropdownComponent,
     AccordionModule, FormsModule, ReactiveFormsModule,
-    InputTextComponent, MultiSelectComponent, ButtonComponent, TranslateModule, TableReportComponent]
+    InputTextComponent, MultiSelectComponent, ButtonComponent, TranslateModule, TableComponent]
 })
 
 export class FIN21030Component extends BasicQueryPageComponent<any> implements OnInit {

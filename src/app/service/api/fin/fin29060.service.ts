@@ -41,8 +41,8 @@ export interface FIN29060Data {
   PayRefDate: string;                 // 開票/匯款日期
   BalanceAmt: number;                 // 帳款餘額
   PaymentNo: string;                  // 電匯/開票/單號
-  VoucherNo: string;                  // 傳票號碼
-  NotPayAmy: number;                  // 未付金額
+  PayVoucherNo: string;                  // 傳票號碼
+  NotPayAmt: number;                  // 未付金額
 }
 
 // 總計資料介面
@@ -50,10 +50,10 @@ export interface FIN29060TotalData {
   VendorNo: string;                   // 廠商編號
   ACP_Amt_Subtotal: number;          // 立帳金額小計
   PayAmy_Subtotal: number;           // 付款金額小計
-  NotPayAmy_Subtotal: number;        // 未付金額小計
+  NotPayAmt_Subtotal: number;        // 未付金額小計
   ACP_Amt_Total: number;             // 立帳金額總計
   PayAmy_Total: number;              // 付款金額總計
-  NotPayAmy_Total: number;           // 未付金額總計
+  NotPayAmt_Total: number;           // 未付金額總計
 }
 
 // 查詢回應資料結構

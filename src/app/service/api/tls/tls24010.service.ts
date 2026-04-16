@@ -106,6 +106,7 @@ export interface POS5008Data {
   PAY_OverPay?: string;
   CRD_NoTXN_CouponNoTXN_PayDesc?: string | null;
   Check_Status?: string; // 審核狀態 (Y: 已審核, N: 未審核)
+  isLocked?: boolean; // 是否鎖定 (已審核的資料將被鎖定，無法編輯)
 }
 
 export interface InsertTLS24010Payload {

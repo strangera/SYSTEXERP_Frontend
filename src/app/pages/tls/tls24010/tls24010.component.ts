@@ -146,11 +146,17 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     });
   }
   onECRNoChanged(ecrNo: string): void {
-    if (!ecrNo) return this.queryForm.get('TLT_No')?.setValue(null);
+    if (!ecrNo) return this.queryForm.get('TLT_No')?.setValue(null), this.queryForm.get('TLT_No')?.enable();
     this.tLS41010Service.queryTLS41010({ ECR_No: ecrNo }).pipe(untilDestroyed(this)).subscribe(res => {
       if (res.Data.length !== 0) {
         const ECR_TLT_No = this.TLT_NoOptions.filter(option => option.No === res.Data[0].ECR_TLT_No);
         this.queryForm.get('TLT_No')?.setValue(ECR_TLT_No.length > 0 ? ECR_TLT_No[0].No : null);
+        // 自收機台只能補登對應的櫃位
+        if (this.queryForm.get('TXN_GUIPaper')?.value === 'E' && res.Data[0].ECR_Type === '2' && ECR_TLT_No.length > 0) {
+          this.queryForm.get('TLT_No')?.disable();
+        } else {
+          this.queryForm.get('TLT_No')?.enable();
+        }
       }
     });
   }
@@ -410,9 +416,9 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       frm.get('talent_id')?.setValue(data?.talent_id);
       frm.get('rece_yn')?.setValue(data?.rece_yn);
     }
-    const inertData = { ...frm.value, TXN_No: '系統自動產生' };
+    const inertData = { ...frm.getRawValue(), TXN_No: '系統自動產生' };
     this.queryStateService.setQueryState(this.ProgNo, frm.value);
-    this.onCreate(inertData, frm.value);
+    this.onCreate(inertData, frm.getRawValue());
   }
 
   onCancel(rowdata: TLS24010Data): void {

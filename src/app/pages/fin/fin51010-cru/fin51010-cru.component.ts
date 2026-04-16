@@ -4,6 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin51010Service, QueryFIN51010DetailLine, QueryFIN51010Response, UpdateFIN51010Request } from '@service/api/fin/fin51010.service';
+import { TLS2C040Service } from '@service/api/tls/tls2c040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -12,8 +13,10 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { PanelModule } from 'primeng/panel';
+import { TabViewModule } from 'primeng/tabview';
 import { finalize, shareReplay } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -25,7 +28,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   imports: [
     MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule,
     InputTextComponent, ButtonComponent, TranslateModule,
-    TableEditComponent, NgIf, CalendarComponent, DropdownComponent
+    TableEditComponent, NgIf, CalendarComponent, DropdownComponent,
+    TableReportComponent, TabViewModule
   ],
 })
 export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Response> implements OnInit {
@@ -42,17 +46,59 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     UPD_USR_No: [{ value: null as string | null, disabled: true }],   // 修改者
     UPD_Date: [{ value: null as string | null, disabled: true }],     // 修改日
   });
+  arData: any[] = []; // 應收資料
+  arTotalRecords = 0;
+  arFooterData = { ar_amt: 0 };
+  arLoading = false;
+  arColumns: ReportColumn[] = [
+    { field: 'VOUNO', header: '應收帳款代號', align: 'left' },
+    { field: 'ProjectNo', header: '專案代號', align: 'left', width: '40px' },
+    { field: 'org_id', header: '組織代碼', align: 'left', width: '40px' },
+    { field: 'org_name', header: '組織名稱', align: 'left' },
+    { field: 'CustomerNo', header: '客戶代碼', align: 'left' },
+    { field: 'DetailNo', header: '廠商代號', align: 'left' },
+    { field: 'VouType', header: '傳票類型', align: 'left' },
+    { field: 'sam_yyymm', header: '年月', align: 'left', width: '40px' },
+    { field: 'sam_termno', header: '帳次', align: 'left', width: '40px' },
+    { field: 'ar_amt', header: '應收帳款金額', format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'pta_amt', header: '沖帳金額', format: formatAmount, align: 'right' },
+    { field: 'accno', header: '會計科目', align: 'left' },
+    { field: 'ent_date', header: '立帳日期', align: 'left', format: formatDate },
+    { field: 'perget_date', header: '預計收款日期', align: 'left', format: formatDate },
+    { field: 'SrcVouNo', header: '原始憑證', align: 'left' },
+    { field: 'notedesc', header: '備註', align: 'left' },
+  ];
+  apData: any[] = []; // 應付資料
+  apFooterData = { ap_amt: 0 };
+  apTotalRecords = 0;
+  apLoading = false;
+  apColumns: ReportColumn[] = [
+    { field: 'VOUNO', header: '應付帳款代號', align: 'left' },
+    { field: 'ProjectNo', header: '專案代號', align: 'left', width: '40px' },
+    { field: 'org_id', header: '組織代碼', align: 'left', width: '40px' },
+    { field: 'org_name', header: '組織名稱', align: 'left' },
+    { field: 'CustomerNo', header: '客戶代碼', align: 'left' },
+    { field: 'DetailNo', header: '廠商代號', align: 'left' },
+    // 後端回傳 VouType = GLS1010.Voucher_Name（依傳票型態/種類對應的中文名稱）
+    { field: 'VouType', header: '傳票類型', align: 'left' },
+    { field: 'sam_yyymm', header: '年月', align: 'left', width: '40px' },
+    { field: 'sam_termno', header: '帳次', align: 'left', width: '40px' },
+    { field: 'ap_amt', header: '應付帳款金額', format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'pta_amt', header: '沖帳金額', format: formatAmount, align: 'right' },
+    { field: 'accno', header: '會計科目', align: 'left' },
+    { field: 'ent_date', header: '立帳日期', align: 'left', format: formatDate },
+    { field: 'perget_date', header: '預計付款日期', align: 'left', format: formatDate },
+    { field: 'SrcVouNo', header: '原始憑證', align: 'left' },
+    { field: 'notedesc', header: '備註', align: 'left' },
+    // { field: 'AP_Status', header: '狀態', align: 'left' },
+  ];
   data: QueryFIN51010DetailLine[] = [];
   columns: EditColumn[] = [
     { field: 'SerNo', header: '序號', width: '60px', textAlign: 'left' },
     {
       field: 'AccNo', header: '科目代號', width: '120px', type: 'dropdown', textAlign: 'left',
-      optionsAsync: true,
-      options: () => this.ledgerOptions$, // 使用科目代號 API
-      optionLabel: 'value',                        // 顯示選中的代碼
-      optionValue: 'value',                        // 綁定的值
-      templateLabel: 'label',                      // 下拉清單顯示 "代碼 - 名稱"
-      showClear: false,
+      optionsAsync: true, options: () => this.ledgerOptions$, optionLabel: 'value', optionValue: 'value',
+      templateLabel: 'label', showClear: false,
       onChange: (value: any, rowData: any) => {
         if (value) {
           this.dropdown.queryGls1005_ledgerMD().subscribe(options => {
@@ -72,13 +118,8 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     { field: 'Debit_Amt', header: '借方金額', width: '120px', format: formatAmount, textAlign: 'right', aggregate: 'sum' },
     { field: 'Credit_Amt', header: '貸方金額', width: '120px', format: formatAmount, textAlign: 'right', aggregate: 'sum' },
     {
-      field: 'ORG_ID', header: '組織代號', width: '120px', type: 'dropdown', textAlign: 'left',
-      optionsAsync: true,
-      options: () => this.sys3100Options$,
-      optionLabel: 'No',       // 對應您 Option 介面的 label (No - Name)
-      optionValue: 'value',       // 對應您 Option 介面的 value (No)
-      templateLabel: 'label',
-      showClear: false,
+      field: 'ORG_ID', header: '組織代號', width: '120px', type: 'dropdown', textAlign: 'left', showClear: false,
+      optionsAsync: true, options: () => this.sys3100Options$, optionLabel: 'No', optionValue: 'value', templateLabel: 'label',
       onChange: (value: any, rowData: any) => {
         if (value) {
           this.dropdown.querySys3100().subscribe(options => {
@@ -107,6 +148,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   constructor(
     private readonly fin51010Service: Fin51010Service,
     private readonly dropdown: DropdownApiService,
+    private readonly tLS2C040Service: TLS2C040Service
   ) {
     super();
   }
@@ -117,28 +159,42 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   initData() {
     this.initTable = false;
     this.initializePage('FIN51010', this.dataForm);
+    const mainId = this.rowdata?.id;
+    if (!mainId) return;
     this.formTitle = '傳票資料'
-    if (this.rowdata?.id) {
-      this.loading = true;
-      this.fin51010Service.queryFIN51010Detail({ GLS6001_ID: this.rowdata?.id }).pipe(
-        finalize(() => (this.loading = false)),
-        untilDestroyed(this)
-      ).subscribe((res) => {
-        if (res.Data && res.Data.length > 0) {
-          const mainData = res.Data[0];
-          this.dataForm.patchValue(mainData);
+    // 1. 主資料 (Detail)
+    this.fin51010Service.queryFIN51010Detail({ GLS6001_ID: mainId }).pipe(finalize(() => (this.loading = false)), untilDestroyed(this)).subscribe((res) => {
+      if (res.Data && res.Data.length > 0) {
+        const mainData = res.Data[0];
+        this.dataForm.patchValue(mainData);
+        this.data = (mainData.LineList || []).map((line: any) => ({
+          ...line,
+          AccNo: line.AccNo?.trim(),
+          ORG_ID: line.ORG_ID?.trim(),
+        }));
+        this.initTable = true;
+      }
+    });
 
-          // 處理明細資料，移除特定欄位的空白
-          this.data = (mainData.LineList || []).map((line: any) => ({
-            ...line,
-            // 使用 trim() 移除空白，並確保欄位有值才處理
-            AccNo: line.AccNo?.trim(),
-            ORG_ID: line.ORG_ID?.trim(), // 如果組織代號也有同樣問題，可以一併處理
-          }));
-          this.initTable = true;
-        }
-      });
-    }
+    // 2. 應收帳款資料 (AR)
+    this.arLoading = true;
+    this.tLS2C040Service.queryTLS2C040_GLS6004({ id: mainId }).pipe(finalize(() => (this.arLoading = false)), untilDestroyed(this)).subscribe(res => {
+      if (res.Data) {
+        this.arData = res.Data._GLS6004List || [];
+        this.arFooterData = { ar_amt: res.Data?.Total_ar_amt };
+        this.arTotalRecords = this.arData.length; // 修正：應為 arData 的長度
+      }
+    });
+
+    // 3. 應付帳款資料 (AP)
+    this.apLoading = true;
+    this.tLS2C040Service.queryTLS2C040_GLS6005({ id: mainId }).pipe(finalize(() => (this.apLoading = false)), untilDestroyed(this)).subscribe(res => {
+      if (res.Data) {
+        this.apData = res.Data._GLS6005List || [];
+        this.apFooterData = { ap_amt: res.Data?.Total_AP_Amt };
+        this.apTotalRecords = this.apData.length; // 修正：應為 apData 的長度
+      }
+    });
   }
   onSubmit(frm: FormGroup) {
     const mainId = this.rowdata?.id;
@@ -158,7 +214,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
               Remark: frm.value.Remark,
               DetailList: modifiedDetails
             };
-            this.fin51010Service.updateFIN51010(body).pipe(untilDestroyed(this)).subscribe(res => {
+            this.fin51010Service.updateFIN51010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
               this.messageService.successBubble(res.Message || '修改成功');
               this.onCancel();
             });

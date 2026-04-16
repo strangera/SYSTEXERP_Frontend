@@ -21,6 +21,7 @@ import { forkJoin } from 'rxjs';
 export class Tls24010PaynoComponent implements OnInit, OnChanges {
   @Input() data: POS5008Data[] = [];
   payNoData: POS5008Data[] = [];
+  checkPayNoList: string[] = []; // 已審核的付款別清單
   private previousData: POS5008Data[] = [];
   columns: EditColumn[] = [
     { field: 'PAY_No', header: '付款別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'PAY_No', onChange: (rowData: any, value: any, col: EditColumn, index: number) => this.handlePayNoChange(rowData) },
@@ -71,7 +72,7 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
       POS1006Result: this.dropDownListService.queryPOS1006_DropDownList()
     }).pipe(untilDestroyed(this)).subscribe(({ CheckResult, POS1006Result }) => {
 
-      const payNoList = CheckResult.Data?.payNoList || [];
+      this.checkPayNoList = CheckResult.Data?.payNoList || [];
 
       this.PAY_TypeOptions = POS1006Result.Data.map(item => ({
         ...item,
@@ -82,7 +83,7 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
 
       // 下拉選單排除掉已被審核的項目
       const filteredOptions = this.PAY_TypeOptions.filter(
-        item => !payNoList.includes(item.No)
+        item => !this.checkPayNoList.includes(item.No)
       );
 
       this.columns = this.columns.map(col => {
@@ -214,6 +215,6 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
 
   /** 有已審核資料才顯示提示訊息 */
   get hasCheckedData(): boolean {
-    return this.payNoData?.some(row => row.Check_Status === 'Y') ?? false;
+    return this.checkPayNoList.length > 0;
   }
 }

@@ -38,6 +38,7 @@
         </div>
       </div>
     </div>
+    <ng-content></ng-content>
   </ng-template>
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
@@ -161,7 +162,11 @@
         (keydown)="onCellKeydown($event, rowIndex, colIndex)"
         [style]="{ width: col.width, 'text-align': col.textAlign || 'center' }" [ngClass]="getTdClass(rowData, col)">
         <ng-container *ngIf="!col.hidden || !col.hidden(rowData, rowIndex)">
-          <ng-container *ngIf="col.type && getEditComponent(col.type) as componentType">
+          <ng-container *ngIf="col.type === 'custom' && customCellTemp">
+            <ng-container
+              *ngTemplateOutlet="customCellTemp; context: { rowData: rowData, col: col, index: rowIndex }"></ng-container>
+          </ng-container>
+          <ng-container *ngIf="col.type && col.type !== 'custom' && getEditComponent(col.type) as componentType">
             <ng-container *ngComponentOutlet="
           componentType;
           inputs: { cellInput: cellInputData(rowData, col, rowIndex) }

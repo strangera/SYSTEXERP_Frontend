@@ -50,12 +50,42 @@
             [control]="dataForm.controls.UPD_Date"></app-calendar>
         </div>
       </div>
+      <p-tabView class="mt-3 block">
 
-      <app-table-edit *ngIf="initTable" title="傳票明細" [data]="data" [columns]="columns" [showDelete]="false"
-        class="mt-3 block" [showPaginator]="true" [loading]="loading" [canInsert]="false" [showFooter]="true"
-        [showCheckBox]="false" [disabled]="isFormReadable">
-      </app-table-edit>
+        <p-tabPanel header="傳票明細">
+          <app-table-edit *ngIf="initTable" title="傳票明細" [data]="data" [columns]="columns" [showDelete]="false"
+            [showPaginator]="true" [loading]="loading" [canInsert]="false" [showFooter]="true" [showCheckBox]="false"
+            [disabled]="isFormReadable">
+          </app-table-edit>
+        </p-tabPanel>
 
+        <p-tabPanel header="應收資料">
+          <div class="relative">
+            <div *ngIf="arLoading"
+              class="absolute w-full h-full flex justify-content-center align-items-center surface-0 opacity-50 z-2">
+              <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            </div>
+
+            <app-table-report [data]="arData" [columns]="arColumns" [showManage]="false" [footerData]="arFooterData"
+              [showSummary]="false" [totalRecords]="arTotalRecords" [showDelete]="false" [showCaption]="false">
+            </app-table-report>
+          </div>
+        </p-tabPanel>
+
+        <p-tabPanel header="應付資料">
+          <div class="relative">
+            <div *ngIf="apLoading"
+              class="absolute w-full h-full flex justify-content-center align-items-center surface-0 opacity-50 z-2">
+              <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            </div>
+
+            <app-table-report [data]="apData" [columns]="apColumns" [showManage]="false" [footerData]="apFooterData"
+              [showSummary]="false" [totalRecords]="apTotalRecords" [showDelete]="false" [showCaption]="false">
+            </app-table-report>
+          </div>
+        </p-tabPanel>
+
+      </p-tabView>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (click)="onClear()"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
