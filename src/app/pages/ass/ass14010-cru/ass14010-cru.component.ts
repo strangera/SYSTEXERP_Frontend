@@ -53,7 +53,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     TICKET_BE: [null, [Validators.max(10), this.validationService.numberValidator]], // 付款天數(看起來好像新增/編輯才有??)
     TOKEN_NO: [[]], // 驗收單號(多筆) > 禁止編輯動態填寫
     RECEIPT_TYPE: [], //單據種類(0發票 1收據)
-    RECEIPT_NO: ['', [Validators.maxLength(1)]], // 發票/收據號碼
+    RECEIPT_NO: ['', [Validators.maxLength(1000)]], // 發票/收據號碼
     RECEIPT_DATE: [null], // 發票日期
     TICKET_DATE: [null], // 票據到期日
     DEC_YM: [null], // 申報年月(YYYYMM)
@@ -84,22 +84,15 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   // ---------供應商 表格-------------------------------------------------------
   orgsupplierData: Ass14010Supplier[] = []; // 原始供應商備份
   supplierData: Ass14010Supplier[] = [];
-  supplierColumn: EditColumn[] = [
-    { field: 'SUPPLIER_ID', header: '供應商代碼', type: 'input' },
-    { field: 'SUPPLIER_NAME', header: '供應商名稱', type: 'input' },
-    { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber' },
-    { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber' },
-    { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber' },
-    { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber' },
-  ];
+  supplierColumn: EditColumn[] = []; //等下拉讀取完成後寫入定義
   // ---------單據明細 表格-------------------------------------------------------
   orgitemData: Ass14010Items[] = []; // 原始供應商備份
   itemData: Ass14010Items[] = [];
   itemColumn: EditColumn[] = [
-    { field: 'TOKEN_NO', header: '進貨單號 / 採購單號', type: 'input' },
-    { field: 'NTX_AMT', header: '單據未稅金額', type: 'inputNumber' },
-    { field: 'TX_AMT', header: '單據稅額', type: 'inputNumber' },
-    { field: 'AMT', header: '單據含稅金額', type: 'inputNumber' },
+    { field: 'TOKEN_NO', header: '驗收單號', type: 'input' },
+    { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber' },
+    { field: 'TX_AMT', header: '稅額', type: 'inputNumber' },
+    { field: 'AMT', header: '含稅金額', type: 'inputNumber' },
   ];
   // ----------------------------------------------------------------
   constructor(
@@ -133,6 +126,10 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
+            console.log('edit submit', frm.getRawValue());
+            console.log('edit supplierData', this.supplierData);
+            console.log('edit itemData', this.itemData);
+            this.loading = false;
             // const formValue = frm.getRawValue();
             // this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
             //   this.onCancel();
@@ -156,18 +153,31 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
           // 確保 res.Data.QueryData 有資料
           console.log('res', res);
 
-          //   if (firstDetail) {
-          //     // 建議檢查 API 回傳實際欄位是大寫 Supplier 還是小寫 supplier
-          //     this.orgsupplierData = firstDetail.Supplier || [];
-          //     this.supplierData = [...this.orgsupplierData]; // 使用展開運算子避免引用同一物件
+          // 2. 程式碼存取時要加上索引 [0]
+          if (res.Data) {
+            // 檢查 Supplier 是否為陣列，若不是則轉為陣列
+            const supplierRaw = res.Data.Supplier;
+            this.supplierData = Array.isArray(supplierRaw)
+              ? [...supplierRaw]
+              : (supplierRaw ? [supplierRaw] : []);
 
-          //     this.orgitemData = firstDetail.Details || [];
-          //     this.itemData = [...this.orgitemData];
-          //   } else {
-          //     console.warn('API 回傳資料列為空');
-          //     this.supplierData = [];
-          //     this.itemData = [];
-          //   }
+
+            // 檢查 Details 是否為陣列
+            const detailsRaw = res.Data.Details;
+            this.itemData = Array.isArray(detailsRaw)
+              ? [...detailsRaw]
+              : (detailsRaw ? [detailsRaw] : []);
+
+            // 同步備份原始資料
+            this.orgsupplierData = [...this.supplierData];
+            this.orgitemData = [...this.itemData];
+
+            console.log('處理後的供應商資料', this.supplierData);
+          } else {
+            // 如果整個 res.Data 都是空的，也要清空表格防止舊資料殘留
+            this.supplierData = [];
+            this.itemData = [];
+          }
         });
     }
   }
@@ -184,6 +194,15 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
           value: item.VEN_No ?? item.No ?? '',
           label: `${item.VEN_No ?? item.No ?? ''} - ${item.Name ?? ''}`,
         }));
+
+        this.supplierColumn = [
+          { field: 'SUPPLIER_ID', header: '供應商代碼', type: 'dropdown', options: this.SUPPLIER_ID_Options, optionValue: 'value', optionLabel: 'label' },
+          // { field: 'SUPPLIER_NAME', header: '供應商名稱', type: 'input' },
+          { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber' },
+          { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber' },
+          { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber' },
+          { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber' },
+        ]
       });
     // 進貨單號
     this.dropdownApiService

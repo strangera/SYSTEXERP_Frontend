@@ -23,11 +23,7 @@ export interface ass14010MainResponse {
 //明細API回應
 export interface ass14010DetailResponse {
   Status: string;
-  Data: {
-    QueryData: ass14010detailData[]; // 資料列陣列
-    TotalRows: number;
-    TotalPages: number;
-  };
+  Data: ass14010detailData; // 資料列陣列
   Error: {
     Code: string;
     Message: string;
@@ -114,7 +110,7 @@ export class Ass14010Service {
 
   // 查詢發票作業 明細
   queryDetailASS14010(body: any): Observable<ass14010DetailResponse> {
-    return this.http.post<ass14010DetailResponse>(`${this.apiUrl}/queryASS14010`, body);
+    return this.http.post<ass14010DetailResponse>(`${this.apiUrl}/queryDetailASS14010`, body);
   }
 
   // 新增 發票建檔作業

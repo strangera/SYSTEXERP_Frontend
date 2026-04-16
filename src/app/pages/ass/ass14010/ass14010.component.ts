@@ -11,8 +11,10 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { ass14010mainData, Ass14010Service } from './../../../service/api/ass/ass14010.service';
 
 //3.1.4.1  進貨發票建檔作業
@@ -24,6 +26,7 @@ import { ass14010mainData, Ass14010Service } from './../../../service/api/ass/as
   imports: [
     AccordionModule,
     ButtonComponent,
+    ButtonModule,
     CalendarRangeQuickComponent,
     DropdownComponent,
     FormsModule,
@@ -91,7 +94,19 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
     { field: 'REDU_CODE_NAME', header: '扣抵別', visible: true },
   ];
 
+  btnVoucharLoading = false;
+
+  addButton: AddButton[] = [
+    {
+      label: '列印請款單',
+      icon: 'pi pi-print',
+      loading: () => this.btnVoucharLoading,
+      action: (rowData: ass14010mainData) => { this.printVouchar(rowData.RECEIPT_INS_ID) },
+    }
+  ];
+
   selectedItems: ass14010mainData[] = [];// 多選項目
+
   // ----------------------------------------------------------------
   constructor(
     private ass14010Service: Ass14010Service,
@@ -236,5 +251,63 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
 
   isRowSelectable(rowData: ass14010mainData): boolean {
     return rowData.RECEIPT_STATUS === '1';
+  }
+
+  btnInvoiceLoading = false;
+  //匯出報表
+  onReport(frm: FormGroup, PDFType: string) {
+    // console.log('進貨發票建檔print請求', JSON.stringify(frm.value));
+    if (PDFType === 'Invoice') { // 匯出發票建檔作業PDF
+      this.btnInvoiceLoading = true;
+      this.ass14010Service
+        .exportPDFASS14010(frm.value)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.btnInvoiceLoading = false)
+        )
+        .subscribe(blob => {
+          if (blob) {
+            this.downloadBlob(blob, `進貨發票建檔查詢_${this.getTimestamp()}`);
+          }
+        });
+    }
+  }
+
+  //列印請款單
+  printVouchar(RECEIPT_INS_IDS: string) {
+    if (!RECEIPT_INS_IDS) {
+      this.messageService.errorBubble('必須輸入請款單號');
+    } else {
+      this.btnVoucharLoading = true;
+      this.ass14010Service
+        .exportPDFPaymentVoucher({ RECEIPT_INS_IDS: RECEIPT_INS_IDS })
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.btnVoucharLoading = false)
+        )
+        .subscribe(blob => {
+          if (blob) {
+            this.downloadBlob(blob, `請款單_${this.getTimestamp()}`);
+          }
+        });
+    }
+  }
+
+  private getTimestamp(): string {
+    const now = new Date();
+    return now.getFullYear().toString() +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') + '_' +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0');
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(blobUrl);
   }
 }
