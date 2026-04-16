@@ -45,7 +45,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   // ----------------------------------------------------------------
   receiveForm = this.formBuilder.nonNullable.group({
     STO_NO: [this.authService.getUserInfo()?.SYS_StoreNo || null], //token取
-    RECEIPT_NO: [null], // 發票/收據號碼
+    RECEIPT_NO: [''], // 發票/收據號碼
   });
   dataForm = this.formBuilder.nonNullable.group({
     // 明細由 STO_NO、RECEIPT_NO進行查詢
@@ -111,7 +111,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     this.initializePage('ASS14010', this.receiveForm);
 
     const { STO_NO, RECEIPT_NO } = this.receiveForm.getRawValue();
-    // this.get14010Detail(STO_NO, RECEIPT_NO);
+    this.get14010Detail(STO_NO, RECEIPT_NO);
     this.loadOptions();
   }
 
