@@ -1,19 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ValidationService } from '../../../shared/service/validation.service';
-//
+import { ass14010mainData, Ass14010Service } from './../../../service/api/ass/ass14010.service';
 
 //3.1.4.1  進貨發票建檔作業
 @Component({
@@ -21,129 +21,220 @@ import { ValidationService } from '../../../shared/service/validation.service';
   templateUrl: './ass14010.component.html',
   styleUrl: './ass14010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, TableComponent, TranslateModule]
+  imports: [
+    AccordionModule,
+    ButtonComponent,
+    CalendarRangeQuickComponent,
+    DropdownComponent,
+    FormsModule,
+    InputTextComponent,
+    MenubarComponent,
+    ReactiveFormsModule,
+    TableComponent,
+    TranslateModule
+  ]
 })
-export class ASS14010Component extends BasicQpageComponent implements OnInit {
-  //
+export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData> implements OnInit {
+  // 查詢
   queryForm = this.formBuilder.group({
-    invoiceNumber: [, [this.validationService.numberValidator, Validators.maxLength(16)]], // 發票/收據號碼
-    supplierCode: [], // 供應商編號
-    requestType: [], // 請款單據種類
-    orderNumber: [, [this.validationService.numberValidator, Validators.maxLength(11)]], // 驗收單號
-    maintenanceNumber: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 發票維護單號
-    invoiceFormat: [], // 發票格式
-    taxType: [], // 稅別
-    deductionsType: [], // 扣抵別
+    // ass14010mainData
+    MID: [this.authService.getUserInfo()?.mid || null], //token取
+    STO_NO: [this.authService.getUserInfo()?.SYS_StoreNo || null], //token取
+
+    RECEIPT_NO: ['', [Validators.maxLength(10)]], // 發票/收據號碼
+    SUPPLIER_ID: ['', [Validators.maxLength(50)]], // 供應商代碼
+    RECEIPT_TYPE: ['', [Validators.maxLength(1)]], // 單據種類(0發票 1收據)
+    TOKEN_NO: ['', [Validators.maxLength(20)]], // 進貨單號
+    RECEIPT_INS_ID: ['', [Validators.maxLength(20)]], // 發票維護單號
+    INV_FORMAT: ['', [Validators.maxLength(20)]], // 發票格式
+
+    TAX_CODE: ['', [Validators.maxLength(20)]], // 稅別
+    REDU_CODE: ['', [Validators.maxLength(20)]], // 扣抵別
+    RECEIPT_DATE_S: [null], // 發票日期(起)
+    RECEIPT_DATE_E: [null], // 發票日期(迄)
+
+    //分頁查詢
+    ...createPaginationConfig([{ field: 'RECEIPT_NO', order: 1 }]), // 分頁和排序參數
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
   // 表格
   // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      'invoiceNumber': 'CG12345678', 'orderNumber': '2014030001', 'maintenanceNumber': 'I0000001', 'supplierCode': '03550014-1/A公司',
-      'requestType': '發票', 'invoiceFormat': 21, 'taxType': '應稅',
-      'noTaxAmount': 65400, 'taxAmount': 3270, 'totalAmount': 658670, 'deductionsType': '代表近項可扣抵之進貨及費用',
-    },
-  ];
-  columns: any[] = [
-    { field: 'invoiceNumber', header: '發票/收據號碼', visible: true },
-    { field: 'orderNumber', header: '驗收單號', visible: true },
-    { field: 'maintenanceNumber', header: '發票維護單號', visible: true },
-    { field: 'supplierCode', header: '供應商編號', visible: true },
-    { field: 'requestType', header: '請款單據種類', visible: true },
-    { field: 'invoiceFormat', header: '發票格式', visible: true },
-    { field: 'taxType', header: '稅別', visible: true },
-    { field: 'noTaxAmount', header: '未稅金額', visible: true },
-    { field: 'taxAmount', header: '稅額', visible: true },
-    { field: 'totalAmount', header: '金額', visible: true },
-    { field: 'deductionsType', header: '扣抵別', visible: true },
-  ];
-  // ----------------------------------------------------------------
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  supplierCodeOptions: any[] = [];
-  requestTypeOptions: any[] = [];
-  invoiceFormatOptions: any[] = [
-    { value: 1, label: '21/進項三聯式、電子計算機統一發票' },
-    { value: 2, label: '22/進項二聯式收銀機統一發票、載有稅額之其他憑證' },
-    { value: 3, label: '25/進向三連式收銀機統一發票及一般稅額計算之電子發票' },
-    { value: 4, label: '26/彙總登陸每張稅額五百元以下之盡項三聯式、電子計算機之統一發票' },
-    { value: 5, label: '27/彙總登陸每張稅額五百元以下之盡項二聯式收銀雞統一發票、載有稅額之其他憑證' },
-    { value: 6, label: '28/進項海關代徵營業稅繳納證' },
+  SUPPLIER_ID_Options: { value: string; label: string }[] = []; // 供應商編號 下拉選項 (ass12050: queryPOS2013_DropDownList)
+  RECEIPT_TYPE_Options: { value: string; label: string }[] = [ // 單據種類 下拉選項
+    { value: "0", label: '發票' },
+    { value: "1", label: '單據' },
   ];
-  taxTypeOptions: any[] = [
-    { value: 1, label: '應稅' },
-    { value: 2, label: '免稅' },
+  TOKEN_NO_Options: { value: string; label: string }[] = []; // 進貨單號 下拉選項 (ass15070: queryFAASSCHKMASS15070_DropDownList)
+  INV_FORMAT_Options: { value: string; label: string }[] = []; // 發票格式 下拉選項 (fin15030: queryTDS1007_DropDownList)
+  TAX_CODE_Options: { value: string; label: string }[] = [
+    { value: "1", label: '應稅' },
+    { value: "3", label: '免稅' },
   ];
-  deductionsTypeOptions: any[] = [
-    { value: 1, label: '代表近項可扣抵之進貨及費用' },
-    { value: 2, label: '代表近項可扣抵之固定資產' },
-    { value: 3, label: '代表近項不可扣抵之進貨及費用' },
-    { value: 4, label: '代表近項不可扣抵之固定資產' },
+  REDU_CODE_Options: { value: string; label: string }[] = []; // 扣抵別 下拉選項 (querySys1000({ SYS_Type: 'PUR_DiscNo' }))
+
+  data: ass14010mainData[] = [];
+  columns: Column[] = [
+    { field: 'RECEIPT_NO', header: '發票/收據號碼', visible: true },
+    { field: 'TOKEN_NO', header: '進貨單號', visible: true },
+    { field: 'RECEIPT_INS_ID', header: '發票維護單號', visible: true },
+    { field: 'SUPPLIER_ID', header: '供應商代碼', visible: true },
+    { field: 'SUPPLIER_NAME', header: '供應商名稱', visible: true },
+    { field: 'RECEIPT_TYPE_NAME', header: '單據種類', visible: true },
+    { field: 'INV_FORMAT', header: '發票格式', visible: true },
+    // { field: 'TAX_CODE', header: '稅別代號', visible: true },
+    { field: 'TAX_CODE_NAME', header: '稅別', visible: true },
+    { field: 'NTX_AMT', header: '未稅金額', visible: true, format: formatAmount },
+    { field: 'TX_AMT', header: '稅額', visible: true, format: formatAmount },
+    { field: 'AMT', header: '含稅金額', visible: true, format: formatAmount },
+    // { field: 'REDU_CODE', header: '扣抵別代號', visible: true },
+    { field: 'REDU_CODE_NAME', header: '扣抵別', visible: true },
   ];
-  //
+
+  selectedItems: ass14010mainData[] = [];// 多選項目
+  // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private validationService: ValidationService,
+    private ass14010Service: Ass14010Service,
+    private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310028';
-    this.cruPage = '/ASS1000/ASS14010CRU';
+    this.initializePage('ASS14010', 'ASS/ASS14010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      const payload = {
+        ...frm.value,
+        PageIndex: frm.value.pageIndex, // 轉型：小寫變大寫
+        PageSize: frm.value.pageSize    // 轉型：小寫變大寫
+      }
+      console.log(' 進貨發票request:', JSON.stringify(payload, null, 2));
+      this.loading = false;
+      this.ass14010Service.queryASS14010(frm.value).subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.data = response.Data.QueryData || [];
+            console.log('Result', this.data);
+            this.totalRecords = response.TotalCount || this.data.length;
+            this.queryStateService.setQueryState(this.ProgNo, payload);
+          } else {
+            console.error('API error:', response.Error.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+  //---刪除檢查---
+  onDelete(data: ass14010mainData | ass14010mainData[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
+
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
+    // 收集所有有效的 ID
+    const idList = items
+      .filter((item) => item && item.ID != null && item.ID !== undefined)
+      .map((item) => item.ID);
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
     }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
+    //確認是否全部都可以刪除
+    const canDelete = items.every((item) => item.RECEIPT_STATUS);
+
+    if (!canDelete) {
+      console.error('Some items cannot be deleted');
+      this.messageService.errorBubble('無法刪除：組織階層互相關連');
+      return;
     }
+
+    const deleteBody = {
+      RECEIPT_INS_IDs: idList, // 符合 API 的 idList 格式
+    };
+    this.ass14010Service.deleteASS14010(deleteBody).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+        } else {
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
+    });
+
+    this.selectedItems = [];
   }
 
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  loadOptions() {
+    // 供應商編號
+    this.dropDownListService
+      .queryPOS2013_DropDownList({})
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const list = res.Data ?? [];
+        this.SUPPLIER_ID_Options = list.map((item: { VEN_No?: string; No?: string; Name?: string }) => ({
+          value: item.VEN_No ?? item.No ?? '',
+          label: `${item.VEN_No ?? item.No ?? ''} - ${item.Name ?? ''}`,
+        }));
+      });
+    // 進貨單號
+    this.dropdownApiService
+      .queryFAASSCHKMASS15070_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(options => {
+        this.TOKEN_NO_Options = (options ?? []).map(res => ({
+          label: res.label,
+          value: res.value,
+        }));
+      });
+    //發票格式
+    this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).subscribe(r => {
+      this.INV_FORMAT_Options = r.Data.INV_GUITypes
+        .filter(item => ['21', '22', '25'].includes(item.INV_GUIType))
+        .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
+        .map(item => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }));
+    });
+    // 扣抵別
+    this.dropdownApiService
+      .querySys1000({ SYS_Type: 'PUR_DiscNo' })
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        console.log('扣抵別', res)
+        this.REDU_CODE_Options = (res ?? []).map(res => ({
+          label: res.No + '-' + res.Name,
+          value: res.No,
+        }));
+      });
+  }
+
+  isRowSelectable(rowData: ass14010mainData): boolean {
+    return rowData.RECEIPT_STATUS === '1';
   }
 }

@@ -1,45 +1,71 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { DetailASS13010Request, DetailASS13010Response } from '@pages/ass/ass13010/ass13010.model';
+import {
+  DetailASS13010Request,
+  DetailASS13010Response,
+  DeleteASS13010Request,
+  DeleteASS13010ResultApiResponse,
+  ExportPDFASS13010Request,
+  InsertASS13010Request,
+  InsertASS13010Response,
+  UpdateASS13010Request,
+  UpdateASS13010Response,
+  QueryASS13010Request,
+  QueryASS13010Response,
+  QueryASS13010ResultApiResponse,
+} from '@pages/ass/ass13010/ass13010.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
-/** ASS13010 資產維護作業 API */
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root',
+})
 export class ASS13010Service {
   private readonly apiUrl = environment.ApiUrl + '/ASS0000/ASS1000';
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private http: HttpClient) { }
+
+  queryASS13010(body: QueryASS13010Request): Observable<ApiResponse<QueryASS13010Response[]>> {
+    return this.http.post<QueryASS13010ResultApiResponse>(`${this.apiUrl}/queryASS13010`, body).pipe(
+      map(
+        res =>
+          ({
+            ...res,
+            Data: res.Data?.QueryData ?? [],
+            TotalCount: res.Data?.TotalRows ?? res.TotalCount ?? 0,
+          }) as ApiResponse<QueryASS13010Response[]>,
+      ),
+    );
+  }
+
+  detailASS13010(body: DetailASS13010Request): Observable<ApiResponse<DetailASS13010Response>> {
+    return this.http.post<ApiResponse<DetailASS13010Response>>(`${this.apiUrl}/detailASS13010`, body);
+  }
+
+  insertASS13010(body: InsertASS13010Request): Observable<ApiResponse<InsertASS13010Response>> {
+    return this.http.post<ApiResponse<InsertASS13010Response>>(`${this.apiUrl}/insertASS13010`, body);
+  }
 
   /**
-   * 資產明細。後端可能回傳 `Data` 為單一物件或陣列，統一正規化為單一物件或 `null`。
+   * 修改資產維護作業
    */
-  detailASS13010(body: DetailASS13010Request): Observable<ApiResponse<DetailASS13010Response | null>> {
-    return this.http
-      .post<ApiResponse<DetailASS13010Response | DetailASS13010Response[] | null>>(
-        `${this.apiUrl}/detailASS13010`,
-        body
-      )
-      .pipe(
-        map(res => ({
-          ...res,
-          Data: this.normalizeDetailAss13010Data(res.Data),
-        }))
-      );
+  updateASS13010(body: UpdateASS13010Request): Observable<ApiResponse<UpdateASS13010Response>> {
+    return this.http.post<ApiResponse<UpdateASS13010Response>>(`${this.apiUrl}/updateASS13010`, body);
   }
 
-  /** 將 detailASS13010 的 Data 解包為單筆明細（陣列取第一筆，空陣列為 null） */
-  private normalizeDetailAss13010Data(data: unknown): DetailASS13010Response | null {
-    if (data == null) return null;
-    if (Array.isArray(data)) {
-      const first = data[0];
-      if (first == null || typeof first !== 'object') return null;
-      return first as DetailASS13010Response;
-    }
-    if (typeof data === 'object') {
-      return data as DetailASS13010Response;
-    }
-    return null;
+  /**
+   * 匯出 PDF
+   */
+  exportPDFASS13010(body: ExportPDFASS13010Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportPDFASS13010`, body, { responseType: 'blob' });
+  }
+
+  /**
+   * 刪除
+   */
+  deleteASS13010(body: DeleteASS13010Request): Observable<DeleteASS13010ResultApiResponse> {
+    return this.http.post<DeleteASS13010ResultApiResponse>(`${this.apiUrl}/deleteASS13010`, body);
   }
 }
+

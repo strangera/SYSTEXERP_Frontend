@@ -1,29 +1,28 @@
-import { NgIf } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
+import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin21020Service, IFin21020Data, IQueryFin21020Request } from '@service/api/fin/fin21020.service';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { ExcelColumn, ExcelExportService } from './../../../shared/service/excel-export.service';
+import { Option } from '@service/utility/dropdown-api.model';
 // 1.2.1.2 費率對照維護
 @Component({
   selector: 'app-fin21020',
   templateUrl: './fin21020.component.html',
   standalone: true,
-  imports: [TableReportComponent, DialogComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule, NgIf]
+  imports: [TableReportComponent, DialogComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TranslateModule]
 })
 export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -50,7 +49,6 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', format: formatAmount },
     { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', format: formatAmount },
   ];
-  bankCodeOptions: IDropdownItem[] = [];
   addButton: AddButton[] = [
     { label: '匯出單筆銀行科目', icon: 'pi pi-file-export', action: (rowData: IFin21020Data) => this.onExport(rowData), disabled: () => !this.hasPermission(Actions.ExportExcel) },
   ]
@@ -58,22 +56,49 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
   lastQueryBody?: IQueryFin21020Request;
   totalRecords = 0;
   data: IFin21020Data[] = [];
+  saveLoading = signal(false);
+  bankCodeOptions = signal<Option[]>([]);
+  // 2. 互斥選項邏輯 (使用 Computed 效能更好且邏輯清晰)
+  sourceOptions = computed(() => {
+    const target = this.targetSelected();
+    // 使用 == 而非 === 來處理可能的 string/number 型別差異，或者強制轉字串
+    return this.bankCodeOptions().filter(opt =>
+      target === null || String(opt.value) !== String(target)
+    );
+  });
+
+  targetOptions = computed(() => {
+    const source = this.sourceSelected();
+    return this.bankCodeOptions().filter(opt =>
+      source === null || String(opt.value) !== String(source)
+    );
+  });
+  sourceSelected = signal<string | null>(null);
+  targetSelected = signal<string | null>(null);
   constructor(
-    private readonly dropDownListService: DropDownListService,
     public readonly fin21020Service: Fin21020Service, // 注入新的 service
     private readonly excelExportService: ExcelExportService,
+    private readonly dropdownApiService: DropdownApiService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN21020', 'fin/fin21020cru', this.queryForm, (form) => this.onSubmit(form));
-    this.dropDownListService.queryGLS1005For1103_DropDownList().pipe(untilDestroyed(this)).subscribe(data => {
-      this.bankCodeOptions = data.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+    this.dropdownApiService.queryAps1002().pipe(
+      map(options => options?.filter(opt => opt['ACCCNAME'] !== null && opt['ACCCNAME'] !== undefined) ?? []),
+      untilDestroyed(this)
+    ).subscribe(options => {
+      this.bankCodeOptions.set(options);
     });
-    // 監聽，當 BNK_No 變化時，並且變化的值是下拉選單中的值，延遲並打API
-    this.dialogForm.get('BNK_No')?.valueChanges.pipe(untilDestroyed(this)).subscribe(bnkNo => {
-      this.dataDialog = this.bankCodeOptions.filter(item => item.No !== bnkNo) ?? [];
+    // 監聽來源值變化
+    this.dialogForm.get('sourceBnkNo')?.valueChanges.pipe(untilDestroyed(this)).subscribe(val => {
+      this.sourceSelected.set(val);
+    });
+
+    // 監聽目的值變化
+    this.dialogForm.get('targetBnkNo')?.valueChanges.pipe(untilDestroyed(this)).subscribe(val => {
+      this.targetSelected.set(val);
     });
   }
   onSubmit(frm: FormGroup) {
@@ -132,37 +157,45 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     });
   }
   dialogVisible = signal(false);
-  dataDialog: IDropdownItem[] = [];
-  selectedItemsDialog: IDropdownItem[] = [];
   columnsDialog: Column[] = [
     { field: 'No', header: '公司銀行科目代號' },
     { field: 'Name', header: '公司銀行科目名稱' },
   ]
   dialogForm = this.formBuilder.nonNullable.group({
-    BNK_No: [null, [Validators.required]], // 公司銀行科目代號
+    sourceBnkNo: [null as string | null, [Validators.required]], // 來源
+    targetBnkNo: [null as string | null, [Validators.required]], // 目的
   });
   dialogSubmitted = signal(false);
   onCopyRate() {
     this.dialogVisible.set(true);
     this.dialogForm.reset();
-    this.selectedItemsDialog = [];
     this.dialogSubmitted.set(false);
-    this.dataDialog = [];
+    this.saveLoading.set(false);
   }
   saveDialog() {
+    if (this.dialogForm.invalid) {
+      this.dialogSubmitted.set(true);
+      return;
+    }
+
+    const { sourceBnkNo, targetBnkNo } = this.dialogForm.getRawValue();
+
     this.messageService.confirm({
-      message: '是否將被選擇的公司銀行科目代號資料全數刪除，並且將來源公司銀行科目代號的資料複製寫入?',
+      message: `是否確定將來源科目 <b>[${sourceBnkNo}]</b> 的費率資料，<br>覆蓋至目的科目 <b>[${targetBnkNo}]</b>？<br>(注意：目的科目的現有資料將被全數刪除)`,
       accept: () => {
-        this.loading = true;
+        // 1. 開啟 Loading
+        this.saveLoading.set(true);
+
         const body = {
-          sourceBnkNo: this.dialogForm.getRawValue().BNK_No || '',
-          targetBnkNos: this.selectedItemsDialog.map(item => item.No)
-        }
-        // 呼叫刪除服務，傳入不重複的 BnkNos
-        this.fin21020Service.copyFIN21020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+          sourceBnkNo: sourceBnkNo || '',
+          targetBnkNos: [targetBnkNo || '']
+        };
+
+        this.fin21020Service.copyFIN21020(body).pipe(
+          untilDestroyed(this),
+          finalize(() => this.saveLoading.set(false)) // 結束時關閉 Loading
+        ).subscribe(res => {
           this.messageService.successBubble(res.Message);
-          this.selectedItemsDialog = [];
-          this.dataDialog = [];
           this.dialogVisible.set(false);
           this.onSubmit(this.queryForm);
         });

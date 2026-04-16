@@ -37,7 +37,7 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
     GUI_INPUTDATE_Start: [new Date(), Validators.required],//換開日期起,必填
     GUI_INPUTDATE_End: [new Date(), Validators.required],//換開日期迄,必填
     TXN_GUIBegNo: ['', [Validators.maxLength(10)]],
-    GUI_Status: ['0'],
+    GUI_Status: [''],
     TXN_Uniform: [''],
     ...createPaginationConfig([{ field: 'CHG_No', order: 1 }])
   });

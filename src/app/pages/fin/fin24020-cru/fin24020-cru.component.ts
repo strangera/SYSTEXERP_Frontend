@@ -77,10 +77,11 @@ export class FIN24020CRUComponent extends BasicCruPageComponent<any> implements 
   ];
   apsDialogColumns: Column[] = [
     { field: 'ACP_No', header: '應付帳款編號' },
+    { field: 'ACP_Date', header: '立帳日期', format: formatDate },
     { field: 'VEN_No', header: '廠客代號' },
     { field: 'VEN_Name', header: '廠客名稱' },
     { field: 'ACP_Amt', header: '應付金額', format: formatAmount },
-    { field: 'ACP_Date', header: '立帳日期', format: formatDate },
+    { field: 'acp_reserveamt', header: '應付帳款餘額', format: formatAmount },
   ];
 
   statusOptions = [

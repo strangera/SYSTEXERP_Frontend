@@ -1,160 +1,250 @@
-import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { ASS13070Service } from '@service/api/ass/ass13070.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { PanelModule } from 'primeng/panel';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { finalize } from 'rxjs';
+import {
+  ASS13070QueryRow,
+  ASS13070TransferRequest,
+  ASS13070TransferResultRow,
+} from '../ass13070/ass13070.model';
 
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
-//3.1.3.7  財產保管單位設定作業 CRU
+/** 3.1.3.7 財產保管單位設定／移轉作業（新增／移轉） */
 @Component({
   selector: 'app-ass13070-cru',
   templateUrl: './ass13070-cru.component.html',
   styleUrl: './ass13070-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, CalendarComponent, ButtonComponent, NgIf, TranslateModule]
+  providers: [DatePipe],
+  imports: [
+    AsyncPipe,
+    MenubarComponent,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    PanelModule,
+    ButtonComponent,
+    DropdownComponent,
+    CalendarComponent,
+    TableReportComponent,
+  ],
 })
-export class ASS13070CRUComponent implements OnInit {
-  ProgNo = '';
-  formTitle = '';
-  submitted = false;
-  crudstatus = '';
-
-  // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    // ----------------------------------------------------------------
-    keeper: [, [Validators.required]], // 新保管人
-    keeperUnit: [, [Validators.required]], // 新保管單位
-    transferDate: [, [Validators.required]], // 移轉生效日
-    user: [, [Validators.required]], // 新使用單位
-    userUnit: [, [Validators.required]], // 新使用人
-
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+export class ASS13070CRUComponent extends BasicCruPageComponent<unknown> implements OnInit {
+  public readonly dataForm = this.formBuilder.nonNullable.group({
+    NEW_HOLD_ORG_ID: new FormControl<string | null>(null, [Validators.required]),
+    NEW_HOLD_EMP_ID: new FormControl<string | null>(null, [Validators.required]),
+    NEW_USE_ORG_ID: new FormControl<string | null>(null, [Validators.required]),
+    NEW_USE_EMP_ID: new FormControl<string | null>(null, [Validators.required]),
+    TRANSFER_DATE: new FormControl<Date | null>(null, [Validators.required]),
   });
-  // ----------------------------------------------------------------
-  userCodeOptions: any[] = [];
-  organizationOptions: any[] = [];
 
-  //
+  /** 由查詢頁勾選帶入（重置時還原） */
+  private initialRows: ASS13070QueryRow[] = [];
+  /** 用於 API 的資產主鍵清單（匯出／轉移） */
+  public idList: number[] = [];
+
+  readonly tableRows = signal<(ASS13070QueryRow | ASS13070TransferResultRow)[]>([]);
+  readonly transferCompleted = signal<boolean>(false);
+  readonly tableLoading = signal<boolean>(false);
+
+  readonly orgOptions$ = this.dropdownApi.querySys3100();
+  empOptions: { label: string; value: string }[] = [];
+
+  readonly columnsPreview: ReportColumn[] = [
+    { field: 'DEPRE_YN_NAME', header: '財產類型' },
+    { field: 'SUBPOENA_ID', header: '進貨單號' },
+    { field: 'ASSET_ID', header: '財產編號' },
+    {
+      field: 'GOODS_NAME',
+      header: '品項',
+      format: (_v, _i, row: ASS13070QueryRow) =>
+        row?.GOODS_NAME ?? (row?.GOODS_ID ? String(row.GOODS_ID) : ''),
+    },
+    { field: 'GET_DATE', header: '購入日期', format: formatDate },
+    { field: 'FIR_GET_COST', header: '原購入金額', format: formatAmount },
+    { field: 'ORI_ORG_NAME', header: '原保管單位' },
+    { field: 'ORI_EMP_NAME', header: '原保管人' },
+    { field: 'USE_ORG_NAME', header: '原使用單位' },
+    { field: 'USE_EMP_NAME', header: '原使用人' },
+  ];
+
+  readonly columnsResult: ReportColumn[] = [
+    {
+      field: 'DEPRE_YN',
+      header: '財產類型',
+      format: (v, _i, row: ASS13070TransferResultRow) => {
+        const code = String(row?.DEPRE_YN ?? v ?? '');
+        if (code === '1') return '資產';
+        if (code === '2') return '列管品';
+        return code;
+      },
+    },
+    { field: 'SUBPOENA_ID', header: '進貨單號' },
+    { field: 'ASSET_ID', header: '財產編號' },
+    { field: 'GOODS_NAME', header: '品項' },
+    {
+      field: 'INPUT_DATE',
+      header: '購入日期',
+      format: v => (v != null && String(v) !== '' ? formatDate(String(v)) : ''),
+    },
+    {
+      field: 'INPUT_DATE',
+      header: '原購入日期',
+      format: v => (v != null && String(v) !== '' ? formatDate(String(v)) : ''),
+    },
+    { field: 'FIR_GET_COST', header: '原購入金額', format: formatAmount },
+    { field: 'ORI_ORG_NAME', header: '原保管單位' },
+    { field: 'ORI_USER_NAME', header: '原保管人' },
+    { field: 'ORI_USE_ORG_NAME', header: '原使用單位' },
+    { field: 'ORI_USE_USER_NAME', header: '原使用人' },
+    { field: 'HOLDER_ORG_NAME', header: '新保管單位' },
+    { field: 'HOLDER_USER_NAME', header: '新保管人' },
+    { field: 'USE_ORG_NAME', header: '新使用單位' },
+    { field: 'USE_USER_NAME', header: '新使用人' },
+  ];
+
+  displayColumns: ReportColumn[] = [];
+
+  exportPdfLoading = false;
+  exportExcelLoading = false;
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private translate: TranslateService,
+    private readonly ass13070Service: ASS13070Service,
+    private readonly dropdownApi: DropdownApiService,
+    private readonly dropDownListService: DropDownListService,
+    private readonly fileExportService: FileExportService,
+    private readonly datePipe: DatePipe,
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '310022';
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // subjectCode: [,[Validators.required]], // 科目代號
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
+    const state = this.router.lastSuccessfulNavigation?.extras.state as
+      | { ass13070Rows?: ASS13070QueryRow[] }
+      | undefined;
+    const rows = state?.ass13070Rows ?? [];
+    if (rows.length === 0) {
+      this.messageService.warnBubble('未帶入查詢資料，請由查詢頁勾選後進入');
+      void this.router.navigate(['/account/ass/ass13070']);
       return;
     }
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
+    this.initialRows = rows.map(r => ({ ...r }));
+    this.idList = rows.map(r => r.ID!).filter((id): id is number => id != null);
+    this.tableRows.set([...this.initialRows]);
+    this.displayColumns = [...this.columnsPreview];
+    this.transferCompleted.set(false);
 
-    this.messageService.unblockUi();
-    this.submitted = false;
+    this.initializePage('ASS13070', this.dataForm);
+    this.loadEmpOptions();
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
+  private loadEmpOptions(): void {
+    this.dropDownListService.queryTBLUSER_DropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        this.empOptions = (res.Data ?? []).map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+      },
+    });
+  }
 
-  onCancel() {
-    this.router.navigate(['/ASS1000/ASS13070']);
+  onConfirm(): void {
+    this.submitted = true;
+    if (this.dataForm.invalid) {
+      this.messageService.errorBubble('請填寫完整必填欄位');
+      return;
+    }
+
+    const raw = this.dataForm.getRawValue();
+    const handleDateStr =
+      raw.TRANSFER_DATE != null
+        ? this.datePipe.transform(raw.TRANSFER_DATE, 'yyyy-MM-dd') ?? ''
+        : '';
+    const payload: ASS13070TransferRequest = {
+      ID_LIST: this.idList,
+      NEW_HOLD_ORG_ID: String(raw.NEW_HOLD_ORG_ID ?? ''),
+      NEW_HOLD_EMP_ID: String(raw.NEW_HOLD_EMP_ID ?? ''),
+      NEW_USE_ORG_ID: String(raw.NEW_USE_ORG_ID ?? ''),
+      NEW_USE_EMP_ID: String(raw.NEW_USE_EMP_ID ?? ''),
+      HANDLE_DATE: handleDateStr,
+    };
+
+    this.loading = true;
+    this.ass13070Service
+      .transferASS13070(payload)
+      .pipe(finalize(() => (this.loading = false)))
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') {
+            this.messageService.errorBubble(res.Message ?? '轉移財產失敗');
+            return;
+          }
+          this.messageService.successBubble('轉移財產成功');
+          this.loadTransferResult();
+        },
+      });
+  }
+
+  private loadTransferResult(): void {
+    this.tableLoading.set(true);
+    this.ass13070Service
+      .transferResultASS13070({ ID_LIST: this.idList })
+      .pipe(finalize(() => this.tableLoading.set(false)))
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') {
+            this.messageService.errorBubble(res.Message ?? '取得轉移結果失敗');
+            return;
+          }
+          this.transferCompleted.set(true);
+          this.displayColumns = [...this.columnsResult];
+          this.tableRows.set(res.Data ?? []);
+        },
+      });
+  }
+
+  onReset(): void {
+    this.submitted = false;
+    this.transferCompleted.set(false);
+    this.dataForm.reset({
+      NEW_HOLD_ORG_ID: null,
+      NEW_HOLD_EMP_ID: null,
+      NEW_USE_ORG_ID: null,
+      NEW_USE_EMP_ID: null,
+      TRANSFER_DATE: null,
+    });
+    this.displayColumns = [...this.columnsPreview];
+    this.tableRows.set(this.initialRows.map(r => ({ ...r })));
+  }
+
+  onExportPdf(): void {
+    if (this.idList.length === 0) return;
+    const req$ = this.ass13070Service.exportPDFASS13070({ ID_LIST: this.idList });
+    this.fileExportService
+      .executeFileExport(req$, '.pdf', v => (this.exportPdfLoading = v))
+      .subscribe();
+  }
+
+  onExportExcel(): void {
+    if (this.idList.length === 0) return;
+    const req$ = this.ass13070Service.exportExcelASS13070({ ID_LIST: this.idList });
+    this.fileExportService
+      .executeFileExport(req$, '.xlsx', v => (this.exportExcelLoading = v))
+      .subscribe();
   }
 }

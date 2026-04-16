@@ -21,7 +21,7 @@
 
           <!-- 收銀機號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="value"
+            <app-dropdown label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-dropdown>
           </div>
 
@@ -39,22 +39,22 @@
 
           <!-- LOGO_No / TLT_No / HOS_NO / USR_No -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌編號/名稱" controlName="LOGO_No" [options]="logoOptions" optionLabel="label"
+            <app-dropdown label="品牌編號/名稱" controlName="LOGO_No" [options]="logoOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.LOGO_No"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="專櫃編號/名稱" controlName="TLT_No" [options]="CounterOptions" optionLabel="formLabel"
+            <app-dropdown label="專櫃編號/名稱" controlName="TLT_No" [options]="CounterOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.TLT_No" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="倉別" controlName="HOS_NO" [options]="hosOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.HOS_NO"></app-dropdown>
+            <app-dropdown label="倉別" controlName="HOS_NO" [options]="hosOptions | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.HOS_NO"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="銷售人員" controlName="USR_No" [options]="cashierOptions" optionLabel="formLabel"
+            <app-dropdown label="銷售人員" controlName="USR_No" [options]="cashierOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.USR_No" [submitted]="submitted"></app-dropdown>
           </div>
 
@@ -80,9 +80,17 @@
 
 <!-- 明細表（群組小計：以銷售單號為一組，使用 SumTXN_SaleAmt） -->
 <div class="card">
-  <app-tls55070-table #saleTable [data]="data" [columns]="columns" [dataKey]="'_rowKey'" [totalRecords]="totalRecords"
-    [pageSize]="queryForm.value.pageSize || 20" [loading]="loading" [groupKey]="groupByField"
-    [mergedColumns]="['TXN_SaleNoteNo']" [showTotal]="true" [totals]="detailTotals" [showMainExportButtons]="true"
-    [mainExcelLoading]="btnLoadingExcel" [mainPdfLoading]="btnLoadingPDF" (mainExcelExport)="onExportExcel()"
-    (mainPdfExport)="onExportPDF()" (lazyLoadData)="onLazyLoadData($event, queryForm)"></app-tls55070-table>
+  <app-table-report [data]="data" [columns]="columns" dataKey="TXN_SaleNoteNo" [totalRecords]="totalRecords"
+    [loading]="loading" [lastQueryBody]="historyRequestBody" [showDelete]="false" [showManage]="false"
+    [showReportMode]="false" [queryFunction]="tls55070Service.queryTLS55070.bind(tls55070Service)"
+    groupRowsBy="TXN_SaleNoteNo" [footerData]="footerData">
+    <header>
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button styleClass="p-2" label="匯出銷售明細.PDF" icon="pi pi-file" (click)="onExportPDF()"
+          [disabled]="data.length === 0 || !hasPermission(Actions.Print)" [loading]="btnLoadingPDF"></p-button>
+        <p-button styleClass="p-2" label="匯出銷售明細.XLSX" icon="pi pi-file" (click)="onExportExcel()"
+          [disabled]="data.length === 0 || !hasPermission(Actions.ExportExcel)" [loading]="btnLoadingExcel"></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

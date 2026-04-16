@@ -109,7 +109,8 @@
         </th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
           [pSortableColumn]="showSort ? col.field : undefined"
-          [pSortableColumnDisabled]="!showSort || col.showSort === false" class="text-center">
+          [pSortableColumnDisabled]="!showSort || col.showSort === false"
+          [style.text-align]="col.textAlign || 'center'">
           {{ col.header }}
           <span *ngIf="validationService.isRequired(col)" class="text-red-500">
             *
@@ -151,7 +152,7 @@
           : "新增資料"
           : rowData._rowValidationError?.isValid === false
           ? ""
-          : rowData.SerNo
+          : rowIndex + 1
           }}
         </span>
       </td>

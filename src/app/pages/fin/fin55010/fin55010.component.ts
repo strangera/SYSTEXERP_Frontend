@@ -193,12 +193,54 @@ export class FIN55010Component extends BasicQueryPageComponent<FIN55010Detail> i
   // ========= 本地工具 =========
   private handleFileExport(resp: any, ext: '.pdf' | '.xlsx', baseName: string) {
     const blob = resp?.body instanceof Blob ? resp.body : resp;
-    const fileName = `${baseName}_${new Date().getTime()}${ext}`;
+    const cd = resp?.headers?.get?.('Content-Disposition') ?? resp?.headers?.get?.('content-disposition');
+    const fileName = this.getFilenameFromHeader(cd, ext) ?? `${baseName}_${new Date().getTime()}${ext}`;
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  private getFilenameFromHeader(contentDisposition: string | null | undefined, ext: string): string | null {
+    if (!contentDisposition) return null;
+
+    // RFC 5987: filename*=UTF-8''<urlencoded>
+    const filenameStarMatch = /filename\*=([^;]+)/i.exec(contentDisposition);
+    if (filenameStarMatch?.[1]) {
+      const raw = filenameStarMatch[1].trim();
+      const encoded = raw.replace(/^UTF-8''/i, '').replace(/^"(.*)"$/, '$1');
+      try {
+        const decoded = decodeURIComponent(encoded);
+        return this.ensureExtension(this.sanitizeFilename(decoded), ext);
+      } catch {
+        return this.ensureExtension(this.sanitizeFilename(encoded), ext);
+      }
+    }
+
+    // filename="<value>"
+    const filenameMatch = /filename="([^"]+)"/i.exec(contentDisposition);
+    if (filenameMatch?.[1]) {
+      const raw = filenameMatch[1].trim();
+      try {
+        return this.ensureExtension(this.sanitizeFilename(decodeURIComponent(raw.replace(/\+/g, ' '))), ext);
+      } catch {
+        return this.ensureExtension(this.sanitizeFilename(raw), ext);
+      }
+    }
+
+    return null;
+  }
+
+  private sanitizeFilename(name: string): string {
+    // Windows 不允許: \ / : * ? " < > |
+    return name.replace(/[\u0000-\u001F\\/:*?"<>|]+/g, '_').trim();
+  }
+
+  private ensureExtension(name: string, ext: string): string {
+    if (!name) return name;
+    if (name.toLowerCase().endsWith(ext.toLowerCase())) return name;
+    return `${name}${ext}`;
   }
 }

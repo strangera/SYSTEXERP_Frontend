@@ -10,7 +10,9 @@ import { FloorService } from '@service/basic/querySYS3900.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize, map, Observable, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -32,7 +34,8 @@ import { createPaginationConfig, formatToSixDigits } from '../../../shared/compo
     CalendarRangeComponent,
     MultiSelectComponent,
     TranslateModule,
-    TableReportComponent
+    TableReportComponent,
+    ButtonModule
   ]
 })
 export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> implements OnInit {
@@ -92,13 +95,18 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   ecrOptions: any[] = [];
   tltOptions: any[] = [];
 
+  // 列印按鈕載入狀態
+  exportPdfLoading = false;
+  exportExcelLoading = false;
+
   constructor(
     private tls26030Service: TLS26030Service,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
     private tls51080Service: Tls51080Service,
     private datePipe: DatePipe,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }
@@ -172,5 +180,27 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
         value: item.No
       }));
     });
+  }
+
+  onExportExcel(): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+
+    const req$ = this.tls26030Service.exportExcelTLS26030({ ...this.lastQueryBody });
+    this.fileExportService
+      .executeFileExport(req$, '.xlsx', v => (this.exportExcelLoading = v))
+      .subscribe();
+  }
+
+  onExportPDF(): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+
+    const req$ = this.tls26030Service.exportPDFTLS26030({ ...this.lastQueryBody });
+    this.fileExportService
+      .executeFileExport(req$, '.pdf', v => (this.exportPdfLoading = v))
+      .subscribe();
   }
 }

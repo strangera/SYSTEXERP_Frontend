@@ -1,16 +1,14 @@
 import { AsyncPipe, Location } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize, Observable } from 'rxjs';
+import { finalize } from 'rxjs';
 import { FIN29060Data, FIN29060Service, FIN29060TotalData, QueryFIN29060Request } from '../../../service/api/fin/fin29060.service';
 import { FIN55050Detail } from '../../../service/api/fin/fin55050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -55,25 +53,24 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
   VendorNoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
   AccNoOptions = this.dropdown.queryGls1005();
   lastQueryBody: any = null;
-  queryFn: ((body: any) => Observable<any>) | null = null;
   selectedItems: FIN29060Data[] = [];
   totalData: FIN29060TotalData[] = [];
   totalRecords = 0;
   fullData: FIN29060Data[] = [];
   data: FIN29060Data[] = [];
-  lazyBatchSize = 30;
   columns: Column[] = [
-    { field: 'VendorNo', header: '廠商編號', visible: true },
-    { field: 'VendorName', header: '廠商名稱', visible: true },
-    { field: 'ACP_No', header: '應付帳款編號', visible: true, type: 'detail' },
-    { field: 'AccNo', header: '會計科目', visible: true },
-    { field: 'Summary', header: '摘要', visible: true },
-    { field: 'PostDate', header: '立帳日期', visible: true, format: formatDate },
-    { field: 'ACP_Amt', header: '立帳金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
-    { field: 'PaymentNo', header: '電匯/開票/單號', visible: true },
-    { field: 'PayRefDate', header: '開票/匯款日期', visible: true, format: formatDate },
-    { field: 'VoucherNo', header: '傳票號碼', visible: true, type: 'detail' },
-    { field: 'PayAmt', header: '付款金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
+    { field: 'VendorNo', header: '廠商編號', align: 'left' },
+    { field: 'VendorName', header: '廠商名稱', align: 'left' },
+    { field: 'ACP_No', header: '應付帳款編號', type: 'detail', align: 'left' },
+    { field: 'AccNo', header: '會計科目', align: 'left' },
+    { field: 'Summary', header: '摘要', align: 'left' },
+    { field: 'PostDate', header: '立帳日期', format: formatDate, align: 'left' },
+    { field: 'ACP_Amt', header: '立帳金額', format: formatAmount, align: 'right', isSubTotal: true, isTotal: true },
+    { field: 'WireOrBillNo', header: '電匯/開票/單號', align: 'left' },
+    { field: 'PayRefDate', header: '開票/匯款日期', format: formatDate, align: 'left' },
+    { field: 'PayVoucherNo', header: '傳票號碼', type: 'detail', align: 'left' },
+    { field: 'PayAmt', header: '付款金額', format: formatAmount, align: 'right', isSubTotal: true, isTotal: true },
+    { field: 'NotPayAmt', header: '未沖餘額', format: formatAmount, align: 'right', isSubTotal: true, isTotal: true },
   ];
   constructor(
     public readonly fin29060Service: FIN29060Service,
@@ -86,13 +83,6 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     this.initializePage('FIN29060', '/FIN/FIN29060CRU', this.queryForm, (frm) => this.onSubmit(frm));
   }
   onDetailWithColValue(event: { row: FIN29060Data; col: any; value: any }) {
-    const extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: event.row,
-        fromRoute: this.router.url,
-      },
-    };
     if (event.col.field === 'ACP_No') {
       const acpNo = event.row?.ACP_No;
       const handoff = {
@@ -105,8 +95,8 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       const externalUrl = this.location.prepareExternalUrl(`/account/fin/fin24010cru?acpid=${encodeURIComponent(acpNo ?? '')}`);
       const finalUrl = `${window.location.origin}${externalUrl}`;
       window.open(finalUrl, '_blank', 'noopener');
-    } else if (event.col.field === 'VoucherNo') {
-      const vouNo = event.row?.VoucherNo;
+    } else if (event.col.field === 'PayVoucherNo') {
+      const vouNo = event.row?.PayVoucherNo;
       const handoff = {
         vouNo,
         fromRoute: window.location.pathname,
@@ -126,16 +116,14 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       this.lastQueryBody = {
         ...raw,
         pageIndex: 1,
-        pageSize: this.lazyBatchSize,
+        pageSize: 30,
         SortBy: [
+          { field: 'VendorNo', order: 1 },
           { field: 'ACP_No', order: 1 },
           { field: 'PostDate', order: 1 },
-          { field: 'VendorNo', order: 1 }
         ]
       };
-      this.queryFn = (body: any) => this.fin29060Service.queryFIN29060(body);
       this.fin29060Service.queryFIN29060(this.lastQueryBody).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((res) => {
-        console.log('29060 res', res);
         this.totalData = res.totalData || [];
         this.totalRecords = res.TotalCount;
         this.data = res.Data || [];
@@ -143,42 +131,13 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     })
   }
 
-  private buildExportPayload(): QueryFIN29060Request {
-    const raw = this.queryForm.getRawValue();
-    return {
-      // 使用 totalRecords 作為 PageSize，向後端請求完整資料頁數
-      PageSize: this.totalRecords || 0,
-      PageIndex: this.totalRecords ? 1 : 0,
-      STO_No: raw.STO_No || '',
-      VEN_No_From: raw.VEN_No_From || '',
-      VEN_No_To: raw.VEN_No_To || '',
-
-      ODM_Date_From: raw.ODM_Date_From ? new Date(raw.ODM_Date_From).toISOString() : undefined,
-
-      ODM_Date_To: raw.ODM_Date_To ? new Date(raw.ODM_Date_To).toISOString() : undefined,
-
-      PayRefDate_From: raw.PayRefDate_From ? new Date(raw.PayRefDate_From).toISOString() : undefined,
-
-      PayRefDate_To: raw.PayRefDate_To ? new Date(raw.PayRefDate_To).toISOString() : undefined,
-
-      AccNo_From: raw.AccNo_From || '',
-      AccNo_To: raw.AccNo_To || '',
-      ACP_Desc: raw.ACP_Desc || '',
-
-      ShowUnpaid: raw.ShowUnpaid,
-      ShowZeroBalance: raw.ShowZeroBalance,
-    };
-  }
-
-
   excelBtnLoading = false;
   onExportExcel() {
     if (!this.data?.length) {
       this.messageService.warnBubble('目前沒有資料可匯出');
       return;
     }
-    const payload = this.buildExportPayload();
-    const export$ = this.fin29060Service.exportFIN29060_Excel(payload);
+    const export$ = this.fin29060Service.exportFIN29060_Excel(this.lastQueryBody);
     this.fileExportService.executeFileExport(
       export$.pipe(untilDestroyed(this)),
       '.pdf',
@@ -192,8 +151,7 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
       return;
     }
     this.pdfBtnLoading = true;
-    const payload = this.buildExportPayload();
-    const export$ = this.fin29060Service.exportFIN29060_PDF(payload);
+    const export$ = this.fin29060Service.exportFIN29060_PDF(this.lastQueryBody);
     this.fileExportService.executeFileExport(
       export$.pipe(untilDestroyed(this)),
       '.pdf',

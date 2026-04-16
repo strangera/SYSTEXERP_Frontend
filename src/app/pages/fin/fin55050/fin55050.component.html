@@ -16,20 +16,21 @@
 
           <!-- 部門 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="部門" controlName="OrgIdList" [options]="OrgIdListOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.OrgIdList" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="部門" controlName="OrgIdList" [options]="OrgIdListOptions | async"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.OrgIdList"
+              [submitted]="submitted"></app-multi-select>
           </div>
 
           <!-- 科目代號(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range label="科目代號" controlName="AccNoList" [options]="AccNoListOptions" optionLabel="label"
-              optionValue="value" [startControl]="queryForm.controls.AccNoFrom"
+            <app-dropdown-range label="科目代號" controlName="AccNoList" [options]="AccNoListOptions | async"
+              optionLabel="label" optionValue="value" [startControl]="queryForm.controls.AccNoFrom"
               [endControl]="queryForm.controls.AccNoTo" [submitted]="submitted"></app-dropdown-range>
           </div>
 
           <!-- 廠商編號(起訖) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range label="廠商編號" controlName="VendorNoList" [options]="VendorNoListOptions"
+            <app-dropdown-range label="廠商編號" controlName="VendorNoList" [options]="VendorNoListOptions | async"
               optionLabel="label" optionValue="value" [startControl]="queryForm.controls.VendorFrom"
               [endControl]="queryForm.controls.VendorTo" [submitted]="submitted"></app-dropdown-range>
           </div>
@@ -95,13 +96,10 @@
 
 <div class="card">
   <ng-template #accGroupHeader let-row>
-    <span>會計科目：{{ getAccNoLabel(row.AccNo) }}</span>
+    <span>會計科目：{{ row.AccCName }}</span>
   </ng-template>
-  <app-table-subheader tableKey="FIN55050" dataKey="ID" [data]="data" [columns]="columns" [showCheckBox]="false"
-    [showManage]="false" [showDelete]="false" (detail)="onDetail($event)" [multiSortMeta]="[]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [showSerialNo]="false" [showPaginator]="false" [showReportMode]="false" [groupRowsBy]="'AccNo'"
-    [groupRowsByName]="'AccCName'" [showSort]="false" [groupHeaderTemplate]="accGroupHeader">
+  <app-table-subheader [data]="data" [totalRecords]="totalRecords" [loading]="loading"
+    [groupHeaderTemplate]="accGroupHeader" (detail)="onDetail($event)">
     <header>
       <div class="flex justify-content-end align-items-center gap-2">
         <p-button styleClass="p-2" label="匯出 PDF" icon="pi pi-file-pdf" (click)="onExportPDF()"
