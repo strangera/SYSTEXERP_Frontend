@@ -4,19 +4,19 @@
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="倉別"
-            controlName="whCategory "
-            [options]="whCategory"
+            controlName="whCategory"
+            [options]="whCategory()"
             optionLabel="label"
             optionValue="value"
             [control]="dataForm.controls.whCategory"
           ></app-dropdown>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
+        <div class="col-12 md:col-6 lg:col-4 no-radio-label-margin">
           <app-radiobutton
             label="盤點類型"
             [control]="dataForm.controls.invType"
@@ -28,7 +28,7 @@
           <app-dropdown
             label="中分類"
             controlName="categoryOptions "
-            [options]="categoryOptions"
+            [options]="categoryOptions()"
             optionLabel="label"
             optionValue="value"
             [control]="dataForm.controls.categoryOptions"
