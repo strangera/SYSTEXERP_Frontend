@@ -243,8 +243,8 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
     } else {
       // 未到期 bucket n: DaysUntilDue 範圍 (n-1)*bd+1 ~ n*bd (最後一期無上限)
       // RefDate = AnalysisDate + DaysUntilDue → 越晚的日期 DaysUntilDue 越大
-      ACP_DATE_S = addDaysStr(analysisDate, bucketN * bucketDays + 1);         // AnalysisDate + (n-1)*bd + 1
-      ACP_DATE_E = isLastBucket ? '9999-12-31' : addDaysStr(analysisDate, (bucketN + 1) * bucketDays); // AnalysisDate + n*bd
+      ACP_DATE_S = addDaysStr(analysisDate, bucketN * bucketDays);              // AnalysisDate + (n-1)*bd
+      ACP_DATE_E = isLastBucket ? '9999-12-31' : addDaysStr(analysisDate, (bucketN + 1) * bucketDays - 1); // AnalysisDate + n*bd - 1
     }
 
     this.dialogLoading = true;
@@ -346,18 +346,19 @@ export class FIN29110Component extends BasicQueryPageComponent<Fin29110Row> impl
     }
 
     // --- 2. 未到期 (NotDue) ---
+    // 日期從分析日當天(+0)開始，例如第1期(1~10天) = AnalysisDate ~ AnalysisDate+9
     for (let i = 1; i <= periods; i++) {
       let field = '';
       let header = '';
       if (i === periods) {
         const fromDays = (periods - 1) * bucketDays + 1;
         field = `NotDue_${periods}_Over_Days`;
-        header = `${fromDays}天以上\n${this.getRelativeDate(analysisDate, fromDays)}\n以後`;
+        header = `${fromDays}天以上\n${this.getRelativeDate(analysisDate, fromDays - 1)}\n以後`;
       } else {
         const from = (i - 1) * bucketDays + 1;
         const to = i * bucketDays;
         field = `NotDue_${i}_${from}_${to}_Days`;
-        header = `${from}~${to}天\n${this.getRelativeDate(analysisDate, from)}\n${this.getRelativeDate(analysisDate, to)}`;
+        header = `${from}~${to}天\n${this.getRelativeDate(analysisDate, from - 1)}\n${this.getRelativeDate(analysisDate, to - 1)}`;
       }
 
       cols.push({
