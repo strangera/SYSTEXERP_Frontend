@@ -46,12 +46,12 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
 
     RECEIPT_NO: ['', [Validators.maxLength(10)]], // 發票/收據號碼
     SUPPLIER_ID: ['', [Validators.maxLength(50)]], // 供應商代碼
-    RECEIPT_TYPE: ['', [Validators.maxLength(1)]], // 單據種類(0發票 1收據)
-    TOKEN_NO: ['', [Validators.maxLength(20)]], // 進貨單號
+    RECEIPT_TYPE: ['', [Validators.maxLength(1)]], // 請款單據種類(0發票 1收據)
+    TOKEN_NO: ['', [Validators.maxLength(20)]], // 驗收單號
     RECEIPT_INS_ID: ['', [Validators.maxLength(20)]], // 發票維護單號
     INV_FORMAT: ['', [Validators.maxLength(20)]], // 發票格式
 
-    TAX_CODE: ['', [Validators.maxLength(20)]], // 稅別
+    TAX_CODE: ['', [Validators.maxLength(20)]], // 課稅別
     REDU_CODE: ['', [Validators.maxLength(20)]], // 扣抵別
     RECEIPT_DATE_S: [null], // 發票日期(起)
     RECEIPT_DATE_E: [null], // 發票日期(迄)

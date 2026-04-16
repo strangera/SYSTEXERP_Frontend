@@ -17,7 +17,6 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 
 //3.1.4.1  進貨發票建檔作業 CRU
@@ -44,14 +43,23 @@ import { PanelModule } from 'primeng/panel';
 })
 export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailData> implements OnInit {
   // ----------------------------------------------------------------
+  receiveForm = this.formBuilder.nonNullable.group({
+    STO_NO: [this.authService.getUserInfo()?.SYS_StoreNo || null], //token取
+    RECEIPT_NO: [null], // 發票/收據號碼
+  });
   dataForm = this.formBuilder.nonNullable.group({
     // 明細由 STO_NO、RECEIPT_NO進行查詢
     MID: [this.authService.getUserInfo()?.mid || null], //token取
     STO_NO: [this.authService.getUserInfo()?.SYS_StoreNo || null], //token取
 
-    SUPPLIER_ID: ['', [Validators.maxLength(50)]], // 供應商編號
-    TICKET_BE: [null, [Validators.max(10), this.validationService.numberValidator]], // 付款天數(看起來好像新增/編輯才有??)
-    TOKEN_NO: [[]], // 驗收單號(多筆) > 禁止編輯動態填寫
+    SUPPLIER_ID: [{ value: null, disabled: true }], // 供應商編號
+    TICKET_BE: [{ value: null, disabled: true }], // 付款天數
+
+    NTX_AMT: [{ value: null, disabled: true }], // 未稅金額
+    TX_AMT: [{ value: null, disabled: true }], // 稅額
+    AMT: [{ value: null, disabled: true }], // 含稅金額
+
+    TOKEN_NO: [{ value: null, disabled: true }], // 驗收單號(多筆)
     RECEIPT_TYPE: [], //單據種類(0發票 1收據)
     RECEIPT_NO: ['', [Validators.maxLength(1000)]], // 發票/收據號碼
     RECEIPT_DATE: [null], // 發票日期
@@ -60,10 +68,6 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     INV_FORMAT: ['', [Validators.maxLength(20)]], // 發票格式
     TAX_CODE: ['', [Validators.maxLength(20)]], // 稅別
     REDU_CODE: ['', [Validators.maxLength(20)]], // 扣抵別
-
-    NTX_AMT: [null, [Validators.max(999999999), this.validationService.numberValidator]], // 未稅金額
-    TX_AMT: [null, [Validators.max(999999999), this.validationService.numberValidator]], // 稅額
-    AMT: [null, [Validators.max(999999999), this.validationService.numberValidator]], // 含稅金額
 
     CRT_USR_No: [''], // 建立人員編號
     CRT_USR_Name: [''], // 建立人員姓名
@@ -97,7 +101,6 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   // ----------------------------------------------------------------
   constructor(
     private ass14010Service: Ass14010Service,
-    private validationService: ValidationService,
     private readonly dropDownListService: DropDownListService,
     private readonly dropdownApiService: DropdownApiService,
   ) {
@@ -105,10 +108,10 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   }
 
   ngOnInit(): void {
-    this.initializePage('ASS14010', this.dataForm);
+    this.initializePage('ASS14010', this.receiveForm);
 
-    const { STO_NO, RECEIPT_NO } = this.dataForm.getRawValue();
-    this.get14010Detail(STO_NO, RECEIPT_NO);
+    const { STO_NO, RECEIPT_NO } = this.receiveForm.getRawValue();
+    // this.get14010Detail(STO_NO, RECEIPT_NO);
     this.loadOptions();
   }
 
@@ -151,7 +154,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
         .pipe(untilDestroyed(this))
         .subscribe(res => {
           // 確保 res.Data.QueryData 有資料
-          console.log('res', res);
+          console.log('明細資料', res);
+          // 1. 依據資料帶入給dataForm
+          // this.dataForm = res.Data;
 
           // 2. 程式碼存取時要加上索引 [0]
           if (res.Data) {
