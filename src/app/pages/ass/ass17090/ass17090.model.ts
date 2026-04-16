@@ -12,7 +12,8 @@ export interface ASS17090QueryRequest extends BaseQueryRequest {
   GOODS_ID?: string | null;
 }
 
-export interface ASS17090QueryRow {
+/** queryASS17090 明細列（D）或小計列（S），表格僅顯示 D */
+export interface QueryASS17090Detail {
   RowType?: string | null;
   RowNo?: number | null;
   GoodsID?: string | null;
@@ -21,12 +22,20 @@ export interface ASS17090QueryRow {
   StocksQty?: number | null;
   ProjectQty?: number | null;
   ExamineQty?: number | null;
-  ID?: number | string | null;
-  [key: string]: unknown;
 }
 
-export interface ASS17090QueryDataWrapper {
-  TotalRows?: number;
-  TotalPages?: number;
-  Details?: ASS17090QueryRow[];
+/** queryASS17090 的 Data 本體 */
+export interface QueryASS17090Response {
+  SafeQty?: number | null;
+  StocksQty?: number | null;
+  ProjectQty?: number | null;
+  ExamineQty?: number | null;
+  Details?: QueryASS17090Detail[] | null;
+  TotalRows?: number | null;
+  TotalPages?: number | null;
 }
+
+/** 表格列：明細 + 前端合成 ID（供 dataKey / 虛擬滾動） */
+export type ASS17090QueryRow = QueryASS17090Detail & {
+  ID?: number | string | null;
+};

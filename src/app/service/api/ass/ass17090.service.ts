@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
-  ASS17090QueryDataWrapper,
   ASS17090QueryRequest,
-  ASS17090QueryRow,
+  QueryASS17090Detail,
+  QueryASS17090Response,
 } from '@pages/ass/ass17090/ass17090.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { map, Observable } from 'rxjs';
@@ -15,9 +15,9 @@ export class ASS17090Service {
 
   constructor(private readonly http: HttpClient) {}
 
-  queryASS17090(body: ASS17090QueryRequest): Observable<ApiResponse<ASS17090QueryRow[]>> {
+  queryASS17090(body: ASS17090QueryRequest): Observable<ApiResponse<QueryASS17090Response>> {
     return this.http
-      .post<ApiResponse<ASS17090QueryRow[] | ASS17090QueryDataWrapper>>(
+      .post<ApiResponse<QueryASS17090Response | QueryASS17090Detail[]>>(
         `${this.apiUrl}/queryASS17090`,
         body
       )
@@ -25,22 +25,26 @@ export class ASS17090Service {
         map((res) => {
           const data = res.Data;
           if (Array.isArray(data)) {
+            const normalized: QueryASS17090Response = {
+              Details: data,
+              TotalRows: res.TotalCount ?? data.length,
+            };
             return {
               ...res,
-              Data: data,
+              Data: normalized,
               TotalCount: res.TotalCount ?? data.length,
-            } as ApiResponse<ASS17090QueryRow[]>;
+            } as ApiResponse<QueryASS17090Response>;
           }
 
-          const wrapper = data as ASS17090QueryDataWrapper;
-          const list = wrapper?.Details ?? [];
-          const total = wrapper?.TotalRows ?? res.TotalCount ?? list.length;
+          const wrapper = data as QueryASS17090Response;
+          const total =
+            res.TotalCount ?? wrapper.TotalRows ?? wrapper.Details?.length ?? 0;
 
           return {
             ...res,
-            Data: list,
+            Data: wrapper,
             TotalCount: total,
-          } as ApiResponse<ASS17090QueryRow[]>;
+          } as ApiResponse<QueryASS17090Response>;
         })
       );
   }

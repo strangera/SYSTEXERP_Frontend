@@ -52,7 +52,8 @@
 <div class="card">
   <div class="col-12">
     <app-table-report [data]="tableData()" [columns]="columns" [totalRecords]="totalRecords()"
-      [loading]="tableLoading()" dataKey="GoodsID" tableKey="ASS17090_Data" [showCheckBox]="false" [showEdit]="false"
+      [footerData]="tableFooterData()" footerLabel="小計" [loading]="tableLoading()" dataKey="GoodsID"
+      tableKey="ASS17090_Data" [showCheckBox]="false" [showEdit]="false"
       [showDetail]="false" [showDelete]="false" [showManage]="false" [queryFunction]="queryFunction"
       [lastQueryBody]="lastQueryBody">
       <header>

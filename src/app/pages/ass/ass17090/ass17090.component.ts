@@ -6,19 +6,21 @@ import { ASS17090Service } from '@service/api/ass/ass17090.service';
 import {
   ASS17090QueryRequest,
   ASS17090QueryRow,
+  QueryASS17090Detail,
+  QueryASS17090Response,
 } from '@pages/ass/ass17090/ass17090.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize, map, Observable } from 'rxjs';
+import { finalize, map, Observable, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
+import { formatAmount2, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 import { removeEmptyValues } from '../../../shared/utils/object-utils';
 import { ApiResponse } from '../../../shared/utils/rxjs-operators/validate-api-response';
 
@@ -54,6 +56,7 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
   });
   readonly tableData = signal<ASS17090QueryRow[]>([]);
   readonly totalRecords = signal<number>(0);
+  readonly tableFooterData = signal<Record<string, number | null | undefined> | null>(null);
   readonly tableLoading = signal<boolean>(false);
   lastQueryBody?: ASS17090QueryRequest;
   exportExcelLoading = false;
@@ -73,10 +76,34 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
   columns: ReportColumn[] = [
     { field: 'GoodsID', header: '品項編號', visible: true },
     { field: 'GoodsName', header: '品項名稱', visible: true },
-    { field: 'StocksQty', header: '目前庫存數量', visible: true, align: 'right' },
-    { field: 'SafeQty', header: '安全庫存數量', visible: true, align: 'right' },
-    { field: 'ProjectQty', header: '請購數量', visible: true, align: 'right' },
-    { field: 'ExamineQty', header: '驗收數量', visible: true, align: 'right' },
+    {
+      field: 'StocksQty',
+      header: '目前庫存數量',
+      visible: true,
+      align: 'right',
+      format: (v) => formatAmount2(v),
+    },
+    {
+      field: 'SafeQty',
+      header: '安全庫存數量',
+      visible: true,
+      align: 'right',
+      format: (v) => formatAmount2(v),
+    },
+    {
+      field: 'ProjectQty',
+      header: '請購數量',
+      visible: true,
+      align: 'right',
+      format: (v) => formatAmount2(v),
+    },
+    {
+      field: 'ExamineQty',
+      header: '驗收數量',
+      visible: true,
+      align: 'right',
+      format: (v) => formatAmount2(v),
+    },
   ];
 
   constructor(
@@ -175,6 +202,26 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
     return removeEmptyValues(payload) as ASS17090QueryRequest;
   }
 
+  private static isSubtotalRow(row: QueryASS17090Detail): boolean {
+    return String(row.RowType ?? '').toUpperCase() === 'S';
+  }
+
+  private buildFooterFromData(data: QueryASS17090Response | undefined): Record<string, number | null | undefined> | null {
+    if (!data) return null;
+    const hasTotal =
+      data.SafeQty != null ||
+      data.StocksQty != null ||
+      data.ProjectQty != null ||
+      data.ExamineQty != null;
+    if (!hasTotal) return null;
+    return {
+      SafeQty: data.SafeQty,
+      StocksQty: data.StocksQty,
+      ProjectQty: data.ProjectQty,
+      ExamineQty: data.ExamineQty,
+    };
+  }
+
   queryFunction = (body: {
     pageSize?: number;
     PageSize?: number;
@@ -186,16 +233,26 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
     this.lastQueryBody = request;
     const requestPageIndex = request.PageIndex ?? 1;
     return this.ass17090Service.queryASS17090(request).pipe(
-      map((res: ApiResponse<ASS17090QueryRow[]>) => {
-        const rows = res.Status === '0000' ? (res.Data ?? []) : [];
-        const mapped = rows.map((row, idx) => ({
+      tap((res: ApiResponse<QueryASS17090Response>) => {
+        if (res.Status !== '0000') {
+          this.tableFooterData.set(null);
+          return;
+        }
+        this.tableFooterData.set(this.buildFooterFromData(res.Data));
+      }),
+      map((res: ApiResponse<QueryASS17090Response>) => {
+        if (res.Status !== '0000') {
+          return { Data: [] as ASS17090QueryRow[], TotalCount: 0 };
+        }
+        const dataObj = res.Data;
+        const details = (dataObj?.Details ?? []).filter((row) => !ASS17090Component.isSubtotalRow(row));
+        const mapped = details.map((row, idx): ASS17090QueryRow => ({
           ...row,
-          // ASS17090 專用：確保 loadMore 跨頁時 dataKey 不重複，避免虛擬滾動重建
-          ID: row.ID ?? `${row.GoodsID ?? 'row'}-p${requestPageIndex}-r${row.RowNo ?? idx + 1}`,
+          ID: `${row.GoodsID ?? 'row'}-p${requestPageIndex}-r${row.RowNo ?? idx + 1}`,
         }));
         return {
           Data: mapped,
-          TotalCount: res.TotalCount ?? mapped.length,
+          TotalCount: res.TotalCount ?? dataObj?.TotalRows ?? mapped.length,
         };
       })
     );
@@ -225,6 +282,7 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
           error: () => {
             this.tableData.set([]);
             this.totalRecords.set(0);
+            this.tableFooterData.set(null);
           },
         });
     });
@@ -287,5 +345,6 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
     this.lastQueryBody = undefined;
     this.tableData.set([]);
     this.totalRecords.set(0);
+    this.tableFooterData.set(null);
   }
 }
