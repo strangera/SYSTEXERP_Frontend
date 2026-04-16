@@ -43,23 +43,19 @@ import { PanelModule } from 'primeng/panel';
 })
 export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailData> implements OnInit {
   // ----------------------------------------------------------------
-  receiveForm = this.formBuilder.nonNullable.group({
-    STO_NO: [this.authService.getUserInfo()?.SYS_StoreNo || null], //token取
-    RECEIPT_NO: [''], // 發票/收據號碼
-  });
   dataForm = this.formBuilder.nonNullable.group({
     // 明細由 STO_NO、RECEIPT_NO進行查詢
     MID: [this.authService.getUserInfo()?.mid || null], //token取
     STO_NO: [this.authService.getUserInfo()?.SYS_StoreNo || null], //token取
 
     SUPPLIER_ID: [{ value: null, disabled: true }], // 供應商編號
-    TICKET_BE: [{ value: null, disabled: true }], // 付款天數
+    TICKET_BE: [{ value: null, disabled: true }], // 付款天數(這個明細找不到)
 
     NTX_AMT: [{ value: null, disabled: true }], // 未稅金額
     TX_AMT: [{ value: null, disabled: true }], // 稅額
     AMT: [{ value: null, disabled: true }], // 含稅金額
 
-    TOKEN_NO: [{ value: null, disabled: true }], // 驗收單號(多筆)
+    TOKEN_NO: [{ value: '', disabled: true }], // 驗收單號(多筆: TOKEN_NO以逗號相連)
     RECEIPT_TYPE: [], //單據種類(0發票 1收據)
     RECEIPT_NO: ['', [Validators.maxLength(1000)]], // 發票/收據號碼
     RECEIPT_DATE: [null], // 發票日期
@@ -68,9 +64,6 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     INV_FORMAT: ['', [Validators.maxLength(20)]], // 發票格式
     TAX_CODE: ['', [Validators.maxLength(20)]], // 稅別
     REDU_CODE: ['', [Validators.maxLength(20)]], // 扣抵別
-
-    CRT_USR_No: [''], // 建立人員編號
-    CRT_USR_Name: [''], // 建立人員姓名
   });
   //---------下拉選單-------------------------------------------------------
   SUPPLIER_ID_Options: { value: string; label: string }[] = []; // 供應商編號 下拉選項 (ass12050: queryPOS2013_DropDownList)
@@ -89,6 +82,14 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   orgsupplierData: Ass14010Supplier[] = []; // 原始供應商備份
   supplierData: Ass14010Supplier[] = [];
   supplierColumn: EditColumn[] = []; //等下拉讀取完成後寫入定義
+  defaultsupplier = {
+    'SUPPLIER_ID': null, // 供應商代碼
+    'SUPPLIER_NAME': null, // 供應商名稱
+    'TICKET_BE': null, // 付款天數
+    'TOTAL_AMT': null, // 發票總金額
+    'TOTAL_NTX_AMT': null, // 未稅總金額
+    'TOTAL_TX_AMT': null, // 稅額總金額
+  };
   // ---------單據明細 表格-------------------------------------------------------
   orgitemData: Ass14010Items[] = []; // 原始供應商備份
   itemData: Ass14010Items[] = [];
@@ -108,15 +109,29 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   }
 
   ngOnInit(): void {
-    this.initializePage('ASS14010', this.receiveForm);
+    this.initializePage('ASS14010', this.dataForm);
+    console.log('接收端', this.dataForm.value);
 
-    const { STO_NO, RECEIPT_NO } = this.receiveForm.getRawValue();
+    const { STO_NO, RECEIPT_NO } = this.dataForm.getRawValue();
     this.get14010Detail(STO_NO, RECEIPT_NO);
     this.loadOptions();
+
+    // 觀察 驗收單號(TOKEN_NO)發生變化時自動同步給主檔的驗收單號 (TOKEN_NO)
   }
 
-  onSubmit(frm: FormGroup) {
+  onSubmit(frm: FormGroup) {// 驗證單據明細
+    // --------------------------
+    for (let i = 0; i < this.itemData.length; i++) {
+      const row = this.itemData[i];
+      const result = this.validateItemRow(row);
+      if (!result.isValid) {
+        this.messageService.unblockUi();
+        this.messageService.errorBubble(`單據資料 第 ${i + 1} 筆錯誤: ${result.errorMessage}`);
+        return;
+      }
+    }
     this.handleSubmit(frm, () => {
+      // 送出只會更新上面的部分 (明細都不送出)
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
@@ -155,9 +170,6 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
         .subscribe(res => {
           // 確保 res.Data.QueryData 有資料
           console.log('明細資料', res);
-          // 1. 依據資料帶入給dataForm
-          // this.dataForm = res.Data;
-
           // 2. 程式碼存取時要加上索引 [0]
           if (res.Data) {
             // 檢查 Supplier 是否為陣列，若不是則轉為陣列
@@ -177,7 +189,8 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
             this.orgsupplierData = [...this.supplierData];
             this.orgitemData = [...this.itemData];
 
-            console.log('處理後的供應商資料', this.supplierData);
+            console.log('明細供應商資料', this.supplierData);
+            console.log('明細單據資料', this.itemData);
           } else {
             // 如果整個 res.Data 都是空的，也要清空表格防止舊資料殘留
             this.supplierData = [];
@@ -201,8 +214,8 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
         }));
 
         this.supplierColumn = [
-          { field: 'SUPPLIER_ID', header: '供應商代碼', type: 'dropdown', options: this.SUPPLIER_ID_Options, optionValue: 'value', optionLabel: 'label' },
-          // { field: 'SUPPLIER_NAME', header: '供應商名稱', type: 'input' },
+          { field: 'SUPPLIER_ID', header: '供應商代碼' },
+          { field: 'SUPPLIER_NAME', header: '供應商名稱' },
           { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber' },
           { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber' },
           { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber' },
@@ -238,6 +251,44 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
         }));
       });
   }
+
+  //依據明細驗收單號進行主檔token_no刷新
+  onTableDataChange(eventData: Ass14010Items[]) {
+    // 1. 變更後的資料同步回 itemData
+    this.itemData = eventData;
+
+    // 2. 取得所有不為空的 TOKEN_NO 並用逗號結合
+    const tokenNos = this.itemData
+      .map(item => item.TOKEN_NO)
+      .filter(no => no !== null && no !== undefined && no !== '')
+      .join(',');
+
+    // 3. 更新主表單的值
+    // 由於 TOKEN_NO 是 disabled 狀態，setValue 依然有效
+    this.dataForm.get('TOKEN_NO')?.setValue(tokenNos);
+  }
+
+  //驗收單號前端驗證機制
+  validateItemRow = (rowData: Ass14010Items): { isValid: boolean; errorMessage: string } => {
+    const TOKEN_NO = rowData?.TOKEN_NO?.trim();
+
+    // 1. 檢查驗收單號是否為空
+    if (!TOKEN_NO) {
+      return { isValid: false, errorMessage: '驗收單號不能為空。' };
+    }
+
+    // 2. 檢查重複 
+    const isDuplicate = this.itemData.some(item =>
+      item !== rowData && // 排除掉自己 (記憶體位址比對)
+      item.TOKEN_NO?.trim() === TOKEN_NO
+    );
+
+    if (isDuplicate) {
+      return { isValid: false, errorMessage: `驗收單號不可重複。` };
+    }
+
+    return { isValid: true, errorMessage: '' };
+  };
 
   //清除明細內容
   clearSubForm() {
