@@ -37,7 +37,7 @@ export class ASS16010CRUComponent extends BasicCruPageComponent<ASS16010Data> im
 
   //非動態新增 ----------------------------------------------------------
   dataForm = this.formBuilder.group({
-    whCategory: [''],
+    whCategory: ['', Validators.required],
     invType: [0],
     categoryOptions: [''],
   });
@@ -121,18 +121,14 @@ export class ASS16010CRUComponent extends BasicCruPageComponent<ASS16010Data> im
 
   // 根據盤點類型動態更新驗證規則
   private updateDynamicValidators(value: number): void {
-    const { whCategory, categoryOptions } = this.dataForm.controls;
+    const { categoryOptions } = this.dataForm.controls;
 
-    whCategory.clearValidators();
     categoryOptions.clearValidators();
 
-    if (value === 1) {
-      whCategory.setValidators([Validators.required]);
-    } else if (value === 2) {
+    if (value === 2) {
       categoryOptions.setValidators([Validators.required]);
     }
 
-    whCategory.updateValueAndValidity();
     categoryOptions.updateValueAndValidity();
   }
 

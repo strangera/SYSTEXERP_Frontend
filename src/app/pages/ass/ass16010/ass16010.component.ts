@@ -4,6 +4,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS16010Data, ASS16010Service, QueryASS16010Request, QueryFAINVENTORYMRequest } from '@service/api/ass/ass16010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -19,7 +20,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
   templateUrl: './ass16010.component.html',
   styleUrl: './ass16010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, TableComponent, TranslateModule, ButtonModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, TableComponent, TranslateModule, ButtonModule, TableReportComponent]
 })
 export class ASS16010Component extends BasicQueryPageComponent<ASS16010Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -29,7 +30,7 @@ export class ASS16010Component extends BasicQueryPageComponent<ASS16010Data> imp
 
   data: ASS16010Data[] = [];
   selectedItems: ASS16010Data[] = [];
-  totalRecords = 0;
+  public readonly totalRecords = signal<number>(0);
 
   // 列印按鈕載入狀態
   exportPdfLoading = false;
@@ -73,11 +74,19 @@ export class ASS16010Component extends BasicQueryPageComponent<ASS16010Data> imp
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
-          this.totalRecords = response.TotalCount;
+          this.totalRecords.set(response.TotalCount);
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
         });
     });
   }
+
+  isEditDisabled = (): boolean => {
+  return true;
+};
+
+  isDetailDisabled = (): boolean => {
+  return true;
+};
 
   onExportPDF(selectedItems: QueryASS16010Request): void {
     if (!this.data || this.data.length === 0) {

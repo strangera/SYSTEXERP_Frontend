@@ -41,15 +41,16 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table
+    <app-table-report
       [data]="data"
       [columns]="columns"
       [addButton]="addButton"
       [loading]="exportPdfLoading"
-      [showDetail]="false"
-      [showEdit]="false"
+      [totalRecords]="totalRecords()"
+      [editDisabled]="isEditDisabled"
+      [detailDisabled]="isDetailDisabled"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
-    ></app-table>
+    ></app-table-report>
   </div>
 </div>
