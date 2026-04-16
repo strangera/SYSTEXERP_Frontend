@@ -322,19 +322,43 @@ export class FIN32020CRUComponent
     super();
   }
 
-  ngOnInit(): void {
-    this.initializePage('FIN32020', this.dataForm);
+ngOnInit(): void {
+  this.initializePage('FIN32020', this.dataForm);
 
-    if (this.rowdata) {
-      this.patchFromRowdata(this.rowdata);
-    } else {
-      this.detailData = [{ ...this.defaultDetailRow, SeqNo: 1 }];
-    }
+  if (this.rowdata) {
+    this.patchFromRowdata(this.rowdata);
 
-    if (this.crudstatus === CRUDStatus.Create) {
-      this.dataForm.patchValue({ adjust_Date: new Date() });
+    if (
+      (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) &&
+      this.rowdata.ADJ_No
+    ) {
+      this.detailLoading = true;
+
+      this.fin32020Service.queryFIN32020Detail(this.rowdata.ADJ_No).subscribe({
+        next: (res) => {
+          const details = Array.isArray(res?.Data) ? res.Data : [];
+
+          this.patchFromRowdata({
+            ...this.rowdata!,
+            _Details: details,
+          });
+
+          this.detailLoading = false;
+        },
+        error: (err) => {
+          console.error('FIN32020 query detail error:', err);
+          this.detailLoading = false;
+        },
+      });
     }
+  } else {
+    this.detailData = [{ ...this.defaultDetailRow, SeqNo: 1 }];
   }
+
+  if (this.crudstatus === CRUDStatus.Create) {
+    this.dataForm.patchValue({ adjust_Date: new Date() });
+  }
+}
 
   private afterSaveSuccess(): void {
     this.loading = false;

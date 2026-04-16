@@ -108,8 +108,8 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
   ];
 
 readonly defaultSort: SortItem[] = [
-  { field: 'ADJ_No', order: 1 },
   { field: 'ADJ_Date', order: -1 },
+  { field: 'ADJ_No', order: 1 },
 ];;
 
   queryForm = this.formBuilder.group({
@@ -120,8 +120,8 @@ readonly defaultSort: SortItem[] = [
   summons_ID_From: [null as string | null],
   summons_ID_To: [null as string | null],
   ...createPaginationConfig([
-    { field: 'ADJ_No', order: 1 },
-    { field: 'ADJ_Date', order: -1 },
+  { field: 'ADJ_Date', order: -1 },
+  { field: 'ADJ_No', order: 1 },
   ]),
 });
 
@@ -379,8 +379,9 @@ this.loading = false;
       summons_ID_From: null,
       summons_ID_To: null,
       ...createPaginationConfig([
-        { field: 'ADJ_No', order: 1 },
         { field: 'ADJ_Date', order: -1 },
+        { field: 'ADJ_No', order: 1 },
+        
       ]),
     } as any,
     { emitEvent: false }
@@ -416,14 +417,43 @@ this.loading = false;
     );
   }
 
-  override onEdit(row: Fin32020Row, queryConditions?: any): void {
-    this.saveQueryState();
+ override onEdit(row: Fin32020Row, queryConditions?: any): void {
+  this.saveQueryState();
 
-    if ((row as any)?.['CanEdit'] !== true) {
-      super.onDetail(row, this.queryForm.value);
-      return;
-    }
-
-    super.onEdit(row, this.queryForm.value);
+  if ((row as any)?.['CanEdit'] !== true) {
+    super.onDetail(row, this.queryForm.value);
+    return;
   }
+
+  if (!row?.ADJ_No) {
+    super.onEdit(row, this.queryForm.value);
+    return;
+  }
+
+  this.loading = true;
+
+  this.fin32020Service
+    .queryFIN32020Detail(row.ADJ_No)
+    .pipe(untilDestroyed(this), take(1))
+    .subscribe({
+      next: (res) => {
+        const details = Array.isArray(res?.Data) ? res.Data : [];
+
+        const rowWithDetails: Fin32020Row = {
+          ...row,
+          _Details: details,
+        };
+
+        this.loading = false;
+        super.onEdit(rowWithDetails, this.queryForm.value);
+      },
+      error: (err) => {
+        console.error('queryFIN32020Detail error before edit:', err);
+        this.loading = false;
+      },
+    });
+}
+  editDisabledFn = (row: any) => {
+  return !row?.CanEdit;
+};
 }
