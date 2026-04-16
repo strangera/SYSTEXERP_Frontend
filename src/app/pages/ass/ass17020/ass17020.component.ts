@@ -215,7 +215,7 @@ export class ASS17020Component
         header: '數量',
         groupField: k,
         align: 'right',
-        sortField: qf,
+        showSort: false,
         format: (v) => formatAmount(v as number),
       });
       deptCols.push({
@@ -223,7 +223,7 @@ export class ASS17020Component
         header: '金額',
         groupField: k,
         align: 'right',
-        sortField: af,
+        showSort: false,
         format: (v) => formatAmount(v as number),
       });
     }

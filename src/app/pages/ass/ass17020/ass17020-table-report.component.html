@@ -85,7 +85,7 @@
             <th *ngIf="col.groupField" class="text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
               pReorderableColumn pResizableColumn [pSortableColumn]="
                 showSort ? col.sortField ?? col.field : undefined
-              " [pSortableColumnDisabled]="col.showSort === false" style="min-width: 55px">
+              " [pSortableColumnDisabled]="col.showSort === false || showSort === false" style="min-width: 55px">
               {{ col.header }}
               <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
             </th>
@@ -132,7 +132,7 @@
             <th *ngIf="col.groupField" class="text-center" [ngClass]="{ 'multiline-header': allowMultilineHeader }"
               pReorderableColumn pResizableColumn [pSortableColumn]="
                 showSort ? col.sortField ?? col.field : undefined
-              " [pSortableColumnDisabled]="col.showSort === false" style="min-width: 55px">
+              " [pSortableColumnDisabled]="col.showSort === false || showSort === false" style="min-width: 55px">
               {{ col.header }}
               <p-sortIcon *ngIf="showSort && col.showSort !== false && data.length" [field]="col.field" />
             </th>
