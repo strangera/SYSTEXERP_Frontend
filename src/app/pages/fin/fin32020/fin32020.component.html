@@ -108,6 +108,7 @@
     (detail)="onDetail($event)"
     [showEdit]="canShowEdit"
     (edit)="onEdit($event)"
+    [editDisabled]="editDisabledFn"
     [expansionDataKey]="'_Details'"
     [expansionColumns]="expansionColumns"
     [expansionMultiSortMeta]="[{ field: 'ARS_No', order: 1 }]"
