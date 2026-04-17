@@ -438,7 +438,14 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
         next: (res) => {
           const data = res?.Data;
 
-          if (data) {
+          if (res?.Status === "9999" || data?.Success === false) {
+            // 取得 Errors 陣列中的第一筆錯誤訊息，若無則顯示通用文字
+            const errorMsg = data?.Errors && data.Errors.length > 0
+              ? data.Errors[0]
+              : '匯入失敗，請檢查資料格式';
+
+            this.messageService.errorBubble(errorMsg);
+
             if (data.ErrorFilePath) {
               this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
               this.downloadErrorFile(data.ErrorFilePath);
