@@ -7,8 +7,8 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="公司銀行科目代號/名稱" controlName="BNK_No" [options]="bankCodeOptions" optionLabel="label"
-            optionValue="No" [control]="dataForm.controls.BNK_No" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="公司銀行科目代號/名稱" controlName="BNK_No" [options]="aps1002Options()" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.BNK_No" [submitted]="submitted"></app-dropdown>
         </div>
         <app-table-edit class="col-12" title="費率對照明細" tableKey="FIN21020Detail" [columns]="columns" [data]="data"
           (dataChange)="data = $event" [defaultInsertData]="currentDefaultInsertData" [rowValidate]="validateEntireRow"

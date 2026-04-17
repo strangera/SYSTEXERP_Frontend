@@ -43,6 +43,7 @@ export interface TLS27040Data {
   CRD_Type_Name: string;
   PayCrdType: string;
   TxnAmt: number;
+  AccTxnDate: Date; // 帳務日期
   TxnDate: Date;
   TXN_Date: Date;
   TxnTime: string;

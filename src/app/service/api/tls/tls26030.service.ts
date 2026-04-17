@@ -1,7 +1,7 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
-import { Observable } from 'rxjs';
+import { Observable, take } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 // Query request interface for TLS26030
@@ -45,5 +45,25 @@ export class TLS26030Service {
   // 查詢預售明細表
   queryTLS26030(data: TLS26030QueryRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS26030`, data);
+  }
+
+  /** 匯出 Excel */
+  exportExcelTLS26030(payload: TLS26030QueryRequest): Observable<HttpResponse<Blob>> {
+    return this.http
+      .post(`${this.apiUrl}/exportTLS26030_Excel`, payload, {
+        responseType: 'blob',
+        observe: 'response',
+      })
+      .pipe(take(1));
+  }
+
+  /** 匯出 PDF */
+  exportPDFTLS26030(payload: TLS26030QueryRequest): Observable<HttpResponse<Blob>> {
+    return this.http
+      .post(`${this.apiUrl}/exportTLS26030_PDF`, payload, {
+        responseType: 'blob',
+        observe: 'response',
+      })
+      .pipe(take(1));
   }
 }

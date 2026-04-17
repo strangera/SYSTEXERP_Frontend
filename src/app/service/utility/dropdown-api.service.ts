@@ -13,6 +13,7 @@ import {
   Aps1001Query,
   Aps1002Item,
   Aps1003Query,
+  Ass13010PurchaseNumberDropDownItem,
   BusClassItem,
   BusClassQuery,
   BusSClassItem,
@@ -23,6 +24,7 @@ import {
   EcrItem,
   EcrQuery,
   ENG1001Item,
+  FAASSCHKMASS15070DropDownItem,
   FaClass1Item,
   FaClass1Query,
   FaClass2Item,
@@ -31,6 +33,9 @@ import {
   FasItemDropDownQuery,
   FaClassMItem,
   FaClassMQuery,
+  FaSitemItem,
+  FaSitemQuery,
+  GLS1005AccSubCodeItem,
   IDropdownItem,
   IGLS1005LedgerMDItem,
   LogoAccorHosItem,
@@ -58,6 +63,7 @@ import {
   Pos2013Item,
   Pos2013LogoRequest,
   Pos2013Query,
+  queryPOS1002_DropDownListItem,
   Sys1000Query,
   Sys5000SubModuleItem,
   TalentByContractDateItem,
@@ -78,7 +84,6 @@ import {
   TLTTALENTItem,
   TLTTALENTQuery,
   TlttalentTltSpaceItem,
-  Ass13010PurchaseNumberDropDownItem
 } from './dropdown-api.model';
 
 @Injectable({
@@ -279,6 +284,22 @@ export class DropdownApiService {
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
+  /**
+   * 查詢品項(FASITEM)下拉 — 預設 MATERIAL_TYPE=3（列管耗材）；回傳 GOODS_ID / GOODS_NAME
+   */
+  queryFasItemDropdown(body: FaSitemQuery = {}): Observable<Option[] | null> {
+    const payload: FaSitemQuery = {
+      ...body,
+      MATERIAL_TYPE: body.MATERIAL_TYPE ?? '3',
+    };
+    return this.queryAndMapDropdown<FaSitemItem, FaSitemQuery>(
+      '/queryFASITEM_DropDownList',
+      'GOODS_ID',
+      'GOODS_NAME',
+      payload,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
   /** 查詢商品管理編號(ASS11040)下拉選單 */
   queryAss11040Dropdown(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>(
@@ -313,6 +334,27 @@ export class DropdownApiService {
     return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1005_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
     );
+  }
+
+  /** 查詢會計科目子科目設定檔(GLS1005 AccSubCode) */
+  queryGls1005AccSubCode(): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<GLS1005AccSubCodeItem[]>>(`${this.apiUrl}/queryGLS1005AccSubCode_DropDownList`, {})
+      .pipe(
+        map(response => {
+          const data = response?.Data ?? [];
+          return data.map(item => ({
+            ...item,
+            value: item.AccNo,
+            label: `${item.AccNo} - ${item.AccCName}`,
+          }));
+        }),
+        catchError(err => {
+          console.error('API /queryGLS1005AccSubCode_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
   }
 
   // 查詢會計科目設定檔(GLS1005)下拉式選單(只顯示 GLS1005.ledger_MD=1)
@@ -412,7 +454,7 @@ export class DropdownApiService {
 
   /** 查詢收銀機設定檔(POS1002) */
   queryPos1002(): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS1002_DropDownList', 'No', 'Name').pipe(
+    return this.queryAndMapDropdown<queryPOS1002_DropDownListItem>('/queryPOS1002_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -441,6 +483,29 @@ export class DropdownApiService {
           value: String(item.ID),
           label: String(item.ID),
         }));
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  /** 查詢進貨單號下拉選單(ASS15070) */
+  queryFAASSCHKMASS15070_DropDownList(): Observable<Option[] | null> {
+    return this.queryDropdown<FAASSCHKMASS15070DropDownItem>(
+      '/ASS0000/ASS1000/queryFAASSCHKMASS15070_DropDownList'
+    ).pipe(
+      map(items => {
+        if (!items) return null;
+        return items
+          .map(item => {
+            const id = item.SUBPOENA_ID?.trim() ?? '';
+            if (!id) return null;
+            return {
+              ...item,
+              value: id,
+              label: id,
+            };
+          })
+          .filter((x): x is Option => x !== null);
       }),
       shareReplay({ bufferSize: 1, refCount: true })
     );

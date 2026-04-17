@@ -1,4 +1,4 @@
-import { Location, NgIf, NgStyle } from '@angular/common';
+import { Location, NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -16,9 +16,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
-import { Fin29060TableSubheaderComponent } from '../fin29060/fin29060-table-subheader/fin29060-table-subheader.component';
+import { Fin29060TableSubheaderComponent } from '../fin55040/fin29060-table-subheader/fin29060-table-subheader.component';
 
 @Component({
   selector: 'app-fin54020',
@@ -27,14 +26,12 @@ import { Fin29060TableSubheaderComponent } from '../fin29060/fin29060-table-subh
   standalone: true,
   imports: [
     NgStyle,
-    NgIf,
     ButtonModule,
     MenubarComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
     ButtonComponent,
-    InputTextComponent,
     InputNumberRangeComponent,
     DropdownComponent,
     CalendarRangeComponent,

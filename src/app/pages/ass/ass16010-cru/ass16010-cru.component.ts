@@ -1,10 +1,12 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { ASS16010Data } from '@service/api/ass/ass16010.service';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { ASS16010Data, ASS16010Service, InsertASS16010Request, QueryASS11020Request, QueryASS11100Request } from '@service/api/ass/ass16010.service';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { PanelModule } from 'primeng/panel';
+import { finalize, map, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -22,134 +24,169 @@ export class ASS16010CRUComponent extends BasicCruPageComponent<ASS16010Data> im
   ngOnInit(): void {
     // 初始化
     this.initializePage('ASS16010', this.dataForm);
-  }
+    this.loadDropdownOptions();
 
-  // 下拉選單--------------------------------------------------------
-  // ----------------------------------------------------------------
-  // const state = this.router.lastSuccessfulNavigation?.extras.state as {
-  //   crudstatus: CRUDStatus;
-  //   rowdata: any;
-  // };
+    // 先初始值跑一次
+    this.updateDynamicValidators(this.dataForm.controls.invType.value ?? 0);
 
-  // switch (state.crudstatus) {
-  //   // 創建
-  //   case CRUDStatus.Create:
-  //     this.formTitle = 'create-conditions';
-  //     this.accordionTabCss = 'create-accordionTab';
-  //     this.crudstatus = CRUDStatus.Create;
-
-  //     break;
-  //   // 修改
-  //   case CRUDStatus.Edit:
-  //     this.formTitle = 'edit-conditions';
-  //     this.accordionTabCss = 'edit-accordionTab';
-  //     this.crudstatus = CRUDStatus.Edit;
-
-  //     this.Edit(state.rowdata);
-  //     break;
-  //   // 讀檔
-  //   case CRUDStatus.Read:
-  //     this.formTitle = 'display-conditions';
-  //     this.crudstatus = CRUDStatus.Read;
-  //     this.Read(state.rowdata);
-  //     break;
-  // }
-
-  // console.log(this.accordionTabCss);
-
-  //動態新增----------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      Accountcode: [],
+    // 之後每次 invType 改變都會再跑
+    this.dataForm.controls.invType.valueChanges.subscribe(value => {
+      this.updateDynamicValidators(value ?? 0);
     });
   }
 
   //非動態新增 ----------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    whCategory: [],
-    invType: [],
-    categoryOptions: [],
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([this.createItem()]),
+  dataForm = this.formBuilder.group({
+    whCategory: ['', Validators.required],
+    invType: [0],
+    categoryOptions: [''],
   });
 
+
+  // 根據表單值組裝要送後端的 payload
+  private buildASS16010LikePayload() {
+    const raw = this.dataForm.getRawValue();
+
+    const ASS11020_req: QueryASS11020Request = {
+      STO_NO: this.getUserInfoFromLocal().SYS_StoreNo,
+      M_CLASS_ID: raw.categoryOptions ?? '',
+    };
+
+    return this.ass16010Service.queryASS11020(ASS11020_req).pipe(
+      map(res => {
+        const bClassId =
+          res.Status === '0000'
+            ? res.Data.QueryData?.[0]?.B_CLASS_ID ?? ''
+            : '';
+
+        const payload: InsertASS16010Request = {
+          STO_NO: this.getUserInfoFromLocal().SYS_StoreNo,
+          INV_TYPE: raw.invType?.toString() ?? '0',
+          WHIDs: raw.whCategory ? [raw.whCategory] : [],
+          B_CLASS_ID: bClassId,
+          M_CLASS_ID: raw.categoryOptions ?? '',
+          CRT_USR_No: this.getUserInfoFromLocal().user_No,
+          CRT_USR_Name: this.getUserInfoFromLocal().user_Name,
+        };
+
+        return payload;
+      })
+    );
+  }
+
   // Dropdown options
-  whCategory = [
-    { value: 1, label: '總公司' },
-    { value: 2, label: '測試' },
-  ];
+  whCategory = signal<{ label: string; value: string }[]>([]);
   invType = [
     { value: 1, label: '全盤(不分類)' },
     { value: 2, label: '部份盤(以中分類)' },
   ];
-  categoryOptions = [
-    { value: 1, label: '裝潢工程' },
-    { value: 2, label: '其他工程' },
-    { value: 3, label: '電腦及電子零件產品' },
-    { value: 4, label: '電力及照明系統' },
-    { value: 5, label: '家電家俱設備' },
-    { value: 6, label: '機消空電水零配件' },
-    { value: 7, label: '辦公及營運庶務' },
-    { value: 8, label: '印刷品(非廣告行銷)' },
-    { value: 9, label: '印刷品(廣告行銷)' },
-    { value: 10, label: '衛生及醫療庶務用品' },
-    { value: 11, label: '營運機電設備' },
-    { value: 12, label: '資訊軟體及系統' },
-    { value: 13, label: '運輸及物流設備' },
-    { value: 14, label: '其他財物用品' },
-    { value: 15, label: '環境衛生及安全維護' },
-  ];
+  categoryOptions = signal<{ label: string; value: string }[]>([]);
 
   // ----------------------------------------------------------------
   constructor(
-    private translate: TranslateService,
-
+    private ass16010Service: ASS16010Service,
+    private readonly notification: NotificationService
   ) {
     super(); // 呼叫父類建構子
   }
 
   // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
+
+  onSubmit() {
+    this.handleSubmit(this.dataForm, () => {
+      if (this.isFormCreateable) {
+        this.buildASS16010LikePayload()
+          .pipe(
+            switchMap(payload => this.ass16010Service.insertASS16010(payload)),
+            finalize(() => {
+              this.loading = false;
+            })
+          )
+          .subscribe({
+            next: res => {
+              if (res.Status !== '0000') return;
+              this.notification.successBubble('新增成功');
+              this.onCancel();
+            },
+            error: err => {
+              console.error(err);
+            }
+          });
+        return;
+      }
+
+    });
   }
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
 
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
+  // 根據盤點類型動態更新驗證規則
+  private updateDynamicValidators(value: number): void {
+    const { categoryOptions } = this.dataForm.controls;
 
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
+    categoryOptions.clearValidators();
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
-      this.messageService.unblockUi();
-      return;
+    if (value === 2) {
+      categoryOptions.setValidators([Validators.required]);
     }
 
-    this.messageService.unblockUi();
+    categoryOptions.updateValueAndValidity();
   }
 
+  // ----------------------------------------------------------------
+
+  /**
+   * 載入下拉選單選項
+   */
+  private loadDropdownOptions(): void {
+    // 倉別
+    const ASS11100_req: QueryASS11100Request = { STO_NO: this.getUserInfoFromLocal().SYS_StoreNo };
+    this.ass16010Service.queryASS11100(ASS11100_req).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data.QueryData ?? []).map(item => ({
+          label: `${item.WH_ID} - ${item.WH_NAME}`,
+          value: item.WH_ID,
+        }));
+        this.whCategory.set(options);
+      },
+    });
+
+    const ASS11020_req: QueryASS11020Request = { STO_NO: this.getUserInfoFromLocal().SYS_StoreNo };
+    this.ass16010Service.queryASS11020(ASS11020_req).subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = (res.Data.QueryData ?? []).map(item => ({
+          label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
+          value: item.M_CLASS_ID,
+        }));
+        this.categoryOptions.set(options);
+      },
+    });
+
+  }
+
+  /** 解析 localStorage.UserInfo，回傳 { mid, SYS_StoreNo, user_No, user_Name } */
+  private getUserInfoFromLocal(): { mid: number; SYS_StoreNo: string; user_No: string; user_Name: string } {
+    let mid = 0;
+    let SYS_StoreNo = '';
+    let user_No = '';
+    let user_Name = '';
+
+    try {
+      const raw = localStorage.getItem('UserInfo');
+      if (raw) {
+        const obj = JSON.parse(raw);
+        // 依你的截圖欄位：mid 與 SYS_StoreNo
+        mid = Number(obj?.mid ?? 0);
+        SYS_StoreNo = String(obj?.SYS_StoreNo ?? '');
+        user_No = String(obj?.user_No ?? '');
+        user_Name = String(obj?.user_Name ?? '');
+      }
+    } catch (e) {
+      console.error('解析 localStorage.UserInfo 失敗：', e);
+    }
+
+    return { mid, SYS_StoreNo, user_No, user_Name };
+  }
 }
 

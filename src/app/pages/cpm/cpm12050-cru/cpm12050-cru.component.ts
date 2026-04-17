@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+﻿import { NgIf } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -106,10 +106,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   rawExistingFile2: string | null = null;
   rawExistingFile3: string | null = null;
   ANSWER_YNOptions = [
-    { label: '已建立', value: 'S' },
-    { label: '已派單', value: 'W' },
-    { label: '處理中', value: 'Y' },
-    { label: '結案', value: 'Z' }
+    { label: '處理中', value: '1' },
+    { label: '結案', value: '2' },
+    { label: '已建立', value: '3' },
+    { label: '已派單', value: '4' }
   ];
   SUGG_TYPEOptions = [
     { label: '客訴', value: '0' },
@@ -138,6 +138,9 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
 
   // 責任單位選項
   orgIdOptions: any[] = [];
+
+  // CSS10031 類別資訊 — 下拉選單選項
+  css10031Options: { label: string; value: string }[] = [];
   //#endregion
 
   // 編輯table設定
@@ -360,12 +363,12 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
 
     // 若為新增，預設 STATUS 為 'S'
     if (this.crudstatus === CRUDStatus.Create) {
-      try { statusCtrl.setValue('S', { emitEvent: false }); } catch (e) { /* ignore */ }
+      try { statusCtrl.setValue('3', { emitEvent: false }); } catch (e) { /* ignore */ }
     }
 
     const applyRules = (status: any) => {
       const key = status ? String(status).toUpperCase() : '';
-      const isRequired = key === 'Y' || key === 'Z';
+      const isRequired = key === '1' || key === '2';
       if (isRequired) {
         alertCtrl.setValidators([Validators.required]);
         alertCtrl.updateValueAndValidity({ emitEvent: true });
@@ -390,7 +393,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     // 初始化後：若為檢視模式且不允許強制編輯，或是後端載入時已有 ALERT_DATE 且狀態為 Y/Z，則把欄位設為唯讀
     try {
       const statusKey = statusCtrl.value ? String(statusCtrl.value).toUpperCase() : '';
-      const isYorZ = statusKey === 'Y' || statusKey === 'Z';
+      const isYorZ = statusKey === '1' || statusKey === '2';
       if (this.crudstatus === CRUDStatus.Read && !this.forceEditAll) {
         console.log('DEBUG: init disable ALERT_DATE because Read mode');
         alertCtrl.disable({ emitEvent: false });
@@ -421,8 +424,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       const statusCtrl: any = (this.dataForm.controls as any).STATUS;
       const current = statusCtrl && statusCtrl.value ? String(statusCtrl.value).toUpperCase() : (this.rowdata ? String((this.rowdata as any).STATUS ?? '').toUpperCase() : '');
       // 編輯模式且目前為處理中（Y）時，僅允許保留 Y 或變更為 Z
-      if (this.crudstatus === CRUDStatus.Edit && current === 'Y') {
-        return this.ANSWER_YNOptions.filter(o => String(o.value).toUpperCase() === 'Y' || String(o.value).toUpperCase() === 'Z');
+      if (this.crudstatus === CRUDStatus.Edit && current === '1') {
+        return this.ANSWER_YNOptions.filter(o => o.value === '1' || o.value === '2');
       }
     } catch (e) {
       // ignore
@@ -441,6 +444,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
 
       // 預先載入下拉選項
       this.onKindChange(this.rowdata.KIND_ID!);
+      if (this.rowdata.KIND_ID_SUB) this.onKindSubChange(this.rowdata.KIND_ID_SUB);
       this.onOrgQueryChange(this.rowdata.ORG_ID!);
       // 設定表單值（帶入 master 欄位）
       this.dataForm.patchValue({
@@ -536,10 +540,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     if (prev === 0 && curr > 0) {
       const statusCtrl: any = (this.dataForm.controls as any).STATUS;
       try {
-        // 只有在狀態不是 Z（結案）時才改為 Y
-        const cur = statusCtrl && statusCtrl.value ? String(statusCtrl.value).toUpperCase() : '';
-        if (cur !== 'Z') {
-          statusCtrl.setValue('Y');
+        // 只有在狀態不是 2（結案）時才改為 1（處理中）
+        const cur = statusCtrl && statusCtrl.value ? String(statusCtrl.value) : '';
+        if (cur !== '2') {
+          statusCtrl.setValue('1');
         }
       } catch (e) {
         // ignore
@@ -621,7 +625,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             SUGG_SOURCE_OTHER: (formValue as any).SUGG_SOURCE_OTHER ?? '',
             MEMBER_ID: formValue.MEMBER_ID,
             ANSWER_YN: formValue.ANSWER_YN ? String(formValue.ANSWER_YN).toUpperCase() : formValue.ANSWER_YN,
-            STATUS: formValue.STATUS ?? formValue.ANSWER_YN ?? 'S',
+            STATUS: formValue.STATUS ?? formValue.ANSWER_YN ?? '3',
             SUGG_TYPE: formValue.SUGG_TYPE,
             CLASS_EMAIL: formValue.CLASS_EMAIL,
             ALERT_DATE: formValue.ALERT_DATE ? (new Date(formValue.ALERT_DATE)).toISOString() : undefined,
@@ -687,7 +691,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             SUGG_TYPE: formValue.SUGG_TYPE ?? (this.rowdata as any)?.SUGG_TYPE,
             ANSWER_YN: formValue.ANSWER_YN ? String(formValue.ANSWER_YN).toUpperCase() : this.rowdata?.ANSWER_YN ?? undefined,
             CLASS_EMAIL: formValue.CLASS_EMAIL ?? (this.rowdata as any)?.CLASS_EMAIL,
-            STATUS: this.forceEditAll ? (formValue.STATUS ?? this.rowdata?.STATUS) : 'Y',
+            STATUS: this.forceEditAll ? (formValue.STATUS ?? this.rowdata?.STATUS) : '1',
             ALERT_DATE: formValue.ALERT_DATE ? (new Date(formValue.ALERT_DATE)).toISOString() : (this.rowdata?.ALERT_DATE ? (new Date(this.rowdata.ALERT_DATE)).toISOString() : undefined),
             USR_NO: formValue.CRT_USR_No ?? this.rowdata?.CRT_USR_No,
             USR_NAME: formValue.CRT_USR_Name ?? this.rowdata?.CRT_USR_Name
@@ -781,6 +785,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   onKindChange(kindId: string) {
     if (!kindId) {
       this.kindIdSubOptions = [];
+      this.css10031Options = [];
       this.dataForm.patchValue({ KIND_ID_SUB: null });
       return;
     }
@@ -793,6 +798,22 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
         }));
       })
   }
+
+  onKindSubChange(kindSubId: string) {
+    if (!kindSubId) {
+      this.css10031Options = [];
+      return;
+    }
+    this.cpm12050Service.queryCPM12050CSS10031(kindSubId)
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.css10031Options = (res.Data ?? []).map(item => ({
+          value: item.KIND_ItemID,
+          label: `${item.KIND_ItemID} - ${item.KIND_Name}`,
+        }));
+      });
+  }
+
   // 處理三個不同的檔案上傳（各自單檔）
   onSelectFile1(event: FileSelectEvent) {
     const files = [...event.files];

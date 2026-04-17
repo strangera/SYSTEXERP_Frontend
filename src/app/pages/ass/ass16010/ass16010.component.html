@@ -19,11 +19,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="盤點單號"
-              controlName="inventoryNo"
-              [options]="inventoryNoOptions"
+              controlName="INV_ID"
+              [options]="INV_ID_Options()"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.inventoryNo"
+              [control]="queryForm.controls.INV_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -41,11 +41,16 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table
+    <app-table-report
       [data]="data"
       [columns]="columns"
+      [addButton]="addButton"
+      [loading]="exportPdfLoading"
+      [totalRecords]="totalRecords()"
+      [editDisabled]="isEditDisabled"
+      [detailDisabled]="isDetailDisabled"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
-    ></app-table>
+    ></app-table-report>
   </div>
 </div>

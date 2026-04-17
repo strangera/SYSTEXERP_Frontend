@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { getSYS1000 } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -19,6 +19,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 
 @Component({
   selector: 'app-fin25010-cru',
@@ -52,7 +53,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     VEN_PayType: [null], // 付款方式
     pageSize: [1780],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'ven_no', order: 1 }, { field: 'acp_DATE', order: -1 }]],
+    SortBy: [[{ field: 'ven_no', order: 1 }, { field: 'IN_TYPE', order: 1 }, { field: 'acp_DATE', order: 1 }]],
 
     // 檢視
     PAM_No: [null],  // 匯款來源單號
@@ -117,14 +118,15 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
 
         // D. 負數變紅
         return amt < 0 ? 'bg-red-500 text-white font-bold' : '';
-      }
+      },
+      align: 'right'
     },
     { field: 'acp_no', header: '應收/付ID' },
     { field: 'acp_DATE', header: '立帳日期', format: formatDate },
     { field: 'PTA_Date', header: '預計收/付款日', format: formatDate },
     { field: 'NoteDesc', header: '備註' },
     { field: 'ACCNO', header: '會計科目' },
-    { field: 'ACP_STATUS', header: '狀態', format: (v) => getSYS1000('ACP_Status', v) },
+    { field: 'ACP_STATUS', header: '狀態', format: (v) => getSYS1000('ACP_Status', v), exportFormat: transformOptionsForExport(getSYS1000Options('ACP_Status')) },
     { field: 'ORG_ID', header: '組織代號' },
   ];
 

@@ -10,6 +10,7 @@ export const columns: ReportColumn[] = [
   { field: 'TLT_No', header: '專櫃編號' }, // 對應 TLT_No
   { field: 'CRD_Type_Name', header: '卡別', sortField: 'CRD_Type' }, // 對應 CRD_Type
   { field: 'TxnAmt', header: '金額', format: formatAmount, isTotal: true }, // 對應 TxnAmt (number)
+  { field: 'AccTxnDate', header: '帳務日期', format: formatDate },
   { field: 'TxnDate', header: '銷售日期', format: formatDate }, // 對應 TxnDate (DATE)
   { field: 'TxnTime', header: '銷售時間' }, // 對應 TxnTime (string->HHmmss)
   { field: 'ReqDate', header: '請款日期', format: formatDate }, // 對應 ReqDate (DATE)
