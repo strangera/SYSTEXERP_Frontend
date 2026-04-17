@@ -12,19 +12,18 @@ export interface queryParams {
 }
 
 export interface TLS27020Data {
-  id: number,
+  ID: number,
   TXN_Date: string,
   ECR_No: string,
   TLT_NO: string,
   tlt_name: string,
-  BOOK_PayAmt: number,
-  ACT_PayAmt: number,
-  ACT_PayAmt_ori: number,
-  MOD_PayAmt: number,
-  mod_date: string,
-  crt_usr_name: string
-  Check_Status: string
-  isClose: string
+  TSDP_DepositAmt: number,
+  PRM_TSDP_DepositAmt: number,
+  TSDP_PayTime: string,
+  TSDP_File: string,
+  CRT_USR_No: string,
+  Check_Status: string,
+  isClose: string,
 }
 
 export interface CheckValue {

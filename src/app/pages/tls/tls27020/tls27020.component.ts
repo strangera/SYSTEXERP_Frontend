@@ -9,7 +9,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -28,7 +28,7 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
     TXN_Date: [null as string | null],  // 銷售日期
     TLT_NOList: [null], // 專櫃編號
     ECR_NoList: [null],       // 收銀機號
-    ACT_PayAmt: [null, [Validators.max(99999999)]],
+    TSDP_DepositAmt: [null, [Validators.max(99999999)]],
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [[{ field: 'TXN_Date, ECR_No', order: 1 }]],
@@ -42,9 +42,10 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'TLT_NO', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
-    { field: 'PayAmt', header: '實收金額', format: formatAmount },
-    { field: 'crt_usr_name', header: '建立人員姓名' },
-    { field: 'MOD_Date', header: '調整日期', format: formatDateTime },
+    { field: 'TSDP_DepositAmt', header: '存入金額', format: formatAmount },
+    { field: 'TSDP_PayTime', header: '繳款時間', format: formatDate },
+    { field: 'TSDP_File', header: '檔案名稱' },
+    { field: 'CRT_USR_No', header: '建立人員編號' },
   ];
   ECR_NoOptions = this.dropdown.queryPos1002(); // 收銀機號下拉選單
   TLTTALENT_DropDownList = this.dropdown.queryTltTalent(); // 專櫃編號下拉選單
@@ -78,7 +79,7 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
       accept: () => {
         this.loading = true;
         const body = {
-          idList: selectedItems.map(item => item.id),
+          idList: selectedItems.map(item => item.ID),
         };
         this.tls27020Service.deleteTLS27020(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
           this.messageService.successBubble(res.Message);
