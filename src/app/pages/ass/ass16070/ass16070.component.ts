@@ -22,22 +22,22 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   createPaginationConfig,
   formatDateToYYYY_MM_DD,
 } from '../../../shared/componentkit/table/table.model';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 import {
   ApiResponse,
-  ASS16070Service,
   Ass16070DetailResponse,
   Ass16070Row,
+  ASS16070Service,
 } from '../../../service/api/ass/ass16070.service';
 
 interface SortItem {
@@ -325,10 +325,10 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
       MID: 0,
       OUT_WH_ID: raw.OUT_WH_ID || null,
       IN_WH_ID: raw.IN_WH_ID || null,
-      WHMOVE_ID: raw.WHMOVE_ID ? [raw.WHMOVE_ID] : null,
+      WHMOVE_ID: raw.WHMOVE_ID || null,
       WHMOVE_STATUS: raw.WHMOVE_STATUS || null,
       EMP_ID: raw.EMP_ID || null,
-      GOODS_ID: raw.GOODS_ID ? [raw.GOODS_ID] : null,
+      GOODS_ID: raw.GOODS_ID || null,
       ORG_ID: raw.ORG_ID || null,
       APPLY_DATE_S: this.toYMDOrNull(raw.APPLY_DATE_S),
       APPLY_DATE_E: this.toYMDOrNull(raw.APPLY_DATE_E),
@@ -347,47 +347,47 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
     return req;
   }
 
-public loadDetailForExpansion = (
-  row: Ass16070Row
-): Observable<{ Data: any[]; TotalCount: number }> => {
-  const whmoveId = row?.WHMOVE_ID;
+  public loadDetailForExpansion = (
+    row: Ass16070Row
+  ): Observable<{ Data: any[]; TotalCount: number }> => {
+    const whmoveId = row?.WHMOVE_ID;
 
-  if (!whmoveId) {
-    console.warn('沒有 WHMOVE_ID', row);
-    return of({ Data: [], TotalCount: 0 });
-  }
+    if (!whmoveId) {
+      console.warn('沒有 WHMOVE_ID', row);
+      return of({ Data: [], TotalCount: 0 });
+    }
 
-  if ((row as any)._detailLoaded) {
-    return of({
-      Data: Array.isArray(row.Details) ? row.Details : [],
-      TotalCount: Array.isArray(row.Details) ? row.Details.length : 0,
-    });
-  }
+    if ((row as any)._detailLoaded) {
+      return of({
+        Data: Array.isArray(row.Details) ? row.Details : [],
+        TotalCount: Array.isArray(row.Details) ? row.Details.length : 0,
+      });
+    }
 
-  (row as any).expansionLoading = true;
+    (row as any).expansionLoading = true;
 
-  return this.ass16070Service
-    .queryDetailASS16070({ ID: whmoveId })
-    .pipe(
-      map((detailRes: ApiResponse<Ass16070DetailResponse>) => {
-        const details = Array.isArray(detailRes?.Data?.Details)
-          ? detailRes.Data.Details
-          : [];
+    return this.ass16070Service
+      .queryDetailASS16070({ ID: whmoveId })
+      .pipe(
+        map((detailRes: ApiResponse<Ass16070DetailResponse>) => {
+          const details = Array.isArray(detailRes?.Data?.Details)
+            ? detailRes.Data.Details
+            : [];
 
-        row.Details = details;
-        (row as any)._detailLoaded = true;
-        (row as any).expansionLoading = false;
+          row.Details = details;
+          (row as any)._detailLoaded = true;
+          (row as any).expansionLoading = false;
 
-        this.data = [...this.data];
-        this.cdr.detectChanges();
+          this.data = [...this.data];
+          this.cdr.detectChanges();
 
-        return {
-          Data: details,
-          TotalCount: details.length,
-        };
-      })
-    );
-};
+          return {
+            Data: details,
+            TotalCount: details.length,
+          };
+        })
+      );
+  };
 
   public queryASS16070ForReport = (body: any) =>
     this.ass16070Service.queryASS16070(this.buildPayload(body || {})).pipe(
