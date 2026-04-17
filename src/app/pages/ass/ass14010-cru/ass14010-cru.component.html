@@ -133,15 +133,6 @@
       <hr />
       <div class="grid p-fluid">
         <app-table-edit
-          title="單據資料"
-          class="col-12"
-          [columns]="itemColumn"
-          [data]="itemData"
-          [loading]="loading"
-          (dataChange)="onItemDataChange($event)"
-          [rowValidate]="validateItemRow"
-        ></app-table-edit>
-        <app-table-edit
           title="供應商資料"
           class="col-12"
           [columns]="supplierColumn"
@@ -149,6 +140,15 @@
           [loading]="loading"
           [defaultInsertData]="defaultsupplier"
           (dataChange)="onSupplierDataChange($event)"
+        ></app-table-edit>
+        <app-table-edit
+          title="單據資料"
+          class="col-12"
+          [columns]="itemColumn"
+          [data]="itemData"
+          [loading]="loading"
+          (dataChange)="onItemDataChange($event)"
+          [rowValidate]="validateItemRow"
         ></app-table-edit>
       </div>
       <div

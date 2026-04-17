@@ -1,6 +1,6 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ass14010detailData, Ass14010Items, Ass14010Service, Ass14010Supplier } from '@service/api/ass/ass14010.service';
@@ -48,22 +48,24 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     MID: [this.authService.getUserInfo()?.mid || null], //token取
     STO_NO: [this.authService.getUserInfo()?.SYS_StoreNo || null], //token取
 
-    SUPPLIER_ID: [{ value: null, disabled: true }], // 供應商編號
+    // ---查詢頁回報---
+    RECEIPT_NO: [''], // 發票/收據號碼
+    TOKEN_NO: [{ value: '', disabled: true }], // 驗收單號
+    RECEIPT_INS_ID: [null], // 發票維護單號
+    SUPPLIER_ID: [null], // 供應商代碼
+    RECEIPT_TYPE: [null], // 單據代碼
+    INV_FORMAT: [null], // 發票格式
+    TAX_CODE: [null], // 稅別
+    NTX_AMT: [null], // 未稅金額
+    TX_AMT: [null], // 稅額
+    AMT: [null], // 含稅金額
+    REDU_CODE: [null], // 扣抵別
+    //------
+
     TICKET_BE: [{ value: 0, disabled: true }], // 付款天數(明細加總)
-
-    NTX_AMT: [{ value: null, disabled: true }], // 未稅金額
-    TX_AMT: [{ value: null, disabled: true }], // 稅額
-    AMT: [{ value: null, disabled: true }], // 含稅金額
-
-    TOKEN_NO: [{ value: '', disabled: true }], // 驗收單號(多筆: TOKEN_NO以逗號相連)
-    RECEIPT_TYPE: [], //單據種類(0發票 1收據)
-    RECEIPT_NO: ['', [Validators.maxLength(1000)]], // 發票/收據號碼
     RECEIPT_DATE: [null], // 發票日期
     TICKET_DATE: [null], // 票據到期日
     DEC_YM: [null], // 申報年月(YYYYMM)
-    INV_FORMAT: ['', [Validators.maxLength(20)]], // 發票格式
-    TAX_CODE: ['', [Validators.maxLength(20)]], // 稅別
-    REDU_CODE: ['', [Validators.maxLength(20)]], // 扣抵別
   });
   //---------下拉選單-------------------------------------------------------
   SUPPLIER_ID_Options: { value: string; label: string }[] = []; // 供應商編號 下拉選項 (ass12050: queryPOS2013_DropDownList)
@@ -71,7 +73,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     { value: "0", label: '發票' },
     { value: "1", label: '單據' },
   ];
-  TOKEN_NO_Options: { value: string; label: string }[] = []; // 進貨單號 下拉選項 (ass15070: queryFAASSCHKMASS15070_DropDownList)
+  TOKEN_NO_Options: { value: string; label: string }[] = []; // 驗收單號 下拉選項 (ass15070: queryFAASSCHKMASS15070_DropDownList)
   INV_FORMAT_Options: { value: string; label: string }[] = []; // 發票格式 下拉選項 (fin15030: queryTDS1007_DropDownList)
   TAX_CODE_Options: { value: string; label: string }[] = [
     { value: "1", label: '應稅' },
@@ -130,6 +132,39 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     }
     this.handleSubmit(frm, () => {
       // 送出只會更新上面的部分 (明細都不送出)
+      // 快速但不一定推薦（要注意時區偏差）
+      // 取得日期物件
+      const decYmDate = frm.get('DEC_YM')?.value;
+      let formattedYM = '';
+
+      if (decYmDate instanceof Date) {
+        const year = decYmDate.getFullYear();
+        // getMonth() 回傳 0-11，所以要 +1，並使用 padStart 補 0
+        const month = String(decYmDate.getMonth() + 1).padStart(2, '0');
+        formattedYM = `${year}${month}`;
+      } else {
+        // 如果本來就是字串或其他格式，則視情況處理或直接賦值
+        formattedYM = decYmDate;
+      }
+
+      const payloadd = {
+        RECEIPT_INS_ID: frm.get('RECEIPT_INS_ID')?.value,
+        SUPPLIER_ID: frm.get('SUPPLIER_ID')?.value,
+        TOKEN_NO: frm.get('TOKEN_NO')?.value,
+        TICKET_BE: frm.get('TICKET_BE')?.value,
+        RECEIPT_TYPE: frm.get('RECEIPT_TYPE')?.value,
+        RECEIPT_NO: frm.get('RECEIPT_NO')?.value,
+        RECEIPT_DATE: frm.get('RECEIPT_DATE')?.value,
+        TICKET_DATE: frm.get('TICKET_DATE')?.value,
+        DEC_YM: formattedYM,
+        INV_FORMAT: frm.get('INV_FORMAT')?.value,
+        TAX_CODE: frm.get('TAX_CODE')?.value,
+        REDU_CODE: frm.get('REDU_CODE')?.value,
+        NTX_AMT: frm.get('NTX_AMT')?.value,
+        TX_AMT: frm.get('TX_AMT')?.value,
+        AMT: frm.get('AMT')?.value,
+      }
+
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
@@ -142,14 +177,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            // console.log('edit submit', frm.getRawValue());
-            // console.log('edit supplierData', this.supplierData);
-            // console.log('edit itemData', this.itemData);
+            // 16251143-1
             this.loading = false;
-            // const formValue = frm.getRawValue();
-            // this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
-            //   this.onCancel();
-            // });
+            this.ass14010Service.updateASS14010(payloadd).subscribe(() => {
+              this.onCancel();
+            });
           }
           break;
       }

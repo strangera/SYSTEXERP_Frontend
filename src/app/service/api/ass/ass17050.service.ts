@@ -22,11 +22,6 @@ export class Ass17050Service {
     return this.http.post(`${this.apiUrl}/exportPDFASS17050`, body, { responseType: 'blob' });
   }
 
-  //大分類
-  queryFACLASSM_DropDownList(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/queryFACLASSM_DropDownList`, body);
-  }
-
   //中分類
   queryFACLASS1_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryFACLASS1_DropDownList`, body);
