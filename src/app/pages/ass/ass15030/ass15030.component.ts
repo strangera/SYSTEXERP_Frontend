@@ -12,6 +12,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
@@ -57,7 +58,7 @@ interface Ass15030MockRow {
   templateUrl: './ass15030.component.html',
   styleUrl: './ass15030.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, DropdownComponent, CalendarRangeComponent, CheckboxModule, ButtonComponent, TableReportComponent, TranslateModule, ButtonModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, DropdownComponent, CalendarRangeComponent, CalendarComponent, CheckboxModule, ButtonComponent, TableReportComponent, TranslateModule, ButtonModule]
 })
 export class ASS15030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -134,7 +135,6 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
   midCategoryCodeOptions: Option[] = [];
   smlCategoryCodeOptions: Option[] = [];
   itemCodeOptions: Option[] = [];
-  baseYYMMOptions: Option[] = [];
   reportStyleOptions: Option[] = [
     { value: '1', label: '彙總' },
     { value: '2', label: '明細' },
@@ -148,28 +148,36 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('ASS15030', '', this.queryForm, frm => this.onSubmit(frm));
-    this.buildBaseYYMMOptions();
     this.loadDropdownOptions();
     this.setupCategoryCascade();
     this.seedMockData();
   }
 
   onSubmit(frm: FormGroup): void {
-    // TODO: 查詢報表 API
-    this.submitted = true;
-    this.loading = true;
-    this.tableLoading.set(true);
-    this.messageService.blockUi();
-
-    if (frm.valid && this.hasPermission(this.Actions.Query)) {
-      this.columns = this.getColumnsByReportStyle(this.queryForm.controls.reportStyle.value);
-      this.data = this.filterMockData();
-      this.totalRecords = this.data.length;
-    }
-
-    this.loading = false;
-    this.tableLoading.set(false);
-    this.messageService.unblockUi();
+    // TODO 串接查詢 API
+    this.handleSubmit(
+      frm,
+      () => {
+        if (!this.hasPermission(this.Actions.Query)) {
+          this.tableLoading.set(false);
+          return;
+        }
+        try {
+          this.columns = this.getColumnsByReportStyle(this.queryForm.controls.reportStyle.value);
+          this.data = this.filterMockData();
+          this.totalRecords = this.data.length;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        } catch {
+          this.data = [];
+          this.totalRecords = 0;
+          this.messageService.warnBubble('查詢失敗，請稍後再試');
+        } finally {
+          this.loading = false;
+          this.tableLoading.set(false);
+        }
+      },
+      v => this.tableLoading.set(v),
+    );
   }
 
   onSubmitQuery(frm: FormGroup): void {
@@ -265,19 +273,6 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
           .pipe(untilDestroyed(this))
           .subscribe(opts => (this.smlCategoryCodeOptions = opts ?? []));
       });
-  }
-
-  private buildBaseYYMMOptions(): void {
-    const today = new Date();
-    const options: Option[] = [];
-    for (let i = 0; i < 12; i++) {
-      const d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-      const y = d.getFullYear().toString();
-      const m = (d.getMonth() + 1).toString().padStart(2, '0');
-      const value = `${y}${m}`;
-      options.push({ value, label: `${y}/${m}` });
-    }
-    this.baseYYMMOptions = options;
   }
 
   private seedMockData(): void {

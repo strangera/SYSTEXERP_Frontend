@@ -123,15 +123,13 @@
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-calendar
+              calendarType="dateMonthOne"
               label="基準日"
               controlName="baseYYMM"
-              [options]="baseYYMMOptions"
-              optionLabel="label"
-              optionValue="value"
               [control]="queryForm.controls.baseYYMM"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-calendar>
           </div>
         </div>
         <hr />
@@ -167,10 +165,13 @@
         </div>
         <div>
           <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+            <app-button
+              btnType="clear"
+              (clickEvent)="onClearForm()"
+            ></app-button>
             <app-button
               btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
+              (clickEvent)="onSubmitQuery(queryForm)"
               [loading]="loading"
             ></app-button>
           </div>
