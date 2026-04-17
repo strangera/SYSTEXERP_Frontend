@@ -437,27 +437,32 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       .subscribe({
         next: (res) => {
           const data = res?.Data;
+          // --- 情況 A：失敗 (Status 不對 或 Success 為 false) ---
+          if (res?.Status !== "200" || data?.Success === false) {
 
-          if (res?.Status === "9999" || data?.Success === false) {
-            // 取得 Errors 陣列中的第一筆錯誤訊息，若無則顯示通用文字
-            const errorMsg = data?.Errors && data.Errors.length > 0
-              ? data.Errors[0]
-              : '匯入失敗，請檢查資料格式';
-
+            // 優先抓取 Errors 陣列裡的詳細訊息
+            const errorMsg = data?.Errors?.[0] || res?.Message || '匯入失敗';
             this.messageService.errorBubble(errorMsg);
 
-            if (data.ErrorFilePath) {
-              this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+            // 如果有提供錯誤檔，才執行下載邏輯
+            if (data?.ErrorFilePath) {
+              // this.messageService.errorBubble(`請下載錯誤檔檢查失敗原因`);
               this.downloadErrorFile(data.ErrorFilePath);
-            } else {
-              this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
-
-              // 只有成功時才關閉視窗，方便使用者若失敗時可以直接重選檔案
-              this.importDialogVisible = false;
-              this.onSubmit(this.queryForm); // 重新查詢資料
             }
+
+            // 失敗就不往下跑了，直接結束
+            this.excelUploadComponent.clearFiles();
+            return;
           }
-          // 清除上傳元件內的檔案 (避免下次打開還看到舊檔案)
+
+          // --- 情況 B：成功 (通過上面的檢查，代表成功) ---
+          if (data?.Success === true) {
+            this.messageService.infoBubble(`匯入成功，共 ${data.SuccessCount} 筆`);
+
+            this.importDialogVisible = false; // 只有成功才關閉視窗
+            this.onSubmit(this.queryForm);   // 重新整理列表
+          }
+
           this.excelUploadComponent.clearFiles();
         },
         error: (err) => {
