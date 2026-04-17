@@ -43,29 +43,6 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- <div class="card">
-  <div class="col-13">
-    <app-table-report
-      [tableKey]="'CPM11100'"
-      [dataKey]="'TLT_NO'"
-      [columns]="columns"
-      [data]="data"
-      [totalRecords]="totalRecords"
-      [loading]="loading"
-      [queryFunction]="cpm11100Service.queryCPM11100.bind(cpm11100Service)"
-      [lastQueryBody]="historyRequestBody"
-      [showManage]="false"
-      [showExcel]="false"
-      [showDelete]="false"
-      [showReportMode]="false"
-      [showCheckBox]="false"
-      [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event"
-      (linkClick)="onLinkClick($event)"
-    ></app-table-report>
-  </div>
-</div> -->
-
 <div class="card">
   <app-table-report
     tableKey="CPM11100"
@@ -84,29 +61,3 @@
     [queryFunction]="wrappedQueryFunction"
   ></app-table-report>
 </div>
-
-<!-- <div class="card">
-  <div class="col-13">
-    <app-table
-      tableKey="CPM11100"
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-      [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event"
-      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [rows]="30"
-      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [showDelete]="false"
-      [showCheckBox]="false"
-      [showManage]="false"
-      dataKey="TLT_NO"
-      [multiSortMeta]="[{ field: 'TLT_NO', order: 1 }]"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true"
-      [loading]="loading"
-    ></app-table>
-  </div>
-</div> -->
