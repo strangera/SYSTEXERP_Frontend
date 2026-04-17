@@ -49,7 +49,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     STO_NO: [this.authService.getUserInfo()?.SYS_StoreNo || null], //token取
 
     SUPPLIER_ID: [{ value: null, disabled: true }], // 供應商編號
-    TICKET_BE: [{ value: null, disabled: true }], // 付款天數(這個明細找不到)
+    TICKET_BE: [{ value: 0, disabled: true }], // 付款天數(明細加總)
 
     NTX_AMT: [{ value: null, disabled: true }], // 未稅金額
     TX_AMT: [{ value: null, disabled: true }], // 稅額
@@ -95,9 +95,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   itemData: Ass14010Items[] = [];
   itemColumn: EditColumn[] = [
     { field: 'TOKEN_NO', header: '驗收單號', type: 'input' },
-    { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber' },
-    { field: 'TX_AMT', header: '稅額', type: 'inputNumber' },
-    { field: 'AMT', header: '含稅金額', type: 'inputNumber' },
+    { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', disabled: () => true },
+    { field: 'TX_AMT', header: '稅額', type: 'inputNumber', disabled: () => true },
+    { field: 'AMT', header: '含稅金額', type: 'inputNumber', disabled: () => true },
   ];
   // ----------------------------------------------------------------
   constructor(
@@ -110,13 +110,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
   ngOnInit(): void {
     this.initializePage('ASS14010', this.dataForm);
-    console.log('接收端', this.dataForm.value);
+    // console.log('接收端', this.dataForm.value);
 
     const { STO_NO, RECEIPT_NO } = this.dataForm.getRawValue();
     this.get14010Detail(STO_NO, RECEIPT_NO);
     this.loadOptions();
-
-    // 觀察 驗收單號(TOKEN_NO)發生變化時自動同步給主檔的驗收單號 (TOKEN_NO)
   }
 
   onSubmit(frm: FormGroup) {// 驗證單據明細
@@ -144,9 +142,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            console.log('edit submit', frm.getRawValue());
-            console.log('edit supplierData', this.supplierData);
-            console.log('edit itemData', this.itemData);
+            // console.log('edit submit', frm.getRawValue());
+            // console.log('edit supplierData', this.supplierData);
+            // console.log('edit itemData', this.itemData);
             this.loading = false;
             // const formValue = frm.getRawValue();
             // this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
@@ -170,7 +168,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
         .subscribe(res => {
           // 確保 res.Data.QueryData 有資料
           console.log('明細資料', res);
-          // 2. 程式碼存取時要加上索引 [0]
+          // 2. 程式碼存取時要加上索引
           if (res.Data) {
             // 檢查 Supplier 是否為陣列，若不是則轉為陣列
             const supplierRaw = res.Data.Supplier;
@@ -188,6 +186,8 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
             // 同步備份原始資料
             this.orgsupplierData = [...this.supplierData];
             this.orgitemData = [...this.itemData];
+
+            this.updateTokenNoSum(); //更新付款天數加總
 
             console.log('明細供應商資料', this.supplierData);
             console.log('明細單據資料', this.itemData);
@@ -217,9 +217,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
           { field: 'SUPPLIER_ID', header: '供應商代碼' },
           { field: 'SUPPLIER_NAME', header: '供應商名稱' },
           { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber' },
-          { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber' },
-          { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber' },
-          { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber' },
+          { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber', disabled: () => true },
+          { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber', disabled: () => true },
+          { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber', disabled: () => true },
         ]
       });
     // 進貨單號
@@ -252,8 +252,30 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       });
   }
 
+  //---供應商明細---
+
   //依據明細驗收單號進行主檔token_no刷新
-  onTableDataChange(eventData: Ass14010Items[]) {
+  onSupplierDataChange(eventData: Ass14010Supplier[]) {
+    // 1. 變更後的資料同步回 itemData
+    this.supplierData = eventData;
+
+    //更新付款天數
+    this.updateTokenNoSum()
+  }
+
+  //更新付款天數
+  private updateTokenNoSum() {
+    const ticket_sum = this.supplierData.reduce((sum, item) => {
+      return sum + (Number(item.TICKET_BE) || 0);
+    }, 0);
+
+    this.dataForm.get('TICKET_BE')?.setValue(ticket_sum);
+  }
+
+  // ---驗收單明細---
+
+  //依據明細驗收單號進行主檔token_no刷新
+  onItemDataChange(eventData: Ass14010Items[]) {
     // 1. 變更後的資料同步回 itemData
     this.itemData = eventData;
 

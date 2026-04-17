@@ -138,7 +138,7 @@
           [columns]="itemColumn"
           [data]="itemData"
           [loading]="loading"
-          (dataChange)="onTableDataChange($event)"
+          (dataChange)="onItemDataChange($event)"
           [rowValidate]="validateItemRow"
         ></app-table-edit>
         <app-table-edit
@@ -148,7 +148,7 @@
           [data]="supplierData"
           [loading]="loading"
           [defaultInsertData]="defaultsupplier"
-          (dataChange)="supplierData = $event"
+          (dataChange)="onSupplierDataChange($event)"
         ></app-table-edit>
       </div>
       <div
