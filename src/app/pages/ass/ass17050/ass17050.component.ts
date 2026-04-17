@@ -3,9 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS11010Service } from '@service/api/ass/ass11010.service';
-import { ASS11020Service } from '@service/api/ass/ass11020.service';
-import { ASS11030Service } from '@service/api/ass/ass11030.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
@@ -20,9 +17,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
-import { ASS11010Data } from '../ass11010/ass11010.model';
-import { ASS11020Data } from '../ass11020/ass11020.model';
-import { ASS11030Data } from '../ass11030/ass11030.model';
 import { Ass17050Service } from './../../../service/api/ass/ass17050.service';
 import { RadiobuttonComponent } from './../../../shared/componentkit/radiobutton/radiobutton.component';
 
@@ -197,16 +191,13 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
   // ----------------------------------------------------------------
   constructor(
     private readonly dropdownApi: DropdownApiService,
-    private readonly ass11010Service: ASS11010Service, //大類
-    private readonly ass11020Service: ASS11020Service, //中類
-    private readonly ass11030Service: ASS11030Service, //小類
     private readonly ass17050Service: Ass17050Service
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('ASS17050', 'ASS/ASS17050cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('ASS17050', 'ASS/ASS17050', this.queryForm, (form) => this.onSubmit(form));
 
     this.loadOptions();
     //初始導入所有大分類、中分類、小分類表單 (ass11030)
@@ -228,19 +219,11 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
     //觀察表單 中分類變化
     this.queryForm.get('B_CLASS_ID')?.valueChanges.subscribe((lno) => {
       if (lno) {
-        // console.log('觀察大分類變化', lno);
-        const midPayload = {
-          STO_NO: this.authService.getUserInfo()?.SYS_StoreNo ?? '', // 分店編號
-          M_CLASS_ID: '',     // 中分類代碼
-          M_CLASS_NAME: '',   // 中分類名稱
-          B_CLASS_ID: lno,     // 大分類代碼
-          B_CLASS_NAME: '',   // 大分類名稱
-          NOTES_KEYWORD: ''  // 說明關鍵字
-        };
-        this.ass11020Service
-          .queryASS11020(midPayload)
+        this.ass17050Service
+          .queryFACLASS1_DropDownList({ CLASS_ID: lno })
           .subscribe((res) => {
-            this.middleOption = res.Data.map((item: ASS11020Data) => ({
+            // console.log('中分類', res);
+            this.middleOption = res.Data.map((item: any) => ({
               No: item.M_CLASS_ID,
               Name: item.M_CLASS_NAME,
               Label: item.M_CLASS_ID + '-' + item.M_CLASS_NAME,
@@ -261,35 +244,26 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
       const lno = this.queryForm.get('B_CLASS_ID')?.value;
       if (lno && mno) {
         //新版api改成list傳送
-        const requestPayload = {
-          "STO_NO": this.authService.getUserInfo()?.SYS_StoreNo ?? '', // 分店編號
-          "S_CLASS_ID": "",
-          "S_CLASS_NAME": "",
-          "M_CLASS_ID": mno,
-          "M_CLASS_NAME": "",
-          "B_CLASS_ID": lno,
-          "B_CLASS_NAME": "",
-          "NOTES_KEYWORD": ""
-        };
-
-        this.ass11030Service
-          .queryASS11030(requestPayload)
+        this.ass17050Service
+          .queryFACLASS2_DropDownList({ B_CLASS_ID: lno, CLASS_ID: mno })
           .subscribe((res) => {
-            // 1. 先進行 map 轉換格式 (這邊後端回傳的小分類有重複，先進行去重處理)
-            const mappedOptions = res.Data.map((item: ASS11030Data) => ({
+            // console.log('小分類', res);
+            const rawData = res.Data;
+
+            // 2. 進行格式轉換
+            const mappedOptions = rawData.map((item: any) => ({
               No: item.S_CLASS_ID,
               Name: item.S_CLASS_NAME,
-              Label: item.S_CLASS_ID + '-' + item.S_CLASS_NAME,
+              Label: item.S_CLASS_ID + '-' + item.S_CLASS_NAME
             }));
 
-            // 2. 使用 filter 避免重複的 No (即 S_CLASS_ID)
-            this.smallOption = mappedOptions.filter((item, index, self) =>
+            // console.log('轉換後的小分類', mappedOptions);
+
+            // 3. 進行去重 (Distinct)
+            // 在 filter 的參數中必須加上 (item, index, self)
+            this.smallOption = mappedOptions.filter((item: any, index: number, self: any[]) =>
               index === self.findIndex((t) => t.No === item.No)
             );
-
-            this.queryForm.get('S_CLASS_ID')?.setValue(null);
-
-            // console.log('小分類 (已去重)', this.smallOption);
           });
       } else {
         this.smallOption = [];
@@ -311,12 +285,12 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
         "PageSize": formValue.pageSize
       };
 
-      console.log('使用統計月報表request', payload)
+      // console.log('使用統計月報表request', payload)
 
       this.ass17050Service.queryASS17050(payload).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
-            console.log('Result', response);
+            // console.log('Result', response);
             this.data = response.Data || []; // 這邊後端多包了一層 Details
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, payload);
@@ -367,7 +341,7 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
       "PageSize": formValue.pageSize
     };
 
-    console.log('使用統計月報表request', payload)
+    // console.log('使用統計月報表request', payload)
 
     this.ass17050Service
       .exportPDFASS17050(payload)
@@ -386,37 +360,27 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
   loadCATOptions() {
     {
       // 查詢 大分類(queryFACLASSM_DropDownList)
-      this.ass11010Service
-        .queryASS11010({}).pipe(untilDestroyed(this))
+      this.dropdownApi
+        .queryFaClassM().pipe(untilDestroyed(this))
         .subscribe((response) => {
-          this.largeOption = response.Data.map((item: ASS11010Data) => ({
-            No: item.CLASS_ID,
-            Name: item.CLASS_NAME,
-            Label: item.CLASS_ID + '-' + item.CLASS_NAME,
-          }));
+          // console.log('大分類表單', response);
+          if (response) {
+            const mappedData = response.map((item: any) => ({
+              No: item.B_CLASS_ID,
+              Name: item.B_CLASS_NAME,
+              Label: `${item.B_CLASS_ID}-${item.B_CLASS_NAME}`,
+            }));
+
+            // 利用 Map 以 No 作為 Key 來去重
+            const uniqueData = [...new Map(mappedData.map(item => [item.No, item])).values()];
+
+            // 3. 排序 (以 No 進行升冪排序)
+            this.largeOption = uniqueData.sort((a, b) => {
+              // 如果 No 是字串格式 (例如 'A01', 'A02')
+              return a.No.localeCompare(b.No);
+            });
+          }
         });
-
-      // this.dropdownApi
-      //   .queryFaClassM().pipe(untilDestroyed(this))
-      //   .subscribe((response) => {
-      //     console.log('大分類表單', response);
-      //     if (response) {
-      //       const mappedData = response.map((item: any) => ({
-      //         No: item.B_CLASS_ID,
-      //         Name: item.B_CLASS_NAME,
-      //         Label: `${item.B_CLASS_ID}-${item.B_CLASS_NAME}`,
-      //       }));
-
-      //       // 利用 Map 以 No 作為 Key 來去重
-      //       const uniqueData = [...new Map(mappedData.map(item => [item.No, item])).values()];
-
-      //       // 3. 排序 (以 No 進行升冪排序)
-      //       this.largeOption = uniqueData.sort((a, b) => {
-      //         // 如果 No 是字串格式 (例如 'A01', 'A02')
-      //         return a.No.localeCompare(b.No);
-      //       });
-      //     }
-      //   });
 
       // 禁用中分類、小分類
       this.queryForm.get('M_CLASS_ID')?.disable();
