@@ -353,6 +353,7 @@ export const finRoutes: Routes = [
   // { path: 'fin65010cru', loadComponent: () => import('./fin65010-cru/fin65010-cru.component').then(m => m.FIN65010CRUComponent),data: { progNo: 'FIN65010'} },
   // 零用金參數維護
   { path: 'fin71010', loadComponent: () => import('./fin71010/fin71010.component').then(m => m.FIN71010Component), data: { progNo: 'FIN71010' } },
+  { path: 'fin71010cru', loadComponent: () => import('./fin71010-cru/fin71010-cru.component').then(m => m.FIN71010CRUComponent), data: { progNo: 'FIN71010' } },
   // 保管人及額度設定作業
   { path: 'fin71020', loadComponent: () => import('./fin71020/fin71020.component').then(m => m.FIN71020Component), data: { progNo: 'FIN71020' } },
   { path: 'fin71020cru', loadComponent: () => import('./fin71020-cru/fin71020-cru.component').then(m => m.FIN71020CRUComponent), data: { progNo: 'FIN71020' } },
