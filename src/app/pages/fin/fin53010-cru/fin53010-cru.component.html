@@ -155,7 +155,7 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 5) {
 <div class="card">
   <p-panel header="銷項發票" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepSalesRows()"
+    <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepSalesRows()"
       [columns]="stepSalesColumns" [tableKey]="'FIN53010_step_sales'" (dataChange)="onStepSalesDataChange($event)"
       (fieldChange)="onStepSalesInvoiceFieldChange($event)"></app-table-edit>
     <div class="flex justify-content-between mt-3">
@@ -175,7 +175,7 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 6) {
 <div class="card">
   <p-panel header="進項發票" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
+    <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
       [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'"
       (dataChange)="onStepPurchaseDataChange($event)"
       (fieldChange)="onStepPurchaseInvoiceFieldChange($event)"></app-table-edit>

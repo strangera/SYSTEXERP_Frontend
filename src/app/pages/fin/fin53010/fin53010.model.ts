@@ -823,7 +823,6 @@ export interface FIN53010StepAR {
 export interface FIN53010StepSalesInvoiceRow {
   /** APS4023 主檔 ID（insert／update APS4023Data 用） */
   id?: number;
-  add_flag?: boolean;
   invoice_type?: string;
   invoice_prefix?: string;
   invoice_no?: string;
@@ -843,7 +842,6 @@ export interface FIN53010StepSalesInvoiceRow {
 export interface FIN53010StepPurchaseInvoiceRow {
   /** 更新 APS2002 時帶入 */
   id?: number;
-  add_flag?: boolean;
   voucher_type?: string;
   track_no?: string;
   invoice_no?: string;

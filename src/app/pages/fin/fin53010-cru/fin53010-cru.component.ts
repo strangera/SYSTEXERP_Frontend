@@ -558,7 +558,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly stepSalesColumns: EditColumn[] = [
-    { field: 'add_flag', header: '是否新增', type: 'checkbox' },
     { field: 'invoice_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'invoice_prefix', header: '字軌', type: 'input', maxLength: 2 },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8 },
@@ -575,7 +574,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly stepPurchaseColumns: EditColumn[] = [
-    { field: 'add_flag', header: '是否新增', type: 'checkbox' },
     { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'track_no', header: '字軌', type: 'input', maxLength: 2 },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8 },
@@ -1244,7 +1242,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       : null;
     return {
       id: d.ID,
-      add_flag: true,
       invoice_type: d.InvoiceType ?? undefined,
       invoice_prefix: prefix,
       invoice_no: no,
@@ -1270,7 +1267,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       ? new Date(`${String(invYm).slice(0, 4)}-${String(invYm).slice(4, 6)}-01`)
       : null;
     return {
-      add_flag: true,
       voucher_type: d.InvoiceType ?? undefined,
       track_no: prefix,
       invoice_no: no,
