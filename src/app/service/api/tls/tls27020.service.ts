@@ -8,7 +8,7 @@ export interface queryParams {
   TXN_Date: string,
   TLT_NOList: string[],
   ECR_NoList: string[],
-  ACT_PayAmt: string
+  TSDP_DepositAmt: number,
 }
 
 export interface TLS27020Data {
@@ -25,26 +25,32 @@ export interface TLS27020Data {
   Check_Status: string,
   isClose: string,
 }
-
-export interface CheckValue {
-  SYS_StoreNo: string
-  TXN_Date: string
-  ECR_No: string
-}
-
 export interface InsertTLS27020 {
-  SYS_StoreNo: string,
   TXN_Date: string,
   ECR_No: string,
   TLT_NO: string,
-  ACT_PayAmt: number,
+  Talent_ID: number,
+  TSDP_DepositAmt: number,
 }
 export interface UpdateTLS27020 {
-  id: number,
-  ACT_PayAmt_ori: number,
-  BOOK_PayAmt: number,
-  ACT_PayAmt: number,
-  MOD_PayAmt: number
+  ID: number,
+  Talent_ID: number,
+  TXN_Date: string,
+  old_TXN_Date: string,
+  ECR_No: string,
+  old_ECR_No: string,
+  TLT_NO: string,
+  PayAmt: number,
+  TSDP_DepositAmt: number,
+  PRM_TSDP_DepositAmt: number,
+}
+export interface deleteTLS27020 {
+  selectList: DeleteItem[];
+}
+export interface DeleteItem {
+  ID: number,
+  ECR_No: string,
+  TXN_Date: string,
 }
 
 @Injectable({
@@ -68,15 +74,11 @@ export class TLS27020Service {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updateTLS27020`, data);
   }
 
-  queryIsExist(checkValue: CheckValue): Observable<ApiResponse<boolean>> {
-    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/queryIsExist`, checkValue);
-  }
-
   queryClsDate(): Observable<ApiResponse<string>> {
     return this.http.post<ApiResponse<string>>(`${this.apiUrl}/queryClsDate`, {});
   }
 
-  deleteTLS27020(params: { idList: number[] }): Observable<ApiResponse<any>> {
+  deleteTLS27020(params: deleteTLS27020): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/deleteTLS27020`, params);
   }
 }

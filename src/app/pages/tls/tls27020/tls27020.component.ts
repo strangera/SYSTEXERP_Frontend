@@ -79,7 +79,11 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
       accept: () => {
         this.loading = true;
         const body = {
-          idList: selectedItems.map(item => item.ID),
+          selectList: selectedItems.map(item => ({
+            ID: item.ID,
+            ECR_No: item.ECR_No,
+            TXN_Date: this.datePipe.transform(item.TXN_Date, 'yyyy-MM-dd') ?? '',
+          }))
         };
         this.tls27020Service.deleteTLS27020(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
           this.messageService.successBubble(res.Message);
