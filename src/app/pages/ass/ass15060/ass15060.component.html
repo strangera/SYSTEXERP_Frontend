@@ -1,11 +1,6 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-        <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-      </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -20,100 +15,153 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
+          <app-radiobutton
+            label="查詢條件"
+            groupname="QUERY_MODE"
+            [control]="queryForm.controls.QUERY_MODE"
+            [options]="QUERY_MODE_OPTIONS"
+            [submitted]="submitted"
+          ></app-radiobutton>
+        </div>
+        <hr />
+        <div
+          class="grid p-fluid"
+          *ngIf="queryForm.controls.QUERY_MODE.value === 1"
+        >
+          <app-radiobutton
+            label="異動類型"
+            groupname="MV_TYPE"
+            [control]="queryForm.controls.MV_TYPE"
+            [options]="MV_TYPE_OPTIONS"
+            [submitted]="submitted"
+          ></app-radiobutton>
+        </div>
+        <div
+          class="grid p-fluid"
+          *ngIf="queryForm.controls.QUERY_MODE.value === 2"
+        >
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="財產編號/名稱"
+              controlName="ASSET_ID"
+              [options]="assetOptions$ | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ASSET_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+        <div
+          class="grid p-fluid"
+          *ngIf="queryForm.controls.QUERY_MODE.value === 3"
+        >
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
-              label="以狀態查詢"
-              [control]="queryForm.controls.Querybystatus"
-              [options]="Querybystatus"
+              label="財產類型"
+              groupname="DEPRE_YN"
+              [control]="queryForm.controls.DEPRE_YN"
+              [options]="assetTypeOptions"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
+        </div>
+        <div
+          class="grid p-fluid"
+          *ngIf="queryForm.controls.QUERY_MODE.value === 4"
+        >
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="以財產編號查詢"
-              controlName="propertynumber"
-              [options]="assetCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.propertynumber"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="以財產類型查詢"
-              [control]="queryForm.controls.propertytype"
-              [options]="propertytype"
-              [submitted]="submitted"
-            ></app-radiobutton>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類代碼"
-              controlName="bigCategoryCode"
-              [options]="bigCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.bigCategoryCode"
+              label="大分類代碼/名稱"
+              controlName="B_CLASS_ID"
+              [options]="largeOption"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.B_CLASS_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="中分類代碼"
-              controlName="midCategoryCode"
-              [options]="midCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.midCategoryCode"
+              label="中分類代碼/名稱"
+              controlName="M_CLASS_ID"
+              [options]="middleOption"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.M_CLASS_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="小分類代碼"
-              controlName="smallCategoryCode"
-              [options]="smallCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.smallCategoryCode"
+              label="小分類代碼/名稱"
+              controlName="S_CLASS_ID"
+              [options]="smallOption"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.S_CLASS_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="品項編號"
-              controlName="Itemnumber"
-              [options]="Itemnumber"
+              label="品項代碼/名稱"
+              controlName="GOODS_ID"
+              [options]="goodsIdOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Itemnumber"
+              [control]="queryForm.controls.GOODS_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+        </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
-
 <div class="card">
-  <div class="col-12">
+  <div class="col-13">
     <app-table
+      tableKey="ASS15060"
       [data]="data"
       [columns]="columns"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
-    ></app-table>
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [showDelete]="false"
+      [showCheckBox]="false"
+      [showManage]="false"
+      [showReportMode]="false"
+      dataKey="id"
+      [multiSortMeta]="[{ field: 'ASSET_ID', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+    >
+      <header>
+        <div class="flex justify-content-end gap-2">
+          <p-button
+            label="匯出 Excel"
+            [icon]="
+              exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'
+            "
+            [loading]="exportExcelLoading"
+            [disabled]="data.length === 0"
+            (click)="onExportExcel()"
+          ></p-button>
+        </div>
+      </header>
+    </app-table>
   </div>
 </div>

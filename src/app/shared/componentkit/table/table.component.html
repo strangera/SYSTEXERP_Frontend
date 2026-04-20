@@ -162,13 +162,29 @@
     let-editing="editing" let-ri="rowIndex" let-index="rowIndex">
     <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" style="height: 40.8px"
       [pSelectableRowDisabled]="!isRowSelectable(rowData) || disabled" [pReorderableRow]="index"
-      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [pEditableRow]="rowData"
+      [ngClass]="{
+        'p-disabled-row': !isRowSelectable(rowData),
+        'invalid-row': showRowValidationHint && rowData._rowValidationError?.isValid === false
+      }" [pEditableRow]="rowData"
       [pSelectableRowIndex]="rowIndex" (click)="itemClick.emit(rowData)">
       <ng-container *ngIf="!loading; else loadingTemplate">
         <td *ngIf="!showSubTotal && data.length && (showReorder || showRowEdit)">
           <span class="pi pi-bars" pReorderableRowHandle></span>
         </td>
-        <td *ngIf="showSerialNo" class="text-center">{{ rowIndex + 1 }}</td>
+        <td *ngIf="showSerialNo" class="text-center"
+          [pTooltip]="showRowValidationHint && rowData._rowValidationError?.isValid === false ? rowData._rowValidationError?.errorMessage : ''"
+          tooltipPosition="bottom">
+          <ng-container *ngIf="showRowValidationHint; else normalSerialNo">
+            <div class="flex align-items-center justify-content-center gap-1">
+              <i class="pi pi-exclamation-circle text-red-500"
+                *ngIf="rowData._rowValidationError?.isValid === false"></i>
+              <span>{{ rowIndex + 1 }}</span>
+            </div>
+          </ng-container>
+          <ng-template #normalSerialNo>
+            {{ rowIndex + 1 }}
+          </ng-template>
+        </td>
         <td
           *ngIf="IsPrint && showCheckBox && !rowEditing && (selectionMode === 'multiple' || selectionMode === 'single')">
           <p-tableCheckbox *ngIf="selectionMode === 'multiple'" class="flex justify-content-center"
@@ -261,7 +277,7 @@
           IsPrint && showCheckBox && !rowEditing && (selectionMode === 'multiple' || selectionMode === 'single')
         "></td>
       <td *ngIf="expansionColumns.length && IsPrint"></td>
-      <td *ngFor="let col of columns" class="text-center font-bold pr-2">
+      <td *ngFor="let col of columns" class="font-bold pr-2" [ngClass]="{'text-left': col.align === 'left', 'text-center': col.align === 'center' || !col.align, 'text-right': col.align === 'right'}">
         <ng-container *ngIf="col.isTotal">
           {{
           col.format ? col.format(getTotal(col.field)) : getTotal(col.field)
@@ -306,3 +322,12 @@
     </div>
   </ng-template>
 </p-table>
+<span *ngIf="tableDataEmpty" class="block w-full text-right text-red-500">
+  {{
+  errorMessage
+  ? errorMessage
+  : validateOnlySelected
+  ? "請至少選擇一筆資料"
+  : "至少輸入一筆資料"
+  }}
+</span>

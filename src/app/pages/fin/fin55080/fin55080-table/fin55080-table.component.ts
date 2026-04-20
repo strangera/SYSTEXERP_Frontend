@@ -1,6 +1,5 @@
 import { NgClass, NgFor, NgIf, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
 import { Component, inject, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core'; // 增加 OnChanges, SimpleChanges
-import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { NavigationHelperService } from 'src/app/reports/services/navigation-helper.service';
@@ -37,7 +36,7 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
   public groupedFooters: Record<string, any[]> = {};
   // 新增屬性：用於儲存過濾掉小計後的明細資料
   public detailData: any[] = [];
-  constructor(private router: Router) { } // 注入 Router
+  constructor() { } // 注入 Router
   ngOnInit() {
     this.processData();
   }
@@ -85,7 +84,8 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
     this.navHelper.openInNewTab('/reports/fin/fin55080', {
       AccNo: rowData.STYPE_ID,
       DateFrom: this.historyRequestBody?.DateFrom,
-      DateTo: this.historyRequestBody?.DateTo
+      DateTo: this.historyRequestBody?.DateTo,
+      OrgId: this.historyRequestBody?.OrgId
     });
   }
 }

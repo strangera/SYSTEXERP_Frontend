@@ -15,6 +15,7 @@ import { TableSubheaderComponent } from './table-subheader/table-subheader.compo
 @Component({
   selector: 'app-fin55080-report',
   templateUrl: './fin55080Report.component.html',
+  styleUrls: ['./fin55080Report.component.scss'],
   standalone: true,
   imports: [
     TranslateModule,
@@ -90,13 +91,12 @@ export class FIN55080ReportComponent implements OnInit {
     const accNo = params['accno'] || params['AccNo'];
     const dateFrom = params['datefrom'] || params['DateFrom'];
     const dateTo = params['dateto'] || params['DateTo'];
+    const orgId = params['orgid'] || params['OrgId']; // 新增
 
     if (!accNo || !dateFrom || !dateTo) return null;
 
     try {
-      // 月初
       const startDate = new Date(`${dateFrom}-01`);
-      // 月末邏輯
       const [year, month] = dateTo.split('-').map(Number);
       const endDate = new Date(year, month, 0);
 
@@ -105,6 +105,7 @@ export class FIN55080ReportComponent implements OnInit {
         AccNoTo: accNo,
         DateFrom: this.datePipe.transform(startDate, 'yyyy-MM-dd') || '',
         DateTo: this.datePipe.transform(endDate, 'yyyy-MM-dd') || '',
+        OrgId: orgId // 確保 Request 中包含此欄位
       };
     } catch (e) {
       console.error('日期解析失敗', e);
@@ -184,5 +185,27 @@ export class FIN55080ReportComponent implements OnInit {
       '.xlsx',
       (loading) => this.isXlsxExporting.set(loading),
     ).subscribe();
+  }
+
+  /** 取得顯示用的日期區間文字 */
+  get displayDateRange(): string {
+    if (!this.lastQuery) return '';
+    // 將 yyyy-MM-dd 轉為 yyyy/MM/dd 顯示感較佳
+    const from = this.lastQuery.DateFrom.replace(/-/g, '/');
+    const to = this.lastQuery.DateTo.replace(/-/g, '/');
+    return `${from} ～ ${to}`;
+  }
+
+  /** 取得當前會計科目的完整標籤 */
+  get currentAccNoLabel(): string {
+    if (!this.lastQuery) return '';
+    return this.getAccNoLabel(this.lastQuery.AccNoFrom ?? '');
+  }
+
+  get displayOrgLabel(): string {
+    const orgId = this.lastQuery?.OrgId;
+    if (!orgId || orgId === '') return '全部';
+    // 如果你有部門清單，可以在這裡做 find label，否則先顯示 ID
+    return orgId;
   }
 }

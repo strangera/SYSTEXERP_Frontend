@@ -284,6 +284,17 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2034_DropDownList`, {});
   }
 
+  /**
+   * 查詢倉別(FAHOS)下拉選單（ASS17100 等）
+   */
+  queryFAHOS_DropDownList(body: Record<string, unknown> = {}): Observable<
+    ApiResponse<{ WH_ID?: string | null; WH_NAME?: string | null }[]>
+  > {
+    return this.http.post<ApiResponse<{ WH_ID?: string | null; WH_NAME?: string | null }[]>>(
+      `${this.apiUrl}/queryFAHOS_DropDownList`,
+      body,
+    );
+  }
 
   // 查詢上層組織(SYS3000)資料表下拉選單
   querySYS3000_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
@@ -343,6 +354,11 @@ export class DropDownListService {
   // 查詢會計科目設定檔(GLS1005)下拉式選單
   queryGLS1005_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1005_DropDownList`, {});
+  }
+
+  // 查詢科目大分類(GLS1003)下拉式選單
+  queryGLS1003_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1003_DropDownList`, {});
   }
   // 查詢 ENG1002 下拉式選單
   queryENG1002_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {

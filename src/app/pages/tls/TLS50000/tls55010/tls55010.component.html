@@ -23,6 +23,8 @@
             (clickEvent)="onQuery(queryForm)"></app-button>
           <app-button severity="success" icon="pi pi-check" type="button" label="確定日結"
             (clickEvent)="onSubmit(queryForm)" [loading]="insertLoading"></app-button>
+          <app-button severity="danger" type="button" label="反日結" (clickEvent)="onReverse(queryForm)"
+            [loading]="reverseLoading"></app-button>
           <app-button icon="pi pi-search" type="button" label="查詢" (clickEvent)="onQueryVou(queryForm)"
             [loading]="queryLoading"></app-button>
         </div>
@@ -46,12 +48,6 @@
   }
   @else {
   <form [formGroup]="dataForm" id="dataForm" class="flex flex-column gap-3" (ngSubmit)="onReverse(dataForm)">
-    @if (showReverseBtn) {
-    <div class="grid justify-content-end m-0 mt-2">
-      <app-button severity="danger" type="button" label="反日結" (clickEvent)="onReverse(dataForm)"
-        [loading]="reverseLoading"></app-button>
-    </div>
-    }
     <p-panel header="傳票資料">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-3">

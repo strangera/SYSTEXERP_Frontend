@@ -23,6 +23,8 @@ export interface QueryFIN55050Request extends BaseQueryRequest {
   VouStatusList?: string[];
   IsTarget?: string;
   ReportMode?: string;
+
+  OrgId?: string;
 }
 
 // 明細 Row
@@ -38,6 +40,7 @@ export interface FIN55050Detail {
   AccAmt_D: number;
   AccAmt_C: number;
   OpeningBal: number;
+  AccFullLabel?: string;
 }
 
 export interface GroupedFIN55050Detail extends FIN55050Detail {

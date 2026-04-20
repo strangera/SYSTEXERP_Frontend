@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import {
@@ -84,6 +85,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   // ===== state =====
   pdfSummary: string[] = [];
   data: TLS23010Data[] = [];
+  showTable = true;
   summaryData: any[] = [];
   totalRecords = 0;
 
@@ -173,6 +175,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private tls23010Service: TLS23010Service,
+    private cdr: ChangeDetectorRef,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
     private counterNameService: CounterNameService,
@@ -240,33 +243,49 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
 
 
   // ========= 查詢（明細 / 彙總） =========
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      const val = this.queryForm.getRawValue() as any;
-      const isSummary = !!this.queryForm.get('showSummary')?.value;
+onSubmit(frm: FormGroup) {
+  this.handleSubmit(frm, () => {
+    const val = this.queryForm.getRawValue() as any;
+    const isSummary = !!this.queryForm.get('showSummary')?.value;
 
-      const pageSize = 30;
-      const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
+    const pageSize = 30;
+    const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
 
-      const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
-        ? val.SortBy
-        : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
-      ).map((s: any) => ({ ...s }));
+    const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
+      ? val.SortBy
+      : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
+    ).map((s: any) => ({ ...s }));
 
-      // ✅ 基本 payload（先把日期轉 yyyy-MM-dd）
+    /** 🔥🔥🔥 關鍵：先收合所有展開列 */
+    this.showTable = false;
+
+    /** 清空資料 */
+    this.data = [];
+    this.summaryData = [];
+    this.totalRecords = 0;
+    this.detailTotals = {};
+    this.summaryTotals = {};
+    this.historyRequestBody = null;
+
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      /** 🔥 重建 table */
+      this.showTable = true;
+      this.cdr.detectChanges();
+
+      // ===== 原本你的 payload =====
       const payload: any = {
         ...val,
         TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
         TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
-        
       };
-      payload.TXN_No_Start = this.normalizeTxnNo(payload.TXN_No_Start, 6) || undefined;
-payload.TXN_No_End   = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined; 
 
-      // ✅ UI 狀態欄位不送後端
+      payload.TXN_No_Start = this.normalizeTxnNo(payload.TXN_No_Start, 6) || undefined;
+      payload.TXN_No_End = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined;
+
       delete payload.showSummary;
 
-      // ✅ 清掉空值，避免送一堆 [] / '' / null
       Object.keys(payload).forEach((k) => {
         const v = payload[k];
         if (v === null || v === undefined) delete payload[k];
@@ -277,7 +296,7 @@ payload.TXN_No_End   = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined;
       this.loading = true;
 
       // =========================
-      // 明細：後端分頁 + 後端排序
+      // 明細
       // =========================
       if (!isSummary) {
         const detailBody = {
@@ -287,7 +306,6 @@ payload.TXN_No_End   = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined;
           SortBy: sortByArr,
         };
 
-        // ✅ 匯出 / 重新查詢要用
         this.historyRequestBody = { ...detailBody };
 
         this.tls23010Service
@@ -304,11 +322,9 @@ payload.TXN_No_End   = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined;
               this.data = queryData as TLS23010Data[];
               this.summaryData = [];
 
-              // ✅ 明細 totals
               this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
               this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
 
-              // ✅ 明細模式不該顯示彙總 totals（避免殘留）
               this.summaryTotals = {};
 
               this.updatePdfSummary?.();
@@ -328,14 +344,13 @@ payload.TXN_No_End   = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined;
       }
 
       // =========================
-      // 彙總：一次抓回（不送 pageIndex/pageSize）
+      // 彙總
       // =========================
       const summaryBody: any = {
         ...payload,
         SortBy: sortByArr,
       };
 
-      // ✅ 彙總本身不用分頁參數（TableReport 也會自己帶）
       delete summaryBody.pageIndex;
       delete summaryBody.pageSize;
 
@@ -349,23 +364,20 @@ payload.TXN_No_End   = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined;
 
             const details =
               Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
-                Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
-                  [];
+              Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+              [];
 
             this.summaryData = details.map((row: any) => ({ ...row }));
             this.data = [];
             this.totalRecords = this.summaryData.length;
 
-            // ✅ 取總計（這裡才會有 Total_TXN_TotGUI）
             this.summaryTotals = this.coerceNumberMap({
               Total_TXN_TotGUI: head?.Total_TXN_TotGUI,
               Total_TXN_TotGUI_Inv: head?.Total_TXN_TotGUI_Inv,
             });
 
-            // ✅ 彙總模式不該顯示明細 totals（避免殘留）
             this.detailTotals = {};
 
-            // ✅ 給匯出 / 其它 API 用（你原本的邏輯保留）
             const summaryPageSize = this.summaryData.length || 30;
             this.historyRequestBody = {
               ...summaryBody,
@@ -385,8 +397,10 @@ payload.TXN_No_End   = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined;
             this.pdfSummary = [];
           },
         });
-    });
-  }
+
+    }); // end setTimeout
+  });
+}
 
 
 

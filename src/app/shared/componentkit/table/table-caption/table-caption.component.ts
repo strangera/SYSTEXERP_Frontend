@@ -94,6 +94,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() totalRecords = 0;                                 // 記錄總數
   @Input() rows = 10;                                         // 每頁顯示的行數
   @Input() first = 0;                                        // 當前表格的起始索引
+  @Input() footerData: any;     // (總計)頁尾資料
   // 底層匯出
   @Input() apiUrl?: string;                         // table API URL (可選)
   @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)

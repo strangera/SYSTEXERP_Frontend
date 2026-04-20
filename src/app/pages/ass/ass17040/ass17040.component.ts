@@ -150,9 +150,9 @@ export class ASS17040Component
 
   private loadGoodsOptions(): void {
     this.dropdown
-      .queryFasItemDropDownList({ MATERIAL_TYPE: '3' })
+      .queryFasItemDropdown({ MATERIAL_TYPE: '3' })
       .pipe(untilDestroyed(this))
-      .subscribe((opts) => {
+      .subscribe((opts: Option[] | null) => {
         this.goodsOptions = opts ?? [];
       });
   }

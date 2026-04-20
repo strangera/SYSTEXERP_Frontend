@@ -17,8 +17,28 @@ export interface IDropdownItem {
 }
 
 /**
- * 查詢 FACLASSM_DropDownList 時的請求 body
+ * 查詢採購單號下拉選單(ASS13010)
+ * 後端回傳欄位：ID、APPLY_DATE
+ * 前端下拉顯示僅需 ID
  */
+export interface Ass13010PurchaseNumberDropDownItem {
+  ID: string;
+  APPLY_DATE: string;
+}
+
+/**
+ * 查詢進貨單號下拉選單(ASS15070) queryFAASSCHKMASS15070_DropDownList
+ * 前端下拉僅使用 SUBPOENA_ID
+ */
+export interface FAASSCHKMASS15070DropDownItem {
+  SUBPOENA_ID?: string | null;
+  NTAX_AMT?: number;
+  CHECK_DATE?: string | null;
+}
+
+/**
+ * 查詢 FACLASSM_DropDownList 時的請求 body
+*/
 export interface FaClassMQuery {
   CLASS_ID?: string | null;
   Keyword?: string | null;
@@ -87,11 +107,10 @@ export interface FaClass2Item {
 }
 
 /**
- * queryFASITEM_DropDownList 請求（例：ASS17040 品項編碼，MATERIAL_TYPE=3）
+ * queryFASITEM_DropDownList 請求（若後端欄位不同請再調整）
  */
-export interface FasitemQuery {
+export interface FaSitemQuery {
   MATERIAL_TYPE?: string | null;
-  Keyword?: string | null;
 }
 
 /**
@@ -656,6 +675,17 @@ export interface Aps1002Item {
 }
 
 /**
+ * 查詢會計科目子科目設定檔(GLS1005 AccSubCode)下拉式選單
+ */
+export interface GLS1005AccSubCodeItem {
+  CompNo: string;
+  AccNo: string;
+  AccCName: string;
+  AccEName: string;
+  AccDC: string;
+}
+
+/**
  * 查詢會計科目設定檔(GLS1005)下拉式選單(只顯示 GLS1005.ledger_MD=1)
  */
 export interface IGLS1005LedgerMDItem extends IDropdownItem {
@@ -690,4 +720,13 @@ export interface Sys5000SubModuleItem extends IDropdownItem {
 export interface Tls55020Query {
   /** 交易日期 (YYYY-MM-DD) */
   TXN_Date: string;
+}
+
+/**
+ * 收銀機下拉選單項目型別
+ */
+export interface queryPOS1002_DropDownListItem {
+  No: string;
+  Name: string;
+  ECR_TLT_No?: string;
 }

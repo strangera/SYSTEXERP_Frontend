@@ -28,11 +28,11 @@
       background: transparent;
       border: none;
       padding: 0;
-      p-multiselect {
+      .caption-left p-multiselect {
         width: 35px;
         height: 35px;
       }
-      p-multiselect {
+      .caption-left p-multiselect {
         .p-multiselect-label {
           display: none;
         }

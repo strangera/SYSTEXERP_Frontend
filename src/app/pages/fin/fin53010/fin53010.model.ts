@@ -498,6 +498,7 @@ export interface APS3001 {
   VEN_Name?: string | null;
   VEN_Uniform?: string | null;
   AccNo?: string | null;
+  AccCName?: string | null;
   ACP_SourceNo?: string | null;
   ACP_Amt?: number | null;
   PTA_Amt?: number | null;
@@ -679,7 +680,40 @@ export interface APS4002 {
 
 export type FIN53010Aps3001Row = APS3001 & { VEN_PayType_Name?: string | null };
 
-export type FIN53010Aps2002Row = APS2002;
+/**
+ * Swagger `#/components/schemas/_APS2002DataInfo`
+ * `queryFIN53010DetailData_ByVouNo` 之 `_APS2002.Details` 單筆（與 DB 版 `APS2002` 欄位命名不同）
+ */
+export interface Fin53010Aps2002ByVouNoRow {
+  VoucherType?: string | null;
+  TrackNo?: string | null;
+  InvoiceDate?: string | null;
+  DeclareYM?: string | null;
+  VendorTaxID?: string | null;
+  InvoiceUsage?: string | null;
+  InvoiceAmount?: number | null;
+  TaxType?: string | null;
+  NetAmount?: number | null;
+  TaxAmount?: number | null;
+  DeductionCodeDesc?: string | null;
+  CategoryType?: string | null;
+  SourceDocNo?: string | null;
+  TotalCount?: number | null;
+}
+
+/**
+ * Swagger `#/components/schemas/_APS2002Data`
+ * `queryFIN53010DetailData_ByVouNo` 之 `_APS2002` 區塊（含合計與明細）
+ */
+export interface Fin53010Aps2002ByVouNoBucket {
+  Details?: Fin53010Aps2002ByVouNoRow[] | null;
+  Total_InvoiceAmount?: number | null;
+  Total_NetAmount?: number | null;
+  Total_TaxAmount?: number | null;
+}
+
+/** 關聯明細表（ByVouNo）列型別 */
+export type FIN53010Aps2002Row = Fin53010Aps2002ByVouNoRow;
 
 /** 進項折讓 APS2002_C 明細列 */
 export interface FIN53010Aps2002_CRow {
@@ -728,7 +762,7 @@ export interface FIN53010DetailBucket<T> {
 
 export interface QueryFIN53010DetailDataByVouNoResponse {
   _APS3001?: FIN53010DetailBucket<FIN53010Aps3001Row> | null;
-  _APS2002?: FIN53010DetailBucket<FIN53010Aps2002Row> | null;
+  _APS2002?: Fin53010Aps2002ByVouNoBucket | null;
   _APS2002_C?: FIN53010DetailBucket<FIN53010Aps2002_CRow> | null;
   _ARS3001?: FIN53010DetailBucket<FIN53010Ars3001Row> | null;
   _APS4023?: FIN53010DetailBucket<FIN53010Aps4023Row> | null;

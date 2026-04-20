@@ -49,30 +49,33 @@ import { columns, POS611XOptions, queryCrdTxnFgOptions, queryFilterOptions, quer
   ]
 })
 export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> implements OnInit {
+  private today = new Date();
+  firstDay = new Date(this.today.getFullYear(), this.today.getMonth(), 1);
+  lastDay = new Date(this.today.getFullYear(), this.today.getMonth() + 1, 0);
   queryForm = this.formBuilder.group({
     tableNameList: [null, [Validators.required]],
-    ECR_No: [null, [Validators.maxLength(10)]], // ECR編號
-    TXN_No: [null, [Validators.maxLength(8)]], // 交易編號
-    TLT_No: [null, [Validators.maxLength(12)]], // 專櫃編號
-    TxnTypeList: [null],         // 銷售狀況
-    PayCrdTypeList: [null],    // 卡別
-    TxnAmt_Start: [null, [Validators.max(9999999999)]],       // 交易金額起 decimal 12, 2
-    TxnAmt_End: [null, [Validators.max(9999999999)]],      // 交易金額迄 decimal 12, 2
-    TxnDate_Start: [null],    // 交易日期起
-    TxnDate_End: [null],    // 交易日期迄
-    TxnTime_Start: [getDateTime()],  // 交易時間起
-    TxnTime_End: [getDateTime(undefined, 23, 59, 59, 999)],  // 交易時間迄
-    CrdNo: [null, [Validators.maxLength(32)]],       // 卡號
-    TmID: [null, [Validators.maxLength(8)]],      //EDC號碼
-    ReqDate_Start: [null], // 請款日期起
-    ReqDate_End: [null], // 請款日期迄
-    CrdTxnFgList: [null],      // 交易類別 資料型態，C=一般交易、I=分期交易、R=紅利交易
-    EntryFgList: [null],       // 輸入狀態
-    ApprovalCode: [null, [Validators.maxLength(6)]],  // 核准碼
-    TermNoList: [null],      // 分期期數
-    radioBtn: [null], // 查詢篩選
+    ECR_No: [null, [Validators.maxLength(10)]],             // ECR編號
+    TXN_No: [null, [Validators.maxLength(8)]],              // 交易編號
+    TLT_No: [null, [Validators.maxLength(12)]],             // 專櫃編號
+    TxnTypeList: [null],                                    // 銷售狀況
+    PayCrdTypeList: [null],                                 // 卡別
+    TxnAmt_Start: [null, [Validators.max(9999999999)]],     // 交易金額起 decimal 12, 2
+    TxnAmt_End: [null, [Validators.max(9999999999)]],       // 交易金額迄 decimal 12, 2
+    TxnDate_Start: [this.firstDay],                         // 交易日期起(預設當月首日)
+    TxnDate_End: [this.lastDay],                            // 交易日期迄(預設當月最後日)
+    TxnTime_Start: [getDateTime()],                         // 交易時間起
+    TxnTime_End: [getDateTime(undefined, 23, 59, 59, 999)], // 交易時間迄
+    CrdNo: [null, [Validators.maxLength(32)]],              // 卡號
+    TmID: [null, [Validators.maxLength(8)]],                // EDC號碼
+    ReqDate_Start: [null],                                  // 請款日期起
+    ReqDate_End: [null],                                    // 請款日期迄
+    CrdTxnFgList: [null],                                   // 交易類別 資料型態，C=一般交易、I=分期交易、R=紅利交易
+    EntryFgList: [null],                                    // 輸入狀態
+    ApprovalCode: [null, [Validators.maxLength(6)]],        // 核准碼
+    TermNoList: [null],                                     // 分期期數
+    radioBtn: [null],                                       // 查詢篩選
     pageSize: [30],
-    pageIndex: [1], // 你將初始頁碼改為 1
+    pageIndex: [1],
     SortBy: [[{ field: 'ID', order: 1 }]],
   });
   data: TLS27040Data[] = [];
@@ -81,11 +84,11 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
   columns: ReportColumn[] = columns;
   totalRecords = 0;
   lastQueryBody: any;
-  POS611XOptions = POS611XOptions;                // 收單銀行
-  ECR_NoOptions = this.dropdown.queryPos1002();   // ECR編號
-  TLT_NoOptions = this.dropdown.queryTltTalent(); // 專櫃編號
-  TxnTypeOptions = queryTxnTypeOptions;                // 銷售狀況
-  PayCrdTypeOptions = getSYS1000Options('NCML_PayCrdType');// 卡別
+  POS611XOptions = POS611XOptions;                          // 收單銀行
+  ECR_NoOptions = this.dropdown.queryPos1002();             // ECR編號
+  TLT_NoOptions = this.dropdown.queryTltTalent();           // 專櫃編號
+  TxnTypeOptions = queryTxnTypeOptions;                     // 銷售狀況
+  PayCrdTypeOptions = getSYS1000Options('NCML_PayCrdType'); // 卡別
   CrdTxnFgOptions = queryCrdTxnFgOptions;
   CheckOptions = getSYS1000Options('CTBC_Check');
   EntryFgOptions = getSYS1000Options('EntryFg');
@@ -262,10 +265,10 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     if (rowData.tableName === 'POS6118H') {
       return false;
     }
-    // 非手動新增的不可刪除(需求待確認)
-    // if (rowData.FileName !== 'ManualInput') {
-    //   return false;
-    // }
+    // 非手動新增的不可刪除
+    if (rowData.FileName !== 'ManualInput') {
+      return false;
+    }
     return rowData.isClose === 'N' && rowData.Check_Status === 'N';
   }
 }

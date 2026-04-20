@@ -275,13 +275,18 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       this.dataForm.controls.VEN_No.disable();
       this.dataForm.controls.DIS_EntryType.disable();
     } else {
-      this.dataForm.enable();
+      if (!this.isFormReadable) {
+        this.dataForm.controls.ACP_YYYYMM.enable();
+        this.dataForm.controls.VEN_No.enable();
+        this.dataForm.controls.DIS_EntryType.enable();
+      }
 
       // 彙總欄位恆禁用清單更新
-      const disableControls = [
+      const permanentDisabledControls = [
+        'DIS_No', // <--- 確保單號始終鎖定
         'RJM_TotalBuyAmt',
         'RJM_TotalBuyNet',
-        'RJM_TotalBuyTax', // 新增這兩個
+        'RJM_TotalBuyTax',
         'invoiceTotalAmount',
         'invoiceRemainingRebateAmount',
         'totalRebateAmount',
@@ -289,12 +294,16 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
         'Rebate_Amt'
       ];
 
-      disableControls.forEach(key => {
-        this.dataForm.get(key)?.disable();
+      permanentDisabledControls.forEach(key => {
+        this.dataForm.get(key)?.disable({ emitEvent: false });
       });
 
-      if (this.isFormReadable) {
+      // 特別處理 Rebate_Name：只有在可編輯且 EntryType != '1' 時才啟用
+      if (!this.isFormReadable && this.dataForm.controls.DIS_EntryType.value !== '1') {
         this.dataForm.controls.Rebate_Name.enable();
+      } else if (this.isFormReadable) {
+        // 唯讀模式下 Rebate_Name 也應鎖定
+        this.dataForm.controls.Rebate_Name.disable();
       }
     }
   }
@@ -366,12 +375,43 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
         this.loading = false;
         return;
       }
-      if ((frm.getRawValue().totalRebateAmount * -1) !== (frm.getRawValue().RJM_TotalBuyAmt || 0)) {
-        this.messageService.errorBubble('【退貨總金額】與【折讓總金額】不相符');
+      const formValue = frm.getRawValue();
+      const entryType = formValue.DIS_EntryType;
+      // ---------------------------------------------------------
+      // 2. 核心卡控邏輯調整
+      // ---------------------------------------------------------
+      let isAmountMatched = false;
+      let errorMessage = '';
+
+      if (entryType === '1') {
+        // 類別為「退貨」：檢查【發票折讓總金額】是否等於【退貨明細總金額】
+        // 注意：totalRebateAmount 在畫面上顯示為負數，所以運算時取絕對值
+        const totalRebateAbs = Math.abs(formValue.totalRebateAmount || 0);
+        const totalReturnAmt = Math.round(formValue.RJM_TotalBuyAmt || 0);
+
+        if (totalRebateAbs !== totalReturnAmt) {
+          isAmountMatched = false;
+          errorMessage = '【退貨總金額】與【折讓總金額】不相符';
+        } else {
+          isAmountMatched = true;
+        }
+      } else {
+        // 類別為「一般折讓」或「活動券」：檢查【發票折讓總金額】是否等於【折讓單開立金額】
+        const totalRebateAbs = Math.abs(formValue.totalRebateAmount || 0);
+        const openRebateAmt = Math.round(formValue.Rebate_Amt || 0);
+
+        if (totalRebateAbs !== openRebateAmt) {
+          isAmountMatched = false;
+          errorMessage = '【折讓單開立金額】與【發票折讓明細總額】不相符';
+        } else {
+          isAmountMatched = true;
+        }
+      }
+      if (!isAmountMatched) {
+        this.messageService.errorBubble(errorMessage);
         this.loading = false;
         return;
       }
-      const formValue = frm.getRawValue();
       const paramBody = {
         DIS_No: this.isFormCreateable ? undefined : formValue.DIS_No,
         ACP_YYYYMM: this.datePipe.transform(formValue.ACP_YYYYMM, 'yyyyMM') || '',

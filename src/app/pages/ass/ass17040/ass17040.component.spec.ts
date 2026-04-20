@@ -43,7 +43,7 @@ describe('ASS17040Component', () => {
             queryFaClassM: () => of([]),
             queryFaClass1: () => of([]),
             queryFaClass2: () => of([]),
-            queryFasItemDropDownList: () => of([]),
+            queryFasItemDropdown: () => of([]),
           },
         },
         {

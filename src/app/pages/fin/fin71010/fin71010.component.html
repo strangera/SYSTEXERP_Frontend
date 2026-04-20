@@ -2,8 +2,6 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo"
                  class="flex-1"></app-menubar>
-    <app-button btnType="create"
-                (click)="onCreate()"></app-button>
   </div>
 
   <p-accordion>
@@ -15,42 +13,17 @@
             id="queryForm"
             (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4"
-                              [control]="qf().PayableExpense"
-                              [submitted]="submitted"
-                              optionLabel="label"
-                              optionValue="value"
-                              [fieldsConfig]="fieldsConfig"
-                              (inputValueChanged)="onAutoCompleteInputChange($event)"
-                              (formValueChanged)="onformValueChanged($event)"
-                              [formGroup]="opForm"
-                              [dialogData]="opData()"
-                              [dialogColumns]="opColumns"
-                              [loading]="opLoading"
-                              [totalRecords]="opTotalRecords()">
-          </app-dropdown-table>
+          <app-input-text class="col-12 md:col-6 lg:col-4"
+                          label="分店代號"
+                          controlName="SYS_StoreNo"
+                          [control]="qf().SYS_StoreNo"
+                          [submitted]="submitted"></app-input-text>
 
-          <app-input-number class="col-12 md:col-6 lg:col-4"
-                            [label]="'進項稅額-共同'"
-                            controlName="InputTaxCommon"
-                            [control]="qf().InputTaxCommon"
-                            [submitted]="submitted"
-                            [mode]="'currency'"
-                            [minFractionDigits]="0"
-                            [maxFractionDigits]="0"
-                            [min]="0"
-                            [max]="999999999"></app-input-number>
-
-          <app-input-number class="col-12 md:col-6 lg:col-4"
-                            [label]="'進項稅額-固定資產及費用'"
-                            controlName="InputTaxFixedAsset"
-                            [control]="qf().InputTaxFixedAsset"
-                            [submitted]="submitted"
-                            [mode]="'currency'"
-                            [minFractionDigits]="0"
-                            [maxFractionDigits]="0"
-                            [min]="0"
-                            [max]="999999999"></app-input-number>
+          <app-input-text class="col-12 md:col-6 lg:col-4"
+                          label="收銀機號"
+                          controlName="ECR_No"
+                          [control]="qf().ECR_No"
+                          [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -64,18 +37,15 @@
   </p-accordion>
 </div>
 
-
 <div class="card">
-  <div class="col-12">
-    <app-table [data]="tableData()"
-               [columns]="columns"
-               [totalRecords]="totalRecords()"
-               (edit)="onEdit($event)"
-               (detail)="onDetail($event)"
-               [tableKey]="'FIN52090'"
-               [dataKey]="'AccNo'"
-               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-               [lazy]="true"
-               [loading]="tableLoading()"></app-table>
-  </div>
+  <app-table [data]="tableData()"
+             [columns]="columns"
+             [totalRecords]="totalRecords()"
+             (edit)="onEdit($event)"
+             (detail)="onDetail($event)"
+             [tableKey]="'FIN71010'"
+             [dataKey]="'ECR_No'"
+             (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+             [lazy]="true"
+             [loading]="tableLoading()"></app-table>
 </div>

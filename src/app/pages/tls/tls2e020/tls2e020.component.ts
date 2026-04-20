@@ -1,9 +1,11 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls2e020Data, Tls2e020QueryBody, Tls2e020Service } from '@service/api/tls/tls2e020.service'; // 確保 Tls2e020QueryBody 已被引入
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -19,14 +21,16 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
   selector: 'app-tls2e020',
   templateUrl: './tls2e020.component.html',
   standalone: true,
-  imports: [TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
+  imports: [AsyncPipe, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, TranslateModule]
 })
 export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> implements OnInit {
   money_typeOptions = getSYS1000Options('money_type');
+  tltNoOptions$ = this.dropdown.queryTltTalent(); // 專櫃下拉（單選）
   queryForm = this.formBuilder.nonNullable.group({
     sam_yyymm: [new Date(), [Validators.required]], // 查詢年月
     money_type: [this.money_typeOptions[2]?.value || null as string | null, [Validators.required]], // 結帳方式 (使用 string|null 來匹配後端)
     sam_termno: [1, [Validators.required]], // 期別 (使用 number|null)
+    tlt_no: ['', [Validators.maxLength(12)]], // 指定專櫃（可不選；不選=全部專櫃）
     PageSize: [30],
     PageIndex: [1],
   });
@@ -44,14 +48,15 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
     { field: 'money_type', header: '結帳方式', visible: true, format: (value) => getSYS1000('money_type', value) },
     { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'sam_type', header: '費用型態', visible: true, format: (value) => getSYS1000('sam_type', value) },
-    { field: 'CRT_Date', header: '關帳時間', visible: true, format: formatDate },
-    { field: 'CRT_USR_No', header: '關帳者', visible: true },
-    { field: 'CRT_USR_Name', header: '關帳者姓名', visible: true },
+    { field: 'Final_Date', header: '關帳時間', visible: true, format: formatDate },
+    { field: 'Final_USR_No', header: '關帳者', visible: true },
+    { field: 'Final_USR_Name', header: '關帳者姓名', visible: true },
   ];
   sam_termnoOptions: { value: number, label: string }[] = []; // 期別選項
 
   constructor(
-    public readonly tls2e020Service: Tls2e020Service
+    public readonly tls2e020Service: Tls2e020Service,
+    private dropdown: DropdownApiService
   ) {
     super();
   }
@@ -88,7 +93,8 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
             this.queryForm.controls.sam_termno.setValue(1, { emitEvent: false });
           }
         } else {
-          this.queryForm.controls.sam_termno.setValue(null as any, { emitEvent: false });
+          // 表單是 nonNullable，避免塞 null；重置為預設 1
+          this.queryForm.controls.sam_termno.setValue(1, { emitEvent: false });
         }
       });
   }
@@ -134,8 +140,11 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
   onSettle(frm: FormGroup) {
     this.queryForm.controls.money_type.setValidators([Validators.required]);
     this.queryForm.controls.sam_termno.setValidators([Validators.required]);
+    // 指定專櫃：可不選（不選=全部專櫃），因此不加 required
+    this.queryForm.controls.tlt_no.setValidators([Validators.maxLength(12)]);
     this.queryForm.controls.money_type.updateValueAndValidity();
     this.queryForm.controls.sam_termno.updateValueAndValidity();
+    this.queryForm.controls.tlt_no.updateValueAndValidity();
     this.submitted = true;
     if (!frm.valid) {
       this.submitted = false;
@@ -148,7 +157,9 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
       ...frm.value,
       sam_yyymm: convertDateToYYYYMM(frm.value.sam_yyymm),
       sam_termno: frm.value.sam_termno as number,
-      money_type: frm.value.money_type as number,
+      money_type: Number(frm.value.money_type),
+      // 不選指定專櫃時送空字串，代表「全部專櫃」
+      tlt_no: String(this.queryForm.controls.tlt_no.value ?? '').trim(),
     }
 
     this.tls2e020Service.executeTls2e020(body).pipe(finalize(() => this.settleLoding = false), untilDestroyed(this)).subscribe(res => {

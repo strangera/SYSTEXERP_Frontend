@@ -1,4 +1,7 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import { ASS15010Component } from './ass15010.component';
 
@@ -8,9 +11,9 @@ describe('ASS15010Component', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [ASS15010Component]
-    })
-    .compileComponents();
+      imports: [ASS15010Component],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(ASS15010Component);
     component = fixture.componentInstance;
