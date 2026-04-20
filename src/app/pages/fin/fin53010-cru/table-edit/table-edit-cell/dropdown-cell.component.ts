@@ -29,7 +29,7 @@ import { CellInput } from './table-edit-cell.model';
               (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
               (onHide)="handleHide()"
               (keydown.enter)="handleEnter($event)"
-              [virtualScroll]="true"
+              [virtualScroll]="(getOptions(cellInput.rowData, cellInput.col)?.length ?? 0) > 10"
               [virtualScrollItemSize]="37"
               scrollHeight="250px"
               [showClear]="cellInput.col.showClear ?? true"
