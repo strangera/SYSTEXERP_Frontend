@@ -181,11 +181,11 @@ function buildInsertNext(
         ? stepAR.map(r => mapStepArToInsert(r, deps))
         : [],
     insertAPS4023Datas:
-      activeSteps.includes(5) && stepSales.length
+      activeSteps.includes(6) && stepSales.length
         ? stepSales.map(r => mapStepSalesToInsert4023(r))
         : [],
     insertAPS2002Datas:
-      activeSteps.includes(6) && stepPurchase.length
+      activeSteps.includes(5) && stepPurchase.length
         ? stepPurchase.map((r, i) => mapStepPurchaseToInsert2002(r, i, deps))
         : [],
     insertAPS4002Datas:
@@ -310,10 +310,10 @@ function buildUpdateNext(
     const r = stepAR[0];
     next.updateARS3001Datas = [mapStepArToUpdate(r, deps, r.id)];
   }
-  if (activeSteps.includes(5) && stepSales.length) {
+  if (activeSteps.includes(6) && stepSales.length) {
     next.updateAPS4023Datas = stepSales.map(r => mapStepSalesToUpdate4023(r));
   }
-  if (activeSteps.includes(6) && stepPurchase.length) {
+  if (activeSteps.includes(5) && stepPurchase.length) {
     next.updateAPS2002Datas = stepPurchase.map((r, i) => mapStepPurchaseToUpdate2002(r, i, deps, r.id));
   }
   if (activeSteps.includes(7) && stepBank.length) {
