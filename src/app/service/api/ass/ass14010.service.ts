@@ -59,17 +59,6 @@ export interface ass14010mainData {
 
 //明細頁 主檔 + 明細
 export interface ass14010detailData {
-  'RECEIPT_TYPE': string; // 單據種類(0發票 1收據)
-  'RECEIPT_TYPE_NAME'?: string; // 單據種類名稱
-  'RECEIPT_NO': string; // 發票號碼
-  'RECEIPT_DATE': Date; // 發票日期
-  'TICKET_DATE': Date; // 票據到期日
-  'DEC_YM': string; // 申報年月(YYYYMM)
-  'INV_FORMAT': string; // 發票格式
-  'TAX_CODE': string; // 稅別
-  'TAX_CODE_NAME'?: string; // 稅別名稱
-  'REDU_CODE': string; // 扣抵別
-  'REDU_CODE_NAME'?: string; // 扣抵別名稱
   'NTX_AMT': number; // 未稅金額
   'TX_AMT': number; // 稅額
   'AMT': number; // 含稅金額
@@ -79,8 +68,17 @@ export interface ass14010detailData {
 
 // 供應商資料
 export interface Ass14010Supplier {
-  'SUPPLIER_ID': string; // 供應商代碼
-  'SUPPLIER_NAME': string; // 供應商名稱
+  'RECEIPT_TYPE': string; // 單據種類(0發票 1收據)
+  'RECEIPT_NO': string; // 發票號碼
+  'RECEIPT_DATE': Date; // 發票日期
+  'TICKET_DATE': Date; // 票據到期日
+  'DEC_YM': string; // 申報年月(YYYYMM)
+  'INV_FORMAT': string; // 發票格式
+  'TAX_CODE': string; // 稅別
+  'TAX_CODE_NAME'?: string; // 稅別名稱
+  'REDU_CODE': string; // 扣抵別
+  'REDU_CODE_NAME'?: string; // 扣抵別名稱
+
   'TICKET_BE': number; // 付款天數
   'TOTAL_AMT': number; // 發票總金額
   'TOTAL_NTX_AMT': number; // 未稅總金額

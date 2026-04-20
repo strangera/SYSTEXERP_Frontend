@@ -85,8 +85,15 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   supplierData: Ass14010Supplier[] = [];
   supplierColumn: EditColumn[] = []; //等下拉讀取完成後寫入定義
   defaultsupplier = {
-    'SUPPLIER_ID': null, // 供應商代碼
-    'SUPPLIER_NAME': null, // 供應商名稱
+    'RECEIPT_TYPE': null, // 單據種類(0發票 1收據)
+    'RECEIPT_NO': null, // 發票號碼
+    'RECEIPT_DATE': null, // 發票日期
+    'TICKET_DATE': null, // 票據到期日
+    'DEC_YM': null, // 申報年月(YYYYMM)
+    'INV_FORMAT': null, // 發票格式
+    'TAX_CODE': null, // 稅別
+    'REDU_CODE': null, // 扣抵別
+
     'TICKET_BE': null, // 付款天數
     'TOTAL_AMT': null, // 發票總金額
     'TOTAL_NTX_AMT': null, // 未稅總金額
@@ -149,8 +156,8 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
       const payloadd = {
         RECEIPT_INS_ID: frm.get('RECEIPT_INS_ID')?.value,
-        SUPPLIER_ID: frm.get('SUPPLIER_ID')?.value,
-        TOKEN_NO: frm.get('TOKEN_NO')?.value,
+        SUPPLIER_ID: frm.get('SUPPLIER_ID')?.value, // 供應商代碼(不可修改)
+        TOKEN_NO: frm.get('TOKEN_NO')?.value, // 驗收單號(多筆)
         TICKET_BE: frm.get('TICKET_BE')?.value,
         RECEIPT_TYPE: frm.get('RECEIPT_TYPE')?.value,
         RECEIPT_NO: frm.get('RECEIPT_NO')?.value,
@@ -246,9 +253,16 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
         }));
 
         this.supplierColumn = [
-          { field: 'SUPPLIER_ID', header: '供應商代碼' },
-          { field: 'SUPPLIER_NAME', header: '供應商名稱' },
-          { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber' },
+          { field: 'RECEIPT_TYPE', header: '單據種類', type: 'dropdown', options: this.RECEIPT_TYPE_Options, disabled: () => true },
+          { field: 'RECEIPT_NO', header: '發票號碼' },
+          { field: 'RECEIPT_DATE', header: '發票日期', type: 'date', disabled: () => true },
+          { field: 'TICKET_DATE', header: '票據到期日', type: 'date', disabled: () => true },
+          { field: 'DEC_YM', header: '申報年月', type: 'date', options: { dateFormat: 'yy/mm' }, disabled: () => true },
+          { field: 'INV_FORMAT', header: '發票格式', type: 'dropdown', options: this.INV_FORMAT_Options, disabled: () => true },
+          { field: 'TAX_CODE_NAME', header: '稅別', disabled: () => true },
+          { field: 'REDU_CODE_NAME', header: '扣抵別', disabled: () => true },
+
+          { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber', disabled: () => true },
           { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber', disabled: () => true },
           { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber', disabled: () => true },
           { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber', disabled: () => true },
