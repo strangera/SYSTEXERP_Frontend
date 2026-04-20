@@ -57,11 +57,12 @@ export class Fin41050Component extends BasicQueryPageComponent<fin41050data> imp
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  Org_ID_Options: { value: string; label: string }[] = []; // 供應商編號 下拉選項 (ass12050: queryPOS2013_DropDownList)
-  AccNo_Options: { value: string; label: string }[] = []; // 會計科目 下拉選項 (ass12050: queryPOS2023_DropDownList)
+  Org_ID_Options: { value: string; label: string }[] = []; // 供應商編號 下拉選項
+  AccNo_Options: { value: string; label: string }[] = []; // 會計科目 下拉選項
 
   data: fin41050data[] = [];
   columns: Column[] = [
+    // { field: 'ID', header: 'ID', hidden: true },
     { field: 'Org_ID', header: '部門代號' },
     { field: 'Org_Name', header: '部門名稱' },
     { field: 'Budget_Version', header: '版本' },
