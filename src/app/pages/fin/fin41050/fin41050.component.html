@@ -1,1 +1,106 @@
-<p>fin41050 works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="部門代號/名稱"
+            controlName="Org_ID"
+            [options]="Org_ID_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.Org_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="版本"
+            controlName="Budget_Version"
+            [control]="queryForm.controls.Budget_Version"
+            [submitted]="submitted"
+          ></app-input-text>
+          <app-calendar
+            class="col-12 md:col-6 lg:col-4"
+            calendarType="dateMonthOne"
+            label="年月"
+            controlName="Budget_YM"
+            [control]="queryForm.controls.Budget_YM"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+        <div class="grid p-fluid">
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="會計科目"
+            controlName="AccNo"
+            [options]="AccNo_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.AccNo"
+            [submitted]="submitted"
+          ></app-dropdown>
+          <app-input-number-range
+            class="col-12 md:col-6 lg:col-4"
+            label="金額區間"
+            descLabel=""
+            [startControl]="queryForm.controls.Budget_From"
+            [endControl]="queryForm.controls.Budget_To"
+            [submitted]="submitted"
+          ></app-input-number-range>
+          <app-input-text
+            class="col-12 md:col-6 lg:col-4"
+            label="備註"
+            controlName="Remark"
+            [control]="queryForm.controls.Remark"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <div class="col-13">
+    <app-table
+      tableKey="FIN41050"
+      [data]="data"
+      [columns]="columns"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      (delete)="onDelete($event)"
+      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [showDelete]="true"
+      [showCheckBox]="true"
+      [showReportMode]="false"
+      dataKey="ID"
+      [multiSortMeta]="[{ field: 'Org_ID', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+    ></app-table>
+  </div>
+</div>
