@@ -36,6 +36,22 @@ export interface FAASSCHKMASS15070DropDownItem {
   CHECK_DATE?: string | null;
 }
 
+/** 
+ * 查詢 queryFAASSCHKM_DropDownList 時的請求 body
+ */
+export interface FAASSCHKMQuery {
+  Keyword?: string;
+}
+
+/**
+ * 查詢採購單號下拉選單 queryFAASSCHKM_DropDownList
+ * 後端回傳欄位：SUBPOENA_ID
+ * 前端下拉顯示僅需 後端回傳欄位：SUBPOENA_ID
+ */
+export interface FAASSCHKMDropDownItem {
+  SUBPOENA_ID?: string | null;
+}
+
 /**
  * 查詢 FACLASSM_DropDownList 時的請求 body
 */
