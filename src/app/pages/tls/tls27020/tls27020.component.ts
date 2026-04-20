@@ -69,7 +69,7 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
   };
 
   isRowSelectable(rowData: TLS27020Data): boolean {
-    return rowData.isClose === 'N' && rowData.Check_Status === 'N';
+    return rowData.isClose === 'N' && rowData.Check_Status === 'N' && rowData.TSDP_File === 'ManualInput'; // 只有未關帳、未審核且自行新增的資料可選取
   }
 
   onDelete(selectedItems: TLS27020Data[]) {
