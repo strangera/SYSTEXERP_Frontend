@@ -106,18 +106,6 @@ export interface FaClass2Item {
   NOTES?: string | null;
 }
 
-/** queryFASITEM_DropDownList 請求（耗材品項等） */
-export interface FasItemDropDownQuery {
-  MATERIAL_TYPE: string;
-}
-
-/** queryFASITEM_DropDownList 回傳列 */
-export interface FasItemDropDownItem {
-  RowNo?: string;
-  GOODS_ID: string;
-  GOODS_NAME?: string;
-}
-
 /**
  * queryFASITEM_DropDownList 請求（若後端欄位不同請再調整）
  */

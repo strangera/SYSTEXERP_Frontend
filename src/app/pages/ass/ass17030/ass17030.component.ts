@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import {
@@ -12,20 +12,17 @@ import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import {
-  Ass17030DeptHeader,
-  Ass17030TableReportComponent,
-} from '@shared/componentkit/ass17030-table-report/ass17030-table-report.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, map, Observable } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ASS17020TableReportComponent } from '../ass17020/ass17020-table-report.component';
+import { ColumnGroup, ReportColumn } from '../ass17020/ass17020-table-report.model';
 
 @UntilDestroy()
 @Component({
@@ -41,7 +38,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
     CalendarRangeComponent,
     DropdownComponent,
     ButtonComponent,
-    Ass17030TableReportComponent,
+    ASS17020TableReportComponent,
     TranslateModule,
   ],
 })
@@ -65,12 +62,10 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
   public readonly tableData = signal<QueryASS17030Detail[]>([]);
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(false);
-  public readonly deptHeaders = signal<Ass17030DeptHeader[]>([]);
   public readonly footerData = signal<Record<string, unknown> | undefined>(undefined);
   lastQueryBody?: QueryASS17030Request & { pageSize?: number; pageIndex?: number };
   private currentDeptData: QueryASS17030DeptInfo[] = [];
-
-  @ViewChild(Ass17030TableReportComponent) tableReport!: Ass17030TableReportComponent;
+  columnGroup: ColumnGroup[] = [];
 
   columns: ReportColumn[] = [
     { field: 'Goods', header: '品名', visible: true },
@@ -140,7 +135,7 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
 
   private loadGoodsOptions(): void {
     this.dropdownApiService
-      .queryFasItemDropDownList({ MATERIAL_TYPE: '3' })
+      .queryFasItemDropdown({ MATERIAL_TYPE: '3' })
       .pipe(untilDestroyed(this))
       .subscribe(opts => {
         this.goodsOptions = opts ?? [];
@@ -219,8 +214,8 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
         const deptData = res.DeptData ?? this.currentDeptData;
         if (res.DeptData?.length) {
           this.currentDeptData = res.DeptData;
-          this.deptHeaders.set(this.toDeptHeaders(res.DeptData));
           this.columns = this.buildColumns(res.DeptData);
+          this.columnGroup = this.buildColumnGroup(res.DeptData);
         }
         if (res.Summary) {
           this.footerData.set(this.buildFooterData(res.Summary, deptData));
@@ -237,9 +232,7 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const rawFormValue = frm.getRawValue();
-      const currentSort = this.tableReport?.multiSortMeta?.length
-        ? [...this.tableReport.multiSortMeta]
-        : undefined;
+      const currentSort = this.lastQueryBody?.SortBy?.length ? [...this.lastQueryBody.SortBy] : undefined;
       this.lastQueryBody = {
         StartDate: rawFormValue.Sdate ? this.toStartOfDayIso(rawFormValue.Sdate) : undefined,
         EndDate: rawFormValue.Edate ? this.toEndOfDayIso(rawFormValue.Edate) : undefined,
@@ -275,13 +268,6 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
     });
   }
 
-  private toDeptHeaders(deptData: QueryASS17030DeptInfo[]): Ass17030DeptHeader[] {
-    return deptData.map(item => ({
-      key: item.Key ?? '',
-      name: item.Name || item.Key || '',
-    }));
-  }
-
   private buildColumns(deptData: QueryASS17030DeptInfo[]): ReportColumn[] {
     const baseColumns: ReportColumn[] = [
       { field: 'Goods', header: '品名', visible: true },
@@ -293,14 +279,18 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
         {
           field: this.getDeptQtyField(key),
           header: '數量',
+          groupField: key,
           visible: true,
+          showSort: false,
           format: this.money,
           align: 'right',
         },
         {
           field: this.getDeptAmtField(key),
           header: '金額',
+          groupField: key,
           visible: true,
+          showSort: false,
           format: this.money,
           align: 'right',
         },
@@ -311,6 +301,13 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
       { field: 'TotalAmt', header: '總計金額', visible: true, format: this.money, align: 'right' },
     ];
     return [...baseColumns, ...deptColumns, ...totalColumns];
+  }
+
+  private buildColumnGroup(deptData: QueryASS17030DeptInfo[]): ColumnGroup[] {
+    return deptData.map(item => ({
+      field: item.Key ?? '',
+      header: item.Name || item.Key || '',
+    }));
   }
 
   private flattenRow(row: QueryASS17030Detail, deptData: QueryASS17030DeptInfo[]): QueryASS17030Detail {

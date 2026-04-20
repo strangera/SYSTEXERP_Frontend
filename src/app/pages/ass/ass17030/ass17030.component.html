@@ -45,10 +45,11 @@
 
 <div class="card">
   <div class="col-12">
-    <app-ass17030-table-report [data]="tableData()" dataKey="_rowKey" tableKey="ASS17030_Data" [columns]="columns"
-      [deptHeaders]="deptHeaders()" topGroupHeader="單位領用數量" [footerData]="footerData()"
-      [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
-      [queryFunction]="queryFunction" [showCheckBox]="false" [showReportMode]="false" [showDelete]="false"
-      [showEdit]="false" [showDetail]="false" [showManage]="false"></app-ass17030-table-report>
+    <app-ass17020-table-report [data]="tableData()" dataKey="_rowKey" tableKey="ASS17030_Data" [columns]="columns"
+      outerGroupHeader="單位領用數量" [columnGroup]="columnGroup.length ? columnGroup : undefined"
+      [footerData]="footerData()" [totalRecords]="totalRecords()" [loading]="tableLoading()"
+      [lastQueryBody]="lastQueryBody" [queryFunction]="queryFunction" [showCheckBox]="false"
+      [showReportMode]="false" [showDelete]="false" [showEdit]="false" [showDetail]="false"
+      [showManage]="false"></app-ass17020-table-report>
   </div>
 </div>
