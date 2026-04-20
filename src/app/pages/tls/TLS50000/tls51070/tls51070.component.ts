@@ -429,10 +429,14 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       // --- 第一層：處理 ErrorFilePath (資料列內容有誤) ---
       // 這會處理你之前貼的那種「成功 0 筆，失敗 6 筆」的情況
       if (data?.ErrorFilePath) {
-        this.erroreportService.showImportError(
-          data.ErrorFilePath,
-          `匯入完成（含錯誤）：成功 ${data.SuccessCount} 筆，失敗 ${data.ErrorCount} 筆`
-        );
+        // this.erroreportService.showImportError(
+        //   data.ErrorFilePath,
+        //   `匯入完成（含錯誤）：成功 ${data.SuccessCount} 筆，失敗 ${data.ErrorCount} 筆`
+        // );
+
+        this.messageService.errorBubble(`匯入失敗，請確認錯誤檔：成功 ${data.SuccessCount} 筆，失敗 ${data.ErrorCount} 筆。`);
+        this.downloadErrorFile(data.ErrorFilePath);
+
         if (data.SuccessCount > 0) {
           this.importDialogVisible = false;
           this.onSubmit(this.queryForm);
