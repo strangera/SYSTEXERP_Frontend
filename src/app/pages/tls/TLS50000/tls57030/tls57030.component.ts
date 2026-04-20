@@ -101,6 +101,24 @@ export class TLS57030Component extends BasicQueryPageComponent<TLS57030Detail> i
 
   ngOnInit(): void {
     this.initializePage('TLS57030');
+    // 在 ngOnInit 或是專門的初始化方法中加入
+    this.queryForm.controls.LOGO_No.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((logoNo) => {
+        if (logoNo) {
+          // 呼叫 API 查詢該品牌對應的倉別
+          this.dropdown.queryLogoAccorHOS({ LOGO_No: logoNo }).subscribe((res) => {
+            if (res && res.length > 0) {
+              // 邏輯 A：如果該品牌只對應一個倉別，直接自動帶入
+              if (res.length === 1) {
+                this.queryForm.patchValue({ HOS_No: res[0]['HOS_No'] });
+              }
+              // 邏輯 B：如果有多個倉別，通常會讓使用者選，但你可以決定是否清空舊值
+              // else { this.queryForm.patchValue({ HOS_No: null }); }
+            }
+          });
+        }
+      });
   }
 
   onSubmit(frm: FormGroup) {
