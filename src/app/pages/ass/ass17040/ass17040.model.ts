@@ -21,24 +21,56 @@ export interface QueryASS17040Request extends BaseQueryRequest {
   GoodsID?: string | null;
 }
 
-/** 單筆明細 */
-export interface QueryASS17040Detail {
+export interface ASS17040DeptInfo {
+  Key: string;
+  Name: string;
+}
+
+export interface ASS17040DeptDetail {
+  Qty: number;
+  Amt: number;
+}
+
+/** API 明細列 */
+export interface ASS17040DataRow {
   Seq?: number | null;
   GoodsID?: string | null;
   GoodsName?: string | null;
   GoodsPrice?: number | null;
+  Depts?: Record<string, ASS17040DeptDetail> | null;
   TotalQty?: number | null;
   TotalAmt?: number | null;
-  RowType?: string | null;
-  /** 部門編號_數量和金額（動態欄位） */
-  OrgDetails?: Record<string, string> | null;
-  /** 前端列鍵 */
-  rowKey?: string;
 }
 
-/** API Data 包裝 */
-export interface QueryASS17040DataWrapper {
+export interface ASS17040Summary {
+  Depts?: Record<string, ASS17040DeptDetail> | null;
+  TotalQty?: number | null;
+  TotalAmt?: number | null;
+}
+
+export interface ASS17040QueryData {
+  DeptData: ASS17040DeptInfo[];
+  Data: ASS17040DataRow[];
+  Summary?: ASS17040Summary | null;
+}
+
+/** HTTP Data 本體（含分頁） */
+export interface QueryASS17040DataPayload {
+  QueryData: ASS17040QueryData;
   TotalRows?: number;
   TotalPages?: number;
-  Details?: QueryASS17040Detail[] | null;
+}
+
+/**
+ * 攤平後供報表使用（動態欄位以 dept__{Key}__Qty / dept__{Key}__Amt，Key 會經 sanitize）
+ */
+export interface ASS17040FlatRow {
+  Seq?: number | null;
+  GoodsName?: string | null;
+  GoodsPrice?: number | null;
+  TotalQty?: number | null;
+  TotalAmt?: number | null;
+  /** 供 table dataKey */
+  __rowUid?: string;
+  [key: string]: string | number | null | undefined;
 }

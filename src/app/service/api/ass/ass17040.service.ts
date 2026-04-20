@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import {
-  QueryASS17040DataWrapper,
+  QueryASS17040DataPayload,
   QueryASS17040Request,
 } from '@pages/ass/ass17040/ass17040.model';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
@@ -16,8 +16,8 @@ export class ASS17040Service {
 
   queryASS17040(
     body: QueryASS17040Request
-  ): Observable<ApiResponse<QueryASS17040DataWrapper>> {
-    return this.http.post<ApiResponse<QueryASS17040DataWrapper>>(
+  ): Observable<ApiResponse<QueryASS17040DataPayload>> {
+    return this.http.post<ApiResponse<QueryASS17040DataPayload>>(
       `${this.apiUrl}/queryASS17040`,
       body
     );

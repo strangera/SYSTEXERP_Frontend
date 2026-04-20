@@ -10,22 +10,28 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import {
+  formatAmount,
+  formatAmountWithDecimals,
+} from '@shared/componentkit/table-report/table-report.model';
+import { SortOption } from '@shared/models/api/base-api.interface';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { Observable, finalize, map } from 'rxjs';
-import { QueryASS17040Detail, QueryASS17040Request } from './ass17040.model';
-
-function formatOrgDetails(value: unknown): string {
-  if (value == null || typeof value !== 'object') {
-    return '';
-  }
-  return Object.entries(value as Record<string, string>)
-    .map(([k, v]) => `${k}: ${v}`)
-    .join('；');
-}
+import { Observable, finalize, map, tap } from 'rxjs';
+import { ASS17020TableReportComponent } from '../ass17020/ass17020-table-report.component';
+import {
+  ColumnGroup,
+  ReportColumn,
+} from '../ass17020/ass17020-table-report.model';
+import {
+  ASS17040DataRow,
+  ASS17040DeptInfo,
+  ASS17040FlatRow,
+  ASS17040Summary,
+  QueryASS17040DataPayload,
+  QueryASS17040Request,
+} from './ass17040.model';
 
 @UntilDestroy()
 @Component({
@@ -41,12 +47,12 @@ function formatOrgDetails(value: unknown): string {
     CalendarRangeComponent,
     DropdownComponent,
     ButtonComponent,
-    TableReportComponent,
+    ASS17020TableReportComponent,
     TranslateModule,
   ],
 })
 export class ASS17040Component
-  extends BasicQueryPageComponent<QueryASS17040Detail>
+  extends BasicQueryPageComponent<ASS17040FlatRow>
   implements OnInit
 {
   readonly queryForm = this.formBuilder.nonNullable.group({
@@ -65,25 +71,45 @@ export class ASS17040Component
   smallCategoryOptions: Option[] = [];
   goodsOptions: Option[] = [];
 
-  data: QueryASS17040Detail[] = [];
+  data: ASS17040FlatRow[] = [];
   totalRecords = 0;
   lastQueryBody: QueryASS17040Request | null = null;
 
-  @ViewChild(TableReportComponent) tableReport!: TableReportComponent;
+  columns: ReportColumn[] = [];
+  columnGroup: ColumnGroup[] = [];
+  summaryFooter: Record<string, unknown> | null = null;
 
-  readonly columns: ReportColumn[] = [
+  @ViewChild(ASS17020TableReportComponent)
+  tableReport!: ASS17020TableReportComponent;
+
+  private readonly defaultPageSize = 30;
+
+  private readonly baseColumns: ReportColumn[] = [
     { field: 'Seq', header: '序號', sortField: 'Seq' },
-    { field: 'GoodsID', header: '品項ID', sortField: 'GoodsID' },
-    { field: 'GoodsName', header: '品項名稱', sortField: 'GoodsName' },
-    { field: 'GoodsPrice', header: '品項單價', sortField: 'GoodsPrice' },
-    { field: 'TotalQty', header: '總數量', sortField: 'TotalQty' },
-    { field: 'TotalAmt', header: '總金額', sortField: 'TotalAmt' },
-    { field: 'RowType', header: '總筆性質', sortField: 'RowType' },
+    { field: 'GoodsName', header: '品名', sortField: 'GoodsName' },
     {
-      field: 'OrgDetails',
-      header: '部門明細',
-      showSort: false,
-      format: (v, _i, row) => formatOrgDetails(row?.OrgDetails ?? v),
+      field: 'GoodsPrice',
+      header: '品項單價',
+      align: 'right',
+      sortField: 'GoodsPrice',
+      format: (v) => formatAmountWithDecimals(v, 2),
+    },
+  ];
+
+  private readonly tailColumns: ReportColumn[] = [
+    {
+      field: 'TotalQty',
+      header: '總計數量',
+      align: 'right',
+      sortField: 'TotalQty',
+      format: (v) => formatAmount(v as number),
+    },
+    {
+      field: 'TotalAmt',
+      header: '總計金額',
+      align: 'right',
+      sortField: 'TotalAmt',
+      format: (v) => formatAmount(v as number),
     },
   ];
 
@@ -98,6 +124,7 @@ export class ASS17040Component
     this.initializePage('ASS17040', '', this.queryForm, (form) =>
       this.onSubmit(form),
     );
+    this.rebuildColumns([]);
     this.loadOrgOptions();
     this.loadBigCategoryOptions();
     this.loadGoodsOptions();
@@ -183,11 +210,95 @@ export class ASS17040Component
       });
   }
 
+  private sanitizeDeptKey(key: string): string {
+    return key.replace(/[^a-zA-Z0-9_]/g, '_');
+  }
+
+  private deptQtyField(key: string): string {
+    return `dept__${this.sanitizeDeptKey(key)}__Qty`;
+  }
+
+  private deptAmtField(key: string): string {
+    return `dept__${this.sanitizeDeptKey(key)}__Amt`;
+  }
+
+  private rebuildColumns(deptData: ASS17040DeptInfo[]): void {
+    const deptCols: ReportColumn[] = [];
+    for (const d of deptData) {
+      const k = d.Key;
+      const qf = this.deptQtyField(k);
+      const af = this.deptAmtField(k);
+      deptCols.push({
+        field: qf,
+        header: '數量',
+        groupField: k,
+        align: 'right',
+        showSort: false,
+        format: (v) => formatAmount(v as number),
+      });
+      deptCols.push({
+        field: af,
+        header: '金額',
+        groupField: k,
+        align: 'right',
+        showSort: false,
+        format: (v) => formatAmount(v as number),
+      });
+    }
+    this.columns = [...this.baseColumns, ...deptCols, ...this.tailColumns];
+    this.columnGroup = deptData.map((d) => ({ field: d.Key, header: d.Name }));
+  }
+
+  private flattenRow(
+    row: ASS17040DataRow,
+    deptInfos: ASS17040DeptInfo[],
+    pageIndex: number,
+    rowIndex: number,
+  ): ASS17040FlatRow {
+    const out: ASS17040FlatRow = {
+      Seq: row.Seq ?? null,
+      GoodsName: row.GoodsName ?? null,
+      GoodsPrice: row.GoodsPrice ?? null,
+      TotalQty: row.TotalQty ?? null,
+      TotalAmt: row.TotalAmt ?? null,
+      __rowUid: `${pageIndex}-${rowIndex}-${row.Seq ?? ''}-${row.GoodsID ?? ''}`,
+    };
+    for (const d of deptInfos) {
+      const det = row.Depts?.[d.Key];
+      out[this.deptQtyField(d.Key)] = det?.Qty ?? null;
+      out[this.deptAmtField(d.Key)] = det?.Amt ?? null;
+    }
+    return out;
+  }
+
+  private flattenSummary(
+    summary: ASS17040Summary | null | undefined,
+    deptInfos: ASS17040DeptInfo[],
+  ): Record<string, unknown> | null {
+    if (!summary) {
+      return null;
+    }
+    const row: Record<string, unknown> = {
+      Seq: '',
+      GoodsName: '',
+      GoodsPrice: '',
+      __rowUid: 'summary',
+    };
+    for (const d of deptInfos) {
+      const det = summary.Depts?.[d.Key];
+      row[this.deptQtyField(d.Key)] = det?.Qty ?? 0;
+      row[this.deptAmtField(d.Key)] = det?.Amt ?? 0;
+    }
+    row['TotalQty'] = summary.TotalQty ?? 0;
+    row['TotalAmt'] = summary.TotalAmt ?? 0;
+    return row;
+  }
+
   private buildPayload(
     raw: ReturnType<typeof this.queryForm.getRawValue>,
     pageSize: number,
     pageIndex: number,
-    sortBy: QueryASS17040Request['SortBy'],
+    sortBy: SortOption[] | undefined,
   ): QueryASS17040Request {
     return removeEmptyValues({
       StartDate: raw.Sdate ? new Date(raw.Sdate).toISOString() : undefined,
@@ -204,25 +315,63 @@ export class ASS17040Component
   }
 
   queryFunction = (
-    body: QueryASS17040Request & { pageSize?: number; pageIndex?: number },
-  ): Observable<ApiResponse<QueryASS17040Detail[]>> => {
+    body: QueryASS17040Request & {
+      pageSize?: number;
+      pageIndex?: number;
+      PageSize?: number;
+      PageIndex?: number;
+      SortBy?: SortOption[];
+    },
+  ): Observable<ApiResponse<ASS17040FlatRow[]>> => {
     const rawForm = this.queryForm.getRawValue();
-    const pageSize = body.pageSize ?? body.PageSize ?? 30;
+    const pageSize =
+      body.pageSize ?? body.PageSize ?? this.defaultPageSize;
     const pageIndex = body.pageIndex ?? body.PageIndex ?? 1;
-    const payload = this.buildPayload(rawForm, pageSize, pageIndex, body.SortBy);
+    const payload = this.buildPayload(
+      rawForm,
+      pageSize,
+      pageIndex,
+      body.SortBy,
+    );
     return this.ass17040Service.queryASS17040(payload).pipe(
-      map((res) => {
-        const details = res.Data?.Details ?? [];
-        const mapped = details.map((row, i) => ({
-          ...row,
-          rowKey: `${row.Seq ?? i}-${row.RowType ?? ''}-${row.GoodsID ?? ''}-${i}`,
-        }));
-        return {
-          ...res,
-          Data: mapped,
-          TotalCount: res.Data?.TotalRows ?? res.TotalCount ?? 0,
-        } as ApiResponse<QueryASS17040Detail[]>;
+      tap((res: ApiResponse<QueryASS17040DataPayload>) => {
+        if (res.Status === '0000' && res.Data?.QueryData) {
+          const deptData = res.Data.QueryData.DeptData ?? [];
+          this.rebuildColumns(deptData);
+          this.summaryFooter = this.flattenSummary(
+            res.Data.QueryData.Summary,
+            deptData,
+          );
+        } else {
+          this.rebuildColumns([]);
+          this.summaryFooter = null;
+        }
       }),
+      map(
+        (res: ApiResponse<QueryASS17040DataPayload>): ApiResponse<
+          ASS17040FlatRow[]
+        > => {
+          if (res.Status !== '0000') {
+            return {
+              ...res,
+              Data: [] as ASS17040FlatRow[],
+              TotalCount: 0,
+            } as ApiResponse<ASS17040FlatRow[]>;
+          }
+          const qd = res.Data?.QueryData;
+          const deptData = qd?.DeptData ?? [];
+          const rows = qd?.Data ?? [];
+          const flat = rows.map((row, idx) =>
+            this.flattenRow(row, deptData, pageIndex, idx),
+          );
+          const total = res.Data?.TotalRows ?? res.TotalCount ?? 0;
+          return {
+            ...res,
+            Data: flat,
+            TotalCount: total,
+          } as ApiResponse<ASS17040FlatRow[]>;
+        },
+      ),
     );
   };
 
@@ -232,7 +381,12 @@ export class ASS17040Component
       const currentSort = this.tableReport?.multiSortMeta?.length
         ? [...this.tableReport.multiSortMeta]
         : undefined;
-      this.lastQueryBody = this.buildPayload(raw, 30, 1, currentSort);
+      this.lastQueryBody = this.buildPayload(
+        raw,
+        this.defaultPageSize,
+        1,
+        currentSort,
+      );
 
       this.queryFunction(this.lastQueryBody)
         .pipe(

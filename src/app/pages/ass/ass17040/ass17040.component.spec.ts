@@ -31,7 +31,15 @@ describe('ASS17040Component', () => {
             queryASS17040: () =>
               of({
                 Status: '0000',
-                Data: { Details: [], TotalRows: 0 },
+                Data: {
+                  QueryData: {
+                    DeptData: [],
+                    Data: [],
+                    Summary: { Depts: {}, TotalQty: 0, TotalAmt: 0 },
+                  },
+                  TotalRows: 0,
+                  TotalPages: 0,
+                },
                 TotalCount: 0,
               }),
           },
