@@ -34,6 +34,22 @@ export interface ass14010DetailResponse {
   TotalPage: number;
 }
 
+export interface ass14010updateResponse {
+  Status: string;
+  Data: {
+    O_MSGTYPE: string; // 訊息類型(S:成功 E:錯誤)
+    O_MESSAGE: string; // 訊息內容
+  }
+  Error: {
+    Code: string;
+    Message: string;
+    Details: string;
+  };
+  Message: string;
+  TotalCount: number;
+  TotalPage: number;
+}
+
 //查詢頁 主檔
 export interface ass14010mainData {
   'ID': number;
@@ -117,8 +133,8 @@ export class Ass14010Service {
   }
 
   // 更新 發票建檔作業
-  updateASS14010(body: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/updateASS14010`, body);
+  updateASS14010(body: any): Observable<ass14010updateResponse> {
+    return this.http.post<ass14010updateResponse>(`${this.apiUrl}/updateASS14010`, body);
   }
 
   // 刪除 發票建檔作業
