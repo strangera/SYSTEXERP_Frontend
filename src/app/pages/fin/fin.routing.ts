@@ -205,7 +205,9 @@ export const finRoutes: Routes = [
   // { path: 'fin41040', loadComponent: () => import('./fin41040/fin41040.component').then(m => m.FIN41040Component),data:{progNo:'FIN41040'} },
   // { path: 'fin41040cru', loadComponent: () => import('./fin41040-cru/fin41040-cru.component').then(m => m.FIN41040CRUComponent),data: { progNo: 'FIN41040'} },
   // 部門預算編制明細維護
-  // { path: 'fin41050', loadComponent: () => import('./fin41050/fin41050.component').then(m => m.Fin41050Component),data:{progNo:'Fin41050'} },
+  { path: 'fin41050', loadComponent: () => import('./fin41050/fin41050.component').then(m => m.Fin41050Component), data: { progNo: 'Fin41050' } },
+  { path: 'fin41050cru', loadComponent: () => import('./fin41050-cru/fin41050-cru.component').then(m => m.FIN41050CRUComponent), data: { progNo: 'FIN41050' } },
+
   // 部門預算審核作業
   // { path: 'fin41060', loadComponent: () => import('./fin41060/fin41060.component').then(m => m.Fin41060Component),data:{progNo:'Fin41060'} },
   // 預計損益表
