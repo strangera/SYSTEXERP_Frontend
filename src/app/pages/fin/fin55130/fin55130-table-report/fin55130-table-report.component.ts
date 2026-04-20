@@ -190,28 +190,31 @@ export class Fin55130TableReportComponent {
 
   /**
  * 計算分類的差異百分比小計
- * 公式：(該分類差異金額合計 / 該分類基準年月金額合計) * 100
+ * 公式：(該分類差異金額合計 / 該分類比較期金額合計) * 100
  */
   calculateClassDiffPct(data: any[], currentIndex: number): number {
     const currentClass = data[currentIndex]?.ClassNo;
     const currentGroup = data[currentIndex]?.groupNo;
 
-    // 過濾出同一中類的所有項目進行加總
-    const sameClassItems = data.filter(item => item.ClassNo === currentClass && item.groupNo === currentGroup);
+    // 1. 過濾出同一中類的所有項目
+    const sameClassItems = data.filter(item =>
+      item.ClassNo === currentClass && item.groupNo === currentGroup
+    );
 
-    let totalBaseAmt = 0;
+    let totalCompareAmt = 0; // 改用比較期金額
     let totalDiffAmt = 0;
 
+    // 2. 加總金額
     sameClassItems.forEach(item => {
-      totalBaseAmt += (Number(item.BaseAmt) || 0);
+      totalCompareAmt += (Number(item.CompareAmt) || 0); // 這裡要對應後端的 CompareAmt
       totalDiffAmt += (Number(item.DiffAmt) || 0);
     });
 
-    // 財務邏輯：如果基準月(分母)是 0，通常百分比顯示為 null 或 0
-    if (totalBaseAmt === 0) return 0;
+    // 3. 財務邏輯：如果比較期(分母)是 0，則百分比為 0，避免除以零錯誤
+    if (totalCompareAmt === 0) return 0;
 
-    // 注意：這裡算出來如果是 0.1865，乘上 100 變成 18.65
-    return (totalDiffAmt / Math.abs(totalBaseAmt)) * 100;
+    // 4. 回傳計算結果 (不使用 Math.abs，保留正負號反應增減)
+    return (totalDiffAmt / totalCompareAmt) * 100;
   }
 
   // 新增跳窗方法
