@@ -548,12 +548,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly stepARColumns: EditColumn[] = [
-    { field: 'org_id', header: '組織代號', type: 'dropdown', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'org_id', header: '組織代號', type: 'dropdown', textAlign: 'left', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'ven_no', header: '廠商代號', type: 'dropdown', textAlign: 'left', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ars_amt', header: '金額', type: 'inputNumber', disabled: () => true },
     { field: 'pta_date', header: '預計收款日', type: 'date' },
     { field: 'ars_date', header: '立帳日期', type: 'date', disabled: () => true },
-    { field: 'acc_no', header: '會計科目代號', type: 'dropdown', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'acc_no', header: '會計科目代號', type: 'dropdown', textAlign: 'left', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'note_desc', header: '摘要', type: 'input' },
   ];
 
