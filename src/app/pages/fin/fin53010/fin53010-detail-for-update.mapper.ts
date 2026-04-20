@@ -135,7 +135,7 @@ export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseI
     invoice_no: invoiceNo || undefined,
     invoice_date: parseYmdToDate(row.PUR_GUIDate ?? undefined),
     declare_ym: parseYyyyMmToMonthDate(row.PUR_RepYYYYMM ?? undefined),
-    vendor_tax_id: row.PUR_VenUniform ?? row.PUR_Uniform ?? row.PUR_VenNo ?? undefined,
+    vendor_tax_id: row.PUR_VenNo ?? undefined,
     invoice_usage: row.PUR_DirectType ?? undefined,
     invoice_amount: row.PUR_Amt ?? undefined,
     tax_type: row.PUR_TaxType ?? undefined,
