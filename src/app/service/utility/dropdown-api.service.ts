@@ -23,6 +23,7 @@ import {
   CssDropDownItem,
   EcrItem,
   EcrQuery,
+  FasItemDropdownItem,
   ENG1001Item,
   FAASSCHKMASS15070DropDownItem,
   FaClass1Item,
@@ -901,6 +902,19 @@ export class DropdownApiService {
       '/ASS0000/ASS1000/queryASS11040_DropDownList',
       'No',
       'Name'
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /**
+   * queryFASITEM_DropDownList（固定 MATERIAL_TYPE=3，耗材品項）。
+   * 回傳列：RowNo、GOODS_ID、GOODS_NAME → 下拉 value/label 使用 GOODS_ID、GOODS_NAME。
+   */
+  queryFasItemDropDownList(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FasItemDropdownItem>(
+      '/queryFASITEM_DropDownList',
+      'GOODS_ID',
+      'GOODS_NAME',
+      { MATERIAL_TYPE: '3' }
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
   /** 查詢子模組代碼(SYS5000) */
