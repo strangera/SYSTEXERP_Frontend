@@ -322,9 +322,8 @@
         (keydown)="onCellKeydown($event, rowIndex, colIndex)"
         [style]="{
           width: col.width,
-          'min-width': col.width,
           'text-align': col.textAlign || 'center',
-          overflow: 'visible',
+          'max-width': '10rem',
         }"
         [ngClass]="getTdClass(rowData, col)"
       >
