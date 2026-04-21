@@ -32,3 +32,35 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+<div class="card">
+  <p-accordion>
+    <p-accordionTab header="查詢條件" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="檔案日期" controlName="CTBC_SendTime"
+            [control]="queryForm.controls.CTBC_SendTime" [submitted]="submitted"></app-calendar>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="檔案類型" controlName="CTBC_FileType"
+            [options]="CTBC_FileTypeListOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.CTBC_FileTypeList" [submitted]="submitted" />
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="檔案來源" controlName="CTBC_FileSrcList"
+            [options]="CTBC_FileSrcListOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.CTBC_FileSrcList" [submitted]="submitted" />
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="處理狀態" controlName="CTBC_ProcStatusList"
+            [options]="CTBC_ProcStatusListOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.CTBC_ProcStatusList" [submitted]="submitted" />
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <app-table-report dataKey="id" [data]="data" [columns]="columns" [showEdit]="false" [showDetail]="false"
+    [showManage]="false" [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls27030Service.queryTLS27030.bind(tls27030Service)"></app-table-report>
+</div>
