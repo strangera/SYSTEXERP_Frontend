@@ -1,5 +1,5 @@
 import { DatePipe, NgClass } from '@angular/common';
-import { afterNextRender, Component, computed, effect, Injector, OnInit, signal, TemplateRef, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, effect, Injector, OnInit, signal, TemplateRef, ViewChild, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -85,6 +85,8 @@ import { EditColumn, EditColumnExtend, FieldChangeEvent as StepFieldChangeEvent 
   ],
 })
 export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Detail> implements OnInit {
+
+  @ViewChild('purchaseTableEdit') purchaseTableEditComponent!: TableEditComponent;
 
   private readonly venUsrTemplate = viewChild.required<TemplateRef<any>>('venUsrTemplate');
 
@@ -588,7 +590,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'category_type', header: '類別區分', type: 'dropdown', options: () => this.service.purTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'source_doc_no', header: '憑證單號', type: 'input' },
-    { field: 'total_count', header: '彙整張數', type: 'inputNumber' },
+    { field: 'total_count', header: '彙整張數', type: 'inputNumber', validate: [this.validatePURCombCnt] },
   ];
 
   public readonly stepBankColumns: EditColumn[] = [
@@ -1040,6 +1042,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   public onSubmit(): void {
+    const valid = this.purchaseTableEditComponent?.validateAndShowErrors();
+    if (valid === false) {
+      return;
+    }
+
     this.handleSubmit(this.dataForm, () => {
       if ((this.isFormCreateable || this.isFormEditable) && !this.isLastStep()) {
         this.messageService.warnBubble('請先完成所有步驟，再進行送出');
@@ -1189,6 +1196,29 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         });
       },
     });
+  }
+
+  /** 檢核彙總張數
+   *
+   * 當格式(voucher_type)為26, 27時, 必填
+   */
+  private validatePURCombCnt(value: any, rowData: any, data: any[], field: string, header: string): { isValid: boolean, errorMessage: string[] } {
+    const validData = {
+      isValid: true,
+      errorMessage: []
+    }
+    const invalidData = {
+      isValid: false,
+      errorMessage: ['彙總張數不可為空']
+    }
+
+    if (rowData['voucher_type'] === '26' || rowData['voucher_type'] === '27') {
+      if (value === '' || value === null || value === undefined) {
+        return invalidData
+      }
+    }
+
+    return validData
   }
 
   /** 進項步驟表：字軌 2 碼 + 發票號碼 8 碼齊備時查 APS4023 並帶入該列 */

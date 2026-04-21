@@ -155,7 +155,7 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 5) {
 <div class="card">
   <p-panel header="進項發票" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
+    <app-table-edit #purchaseTableEdit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
       [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'"
       (dataChange)="onStepPurchaseDataChange($event)"
       (fieldChange)="onStepPurchaseInvoiceFieldChange($event)"></app-table-edit>
