@@ -48,7 +48,7 @@
         ></app-input-number>
       </div>
       <hr />
-      <div class="grid p-fluid">
+      <!-- <div class="grid p-fluid">
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="驗收單號"
@@ -56,7 +56,7 @@
           [control]="dataForm.controls.TOKEN_NO"
           [submitted]="submitted"
         ></app-input-text>
-      </div>
+      </div> -->
       <hr />
       <div class="grid p-fluid">
         <app-table-edit
@@ -67,7 +67,7 @@
           [loading]="loading"
           [defaultInsertData]="defaultsupplier"
           (dataChange)="onSupplierDataChange($event)"
-          [canInsert]="false"
+          [canInsert]="supplierData.length < 1"
         ></app-table-edit>
         <app-table-edit
           title="單據資料"

@@ -228,9 +228,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
               ? [...detailsRaw]
               : (detailsRaw ? [detailsRaw] : []);
 
-            // 同步備份原始資料
-            this.orgsupplierData = [...this.supplierData];
-            this.orgitemData = [...this.itemData];
+            // 深拷備份(切斷與原始資料物件的參考連結)
+            this.orgsupplierData = JSON.parse(JSON.stringify(this.supplierData));
+            this.orgitemData = JSON.parse(JSON.stringify(this.itemData));
 
             this.updateTokenNoSum(); //更新付款天數加總
 
@@ -290,18 +290,18 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   private initSupplierColumns() {
     this.supplierColumn = [
       { field: 'RECEIPT_TYPE', header: '單據種類', type: 'dropdown', options: [...this.RECEIPT_TYPE_Options], optionLabel: 'label', optionValue: 'value' },
-      { field: 'RECEIPT_NO', header: '發票號碼' },
-      { field: 'RECEIPT_DATE', header: '發票日期', type: 'date', disabled: () => true },
-      { field: 'TICKET_DATE', header: '票據到期日', type: 'date', disabled: () => true },
-      { field: 'DEC_YM', header: '申報年月', type: 'input', disabled: () => true },
+      { field: 'RECEIPT_NO', header: '發票號碼', type: 'input' },
+      { field: 'RECEIPT_DATE', header: '發票日期', type: 'date' },
+      { field: 'TICKET_DATE', header: '票據到期日', type: 'date' },
+      { field: 'DEC_YM', header: '申報年月', type: 'input' },
       { field: 'INV_FORMAT', header: '發票格式', type: 'dropdown', options: [...this.INV_FORMAT_Options], optionLabel: 'label', optionValue: 'value' },
       { field: 'TAX_CODE', header: '稅別', type: 'dropdown', options: [...this.TAX_CODE_Options], optionLabel: 'label', optionValue: 'value' },
       { field: 'REDU_CODE', header: '扣抵別', type: 'dropdown', options: [...this.REDU_CODE_Options], optionLabel: 'label', optionValue: 'value' },
 
-      { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber', disabled: () => true },
-      { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber', disabled: () => true },
-      { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber', disabled: () => true },
-      { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber', disabled: () => true },
+      { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber' },
+      { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber' },
+      { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber' },
+      { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber' },
     ];
   }
 
@@ -366,7 +366,15 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
   //清除明細內容
   clearSubForm() {
-    this.supplierData = this.orgsupplierData; // 還原表格資料
-    this.itemData = this.orgitemData; // 還原表格資料
+    const restoredData = JSON.parse(JSON.stringify(this.orgsupplierData));
+
+    this.supplierData = restoredData.map((item: any) => ({
+      ...item,
+      // 手動將字串轉回 Date 物件
+      RECEIPT_DATE: item.RECEIPT_DATE ? new Date(item.RECEIPT_DATE) : null,
+      TICKET_DATE: item.TICKET_DATE ? new Date(item.TICKET_DATE) : null
+    }));
+    this.itemData = JSON.parse(JSON.stringify(this.orgitemData));
+    this.updateTokenNoSum(); // 重新觸發加總計算
   }
 }
