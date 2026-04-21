@@ -10,6 +10,8 @@ export interface EditColumn {
   validate?: ((value: any, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[];
   type?: 'input' | 'inputNumber' | 'percent' | 'dropdown' | 'autoComplete' | 'date' | 'template' | 'checkbox' | 'dropdownTable' | 'custom';
   groupField?: string;
+  maxWidth?: string;
+  minWidth?: string;
   width?: string;
   textAlign?: 'left' | 'right' | 'center' | 'justify' | 'match-parent' | 'initial' | 'inherit' | 'unset' | 'revert' | 'revert-layer' | 'unset';
   showSort?: boolean;

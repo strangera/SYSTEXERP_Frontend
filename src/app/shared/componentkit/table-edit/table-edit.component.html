@@ -159,9 +159,12 @@
           " />
       </td>
       <td *ngFor="let col of columns; let colIndex = index" (click)="col.type ? $event.stopPropagation() : null"
-        (keydown)="onCellKeydown($event, rowIndex, colIndex)"
-        [style]="{ width: col.width, 'text-align': col.textAlign || 'center', 'max-width': '10rem' }"
-        [ngClass]="getTdClass(rowData, col)">
+        (keydown)="onCellKeydown($event, rowIndex, colIndex)" [style]="{
+        'width': col.width ? col.width : 'auto',
+        'min-width': col.minWidth ? col.minWidth : undefined,
+        'max-width': col.maxWidth ? col.maxWidth : undefined,
+        'text-align': col.textAlign || 'center'
+    }" [ngClass]="getTdClass(rowData, col)">
         <ng-container *ngIf="!col.hidden || !col.hidden(rowData, rowIndex)">
           <ng-container *ngIf="col.type === 'custom' && customCellTemp">
             <ng-container
