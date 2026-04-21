@@ -159,7 +159,7 @@ export interface InsertAPS2002DataBody {
   PUR_Net?: number;
   PUR_Tax?: number;
   PUR_Amt?: number;
-  PUR_Uniform?: string | null;
+  // PUR_Uniform?: string | null;
   PUR_TaxType?: string | null;
   PUR_DiscNo?: string | null;
   PUR_RepYYYYMM?: string | null;

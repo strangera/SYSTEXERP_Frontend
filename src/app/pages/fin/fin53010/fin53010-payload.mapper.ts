@@ -128,6 +128,7 @@ function mapStepPurchaseToInsert2002(
   const ven = deps.getVendorOption(row.vendor_tax_id);
   const voucherType = String(row.voucher_type ?? '').trim();
   const purComb = (voucherType === '26' || voucherType === '27') ? 'A' : undefined;
+  const purVenUniform = row.vendor_tax_id?.slice(0, 8);
   return {
     PUR_GUINo: purGuino,
     PUR_VoucherType: row.voucher_type,
@@ -135,11 +136,11 @@ function mapStepPurchaseToInsert2002(
     PUR_GUIDate: toYmd(row.invoice_date ?? undefined, deps.datePipe),
     PUR_VenNo: row.vendor_tax_id,
     PUR_VenName: vendorDisplayName(ven),
-    PUR_VenUniform: ven?.['VEN_Uniform'] != null ? String(ven['VEN_Uniform']) : row.vendor_tax_id,
+    PUR_VenUniform: purVenUniform,
     PUR_Net: row.net_amount,
     PUR_Tax: row.tax_amount,
     PUR_Amt: row.invoice_amount,
-    PUR_Uniform: row.vendor_tax_id,
+    // PUR_Uniform: row.vendor_tax_id,
     PUR_TaxType: row.tax_type,
     PUR_DiscNo: row.deduction_code,
     PUR_RepYYYYMM: toYyyyMm(row.declare_ym ?? undefined, deps.datePipe),
