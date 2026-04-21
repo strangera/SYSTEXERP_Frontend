@@ -98,6 +98,8 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     { label: '否', value: false }
   ]
 
+  readonly formatAmount = formatAmount;
+
   btn_pdf_Loading = false;
   btn_excel_Loading = false;
 
@@ -234,6 +236,12 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     const finalUrl = `${window.location.origin}${externalUrl}`;
     // 開新分頁
     window.open(finalUrl, '_blank', 'noopener');
+  }
+
+  getAccSubtotal(accNo: string, field: string): number {
+    return this.fullData
+      .filter(d => d.AccNo === accNo)
+      .reduce((sum, row) => sum + (Number((row as any)[field]) || 0), 0);
   }
 
   // 列印 PDF 或 Excel
