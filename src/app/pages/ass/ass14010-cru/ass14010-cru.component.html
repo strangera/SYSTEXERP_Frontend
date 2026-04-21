@@ -56,6 +56,16 @@
           [control]="dataForm.controls.TOKEN_NO"
           [submitted]="submitted"
         ></app-input-text>
+      </div>
+      <!-- <hr />
+      <div class="grid p-fluid">
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="驗收單號"
+          controlName="TOKEN_NO"
+          [control]="dataForm.controls.TOKEN_NO"
+          [submitted]="submitted"
+        ></app-input-text>
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
           label="單據種類"
@@ -128,18 +138,19 @@
           [control]="dataForm.controls.REDU_CODE"
           [submitted]="submitted"
         ></app-dropdown>
-      </div>
+      </div> -->
 
       <hr />
       <div class="grid p-fluid">
         <app-table-edit
-          title="供應商資料"
+          title="發票資料"
           class="col-12"
           [columns]="supplierColumn"
           [data]="supplierData"
           [loading]="loading"
           [defaultInsertData]="defaultsupplier"
           (dataChange)="onSupplierDataChange($event)"
+          [canInsert]="false"
         ></app-table-edit>
         <app-table-edit
           title="單據資料"

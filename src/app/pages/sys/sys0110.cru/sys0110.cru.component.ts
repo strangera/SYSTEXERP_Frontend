@@ -3,15 +3,17 @@ import { ChangeDetectorRef, Component, OnInit, TemplateRef, ViewChild } from '@a
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { IDropdownItem, Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { ValidationService } from '@shared/service/validation.service';
+import { TreeNode } from 'primeng/api';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { PanelModule } from 'primeng/panel';
+import { TreeSelectModule } from 'primeng/treeselect';
 import { finalize } from 'rxjs';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { UserCodeService } from '../../../service/system/user-code.service';
@@ -43,7 +45,8 @@ import { user_priorityOptions, UserInfo, UserSys3700Detail } from '../sys0110/sy
     TableEditComponent,
     AsyncPipe,
     MultiSelectComponent,
-    MultiSelectModule
+    MultiSelectModule,
+    TreeSelectModule,
   ],
 })
 export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> implements OnInit {
@@ -89,14 +92,17 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   BUS_TypeOptions$ = this.dropDown.queryTltBusType();
   user_priorityOptions = user_priorityOptions;
 
-  // 🎯 新增：用來存放所有選項的實體陣列，供全選判定使用
+  // 新增：用來存放所有選項的實體陣列，供全選判定使用
   private orgOptionsList: Option[] | null = null;
   private buildingOptionsList: IDropdownItem[] | null = null;
   private floorOptionsList: IDropdownItem[] | null = null;
   private areaOptionsList: IDropdownItem[] | null = null;
   private tltTalentOptionsList: Option[] | null = null;
   private busTypeOptionsList: Option[] | null = null;
-  private sysIdOptionsList: Option[] | null = getSYS1000Options('SYS_ID');
+
+  sysTreeOptions: TreeNode[] = [];
+  private sysIdOptionsList: any[] = []; // 改為 any[] 因為我們要用到 CRT_USR_Name
+  private sysSubModuleList: any[] = [];
 
   data: UserSys3700Detail[] = [];
   selectedRows: UserSys3700Detail[] = [];
@@ -140,26 +146,31 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
     this.SYS3A00_Options$.pipe(untilDestroyed(this)).subscribe(res => this.areaOptionsList = res);
     this.TLTTALENT_OPTIONS$.pipe(untilDestroyed(this)).subscribe(res => this.tltTalentOptionsList = res);
     this.BUS_TypeOptions$.pipe(untilDestroyed(this)).subscribe(res => this.busTypeOptionsList = res);
+    // 獲取選項
+    this.sysIdOptionsList = SystemOptionsService.getOptions('SYS_ID'); // 直接拿原始物件，包含 CRT_USR_Name
+    this.sysSubModuleList = SystemOptionsService.getOptions('SYS_SubModule');
+    // 組建樹狀結構
+    this.sysTreeOptions = this.buildSysTree(this.sysSubModuleList, this.sysIdOptionsList);
     if (this.rowdata && !this.isFormCreateable) {
       this.dataForm.get('user_No')?.disable();
       this.dataForm.get('user_Password')?.disable();
       this.sys0110Service.queryUserDetail({ user_No: this.rowdata.user_No }).subscribe((response: any) => {
-        // 🎯 1. 回填表格一 (SYS3700)
+        // 1. 回填表格一 (SYS3700)
         this.data = [...response.Data.QueryData];
-
-        // 🎯 2. 回填表格二 (tblUserContractReportRole)
+        // 2. 回填表格二 (tblUserContractReportRole)
         // 需要將後端傳回來的 "xx" 或 "A#B" 轉回 MultiSelect 認識的陣列
         this.reportRoleData = response.Data.ReportRoleData.map((role: any) => {
           return {
             ...role,
             // 這裡呼叫一個轉回陣列的輔助函式
             ORG_ID: this.parseSAString(role.ORG_ID, 'ORG_ID'),
-            SYS_ID: this.parseSAString(role.SYS_ID, 'SYS_ID'),
+            SYS_ID_TreeNodes: this.parseSysIdToNodes(role.SYS_ID),
+            SYS_ID: role.SYS_ID,
             // 如果你的 FLOOR_ID 等是在 form 裡的，也要回填給 form
           };
         });
 
-        // 🎯 3. 回填底部的 Multi-Select (FormControls)
+        // 3. 回填底部的 Multi-Select (FormControls)
         // 假設你只取第一筆權限作為底部 UI 的顯示來源
         if (response.Data.ReportRoleData.length > 0) {
           const firstRole = response.Data.ReportRoleData[0];
@@ -179,6 +190,67 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
         this.data = [{ ID: 0, User_No: this.dataForm.get('user_No')?.value, Org_ID: value, Building_No: null, Floor_No: null, Area_No: null, TLT_No: null, TLT_Kind: null, BUS_Type: null }];
       }
     });
+  }
+
+  // 模擬將 SYS_ID 選項轉成 Tree 結構的函式
+  buildSysTree(parents: any[], children: any[]): TreeNode[] {
+    if (!parents) return [];
+
+    return parents.map(p => ({
+      label: `${p.SYS_Code} - ${p.SYS_Name}`,
+      data: p.SYS_Code,
+      key: p.SYS_Code,
+      selectable: true,
+      children: children
+        // 使用你 SQL 修正後的欄位做精確關聯
+        .filter(c => c.CRT_USR_Name === p.SYS_Code)
+        .map(c => ({
+          label: `${c.SYS_Code} - ${c.SYS_Name}`,
+          data: c.SYS_Code,
+          key: c.SYS_Code,
+          selectable: true
+        }))
+    }));
+  }
+
+  onTreeValueChange(rowData: any, col: EditColumn, index: number) {
+    const selectedNodes: TreeNode[] = rowData[col.field + '_TreeNodes'] || [];
+
+    // 邏輯：如果父節點被選取，我們只拿父節點的值（符合你說的套用全部）
+    // 或者根據後端需求，拿到所有選中的 leaf 節點。
+    // 這裡採用你要求的：選了父就代表子。
+    const values = selectedNodes.map(node => node.key);
+
+    // 同步回原始欄位 (以 # 串接)
+    rowData[col.field] = values.join('#');
+
+    // 通知 Table 更新狀態
+    if (this.tableEditComponent) {
+      this.tableEditComponent.onValueChange(rowData, rowData[col.field], col, index);
+      this.cdr.detectChanges();
+    }
+  }
+  private parseSysIdToNodes(val: string | null): TreeNode[] {
+    if (!val || this.sysTreeOptions.length === 0) return [];
+
+    const nodes: TreeNode[] = [];
+    const isAllSelected = val === 'xx';
+    const keys = isAllSelected ? [] : val.split('#');
+
+    const findNodes = (treeNodes: TreeNode[]) => {
+      treeNodes.forEach(node => {
+        // 如果是 xx (全選)，直接加入節點；否則比對 key
+        if (isAllSelected || keys.includes(node.key!)) {
+          nodes.push(node);
+        }
+        if (node.children) {
+          findNodes(node.children);
+        }
+      });
+    };
+
+    findNodes(this.sysTreeOptions);
+    return nodes;
   }
 
   private parseSAString(val: string | null, type: string): any[] {
@@ -213,17 +285,20 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
       const expireDate = new Date(today);
       expireDate.setDate(today.getDate() + 90);
       const formatForSA = (selectedIds: any[], totalOptions: any[]) => {
-        // 1. 沒選：傳 null
-        if (!selectedIds || selectedIds.length === 0) {
-          return null;
+        // 確保它是陣列，如果不是陣列（例如是 null 或已經是字串），就回傳原始值或處理它
+        if (!Array.isArray(selectedIds)) {
+          return selectedIds;
         }
-        // 2. 全選：選中的長度等於總選項長度，傳 'xx'
+        if (selectedIds.length === 0) return null;
         if (totalOptions && selectedIds.length === totalOptions.length && totalOptions.length > 0) {
           return 'xx';
         }
-        // 3. 部分多選：用 # 分隔
         return selectedIds.join('#');
       };
+      const allSysIdCodes = [
+        ...(this.sysSubModuleList?.map(m => m.SYS_Code) || []),
+        ...(this.sysIdOptionsList?.map(c => c.SYS_Code) || [])
+      ];
       const body = {
         ...frm.value,
         id: this.rowdata?.id,
@@ -234,15 +309,21 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
           ...item,
           User_No: frm.get('user_No')?.value,
         })),
-        userContractReportRole: this.reportRoleData.map(role => ({
-          USER_ID: frm.get('user_No')?.value,
-          ORG_ID: formatForSA(role.ORG_ID, this.getOptionsArray('ORG_ID')),
-          SYS_ID: formatForSA(role.SYS_ID, this.getOptionsArray('SYS_ID')),
-          FLOOR_ID: formatForSA(frm.value.FLOOR_ID, this.getOptionsArray('FLOOR_ID')),
-          AREA_ID: formatForSA(frm.value.AREA_ID, this.getOptionsArray('AREA_ID')),
-          STORE_ID: formatForSA(frm.value.STORE_ID, this.getOptionsArray('STORE_ID')),
-          BTYPE_ID: formatForSA(frm.value.BTYPE_ID, this.getOptionsArray('BTYPE_ID')),
-        }))
+        userContractReportRole: this.reportRoleData.map(role => {
+          // 【關鍵修正】：從選中的 TreeNodes 中提取 key 陣列
+          const sysIdArray = (role.SYS_ID_TreeNodes as TreeNode[])?.map(node => node.key) || [];
+
+          return {
+            USER_ID: frm.get('user_No')?.value,
+            ORG_ID: formatForSA(role.ORG_ID, this.getOptionsArray('ORG_ID')),
+            // 這裡傳入提取後的陣列
+            SYS_ID: formatForSA(sysIdArray, allSysIdCodes),
+            FLOOR_ID: formatForSA(frm.value.FLOOR_ID, this.getOptionsArray('FLOOR_ID')),
+            AREA_ID: formatForSA(frm.value.AREA_ID, this.getOptionsArray('AREA_ID')),
+            STORE_ID: formatForSA(frm.value.STORE_ID, this.getOptionsArray('STORE_ID')),
+            BTYPE_ID: formatForSA(frm.value.BTYPE_ID, this.getOptionsArray('BTYPE_ID')),
+          };
+        })
       };
       const serviceCall = this.isFormCreateable ? this.sys0110Service.createUser(body) : this.sys0110Service.updateUser(body);
       serviceCall.pipe(untilDestroyed(this)).subscribe(res => {

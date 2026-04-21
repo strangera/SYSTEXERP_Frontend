@@ -85,8 +85,15 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   supplierData: Ass14010Supplier[] = [];
   supplierColumn: EditColumn[] = []; //等下拉讀取完成後寫入定義
   defaultsupplier = {
-    'SUPPLIER_ID': null, // 供應商代碼
-    'SUPPLIER_NAME': null, // 供應商名稱
+    'RECEIPT_TYPE': null, // 單據種類(0發票 1收據)
+    'RECEIPT_NO': null, // 發票號碼
+    'RECEIPT_DATE': null, // 發票日期
+    'TICKET_DATE': null, // 票據到期日
+    'DEC_YM': null, // 申報年月(YYYYMM)
+    'INV_FORMAT': null, // 發票格式
+    'TAX_CODE': null, // 稅別
+    'REDU_CODE': null, // 扣抵別
+
     'TICKET_BE': null, // 付款天數
     'TOTAL_AMT': null, // 發票總金額
     'TOTAL_NTX_AMT': null, // 未稅總金額
@@ -112,8 +119,6 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
   ngOnInit(): void {
     this.initializePage('ASS14010', this.dataForm);
-    // console.log('接收端', this.dataForm.value);
-
     const { STO_NO, RECEIPT_NO } = this.dataForm.getRawValue();
     this.get14010Detail(STO_NO, RECEIPT_NO);
     this.loadOptions();
@@ -131,45 +136,30 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       }
     }
     this.handleSubmit(frm, () => {
-      // 送出只會更新上面的部分 (明細都不送出)
-      // 快速但不一定推薦（要注意時區偏差）
-      // 取得日期物件
-      const decYmDate = frm.get('DEC_YM')?.value;
-      let formattedYM = '';
-
-      if (decYmDate instanceof Date) {
-        const year = decYmDate.getFullYear();
-        // getMonth() 回傳 0-11，所以要 +1，並使用 padStart 補 0
-        const month = String(decYmDate.getMonth() + 1).padStart(2, '0');
-        formattedYM = `${year}${month}`;
-      } else {
-        // 如果本來就是字串或其他格式，則視情況處理或直接賦值
-        formattedYM = decYmDate;
-      }
-
-      const payloadd = {
-        RECEIPT_INS_ID: frm.get('RECEIPT_INS_ID')?.value,
-        SUPPLIER_ID: frm.get('SUPPLIER_ID')?.value,
-        TOKEN_NO: frm.get('TOKEN_NO')?.value,
-        TICKET_BE: frm.get('TICKET_BE')?.value,
-        RECEIPT_TYPE: frm.get('RECEIPT_TYPE')?.value,
-        RECEIPT_NO: frm.get('RECEIPT_NO')?.value,
-        RECEIPT_DATE: frm.get('RECEIPT_DATE')?.value,
-        TICKET_DATE: frm.get('TICKET_DATE')?.value,
-        DEC_YM: formattedYM,
-        INV_FORMAT: frm.get('INV_FORMAT')?.value,
-        TAX_CODE: frm.get('TAX_CODE')?.value,
-        REDU_CODE: frm.get('REDU_CODE')?.value,
-        NTX_AMT: frm.get('NTX_AMT')?.value,
-        TX_AMT: frm.get('TX_AMT')?.value,
-        AMT: frm.get('AMT')?.value,
-      }
-
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
+            const payload = {
+              MID: this.authService.getUserInfo()?.mid || null,
+              STO_NO: this.authService.getUserInfo()?.SYS_StoreNo || null,
+              SUPPLIER_ID: frm.get('SUPPLIER_ID')?.value,
+              TICKET_BE: frm.get('TICKET_BE')?.value,
+              TOKEN_NO: frm.get('TOKEN_NO')?.value,
+              RECEIPT_TYPE: this.supplierData[0]?.RECEIPT_TYPE || null,
+              RECEIPT_NO: this.supplierData[0]?.RECEIPT_NO || null,
+              RECEIPT_DATE: this.supplierData[0]?.RECEIPT_DATE || null,
+              TICKET_DATE: this.supplierData[0]?.TICKET_DATE || null,
+              DEC_YM: this.supplierData[0]?.DEC_YM || null,
+              INV_FORMAT: this.supplierData[0]?.INV_FORMAT || null,
+              TAX_CODE: this.supplierData[0]?.TAX_CODE || null,
+              REDU_CODE: this.supplierData[0]?.REDU_CODE || null,
+              NTX_AMT: frm.get('NTX_AMT')?.value,
+              TX_AMT: frm.get('TX_AMT')?.value,
+              AMT: frm.get('AMT')?.value,
+            }
+            console.log('提交的payload', payload);
             // const formValue = frm.getRawValue();
-            // this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
+            // this.ass14010Service.insertASS14010(payload).subscribe(() => {
             //   this.messageService.successBubble('新增成功');
             //   this.dataForm.reset();
             // });
@@ -177,10 +167,33 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            // 16251143-1
             this.loading = false;
-            this.ass14010Service.updateASS14010(payloadd).subscribe(() => {
-              this.onCancel();
+            const payload = {
+              RECEIPT_INS_ID: this.supplierData[0]?.RECEIPT_NO || null, // 發票維護單號(編輯時帶入，新增時為null)
+              SUPPLIER_ID: frm.get('SUPPLIER_ID')?.value, // 供應商代碼(不可修改)
+              TOKEN_NO: frm.get('TOKEN_NO')?.value, // 驗收單號(多筆)
+              TICKET_BE: frm.get('TICKET_BE')?.value,
+              RECEIPT_TYPE: this.supplierData[0]?.RECEIPT_TYPE || null, // 單據代碼(編輯時帶入，新增時由使用者選擇)
+              RECEIPT_NO: this.supplierData[0]?.RECEIPT_NO || null, // 發票/收據號碼(編輯時帶入，新增時由使用者輸入)
+              RECEIPT_DATE: this.supplierData[0]?.RECEIPT_DATE || null, // 發票日期(編輯時帶入，新增時由使用者選擇)
+              TICKET_DATE: this.supplierData[0]?.TICKET_DATE || null, // 票據到期日(編輯時帶入，新增時由使用者選擇)
+              DEC_YM: this.supplierData[0]?.DEC_YM || null, // 申報年月(編輯時帶入，新增時由使用者選擇)
+              INV_FORMAT: this.supplierData[0]?.INV_FORMAT || null, // 發票格式(編輯時帶入，新增時由使用者選擇)
+              TAX_CODE: this.supplierData[0]?.TAX_CODE || null, // 稅別(編輯時帶入，新增時由使用者選擇)
+              REDU_CODE: this.supplierData[0]?.REDU_CODE || null, // 扣抵別(編輯時帶入，新增時由使用者選擇)
+              NTX_AMT: frm.get('NTX_AMT')?.value,
+              TX_AMT: frm.get('TX_AMT')?.value,
+              AMT: frm.get('AMT')?.value,
+            }
+
+            console.log('提交的payload', payload);
+            this.ass14010Service.updateASS14010(payload).subscribe((res) => {
+              if (res.Data.O_MSGTYPE === 'S') {
+                this.messageService.successBubble('更新成功');
+                this.onCancel();
+              } else {
+                this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
+              }
             });
           }
           break;
@@ -246,9 +259,16 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
         }));
 
         this.supplierColumn = [
-          { field: 'SUPPLIER_ID', header: '供應商代碼' },
-          { field: 'SUPPLIER_NAME', header: '供應商名稱' },
-          { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber' },
+          { field: 'RECEIPT_TYPE', header: '單據種類', type: 'dropdown', options: this.RECEIPT_TYPE_Options, disabled: () => true },
+          { field: 'RECEIPT_NO', header: '發票號碼' },
+          { field: 'RECEIPT_DATE', header: '發票日期', type: 'date', disabled: () => true },
+          { field: 'TICKET_DATE', header: '票據到期日', type: 'date', disabled: () => true },
+          { field: 'DEC_YM', header: '申報年月', type: 'date', options: { dateFormat: 'yy/mm' }, disabled: () => true },
+          { field: 'INV_FORMAT', header: '發票格式', type: 'dropdown', options: this.INV_FORMAT_Options, disabled: () => true },
+          { field: 'TAX_CODE_NAME', header: '稅別', disabled: () => true },
+          { field: 'REDU_CODE_NAME', header: '扣抵別', disabled: () => true },
+
+          { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber', disabled: () => true },
           { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber', disabled: () => true },
           { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber', disabled: () => true },
           { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber', disabled: () => true },
