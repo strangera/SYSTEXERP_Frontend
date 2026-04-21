@@ -9,7 +9,9 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="品項代碼" controlName="itemCode" [control]="dataForm.controls.itemCode"
-            [submitted]="submitted" [disabled]="isFormEditable">
+            [submitted]="submitted" [disabled]="isFormEditable || isFormCreateable || isFormReadable"
+            [customPlaceholder]="isFormCreateable ? itemCodeDisplayValue : undefined"
+            [alwaysShowPlaceholder]="isFormCreateable">
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
