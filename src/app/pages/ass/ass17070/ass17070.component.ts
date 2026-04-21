@@ -3,6 +3,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS17070Service } from '@service/api/ass/ass17070.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { removeEmptyValues } from '@shared/utils/object-utils';
@@ -99,7 +100,7 @@ export class ASS17070Component extends BasicQueryPageComponent<QueryASS17070Deta
     this.dropdownApi.queryFaClass2({ M_CLASS_ID: '' }).pipe(untilDestroyed(this)).subscribe((options) => {
       this.sClassOptions = options ?? [];
     });
-    this.dropdownApi.queryFaSItem({ MATERIAL_TYPE: '3' }).pipe(untilDestroyed(this)).subscribe((options) => {
+    this.dropdownApi.queryFasItemDropdown({ MATERIAL_TYPE: '3' }).pipe(untilDestroyed(this)).subscribe((options: Option[] | null) => {
       this.goodsOptions = options ?? [];
     });
   }
