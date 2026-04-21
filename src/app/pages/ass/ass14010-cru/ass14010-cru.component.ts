@@ -18,6 +18,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
+import { forkJoin } from 'rxjs';
 
 //3.1.4.1  進貨發票建檔作業 CRU
 @Component({
@@ -187,14 +188,14 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
             }
 
             console.log('提交的payload', payload);
-            this.ass14010Service.updateASS14010(payload).subscribe((res) => {
-              if (res.Data.O_MSGTYPE === 'S') {
-                this.messageService.successBubble('更新成功');
-                this.onCancel();
-              } else {
-                this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
-              }
-            });
+            // this.ass14010Service.updateASS14010(payload).subscribe((res) => {
+            //   if (res.Data.O_MSGTYPE === 'S') {
+            //     this.messageService.successBubble('更新成功');
+            //     this.onCancel();
+            //   } else {
+            //     this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
+            //   }
+            // });
           }
           break;
       }
@@ -221,7 +222,6 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
               ? [...supplierRaw]
               : (supplierRaw ? [supplierRaw] : []);
 
-
             // 檢查 Details 是否為陣列
             const detailsRaw = res.Data.Details;
             this.itemData = Array.isArray(detailsRaw)
@@ -247,65 +247,65 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
   // 讀取dopropdown選項
   loadOptions() {
-    // 供應商編號
-    this.dropDownListService
-      .queryPOS2013_DropDownList({})
+    // 定義所有 API 任務
+    const supplier$ = this.dropDownListService.queryPOS2013_DropDownList({});
+    const token$ = this.dropdownApiService.queryFAASSCHKMASS15070_DropDownList();
+    const invFormat$ = this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 });
+    const reduCode$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_DiscNo' });
+
+    // 同時發送，等待全部回傳
+    forkJoin([supplier$, token$, invFormat$, reduCode$])
       .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        const list = res.Data ?? [];
-        this.SUPPLIER_ID_Options = list.map((item: { VEN_No?: string; No?: string; Name?: string }) => ({
+      .subscribe(([resSup, resTok, resInv, resRedu]) => {
+
+        // 1. 處理供應商選項
+        this.SUPPLIER_ID_Options = (resSup.Data ?? []).map((item: any) => ({
           value: item.VEN_No ?? item.No ?? '',
           label: `${item.VEN_No ?? item.No ?? ''} - ${item.Name ?? ''}`,
         }));
 
-        this.supplierColumn = [
-          { field: 'RECEIPT_TYPE', header: '單據種類', type: 'dropdown', options: this.RECEIPT_TYPE_Options, disabled: () => true },
-          { field: 'RECEIPT_NO', header: '發票號碼' },
-          { field: 'RECEIPT_DATE', header: '發票日期', type: 'date', disabled: () => true },
-          { field: 'TICKET_DATE', header: '票據到期日', type: 'date', disabled: () => true },
-          { field: 'DEC_YM', header: '申報年月', type: 'date', options: { dateFormat: 'yy/mm' }, disabled: () => true },
-          { field: 'INV_FORMAT', header: '發票格式', type: 'dropdown', options: this.INV_FORMAT_Options, disabled: () => true },
-          { field: 'TAX_CODE_NAME', header: '稅別', disabled: () => true },
-          { field: 'REDU_CODE_NAME', header: '扣抵別', disabled: () => true },
-
-          { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber', disabled: () => true },
-          { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber', disabled: () => true },
-          { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber', disabled: () => true },
-          { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber', disabled: () => true },
-        ]
-      });
-    // 進貨單號
-    this.dropdownApiService
-      .queryFAASSCHKMASS15070_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(options => {
-        this.TOKEN_NO_Options = (options ?? []).map(res => ({
+        // 2. 處理進貨單號
+        this.TOKEN_NO_Options = (resTok ?? []).map(res => ({
           label: res.label,
           value: res.value,
         }));
-      });
-    //發票格式
-    this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).subscribe(r => {
-      this.INV_FORMAT_Options = r.Data.INV_GUITypes
-        .filter(item => ['21', '22', '25'].includes(item.INV_GUIType))
-        .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
-        .map(item => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }));
-    });
-    // 扣抵別
-    this.dropdownApiService
-      .querySys1000({ SYS_Type: 'PUR_DiscNo' })
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        // console.log('扣抵別', res)
-        this.REDU_CODE_Options = (res ?? []).map(res => ({
+
+        // 3. 處理發票格式
+        this.INV_FORMAT_Options = (resInv.Data.INV_GUITypes ?? [])
+          .filter(item => ['21', '22', '25'].includes(item.INV_GUIType))
+          .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
+          .map(item => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }));
+
+        // 4. 處理扣抵別
+        this.REDU_CODE_Options = (resRedu ?? []).map(res => ({
           label: res.No + '-' + res.Name,
           value: res.No,
         }));
+
+        // 5. 選項都到位後建立 supplierColumn
+        this.initSupplierColumns();
       });
   }
 
-  //---供應商明細---
+  private initSupplierColumns() {
+    this.supplierColumn = [
+      { field: 'RECEIPT_TYPE', header: '單據種類', type: 'dropdown', options: [...this.RECEIPT_TYPE_Options], optionLabel: 'label', optionValue: 'value' },
+      { field: 'RECEIPT_NO', header: '發票號碼' },
+      { field: 'RECEIPT_DATE', header: '發票日期', type: 'date', disabled: () => true },
+      { field: 'TICKET_DATE', header: '票據到期日', type: 'date', disabled: () => true },
+      { field: 'DEC_YM', header: '申報年月', type: 'input', disabled: () => true },
+      { field: 'INV_FORMAT', header: '發票格式', type: 'dropdown', options: [...this.INV_FORMAT_Options], optionLabel: 'label', optionValue: 'value' },
+      { field: 'TAX_CODE', header: '稅別', type: 'dropdown', options: [...this.TAX_CODE_Options], optionLabel: 'label', optionValue: 'value' },
+      { field: 'REDU_CODE', header: '扣抵別', type: 'dropdown', options: [...this.REDU_CODE_Options], optionLabel: 'label', optionValue: 'value' },
 
+      { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber', disabled: () => true },
+      { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber', disabled: () => true },
+      { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber', disabled: () => true },
+      { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber', disabled: () => true },
+    ];
+  }
+
+  //---發票明細---
   //依據明細驗收單號進行主檔token_no刷新
   onSupplierDataChange(eventData: Ass14010Supplier[]) {
     // 1. 變更後的資料同步回 itemData
