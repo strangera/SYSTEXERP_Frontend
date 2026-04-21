@@ -59,7 +59,7 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
     companyAddress: new FormControl<string | null>(null, [Validators.maxLength(100)]),
     chargeStaff: new FormControl<string | null>(null, [Validators.maxLength(60)]),
     payType: new FormControl<string | null>(null, [Validators.maxLength(20)]),
-    ticketPeriod: new FormControl<string | null>(null, [Validators.maxLength(30)]),
+    ticketPeriod: new FormControl<string | null>(null, [Validators.maxLength(30), Validators.pattern('^[0-9]+$')]),
     serviceItems: new FormControl<string | null>(null, [Validators.maxLength(100)]),
     notes: new FormControl<string | null>(null, [Validators.maxLength(100)]),
     pageSize: new FormControl<number>(30),
