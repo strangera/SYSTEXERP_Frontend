@@ -1,35 +1,159 @@
-import { Injectable } from "@angular/core";
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
-
-// Response 資料結構
-export interface ASS16080Data {
-    id: number;
-    transferNote: string;     // 調撥單號
-    applicantCode: string;   // 申請人代號
-    departmentCode: string;     // 部門代號
-    applicationDate: string;   // 申請日期
-    outWarehouse: string;     // 調出倉別
-    outDate: string;   // 撥出日期
-    inWarehouse: string;     // 調入倉別
-    inDate: string;     // 撥入日期
-    transferStatus: string;     // 調撥狀態
-    detailCount: number;     // 明細筆數
+/** 查詢 Request */
+export interface QueryASS16080Request extends BaseQueryRequest {
+  OUT_WH_ID?: string | null;
+  IN_WH_ID?: string | null;
+  WHMOVE_STATUS?: string | null;
+  WHMOVE_ID?: string | null;
+  EMP_ID?: string | null;
+  GOODS_ID?: string | null;
+  ORG_ID?: string | null;
+  APPLY_DATE_S?: string | null;
+  APPLY_DATE_E?: string | null;
+  APRV_DATE_S?: string | null;
+  APRV_DATE_E?: string | null;
+  APRV_EMP_ID?: string | null;
+  [key: string]: any;
 }
 
-/** 新增更新資料介面 */
-export interface ASS16080Request {
-    id?: number;
-    itemCode: string;     // 品項編碼
-    itemName: string;     // 品項名稱
-    unit: string;     // 單位
-    returnQty: string;     // 調撥數量
-    shipQty: string;     // 發貨數量
-    remark: string;     // 說明
+/** 查詢列表 Response Row */
+export interface QueryASS16080Response {
+  RowNo?: number | null;
+  WHMOVE_ID?: string | null;
+  EMP_ID?: string | null;
+  ORG_ID?: string | null;
+  APPLY_DATE?: string | null;
+  OUT_WH_ID?: string | null;
+  OutWhName?: string | null;
+  OUTGODS_DATE?: string | null;
+  IN_WH_ID?: string | null;
+  InWhName?: string | null;
+  SUBCHK_DATE?: string | null;
+  WHMOVE_STATUS?: string | null;
+  APRV_EMP_ID?: string | null;
+  APRV_DATE?: string | null;
+  DetailCount?: number | null;
+
+  /** 前端展開用 */
+  Details?: QueryDetailASS16080DetailResponse[] | null;
+  [key: string]: any;
 }
 
-@Injectable({
-    providedIn: 'root'
-})
+/** 詳細查詢 Request */
+export interface QueryDetailASS16080Request {
+  WHMOVE_ID: string;
+}
+
+/** 詳細主檔 */
+export interface QueryDetailASS16080MasterResponse {
+  ID?: number | null;
+  WHMOVE_ID?: string | null;
+  WHMOVE_STATUS?: string | null;
+  OUT_WH_ID?: string | null;
+  OutWhName?: string | null;
+  IN_WH_ID?: string | null;
+  InWhName?: string | null;
+  EMP_ID?: string | null;
+  EmpName?: string | null;
+  ORG_ID?: string | null;
+  APPLY_DATE?: string | null;
+  NOTES?: string | null;
+}
+
+/** 詳細明細 */
+export interface QueryDetailASS16080DetailResponse {
+  RowNo?: number | null;
+  DetailID?: number | null;
+  GOODS_ID?: string | null;
+  GOODS_NAME?: string | null;
+  UNIT?: string | null;
+  QTY?: number | null;
+  OUTGODS_QTY?: number | null;
+  NOTES?: string | null;
+  [key: string]: any;
+}
+
+/** 詳細查詢 Result */
+export interface QueryDetailASS16080Result {
+  Master?: QueryDetailASS16080MasterResponse | null;
+  Details?: QueryDetailASS16080DetailResponse[] | null;
+}
+
+/** 出庫明細 */
+export interface UpdateOutASS16080Detail {
+  DetailID?: number | null;
+  QTY?: number | null;
+}
+
+/** 調撥出庫 Request */
+export interface UpdateOutASS16080Request {
+  WHMOVE_ID?: string | null;
+  Details?: UpdateOutASS16080Detail[] | null;
+  UPD_USR_No?: string | null;
+  UPD_USR_Name?: string | null;
+}
+
+/** 入庫明細 */
+export interface UpdateInASS16080Detail {
+  DetailID?: number | null;
+  QTY?: number | null;
+}
+
+/** 調撥入庫 Request */
+export interface UpdateInASS16080Request {
+  WHMOVE_ID?: string | null;
+  Details?: UpdateInASS16080Detail[] | null;
+  UPD_USR_No?: string | null;
+  UPD_USR_Name?: string | null;
+}
+
+@Injectable({ providedIn: 'root' })
 export class ASS16080Service {
-    constructor() { }
+  private apiUrl = `${environment.ApiUrl}/ASS0000/ASS1000`;
+
+  constructor(private http: HttpClient) {}
+
+  queryASS16080(
+    body: QueryASS16080Request
+  ): Observable<ApiResponse<QueryASS16080Response[]>> {
+    return this.http.post<ApiResponse<QueryASS16080Response[]>>(
+      `${this.apiUrl}/queryASS16080`,
+      body
+    );
+  }
+
+  queryDetailASS16080(
+    body: QueryDetailASS16080Request
+  ): Observable<ApiResponse<QueryDetailASS16080Result>> {
+    return this.http.post<ApiResponse<QueryDetailASS16080Result>>(
+      `${this.apiUrl}/queryDetailASS16080`,
+      body
+    );
+  }
+
+  updateOutASS16080(
+    body: UpdateOutASS16080Request
+  ): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(
+      `${this.apiUrl}/updateOutASS16080`,
+      body
+    );
+  }
+
+  updateInASS16080(
+    body: UpdateInASS16080Request
+  ): Observable<ApiResponse<string>> {
+    return this.http.post<ApiResponse<string>>(
+      `${this.apiUrl}/updateInASS16080`,
+      body
+    );
+  }
 }
+
+export { ApiResponse };

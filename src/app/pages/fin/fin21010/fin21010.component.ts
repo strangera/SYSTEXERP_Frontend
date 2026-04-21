@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-// Shared
 import { TranslateModule } from '@ngx-translate/core';
 import { APS1002, FIN21010Response, Fin21010Service } from '@service/api/fin/fin21010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -14,12 +13,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { getSYS1000 } from '@service/system/sys1000.service';
 
 //1.2.1.1 公司銀行資料維護
 @Component({
   selector: 'app-fin21010',
   templateUrl: './fin21010.component.html',
-  styleUrl: './fin21010.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, InputTextComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent,
     // MultiSelectComponent,
@@ -66,11 +65,6 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   data: FIN21010Response[] = [];
   columns: Column[] = [
     {
-      field: 'BNK_id',
-      header: '帳戶編號',
-      visible: true,
-    },
-    {
       field: 'BNK_DepositAccNo',
       header: '公司銀行科目',
       visible: true,
@@ -82,9 +76,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
     { field: 'BNK_AccName', header: '帳戶名稱', visible: true },
     {
       field: 'BNK_AccType', header: '存款代號', visible: true,
-      format: (value: string) =>
-        this.BNK_AccType_Option.find((option) => option.No === value)?.Name ||
-        value,
+      format: (value: string) => getSYS1000('BNK_AccType', value)
     },
     {
       field: 'BNK_CheckInAccNo',

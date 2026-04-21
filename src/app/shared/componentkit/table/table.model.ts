@@ -417,3 +417,28 @@ export const formatOptionLabel = (value: any, options: { value: string; label: s
   const option = options.find(opt => opt.value === value?.toString());
   return option ? option.label : value?.toString() || '';
 };
+/**
+ * 格式化為金額（千分位），並四捨五入取整數
+ * 輸入 '1234.56' -> 輸出 '1,235'
+ * 輸入 '1234.4'  -> 輸出 '1,234'
+ * 輸入 null/NaN  -> 輸出 ''
+ */
+export const formatAmountRoundToInteger = (val: number | string | null | undefined): string => {
+  // 1. 基本空值檢查
+  if (val === null || val === undefined || val === '') {
+    return '';
+  }
+
+  // 2. 轉換為數字並檢查有效性
+  const num = Number(val);
+  if (isNaN(num)) {
+    return ''; // 或者根據需求回傳原字串 val.toString()
+  }
+
+  // 3. 先顯式執行四捨五入取整數
+  const roundedNum = Math.round(num);
+
+  // 4. 再進行千分位格式化
+  // 這裡使用 'en-US' 或 undefined 確保輸出的格式是標準的 1,000,000
+  return roundedNum.toLocaleString('en-US');
+};

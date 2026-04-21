@@ -106,8 +106,12 @@
 </div>
 
 <div class="card">
-  <app-table-report tableKey="fin21030" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [showCheckBox]="false" dataKey="id" [totalRecords]="totalRecords" [showManage]="true"
-    [loading]="loading" [showDelete]="false" [queryFunction]="fin21030Service.queryFIN21030.bind(fin21030Service)"
-    [lastQueryBody]="lastQueryBody"></app-table-report>
+  <div class="col-13">
+    <app-table pageSizeSetting='A3' tableKey="fin21030" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+      (detail)="onDetail($event)" [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]" [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [showCheckBox]="false" [showDelete]="false" dataKey="id"
+      [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+      [loading]="loading"></app-table>
+  </div>
 </div>

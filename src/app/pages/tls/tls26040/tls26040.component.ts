@@ -4,9 +4,11 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize, Observable } from 'rxjs';
-import { TLS26040Data, TLS26040Service } from '../../../service/api/tls/tls26040.service';
+import { TLS26040Data, TLS26040QueryRequest, TLS26040Service } from '../../../service/api/tls/tls26040.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -31,7 +33,8 @@ import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, fo
     InputTextComponent,
     TableComponent,
     TranslateModule,
-    MultiSelectComponent
+    MultiSelectComponent,
+    ButtonModule
   ]
 })
 export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> implements OnInit {
@@ -48,6 +51,7 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
   totalRecords = 0;
   data: TLS26040Data[] = [];
   selectedItems: TLS26040Data[] = [];
+  lastQueryBody: TLS26040QueryRequest | null = null;
 
   addButton: AddButton[] = [
     {
@@ -86,10 +90,15 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
     { label: '排除所選的專櫃', value: 'N' }
   ];
 
+  // 列印按鈕載入狀態
+  exportPdfLoading = false;
+  exportExcelLoading = false;
+
   constructor(
     private tls26040Service: TLS26040Service,
     private dropDownListService: DropDownListService,
     private datePipe: DatePipe,
+    private readonly fileExportService: FileExportService,
   ) {
     super();
   }
@@ -107,12 +116,14 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      const body = frm.getRawValue() as TLS26040QueryRequest;
       this.tls26040Service.queryTLS26040(frm.value)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          this.lastQueryBody = body;
         });
     });
   }
@@ -142,5 +153,28 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
           });
       }
     });
+  }
+
+
+  onExportExcel(): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+
+    const req$ = this.tls26040Service.exportExcelTLS26040({ ...this.lastQueryBody });
+    this.fileExportService
+      .executeFileExport(req$, '.xlsx', v => (this.exportExcelLoading = v))
+      .subscribe();
+  }
+
+  onExportPDF(): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+
+    const req$ = this.tls26040Service.exportPDFTLS26040({ ...this.lastQueryBody });
+    this.fileExportService
+      .executeFileExport(req$, '.pdf', v => (this.exportPdfLoading = v))
+      .subscribe();
   }
 }

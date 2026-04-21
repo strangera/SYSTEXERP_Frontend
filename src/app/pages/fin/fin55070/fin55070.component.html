@@ -55,57 +55,16 @@
   </p-accordion>
 </div>
 <div class="card">
-  <p-table #dt id="fin55070Table" [columns]="columns" [value]="data" scrollable="true" scrollHeight="450px"
-    [virtualScroll]="data.length > 0" [virtualScrollItemSize]="25">
-    <ng-template pTemplate="caption">
-      <div class="flex justify-content-end align-items-center gap-2 p-2">
+  <app-table-report [columns]="columns" [data]="data" [loading]="loading" [totalRecords]="totalRecords"
+    [showReportMode]="false" [columnGroup]="columnGroup" [lazy]="false" [showManage]="false" [showDelete]="false"
+    [footerData]="footerData">
+    <header>
+      <div class="flex justify-content-end align-items-center gap-2">
         <p-button styleClass="p-2" label="產出試算表.PDF" [loading]="btnLoading" icon="pi pi-file" (click)="onExportPDF()"
           [disabled]="data.length === 0" [loading]="false"></p-button>
         <p-button styleClass="p-2" label="產出試算表.XLSX" [loading]="btnLoading" icon="pi pi-file" (click)="onExportXLSX()"
           [disabled]="data.length === 0" [loading]="false"></p-button>
       </div>
-    </ng-template>
-    <ng-template pTemplate="header" let-columns>
-      <tr>
-        <th style="width:6rem">序號</th>
-        <th *ngFor="let col of columns" style="min-width: 55px">
-          {{col.header}}
-        </th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
-      <tr style="height:25px">
-        <td>{{ rowIndex + 1 }}</td>
-        <td *ngFor="let col of columns" [ngClass]="{
-          'text-right': isNumericColumn(col.field)
-        }">
-          <ng-container *ngIf="isNumericColumn(col.field); else normalCell">
-            {{ rowData[col.field] | number:'1.0-0' }}
-          </ng-container>
-          <ng-template #normalCell>
-            {{ rowData[col.field] }}
-          </ng-template>
-        </td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="footer" let-columns>
-      <tr>
-        <td></td>
-        <td></td>
-        <td class="text-center font-bold">總計：</td>
-        <td class="text-right">{{ getColumnSum('Prior_DAmt') | number:'1.0-0' }}</td>
-        <td class="text-right">{{ getColumnSum('Prior_CAmt') | number:'1.0-0' }}</td>
-        <td class="text-right">{{ getColumnSum('Curr_DAmt') | number:'1.0-0' }}</td>
-        <td class="text-right">{{ getColumnSum('Curr_CAmt') | number:'1.0-0' }}</td>
-        <td class="text-right">{{ getColumnSum('Total_DAmt') | number:'1.0-0' }}</td>
-        <td class="text-right">{{ getColumnSum('Total_CAmt') | number:'1.0-0' }}</td>
-      </tr>
-      <tr>
-        <td colspan="9" class="text-right font-bold">
-          總筆數: {{ data.length }}
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
+    </header>
+  </app-table-report>
 </div>

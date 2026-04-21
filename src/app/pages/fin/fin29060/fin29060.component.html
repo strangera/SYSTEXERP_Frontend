@@ -59,15 +59,9 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <ng-template #vendorGroupHeader let-row>
-      <span>廠商編號：{{ row.VendorNo }}</span>
-    </ng-template>
-
-    <app-fin29060-table-subheader [data]="data" [columns]="columns" [totalRecords]="totalRecords" [showPage]="false"
-      [showFilter]="false" [lastQueryBody]="lastQueryBody" [lazyBatchSize]="lazyBatchSize" [showManage]="false"
-      (dataChange)="data = $event" [groupRowsBy]="'VendorNo'" [totalData]="totalData" [groupRowsByName]="'廠商編號'"
-      [showSubTotal]="true" [showTotal]="true" [subtotalLabel]="'小計'" [queryFunction]="queryFn"
-      [skipPageTotalRows]="true" (detailWithColValue)="onDetailWithColValue($event)">
+    <app-fin29060-table-subheader [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+      (dataChange)="data = $event" [groupRowsBy]="'VendorNo'" [totalData]="totalData"
+      (detailWithColValue)="onDetailWithColValue($event)">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
           <p-button styleClass="p-2" label="廠商付款明細表.PDF" icon="pi pi-file" (click)="onExportPDF()"

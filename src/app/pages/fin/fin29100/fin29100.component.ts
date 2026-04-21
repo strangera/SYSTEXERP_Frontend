@@ -22,21 +22,16 @@ type TxnTypeOption = { label: string; value: string };
 @Component({
   selector: 'app-fin29100',
   templateUrl: './fin29100.component.html',
-  styleUrl: './fin29100.component.scss',
   standalone: true,
   imports: [
     ButtonModule,
     TableSubheaderComponent,
-    // DropdownRangeComponent,
     MenubarComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
     CalendarRangeComponent,
-    // InputTextComponent,
-    // RadiobuttonComponent,
     ButtonComponent,
-    // TableComponent,
     TranslateModule,
     InputTextRangeComponent,
     DropdownComponent
@@ -126,7 +121,7 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
         DocNo_To: string | null;
         TxnDate_From: string;
         TxnDate_To: string;
-        TxnType: TxnTypeOption | null;
+        TxnType: string | null;
         pageSize: number;
         pageIndex: number;
         SortBy: any[];
@@ -141,7 +136,7 @@ export class FIN29100Component extends BasicQueryPageComponent<FIN29100Data> imp
         BNK_No: formValue.BNK_No || '',
         DocNo_From: formValue.DocNo_From || '',
         DocNo_To: formValue.DocNo_To || '',
-        TxnType: formValue.TxnType?.value || '',
+        TxnType: formValue.TxnType || '',
         TxnDate_From: this.datePipe.transform(formValue.TxnDate_From, 'yyyy-MM-dd') || '',
         TxnDate_To: this.datePipe.transform(formValue.TxnDate_To, 'yyyy-MM-dd') || ''
       };

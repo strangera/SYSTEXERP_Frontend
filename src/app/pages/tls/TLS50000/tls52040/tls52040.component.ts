@@ -71,7 +71,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     APRV_Date_End: [null], // 審核(驗收)日期迄
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'RJM_No', order: 1 }]],
+    SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'RJM_No', order: -1 }]],
   });
   totalRecords = 0;
   warehouseOptions = this.dropdown.queryPos2034(); // 倉別

@@ -69,25 +69,41 @@ export class TableSubheaderGroupingComponent implements OnInit, OnChanges {
   // 核心邏輯：分離小計和明細資料 (保持不變)
   private processData(): void {
     this.groupedFooters = {};
-    this.detailData = [];
+    if (this.data && this.data.length > 0) {
+      // 1. 依然存下小計資料（用於顯示合計列）
+      this.data.forEach(row => {
+        if (row.LTYPE_ID && !row.STYPE_ID) {
+          this.groupedFooters[row.LTYPE_NAME] = row;
+        }
+      });
 
-    if (!this.data || this.data.length === 0) {
-      return;
+      // 2. 過濾掉原本 JSON 裡面的「小計行」，因為我們要自己手動插在 Body 裡
+      // 這樣才能精準控制樣式
+      this.detailData = this.data.filter(row => !(row.LTYPE_ID && !row.STYPE_ID))
+        .map(row => ({
+          ...row,
+          isSummaryRow: !row.LTYPE_ID // 沒有 ID 的就是損益中間項
+        }));
     }
+  }
 
-    this.data.forEach(row => {
-      const groupKey = row.LTYPE_NAME;
-      // 判斷是否為小計行 (LTYPE_ID 不為空，但其餘 ID 欄位為空)
-      if ((row.STYPE_ID === null || row.STYPE_ID === '') && (row.MTYPE_ID === null || row.MTYPE_ID === '') && (row.LTYPE_ID !== null && row.LTYPE_ID !== '')) {
-        // 小計行：儲存到 groupedFooters，並以 LTYPE_NAME 作為 key
-        this.groupedFooters[groupKey] = row;
-      } else if (row.LTYPE_ID === null && row.MTYPE_ID === null && row.STYPE_ID === null) {
-        // 總計行：由父元件的 footerData 處理，此處忽略
-      } else {
-        // 明細行：儲存到 detailData
-        this.detailData.push(row);
-      }
-    });
+  // 判斷是否為群組的第一筆，用來顯示 Header
+  isFirstInGroup(index: number): boolean {
+    if (index === 0) return true;
+    // 如果這一筆的 LTYPE_ID 跟上一筆不同，且這一筆不是損益項，就顯示 Header
+    const current = this.detailData[index];
+    const previous = this.detailData[index - 1];
+    return current.LTYPE_ID && current.LTYPE_ID !== previous.LTYPE_ID;
+  }
+
+  // 判斷是否為群組的最後一筆，用來顯示 Footer
+  isLastInGroup(index: number): boolean {
+    const current = this.detailData[index];
+    if (current.isSummaryRow) return false; // 損益項不需要顯示群組 Footer
+
+    const next = this.detailData[index + 1];
+    // 如果下一筆不存在，或是下一筆的 ID 不同（或是下一筆是損益項），則當前是最後一筆
+    return !next || next.LTYPE_ID !== current.LTYPE_ID;
   }
 
   /**

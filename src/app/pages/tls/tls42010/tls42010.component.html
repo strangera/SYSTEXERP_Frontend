@@ -50,8 +50,8 @@
 
   <form [formGroup]="dialogQueryForm" class="flex gap-2">
     <app-dropdown (changeEvent)="onDialogChange($event)" class="flex-1" label="來源鍵盤編號" controlName="Source_USR_Level"
-      [control]="dialogQueryForm.controls.Source_USR_Level" [options]="kbFuncOptions" optionLabel="USR_Level"
-      optionValue="USR_Level" [submitted]="submitted">
+      [control]="dialogQueryForm.controls.Source_USR_Level" [options]="kbFuncOptions" optionLabel="keyUSR_Level"
+      optionValue="valueUSR_Level" [submitted]="submitted">
     </app-dropdown>
 
     <app-input-text class="flex-1" label="目標鍵盤編號" controlName="Target_USR_Level"
