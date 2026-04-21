@@ -127,6 +127,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
   onSubmit(frm: FormGroup) {// 驗證單據明細
     // --------------------------
+    //必須至少有一筆供應商資料
+    if (this.supplierData.length < 1) {
+      this.messageService.errorBubble('發票資料不可為空。');
+      return;
+    }
     for (let i = 0; i < this.supplierData.length; i++) {
       const row = this.supplierData[i];
       const result = this.validateSupplierRow(row);
@@ -168,11 +173,10 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
               AMT: frm.get('AMT')?.value,
             }
             console.log('提交的payload', payload);
-            // const formValue = frm.getRawValue();
-            // this.ass14010Service.insertASS14010(payload).subscribe(() => {
-            //   this.messageService.successBubble('新增成功');
-            //   this.dataForm.reset();
-            // });
+            this.ass14010Service.insertASS14010(payload).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.dataForm.reset();
+            });
           }
           break;
         case CRUDStatus.Edit:
@@ -197,14 +201,14 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
             }
 
             console.log('提交的payload', payload);
-            // this.ass14010Service.updateASS14010(payload).subscribe((res) => {
-            //   if (res.Data.O_MSGTYPE === 'S') {
-            //     this.messageService.successBubble('更新成功');
-            //     this.onCancel();
-            //   } else {
-            //     this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
-            //   }
-            // });
+            this.ass14010Service.updateASS14010(payload).subscribe((res) => {
+              if (res.Data.O_MSGTYPE === 'S') {
+                this.messageService.successBubble('更新成功');
+                this.onCancel();
+              } else {
+                this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
+              }
+            });
           }
           break;
       }
@@ -213,7 +217,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   //讀取明細
   get14010Detail(STO_NO: string | null, RECEIPT_NO: string) {
     //編輯模式確認是否包含指定引數
-    if (this.crudstatus == CRUDStatus.Edit || CRUDStatus.Read) {
+    if (this.crudstatus == CRUDStatus.Edit || this.crudstatus == CRUDStatus.Read) {
+      //編輯模式不可變更供應商代號
+      if (this.crudstatus == CRUDStatus.Edit) {
+        this.dataForm.controls.SUPPLIER_ID.disable();
+      }
       if (!STO_NO || !RECEIPT_NO) {
         this.messageService.errorBubble('明細必須包含分店編號與收據編號')
       }
@@ -311,9 +319,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       { field: 'REDU_CODE', header: '扣抵別', type: 'dropdown', options: [...this.REDU_CODE_Options], optionLabel: 'label', optionValue: 'value' },
 
       { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber' },
-      { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber', disabled: () => true },
-      { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber', disabled: () => true },
-      { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber', disabled: () => true },
+      { field: 'TOTAL_NTX_AMT', header: '未稅金額', type: 'inputNumber', disabled: () => true },
+      { field: 'TOTAL_TX_AMT', header: '稅額', type: 'inputNumber', disabled: () => true },
+      { field: 'TOTAL_AMT', header: '含稅金額', type: 'inputNumber', disabled: () => true },
     ];
   }
   //依據明細驗收單號進行主檔token_no刷新
@@ -349,7 +357,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     // 3. 發票總金額應為未稅金額加稅額總金額
     const expectedTotal = (Number(rowData.TOTAL_NTX_AMT) || 0) + (Number(rowData.TOTAL_TX_AMT) || 0);
     if (Number(rowData.TOTAL_AMT) !== expectedTotal) {
-      return { isValid: false, errorMessage: `發票總金額應為未稅金額加稅額總金額 (${expectedTotal})。` };
+      return { isValid: false, errorMessage: `含稅金額應為未稅金額加稅額，應為 (${expectedTotal}) 元。` };
     }
 
     return { isValid: true, errorMessage: '' };
