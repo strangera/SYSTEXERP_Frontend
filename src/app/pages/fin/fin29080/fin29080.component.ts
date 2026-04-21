@@ -51,11 +51,15 @@ export class FIN29080Component extends BasicQueryPageComponent<FIN29080Data> imp
 
   columns: Column[] = [
     { field: 'ExpectedPayDate', header: '預計付款日', visible: true, format: formatDate },
-    { field: 'PayableAmount', header: '應付金額', visible: true, format: formatAmount },
-    { field: 'WithholdAmount', header: '代扣款項', visible: true, format: formatAmount },
-    { field: 'DiscountInterest', header: '貼現利息', visible: true, format: formatAmount },
-    { field: 'EstimatedPayable', header: '預估應付款', visible: true, format: formatAmount },
+    { field: 'PayableAmount', header: '應付金額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'WithholdAmount', header: '代扣款項', visible: true, format: formatAmount, isTotal: true },
+    { field: 'DiscountInterest', header: '貼現利息', visible: true, format: formatAmount, isTotal: true },
+    { field: 'EstimatedPayable', header: '預估應付款', visible: true, format: formatAmount, isTotal: true },
   ];
+
+  showSubTotal = true;
+  groupRowsBy = 'ExpectedPayDate';
+  showTotal = true;
 
   ngOnInit(): void {
     this.initializePage('FIN29080', 'account/fin/fin29080cru', this.queryForm, (form) => this.onSubmit(form));

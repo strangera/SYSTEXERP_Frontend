@@ -27,14 +27,14 @@
   </ng-container>
 </div>
 
-<p-overlayPanel #op [style]="{'max-width': '700px'}" [appendTo]="'body'">
+<p-overlayPanel #op [style]="{'min-width': '700px', 'max-width': '90vw'}" [appendTo]="'body'">
   <ng-container *ngIf="showOverlay && formGroup">
     <form [formGroup]="formGroup" class="grid p-fluid">
       <ng-content />
       <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"
         (selectionChange)="onSelectionChange($event)" (itemClick)="onRowClick($event)" [columns]="dialogColumns"
         [showHeader]="false" [showPage]="false" [showCheckBox]="true" selectionMode="single" [showManage]="false"
-        scrollHeight="200px" [loading]="loading" [totalRecords]="totalRecords" [rows]="30"
+        scrollHeight="400px" [loading]="loading" [totalRecords]="totalRecords" [rows]="30"
         [rowsPerPageOptions]="[30,60,90]" (lazyLoadData)="onLazyLoadData($event, formGroup)" [lazy]="lazy"
         [showCaption]="false" />
     </form>

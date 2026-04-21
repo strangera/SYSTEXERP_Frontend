@@ -44,10 +44,28 @@ export interface CSS1004Data {
   UPD_USR_Name?: string;
 }
 
+export interface CSS10031Data {
+  ID: number;
+  KIND_ItemID?: string;
+  KIND_Name: string;
+}
+
+export interface CPM12030DetailData {
+  ClassItems: CSS1004Data[];
+  KindItems: CSS10031Data[];
+}
+
+export interface CSS10031ItemRequest {
+  ID: number;
+  KIND_Name: string;
+}
+
 export interface CreateCPM12030Request {
   KIND_ID: string;
   KIND_SubID: string;
   KIND_SubName: string;
+  CLASS_IDs: string[];
+  CSS10031Items?: CSS10031ItemRequest[];
 }
 
 export interface UpdateCPM12030Request {
@@ -55,6 +73,8 @@ export interface UpdateCPM12030Request {
   KIND_ID: string;
   KIND_SubID: string;
   KIND_SubName: string;
+  CLASS_IDs: string[];
+  CSS10031Items?: CSS10031ItemRequest[];
 }
 
 @Injectable({
@@ -77,8 +97,8 @@ export class Cpm12030Service {
   }
 
   /** 查詢明細 (單筆) */
-  queryCPM12030Detail(body: { ID: number }): Observable<ApiResponse<CSS1004Data[]>> {
-    return this.http.post<ApiResponse<CSS1004Data[]>>(`${this.apiUrl}/queryCPM12030Detail`, body);
+  queryCPM12030Detail(body: { ID: number; KIND_SubID?: string }): Observable<ApiResponse<CPM12030DetailData>> {
+    return this.http.post<ApiResponse<CPM12030DetailData>>(`${this.apiUrl}/queryCPM12030Detail`, body);
   }
 
   /** 修改 */

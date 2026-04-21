@@ -355,6 +355,11 @@ export class DropDownListService {
   queryGLS1005_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1005_DropDownList`, {});
   }
+
+  // 查詢科目大分類(GLS1003)下拉式選單
+  queryGLS1003_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1003_DropDownList`, {});
+  }
   // 查詢 ENG1002 下拉式選單
   queryENG1002_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/Share/queryENG1002_DropDownList`, {});

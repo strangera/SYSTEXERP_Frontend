@@ -159,7 +159,7 @@ export interface InsertAPS2002DataBody {
   PUR_Net?: number;
   PUR_Tax?: number;
   PUR_Amt?: number;
-  PUR_Uniform?: string | null;
+  // PUR_Uniform?: string | null;
   PUR_TaxType?: string | null;
   PUR_DiscNo?: string | null;
   PUR_RepYYYYMM?: string | null;
@@ -498,6 +498,7 @@ export interface APS3001 {
   VEN_Name?: string | null;
   VEN_Uniform?: string | null;
   AccNo?: string | null;
+  AccCName?: string | null;
   ACP_SourceNo?: string | null;
   ACP_Amt?: number | null;
   PTA_Amt?: number | null;
@@ -818,11 +819,10 @@ export interface FIN53010StepAR {
   note_desc?: string;
 }
 
-/** FIN53010 新增多步驟：銷項發票（Voucher_Type=5）單列 */
+/** FIN53010 新增多步驟：銷項發票（Voucher_Type=6）單列 */
 export interface FIN53010StepSalesInvoiceRow {
   /** APS4023 主檔 ID（insert／update APS4023Data 用） */
   id?: number;
-  add_flag?: boolean;
   invoice_type?: string;
   invoice_prefix?: string;
   invoice_no?: string;
@@ -838,11 +838,10 @@ export interface FIN53010StepSalesInvoiceRow {
   asset_flag?: string;
 }
 
-/** FIN53010 新增多步驟：進項發票（Voucher_Type=6）單列 */
+/** FIN53010 新增多步驟：進項發票（Voucher_Type=5）單列 */
 export interface FIN53010StepPurchaseInvoiceRow {
   /** 更新 APS2002 時帶入 */
   id?: number;
-  add_flag?: boolean;
   voucher_type?: string;
   track_no?: string;
   invoice_no?: string;

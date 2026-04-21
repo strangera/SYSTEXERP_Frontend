@@ -1114,7 +1114,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
       const rawData = await excelImportService.importExcel(file, importExcelColumn);
 
       // 將中文標題映射到欄位名稱（專櫃名稱設為空白）
-      const data: TltItemWithStatus[] = rawData.map((item: Record<string, string | number | undefined>) => ({
+      const data: TltItemWithStatus[] = rawData.data.map((item: Record<string, string | number | undefined>) => ({
         id: undefined,
         tlt_no: (item['專櫃編號'] || item['tlt_no'] || '').toString().trim(),
         tlt_name: '',  // 不匯入專櫃名稱，保持空白
@@ -1166,40 +1166,60 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<tls26010response
         }
       }
 
-      // 顯示查無此櫃位訊息
-      if (notFoundItems.length > 0) {
-        const notFoundMsg = notFoundItems.length > 5
-          ? `${notFoundItems.slice(0, 5).join(', ')} 等 ${notFoundItems.length} 筆`
-          : notFoundItems.join(', ');
-        this.messageService.errorBubble(`無此櫃位，已略過：${notFoundMsg}`);
-      }
-
-      // 顯示重複訊息
-      if (duplicateItems.length > 0) {
-        const duplicateMsg = duplicateItems.length > 5
-          ? `${duplicateItems.slice(0, 5).join(', ')} 等 ${duplicateItems.length} 筆`
-          : duplicateItems.join(', ');
-        this.messageService.warnBubble(`以下專櫃編號重複，已自動略過：${duplicateMsg}`);
+      // 有錯誤時下載錯誤報告
+      const hasErrors = notFoundItems.length > 0 || duplicateItems.length > 0;
+      if (hasErrors) {
+        this.downloadImportErrorReport(notFoundItems, duplicateItems);
       }
 
       // 如果沒有新資料
       if (newItems.length === 0) {
-        this.messageService.errorBubble('所有匯入資料都重複或無效，沒有新增任何資料');
+        this.messageService.errorBubble('所有匯入資料都重複或無效，沒有新增任何資料，請參考已下載的錯誤報告');
         return;
       }
 
       // 將新資料加入到現有資料中
       this.tltData = [...this.tltData, ...newItems];
 
-      this.messageService.successBubble(
+      const successMsg =
         `匯入成功！新增 ${newItems.length} 筆資料` +
         (duplicateItems.length > 0 ? `，略過 ${duplicateItems.length} 筆重複` : '') +
-        (notFoundItems.length > 0 ? `，略過 ${notFoundItems.length} 筆無此櫃位` : '')
-      );
+        (notFoundItems.length > 0 ? `，略過 ${notFoundItems.length} 筆無此櫃位` : '') +
+        (hasErrors ? '，錯誤明細請參考已下載的錯誤報告' : '');
+      this.messageService.successBubble(successMsg);
 
     } catch (error) {
       console.error('Excel 匯入錯誤:', error);
       this.messageService.errorBubble('Excel 檔案讀取失敗，請檢查檔案格式');
     }
+  }
+
+  /**
+   * 下載匯入錯誤報告
+   */
+  private downloadImportErrorReport(notFoundItems: string[], duplicateItems: string[]): void {
+    const rows: { 專櫃編號: string; 錯誤原因: string }[] = [
+      ...notFoundItems.map(no => ({ 專櫃編號: no, 錯誤原因: '查無此櫃位' })),
+      ...duplicateItems.map(no => ({ 專櫃編號: no, 錯誤原因: '資料重複，已略過' }))
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(rows, { header: ['專櫃編號', '錯誤原因'] });
+    ws['!cols'] = [{ wch: 15 }, { wch: 25 }];
+
+    // 設定 A 欄（專櫃編號）為文字格式，避免前導零被移除
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+    for (let row = 1; row <= range.e.r; row++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: row, c: 0 });
+      if (ws[cellAddress]) {
+        ws[cellAddress].t = 's';
+        ws[cellAddress].z = '@';
+      }
+    }
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '錯誤明細');
+
+    const today = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `專櫃匯入錯誤報告_${today}.xlsx`);
   }
 }

@@ -71,10 +71,10 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
 
   // 處理狀況選項
   statusOptions = [
-    { label: '已建立', value: 'S' },
-    { label: '已派單', value: 'W' },
-    { label: '處理中', value: 'Y' },
-    { label: '結案', value: 'Z' }
+    { label: '處理中', value: '1' },
+    { label: '結案', value: '2' },
+    { label: '已建立', value: '3' },
+    { label: '已派單', value: '4' }
   ];
 
   // 意見類型選項
@@ -98,7 +98,7 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
   columns: Column[] = [
     { field: 'ID', header: '序號', hidden: true },
     { field: 'SEQ_ID', header: '客戶意見編號', visible: true },
-    { field: 'COMPLAIN_NOTES', header: '顧客意見內容', visible: true },
+    { field: 'COMPLAIN_NOTES', header: '顧客意見內容', visible: true, align: 'left' },
     { field: 'COMPLAIN_DATE', header: '接件日期', visible: true, format: formatDate },
     { field: 'CRT_USR_Name', header: '建檔人員', visible: true },
     { field: 'ORG_ID', header: '責任單位', visible: true },
@@ -122,14 +122,14 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
       displayText: '派單',
       icon: '',
       action: (rowData: CPM12050Data) => this.onDispatch(rowData),
-      disabled: (rowData: CPM12050Data) => rowData.STATUS !== 'S'
+      disabled: (rowData: CPM12050Data) => rowData.STATUS !== '3'
     },
     {
       label: '結案',
       displayText: '結案',
       icon: '',
       action: (rowData: CPM12050Data) => this.onClose(rowData),
-      disabled: (rowData: CPM12050Data) => rowData.STATUS === 'Z'
+      disabled: (rowData: CPM12050Data) => rowData.STATUS === '2'
     },
     {
       label: '高權限',
@@ -224,15 +224,9 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     return;
   }
 
-  // 判斷是否禁用編輯按鈕: 只有結案（label '結案' 或 value 'Z'）為不可編輯
+  // 判斷是否禁用編輯按鈕: 只有結案（value '2'）為不可編輯
   editDisabled = (rowData: any): boolean => {
-    const status = rowData?.STATUS;
-    if (!status) return false;
-    const disabledLabels = ['結案'];
-    const disabledValues = this.statusOptions
-      .filter(o => disabledLabels.includes(o.label))
-      .map(o => o.value);
-    return disabledLabels.includes(status) || disabledValues.includes(status);
+    return rowData?.STATUS === '2';
   }
 
   expansionLoadFn = (rowData: CPM12050Data): Observable<any> => {

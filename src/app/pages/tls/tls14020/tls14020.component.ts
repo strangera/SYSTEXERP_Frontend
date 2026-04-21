@@ -1,10 +1,12 @@
 /* eslint-disable no-sparse-arrays */
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatStoreWay, formatTltTermType } from '@pages/tls/shared/constants/tls13010.constants';
 import { TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { ContractItem } from '@service/api/tls/tls14020.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -33,7 +35,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
   templateUrl: './tls14020.component.html',
   styleUrl: './tls14020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule, TableComponent, MultiSelectComponent, DialogComponent, RadiobuttonYNComponent, CheckboxModule]
+  imports: [MenubarComponent, AccordionModule, AsyncPipe, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule, TableComponent, MultiSelectComponent, DialogComponent, RadiobuttonYNComponent, CheckboxModule, MultiSelectComponent]
 })
 export class TLS14020Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
 
@@ -44,7 +46,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     private locationService: LocationOptionsService,
     private negotiatorService: NegotiatorOptionsService,
     private apiService: TLS13010Service,
-
+    private readonly dropdown: DropdownApiService,
   ) {
     super();
   }
@@ -98,6 +100,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     { field: 'contract_filename', header: '列印合約檔名', visible: true },
   ];
   // 下拉選單選項
+  tlt_noListOptions = this.dropdown.queryTltTalent();
   businessTypeOptions: any[] = [];
   vendorOptions: any[] = [];
   locationOptions: any[] = [];

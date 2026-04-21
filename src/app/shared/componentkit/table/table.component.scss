@@ -27,6 +27,11 @@
     }
   }
   .p-datatable {
+    .invalid-row {
+      color: var(--red-500) !important;
+      background-color: var(--table-invalid-row) !important;
+    }
+
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
     }

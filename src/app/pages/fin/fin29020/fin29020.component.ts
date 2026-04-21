@@ -67,7 +67,7 @@ export class FIN29020Component extends BasicQueryPageComponent<FIN29020Detail> i
     { field: 'BankInfo', header: '銀行代號', visible: true },
     { field: 'RmtDate', header: '匯款日期', visible: true, format: formatDate },
     { field: 'VendorName', header: '廠商名稱', visible: true },
-    { field: 'VendorBankNo', header: '匯款銀行帳號', visible: true },
+    { field: 'VendorBankNo', header: '匯款銀行代號', visible: true },
     { field: 'VendorBankNane', header: '解款銀行名稱', visible: true },
     { field: 'VendorAccNo', header: '銀行帳號', visible: true },
     { field: 'VendorAccName', header: '帳戶名稱', visible: true },

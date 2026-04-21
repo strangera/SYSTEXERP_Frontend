@@ -94,9 +94,16 @@ export class FIN34010Component extends BasicQueryPageComponent<any> implements O
     },
     {
       field: 'REC_Amt',
-      header: '收款金額',
+      header: '收/付款金額',
       format: this.moneyFormat.bind(this),
       isTotal: true,
+    },
+    {
+      field: 'PTA_Amt',
+      header: '已沖帳金額',
+      format: this.moneyFormat.bind(this),
+      isTotal: true,
+      visible: false,
     },
     {
       field: 'ADJ_Amt',
@@ -281,6 +288,7 @@ export class FIN34010Component extends BasicQueryPageComponent<any> implements O
     return {
       ARS_Amt: summary.SumARS_Amt ?? 0,
       REC_Amt: summary.SumREC_Amt ?? 0,
+      PTA_Amt: summary.SumPTA_Amt ?? 0,
       ADJ_Amt: summary.SumADJ_Amt ?? 0,
       Unpaid_Amt: summary.SumUnpaid_Amt ?? 0,
     };

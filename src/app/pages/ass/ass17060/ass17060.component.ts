@@ -105,7 +105,7 @@ export class ASS17060Component extends BasicQueryPageComponent<QueryASS17060Deta
   }
 
   private loadGoodsOptions(): void {
-    this.dropdownApiService.queryFasItem({ MATERIAL_TYPE: '3' }).pipe(untilDestroyed(this)).subscribe((opts) => {
+    this.dropdownApiService.queryFasItemDropdown({ MATERIAL_TYPE: '3' }).pipe(untilDestroyed(this)).subscribe((opts: Option[] | null) => {
       this.goodsOptions = opts ?? [];
     });
   }

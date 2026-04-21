@@ -21,6 +21,10 @@
             <app-dropdown label="帳次" controlName="sam_termno" [options]="sam_termnoOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.sam_termno" [submitted]="submitted"></app-dropdown>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="指定專櫃" controlName="tlt_no" [options]="tltNoOptions$ | async" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.tlt_no" [submitted]="submitted"></app-dropdown>
+          </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
