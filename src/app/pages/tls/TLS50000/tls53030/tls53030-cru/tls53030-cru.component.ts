@@ -95,30 +95,22 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       type: 'inputNumber',
       placeholder: '請輸入數量',
       calculate: (row) => {
-        if (this.crudstatus !== CRUDStatus.Edit) return {};
-
-        // 如果 DIFF_Qty 已經有值（初始載入時），則不重新計算
-        if (row.DIFF_Qty !== undefined && row.DIFF_Qty !== null && row._dataStatus === 'original') {
+        // 如果不是編輯模式，或該資料尚未被異動 (還是 original)，就不計算，維持後端給的值
+        if (this.crudstatus !== CRUDStatus.Edit || row._dataStatus === 'original') {
           return {};
         }
+        // --- 只有當使用者開始修改 (status 變為 modified) 才會走到下面 ---
+        let diff = 0;
+        const status = this.rowdata?.PST_Status;
 
-        // 狀態1(初盤)：用初盤計算差異量
-        if (this.rowdata?.PST_Status === '1') {
-          return {
-            'DIFF_Qty': row.PST_Qty1 - row.SYS_STOCK_QTY,
-          };
+        if (status === '1') {
+          diff = (row.PST_Qty1 || 0) - (row.SYS_STOCK_QTY || 0);
+        } else if (['2', '3'].includes(status || '')) {
+          const qty = (row.PST_Qty2 !== null && row.PST_Qty2 !== undefined) ? row.PST_Qty2 : row.PST_Qty1;
+          diff = (qty || 0) - (row.SYS_STOCK_QTY || 0);
         }
 
-        // 狀態2(複盤)或3(抽盤)：若複盤無值，則用初盤計算差異量
-        if (['2', '3'].includes(this.rowdata?.PST_Status || '')) {
-          if (row.PST_Qty2 === null || row.PST_Qty2 === undefined) {
-            return {
-              'DIFF_Qty': row.PST_Qty1 - row.SYS_STOCK_QTY,
-            };
-          }
-        }
-
-        return {};
+        return { 'DIFF_Qty': diff };
       }
     },
     {
@@ -238,21 +230,6 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       .pipe(untilDestroyed(this), finalize(() => this.detailLoading = false))
       .subscribe(response => {
         const data = response.Data;
-
-        // 預先計算 DIFF_Qty，確保篩選功能正常
-        data.forEach(row => {
-          const status = this.rowdata?.PST_Status;
-          let diff = 0;
-
-          if (status === '1') {
-            diff = (row.PST_Qty1 || 0) - (row.SYS_STOCK_QTY || 0);
-          } else if (['2', '3'].includes(status || '')) {
-            const qty = (row.PST_Qty2 !== null && row.PST_Qty2 !== undefined) ? row.PST_Qty2 : row.PST_Qty1;
-            diff = (qty || 0) - (row.SYS_STOCK_QTY || 0);
-          }
-          row.DIFF_Qty = diff;
-        });
-
         this.originalDetailData = JSON.parse(JSON.stringify(data));
         this.detailData = data;
       });
