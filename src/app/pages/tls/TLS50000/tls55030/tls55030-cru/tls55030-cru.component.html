@@ -27,8 +27,9 @@
       <app-table-edit title="折讓單明細" [data]="data" [columns]="columns" [defaultInsertData]="defaultInsertData"
         (dataChange)="updateInvoiceSummaryAndFormState($event)" (selectionChange)="selectedItems = $event"
         [selectedItems]="selectedItems" [tableRequired]="true" [disabled]="isFormReadable"
-        (insert)="dialogComponent.openInvoiceDialog()" [showInsert]="!isFormReadable" [canInsert]="false"
-        [rowValidate]="validateRow" (delete)="updateInvoiceSummaryAndFormState()"
+        (insert)="dialogComponent.openInvoiceDialog()" [showInsert]="!isFormReadable" [rowValidate]="validateRow"
+        (delete)="updateInvoiceSummaryAndFormState()"
+        [canInsert]="dataForm.controls.VEN_No.value && dataForm.controls.ACP_YYYYMM.value ? true : false"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.ACP_YYYYMM.value ? false : true"
         (fieldChange)="updateSummaryAmounts()">
         <header>
