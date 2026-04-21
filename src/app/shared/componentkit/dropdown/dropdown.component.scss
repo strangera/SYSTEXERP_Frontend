@@ -1,6 +1,8 @@
 // WebKit (Chrome, Safari, Edge, Opera) 瀏覽器
-::ng-deep .p-scroller {
+::ng-deep .p-dropdown-items-wrapper .p-scroller {
   max-height: 250px !important; /* 設定下拉面板的高度，超出部分會出現滾動條 */
+}
+::ng-deep .p-scroller {
   // 針對下拉面板內部滾動條的容器
   &::-webkit-scrollbar {
     width: 6px; /* 垂直滾動條寬度 */
