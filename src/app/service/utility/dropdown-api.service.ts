@@ -2,10 +2,10 @@ import { AuthService } from './../system/auth.service';
 // !!! 新版下拉方法
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiResponse } from '../../shared/utils/rxjs-operators/validate-api-response';
 import { Observable, of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
+import { environment } from '../../../environments/environment';
 import {
   Aps1001ComboItem,
   Aps1001ComboQuery,
@@ -947,9 +947,9 @@ export class DropdownApiService {
             value: item.No
           });
           return acc;
-        }, {} as Record<string, any>);
+        }, {} as Record<string, Option & { items: Option[] }>);
 
-        return Object.values(grouped);
+        return Object.values(grouped) as Option[];
       }),
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );

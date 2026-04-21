@@ -93,7 +93,7 @@ export const assRoutes: Routes = [
   // { path: 'ass17040', loadComponent: () => import('./ass17040/ass17040.component').then(m => m.ASS17040Component),data: {progNo:'ASS17040'} }, // 領用退料統計表
   { path: 'ass17050', loadComponent: () => import('./ass17050/ass17050.component').then(m => m.ASS17050Component), data: { progNo: 'ASS17050' } }, // 使用統計月報表
   { path: 'ass17060', loadComponent: () => import('./ass17060/ass17060.component').then(m => m.ASS17060Component), data: { progNo: 'ASS17060' } }, // 調撥明細表
-  // { path: 'ass17070', loadComponent: () => import('./ass17070/ass17070.component').then(m => m.ASS17070Component),data: {progNo:'ASS17070'} }, // 報廢明細表
+  { path: 'ass17070', loadComponent: () => import('./ass17070/ass17070.component').then(m => m.ASS17070Component), data: { progNo: 'ASS17070' } }, // 報廢明細表
   // { path: 'ass17080', loadComponent: () => import('./ass17080/ass17080.component').then(m => m.ASS17080Component),data: {progNo:'ASS17080'} }, // 耗材庫存查詢作業(含金額)
   // { path: 'ass17090', loadComponent: () => import('./ass17090/ass17090.component').then(m => m.ASS17090Component),data: {progNo:'ASS17090'} }, // 耗材庫存查詢作業
   { path: 'ass17100', loadComponent: () => import('./ass17100/ass17100.component').then(m => m.ASS17100Component), data: { progNo: 'ASS17100' } }, // 耗材進耗存報表
