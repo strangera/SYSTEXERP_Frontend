@@ -116,8 +116,8 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
     { field: 'BUS_Type', header: '大分類代碼', type: 'dropdown', options: this.BUS_TypeOptions$, optionsAsync: true, optionLabel: 'label', optionValue: 'value' },
   ];
   columnsReportRole: EditColumn[] = [
-    { field: 'ORG_ID', header: '組織代碼', width: '50%', type: 'custom', options: this.SYS3100_Options$, optionsAsync: true, optionLabel: 'label', optionValue: 'value' },
-    { field: 'SYS_ID', header: '系統代碼', width: '50%', type: 'custom', options: getSYS1000Options('SYS_ID'), optionLabel: 'label', optionValue: 'value' }
+    { field: 'ORG_ID', header: '組織代碼', maxWidth: '15rem', type: 'custom', options: this.SYS3100_Options$, optionsAsync: true, optionLabel: 'label', optionValue: 'value' },
+    { field: 'SYS_ID', header: '系統代碼', maxWidth: '15rem', type: 'custom', options: getSYS1000Options('SYS_ID'), optionLabel: 'label', optionValue: 'value' }
   ];
   reportRoleData: any[] = [];
   selectedReportRoleRows: any[] = [];
