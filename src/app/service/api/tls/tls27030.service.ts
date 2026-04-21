@@ -25,4 +25,8 @@ export class TLS27030Service {
     formData.append('uploadType', uploadType);
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/uploadTLS27030`, formData);
   }
+
+  queryTLS27030(query: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/queryTLS27030`, query);
+  }
 }

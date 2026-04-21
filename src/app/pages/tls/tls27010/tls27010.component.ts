@@ -69,9 +69,9 @@ export class TLS27010Component extends BasicQueryPageComponent<unknown> implemen
     { field: 'TSDP_ProcFailCnt', header: '失敗筆數', isTotal: true },
     { field: 'TSDP_ProcMsg', header: '回應訊息' },
     { field: 'CRT_USR_No', header: '建立者' },
-    { field: 'CRT_Date', header: '建立日期', format: formatDateTime },
+    { field: 'CRT_Date', header: '建立日期', format: formatDate },
     { field: 'UPD_USR_No', header: '修改者' },
-    { field: 'UPD_Date', header: '修改日期', format: formatDateTime },
+    { field: 'UPD_Date', header: '修改日期', format: formatDate },
   ];
   totalRecords = 0;
   lastQueryBody: any = null;
