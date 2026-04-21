@@ -121,9 +121,10 @@ export interface IReturnDetailByDisNoData {
  */
 export interface RebateDetailOptionQueryBody {
   VEN_No: string; // 廠商編號\
+  PUR_GUINo?: string; // 發票/收據號碼
   PageSize: number;
   PageIndex: number;
-  SortBy: SortMeta[];
+  SortBy?: SortMeta[];
 }
 
 /**

@@ -49,7 +49,7 @@ export abstract class BasicPrintDataComponent {
     }
   }
 
-  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, PrintRemark?: boolean, Conditions?: any, PrintColumn?: Column[]): void {
+  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string, DataKeyName?: string, PrintRemark?: boolean, Conditions?: any, PrintColumn?: Column[], footerData?: any): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.systemDataService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`${apiUrl ? apiUrl : `query${ProgNo}`}`);
@@ -82,14 +82,15 @@ export abstract class BasicPrintDataComponent {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
         Conditions: Conditions || queryState?.value || []
       },
-      report_title: REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
+      report_title: apiUrl ? REPORT_TITLES[`${apiUrl}`] : REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
       columns: pdfColumns,
       config: {
         ...event,
         footer_DataType: PrintRemark ? ProgNo : undefined
       },
+      footer_data: footerData ? (Array.isArray(footerData) ? footerData : [footerData]) : null,
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,
-      data_key_name: DataKeyName
+      data_key_name: DataKeyName,
     };
     this.exportLoading = true;
     const export$ = this.tableService.exportPDF(body)
@@ -132,7 +133,7 @@ export abstract class BasicPrintDataComponent {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
         Conditions: Conditions || queryState?.value || []
       },
-      report_title: REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
+      report_title: apiUrl ? REPORT_TITLES[`${apiUrl}`] : REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
       columns: excelColumns,
       config: event,
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,

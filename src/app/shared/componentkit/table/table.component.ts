@@ -39,6 +39,16 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   selectedColumns!: Column[];
   /** table 資料 (必填) @default [] */
   @Input() data: any[] = [];
+  /** row 驗證（opt-in） */
+  @Input() rowValidate: ((rowData: any, index?: number) => { isValid: boolean, errorMessage: string | string[]; }) | undefined;
+  /** 是否顯示 row 驗證提示（opt-in） */
+  @Input() showRowValidationHint = false;
+  /** table 是否必填（opt-in） */
+  @Input() tableRequired = false;
+  /** 是否只驗證已勾選資料（opt-in） */
+  @Input() validateOnlySelected = false;
+  /** table 驗證錯誤訊息（opt-in） */
+  @Input() errorMessage: string | undefined = undefined;
   /** table 資料改變 (事件) */
   @Output() dataChange = new EventEmitter<any[]>();
   /** 是否顯示 loading @default false */
@@ -267,6 +277,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 其他
   /** table 無資料時顯示文字 @default '查無資料' */
   @Input() emptyMessage = '查無資料';
+  /** table 必填錯誤狀態 */
+  tableDataEmpty = false;
 
   // 底層匯出
   @Input() apiUrl?: string;                         // table API URL (可選)
@@ -283,6 +295,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
+      this.tableDataEmpty = false;
       this.hasSearched = true;
       setTimeout(() => {
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
@@ -290,6 +303,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
         this.expandedRows = {};
         this.selectionChange.emit(this.selectedItems);
       });
+      if (this.showRowValidationHint && this.rowValidate) {
+        this.applyRowValidation();
+      }
     }
     // 僅在 columns 首次被設定時執行初始化邏輯// 這樣就不會在每次 data 變動時都重置 filter 狀態
     if (changes['columns'] && this.columns.length > 0) {
@@ -359,7 +375,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 行編輯保存
   onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
     if (this.insertRowData && this.tableUtilityService.isNewRowUnchanged(rowData, this.columns, this.dataKey, this.defaultInsertData)) {
-      this.messageService.errorBubble('請輸入至少一個欄位的值', '未輸入任何值');
+      (this.messageService as any).errorBubble('請輸入至少一個欄位的值', '未輸入任何值');
       return;// 驗證邏輯
     }
     if (!this.tableUtilityService.validateRowData(rowData, this.columns, this.data, this.messageService)) {
@@ -440,7 +456,12 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.filterChange.emit({ rowData: event.originalEvent, value: event.query });
   }
   // 處理值變化事件
-  onFieldChange(rowData: any, field: string, value: any, index?: number) { this.fieldChange.emit({ rowData, field, value, index }); }
+  onFieldChange(rowData: any, field: string, value: any, index?: number) {
+    this.fieldChange.emit({ rowData, field, value, index });
+    if (this.showRowValidationHint && this.rowValidate) {
+      this.applyRowValidation();
+    }
+  }
   // Insert 按鈕
   insertRow() {
     if (this.insertRowData) {
@@ -549,5 +570,79 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 資料列重新排序
   onRowReorder(event: TableRowReorderEvent): void {
     this.rowReorder.emit(event);
+  }
+
+  public validateAndShowErrors(): boolean {
+    this.tableDataEmpty = false;
+    const validData = this.data ?? [];
+    const rowsToValidate = this.validateOnlySelected ? (this.selectedItems ?? []) : validData;
+
+    if (this.tableRequired && rowsToValidate.length === 0) {
+      this.tableDataEmpty = true;
+      return false;
+    }
+
+    if (!this.rowValidate) {
+      return true;
+    }
+
+    const { isValid, firstErrorIndex } = this.applyRowValidation();
+    if (!isValid) {
+      const firstErrorRow = (this.data ?? []).find(row => row?._rowValidationError?.isValid === false);
+      const errorMessage = firstErrorRow?._rowValidationError?.errorMessage ?? '表格資料有誤';
+      (this.messageService as any).errorBubble(errorMessage, '表格驗證失敗');
+      if (firstErrorIndex !== -1) {
+        this.scrollToRow(firstErrorIndex);
+      }
+    }
+    return isValid;
+  }
+
+  private applyRowValidation(): { isValid: boolean; firstErrorIndex: number; } {
+    const data = this.data ?? [];
+    const rowSet = new Set(this.validateOnlySelected ? (this.selectedItems ?? []) : data);
+
+    let isValid = true;
+    let firstErrorIndex = -1;
+
+    data.forEach((rowData, index) => {
+      delete rowData._rowValidationError;
+
+      if (!this.rowValidate || !rowSet.has(rowData)) {
+        return;
+      }
+
+      const result = this.rowValidate(rowData, index);
+      if (result?.isValid === false) {
+        isValid = false;
+        if (firstErrorIndex === -1) {
+          firstErrorIndex = index;
+        }
+        rowData._rowValidationError = {
+          isValid: false,
+          errorMessage: this.normalizeRowErrorMessage(result.errorMessage),
+        };
+      }
+    });
+
+    this.cdr.markForCheck();
+    return { isValid, firstErrorIndex };
+  }
+
+  private normalizeRowErrorMessage(errorMessage: string | string[] | undefined): string {
+    if (Array.isArray(errorMessage)) {
+      return errorMessage.filter(Boolean).join('、');
+    }
+    return errorMessage ?? '';
+  }
+
+  private scrollToRow(index: number): void {
+    if (!this.dt?.el) { return; }
+    const tbody = this.dt.el.nativeElement.querySelector('.p-datatable-tbody');
+    if (!tbody) { return; }
+    const rowElement = tbody.children[index];
+    if (rowElement) {
+      rowElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 }

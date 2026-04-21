@@ -84,6 +84,25 @@
         cursor: pointer;
       }
     }
+    .p-datatable-thead > tr > th,
+    .p-datatable-tbody > tr > td {
+      // 如果你希望欄位不要被壓扁，可以取消 table-layout: fixed
+      // 或者針對單一 td 設定最小寬度
+      white-space: nowrap; // 防止內容換行把行高撐大
+      overflow: visible !important; // 確保下拉選單或錯誤提示不被遮擋
+      .p-inputtext,
+      .p-inputnumber,
+      .p-dropdown,
+      .p-autocomplete {
+        width: 100% !important; // 強制輸入框填滿單元格
+        min-width: 80px; // 設定最小寬度，防止被壓到看不見
+      }
+
+      // 修正 InputNumber 在表格內的特殊結構
+      .p-inputnumber-input {
+        width: 100% !important;
+      }
+    }
     .p-datatable-thead > tr > th {
       background: var(--table-header-bg);
     }

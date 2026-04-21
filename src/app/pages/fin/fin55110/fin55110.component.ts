@@ -70,27 +70,17 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
       this.orgOptions = (opts || []) as { value: string; label: string }[];
     });
 
-    // 取得科目大分類下拉：首碼 4~9（收入及費用），依首碼去重，取最短 AccNo 當代表
-    this.dropDownListService.queryGLS1005_DropDownList().subscribe((res) => {
+    // 取得科目大分類下拉 (GLS1003)，只顯示 4~9
+    this.dropDownListService.queryGLS1003_DropDownList().subscribe((res) => {
       const majorCodes = ['4', '5', '6', '7', '8', '9'];
-      const majorMap = new Map<string, IDropdownItem>();
-
-      (res?.Data || [])
-        .filter((item: IDropdownItem) => majorCodes.includes((item.No as string)?.charAt(0)))
-        .forEach((item: IDropdownItem) => {
-          const key = (item.No as string).charAt(0);
-          const existing = majorMap.get(key);
-          if (!existing || (item.No as string).length < (existing.No as string).length) {
-            majorMap.set(key, item);
-          }
-        });
-
-      this.AccNoOptions = majorCodes
-        .filter(code => majorMap.has(code))
-        .map(code => {
-          const item = majorMap.get(code)!;
-          return { value: code, label: `${code}-${item.Name}`, No: code, Name: item.Name };
-        });
+      this.AccNoOptions = (res?.Data || [])
+        .filter((item: IDropdownItem) => majorCodes.includes(item.No as string))
+        .map((item: IDropdownItem) => ({
+          value: item.No as string,
+          label: `${item.No}-${item.Name}`,
+          No: item.No as string,
+          Name: item.Name as string,
+        }));
     });
   }
 

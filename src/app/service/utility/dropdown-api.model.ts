@@ -43,7 +43,7 @@ export interface FAASSCHKMASS15070DropDownItem {
   CHECK_DATE?: string | null;
 }
 
-/** 
+/**
  * 查詢 FACLASSM_DropDownList 時的請求 body
 */
 export interface FaClassMQuery {
@@ -111,6 +111,22 @@ export interface FaClass2Item {
   B_CLASS_ID: string;
   B_CLASS_NAME: string;
   NOTES?: string | null;
+}
+
+/**
+ * queryFASITEM_DropDownList 請求（若後端欄位不同請再調整）
+ */
+export interface FaSitemQuery {
+  MATERIAL_TYPE?: string | null;
+}
+
+/**
+ * queryFASITEM_DropDownList 回傳項目
+ */
+export interface FaSitemItem {
+  RowNo?: string;
+  GOODS_ID: string;
+  GOODS_NAME: string;
 }
 
 /**
@@ -711,4 +727,13 @@ export interface Sys5000SubModuleItem extends IDropdownItem {
 export interface Tls55020Query {
   /** 交易日期 (YYYY-MM-DD) */
   TXN_Date: string;
+}
+
+/**
+ * 收銀機下拉選單項目型別
+ */
+export interface queryPOS1002_DropDownListItem {
+  No: string;
+  Name: string;
+  ECR_TLT_No?: string;
 }

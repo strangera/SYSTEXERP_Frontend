@@ -57,7 +57,21 @@ export class TableEditDataService {
   }
 
   // --- 核心資料操作方法 ---
-
+  /**
+   * 建立一個安全的指紋，避開循環引用
+   */
+  private generateFingerprint(data: any[]): string {
+    try {
+      return JSON.stringify(data, (key, value) => {
+        // 核心修正：過濾掉 PrimeNG TreeNode 自動產生的 parent 屬性
+        if (key === 'parent') return undefined;
+        return value;
+      });
+    } catch (e) {
+      console.warn('指紋計算失敗，回退到長度比對', e);
+      return data.length.toString();
+    }
+  }
   /**
    * 1. 載入和初始化資料（相當於 ngOnChanges 的核心邏輯）。
    * @param data 外部傳入的原始資料
@@ -119,7 +133,7 @@ export class TableEditDataService {
       // insertNewRow 已經會更新 this._tableData
       this.insertNewRow(columns, dataKey, defaultInsertData, dataStatusField, dataStatusValue);
     }
-    this._externalDataFingerprint = JSON.stringify(data);
+    this._externalDataFingerprint = this.generateFingerprint(data); // 使用新方法
     return {
       tableData: this._tableData, // 供表格顯示
       cleanData: this.getCleanData(keepDeletedData, canInsert) // 供 dataChange 發射
@@ -299,12 +313,10 @@ export class TableEditDataService {
     }
     // 3. 新增：檢查外部資料指紋
     // 如果外部資料與上次初始化時儲存的指紋不同，則認為需要同步
-    const incomingFingerprint = JSON.stringify(data); // 使用最簡單的 JSON 序列化作為指紋
+    const incomingFingerprint = this.generateFingerprint(data);
     if (incomingFingerprint !== this._externalDataFingerprint) {
-      // 外部資料內容發生了變化（例如 onAutoCalculate），需要同步
       return false;
     }
-    // 這是最寬鬆的檢查，只要長度相等且非空的第一個 key 相等，就認為是同步的
     return true;
   }
 }

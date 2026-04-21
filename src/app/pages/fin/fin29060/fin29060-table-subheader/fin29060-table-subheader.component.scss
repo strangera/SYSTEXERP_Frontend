@@ -1,4 +1,4 @@
-::ng-deep {
+:host ::ng-deep {
   &::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -18,14 +18,7 @@
   &::-webkit-scrollbar-thumb:hover {
     background: #949494;
   }
-  .p-datatable-header {
-    .p-button.p-fileupload-choose {
-      border: 1px solid var(--surface-border);
-      padding: 0.75rem 1.25rem;
-      height: 100%;
-      width: max-content;
-    }
-  }
+
   .p-datatable {
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
@@ -71,14 +64,13 @@
         font-size: 1.5em;
       }
     }
-
     .p-datatable-tbody > tr .p-highlight.p-disabled {
       background-color: #38a8ff !important;
     }
 
     .p-selectable-row:not(.p-disabled-row):hover {
       background-color: #d5edff !important;
-      // cursor: pointer;
+      cursor: pointer;
     }
 
     .p-disabled-row {
@@ -127,7 +119,7 @@
     .p-selectable-row:not(.p-disabled-row) {
       &:hover {
         background-color: var(--p-selectable-row-hover) !important;
-        // cursor: pointer;
+        cursor: pointer;
       }
     }
     .p-paginator {
@@ -135,12 +127,15 @@
       background: transparent;
     }
 
-    .p-scroller .p-scroller-inline {
-      background: #cacaca;
-    }
-
     .p-component-overlay {
       background-color: rgb(217 217 217 / 40%) !important;
+    }
+
+    // .p-datatable-thead > tr > th {
+    //   background: var(--table-header-bg);
+    // }
+    .p-datatable-tfoot > tr > td {
+      background: var(--table-footer-bg);
     }
   }
   .html-cell,
@@ -157,7 +152,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-height: 1.2em; /* 限制高度為一行 */
-    white-space: normal;
+    // white-space: normal;
     word-break: break-word;
     max-width: 75px; /* 可選：限制寬度 */
   }
@@ -175,7 +170,6 @@
   }
 
   .icon-button button {
-    color: var(--icon-button-span);
     background-color: var(--icon-button-bg);
     border-radius: 5px;
     border: var(--icon-button-border);
@@ -189,9 +183,28 @@
   .wrap-header {
     white-space: normal; /* 讓文字可以正常換行 */
   }
-
-  a:hover {
+  .multiline-header {
+    white-space: pre-line; /* 允許 \n 換行 */
+  }
+  /* 連結啟動狀態 */
+  .link-active {
+    color: #2196f3; /* 使用主題藍色 */
     cursor: pointer;
-    text-decoration: underline;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+
+  .link-active:hover {
+    color: #1565c0; /* 移入時顏色變深 */
+    text-decoration: underline; /* 增加底線 */
+  }
+
+  /* 連結停用狀態 */
+  .link-disabled {
+    color: #9e9e9e;
+    cursor: not-allowed;
+    text-decoration: none;
   }
 }

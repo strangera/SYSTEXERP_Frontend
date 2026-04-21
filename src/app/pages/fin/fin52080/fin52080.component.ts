@@ -108,8 +108,6 @@ export class FIN52080Component extends BasicQueryPageComponent<FIN52080Data> imp
     {
       field: 'AccDC',
       header: '借/貸',
-      options: this.service.accDCOption,
-      format: v => v === 'D' ? '借' : v === 'C' ? '貸' : v,
     },
     {
       field: 'Ledger_MD',

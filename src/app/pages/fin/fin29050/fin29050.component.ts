@@ -51,7 +51,7 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     AccNo_To: [null],
     ShowZeroBalance: ['N'],
     UnpaidIncludeReserve: ['N'],
-    ...createPaginationConfig([]),
+    ...createPaginationConfig([{ field: 'VendorNo', order: 1 }]),
   });
 
   VendorNoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
@@ -127,7 +127,7 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
       const requestData: QueryFIN29050Request = {
         PageSize: pageSize,
         PageIndex: pageIndex,
-        SortBy: raw.SortBy || [],
+        SortBy: raw.SortBy || [{ field: 'VendorNo', order: 1 }],
         VEN_No_From: raw.VEN_No_From || null,
         VEN_No_To: raw.VEN_No_To || null,
         ACP_Date_From: this.datePipe.transform(raw.ACP_Date_From, 'yyyy-MM-dd') || '',
@@ -206,13 +206,13 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     if (!event) return;
     const pageSize = (event as any).pageSize ?? (event as any).rows ?? 30;
     const pageIndex = (event as any).pageIndex ?? 1;
-    const body = { pageIndex, pageSize, SortBy: (event as any).SortBy ?? (event as any).multiSortMeta ?? [] };
+    const body = { pageIndex, pageSize, SortBy: (event as any).SortBy ?? (event as any).multiSortMeta ?? [{ field: 'VendorNo', order: 1 }] };
     console.log('[FIN29050] onLazyLoadData', { pageIndex, pageSize, body, queryFormExists: !!queryForm });
 
     // 把目前的分頁與排序回寫到 queryForm，讓匯出/儲存狀態時能保留排序與分頁
     if (queryForm) {
       try {
-        queryForm.patchValue({ pageIndex, pageSize, SortBy: body.SortBy || body.SortBy || [] });
+        queryForm.patchValue({ pageIndex, pageSize, SortBy: body.SortBy || [{ field: 'VendorNo', order: 1 }] });
       } catch (e) {
         // ignore patch errors
       }
@@ -260,7 +260,7 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
     this.fin29050Service.exportFIN29050_Excel(payload)
       .pipe(finalize(() => this.excelBtnLoading = false))
       .subscribe({
-        next: (r) => this.downloadFile(r, '. xlsx', '應付帳款明細表'),
+        next: (r) => this.downloadFile(r, '.xlsx', '應付帳款明細表'),
         error: () => this.messageService.warnBubble('匯出 Excel 失敗')
       });
   }

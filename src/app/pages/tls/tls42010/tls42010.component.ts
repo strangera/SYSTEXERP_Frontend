@@ -59,8 +59,8 @@ export class TLS42010Component extends BasicQueryPageComponent<POS1004Master> im
   kbFuncOptions: USRLevelOption[] = [];
   dialogVisible = false;
   dialogQueryForm = this.formBuilder.group({
-    Source_USR_Level: ['', Validators.required],
-    Target_USR_Level: [[Validators.maxLength(6), Validators.required]],
+    Source_USR_Level: ['', [Validators.required]],
+    Target_USR_Level: [null, [Validators.maxLength(6), Validators.required]],
   });
   dialogSelectItem: any | null = null;
   dialogSelectTargetItem: any | null = null;
@@ -87,8 +87,22 @@ export class TLS42010Component extends BasicQueryPageComponent<POS1004Master> im
   }
   saveDialog(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = true;
-      if (this.isValid) return;
+      if (this.isValid) {
+        this.messageService.warnBubble('來源與目標鍵盤編號不可相同');
+        this.loading = false;
+        return;
+      }
+      if (this.isValid) {
+        this.messageService.warnBubble('來源與目標鍵盤編號不可相同');
+        this.loading = false;
+        return;
+      };
+      // 加入目標不能超過 6 碼的驗證
+      if (typeof frm.value.Target_USR_Level !== 'string' || frm.value.Target_USR_Level.length > 6) {
+        this.messageService.warnBubble('目標鍵盤編號不可超過 6 碼');
+        this.loading = false;
+        return;
+      }
       const srcNo = frm.value.Source_USR_Level;
       const tgtNo = frm.value.Target_USR_Level;
       this.tls42010Service.queryTLS42010M({ USR_Level: srcNo, pageSize: 10, pageIndex: 1 }).subscribe((srcRes) => {
@@ -97,7 +111,7 @@ export class TLS42010Component extends BasicQueryPageComponent<POS1004Master> im
           this.loading = false;
           return;
         }
-        this.tls42010Service.queryTLS42010_Detail({ USR_Level: [srcNo] }).subscribe((detailRes) => {
+        this.tls42010Service.queryTLS42010_Detail({ USR_Level: [srcNo] }).pipe(finalize(() => (this.loading = false)), untilDestroyed(this)).subscribe((detailRes) => {
           const details = detailRes?.Data ?? [];
           const body = {
             ECR_KBType: srcData.ECR_KBType || 'TCHBTN',
@@ -126,11 +140,14 @@ export class TLS42010Component extends BasicQueryPageComponent<POS1004Master> im
     });
   }
 
-  // 判斷來源與目標相同
+  // 判斷來源與目標相同，必須都有值再判斷
   get isValid(): boolean {
-    const Source = this.dialogQueryForm.value.Source_USR_Level ?? '';
-    const Target = this.dialogQueryForm.value.Target_USR_Level ?? '';
-    return typeof Source === 'string' && typeof Target === 'string' && Source === Target;
+    const source = this.dialogQueryForm.value.Source_USR_Level;
+    const target = this.dialogQueryForm.value.Target_USR_Level;
+    if (!source || !target) {
+      return false; // 其中一個沒有值，不進行相同判斷
+    }
+    return source === target; // 只有當兩者都有值且相同時才回傳 true
   }
 
   // ---------------- 查詢 ----------------

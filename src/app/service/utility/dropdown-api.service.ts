@@ -13,6 +13,7 @@ import {
   Aps1001Query,
   Aps1002Item,
   Aps1003Query,
+  Ass13010PurchaseNumberDropDownItem,
   BusClassItem,
   BusClassQuery,
   BusSClassItem,
@@ -24,12 +25,15 @@ import {
   EcrQuery,
   FasItemDropdownItem,
   ENG1001Item,
+  FAASSCHKMASS15070DropDownItem,
   FaClass1Item,
   FaClass1Query,
   FaClass2Item,
   FaClass2Query,
   FaClassMItem,
   FaClassMQuery,
+  FaSitemItem,
+  FaSitemQuery,
   GLS1005AccSubCodeItem,
   IDropdownItem,
   IGLS1005LedgerMDItem,
@@ -58,6 +62,7 @@ import {
   Pos2013Item,
   Pos2013LogoRequest,
   Pos2013Query,
+  queryPOS1002_DropDownListItem,
   Sys1000Query,
   Sys5000SubModuleItem,
   TalentByContractDateItem,
@@ -78,8 +83,6 @@ import {
   TLTTALENTItem,
   TLTTALENTQuery,
   TlttalentTltSpaceItem,
-  Ass13010PurchaseNumberDropDownItem,
-  FAASSCHKMASS15070DropDownItem
 } from './dropdown-api.model';
 
 @Injectable({
@@ -270,6 +273,22 @@ export class DropdownApiService {
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
+  /**
+   * 查詢品項(FASITEM)下拉 — 預設 MATERIAL_TYPE=3（列管耗材）；回傳 GOODS_ID / GOODS_NAME
+   */
+  queryFasItemDropdown(body: FaSitemQuery = {}): Observable<Option[] | null> {
+    const payload: FaSitemQuery = {
+      ...body,
+      MATERIAL_TYPE: body.MATERIAL_TYPE ?? '3',
+    };
+    return this.queryAndMapDropdown<FaSitemItem, FaSitemQuery>(
+      '/queryFASITEM_DropDownList',
+      'GOODS_ID',
+      'GOODS_NAME',
+      payload,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
   /** 查詢商品管理編號(ASS11040)下拉選單 */
   queryAss11040Dropdown(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>(
@@ -424,7 +443,7 @@ export class DropdownApiService {
 
   /** 查詢收銀機設定檔(POS1002) */
   queryPos1002(): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS1002_DropDownList', 'No', 'Name').pipe(
+    return this.queryAndMapDropdown<queryPOS1002_DropDownListItem>('/queryPOS1002_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

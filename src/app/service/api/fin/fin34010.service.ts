@@ -14,6 +14,7 @@ export interface Fin34010Row {
   AccNo: string;         // 科目代號
   ARS_Amt: number;       // 帳款金額
   REC_Amt: number;       // 收款金額
+  PTA_Amt: number;       // 已沖帳金額
   ADJ_Amt: number;       // 調整金額
   Unpaid_Amt: number;    // 未收金額
   [key: string]: any;

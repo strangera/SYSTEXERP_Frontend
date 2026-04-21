@@ -62,12 +62,21 @@
               </div>
             </div>
             <ng-template #customCell let-rowData="rowData" let-col="col" let-index="index">
-              <p-multiSelect [options]="(col.optionsAsync ? (col.options | async) : col.options) || []"
+              <p-multiSelect *ngIf="col.field === 'ORG_ID'"
+                [options]="(col.optionsAsync ? (col.options | async) : col.options) || []"
                 [optionLabel]="col.optionLabel" [optionValue]="col.optionValue" [(ngModel)]="rowData[col.field]"
                 (onChange)="onRoleValueChange(rowData, col, $event.value, index)" [placeholder]="'請選擇'"
                 [showClear]="true" [filter]="true" appendTo="body" [style]="{'width': '100%'}"
                 [ngModelOptions]="{standalone: true}" [maxSelectedLabels]="3" [disabled]="isFormReadable">
               </p-multiSelect>
+              <ng-container *ngIf="col.field === 'SYS_ID'">
+                <p-treeSelect [(ngModel)]="rowData[col.field + '_TreeNodes']" [ngModelOptions]="{standalone: true}"
+                  [options]="sysTreeOptions" display="comma" [metaKeySelection]="false" selectionMode="checkbox"
+                  placeholder="請選擇系統權限" appendTo="body" [style]="{'max-width': '10rem'}"
+                  (onNodeSelect)="onTreeValueChange(rowData, col, index)" labelStyleClass="py-2"
+                  (onNodeUnselect)="onTreeValueChange(rowData, col, index)" [disabled]="isFormReadable">
+                </p-treeSelect>
+              </ng-container>
             </ng-template>
           </app-table-edit>
         </div>

@@ -1,20 +1,29 @@
+:host {
+  display: block;
+  --fin32020-sticky-top: 0px;
+}
+
 :host ::ng-deep {
   &::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
+
   &::-webkit-scrollbar-track {
     background: transparent;
     border: 5px solid transparent;
   }
+
   &::-webkit-scrollbar-thumb {
     background: #9f9f9f;
     border-radius: 12px;
     border: 2px solid var(--surface-d);
   }
+
   &::-webkit-scrollbar-thumb:hover {
     background: #949494;
   }
+
   .p-datatable-header {
     .p-button.p-fileupload-choose {
       border: 1px solid var(--surface-border);
@@ -23,34 +32,40 @@
       width: max-content;
     }
   }
+
   .p-datatable {
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
     }
+
     .p-datatable-header {
       background: transparent;
       border: none;
       padding: 0;
+
       .p-button-icon {
         font-size: 1.5em;
       }
     }
+
     .invalid-row {
       color: var(--red-500) !important;
       background-color: var(--table-invalid-row) !important;
     }
+
     .insert-row {
       .p-dropdown.p-component,
       .p-inputtext {
         border-style: dashed !important;
-        // border-width: 2px !important;
-        // border-color: var(--blue-400) !important;
       }
     }
+
     .p-datatable-wrapper {
       border: 1px solid var(--surface-d);
+      position: relative;
+      overflow: auto;
     }
-    // 可選行的hover效果
+
     .p-selectable-row:not(.p-disabled-row) {
       &:hover {
         background-color: var(--p-selectable-row-hover) !important;
@@ -58,11 +73,62 @@
       }
     }
   }
+
   .p-component-overlay {
-    // 轉圈圈的遮罩
     background-color: rgb(217 217 217 / 40%) !important;
   }
+
+  /* 一般表頭底色 */
   .p-datatable .p-datatable-thead > tr > th {
     background: var(--table-header-bg);
+  }
+
+  /* 表格要用 separate，sticky 才比較穩 */
+  .p-datatable-table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+
+  /* 一般 tbody z-index 壓低，避免蓋到 sticky header */
+  .p-datatable-tbody > tr > td {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* scrollable header 外層 */
+  .p-datatable-scrollable-header {
+    position: sticky;
+    top: var(--fin32020-sticky-top);
+    z-index: 30;
+    background: var(--table-header-bg);
+  }
+
+  .p-datatable-scrollable-header-box {
+    position: relative;
+    z-index: 30;
+    background: var(--table-header-bg);
+  }
+
+  /* scrollable 模式真正要固定的是 th */
+  .p-datatable-scrollable-table > .p-datatable-thead > tr > th,
+  .p-datatable-scrollable-header th {
+    position: sticky;
+    top: var(--fin32020-sticky-top);
+    z-index: 31;
+    background: var(--table-header-bg) !important;
+    background-clip: padding-box;
+  }
+
+  /* 如果有兩層表頭時第二層也不要透明 */
+  .p-datatable-scrollable-table > .p-datatable-thead > tr:nth-child(2) > th {
+    z-index: 32;
+    background: var(--table-header-bg) !important;
+  }
+
+  /* 避免 frozen / reorder / checkbox 欄位被蓋掉 */
+  .p-datatable-scrollable-table > .p-datatable-thead > tr > th.p-frozen-column,
+  .p-datatable-scrollable-header th.p-frozen-column {
+    z-index: 33;
+    background: var(--table-header-bg) !important;
   }
 }

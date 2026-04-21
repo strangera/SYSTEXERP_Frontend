@@ -1,5 +1,5 @@
 import { DatePipe, NgClass } from '@angular/common';
-import { afterNextRender, Component, computed, effect, Injector, OnInit, signal, TemplateRef, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, effect, Injector, OnInit, signal, TemplateRef, ViewChild, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -9,11 +9,9 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { CheckboxComponent } from '@shared/componentkit/checkbox/checkbox.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount as reportFormatAmount, formatDate as reportFormatDate } from '@shared/componentkit/table-report/table-report.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
@@ -57,10 +55,8 @@ import { EditColumn, EditColumnExtend, FieldChangeEvent as StepFieldChangeEvent 
 @Component({
   selector: 'app-fin53010-cru',
   templateUrl: './fin53010-cru.component.html',
-  styleUrl: './fin53010-cru.component.scss',
   standalone: true,
   imports: [
-    NgClass,
     ButtonModule,
     CheckboxModule,
     DropdownModule,
@@ -72,12 +68,10 @@ import { EditColumn, EditColumnExtend, FieldChangeEvent as StepFieldChangeEvent 
     TranslateModule,
     ButtonComponent,
     CalendarComponent,
-    CheckboxComponent,
     DialogComponent,
     DropdownComponent,
     InputTextComponent,
     MenubarComponent,
-    RadiobuttonComponent,
     TableComponent,
     TableEditComponent,
     TableReportComponent,
@@ -85,6 +79,8 @@ import { EditColumn, EditColumnExtend, FieldChangeEvent as StepFieldChangeEvent 
   ],
 })
 export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Detail> implements OnInit {
+
+  @ViewChild('purchaseTableEdit') purchaseTableEditComponent!: TableEditComponent;
 
   private readonly venUsrTemplate = viewChild.required<TemplateRef<any>>('venUsrTemplate');
 
@@ -548,23 +544,22 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly stepARColumns: EditColumn[] = [
-    { field: 'org_id', header: '組織代號', type: 'dropdown', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'org_id', header: '組織代號', type: 'dropdown', textAlign: 'left', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'ven_no', header: '廠商代號', type: 'dropdown', textAlign: 'left', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ars_amt', header: '金額', type: 'inputNumber', disabled: () => true },
     { field: 'pta_date', header: '預計收款日', type: 'date' },
     { field: 'ars_date', header: '立帳日期', type: 'date', disabled: () => true },
-    { field: 'acc_no', header: '會計科目代號', type: 'dropdown', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
+    { field: 'acc_no', header: '會計科目代號', type: 'dropdown', textAlign: 'left', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'note_desc', header: '摘要', type: 'input' },
   ];
 
   public readonly stepSalesColumns: EditColumn[] = [
-    { field: 'add_flag', header: '是否新增', type: 'checkbox' },
     { field: 'invoice_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'invoice_prefix', header: '字軌', type: 'input', maxLength: 2 },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8 },
-    { field: 'invoice_date', header: '發票日期', type: 'date' },
-    { field: 'declare_ym', header: '申報年月', type: 'date', view: 'month' },
-    { field: 'buyer_uniform', header: '買受人統一編號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date' },
+    { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month' },
+    { field: 'buyer_uniform', header: '買受人統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'total_amount', header: '發票總金額', type: 'inputNumber' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber' },
@@ -575,13 +570,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ];
 
   public readonly stepPurchaseColumns: EditColumn[] = [
-    { field: 'add_flag', header: '是否新增', type: 'checkbox' },
     { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'track_no', header: '字軌', type: 'input', maxLength: 2 },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8 },
-    { field: 'invoice_date', header: '發票日期', type: 'date' },
-    { field: 'declare_ym', header: '申報年月', type: 'date', view: 'month' },
-    { field: 'vendor_tax_id', header: '廠商統一編號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date' },
+    { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month' },
+    { field: 'vendor_tax_id', header: '廠商統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'invoice_usage', header: '發票用途', type: 'dropdown', options: () => this.service.purDirectTypeOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'invoice_amount', header: '發票總金額', type: 'inputNumber' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value' },
@@ -590,7 +584,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'category_type', header: '類別區分', type: 'dropdown', options: () => this.service.purTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'source_doc_no', header: '憑證單號', type: 'input' },
-    { field: 'total_count', header: '彙整張數', type: 'inputNumber' },
+    { field: 'total_count', header: '彙整張數', type: 'inputNumber', validate: [this.validatePURCombCnt] },
   ];
 
   public readonly stepBankColumns: EditColumn[] = [
@@ -1042,6 +1036,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   public onSubmit(): void {
+    const valid = this.purchaseTableEditComponent?.validateAndShowErrors();
+    if (valid === false) {
+      return;
+    }
+
     this.handleSubmit(this.dataForm, () => {
       if ((this.isFormCreateable || this.isFormEditable) && !this.isLastStep()) {
         this.messageService.warnBubble('請先完成所有步驟，再進行送出');
@@ -1193,6 +1192,29 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     });
   }
 
+  /** 檢核彙總張數
+   *
+   * 當格式(voucher_type)為26, 27時, 必填
+   */
+  private validatePURCombCnt(value: any, rowData: any, data: any[], field: string, header: string): { isValid: boolean, errorMessage: string[] } {
+    const validData = {
+      isValid: true,
+      errorMessage: []
+    }
+    const invalidData = {
+      isValid: false,
+      errorMessage: ['彙總張數不可為空']
+    }
+
+    if (rowData['voucher_type'] === '26' || rowData['voucher_type'] === '27') {
+      if (value === '' || value === null || value === undefined) {
+        return invalidData
+      }
+    }
+
+    return validData
+  }
+
   /** 進項步驟表：字軌 2 碼 + 發票號碼 8 碼齊備時查 APS4023 並帶入該列 */
   public onStepPurchaseInvoiceFieldChange(event: StepFieldChangeEvent): void {
     if (this.isFormReadable) return;
@@ -1244,7 +1266,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       : null;
     return {
       id: d.ID,
-      add_flag: true,
       invoice_type: d.InvoiceType ?? undefined,
       invoice_prefix: prefix,
       invoice_no: no,
@@ -1270,7 +1291,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       ? new Date(`${String(invYm).slice(0, 4)}-${String(invYm).slice(4, 6)}-01`)
       : null;
     return {
-      add_flag: true,
       voucher_type: d.InvoiceType ?? undefined,
       track_no: prefix,
       invoice_no: no,
