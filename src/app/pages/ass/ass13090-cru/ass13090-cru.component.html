@@ -13,51 +13,39 @@
           [control]="dataForm.controls.assetsCode"
           [submitted]="submitted"
         ></app-input-text>
-        <app-dropdown
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="品名編號／名稱"
           controlName="itemCode"
-          [options]="itemCodeOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.itemCode"
           [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
+        ></app-input-text>
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="資產狀態"
           controlName="assetStatus"
-          [options]="assetStatusOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.assetStatus"
           [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
+        ></app-input-text>
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="資產類型"
           controlName="assetType"
-          [options]="assetTypeOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.assetType"
           [submitted]="submitted"
-        ></app-dropdown>
+        ></app-input-text>
       </div>
 
       <hr />
       <h5 class="mt-0 mb-2">採購資訊</h5>
       <div class="grid p-fluid">
-        <app-dropdown
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="採購單號"
           controlName="purchaseNumber"
-          [options]="orderNumberOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.purchaseNumber"
           [submitted]="submitted"
-        ></app-dropdown>
+        ></app-input-text>
         <app-calendar
           class="col-12 md:col-6 lg:col-4"
           calendarType="dateOne"
@@ -80,36 +68,27 @@
           [control]="dataForm.controls.alteredAmount"
           [submitted]="submitted"
         ></app-input-number>
-        <app-dropdown
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="供應商代號"
           controlName="supplierCode"
-          [options]="supplierCodeOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.supplierCode"
           [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
+        ></app-input-text>
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="會計科目(借)"
           controlName="accounting_Borrow"
-          [options]="accountingCodeOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.accounting_Borrow"
           [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
+        ></app-input-text>
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="會計科目(貸)"
           controlName="accounting_Credit"
-          [options]="accountingCodeOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.accounting_Credit"
           [submitted]="submitted"
-        ></app-dropdown>
+        ></app-input-text>
         <app-calendar
           class="col-12 md:col-6 lg:col-4"
           calendarType="dateOne"
@@ -131,26 +110,20 @@
       <hr />
       <h5 class="mt-0 mb-2">折舊資訊</h5>
       <div class="grid p-fluid">
-        <app-dropdown
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="折舊會計科目"
           controlName="depreciation"
-          [options]="accountingCodeOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.depreciation"
           [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
+        ></app-input-text>
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="累計折舊科目"
           controlName="totalDepreciation"
-          [options]="accountingCodeOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.totalDepreciation"
           [submitted]="submitted"
-        ></app-dropdown>
+        ></app-input-text>
         <app-input-number
           class="col-12 md:col-6 lg:col-4"
           [useGrouping]="false"
@@ -200,56 +173,41 @@
       <hr />
       <h5 class="mt-0 mb-2">保管資訊</h5>
       <div class="grid p-fluid">
-        <app-dropdown
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="保管人"
           controlName="keepingPerson"
-          [options]="keepingPersonOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.keepingPerson"
           [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
+        ></app-input-text>
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="保管單位"
           controlName="keepingUnit"
-          [options]="orgUnitOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.keepingUnit"
           [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
+        ></app-input-text>
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="使用人"
           controlName="user"
-          [options]="userOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.user"
           [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
+        ></app-input-text>
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="使用單位"
           controlName="userUnit"
-          [options]="orgUnitOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.userUnit"
           [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
+        ></app-input-text>
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="位置代號"
           controlName="locationCode"
-          [options]="locationCodeOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.locationCode"
           [submitted]="submitted"
-        ></app-dropdown>
+        ></app-input-text>
       </div>
 
       <hr />
@@ -264,7 +222,7 @@
         ></app-input-text>
         <app-input-number
           class="col-12 md:col-6 lg:col-4"
-          label="續提Ｚ攤入金額"
+          label="續提攤入金額"
           controlName="renewalAmount"
           [control]="dataForm.controls.renewalAmount"
           [submitted]="submitted"

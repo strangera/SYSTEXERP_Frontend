@@ -3,13 +3,6 @@
     <div class="col" style="flex: 1">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <div>
-      <app-button
-        btnType="create"
-        class="col"
-        (clickEvent)="onCreate()"
-      ></app-button>
-    </div>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -90,13 +83,13 @@
           </div>
         </div>
         <div class="grid p-fluid">
-          <app-input-text-range
+          <app-input-number-range
             class="col-12 md:col-6 lg:col-4"
-            startLabel="輸入金額"
+            label="購入金額"
             [startControl]="queryForm.controls.inputAmountFrom"
             [endControl]="queryForm.controls.inputAmountTo"
             [submitted]="submitted"
-          ></app-input-text-range>
+          ></app-input-number-range>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="採購單號"

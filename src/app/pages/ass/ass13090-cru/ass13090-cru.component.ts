@@ -1,16 +1,12 @@
 import { NgIf } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Option } from '@service/utility/dropdown-api.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
@@ -20,7 +16,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 
 // 3.1.3.9 資產攤提作業 CRU
-@UntilDestroy()
 @Component({
   selector: 'app-ass13090-cru',
   templateUrl: './ass13090-cru.component.html',
@@ -33,7 +28,6 @@ import { ValidationService } from '../../../shared/service/validation.service';
     ReactiveFormsModule,
     InputTextComponent,
     InputNumberComponent,
-    DropdownComponent,
     CalendarComponent,
     InputTextareaComponent,
     ButtonComponent,
@@ -44,20 +38,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 })
 export class ASS13090CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   private validationService = inject(ValidationService);
-  private dropdownApiService = inject(DropdownApiService);
   private translate = inject(TranslateService);
-
-  itemCodeOptions: Option[] = [];
-  assetStatusOptions: Option[] = [];
-  assetTypeOptions: Option[] = [];
-  accountingCodeOptions: Option[] = [];
-  orderNumberOptions: Option[] = [];
-  supplierCodeOptions: Option[] = [];
-  orgUnitOptions: Option[] = [];
-  allUserOptionsWithOrg: Option[] = [];
-  keepingPersonOptions: Option[] = [];
-  userOptions: Option[] = [];
-  locationCodeOptions: Option[] = [];
 
   /** 攤提紀錄（明細列表，API 就緒後改為查詢結果） */
   readonly amortRecordTableLoading = signal(false);
@@ -118,140 +99,17 @@ export class ASS13090CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initializePage('ASS13090', this.dataForm);
-    if (this.crudstatus !== CRUDStatus.Create) {
-      this.seedFormMockForEditRead();
-    }
+    // TODO: 取 API 資料
+    this.seedFormMockForEditRead();
     this.applyEditFieldLock();
     queueMicrotask(() => this.captureFormBaseline());
-    this.loadDropdownOptions();
-
-    this.dataForm.controls.keepingUnit.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
-      this.updateKeepingPersonOptions();
-      if (!this.allUserOptionsWithOrg.length) {
-        return;
-      }
-      const unitVal = this.dataForm.controls.keepingUnit.value;
-      const allowed = this.keepingPersonOptions.some(o => o.value === this.dataForm.controls.keepingPerson.value);
-      if (unitVal != null && unitVal !== '' && !allowed) {
-        this.dataForm.patchValue({ keepingPerson: undefined }, { emitEvent: false });
-        this.dataForm.controls.keepingPerson.markAsPristine({ onlySelf: true });
-      }
-    });
-
-    if (this.crudstatus !== CRUDStatus.Create) {
-      this.seedAmortRecordMock();
-    } else {
-      this.amortRecordData = [];
-      this.amortRecordTotal = 0;
-    }
-
-    this.dataForm.controls.userUnit.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
-      this.updateUserOptions();
-      if (!this.allUserOptionsWithOrg.length) {
-        return;
-      }
-      const unitVal = this.dataForm.controls.userUnit.value;
-      const allowed = this.userOptions.some(o => o.value === this.dataForm.controls.user.value);
-      if (unitVal != null && unitVal !== '' && !allowed) {
-        this.dataForm.patchValue({ user: undefined }, { emitEvent: false });
-        this.dataForm.controls.user.markAsPristine({ onlySelf: true });
-      }
-    });
-  }
-
-  private updateKeepingPersonOptions(): void {
-    const unitVal = this.dataForm.controls.keepingUnit.value;
-    if (unitVal == null || unitVal === '') {
-      this.keepingPersonOptions = [...this.allUserOptionsWithOrg];
-    } else {
-      this.keepingPersonOptions = this.allUserOptionsWithOrg.filter(
-        (o: Option) => (o as Option & { Org_ID?: string }).Org_ID === unitVal,
-      );
-    }
-  }
-
-  private updateUserOptions(): void {
-    const unitVal = this.dataForm.controls.userUnit.value;
-    if (unitVal == null || unitVal === '') {
-      this.userOptions = [...this.allUserOptionsWithOrg];
-    } else {
-      this.userOptions = this.allUserOptionsWithOrg.filter(
-        (o: Option) => (o as Option & { Org_ID?: string }).Org_ID === unitVal,
-      );
-    }
-  }
-
-  private loadDropdownOptions(): void {
-    this.dropdownApiService
-      .queryFasItemDropdown({})
-      .pipe(untilDestroyed(this))
-      .subscribe(opts => (this.itemCodeOptions = opts ?? []));
-
-    this.dropdownApiService
-      .querySys1000({ SYS_Type: 'ASSET_STATUS' })
-      .pipe(untilDestroyed(this))
-      .subscribe(list => {
-        this.assetStatusOptions = (list ?? []).map(x => ({
-          value: x.No,
-          label: x.Name,
-        }));
-      });
-
-    this.dropdownApiService
-      .querySys1000({ SYS_Type: 'ASSET_TYPE' })
-      .pipe(untilDestroyed(this))
-      .subscribe(list => {
-        this.assetTypeOptions = (list ?? []).map(x => ({
-          value: x.No,
-          label: `${x.No} - ${x.Name}`,
-        }));
-      });
-
-    this.dropdownApiService
-      .queryGls1005()
-      .pipe(untilDestroyed(this))
-      .subscribe(opts => (this.accountingCodeOptions = opts ?? []));
-
-    this.dropdownApiService
-      .queryPos2013({ VEN_Flag: '' })
-      .pipe(untilDestroyed(this))
-      .subscribe(opts => (this.supplierCodeOptions = opts ?? []));
-
-    this.dropdownApiService
-      .queryFAASSCHKM_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(opts => (this.orderNumberOptions = opts ?? []));
-
-    this.dropdownApiService
-      .querySys3100()
-      .pipe(untilDestroyed(this))
-      .subscribe(opts => (this.orgUnitOptions = opts ?? []));
-
-    this.dropdownApiService
-      .queryTblUserOrgid()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        this.allUserOptionsWithOrg = res ?? [];
-        this.updateKeepingPersonOptions();
-        this.updateUserOptions();
-      });
-
-    this.dropdownApiService
-      .queryPos2002()
-      .pipe(untilDestroyed(this))
-      .subscribe(opts => (this.locationCodeOptions = opts ?? []));
+    this.seedAmortRecordMock();
   }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       this.loading = false;
       switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (this.canAdd()) {
-            this.messageService.successBubble(this.translate.instant('success_message'));
-            this.onCancel();
-          }
-          break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             this.messageService.successBubble(this.translate.instant('updated-successfully'));
@@ -275,8 +133,6 @@ export class ASS13090CRUComponent extends BasicCruPageComponent<any> implements 
     }
     this.dataForm.reset(this.formBaseline);
     this.submitted = false;
-    this.updateKeepingPersonOptions();
-    this.updateUserOptions();
     this.applyEditFieldLock();
   }
 

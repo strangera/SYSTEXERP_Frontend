@@ -13,7 +13,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
@@ -79,7 +79,7 @@ const ASS13090_COLUMNS_UNAMORTIZED: ReportColumn[] = [
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    InputTextRangeComponent,
+    InputNumberRangeComponent,
     DropdownComponent,
     CalendarRangeComponent,
     CalendarComponent,
@@ -98,8 +98,8 @@ export class ASS13090Component extends BasicQueryPageComponent<any> implements O
     assetStatus: [null as string | null], // 資產狀態
     assetType: [null as string | null], // 資產類型
     accountCode: [null as string | null], // 會計科目代號
-    inputAmountFrom: [null as string | null], // 輸入金額(起)
-    inputAmountTo: [null as string | null], // 輸入金額(訖)
+    inputAmountFrom: [null as number | null], // 購入金額(起)
+    inputAmountTo: [null as number | null], // 購入金額(訖)
     purchaseNo: [null as string | null], // 採購單號
     amortYearMonth: [null as Date | string | null], // 攤提年月 YYYYMM
     conditionFilter: ['1'], // 1:已設定攤提 0:未設定攤提
@@ -266,12 +266,6 @@ export class ASS13090Component extends BasicQueryPageComponent<any> implements O
       this.messageService.errorBubble('檔案匯出失敗，請重試。');
     } finally {
       this.exportExcelLoading = false;
-    }
-  }
-
-  override onCreate(): void {
-    if (this.hasPermission(this.Actions.Create)) {
-      this.navigateWithState(CRUDStatus.Create, null);
     }
   }
 
