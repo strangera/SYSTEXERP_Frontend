@@ -68,6 +68,7 @@
           [defaultInsertData]="defaultsupplier"
           (dataChange)="onSupplierDataChange($event)"
           [canInsert]="supplierData.length < 1"
+          [rowValidate]="validateSupplierRow"
         ></app-table-edit>
         <app-table-edit
           title="單據資料"
@@ -77,6 +78,7 @@
           [loading]="loading"
           (dataChange)="onItemDataChange($event)"
           [rowValidate]="validateItemRow"
+          [showFooter]="true"
         ></app-table-edit>
       </div>
       <div

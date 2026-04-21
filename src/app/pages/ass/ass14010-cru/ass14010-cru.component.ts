@@ -57,9 +57,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     RECEIPT_TYPE: [null], // 單據代碼
     INV_FORMAT: [null], // 發票格式
     TAX_CODE: [null], // 稅別
-    NTX_AMT: [null], // 未稅金額
-    TX_AMT: [null], // 稅額
-    AMT: [null], // 含稅金額
+    NTX_AMT: [{ value: null as number | null, disabled: true }], // 未稅金額
+    TX_AMT: [{ value: null as number | null, disabled: true }], // 稅額
+    AMT: [{ value: null as number | null, disabled: true }], // 含稅金額
     REDU_CODE: [null], // 扣抵別
     //------
 
@@ -105,9 +105,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   itemData: Ass14010Items[] = [];
   itemColumn: EditColumn[] = [
     { field: 'TOKEN_NO', header: '驗收單號', type: 'input' },
-    { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', disabled: () => true },
-    { field: 'TX_AMT', header: '稅額', type: 'inputNumber', disabled: () => true },
-    { field: 'AMT', header: '含稅金額', type: 'inputNumber', disabled: () => true },
+    { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
+    { field: 'TX_AMT', header: '稅額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
+    { field: 'AMT', header: '含稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
   ];
   // ----------------------------------------------------------------
   constructor(
@@ -127,6 +127,15 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
   onSubmit(frm: FormGroup) {// 驗證單據明細
     // --------------------------
+    for (let i = 0; i < this.supplierData.length; i++) {
+      const row = this.supplierData[i];
+      const result = this.validateSupplierRow(row);
+      if (!result.isValid) {
+        this.messageService.unblockUi();
+        this.messageService.errorBubble(`發票資料 第 ${i + 1} 筆錯誤: ${result.errorMessage}`);
+        return;
+      }
+    }
     for (let i = 0; i < this.itemData.length; i++) {
       const row = this.itemData[i];
       const result = this.validateItemRow(row);
@@ -287,6 +296,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       });
   }
 
+  //---發票明細---
+
+  //欄位名稱初始化
   private initSupplierColumns() {
     this.supplierColumn = [
       { field: 'RECEIPT_TYPE', header: '單據種類', type: 'dropdown', options: [...this.RECEIPT_TYPE_Options], optionLabel: 'label', optionValue: 'value' },
@@ -299,13 +311,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       { field: 'REDU_CODE', header: '扣抵別', type: 'dropdown', options: [...this.REDU_CODE_Options], optionLabel: 'label', optionValue: 'value' },
 
       { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber' },
-      { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber' },
-      { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber' },
-      { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber' },
+      { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber', disabled: () => true },
+      { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber', disabled: () => true },
+      { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber', disabled: () => true },
     ];
   }
-
-  //---發票明細---
   //依據明細驗收單號進行主檔token_no刷新
   onSupplierDataChange(eventData: Ass14010Supplier[]) {
     // 1. 變更後的資料同步回 itemData
@@ -324,6 +334,26 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     this.dataForm.get('TICKET_BE')?.setValue(ticket_sum);
   }
 
+  //驗證供應商資料
+  validateSupplierRow = (rowData: Ass14010Supplier): { isValid: boolean; errorMessage: string } => {
+    // 1. 檢查發票號碼是否為空
+    const RECEIPT_NO = rowData?.RECEIPT_NO?.trim();
+    if (!RECEIPT_NO) {
+      return { isValid: false, errorMessage: '發票號碼不能為空。' };
+    }
+    // 2. 檢查發票號碼格式 (假設格式為兩碼英文+八碼數字，例如 AB12345678)
+    const receiptNoPattern = /^[A-Z]{2}\d{8}$/;
+    if (!receiptNoPattern.test(RECEIPT_NO)) {
+      return { isValid: false, errorMessage: '發票號碼格式不正確，應為兩碼英文加八碼數字。' };
+    }
+    // 3. 發票總金額應為未稅金額加稅額總金額
+    const expectedTotal = (Number(rowData.TOTAL_NTX_AMT) || 0) + (Number(rowData.TOTAL_TX_AMT) || 0);
+    if (Number(rowData.TOTAL_AMT) !== expectedTotal) {
+      return { isValid: false, errorMessage: `發票總金額應為未稅金額加稅額總金額 (${expectedTotal})。` };
+    }
+
+    return { isValid: true, errorMessage: '' };
+  }
   // ---驗收單明細---
 
   //依據明細驗收單號進行主檔token_no刷新
@@ -340,6 +370,33 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     // 3. 更新主表單的值
     // 由於 TOKEN_NO 是 disabled 狀態，setValue 依然有效
     this.dataForm.get('TOKEN_NO')?.setValue(tokenNos);
+
+    // 計算 itemData 的各項總和
+    const totalNtx = this.itemData.reduce((sum, item) => sum + (Number(item.NTX_AMT) || 0), 0);
+    const totalTx = this.itemData.reduce((sum, item) => sum + (Number(item.TX_AMT) || 0), 0);
+    const totalAmt = this.itemData.reduce((sum, item) => sum + (Number(item.AMT) || 0), 0);
+
+    // 3. 同步到發票資料 (supplierData) 的第一筆
+    if (this.supplierData && this.supplierData.length > 0) {
+      // 建立一個新物件參考以觸發變更偵測
+      this.supplierData[0] = {
+        ...this.supplierData[0],
+        TOTAL_NTX_AMT: totalNtx,
+        TOTAL_TX_AMT: totalTx,
+        TOTAL_AMT: totalAmt
+      };
+
+      // 觸發表格重新渲染
+      this.supplierData = [...this.supplierData];
+    }
+
+    // 4. 同步更新主表單的金額欄位 (如果 dataForm 也需要顯示)
+    this.dataForm.patchValue({
+      NTX_AMT: totalNtx,
+      TX_AMT: totalTx,
+      AMT: totalAmt
+    });
+
   }
 
   //驗收單號前端驗證機制
