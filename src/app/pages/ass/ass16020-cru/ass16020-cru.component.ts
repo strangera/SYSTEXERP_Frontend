@@ -1,9 +1,10 @@
-import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { formatDate, NgIf } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS16020Data, ASS16020ReportData, ASS16020ReportRequest, ASS16020Request } from '@service/api/ass/ass16020.service';
+import { ASS16020Data, ASS16020ReportData, ASS16020ReportRequest, Ass16020Service, InsertASS16020Request, QueryDetailASS16020Detail, QueryDetailASS16020Request, UpdateASS16020Request } from '@service/api/ass/ass16020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -18,6 +19,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 
 @Component({
     selector: 'app-ass16020-cru',
@@ -42,15 +44,15 @@ import { PanelModule } from 'primeng/panel';
 })
 export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> implements OnInit {
     dataForm = this.formBuilder.nonNullable.group({
-        warehouseType: [{ value: '', disabled: true }, [Validators.required, Validators.maxLength(60)]],   // 倉別
-        inventoryNumber: [{ value: '', disabled: true }],    // 盤點單號
+        WH_ID: [{ value: '', disabled: true }, [Validators.required, Validators.maxLength(60)]],   // 倉別
+        INV_ID: [{ value: '', disabled: true }],    // 盤點單號
         SInventoryDate: [{ value: '', disabled: true }],   // 盤點日期(起)
         EInventoryDate: [{ value: '', disabled: true }],   // 盤點日期(迄)
-        initOrgCode: ['', [Validators.required, Validators.maxLength(60)]],    // 初盤組織
-        initChecker: ['', [Validators.required, Validators.maxLength(60)]],    // 初盤人員
-        reOrgCode: ['', [Validators.required, Validators.maxLength(60)]],   // 複盤組織
-        rechecker: ['', [Validators.required, Validators.maxLength(60)]],   // 複盤人員
-        remark: [''],    // 說明
+        EMP_ID: ['', [Validators.required, Validators.maxLength(60)]],    // 初盤組織
+        EMP_NAME: ['', [Validators.required, Validators.maxLength(60)]],    // 初盤人員
+        EMP_ID2: ['', [Validators.required, Validators.maxLength(60)]],   // 複盤組織
+        EMP_NAME2: ['', [Validators.required, Validators.maxLength(60)]],   // 複盤人員
+        NOTES: [''],    // 說明
     });
 
     // 控制
@@ -63,61 +65,145 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
 
     btnLoading = false;
     totalRecords = 0;
-    data: ASS16020Request[] = [];
+    data: QueryDetailASS16020Detail[] = [];
     reportData: ASS16020ReportData[] = [];
-    reportRequest: ASS16020ReportRequest = { inventoryNumber: '' };
+    reportRequest: ASS16020ReportRequest = { INV_ID: '' };
     footerData: any[] = [];
     group_name = [{ group_name: '' }];
-    selectedRows: ASS16020Request[] = [];
-    deleteRows: ASS16020Request[] = [];
+    selectedRows: QueryDetailASS16020Detail[] = [];
+    deleteRows: QueryDetailASS16020Detail[] = [];
     columns: EditColumn[] = [
-        { field: 'Inventoryordernumber', header: '盤點序號', type: 'inputNumber', disabled: () => !this.isEditMode, validate: [validateDuplicate, validateMaxLength(100)] },
-        { field: 'InventoryQty', header: '盤點數量', type: 'inputNumber', maxLength: 8, validate: [validateMaxNumber(99999999)] },
-        { field: 'MainCategoryNo', header: '大分類編號', type: 'dropdown', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
-        { field: 'MainCategoryName', header: '大分類名稱', type: 'input', disabled: () => true, validate: [validateMaxLength(100)] },
-        { field: 'MidCategoryNo', header: '中分類編號', type: 'dropdown', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
-        { field: 'MidCategoryName', header: '中分類名稱', type: 'input', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
-        { field: 'SmallCategoryNo', header: '小分類編號', type: 'dropdown', disabled: () => true, validate: [validateMaxLength(100)] },
-        { field: 'SmallCategoryName', header: '小分類名稱', type: 'input', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
-        { field: 'ItemNo', header: '品項編號/名稱', type: 'input', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
-        { field: 'Remark', header: '說明', type: 'autoComplete', validate: [validateMaxLength(100)] },
+        { field: 'KEYIN_NO', header: '盤點序號', type: 'inputNumber', disabled: () => !this.isEditMode, validate: [validateDuplicate, validateMaxLength(100)] },
+        { field: 'FINE_QTY', header: '盤點數量', type: 'inputNumber', disabled: () => this.isReadOnly(), maxLength: 8, validate: [validateMaxNumber(99999999)] },
+        { field: 'B_CLASS_ID', header: '大分類編號', type: 'dropdown', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
+        { field: 'BClassName', header: '大分類名稱', type: 'input', disabled: () => true, validate: [validateMaxLength(100)] },
+        { field: 'M_CLASS_ID', header: '中分類編號', type: 'dropdown', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
+        { field: 'MClassName', header: '中分類名稱', type: 'input', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
+        { field: 'S_CLASS_ID', header: '小分類編號', type: 'dropdown', disabled: () => true, validate: [validateMaxLength(100)] },
+        { field: 'SClassName', header: '小分類名稱', type: 'input', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
+        { field: 'FASITEM_ID', header: '品項編號/名稱', type: 'input', disabled: () => true, maxLength: 8, validate: [validateMaxLength(100)] },
+        { field: 'NOTES', header: '說明', type: 'autoComplete', disabled: () => this.isReadOnly(), validate: [validateMaxLength(100)] },
     ];
 
     reportColumns = [
-        { field: 'MainCategoryNo', header: '大分類編號' },
-        { field: 'MainCategoryName', header: '大分類名稱' },
-        { field: 'MidCategoryNo', header: '中分類編號' },
-        { field: 'MidCategoryName', header: '中分類名稱' },
-        { field: 'SmallCategoryNo', header: '小分類編號' },
-        { field: 'SmallCategoryName', header: '小分類名稱' },
-        { field: 'Inventoryordernumber', header: '盤點序號' },
-        { field: 'ItemNo', header: '品項編號' },
-        { field: 'ItemName', header: '品項名稱' },
-        { field: 'StockQty', header: '庫存數量' },
-        { field: 'InventoryQty', header: '盤點數量' },
-        { field: 'DiffQty', header: '差異數量' },
-        { field: 'AvgUnitPrice', header: '平均單價' },
-        { field: 'DiffAmount', header: '差異金額' },
+        { field: 'B_CLASS_ID', header: '大分類編號' },
+        { field: 'BClassName', header: '大分類名稱' },
+        { field: 'M_CLASS_ID', header: '中分類編號' },
+        { field: 'MClassName', header: '中分類名稱' },
+        { field: 'S_CLASS_ID', header: '小分類編號' },
+        { field: 'SClassName', header: '小分類名稱' },
+        { field: 'FASITEM_ID', header: '品項編號' },
+        { field: 'GOODS_NAME', header: '品項名稱' },
+        { field: 'QTY', header: '庫存數量' },
+        { field: 'FINE_QTY', header: '盤點數量' },
+        { field: 'DIFF_QTY', header: '差異數量' },
+        { field: 'AVER_AMT', header: '平均單價' },
+        { field: 'DIFF_AMT', header: '差異金額' },
     ]
+
+    isReadOnly(): boolean {
+        return this.crudstatus === CRUDStatus.Read;
+    }
 
     constructor(
         private notificationService: NotificationService,
         private route: ActivatedRoute,
+        private ass16020Service: Ass16020Service,
     ) {
         super();
     }
 
     ngOnInit(): void {
         this.initializePage('ASS16020', this.dataForm);
+        console.log('讀取資料', this.dataForm);
+        this.loadDropdownOptions();
+
+        const mode = history.state.mode;
+
+        // 監聽 組織 的變化，更新對應的 人員 選項
+        this.dataForm.get('EMP_ID')?.valueChanges.subscribe(orgId => {
+            this.dataForm.get('EMP_NAME')?.setValue("");
+            const filteredEmployees = this.filterEmployeesByOrg(orgId);
+            this.EMP_NAME.set(filteredEmployees);
+        });
+        this.dataForm.get('EMP_ID2')?.valueChanges.subscribe(orgId => {
+            this.dataForm.get('EMP_NAME2')?.setValue("");
+            const filteredEmployees = this.filterEmployeesByOrg(orgId);
+            this.EMP_NAME2.set(filteredEmployees);
+        });
+
+
+
         if (this.crudstatus === CRUDStatus.Create) {
             this.isEditMode = false; // 新增頁
+            const request: QueryDetailASS16020Request = {
+                INV_ID: this.dataForm.getRawValue().INV_ID,
+            };
+            this.ass16020Service.queryDetailASS16020(request)
+                .subscribe(response => {
+                    this.dataForm.patchValue({
+                        WH_ID: response.Data.WH_ID,
+                        INV_ID: response.Data.INV_ID,
+                        SInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
+                        EInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
+                        EMP_ID: response.Data.EMP_ID,
+                        EMP_NAME: response.Data.EMP_NAME,
+                        EMP_ID2: response.Data.EMP_ID2,
+                        EMP_NAME2: response.Data.EMP_NAME2,
+                        NOTES: response.Data.NOTES
+                    });
+                    this.data = response.Data.Details;
+                });
         }
         else if (this.crudstatus === CRUDStatus.Edit) {
             this.isEditMode = true; // 修改頁
+
+            const request: QueryDetailASS16020Request = {
+                INV_ID: this.dataForm.getRawValue().INV_ID,
+            };
+            this.ass16020Service.queryDetailASS16020(request)
+                .subscribe(response => {
+                    this.dataForm.patchValue({
+                        WH_ID: response.Data.WH_ID,
+                        INV_ID: response.Data.INV_ID,
+                        SInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
+                        EInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
+                        EMP_ID: response.Data.EMP_ID,
+                        EMP_NAME: response.Data.EMP_ID,
+                        EMP_ID2: response.Data.EMP_ID2,
+                        EMP_NAME2: response.Data.EMP_ID2,
+                        NOTES: response.Data.NOTES
+                    });
+                    this.data = response.Data.Details;
+                });
+        }
+        else if (this.crudstatus === CRUDStatus.Read) {
+            this.isEditMode = false;
+            this.isReportMode = mode === 'report'; // 判斷是 檢視頁 還是 報表頁
+
+            // 載入資料
+            const request: QueryDetailASS16020Request = {
+                INV_ID: this.dataForm.getRawValue().INV_ID,
+            };
+            this.ass16020Service.queryDetailASS16020(request)
+                .subscribe(response => {
+                    this.dataForm.patchValue({
+                        WH_ID: response.Data.WH_ID,
+                        INV_ID: response.Data.INV_ID,
+                        SInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
+                        EInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
+                        EMP_ID: response.Data.EMP_ID,
+                        EMP_NAME: response.Data.EMP_NAME,
+                        EMP_ID2: response.Data.EMP_ID2,
+                        EMP_NAME2: response.Data.EMP_NAME2,
+                        NOTES: response.Data.NOTES
+                    });
+                    this.data = response.Data.Details;
+                });
         }
         else {
             this.isEditMode = false;
-            this.isReportMode = true; // 報表頁
+            this.isReportMode = false;
         }
 
         // this.route.queryParams.subscribe(params => {
@@ -128,218 +214,109 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
         //     }
         // });
 
-        // 測試用假資料
-        this.reportRequest = { inventoryNumber: '202502001' };
-        this.reportData = [
-            {
-                MainCategoryNo: 'D',
-                MainCategoryName: '電力及照明系統',
-                MidCategoryNo: '25',
-                MidCategoryName: '電力系統備品',
-                SmallCategoryNo: '42',
-                SmallCategoryName: '盤面接頭+接線箱',
-                Inventoryordernumber: '1',
-                ItemNo: '3D25420000001',
-                ItemName: '3Ø4W+1/2E 4000A CU BUSWAY',
-                StockQty: 2,
-                InventoryQty: 2,
-                DiffQty: 0,
-                AvgUnitPrice: 99190,
-                DiffAmount: 0,
-            },
-            {
-                MainCategoryNo: 'D',
-                MainCategoryName: '電力及照明系統',
-                MidCategoryNo: '25',
-                MidCategoryName: '電力系統備品',
-                SmallCategoryNo: '42',
-                SmallCategoryName: '盤面接頭+接線箱',
-                Inventoryordernumber: '2',
-                ItemNo: '3D25420000002',
-                ItemName: '3Ø4W+1/2E 3000A CU BUSWAY',
-                StockQty: 2,
-                InventoryQty: 1,
-                DiffQty: -1,
-                AvgUnitPrice: 87000,
-                DiffAmount: -87000,
-            },
-            {
-                MainCategoryNo: 'D',
-                MainCategoryName: '電力及照明系統',
-                MidCategoryNo: '25',
-                MidCategoryName: '電力系統備品',
-                SmallCategoryNo: '42',
-                SmallCategoryName: '盤面接頭+接線箱',
-                Inventoryordernumber: '3',
-                ItemNo: '3D25420000003',
-                ItemName: '3Ø4W+1/2E 3000A CU BUSWAY',
-                StockQty: 2,
-                InventoryQty: 1,
-                DiffQty: -1,
-                AvgUnitPrice: 64000,
-                DiffAmount: -64000,
-            },
-            {
-                MainCategoryNo: 'D',
-                MainCategoryName: '電力及照明系統',
-                MidCategoryNo: '25',
-                MidCategoryName: '電力系統備品',
-                SmallCategoryNo: '42',
-                SmallCategoryName: '盤面接頭+接線箱',
-                Inventoryordernumber: '4',
-                ItemNo: '3D25420000004',
-                ItemName: '3Ø4W+1/2E 3000A CU BUSWAY',
-                StockQty: 2,
-                InventoryQty: 1,
-                DiffQty: -1,
-                AvgUnitPrice: 55000,
-                DiffAmount: -55000,
-            },
-            {
-                MainCategoryNo: 'D',
-                MainCategoryName: '電力及照明系統',
-                MidCategoryNo: '25',
-                MidCategoryName: '電力系統備品',
-                SmallCategoryNo: '42',
-                SmallCategoryName: '盤面接頭+接線箱',
-                Inventoryordernumber: '5',
-                ItemNo: '3D25420000005',
-                ItemName: '3Ø4W+1/2E 3000A CU BUSWAY',
-                StockQty: 2,
-                InventoryQty: 1,
-                DiffQty: -1,
-                AvgUnitPrice: 47000,
-                DiffAmount: -47000,
-            },
-            {
-                MainCategoryNo: 'D',
-                MainCategoryName: '電力及照明系統',
-                MidCategoryNo: '25',
-                MidCategoryName: '電力系統備品',
-                SmallCategoryNo: '42',
-                SmallCategoryName: '盤面接頭+接線箱',
-                Inventoryordernumber: '6',
-                ItemNo: '3D25420000006',
-                ItemName: '3Ø4W+1/2E 3000A CU BUSWAY',
-                StockQty: 2,
-                InventoryQty: 1,
-                DiffQty: -1,
-                AvgUnitPrice: 33000,
-                DiffAmount: -33000,
-            },
-            {
-                MainCategoryNo: 'D',
-                MainCategoryName: '電力及照明系統',
-                MidCategoryNo: '25',
-                MidCategoryName: '電力系統備品',
-                SmallCategoryNo: '42',
-                SmallCategoryName: '盤面接頭+接線箱',
-                Inventoryordernumber: '7',
-                ItemNo: '3D25420000007',
-                ItemName: '3Ø4W+1/2E 3000A CU BUSWAY',
-                StockQty: 2,
-                InventoryQty: 1,
-                DiffQty: -1,
-                AvgUnitPrice: 28000,
-                DiffAmount: -28000,
-            },
-            {
-                MainCategoryNo: 'D',
-                MainCategoryName: '電力及照明系統',
-                MidCategoryNo: '25',
-                MidCategoryName: '電力系統備品',
-                SmallCategoryNo: '42',
-                SmallCategoryName: '盤面接頭+接線箱',
-                Inventoryordernumber: '8',
-                ItemNo: '3D25420000008',
-                ItemName: '3Ø4W+1/2E 3000A CU BUSWAY',
-                StockQty: 2,
-                InventoryQty: 1,
-                DiffQty: -1,
-                AvgUnitPrice: 24000,
-                DiffAmount: -24000,
-            },
-            {
-                MainCategoryNo: 'D',
-                MainCategoryName: '電力及照明系統',
-                MidCategoryNo: '25',
-                MidCategoryName: '電力系統備品',
-                SmallCategoryNo: '42',
-                SmallCategoryName: '盤面接頭+接線箱',
-                Inventoryordernumber: '9',
-                ItemNo: '3D25420000009',
-                ItemName: '3Ø4W+1/2E 3000A CU BUSWAY',
-                StockQty: 2,
-                InventoryQty: 1,
-                DiffQty: -1,
-                AvgUnitPrice: 22000,
-                DiffAmount: -22000,
-            },
-            {
-                MainCategoryNo: 'D',
-                MainCategoryName: '電力及照明系統',
-                MidCategoryNo: '25',
-                MidCategoryName: '電力系統備品',
-                SmallCategoryNo: '42',
-                SmallCategoryName: '盤面接頭+接線箱',
-                Inventoryordernumber: '10',
-                ItemNo: '3D25420000010',
-                ItemName: '3Ø4W+1/2E 3000A CU BUSWAY',
-                StockQty: 2,
-                InventoryQty: 1,
-                DiffQty: -1,
-                AvgUnitPrice: 17000,
-                DiffAmount: -17000,
-            }
-        ];
-        this.group_name = [
-            { group_name: '小計' },
-            { group_name: '盤盈項數' },
-            { group_name: '盤損項數' },
-            { group_name: '總差異金額' },
-            { group_name: '說明' },
-        ]
-        this.footerData = [
-            { group_name: '小計', StockQty: 20, InventoryQty: 11, DiffQty: -9, AvgUnitPrice: 476190, DiffAmount: -377000 },
-            { group_name: '盤盈項數', DiffAmount: 0 },
-            { group_name: '盤損項數', DiffAmount: 9 },
-            { group_name: '總差異金額', DiffAmount: -377000 },
-            { group_name: '說明', DiffAmount: '' },
-        ];
-        this.totalRecords = this.reportData.length;
+
         if (this.isReportMode) {
-            this.dataForm.controls.inventoryNumber.setValue(this.reportRequest.inventoryNumber);
+            this.dataForm.controls.INV_ID.setValue(this.reportRequest.INV_ID);
         }
+
     }
 
-    queryForm = this.formBuilder.group({
-        warehouseType: [],
-        inventoryNumber: [],
-        SInventoryDate: [],
-        EInventoryDate: [],
-        initChecker: [],
-        rechecker: [],
-        remark: [],
-    });
+    EMP_NAME = signal<{ label: string; value: string }[]>([]);
+    EMP_NAME2 = signal<{ label: string; value: string }[]>([]);
+    EMP_ID = signal<{ label: string; value: string }[]>([]);
+    EMP_ID2 = signal<{ label: string; value: string }[]>([]);
 
-    initCheckerOp = [{ value: 1, label: '員工A' }, { value: 2, label: '員工B' },];
-    recheckerOp = [{ value: 1, label: '員工A' }, { value: 2, label: '員工B' },];
-    initOrgCodeOp = [];
-    reOrgCodeOp = [];
+    allUsers: any[] = [];
+    empOptions: { label: string; value: string }[] = [];
 
-    onSubmit(frm: FormGroup) {
-        console.log(frm.value);
-        this.submitted = true;
-        this.loading = true;
-        this.notificationService.blockUi();
+    onSubmit(form: FormGroup) {
+        console.log('onSubmit', form.value);
 
-        // if (frm.valid && this.canQuery()) {
-        //   // Submit logic here
-        // }
+        const formValue = form.getRawValue();
+        if (this.crudstatus === CRUDStatus.Create) {
+            // 新增頁
+            const insertRequest: InsertASS16020Request = {
+                INV_ID: formValue.INV_ID || '',
+                EMP_ID: formValue.EMP_NAME || '',
+                EMP_ID2: formValue.EMP_NAME2 || '',
+                NOTES: formValue.NOTES || '',
+                Details: this.data.map(item => ({
+                    KEYIN_NO: item.KEYIN_NO,
+                    FINE_QTY:
+                        item.FINE_QTY === null || item.FINE_QTY === undefined
+                            ? 0
+                            : Number(String(item.FINE_QTY).replace(/,/g, '')),
+                    NOTES: item.NOTES,
+                })),
+                UPD_USR_No: this.getUserInfoFromLocal().user_No,
+                UPD_USR_Name: this.getUserInfoFromLocal().user_Name,
+            }
+            console.log('新增 insertRequest', insertRequest);
+            this.ass16020Service.insertASS16020(insertRequest)
+                .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+                .subscribe(response => {
+                    if (response.Data.ErrCode !== 0) {
+                        this.messageService.errorBubble(response.Data.ErrMsg || '新增失敗');
+                    }
+                    else {
+                        this.messageService.successBubble(response.Data.ErrMsg || '新增成功');
+                    }
+                    this.onCancel();  // 返回查詢頁
+                    // this.dataForm.reset(); // 重置表單
+                });
+        }
+        else if (this.crudstatus === CRUDStatus.Edit) {
+            // 修改頁
+            const updateRequest: UpdateASS16020Request = {
+                INV_ID: formValue.INV_ID || '',
+                EMP_ID: formValue.EMP_NAME || '',
+                EMP_ID2: formValue.EMP_NAME2 || '',
+                NOTES: formValue.NOTES || '',
+                Details: this.data.map(item => ({
+                    KEYIN_NO: item.KEYIN_NO,
+                    FINE_QTY:
+                        item.FINE_QTY === null || item.FINE_QTY === undefined
+                            ? 0
+                            : Number(String(item.FINE_QTY).replace(/,/g, '')),
+                    NOTES: item.NOTES,
+                })),
+                UPD_USR_No: this.getUserInfoFromLocal().user_No,
+                UPD_USR_Name: this.getUserInfoFromLocal().user_Name,
+            }
+            this.ass16020Service.updateASS16020(updateRequest)
+                .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+                .subscribe(response => {
+                    if (response.Data.ErrCode !== 0) {
+                        this.messageService.errorBubble(response.Data.ErrMsg || '修改失敗');
+                    }
+                    else {
+                        this.messageService.successBubble(response.Data.ErrMsg || '修改成功');
+                    }
+                    this.onCancel();  // 返回查詢頁
+                })
+        }
 
-        this.loading = false;
-        this.notificationService.unblockUi();
+    }
 
+    CloseLoading = false;
+    onClosed() {
+        this.CloseLoading = true;
+        this.ass16020Service.updateCloseASS16020({
+            INV_ID: String(this.dataForm.getRawValue().INV_ID),
+            CLOSE_EMP_ID: this.getUserInfoFromLocal().user_No,
+            UPD_USR_No: this.getUserInfoFromLocal().user_No,
+            UPD_USR_Name: this.getUserInfoFromLocal().user_Name
+        }).pipe(
+            untilDestroyed(this), finalize(() => this.CloseLoading = false)
+        ).subscribe(response => {
+            if (response.Data.ErrCode !== 0) {
+                this.messageService.errorBubble(response.Data.ErrMsg || '結案失敗');
+            }
+            else {
+                this.messageService.successBubble(response.Data.ErrMsg || '結案成功');
+            }
+            this.onCancel();  // 返回查詢頁
+        });
 
     }
 
@@ -349,12 +326,81 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
     }
 
     // 刪除資料的方法
-    onDelete(rows: ASS16020Request[]) {
+    onDelete(rows: QueryDetailASS16020Detail[]) {
         // 將畫面資料中刪除這些 row
         this.data = this.data.filter(item => !rows.includes(item));
-        // 將有 inventoryNumber 的項目（表示是資料庫已存在的）加進 deleteRows，避免重複
-        rows.filter(item => item.inventoryNumber !== undefined && !this.deleteRows.some(d => d.inventoryNumber === item.inventoryNumber)).forEach(item => this.deleteRows.push(item));
+        // 將有 KEYIN_NO 的項目（表示是資料庫已存在的）加進 deleteRows，避免重複
+        rows.filter(item => item.KEYIN_NO !== undefined && !this.deleteRows.some(d => d.KEYIN_NO === item.KEYIN_NO)).forEach(item => this.deleteRows.push(item));
         // 清空選取列
         this.selectedRows = [];
     }
+
+    // 篩選員工的方法，根據選擇的組織 ID 來過濾員工列表
+    private filterEmployeesByOrg(orgId: string | null): { label: string; value: string }[] {
+        if (!orgId) {
+            this.empOptions = [];
+            return this.empOptions;
+        }
+
+        // 根據 orgId 過濾員工列表，並轉換成下拉選單需要的格式
+        this.empOptions = this.allUsers
+            .filter(user => user.Org_ID === orgId)
+            .map(user => ({
+                label: `${user.user_No} - ${user.user_Name}`,
+                value: user.user_No,
+            }));
+        return this.empOptions;
+
+    }
+
+    /**
+     * 載入下拉選單選項
+     */
+    private loadDropdownOptions(): void {
+        // 組織
+        this.ass16020Service.querySYS3100_DropDownList().subscribe({
+            next: res => {
+                if (res.Status !== '0000') return;
+                const options = res.Data.map(item => ({
+                    label: `${item.No} - ${item.Name}`,
+                    value: item.No,
+                }));
+                this.EMP_ID.set(options);
+                this.EMP_ID2.set(options);
+            },
+        });
+
+        // 盤點人員
+        this.ass16020Service.queryTBLUSER_Orgid_DropDownList().subscribe({
+            next: res => {
+                if (res.Status !== '0000') return;
+                this.allUsers = res.Data; // 儲存完整員工資料以供篩選使用
+            },
+        });
+    }
+
+    /** 解析 localStorage.UserInfo，回傳 { mid, SYS_StoreNo, user_No, user_Name } */
+    private getUserInfoFromLocal(): { mid: number; SYS_StoreNo: string; user_No: string; user_Name: string } {
+        let mid = 0;
+        let SYS_StoreNo = '';
+        let user_No = '';
+        let user_Name = '';
+
+        try {
+            const raw = localStorage.getItem('UserInfo');
+            if (raw) {
+                const obj = JSON.parse(raw);
+                // 依你的截圖欄位：mid 與 SYS_StoreNo
+                mid = Number(obj?.mid ?? 0);
+                SYS_StoreNo = String(obj?.SYS_StoreNo ?? '');
+                user_No = String(obj?.user_No ?? '');
+                user_Name = String(obj?.user_Name ?? '');
+            }
+        } catch (e) {
+            console.error('解析 localStorage.UserInfo 失敗：', e);
+        }
+
+        return { mid, SYS_StoreNo, user_No, user_Name };
+    }
+
 }

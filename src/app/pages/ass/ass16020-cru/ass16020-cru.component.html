@@ -6,7 +6,7 @@
       btnType="default"
       label="結案"
       *ngIf="isEditMode"
-      (clickEvent)="onCancel()"
+      (clickEvent)="onClosed()"
     ></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
@@ -19,16 +19,16 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="倉別"
-            controlName="warehouseType"
-            [control]="dataForm.controls.warehouseType"
+            controlName="WH_ID"
+            [control]="dataForm.controls.WH_ID"
             [submitted]="submitted"
           ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="盤點單號"
-            controlName="inventoryNumber"
-            [control]="dataForm.controls.inventoryNumber"
+            controlName="INV_ID"
+            [control]="dataForm.controls.INV_ID"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -42,7 +42,7 @@
           ></app-calendar-range>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <label for="initOrgCode" class="block">
+          <label for="EMP_ID" class="block">
             初盤人員
             <span class="text-red-500">*</span>
           </label>
@@ -50,29 +50,29 @@
             <div class="col-12 md:col-6">
               <app-dropdown
                 [showLabel]="false"
-                controlName="initOrgCode"
-                [options]="initOrgCodeOp"
+                controlName="EMP_ID"
+                [options]="EMP_ID()"
                 optionLabel="label"
                 optionValue="value"
-                [control]="dataForm.controls.initOrgCode"
+                [control]="dataForm.controls.EMP_ID"
                 [submitted]="submitted"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6">
               <app-dropdown
                 [showLabel]="false"
-                controlName="initChecker"
-                [options]="initCheckerOp"
+                controlName="EMP_NAME"
+                [options]="EMP_NAME()"
                 optionLabel="label"
                 optionValue="value"
-                [control]="dataForm.controls.initChecker"
+                [control]="dataForm.controls.EMP_NAME"
                 [submitted]="submitted"
               ></app-dropdown>
             </div>
           </div>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <label for="reOrgCode" class="block">
+          <label for="EMP_ID2" class="block">
             複盤人員
             <span class="text-red-500">*</span>
           </label>
@@ -80,22 +80,22 @@
             <div class="col-12 md:col-6">
               <app-dropdown
                 [showLabel]="false"
-                controlName="reOrgCode"
-                [options]="reOrgCodeOp"
+                controlName="EMP_ID2"
+                [options]="EMP_ID2()"
                 optionLabel="label"
                 optionValue="value"
-                [control]="dataForm.controls.reOrgCode"
+                [control]="dataForm.controls.EMP_ID2"
                 [submitted]="submitted"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6">
               <app-dropdown
                 [showLabel]="false"
-                controlName="rechecker"
-                [options]="recheckerOp"
+                controlName="EMP_NAME2"
+                [options]="EMP_NAME2()"
                 optionLabel="label"
                 optionValue="value"
-                [control]="dataForm.controls.rechecker"
+                [control]="dataForm.controls.EMP_NAME2"
                 [submitted]="submitted"
               ></app-dropdown>
             </div>
@@ -104,8 +104,8 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="說明"
-            controlName="remark"
-            [control]="dataForm.controls.remark"
+            controlName="NOTES"
+            [control]="dataForm.controls.NOTES"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -116,6 +116,7 @@
           [columns]="columns"
           (dataChange)="data = $event"
           [tableRequired]="true"
+          [showCheckBox]="false"
           [canInsert]="isEditMode || data.length === 0"
         ></app-table-edit>
       </div>
@@ -123,11 +124,7 @@
         *ngIf="!isFormReadable"
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
       >
-        <app-button
-          btnType="cancel"
-          [form]="dataForm"
-          (clickEvent)="resetTable()"
-        ></app-button>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button
           btnType="submit"
           label="儲存"
@@ -136,16 +133,17 @@
       </div>
     </form>
 
-    <div *ngIf="isReportMode">
+    <!-- 報表模式 -->
+    <div *ngIf="isReportMode && !isEditMode">
       <div class="flex gap-2 mb-2">
         <app-input-text
           label="盤點單號"
-          controlName="inventoryNumber"
-          [control]="dataForm.controls.inventoryNumber"
+          controlName="INV_ID"
+          [control]="dataForm.controls.INV_ID"
           [submitted]="submitted"
         ></app-input-text>
         <!-- <div class="block">盤點單號:</div>
-        <div class="block">{{ reportRequest.inventoryNumber }}</div> -->
+        <div class="block">{{ reportRequest.INV_ID }}</div> -->
       </div>
 
       <div class="card">
