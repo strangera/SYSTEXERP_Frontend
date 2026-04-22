@@ -1,4 +1,4 @@
-import { DatePipe, NgClass } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { afterNextRender, Component, computed, effect, Injector, OnInit, signal, TemplateRef, ViewChild, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -525,7 +525,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'TempNo', header: '傳票號碼' },
     { field: 'TempName', header: '傳票代號' },
     { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions.find(({ value }) => value === v)?.label ?? v },
-    { field: 'DetailCount', header: '明細筆數' },
   ];
 
   public readonly stepAPColumns: EditColumn[] = [
