@@ -5,7 +5,11 @@ import { ValidationService } from '../../service/validation.service';
 
 @Component({
   selector: 'app-control-messages',
-  templateUrl: './control-messages.component.html',
+  template: `
+    <div class="text-red-600" *ngIf="errorMessage !== null">
+      <small>{{errorMessage}}</small>
+    </div>
+  `,
   standalone: true,
   imports: [NgIf],
 })
