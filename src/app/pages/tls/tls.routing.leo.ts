@@ -15,6 +15,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls21040', loadComponent: () => import('./tls21040/tls21040.component').then(m => m.TLS21040Component), data: { progNo: 'TLS21040' } },
   // 信用卡之卡種維護作業 CRU
   { path: 'tls21040cru', loadComponent: () => import('./tls21040-cru/tls21040-cru.component').then(m => m.TLS21040CRUComponent), data: { progNo: 'TLS21040' } },
+  // 序號報表
+  { path: 'tls22030', loadComponent: () => import('./tls22030/tls22030.component').then(m => m.TLS22030Component), data: { progNo: 'TLS22030' } },
   // 交易補登作業
   { path: 'tls24010', loadComponent: () => import('./tls24010/tls24010.component').then(m => m.TLS24010Component), data: { progNo: 'TLS24010' } },
   // 交易補登作業 CRU
