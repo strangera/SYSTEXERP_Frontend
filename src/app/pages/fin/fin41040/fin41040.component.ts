@@ -41,7 +41,7 @@ export class FIN41040Component extends BasicQueryPageComponent<fin41040data> imp
   data: fin41040data[] = [];
   columns: Column[] = [
     { field: 'budget_year', header: '年度', visible: true },
-    { field: 'budget_version', header: '最新版本', visible: true },
+    { field: 'budget_version', header: '目前最新版本', visible: true },
     { field: 'new_budget_year', header: '產生年度', visible: true },
     { field: 'new_budget_version', header: '產生版本', visible: true },
   ];
@@ -50,8 +50,8 @@ export class FIN41040Component extends BasicQueryPageComponent<fin41040data> imp
 
   public readonly addButton: AddButton[] = [
     {
-      label: '產生',
-      icon: 'pi pi-download',
+      label: '確定',
+      icon: 'pi pi-circle',
       action: (rowData: fin41040data) => this.generateNewVersion(rowData),
     },
   ];
@@ -108,8 +108,7 @@ export class FIN41040Component extends BasicQueryPageComponent<fin41040data> imp
   }
 
   generateNewVersion(rowData: fin41040data) {
-    console.log('產生年中版本作業 - 產生新版本:', rowData);
-
+    // console.log('產生年中版本作業 - 產生新版本:', rowData);
     const payload = {
       OldBudgetYear: rowData.budget_year,
       OldVersion: rowData.budget_version,
@@ -122,11 +121,10 @@ export class FIN41040Component extends BasicQueryPageComponent<fin41040data> imp
     this.fin41040Service.copyFIN41040(payload).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
-          this.messageService.successBubble('產生年中版本成功');
+          this.messageService.successBubble(response.Message);
           this.onSubmit(this.queryForm); // 重新查詢以更新表格
         } else {
-          console.error('API error:', response.Error.Message);
-          this.messageService.errorBubble('產生年中版本失敗: ' + response.Message);
+          this.messageService.errorBubble('產生年中版本失敗: ' + response.Error.Message);
         }
       },
       error: (err: string) => {
