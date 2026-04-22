@@ -398,7 +398,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
         ?? this.service.usrMap().get(String(v.DetailNo))?.label,
       NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
-      SerNo: index + 1, // 序號從 1 起
+      SerNo: (index + 1) * 10, // 序號從 10 起，10 為單位遞增
     })));
 
     const rows = this.tableData();
@@ -1124,7 +1124,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public onDataChange(data: FIN53010DetailTable[]): void {
     this.logger.debug(`onDataChange:`, [data]);
-    const renumbered = data.map((row, i) => ({ ...row, SerNo: i + 1, index: i }));
+    const renumbered = data.map((row, i) => ({ ...row, SerNo: (i + 1) * 10, index: i }));
     this.tableData.set(renumbered);
     this.rowEditCanSave.set(this.tableData().some(row => row.AccNo && row.ORG_ID) || !!this.isBalanced());
   }
@@ -1366,7 +1366,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.tableData.update(current =>
           current
             .filter(d => d.SerNo !== e.SerNo)
-            .map((row, i) => ({ ...row, SerNo: i + 1, index: i })),
+            .map((row, i) => ({ ...row, SerNo: (i + 1) * 10, index: i })),
         );
         continue;
       }
@@ -1404,7 +1404,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         ...item,
         index,
         displayIndex: index,
-        SerNo: index + 1,
+        SerNo: (index + 1) * 10,
       }));
     });
 
@@ -1471,7 +1471,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
               ?? this.service.usrMap().get(String(v.DetailNo))?.label
               ?? '',
             NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
-            SerNo: index + 1, // 序號從 1 起
+            SerNo: (index + 1) * 10, // 序號從 10 起，10 為單位遞增
             index,
           };
         }));
