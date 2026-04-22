@@ -13,8 +13,8 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="鍵盤編號" controlName="USR_Level" [control]="queryForm.controls.USR_Level"
-              [submitted]="submitted" [options]="kbFuncOptions" optionLabel="keyUSR_Level" optionValue="valueUSR_Level"
-              placeholder="請選擇鍵盤編號">
+              [submitted]="submitted" [options]="kbFuncOptions" optionLabel="keyUSR_Level" templateLabel="label"
+              optionValue="valueUSR_Level" placeholder="請選擇鍵盤編號">
             </app-dropdown>
           </div>
         </div>
@@ -27,7 +27,8 @@
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" />
           <app-button btnType="query" [loading]="loading" />
         </div>
@@ -51,7 +52,7 @@
   <form [formGroup]="dialogQueryForm" class="flex gap-2">
     <app-dropdown (changeEvent)="onDialogChange($event)" class="flex-1" label="來源鍵盤編號" controlName="Source_USR_Level"
       [control]="dialogQueryForm.controls.Source_USR_Level" [options]="kbFuncOptions" optionLabel="keyUSR_Level"
-      optionValue="valueUSR_Level" [submitted]="submitted">
+      templateLabel="label" optionValue="valueUSR_Level" [submitted]="submitted">
     </app-dropdown>
 
     <app-input-text class="flex-1" label="目標鍵盤編號" controlName="Target_USR_Level"
