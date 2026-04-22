@@ -43,9 +43,8 @@
 
           <!-- 廠商統編 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="廠商編號(統一編號)" controlName="PUR_VenUniform" [options]="vendorOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.PUR_VenUniform"
-              [submitted]="submitted"></app-multi-select>
+            <app-input-text label="廠商編號(統一編號)" controlName="PUR_VenUniform"
+              [control]="queryForm.controls.PUR_VenUniform" [submitted]="submitted"></app-input-text>
           </div>
 
           <!-- 發票總金額 -->

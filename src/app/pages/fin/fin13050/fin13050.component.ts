@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { finalize, forkJoin } from 'rxjs';
 
@@ -23,7 +23,6 @@ import { formatAmount, formatYYYYMMDD } from '@shared/componentkit/table-report/
 import { AccordionModule } from 'primeng/accordion';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
-@UntilDestroy()
 @Component({
   selector: 'app-fin13050',
   standalone: true,
