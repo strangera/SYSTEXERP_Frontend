@@ -1,136 +1,138 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { FIN41040data as fin41040data } from '@service/api/fin/fin41040.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { AddButton, Column } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { Fin41040Service } from './../../../service/api/fin/fin41040.service';
 
+// FIN41040 產生年中版本作業
 @Component({
   selector: 'app-fin41040',
   templateUrl: './fin41040.component.html',
   styleUrl: './fin41040.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, TranslateModule]
+  imports: [
+    AccordionModule,
+    ButtonComponent,
+    CalendarComponent,
+    FormsModule,
+    MenubarComponent,
+    ReactiveFormsModule,
+    TableComponent,
+    TranslateModule]
 })
-export class FIN41040Component extends BasicQpageComponent implements OnInit {
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+export class FIN41040Component extends BasicQueryPageComponent<fin41040data> implements OnInit {
+  // 查詢
   queryForm = this.formBuilder.group({
-    year: [, Validators.required],
-    version: [],
-    organizationNumber: [, Validators.required],
-    month: [],
-    amountStart: [], // 金額 起
-    amountEnd: [], // 金額 迄
-    remark: [],
-    status: [],
+    BudgetYear: ['', [Validators.required]], // 年度 (例如： 2026)
+    //分頁查詢
+    // ...createPaginationConfig([{ field: 'budget_year', order: 1 }]), // 分頁和排序參數
   });
+  // 表格
+  // ----------------------------------------------------------------
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  // Dropdown options
-
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  displayOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  vendorOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
-  statusOptions: any[] = [{ value: 1, label: '是' },
-  { value: 1, label: '否' }
-  ];
-  // Table data
-  data: any[] = [
-    { name: 'John', age: 25, email: 'john@example.com' },
-    { name: 'Jane', age: 30, email: 'jane@example.com' },
-    // Other data
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'name', header: 'Name', visible: true },
-    { field: 'age', header: 'Age', visible: true },
-    { field: 'email', header: 'Email', visible: true },
-    // Other columns
+  data: fin41040data[] = [];
+  columns: Column[] = [
+    { field: 'budget_year', header: '年度', visible: true },
+    { field: 'budget_version', header: '最新版本', visible: true },
+    { field: 'new_budget_year', header: '產生年度', visible: true },
+    { field: 'new_budget_version', header: '產生版本', visible: true },
   ];
 
+  selectedItems: fin41040data[] = [];// 多選項目
+
+  public readonly addButton: AddButton[] = [
+    {
+      label: '產生',
+      icon: 'pi pi-download',
+      action: (rowData: fin41040data) => this.generateNewVersion(rowData),
+    },
+  ];
+
+
+  // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
+    private fin41040Service: Fin41040Service,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '140004';
+    this.initializePage('FIN41040', 'FIN/FIN41040cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
+    this.handleSubmit(frm, () => {
+      // 將date格式轉換為string("2026")
+      const payload = {
+        BudgetYear: frm.value.BudgetYear ? frm.value.BudgetYear.getFullYear().toString() : null,
       };
-      this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-    }
-  }
+      console.log('產生年中版本作業 request:', payload);
+      this.fin41040Service.queryFIN41040(payload).subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            const result = Array.isArray(response.Data)
+              ? response.Data
+              : (response.Data ? [response.Data] : []);
+            this.data = result;
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
+            // 將 NewBudgetYear = BudgetYear, NewBudgetVersion = BudgetVersion + 1
+            this.data = this.data.map(item => ({
+              ...item,
+              new_budget_year: item.budget_year,
+              new_budget_version: (parseInt(item.budget_version, 10) + 1).toString()
+            }));
+            console.log('Result', this.data);
+            this.totalRecords = response.TotalCount;
+            this.queryStateService.setQueryState(this.ProgNo, payload);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
         },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+  generateNewVersion(rowData: fin41040data) {
+    console.log('產生年中版本作業 - 產生新版本:', rowData);
+
+    const payload = {
+      OldBudgetYear: rowData.budget_year,
+      OldVersion: rowData.budget_version,
+      NewBudgetYear: rowData.new_budget_year,
+      NewVersion: rowData.new_budget_version,
     };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+
+    console.log('產生request:', payload);
+
+    this.fin41040Service.copyFIN41040(payload).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('產生年中版本成功');
+          this.onSubmit(this.queryForm); // 重新查詢以更新表格
+        } else {
+          console.error('API error:', response.Error.Message);
+          this.messageService.errorBubble('產生年中版本失敗: ' + response.Message);
+        }
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('產生年中版本失敗: ' + err);
+      },
+    });
   }
 }
