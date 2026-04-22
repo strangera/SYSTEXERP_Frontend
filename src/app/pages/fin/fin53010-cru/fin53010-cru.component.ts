@@ -1034,6 +1034,24 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     });
   }
 
+  /**
+   * 驗證傳票明細行
+   * 1. 當會計科目為 '123208' 時，組織代號必須為特定的幾個值
+   */
+  public readonly validateRow = (rowData: FIN53010DetailTable): { isValid: boolean, errorMessage: string; } => {
+    const accNo = String(rowData.AccNo ?? '').trim();
+    const orgId = String(rowData.ORG_ID ?? '').trim();
+
+    if (accNo === '123208') {
+      const allowedOrgIds = ['107400', '107500', '100200', '100210', '100300', '100310', '106000'];
+      if (!allowedOrgIds.includes(orgId)) {
+        return { isValid: false, errorMessage: '組織代號有誤' };
+      }
+    }
+
+    return { isValid: true, errorMessage: '' };
+  };
+
   public onSubmit(): void {
     const valid = this.purchaseTableEditComponent?.validateAndShowErrors();
     if (valid === false) {
