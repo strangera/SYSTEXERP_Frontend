@@ -15,14 +15,17 @@ export const finRoutes: Routes = [
   { path: 'fin11200', loadComponent: () => import('./fin11200/fin11200.component').then(m => m.FIN11200Component), data: { progNo: 'FIN11200' } },
   { path: 'fin11200cru', loadComponent: () => import('./fin11200-cru/fin11200-cru.component').then(m => m.FIN11200CRUComponent), data: { progNo: 'FIN11200' } },
   { path: 'fin11210cru', loadComponent: () => import('./fin11210-cru/fin11210-cru.component').then(m => m.FIN11210CRUComponent), data: { progNo: 'FIN11210' } },
-  // 銷貨退回或折讓單列印
-  { path: 'fin15100', loadComponent: () => import('./fin15100/fin15100.component').then(m => m.FIN15100Component), data: { progNo: 'FIN15100' } },
+  // 進項發票調整
+  { path: 'fin13050', loadComponent: () => import('./fin13050/fin13050.component').then(m => m.FIN13050Component), data: { progNo: 'FIN13050' } },
+  { path: 'fin13050cru', loadComponent: () => import('./fin13050-cru/fin13050-cru.component').then(m => m.FIN13050CRUComponent), data: { progNo: 'FIN13050' } },
   // 電子式發票各系統配號維護
   { path: 'fin12010', loadComponent: () => import('./fin12010/fin12010.component').then(m => m.FIN12010Component), data: { progNo: 'FIN12010' } },
   { path: 'fin12010cru', loadComponent: () => import('./fin12010-cru/fin12010-cru.component').then(m => m.FIN12010CRUComponent), data: { progNo: 'FIN12010' } },
   //非二聯式收銀機發票調整作業
   { path: 'fin13040', loadComponent: () => import('./fin13040/fin13040.component').then(m => m.FIN13040Component), data: { progNo: 'FIN13040' } },
   { path: 'fin13040cru', loadComponent: () => import('./fin13040-cru/fin13040-cru.component').then(m => m.FIN13040CRUComponent), data: { progNo: 'FIN13040' } },
+  // 銷貨退回或折讓單列印
+  { path: 'fin15100', loadComponent: () => import('./fin15100/fin15100.component').then(m => m.FIN15100Component), data: { progNo: 'FIN15100' } },
   // 公司銀行資料維護
   { path: 'fin21010', loadComponent: () => import('./fin21010/fin21010.component').then(m => m.FIN21010Component), data: { progNo: 'FIN21010' } },
   { path: 'fin21010cru', loadComponent: () => import('./fin21010-cru/fin21010-cru.component').then(m => m.FIN21010CRUComponent), data: { progNo: 'FIN21010' } },
