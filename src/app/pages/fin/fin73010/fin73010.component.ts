@@ -58,10 +58,11 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
   lastQueryBody: any = null; // 紀錄最後一次查詢條件
 
   data: Fin73010data[] = [];
+  sumData: Record<string, number> | null = { PCS_Net: 0, PCS_Tax: 0, PCS_Amt: 0 }; // 合計資料
   columns: Column[] = [
-    { field: 'RowTypeDesc', header: '列別' },
     // { field: 'RowType', header: '列別' },
     { field: 'SeqNo', header: '序號' },
+    { field: 'RowTypeDesc', header: '列別' },
     { field: 'PCS_No', header: '零用金單號' },
     { field: 'PCS_Date', header: '零用金申請日期', format: formatDate },
     { field: 'PCS_UsrNo', header: '零用金申請人員代碼' },
@@ -85,9 +86,9 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
     { field: 'ORG_ID', header: '費用科目組織代碼' },
     { field: 'Dtl_OrgName', header: '費用科目組織名稱' },
     { field: 'PUR_Date', header: '憑證日期', format: formatDate },
-    { field: 'PCS_Net', header: '未稅金額', format: formatAmount },
-    { field: 'PCS_Tax', header: '稅額', format: formatAmount },
-    { field: 'PCS_Amt', header: '含稅金額', format: formatAmount },
+    { field: 'PCS_Net', header: '未稅金額', format: formatAmount, isTotal: true },
+    { field: 'PCS_Tax', header: '稅額', format: formatAmount, isTotal: true },
+    { field: 'PCS_Amt', header: '含稅金額', format: formatAmount, isTotal: true },
   ];
 
   PCS_No_Options: { No: string; Name: string; Label: string }[] = []; // 零用金單號選項
@@ -123,6 +124,16 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
           if (response.Status === '0000') {
             this.lastQueryBody = frm.value;
             this.data = response.Data
+            // this.data = response.Data.filter((item: Fin73010data) => item.RowType !== 2); // 只顯示明細列 (html:howTotal、showPaginator)
+            // 直接抓response為2的資料欄位，只會有1筆不用逐欄位相加
+            // const sumRow = response.Data.find((item: Fin73010data) => item.RowType === 2);
+            // if (sumRow) {
+            //   this.sumData = {
+            //     PCS_Net: sumRow.PCS_Net,
+            //     PCS_Tax: sumRow.PCS_Tax,
+            //     PCS_Amt: sumRow.PCS_Amt
+            //   };
+            // }
             console.log('Result', this.data);
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
