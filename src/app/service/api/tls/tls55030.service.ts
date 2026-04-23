@@ -419,4 +419,13 @@ export class Tls55030Service {
       body
     );
   }
+
+  /**
+   * 匯出折讓單
+   */
+  PrintTLS55030PDF(body: { DIS_No: string }): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/PrintTLS55030PDF`, body, {
+      responseType: 'blob'
+    });
+  }
 }
