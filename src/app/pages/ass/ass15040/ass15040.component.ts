@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS15040Service } from '@service/api/ass/ass15040.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { Option } from '../../../service/utility/dropdown-api.model';
@@ -13,26 +14,8 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
-interface Ass15040MockRow {
-  seq: number;
-  assetCode: string;
-  itemCode: string;
-  itemName: string;
-  enableYears: number;
-  purchaseDate: string;
-  acquireCost: number;
-  reserveResidualValue: number;
-  yearBeginAccumulatedDepreciation: number;
-  previousDepreciationAmount: number;
-  currentDepreciationAmount: number;
-  accumulatedDepreciationAmount: number;
-  bookValue: number;
-  keeperUnit: string;
-  propertyRemark: string;
-  baseYYMM: string;
-  accountCode: string;
-}
+import { FileExportService } from '../../../shared/service/file-export.service';
+import { PrintASS15040Request, QueryASS15040Request, QueryASS15040Response } from './ass15040.model';
 
 // 3.1.5.4 財產目錄之會計科目報表
 @UntilDestroy()
@@ -54,7 +37,7 @@ interface Ass15040MockRow {
     ButtonModule,
   ],
 })
-export class ASS15040Component extends BasicQueryPageComponent<any> implements OnInit {
+export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Response> implements OnInit {
   queryForm = this.formBuilder.group({
     baseYYMM: [null as Date | string | null], // 基準日 YYYYMM
     keeperUnit: [null as string | null], // 保管單位
@@ -62,46 +45,51 @@ export class ASS15040Component extends BasicQueryPageComponent<any> implements O
     itemCode: [null as string | null], // 品項編號
   });
 
-  data: any[] = [];
+  data: QueryASS15040Response[] = [];
   totalRecords = 0;
   readonly tableLoading = signal(false);
+  exportPdfLoading = false;
   exportExcelLoading = false;
-  private allMockRows: Ass15040MockRow[] = [];
 
   columns: any[] = [
-    { field: 'seq', header: '項次', visible: true },
-    { field: 'assetCode', header: '財產編號', visible: true },
-    { field: 'itemCode', header: '品項編號', visible: true },
-    { field: 'itemName', header: '項目名稱', visible: true },
-    { field: 'enableYears', header: '啟用\n年數', visible: true },
-    { field: 'purchaseDate', header: '購入日期', visible: true },
-    { field: 'acquireCost', header: '取得成本', visible: true },
-    { field: 'reserveResidualValue', header: '預留殘值', visible: true },
-    { field: 'yearBeginAccumulatedDepreciation', header: '年初\n累計折舊', visible: true },
-    { field: 'previousDepreciationAmount', header: '前期\n折舊金額', visible: true },
-    { field: 'currentDepreciationAmount', header: '本期\n折舊金額', visible: true },
-    { field: 'accumulatedDepreciationAmount', header: '累計\n折舊金額', visible: true },
-    { field: 'bookValue', header: '帳面價值', visible: true },
-    { field: 'keeperUnitName', header: '保管單位', visible: true },
-    { field: 'propertyRemark', header: '財產註記', visible: true },
+    { field: 'STYPE_ID', header: '會計科目代碼', visible: true },
+    { field: 'STYPE_NAME', header: '會計科目名稱', visible: true },
+    { field: 'ASSET_ID', header: '資產編號', visible: true },
+    { field: 'GOODS_ID', header: '品項編號', visible: true },
+    { field: 'GOODS_NAME', header: '品項名稱', visible: true },
+    { field: 'HOLD_ORG_ID', header: '保管單位代碼', visible: true },
+    { field: 'HOLD_ORG_NAME', header: '保管單位名稱', visible: true },
+    { field: 'GET_DATE', header: '取得日期', visible: true },
+    { field: 'NOTES', header: '備註', visible: true },
+    { field: 'EXP_YEAR', header: '耐用年數', visible: true },
+    { field: 'GET_COST', header: '取得成本', visible: true },
+    { field: 'RESI_VALUE', header: '殘值', visible: true },
+    { field: 'YEAR_BEGIN_DEPREAMT', header: '年初累計折舊', visible: true },
+    { field: 'PREV_DEPREAMT', header: '前期折舊', visible: true },
+    { field: 'YEAR_DEPREAMT', header: '本期折舊', visible: true },
+    { field: 'MONTH_DEPREAMT', header: '本月折舊', visible: true },
+    { field: 'ACCUMULATED_DEPREAMT', header: '累計折舊', visible: true },
+    { field: 'AMT', header: '帳面價值（淨值）', visible: true },
   ];
 
   keeperUnitOptions: Option[] = [];
   accountCodeOptions: Option[] = [];
   itemCodeOptions: Option[] = [];
 
-  constructor(private readonly dropdownApiService: DropdownApiService) {
+  constructor(
+    private readonly dropdownApiService: DropdownApiService,
+    private readonly ass15040Service: ASS15040Service,
+    private readonly fileExportService: FileExportService,
+  ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('ASS15040', '', this.queryForm, frm => this.onSubmit(frm));
     this.loadDropdownOptions();
-    this.seedMockData();
   }
 
   onSubmit(frm: FormGroup): void {
-    // TODO 串接查詢 API
     this.handleSubmit(
       frm,
       () => {
@@ -109,18 +97,43 @@ export class ASS15040Component extends BasicQueryPageComponent<any> implements O
           this.tableLoading.set(false);
           return;
         }
-        try {
-          this.data = this.filterMockData();
-          this.totalRecords = this.data.length;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-        } catch {
+        const payload = this.buildQueryRequest();
+        if (!payload) {
           this.data = [];
           this.totalRecords = 0;
-          this.messageService.warnBubble('查詢失敗，請稍後再試');
-        } finally {
           this.loading = false;
           this.tableLoading.set(false);
+          return;
         }
+        this.ass15040Service.queryASS15040(payload).pipe(untilDestroyed(this)).subscribe({
+          next: res => {
+            if (res?.Status !== '0000') {
+              this.data = [];
+              this.totalRecords = 0;
+              this.messageService.warnBubble(res?.Message || '查無資料或查詢失敗');
+              return;
+            }
+            const rows = res?.Data?.QueryData ?? [];
+            this.data = rows;
+            this.totalRecords =
+              res?.Data?.TotalCount ??
+              rows.find(x => typeof x.TOTAL_COUNT === 'number')?.TOTAL_COUNT ??
+              res?.TotalCount ??
+              rows.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          },
+          error: () => {
+            this.data = [];
+            this.totalRecords = 0;
+            this.messageService.warnBubble('查詢失敗，請稍後再試');
+            this.loading = false;
+            this.tableLoading.set(false);
+          },
+          complete: () => {
+            this.loading = false;
+            this.tableLoading.set(false);
+          },
+        });
       },
       v => this.tableLoading.set(v),
     );
@@ -157,25 +170,30 @@ export class ASS15040Component extends BasicQueryPageComponent<any> implements O
     this.navigateWithState(CRUDStatus.Read, data);
   }
 
-  onExportExcel(): void {
-    // TODO 串接報表 API
-    this.exportExcelLoading = true;
-    try {
-      const payload = {
-        query: this.queryForm.getRawValue(),
-        columns: this.columns.map(col => col.header),
-        data: this.data,
-        exportedAt: new Date().toISOString(),
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-      this.downloadBlob(blob, `ASS15040_${this.getTimestamp()}.xlsx`);
-    } catch {
-      this.messageService.errorBubble('檔案匯出失敗，請重試。');
-    } finally {
-      this.exportExcelLoading = false;
+  onExportPdf(): void {
+    const payload = this.buildExportRequest();
+    if (!payload) return;
+    if ((this.data?.length ?? 0) === 0) {
+      this.messageService.warnBubble('目前無資料可供下載。');
+      return;
     }
+    const export$ = this.ass15040Service.exportPDFASS15040(payload);
+    this.fileExportService
+      .executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', v => (this.exportPdfLoading = v))
+      .subscribe();
+  }
+
+  onExportExcel(): void {
+    const payload = this.buildExportRequest();
+    if (!payload) return;
+    if ((this.data?.length ?? 0) === 0) {
+      this.messageService.warnBubble('目前無資料可供下載。');
+      return;
+    }
+    const export$ = this.ass15040Service.exportExcelASS15040(payload);
+    this.fileExportService
+      .executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', v => (this.exportExcelLoading = v))
+      .subscribe();
   }
 
   private loadDropdownOptions(): void {
@@ -196,75 +214,37 @@ export class ASS15040Component extends BasicQueryPageComponent<any> implements O
       .subscribe(opts => (this.itemCodeOptions = opts ?? []));
   }
 
-  private seedMockData(): void {
-    this.allMockRows = [
-      {
-        seq: 1,
-        assetCode: 'FA-2024-1001',
-        itemCode: 'A0001',
-        itemName: '辦公桌',
-        enableYears: 5,
-        purchaseDate: '2024-01-10',
-        acquireCost: 50000,
-        reserveResidualValue: 5000,
-        yearBeginAccumulatedDepreciation: 9200,
-        previousDepreciationAmount: 1100,
-        currentDepreciationAmount: 1200,
-        accumulatedDepreciationAmount: 10400,
-        bookValue: 39600,
-        keeperUnit: 'D001',
-        propertyRemark: '正常使用',
-        baseYYMM: '202601',
-        accountCode: '150101',
-      },
-      {
-        seq: 2,
-        assetCode: 'FA-2023-1002',
-        itemCode: 'B0002',
-        itemName: '筆電',
-        enableYears: 3,
-        purchaseDate: '2023-08-15',
-        acquireCost: 32000,
-        reserveResidualValue: 1000,
-        yearBeginAccumulatedDepreciation: 12000,
-        previousDepreciationAmount: 900,
-        currentDepreciationAmount: 950,
-        accumulatedDepreciationAmount: 12950,
-        bookValue: 19050,
-        keeperUnit: 'D002',
-        propertyRemark: '資產移轉',
-        baseYYMM: '202602',
-        accountCode: '151201',
-      },
-      {
-        seq: 3,
-        assetCode: 'FA-2022-1003',
-        itemCode: 'C0003',
-        itemName: '空調主機',
-        enableYears: 8,
-        purchaseDate: '2022-03-01',
-        acquireCost: 150000,
-        reserveResidualValue: 10000,
-        yearBeginAccumulatedDepreciation: 48000,
-        previousDepreciationAmount: 3400,
-        currentDepreciationAmount: 3500,
-        accumulatedDepreciationAmount: 51500,
-        bookValue: 98500,
-        keeperUnit: 'D001',
-        propertyRemark: '大型設備',
-        baseYYMM: '202603',
-        accountCode: '152201',
-      },
-    ];
+  private buildQueryRequest(): QueryASS15040Request | null {
+    const q = this.queryForm.getRawValue();
+    const baseYM = this.toYYYYMM(q.baseYYMM);
+    if (!baseYM) {
+      this.messageService.warnBubble('請輸入正確的基準日（yyyyMM）');
+      return null;
+    }
+    const request: QueryASS15040Request = {
+      BaseYM: baseYM,
+      STYPE_ID: q.accountCode || null,
+      HOLD_ORG_ID: q.keeperUnit || null,
+      GOODS_ID: q.itemCode || null,
+      PageIndex: 1,
+      PageSize: 9999,
+    };
+    return request;
   }
 
-  private filterMockData(): any[] {
+  private buildExportRequest(): PrintASS15040Request | null {
     const q = this.queryForm.getRawValue();
-    const baseYYMM = this.toYYYYMM(q.baseYYMM);
-    return this.allMockRows.map(row => ({
-      ...row,
-      keeperUnitName: this.getOptionLabel(this.keeperUnitOptions, row.keeperUnit) || row.keeperUnit,
-    }));
+    const baseYM = this.toYYYYMM(q.baseYYMM);
+    if (!baseYM) {
+      this.messageService.warnBubble('請輸入正確的基準日（yyyyMM）');
+      return null;
+    }
+    return {
+      BaseYM: baseYM,
+      STYPE_ID: q.accountCode || null,
+      HOLD_ORG_ID: q.keeperUnit || null,
+      GOODS_ID: q.itemCode || null,
+    };
   }
 
   private toYYYYMM(value: Date | string | null | undefined): string | null {
@@ -279,28 +259,4 @@ export class ASS15040Component extends BasicQueryPageComponent<any> implements O
     return /^\d{6}$/.test(normalized) ? normalized : null;
   }
 
-  private getOptionLabel(options: Option[], value: string): string {
-    return options.find(x => x.value === value)?.label ?? '';
-  }
-
-  private downloadBlob(blob: Blob, fileName: string): void {
-    const blobUrl = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = blobUrl;
-    a.download = fileName;
-    a.click();
-    URL.revokeObjectURL(blobUrl);
-  }
-
-  private getTimestamp(): string {
-    const now = new Date();
-    return (
-      now.getFullYear().toString() +
-      (now.getMonth() + 1).toString().padStart(2, '0') +
-      now.getDate().toString().padStart(2, '0') +
-      '_' +
-      now.getHours().toString().padStart(2, '0') +
-      now.getMinutes().toString().padStart(2, '0')
-    );
-  }
 }
