@@ -1,14 +1,19 @@
-import { Component, OnInit, computed } from '@angular/core';
+import { Component, OnInit, computed, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN71010Service } from '@service/api/fin/fin71010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DropdownComponent } from "@shared/componentkit/dropdown/dropdown.component";
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NGXLogger } from 'ngx-logger';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { PanelModule } from 'primeng/panel';
-import { FIN71010Data } from '../fin71010/fin71010.model';
+import { forkJoin } from 'rxjs';
+import { FIN71010Data, FIN71010DropdownItem } from '../fin71010/fin71010.model';
 
 @Component({
   selector: 'app-fin71010-cru',
@@ -21,8 +26,12 @@ import { FIN71010Data } from '../fin71010/fin71010.model';
     ReactiveFormsModule,
     TranslateModule,
     ButtonComponent,
+    ButtonModule,
+    InputTextModule,
     InputTextComponent,
     MenubarComponent,
+    OverlayPanelModule,
+    DropdownComponent
   ]
 })
 export class FIN71010CRUComponent extends BasicCruPageComponent<FIN71010Data> implements OnInit {
@@ -38,6 +47,11 @@ export class FIN71010CRUComponent extends BasicCruPageComponent<FIN71010Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
+  public readonly apexpOptions = signal<FIN71010DropdownItem[] | null>(null);
+  public readonly apexpCommonOptions = signal<FIN71010DropdownItem[] | null>(null);
+  public readonly ptaxOptions = signal<FIN71010DropdownItem[] | null>(null);
+  public readonly ptaxCommonOptions = signal<FIN71010DropdownItem[] | null>(null);
+
   constructor(
     private readonly service: FIN71010Service,
     private readonly logger: NGXLogger,
@@ -48,12 +62,33 @@ export class FIN71010CRUComponent extends BasicCruPageComponent<FIN71010Data> im
   public ngOnInit(): void {
     this.initializePage('FIN71010', this.dataForm);
 
-    // 分店代號與收銀機號為唯讀識別欄位，不可修改
     this.dataForm.controls.MID.disable();
     this.dataForm.controls.SYS_StoreNo.disable();
     this.dataForm.controls.ECR_No.disable();
 
     this.logger.debug('init:', [this.rowdata]);
+    this.loadDropdowns();
+  }
+
+  private loadDropdowns(): void {
+    forkJoin({
+      apexp: this.service.queryFIN71010Dropdown('APEXP_LID'),
+      apexpCommon: this.service.queryFIN71010Dropdown('APEXP_LID_COMMON'),
+      ptax: this.service.queryFIN71010Dropdown('PTAX_LID'),
+      ptaxCommon: this.service.queryFIN71010Dropdown('PTAX_LID_COMMON'),
+    }).subscribe({
+      next: ({ apexp, apexpCommon, ptax, ptaxCommon }) => {
+        this.apexpOptions.set(apexp.Status === '0000' ? apexp.Data : []);
+        this.apexpCommonOptions.set(apexpCommon.Status === '0000' ? apexpCommon.Data : []);
+        this.ptaxOptions.set(ptax.Status === '0000' ? ptax.Data : []);
+        this.ptaxCommonOptions.set(ptaxCommon.Status === '0000' ? ptaxCommon.Data : []);
+      },
+    });
+  }
+
+  public onSelectOption(field: string, value: string, panel: OverlayPanel): void {
+    this.dataForm.patchValue({ [field]: value });
+    panel.hide();
   }
 
   public onSubmit(): void {
