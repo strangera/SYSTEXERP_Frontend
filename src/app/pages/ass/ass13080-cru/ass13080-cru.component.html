@@ -12,14 +12,14 @@
     ></app-button>
 
     <app-button
-      *ngIf="crudstatus !== CRUDStatus.Create"
+      *ngIf="crudstatus === CRUDStatus.Edit"
       label="取消變賣"
       (click)="onCancelSold()"
       [disabled]="!hasPermission(Actions.Edit)"
     ></app-button>
 
     <app-button
-      *ngIf="crudstatus !== CRUDStatus.Create"
+      *ngIf="crudstatus === CRUDStatus.Edit"
       label="變賣審核"
       (click)="onApproveSold()"
       [disabled]="!hasPermission(Actions.Audit)"

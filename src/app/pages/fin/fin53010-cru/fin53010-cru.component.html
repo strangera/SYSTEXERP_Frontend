@@ -106,7 +106,7 @@
           (rowReorderData)="onRowReorder($event)" [data]="tableData()" [defaultInsertData]="defaultInsertData()"
           [footerData]="footerData()" [loading]="tableLoading()" [tableKey]="'FIN52030_detail'" [tableRequired]="true"
           [columns]="columns()" [scrollable]="true" [virtualScroll]="true"
-          [virtualScrollItemSize]="46"></app-table-edit>
+          [rowValidate]="validateRow" [virtualScrollItemSize]="46"></app-table-edit>
       </p-panel>
     </div>
   </div>
