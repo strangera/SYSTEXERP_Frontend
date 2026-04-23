@@ -1,4 +1,4 @@
-import { DatePipe, NgClass } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { afterNextRender, Component, computed, effect, Injector, OnInit, signal, TemplateRef, ViewChild, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -89,7 +89,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     /** 傳票類別 1:現金收入 2:現金支出 3:轉帳傳票 */
     VouType: new FormControl<'1' | '2' | '3' | void>('3', [Validators.required]),
     /** 傳票狀態 0:作廢 1:建立 2:確認(取消確認動作) 3:過帳 */
-    PostFlag: new FormControl<'0' | '1' | '3' | void>(void 0),
+    PostFlag: new FormControl<'0' | '1' | '3' | void>(void 0, [Validators.required]),
     /** 傳票種類(SYS1000.VoucherType) */
     VoucherType: new FormControl<string>('GL', [Validators.required]),
     VouDate: new FormControl<Date>(new Date, [Validators.required]),
@@ -398,7 +398,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       DetailName: this.service.vendorMap().get(String(v.DetailNo))?.label
         ?? this.service.usrMap().get(String(v.DetailNo))?.label,
       NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
-      SerNo: index + 1, // 序號從 1 起
+      SerNo: (index + 1) * 10, // 序號從 10 起，10 為單位遞增
     })));
 
     const rows = this.tableData();
@@ -525,7 +525,6 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'TempNo', header: '傳票號碼' },
     { field: 'TempName', header: '傳票代號' },
     { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions.find(({ value }) => value === v)?.label ?? v },
-    { field: 'DetailCount', header: '明細筆數' },
   ];
 
   public readonly stepAPColumns: EditColumn[] = [
@@ -1035,6 +1034,24 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     });
   }
 
+  /**
+   * 驗證傳票明細行
+   * 1. 當會計科目為 '123208' 時，組織代號必須為特定的幾個值
+   */
+  public readonly validateRow = (rowData: FIN53010DetailTable): { isValid: boolean, errorMessage: string; } => {
+    const accNo = String(rowData.AccNo ?? '').trim();
+    const orgId = String(rowData.ORG_ID ?? '').trim();
+
+    if (accNo === '123208') {
+      const allowedOrgIds = ['107400', '107500', '100200', '100210', '100300', '100310', '106000'];
+      if (!allowedOrgIds.includes(orgId)) {
+        return { isValid: false, errorMessage: '組織代號有誤' };
+      }
+    }
+
+    return { isValid: true, errorMessage: '' };
+  };
+
   public onSubmit(): void {
     const valid = this.purchaseTableEditComponent?.validateAndShowErrors();
     if (valid === false) {
@@ -1125,7 +1142,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public onDataChange(data: FIN53010DetailTable[]): void {
     this.logger.debug(`onDataChange:`, [data]);
-    const renumbered = data.map((row, i) => ({ ...row, SerNo: i + 1, index: i }));
+    const renumbered = data.map((row, i) => ({ ...row, SerNo: (i + 1) * 10, index: i }));
     this.tableData.set(renumbered);
     this.rowEditCanSave.set(this.tableData().some(row => row.AccNo && row.ORG_ID) || !!this.isBalanced());
   }
@@ -1367,7 +1384,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.tableData.update(current =>
           current
             .filter(d => d.SerNo !== e.SerNo)
-            .map((row, i) => ({ ...row, SerNo: i + 1, index: i })),
+            .map((row, i) => ({ ...row, SerNo: (i + 1) * 10, index: i })),
         );
         continue;
       }
@@ -1405,7 +1422,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         ...item,
         index,
         displayIndex: index,
-        SerNo: index + 1,
+        SerNo: (index + 1) * 10,
       }));
     });
 
@@ -1472,7 +1489,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
               ?? this.service.usrMap().get(String(v.DetailNo))?.label
               ?? '',
             NoteDesc: v.NoteDesc || this.service.noteDescMap().get(String(v.AccNo))?.label,
-            SerNo: index + 1, // 序號從 1 起
+            SerNo: (index + 1) * 10, // 序號從 10 起，10 為單位遞增
             index,
           };
         }));
