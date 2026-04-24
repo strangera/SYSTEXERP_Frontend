@@ -166,6 +166,7 @@ export class ASS11070Component extends BasicQueryPageComponent<QueryASS11070Resp
       VENDOR_NAME: raw.vendorName ?? undefined,
       VENDOR_NAME_E: raw.vendorNameE ?? undefined,
       CONTACT_STAFF: raw.contactStaff ?? undefined,
+      CONTACT_TITLE: raw.contactTitle ?? undefined,
       CONTACT_TEL: raw.contactTel ?? undefined,
       CONTACT_MOBILE_PHONE: raw.contactMobilePhone ?? undefined,
       CONTACT_EMAIL: raw.contactEmail ?? undefined,
