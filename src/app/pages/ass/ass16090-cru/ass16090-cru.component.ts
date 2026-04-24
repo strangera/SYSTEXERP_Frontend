@@ -269,9 +269,11 @@ export class ASS16090CRUComponent
     return this.crudstatus === CRUDStatus.Edit;
   }
 
-  onBack(): void {
-    this.router.navigate(['account/ass/ass16090']);
-  }
+ onBack(): void {
+  this.router.navigate(['account/ass/ass16090'], {
+    state: { fromCru: true },
+  });
+}
 
   private loadDropdownOptions(): void {
     this.ass11100Service

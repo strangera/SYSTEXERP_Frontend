@@ -312,14 +312,17 @@ export class ASS16080Component extends BasicQueryPageComponent<QueryASS16080Resp
     return cleaned.length ? cleaned : fallback;
   }
 
-  private initRows(rows: QueryASS16080Response[]): QueryASS16080Response[] {
-    rows.forEach((r, idx) => {
-      (r as any)._rowKey = idx + 1;
-      (r as any)._detailLoaded = false;
-      r.Details = [];
-    });
-    return rows;
-  }
+private initRows(rows: QueryASS16080Response[]): QueryASS16080Response[] {
+  const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+  rows.forEach((r, idx) => {
+    (r as any)._rowKey = `${seed}_${idx}`;
+    (r as any)._detailLoaded = false;
+    r.Details = [];
+  });
+
+  return rows;
+}
 
   private saveQueryState(): void {
     this.queryStateService.setQueryState(

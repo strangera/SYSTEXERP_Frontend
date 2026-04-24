@@ -118,7 +118,7 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
   ];
 
   expansionColumns: ReportColumn[] = [
-    { field: 'LINE_NUM', header: '行號' },
+    // { field: 'LINE_NUM', header: '行號' },
     { field: 'GOODS_ID', header: '品項編號' },
     { field: 'GOODS_NAME', header: '品項名稱' },
     { field: 'GOODS_UNIT_NAME', header: '單位' },
@@ -312,15 +312,17 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
     return cleaned.length ? cleaned : fallback;
   }
 
-  private initRows(rows: Ass16090Row[]): Ass16090Row[] {
-    rows.forEach((r, idx) => {
-      (r as any)._rowKey = idx + 1;
-      r.Details = [];
-      (r as any)._detailLoaded = false;
-    });
+ private initRows(rows: Ass16090Row[]): Ass16090Row[] {
+  const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    return rows;
-  }
+  rows.forEach((r, idx) => {
+    (r as any)._rowKey = `${seed}_${idx}`;
+    r.Details = [];
+    (r as any)._detailLoaded = false;
+  });
+
+  return rows;
+}
 
   private saveQueryState(): void {
     this.queryStateService.setQueryState(
