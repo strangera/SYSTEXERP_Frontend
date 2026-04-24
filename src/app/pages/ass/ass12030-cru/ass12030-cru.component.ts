@@ -471,14 +471,16 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const valid = this.tableEditComponent?.validateAndShowErrors();
-      if (valid === false) return;
+      this.loading = true;
+      if (valid === false) {
+        this.loading = false;
+        return;
+      }
       const raw = this.dataForm.getRawValue();
       const details = this.toDetails(this.data as Record<string, unknown>[]);
       const applyDate = raw.APPLY_DATE instanceof Date
         ? raw.APPLY_DATE.toISOString().slice(0, 10)
         : String(raw.APPLY_DATE ?? '');
-
-      this.loading = true;
 
       if (this.crudstatus === CRUDStatus.Create) {
         const payload: ASS12030InsertRequest = {
