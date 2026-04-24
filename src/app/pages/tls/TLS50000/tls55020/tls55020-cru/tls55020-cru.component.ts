@@ -232,7 +232,10 @@ export class TLS55020CRUComponent extends BasicCruPageComponent<Tls55020MasterDa
         this.loading = false;
         return;
       }
-      const updatedDetails = this.data.filter(item => item.isEditable);
+      const updatedDetails = this.data.filter(item => item.isEditable).map(item => ({
+        ...item,
+        TXN_DiscS: item.TXN_Disc
+      }));
 
       if (updatedDetails.length === 0) {
         this.messageService.warnBubble('沒有任何可修改的明細資料');
