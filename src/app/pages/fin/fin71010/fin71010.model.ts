@@ -22,6 +22,11 @@ export interface FIN71010Data {
   UPD_USR_Name: string | null;
 }
 
+export interface FIN71010DropdownItem {
+  No: string;
+  Name: string;
+}
+
 export interface FIN71010Update {
   MID: number;
   SYS_StoreNo: string;

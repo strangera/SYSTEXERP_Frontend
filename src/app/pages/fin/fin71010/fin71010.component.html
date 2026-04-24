@@ -4,48 +4,65 @@
                  class="flex-1"></app-menubar>
   </div>
 
-  <p-accordion>
-    <p-accordionTab [header]="'query-conditions' | translate"
-                    [selected]="true"
-                    class="line-height-3 m-0"
-                    [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit()">
-        <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4"
-                          label="分店代號"
-                          controlName="SYS_StoreNo"
-                          [control]="qf().SYS_StoreNo"
-                          [submitted]="submitted"></app-input-text>
+  @if (hasData()) {
+  <p-panel header="編輯零用金會計科目">
+    <form [formGroup]="editForm"
+          (ngSubmit)="onSave()">
+      <div class="grid p-fluid">
 
-          <app-input-text class="col-12 md:col-6 lg:col-4"
-                          label="收銀機號"
-                          controlName="ECR_No"
-                          [control]="qf().ECR_No"
-                          [submitted]="submitted"></app-input-text>
-        </div>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-3"
+          label="應付費用會計科目"
+          controlName="APEXP_LID"
+          [control]="ef().APEXP_LID"
+          [options]="gls1005Options()"
+          optionLabel="DisplayName"
+          optionValue="No"
+          [submitted]="submitted"
+        ></app-dropdown>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear"
-                      [form]="queryForm"></app-button>
-          <app-button btnType="query"
-                      [loading]="loading"></app-button>
-        </div>
-      </form>
-    </p-accordionTab>
-  </p-accordion>
-</div>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-3"
+          label="應付費用會計科目(共同)"
+          controlName="APEXP_LID_COMMON"
+          [control]="ef().APEXP_LID_COMMON"
+          [options]="gls1005Options()"
+          optionLabel="DisplayName"
+          optionValue="No"
+          [submitted]="submitted"
+        ></app-dropdown>
 
-<div class="card">
-  <app-table [data]="tableData()"
-             [columns]="columns"
-             [totalRecords]="totalRecords()"
-             (edit)="onEdit($event)"
-             (detail)="onDetail($event)"
-             [tableKey]="'FIN71010'"
-             [dataKey]="'ECR_No'"
-             (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-             [lazy]="true"
-             [loading]="tableLoading()"></app-table>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-3"
+          label="進項稅額會計科目"
+          controlName="PTAX_LID"
+          [control]="ef().PTAX_LID"
+          [options]="gls1005Options()"
+          optionLabel="DisplayName"
+          optionValue="No"
+          [submitted]="submitted"
+        ></app-dropdown>
+
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-3"
+          label="進項稅額會計科目(共同)"
+          controlName="PTAX_LID_COMMON"
+          [control]="ef().PTAX_LID_COMMON"
+          [options]="gls1005Options()"
+          optionLabel="DisplayName"
+          optionValue="No"
+          [submitted]="submitted"
+        ></app-dropdown>
+
+      </div>
+
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel"
+                    (click)="loadData()"></app-button>
+        <app-button btnType="submit"
+                    [loading]="savingLoading()"></app-button>
+      </div>
+    </form>
+  </p-panel>
+  }
 </div>

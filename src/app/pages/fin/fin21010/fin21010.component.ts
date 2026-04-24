@@ -1,19 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { APS1002, FIN21010Response, Fin21010Service } from '@service/api/fin/fin21010.service';
+import { getSYS1000 } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { getSYS1000 } from '@service/system/sys1000.service';
 
 //1.2.1.1 公司銀行資料維護
 @Component({
@@ -101,7 +102,6 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   ];
 
   selectedItems: APS1002[] = [];// 多選項目
-
   // ----------------------------------------------------------------
   constructor(
     private fin21010Service: Fin21010Service,
@@ -116,29 +116,12 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
   }
 
   onSubmit(frm: FormGroup) {
-    console.log('查詢條件', frm.value);
     this.handleSubmit(frm, () => {
-      this.fin21010Service.queryFIN21010(frm.value).subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.data = response.Data || [];
-            console.log('Result', response);
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
+      this.fin21010Service.queryFIN21010(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
+        this.data = response.Data || [];
+        this.totalRecords = response.TotalCount || response.Data.length;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
-
-      this.loading = false;
     });
   }
 
@@ -148,8 +131,6 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
       message: `是否確認刪除選中的公司銀行資料?`,
       header: `確認刪除`,
       accept: () => {
-        console.log('Delete data:', JSON.stringify(data, null, 2));
-
         const items = Array.isArray(data) ? data : [data];
         if (items.length === 0) {
           console.error('No items to delete');

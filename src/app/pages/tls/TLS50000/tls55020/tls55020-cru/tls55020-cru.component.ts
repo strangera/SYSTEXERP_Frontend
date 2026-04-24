@@ -55,6 +55,7 @@ export class TLS55020CRUComponent extends BasicCruPageComponent<Tls55020MasterDa
     GUI_Track: [{ value: null, disabled: true }], //發票字軌
     TXN_GUIBegNo: [{ value: null, disabled: true }], //起始發票號碼
     TXN_GUIEndNo: [{ value: null, disabled: true }], //結束發票號碼
+    TXN_TotGUI: [{ value: null, disabled: true }], //總發票金額
     TXN_CustCnt: [{ value: null, disabled: true }], //來客數
     TXN_MemCard: [{ value: null, disabled: true }], //會員編號，若有資料需要串接環友
     TXN_Uniform: [{ value: null, disabled: true }], //客戶統一編號 可以為空
@@ -111,11 +112,43 @@ export class TLS55020CRUComponent extends BasicCruPageComponent<Tls55020MasterDa
       validate: [validateRequired]
     },
     { field: 'PLU_Name', header: '商品名稱' },
-    { field: 'TXN_Qty', header: '數量', format: formatAmount },
+    {
+      field: 'TXN_Qty',
+      header: '數量',
+      type: 'inputNumber', // 必須指定 type 才能編輯
+      format: formatAmount,
+      // 關鍵：根據 rowData 狀態決定是否禁用
+      disabled: (value: any, index?: number, rowData?: ProductDetail) => !rowData?.isQtyDiscEditable,
+      calculate: (rowData: ProductDetail, value: number) => {
+        const qty = value || 0;
+        const prc = rowData.PLU_SalePrc || 0;
+        const disc = rowData.TXN_Disc || 0;
+        return {
+          Unitprice: qty * prc,
+          // 公式：數量 * 單價 + 折扣 (折扣通常為負數)
+          TXN_SaleAmt: (qty * prc) + disc
+        };
+      }
+    },
     { field: 'PLU_SalePrc', header: '單價金額', format: formatAmount },
-    { field: 'Unitprice', header: '單價小計金額', format: formatAmount },
-    { field: 'TXN_Disc', header: '單價折扣讓金額(負數)', format: formatAmount },
-    { field: 'TXN_SaleAmt', header: '單價銷售金額', format: formatAmount },
+    { field: 'Unitprice', header: '單價小計金額', format: formatAmount, aggregate: 'sum' },
+    {
+      field: 'TXN_Disc',
+      header: '單價折扣讓金額(負數)',
+      type: 'inputNumber',
+      format: formatAmount,
+      disabled: (value: any, index?: number, rowData?: ProductDetail) => !rowData?.isQtyDiscEditable,
+      calculate: (rowData: ProductDetail, value: number) => {
+        const qty = rowData.TXN_Qty || 0;
+        const prc = rowData.PLU_SalePrc || 0;
+        const disc = value || 0;
+        return {
+          TXN_SaleAmt: (qty * prc) + disc
+        };
+      },
+      aggregate: 'sum'
+    },
+    { field: 'TXN_SaleAmt', header: '單價銷售金額', format: formatAmount, aggregate: 'sum' },
   ];
   // 修改驗證邏輯：僅判斷目前的值是否包含在下拉選單中
   validateEntireRow = (rowData: ProductDetail): { isValid: boolean, errorMessage: string } => {
@@ -163,9 +196,17 @@ export class TLS55020CRUComponent extends BasicCruPageComponent<Tls55020MasterDa
     this.tls55020Service.queryTLS55020Detail(body).subscribe(res => {
       if (res.Data && res.Data.length > 0) {
         const detail = res.Data[0];
+        if (!this.rowdata) { return; }
+        // 判斷是否符合開放數量/折扣修改的條件
+        // 條件：GUI_Track + TXN_GUIBegNo 為空或全為0，且 TXN_TotGUI 為 0
+        const isInvoiceEmpty = (!this.rowdata.GUI_Track || this.rowdata.GUI_Track === '00') && (!this.rowdata.TXN_GUIBegNo || this.rowdata.TXN_GUIBegNo === '00000000');
+        const isAmountZero = this.rowdata.TXN_TotGUI === 0;
+        const allowQtyDiscEdit = isInvoiceEmpty && isAmountZero;
+
         this.data = (detail.ProductDetailList || []).map(item => ({
           ...item,
-          isEditable: item.PLU_MagNo === '1000000000001'
+          isEditable: item.PLU_MagNo === '1000000000001',
+          isQtyDiscEditable: allowQtyDiscEdit // 符合條件則開啟該行編輯權限
         }));
         this.data2 = detail.PaymentDetailsList.map(item => ({
           ...item,
@@ -182,10 +223,16 @@ export class TLS55020CRUComponent extends BasicCruPageComponent<Tls55020MasterDa
         this.loading = false;
         return;
       }
-      const updatedDetails = this.data.filter(item => item.isEditable).map(item => ({
-        ID: item.ID,
-        PLU_MagNo: item.PLU_MagNo
-      }));
+      // 2. 業務邏輯驗證：整筆交易銷售金額加總必須為 0
+      // 注意：這裡要加總所有的 data (包含不可編輯的)，確認結果
+      const totalSaleAmt = this.data.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0);
+
+      if (totalSaleAmt !== 0) {
+        this.messageService.errorBubble(`修改後整筆交易銷售金額為 ${totalSaleAmt}，不符合金額必須為 0 的限制`);
+        this.loading = false;
+        return;
+      }
+      const updatedDetails = this.data.filter(item => item.isEditable);
 
       if (updatedDetails.length === 0) {
         this.messageService.warnBubble('沒有任何可修改的明細資料');

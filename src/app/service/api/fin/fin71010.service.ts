@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { FIN71010Data, FIN71010Update } from '@pages/fin/fin71010/fin71010.model';
+import { FIN71010Data, FIN71010DropdownItem, FIN71010Update } from '@pages/fin/fin71010/fin71010.model';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { Observable, take, tap } from 'rxjs';
@@ -22,6 +22,13 @@ export class FIN71010Service {
     return this.http.post<BaseQueryResponse<FIN71010Data>>(`${apiUrl}/queryFIN71010`, payload).pipe(
       take(1),
       tap(res => this.logger.debug('查詢FIN71010結果:', [res.Data])),
+    );
+  }
+
+  public queryFIN71010Dropdown(argNo: string): Observable<BaseQueryResponse<FIN71010DropdownItem>> {
+    return this.http.post<BaseQueryResponse<FIN71010DropdownItem>>(`${apiUrl}/queryFIN71010Dropdown`, { ARG_NO: argNo }).pipe(
+      take(1),
+      tap(res => this.logger.debug(`查詢FIN71010下拉選單(${argNo})結果:`, [res.Data])),
     );
   }
 

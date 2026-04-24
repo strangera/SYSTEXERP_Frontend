@@ -86,9 +86,9 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
     { field: 'ORG_ID', header: '費用科目組織代碼' },
     { field: 'Dtl_OrgName', header: '費用科目組織名稱' },
     { field: 'PUR_Date', header: '憑證日期', format: formatDate },
-    { field: 'PCS_Net', header: '未稅金額', format: formatAmount, isTotal: true },
-    { field: 'PCS_Tax', header: '稅額', format: formatAmount, isTotal: true },
-    { field: 'PCS_Amt', header: '含稅金額', format: formatAmount, isTotal: true },
+    { field: 'PCS_Net', header: '未稅金額', format: formatAmount },
+    { field: 'PCS_Tax', header: '稅額', format: formatAmount },
+    { field: 'PCS_Amt', header: '含稅金額', format: formatAmount },
   ];
 
   PCS_No_Options: { No: string; Name: string; Label: string }[] = []; // 零用金單號選項
