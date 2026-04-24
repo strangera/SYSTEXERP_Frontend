@@ -167,9 +167,11 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
   ngOnInit(): void {
     this.initializePage('ASS11040', this.dataForm);
     this.loadBigCategoryOptions();
-    this.loadMidCategoryOptions('');
-    this.loadSmlCategoryOptions('');
-    this.setupCategoryListeners(); //大中小分類欄位連動監聽
+    if (this.isFormCreateable) {
+      this.loadMidCategoryOptions('');
+      this.loadSmlCategoryOptions('');
+      this.setupCategoryListeners(); //大中小分類欄位連動監聽
+    }
     this.dropdownApiService.querySys3100().pipe(untilDestroyed(this)).subscribe(res => {
       this.deptCodeOptions = res ?? [];
     });
@@ -256,8 +258,8 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
       illustrate: row.NOTES ?? null,
     });
     this.initializeMediaFromPhotoUrl(row.PHOTO_URL ?? null);
-    // if (row.B_CLASS_ID) this.loadMidCategoryOptions(row.B_CLASS_ID);
-    // if (row.M_CLASS_ID) this.loadSmlCategoryOptions(row.M_CLASS_ID);
+    if (row.B_CLASS_ID) this.loadMidCategoryOptions(row.B_CLASS_ID);
+    if (row.M_CLASS_ID) this.loadSmlCategoryOptions(row.M_CLASS_ID);
     this.patchInProgress = false;
   }
 
