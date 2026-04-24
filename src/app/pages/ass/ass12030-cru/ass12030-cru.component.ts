@@ -35,6 +35,8 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { AsyncPipe } from '@angular/common';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
 /** 進入新增頁時的套用模式：已詢價=套用請購清單，未詢價=套用詢價清單 */
 export type CreateMode = 'quoted' | 'unquoted';
@@ -47,6 +49,7 @@ export type CreateMode = 'quoted' | 'unquoted';
   styleUrl: './ass12030-cru.component.scss',
   standalone: true,
   imports: [
+    AsyncPipe,
     MenubarComponent,
     ButtonComponent,
     PanelModule,
@@ -81,8 +84,10 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
 
   /** 申請人下拉選項 */
   empIdOptions: { value: string; label: string }[] = [];
+  /** 部門下拉選項 */
+  orgIdOptions = this.dropdownApiService.querySys3100();
   /** 委託部門下拉選項 */
-  orgIdOptions: { value: string; label: string }[] = [];
+  entrustOrgIdOptions: { value: string; label: string }[] = [];
   /** 稅別下拉選項 */
   taxCodeOptions: { value: string; label: string }[] = [];
   /** 支出類型下拉選項 */
@@ -144,7 +149,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       type: 'dropdown',
       optionLabel: 'label',
       optionValue: 'value',
-      options: () => this.orgIdOptions,
+      options: () => this.entrustOrgIdOptions,
       validate: [validateRequired],
     },
     {
@@ -198,6 +203,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   constructor(
     private readonly ass12030Service: ASS12030Service,
     private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly fin11040Service: Fin11040Service,
     private readonly ass11100Service: ASS11100Service,
     private readonly ass12010Service: ASS12010Service,
@@ -266,7 +272,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         const list = res.Data ?? [];
-        this.orgIdOptions = list.map((item: { No?: string; Name?: string }) => ({
+        this.entrustOrgIdOptions = list.map((item: { No?: string; Name?: string }) => ({
           value: item.No ?? '',
           label: `${item.No ?? ''} - ${item.Name ?? ''}`,
         }));

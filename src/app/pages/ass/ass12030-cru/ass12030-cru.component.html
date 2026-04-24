@@ -46,7 +46,7 @@
           <app-dropdown
             label="部門代號"
             controlName="ORG_ID"
-            [options]="orgIdOptions"
+            [options]="orgIdOptions | async"
             optionLabel="label"
             optionValue="value"
             [control]="dataForm.controls.ORG_ID"
