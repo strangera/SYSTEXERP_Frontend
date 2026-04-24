@@ -190,9 +190,9 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
     { field: 'Detail_CNT', header: '明細筆數' },
   ];
   applyPurchaseColumns: Column[] = [
-    { field: 'BATCH_NO', header: '登錄批號' },
+    { field: 'BATCH_ID', header: '登錄批號' },
     { field: 'SUPPLIER_ID', header: '供應商' },
-    { field: 'LOG_DATE', header: '登錄日期', format: formatDate },
+    { field: 'CRT_Date', header: '登錄日期', format: formatDate },
     { field: 'EXPDATE', header: '報價期限' },
     { field: 'NOTES', header: '說明' },
   ];
