@@ -48,7 +48,7 @@
         ></app-input-number>
       </div>
       <hr />
-      <div class="grid p-fluid">
+      <!-- <div class="grid p-fluid">
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="驗收單號"
@@ -56,90 +56,19 @@
           [control]="dataForm.controls.TOKEN_NO"
           [submitted]="submitted"
         ></app-input-text>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="單據種類"
-          controlName="RECEIPT_TYPE"
-          [options]="RECEIPT_TYPE_Options"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataForm.controls.RECEIPT_TYPE"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-input-text
-          class="col-12 md:col-6 lg:col-4"
-          label="發票/收據號碼"
-          controlName="RECEIPT_NO"
-          [control]="dataForm.controls.RECEIPT_NO"
-          [submitted]="submitted"
-        ></app-input-text>
-      </div>
-      <div class="grid p-fluid">
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="發票/收據日期"
-          [control]="dataForm.controls.RECEIPT_DATE"
-          [submitted]="submitted"
-        ></app-calendar>
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="票據到期日"
-          [control]="dataForm.controls.TICKET_DATE"
-          [submitted]="submitted"
-        ></app-calendar>
-        <app-calendar
-          class="col-12 md:col-6 lg:col-4"
-          calendarType="dateMonthOne"
-          label="申報年月"
-          [control]="dataForm.controls.DEC_YM"
-          [submitted]="submitted"
-        ></app-calendar>
-      </div>
-      <div class="grid p-fluid">
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="發票格式"
-          controlName="INV_FORMAT"
-          [options]="INV_FORMAT_Options"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataForm.controls.INV_FORMAT"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="課稅別"
-          controlName="TAX_CODE"
-          [options]="TAX_CODE_Options"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataForm.controls.TAX_CODE"
-          [submitted]="submitted"
-        ></app-dropdown>
-        <app-dropdown
-          class="col-12 md:col-6 lg:col-4"
-          label="扣抵別"
-          controlName="REDU_CODE"
-          [options]="REDU_CODE_Options"
-          optionLabel="label"
-          optionValue="value"
-          [control]="dataForm.controls.REDU_CODE"
-          [submitted]="submitted"
-        ></app-dropdown>
-      </div>
-
+      </div> -->
       <hr />
       <div class="grid p-fluid">
         <app-table-edit
-          title="供應商資料"
+          title="發票資料"
           class="col-12"
           [columns]="supplierColumn"
           [data]="supplierData"
           [loading]="loading"
           [defaultInsertData]="defaultsupplier"
           (dataChange)="onSupplierDataChange($event)"
+          [canInsert]="supplierData.length < 1"
+          [rowValidate]="validateSupplierRow"
         ></app-table-edit>
         <app-table-edit
           title="單據資料"
@@ -149,6 +78,7 @@
           [loading]="loading"
           (dataChange)="onItemDataChange($event)"
           [rowValidate]="validateItemRow"
+          [showFooter]="true"
         ></app-table-edit>
       </div>
       <div

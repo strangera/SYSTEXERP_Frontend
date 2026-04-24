@@ -10,19 +10,13 @@ import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { finalize, Observable, of } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import * as XLSX from 'xlsx';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CustomFooterTableComponent } from '../../../shared/componentkit/custom-footer-table/customFooterTable.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount, formatDate, formatOptionLabel } from '../../../shared/componentkit/table/table.model';
 import { option } from '../../../shared/models/sys/sysb000.model';
 
@@ -67,28 +61,20 @@ export interface ENG2001 {
 @Component({
   selector: 'app-ass21030',
   templateUrl: './ass21030.component.html',
-  styleUrl: './ass21030.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
     ButtonComponent,
     ButtonModule,
-    InputTextComponent,
-    InputNumberComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
     CalendarComponent,
-    CalendarRangeComponent,
-    CalendarRangeQuickComponent,
     DropdownComponent,
     MultiSelectComponent,
     FileUploadModule,
-    InputTextComponent,
-    TableComponent,
     CustomFooterTableComponent,
     TranslateModule]
-
 })
 
 // 能源抄表作業
@@ -438,60 +424,69 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
   /**
   * 匯出Excel範本
   */
-  onExportTemplate(): void {
-    // 建立工作簿
-    const wb = XLSX.utils.book_new();
+  async onExportTemplate() {
+    this.btnTemplateLoading = true;
+    try {
+      const XLSX = await import('xlsx-js-style');
+      // 建立工作簿
+      const wb = XLSX.utils.book_new();
 
-    // 2. 定義標題列與範例資料
-    // 標題包含：項次, 結算年月(yyyymm), 能源錶號(5碼), 能源類型(G01:水 G02:電 G03:瓦斯), 本次抄錶日(yyyy/mm/dd), 本次抄錶度, 結算金額
-    const header = [
-      '項次',
-      '結算年月\n(yyyymm)',
-      '能源錶號\n(5碼)',
-      '能源類型\n(G01:水 G02:電 G03:瓦斯)',
-      '本次抄錶日\n(yyyy/mm/dd)',
-      '本次抄錶度',
-      '結算金額'
-    ];
+      // 2. 定義標題列與範例資料
+      // 標題包含：項次, 結算年月(yyyymm), 能源錶號(5碼), 能源類型(G01:水 G02:電 G03:瓦斯), 本次抄錶日(yyyy/mm/dd), 本次抄錶度, 結算金額
+      const header = [
+        '項次',
+        '結算年月\n(yyyymm)',
+        '能源錶號\n(5碼)',
+        '能源類型\n(G01:水 G02:電 G03:瓦斯)',
+        '本次抄錶日\n(yyyy/mm/dd)',
+        '本次抄錶度',
+        '結算金額'
+      ];
 
-    // 建立工作表
-    const ws = XLSX.utils.aoa_to_sheet([header]);
+      // 建立工作表
+      const ws = XLSX.utils.aoa_to_sheet([header]);
 
-    // 3. 設定欄寬 (根據內容長度微調)
-    ws['!cols'] = [
-      { wch: 8 },  // 項次
-      { wch: 15 }, // 結算年月
-      { wch: 15 }, // 能源錶號
-      { wch: 35 }, // 能源類型 (欄位較長)
-      { wch: 20 }, // 本次抄錶日
-      { wch: 15 }, // 本次抄錶度
-      { wch: 15 }  // 結算金額
-    ];
+      // 3. 設定欄寬 (根據內容長度微調)
+      ws['!cols'] = [
+        { wch: 8 },  // 項次
+        { wch: 15 }, // 結算年月
+        { wch: 15 }, // 能源錶號
+        { wch: 35 }, // 能源類型 (欄位較長)
+        { wch: 20 }, // 本次抄錶日
+        { wch: 15 }, // 本次抄錶度
+        { wch: 15 }  // 結算金額
+      ];
 
-    // 4. 🔑 設定儲存格格式
-    // 我們將 B, C, D 欄（索引 1, 2, 3）設定為文字格式，防止前導零消失
-    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+      // 4. 🔑 設定儲存格格式
+      // 我們將 B, C, D 欄（索引 1, 2, 3）設定為文字格式，防止前導零消失
+      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
 
-    // 遍歷每一列（從第 2 列開始，並預留 100 列空列供使用者填寫）
-    for (let row = 1; row <= range.e.r + 100; row++) {
-      [1, 2, 3].forEach(colIdx => { // 針對 結算年月、能源錶號、能源類型
-        const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIdx });
+      // 遍歷每一列（從第 2 列開始，並預留 100 列空列供使用者填寫）
+      for (let row = 1; row <= range.e.r + 100; row++) {
+        [1, 2, 3].forEach(colIdx => { // 針對 結算年月、能源錶號、能源類型
+          const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIdx });
 
-        if (!ws[cellAddress]) {
-          ws[cellAddress] = { t: 's', v: '' };
-        }
+          if (!ws[cellAddress]) {
+            ws[cellAddress] = { t: 's', v: '' };
+          }
 
-        ws[cellAddress].t = 's'; // 設定為 String
-        ws[cellAddress].z = '@'; // 強制 Excel 識別為文字格式
-      });
+          ws[cellAddress].t = 's'; // 設定為 String
+          ws[cellAddress].z = '@'; // 強制 Excel 識別為文字格式
+        });
+      }
+
+      console.log('📤 匯出能源結算 Excel 範本:', [wb, ws]);
+
+      // 5. 將工作表加入工作簿並下載
+      XLSX.utils.book_append_sheet(wb, ws, '能源結算範本');
+
+      const fileName = `EnergyUploadSample.xlsx`;
+      XLSX.writeFile(wb, fileName);
+    } catch (error) {
+      console.error('加載 Excel 套件失敗', error);
+      this.messageService.errorBubble('無法產生範本，請稍後再試');
+    } finally {
+      this.btnTemplateLoading = false;
     }
-
-    console.log('📤 匯出能源結算 Excel 範本:', [wb, ws]);
-
-    // 5. 將工作表加入工作簿並下載
-    XLSX.utils.book_append_sheet(wb, ws, '能源結算範本');
-
-    const fileName = `EnergyUploadSample.xlsx`;
-    XLSX.writeFile(wb, fileName);
   }
 }

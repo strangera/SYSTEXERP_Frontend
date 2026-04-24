@@ -27,16 +27,14 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   @Input() override controlName = '';
   @Input() set control(value: FormControl) { this._control = value; }
   @Input() set options(value: any[] | null) {
-    // 當 options 收到資料時，停止載入
     if (value !== null) {
       this.loading = false;
-      this._options = value;
+      this._options = [...value]; // 使用 spread operator 確保參考更新
     } else {
-      // 當 options 收到 null 時，表示開始載入
       this.loading = true;
-      this._options = []; // 清空選項，避免顯示舊資料
+      this._options = [];
     }
-  };
+  }
   get options(): any[] { return this._options; }
   private _options: any[] = [];
   @Input() optionLabel = 'label'; // 資料的 Label
