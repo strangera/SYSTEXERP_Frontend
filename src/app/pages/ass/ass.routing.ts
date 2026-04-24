@@ -89,8 +89,8 @@ export const assRoutes: Routes = [
   { path: 'ass16090cru', loadComponent: () => import('./ass16090-cru/ass16090-cru.component').then(m => m.ASS16090CRUComponent), data: { progNo: 'ASS16090' } },
   { path: 'ass17010', loadComponent: () => import('./ass17010/ass17010.component').then(m => m.ASS17010Component), data: { progNo: 'ASS17010' } }, // 領用明細表
   { path: 'ass17020', loadComponent: () => import('./ass17020/ass17020.component').then(m => m.ASS17020Component), data: { progNo: 'ASS17020' } }, // 領用統計表
-  // { path: 'ass17030', loadComponent: () => import('./ass17030/ass17030.component').then(m => m.ASS17030Component),data: {progNo:'ASS17030'} }, // 領用發料統計表
-  // { path: 'ass17040', loadComponent: () => import('./ass17040/ass17040.component').then(m => m.ASS17040Component),data: {progNo:'ASS17040'} }, // 領用退料統計表
+  { path: 'ass17030', loadComponent: () => import('./ass17030/ass17030.component').then(m => m.ASS17030Component), data: { progNo: 'ASS17030' } }, // 領用發料統計表
+  { path: 'ass17040', loadComponent: () => import('./ass17040/ass17040.component').then(m => m.ASS17040Component), data: { progNo: 'ASS17040' } }, // 領用退料統計表
   { path: 'ass17050', loadComponent: () => import('./ass17050/ass17050.component').then(m => m.ASS17050Component), data: { progNo: 'ASS17050' } }, // 使用統計月報表
   { path: 'ass17060', loadComponent: () => import('./ass17060/ass17060.component').then(m => m.ASS17060Component), data: { progNo: 'ASS17060' } }, // 調撥明細表
   { path: 'ass17070', loadComponent: () => import('./ass17070/ass17070.component').then(m => m.ASS17070Component), data: { progNo: 'ASS17070' } }, // 報廢明細表

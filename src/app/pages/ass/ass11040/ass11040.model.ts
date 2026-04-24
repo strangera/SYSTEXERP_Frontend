@@ -89,6 +89,7 @@ export interface UpdateASS11040Request {
   GOODS_NAME?: string | null;
   BAR_CODE?: string | null;
   PHOTO_URL?: string | null;
+  ORG_ID?: string | null;
   MATERIAL_TYPE?: string | null;
   B_CLASS_ID?: string | null;
   M_CLASS_ID?: string | null;
@@ -204,6 +205,10 @@ export interface QueryASS11040Response {
   GOODS_ID?: string | null;
   /** 品項名稱 */
   GOODS_NAME?: string | null;
+  /** 會計歸屬單位代碼 */
+  ORG_ID?: string | null;
+  /** 會計歸屬單位名稱 */
+  ORG_NAME?: string | null;
   /** 大分類代碼 */
   B_CLASS_ID?: string | null;
   /** 大分類名稱 */
@@ -218,8 +223,6 @@ export interface QueryASS11040Response {
   S_CLASS_NAME?: string | null;
   /** 品項類別屬性代碼 */
   MATERIAL_TYPE?: string | null;
-  /** 品項類別屬性名稱 */
-  MATERIAL_TYPE_NAME?: string | null;
   /** 備註說明 */
   NOTES?: string | null;
   /** 條碼 */
@@ -236,20 +239,16 @@ export interface QueryASS11040Response {
   WEIGHT_KG?: number | null;
   /** 基本單位代碼 */
   UNIT?: string | null;
-  /** 基本單位名稱 */
-  UNIT_NAME?: string | null;
   /** 包裝單位代碼 */
   PACK_UNIT?: string | null;
-  /** 包裝單位名稱 */
-  PACK_UNIT_NAME?: string | null;
   /** 包裝數量 */
   PACK_NUM?: number | null;
+  /** 成本單價 */
+  COST_PRICE?: number | null;
   /** 稅別代碼 */
   TAX_CODE?: string | null;
   /** 保固方式代碼 */
   MT_MODE?: string | null;
-  /** 保固方式名稱 */
-  MT_MODE_NAME?: string | null;
   /** 維保廠商 */
   MT_SUPP?: string | null;
   /** 保固年 */
@@ -260,8 +259,6 @@ export interface QueryASS11040Response {
   MT_DAY?: number | null;
   /** 保養方式代碼 */
   IVN_MODE?: string | null;
-  /** 保養方式名稱 */
-  IVN_MODE_NAME?: string | null;
   /** 保養廠商 */
   IVN_SUPP?: string | null;
   /** 可維修年 */
