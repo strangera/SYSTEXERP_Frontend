@@ -76,11 +76,10 @@
           <div class="grid justify-content-end">
             <app-button
               btnType="clear"
-              (clickEvent)="onClearForm()"
+              [form]="queryForm"
             ></app-button>
             <app-button
               btnType="query"
-              (clickEvent)="onSubmitQuery(queryForm)"
               [loading]="loading"
             ></app-button>
           </div>
@@ -101,7 +100,8 @@
       [showReorder]="false"
       [showManage]="false"
       [showSummary]="true"
-      [lazy]="false"
+      [loading]="tableLoading()"
+      [lazy]="true"
     >
       <header>
         <div class="flex justify-content-end gap-2">

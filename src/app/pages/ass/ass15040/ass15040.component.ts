@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS15040Service } from '@service/api/ass/ass15040.service';
@@ -39,7 +39,7 @@ import { PrintASS15040Request, QueryASS15040Request, QueryASS15040Response } fro
 })
 export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Response> implements OnInit {
   queryForm = this.formBuilder.group({
-    baseYYMM: [null as Date | string | null], // 基準日 YYYYMM
+    baseYYMM: [null as Date | string | null, Validators.required], // 基準日 YYYYMM
     keeperUnit: [null as string | null], // 保管單位
     accountCode: [null as string | null], // 會計科目代碼
     itemCode: [null as string | null], // 品項編號
@@ -141,17 +141,6 @@ export class ASS15040Component extends BasicQueryPageComponent<QueryASS15040Resp
 
   onSubmitQuery(frm: FormGroup): void {
     this.onSubmit(frm);
-  }
-
-  onClearForm(): void {
-    this.queryForm.reset({
-      baseYYMM: null,
-      keeperUnit: null,
-      accountCode: null,
-      itemCode: null,
-    });
-    this.data = [];
-    this.totalRecords = 0;
   }
 
   override onCreate(): void {
