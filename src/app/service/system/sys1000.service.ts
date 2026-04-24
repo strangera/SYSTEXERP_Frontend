@@ -22,7 +22,7 @@ export interface Sys1000 extends Sys1000Base {
   Children: Sys1000Children[];
 }
 
-export type SystemOption = Pick<Sys1000Children, 'SYS_Code' | 'SYS_Name' | 'SYS_Sort'>;
+export type SystemOption = Pick<Sys1000Children, 'SYS_Code' | 'SYS_Name' | 'SYS_Sort' | 'CRT_USR_Name'>;
 
 
 /**
@@ -62,6 +62,7 @@ export class SystemOptionsService {
       }
 
       acc[item.SYS_Type].push({
+        ...item,
         SYS_Code: item.SYS_Code,
         SYS_Name: item.SYS_Name,
         SYS_Sort: item.SYS_Sort,

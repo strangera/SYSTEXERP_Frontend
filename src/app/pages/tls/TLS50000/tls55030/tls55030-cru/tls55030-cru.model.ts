@@ -1,12 +1,18 @@
 import { getSYS1000 } from "@service/system/sys1000.service";
 import { EditColumn } from "@shared/componentkit/table-edit/table-edit.model";
-import { validateMinNumber, validateRequired } from "@shared/componentkit/table-edit/validate-field.model";
+import { validateDuplicate, validateMaxLength, validateMinNumber, validateRequired } from "@shared/componentkit/table-edit/validate-field.model";
 import { formatDate } from "@shared/componentkit/table-report/table-report.model";
 import { formatAmount } from "@shared/componentkit/table/table.model";
-
+import { AA00000000 } from "../../tls55040/tls55040-cru/tls55040-cru.component";
+import { IRebateDetailForCRU } from "./tls55030-cru.component";
+export function toUpperCase(rowData: IRebateDetailForCRU): void {
+  if (rowData && rowData.PUR_GUINo) {
+    rowData.PUR_GUINo = rowData.PUR_GUINo.toUpperCase();
+  }
+}
 export const columns: EditColumn[] = [
-  { field: 'TABTYPE', header: '單據別', format: (value) => getSYS1000('TABTYPE', value) },
-  { field: 'PUR_GUINo', header: '發票/收據編號' },
+  { field: 'TABTYPE', header: '單據別', format: (value) => getSYS1000('TABTYPE', value), width: '85px' },
+  { field: 'PUR_GUINo', header: '發票/收據編號', type: 'input', validate: [validateDuplicate, validateRequired, validateMaxLength(10), AA00000000], onBlur: (rowData) => toUpperCase(rowData), width: '100px' },
   { field: 'PUR_TaxType', header: '課稅別', format: (value) => getSYS1000('PUR_TaxType', value) },
   { field: 'PUR_DirectType', header: '發票用途', format: (value) => getSYS1000('PUR_DirectType', value) },
   { field: 'PUR_Amt', header: '發票金額', format: formatAmount },

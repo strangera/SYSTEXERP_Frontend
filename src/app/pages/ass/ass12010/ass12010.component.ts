@@ -12,7 +12,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { AddButton, ReportColumn, formatDate } from '@shared/componentkit/table-report/table-report.model';
+import { AddButton, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { Actions } from '@shared/service/permission-guard.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
@@ -183,6 +183,11 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
    */
   public queryFunction = (body: ASS12010QueryRequest): Observable<ApiResponse<ASS12010Data[]>> => {
     const rawFormValue = this.queryForm.getRawValue();
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const pageSize: number = body.PageSize || (body as any).pageSize;
+    const pageIndex: number = body.PageIndex || (body as any).pageIndex;
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
     const payload: ASS12010QueryRequest = {
       WH_ID: rawFormValue.WH_ID || undefined,
       NEED_ID: rawFormValue.NEED_ID || undefined,
@@ -192,8 +197,8 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
       APPLY_DATE_S: rawFormValue.APPLY_DATE_S || undefined,
       APPLY_DATE_E: rawFormValue.APPLY_DATE_E || undefined,
       NEEDS_STATUS: rawFormValue.NEEDS_STATUS || undefined,
-      PageSize: body.PageSize,
-      PageIndex: body.PageIndex,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
       SortBy: body.SortBy,
     };
     // 移除空值

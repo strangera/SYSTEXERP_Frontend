@@ -111,19 +111,7 @@
           (click)="onCancel()"
         ></app-button>
 
-        <app-button
-          *ngIf="isEditMode"
-          [type]="'button'"
-          label="作廢"
-          (click)="onVoid()"
-        ></app-button>
 
-        <app-button
-          *ngIf="isEditMode"
-          [type]="'button'"
-          label="確認審核"
-          (click)="onApprove()"
-        ></app-button>
 
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>

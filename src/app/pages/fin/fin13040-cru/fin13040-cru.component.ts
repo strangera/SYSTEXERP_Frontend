@@ -7,7 +7,6 @@ import { Fin13040Service } from '@service/api/fin/fin13040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { AutoCompleteComponent } from '@shared/componentkit/auto-complete/auto-complete.component';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -27,7 +26,6 @@ import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
   templateUrl: './fin13040-cru.component.html',
   standalone: true,
   imports: [
-    AutoCompleteComponent,
     MenubarComponent,
     PanelModule,
     FormsModule,
