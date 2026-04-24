@@ -667,6 +667,8 @@ export interface Css1005Query {
 export interface CssDropDownItem {
   No: string;
   Name: string;
+  /** CSS1005 專用：選 CLASS_ID 後自動帶出組織代碼 */
+  ORG_ID?: string;
 }
 
 /**
