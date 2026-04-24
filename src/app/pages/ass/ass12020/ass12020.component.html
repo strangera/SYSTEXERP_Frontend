@@ -20,7 +20,7 @@
             <app-dropdown
               label="品項編號"
               controlName="itemCode"
-              [options]="itemCodeOptions"
+              [options]="itemCodeOptions | async"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.itemCode"
