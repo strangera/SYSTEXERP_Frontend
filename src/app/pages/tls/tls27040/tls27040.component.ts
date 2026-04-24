@@ -67,8 +67,8 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     TxnTime_End: [getDateTime(undefined, 23, 59, 59, 999)], // 交易時間迄
     CrdNo: [null, [Validators.maxLength(32)]],              // 卡號
     TmID: [null, [Validators.maxLength(8)]],                // EDC號碼
-    ReqDate_Start: [null],                                  // 請款日期起
-    ReqDate_End: [null],                                    // 請款日期迄
+    BatCloseDate_Start: [null],                             // 檔案日期起
+    BatCloseDate_End: [null],                               // 檔案日期迄
     CrdTxnFgList: [null],                                   // 交易類別 資料型態，C=一般交易、I=分期交易、R=紅利交易
     EntryFgList: [null],                                    // 輸入狀態
     ApprovalCode: [null, [Validators.maxLength(6)]],        // 核准碼
@@ -116,8 +116,8 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
         TxnTime_End: toHHmm(frm.value.TxnTime_End),
         TxnTypeList: processSelectedCodes(frm.value.TxnTypeList),
         CrdTxnFgList: processSelectedCodes(frm.value.CrdTxnFgList),
-        ReqDate_End: this.datePipe.transform(frm.value.ReqDate_End, 'yyyy-MM-dd'),
-        ReqDate_Start: this.datePipe.transform(frm.value.ReqDate_Start, 'yyyy-MM-dd'),
+        BatCloseDate_Start: this.datePipe.transform(frm.value.BatCloseDate_Start, 'yyyy-MM-dd'),
+        BatCloseDate_End: this.datePipe.transform(frm.value.BatCloseDate_End, 'yyyy-MM-dd'),
       }
       this.tls27040Service.queryTLS27040(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
