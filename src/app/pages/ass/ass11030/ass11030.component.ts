@@ -11,8 +11,8 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
@@ -137,13 +137,18 @@ export class ASS11030Component extends BasicQueryPageComponent<ASS11030Data> imp
    */
   public queryFunction = (body: ASS11030QueryRequest): Observable<ApiResponse<ASS11030Data[]>> => {
     const rawFormValue = this.queryForm.getRawValue();
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const pageSize: number = body.PageSize || (body as any).pageSize;
+    const pageIndex: number = body.PageIndex || (body as any).pageIndex;
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
     const payload: ASS11030QueryRequest = {
       S_CLASS_ID: rawFormValue.S_CLASS_ID || undefined,
       M_CLASS_ID: rawFormValue.M_CLASS_ID || undefined,
       B_CLASS_ID: rawFormValue.B_CLASS_ID || undefined,
       NOTES_KEYWORD: rawFormValue.NOTES_KEYWORD || undefined,
-      PageSize: body.PageSize,
-      PageIndex: body.PageIndex,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
       SortBy: body.SortBy,
     };
     // 移除空值

@@ -58,11 +58,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="FIN24020" dataKey="ACP_No" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [loading]="loading" [showDelete]="false" [editDisabled]="editDisabledByVouNo" [showDetail]="true"
-    expansionDataKey="Details" [expansionColumns]="detailColumns" (edit)="onEdit($event, queryForm.getRawValue())"
-    (detail)="onDetail($event, queryForm.getRawValue())" [lazy]="true" [rows]="30"
-    [multiSortMeta]="[{ field: 'ACP_No', order: -1 }]" [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-    [expansionRowsPerPageOptions]="expansionRowsPerPageOptions" (lazyLoadData)="handleLazyLoad($event)"
-    [Conditions]="lastQueryBody" [PrintColumn]="printColumns" apiUrl='queryForExportFIN24020'></app-table>
+  <app-table-report tableKey="FIN24020" dataKey="ACP_No" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    [loading]="loading" [showDelete]="false" [editDisabled]="editDisabledByVouNo"
+    (edit)="onEdit($event, queryForm.getRawValue())" (detail)="onDetail($event, queryForm.getRawValue())"
+    [lastQueryBody]="lastQueryBody" [lazy]="false"></app-table-report>
 </div>

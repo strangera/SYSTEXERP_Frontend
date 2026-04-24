@@ -219,6 +219,11 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     this.selectedRows = [];
   }
 
+  // 離開：導回查詢頁
+  goBack() {
+    super.onCancel();
+  }
+
   // 取消：還原表單與 contacts（不導回查詢頁）
   override onCancel(returnValue?: any) {
     // 還原表單值

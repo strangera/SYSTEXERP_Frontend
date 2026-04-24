@@ -23,13 +23,13 @@ import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response'
 import { AccordionModule } from 'primeng/accordion';
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { ButtonModule } from 'primeng/button';
-import { FileSelectEvent } from 'primeng/fileupload';
-import { FileUploadHandlerEvent } from 'primeng/fileupload';
+import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { finalize } from 'rxjs/operators';
 import {
   ASS13100ExportPDFRequest,
   ASS13100QueryRow,
   QueryASS13100Request,
+  Status,
 } from './ass13100.model';
 
 // 3.1.3.10 資產清點作業
@@ -55,7 +55,7 @@ import {
     DialogComponent,
     FileUploadComponent,
     BreadcrumbModule
-],
+  ],
 })
 export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow> implements OnInit {
   @ViewChild(FileUploadComponent) fileUpload?: FileUploadComponent;
@@ -85,7 +85,6 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
   data: ASS13100QueryRow[] = [];
   totalRecords = 0;
   columns: ReportColumn[] = [
-    { field: 'SeqNo', header: '序號' },
     { field: 'CHK_ID', header: '清點單號' },
     { field: 'CHK_DATE', header: '清點日期' },
     { field: 'FIRST_CHK_EMP_ID', header: '清點人代碼' },
@@ -93,6 +92,8 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
   ];
   lastQueryBody?: QueryASS13100Request;
   selectedItems: ASS13100QueryRow[] = [];
+  /** 已結案 的 checkbox 不可選取 */
+  readonly isRowSelectable = (row: ASS13100QueryRow): boolean => row?.STATUS !== Status.Completed;
 
   /** 上傳盤點機檔案 Dialog 狀態 */
   uploadDialogVisible = false;

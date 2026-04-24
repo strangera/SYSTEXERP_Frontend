@@ -11,6 +11,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 import { Observable, of } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 
@@ -22,23 +23,28 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   createPaginationConfig,
   formatDateToYYYY_MM_DD,
 } from '../../../shared/componentkit/table/table.model';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 import {
   ApiResponse,
-  ASS16070Service,
   Ass16070DetailResponse,
   Ass16070Row,
+  ASS16070Service,
+  QueryDDLASS16070Request,
+  QueryDDLASS16070Response,
 } from '../../../service/api/ass/ass16070.service';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
+import { Column } from '../../../shared/componentkit/table2/table2.model';
 
 interface SortItem {
   field: string;
@@ -64,6 +70,9 @@ interface SortItem {
     CalendarRangeComponent,
     InputTextComponent,
     TableReportComponent,
+    DialogComponent,
+    Table2Component,
+    InputTextModule,
   ],
 })
 export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
@@ -82,6 +91,28 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
   orgIdOptions: { value: string; label: string }[] = [];
   statusOptions: { value: string; label: string }[] = [];
   private _currentSortBy: SortItem[] = [];
+
+  /** 查詢頁品項 Dialog */
+  queryGoodsDialogVisible = false;
+  queryGoodsLoading = false;
+  queryGoodsList: QueryDDLASS16070Response[] = [];
+  queryGoodsSelectedRows: QueryDDLASS16070Response[] = [];
+  queryGoodsDisplay = '';
+
+  queryGoodsSearchForm = this.formBuilder.nonNullable.group({
+    GoodsPrefix: [''],
+    Keyword: [''],
+  });
+
+  queryGoodsColumns: Column[] = [
+    { field: 'GOODS_ID', header: '品項編號' },
+    { field: 'GOODS_NAME', header: '品項名稱' },
+    { field: 'UNIT', header: '單位' },
+    { field: 'APPLYABLE_QTY', header: '可申請數量' },
+    { field: 'ACTUAL_STOCK_QTY', header: '實際庫存量' },
+    { field: 'SAFE_QTY', header: '安全庫存量' },
+    { field: 'STOCK_SAFE', header: '庫存安全' },
+  ];
 
   readonly defaultSort: SortItem[] = [
     { field: 'APPLY_DATE', order: -1 },
@@ -175,6 +206,7 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
           this.handleQueryRestore(this.queryForm, this.ProgNo, (f) =>
             this.onSubmit(f)
           );
+          this.syncQueryGoodsDisplayFromForm();
         } else {
           this.onClear(this.queryForm);
           this.data = [];
@@ -325,10 +357,10 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
       MID: 0,
       OUT_WH_ID: raw.OUT_WH_ID || null,
       IN_WH_ID: raw.IN_WH_ID || null,
-      WHMOVE_ID: raw.WHMOVE_ID ? [raw.WHMOVE_ID] : null,
+      WHMOVE_ID: raw.WHMOVE_ID || null,
       WHMOVE_STATUS: raw.WHMOVE_STATUS || null,
       EMP_ID: raw.EMP_ID || null,
-      GOODS_ID: raw.GOODS_ID ? [raw.GOODS_ID] : null,
+      GOODS_ID: raw.GOODS_ID || null,
       ORG_ID: raw.ORG_ID || null,
       APPLY_DATE_S: this.toYMDOrNull(raw.APPLY_DATE_S),
       APPLY_DATE_E: this.toYMDOrNull(raw.APPLY_DATE_E),
@@ -347,47 +379,130 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
     return req;
   }
 
-public loadDetailForExpansion = (
-  row: Ass16070Row
-): Observable<{ Data: any[]; TotalCount: number }> => {
-  const whmoveId = row?.WHMOVE_ID;
+  public loadDetailForExpansion = (
+    row: Ass16070Row
+  ): Observable<{ Data: any[]; TotalCount: number }> => {
+    const id = row?.ID;
 
-  if (!whmoveId) {
-    console.warn('沒有 WHMOVE_ID', row);
-    return of({ Data: [], TotalCount: 0 });
-  }
+    if (!id) {
+      console.warn('沒有 ID，無法查詢明細', row);
+      row.Details = [];
+      return of({ Data: [], TotalCount: 0 });
+    }
 
-  if ((row as any)._detailLoaded) {
-    return of({
-      Data: Array.isArray(row.Details) ? row.Details : [],
-      TotalCount: Array.isArray(row.Details) ? row.Details.length : 0,
+    if ((row as any)._detailLoaded) {
+      return of({
+        Data: Array.isArray(row.Details) ? row.Details : [],
+        TotalCount: Array.isArray(row.Details) ? row.Details.length : 0,
+      });
+    }
+
+    (row as any).expansionLoading = true;
+
+    return this.ass16070Service
+      .queryDetailASS16070({ ID: Number(id) })
+      .pipe(
+        map((detailRes: ApiResponse<Ass16070DetailResponse>) => {
+          const details = Array.isArray(detailRes?.Data?.Details)
+            ? detailRes.Data.Details
+            : [];
+
+          row.Details = details;
+          (row as any)._detailLoaded = true;
+          (row as any).expansionLoading = false;
+
+          this.data = [...this.data];
+          this.cdr.detectChanges();
+
+          return {
+            Data: details,
+            TotalCount: details.length,
+          };
+        })
+      );
+  };
+
+  /** 查詢頁品項 Dialog：開啟 */
+  openQueryGoodsDialog(): void {
+    this.queryGoodsDialogVisible = true;
+    this.queryGoodsSelectedRows = [];
+    this.queryGoodsList = [];
+
+    this.queryGoodsSearchForm.patchValue({
+      GoodsPrefix: String(this.queryForm.controls.GOODS_ID.value ?? '').trim(),
+      Keyword: '',
     });
+
+    this.onSearchQueryGoods();
   }
 
-  (row as any).expansionLoading = true;
+  /** 查詢頁品項 Dialog：查詢，不需先輸入倉別，也不傳 WH_ID */
+  onSearchQueryGoods(): void {
+    const raw = this.queryGoodsSearchForm.getRawValue();
 
-  return this.ass16070Service
-    .queryDetailASS16070({ ID: whmoveId })
-    .pipe(
-      map((detailRes: ApiResponse<Ass16070DetailResponse>) => {
-        const details = Array.isArray(detailRes?.Data?.Details)
-          ? detailRes.Data.Details
-          : [];
+    const payload: QueryDDLASS16070Request = {
+      Keyword: String(raw.Keyword ?? '').trim(),
+      GoodsPrefix: String(raw.GoodsPrefix ?? '').trim(),
+    };
 
-        row.Details = details;
-        (row as any)._detailLoaded = true;
-        (row as any).expansionLoading = false;
+    this.queryGoodsLoading = true;
 
-        this.data = [...this.data];
-        this.cdr.detectChanges();
+    this.ass16070Service
+      .queryASS16070_DropDownList(payload)
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          this.queryGoodsList = Array.isArray(res?.Data) ? res.Data : [];
+          this.queryGoodsLoading = false;
+        },
+        error: (err) => {
+          console.error('queryASS16070_DropDownList error:', err);
+          this.queryGoodsLoading = false;
+        },
+      });
+  }
 
-        return {
-          Data: details,
-          TotalCount: details.length,
-        };
-      })
-    );
-};
+  onQueryGoodsSelectionChange(rows: QueryDDLASS16070Response[]): void {
+    this.queryGoodsSelectedRows = rows ?? [];
+  }
+
+  onQueryGoodsRowDetail(row: QueryDDLASS16070Response): void {
+    this.queryGoodsSelectedRows = row ? [row] : [];
+    this.confirmQueryGoodsSelection();
+  }
+
+  onQueryGoodsCancel(): void {
+    this.queryGoodsSelectedRows = [];
+    this.queryGoodsDialogVisible = false;
+  }
+
+  confirmQueryGoodsSelection(): void {
+    if (!this.queryGoodsSelectedRows || !this.queryGoodsSelectedRows.length) {
+      return;
+    }
+
+    const selected = this.queryGoodsSelectedRows[0];
+    const goodsId = String(selected?.GOODS_ID ?? '').trim();
+    const goodsName = String(selected?.GOODS_NAME ?? '').trim();
+
+    this.queryForm.patchValue({
+      GOODS_ID: goodsId || null,
+    });
+
+    this.queryGoodsDisplay = goodsId
+      ? goodsName
+        ? `${goodsId} - ${goodsName}`
+        : goodsId
+      : '';
+
+    this.queryGoodsSelectedRows = [];
+    this.queryGoodsDialogVisible = false;
+  }
+
+  private syncQueryGoodsDisplayFromForm(): void {
+    const goodsId = String(this.queryForm.controls.GOODS_ID.value ?? '').trim();
+    this.queryGoodsDisplay = goodsId || '';
+  }
 
   public queryASS16070ForReport = (body: any) =>
     this.ass16070Service.queryASS16070(this.buildPayload(body || {})).pipe(
@@ -498,6 +613,18 @@ public loadDetailForExpansion = (
           { field: 'WHMOVE_ID', order: -1 },
         ]),
       } as any,
+      { emitEvent: false }
+    );
+
+    this.queryGoodsDisplay = '';
+    this.queryGoodsDialogVisible = false;
+    this.queryGoodsSelectedRows = [];
+    this.queryGoodsList = [];
+    this.queryGoodsSearchForm.reset(
+      {
+        GoodsPrefix: '',
+        Keyword: '',
+      },
       { emitEvent: false }
     );
 

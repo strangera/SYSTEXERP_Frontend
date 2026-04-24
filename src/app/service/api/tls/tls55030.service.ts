@@ -121,9 +121,10 @@ export interface IReturnDetailByDisNoData {
  */
 export interface RebateDetailOptionQueryBody {
   VEN_No: string; // 廠商編號\
+  PUR_GUINo?: string; // 發票/收據號碼
   PageSize: number;
   PageIndex: number;
-  SortBy: SortMeta[];
+  SortBy?: SortMeta[];
 }
 
 /**
@@ -417,5 +418,14 @@ export class Tls55030Service {
       `${this.apiUrl}/queryTLS55030RebateDetail`,
       body
     );
+  }
+
+  /**
+   * 匯出折讓單
+   */
+  PrintTLS55030PDF(body: { DIS_No: string }): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/PrintTLS55030PDF`, body, {
+      responseType: 'blob'
+    });
   }
 }

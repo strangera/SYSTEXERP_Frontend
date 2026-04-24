@@ -55,6 +55,7 @@ export class ValidationService {
       dateNotAfterToday: '日期必須大於等於今日',
       containsFullWidth: '不可輸入全形字元，請切換為半形輸入。',
       accNoClassNoMismatch: '「科目代號」與「三碼代號」不符',
+      requireOneGroup: '請輸入「退出/折讓單號」或「發票號碼」擇一輸入',
     };
     return config[validatorName];
   }

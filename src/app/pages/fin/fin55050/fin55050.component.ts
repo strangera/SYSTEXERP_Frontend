@@ -77,6 +77,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   data: GroupedFIN55050Detail[] = [];
   selectedItems: GroupedFIN55050Detail[] = [];
   totalRecords = 0;
+  lastQueryConditions: ExportFIN55050Payload | null = null;
   OrgIdListOptions = this.dropdown.querySys3100();
   AccNoListOptions = this.dropdown.queryGls1005();
   VendorNoListOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
@@ -95,7 +96,29 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
   }
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
-      this.fin55050Service.queryFIN55050(form.getRawValue()).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((response) => {
+      const raw = this.queryForm.getRawValue();
+      const from = this.datePipe.transform(raw?.DateFrom, 'yyyy-MM-dd');
+      const to = this.datePipe.transform(raw?.DateTo, 'yyyy-MM-dd');
+      const payload: ExportFIN55050Payload = {
+        DateFrom: from ?? '',
+        DateTo: to ?? '',
+        OrgIdList: raw?.OrgIdList ?? [],
+        AccNoFrom: raw?.AccNoFrom ?? '',
+        AccNoTo: raw?.AccNoTo ?? '',
+        VendorFrom: raw?.VendorFrom ?? '',
+        VendorTo: raw?.VendorTo ?? '',
+        PTAFrom: raw?.PTAFrom ?? '',
+        PTATo: raw?.PTATo ?? '',
+        Target: raw?.Target ?? '',
+        Project: raw?.Project ?? '',
+        Notes: raw?.Notes ?? '',
+        VoucherType: raw?.VoucherType ?? '',
+        VouStatusList: raw?.VouStatusList ?? [],
+        IsTarget: raw?.IsTarget ?? '',
+        ReportMode: raw?.ReportMode ?? '',
+      };
+      this.fin55050Service.queryFIN55050(payload).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((response) => {
+        this.lastQueryConditions = payload;
         this.data = this.restructureData(response.Data);
         this.totalRecords = response.TotalCount ?? this.data.length;
         this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
@@ -143,43 +166,14 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     return grouped;
   }
   onExportPDF() {
-    if ((this.data?.length ?? 0) === 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
-    const payload = this.buildExportBody();
-    if (!payload) return;
-    const export$ = this.fin55050Service.exportFIN55050PDF(payload);
+    if (!this.data?.length || !this.lastQueryConditions) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
+    const export$ = this.fin55050Service.exportFIN55050PDF(this.lastQueryConditions);
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.PDFBtnLoading = isLoading).subscribe();
   }
 
   onExportXLSX() {
-    if ((this.data?.length ?? 0) === 0) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
-    const payload = this.buildExportBody();
-    if (!payload) return;
-    const export$ = this.fin55050Service.exportFIN55050Excel(payload);
+    if (!this.data?.length || !this.lastQueryConditions) return this.messageService?.warnBubble?.('目前沒有資料可匯出。');
+    const export$ = this.fin55050Service.exportFIN55050Excel(this.lastQueryConditions);
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.XLSXBtnLoading = isLoading).subscribe();
-  }
-  /** 產生匯出 payload（不再使用 VOUDATE_*） */
-  private buildExportBody(): ExportFIN55050Payload | null {
-    const raw = this.queryForm.getRawValue();
-    const from = this.datePipe.transform(raw?.DateFrom, 'yyyy-MM-dd');
-    const to = this.datePipe.transform(raw?.DateTo, 'yyyy-MM-dd');
-    const payload: ExportFIN55050Payload = {
-      DateFrom: from ?? '',
-      DateTo: to ?? '',
-      OrgIdList: raw?.OrgIdList ?? [],
-      AccNoFrom: raw?.AccNoFrom ?? '',
-      AccNoTo: raw?.AccNoTo ?? '',
-      VendorFrom: raw?.VendorFrom ?? '',
-      VendorTo: raw?.VendorTo ?? '',
-      PTAFrom: raw?.PTAFrom ?? '',
-      PTATo: raw?.PTATo ?? '',
-      Target: raw?.Target ?? '',
-      Project: raw?.Project ?? '',
-      Notes: raw?.Notes ?? '',
-      VoucherType: raw?.VoucherType ?? '',
-      VouStatusList: raw?.VouStatusList ?? [],
-      IsTarget: raw?.IsTarget ?? '',
-      ReportMode: raw?.ReportMode ?? '',
-    };
-    return payload;
   }
 }

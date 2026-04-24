@@ -283,9 +283,11 @@ export class ASS16070CRUComponent
     return this.crudstatus === CRUDStatus.Edit;
   }
 
-  onBack(): void {
-    this.router.navigate(['account/ass/ass16070']);
-  }
+ onBack(): void {
+  this.router.navigate(['account/ass/ass16070'], {
+    state: { fromCru: true },
+  });
+}
 
   private loadDropdownOptions(): void {
     this.ass11100Service
@@ -319,17 +321,20 @@ export class ASS16070CRUComponent
         );
       });
 
-    this.dropDownListService
-      .queryPOS2013_DropDownList({})
+
+    const toOpt = (items: { No?: string; Name?: string }[]) =>
+      (items ?? []).map(item => ({
+        label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+        value: item.No ?? '',
+      }));
+
+
+          this.dropDownListService
+      .querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe((res) => {
-        const list = res.Data ?? [];
-        this.orgIdOptions = list.map(
-          (item: { No?: string; Name?: string }) => ({
-            value: item.No ?? '',
-            label: `${item.No ?? ''} - ${item.Name ?? ''}`,
-          })
-        );
+      .subscribe(res => {
+        if (res.Status !== '0000') return;
+        this.orgIdOptions = toOpt(res.Data ?? []);
       });
   }
 

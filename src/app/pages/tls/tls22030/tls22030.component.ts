@@ -1,14 +1,17 @@
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { Tls22030Service } from '../../../service/api/tls/tls22030.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -18,202 +21,111 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-const yesterday = new Date();
-yesterday.setDate(yesterday.getDate() - 1);
-
 @Component({
   selector: 'app-tls22030',
   templateUrl: './tls22030.component.html',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ButtonModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TableReportComponent, DropdownComponent, TranslateModule],
+  imports: [AsyncPipe, MenubarComponent, AccordionModule, FormsModule, ButtonModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TableReportComponent, DropdownComponent, TranslateModule],
+  styles: [
+    `
+    :host ::ng-deep {
+      .loss-error {
+        background-color: #ffcccc !important; // 淺紅背景
+        color: #d32f2f !important;           // 深紅文字
+        font-weight: bold;
+      }
+    }
+    `
+  ]
 })
 
 export class TLS22030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    ECR_No: [''],
+    ECR_No: [null],
     TLT_NoList: [null],
     TXN_DateStart: [yesterday, Validators.required],
     TXN_DateEnd: [yesterday, Validators.required],
     IsLossStatus: [null], // 預設值為 '0000'，表示全部
-
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]),
-    pageSize: [30], // 每頁顯示 30 筆（覆寫共用預設）
-
   });
+  data: any[] = [];
   totalRecords = 0;
   historyRequestBody: any;
-  tltNoOptions: IDropdownItem[] = [];
-  data: any[] = [];
-  ECRNoOptions: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-
-    { field: 'TXN_Date', header: '日期', visible: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'MIN_TXN_No', header: '後台交易起號', visible: true },
-    { field: 'MAX_TXN_No', header: '後台交易迄號', visible: true },
-    { field: 'SLE_TxnBegNo', header: '前台清機起號', visible: true },
-    { field: 'SLE_TxnEndNo', header: '前台清機迄號', visible: true },
-    { field: 'SLE_GUIBegNo', header: '發票起始(起)', visible: true },
-    { field: 'SLE_GUIEndNo', header: '發票結束(迄)', visible: true },
+  tltNoOptions = this.dropDown.queryTltTalent();
+  ECRNoOptions = this.dropDown.queryPos1002();
+  columns: ReportColumn[] = [
+    { field: 'TXN_Date', header: '日期' },
+    { field: 'ECR_No', header: '收銀機號' },
+    { field: 'tlt_no', header: '專櫃編號' },
+    { field: 'tlt_name', header: '櫃位名稱' },
+    { field: 'MIN_TXN_No', header: '後台交易起號' },
+    { field: 'MAX_TXN_No', header: '後台交易迄號' },
+    { field: 'SLE_TxnBegNo', header: '前台清機起號' },
+    { field: 'SLE_TxnEndNo', header: '前台清機迄號' },
+    { field: 'SLE_GUIBegNo', header: '發票起始(起)' },
+    { field: 'SLE_GUIEndNo', header: '發票結束(迄)' },
     {
-      field: 'IsPerDayLoss', header: '當日是否欠落', visible: true,
-      format: (val: string) => val === '1' ? '有' : '無'
+      field: 'IsPerDayLoss',
+      header: '當日是否欠落',
+      format: val => val === '1' ? '有' : '無',
+      // 新增：判斷如果值為 '1' (有欠落)，則回傳 CSS class 名稱
+      cellClass: (rowData) => rowData.IsPerDayLoss === '1' ? 'loss-error' : ''
     },
     {
-      field: 'IsCrossDayLoss', header: '跨日是否欠落', visible: true,
-      format: (val: string) => val === '1' ? '有' : '無'
-    },
+      field: 'IsCrossDayLoss',
+      header: '跨日是否欠落',
+      format: val => val === '1' ? '有' : '無',
+      // 新增：同理處理跨日欠落
+      cellClass: (rowData) => rowData.IsCrossDayLoss === '1' ? 'loss-error' : ''
+    }
   ];
   btnLoading = false;
   displayConditionOptions: any[] = [];
   tlt_no?: string;
 
   constructor(
-    private ECRNoService: ECRNoService,
-    public tls22030Service: Tls22030Service,
-    private dropDownListService: DropDownListService,
+    public readonly tls22030Service: Tls22030Service,
+    private readonly dropDown: DropdownApiService,
+    private readonly datePipe: DatePipe,
+    private readonly fileExportService: FileExportService
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS22030', '/TLS/TLS22030cru', this.queryForm);
-
-    this.ECRNoService.getECRNo().subscribe((data) => {
-      this.ECRNoOptions = data;
-    });
-    this.dropDownListService.queryTLTTALENT_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        if (res && res.Data) {
-          this.tltNoOptions = res.Data.map(item => ({
-            label: `${item.No}-${item.Name}`,   // 假設 item 有 Name 欄位
-            value: item.No,     // 假設 item 有 No 欄位
-            No: item.No,        // 確保包含 No 屬性
-            Name: item.Name     // 確保包含 Name 屬性
-          }));
-        }
-      });
-  }
-
-  /** 處理文件上傳事件 */
-  onImportExcel(event: any): void {
-    const file = event.files[0];
-    if (!file) {
-      console.error('No file selected for import');
-      return;
-    }
+    this.initializePage('TLS22030');
   }
 
   onExportExcel(): void {
-    const condition = this.queryForm.getRawValue();
-
-    // 準備與查詢相同格式的參數
-    const payload = {
-      ...condition,
-      TXN_DateStart: this.toYMD(condition.TXN_DateStart),
-      TXN_DateEnd: this.toYMD(condition.TXN_DateEnd),
-    };
-
-    console.log('匯出 Excel 請求參數:', payload);
-
-    this.btnLoading = true;
-
-    this.tls22030Service.exportTLS22030(payload).subscribe({
-      next: (blob: Blob) => {
-
-        if (blob.size === 0) {
-          alert('匯出失敗：沒有資料可匯出');
-          this.btnLoading = false;
-          return;
-        }
-
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `TLS22030_序號異常報表_${new Date().toISOString().slice(0, 10)}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
-        this.btnLoading = false;
-      },
-    });
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    const export$ = this.tls22030Service.exportTLS22030(this.historyRequestBody);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 
   onExportPDF(): void {
-    const condition = this.queryForm.getRawValue();
-
-    // 組 payload：跟 Excel 類似，但只要帶查詢條件
-    const payload = {
-      ...condition,
-      TXN_DateStart: this.toYMD(condition.TXN_DateStart),
-      TXN_DateEnd: this.toYMD(condition.TXN_DateEnd),
-    };
-
-    this.btnLoading = true;
-    this.tls22030Service.exportTLS22030PDF(payload)
-      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
-      .subscribe({
-        next: (blob: Blob) => {
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `TLS22030_${new Date().toISOString().slice(0, 10)}.pdf`;
-          a.click();
-          window.URL.revokeObjectURL(url);
-        },
-        error: (err) => {
-          console.error('匯出 PDF 失敗', err);
-        }
-      });
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    const export$ = this.tls22030Service.exportTLS22030PDF(this.historyRequestBody);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
-
-  private toYMD(date: Date | string | null): string | null {
-    if (!date) return null;
-    const d = new Date(date);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}/${month}/${day}`;
-  }
-
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
-
-      // 組 payload，日期轉 yyyy/MM/dd
       const payload = {
         ...raw,
-        TXN_DateStart: this.toYMD(raw.TXN_DateStart),
-        TXN_DateEnd: this.toYMD(raw.TXN_DateEnd),
+        TXN_DateStart: this.datePipe.transform(raw.TXN_DateStart, 'yyyy/MM/dd'),
+        TXN_DateEnd: this.datePipe.transform(raw.TXN_DateEnd, 'yyyy/MM/dd'),
       };
-
-      // 設定最後查詢條件給 app-table-report 使用
-      this.historyRequestBody = payload;
-
-      this.tls22030Service
-        .queryTLS22030(payload)
-        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-        .subscribe({
-          next: (res) => {
-            this.data = res?.Data ?? [];
-            this.totalRecords = res?.TotalCount ?? this.data.length;
-
-            // 儲存查詢條件
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-            // 更新 historyRequestBody（確保與回傳一致）
-            this.historyRequestBody = payload;
-          },
-
-        });
+      this.tls22030Service.queryTLS22030(payload).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((res) => {
+        this.data = res?.Data ?? [];
+        this.totalRecords = res?.TotalCount ?? this.data.length;
+        this.historyRequestBody = payload;
+      });
     });
   }
-
-
-
-
 }

@@ -1,0 +1,79 @@
+<p-table #dt [value]="data" [columns]="selectedColumns" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
+  [scrollable]="true" scrollHeight="867px" [reorderableColumns]="true" tableStyleClass="h-full" [styleClass]="
+    'p-datatable-sm' +
+    (IsPrint ? ' p-datatable-gridlines' : ' ')
+  " [virtualScroll]="false" [virtualScrollItemSize]="35" [virtualScrollDelay]="250"
+  [loading]="loading && data.length === 0" paginatorDropdownAppendTo="body" [groupRowsBy]="groupRowsBy"
+  rowGroupMode="subheader">
+  <ng-template pTemplate="caption">
+    <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
+      [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event" [tableKey]="tableKey"
+      [showCaption]="true" [showHeader]="true" [showFilter]="true" [showReportMode]="false" [showDelete]="false"
+      [showPage]="false" [totalRecords]="dt.totalRecords">
+      <header><ng-content select="header"></ng-content></header>
+    </app-table-caption>
+  </ng-template>
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th *ngFor="let col of columns" class="text-center wrap-header">
+        {{ col.header }}
+        <span *ngIf="col.required" class="text-red-500">*</span>
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="groupheader" let-rowData>
+    <tr pRowGroupHeader style="height: 40.8px">
+      <td [attr.colspan]="getVisibleHeaderCount"
+        class="bg-gray-200 text-blue gray-900 px-3 py-2 border-bottom-1 surface-border" style="font-weight: bold;">
+        <div class="flex align-items-center">
+          <span>會計科目: {{ rowData.AccNo4 }} - {{ rowData.AccNo4Name }}</span>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-ri="rowIndex"
+    let-index="rowIndex">
+    <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" [pReorderableRow]="index"
+      [pSelectableRowIndex]="rowIndex" [ngClass]="{
+        'bg-gray-100 font-bold text-color-secondary': rowData.NoteDesc === '【期初餘額】',
+        'bg-blue-50 font-bold text-blue-800': rowData.NoteDesc === '【總計】'
+    }">
+
+      <td *ngFor="let col of columns" style="text-overflow: ellipsis; min-width: 55px"
+        [ngClass]="[col.style || '', 'text-center']">
+
+        <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="false"></app-table-input>
+
+        <ng-container *ngIf="rowData.NoteDesc === '【期初餘額】'; else normalCell">
+          <span *ngIf="col.field === 'AccNo' || col.field === 'Balance'">
+            {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field] }}
+          </span>
+        </ng-container>
+
+        <ng-template #normalCell>
+          <ng-container *ngIf="col.type === 'detail'">
+            <a (click)="detailRow(rowData, col, rowData[col.field])"
+              class="text-blue-600 cursor-pointer hover:underline">
+              {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field] }}
+            </a>
+          </ng-container>
+
+          <span *ngIf="!col.type && !col.htmlFormat">
+            {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field] }}
+          </span>
+        </ng-template>
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="getVisibleHeaderCount">
+        <div>
+          <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+            查無資料
+          </div>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
