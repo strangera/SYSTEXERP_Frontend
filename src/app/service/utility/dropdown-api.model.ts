@@ -16,6 +16,13 @@ export interface IDropdownItem {
   Name: string;
 }
 
+/** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME） */
+export interface FasItemDropdownItem {
+  RowNo?: string;
+  GOODS_ID?: string | null;
+  GOODS_NAME?: string | null;
+}
+
 /**
  * 查詢採購單號下拉選單(ASS13010)
  * 後端回傳欄位：ID、APPLY_DATE
@@ -107,8 +114,7 @@ export interface FaClass2Item {
 }
 
 /**
- * queryFASITEM_DropDownList 請求（若後端欄位不同請再調整）
- */
+ * queryFASITEM_DropDownList 請求（例：MATERIAL_TYPE = 品項類別） */
 export interface FaSitemQuery {
   MATERIAL_TYPE?: string | null;
 }

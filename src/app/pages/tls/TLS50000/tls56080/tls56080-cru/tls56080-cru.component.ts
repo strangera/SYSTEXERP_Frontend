@@ -100,7 +100,7 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
   brandOptions = this.dropdown.queryPluLogo();
   warehouseOptions = this.dropdown.queryPos2034();
   userOptions = this.dropdown.queryTblUser();
-  vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
+  vendorOptions = this.dropdown.queryPos2013TltTalent();
   reasonOptions = getSYS1000Options('TRD_Reason');
   totalRecords = 0;
   initComponent = true;

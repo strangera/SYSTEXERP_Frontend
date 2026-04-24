@@ -229,3 +229,11 @@ export interface ASS13100ExportPDFRequest {
   /** 清點單號(迄) */
   CHK_ID_E: string;
 }
+
+/** 清點單狀態 */
+export enum Status {
+  /** 清點中 */
+  Progress = '1',
+  /** 已結案 */
+  Completed = '2',
+}

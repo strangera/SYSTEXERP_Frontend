@@ -202,7 +202,7 @@ export const finRoutes: Routes = [
   { path: 'fin41030', loadComponent: () => import('./fin41030/fin41030.component').then(m => m.FIN41030Component), data: { progNo: 'FIN41030' } },
   { path: 'fin41030cru', loadComponent: () => import('./fin41030-cru/fin41030-cru.component').then(m => m.FIN41030CRUComponent), data: { progNo: 'FIN41030' } },
   // 產生年中版本作業
-  // { path: 'fin41040', loadComponent: () => import('./fin41040/fin41040.component').then(m => m.FIN41040Component),data:{progNo:'FIN41040'} },
+  { path: 'fin41040', loadComponent: () => import('./fin41040/fin41040.component').then(m => m.FIN41040Component), data: { progNo: 'FIN41040' } },
   // { path: 'fin41040cru', loadComponent: () => import('./fin41040-cru/fin41040-cru.component').then(m => m.FIN41040CRUComponent),data: { progNo: 'FIN41040'} },
   // 部門預算編制明細維護
   { path: 'fin41050', loadComponent: () => import('./fin41050/fin41050.component').then(m => m.Fin41050Component), data: { progNo: 'Fin41050' } },

@@ -1,5 +1,5 @@
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -17,13 +17,15 @@ export class Tls22030Service {
   }
 
   // 匯出 TLS22030 PDF
-  exportTLS22030PDF(data: any): Observable<Blob> {
+  exportTLS22030PDF(data: any): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportTLS22030PDF`, data, {
+      observe: 'response',
       responseType: 'blob'
     });
   }
-  exportTLS22030(data: any): Observable<Blob> {
+  exportTLS22030(data: any): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/exportTLS22030`, data, {
+      observe: 'response',
       responseType: 'blob'
     });
   }

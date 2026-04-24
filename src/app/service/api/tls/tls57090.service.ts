@@ -118,12 +118,8 @@ export class Tls57090Service {
    * @param body 統一的匯出請求物件 (QueryTLS57090Request)
    * @returns 包含 PDF 檔案的 Blob 物件
    */
-  exportTLS57090PDF(
-    body: QueryTLS57090Request
-  ): Observable<HttpResponse<Blob>> { // 將回傳類型改為 HttpResponse<Blob>
-    return this.http.post(
-      `${this.apiUrl}/exportTLS57090PDF`,
-      body,
+  exportTLS57090PDF(body: QueryTLS57090Request): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS57090PDF`, body,
       {
         observe: 'response',
         responseType: 'blob'

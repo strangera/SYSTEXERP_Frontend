@@ -134,6 +134,7 @@ export class TLS55020Component extends BasicQueryPageComponent<Tls55020MasterDat
       this.tls55020Service.queryTLS55020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         this.data = res.Data;
         this.lastQueryBody = body;
+        this.totalRecords = res.TotalCount || 0;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       });
     });

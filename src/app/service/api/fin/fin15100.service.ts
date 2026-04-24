@@ -1,29 +1,25 @@
-import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
+import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { ApiResponse } from './fin26010.service';
+
+export interface FIN15100QueryParams {
+  INV_DeclareYM: string | null,
+  TXN_Ret_NoS: string | null,
+  TXN_Ret_NoE: string | null,
+  InvoiceTrack: string | null,
+  InvoiceNumberS: string | null,
+  InvoiceNumberE: string | null,
+  Mid: number,
+  STO_No: string
+}
 
 @Injectable({ providedIn: 'root' })
 export class FIN15100Service {
-  private apiUrl = `${environment.ApiUrl}/FIN15100`;
-
-  constructor(private http: HttpClient) {}
-
-  queryFIN15100(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryFIN15100`, data);
-  }
-    // 新增：呼叫列印 API
-  printFIN15100(data: {
-    INV_DeclareYM: string;
-    TXN_Ret_NoS?: string | null;
-    TXN_Ret_NoE?: string | null;
-    InvoiceTrack?: string | null;
-    InvoiceNumberS?: string | null;
-    InvoiceNumberE?: string | null;
-    Mid: number;
-    STO_No: string;
-  }): Observable<any> {
-    const url = `${environment.ApiUrl}/FIN0000/INV1000/PrintFIN15100`;
-    return this.http.post<any>(url, data);
+  constructor(private http: HttpClient) { }
+  // 新增：呼叫列印 PI
+  printFIN15100(data: FIN15100QueryParams): Observable<ApiResponse<{ Print_URL: string }>> {
+    return this.http.post<ApiResponse<{ Print_URL: string }>>(`${environment.ApiUrl}/FIN0000/INV1000/PrintFIN15100`, data);
   }
 }

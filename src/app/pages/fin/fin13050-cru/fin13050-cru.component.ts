@@ -67,7 +67,6 @@ interface DropdownOption {
   selector: 'app-fin13050-cru',
   standalone: true,
   templateUrl: './fin13050-cru.component.html',
-  styleUrls: ['./fin13050-cru.component.scss'],
   imports: [
     MenubarComponent,
     ButtonComponent,
