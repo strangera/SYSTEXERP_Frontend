@@ -1,4 +1,4 @@
-﻿import { NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -63,8 +63,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     KIND_ID: [null as string | null, Validators.required],                        // 意見類型（必填）
     KIND_ID_SUB: [null as string | null, Validators.required],                    // 意見子類型（必填）
     SUGG_SOURCE: [null as string | null, Validators.required],                    // 建議來源（必填）
-    ORG_ID_QUERY: [null as string | null, Validators.required],                   // 組織(查詢責任單位用)
-    ORG_ID: [null as string | null, Validators.required],                         // 責任單位（必填）
+    ORG_ID: [null as string | null, Validators.required],                           // 組織（自動帶入）
+    CLASS_ID: [null as string | null, Validators.required],                         // CLASS_ID（必填）
     COMPLAIN_NOTES: [null, [Validators.required, Validators.maxLength(1000)]],    // 顧客意見內容（必填）
     CUST_NAME: [null, Validators.maxLength(20)],                                  // 客戶姓名
     SEX: [null],                                                                  // 性別
@@ -450,8 +450,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       this.dataForm.patchValue({
         KIND_ID: this.rowdata.KIND_ID,
         KIND_ID_SUB: this.rowdata.KIND_ID_SUB,
-        ORG_ID_QUERY: this.rowdata.ORG_ID,
-        ORG_ID: this.rowdata.CLASS_ID,
+        ORG_ID: this.rowdata.ORG_ID,
+        CLASS_ID: this.rowdata.CLASS_ID,
         COMPLAIN_NOTES: this.rowdata.COMPLAIN_NOTES ?? null,
         CUST_NAME: this.rowdata.CUST_NAME ?? null,
         SEX: this.rowdata.SEX ?? null,
@@ -615,6 +615,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             KIND_ID_SUB: formValue.KIND_ID_SUB,
             SUGG_SOURCE: formValue.SUGG_SOURCE,
             ORG_ID: formValue.ORG_ID,
+            CLASS_ID: formValue.CLASS_ID,
             COMPLAIN_NOTES: formValue.COMPLAIN_NOTES,
             CUST_NAME: formValue.CUST_NAME,
             SEX: formValue.SEX,
@@ -633,40 +634,32 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             USR_NAME: formValue.CRT_USR_Name
           };
 
-          const hasFilesCreate = !!(this.formFile1 || this.formFile2 || this.formFile3);
+          const formData = new FormData();
+          Object.keys(insertRequest || {}).forEach(k => {
+            const v = (insertRequest as Record<string, unknown>)[k];
+            formData.append(k, v === undefined || v === null ? '' : String(v));
+          });
+          if (this.formFile1) formData.append('formFile1', this.formFile1, this.formFile1.name);
+          if (this.formFile2) formData.append('formFile2', this.formFile2, this.formFile2.name);
+          if (this.formFile3) formData.append('formFile3', this.formFile3, this.formFile3.name);
 
-          const performInsert = (payload: any) => {
-            this.cpm12050Service.insertCPM12050(payload)
-              .pipe(untilDestroyed(this), finalize(() => this.loading = false))
-              .subscribe((response: any) => {
-                this.messageService.successBubble('新增成功');
-                const seq = response?.Data?.SEQ_ID ?? response?.SEQ_ID;
-                const newId = response?.ID ?? (Array.isArray(response?.Data) ? response.Data[0]?.ID : undefined);
-                if (seq) {
-                  this.cpm12050Service.queryCPM12050({ SEQ_ID: seq }).pipe(untilDestroyed(this)).subscribe(r => this.onCancel());
-                  return;
-                }
-                if (newId) {
-                  this.cpm12050Service.queryCPM12050({ ID: newId }).pipe(untilDestroyed(this)).subscribe(r => this.onCancel());
-                  return;
-                }
-                this.dataForm.reset();
-              });
-          };
-
-          if (hasFilesCreate) {
-            const formData = new FormData();
-            Object.keys(insertRequest || {}).forEach(k => {
-              const v = (insertRequest as any)[k];
-              formData.append(k, v === undefined || v === null ? '' : String(v));
+          this.cpm12050Service.insertCPM12050(formData)
+            .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+            .subscribe((response: Record<string, unknown>) => {
+              this.messageService.successBubble('新增成功');
+              const seq = (response?.['Data'] as Record<string, unknown>)?.['SEQ_ID'] ?? response?.['SEQ_ID'];
+              const dataArr = response?.['Data'];
+              const newId = response?.['ID'] ?? (Array.isArray(dataArr) ? (dataArr[0] as Record<string, unknown>)?.['ID'] : undefined);
+              if (seq) {
+                this.cpm12050Service.queryCPM12050({ SEQ_ID: String(seq) }).pipe(untilDestroyed(this)).subscribe(() => this.onCancel());
+                return;
+              }
+              if (newId) {
+                this.cpm12050Service.queryCPM12050({ ID: Number(newId) }).pipe(untilDestroyed(this)).subscribe(() => this.onCancel());
+                return;
+              }
+              this.dataForm.reset();
             });
-            if (this.formFile1) formData.append('formFile1', this.formFile1, this.formFile1.name);
-            if (this.formFile2) formData.append('formFile2', this.formFile2, this.formFile2.name);
-            if (this.formFile3) formData.append('formFile3', this.formFile3, this.formFile3.name);
-            performInsert(formData);
-          } else {
-            performInsert(insertRequest);
-          }
 
           break;
         }
@@ -687,6 +680,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             SUGG_SOURCE: formValue.SUGG_SOURCE ?? this.rowdata?.SUGG_SOURCE,
             SUGG_SOURCE_OTHER: (formValue as any).SUGG_SOURCE_OTHER ?? this.rowdata?.SUGG_SOURCE_OTHER ?? '',
             ORG_ID: formValue.ORG_ID ?? this.rowdata?.ORG_ID,
+            CLASS_ID: formValue.CLASS_ID ?? this.rowdata?.CLASS_ID,
             MEMBER_ID: formValue.MEMBER_ID ?? this.rowdata?.MEMBER_ID,
             SUGG_TYPE: formValue.SUGG_TYPE ?? (this.rowdata as any)?.SUGG_TYPE,
             ANSWER_YN: formValue.ANSWER_YN ? String(formValue.ANSWER_YN).toUpperCase() : this.rowdata?.ANSWER_YN ?? undefined,
@@ -780,6 +774,14 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   onOrgQueryChange(orgId: string) {
     // 不更動 orgIdOptions，讓 ORG_ID 與 ORG_ID_QUERY 完全獨立
     return;
+  }
+
+  onClassIdChange(classId: string) {
+    if (!classId) return;
+    const found = (this.orgIdOptions as { value: string; ORG_ID?: string }[]).find(o => o.value === classId);
+    if (found?.ORG_ID) {
+      this.dataForm.patchValue({ ORG_ID: found.ORG_ID });
+    }
   }
 
   onKindChange(kindId: string) {
