@@ -86,7 +86,6 @@ export class ASS17080Component extends BasicQueryPageComponent<QueryASS17080Deta
   /** 表尾合計：使用 API `Data` 回傳之加總欄位（見 QueryASS17080Response） */
   get footerData(): Record<string, unknown> | null {
     const t = this.lastApiTotals;
-    console.log('this.lastApiTotals',this.lastApiTotals);
     if (!t) {
       return null;
     }
