@@ -57,7 +57,7 @@ export type FIN53010DataDetail = Omit<BaseQueryResponse<QueryFIN53010Detail>, 'D
  * ORG_ID: 組織編號
  * SerNo: 顯示用序號，10 為單位遞增
  * SubDetailNo: 對象編號
- * clearingCode: 立沖代號
+ * PTA: 立沖代號
  * id: 明細檔流水號
  * index: 索引
  */
@@ -80,7 +80,7 @@ export interface FIN53010Detail {
  * AccName: 科目名稱
  * DetailName: 廠商/員工名稱
  * ReflNo: 參考編號
- * clearingCode: 立沖代號
+ * PTA: 立沖代號
  * recKey: 對帳KEY值
  */
 export interface FIN53010DetailTable extends FIN53010Detail {
@@ -89,7 +89,7 @@ export interface FIN53010DetailTable extends FIN53010Detail {
   AccCName?: string;
   DetailName?: string;
   ReflNo?: string;
-  clearingCode?: string;
+  PTA?: string;
   recKey?: number;
 }
 

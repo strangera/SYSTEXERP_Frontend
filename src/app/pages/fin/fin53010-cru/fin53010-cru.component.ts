@@ -495,11 +495,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         optionValue: 'value',
       },
       {
-        field: 'clearingCode',
+        field: 'PTA',
         header: '立沖代號',
         textAlign: 'left',
         type: 'dropdown',
-        options: () => this.emptyClearingOptions,
+        options: (rowData: { AccNo?: string }) => {
+          const { AccNo } = rowData || {};
+          if (!AccNo) return this.emptyClearingOptions;
+          return this.service.ptaOptions().get(AccNo) || this.emptyClearingOptions;
+        },
+        triggerFields: ['AccNo'],
         optionLabel: 'label',
         optionValue: 'value',
       },
@@ -699,7 +704,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           const accNos = Array.from(new Set(
             details.map(d => d.AccNo).filter((a): a is string => !!a && String(a).trim() !== ''),
           ));
-          if (accNos.length) this.service.getAccDescOptions(accNos);
+          if (accNos.length) {
+            this.service.getAccDescOptions(accNos);
+            accNos.forEach(acc => this.service.getPTADropdownOptions(acc));
+          }
           this.loadRelatedDetailByVouNo(raw.VouNo);
         },
       });
@@ -949,7 +957,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         const accNos = Array.from(new Set(
           (res.Data?.Details ?? []).map(d => d.AccNo).filter((a): a is string => !!a && String(a).trim() !== ''),
         ));
-        if (accNos.length) this.service.getAccDescOptions(accNos);
+        if (accNos.length) {
+          this.service.getAccDescOptions(accNos);
+          accNos.forEach(acc => this.service.getPTADropdownOptions(acc));
+        }
         this.loadRelatedDetailByVouNo(res.Data?.VouNo);
         this.messageService.successBubble('已載入傳票');
       }),
@@ -1338,6 +1349,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           // 自動帶入摘要
           rowData.NoteDesc = String(this.service.noteDescMap()
             .get(event.value)?.data?.[0].label || event.value || '');
+          // 取得立沖代號下拉選單
+          this.service.getPTADropdownOptions(String(event.value));
           break;
 
         case 'AccAmtD':
@@ -1493,6 +1506,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
             index,
           };
         }));
+
+        const accNos = Array.from(new Set(
+          (data.Details || []).map(d => d.AccNo).filter((a): a is string => !!a && String(a).trim() !== ''),
+        ));
+        accNos.forEach(acc => this.service.getPTADropdownOptions(acc));
       },
     });
   }
