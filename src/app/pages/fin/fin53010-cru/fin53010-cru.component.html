@@ -196,7 +196,7 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 7) {
 <div class="card">
   <p-panel header="銀行存款" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepBankRows()"
+    <app-table-edit #bankTableEdit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepBankRows()"
       [columns]="stepBankColumns" [tableKey]="'FIN53010_step_bank'"
       (dataChange)="onStepBankDataChange($event)"></app-table-edit>
     <div class="flex justify-content-between mt-3">

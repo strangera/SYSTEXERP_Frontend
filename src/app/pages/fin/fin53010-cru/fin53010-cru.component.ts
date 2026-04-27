@@ -80,7 +80,8 @@ import { EditColumn, EditColumnExtend, FieldChangeEvent as StepFieldChangeEvent 
 })
 export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Detail> implements OnInit {
 
-  @ViewChild('purchaseTableEdit') purchaseTableEditComponent!: TableEditComponent;
+  @ViewChild('purchaseTableEdit') purchaseTableEditComponent?: TableEditComponent;
+  @ViewChild('bankTableEdit') bankTableEditComponent?: TableEditComponent;
 
   private readonly venUsrTemplate = viewChild.required<TemplateRef<any>>('venUsrTemplate');
 
@@ -591,11 +592,19 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'total_count', header: '彙整張數', type: 'inputNumber', validate: [this.validatePURCombCnt] },
   ];
 
+  private validateBankRequired(value: any, rowData: any, data: any[], field: string, header: string): { isValid: boolean, errorMessage: string[] } {
+    if (value === '' || value === null || value === undefined) {
+      return { isValid: false, errorMessage: [`${header}不可為空`] };
+    }
+    return { isValid: true, errorMessage: [] };
+  }
+
   public readonly stepBankColumns: EditColumn[] = [
-    { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'bank_no', header: '銀行代號', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'deposit_amt', header: '存款', type: 'inputNumber', disabled: () => true },
-    { field: 'withdraw_amt', header: '提款', type: 'inputNumber', disabled: () => true },
+    { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)] },
+    { field: 'bank_no', header: '銀行代號', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)] },
+    { field: 'deposit_amt', header: '存款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)] },
+    { field: 'withdraw_amt', header: '提款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)] },
+    { field: 'status', header: '狀態', type: 'dropdown', options: [{ label: '作廢', value: '0' }, { label: '建立', value: '1' }], optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)] },
     { field: 'note_desc', header: '摘要', type: 'input' },
     { field: 'txn_date', header: '日期', type: 'date', disabled: () => true },
   ];
@@ -1065,7 +1074,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public onSubmit(): void {
     const valid = this.purchaseTableEditComponent?.validateAndShowErrors();
-    if (valid === false) {
+    const bankValid = this.bankTableEditComponent?.validateAndShowErrors();
+    
+    if (valid === false || bankValid === false) {
       return;
     }
 
