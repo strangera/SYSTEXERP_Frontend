@@ -91,7 +91,7 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
   private formatRepYYYYMM = (value: string, index: number | undefined, rowData: APS3018): string | number | null => {
     const repYYYYMM = this.calculateRepYYYYMM(rowData.PUR_GUIDate);
     if (!repYYYYMM) return '--';
-    return `${repYYYYMM.substring(0, 4)}年${repYYYYMM.substring(4, 6)}月`;
+    return `${repYYYYMM.substring(0, 4)}/${repYYYYMM.substring(4, 6)}`;
   };
   APS3018Columns: EditColumn[] = [];
   APS3018Data: APS3018[] = []; // 主資料表格
@@ -199,10 +199,10 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
       { field: 'ADJ_Amt', header: this.isFormCreateable ? '調整金額' : '未稅調整金額', format: formatAmount, max: 9999999999, type: 'inputNumber', aggregate: 'sum', textAlign: 'right' },
     ]
     this.APS3018Columns = [
-      { field: 'TABTYPE', header: '單據別', format: v => getSYS1000('TABTYPE', v), width: '85px' },
+      { field: 'TABTYPE', header: '單據別', format: v => getSYS1000('TABTYPE', v), width: '45px' },
       {
         field: 'PUR_GUINo', header: '發票/收據編號', type: 'input', validate: [validateDuplicate, validateRequired, validateMaxLength(10), AA00000000], maxLength: 10,
-        onBlur: (rowData) => this.toUpperCase(rowData), width: '100px'
+        onBlur: (rowData) => this.toUpperCase(rowData), width: '80px'
       },
       {
         field: 'PUR_GUIDate',
@@ -216,9 +216,9 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
           };
         },
         validate: [validateRequired],
-        width: '145px'
+        width: '120px'
       },
-      { field: 'PUR_RepYYYYMM', header: '申報年月', format: this.formatRepYYYYMM, width: '110px' },
+      { field: 'PUR_RepYYYYMM', header: '申報年月', format: this.formatRepYYYYMM, width: '50px' },
       {
         field: 'OTA_TaxType', header: '課稅別', validate: [validateRequired], type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('OTA_TaxType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('OTA_TaxType', v), disabled: () => !this.isFormCreateable,
         calculate: (rowData, value) => {
@@ -226,27 +226,41 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
             PUR_Tax: value !== '1' ? 0 : rowData.PUR_Tax,
             PUR_TotAmt: value !== '1' ? rowData.PUR_TotNet : rowData.PUR_TotAmt,
           };
-        }, width: '85px', showClear: false
+        }, width: '45px', showClear: false
       },
-      { field: 'PUR_DirectType', header: '發票用途', type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('PUR_DirectType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DirectType', v), width: '110px', showClear: false },
-      { field: 'PUR_DiscNo', header: '扣抵代號', type: this.isFormCreateable ? 'dropdown' : undefined, options: getSYS1000Options('PUR_DiscNo'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DiscNo', v), width: '230px', showClear: false },
+      {
+        field: 'PUR_DirectType', header: '發票用途', type: this.isFormCreateable ? 'dropdown' : undefined,
+        options: getSYS1000Options('PUR_DirectType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DirectType', v),
+        width: '60px', showClear: false
+      },
+      {
+        field: 'PUR_DiscNo', header: '扣抵代號', type: this.isFormCreateable ? 'dropdown' : undefined,
+        options: getSYS1000Options('PUR_DiscNo'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DiscNo', v),
+        width: '130px', showClear: false
+      },
       {
         field: 'PUR_TotNet', header: '未稅金額', format: formatAmount, validate: [validateRequired], max: 9999999999, maxLength: 10, type: 'inputNumber',
-        onBlur: (rowData, value) => this.onPurTotNetBlur(rowData, value), textAlign: 'right', aggregate: 'sum', min: 0, width: '100px'
+        onBlur: (rowData, value) => this.onPurTotNetBlur(rowData, value), textAlign: 'right', aggregate: 'sum', min: 0,
+        width: '80px'
       },
       {
-        field: 'PUR_TotTax', header: '稅額', format: formatAmount, validate: [validateRequired], max: 9999999999, min: 0, maxLength: 10, type: 'inputNumber', textAlign: 'right', aggregate: 'sum', width: '80px',
+        field: 'PUR_TotTax', header: '稅額', format: formatAmount, validate: [validateRequired], max: 9999999999, min: 0,
+        maxLength: 10, type: 'inputNumber', textAlign: 'right', aggregate: 'sum', width: '80px',
         onBlur: (rowData, value) => this.onPurTotTaxBlur(rowData, value), disabled: (value, index, rowData) => {
           if (rowData.OTA_TaxType !== '1') { rowData.PUR_TotTax = 0 }
           return rowData.OTA_TaxType !== '1'
         }
       },
-      { field: 'PUR_TotAmt', header: '應稅金額', format: formatAmount, validate: [validateRequired], max: 9999999999, min: 0, maxLength: 10, type: 'inputNumber', disabled: () => true, aggregate: 'sum', textAlign: 'right', width: '100px' },
+      {
+        field: 'PUR_TotAmt', header: '應稅金額', format: formatAmount, validate: [validateRequired],
+        max: 9999999999, min: 0, maxLength: 10, type: 'inputNumber', disabled: () => true, aggregate: 'sum',
+        textAlign: 'right', width: '80px'
+      },
       {
         field: 'PUR_VoucherType', header: '發票格式', validate: [validateRequired], type: 'dropdown',
         options: this.PUR_VoucherTypeOptions,
         optionLabel: 'value', optionValue: 'value',
-        width: '85px', showClear: false
+        width: '75px', showClear: false
       },
     ]
   }

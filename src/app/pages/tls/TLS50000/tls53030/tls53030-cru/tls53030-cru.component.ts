@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -15,6 +15,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { formatAmount } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { FileExportService } from '@shared/service/file-export.service';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
 import { SelectButtonChangeEvent, SelectButtonModule } from 'primeng/selectbutton';
@@ -172,7 +173,9 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
   ];
   constructor(
     private tls53030Service: TLS53030Service,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private readonly fileExportService: FileExportService,
+    private readonly datePeipe: DatePipe
   ) {
     super();
   }
@@ -295,5 +298,23 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       this.filterMode = newMode;
       this.detailLoading = false;
     }, 300);
+  }
+
+  btnLoading = false;
+  onPrintDiff() {
+    if (!this.rowdata) return;
+
+    this.loading = true; // 使用全域 loading 或自定義一個 printLoading
+
+    const payload = {
+      MID: this.rowdata.MID,
+      PST_No: this.rowdata.PST_No || '',
+      SYS_StoreNo: this.rowdata.SYS_StoreNo || '',
+      HOS_No: this.rowdata.HOS_No || '',
+      PST_Date: this.datePeipe.transform(this.rowdata.PST_Date, 'yyyy-MM-dd') || '',
+      showDiff: true // 強制開啟差異列印
+    };
+    const export$ = this.tls53030Service.exportTLS53030DetailPDF(payload as any);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 }

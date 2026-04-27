@@ -14,29 +14,34 @@ import { CellInput } from './table-edit-cell.model';
   selector: 'app-dropdown-cell',
   host: { 'table-edit-id': '複製時請自行取唯一名' },
   template: `
- <p-iconField iconPosition="right">
-  <p-dropdown class="flex min-w-max" appendTo="body"
-              [(ngModel)]="cellInput.rowData[cellInput.col.field]"
-              [ngModelOptions]="{ standalone: true }"
-              [placeholder]="internalLoading ? '載入中...' : (isDisabled() ? '' : '請輸入' + cellInput.col.header)"
-              [options]="getOptions(cellInput.rowData, cellInput.col)"
-              [optionLabel]="cellInput.col.optionLabel"
-              [optionValue]="cellInput.col.optionValue"
-              [filter]="true"
-              [style]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
-              [disabled]="isDisabled() || internalLoading"
-              [editable]="true"
-              [loading]="internalLoading"
-              [virtualScroll]="(getOptions(cellInput.rowData, cellInput.col)?.length ?? 0) > 7"
-              [virtualScrollItemSize]="37"
-              [scrollHeight]="(getOptions(cellInput.rowData, cellInput.col)?.length ?? 0) > 7 ? '250px' : 'auto'"
-              [showClear]="cellInput.col.showClear ?? true"
-              [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
-              [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }"
-              (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index);onDropdownChange($event)"
-              (onHide)="handleHide()"
-              (onBlur)="handleBlur()"
-              (keydown.enter)="handleEnter($event)">
+<p-iconField iconPosition="right">
+  <p-dropdown
+    class="flex w-full"
+    appendTo="body"
+    [(ngModel)]="cellInput.rowData[cellInput.col.field]"
+    [ngModelOptions]="{ standalone: true }"
+    [placeholder]="internalLoading ? '載入中...' : (isDisabled() ? '' : '請輸入' + cellInput.col.header)"
+    [options]="getOptions(cellInput.rowData, cellInput.col)"
+    [optionLabel]="cellInput.col.optionLabel"
+    [optionValue]="cellInput.col.optionValue"
+    [filter]="true"
+    [style]="{
+      'width': cellInput.col.width,
+      'text-align': cellInput.col.textAlign
+    }"
+    [disabled]="isDisabled() || internalLoading"
+    [editable]="true"
+    [loading]="internalLoading"
+    [virtualScroll]="(getOptions(cellInput.rowData, cellInput.col)?.length ?? 0) > 7"
+    [virtualScrollItemSize]="37"
+    [scrollHeight]="(getOptions(cellInput.rowData, cellInput.col)?.length ?? 0) > 7 ? '250px' : 'auto'"
+    [showClear]="cellInput.col.showClear ?? true"
+    [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
+    [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }"
+    (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index);onDropdownChange($event)"
+    (onHide)="handleHide()"
+    (onBlur)="handleBlur()"
+    (keydown.enter)="handleEnter($event)">
 
     <ng-template let-item pTemplate="item" *ngIf="cellInput.col.templateLabel">
       <div class="flex align-items-center gap-2">
@@ -50,7 +55,7 @@ import { CellInput } from './table-edit-cell.model';
                [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
                tooltipPosition="bottom" />
 </p-iconField>
-  `,
+`,
   styles: [`
     /* 使用 ::ng-deep 是因為下拉選單通常 appendTo="body"，不在組件視圖內 */
     ::ng-deep .p-dropdown-item {

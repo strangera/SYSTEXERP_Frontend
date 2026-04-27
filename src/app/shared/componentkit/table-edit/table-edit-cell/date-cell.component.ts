@@ -16,37 +16,47 @@ const FORMAT_RULES: Record<string, { lengths: number[], chars: string[] }> = {
   selector: 'app-date-cell',
   host: { 'table-edit-id': '複製時請自行取唯一名' },
   template: `
-    <p-iconField iconPosition="right">
-      <p-calendar class="flex min-w-max" [(ngModel)]="cellInput.rowData[cellInput.col.field]"
-                  [ngModelOptions]="{ standalone: true }"
-                  [placeholder]="isDisabled() ? '' : '請輸入' + cellInput.col.header"
-                  [timeOnly]="cellInput.col.timeOnly || false"
-                  [showTime]="cellInput.col.showTime || false"
-                  [hourFormat]="cellInput.col.hourFormat || '24'"
-                  [showSeconds]="cellInput.col.showSeconds"
-                  [view]="cellInput.col.view || 'date'"
-                  [dateFormat]="cellInput.col.dateFormat || 'yy/mm/dd'"
-                  iconDisplay="input"
-                  [minDate]="cellInput.col.minDate"
-                  [maxDate]="cellInput.col.maxDate"
-                  [appendTo]="'body'"
-                  [showIcon]="!isDisabled()"
-                  [disabled]="isDisabled()"
-                  (onSelect)="handleSelect()"
-                  (onFocus)="cellInput.col.onFocus?.(cellInput.rowData, cellInput.rowData[cellInput.col.field], cellInput.col, cellInput.index)"
-                  (onBlur)="handleBlur($event)"
-                  (onInput)="onInput($event)"
-                  (keydown.enter)="handleEnter($event)"
-                  [style]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
-                  [inputStyle]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign || 'left'}"
-                  [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
-                  [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }">
-        <ng-template pTemplate="inputicon">
-          <i *ngIf="cellInput.col.timeOnly || false" class="pi pi-clock pointer-events-none"></i>
-          <i *ngIf="!cellInput.col.timeOnly || false" class="pi pi-calendar pointer-events-none"></i>
-        </ng-template>
-      </p-calendar>
-      </p-iconField>
+  <p-iconField iconPosition="right">
+    <p-calendar
+      class="flex w-full"
+      styleClass="w-full"
+      [(ngModel)]="cellInput.rowData[cellInput.col.field]"
+      [ngModelOptions]="{ standalone: true }"
+      [placeholder]="isDisabled() ? '' : '請輸入' + cellInput.col.header"
+      [timeOnly]="cellInput.col.timeOnly || false"
+      [showTime]="cellInput.col.showTime || false"
+      [hourFormat]="cellInput.col.hourFormat || '24'"
+      [showSeconds]="cellInput.col.showSeconds"
+      [view]="cellInput.col.view || 'date'"
+      [dateFormat]="cellInput.col.dateFormat || 'yy/mm/dd'"
+      iconDisplay="input"
+      [minDate]="cellInput.col.minDate"
+      [maxDate]="cellInput.col.maxDate"
+      [appendTo]="'body'"
+      [showIcon]="!isDisabled()"
+      [disabled]="isDisabled()"
+      (onSelect)="handleSelect()"
+      (onFocus)="cellInput.col.onFocus?.(cellInput.rowData, cellInput.rowData[cellInput.col.field], cellInput.col, cellInput.index)"
+      (onBlur)="handleBlur($event)"
+      (onInput)="onInput($event)"
+      (keydown.enter)="handleEnter($event)"
+      [style]="{
+        'width': cellInput.col.width,
+        'text-align': cellInput.col.textAlign
+      }"
+      [inputStyle]="{
+        'width': '100%',
+        'text-align': cellInput.col.textAlign || 'left'
+      }"
+      [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
+      [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }">
+
+      <ng-template pTemplate="inputicon">
+        <i *ngIf="cellInput.col.timeOnly || false" class="pi pi-clock pointer-events-none"></i>
+        <i *ngIf="!cellInput.col.timeOnly || false" class="pi pi-calendar pointer-events-none"></i>
+      </ng-template>
+    </p-calendar>
+  </p-iconField>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
