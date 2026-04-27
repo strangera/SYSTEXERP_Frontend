@@ -77,15 +77,13 @@
           </div>
 
           <div class="col-12 md:col-4">
-            <app-dropdown
+
+                  <app-input-text
               label="品項編號"
               controlName="GOODS_ID"
-              [options]="goodsIdOptions"
-              optionLabel="label"
-              optionValue="value"
               [control]="queryForm.controls.GOODS_ID"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-input-text>
           </div>
 
           <div class="col-12 md:col-4">
@@ -170,7 +168,7 @@
     (selectionChange)="selectedItems = $event"
     [showDetail]="true"
     (detail)="onDetail($event)"
-    [showEdit]="canShowEdit"
+    [showEdit]="false"
     (edit)="onEdit($event)"
     [addButton]="actionButtons"
     [expansionDataKey]="'Details'"

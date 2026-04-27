@@ -189,6 +189,7 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
       } else {
         // 更新
         const updatePayload: ASS11030UpdateRequest = {
+          OLD_STO_NO: this.authService.getUserInfo()?.SYS_StoreNo || '',
           OLD_B_CLASS_ID: this.rowdata?.B_CLASS_ID ?? '',
           OLD_M_CLASS_ID: this.rowdata?.M_CLASS_ID ?? '',
           OLD_CLASS_ID: this.rowdata?.S_CLASS_ID ?? '',

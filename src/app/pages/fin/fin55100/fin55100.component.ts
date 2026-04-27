@@ -4,7 +4,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-// 變更為 FIN55100 的 Service
 import { Fin55100Service, QueryFIN55100Request, QueryFIN55100Response } from '@service/api/fin/fin55100.service'; // 假設路徑
 import { DropdownApiService } from '@service/utility/dropdown-api.service'; // 假設路徑
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component'; // 假設路徑

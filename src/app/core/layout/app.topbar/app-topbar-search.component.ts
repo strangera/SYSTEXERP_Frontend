@@ -1,11 +1,11 @@
-import { Component, EventEmitter, Output, inject, signal, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 
 @Component({
   selector: 'app-topbar-search',
@@ -16,7 +16,7 @@ import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
           (completeMethod)="filterProgNo($event)" optionLabel="label" placeholder="搜尋選單的名稱編號" styleClass="h-2rem"
           (keydown.enter)="onSubmit(queryForm)" (onSelect)="onSubmit(queryForm)" />
         <!-- 這裡的 (click) 在 AutoComplete 的 InputIcon 上，不需要額外 A11Y 修正，因為 form 響應 enter -->
-        <p-inputIcon styleClass="pi pi-search" (click)="onSubmit(queryForm)" /> 
+        <p-inputIcon styleClass="pi pi-search" (click)="onSubmit(queryForm)" />
       </p-iconField>
     </form>
   `,
@@ -39,23 +39,31 @@ export class AppTopbarSearchComponent {
   @Output() navigateSuccess = new EventEmitter<void>(); // 導航成功後通知父組件
 
   filterProgNo(event: AutoCompleteCompleteEvent) {
-    const query = event.query ? event.query.toLowerCase() : '';
-    // ⚠️ 使用 Input 接收的資料
+    const query = event.query ? event.query.toLowerCase().replace(/\s+/g, '') : '';
     const funRights = this.funRightsWithLabel;
 
-    if (!funRights.length) {
+    if (!funRights.length || !query) {
       this.filteredProgs.set([]);
       return;
     }
 
-    const filtered: { label: string; value: FunsrightInfo }[] = funRights
-      .filter(f => f.prog_ispage === 'Y' && f.label && (
-        // 篩選條件包含 label (ex: SYS01 系統管理)
-        f.label.toLowerCase().includes(query) ||
-        f.prog_No?.toLowerCase().includes(query) ||
-        f.prog_id?.toLowerCase().includes(query) ||
-        f.prog_name?.toLowerCase().includes(query)
-      ))
+    const filtered = funRights
+      .filter(f => {
+        if (f.prog_ispage !== 'Y') return false;
+
+        // 2. 處理待比對的欄位，同樣移除所有空格並轉小寫
+        const targetLabel = (f.label || '').toLowerCase().replace(/\s+/g, '');
+        const targetNo = (f.prog_No || '').toLowerCase().replace(/\s+/g, '');
+        const targetId = (f.prog_id || '').toLowerCase().replace(/\s+/g, '');
+        const targetName = (f.prog_name || '').toLowerCase().replace(/\s+/g, '');
+
+        return (
+          targetLabel.includes(query) ||
+          targetNo.includes(query) ||
+          targetId.includes(query) ||
+          targetName.includes(query)
+        );
+      })
       .map(f => ({ label: f.label!, value: f }));
 
     this.filteredProgs.set(filtered);

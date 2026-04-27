@@ -1,13 +1,15 @@
+import { AsyncPipe, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CPM12070Request, CPM12070Response, Cpm12070Service } from '@service/api/cpm/cpm12070.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -19,83 +21,78 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   selector: 'app-cpm12070',
   templateUrl: './cpm12070.component.html',
   standalone: true,
-  imports: [ButtonModule, CalendarRangeQuickComponent, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule]
+  imports: [AsyncPipe, ButtonModule, CalendarRangeQuickComponent, MultiSelectComponent, TableReportComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule],
+  providers: [DatePipe]
 })
 export class CPM12070Component extends BasicQueryPageComponent<CPM12070Response> implements OnInit {
   queryForm = this.formBuilder.group({
-    opinionCategory: [null], // 客戶意見類別
-    receiveDateFrom: [null], // 接件日期
-    receiveDateTo: [null], // 接件日期
+    KIND_IDs: [null],    // 改為對應後端 SP 參數名
+    DATE_FROM: [null],   // 改為對應後端 SP 參數名
+    DATE_TO: [null],     // 改為對應後端 SP 參數名
   });
+
   data: CPM12070Response[] = [];
   totalRecords = 0;
-  footerTotal?: { caseNumber: string, doneCase: string, processingCase: string } | null;
-  lastQuery: CPM12070Request | null = null;
+  historyRequestBody: CPM12070Request | null = null;
+  btnLoading = false;
+
   columns: ReportColumn[] = [
-    { field: 'opinionCode', header: '客戶意見類別代號', visible: true },
-    { field: 'opinionName', header: '客戶意見類別名稱', visible: true },
-    { field: 'caseNumber', header: '總件數', visible: true },
-    { field: 'doneCase', header: '完成件數', visible: true },
-    { field: 'processingCase', header: '待處理件數', visible: true },
+    { field: 'KIND_ID', header: '客戶意見類別代號' },
+    { field: 'KIND_Name', header: '客戶意見類別名稱' },
+    { field: 'TotalCount', header: '總件數', align: 'right', format: formatAmount },
+    { field: 'DoneCount', header: '完成件數', align: 'right', format: formatAmount },
+    { field: 'PendingCount', header: '待處理件數', align: 'right', format: formatAmount },
   ];
-  opinionOptions = [
-    { value: 1, label: '意見反映' },
-    { value: 2, label: '廣告業務' },
-    { value: 3, label: '活動、場地洽談' },
-    { value: 4, label: '承租店櫃' },
-    { value: 5, label: '合作提案' },
-  ];
+
+  // 這裡建議之後可以從下拉選單 API 取得，目前先放靜態或空陣列
+  opinionOptions = this.dropDown.queryCss1002()
+
   constructor(
     public readonly cpm12070Service: Cpm12070Service,
-    private readonly fileExportService: FileExportService
+    private readonly fileExportService: FileExportService,
+    private readonly datePipe: DatePipe,
+    private readonly dropDown: DropdownApiService
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
     this.initializePage('CPM12070');
   }
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.cpm12070Service.queryCPM12070(frm.getRawValue()).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      const formValue = frm.getRawValue();
+      const requestBody: CPM12070Request = {
+        KIND_IDs: Array.isArray(formValue.KIND_IDs) ? formValue.KIND_IDs.join(',') : formValue.KIND_IDs,
+        DATE_FROM: this.datePipe.transform(formValue.DATE_FROM, 'yyyy-MM-dd') ?? undefined,
+        DATE_TO: this.datePipe.transform(formValue.DATE_TO, 'yyyy-MM-dd') ?? undefined,
+        PageIndex: 1,
+        PageSize: 30,
+        SortBy: [{ field: 'KIND_ID', order: 1 }]
+      };
+
+      this.cpm12070Service.queryCPM12070(requestBody).pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      ).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
-        this.footerTotal = res.footerData;
-        this.lastQuery = frm.getRawValue();
-        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-      })
-    })
+        this.historyRequestBody = requestBody;
+        this.queryStateService.setQueryState(this.ProgNo, formValue);
+      });
+    });
   }
-  btnLoading = false;
+
   onExportPDF() {
-    if (!this.lastQuery) {
-      this.messageService.warnBubble('請先執行查詢以產生報表。');
-      return;
-    }
-
-    const export$ = this.cpm12070Service.exportCPM12070PDF(this.lastQuery);
-
-    // 呼叫 Service 執行匯出，並將直到銷毀的邏輯加入
-    this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
-      '.pdf',
-      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    ).subscribe();
+    if (!this.historyRequestBody) return;
+    const export$ = this.cpm12070Service.exportCPM12070PDF(this.historyRequestBody);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (loading) => this.btnLoading = loading).subscribe();
   }
 
   onExportXLSX() {
-    if (!this.lastQuery) {
-      this.messageService.warnBubble('請先執行查詢以產生報表。');
-      return;
-    }
-
-    const export$ = this.cpm12070Service.exportCPM12070Excel(this.lastQuery);
-
-    this.fileExportService.executeFileExport(
-      export$.pipe(untilDestroyed(this)), // 將 untilDestroyed 加入 Service 回傳的 Observable
-      '.xlsx',
-      (isLoading) => this.btnLoading = isLoading // 傳遞 Setter 函數來更新元件狀態
-    ).subscribe();
+    if (!this.historyRequestBody) return;
+    const export$ = this.cpm12070Service.exportCPM12070Excel(this.historyRequestBody);
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (loading) => this.btnLoading = loading).subscribe();
   }
 }
-

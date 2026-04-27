@@ -57,7 +57,7 @@ export type FIN53010DataDetail = Omit<BaseQueryResponse<QueryFIN53010Detail>, 'D
  * ORG_ID: 組織編號
  * SerNo: 顯示用序號，10 為單位遞增
  * SubDetailNo: 對象編號
- * clearingCode: 立沖代號
+ * PTA: 立沖代號
  * id: 明細檔流水號
  * index: 索引
  */
@@ -80,7 +80,7 @@ export interface FIN53010Detail {
  * AccName: 科目名稱
  * DetailName: 廠商/員工名稱
  * ReflNo: 參考編號
- * clearingCode: 立沖代號
+ * PTA: 立沖代號
  * recKey: 對帳KEY值
  */
 export interface FIN53010DetailTable extends FIN53010Detail {
@@ -89,7 +89,7 @@ export interface FIN53010DetailTable extends FIN53010Detail {
   AccCName?: string;
   DetailName?: string;
   ReflNo?: string;
-  clearingCode?: string;
+  PTA?: string;
   recKey?: number;
 }
 
@@ -159,7 +159,7 @@ export interface InsertAPS2002DataBody {
   PUR_Net?: number;
   PUR_Tax?: number;
   PUR_Amt?: number;
-  PUR_Uniform?: string | null;
+  // PUR_Uniform?: string | null;
   PUR_TaxType?: string | null;
   PUR_DiscNo?: string | null;
   PUR_RepYYYYMM?: string | null;
@@ -819,11 +819,10 @@ export interface FIN53010StepAR {
   note_desc?: string;
 }
 
-/** FIN53010 新增多步驟：銷項發票（Voucher_Type=5）單列 */
+/** FIN53010 新增多步驟：銷項發票（Voucher_Type=6）單列 */
 export interface FIN53010StepSalesInvoiceRow {
   /** APS4023 主檔 ID（insert／update APS4023Data 用） */
   id?: number;
-  add_flag?: boolean;
   invoice_type?: string;
   invoice_prefix?: string;
   invoice_no?: string;
@@ -839,11 +838,10 @@ export interface FIN53010StepSalesInvoiceRow {
   asset_flag?: string;
 }
 
-/** FIN53010 新增多步驟：進項發票（Voucher_Type=6）單列 */
+/** FIN53010 新增多步驟：進項發票（Voucher_Type=5）單列 */
 export interface FIN53010StepPurchaseInvoiceRow {
   /** 更新 APS2002 時帶入 */
   id?: number;
-  add_flag?: boolean;
   voucher_type?: string;
   track_no?: string;
   invoice_no?: string;

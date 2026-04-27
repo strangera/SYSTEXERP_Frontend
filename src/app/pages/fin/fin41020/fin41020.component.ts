@@ -1,138 +1,132 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-// Shared
+import { Component, OnInit, signal } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { DeleteFIN41020Request, FIN41020Data, FIN41020Service } from '@service/api/fin/fin41020.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-fin41020',
   templateUrl: './fin41020.component.html',
   styleUrl: './fin41020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, InputNumberRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, ButtonComponent, TranslateModule, TableReportComponent]
 })
-export class FIN41020Component extends BasicQpageComponent implements OnInit {
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+export class FIN41020Component extends BasicQueryPageComponent<FIN41020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    year: [],
-    version: [],
-    organizationNumber: [, Validators.required],
-    month: [],
-    amountStart: [], // 金額 起
-    amountEnd: [], // 金額 迄
-    remark: [],
+    ORG_ID: ['', [Validators.required]], //部門代碼
+    AccNo: ['', [Validators.required]], //會計科目
+    BudgetYear: [], //年 (YYYY)
+    BudgetVersion: [], //版本
   });
 
   // Dropdown options
-
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  displayOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  vendorOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  organizationNumberOptions: any[] = [];
+  ORG_ID_Options = signal<{ label: string; value: string }[]>([]);
+  AccNoOptions = signal<{ label: string; value: string }[]>([]);
 
   // Table data
-  data: any[] = [
+  data: FIN41020Data[] = [];
+  selectedItems: FIN41020Data[] = [];
+  public readonly totalRecords = signal<number>(0);
 
-    // Other data
-  ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'departmentCode', header: '部門代號', visible: true },
-    { field: 'version', header: '版本', visible: true },
-    { field: 'year', header: '年', visible: true },
-    { field: 'month', header: '月', visible: true },
-    { field: 'accountSubject', header: '會計科目', visible: true },
-    { field: 'amount', header: '金額', visible: true },
-    { field: 'note', header: '備註', visible: true },]
+    { field: 'OrgId', header: '部門代號', visible: true },
+    { field: 'BudgetYear', header: '年', visible: true },
+    { field: 'BudgetVersion', header: '版本', visible: true },
+    { field: 'AccNo', header: '會計科目', visible: true },
+    { field: 'TotalAmount', header: '金額', visible: true },
+  ]
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
     private notificationService: NotificationService,
+    private fin41020Service: FIN41020Service,
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.ProgNo = '140002';
-    // Initialize dropdown options
+    this.initializePage('FIN41020', '/fin/fin41020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadDropdownOptions();
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+  onSubmit(form: FormGroup) {
+    console.log(form.value);
 
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
+    this.handleSubmit(form, () => {
+      this.fin41020Service.queryFIN41020(form.value)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords.set(response.TotalCount);
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+        });
+    });
 
-    this.loading = false;
-    this.notificationService.unblockUi();
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-    this.router.navigate(['FIN4000/FIN41020CRU']);
+  // 刪除
+  onDelete(selectedItems: FIN41020Data[]) {
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: `是否確認刪除 ${selectedItems.length} 筆資料？`,
+      accept: () => {
+        const deleteRequest: DeleteFIN41020Request = {
+          ORG_ID: selectedItems[0].OrgId,
+          BudgetYear: selectedItems[0].BudgetYear,
+          BudgetVersion: selectedItems[0].BudgetVersion,
+        };
+        this.fin41020Service.deleteFIN41020(deleteRequest)
+          .pipe(untilDestroyed(this))
+          .subscribe(response => {
+            if (response.Data.ErrCode !== 0) {
+              this.messageService.errorBubble(response.Data.ErrMsg || '刪除失敗');
+            }
+            else {
+              this.messageService.successBubble(response.Data.ErrMsg || '刪除成功');
+            }
+            this.onSubmit(this.queryForm);
+          })
+      }
+    });
   }
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN4000/FIN41020CRU'], extras);
-    }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
+  /** 載入下拉選單選項 */
+  private loadDropdownOptions(): void {
+    // 部門代號
+    this.fin41020Service.querySYS3100_DropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+        this.ORG_ID_Options.set(options);
       },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    });
+
+    // 會計科目
+    this.fin41020Service.queryGLS1005_DropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+        this.AccNoOptions.set(options);
+      },
+    });
+
   }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
-  }
+
 }

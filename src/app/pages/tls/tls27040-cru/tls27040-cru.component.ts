@@ -96,7 +96,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     CTBC_TXN_Date: [null as Date | null, [Validators.required]], // 帳務日期
     CTBC_TxnTime: [null as Date | null, [Validators.required]], // 銷售日期 (DateTime)
     TLT_No: [null as string | null, [Validators.required]], // 專櫃編號
-    CTBC_PayDate: [new Date(), [Validators.required]],// 請款日期
+    CTBC_PayDate: [new Date()],// 請款日期
     CTBC_DataType: ['C', [Validators.required, Validators.maxLength(1)]], // 資料型態
     CRD_Type: [null as string | null, [Validators.maxLength(6)]], // 卡別
     CTBC_CrdNo: [null as string | null, [Validators.maxLength(19)]], // 卡號
@@ -115,7 +115,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     CTBC_TXN_Date: [null as Date | null, [Validators.required]], // 帳務日期
     CTBC_TxnDate: [null as Date | null, [Validators.required]],// 銷售日期
     TLT_No: [null as string | null, [Validators.required]], // 專櫃編號
-    CTBC_PayDate: [new Date(), [Validators.required]], // 請款日期
+    CTBC_PayDate: [new Date()], // 請款日期
     CRD_Type: [null as string | null, [Validators.maxLength(6)]], // 卡別
     CTBC_CrdNo: [null as string | null, [Validators.maxLength(19)]], // 卡號
     CTBC_TxnAmt: [null as number | null, [Validators.required, Validators.max(999999999999)]], // 交易金額

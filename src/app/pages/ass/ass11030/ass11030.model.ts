@@ -49,6 +49,7 @@ export interface ASS11030InsertRequest {
  * ASS11030 更新請求參數
  */
 export interface ASS11030UpdateRequest {
+  OLD_STO_NO: string;       // 原分店代碼
   OLD_B_CLASS_ID: string;   // 原大分類代碼
   OLD_M_CLASS_ID: string;   // 原中分類代碼
   OLD_CLASS_ID: string;     // 原小分類代碼
