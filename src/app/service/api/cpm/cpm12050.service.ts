@@ -77,7 +77,8 @@ export interface InsertCPM12050Request {
   KIND_ID?: string;          // 意見類型
   KIND_ID_SUB?: string;      // 意見類型子類
   SUGG_SOURCE?: string;      // 建議來源
-  ORG_ID?: string;           // 責任單位
+  ORG_ID?: string;           // 組織
+  CLASS_ID?: string;         // 責任單位 CLASS_ID
   COMPLAIN_NOTES?: string;   // 顧客意見內容
   CUST_NAME?: string;        // 客戶姓名
   SEX?: string;              // 性別
@@ -122,7 +123,8 @@ export interface UpdateCPM12050Request {
   SUGG_TYPE?: string;        // 建議類型 (客訴/表揚)
   ANSWER_YN?: string;        // 是否已回覆（Y/N/S 等）
   CLASS_EMAIL?: string;      // 分類 Email
-  ORG_ID?: string;           // 責任單位
+  ORG_ID?: string;           // 組織
+  CLASS_ID?: string;         // 責任單位 CLASS_ID
   MEMBER_ID?: string;        // 會員編號
   STATUS?: string;           // 處理狀況
   USR_NO?: string;           // 使用者編號

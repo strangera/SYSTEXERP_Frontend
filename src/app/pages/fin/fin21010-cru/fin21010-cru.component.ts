@@ -1,21 +1,19 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-// Shared
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
-import { TranslateModule } from '@ngx-translate/core';
-//
 import { NgIf } from '@angular/common';
+import { Component, OnInit, } from '@angular/core';
+import { AbstractControl, AsyncValidatorFn, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 import { APS1002, Fin21010Service } from '@service/api/fin/fin21010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption } from '@shared/models/sys/sysb000.model';
 import { PanelModule } from 'primeng/panel';
+import { catchError, map, Observable, of, switchMap, timer } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { ValidationService } from '../../../shared/service/validation.service';
 
 //1.2.1.1 公司銀行資料維護 CRU
@@ -32,7 +30,11 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
     //APS1002  公司銀行資料維護主檔
     id: [null], // 主鍵ID，新增時為null，編輯時為存在的ID
 
-    BNK_id: [null, [Validators.required, Validators.maxLength(6), this.validationService.noChineseValidator]], // 帳戶編號 (BNK_NO+BNK_BRANCHNO銀行代碼+分行代碼)  PK
+    BNK_id: [
+      null,
+      [Validators.required, Validators.maxLength(6), this.validationService.noChineseValidator],
+      [this.bnkIdDuplicateValidator()] // <--- 新增在這裡
+    ],
     BNK_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.noChineseValidator]],     // 全省銀行代碼--- 下拉: BNK_NO+BNK_BRANCHNO銀行代碼、銀行名稱BNK_BRANCHNAME
 
     BNK_AccNo: [null, [Validators.required, Validators.maxLength(20), this.validationService.numberValidator]],  // 帳號
@@ -64,6 +66,26 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
     private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
+  }
+
+  // 實作驗證器邏輯
+  bnkIdDuplicateValidator(): AsyncValidatorFn {
+    return (control: AbstractControl): Observable<ValidationErrors | null> => {
+      if (!control.value) return of(null);
+
+      // 如果是「修改模式」，需要把目前的 ID 傳給後端進行排除
+      const currentId = this.dataForm.get('id')?.value || 0;
+
+      // 使用 timer 做 debounce (500ms)，避免使用者打字時一直觸發 API
+      return timer(500).pipe(
+        switchMap(() => this.fin21010Service.checkDuplicateBNKid(control.value, currentId)),
+        map(response => {
+          // 假設 API 回傳 Data 為 true 代表已存在（重覆）
+          return response.Data === true ? { bnkIdDuplicate: true } : null;
+        }),
+        catchError(() => of(null)) // 發生 API 錯誤時不阻擋儲存
+      );
+    };
   }
 
   ngOnInit(): void {

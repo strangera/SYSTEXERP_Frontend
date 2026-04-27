@@ -348,7 +348,9 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const valid = this.tableEditComponent?.validateAndShowErrors();
+      this.loading = true;
       if (valid === false) {
+        this.loading = false;
         return;
       }
       const raw = this.dataForm.getRawValue();
@@ -366,7 +368,6 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
           return;
         }
       }
-      this.loading = true;
       const req =
         this.crudstatus === CRUDStatus.Create
           ? this.ass12020Service.insertASS12020(basePayload)

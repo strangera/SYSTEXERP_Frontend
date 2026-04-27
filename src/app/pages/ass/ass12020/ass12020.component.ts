@@ -19,10 +19,12 @@ import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, forkJoin } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { AsyncPipe } from '@angular/common';
 import {
   ASS12020QueryRow,
   QueryASS12020Request,
 } from './ass12020.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
 /** 3.1.2.2 詢價登錄作業 */
 @UntilDestroy()
@@ -32,6 +34,7 @@ import {
   styleUrl: './ass12020.component.scss',
   standalone: true,
   imports: [
+    AsyncPipe,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -73,7 +76,7 @@ export class ASS12020Component extends BasicQueryPageComponent<ASS12020QueryRow>
     PageIndex: [1],
   });
 
-  itemCodeOptions: { value: string; label: string }[] = [];
+  itemCodeOptions = this.dropdownApiService.queryASS11040_DropDownList();
   supplierCodeOptions: { value: string; label: string }[] = [];
   itemUnitOptions = getSYS1000Options('UNIT');
 
@@ -104,6 +107,7 @@ export class ASS12020Component extends BasicQueryPageComponent<ASS12020QueryRow>
   constructor(
     public readonly ass12020Service: ASS12020Service,
     private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService
   ) {
     super();
   }

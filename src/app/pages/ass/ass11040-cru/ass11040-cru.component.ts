@@ -151,6 +151,11 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
   visible = signal(false);
   private patchInProgress = false;
 
+  get itemCodeDisplayValue(): string {
+    if (this.isFormCreateable) return '系統自動產生';
+    return this.dataForm.controls.itemCode.value ?? '';
+  }
+
   constructor(
     private readonly ass11040Service: ASS11040Service,
     private readonly dropdownApiService: DropdownApiService,
@@ -162,9 +167,11 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
   ngOnInit(): void {
     this.initializePage('ASS11040', this.dataForm);
     this.loadBigCategoryOptions();
-    this.loadMidCategoryOptions('');
-    this.loadSmlCategoryOptions('');
-    this.setupCategoryListeners(); //大中小分類欄位連動監聽
+    if (this.isFormCreateable) {
+      this.loadMidCategoryOptions('');
+      this.loadSmlCategoryOptions('');
+      this.setupCategoryListeners(); //大中小分類欄位連動監聽
+    }
     this.dropdownApiService.querySys3100().pipe(untilDestroyed(this)).subscribe(res => {
       this.deptCodeOptions = res ?? [];
     });
@@ -231,7 +238,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
       packageUnit: row.PACK_UNIT ?? null,
       packNum: row.PACK_NUM ?? null,
       taxCode: row.TAX_CODE ?? null,
-      deptCode: (row as Record<string, unknown>)['DEPT_CODE'] as string | undefined ?? null,
+      deptCode: row.ORG_ID ?? null,
       warrantyMethod: row.MT_MODE ?? null,
       mtSupp: row.MT_SUPP ?? null,
       mtYear: row.MT_YEAR ?? null,
@@ -251,8 +258,8 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
       illustrate: row.NOTES ?? null,
     });
     this.initializeMediaFromPhotoUrl(row.PHOTO_URL ?? null);
-    // if (row.B_CLASS_ID) this.loadMidCategoryOptions(row.B_CLASS_ID);
-    // if (row.M_CLASS_ID) this.loadSmlCategoryOptions(row.M_CLASS_ID);
+    if (row.B_CLASS_ID) this.loadMidCategoryOptions(row.B_CLASS_ID);
+    if (row.M_CLASS_ID) this.loadSmlCategoryOptions(row.M_CLASS_ID);
     this.patchInProgress = false;
   }
 
@@ -414,6 +421,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
                     GOODS_NAME: raw.itemName ?? null,
                     BAR_CODE: raw.barCode ?? null,
                     PHOTO_URL: photoUrl,
+                    ORG_ID: raw.deptCode ?? null,
                     MATERIAL_TYPE: raw.itemCategory ?? null,
                     B_CLASS_ID: raw.bigCategoryCode ?? null,
                     M_CLASS_ID: raw.midCategoryCode ?? null,
@@ -478,6 +486,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
           GOODS_NAME: raw.itemName ?? null,
           BAR_CODE: raw.barCode ?? null,
           PHOTO_URL: photoUrl,
+          ORG_ID: raw.deptCode ?? null,
           MATERIAL_TYPE: raw.itemCategory ?? null,
           B_CLASS_ID: raw.bigCategoryCode ?? null,
           M_CLASS_ID: raw.midCategoryCode ?? null,

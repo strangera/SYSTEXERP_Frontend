@@ -57,9 +57,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     RECEIPT_TYPE: [null], // 單據代碼
     INV_FORMAT: [null], // 發票格式
     TAX_CODE: [null], // 稅別
-    NTX_AMT: [null], // 未稅金額
-    TX_AMT: [null], // 稅額
-    AMT: [null], // 含稅金額
+    NTX_AMT: [{ value: null as number | null, disabled: true }], // 未稅金額
+    TX_AMT: [{ value: null as number | null, disabled: true }], // 稅額
+    AMT: [{ value: null as number | null, disabled: true }], // 含稅金額
     REDU_CODE: [null], // 扣抵別
     //------
 
@@ -105,9 +105,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   itemData: Ass14010Items[] = [];
   itemColumn: EditColumn[] = [
     { field: 'TOKEN_NO', header: '驗收單號', type: 'input' },
-    { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', disabled: () => true },
-    { field: 'TX_AMT', header: '稅額', type: 'inputNumber', disabled: () => true },
-    { field: 'AMT', header: '含稅金額', type: 'inputNumber', disabled: () => true },
+    { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
+    { field: 'TX_AMT', header: '稅額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
+    { field: 'AMT', header: '含稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
   ];
   // ----------------------------------------------------------------
   constructor(
@@ -127,6 +127,20 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
   onSubmit(frm: FormGroup) {// 驗證單據明細
     // --------------------------
+    //必須至少有一筆供應商資料
+    if (this.supplierData.length < 1) {
+      this.messageService.errorBubble('發票資料不可為空。');
+      return;
+    }
+    for (let i = 0; i < this.supplierData.length; i++) {
+      const row = this.supplierData[i];
+      const result = this.validateSupplierRow(row);
+      if (!result.isValid) {
+        this.messageService.unblockUi();
+        this.messageService.errorBubble(`發票資料 第 ${i + 1} 筆錯誤: ${result.errorMessage}`);
+        return;
+      }
+    }
     for (let i = 0; i < this.itemData.length; i++) {
       const row = this.itemData[i];
       const result = this.validateItemRow(row);
@@ -159,11 +173,10 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
               AMT: frm.get('AMT')?.value,
             }
             console.log('提交的payload', payload);
-            // const formValue = frm.getRawValue();
-            // this.ass14010Service.insertASS14010(payload).subscribe(() => {
-            //   this.messageService.successBubble('新增成功');
-            //   this.dataForm.reset();
-            // });
+            this.ass14010Service.insertASS14010(payload).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.dataForm.reset();
+            });
           }
           break;
         case CRUDStatus.Edit:
@@ -188,14 +201,14 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
             }
 
             console.log('提交的payload', payload);
-            // this.ass14010Service.updateASS14010(payload).subscribe((res) => {
-            //   if (res.Data.O_MSGTYPE === 'S') {
-            //     this.messageService.successBubble('更新成功');
-            //     this.onCancel();
-            //   } else {
-            //     this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
-            //   }
-            // });
+            this.ass14010Service.updateASS14010(payload).subscribe((res) => {
+              if (res.Data.O_MSGTYPE === 'S') {
+                this.messageService.successBubble('更新成功');
+                this.onCancel();
+              } else {
+                this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
+              }
+            });
           }
           break;
       }
@@ -204,7 +217,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   //讀取明細
   get14010Detail(STO_NO: string | null, RECEIPT_NO: string) {
     //編輯模式確認是否包含指定引數
-    if (this.crudstatus == CRUDStatus.Edit || CRUDStatus.Read) {
+    if (this.crudstatus == CRUDStatus.Edit || this.crudstatus == CRUDStatus.Read) {
+      //編輯模式不可變更供應商代號
+      if (this.crudstatus == CRUDStatus.Edit) {
+        this.dataForm.controls.SUPPLIER_ID.disable();
+      }
       if (!STO_NO || !RECEIPT_NO) {
         this.messageService.errorBubble('明細必須包含分店編號與收據編號')
       }
@@ -228,9 +245,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
               ? [...detailsRaw]
               : (detailsRaw ? [detailsRaw] : []);
 
-            // 同步備份原始資料
-            this.orgsupplierData = [...this.supplierData];
-            this.orgitemData = [...this.itemData];
+            // 深拷備份(切斷與原始資料物件的參考連結)
+            this.orgsupplierData = JSON.parse(JSON.stringify(this.supplierData));
+            this.orgitemData = JSON.parse(JSON.stringify(this.itemData));
 
             this.updateTokenNoSum(); //更新付款天數加總
 
@@ -287,25 +304,26 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       });
   }
 
+  //---發票明細---
+
+  //欄位名稱初始化
   private initSupplierColumns() {
     this.supplierColumn = [
       { field: 'RECEIPT_TYPE', header: '單據種類', type: 'dropdown', options: [...this.RECEIPT_TYPE_Options], optionLabel: 'label', optionValue: 'value' },
-      { field: 'RECEIPT_NO', header: '發票號碼' },
-      { field: 'RECEIPT_DATE', header: '發票日期', type: 'date', disabled: () => true },
-      { field: 'TICKET_DATE', header: '票據到期日', type: 'date', disabled: () => true },
-      { field: 'DEC_YM', header: '申報年月', type: 'input', disabled: () => true },
+      { field: 'RECEIPT_NO', header: '發票號碼', type: 'input' },
+      { field: 'RECEIPT_DATE', header: '發票日期', type: 'date' },
+      { field: 'TICKET_DATE', header: '票據到期日', type: 'date' },
+      { field: 'DEC_YM', header: '申報年月', type: 'input' },
       { field: 'INV_FORMAT', header: '發票格式', type: 'dropdown', options: [...this.INV_FORMAT_Options], optionLabel: 'label', optionValue: 'value' },
       { field: 'TAX_CODE', header: '稅別', type: 'dropdown', options: [...this.TAX_CODE_Options], optionLabel: 'label', optionValue: 'value' },
       { field: 'REDU_CODE', header: '扣抵別', type: 'dropdown', options: [...this.REDU_CODE_Options], optionLabel: 'label', optionValue: 'value' },
 
-      { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber', disabled: () => true },
-      { field: 'TOTAL_AMT', header: '發票總金額', type: 'inputNumber', disabled: () => true },
-      { field: 'TOTAL_NTX_AMT', header: '未稅總金額', type: 'inputNumber', disabled: () => true },
-      { field: 'TOTAL_TX_AMT', header: '稅額總金額', type: 'inputNumber', disabled: () => true },
+      { field: 'TICKET_BE', header: '付款天數', type: 'inputNumber' },
+      { field: 'TOTAL_NTX_AMT', header: '未稅金額', type: 'inputNumber', disabled: () => true },
+      { field: 'TOTAL_TX_AMT', header: '稅額', type: 'inputNumber', disabled: () => true },
+      { field: 'TOTAL_AMT', header: '含稅金額', type: 'inputNumber', disabled: () => true },
     ];
   }
-
-  //---發票明細---
   //依據明細驗收單號進行主檔token_no刷新
   onSupplierDataChange(eventData: Ass14010Supplier[]) {
     // 1. 變更後的資料同步回 itemData
@@ -324,6 +342,26 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     this.dataForm.get('TICKET_BE')?.setValue(ticket_sum);
   }
 
+  //驗證供應商資料
+  validateSupplierRow = (rowData: Ass14010Supplier): { isValid: boolean; errorMessage: string } => {
+    // 1. 檢查發票號碼是否為空
+    const RECEIPT_NO = rowData?.RECEIPT_NO?.trim();
+    if (!RECEIPT_NO) {
+      return { isValid: false, errorMessage: '發票號碼不能為空。' };
+    }
+    // 2. 檢查發票號碼格式 (假設格式為兩碼英文+八碼數字，例如 AB12345678)
+    const receiptNoPattern = /^[A-Z]{2}\d{8}$/;
+    if (!receiptNoPattern.test(RECEIPT_NO)) {
+      return { isValid: false, errorMessage: '發票號碼格式不正確，應為兩碼英文加八碼數字。' };
+    }
+    // 3. 發票總金額應為未稅金額加稅額總金額
+    const expectedTotal = (Number(rowData.TOTAL_NTX_AMT) || 0) + (Number(rowData.TOTAL_TX_AMT) || 0);
+    if (Number(rowData.TOTAL_AMT) !== expectedTotal) {
+      return { isValid: false, errorMessage: `含稅金額應為未稅金額加稅額，應為 (${expectedTotal}) 元。` };
+    }
+
+    return { isValid: true, errorMessage: '' };
+  }
   // ---驗收單明細---
 
   //依據明細驗收單號進行主檔token_no刷新
@@ -340,6 +378,33 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     // 3. 更新主表單的值
     // 由於 TOKEN_NO 是 disabled 狀態，setValue 依然有效
     this.dataForm.get('TOKEN_NO')?.setValue(tokenNos);
+
+    // 計算 itemData 的各項總和
+    const totalNtx = this.itemData.reduce((sum, item) => sum + (Number(item.NTX_AMT) || 0), 0);
+    const totalTx = this.itemData.reduce((sum, item) => sum + (Number(item.TX_AMT) || 0), 0);
+    const totalAmt = this.itemData.reduce((sum, item) => sum + (Number(item.AMT) || 0), 0);
+
+    // 3. 同步到發票資料 (supplierData) 的第一筆
+    if (this.supplierData && this.supplierData.length > 0) {
+      // 建立一個新物件參考以觸發變更偵測
+      this.supplierData[0] = {
+        ...this.supplierData[0],
+        TOTAL_NTX_AMT: totalNtx,
+        TOTAL_TX_AMT: totalTx,
+        TOTAL_AMT: totalAmt
+      };
+
+      // 觸發表格重新渲染
+      this.supplierData = [...this.supplierData];
+    }
+
+    // 4. 同步更新主表單的金額欄位 (如果 dataForm 也需要顯示)
+    this.dataForm.patchValue({
+      NTX_AMT: totalNtx,
+      TX_AMT: totalTx,
+      AMT: totalAmt
+    });
+
   }
 
   //驗收單號前端驗證機制
@@ -366,7 +431,15 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
 
   //清除明細內容
   clearSubForm() {
-    this.supplierData = this.orgsupplierData; // 還原表格資料
-    this.itemData = this.orgitemData; // 還原表格資料
+    const restoredData = JSON.parse(JSON.stringify(this.orgsupplierData));
+
+    this.supplierData = restoredData.map((item: any) => ({
+      ...item,
+      // 手動將字串轉回 Date 物件
+      RECEIPT_DATE: item.RECEIPT_DATE ? new Date(item.RECEIPT_DATE) : null,
+      TICKET_DATE: item.TICKET_DATE ? new Date(item.TICKET_DATE) : null
+    }));
+    this.itemData = JSON.parse(JSON.stringify(this.orgitemData));
+    this.updateTokenNoSum(); // 重新觸發加總計算
   }
 }

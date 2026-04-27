@@ -53,14 +53,22 @@
 <div class="card">
   <div class="col-12">
     <ng-template #accGroupHeader let-row>
-      <span class="font-bold">科目：{{ row.AccNo }} - {{ row.AccCName }}</span>
+      <div style="display: flex; justify-content: space-between; width: 100%">
+        <span class="font-bold">科目：{{ row.AccNo }} - {{ row.AccCName }}</span>
+        <div class="flex items-center gap-6">
+          <span>科目立帳合計：{{ formatAmount(getAccSubtotal(row.AccNo, 'PTA1')) }}</span>
+          <span>科目沖銷合計：{{ formatAmount(getAccSubtotal(row.AccNo, 'PTA2')) }}</span>
+          <span>科目餘額：{{ formatAmount(getAccSubtotal(row.AccNo, 'PTA3')) }}</span>
+        </div>
+      </div>
     </ng-template>
 
     <app-fin29060-table-subheader [data]="data" [columns]="columns" [totalRecords]="totalRecords"
       [lastQueryBody]="lastQueryBody" [queryFunction]="fin55040Service.queryFIN55040.bind(fin55040Service)"
       [lazyBatchSize]="lazyBatchSize" [showManage]="false" (dataChange)="data = $event" (detail)="onDetail($event)"
       [groupRowsBy]="'AccNo'" [fullData]="fullData" [totalData]="totalData" [groupRowsByName]="'科目代號'"
-      [showSubTotal]="true" [showTotal]="true" (detailWithColValue)="onDetailWithColValue($event)">
+      [showSubTotal]="true" [showTotal]="true" (detailWithColValue)="onDetailWithColValue($event)"
+      [groupHeaderTemplate]="accGroupHeader">
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
           <p-button styleClass="p-2" label="立沖科目明細表.PDF" icon="pi pi-file" (click)="printPDF(true)"

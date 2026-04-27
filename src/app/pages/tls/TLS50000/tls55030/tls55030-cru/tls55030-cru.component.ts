@@ -144,6 +144,14 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
           this.handleInvoiceAutoFill(rowData);
         }
       }
+      if (['Rebate_Amt_New', 'Rebate_Net', 'Rebate_Tax'].includes(col.field)) {
+        const originalOnBlur = col.onBlur;
+        col.onBlur = (rowData: IRebateDetailForCRU) => {
+          if (originalOnBlur) originalOnBlur(rowData, null, col, 0); // 執行 model 裡的計算邏輯
+          this.updateInvoiceSummaryAndFormState();   // 強制觸發下方的「折讓總金額」與「餘額」重新計算
+          this.cdr.detectChanges();
+        };
+      }
     });
   }
   /**

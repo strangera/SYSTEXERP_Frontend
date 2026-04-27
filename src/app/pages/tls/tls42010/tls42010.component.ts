@@ -74,7 +74,10 @@ export class TLS42010Component extends BasicQueryPageComponent<POS1004Master> im
   ngOnInit(): void {
     this.initializePage('TLS42010', '/TLS/TLS42010cru', this.queryForm, (form) => this.onSubmit(form));
     this.tls42010Service.dropdownTLS42010().subscribe((res) => {
-      this.kbFuncOptions = res.Data;
+      this.kbFuncOptions = res.Data.map((item: USRLevelOption) => ({
+        ...item,
+        label: `${item.keyUSR_Level} / ${item.ECR_KBType} / ${item.ECR_KBDesc}`,
+      }));
     });
   }
   // ---------------- Dialog 行為 ----------------

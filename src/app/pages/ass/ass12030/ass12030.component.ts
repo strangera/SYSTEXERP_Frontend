@@ -22,6 +22,8 @@ import { Actions } from '@shared/service/permission-guard.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { AsyncPipe } from '@angular/common';
 
 /** 3.1.2.3 採購申請作業 */
 @UntilDestroy()
@@ -31,6 +33,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
   styleUrl: './ass12030.component.scss',
   standalone: true,
   imports: [
+    AsyncPipe,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -74,7 +77,7 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
   empIdOptions: { value: string; label: string }[] = [];
   aprvEmpIdOptions: { value: string; label: string }[] = [];
   /** 部門：queryPOS2013_DropDownList */
-  orgIdOptions: { value: string; label: string }[] = [];
+  orgIdOptions = this.dropdownApiService.querySys3100();
   /** 品項：queryFIN11040 */
   goodsIdOptions: { value: string; label: string }[] = [];
   /** 倉別：queryASS11100 */
@@ -130,6 +133,7 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
   constructor(
     public readonly ass12030Service: ASS12030Service,
     private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly fin11040Service: Fin11040Service,
     private readonly ass11100Service: ASS11100Service
   ) {
@@ -182,16 +186,6 @@ export class ASS12030Component extends BasicQueryPageComponent<ASS12030QueryRow>
         }));
         this.empIdOptions = options;
         this.aprvEmpIdOptions = options;
-      });
-    this.dropDownListService
-      .queryPOS2013_DropDownList({})
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        const list = res.Data ?? [];
-        this.orgIdOptions = list.map((item: { No?: string; Name?: string }) => ({
-          value: item.No ?? '',
-          label: `${item.No ?? ''} - ${item.Name ?? ''}`,
-        }));
       });
     this.dropDownListService
       .queryPOS2013_DropDownList({ VEN_Flag: '1' })

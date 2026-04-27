@@ -71,6 +71,13 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
     { field: 'DIS_Status', header: '狀況', format: (v) => getSYS1000('DIS_Status', v) },
     { field: 'Rebate_Amt', header: '總折讓金額', format: formatAmount },
   ];
+  addButtons = [
+    {
+      label: '匯出折讓單',
+      icon: 'pi pi-download',
+      action: (rowData: any) => this.onPrint(rowData),
+    }
+  ];
   isRowSelectable = (item: Tls55030ListData) => item.DIS_Status === '1';
   editDisabled = (item: Tls55030ListData) => item.DIS_Status !== '1';
   constructor(
@@ -110,6 +117,32 @@ export class TLS55030Component extends BasicQueryPageComponent<Tls55030ListData>
           this.onSubmit(this.queryForm);
           this.selectedItems = [];
         });
+      }
+    });
+  }
+
+  onPrint(rowData: Tls55030ListData) {
+    const body = {
+      DIS_No: rowData.DIS_No,
+    };
+    this.loading = true;
+    this.tls55030Service.PrintTLS55030PDF(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe({
+      next: (blob: Blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        const fileName = `${rowData.DIS_No}_折讓單.pdf`;
+        link.download = fileName;
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        window.URL.revokeObjectURL(url);
+      },
+      error: () => {
+        this.messageService.errorBubble('檔案下載失敗，請稍後再試');
       }
     });
   }

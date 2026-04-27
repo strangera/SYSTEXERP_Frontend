@@ -64,7 +64,7 @@ export const assRoutes: Routes = [
   // { path: 'ass15010cru', loadComponent: () => import('./ass15010-cru/ass15010-cru.component').then(m => m.ASS15010CRUComponent),data: {progNo:'ASS15010'} },
   { path: 'ass15020', loadComponent: () => import('./ass15020/ass15020.component').then(m => m.ASS15020Component), data: { progNo: 'ASS15020' } }, // 財產保管清冊
   // { path: 'ass15030', loadComponent: () => import('./ass15030/ass15030.component').then(m => m.ASS15030Component),data: {progNo:'ASS15030'} }, // 財產目錄
-  // { path: 'ass15040', loadComponent: () => import('./ass15040/ass15040.component').then(m => m.ASS15040Component),data: {progNo:'ASS15040'} }, // 財產目錄之會計科目報表
+  { path: 'ass15040', loadComponent: () => import('./ass15040/ass15040.component').then(m => m.ASS15040Component), data: { progNo: 'ASS15040' } }, // 財產目錄之會計科目報表
   { path: 'ass15070', loadComponent: () => import('./ass15070/ass15070.component').then(m => m.ASS15070Component), data: { progNo: 'ASS15070' } }, // 財產進貨清單
   { path: 'ass15050', loadComponent: () => import('./ass15050/ass15050.component').then(m => m.ASS15050Component), data: { progNo: 'ASS15050' } }, // 折舊攤提表
   { path: 'ass15060', loadComponent: () => import('./ass15060/ass15060.component').then(m => m.ASS15060Component), data: { progNo: 'ASS15060' } }, // 財產異動記錄查詢
@@ -87,15 +87,15 @@ export const assRoutes: Routes = [
   { path: 'ass16080cru', loadComponent: () => import('./ass16080-cru/ass16080-cru.component').then(m => m.ASS16080CRUComponent), data: { progNo: 'ASS16080' } },
   { path: 'ass16090', loadComponent: () => import('./ass16090/ass16090.component').then(m => m.ASS16090Component), data: { progNo: 'ASS16090' } }, // 耗材報廢維護作業
   { path: 'ass16090cru', loadComponent: () => import('./ass16090-cru/ass16090-cru.component').then(m => m.ASS16090CRUComponent), data: { progNo: 'ASS16090' } },
-  // { path: 'ass17010', loadComponent: () => import('./ass17010/ass17010.component').then(m => m.ASS17010Component),data: {progNo:'ASS17010'} }, // 領用明細表
+  { path: 'ass17010', loadComponent: () => import('./ass17010/ass17010.component').then(m => m.ASS17010Component), data: { progNo: 'ASS17010' } }, // 領用明細表
   { path: 'ass17020', loadComponent: () => import('./ass17020/ass17020.component').then(m => m.ASS17020Component), data: { progNo: 'ASS17020' } }, // 領用統計表
-  // { path: 'ass17030', loadComponent: () => import('./ass17030/ass17030.component').then(m => m.ASS17030Component),data: {progNo:'ASS17030'} }, // 領用發料統計表
-  // { path: 'ass17040', loadComponent: () => import('./ass17040/ass17040.component').then(m => m.ASS17040Component),data: {progNo:'ASS17040'} }, // 領用退料統計表
+  { path: 'ass17030', loadComponent: () => import('./ass17030/ass17030.component').then(m => m.ASS17030Component), data: { progNo: 'ASS17030' } }, // 領用發料統計表
+  { path: 'ass17040', loadComponent: () => import('./ass17040/ass17040.component').then(m => m.ASS17040Component), data: { progNo: 'ASS17040' } }, // 領用退料統計表
   { path: 'ass17050', loadComponent: () => import('./ass17050/ass17050.component').then(m => m.ASS17050Component), data: { progNo: 'ASS17050' } }, // 使用統計月報表
-  // { path: 'ass17060', loadComponent: () => import('./ass17060/ass17060.component').then(m => m.ASS17060Component),data: {progNo:'ASS17060'} }, // 調撥明細表
-  // { path: 'ass17070', loadComponent: () => import('./ass17070/ass17070.component').then(m => m.ASS17070Component),data: {progNo:'ASS17070'} }, // 報廢明細表
+  { path: 'ass17060', loadComponent: () => import('./ass17060/ass17060.component').then(m => m.ASS17060Component), data: { progNo: 'ASS17060' } }, // 調撥明細表
+  { path: 'ass17070', loadComponent: () => import('./ass17070/ass17070.component').then(m => m.ASS17070Component), data: { progNo: 'ASS17070' } }, // 報廢明細表
   // { path: 'ass17080', loadComponent: () => import('./ass17080/ass17080.component').then(m => m.ASS17080Component),data: {progNo:'ASS17080'} }, // 耗材庫存查詢作業(含金額)
-  // { path: 'ass17090', loadComponent: () => import('./ass17090/ass17090.component').then(m => m.ASS17090Component),data: {progNo:'ASS17090'} }, // 耗材庫存查詢作業
+  { path: 'ass17090', loadComponent: () => import('./ass17090/ass17090.component').then(m => m.ASS17090Component), data: { progNo: 'ASS17090' } }, // 耗材庫存查詢作業
   { path: 'ass17100', loadComponent: () => import('./ass17100/ass17100.component').then(m => m.ASS17100Component), data: { progNo: 'ASS17100' } }, // 耗材進耗存報表
   // { path: 'ass17110', loadComponent: () => import('./ass17110/ass17110.component').then(m => m.ASS17110Component),data: {progNo:'ASS17110'} }, // 耗材進耗存之會計科目報表
   { path: 'ass21010', loadComponent: () => import('./ass21010/ass21010.component').then(m => m.ASS21010Component), data: { progNo: 'ASS21010' } }, // 基本資料設定-能源錶號基本維護
