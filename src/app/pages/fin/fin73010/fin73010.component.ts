@@ -86,9 +86,9 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
     { field: 'ORG_ID', header: '費用科目組織代碼' },
     { field: 'Dtl_OrgName', header: '費用科目組織名稱' },
     { field: 'PUR_Date', header: '憑證日期', format: formatDate },
-    { field: 'PCS_Net', header: '未稅金額', format: formatAmount },
-    { field: 'PCS_Tax', header: '稅額', format: formatAmount },
-    { field: 'PCS_Amt', header: '含稅金額', format: formatAmount },
+    { field: 'PCS_Net', header: '未稅金額', format: formatAmount, isTotal: true },
+    { field: 'PCS_Tax', header: '稅額', format: formatAmount, isTotal: true },
+    { field: 'PCS_Amt', header: '含稅金額', format: formatAmount, isTotal: true }
   ];
 
   PCS_No_Options: { No: string; Name: string; Label: string }[] = []; // 零用金單號選項
@@ -123,18 +123,18 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
         next: (response) => {
           if (response.Status === '0000') {
             this.lastQueryBody = frm.value;
-            this.data = response.Data
-            // this.data = response.Data.filter((item: Fin73010data) => item.RowType !== 2); // 只顯示明細列 (html:howTotal、showPaginator)
+            // this.data = response.Data
+            this.data = response.Data.filter((item: Fin73010data) => item.RowType !== 2); // 只顯示明細列 (html:showTotal、showPaginator)
             // 直接抓response為2的資料欄位，只會有1筆不用逐欄位相加
-            // const sumRow = response.Data.find((item: Fin73010data) => item.RowType === 2);
-            // if (sumRow) {
-            //   this.sumData = {
-            //     PCS_Net: sumRow.PCS_Net,
-            //     PCS_Tax: sumRow.PCS_Tax,
-            //     PCS_Amt: sumRow.PCS_Amt
-            //   };
-            // }
-            console.log('Result', this.data);
+            const sumRow = response.Data.find((item: Fin73010data) => item.RowType === 2);
+            if (sumRow) {
+              this.sumData = {
+                PCS_Net: sumRow.PCS_Net,
+                PCS_Tax: sumRow.PCS_Tax,
+                PCS_Amt: sumRow.PCS_Amt
+              };
+            }
+            console.log('Result', this.sumData);
             this.totalRecords = response.TotalCount || response.Data.length;
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {
