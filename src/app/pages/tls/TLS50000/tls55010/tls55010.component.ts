@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -41,17 +41,14 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   ]
   constructor(
     private readonly tls55010Service: Tls55010Service,
-    private readonly datePipe: DatePipe
+    private readonly datePipe: DatePipe,
+    private readonly cdr: ChangeDetectorRef
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS55010', '/tls/tls55010cru');
-    this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
-      this.cls_date = res.Data.CLS_DATE;
-      const closeDate = new Date(res.Data.CLS_DATE);
-      closeDate.setDate(closeDate.getDate() + 1);
-      this.queryForm.patchValue({ TXN_Date: closeDate });
-    });
+    // 初始化時獲取日期
+    this.refreshCloseDate();
     this.data = getSYS1000Options('IMSCLOSE').map((item: { value: string; label: string }) => ({
       ...item, check_content: item.label, details: []
     }));
@@ -144,6 +141,20 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   onSubmit(frm: FormGroup) {
     this.showHistory = false; // 關閉歷史
     this.handleSubmit(frm, () => {
+      // 1. 前端初步卡控：檢查日期是否為 最近關帳日 + 1 day
+      if (this.cls_date) {
+        const lastDate = new Date(this.cls_date);
+        const targetDate = new Date(lastDate);
+        targetDate.setDate(lastDate.getDate() + 1);
+        const selectedDate = new Date(frm.value.TXN_Date);
+
+        if (selectedDate.toDateString() !== targetDate.toDateString()) {
+          this.messageService.warnBubble(`日結日期錯誤！最近關帳日為 ${this.cls_date}，今日僅能日結 ${targetDate.toLocaleDateString()}。`);
+          this.loading = false;
+          return;
+        }
+      }
+
       this.loading = false;
       this.insertLoading = true;
       const body = {
@@ -153,11 +164,8 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
       this.tls55010Service.insertTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.insertLoading = false)).subscribe((res) => {
         this.messageService.successBubble(res.Message);
         this.isConfirmDate = true;
-        this.showReverseBtn = true;
         this.lastDate = body.TXN_Date as unknown as Tls55010DateRequest;
-        this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
-          this.cls_date = res.Data.CLS_DATE;
-        });
+        this.refreshCloseDate();
         this.dataForm.patchValue(res.Data.Data._gls6001);
         this.data2 = res.Data.Data._gls6002s.map((item: any) => ({
           ...item,
@@ -183,18 +191,15 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
         TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
       }
       this.tls55010Service.queryTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.queryLoading = false)).subscribe((res) => {
+        this.isConfirmDate = true;
         if (!res.Data) {
           this.messageService.warnBubble('查無資料');
           this.data2 = [];
           this.footerData2 = [];
           this.dataForm.reset();
-          this.showReverseBtn = false;
           return;
         }
         this.messageService.successBubble(res.Message);
-        this.lastDate = body.TXN_Date as unknown as Tls55010DateRequest;
-        this.isConfirmDate = true;
-        this.showReverseBtn = true;
         this.dataForm.patchValue(res.Data.Data._gls6001);
         this.data2 = res.Data.Data._gls6002s.map((item: any) => ({
           ...item,
@@ -244,19 +249,42 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   data2: any[] = []
   footerData2: any = {};
   reverseLoading = false;
-  showReverseBtn = false;
   // 反日節方法
   onReverse(frm: FormGroup) {
-    if (!this.lastDate) {
-      return;
-    }
-    this.reverseLoading = true;
-    this.messageService.infoBubble('反日結中,請稍候...');
-    this.tls55010Service.unLockTLS55010(this.lastDate).pipe(untilDestroyed(this), finalize(() => this.reverseLoading = false)).subscribe((res) => {
-      this.messageService.successBubble(res.Message);
-      this.showReverseBtn = false;
-      this.dataForm.reset();
-      this.data2 = [];
+    this.handleSubmit(frm, () => {
+      this.loading = false;
+      const body = {
+        TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
+      }
+      this.reverseLoading = true;
+      this.messageService.infoBubble('反日結中,請稍候...');
+      this.tls55010Service.unLockTLS55010(body).pipe(untilDestroyed(this), finalize(() => this.reverseLoading = false)).subscribe((res) => {
+        this.messageService.successBubble(res.Message);
+        this.dataForm.reset();
+        this.data2 = [];
+        this.refreshCloseDate();
+      });
+    });
+  }
+
+  /**
+ * 從後端獲取最新關帳日，並同步更新表單結帳日期為 關帳日 + 1
+ */
+  private refreshCloseDate(): void {
+    this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
+      if (res?.Data?.CLS_DATE) {
+        this.cls_date = res.Data.CLS_DATE;
+
+        // 計算下一天
+        const closeDate = new Date(res.Data.CLS_DATE);
+        closeDate.setDate(closeDate.getDate() + 1);
+
+        // 更新表單日期
+        this.queryForm.patchValue({ TXN_Date: closeDate });
+
+        // 如果有涉及 ChangeDetection 也可以手動觸發一下
+        this.cdr.detectChanges();
+      }
     });
   }
 }

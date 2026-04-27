@@ -13,8 +13,8 @@
     onScroll: onScroll,
   }" [expandedRowKeys]="expandedRows" [loading]="loading">
   <ng-template pTemplate="caption">
-    <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
-      [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event"
+    <app-table-caption [data]="data" [footerData]="footerData" [columns]="columns" (columnsEvent)="columns = $event"
+      [dataKey]="dataKey" [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event"
       [selectedItems]="selectedItems" [tableKey]="tableKey" [showCaption]="showCaption" [showFilter]="showFilter"
       [showReportMode]="showReportMode" [showDelete]="showDelete" [showExcel]="showExcel"
       [expansionColumns]="expansionColumns" [expandedRows]="expandedRows" [showExcelExport]="showExcelExport"
@@ -231,7 +231,7 @@
     <tr *ngFor="let row of footerRows" class="font-bold text-center text-sm text-primary">
       <td class="text-center"
         [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0) + tableUtility.getFirstFooterIndex(columns, row)">
-        <span class="font-bold">{{ footerLabelField && row[footerLabelField] != null ? row[footerLabelField] :
+        <span class="font-bold">{{ footerLabelField && row[footerLabelField] !== null ? row[footerLabelField] :
           footerLabel }}</span>
       </td>
       <ng-container *ngFor="let col of columns; let i = index">

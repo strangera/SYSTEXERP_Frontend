@@ -1,14 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
 import {
+  AfterViewInit,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  ElementRef,
   EventEmitter,
   inject,
   Input,
   NgZone,
   OnChanges,
+  OnDestroy,
   Output,
   SimpleChanges,
   Type,
@@ -49,7 +52,7 @@ import {
   FieldChangeEvent,
 } from './fin32020table-edit.model';
 import { FIN32020TemplateCellComponent } from './fin32020table-edit-cell/FIN32020template-cell.component';
-
+import { RadioButtonModule } from 'primeng/radiobutton';
 @Component({
   selector: 'app-fin32020table-edit',
   templateUrl: './fin32020table-edit.component.html',
@@ -74,12 +77,18 @@ import { FIN32020TemplateCellComponent } from './fin32020table-edit-cell/FIN3202
     SkeletonModule,
     TableModule,
     TooltipModule,
+    RadioButtonModule,
   ],
   providers: [TableEditDataService, TableValidationService],
 })
-export class FIN32020TableEditComponent implements OnChanges {
+export class FIN32020TableEditComponent
+  implements OnChanges, AfterViewInit, OnDestroy
+{
   @ViewChild('dt') private readonly table!: Table;
+@ViewChild('tableHost', { read: ElementRef })
+private readonly tableHost?: ElementRef<HTMLElement>;
 
+@Output() tableScrollBottom = new EventEmitter<HTMLElement>();
   // 基本設置
   @Input() title: string | undefined = undefined; // table 標題
   @Input() tableKey: string | undefined = undefined; // table 唯一標識 (必填)
@@ -162,15 +171,34 @@ export class FIN32020TableEditComponent implements OnChanges {
   @Input() footerData: any;
   @Input() showFooter = false;
   @Input() scrollable = false;
+  @Input() scrollHeight = '420px';
   @Input() showPaginator = false;
+  @Input() selectionMode: 'single' | 'multiple' | null = null;
 
+  //radioBTN
+@Input() selectedItem: any = null;
+@Output() selectedItemChange = new EventEmitter<any>();
+
+@Input() showSingleSelect = false;
+
+/** 某列是否應顯示 X（不可選） */
+@Input() isRowMarked: (rowData: any, rowIndex: number, data: any[]) => boolean = () => false;
+
+/** 點 radio 時是否直接觸發 detail / confirm 類行為 */
+@Output() singleSelect = new EventEmitter<any>();
+@Output() rowDoubleClick = new EventEmitter<{
+  rowData: any;
+  index: number;
+}>();
   protected readonly tableUtilityService = inject(TableUtilityService);
   protected readonly cdr = inject(ChangeDetectorRef);
   protected readonly messageService = inject(NotificationService);
   protected readonly validationService = inject(TableValidationService);
   protected readonly dataService = inject(TableEditDataService);
   protected readonly zone = inject(NgZone);
-
+private scrollContainer?: HTMLElement;
+private boundScrollHandler?: EventListener;
+private hasEmittedBottom = false;
   public get _tableData(): any[] {
     return this.dataService.tableData;
   }
@@ -193,6 +221,9 @@ export class FIN32020TableEditComponent implements OnChanges {
   public tableDataEmpty = false;
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['data']) {
+  this.hasEmittedBottom = false;
+}
     if (changes['data']) {
       const dataChange = changes['data'];
       const isDataReferenceDifferent =
@@ -219,6 +250,11 @@ export class FIN32020TableEditComponent implements OnChanges {
           );
           this.cdr.detectChanges();
         }
+            if (changes['scrollable'] || changes['data']) {
+      setTimeout(() => {
+        this.bindScrollableBody();
+      });
+    }
       }
     }
 
@@ -567,4 +603,87 @@ deleteRow(selectedItems: any[]) {
   this.dataChange.emit(cleanData);
   this.cdr.detectChanges();
 }
+onSingleSelect(rowData: any, rowIndex: number, event?: MouseEvent): void {
+  if (this.disabled) return;
+  if (event) {
+    event.stopPropagation();
+  }
+
+  if (rowData?._isAutoInsertCandidate) return;
+  if (this.isRowMarked(rowData, rowIndex, this._tableData)) return;
+
+  this.selectedItem = rowData;
+  this.selectedItemChange.emit(rowData);
+  this.singleSelect.emit(rowData);
+  this.cdr.detectChanges();
+}
+onRowDoubleClick(rowData: any, rowIndex: number, event?: MouseEvent): void {
+  if (this.disabled) return;
+  if (event) {
+    event.stopPropagation();
+  }
+
+  if (rowData?._isAutoInsertCandidate) return;
+
+  this.rowDoubleClick.emit({
+    rowData,
+    index: rowIndex,
+  });
+}
+ngAfterViewInit(): void {
+  setTimeout(() => {
+    this.bindScrollableBody();
+  });
+}
+
+ngOnDestroy(): void {
+  this.unbindScrollableBody();
+}
+
+private bindScrollableBody(): void {
+  this.unbindScrollableBody();
+
+  const host = this.tableHost?.nativeElement;
+  if (!host || !this.scrollable) return;
+
+  const container =
+    host.querySelector('.p-datatable-wrapper') ||
+    host.querySelector('.p-datatable-table-container') ||
+    host.querySelector('.p-datatable-scrollable-body');
+
+  if (!(container instanceof HTMLElement)) return;
+
+  this.scrollContainer = container;
+  this.boundScrollHandler = () => this.onInternalScroll(container);
+  container.addEventListener('scroll', this.boundScrollHandler, {
+    passive: true,
+  });
+}
+
+private unbindScrollableBody(): void {
+  if (this.scrollContainer && this.boundScrollHandler) {
+    this.scrollContainer.removeEventListener('scroll', this.boundScrollHandler);
+  }
+  this.scrollContainer = undefined;
+  this.boundScrollHandler = undefined;
+}
+
+private onInternalScroll(target: HTMLElement): void {
+  const threshold = 80;
+  const reachedBottom =
+    target.scrollTop + target.clientHeight >= target.scrollHeight - threshold;
+
+  // 只有第一次碰到底部才觸發
+  if (reachedBottom) {
+    if (!this.hasEmittedBottom) {
+      this.hasEmittedBottom = true;
+      this.tableScrollBottom.emit(target);
+    }
+    return;
+  }
+
+  // 離開底部區域後，才允許下次再次觸發
+  this.hasEmittedBottom = false;
+}
+
 }

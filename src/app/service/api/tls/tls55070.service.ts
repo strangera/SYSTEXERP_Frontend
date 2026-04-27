@@ -22,7 +22,41 @@ export class TLS55070Service {
   // === 查詢 ===
   queryTLS55070(body: any): Observable<any> {
     const url = `${this.apiUrl}/TLS0000/TLS5000/queryTLS55070`;
-    return this.http.post<any>(url, body);
+    return this.http.post<any>(url, body).pipe(
+      map(res => {
+        const headers = res.Data?.Data || [];
+        const rawDetails = res.Data?._DetailList || [];
+        const TotalData = res.Data?.TXN_SaleAmt || [];
+
+        // 計算分頁偏移量 (讓第二頁的序號從 31 開始)
+        const pageSize = body.pageSize || 30;
+        const pageIndex = body.pageIndex || 1;
+        const offset = (pageIndex - 1) * pageSize;
+
+        // 1. 先幫 Header 加工，加上序號 (PageRank)
+        const processedHeaders = headers.map((h: any, index: number) => ({
+          ...h,
+          PageRank: offset + index + 1 // 生成 1, 2, 3...
+        }));
+
+        // 2. 將加工後的 Header 資訊揉進每一筆明細
+        const enrichedDetails = rawDetails.map((detail: any) => {
+          const header = processedHeaders.find((h: any) => h.TXN_SaleNoteNo === detail.TXN_SaleNoteNo);
+          return {
+            ...header, // 這裡面現在有 PageRank 了
+            ...detail
+          };
+        });
+
+        return {
+          ...res,
+          TotalData: TotalData,
+          Data: enrichedDetails, // 這裡給 Table 用的資料現在每筆都有 PageRank
+          TotalCount: res.TotalCount,
+          Details: processedHeaders // 主檔列表
+        };
+      }),
+    );
   }
 
   // === 匯出 ===
@@ -66,8 +100,8 @@ export class TLS55070Service {
 
   /** 將 LOGO + 倉別一次取回（避免在 component 內各自訂閱造成重複打） */
   getLogoAndHosOptions(): Observable<{
-    logoOptions: Array<{ label: string; value: string }>;
-    hosOptions: Array<{ label: string; value: string }>;
+    logoOptions: { label: string; value: string }[];
+    hosOptions: { label: string; value: string }[];
   }> {
     return forkJoin({
       logo: this.queryPLULOGO_DropDownList(),

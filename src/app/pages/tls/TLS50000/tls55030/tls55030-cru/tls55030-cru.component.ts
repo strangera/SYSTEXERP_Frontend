@@ -1,11 +1,10 @@
 import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { IInvoiceDetail, IInvoiceDetailByDisNo, IReturnDetailByDisNoData, IReturnDetailData, ReturnNotRebateQueryBody, Tls55030ListData, Tls55030Service } from '@service/api/tls/tls55030.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -25,7 +24,7 @@ import { ButtonModule } from 'primeng/button';
 import { DividerModule } from "primeng/divider";
 import { PanelModule } from 'primeng/panel';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { combineLatest, finalize, map, startWith } from 'rxjs';
+import { combineLatest, debounceTime, distinctUntilChanged, finalize, map, startWith } from 'rxjs';
 import { columns, columns2 } from './tls55030-cru.model';
 import { TLS55030DialogComponent } from './tls55030-dialog.component'; // 引入新的 Dialog 子元件
 
@@ -74,7 +73,7 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
   });
   // Dropdown options
   DIS_EntryTypeOptions = getSYS1000Options('DIS_EntryType');
-  VEN_NoOptions = this.dropdown.queryPos2013({ VEN_Flag: '' })
+  VEN_NoOptions = this.dropdown.queryPos2013TltTalent();
   HOS_NoOptions = this.dropdown.queryPos2034();
   // 新增屬性：用於儲存選中廠商的統一編號 (No, 即 API 所需的 VEN_No 參數)
   venUniformNo: string | null = null;
@@ -117,6 +116,7 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     public readonly tls55030Service: Tls55030Service,
     private readonly dropdown: DropdownApiService,
     private readonly datePipe: DatePipe,
+    private readonly cdr: ChangeDetectorRef
   ) { super(); }
 
   ngOnInit(): void {
@@ -132,6 +132,91 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     if (!this.isFormCreateable) {
       this.loadDetailData();
     }
+    // 設定this.columns的field為PUR_GUINo的欄位的onBlur事件
+    this.columns.forEach(col => {
+      if (col.field === 'PUR_GUINo') {
+        col.onBlur = (rowData: IRebateDetailForCRU) => {
+          // 1. 強制轉大寫
+          if (rowData.PUR_GUINo) {
+            rowData.PUR_GUINo = rowData.PUR_GUINo.toUpperCase();
+          }
+          // 2. 呼叫元件內部的自動帶入邏輯 (假設我們把邏輯寫在 component 實體中)
+          this.handleInvoiceAutoFill(rowData);
+        }
+      }
+      if (['Rebate_Amt_New', 'Rebate_Net', 'Rebate_Tax'].includes(col.field)) {
+        const originalOnBlur = col.onBlur;
+        col.onBlur = (rowData: IRebateDetailForCRU) => {
+          if (originalOnBlur) originalOnBlur(rowData, null, col, 0); // 執行 model 裡的計算邏輯
+          this.updateInvoiceSummaryAndFormState();   // 強制觸發下方的「折讓總金額」與「餘額」重新計算
+          this.cdr.detectChanges();
+        };
+      }
+    });
+  }
+  /**
+ * 當發票編號失焦時，自動比對預載入清單並帶入資料
+ */
+  public handleInvoiceAutoFill(rowData: IRebateDetailForCRU): void {
+    const inputNo = rowData.PUR_GUINo;
+    if (!inputNo || !this.dataForm.controls.VEN_No.value) return;
+
+    this.loading = true; // 開啟 Loading 遮罩
+
+    const body = {
+      VEN_No: this.dataForm.controls.VEN_No.value,
+      PUR_GUINo: inputNo, // 帶入發票編號
+      PageIndex: 1,
+      PageSize: 1 // 只需要一筆
+    };
+
+    this.tls55030Service.queryTLS55030RebateDetailOption(body)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe(res => {
+        // 因為是精確查詢編號，取第一筆即可
+        const matchedInvoice = res.Data && res.Data.length > 0 ? res.Data[0] : null;
+
+        if (matchedInvoice) {
+          Object.assign(rowData, {
+            TABTYPE: matchedInvoice.TABTYPE,
+            PUR_TaxType: matchedInvoice.PUR_TaxType,
+            PUR_DirectType: matchedInvoice.PUR_DirectType,
+            PUR_Amt: matchedInvoice.PUR_Amt,
+            PUR_VoucherType: matchedInvoice.PUR_VoucherType,
+            PUR_GUIDate: matchedInvoice.PUR_GUIDate,
+            Rebate_Amt: matchedInvoice.Rebate_Amt,
+            Rebate_Amt_New: rowData.Rebate_Amt_New || 0
+          });
+          this.updateInvoiceSummaryAndFormState();
+          this.messageService.successBubble(`已自動帶入發票 ${inputNo} 的資料`);
+        } else {
+          // --- 查無資料：清空 ---
+          this.messageService.errorBubble(`查無發票編號：${inputNo}，請確認廠商及編號是否正確。`);
+
+          // 建議：逐一賦值為 undefined 或初始狀態，並確保屬性名稱正確
+          rowData.TABTYPE = '';
+          rowData.PUR_TaxType = '';
+          rowData.PUR_DirectType = '';
+          rowData.PUR_Amt = 0; // 金額建議回歸 0
+          rowData.PUR_VoucherType = '';
+          rowData.PUR_GUIDate = '';
+          rowData.Rebate_Amt = 0;
+          rowData.Rebate_Amt_New = 0;
+
+          // 如果你有使用 dataService，可能需要通知它資料已變更
+          this.updateInvoiceSummaryAndFormState();
+        }
+
+        // 關鍵：除了 markForCheck，如果是 Array 類型的 Table，有時需要重給 reference
+        // 但因為這裡是修改 rowData 內容，我們強制執行一次 detectChanges
+        this.cdr.detectChanges();
+      });
   }
   /**
    * 根據結帳年月計算該月最後一天，並存入 tableDefaultData
@@ -201,19 +286,37 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
     });
   }
   // 監聽 VEN_No 變化並找出對應的廠商統一編號 (No)
+  // 在 TLS55030CRUComponent 內
+
+  // 修改原本的監聽器或新增一個
   setupVendorUniformNoListener(): void {
-    // 監聽廠商編號變動，並結合廠商下拉選單資料，找出對應的 Uniform No (No)
     combineLatest([
-      this.dataForm.controls.VEN_No.valueChanges.pipe(startWith(this.dataForm.controls.VEN_No.value)),
-      this.VEN_NoOptions // Observable<Pos2013Item[] | null>
+      this.dataForm.controls.VEN_No.valueChanges.pipe(
+        startWith(this.dataForm.controls.VEN_No.value),
+        debounceTime(300),      // <-- 新增：防止使用者快速切換時狂打 API
+        distinctUntilChanged()  // <-- 新增：確保值真的有變才執行
+      ),
+      this.VEN_NoOptions
     ]).pipe(untilDestroyed(this)).subscribe(([selectedVenNo, options]) => {
-      // 確保 options 是陣列且選取值存在
+
       if (selectedVenNo && Array.isArray(options)) {
-        // 尋找選中的項目，並取得其 'No' 欄位作為統一編號
-        const selectedOption: Option | undefined = options.find((opt: Option) => opt['VEN_No'] === selectedVenNo);
+        // 1. 尋找對應的廠商統一編號 (No)
+        const selectedOption = options.find(opt => opt['VEN_No'] === selectedVenNo);
         this.venUniformNo = selectedOption ? selectedOption['No'] : null;
+
+        // 2. 觸發子元件預載入 API
+        // 這裡建議加上判斷，確保 dialogComponent 已經初始化
+        if (this.dialogComponent) {
+          this.dialogComponent.preloadInvoiceData(selectedVenNo);
+        }
+
       } else {
+        // 3. 處理清空狀態
         this.venUniformNo = null;
+        if (this.dialogComponent) {
+          this.dialogComponent.dialogData = [];
+          this.dialogComponent.totalRecords = 0;
+        }
       }
     });
   }
@@ -275,13 +378,18 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       this.dataForm.controls.VEN_No.disable();
       this.dataForm.controls.DIS_EntryType.disable();
     } else {
-      this.dataForm.enable();
+      if (!this.isFormReadable) {
+        this.dataForm.controls.ACP_YYYYMM.enable();
+        this.dataForm.controls.VEN_No.enable();
+        this.dataForm.controls.DIS_EntryType.enable();
+      }
 
       // 彙總欄位恆禁用清單更新
-      const disableControls = [
+      const permanentDisabledControls = [
+        'DIS_No', // <--- 確保單號始終鎖定
         'RJM_TotalBuyAmt',
         'RJM_TotalBuyNet',
-        'RJM_TotalBuyTax', // 新增這兩個
+        'RJM_TotalBuyTax',
         'invoiceTotalAmount',
         'invoiceRemainingRebateAmount',
         'totalRebateAmount',
@@ -289,12 +397,16 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
         'Rebate_Amt'
       ];
 
-      disableControls.forEach(key => {
-        this.dataForm.get(key)?.disable();
+      permanentDisabledControls.forEach(key => {
+        this.dataForm.get(key)?.disable({ emitEvent: false });
       });
 
-      if (this.isFormReadable) {
+      // 特別處理 Rebate_Name：只有在可編輯且 EntryType != '1' 時才啟用
+      if (!this.isFormReadable && this.dataForm.controls.DIS_EntryType.value !== '1') {
         this.dataForm.controls.Rebate_Name.enable();
+      } else if (this.isFormReadable) {
+        // 唯讀模式下 Rebate_Name 也應鎖定
+        this.dataForm.controls.Rebate_Name.disable();
       }
     }
   }
@@ -366,12 +478,43 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
         this.loading = false;
         return;
       }
-      if ((frm.getRawValue().totalRebateAmount * -1) !== (frm.getRawValue().RJM_TotalBuyAmt || 0)) {
-        this.messageService.errorBubble('【退貨總金額】與【折讓總金額】不相符');
+      const formValue = frm.getRawValue();
+      const entryType = formValue.DIS_EntryType;
+      // ---------------------------------------------------------
+      // 2. 核心卡控邏輯調整
+      // ---------------------------------------------------------
+      let isAmountMatched = false;
+      let errorMessage = '';
+
+      if (entryType === '1') {
+        // 類別為「退貨」：檢查【發票折讓總金額】是否等於【退貨明細總金額】
+        // 注意：totalRebateAmount 在畫面上顯示為負數，所以運算時取絕對值
+        const totalRebateAbs = Math.abs(formValue.totalRebateAmount || 0);
+        const totalReturnAmt = Math.round(formValue.RJM_TotalBuyAmt || 0);
+
+        if (totalRebateAbs !== totalReturnAmt) {
+          isAmountMatched = false;
+          errorMessage = '【退貨總金額】與【折讓總金額】不相符';
+        } else {
+          isAmountMatched = true;
+        }
+      } else {
+        // 類別為「一般折讓」或「活動券」：檢查【發票折讓總金額】是否等於【折讓單開立金額】
+        const totalRebateAbs = Math.abs(formValue.totalRebateAmount || 0);
+        const openRebateAmt = Math.round(formValue.Rebate_Amt || 0);
+
+        if (totalRebateAbs !== openRebateAmt) {
+          isAmountMatched = false;
+          errorMessage = '【折讓單開立金額】與【發票折讓明細總額】不相符';
+        } else {
+          isAmountMatched = true;
+        }
+      }
+      if (!isAmountMatched) {
+        this.messageService.errorBubble(errorMessage);
         this.loading = false;
         return;
       }
-      const formValue = frm.getRawValue();
       const paramBody = {
         DIS_No: this.isFormCreateable ? undefined : formValue.DIS_No,
         ACP_YYYYMM: this.datePipe.transform(formValue.ACP_YYYYMM, 'yyyyMM') || '',

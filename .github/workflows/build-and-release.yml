@@ -1,95 +1,105 @@
 name: Build Angular App (Dual Environment)
 on:
   push:
-    tags: 
+    tags:
       - 'v*'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
-    
+
     - name: Install dependencies
-      run: |
-        npm install --legacy-peer-deps
-    
-    # 🔥 建置生產環境（使用 npm script）
+      run: npm install --legacy-peer-deps
+
+    # 🔥 建置生產環境
     - name: Build Production Environment
       run: npm run build:tsrdweb
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
         TZ: Asia/Taipei
-    
+
     - name: Prepare Production files
       run: |
         if [ -d "dist/tsrderp-frontend" ]; then
           mv dist/tsrderp-frontend dist-production
-          echo "✅ Production files ready"
         elif [ -d "dist" ]; then
           mv dist dist-production
-          echo "✅ Production files ready (fallback)"
         fi
-        
-        echo "Production files:"
-        find dist-production -type f | head -10
-        echo "Total files: $(find dist-production -type f | wc -l)"
-    
-    # 🔥 建置測試環境（使用 npm script）
+        echo "Total production files: $(find dist-production -type f | wc -l)"
+
+    # 🔥 建置測試環境
     - name: Build Staging Environment
       run: npm run build:tsrdwebdev
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
         TZ: Asia/Taipei
-    
+
     - name: Prepare Staging files
       run: |
         if [ -d "dist/tsrderp-frontend" ]; then
           mv dist/tsrderp-frontend dist-staging
-          echo "✅ Staging files ready"
         elif [ -d "dist" ]; then
           mv dist dist-staging
-          echo "✅ Staging files ready (fallback)"
         fi
-        
-        echo "Staging files:"
-        find dist-staging -type f | head -10
-        echo "Total files: $(find dist-staging -type f | wc -l)"
-    
+        echo "Total staging files: $(find dist-staging -type f | wc -l)"
+
     - name: Remove source maps
       run: |
         find dist-production -name "*.map" -delete 2>/dev/null || true
         find dist-staging -name "*.map" -delete 2>/dev/null || true
-        echo "Source maps removed"
-    
+
     - name: Get build info
       id: build_info
       run: |
-        echo "timestamp=$(TZ=Asia/Taipei date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_OUTPUT
+        echo "timestamp=$(TZ=Asia/Taipei date +'%Y-%m-%d %H:%M:%S')" >> $GITHUB_OUTPUT
         echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
       env:
         TZ: Asia/Taipei
-    
-    # 上傳 Production 資料夾（artifact 會自動 zip）
-    - name: Upload Production Build
-      uses: actions/upload-artifact@v4
+
+    # 寫入版本資訊（讓 n8n clone 後可確認版本）
+    - name: Add build-info.json
+      run: |
+        printf '{"version":"%s","tag":"%s","buildTime":"%s","commit":"%s"}\n' \
+          "${{ steps.build_info.outputs.version }}" \
+          "${{ github.ref_name }}" \
+          "${{ steps.build_info.outputs.timestamp }}" \
+          "${{ github.sha }}" > dist-production/build-info.json
+        cp dist-production/build-info.json dist-staging/build-info.json
+
+    # 📦 推送 Production 到 releases/production 分支（單一 commit，不累積歷史）
+    - name: Deploy Production to branch
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        name: Angular_App_Production_v${{ steps.build_info.outputs.version }}_${{ steps.build_info.outputs.timestamp }}
-        path: dist-production/
-        retention-days: 1
-    
-    # 上傳 Staging 資料夾（artifact 會自動 zip）
-    - name: Upload Staging Build
-      uses: actions/upload-artifact@v4
+        branch: releases/production
+        folder: dist-production
+        commit-message: "build: ${{ github.ref_name }} (${{ steps.build_info.outputs.timestamp }})"
+        single-commit: true
+
+    # 📦 推送 Staging 到 releases/staging 分支
+    - name: Deploy Staging to branch
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
-        name: Angular_App_Staging_v${{ steps.build_info.outputs.version }}_${{ steps.build_info.outputs.timestamp }}
-        path: dist-staging/
-        retention-days: 1
+        branch: releases/staging
+        folder: dist-staging
+        commit-message: "build: ${{ github.ref_name }} (${{ steps.build_info.outputs.timestamp }})"
+        single-commit: true
+
+    - name: Build Summary
+      run: |
+        echo "✅ 建置完成！"
+        echo "🏷️  版本: ${{ github.ref_name }}"
+        echo "📦 Production → 分支: releases/production"
+        echo "📦 Staging   → 分支: releases/staging"
+        echo "⏰ 建置時間: ${{ steps.build_info.outputs.timestamp }}"

@@ -1,105 +1,195 @@
 import { Injectable } from '@angular/core';
-import * as XLSX from 'xlsx';
 import { NotificationService } from '../component/notification-message/notification.service';
 
-// 定義欄位的介面，新增 type 屬性
 export interface ImportExcelColumn {
   field: string;
   header: string;
-  type?: 'string' | 'number' | 'date'; // 用於匯入時轉換資料類型
+  type?: 'string' | 'number' | 'date';
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class ExcelImportService {
-
   constructor(private readonly messageService: NotificationService) { }
 
   /**
-   * 匯入 Excel 檔案並轉換為 JSON 格式
-   * @param file 使用者選擇的檔案
-   * @param columns 欄位定義陣列，包含 field 和 type
+   * 匯入 Excel 並產生完整檢核報告
+   * @param file 檔案
+   * @param columns 欄位定義
+   * @param customValidator 自定義檢核邏輯
    */
-  async importExcel(file: File, columns: ImportExcelColumn[]): Promise<any[]> {
+  async importExcel(
+    file: File,
+    columns: ImportExcelColumn[],
+    customValidator?: (rowData: any) => string
+  ): Promise<{ data: any[], hasErrors: boolean, errorBlob?: Blob }> {
+    const XLSX = await import('xlsx-js-style');
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-
       reader.onload = (e: any) => {
         try {
           const data = new Uint8Array(e.target.result);
           const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-
-          // 使用 { header: 1 } 從第一行讀取資料陣列
+          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
           const jsonData: any[][] = XLSX.utils.sheet_to_json<any[][]>(worksheet, { header: 1 });
 
           if (jsonData.length <= 1) {
             this.messageService.warnBubble('Excel 檔案中沒有可讀取的數據行。');
-            resolve([]);
+            resolve({ data: [], hasErrors: false });
             return;
           }
 
-          const headerRow = jsonData[0]; // 第一行為標頭
-          const dataRows = jsonData.slice(1); // 數據從第二行開始
+          const dataRows = jsonData.slice(1);
+          let totalHasErrors = false;
+          const fullReportData: any[] = []; // 用於產生 Excel 報告的完整資料
+          const validDataOnly: any[] = [];  // 回傳給前端畫面的正確資料
 
-          const processedData = dataRows.reduce((acc: any[], row: any[]) => {
-            // 檢查該資料列是否所有欄位都為空或 null 或 undefined
+          dataRows.forEach((row) => {
             const isRowEmpty = columns.every((_, index) => {
-              const value = row[index];
-              return value === undefined || value === null || String(value).trim() === '';
+              const val = row[index];
+              return val === undefined || val === null || String(val).trim() === '';
+            });
+            if (isRowEmpty) return;
+
+            const obj: any = {};
+            let rowError = '';
+
+            // 1. 基礎類型檢查
+            columns.forEach((col, index) => {
+              let value = row[index];
+              switch (col.type) {
+                case 'number':
+                  if (typeof value === 'string') value = value.replace(/,/g, '');
+                  const num = (value === null || value === undefined || String(value).trim() === '') ? null : Number(value);
+                  if (num !== null && isNaN(num)) rowError += `[${col.header}] 格式錯誤 `;
+                  obj[col.field] = num;
+                  break;
+                case 'date':
+                  if (typeof value === 'number') {
+                    const dateCode = XLSX.SSF.parse_date_code(value);
+                    value = new Date(dateCode.y, dateCode.m - 1, dateCode.d);
+                  } else {
+                    value = value ? new Date(value) : null;
+                  }
+                  if (value instanceof Date && isNaN(value.getTime())) {
+                    rowError += `[${col.header}] 日期格式錯誤 `;
+                  }
+                  obj[col.field] = value;
+                  break;
+                default:
+                  obj[col.field] = (value === undefined || value === null) ? null : String(value).trim();
+                  break;
+              }
             });
 
-            if (!isRowEmpty) {
-              const obj: any = {};
-              columns.forEach((col, index) => {
-                let value = row[index];
-
-                // 根據 columns 陣列中的 type 屬性進行轉換
-                switch (col.type) {
-                  case 'number':
-                    // 如果值是有效的數字，則轉換為數字類型，否則為 null
-                    value = value === null || isNaN(Number(value)) ? null : Number(value);
-                    break;
-                  case 'date':
-                    // 將 Excel 的日期格式數字轉換為 JavaScript Date 物件
-                    // 注意：這裡假設 Excel 匯入的日期是數字格式
-                    if (typeof value === 'number') {
-                      value = XLSX.SSF.parse_date_code(value);
-                      value = new Date(value.y, value.m - 1, value.d);
-                    } else {
-                      // 如果是字串，嘗試解析
-                      value = value ? new Date(value) : null;
-                    }
-                    break;
-                  case 'string':
-                  default:
-                    // 預設或明確為字串，處理 undefined 或 null
-                    value = value === undefined || value === null ? null : String(value).trim();
-                    break;
-                }
-                obj[col.field] = value;
-              });
-              acc.push(obj);
+            // 2. 外部自定義檢查 (例如：檢查代號是否存在)
+            if (customValidator) {
+              const customErr = customValidator(obj);
+              if (customErr) rowError += customErr;
             }
-            return acc;
-          }, []);
 
-          resolve(processedData);
+            // 3. 建立報告行 (保留使用者原始輸入內容供對照)
+            const reportRow: any = {};
+            columns.forEach((col, idx) => {
+              reportRow[col.header] = row[idx];
+            });
+            reportRow['檢核結果'] = rowError ? '失敗' : '成功';
+            reportRow['錯誤原因'] = rowError || '';
+            reportRow['_isError'] = !!rowError; // 隱藏標記，用於後續染色
+            fullReportData.push(reportRow);
+
+            if (rowError) {
+              totalHasErrors = true;
+            } else {
+              validDataOnly.push(obj);
+            }
+          });
+
+          // 產生包含所有行與樣式的 Blob
+          const errorBlob = this.generateFullReportBlob(XLSX, fullReportData, columns);
+
+          resolve({
+            data: validDataOnly,
+            hasErrors: totalHasErrors,
+            errorBlob: errorBlob
+          });
         } catch (error) {
-          console.error('Excel 檔案讀取或解析失敗:', error);
-          this.messageService.warnBubble('Excel 檔案讀取或解析失敗');
-          reject(new Error('無法讀取 Excel 檔案或檔案格式不正確。請確認檔案內容。'));
+          console.error('Excel 解析失敗:', error);
+          reject(error);
         }
       };
-
-      reader.onerror = (error) => {
-        console.error('檔案讀取錯誤:', error);
-        reject(new Error('檔案讀取失敗。請確保檔案未損壞且可訪問。'));
-      };
-
+      reader.onerror = (err) => reject(err);
       reader.readAsArrayBuffer(file);
     });
+  }
+
+  /**
+   * 產生美化版的檢核報告 Blob
+   */
+  private generateFullReportBlob(XLSX: any, allData: any[], originalCols: ImportExcelColumn[]): Blob {
+    const ws = XLSX.utils.json_to_sheet(allData);
+    const charWidthMultiplier = 1.5;
+    const reportHeaders = originalCols.map(c => c.header).concat(['檢核結果', '錯誤原因']);
+
+    // 1. 自動計算欄位寬度
+    const wscols: any[] = [];
+    reportHeaders.forEach(header => {
+      let maxLen = 0;
+      const lengths = [header].concat(allData.map(row => row[header] ? String(row[header]) : ''));
+      lengths.forEach(text => {
+        let len = 0;
+        for (let i = 0; i < text.length; i++) {
+          const charCode = text.charCodeAt(i);
+          len += (charCode >= 0x4E00 && charCode <= 0x9FFF) ? charWidthMultiplier : 1;
+        }
+        if (len > maxLen) maxLen = len;
+      });
+      wscols.push({ wch: Math.ceil(maxLen) + 5 });
+    });
+    ws['!cols'] = wscols;
+
+    // 2. 遍歷儲存格套用美化樣式
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+    for (let r = range.s.r; r <= range.e.r; r++) {
+      const isHeader = r === 0;
+      const rowData = isHeader ? null : allData[r - 1];
+      const isError = rowData?._isError;
+
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cellRef = XLSX.utils.encode_cell({ r, c });
+        if (!ws[cellRef]) continue;
+
+        // 通用樣式設定
+        ws[cellRef].s = {
+          font: { name: 'Microsoft JhengHei', sz: 10 },
+          alignment: { vertical: 'center', horizontal: 'left' },
+          border: {
+            top: { style: 'thin', color: { rgb: "CCCCCC" } },
+            bottom: { style: 'thin', color: { rgb: "CCCCCC" } },
+            left: { style: 'thin', color: { rgb: "CCCCCC" } },
+            right: { style: 'thin', color: { rgb: "CCCCCC" } }
+          }
+        };
+
+        if (isHeader) {
+          // 標題列：深藍底白字
+          ws[cellRef].s.fill = { fgColor: { rgb: "4472C4" } };
+          ws[cellRef].s.font = { color: { rgb: "FFFFFF" }, bold: true, name: 'Microsoft JhengHei' };
+          ws[cellRef].s.alignment.horizontal = 'center';
+        } else if (isError) {
+          // 錯誤行：紅色字體
+          ws[cellRef].s.font.color = { rgb: "FF0000" };
+        } else {
+          // 正確行：綠色字體
+          ws[cellRef].s.font.color = { rgb: "008000" };
+        }
+      }
+    }
+    // 3. 封裝並回傳 Blob
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '匯入檢核報告');
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    return new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   }
 }

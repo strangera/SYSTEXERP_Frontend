@@ -81,7 +81,7 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
     { field: 'ADJ_No', header: '調整單號' },
     {
       field: 'ADJ_Date',
-      header: '收款日期',
+      header: '調整日期',
       format: (v: string) => this.formatDate(v),
     },
     {
@@ -107,23 +107,23 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
     { field: 'VouNo', header: '傳票單號' },
   ];
 
-  readonly defaultSort: SortItem[] = [
-    { field: 'ADJ_Date', order: -1 },
-    { field: 'ADJ_No', order: 1 },
-  ];
+readonly defaultSort: SortItem[] = [
+  { field: 'ADJ_Date', order: -1 },
+  { field: 'ADJ_No', order: 1 },
+];;
 
   queryForm = this.formBuilder.group({
-    adjust_ID: [null as string | null, [Validators.maxLength(14)]],
-    adjust_Date_From: [null as Date | null],
-    adjust_Date_To: [null as Date | null],
-    remark: ['', [Validators.maxLength(30)]],
-    summons_ID_From: [null as string | null],
-    summons_ID_To: [null as string | null],
-    ...createPaginationConfig([
-      { field: 'ADJ_Date', order: -1 },
-      { field: 'ADJ_No', order: 1 },
-    ]),
-  });
+  adjust_ID: [null as string | null, [Validators.maxLength(14)]],
+  adjust_Date_From: [null as Date | null],
+  adjust_Date_To: [null as Date | null],
+  remark: ['', [Validators.maxLength(30)]],
+  summons_ID_From: [null as string | null],
+  summons_ID_To: [null as string | null],
+  ...createPaginationConfig([
+  { field: 'ADJ_Date', order: -1 },
+  { field: 'ADJ_No', order: 1 },
+  ]),
+});
 
   constructor(
     private readonly fin32020Service: FIN32020Service,
@@ -341,22 +341,22 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
         next: (res: ApiResponse<Fin32020Row[]>) => {
           const rows: Fin32020Row[] = Array.isArray(res?.Data) ? res.Data : [];
 
-          this.initRows(rows);
-          this.data = rows;
-          this.cdr.detectChanges();
+this.initRows(rows);
 
-          const realTotal =
-            Number((res as any)?.TotalCount ?? rows.length) || rows.length;
+const realTotal =
+  Number((res as any)?.TotalCount ?? rows.length) || rows.length;
 
-          setTimeout(() => {
-            this.totalRecords = realTotal;
-            this.viewTotalRecords = realTotal;
-            this.lastQueryBody = { ...payload };
-            this._currentSortBy = payload.SortBy ?? this.defaultSort;
-            this.saveQueryState();
-          });
+// 先給排序狀態，再給 data
+this.lastQueryBody = { ...payload };
+this._currentSortBy = payload.SortBy ?? this.defaultSort;
+this.totalRecords = realTotal;
+this.viewTotalRecords = realTotal;
 
-          this.loading = false;
+this.data = rows;
+this.cdr.detectChanges();
+
+this.saveQueryState();
+this.loading = false;
         },
         error: (err: any) => {
           console.error('FIN32020 API error:', err);
@@ -370,34 +370,35 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
   }
 
   onClear(frm: FormGroup): void {
-    frm.reset(
-      {
-        adjust_ID: null,
-        adjust_Date_From: null,
-        adjust_Date_To: null,
-        remark: '',
-        summons_ID_From: null,
-        summons_ID_To: null,
-        ...createPaginationConfig([
-          { field: 'ADJ_Date', order: -1 },
-          { field: 'ADJ_No', order: 1 },
-        ]),
-      } as any,
-      { emitEvent: false }
-    );
+  frm.reset(
+    {
+      adjust_ID: null,
+      adjust_Date_From: null,
+      adjust_Date_To: null,
+      remark: '',
+      summons_ID_From: null,
+      summons_ID_To: null,
+      ...createPaginationConfig([
+        { field: 'ADJ_Date', order: -1 },
+        { field: 'ADJ_No', order: 1 },
+        
+      ]),
+    } as any,
+    { emitEvent: false }
+  );
 
-    this.submitted = false;
-    this.data = [];
-    this.selectedItems = [];
-    this.totalRecords = 0;
-    this.viewTotalRecords = 0;
-    this.footerData = undefined;
-    this.lastQueryBody = null;
-    this._currentSortBy = this.defaultSort;
+  this.submitted = false;
+  this.data = [];
+  this.selectedItems = [];
+  this.totalRecords = 0;
+  this.viewTotalRecords = 0;
+  this.footerData = undefined;
+  this.lastQueryBody = null;
+  this._currentSortBy = this.defaultSort;
 
-    this.queryStateService.clearQueryState(this.ProgNo);
-    this.queryStateService.clearQueryState(`${this.ProgNo}_ext`);
-  }
+  this.queryStateService.clearQueryState(this.ProgNo);
+  this.queryStateService.clearQueryState(`${this.ProgNo}_ext`);
+}
 
   onClickCreate(): void {
     this.saveQueryState();
@@ -416,14 +417,43 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
     );
   }
 
-  override onEdit(row: Fin32020Row, queryConditions?: any): void {
-    this.saveQueryState();
+ override onEdit(row: Fin32020Row, queryConditions?: any): void {
+  this.saveQueryState();
 
-    if ((row as any)?.['CanEdit'] !== true) {
-      super.onDetail(row, this.queryForm.value);
-      return;
-    }
-
-    super.onEdit(row, this.queryForm.value);
+  if ((row as any)?.['CanEdit'] !== true) {
+    super.onDetail(row, this.queryForm.value);
+    return;
   }
+
+  if (!row?.ADJ_No) {
+    super.onEdit(row, this.queryForm.value);
+    return;
+  }
+
+  this.loading = true;
+
+  this.fin32020Service
+    .queryFIN32020Detail(row.ADJ_No)
+    .pipe(untilDestroyed(this), take(1))
+    .subscribe({
+      next: (res) => {
+        const details = Array.isArray(res?.Data) ? res.Data : [];
+
+        const rowWithDetails: Fin32020Row = {
+          ...row,
+          _Details: details,
+        };
+
+        this.loading = false;
+        super.onEdit(rowWithDetails, this.queryForm.value);
+      },
+      error: (err) => {
+        console.error('queryFIN32020Detail error before edit:', err);
+        this.loading = false;
+      },
+    });
+}
+  editDisabledFn = (row: any) => {
+  return !row?.CanEdit;
+};
 }

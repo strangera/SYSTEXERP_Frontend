@@ -97,6 +97,7 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
     { value: '1', label: '資產' },
     { value: '2', label: '列管品' }
   ];
+  purchaseNumberOptions: Option[] = []; // queryASS13010DropDownList
   supplierCodeOptions: Option[] = []; // queryPOS2013_DropDownList
   depreciationOptions: Option[] = []; // queryGLS1005_ledgerMD_DropDownList
   /** 所有人員（含 Org_ID），供依單位篩選 */
@@ -317,6 +318,9 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   private loadDropdownOptions(): void {
     this.dropdownApiService.queryASS11040_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.itemCodeOptions = res ?? [];
+    });
+    this.dropdownApiService.queryASS13010DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.purchaseNumberOptions = res ?? [];
     });
     this.dropdownApiService.querySys1000({ SYS_Type: 'ASSET_STATUS' }).pipe(untilDestroyed(this)).subscribe(res => {
       this.assetsStatusOptions = (res ?? []).map(item => ({ value: item.No, label: item.Name }));

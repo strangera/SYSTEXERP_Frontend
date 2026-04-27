@@ -96,4 +96,12 @@ export class Fin21010Service {
   deleteFIN21010(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteFIN21010`, body);
   }
+
+  checkDuplicateBNKid(bnkId: string, id?: number): Observable<any> {
+    // 對應後端 [HttpPost("checkDuplicateBNKid")]
+    return this.http.post<any>(`${this.apiUrl}/checkDuplicateBNKid`, {
+      BNK_id: bnkId,
+      id: id
+    });
+  }
 }

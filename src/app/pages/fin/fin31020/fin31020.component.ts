@@ -42,7 +42,7 @@ export class FIN31020Component extends BasicQueryPageComponent<FIN31020Data> imp
   data: FIN31020Data[] = [];
   columns = [
     { field: 'CAR_AccNo', header: '調整科目代號', visible: true },
-    { field: 'CAR_Type', header: '加減項', visible: true, format: (v: string) => v === '1' ? '加項' : '減項' },
+    { field: 'CAR_Type', header: '加減項', visible: true },
     { field: 'Remark', header: '備註', visible: true },
     { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員代號', visible: true },

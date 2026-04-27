@@ -1,4 +1,4 @@
-import { Location, NgIf, NgStyle } from '@angular/common';
+import { Location, NgStyle } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -15,7 +15,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { Fin29060TableSubheaderComponent } from '../fin29060/fin29060-table-subheader/fin29060-table-subheader.component';
+import { Fin29060TableSubheaderComponent } from '../fin55040/fin29060-table-subheader/fin29060-table-subheader.component';
 
 @Component({
   selector: 'app-fin54025',
@@ -23,7 +23,7 @@ import { Fin29060TableSubheaderComponent } from '../fin29060/fin29060-table-subh
   styleUrl: './fin54025.component.scss',
   standalone: true,
   imports: [DropdownComponent, NgStyle,
-    NgIf, ButtonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, Fin29060TableSubheaderComponent, TranslateModule]
+    ButtonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, Fin29060TableSubheaderComponent, TranslateModule]
 })
 
 export class FIN54025Component extends BasicQueryPageComponent<any> implements OnInit {

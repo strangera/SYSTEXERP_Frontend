@@ -1,12 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN55070Data, Fin55070Service } from '@service/api/fin/fin55070.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ColumnGroup, formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -23,7 +25,7 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
   templateUrl: './fin55070.component.html',
   styleUrl: './fin55070.component.scss',
   standalone: true,
-  imports: [ButtonModule, TableModule, CommonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, RadiobuttonComponent, DropdownComponent, CheckboxModule, ButtonComponent, TranslateModule]
+  imports: [TableReportComponent, ButtonModule, TableModule, CommonModule, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, RadiobuttonComponent, DropdownComponent, CheckboxModule, ButtonComponent, TranslateModule]
 })
 export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> implements OnInit {
   historyRequestBody: any;
@@ -50,20 +52,33 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
     { value: false, label: '不顯示' },
   ]
   data: any[] = [];
-  columns: any[] = [
-    { field: 'AccNo', header: '科目代號', visible: true },
-    { field: 'AccCname', header: '科目名稱', visible: true },
-    { field: 'Prior_DAmt', header: '前期借方金額', visible: true },
-    { field: 'Prior_CAmt', header: '前期貸方金額', visible: true },
-    { field: 'Curr_DAmt', header: '本期借方金額', visible: true },
-    { field: 'Curr_CAmt', header: '本期貸方金額', visible: true },
-    { field: 'Total_DAmt', header: '累積借方金額', visible: true },
-    { field: 'Total_CAmt', header: '累積貸方金額', visible: true }
+  footerData = {
+    Prior_DAmt: 0,
+    Prior_CAmt: 0,
+    Curr_DAmt: 0,
+    Curr_CAmt: 0,
+    Total_DAmt: 0,
+    Total_CAmt: 0,
+  };
+  totalRecords = 0;
+  columns: ReportColumn[] = [
+    { field: 'AccNo', header: '科目代號', align: 'left' },
+    { field: 'AccCname', header: '科目名稱', align: 'left' },
+    { field: 'Prior_DAmt', header: '借方金額', groupField: '前期', format: formatAmount, align: 'right' },
+    { field: 'Prior_CAmt', header: '貸方金額', groupField: '前期', format: formatAmount, align: 'right' },
+    { field: 'Curr_DAmt', header: '借方金額', groupField: '本期', format: formatAmount, align: 'right' },
+    { field: 'Curr_CAmt', header: '貸方金額', groupField: '本期', format: formatAmount, align: 'right' },
+    { field: 'Total_DAmt', header: '借方金額', groupField: '累積', format: formatAmount, align: 'right' },
+    { field: 'Total_CAmt', header: '貸方金額', groupField: '累積', format: formatAmount, align: 'right' },
   ];
+  columnGroup: ColumnGroup[] = [
+    { field: '前期', header: '前期' },
+    { field: '本期', header: '本期' },
+    { field: '累積', header: '累積' },
+  ]
   constructor(
     public readonly fin55070Service: Fin55070Service,
     private readonly dropdown: DropdownApiService,
-    private readonly cdr: ChangeDetectorRef
 
   ) {
     super(); // 呼叫父類建構子
@@ -79,22 +94,17 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
       }
       this.fin55070Service.queryFIN55070(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data
+        this.footerData = response.Data.reduce((footer, row) => {
+          footer.Prior_DAmt += Number(row.Prior_DAmt) || 0;
+          footer.Prior_CAmt += Number(row.Prior_CAmt) || 0;
+          footer.Curr_DAmt += Number(row.Curr_DAmt) || 0;
+          footer.Curr_CAmt += Number(row.Curr_CAmt) || 0;
+          footer.Total_DAmt += Number(row.Total_DAmt) || 0;
+          footer.Total_CAmt += Number(row.Total_CAmt) || 0;
+          return footer;
+        }, this.footerData);
         this.historyRequestBody = body;
-        if (this.data.length !== 0) {
-          if (this.dt) {
-            this.dt.virtualScroll = false;
-          }
-          this.cdr.detectChanges();
-          // 判斷是否需要進行虛擬滾動，如果資料小於 pageSize 則不進行
-          if (this.data.length < (this.historyRequestBody?.pageSize || 30)) {
-            this.dt.virtualScroll = false;
-            this.dt.scrollHeight = '450px';
-          } else {
-            this.dt.virtualScroll = true;
-            this.dt.scrollHeight = '450px';
-            this.cdr.detectChanges();
-          }
-        }
+        this.totalRecords = response.TotalCount || this.data.length || 0;
       });
     });
   }

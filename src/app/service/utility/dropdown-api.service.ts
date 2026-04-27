@@ -2,10 +2,10 @@ import { AuthService } from './../system/auth.service';
 // !!! 新版下拉方法
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiResponse } from '../../shared/utils/rxjs-operators/validate-api-response';
 import { Observable, of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
+import { environment } from '../../../environments/environment';
 import {
   Aps1001ComboItem,
   Aps1001ComboQuery,
@@ -13,6 +13,7 @@ import {
   Aps1001Query,
   Aps1002Item,
   Aps1003Query,
+  Ass13010PurchaseNumberDropDownItem,
   BusClassItem,
   BusClassQuery,
   BusSClassItem,
@@ -22,7 +23,9 @@ import {
   CssDropDownItem,
   EcrItem,
   EcrQuery,
+  FasItemDropdownItem,
   ENG1001Item,
+  FAASSCHKMASS15070DropDownItem,
   FaClass1Item,
   FaClass1Query,
   FaClass2Item,
@@ -30,8 +33,9 @@ import {
   FaHosItem,
   FaClassMItem,
   FaClassMQuery,
-  FaSItem,
-  FaSItemQuery,
+  FaSitemItem,
+  FaSitemQuery,
+  GLS1005AccSubCodeItem,
   IDropdownItem,
   IGLS1005LedgerMDItem,
   LogoAccorHosItem,
@@ -59,6 +63,7 @@ import {
   Pos2013Item,
   Pos2013LogoRequest,
   Pos2013Query,
+  queryPOS1002_DropDownListItem,
   Sys1000Query,
   Sys5000SubModuleItem,
   TalentByContractDateItem,
@@ -79,7 +84,6 @@ import {
   TLTTALENTItem,
   TLTTALENTQuery,
   TlttalentTltSpaceItem,
-  Ass13010PurchaseNumberDropDownItem
 } from './dropdown-api.model';
 
 @Injectable({
@@ -271,21 +275,28 @@ export class DropdownApiService {
   }
 
   /** 查詢倉別(FAHOS)資料表下拉選單 - 回傳 WH_ID / WH_NAME */
-  queryFaHos(): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<FaHosItem>(
+  queryFaHos(body: object = {}): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FaHosItem, object>(
       '/queryFAHOS_DropDownList',
       'WH_ID',
       'WH_NAME',
+      body,
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
-  /** 查詢品項(FASITEM)資料表下拉選單 - 回傳 GOODS_ID / GOODS_NAME */
-  queryFaSItem(body: FaSItemQuery): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<FaSItem, FaSItemQuery>(
+  /**
+   * 查詢品項(FASITEM)下拉 — 預設 MATERIAL_TYPE=3（列管耗材）；回傳 GOODS_ID / GOODS_NAME
+   */
+  queryFasItemDropdown(body: FaSitemQuery = {}): Observable<Option[] | null> {
+    const payload: FaSitemQuery = {
+      ...body,
+      MATERIAL_TYPE: body.MATERIAL_TYPE ?? '3',
+    };
+    return this.queryAndMapDropdown<FaSitemItem, FaSitemQuery>(
       '/queryFASITEM_DropDownList',
       'GOODS_ID',
       'GOODS_NAME',
-      body,
+      payload,
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
@@ -323,6 +334,27 @@ export class DropdownApiService {
     return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1005_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
     );
+  }
+
+  /** 查詢會計科目子科目設定檔(GLS1005 AccSubCode) */
+  queryGls1005AccSubCode(): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<GLS1005AccSubCodeItem[]>>(`${this.apiUrl}/queryGLS1005AccSubCode_DropDownList`, {})
+      .pipe(
+        map(response => {
+          const data = response?.Data ?? [];
+          return data.map(item => ({
+            ...item,
+            value: item.AccNo,
+            label: `${item.AccNo} - ${item.AccCName}`,
+          }));
+        }),
+        catchError(err => {
+          console.error('API /queryGLS1005AccSubCode_DropDownList 失敗:', err);
+          return of(null);
+        }),
+        shareReplay({ bufferSize: 1, refCount: true })
+      );
   }
 
   // 查詢會計科目設定檔(GLS1005)下拉式選單(只顯示 GLS1005.ledger_MD=1)
@@ -422,7 +454,7 @@ export class DropdownApiService {
 
   /** 查詢收銀機設定檔(POS1002) */
   queryPos1002(): Observable<Option[] | null> {
-    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS1002_DropDownList', 'No', 'Name').pipe(
+    return this.queryAndMapDropdown<queryPOS1002_DropDownListItem>('/queryPOS1002_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -451,6 +483,29 @@ export class DropdownApiService {
           value: String(item.ID),
           label: String(item.ID),
         }));
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
+  /** 查詢進貨單號下拉選單(ASS15070) */
+  queryFAASSCHKMASS15070_DropDownList(): Observable<Option[] | null> {
+    return this.queryDropdown<FAASSCHKMASS15070DropDownItem>(
+      '/ASS0000/ASS1000/queryFAASSCHKMASS15070_DropDownList'
+    ).pipe(
+      map(items => {
+        if (!items) return null;
+        return items
+          .map(item => {
+            const id = item.SUBPOENA_ID?.trim() ?? '';
+            if (!id) return null;
+            return {
+              ...item,
+              value: id,
+              label: id,
+            };
+          })
+          .filter((x): x is Option => x !== null);
       }),
       shareReplay({ bufferSize: 1, refCount: true })
     );
@@ -860,6 +915,19 @@ export class DropdownApiService {
       'Name'
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
+
+  /**
+   * queryFASITEM_DropDownList（固定 MATERIAL_TYPE=3，耗材品項）。
+   * 回傳列：RowNo、GOODS_ID、GOODS_NAME → 下拉 value/label 使用 GOODS_ID、GOODS_NAME。
+   */
+  queryFasItemDropDownList(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FasItemDropdownItem>(
+      '/queryFASITEM_DropDownList',
+      'GOODS_ID',
+      'GOODS_NAME',
+      { MATERIAL_TYPE: '3' }
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
   /** 查詢子模組代碼(SYS5000) */
   querySys5000SubModuleNo(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<Sys5000SubModuleItem>('/querySYS5000SubModuleNo_DropDownList', 'No', 'Name').pipe(
@@ -890,9 +958,9 @@ export class DropdownApiService {
             value: item.No
           });
           return acc;
-        }, {} as Record<string, any>);
+        }, {} as Record<string, Option & { items: Option[] }>);
 
-        return Object.values(grouped);
+        return Object.values(grouped) as Option[];
       }),
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );

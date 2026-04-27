@@ -16,6 +16,13 @@ export interface IDropdownItem {
   Name: string;
 }
 
+/** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME） */
+export interface FasItemDropdownItem {
+  RowNo?: string;
+  GOODS_ID?: string | null;
+  GOODS_NAME?: string | null;
+}
+
 /**
  * 查詢採購單號下拉選單(ASS13010)
  * 後端回傳欄位：ID、APPLY_DATE
@@ -25,7 +32,18 @@ export interface Ass13010PurchaseNumberDropDownItem {
   ID: string;
   APPLY_DATE: string;
 }
-/** 
+
+/**
+ * 查詢進貨單號下拉選單(ASS15070) queryFAASSCHKMASS15070_DropDownList
+ * 前端下拉僅使用 SUBPOENA_ID
+ */
+export interface FAASSCHKMASS15070DropDownItem {
+  SUBPOENA_ID?: string | null;
+  NTAX_AMT?: number;
+  CHECK_DATE?: string | null;
+}
+
+/**
  * 查詢 FACLASSM_DropDownList 時的請求 body
 */
 export interface FaClassMQuery {
@@ -105,6 +123,21 @@ export interface FaSItemQuery {
 }
 
 export interface FaSItem {
+  GOODS_ID: string;
+  GOODS_NAME: string;
+}
+
+/**
+ * queryFASITEM_DropDownList 請求（例：MATERIAL_TYPE = 品項類別） */
+export interface FaSitemQuery {
+  MATERIAL_TYPE?: string | null;
+}
+
+/**
+ * queryFASITEM_DropDownList 回傳項目
+ */
+export interface FaSitemItem {
+  RowNo?: string;
   GOODS_ID: string;
   GOODS_NAME: string;
 }
@@ -648,6 +681,8 @@ export interface Css1005Query {
 export interface CssDropDownItem {
   No: string;
   Name: string;
+  /** CSS1005 專用：選 CLASS_ID 後自動帶出組織代碼 */
+  ORG_ID?: string;
 }
 
 /**
@@ -659,6 +694,17 @@ export interface Aps1002Item {
   BNK_No: string;           // 銀行代碼
   BNK_BRANCHNAME: string;   // 分行名稱
   BNK_AccType: string;      // 帳戶類型 (例如: 1-支存, 2-活存...)
+}
+
+/**
+ * 查詢會計科目子科目設定檔(GLS1005 AccSubCode)下拉式選單
+ */
+export interface GLS1005AccSubCodeItem {
+  CompNo: string;
+  AccNo: string;
+  AccCName: string;
+  AccEName: string;
+  AccDC: string;
 }
 
 /**
@@ -696,4 +742,13 @@ export interface Sys5000SubModuleItem extends IDropdownItem {
 export interface Tls55020Query {
   /** 交易日期 (YYYY-MM-DD) */
   TXN_Date: string;
+}
+
+/**
+ * 收銀機下拉選單項目型別
+ */
+export interface queryPOS1002_DropDownListItem {
+  No: string;
+  Name: string;
+  ECR_TLT_No?: string;
 }

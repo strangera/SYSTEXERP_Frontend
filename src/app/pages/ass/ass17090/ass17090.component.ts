@@ -127,7 +127,7 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
       this.bigCategoryOptions = opts ?? [];
     });
     this.dropdownApi
-      .queryFaSItem({ MATERIAL_TYPE: '3' })
+      .queryFasItemDropdown({ MATERIAL_TYPE: '3' })
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         this.goodsOptions = opts ?? [];

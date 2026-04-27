@@ -106,7 +106,7 @@
           (rowReorderData)="onRowReorder($event)" [data]="tableData()" [defaultInsertData]="defaultInsertData()"
           [footerData]="footerData()" [loading]="tableLoading()" [tableKey]="'FIN52030_detail'" [tableRequired]="true"
           [columns]="columns()" [scrollable]="true" [virtualScroll]="true"
-          [virtualScrollItemSize]="46"></app-table-edit>
+          [rowValidate]="validateRow" [virtualScrollItemSize]="46"></app-table-edit>
       </p-panel>
     </div>
   </div>
@@ -154,10 +154,11 @@
 
 @if ((isFormCreateable || isFormEditable) && currentStep() === 5) {
 <div class="card">
-  <p-panel header="銷項發票" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepSalesRows()"
-      [columns]="stepSalesColumns" [tableKey]="'FIN53010_step_sales'" (dataChange)="onStepSalesDataChange($event)"
-      (fieldChange)="onStepSalesInvoiceFieldChange($event)"></app-table-edit>
+  <p-panel header="進項發票" class="line-height-3 m-0">
+    <app-table-edit #purchaseTableEdit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
+      [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'"
+      (dataChange)="onStepPurchaseDataChange($event)"
+      (fieldChange)="onStepPurchaseInvoiceFieldChange($event)"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
         (click)="goPrevStep()"></app-button>
@@ -174,11 +175,10 @@
 
 @if ((isFormCreateable || isFormEditable) && currentStep() === 6) {
 <div class="card">
-  <p-panel header="進項發票" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
-      [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'"
-      (dataChange)="onStepPurchaseDataChange($event)"
-      (fieldChange)="onStepPurchaseInvoiceFieldChange($event)"></app-table-edit>
+  <p-panel header="銷項發票" class="line-height-3 m-0">
+    <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepSalesRows()"
+      [columns]="stepSalesColumns" [tableKey]="'FIN53010_step_sales'" (dataChange)="onStepSalesDataChange($event)"
+      (fieldChange)="onStepSalesInvoiceFieldChange($event)"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
         (click)="goPrevStep()"></app-button>

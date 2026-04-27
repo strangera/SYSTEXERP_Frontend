@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -24,7 +24,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
   standalone: true,
   imports: [MenubarComponent, DropdownComponent,
     AccordionModule, FormsModule, ReactiveFormsModule,
-    InputTextComponent, MultiSelectComponent, ButtonComponent, TranslateModule, TableReportComponent]
+    InputTextComponent, MultiSelectComponent, ButtonComponent, TranslateModule, TableComponent]
 })
 
 export class FIN21030Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -112,14 +112,9 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     { field: 'VEN_Name', header: '廠客名稱', visible: true },
     { field: 'VEN_ShortName', header: '廠商簡稱', visible: true },
     { field: 'VEN_EngName', header: '廠商英文簡稱', visible: true },
-    {
-      field: 'VEN_Flag',
-      header: '欄位內容',
-      visible: true,
-      format: (value: string) => this.VEN_FLAG_MAP[value] || value,
-    },
+    { field: 'VEN_Flag', header: '欄位內容', visible: true },
     { field: 'VEN_Uniform', header: '廠商統一編號/身份證字號', visible: true },
-    { field: 'VEN_RemitFeeMode', header: '郵電費負擔', visible: true, format: (value: string) => this.VEN_REMIT_FEE_MODE_MAP[value] || value, },
+    { field: 'VEN_RemitFeeMode', header: '郵電費負擔', visible: true },
     { field: 'VEN_Post', header: '郵遞區號', visible: true },
     { field: 'VEN_Address', header: '郵寄地址', visible: true },
     { field: 'VEN_Tel', header: '電話', visible: true },
@@ -127,17 +122,17 @@ export class FIN21030Component extends BasicQueryPageComponent<any> implements O
     { field: 'VEN_Email', header: '廠商電子郵件', visible: true },
     { field: 'VEN_GUIAddr', header: '廠商發票地址', visible: true },
     { field: 'VEN_GUIEmail', header: '廠商發票電子郵件', visible: true },
-    { field: 'VEN_PayType', header: '付款方式', visible: true, format: (value: string) => this.VEN_PAY_TYPE_MAP[value] || value, },
+    { field: 'VEN_PayType', header: '付款方式', visible: true },
     { field: 'VEN_BNK_No', header: '匯款銀行代碼', visible: true },
     { field: 'VEN_BNK_BranchNo', header: '匯款銀行分行代碼', visible: true },
     { field: 'VEN_BankAccountNo', header: '匯款帳號', visible: true },
     { field: 'VEN_AccountName', header: '匯款帳戶名稱', visible: true },
     { field: 'VEN_PayConditionDay', header: '付款期限(天數)', visible: true },
     { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true },
-    { field: 'VEN_Status', header: '審核狀態', visible: true, format: (value: string) => this.VEN_STATUS_MAP[value] || value, },
+    { field: 'VEN_Status', header: '審核狀態', visible: true },
     { field: 'Approved_Date', header: '審核日期', visible: true, format: formatDate },
-    { field: 'VEN_DiscYN', header: '貼現廠商', visible: true, format: (value: string) => this.VEN_YN_MAP[value] || value, },
-    { field: 'VEN_CTRLYN', header: '禁止背書轉讓', visible: true, format: (value: string) => this.VEN_YN_MAP[value] || value, },
+    { field: 'VEN_DiscYN', header: '貼現廠商', visible: true },
+    { field: 'VEN_CTRLYN', header: '禁止背書轉讓', visible: true },
     { field: 'VEN_DiscDateB', header: '貼現起日', visible: true, format: formatDate },
     { field: 'VEN_DiscDateE', header: '貼現迄日', visible: true, format: formatDate },
     { field: 'GUI_ID_WIRE', header: '匯款統一編號', visible: true },

@@ -100,7 +100,6 @@ export function mapAps4023RowToStepSales(row: APS4023): FIN53010StepSalesInvoice
   const id = typeof idRaw === 'number' && !Number.isNaN(idRaw) ? idRaw : undefined;
   return {
     ...(id !== undefined ? { id } : {}),
-    add_flag: true,
     invoice_type: row.InvoiceType ?? undefined,
     invoice_prefix: prefix || undefined,
     invoice_no: inv8.length === 8 ? inv8 : invNum,
@@ -131,13 +130,12 @@ export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseI
   }
   return {
     ...(typeof id === 'number' && !Number.isNaN(id) ? { id } : {}),
-    add_flag: true,
     voucher_type: row.PUR_VoucherType ?? undefined,
     track_no: trackNo || undefined,
     invoice_no: invoiceNo || undefined,
     invoice_date: parseYmdToDate(row.PUR_GUIDate ?? undefined),
     declare_ym: parseYyyyMmToMonthDate(row.PUR_RepYYYYMM ?? undefined),
-    vendor_tax_id: row.PUR_VenUniform ?? row.PUR_Uniform ?? row.PUR_VenNo ?? undefined,
+    vendor_tax_id: row.PUR_VenNo ?? undefined,
     invoice_usage: row.PUR_DirectType ?? undefined,
     invoice_amount: row.PUR_Amt ?? undefined,
     tax_type: row.PUR_TaxType ?? undefined,

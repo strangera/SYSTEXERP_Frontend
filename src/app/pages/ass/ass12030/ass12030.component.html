@@ -59,7 +59,7 @@
             <app-dropdown
               label="部門代號"
               controlName="orgId"
-              [options]="orgIdOptions"
+              [options]="orgIdOptions | async"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.orgId"

@@ -14,8 +14,9 @@
           [control]="dataForm.controls.user_Password" [submitted]="submitted" [showButton]="isFormEditable"
           [buttonLabel]="'重製密碼'" (clickButton)="resetPassword()" [buttonLoading]="resetLoading"
           [showStar]="!isFormCreateable && showStar" />
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="組織代碼" controlName="org_ID" [options]="SYS3100_Options"
-          optionLabel="label" optionValue="value" [control]="dataForm.controls.org_ID" [submitted]="submitted" />
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="組織代碼" controlName="org_ID"
+          [options]="SYS3100_Options$ | async" optionLabel="label" optionValue="value"
+          [control]="dataForm.controls.org_ID" [submitted]="submitted" />
         <app-calendar-range-quick class="col-12 lg:col-8" label="有效日期" [startControl]="dataForm.controls.str_date"
           [endControl]="dataForm.controls.end_date" [submitted]="submitted" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用者狀態" controlName="status" [options]="userStatusOptions"
@@ -30,14 +31,55 @@
           [control]="dataForm.controls.user_priority" [submitted]="submitted" [options]="user_priorityOptions"
           optionLabel="label" optionValue="value" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="職位" controlName="title" [options]="titleOptions"
-          optionLabel="Label" optionValue="No" [control]="dataForm.controls.title" [submitted]="submitted" />
+          optionLabel="label" optionValue="value" [control]="dataForm.controls.title" [submitted]="submitted" />
         <app-calendar *ngIf="!isFormCreateable" class="col-12 md:col-6 lg:col-4" label="密碼到期日"
           controlName="USER_PwdExpireDate" [control]="dataForm.controls.USER_PwdExpireDate" [submitted]="submitted" />
-        <app-table #table class="col-12" dataKey="ID" [columns]="columns" [data]="data" [showEdit]="false"
-          [showDetail]="false" [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true"
-          (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
-          [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable"
-          [insertRowData]="true" (dataChange)="data = $event" [showReportMode]="false"></app-table>
+        <app-table-edit title="專櫃權限清單" #table class="col-12" [columns]="columns" [data]="data"
+          (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" (dataChange)="data = $event"
+          [disabled]="isFormReadable"></app-table-edit>
+        <hr />
+
+        <div class="col-12">
+          <app-table-edit #table2 title="系統權限清單" [columns]="columnsReportRole" [data]="reportRoleData"
+            (selectionChange)="selectedReportRoleRows = $event" [selectedItems]="selectedReportRoleRows"
+            (dataChange)="reportRoleData = $event" [disabled]="isFormReadable">
+            <div class="grid mt-2 border-top-1 surface-border">
+              <div class="col-12">
+                <div class="grid">
+                  <app-multi-select class="col-12 md:col-6 lg:col-3" label="樓層代碼" controlName="FLOOR_ID"
+                    [options]="SYS3800_Options$ | async" optionLabel="Name" optionValue="No"
+                    [control]="dataForm.controls.FLOOR_ID" [submitted]="submitted" />
+                  <app-multi-select class="col-12 md:col-6 lg:col-3" label="區域代碼" controlName="AREA_ID"
+                    [options]="SYS3A00_Options$ | async" optionLabel="Name" optionValue="No"
+                    [control]="dataForm.controls.AREA_ID" [submitted]="submitted" />
+                  <app-multi-select class="col-12 md:col-6 lg:col-3" label="大分類代碼" controlName="BTYPE_ID"
+                    [options]="BUS_TypeOptions$ | async" optionLabel="label" optionValue="value"
+                    [control]="dataForm.controls.BTYPE_ID" [submitted]="submitted" />
+                  <app-multi-select class="col-12 md:col-6 lg:col-3" label="專櫃編號" controlName="STORE_ID"
+                    [options]="TLTTALENT_OPTIONS$ | async" optionLabel="label" optionValue="value"
+                    [control]="dataForm.controls.STORE_ID" [submitted]="submitted" />
+                </div>
+              </div>
+            </div>
+            <ng-template #customCell let-rowData="rowData" let-col="col" let-index="index">
+              <p-multiSelect *ngIf="col.field === 'ORG_ID'"
+                [options]="(col.optionsAsync ? (col.options | async) : col.options) || []"
+                [optionLabel]="col.optionLabel" [optionValue]="col.optionValue" [(ngModel)]="rowData[col.field]"
+                (onChange)="onRoleValueChange(rowData, col, $event.value, index)" [placeholder]="'請選擇'"
+                [showClear]="true" [filter]="true" appendTo="body" [style]="{'width': '100%'}"
+                [ngModelOptions]="{standalone: true}" [maxSelectedLabels]="3" [disabled]="isFormReadable">
+              </p-multiSelect>
+              <ng-container *ngIf="col.field === 'SYS_ID'">
+                <p-treeSelect [(ngModel)]="rowData[col.field + '_TreeNodes']" [ngModelOptions]="{standalone: true}"
+                  [options]="sysTreeOptions" display="comma" [metaKeySelection]="false" selectionMode="checkbox"
+                  placeholder="請選擇系統權限" appendTo="body" [style]="{'max-width': '10rem'}"
+                  (onNodeSelect)="onTreeValueChange(rowData, col, index)" labelStyleClass="py-2"
+                  (onNodeUnselect)="onTreeValueChange(rowData, col, index)" [disabled]="isFormReadable">
+                </p-treeSelect>
+              </ng-container>
+            </ng-template>
+          </app-table-edit>
+        </div>
       </div>
       <!-- sys3700 -->
       <div class="grid p-fluid border-top-1 surface-border mt-2" *ngIf="!isFormCreateable">

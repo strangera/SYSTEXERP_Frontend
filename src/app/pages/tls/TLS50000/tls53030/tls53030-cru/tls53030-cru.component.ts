@@ -1,4 +1,4 @@
-import { DatePipe, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -15,8 +15,11 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { formatAmount } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
+import { SelectButtonChangeEvent, SelectButtonModule } from 'primeng/selectbutton';
 import { finalize } from 'rxjs';
+type FilterMode = 'ALL' | 'DIFF';
 
 @Component({
   selector: 'app-tls53030-cru',
@@ -33,10 +36,17 @@ import { finalize } from 'rxjs';
     TranslateModule,
     DropdownComponent,
     TableEditComponent,
-    NgIf
+    NgIf,
+    ButtonModule,
+    SelectButtonModule
   ]
 })
 export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> implements OnInit {
+  filterMode: FilterMode = 'ALL'; // 預設顯示全部
+  filterOptions = [
+    { label: `顯示全部`, value: 'ALL', icon: 'pi pi-list' },
+    { label: `只顯示差異`, value: 'DIFF', icon: 'pi pi-exclamation-triangle' }
+  ];
   dataForm = this.formBuilder.nonNullable.group({
     PST_No: [{ value: '', disabled: true }],        // 盤點單編號
     HOS_No: [{ value: '', disabled: true }],        // 倉庫代碼
@@ -48,7 +58,6 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
     PST_Status: [{ value: '', disabled: true }],    // 盤點狀態
   });
 
-  //#region 下拉選項
   hosOptions: any[] = [];   // 倉別選項
   logoOptions: any[] = [];  // 品牌選項
 
@@ -68,9 +77,6 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
     { value: '4', label: '已結案' },
     { value: '9', label: '作廢' }
   ];
-  //#endregion
-
-  //#region 明細資料
   detailData: any[] = [];
   originalDetailData: TLS53030DetailData[] = [];
   selectedItems: TLS53030DetailData[] = [];
@@ -89,30 +95,22 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
       type: 'inputNumber',
       placeholder: '請輸入數量',
       calculate: (row) => {
-        if (this.crudstatus !== CRUDStatus.Edit) return {};
-
-        // 如果 DIFF_Qty 已經有值（初始載入時），則不重新計算
-        if (row.DIFF_Qty !== undefined && row.DIFF_Qty !== null && row._dataStatus === 'original') {
+        // 如果不是編輯模式，或該資料尚未被異動 (還是 original)，就不計算，維持後端給的值
+        if (this.crudstatus !== CRUDStatus.Edit || row._dataStatus === 'original') {
           return {};
         }
+        // --- 只有當使用者開始修改 (status 變為 modified) 才會走到下面 ---
+        let diff = 0;
+        const status = this.rowdata?.PST_Status;
 
-        // 狀態1(初盤)：用初盤計算差異量
-        if (this.rowdata?.PST_Status === '1') {
-          return {
-            'DIFF_Qty': row.PST_Qty1 - row.SYS_STOCK_QTY,
-          };
+        if (status === '1') {
+          diff = (row.PST_Qty1 || 0) - (row.SYS_STOCK_QTY || 0);
+        } else if (['2', '3'].includes(status || '')) {
+          const qty = (row.PST_Qty2 !== null && row.PST_Qty2 !== undefined) ? row.PST_Qty2 : row.PST_Qty1;
+          diff = (qty || 0) - (row.SYS_STOCK_QTY || 0);
         }
 
-        // 狀態2(複盤)或3(抽盤)：若複盤無值，則用初盤計算差異量
-        if (['2', '3'].includes(this.rowdata?.PST_Status || '')) {
-          if (row.PST_Qty2 === null || row.PST_Qty2 === undefined) {
-            return {
-              'DIFF_Qty': row.PST_Qty1 - row.SYS_STOCK_QTY,
-            };
-          }
-        }
-
-        return {};
+        return { 'DIFF_Qty': diff };
       }
     },
     {
@@ -172,11 +170,8 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
     { field: 'DIFF_Qty', header: '差異量', format: formatAmount },
     { field: 'PST_Remark', header: '備註', type: 'input', },
   ];
-  //#endregion
-
   constructor(
     private tls53030Service: TLS53030Service,
-    private datePipe: DatePipe,
     private dropDownListService: DropDownListService
   ) {
     super();
@@ -234,9 +229,9 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
     this.tls53030Service.queryTLS53030Detail(payload)
       .pipe(untilDestroyed(this), finalize(() => this.detailLoading = false))
       .subscribe(response => {
-        // 使用深拷貝保存原始資料
-        this.originalDetailData = JSON.parse(JSON.stringify(response.Data));
-        this.detailData = response.Data;
+        const data = response.Data;
+        this.originalDetailData = JSON.parse(JSON.stringify(data));
+        this.detailData = data;
       });
   }
 
@@ -265,5 +260,40 @@ export class TLS53030CRUComponent extends BasicCruPageComponent<TLS53030Data> im
   resetTable() {
     // 使用深拷貝重置明細資料
     this.detailData = JSON.parse(JSON.stringify(this.originalDetailData));
+  }
+  get filteredDetailData() {
+    if (this.filterMode === 'DIFF') {
+      // 篩選出差異量不等於 0 的資料
+      return this.detailData.filter(item => {
+        const diff = parseFloat(item.DIFF_Qty);
+        return !isNaN(diff) && diff !== 0;
+      });
+    }
+    return this.detailData;
+  }
+  // 計算數量的 Getters
+  get totalCount(): number {
+    return this.detailData?.length || 0;
+  }
+
+  get diffCount(): number {
+    return this.detailData.filter(item => {
+      const diff = parseFloat(item.DIFF_Qty);
+      return !isNaN(diff) && diff !== 0;
+    }).length;
+  }
+
+  // 修改後的切換方法 (配合 SelectButton 的 onChange 事件)
+  onFilterChange(event: SelectButtonChangeEvent) {
+    const newMode = event.value;
+    if (!newMode) {
+      return;
+    }
+    if (newMode === this.filterMode) return;
+    this.detailLoading = true;
+    setTimeout(() => {
+      this.filterMode = newMode;
+      this.detailLoading = false;
+    }, 300);
   }
 }
