@@ -23,17 +23,12 @@
   </ng-template>
   <!-- 群組表頭 -->
   <ng-template pTemplate="groupheader" let-rowData>
-    <tr pRowGroupHeader style="height: 40.8px" class="custom-group-header">
-      <td [attr.colspan]="getVisibleHeaderCount">
-        <ng-container *ngIf="groupHeaderTemplate; else defaultGroupHeader">
-          <ng-container
-            *ngTemplateOutlet="groupHeaderTemplate; context: { $implicit: rowData, groupRowsBy: groupRowsBy, groupRowsByName: groupRowsByName }"></ng-container>
-        </ng-container>
-        <ng-template #defaultGroupHeader>
-          <i class="pi pi-folder-open mr-2"></i> <span>
-            {{ groupRowsByName }}：{{ rowData[groupRowsBy] }}
-          </span>
-        </ng-template>
+    <tr pRowGroupHeader style="height: 40.8px">
+      <td [attr.colspan]="getVisibleHeaderCount"
+        class="bg-gray-200 text-blue gray-900 px-3 py-2 border-bottom-1 surface-border" style="font-weight: bold;">
+        <div class="flex align-items-center">
+          <span>會計科目: {{ rowData.AccNo }} - {{ rowData.AccCName }}</span>
+        </div>
       </td>
     </tr>
   </ng-template>

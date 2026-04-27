@@ -24,6 +24,7 @@
             <app-calendar
               calendarType="dateMonthOne"
               label="基準日"
+              controlName="baseYYMM"
               [control]="queryForm.controls.baseYYMM"
               [submitted]="submitted"
             ></app-calendar>
@@ -34,7 +35,7 @@
             <app-dropdown
               label="保管單位"
               controlName="keeperUnit"
-              [options]="organizationOptions"
+              [options]="keeperUnitOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.keeperUnit"
@@ -44,11 +45,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="會計科目代碼"
-              controlName="Accountcode"
-              [options]="AccountcodeOptions"
+              controlName="accountCode"
+              [options]="accountCodeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.accountcode"
+              [control]="queryForm.controls.accountCode"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -73,10 +74,12 @@
         </ul>
         <div>
           <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+            <app-button
+              btnType="clear"
+              [form]="queryForm"
+            ></app-button>
             <app-button
               btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
               [loading]="loading"
             ></app-button>
           </div>
@@ -87,11 +90,41 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table
+    <app-table-report
       [data]="data"
       [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+      [totalRecords]="totalRecords"
+      tableKey="ASS15040_Data"
+      dataKey="ASSET_ID"
+      [allowMultilineHeader]="true"
+      [showReorder]="false"
+      [showManage]="false"
+      [showSummary]="true"
+      [loading]="tableLoading()"
+      [lazy]="true"
+    >
+      <header>
+        <div class="flex justify-content-end gap-2">
+          <p-button
+            label="匯出 PDF"
+            icon="pi pi-file-pdf"
+            (click)="onExportPdf()"
+            [disabled]="
+              tableLoading() || exportPdfLoading || exportExcelLoading || data.length === 0
+            "
+            [loading]="exportPdfLoading"
+          ></p-button>
+          <p-button
+            label="匯出 XLSX"
+            icon="pi pi-file-excel"
+            (click)="onExportExcel()"
+            [disabled]="
+              tableLoading() || exportPdfLoading || exportExcelLoading || data.length === 0
+            "
+            [loading]="exportExcelLoading"
+          ></p-button>
+        </div>
+      </header>
+    </app-table-report>
   </div>
 </div>

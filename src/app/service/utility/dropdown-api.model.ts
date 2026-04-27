@@ -16,6 +16,13 @@ export interface IDropdownItem {
   Name: string;
 }
 
+/** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME） */
+export interface FasItemDropdownItem {
+  RowNo?: string;
+  GOODS_ID?: string | null;
+  GOODS_NAME?: string | null;
+}
+
 /**
  * 查詢採購單號下拉選單(ASS13010)
  * 後端回傳欄位：ID、APPLY_DATE
@@ -104,6 +111,35 @@ export interface FaClass2Item {
   B_CLASS_ID: string;
   B_CLASS_NAME: string;
   NOTES?: string | null;
+}
+
+export interface FaHosItem {
+  WH_ID: string;
+  WH_NAME: string;
+}
+
+export interface FaSItemQuery {
+  MATERIAL_TYPE: string;
+}
+
+export interface FaSItem {
+  GOODS_ID: string;
+  GOODS_NAME: string;
+}
+
+/**
+ * queryFASITEM_DropDownList 請求（例：MATERIAL_TYPE = 品項類別） */
+export interface FaSitemQuery {
+  MATERIAL_TYPE?: string | null;
+}
+
+/**
+ * queryFASITEM_DropDownList 回傳項目
+ */
+export interface FaSitemItem {
+  RowNo?: string;
+  GOODS_ID: string;
+  GOODS_NAME: string;
 }
 
 /**
@@ -645,6 +681,8 @@ export interface Css1005Query {
 export interface CssDropDownItem {
   No: string;
   Name: string;
+  /** CSS1005 專用：選 CLASS_ID 後自動帶出組織代碼 */
+  ORG_ID?: string;
 }
 
 /**

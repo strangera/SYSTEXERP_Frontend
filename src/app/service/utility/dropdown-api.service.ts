@@ -2,10 +2,10 @@ import { AuthService } from './../system/auth.service';
 // !!! 新版下拉方法
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { ApiResponse } from '../../shared/utils/rxjs-operators/validate-api-response';
 import { Observable, of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
+import { environment } from '../../../environments/environment';
 import {
   Aps1001ComboItem,
   Aps1001ComboQuery,
@@ -23,14 +23,18 @@ import {
   CssDropDownItem,
   EcrItem,
   EcrQuery,
+  FasItemDropdownItem,
   ENG1001Item,
   FAASSCHKMASS15070DropDownItem,
   FaClass1Item,
   FaClass1Query,
   FaClass2Item,
   FaClass2Query,
+  FaHosItem,
   FaClassMItem,
   FaClassMQuery,
+  FaSitemItem,
+  FaSitemQuery,
   GLS1005AccSubCodeItem,
   IDropdownItem,
   IGLS1005LedgerMDItem,
@@ -267,6 +271,32 @@ export class DropdownApiService {
       'S_CLASS_ID',
       'S_CLASS_NAME',
       body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢倉別(FAHOS)資料表下拉選單 - 回傳 WH_ID / WH_NAME */
+  queryFaHos(body: object = {}): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FaHosItem, object>(
+      '/queryFAHOS_DropDownList',
+      'WH_ID',
+      'WH_NAME',
+      body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /**
+   * 查詢品項(FASITEM)下拉 — 預設 MATERIAL_TYPE=3（列管耗材）；回傳 GOODS_ID / GOODS_NAME
+   */
+  queryFasItemDropdown(body: FaSitemQuery = {}): Observable<Option[] | null> {
+    const payload: FaSitemQuery = {
+      ...body,
+      MATERIAL_TYPE: body.MATERIAL_TYPE ?? '3',
+    };
+    return this.queryAndMapDropdown<FaSitemItem, FaSitemQuery>(
+      '/queryFASITEM_DropDownList',
+      'GOODS_ID',
+      'GOODS_NAME',
+      payload,
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
@@ -885,6 +915,19 @@ export class DropdownApiService {
       'Name'
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
+
+  /**
+   * queryFASITEM_DropDownList（固定 MATERIAL_TYPE=3，耗材品項）。
+   * 回傳列：RowNo、GOODS_ID、GOODS_NAME → 下拉 value/label 使用 GOODS_ID、GOODS_NAME。
+   */
+  queryFasItemDropDownList(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FasItemDropdownItem>(
+      '/queryFASITEM_DropDownList',
+      'GOODS_ID',
+      'GOODS_NAME',
+      { MATERIAL_TYPE: '3' }
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
   /** 查詢子模組代碼(SYS5000) */
   querySys5000SubModuleNo(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<Sys5000SubModuleItem>('/querySYS5000SubModuleNo_DropDownList', 'No', 'Name').pipe(
@@ -915,9 +958,9 @@ export class DropdownApiService {
             value: item.No
           });
           return acc;
-        }, {} as Record<string, any>);
+        }, {} as Record<string, Option & { items: Option[] }>);
 
-        return Object.values(grouped);
+        return Object.values(grouped) as Option[];
       }),
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );

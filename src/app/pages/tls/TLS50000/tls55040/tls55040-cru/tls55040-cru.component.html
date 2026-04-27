@@ -5,7 +5,7 @@
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <div class="card grid p-fluid">
+      <div class="grid p-fluid">
         <div *ngIf="!isFormCreateable" class="col-12 md:col-6 lg:col-3">
           <app-input-text label="請款維護單號" controlName="OTA_No" [control]="dataForm.controls.OTA_No" />
         </div>
@@ -43,7 +43,7 @@
         </div>
       </div>
 
-      <div *ngIf="(dataForm.valid && APS30181Data.length > 0) || !isFormCreateable" class="card grid p-fluid">
+      <div *ngIf="(dataForm.valid && APS30181Data.length > 0) || !isFormCreateable" class="grid p-fluid">
         <div class="col-12">
           <app-table-edit #APS30181TableEdit title="單據資料" [multiSortMeta]="[{field: 'EVENT_TYPE',order: 1}]"
             [columns]="APS30181Columns" [data]="APS30181Data" (selectionChange)="APS30181selectedItems = $event"
@@ -55,7 +55,7 @@
         </div>
       </div>
 
-      <div *ngIf="(dataForm.valid && APS30181Data.length > 0) || !isFormCreateable" class="card grid p-fluid">
+      <div *ngIf="(dataForm.valid && APS30181Data.length > 0) || !isFormCreateable" class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-3">
           <app-input-number label="發票總金額(未稅)" controlName="PUR_TotNet" [control]="dataForm.controls.PUR_TotNet"
             [submitted]="submitted"></app-input-number>
@@ -74,7 +74,7 @@
         </div>
       </div>
 
-      <div *ngIf="(dataForm.valid && APS30181Data.length > 0) || !isFormCreateable" class="card grid p-fluid">
+      <div *ngIf="(dataForm.valid && APS30181Data.length > 0) || !isFormCreateable" class="grid p-fluid">
         <div class="col-12">
           <app-table-edit #APS3018TableEdit title="發票資料" [columns]="APS3018Columns" [data]="APS3018Data"
             [canInsert]="isFormCreateable" (selectionChange)="APS3018selectedItems = $event" footerSummaryLabel="發票總金額"

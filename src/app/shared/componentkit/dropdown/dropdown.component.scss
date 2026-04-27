@@ -1,4 +1,7 @@
 // WebKit (Chrome, Safari, Edge, Opera) 瀏覽器
+::ng-deep .p-dropdown-items-wrapper .p-scroller {
+  max-height: 250px !important; /* 設定下拉面板的高度，超出部分會出現滾動條 */
+}
 ::ng-deep .p-scroller {
   // 針對下拉面板內部滾動條的容器
   &::-webkit-scrollbar {
@@ -57,12 +60,14 @@
 
   input {
     width: 100%;
-    padding: 0.5rem 0.75rem;  // 與 calendar 一致的 padding
+    padding: 0.5rem 0.75rem; // 與 calendar 一致的 padding
     font-size: 1rem;
     line-height: 1.5;
     border-radius: 0.375rem;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    height: auto;  // 確保高度自動計算
+    transition:
+      border-color 0.15s ease-in-out,
+      box-shadow 0.15s ease-in-out;
+    height: auto; // 確保高度自動計算
   }
 }
 

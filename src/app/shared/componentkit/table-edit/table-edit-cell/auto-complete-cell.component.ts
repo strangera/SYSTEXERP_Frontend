@@ -12,43 +12,50 @@ import { CellInput } from './table-edit-cell.model';
   selector: 'app-auto-complete-cell',
   host: { 'table-edit-id': 'auto-complete-cell' },
   template: `
-    <p-iconField iconPosition="right">
-      <p-autoComplete
-        #autoCompleteRef
-        class="flex min-w-max"
-        styleClass="w-full"
-        inputStyleClass="w-full"
-        appendTo="body"
-        [(ngModel)]="cellInput.rowData[cellInput.col.field]"
-        [ngModelOptions]="{ standalone: true }"
-        [placeholder]="internalLoading ? '載入中...' : (isDisabled() ? '' : '請輸入' + cellInput.col.header)"
-        [suggestions]="getOptions(cellInput.rowData, cellInput.col)"
-        [optionLabel]="cellInput.col.optionLabel"
-        [optionValue]="cellInput.col.optionValue"
-        [disabled]="isDisabled()"
-        [forceSelection]="cellInput.col.forceSelection ?? false"
-        [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
-        [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }"
-        (completeMethod)="handleComplete($event)"
-        (onSelect)="onSelect($event)"
-        (onClear)="onClear()"
-        (onBlur)="handleBlur()"
-        (keydown.enter)="handleEnter($event)"
-      >
-        <ng-template let-item pTemplate="item" *ngIf="cellInput.col.templateLabel">
-          <div class="flex align-items-center gap-2">
-            <span>{{ item[cellInput.col.templateLabel] }}</span>
-          </div>
-        </ng-template>
-      </p-autoComplete>
+  <p-iconField iconPosition="right">
+    <p-autoComplete
+      #autoCompleteRef
+      class="flex w-full"
+      styleClass="w-full"
+      [inputStyleClass]="'w-full'"
+      appendTo="body"
+      [(ngModel)]="cellInput.rowData[cellInput.col.field]"
+      [ngModelOptions]="{ standalone: true }"
+      [placeholder]="internalLoading ? '載入中...' : (isDisabled() ? '' : '請輸入' + cellInput.col.header)"
+      [suggestions]="getOptions(cellInput.rowData, cellInput.col)"
+      [optionLabel]="cellInput.col.optionLabel"
+      [optionValue]="cellInput.col.optionValue"
+      [disabled]="isDisabled()"
+      [forceSelection]="cellInput.col.forceSelection ?? false"
+      [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
+      [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }"
+      [style]="{
+        'width': cellInput.col.width,
+        'text-align': cellInput.col.textAlign
+      }"
+      [inputStyle]="{
+        'width': '100%',
+        'text-align': cellInput.col.textAlign || 'left'
+      }"
 
-      <p-inputIcon
-        *ngIf="cellInput.rowData._validationErrors?.[cellInput.col.field] && !internalLoading"
-        styleClass="pi pi-exclamation-circle text-red-500"
-        [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
-        tooltipPosition="bottom"
-      />
-    </p-iconField>
+      (completeMethod)="handleComplete($event)"
+      (onSelect)="onSelect($event)"
+      (onClear)="onClear()"
+      (onBlur)="handleBlur()"
+      (keydown.enter)="handleEnter($event)"
+    >
+      <ng-template let-item pTemplate="item" *ngIf="cellInput.col.templateLabel">
+        <div class="flex align-items-center gap-2">
+          <span>{{ item[cellInput.col.templateLabel] }}</span>
+        </div>
+      </ng-template>
+    </p-autoComplete>
+
+    <p-inputIcon *ngIf="cellInput.rowData._validationErrors?.[cellInput.col.field] && !internalLoading"
+                styleClass="pi pi-exclamation-circle text-red-500"
+                [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
+                tooltipPosition="bottom" />
+  </p-iconField>
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,

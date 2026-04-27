@@ -17,7 +17,7 @@ import { CellInput } from './table-edit-cell.model';
                    styleClass="pi pi-exclamation-circle text-red-500"
                    [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
                    tooltipPosition="bottom" />
-      <p-inputNumber class="min-w-max w-full" mode="decimal"
+      <p-inputNumber class="w-full" mode="decimal"
                      [(ngModel)]="cellInput.rowData[cellInput.col.field]"
                      [ngModelOptions]="{ standalone: true }"
                      [placeholder]="
@@ -32,8 +32,8 @@ import { CellInput } from './table-edit-cell.model';
                      [maxFractionDigits]="cellInput.col.maxFractionDigits"
                      (onFocus)="cellInput.col.onFocus?.(cellInput.rowData, cellInput.rowData[cellInput.col.field], cellInput.col, cellInput.index)"
                      (onBlur)="handleBlur()"(keydown.enter)="handleEnter($event)"
-                     [style]="{'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
-                     [inputStyle]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign || 'right'}"
+                     [style]="{'text-align': cellInput.col.textAlign,'width': cellInput.col.width}"
+                     [inputStyle]="{'width': '100%', 'text-align': cellInput.col.textAlign || 'right'}"
                      [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
                      [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }" />
     </p-iconField>

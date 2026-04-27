@@ -25,92 +25,49 @@
         ></app-input-number>
       </div>
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="發票/收據號碼"
-            controlName="RECEIPT_NO"
-            [control]="dataForm.controls.RECEIPT_NO"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="單據種類"
-            controlName="RECEIPT_TYPE"
-            [options]="RECEIPT_TYPE_Options"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.RECEIPT_TYPE"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="進貨單號"
-            controlName="TOKEN_NO"
-            [options]="TOKEN_NO_Options"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.TOKEN_NO"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="發票格式"
-            controlName="INV_FORMAT"
-            [options]="INV_FORMAT_Options"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.INV_FORMAT"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="稅別"
-            controlName="TAX_CODE"
-            [options]="TAX_CODE_Options"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.TAX_CODE"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="扣抵別"
-            controlName="REDU_CODE"
-            [options]="REDU_CODE_Options"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.REDU_CODE"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <app-calendar
+        <app-input-number
           class="col-12 md:col-6 lg:col-4"
-          calendarType="dateOne"
-          label="發票/收據日期"
-          [control]="dataForm.controls.RECEIPT_DATE"
+          label="未稅金額"
+          controlName="NTX_AMT"
+          [control]="dataForm.controls.NTX_AMT"
           [submitted]="submitted"
-        ></app-calendar>
+        ></app-input-number>
+        <app-input-number
+          class="col-12 md:col-6 lg:col-4"
+          label="稅額"
+          controlName="TX_AMT"
+          [control]="dataForm.controls.TX_AMT"
+          [submitted]="submitted"
+        ></app-input-number>
+        <app-input-number
+          class="col-12 md:col-6 lg:col-4"
+          label="含稅金額"
+          controlName="AMT"
+          [control]="dataForm.controls.AMT"
+          [submitted]="submitted"
+        ></app-input-number>
       </div>
-
+      <!-- <div class="grid p-fluid">
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="驗收單號"
+          controlName="TOKEN_NO"
+          [control]="dataForm.controls.TOKEN_NO"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div> -->
       <hr />
       <div class="grid p-fluid">
         <app-table-edit
-          title="供應商資料"
+          title="發票資料"
           class="col-12"
           [columns]="supplierColumn"
           [data]="supplierData"
           [loading]="loading"
-          (dataChange)="supplierData = $event"
+          [defaultInsertData]="defaultsupplier"
+          (dataChange)="onSupplierDataChange($event)"
+          [canInsert]="supplierData.length < 1"
+          [rowValidate]="validateSupplierRow"
         ></app-table-edit>
         <app-table-edit
           title="單據資料"
@@ -118,7 +75,9 @@
           [columns]="itemColumn"
           [data]="itemData"
           [loading]="loading"
-          (dataChange)="itemData = $event"
+          (dataChange)="onItemDataChange($event)"
+          [rowValidate]="validateItemRow"
+          [showFooter]="true"
         ></app-table-edit>
       </div>
       <div

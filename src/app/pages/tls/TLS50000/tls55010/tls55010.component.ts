@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -41,17 +41,14 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   ]
   constructor(
     private readonly tls55010Service: Tls55010Service,
-    private readonly datePipe: DatePipe
+    private readonly datePipe: DatePipe,
+    private readonly cdr: ChangeDetectorRef
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS55010', '/tls/tls55010cru');
-    this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
-      this.cls_date = res.Data.CLS_DATE;
-      const closeDate = new Date(res.Data.CLS_DATE);
-      closeDate.setDate(closeDate.getDate() + 1);
-      this.queryForm.patchValue({ TXN_Date: closeDate });
-    });
+    // 初始化時獲取日期
+    this.refreshCloseDate();
     this.data = getSYS1000Options('IMSCLOSE').map((item: { value: string; label: string }) => ({
       ...item, check_content: item.label, details: []
     }));
@@ -168,9 +165,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
         this.messageService.successBubble(res.Message);
         this.isConfirmDate = true;
         this.lastDate = body.TXN_Date as unknown as Tls55010DateRequest;
-        this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
-          this.cls_date = res.Data.CLS_DATE;
-        });
+        this.refreshCloseDate();
         this.dataForm.patchValue(res.Data.Data._gls6001);
         this.data2 = res.Data.Data._gls6002s.map((item: any) => ({
           ...item,
@@ -267,7 +262,29 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
         this.messageService.successBubble(res.Message);
         this.dataForm.reset();
         this.data2 = [];
+        this.refreshCloseDate();
       });
+    });
+  }
+
+  /**
+ * 從後端獲取最新關帳日，並同步更新表單結帳日期為 關帳日 + 1
+ */
+  private refreshCloseDate(): void {
+    this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
+      if (res?.Data?.CLS_DATE) {
+        this.cls_date = res.Data.CLS_DATE;
+
+        // 計算下一天
+        const closeDate = new Date(res.Data.CLS_DATE);
+        closeDate.setDate(closeDate.getDate() + 1);
+
+        // 更新表單日期
+        this.queryForm.patchValue({ TXN_Date: closeDate });
+
+        // 如果有涉及 ChangeDetection 也可以手動觸發一下
+        this.cdr.detectChanges();
+      }
     });
   }
 }

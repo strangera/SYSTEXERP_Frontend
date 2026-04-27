@@ -35,6 +35,8 @@ import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { AsyncPipe } from '@angular/common';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 
 /** 進入新增頁時的套用模式：已詢價=套用請購清單，未詢價=套用詢價清單 */
 export type CreateMode = 'quoted' | 'unquoted';
@@ -47,6 +49,7 @@ export type CreateMode = 'quoted' | 'unquoted';
   styleUrl: './ass12030-cru.component.scss',
   standalone: true,
   imports: [
+    AsyncPipe,
     MenubarComponent,
     ButtonComponent,
     PanelModule,
@@ -81,8 +84,10 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
 
   /** 申請人下拉選項 */
   empIdOptions: { value: string; label: string }[] = [];
+  /** 部門下拉選項 */
+  orgIdOptions = this.dropdownApiService.querySys3100();
   /** 委託部門下拉選項 */
-  orgIdOptions: { value: string; label: string }[] = [];
+  entrustOrgIdOptions: { value: string; label: string }[] = [];
   /** 稅別下拉選項 */
   taxCodeOptions: { value: string; label: string }[] = [];
   /** 支出類型下拉選項 */
@@ -144,7 +149,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       type: 'dropdown',
       optionLabel: 'label',
       optionValue: 'value',
-      options: () => this.orgIdOptions,
+      options: () => this.entrustOrgIdOptions,
       validate: [validateRequired],
     },
     {
@@ -185,9 +190,9 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
     { field: 'Detail_CNT', header: '明細筆數' },
   ];
   applyPurchaseColumns: Column[] = [
-    { field: 'BATCH_NO', header: '登錄批號' },
+    { field: 'BATCH_ID', header: '登錄批號' },
     { field: 'SUPPLIER_ID', header: '供應商' },
-    { field: 'LOG_DATE', header: '登錄日期', format: formatDate },
+    { field: 'CRT_Date', header: '登錄日期', format: formatDate },
     { field: 'EXPDATE', header: '報價期限' },
     { field: 'NOTES', header: '說明' },
   ];
@@ -198,6 +203,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   constructor(
     private readonly ass12030Service: ASS12030Service,
     private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly fin11040Service: Fin11040Service,
     private readonly ass11100Service: ASS11100Service,
     private readonly ass12010Service: ASS12010Service,
@@ -266,7 +272,7 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         const list = res.Data ?? [];
-        this.orgIdOptions = list.map((item: { No?: string; Name?: string }) => ({
+        this.entrustOrgIdOptions = list.map((item: { No?: string; Name?: string }) => ({
           value: item.No ?? '',
           label: `${item.No ?? ''} - ${item.Name ?? ''}`,
         }));
@@ -465,14 +471,16 @@ export class ASS12030CRUComponent extends BasicCruPageComponent<ASS12030Detail> 
   onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const valid = this.tableEditComponent?.validateAndShowErrors();
-      if (valid === false) return;
+      this.loading = true;
+      if (valid === false) {
+        this.loading = false;
+        return;
+      }
       const raw = this.dataForm.getRawValue();
       const details = this.toDetails(this.data as Record<string, unknown>[]);
       const applyDate = raw.APPLY_DATE instanceof Date
         ? raw.APPLY_DATE.toISOString().slice(0, 10)
         : String(raw.APPLY_DATE ?? '');
-
-      this.loading = true;
 
       if (this.crudstatus === CRUDStatus.Create) {
         const payload: ASS12030InsertRequest = {

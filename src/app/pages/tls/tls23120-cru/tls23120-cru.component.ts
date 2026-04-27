@@ -12,15 +12,15 @@ import {
 } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
+import { finalize } from 'rxjs';
 
+import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
 
 interface SubTable {
   tltId: string;
@@ -293,7 +293,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements 
   //        匯出 Excel（你原本 그대로）
   // =========================
   exportExcel(): void {
-    import('xlsx').then((xlsx) => {
+    import('xlsx-js-style').then((xlsx) => {
       const wb = xlsx.utils.book_new();
 
       const chunk3 = (arr: string[]) => {
@@ -393,11 +393,11 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements 
     return `${y}/${m}/${d}`;
   }
   goBack(): void {
-  this.router.navigate(['/account/tls/tls23120'], { state: { fromCru: true } });
-}
+    this.router.navigate(['/account/tls/tls23120'], { state: { fromCru: true } });
+  }
 
-// onCancel 也同樣
-override onCancel(): void {
-  this.router.navigate(['/account/tls/tls23120'], { state: { fromCru: true } });
-}
+  // onCancel 也同樣
+  override onCancel(): void {
+    this.router.navigate(['/account/tls/tls23120'], { state: { fromCru: true } });
+  }
 }

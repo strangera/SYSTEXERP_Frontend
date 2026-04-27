@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import * as XLSX from 'xlsx-js-style';
 import { NotificationService } from '../component/notification-message/notification.service';
 
 export interface ImportExcelColumn {
@@ -25,6 +24,7 @@ export class ExcelImportService {
     columns: ImportExcelColumn[],
     customValidator?: (rowData: any) => string
   ): Promise<{ data: any[], hasErrors: boolean, errorBlob?: Blob }> {
+    const XLSX = await import('xlsx-js-style');
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e: any) => {
@@ -107,7 +107,7 @@ export class ExcelImportService {
           });
 
           // 產生包含所有行與樣式的 Blob
-          const errorBlob = this.generateFullReportBlob(fullReportData, columns);
+          const errorBlob = this.generateFullReportBlob(XLSX, fullReportData, columns);
 
           resolve({
             data: validDataOnly,
@@ -127,7 +127,7 @@ export class ExcelImportService {
   /**
    * 產生美化版的檢核報告 Blob
    */
-  private generateFullReportBlob(allData: any[], originalCols: ImportExcelColumn[]): Blob {
+  private generateFullReportBlob(XLSX: any, allData: any[], originalCols: ImportExcelColumn[]): Blob {
     const ws = XLSX.utils.json_to_sheet(allData);
     const charWidthMultiplier = 1.5;
     const reportHeaders = originalCols.map(c => c.header).concat(['檢核結果', '錯誤原因']);
@@ -186,7 +186,6 @@ export class ExcelImportService {
         }
       }
     }
-
     // 3. 封裝並回傳 Blob
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, '匯入檢核報告');

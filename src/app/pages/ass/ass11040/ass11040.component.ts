@@ -79,7 +79,7 @@ export class ASS11040Component extends BasicQueryPageComponent<QueryASS11040Resp
     { field: 'M_CLASS_NAME', header: '中分類名稱', visible: true },
     { field: 'S_CLASS_ID', header: '小分類代碼', visible: true },
     { field: 'S_CLASS_NAME', header: '小分類名稱', visible: true },
-    { field: 'MATERIAL_TYPE_NAME', header: '品項類別區分', visible: true },
+    { field: 'MATERIAL_TYPE', header: '品項類別區分', visible: true },
   ];
   // ----------------------------------------------------------------
 
