@@ -160,6 +160,7 @@ function mapStepBankToInsert4002(row: FIN53010StepBankDeposit, deps: Fin53010Pay
     VEN_No: row.ven_no,
     Remark: row.note_desc,
     Source_Date: toYmd(row.txn_date ?? undefined, deps.datePipe),
+    Status: row.status,
   };
 }
 
