@@ -44,7 +44,6 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
     DIFF_TotAmt: [{ value: 0 as number | null, disabled: true }],// 差異金額
   });
 
-  // ========== Dropdown Table 相關屬性 (保持不變) ==========
   vendorQueryForm = this.formBuilder.group({
     VEN_No: [''], // 查詢條件
   });
@@ -61,16 +60,11 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
     { field: 'VEN_Name', header: '廠商名稱' },
     { field: 'VEN_PayConditionDay', header: '結帳後幾日付款' },
   ];
-  // ========== Dropdown Table 相關屬性 END ==========
-
-  // ========== APS30181 Table Edit 相關屬性 (保持不變) ==========
   APS30181Columns: EditColumn[] = [];
   APS30181Data: APS30181[] = []; // 主資料表格
   APS30181selectedItems: APS30181[] = [];
   APS30181Loading = false;
   PUR_VoucherTypeOptions = getSYS1000Options('PUR_VoucherType').filter(v => v.value !== '23' && v.value !== '24')
-  // ========== APS30181 Table Edit 相關屬性 END ==========
-  // ========== APS3018 Table Edit 相關屬性 (保持不變) ==========
   // 計算申報年月 YYYYMM 的函式
   private calculateRepYYYYMM(dateValue: string | Date | null): string | null {
     if (!dateValue) return null;
@@ -127,10 +121,7 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
 
     return { isValid: true, errorMessage: '' };
   };
-  // ========== APS3018 Table Edit 相關屬性 END ==========
-  // ========== 彈窗相關屬性 ==========
   ODMVisible = false;
-  // ========== 彈窗相關屬性 END ==========
   TABTYPEOptions = getSYS1000Options('TABTYPE')
 
   constructor(
