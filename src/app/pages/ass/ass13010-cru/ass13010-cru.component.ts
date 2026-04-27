@@ -538,8 +538,4 @@ export class ASS13010CRUComponent extends BasicCruPageComponent<any> implements 
   submitForm(frm: FormGroup): void {
     this.onSubmit(frm);
   }
-
-  override onCancel(): void {
-    super.onCancel();
-  }
 }

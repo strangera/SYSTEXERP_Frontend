@@ -47,6 +47,7 @@ export interface QueryASS13010Request {
   HANDLE_VENDOR?: string | null;
   HANDLE_VID?: string | null;
   HANDLE_NOTE?: string | null;
+  PURCHASE_NOTES?: string | null;
 }
 
 export interface QueryASS13010Response {
