@@ -4,7 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS16020Data, ASS16020ReportData, ASS16020ReportRequest, Ass16020Service, InsertASS16020Request, QueryDetailASS16020Detail, QueryDetailASS16020Request, UpdateASS16020Request } from '@service/api/ass/ass16020.service';
+import { ASS16020Data, ASS16020ReportData, ASS16020ReportRequest, Ass16020Service, InsertASS16020Request, PrintASS16020Request, QueryDetailASS16020Detail, QueryDetailASS16020Request, UpdateASS16020Request } from '@service/api/ass/ass16020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -17,6 +17,7 @@ import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateDuplicate, validateMaxLength, validateMaxNumber } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { FileExportService } from '@shared/service/file-export.service';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -55,6 +56,10 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
         NOTES: [''],    // 說明
     });
 
+    reportdataForm = this.formBuilder.nonNullable.group({
+        INV_ID: [{ value: '', disabled: true }],    // 盤點單號
+    });
+
     // 控制
     isEditMode = true; // 修改頁
     isReportMode = false; // 報表頁
@@ -64,10 +69,16 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
     // PageMode = PageMode; // 給 html 用
 
     btnLoading = false;
+    // 列印按鈕載入狀態
+    exportPdfLoading = false;
+    exportExcelLoading = false;
+
     totalRecords = 0;
     data: QueryDetailASS16020Detail[] = [];
     reportData: ASS16020ReportData[] = [];
     reportRequest: ASS16020ReportRequest = { INV_ID: '' };
+    lastPrintQueryBody: PrintASS16020Request | null = null;
+
     footerData: any[] = [];
     group_name = [{ group_name: '' }];
     selectedRows: QueryDetailASS16020Detail[] = [];
@@ -109,6 +120,7 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
         private notificationService: NotificationService,
         private route: ActivatedRoute,
         private ass16020Service: Ass16020Service,
+        private readonly fileExportService: FileExportService,
     ) {
         super();
     }
@@ -180,11 +192,18 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
         else if (this.crudstatus === CRUDStatus.Read) {
             this.isEditMode = false;
             this.isReportMode = mode === 'report'; // 判斷是 檢視頁 還是 報表頁
-
-            // 載入資料
-            const request: QueryDetailASS16020Request = {
+            let request: QueryDetailASS16020Request = {
                 INV_ID: this.dataForm.getRawValue().INV_ID,
             };
+
+            if (this.isReportMode) {
+                this.lastPrintQueryBody = history.state?.queryConditions;
+                console.log('報表查詢條件', this.lastPrintQueryBody);
+
+                this.reportdataForm.controls.INV_ID.setValue(this.lastPrintQueryBody?.INV_ID || '');
+                request = { INV_ID: this.reportdataForm.getRawValue().INV_ID, };
+            }
+
             this.ass16020Service.queryDetailASS16020(request)
                 .subscribe(response => {
                     this.dataForm.patchValue({
@@ -204,19 +223,6 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
         else {
             this.isEditMode = false;
             this.isReportMode = false;
-        }
-
-        // this.route.queryParams.subscribe(params => {
-        //     const mode = params['mode'];
-
-        //     if (mode === 'Report') {
-        //         this.pageMode = PageMode.Report;
-        //     }
-        // });
-
-
-        if (this.isReportMode) {
-            this.dataForm.controls.INV_ID.setValue(this.reportRequest.INV_ID);
         }
 
     }
@@ -334,6 +340,23 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
         // 清空選取列
         this.selectedRows = [];
     }
+
+    onExportPDF(): void {
+        if (!this.reportData || this.reportData.length === 0) {
+            return;
+        }
+
+        const printRequest: PrintASS16020Request = {
+            INV_ID: this.lastPrintQueryBody?.INV_ID || '',
+            REPORT_TYPE: this.lastPrintQueryBody?.REPORT_TYPE || ''
+        }
+
+        const req$ = this.ass16020Service.exportPDFASS16020(printRequest);
+        this.fileExportService
+            .executeFileExport(req$, '.pdf', v => (this.exportPdfLoading = v))
+            .subscribe();
+    }
+
 
     // 篩選員工的方法，根據選擇的組織 ID 來過濾員工列表
     private filterEmployeesByOrg(orgId: string | null): { label: string; value: string }[] {

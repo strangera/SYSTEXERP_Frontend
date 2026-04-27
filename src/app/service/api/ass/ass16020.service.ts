@@ -1,9 +1,9 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpResponse } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { IDropdownItem } from "@service/utility/dropDownList.service";
 import { ApiError, ApiMeta } from "@shared/models/api/base-api.interface";
 import { ApiResponse } from "@shared/utils/rxjs-operators/validate-api-response";
-import { Observable } from "rxjs";
+import { Observable, take } from "rxjs";
 import { environment } from "src/environments/environment";
 
 export interface BaseQueryNoArrayResponse<T> {
@@ -233,6 +233,16 @@ export class Ass16020Service {
     // 報表列印
     printASS16020(payload: PrintASS16020Request): Observable<ApiResponse<null>> {
         return this.http.post<ApiResponse<null>>(`${this.apiUrl}/printASS16020`, payload);
+    }
+
+    // 報表列印 (PDF)
+    exportPDFASS16020(payload: PrintASS16020Request): Observable<HttpResponse<Blob>> {
+        return this.http
+            .post(`${this.apiUrl}/exportPDFASS16020`, payload, {
+                responseType: 'blob',
+                observe: 'response',
+            })
+            .pipe(take(1));
     }
 
 

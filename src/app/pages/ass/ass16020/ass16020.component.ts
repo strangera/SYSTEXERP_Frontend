@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS16020Data, Ass16020Service, DeleteASS16020Request, QueryASS16020Detail } from '@service/api/ass/ass16020.service';
+import { ASS16020Data, Ass16020Service, DeleteASS16020Request, QueryASS16020Detail, QueryASS16020Request } from '@service/api/ass/ass16020.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -16,7 +16,6 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-ass16020',
@@ -33,7 +32,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
     InputTextComponent,
     RadiobuttonComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
     MultiSelectComponent,
     DialogModule,
@@ -43,7 +41,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> implements OnInit {
   queryForm = this.formBuilder.group({
     INV_ID: [],
-    INV_STATUS: [],  // 預設選取 ["1", "2"]
+    INV_STATUS: [["1", "2"]],  // 預設選取 ["1", "2"]
     INV_DATE_FROM: [],
     INV_DATE_TO: [],
     CLOSE_DATE_FROM: [],
@@ -116,8 +114,13 @@ export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> imp
     this.clearInvIdValidator();
 
     this.handleSubmit(form, () => {
-      form.get('INV_STATUS')?.setValue("1");
-      this.ass16020Service.queryASS16020(form.value)
+      // form.get('INV_STATUS')?.setValue("3");
+      const request: QueryASS16020Request = {
+        ...form.getRawValue(),
+        INV_STATUS: (form.getRawValue().INV_STATUS ?? []).join(','),
+      };
+      console.log(request);
+      this.ass16020Service.queryASS16020(request)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data?.Details ?? [];
@@ -204,11 +207,12 @@ export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> imp
       state: {
         mode: 'report',
         previousRoute: this.router.url,
-        fromRoute: this.router.url
+        fromRoute: this.router.url,
+        queryConditions: form.getRawValue(),
       }
     });
 
-    console.log(form.value);
+    console.log("開啟報表", form.getRawValue());
   }
 
   /** 編輯按鈕禁用邏輯 */
@@ -248,7 +252,7 @@ export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> imp
         if (res.Status !== '0000') return;
         const options = res.Data.map(item => ({
           label: `${item.user_No} - ${item.user_Name}`,
-          value: item.user_Name,
+          value: item.user_No,
         }));
         this.EMP_ID.set(options);
       },

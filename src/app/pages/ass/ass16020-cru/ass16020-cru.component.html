@@ -139,7 +139,7 @@
         <app-input-text
           label="盤點單號"
           controlName="INV_ID"
-          [control]="dataForm.controls.INV_ID"
+          [control]="reportdataForm.controls.INV_ID"
           [submitted]="submitted"
         ></app-input-text>
         <!-- <div class="block">盤點單號:</div>
@@ -166,7 +166,8 @@
                 <p-button
                   styleClass="p-2"
                   label="盤點維護報表.PDF"
-                  [loading]="btnLoading"
+                  (click)="onExportPDF()"
+                  [loading]="exportPdfLoading"
                   icon="pi pi-file"
                   [disabled]="
                     reportData.length === 0 || !hasPermission(Actions.Print)
