@@ -20,8 +20,8 @@
             label="零用金單號"
             controlName="PCS_No"
             [options]="PCS_No_Options"
-            optionLabel="label"
-            optionValue="value"
+            optionLabel="PCS_No"
+            optionValue="PCS_No"
             [control]="queryForm.controls.PCS_No"
             [submitted]="submitted"
           ></app-dropdown>
@@ -86,32 +86,26 @@
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table
-      tableKey="FIN73010"
+  <div class="col-12">
+    <app-table-report
       [data]="data"
+      [dataKey]="'SeqNo'"
+      [tableKey]="'FIN73010_Data'"
       [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-      [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event"
-      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [rows]="30"
-      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [showSerialNo]="false"
-      [showDelete]="false"
+      [totalRecords]="totalRecords"
       [showCheckBox]="false"
       [showManage]="false"
-      [showReportMode]="false"
-      [showSort]="false"
-      [showPaginator]="false"
-      [showPage]="false"
-      dataKey="SeqNo"
-      [multiSortMeta]="[{ field: 'PCS_No', order: 1 }]"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [showCaption]="false"
+      [showReorder]="false"
+      [showSummary]="false"
+      [showFooterTotal]="true"
+      [footerData]="footerData"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
       [lazy]="true"
       [loading]="loading"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryFunction"
     >
       <header>
         <div class="flex justify-content-end align-items-center gap-2">
@@ -133,6 +127,6 @@
           ></p-button>
         </div>
       </header>
-    </app-table>
+    </app-table-report>
   </div>
 </div>
