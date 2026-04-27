@@ -30,6 +30,7 @@ import {
   FaClass1Query,
   FaClass2Item,
   FaClass2Query,
+  FaHosItem,
   FaClassMItem,
   FaClassMQuery,
   FaSitemItem,
@@ -269,6 +270,16 @@ export class DropdownApiService {
       '/queryFACLASS2_DropDownList',
       'S_CLASS_ID',
       'S_CLASS_NAME',
+      body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /** 查詢倉別(FAHOS)資料表下拉選單 - 回傳 WH_ID / WH_NAME */
+  queryFaHos(body: object = {}): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FaHosItem, object>(
+      '/queryFAHOS_DropDownList',
+      'WH_ID',
+      'WH_NAME',
       body,
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }

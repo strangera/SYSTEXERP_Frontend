@@ -54,7 +54,7 @@ export class ASS11070CRUComponent extends BasicCruPageComponent<QueryASS11070Res
     companyAddress: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
     chargeStaff: new FormControl<string>('', [Validators.maxLength(60)]),
     payType: new FormControl<string>('', [Validators.maxLength(20)]),
-    ticketPeriod: new FormControl<string>('', [Validators.maxLength(30)]),
+    ticketPeriod: new FormControl<string>('', [Validators.maxLength(30), Validators.pattern('^[0-9]+$')]),
     serviceItems: new FormControl<string>('', [Validators.required, Validators.maxLength(100)]),
     notes: new FormControl<string>('', [Validators.maxLength(100)]),
     // Key fields are kept internally for detail/update payload.

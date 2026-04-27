@@ -3,9 +3,6 @@
     <div class="col" style="flex: 1">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <!-- <div >
-          <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-        </div> -->
   </div>
   <p-accordion>
     <p-accordionTab
@@ -23,19 +20,19 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="資料顯示"
-              [control]="queryForm.controls.Querybystatus"
-              [options]="Querybystatus"
+              [control]="displayFilterCtrl"
+              [options]="displayFilterOptions"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="倉別"
-              controlName="Kurabe"
-              [options]="Kurabe"
+              controlName="whId"
+              [options]="warehouseOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Kurabe"
+              [control]="queryForm.controls.whId"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -43,63 +40,52 @@
             <app-calendar
               calendarType="dateOne"
               label="庫存日期"
-              [control]="queryForm.controls.Sdate"
+              controlName="stockDate"
+              [control]="queryForm.controls.stockDate"
               [submitted]="submitted"
             ></app-calendar>
           </div>
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown
-                label="部門代號"
-                controlName="Departmentcode"
-                [options]="Departmentcode"
-                optionLabel="label"
-                optionValue="value"
-                [control]="queryForm.controls.Departmentcode"
-                [submitted]="submitted"
-              ></app-dropdown>
-            </div> -->
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="大分類代碼"
-              controlName="bigCategoryCode"
+              label="大分類編號"
+              controlName="bClassId"
               [options]="bigCategoryOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.bigCategoryCode"
+              [control]="queryForm.controls.bClassId"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="中分類代碼"
-              controlName="midCategoryCode"
+              label="中分類編號"
+              controlName="mClassId"
               [options]="midCategoryOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.midCategoryCode"
+              [control]="queryForm.controls.mClassId"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="小分類代碼"
-              controlName="smallCategoryCode"
+              label="小分類編號"
+              controlName="sClassId"
               [options]="smallCategoryOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.smallCategoryCode"
+              [control]="queryForm.controls.sClassId"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="品項編號"
-              controlName="Itemnumber"
-              [options]="Itemnumber"
+              controlName="goodsId"
+              [options]="goodsOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Itemnumber"
+              [control]="queryForm.controls.goodsId"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -107,11 +93,11 @@
       </form>
       <div>
         <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+          <app-button btnType="clear" (clickEvent)="onClearForm()"></app-button>
           <app-button
             btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
+            (clickEvent)="onSubmitQuery(queryForm)"
+            [loading]="tableLoading()"
           ></app-button>
         </div>
       </div>
@@ -119,15 +105,36 @@
   </p-accordion>
 </div>
 
-<!-- <div class="card">
-    <div class="col-12">
-      <app-table
-        [data]="data"
-        [columns]="columns"
-        (edit)="onEdit($event)"
-        (detail)="onDetail($event)"
-      >
-      </app-table>
-    </div>
+<div class="card">
+  <div class="col-12">
+    <app-table-report
+      tableKey="ASS17080_Data"
+      [data]="data"
+      [columns]="columns"
+      [totalRecords]="totalRecords"
+      dataKey="ID"
+      [loading]="tableLoading()"
+      [lazy]="true"
+      [showManage]="false"
+      [showDelete]="false"
+      [footerData]="footerData"
+      [footerLabelField]="'label'"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="queryASS17080ForReport"
+    >
+      <header>
+        <div class="flex justify-content-end gap-2">
+          <p-button
+            label="報廢明細表.XLSX"
+            icon="pi pi-file-excel"
+            (click)="onExportExcel()"
+            [disabled]="
+              tableLoading() || exportExcelLoading || data.length === 0
+            "
+            [loading]="exportExcelLoading"
+          ></p-button>
+        </div>
+      </header>
+    </app-table-report>
   </div>
-   -->
+</div>
