@@ -77,6 +77,7 @@ export class FIN53010Service {
   /** APS1001 銀行代號（無分行），與 fin32010 匯款銀行代號來源一致 */
   public readonly bankNoLoading = signal<boolean>(!1);
   public readonly bankNoOptions = signal<Option[]>([]);
+  public readonly ptaOptions = signal<Map<string, Option[]>>(new Map());
 
   /** 傳票種類 */
   public readonly vouTypeOptions = [
@@ -262,6 +263,46 @@ export class FIN53010Service {
         }),
         shareReplay({ bufferSize: 1, refCount: true })
       );
+  }
+
+  /** 查詢立沖代號 (GLS3003 FIN53010 專用下拉) */
+  public queryGls3003Fin53010(body: { AccNo: string }): Observable<Option[] | null> {
+    return this.http
+      .post<ApiResponse<{ No: string; Name: string }[]>>(
+        `${fin53010RootApiUrl}/queryGLS3003_FIN53010_DropDownList`,
+        body
+      )
+      .pipe(
+        map(response => {
+          const data = response?.Data;
+          return data
+            ? data.map(item => ({
+              ...item,
+              value: item.No ?? '',
+              label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+            }))
+            : null;
+        }),
+        catchError(err => {
+          console.error('API /queryGLS3003_FIN53010_DropDownList 失敗:', err);
+          return of(null);
+        }),
+      );
+  }
+
+  public getPTADropdownOptions(accNo: string): void {
+    if (!accNo || this.ptaOptions().has(accNo)) return;
+    this.queryGls3003Fin53010({ AccNo: accNo }).pipe(take(1)).subscribe({
+      next: res => {
+        if (res) {
+          this.ptaOptions.update(map => {
+            const newMap = new Map(map);
+            newMap.set(accNo, res);
+            return newMap;
+          });
+        }
+      }
+    });
   }
 
   public insertFIN53010Data(payload: InsertFIN53010Request): Observable<FIN53010InsertResult> {
