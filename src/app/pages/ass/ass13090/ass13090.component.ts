@@ -1,10 +1,14 @@
-import { NgIf } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS13090Service } from '@service/api/ass/ass13090.service';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { Observable, catchError, finalize, map, of } from 'rxjs';
 import { Option } from '../../../service/utility/dropdown-api.model';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -19,48 +23,43 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
-interface Ass13090MockRow {
-  id: string;
-  amortCode: string;
-  itemCode: string;
-  purchaseDate: string;
-  postingDate: string;
-  assetType: string;
-  inputAmount: number;
-  amortStatus: '已設定攤提' | '未設定攤提';
-  /** 未攤提列表：折舊狀態顯示用（如 未設定 → 紅字） */
-  depreciationStatus?: string;
-  itemName: string;
-  inputDate: string;
-  assetStatus: string;
-  accountCode: string;
-  purchaseNo: string;
-  amortYearMonth: string;
-}
+import { removeEmptyValues } from '../../../shared/utils/object-utils';
+import { ApiResponse } from '../../../shared/utils/rxjs-operators/validate-api-response';
+import {
+  AmorASS13090Request,
+  AmorASS13090Response,
+  AmortizeASS13090Request,
+  PrintASS13090Request,
+  QueryASS13090QueryDataRow,
+  QueryASS13090Request,
+  ResultLayoutMode,
+} from './ass13090.model';
 
 const ASS13090_COLUMNS_CONFIGURED: ReportColumn[] = [
-  { field: 'amortCode', header: '攤提代號', visible: true },
-  { field: 'itemCode', header: '品項編號', visible: true },
-  { field: 'purchaseDate', header: '購入日期', visible: true },
-  { field: 'postingDate', header: '入帳日期', visible: true },
-  { field: 'assetType', header: '資產類型', visible: true },
-  { field: 'inputAmount', header: '購入金額', visible: true },
-  { field: 'amortStatus', header: '攤提狀態', visible: true },
+  { field: 'DEPRE_ID', header: '攤提代號', visible: true },
+  { field: 'GOODS_ID', header: '品項編號', visible: true },
+  { field: 'GET_DATE', header: '購入日期', visible: true },
+  { field: 'BILL_DATE', header: '入帳日期', visible: true },
+  { field: 'SYS_Name', header: '資產類型', visible: true },
+  { field: 'ASSET_COST', header: '購入金額', visible: true },
+  { field: 'DEPRE_STATUS', header: '攤提狀態', visible: true },
 ];
 
 const ASS13090_COLUMNS_UNAMORTIZED: ReportColumn[] = [
-  { field: 'amortCode', header: '攤提代號', visible: true },
-  { field: 'itemCode', header: '料項編號', visible: true },
-  { field: 'purchaseDate', header: '購入日期', visible: true },
-  { field: 'postingDate', header: '入帳日期', visible: true },
-  { field: 'assetType', header: '資產類型', visible: true },
-  { field: 'inputAmount', header: '購入金額', visible: true },
+  { field: 'DEPRE_ID', header: '攤提代號', visible: true },
+  { field: 'GOODS_ID', header: '料項編號', visible: true },
+  { field: 'GET_DATE', header: '購入日期', visible: true },
+  { field: 'BILL_DATE', header: '入帳日期', visible: true },
+  { field: 'SYS_Name', header: '資產類型', visible: true },
+  { field: 'ASSET_COST', header: '購入金額', visible: true },
   {
-    field: 'depreciationStatus',
+    field: 'DEPRE_STATUS',
     header: '折舊狀態',
     visible: true,
-    cellClass: (row: Ass13090MockRow) => (row.depreciationStatus === '未設定' ? 'text-red-500' : ''),
+    cellClass: (row: QueryASS13090QueryDataRow) =>
+      row.DEPRE_STATUS === '未設定' || row.DEPRE_STATUS === '未攤提'
+        ? 'text-red-500'
+        : '',
   },
 ];
 
@@ -71,6 +70,7 @@ const ASS13090_COLUMNS_UNAMORTIZED: ReportColumn[] = [
   templateUrl: './ass13090.component.html',
   styleUrl: './ass13090.component.scss',
   standalone: true,
+  providers: [DatePipe],
   imports: [
     NgIf,
     MenubarComponent,
@@ -89,29 +89,34 @@ const ASS13090_COLUMNS_UNAMORTIZED: ReportColumn[] = [
     ButtonModule,
   ],
 })
-export class ASS13090Component extends BasicQueryPageComponent<any> implements OnInit {
+export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090QueryDataRow> implements OnInit {
   queryForm = this.formBuilder.group({
     amortCode: [null as string | null], // 攤提代號
     itemCode: [null as string | null], // 品項編號
-    inputDateFrom: [null as Date | null], // 輸入日期(起)
-    inputDateTo: [null as Date | null], // 輸入日期(訖)
+    inputDateFrom: [null as Date | null], // 購入日期起
+    inputDateTo: [null as Date | null], // 購入日期(訖)
     assetStatus: [null as string | null], // 資產狀態
     assetType: [null as string | null], // 資產類型
-    accountCode: [null as string | null], // 會計科目代號
+    accountCode: [null as string | null], // 會計科目代號（TODO:QueryASS13090Request與AmorASS13090Request無對應欄位）
     inputAmountFrom: [null as number | null], // 購入金額(起)
     inputAmountTo: [null as number | null], // 購入金額(訖)
-    purchaseNo: [null as string | null], // 採購單號
-    amortYearMonth: [null as Date | string | null], // 攤提年月 YYYYMM
-    conditionFilter: ['1'], // 1:已設定攤提 0:未設定攤提
+    purchaseNo: [null as string | null], // 採購單號 → SUBPOENA_ID
+    amortYearMonth: [null as Date | string | null], // 攤提年月
+    conditionFilter: ['1'], // 1:已設定攤提 → DEPRE_STATUS Y；0:未設定 → N
+    pageSize: [30],
+    pageIndex: [1],
   });
 
-  data: any[] = [];
+  data: QueryASS13090QueryDataRow[] = [];
   totalRecords = 0;
   readonly tableLoading = signal(false);
-  /** 上次查詢成功的條件篩選（用於結果表版型） */
-  lastQueriedConditionFilter: string | null = null;
-  selectedRows: unknown[] = [];
+  /** 上次查詢條件（含分頁／排序；餵給 table-report lazy / sort） */
+  lastQueryBody?: Record<string, unknown>;
+  /** 上次執行的查詢版型（決定結果表欄位與操作） */
+  resultLayoutMode: ResultLayoutMode = ResultLayoutMode.Query;
+  selectedRows: QueryASS13090QueryDataRow[] = [];
   exportExcelLoading = false;
+  exportPdfLoading = false;
   columns: ReportColumn[] = [...ASS13090_COLUMNS_CONFIGURED];
   itemCodeOptions: Option[] = [];
   assetStatusOptions: Option[] = [];
@@ -123,8 +128,72 @@ export class ASS13090Component extends BasicQueryPageComponent<any> implements O
     { value: '0', label: '未設定攤提' },
   ];
 
-  constructor(private readonly dropdownApiService: DropdownApiService) {
+  constructor(
+    private readonly dropdownApiService: DropdownApiService,
+    private readonly ass13090Service: ASS13090Service,
+    private readonly fileExportService: FileExportService,
+    private readonly datePipe: DatePipe,
+  ) {
     super();
+  }
+
+  /**
+   * 供 app-table-report：捲動載入更多／排序後重查（與 queryASS15050ForReport 同型）
+   */
+  queryASS13090ForReport = (
+    body: Record<string, unknown>
+  ): Observable<{ Data: QueryASS13090QueryDataRow[]; TotalCount: number; Status?: string; Message?: string }> => {
+    return this.queryForCurrentLayout(body);
+  };
+
+  private queryForCurrentLayout(
+    body: Record<string, unknown>
+  ): Observable<{ Data: QueryASS13090QueryDataRow[]; TotalCount: number; Status?: string; Message?: string }> {
+    const req = this.recordToQueryRequest(body);
+    const clean = removeEmptyValues(req as Record<string, unknown>);
+    const api$: Observable<ApiResponse<unknown>> =
+      this.resultLayoutMode === ResultLayoutMode.AmortizationSetting
+        ? this.ass13090Service.amorASS13090(clean as AmorASS13090Request)
+        : this.ass13090Service.queryASS13090(clean as QueryASS13090Request);
+
+    return api$.pipe(
+      map((res): { Data: QueryASS13090QueryDataRow[]; TotalCount: number; Status?: string; Message?: string } => {
+        try {
+          if (!this.isAss13090ApiSuccess(res?.Status)) {
+            return {
+              Data: [],
+              TotalCount: 0,
+              Status: String(res?.Status ?? ''),
+              Message: res?.Message,
+            };
+          }
+          const apiRows = this.unwrapApiRowsByLayout(res.Data as unknown, this.resultLayoutMode);
+          const rows = apiRows.map(row => this.normalizeApiRow(row));
+          const totalCount = this.pickAss13090TotalCount(res, res.Data as unknown, rows.length);
+          return {
+            Data: rows,
+            TotalCount: totalCount,
+            Status: String(res.Status ?? ''),
+            Message: res.Message,
+          };
+        } catch (e) {
+          return {
+            Data: [],
+            TotalCount: 0,
+            Status: 'MAP_ERR',
+            Message: e instanceof Error ? e.message : String(e),
+          };
+        }
+      }),
+      catchError((err: unknown) =>
+        of({
+          Data: [] as QueryASS13090QueryDataRow[],
+          TotalCount: 0,
+          Status: 'HTTP_ERR',
+          Message: this.queryErrorToMessage(err),
+        }),
+      ),
+    );
   }
 
   ngOnInit(): void {
@@ -133,67 +202,57 @@ export class ASS13090Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(frm: FormGroup): void {
-    // TODO: 串接 API
+    this.submitByLayoutMode(frm, ResultLayoutMode.Query);
+  }
+
+  onAmortizationSettingClick(frm: FormGroup): void {
+    this.submitByLayoutMode(frm, ResultLayoutMode.AmortizationSetting);
+  }
+
+  private submitByLayoutMode(frm: FormGroup, layoutMode: ResultLayoutMode): void {
     this.handleSubmit(
       frm,
       () => {
         if (!this.hasPermission(this.Actions.Query)) {
+          this.loading = false;
           this.tableLoading.set(false);
           return;
         }
-        try {
-          const raw = frm.getRawValue();
-          this.data = [
-            {
-              id: '1',
-              amortCode: 'AMT-0001',
-              itemCode: 'A0001',
-              purchaseDate: '2024/01/10',
-              postingDate: '2024/01/20',
-              assetType: '資產',
-              inputAmount: 50000,
-              amortStatus: '已設定攤提',
-              depreciationStatus: '已設定',
-              itemName: '辦公桌',
-              inputDate: '2024/01/05',
-              assetStatus: '正常',
-              accountCode: '150101',
-              purchaseNo: '201410300001',
-              amortYearMonth: '202501',
+        frm.patchValue({ pageIndex: 1 });
+        const raw = frm.getRawValue();
+        const built = this.buildQueryRequest(raw as Record<string, unknown>, {});
+        this.lastQueryBody = removeEmptyValues(built as Record<string, unknown>);
+        this.resultLayoutMode = layoutMode;
+        this.applyResultTableLayout(layoutMode);
+        this.selectedRows = [];
+        this.queryStateService.setQueryState(this.ProgNo, raw);
+        this.tableLoading.set(true);
+        this.queryASS13090ForReport(this.lastQueryBody!)
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => {
+              this.loading = false;
+              this.tableLoading.set(false);
+            }),
+          )
+          .subscribe({
+            next: res => {
+              if (!this.isAss13090ApiSuccess(res.Status)) {
+                this.data = [];
+                this.totalRecords = 0;
+                this.messageService.warnBubble(res.Message || '查詢失敗');
+                return;
+              }
+              this.data = res.Data ?? [];
+              this.totalRecords = res.TotalCount ?? this.data.length;
             },
-            {
-              id: '2',
-              amortCode: '1C264300000020000016',
-              itemCode: '1C26430000002',
-              purchaseDate: '2020/09/01',
-              postingDate: '2024/06/12',
-              assetType: '資產',
-              inputAmount: 39905,
-              amortStatus: '未設定攤提',
-              depreciationStatus: '未設定',
-              itemName: '筆電',
-              inputDate: '2023/08/10',
-              assetStatus: '停用',
-              accountCode: '151201',
-              purchaseNo: '201410300002',
-              amortYearMonth: '202502',
+            error: err => {
+              this.data = [];
+              this.totalRecords = 0;
+              this.messageService.warnBubble(this.queryErrorToMessage(err));
             },
-          ];
-          this.totalRecords = this.data.length;
-          this.lastQueriedConditionFilter = raw.conditionFilter ?? null;
-          this.applyResultTableLayout();
-          this.selectedRows = [];
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-        } catch {
-          this.data = [];
-          this.totalRecords = 0;
-          this.messageService.warnBubble('查詢失敗，請稍後再試');
-        } finally {
-          this.loading = false;
-          this.tableLoading.set(false);
-        }
+          });
       },
-      v => this.tableLoading.set(v),
     );
   }
 
@@ -201,41 +260,17 @@ export class ASS13090Component extends BasicQueryPageComponent<any> implements O
     this.onSubmit(frm);
   }
 
-  onClearForm(): void {
-    this.queryForm.reset({
-      amortCode: null,
-      itemCode: null,
-      inputDateFrom: null,
-      inputDateTo: null,
-      assetStatus: null,
-      assetType: null,
-      accountCode: null,
-      inputAmountFrom: null,
-      inputAmountTo: null,
-      purchaseNo: null,
-      amortYearMonth: null,
-      conditionFilter: '1',
-    });
-    this.data = [];
-    this.totalRecords = 0;
-    this.lastQueriedConditionFilter = null;
-    this.selectedRows = [];
-    this.columns = [...ASS13090_COLUMNS_CONFIGURED];
-  }
-
   /** 條件為「未設定攤提」時：圖示表頭 + 勾選 + 序號連結 + 攤提按鈕 */
   get isUnamortizedResultLayout(): boolean {
-    return this.lastQueriedConditionFilter === '0';
+    return this.resultLayoutMode === ResultLayoutMode.AmortizationSetting;
   }
 
-  private applyResultTableLayout(): void {
+  private applyResultTableLayout(layoutMode: ResultLayoutMode = this.resultLayoutMode): void {
     this.columns =
-      this.lastQueriedConditionFilter === '0'
-        ? [...ASS13090_COLUMNS_UNAMORTIZED]
-        : [...ASS13090_COLUMNS_CONFIGURED];
+      layoutMode === ResultLayoutMode.AmortizationSetting ? [...ASS13090_COLUMNS_UNAMORTIZED] : [...ASS13090_COLUMNS_CONFIGURED];
   }
 
-  onSelectionChange(rows: unknown[]): void {
+  onSelectionChange(rows: QueryASS13090QueryDataRow[]): void {
     this.selectedRows = rows ?? [];
   }
 
@@ -244,39 +279,260 @@ export class ASS13090Component extends BasicQueryPageComponent<any> implements O
       this.messageService.warnBubble('請先勾選要攤提的資料');
       return;
     }
-    // TODO: 接批次攤提 API
-    this.messageService.successBubble(`已選取 ${this.selectedRows.length} 筆（攤提 API 待接）`);
+    const assetIds = this.selectedRows
+      .map(row => String(row.ASSET_ID ?? '').trim())
+      .filter(id => id.length > 0);
+    if (!assetIds.length) {
+      this.messageService.warnBubble('勾選資料缺少資產編號，無法攤提');
+      return;
+    }
+    const req: AmortizeASS13090Request = { AssetIds: assetIds };
+
+    this.tableLoading.set(true);
+    this.ass13090Service
+      .amortizeASS13090(req)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.tableLoading.set(false)),
+      )
+      .subscribe({
+        next: res => {
+          if (!this.isAss13090ApiSuccess(res.Status)) {
+            this.messageService.warnBubble(res.Message || res.Data?.ResultMsg || '攤提設定失敗');
+            return;
+          }
+          this.selectedRows = [];
+          this.messageService.successBubble(res.Data?.ResultMsg || '攤提設定完成');
+          this.onSubmit(this.queryForm);
+        },
+        error: err => this.messageService.warnBubble(this.queryErrorToMessage(err)),
+      });
   }
 
   onExportExcel(): void {
-    // TODO 串接報表 API
-    this.exportExcelLoading = true;
-    try {
-      const payload = {
-        query: this.queryForm.getRawValue(),
-        columns: this.columns.map(col => col.header),
-        data: this.data,
-        exportedAt: new Date().toISOString(),
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-      this.downloadBlob(blob, `ASS13090_${this.getTimestamp()}.xlsx`);
-    } catch {
-      this.messageService.errorBubble('檔案匯出失敗，請重試。');
-    } finally {
-      this.exportExcelLoading = false;
+    const req = this.buildExportRequestFromLastQuery();
+    if (!req) {
+      this.messageService.warnBubble('請先執行查詢');
+      return;
     }
+    this.fileExportService
+      .executeFileExport(
+        this.ass13090Service.exportExcelASS13090(req).pipe(untilDestroyed(this)),
+        '.xlsx',
+        v => (this.exportExcelLoading = v),
+      )
+      .subscribe();
   }
 
-  override onEdit(data: any): void {
+  onExportPdf(): void {
+    const req = this.buildExportRequestFromLastQuery();
+    if (!req) {
+      this.messageService.warnBubble('請先執行查詢');
+      return;
+    }
+    this.fileExportService
+      .executeFileExport(
+        this.ass13090Service.exportPDFASS13090(req).pipe(untilDestroyed(this)),
+        '.pdf',
+        v => (this.exportPdfLoading = v),
+      )
+      .subscribe();
+  }
+
+  override onEdit(data: QueryASS13090QueryDataRow): void {
     if (this.hasPermission(this.Actions.Edit)) {
       this.navigateWithState(CRUDStatus.Edit, data);
     }
   }
 
-  override onDetail(data: any): void {
-    this.navigateWithState(CRUDStatus.Read, data);
+  override onDetail(data: QueryASS13090QueryDataRow): void {
+    if (this.hasPermission(this.Actions.Query)) {
+      this.navigateWithState(CRUDStatus.Read, data);
+    }
+  }
+
+  /** 將 table 傳入的 body（分頁／排序）與目前表單合併成 API request */
+  private recordToQueryRequest(body: Record<string, unknown>): QueryASS13090Request {
+    const raw = this.queryForm.getRawValue() as Record<string, unknown>;
+    return this.buildQueryRequest(
+      raw,
+      body as Partial<QueryASS13090Request> & { pageSize?: number; pageIndex?: number },
+    );
+  }
+
+  private buildQueryRequest(
+    raw: Record<string, unknown>,
+    override: Partial<QueryASS13090Request> & { pageSize?: number; pageIndex?: number },
+  ): QueryASS13090Request {
+    const depreStatus =
+      raw['conditionFilter'] === '0' ? 'N' : raw['conditionFilter'] === '1' ? 'Y' : undefined;
+    const pageSize = override.PageSize ?? override.pageSize ?? (raw['pageSize'] as number) ?? 30;
+    const pageIndex = override.PageIndex ?? override.pageIndex ?? (raw['pageIndex'] as number) ?? 1;
+    return {
+      STO_NO:
+        this.authService.getUserInfo()?.SYS_StoreNo ??
+        this.authService.currentUserValue?.SYS_StoreNo ??
+        null,
+      DEPRE_ID: (raw['amortCode'] as string | null) ?? null,
+      GOODS_ID: (raw['itemCode'] as string | null) ?? null,
+      ASSET_STATUS: (raw['assetStatus'] as string | null) ?? null,
+      DEPRE_YN: (raw['assetType'] as string | null) ?? null,
+      SUBPOENA_ID: (raw['purchaseNo'] as string | null) ?? null,
+      GET_DATE_S: this.toIsoStart((raw['inputDateFrom'] as Date | null) ?? null),
+      GET_DATE_E: this.toIsoEnd((raw['inputDateTo'] as Date | null) ?? null),
+      ASSET_COST_S: (raw['inputAmountFrom'] as number | null) ?? null,
+      ASSET_COST_E: (raw['inputAmountTo'] as number | null) ?? null,
+      DEPRE_STATUS: depreStatus ?? null,
+      DEPRE_YM: this.formatDepreYm(raw['amortYearMonth'] as Date | string | null),
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: override.SortBy ?? undefined,
+      OrderBy: override.OrderBy ?? null,
+      Offset: override.Offset ?? null,
+    };
+  }
+
+  private toIsoStart(d: Date | null): string | null {
+    if (!d) return null;
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x.toISOString();
+  }
+
+  private toIsoEnd(d: Date | null): string | null {
+    if (!d) return null;
+    const x = new Date(d);
+    x.setHours(23, 59, 59, 999);
+    return x.toISOString();
+  }
+
+  private formatDepreYm(v: Date | string | null): string | null {
+    if (v == null || v === '') return null;
+    if (typeof v === 'string') {
+      const s = v.trim();
+      if (/^\d{6}$/.test(s)) return `${s.slice(0, 4)}-${s.slice(4)}`;
+      if (/^\d{4}-\d{2}$/.test(s)) return s;
+      const d = new Date(s);
+      return Number.isNaN(d.getTime()) ? null : (this.datePipe.transform(d, 'yyyy-MM') ?? null);
+    }
+    return this.datePipe.transform(v, 'yyyy-MM') ?? null;
+  }
+
+  private fmtDisplayDate(v: string | Date | null | undefined): string {
+    if (v == null || v === '') return '';
+    const d = v instanceof Date ? v : new Date(v);
+    if (Number.isNaN(d.getTime())) return typeof v === 'string' ? v : '';
+    return this.datePipe.transform(d, 'yyyy/MM/dd') ?? '';
+  }
+
+  /** 後端 Data：陣列或 { QueryData } */
+  private unwrapAss13090ApiRows(data: unknown): QueryASS13090QueryDataRow[] {
+    if (Array.isArray(data)) {
+      return data;
+    }
+    if (data && typeof data === 'object' && 'QueryData' in data) {
+      const qd = (data as { QueryData?: QueryASS13090QueryDataRow[] | null }).QueryData;
+      return Array.isArray(qd) ? qd : [];
+    }
+    return [];
+  }
+
+  /** amorASS13090 回傳資料轉成列表列型別 */
+  private unwrapAmorApiRows(data: unknown): QueryASS13090QueryDataRow[] {
+    const list = Array.isArray(data)
+      ? data
+      : data && typeof data === 'object' && 'QueryData' in data
+        ? ((data as { QueryData?: AmorASS13090Response[] | null }).QueryData ?? [])
+        : [];
+    if (!Array.isArray(list)) {
+      return [];
+    }
+    return list.map(row => ({
+      ASSET_ID: row.ASSET_ID ?? null,
+      DEPRE_ID: row.DEPRE_ID ?? null,
+      GOODS_ID: row.GOODS_ID ?? null,
+      GET_DATE: row.GET_DATE ?? null,
+      BILL_DATE: row.BILL_DATE ?? null,
+      SYS_Name: row.SYS_Name ?? null,
+      ASSET_COST: row.GET_COST ?? null,
+      DEPRE_STATUS: row.DEPRE_STATUS_TEXT ?? null,
+      RowNum: row.RowNum ?? null,
+    }));
+  }
+
+  private unwrapApiRowsByLayout(data: unknown, layoutMode: ResultLayoutMode): QueryASS13090QueryDataRow[] {
+    return layoutMode === ResultLayoutMode.Query ? this.unwrapAmorApiRows(data) : this.unwrapAss13090ApiRows(data);
+  }
+
+  private pickAss13090TotalCount(res: ApiResponse<unknown>, data: unknown, rowCount: number): number {
+    if (typeof res.TotalCount === 'number') {
+      return res.TotalCount;
+    }
+    if (data && typeof data === 'object' && 'TotalCount' in data) {
+      const t = (data as { TotalCount?: number }).TotalCount;
+      if (typeof t === 'number') {
+        return t;
+      }
+    }
+    return rowCount;
+  }
+
+  /** 後端 Status 多為 '0000'（trim 避免空白） */
+  private isAss13090ApiSuccess(status: unknown): boolean {
+    return String(status ?? '').trim() === '0000';
+  }
+
+  private queryErrorToMessage(err: unknown): string {
+    if (err instanceof HttpErrorResponse) {
+      const body = err.error;
+      if (body && typeof body === 'object' && 'Message' in body) {
+        return String((body as { Message?: unknown }).Message ?? err.message);
+      }
+      if (typeof body === 'string' && body.length) {
+        return body;
+      }
+      return err.message || `HTTP ${err.status}`;
+    }
+    if (err instanceof Error) {
+      return err.message;
+    }
+    return '查詢失敗，請稍後再試';
+  }
+
+  private normalizeApiRow(r: QueryASS13090QueryDataRow): QueryASS13090QueryDataRow {
+    return {
+      ...r,
+      GET_DATE: this.fmtDisplayDate(r.GET_DATE ?? undefined),
+      BILL_DATE: this.fmtDisplayDate(r.BILL_DATE ?? undefined),
+    };
+  }
+
+  private buildExportRequestFromLastQuery(): PrintASS13090Request | null {
+    if (!this.lastQueryBody) {
+      return null;
+    }
+    const q = this.lastQueryBody as Record<string, unknown>;
+    const sortBy = Array.isArray(q['SortBy']) ? (q['SortBy'] as Array<Record<string, unknown>>) : [];
+    const firstSort = sortBy[0] ?? null;
+    const sortField = firstSort?.['field'] != null ? String(firstSort['field']) : null;
+    const sortOrderRaw = firstSort?.['order'];
+    const sortOrder = typeof sortOrderRaw === 'number' ? sortOrderRaw : null;
+    return removeEmptyValues({
+      STO_NO: (q['STO_NO'] as string | null) ?? null,
+      DEPRE_ID: (q['DEPRE_ID'] as string | null) ?? null,
+      GOODS_ID: (q['GOODS_ID'] as string | null) ?? null,
+      ASSET_STATUS: (q['ASSET_STATUS'] as string | null) ?? null,
+      DEPRE_YN: (q['DEPRE_YN'] as string | null) ?? null,
+      SUBPOENA_ID: (q['SUBPOENA_ID'] as string | null) ?? null,
+      GET_DATE_S: (q['GET_DATE_S'] as string | null) ?? null,
+      GET_DATE_E: (q['GET_DATE_E'] as string | null) ?? null,
+      ASSET_COST_S: (q['ASSET_COST_S'] as number | null) ?? null,
+      ASSET_COST_E: (q['ASSET_COST_E'] as number | null) ?? null,
+      DEPRE_STATUS: (q['DEPRE_STATUS'] as string | null) ?? null,
+      DEPRE_YM: (q['DEPRE_YM'] as string | null) ?? null,
+      SortField: sortField,
+      SortOrder: sortOrder,
+    }) as PrintASS13090Request;
   }
 
   private loadDropdownOptions(): void {
@@ -317,23 +573,4 @@ export class ASS13090Component extends BasicQueryPageComponent<any> implements O
       .subscribe(opts => (this.purchaseNoOptions = opts ?? []));
   }
 
-  private downloadBlob(blob: Blob, filename: string): void {
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = filename;
-    anchor.click();
-    URL.revokeObjectURL(url);
-  }
-
-  private getTimestamp(): string {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth() + 1).padStart(2, '0');
-    const d = String(now.getDate()).padStart(2, '0');
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
-    const ss = String(now.getSeconds()).padStart(2, '0');
-    return `${y}${m}${d}_${hh}${mm}${ss}`;
-  }
 }
