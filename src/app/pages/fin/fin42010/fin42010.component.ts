@@ -5,13 +5,17 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
 import { CommonModule } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN42010Data } from '@service/api/fin/fin42010.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { apiOption, option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
@@ -23,42 +27,35 @@ import { TableSubheaderComponent } from './fin42010-table/fin42010-table.compone
   templateUrl: './fin42010.component.html',
   styleUrl: './fin42010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule, CommonModule, TableSubheaderComponent, ButtonModule]
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    RadiobuttonComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+    CommonModule,
+    CalendarComponent,
+    TableSubheaderComponent,
+    ButtonModule]
 })
 export class FIN42010Component extends BasicQueryPageComponent<FIN42010Data> implements OnInit {
-  // Upload files
-  fileType = '';
-  uploadUrl = 'https://www.primefaces.org/cdn/api/upload.php';
   queryForm = this.formBuilder.group({
-    year: [],
-    version: [],
-    organizationNumber: ['', Validators.required],
-    month: [],
-    amountStart: [], // 金額 起
-    amountEnd: [], // 金額 迄
-    remark: [],
-    status: [],
-    department: [],
-    unit: [],
+    version: [null, [Validators.required]], //版本
+    year: [null, [Validators.required]], //年
+    department: [null], //部門
+    unit: [null, [Validators.required]], // 金額單位表示
   });
 
-  // Dropdown options
-  FNCCodeOptions = [];
-  AccountcodeOptions = [];
-  departmentOptions = [];
-  displayOptions2 = [];
-  AnalysisdateCOptions = [];
-  vendorOptions = [];
-  FlippingstateOptions = [];
-  organizationNumberOptions = [];
-  statusOptions = [{ value: 1, label: '是' },
-  { value: 2, label: '否' }];
+  departmentOptions: option[] = [];
   unitOptions = [{ value: 1, label: '元' },
   { value: 2, label: '千' },
   { value: 3, label: '萬' }];
 
-
-  // Table data
   data: FIN42010Data[] = [];
   filteredData = [...this.data];
   columns = [
@@ -83,16 +80,15 @@ export class FIN42010Component extends BasicQueryPageComponent<FIN42010Data> imp
   btnLoading = false;
 
   constructor(
-    // private router: Router,
-    // private formBuilder: FormBuilder,
     private notificationService: NotificationService,
+    private readonly dropDownListService: DropDownListService,
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    this.ProgNo = '140005';
     this.initializePage('FIN42010', 'fin/fin42010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
@@ -100,14 +96,11 @@ export class FIN42010Component extends BasicQueryPageComponent<FIN42010Data> imp
     this.submitted = true;
     this.loading = true;
     this.notificationService.blockUi();
-
     // if (frm.valid && this.canQuery()) {
     //   // Submit logic here
     // }
-
     this.loading = false;
     this.notificationService.unblockUi();
-
     // 模擬查詢結果
     this.data = [
       {
@@ -470,4 +463,14 @@ export class FIN42010Component extends BasicQueryPageComponent<FIN42010Data> imp
     ];
   }
 
+  //讀取下拉  
+  loadOptions() {
+    this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.departmentOptions = res.Data.map((item: apiOption) => ({
+        value: item.No,
+        label: item.No + '-' + item.Name,
+      }));
+      console.log('res', res.Data);
+    });
+  }
 }

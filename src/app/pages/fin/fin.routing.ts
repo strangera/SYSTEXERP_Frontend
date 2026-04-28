@@ -143,7 +143,7 @@ export const finRoutes: Routes = [
   // 匯款明細表
   { path: 'fin29020', loadComponent: () => import('./fin29020/fin29020.component').then(m => m.FIN29020Component), data: { progNo: 'FIN29020' } },
   // 開票明細表
-  // { path: 'fin29030', loadComponent: () => import('./fin29030/fin29030.component').then(m => m.FIN29030Component),data:{progNo:'FIN29030'} },
+  { path: 'fin29030', loadComponent: () => import('./fin29030/fin29030.component').then(m => m.FIN29030Component), data: { progNo: 'FIN29030' } },
   // AP及ARNET之報表
   { path: 'fin29040', loadComponent: () => import('./fin29040/fin29040.component').then(m => m.FIN29040Component) },
   // 應付帳款明細表

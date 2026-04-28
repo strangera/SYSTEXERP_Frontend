@@ -86,6 +86,30 @@
   </p-accordion>
 </div>
 <div class="card">
+  <div class="col-13">
+    <app-table
+      tableKey="FIN73010"
+      [data]="data"
+      [columns]="columns"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [showSerialNo]="false"
+      [showCaption]="false"
+      [showCheckBox]="false"
+      [showManage]="false"
+      dataKey="SeqNo"
+      [multiSortMeta]="[{ field: 'PCS_No', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+    ></app-table>
+  </div>
+</div>
+<!-- <div class="card">
   <div class="col-12">
     <app-table-report
       [data]="data"
@@ -129,4 +153,4 @@
       </header>
     </app-table-report>
   </div>
-</div>
+</div> -->
