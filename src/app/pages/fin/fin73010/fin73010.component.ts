@@ -11,6 +11,7 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -32,6 +33,7 @@ import { FIN73010Service } from './../../../service/api/fin/fin73010.service';
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
+    TableComponent,
     TableReportComponent,
     TranslateModule]
 
@@ -125,12 +127,13 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
         next: (response) => {
           if (response.Status === '0000') {
             this.lastQueryBody = payload;
-            this.data = response.Data.filter((item: Fin73010data) => item.RowType !== 2); // 只顯示明細列 (html:showTotal、showPaginator)
-            const sumData = response.Data.filter((item: Fin73010data) => item.RowType === 2);
-            this.footerData = Array.isArray(sumData) && sumData.length > 0
-              ? { ...sumData[0], RowTypeDesc: '' }
-              : null;
-            console.log('Result', this.footerData);
+            // this.data = response.Data.filter((item: Fin73010data) => item.RowType !== 2); // 只顯示明細列 (html:showTotal、showPaginator)
+            this.data = response.Data.filter((item: Fin73010data) => item.RowType !== 2);
+            // const sumData = response.Data.filter((item: Fin73010data) => item.RowType === 2);
+            // this.footerData = Array.isArray(sumData) && sumData.length > 0
+            //   ? { ...sumData[0], RowTypeDesc: '' }
+            //   : null;
+            console.log('Result', this.data);
             this.totalRecords = response.TotalCount;
             this.queryStateService.setQueryState(this.ProgNo, payload);
           } else {
@@ -151,14 +154,8 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
   queryFunction = (body: any) => {
     return this.fin73010Service.queryFIN73010(body).pipe(
       map((response) => {
-        // 在這裡統一處理資料過濾
-        const filteredData = response.Data.filter(
-          (item: Fin73010data) => item.RowType !== 2
-        );
-
-        // 更新總筆數（視 API 設計而定，如果 TotalCount 包含總計列，可能需要 -1）
         return {
-          Data: filteredData,
+          Data: response.Data,
           TotalCount: response.TotalCount
         };
       })
