@@ -10,7 +10,6 @@ import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
@@ -25,19 +24,16 @@ import { SelectButtonModule } from 'primeng/selectbutton';
 import { combineLatest, distinctUntilChanged, finalize, map, shareReplay, startWith, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { formatAmount, formatYYYYMM, ReportColumn } from './../../../shared/componentkit/table-report/table-report.model';
 import { TLS2F010TableReportComponent } from './tls2f010-table-report.component';
 @Component({
   selector: 'app-tls2f010-cru',
   templateUrl: './tls2f010-cru.component.html',
   standalone: true,
-  imports: [TableEditComponent, NgIf, PanelModule, InputNumberRangeComponent, CalendarComponent, InputTextComponent, SelectButtonModule, TLS2F010TableReportComponent, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, CheckboxModule, TranslateModule]
+  imports: [TableEditComponent, NgIf, PanelModule, CalendarComponent, InputTextComponent, SelectButtonModule, TLS2F010TableReportComponent, TableReportComponent, InputNumberComponent, AsyncPipe, RadiobuttonYNComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, CheckboxModule, TranslateModule]
 })
 export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
-
   dataForm = this.formBuilder.nonNullable.group({
     tlt_no: ['', [Validators.required]],
     sam_yyymm: [new Date(), [Validators.required]],
@@ -45,7 +41,6 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
     sam_termno: [1, [Validators.required]],
     COMM_YM: [new Date(), [Validators.required]],
     COMM_MONEY_TYPE: ['', [Validators.required]],
-    // 以下為從查詢頁帶入的條件，用於編輯模式顯示，不一定都參與送出
     PUR_GUIType: [null],
     PUR_GUINO: [''],
     PUR_GUIDate: [null],
@@ -572,8 +567,8 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
               ven_uniform: defaultVenUniform,
               // 不預設 PUR_GUINO
               PUR_GUINO: '',
-              // 預設發票日期/申報年月（若後端有提供）
-              PUR_GUIDate: new Date(),
+              // 預設發票日期為當月最後一天
+              PUR_GUIDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
               DEC_YM: this.dataForm.controls.COMM_YM.value || null,
               // 預設單據別：若主表 (firstMain) 有 tlttalent.invoice_type 或 invoice_type，帶入該值
               GUIType: String(firstMain?.tlttalent?.invoice_type ?? firstMain?.invoice_type ?? ''),
@@ -860,7 +855,6 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
 
   onDetailFieldChange(_event: any): void {
-    // event payload: { rowData, field, value, index }
     const ev = _event as { rowData: any, field: string, value: any, index?: number };
     if (!ev || !ev.field) return;
 
@@ -890,6 +884,21 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
         row.GUIAmt = (isNaN(netVal) ? 0 : netVal);
       }
     }
+
+    // 如果稅別選免稅 "0"，則強制扣抵代號為「代表進項不可扣抵之進貨及費用」，且稅額為 0
+    if (ev.field === 'TAX_TYPE' && ev.value === '0') {
+      const row = ev.rowData ?? {};
+      let deductVal = this.mapLabelToValue(this.discountOptions, '代表進項不可扣抵之進貨及費用');
+      if (deductVal == null) {
+        const hit2 = (this.discountOptions ?? []).find((o: any) => String(o.label ?? '').includes('代表進項不可扣抵'));
+        deductVal = hit2?.value ?? null;
+      }
+      row.Deduct_Code = deductVal ?? row.Deduct_Code;
+      row.GUITax = 0; // 免稅時稅額為 0
+      const netVal = Number(row.GUINet ?? 0);
+      row.GUIAmt = (isNaN(netVal) ? 0 : netVal); // 免稅時總額 = 未稅金額
+    }
+
     // 當未稅金額 (GUINet) 變更時，自動計算稅額與發票總額
     if (ev.field === 'GUINet') {
       const row = ev.rowData ?? {};
@@ -906,7 +915,6 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
       }
     }
   }
-
   // 由 value 取得對應的 label（若找不到就回傳 undefined）
   private mapValueToLabel(options: { label: string, value: any }[] | any, raw: any): string | undefined {
     if (!options) return undefined;
