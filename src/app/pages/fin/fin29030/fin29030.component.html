@@ -21,19 +21,19 @@
             <app-calendar-range
               calendarType="dateRange"
               label="開票日期"
-              [startControl]="queryForm.controls.ticketDateFrom"
-              [endControl]="queryForm.controls.ticketDateTo"
+              [startControl]="queryForm.controls.IssueDateFrom"
+              [endControl]="queryForm.controls.IssueDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="銀行代號"
-              controlName="bankCode"
-              [options]="bankCodeOptions"
+              controlName="BNK_No"
+              [options]="BNK_No_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.bankCode"
+              [control]="queryForm.controls.BNK_No"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -41,8 +41,8 @@
             <app-input-number-range
               [useGrouping]="false"
               label="開票單號"
-              [startControl]="queryForm.controls.startTransferSource"
-              [endControl]="queryForm.controls.endTransferSource"
+              [startControl]="queryForm.controls.CHK_NoFrom"
+              [endControl]="queryForm.controls.CHK_NoTo"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
@@ -51,11 +51,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="廠客代號"
-              controlName="factoryID"
-              [options]="factoryIDOptions"
+              controlName="VEN_No"
+              [options]="VEN_No_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.factoryID"
+              [control]="queryForm.controls.VEN_No"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -63,31 +63,27 @@
             <app-calendar
               calendarType="dateOne"
               label="到期日"
-              [control]="queryForm.controls.endDate"
+              [control]="queryForm.controls.ExpireDate"
               [submitted]="submitted"
             ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="票據狀態"
-              controlName="ticketStatus"
-              [options]="statusOptions"
+              controlName="CHK_Status"
+              [options]="CHK_Status_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ticketStatus"
+              [control]="queryForm.controls.CHK_Status"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -96,10 +92,22 @@
 <div class="card">
   <div class="col-13">
     <app-table
+      tableKey="FIN29030"
       [data]="data"
       [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [rows]="30"
+      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
+      [showDelete]="false"
+      [showCheckBox]="false"
+      dataKey="id"
+      [multiSortMeta]="[{ field: 'CHK_No', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
     ></app-table>
   </div>
 </div>

@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 // Services
 // Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
@@ -82,7 +81,6 @@ export class FIN42010Component extends BasicQueryPageComponent<FIN42010Data> imp
 
   constructor(
     private notificationService: NotificationService,
-    private readonly dropdownApiService: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
   ) {
     super(); // 呼叫父類建構子
