@@ -24,6 +24,7 @@ import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { finalize, map, Observable, tap } from 'rxjs';
+import * as XLSX from 'xlsx-js-style';
 import { WorkBook, WorkSheet } from 'xlsx-js-style';
 import { CampaignData, TLS26080Data, TLS26080EditTable, TLS26080InsertPayload, TLS26080UpdatePayload } from '../tls26080/tls26080.model';
 
@@ -1029,7 +1030,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         .subscribe({ next: res => this.logger.debug(`downloadXLSXExample:`, [res]) });
       return;
     }
-    const XLSX = await import('xlsx-js-style');
     // 生成工作表
     const ws: WorkSheet = XLSX.utils.aoa_to_sheet([headerRow1, headerRow2, example]);
 

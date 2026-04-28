@@ -10,6 +10,7 @@ import { ButtonModule } from 'primeng/button';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { finalize, Observable, of } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import * as XLSX from 'xlsx-js-style';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -427,7 +428,6 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
   async onExportTemplate() {
     this.btnTemplateLoading = true;
     try {
-      const XLSX = await import('xlsx-js-style');
       // 建立工作簿
       const wb = XLSX.utils.book_new();
 
