@@ -18,6 +18,7 @@ import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-imp
 import { FileSelectEvent } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, distinctUntilChanged } from 'rxjs';
+import * as XLSX from 'xlsx-js-style';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';

@@ -294,7 +294,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements 
   //        匯出 Excel（你原本 그대로）
   // =========================
   exportExcel(): void {
-    const wb = xlsx.utils.book_new();
+    const wb = XLSX.utils.book_new();
 
     const chunk3 = (arr: string[]) => {
       const out: any[] = [];
