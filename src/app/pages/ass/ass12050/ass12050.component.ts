@@ -303,11 +303,11 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
   }
 
   onDownloadReport(row: ASS12050QueryRow): void {
-    const subcheckId = row.SUBCHECK_ID;
-    if (!subcheckId) return;
+    const subpoenaId = row.SUBPOENA_ID;
+    if (!subpoenaId) return;
     this.loading = true;
     this.ass12050Service
-      .exportPDFASS12050({ SUBCHECK_ID: subcheckId })
+      .exportPDFASS12050({ SUBPOENA_ID: subpoenaId })
       .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
       .subscribe({
         next: res => {
@@ -319,7 +319,7 @@ export class ASS12050Component extends BasicQueryPageComponent<ASS12050QueryRow>
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `ASS12050_${subcheckId}.pdf`;
+          a.download = `ASS12050_${subpoenaId}.pdf`;
           a.click();
           window.URL.revokeObjectURL(url);
           this.messageService.successBubble('報表下載成功');

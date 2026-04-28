@@ -275,7 +275,7 @@ export interface ASS12050VoidRequest {
 
 /** 以驗收單號識別的共用 Request（exportPDF 等） */
 export interface ASS12050SubcheckRequest {
-  SUBCHECK_ID: string;
+  SUBPOENA_ID: string;
 }
 
 // ==================== 轉入採購單清單 ====================
