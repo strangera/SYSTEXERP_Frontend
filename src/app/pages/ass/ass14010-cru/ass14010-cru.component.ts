@@ -176,10 +176,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
           }
           break;
         case CRUDStatus.Edit:
+          // AN39731047
           if (this.canEdit()) {
             this.loading = false;
             const payload = {
-              RECEIPT_INS_ID: this.supplierData[0]?.RECEIPT_NO || null, // 發票維護單號(編輯時帶入，新增時為null)
+              RECEIPT_INS_ID: frm.get('RECEIPT_INS_ID')?.value, // 發票維護單號(編輯時帶入，新增時為null)
               SUPPLIER_ID: frm.get('SUPPLIER_ID')?.value, // 供應商代碼(不可修改)
               TOKEN_NO: frm.get('TOKEN_NO')?.value, // 驗收單號(多筆)
               TICKET_BE: frm.get('TICKET_BE')?.value,
