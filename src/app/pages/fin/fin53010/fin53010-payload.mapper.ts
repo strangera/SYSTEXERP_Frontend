@@ -160,6 +160,7 @@ function mapStepBankToInsert4002(row: FIN53010StepBankDeposit, deps: Fin53010Pay
     VEN_No: row.ven_no,
     Remark: row.note_desc,
     Source_Date: toYmd(row.txn_date ?? undefined, deps.datePipe),
+    Status: row.status,
   };
 }
 
@@ -343,7 +344,7 @@ function buildUpdateDetails(
     const accAmt = (AccAmtD ?? 0) + (AccAmtC ?? 0);
     const accDc = AccAmtD ? 'D' : AccAmtC ? 'C' : '';
     const ser = typeof rest.SerNo === 'number' ? rest.SerNo : index + 1;
-    const pta = rest.recKey != null ? String(rest.recKey) : undefined;
+    const pta = rest.PTA != null ? String(rest.PTA) : undefined;
     const id = typeof rest.id === 'number' ? rest.id : undefined;
     const body: UpdateFIN53010DetailBody = {
       id,
