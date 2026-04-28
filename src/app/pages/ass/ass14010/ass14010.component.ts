@@ -183,13 +183,20 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
       return;
     }
 
+    const RECEIPT_INS_IDs = items
+      .filter((item) => item && item.ID != null)
+      .map((item) => item.RECEIPT_INS_ID)
+      .join(',');
+
     const deleteBody = {
-      RECEIPT_INS_IDs: idList, // 符合 API 的 idList 格式
+      RECEIPT_INS_IDs: RECEIPT_INS_IDs, // 符合 API 的 idList 格式
     };
+    console.log('deleteBody', deleteBody)
     this.ass14010Service.deleteASS14010(deleteBody).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('選中項目刪除成功');
+          this.onSubmit(this.queryForm);
         } else {
           console.error('API error:', response.Status, response.Message);
           this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
@@ -198,10 +205,7 @@ export class ASS14010Component extends BasicQueryPageComponent<ass14010mainData>
       error: (err: string) => {
         console.error('API error:', err);
         this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm);
-      },
+      }
     });
 
     this.selectedItems = [];
