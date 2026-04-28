@@ -465,6 +465,7 @@ export class FIN42010Component extends BasicQueryPageComponent<FIN42010Data> imp
 
   //讀取下拉  
   loadOptions() {
+    //部門 下拉
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.departmentOptions = res.Data.map((item: apiOption) => ({
         value: item.No,

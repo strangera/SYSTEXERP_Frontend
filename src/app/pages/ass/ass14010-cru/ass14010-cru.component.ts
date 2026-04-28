@@ -172,6 +172,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
               this.messageService.successBubble('新增成功');
               this.dataForm.reset();
             });
+            this.loading = false
           }
           break;
         case CRUDStatus.Edit:
@@ -204,6 +205,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
                 this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
               }
             });
+            this.loading = false
           }
           break;
       }
@@ -319,10 +321,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       { field: 'TOTAL_AMT', header: '含稅金額', type: 'inputNumber', disabled: () => true },
     ];
     this.itemColumn = [
-      { field: 'TOKEN_NO', header: '驗收單號', type: 'dropdown', options: this.TOKEN_NO_Options, optionLabel: 'label', optionValue: 'value' },
-      { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
-      { field: 'TX_AMT', header: '稅額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
-      { field: 'AMT', header: '含稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
+      // { field: 'TOKEN_NO', header: '驗收單號', type: 'dropdown', options: this.TOKEN_NO_Options, optionLabel: 'label', optionValue: 'value' },
+      { field: 'TOKEN_NO', header: '驗收單號', type: 'input' },
+      { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', aggregate: 'sum' },
+      { field: 'TX_AMT', header: '稅額', type: 'inputNumber', aggregate: 'sum' },
+      { field: 'AMT', header: '含稅金額', type: 'inputNumber', aggregate: 'sum' },
     ];
   }
   //依據明細驗收單號進行主檔token_no刷新
