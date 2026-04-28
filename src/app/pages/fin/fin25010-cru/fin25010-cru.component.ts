@@ -5,6 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -19,7 +20,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 
 @Component({
   selector: 'app-fin25010-cru',
@@ -130,6 +130,8 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     { field: 'ORG_ID', header: '組織代號' },
   ];
 
+  apiUrl = 'query_addFIN25010'
+
   constructor(
     public readonly fin25010Service: FIN25010Service,
     private readonly dropDown: DropdownApiService,
@@ -171,6 +173,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
       .subscribe(response => {
         this.data = response.Data || [];
         this.totalRecords = response.TotalCount;
+        this.apiUrl = 'query_detailFIN25010'; // 切換 API URL 以供匯出使用
 
         // 在檢視模式下，我們可能希望預設「全選」來顯示統計金額
         // 或者根據業務邏輯計算 footer，這裡強制計算一次
