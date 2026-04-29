@@ -1370,13 +1370,24 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       );
       this.userInputValues.delete(fieldKey);
 
-      // 觸發 fieldChange 事件
-      this.triggerFieldChangeEvent(
-        this.currentDateField.field,
-        finalDateString,  //  傳遞字串
-        this.currentDateField.data,
-        oldValue
-      );
+      // 觸發 fieldChange 事件（明細行用 detailFieldChange，主行用 fieldChange）
+      if (this.currentDateField.isDetail) {
+        this.triggerDetailFieldChangeEvent(
+          this.currentDateField.field,
+          finalDateString,
+          this.currentDateField.data,
+          this.currentDateField.rowIndex ?? 0,
+          this.currentDateField.detailIndex ?? 0,
+          oldValue
+        );
+      } else {
+        this.triggerFieldChangeEvent(
+          this.currentDateField.field,
+          finalDateString,
+          this.currentDateField.data,
+          oldValue
+        );
+      }
 
       // 如果是直接編輯模式，觸發保存
       if (column?.directEdit) {
