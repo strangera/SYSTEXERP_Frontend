@@ -1,31 +1,28 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Fin29030Service } from './../../../service/api/fin/fin29030.service';
 import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 // Shared
 import { CommonModule } from '@angular/common';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { FIN29030Data } from '@service/api/fin/fin29030.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { Column, formatAmount, formatDate, } from '@shared/componentkit/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TableSubheaderComponent } from '../fin42010/fin42010-table/fin42010-table.component';
-//
-
-export interface FIN29030Data {
-  id: number;
-  IssueDate: Date; //開票日期
-}
 
 //1.2.9.3 開票明細表
 @Component({
@@ -44,6 +41,7 @@ export interface FIN29030Data {
     TableComponent,
     TableSubheaderComponent,
     TranslateModule,
+    InputTextRangeComponent,
     InputNumberRangeComponent,
     MultiSelectComponent,
     CommonModule,
@@ -61,7 +59,7 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
     CHK_NoTo: [null, [Validators.max(999999999999)]], // 開票單號
     VEN_No: [], // 廠客代號
     ExpireDate: [], // 到期日
-    CHK_Status: [[] as number[]], // 票據狀態
+    CHK_Status: [null], // 票據狀態
   });
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
@@ -82,25 +80,26 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
   selectedItems: FIN29030Data[] = [];
   data: FIN29030Data[] = [];
   filteredData = [...this.data];
-  columns = [
-    { field: 'CHK_No', header: '開票單號', visible: true },
-    { field: 'CHK_Number', header: '票據號碼', visible: true },
-    { field: 'CHK_Status', header: '票據狀態', visible: true },
-    { field: 'BNK_No', header: '付款銀行', visible: true },
-    { field: 'IssueDate', header: '開票日期', visible: true },
-    { field: 'ExpireDate', header: '到期日', visible: true },
+  columns: Column[] = [
+    { field: 'RowType', header: '列別', visible: true },
+    { field: 'SummaryText', header: '小計文字', visible: true },
+    { field: 'PAM_No', header: '付款編號', visible: true },
+    { field: 'CHK_No', header: '支票號碼', visible: true },
+    { field: 'TicketStatusName', header: '票據狀態', visible: true },
+    { field: 'PaymentBank', header: '付款銀行', visible: true },
+    { field: 'IssueDate', header: '開票日期', visible: true, format: formatDate },
+    { field: 'ExpireDate', header: '到期日', visible: true, format: formatDate },
     { field: 'VEN_No', header: '廠客代號', visible: true },
     { field: 'VEN_Name', header: '廠客名稱', visible: true },
-    { field: 'CHK_Amount', header: '票面金額', visible: true },
+    { field: 'TicketAmt', header: '票面金額', visible: true, format: formatAmount },
   ];
 
   // 控制變數
   btnLoading = false;
 
   constructor(
-    private notificationService: NotificationService,
-    private readonly dropDownListService: DropDownListService,
     private readonly dropdownApiService: DropdownApiService,
+    private readonly fin29030Service: Fin29030Service,
   ) {
     super();
   }
@@ -111,15 +110,58 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-    // if (frm.valid && this.canQuery()) {
-    //   // Submit logic here
-    // }
-    this.loading = false;
-    this.notificationService.unblockUi();
+    console.log('開票request:', JSON.stringify(frm.value, null, 2));
+    this.fin29030Service.queryFIN29030(frm.value).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.data = response.Data || [];
+          console.log('Result', this.data);
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        } else {
+          console.error('API error:', response.Status, response.Message);
+        }
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
+  }
+
+  btnPDFLoading = false;
+  btnExcelLoading = false;
+  onReport(frm: FormGroup, PDFType: string) {
+    if (PDFType === 'PDF') { // 匯出發票建檔作業PDF
+      this.btnPDFLoading = true;
+      this.fin29030Service
+        .exportPDFFIN29030(frm.value)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.btnPDFLoading = false)
+        )
+        .subscribe(blob => {
+          if (blob) {
+            this.downloadBlob(blob, `開票明細檔_${this.getTimestamp()}`);
+          }
+        });
+    } else {
+      this.btnExcelLoading = true;
+      this.fin29030Service
+        .exportExcelFIN29030(frm.value)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.btnExcelLoading = false)
+        )
+        .subscribe(blob => {
+          if (blob) {
+            this.downloadBlob(blob, `開票明細檔_${this.getTimestamp()}`);
+          }
+        });
+    }
   }
 
   //讀取下拉  
@@ -142,5 +184,23 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
       }));
       // console.log('廠客代號 下拉', response);
     });
+  }
+
+  private getTimestamp(): string {
+    const now = new Date();
+    return now.getFullYear().toString() +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') + '_' +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0');
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(blobUrl);
   }
 }
