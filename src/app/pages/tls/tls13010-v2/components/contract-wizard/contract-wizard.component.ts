@@ -1061,6 +1061,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       }
     }
 
+    // 地點起訖日必填卡控
+    const locationsWithMissingDates = this.wizardState.locationData.filter(
+      loc => loc._status !== 'deleted' && loc.location_no?.trim() && (!loc.tlt_bdate || !loc.tlt_edate)
+    );
+    if (locationsWithMissingDates.length > 0) {
+      this.messageService.warnBubble('櫃位地點起訖日為必填');
+      return false;
+    }
+
     return true;
   }
 

@@ -145,11 +145,16 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
         PUR_GUIDate_YYYYMM: this.datePipe.transform(raw.PUR_GUIDate_YYYYMM, 'yyyyMM'),
         PUR_RepYYYYMM: this.datePipe.transform(raw.PUR_RepYYYYMM, 'yyyyMM'),
         PUR_GUINo: raw.PUR_GUINo?.toUpperCase(),
-        ...['PUR_VoucherType', 'PUR_DirectType', 'PUR_TaxType', 'PUR_DiscNo', 'PUR_Type', 'SYS_ORIGIN', 'SAL_Type', 'PUR_VenUniform'].reduce((acc, key) => {
+        ...['PUR_VoucherType', 'PUR_DirectType', 'PUR_TaxType', 'PUR_DiscNo', 'PUR_Type', 'SYS_ORIGIN', 'SAL_Type'].reduce((acc, key) => {
           acc[key] = raw[key]?.length ? raw[key] : undefined;
           return acc;
-        }, {} as any)
+        }, {} as any),
+        PUR_VenUniform: (raw.PUR_VenUniform && raw.PUR_VenUniform.length > 0)
+          ? [raw.PUR_VenUniform]
+          : null
       };
+
+      console.log('送出請求', payload);
 
       this.fin13050Service.queryFIN13050(payload).pipe(
         finalize(() => this.loading = false), // 底層的 loading = false 會自動關閉 LoadingService

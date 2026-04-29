@@ -86,7 +86,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   selectedRowData?: TLS24010Data;
   addButton: AddButton[] = [];
   items: MenuItem[] = [];
-  isClosed = false;
+  isClosed = false; // 當日是否已關帳
   get isSpecialPaper(): boolean { // 交易作廢取消 || 折讓單交易取消
     const paper = this.queryForm.get('TXN_GUIPaper')?.value;
     return paper === TXN_GUIPAPER.交易作廢取消 || paper === TXN_GUIPAPER.折讓單交易取消;
@@ -192,8 +192,6 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
           this.addButton = [
             {
               label: (rowData: TLS24010Data) => {
-                if (this.isClosed) return '已關帳不可異動資料';
-
                 if (this.isSpecialPaper) {
                   return rowData.Check_Status === 'Y' ? '已審核不可取消作廢' : '取消作廢';
                 }
@@ -202,7 +200,6 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
               },
               icon: this.isSpecialPaper ? 'pi pi-undo' : 'pi pi-ellipsis-h',
               action: (rowdata: TLS24010Data, event) => {
-                if (this.isClosed) return;
                 const data = this.TLT_NoOptions.find(option => option.No === rowdata.TLT_No);
                 if (data?.store_way && data?.Name && data?.talent_id) {
                   rowdata.store_way = data.store_way;
@@ -215,7 +212,6 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
                 }
               },
               disabled: (rowData: TLS24010Data) => {
-                if (this.isClosed) return true; // 已關帳不可異動
                 if (rowData.TXN_Status === TXN_STATUS.作廢交易) return true;
                 //「取消作廢」模式要多判斷是否已審核
                 if (this.isSpecialPaper) {
@@ -251,42 +247,20 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         templateContext: { data: { selectedDate: defaultVoidDate } },
         acceptLabel: '確定作廢',
         accept: (result) => {
-          this.messageService.infoBubble('作廢中請稍後...');
           const selectedDate = result?.data?.selectedDate;
           if (!this.isValidVoidDate(selectedDate, rowData.TXN_Date)) return;
+          const formattedDate = this.datePipe.transform(selectedDate, 'yyyy-MM-dd') || '';
           this.loading = true;
-          const data = {
-            Store_way: rowData.store_way || '',
-            SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
-            TXN_Date: this.datePipe.transform(rowData.TXN_Date, 'yyyy-MM-dd') || '',
-            ECR_No: rowData.ECR_No || '',
-            TXN_No: Number(rowData.TXN_No) || 0,
-            POS5006_ID: rowData.ID || 0,
-            TXN_Remark: rowData.TXN_Remark || '',
-            EditType: TLS24010_EDIT_TYPE.交易資料作廢,
-            VoidEdit: {
-              Void_Date: this.datePipe.transform(selectedDate, 'yyyy-MM-dd') || '',
-              Void_Time: this.datePipe.transform(selectedDate, 'HH:mm:ss') || '',
-            }
-          };
-          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-            this.messageService.successBubble(res.Message);
-            if (res.Data?.Is_Create_Ret) {
+          this.tls24010Service.queryTLS24010IsClose(formattedDate).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(closeRes => {
+            if (closeRes.Data === 'Y') {
+              this.messageService.errorBubble('此作廢日期已關帳，請選擇其他日期');
               setTimeout(() => {
-                this.messageService.confirm({
-                  header: '折讓單已產生', message: '是否要列印折讓單?',
-                  accept: () => {
-                    this.loading = true;
-                    this.tls24010Service.printTLS24010(res.Data?.TXN_Ret_No || '').pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((printRes) => {
-                      window.open(environment.ApiUrl + printRes.Data.Print_URL, '_blank');
-                      this.onSubmit(this.queryForm);
-                    });
-                  }
-                });
-              }, 1000);
-            } else {
-              this.onSubmit(this.queryForm);
+                this.onEditData(rowData, type);
+              }, 0);
+              return;
             }
+            // --- 檢查通過，執行作廢邏輯 ---
+            this.executeVoidUpdate(rowData, selectedDate, formattedDate);
           });
         },
         // extraButtons: [
@@ -317,6 +291,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       });
     }
   }
+
   /** 輔助：驗證作廢日期 */
   private isValidVoidDate(selected: Date, txnDateStr: string): boolean {
     if (!selected) {
@@ -339,6 +314,49 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     }
     return true;
   }
+
+  /** 作廢更新邏輯*/
+  private executeVoidUpdate(rowData: TLS24010Data, selectedDate: Date, formattedDate: string): void {
+    this.loading = true;
+    this.messageService.infoBubble('作廢中請稍後...');
+
+    const data = {
+      Store_way: rowData.store_way || '',
+      SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+      TXN_Date: this.datePipe.transform(rowData.TXN_Date, 'yyyy-MM-dd') || '',
+      ECR_No: rowData.ECR_No || '',
+      TXN_No: Number(rowData.TXN_No) || 0,
+      POS5006_ID: rowData.ID || 0,
+      TXN_Remark: rowData.TXN_Remark || '',
+      EditType: TLS24010_EDIT_TYPE.交易資料作廢,
+      VoidEdit: {
+        Void_Date: formattedDate,
+        Void_Time: this.datePipe.transform(selectedDate, 'HH:mm:ss') || '',
+      }
+    };
+
+    this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+      this.messageService.successBubble(res.Message);
+      if (res.Data?.Is_Create_Ret) {
+        setTimeout(() => {
+          this.messageService.confirm({
+            header: '折讓單已產生',
+            message: '是否要列印折讓單?',
+            accept: () => {
+              this.loading = true;
+              this.tls24010Service.printTLS24010(res.Data?.TXN_Ret_No || '').pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((printRes) => {
+                window.open(environment.ApiUrl + printRes.Data.Print_URL, '_blank');
+                this.onSubmit(this.queryForm);
+              });
+            }
+          });
+        }, 1000);
+      } else {
+        this.onSubmit(this.queryForm);
+      }
+    });
+  }
+
   updateItems(): void {
     const row = this.selectedRowData;
     const isFixedTerm = row?.tlt_term_type?.toString().trim() === '1';
@@ -347,34 +365,38 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       {
         label: '專櫃編號修正',
         icon: 'pi pi-id-card',
-        disabled: isFixedTerm || !this.hasPermission(Actions.CounterNoCorrection),
+        disabled: isFixedTerm || !this.hasPermission(Actions.CounterNoCorrection) || this.isClosed,
+        styleClass: this.isClosed ? 'close-date-disabled' : '',
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.專櫃編號修正),
       },
       {
         label: '折數修正',
         icon: 'pi pi-percentage',
-        disabled: isFixedTerm || this.selectedRowData?.store_way === STORE_WAY.自營 || !this.hasPermission(Actions.DiscountCorrection),
+        disabled: isFixedTerm || this.selectedRowData?.store_way === STORE_WAY.自營 || !this.hasPermission(Actions.DiscountCorrection) || this.isClosed,
+        styleClass: this.isClosed ? 'close-date-disabled' : '',
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.折扣別修正)
       },
       {
         label: '抽成類別修正', icon: 'pi pi-tags',
-        disabled: isFixedTerm || this.selectedRowData?.store_way === STORE_WAY.自營 || !this.hasPermission(Actions.CommissionTypeCorrection),
+        disabled: isFixedTerm || this.selectedRowData?.store_way === STORE_WAY.自營 || !this.hasPermission(Actions.CommissionTypeCorrection) || this.isClosed,
+        styleClass: this.isClosed ? 'close-date-disabled' : '',
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.抽成類別修正)
       },
       {
         label: '付款別修正', icon: 'pi pi-credit-card',
-        disabled: !this.hasPermission(Actions.PaymentTypeCorrection),
+        disabled: !this.hasPermission(Actions.PaymentTypeCorrection) || this.isClosed,
+        styleClass: this.isClosed ? 'close-date-disabled' : '',
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.付款別修正),
       },
       {
         label: '是否為預售交易修正', icon: 'pi pi-shopping-cart',
-        disabled: !this.hasPermission(Actions.PresaleCorrection),
+        disabled: !this.hasPermission(Actions.PresaleCorrection) || this.isClosed,
+        styleClass: this.isClosed ? 'close-date-disabled' : '',
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.預售交易修正),
       },
       {
         label: '交易資料作廢', icon: 'pi pi-times-circle',
-        disabled: !this.hasPermission(Actions.InvalidateTransaction) || isCheckStatus, // 沒有作廢權限或有已審核的付款別交易不可作廢
-        styleClass: isCheckStatus ? 'check-status-disabled' : '',
+        disabled: !this.hasPermission(Actions.InvalidateTransaction), // 沒有作廢權限交易不可作廢
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢),
       }
     ];
@@ -384,14 +406,14 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         label: '刪除',
         icon: 'pi pi-trash',
         disabled: (() => {
-          if (isCheckStatus) return true; // 已審核的付款別交易不可刪除
+          if (isCheckStatus || this.isClosed) return true; // 已關帳或已審核的付款別交易不可刪除
           if (!this.hasPermission(Actions.Delete)) return true;// 1. 沒有權限，直接禁用
           if (!row) return true; // 2. 如果沒有選中任何列 (row 為空)，應預設為禁用
           // if (isFixedTerm) return true;
           if (row.GUI_Track === '00' && row.TXN_GUIBegNo === '00000000') return false; // 3. 無發票狀態：可以刪除 (disable = false)
           return !row?.IsCanDel;// 4. 有發票或其他狀態：依據 IsCanDel 欄位決定
         })(),
-        styleClass: isCheckStatus ? 'check-status-disabled' : '',
+        styleClass: isCheckStatus ? 'check-status-disabled' : (this.isClosed ? 'close-date-disabled' : ''),
         command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.刪除交易),
       });
     }

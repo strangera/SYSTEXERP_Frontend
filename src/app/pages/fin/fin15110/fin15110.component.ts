@@ -12,6 +12,7 @@ import { FIN15110Service } from '@service/api/fin/fin15110.service';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import {
   Column,
@@ -60,7 +61,8 @@ import {
     DatePipe,
     MultiSelectComponent,
     DropdownRangeComponent,
-    DropdownComponent
+    DropdownComponent,
+    InputTextComponent
   ],
 })
 export class FIN15110Component
@@ -73,6 +75,7 @@ export class FIN15110Component
     ECR_No_S: [''],
     ECR_No_E: [''],
     Data_Source: [''],
+    INV_GUIType: [''],
     displayMode: ['2'],
     ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }]),
     pageSize: [30],
@@ -305,6 +308,7 @@ export class FIN15110Component
           { field: 'TaxAmount', header: '稅額', visible: true, showSort: true, format: formatAmount, isTotal: true },
           { field: 'TaxFreeAmount', header: '免稅金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
           { field: 'ZeroTaxAmount', header: '零稅金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
+          { field: 'SalesTotalAmount', header: '銷售總金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
           { field: 'InvoiceStatusName', header: '發票狀態', visible: true, showSort: true },
           { field: 'VoidDate', header: '發票作廢日期', visible: true, showSort: true, format: formatDate },
           { field: 'DeclareYM', header: '申報年月', visible: true, showSort: true },
@@ -402,9 +406,10 @@ export class FIN15110Component
     const ecrS = this.queryForm.get('ECR_No_S');
     const ecrE = this.queryForm.get('ECR_No_E');
     const dataSource = this.queryForm.get('Data_Source');
+    const invGUIType = this.queryForm.get('INV_GUIType');
     const txnEs = this.queryForm.get('TXN_DT_E');
 
-    if (!ecrS || !ecrE || !dataSource || !txnEs) return;
+    if (!ecrS || !ecrE || !dataSource || !invGUIType || !txnEs) return;
 
     // 收銀機號：mode '4', '5' 時停用並清空
     if (mode === '4' || mode === '5') {
@@ -417,12 +422,15 @@ export class FIN15110Component
       ecrE.enable({ emitEvent: false });
     }
 
-    // 資料來源條件：只有 mode '6', '7' 才啟用
+    // 資料來源條件 / 發票格式代號：只有 mode '6', '7' 才啟用
     if (mode === '6' || mode === '7') {
       dataSource.enable({ emitEvent: false });
+      invGUIType.enable({ emitEvent: false });
     } else {
       dataSource.disable({ emitEvent: false });
       dataSource.patchValue('', { emitEvent: false });
+      invGUIType.disable({ emitEvent: false });
+      invGUIType.patchValue('', { emitEvent: false });
     }
 
     // mode '2', '3' 時結束日自動同步起始日（由 setupDisplayModeWatcher 處理），此處保持啟用
@@ -491,10 +499,12 @@ export class FIN15110Component
             ConvTaxableTotalAmount: data.ConvTaxableTotalAmount,
             ConvTaxAmount: data.ConvTaxAmount,
             ConvTaxFreeAmount: data.ConvTaxFreeAmount,
+            ConvZeroTaxAmount: data.ConvZeroTaxAmount,
             VoidSalesTotalAmount: data.VoidSalesTotalAmount,
             VoidTaxableTotalAmount: data.VoidTaxableTotalAmount,
             VoidTaxAmount: data.VoidTaxAmount,
             VoidTaxFreeAmount: data.VoidTaxFreeAmount,
+            VoidZeroTaxAmount: data.VoidZeroTaxAmount,
             GrandSalesTotalAmount: data.GrandSalesTotalAmount,
           },
         ];
@@ -535,6 +545,7 @@ export class FIN15110Component
         ECR_No_S: v.ECR_No_S || '',
         ECR_No_E: v.ECR_No_E || '',
         Data_Source: v.Data_Source || '',
+        INV_GUIType: v.INV_GUIType || '',
         ReportType: v.displayMode || '2',
       };
 
@@ -618,6 +629,7 @@ export class FIN15110Component
       ECR_No_S: v.ECR_No_S || '',
       ECR_No_E: v.ECR_No_E || '',
       Data_Source: v.Data_Source || '',
+      INV_GUIType: v.INV_GUIType || '',
       ReportType: reportType,
       IsMerge: isMerge,
       IsExcel: isExcel,

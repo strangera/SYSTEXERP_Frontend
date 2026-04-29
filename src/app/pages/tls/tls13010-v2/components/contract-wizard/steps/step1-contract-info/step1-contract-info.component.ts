@@ -263,21 +263,45 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   private setupDateAutoFillListeners(): void {
-    // 監聽契約起始日變更，自動更新營運起始日
+    // 監聽契約起始日變更，自動更新營運起始日 & 自動帶入空白的地點起始日
     const contractStartSub = this.form.get('tlt_bdate')?.valueChanges
       .pipe(distinctUntilChanged())
       .subscribe(contractStart => {
         if (contractStart && this.crudstatus !== CRUDStatus.Read) {
           this.form.patchValue({ tlt_contract_bdate: contractStart }, { emitEvent: false });
+          // 自動帶入：地點起始日為空者，填入契約起始日
+          let changed = false;
+          this.locationData.forEach(loc => {
+            if (loc._status !== 'deleted' && !loc.tlt_bdate) {
+              loc.tlt_bdate = contractStart;
+              changed = true;
+            }
+          });
+          if (changed) {
+            this.updateDisplayLocationData();
+            this.locationDataChange.emit(this.locationData);
+          }
         }
       });
 
-    // 監聽契約截止日變更，自動更新營運截止日
+    // 監聽契約截止日變更，自動更新營運截止日 & 自動帶入空白的地點截止日
     const contractEndSub = this.form.get('tlt_edate')?.valueChanges
       .pipe(distinctUntilChanged())
       .subscribe(contractEnd => {
         if (contractEnd && this.crudstatus !== CRUDStatus.Read) {
           this.form.patchValue({ tlt_contract_edate: contractEnd }, { emitEvent: false });
+          // 自動帶入：地點截止日為空者，填入契約截止日
+          let changed = false;
+          this.locationData.forEach(loc => {
+            if (loc._status !== 'deleted' && !loc.tlt_edate) {
+              loc.tlt_edate = contractEnd;
+              changed = true;
+            }
+          });
+          if (changed) {
+            this.updateDisplayLocationData();
+            this.locationDataChange.emit(this.locationData);
+          }
         }
       });
 
