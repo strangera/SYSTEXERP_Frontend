@@ -381,10 +381,24 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       });
     if (busClassSub) this.subscriptions.push(busClassSub);
 
-    // 監聽契約日期變更，同步營運日期
+    // 監聽契約日期變更，同步營運日期 & 自動帶入空白的地點起訖日
     const tltBdateSub = this.form.get('tlt_bdate')?.valueChanges.subscribe(value => {
       if (value && !this.form.get('tlt_contract_bdate')?.value) {
         this.form.patchValue({ tlt_contract_bdate: value }, { emitEvent: false });
+      }
+      // 自動帶入：地點起始日為空者，填入契約起始日
+      if (value) {
+        let changed = false;
+        this.locationData.forEach(loc => {
+          if (loc._status !== 'deleted' && !loc.tlt_bdate) {
+            loc.tlt_bdate = value;
+            changed = true;
+          }
+        });
+        if (changed) {
+          this.updateDisplayLocationData();
+          this.emitDataChange();
+        }
       }
     });
     if (tltBdateSub) this.subscriptions.push(tltBdateSub);
@@ -392,6 +406,20 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     const tltEdateSub = this.form.get('tlt_edate')?.valueChanges.subscribe(value => {
       if (value && !this.form.get('tlt_contract_edate')?.value) {
         this.form.patchValue({ tlt_contract_edate: value }, { emitEvent: false });
+      }
+      // 自動帶入：地點截止日為空者，填入契約截止日
+      if (value) {
+        let changed = false;
+        this.locationData.forEach(loc => {
+          if (loc._status !== 'deleted' && !loc.tlt_edate) {
+            loc.tlt_edate = value;
+            changed = true;
+          }
+        });
+        if (changed) {
+          this.updateDisplayLocationData();
+          this.emitDataChange();
+        }
       }
     });
     if (tltEdateSub) this.subscriptions.push(tltEdateSub);

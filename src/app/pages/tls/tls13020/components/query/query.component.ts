@@ -99,7 +99,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
   // ========== 查詢表單 ==========
   queryForm = this.formBuilder.group({
-    apply_no: [null as string | null, [Validators.maxLength(8)]],
+    apply_no: [null as string | null],
     apply_type: ['2' as string | null],
     bus_type: [null as string | null],
     tlt_no: [null as string | null],
