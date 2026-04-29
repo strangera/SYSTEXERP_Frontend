@@ -7,6 +7,8 @@ import { ASS11040Service } from '@service/api/ass/ass11040.service';
 import { ASS13080Service } from '@service/api/ass/ass13080.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { QueryASS11040DataWrapper, QueryASS11040Response } from '@pages/ass/ass11040/ass11040.model';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -20,10 +22,12 @@ import { formatDate } from '@shared/componentkit/table/table.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize, map, Observable } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import {
   ASS13080QueryRow,
+  PrintASS13080Request,
   QueryASS13080Request,
 } from './ass13080.model';
 
@@ -38,6 +42,7 @@ import {
   imports: [
     MenubarComponent,
     AccordionModule,
+    ButtonModule,
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
@@ -64,6 +69,7 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
     useOrgId: [null as string | null],
     useEmpId: [null as string | null],
     stypeId: [null as string | null],
+    assetType: [null as string | null],
     getCostFrom: [null as number | null],
     getCostTo: [null as number | null],
     subcheckId: [null as string | null],
@@ -77,6 +83,7 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(false);
   public lastQueryBody?: QueryASS13080Request;
+  public printBtnLoading = false;
 
   public readonly columns: ReportColumn[] = [
     { field: 'ASSET_SALENO', header: '變賣單號', visible: true },
@@ -98,12 +105,15 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
   orgOptions: { value: string; label: string }[] = [];
   /** 保管/使用人：TBLUSER */
   userOptions: { value: string; label: string }[] = [];
-  /** 資產類別：來源未確認，先留白 */
-  stypeOptions: { value: string; label: string }[] = [];
+  /** 資產類別：SYS1000(ASSET_TYPE) */
+  assetTypeOptions: { value: string; label: string }[] = [];
+  /** 折舊會計科目：queryGLS1005_DropDownList */
+  stypeIdOptions: Option[] = [];
 
   constructor(
     private readonly ass13080Service: ASS13080Service,
     private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly ass11040Service: ASS11040Service,
     private readonly datePipe: DatePipe,
   ) {
@@ -136,6 +146,14 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
       });
 
     this.dropDownListService
+      .querySYS1000_DropDownList({ SYS_Type: 'ASSET_TYPE' } as any)
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res.Status !== '0000') return;
+        this.assetTypeOptions = toOpt(res.Data ?? []);
+      });
+
+    this.dropDownListService
       .querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
@@ -149,6 +167,13 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
       .subscribe(res => {
         if (res.Status !== '0000') return;
         this.userOptions = toOpt(res.Data ?? []);
+      });
+
+    this.dropdownApiService
+      .queryGls1005_ledgerMD()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.stypeIdOptions = res ?? [];
       });
 
     this.ass11040Service
@@ -185,6 +210,7 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
       USE_ORG_ID: raw.useOrgId ?? undefined,
       USE_EMP_ID: raw.useEmpId ?? undefined,
       STYPE_ID: raw.stypeId ?? undefined,
+      DEPRE_YN: raw.assetType ?? undefined,
       GET_COST_S: raw.getCostFrom ?? undefined,
       GET_COST_E: raw.getCostTo ?? undefined,
       SUBCHECK_ID: raw.subcheckId ?? undefined,
@@ -214,6 +240,7 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
         USE_ORG_ID: raw.useOrgId ?? undefined,
         USE_EMP_ID: raw.useEmpId ?? undefined,
         STYPE_ID: raw.stypeId ?? undefined,
+        DEPRE_YN: raw.assetType ?? undefined,
         GET_COST_S: raw.getCostFrom ?? undefined,
         GET_COST_E: raw.getCostTo ?? undefined,
         SUBCHECK_ID: raw.subcheckId ?? undefined,
@@ -241,5 +268,56 @@ export class ASS13080Component extends BasicQueryPageComponent<ASS13080QueryRow>
           },
         });
     });
+  }
+
+  /** 列印變賣清單 */
+  onExportPdf(): void {
+    if (!this.lastQueryBody) {
+      this.messageService.warnBubble('請先查詢再列印');
+      return;
+    }
+    if (!this.tableData().length) {
+      this.messageService.warnBubble('查無資料可列印');
+      return;
+    }
+
+    const { PageSize: _PageSize, PageIndex: _PageIndex, SortBy: _SortBy, ...rest } =
+      this.lastQueryBody as Record<string, unknown>;
+
+    const payload: PrintASS13080Request = rest as PrintASS13080Request;
+
+    this.printBtnLoading = true;
+    this.ass13080Service
+      .printASS13080(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.printBtnLoading = false;
+        })
+      )
+      .subscribe({
+        next: resp => {
+          const blob = resp?.body ?? (resp as unknown as Blob);
+          if (!blob) return;
+
+          const now = new Date();
+          const timestamp =
+            now.getFullYear().toString() +
+            String(now.getMonth() + 1).padStart(2, '0') +
+            String(now.getDate()).padStart(2, '0') +
+            String(now.getHours()).padStart(2, '0') +
+            String(now.getMinutes()).padStart(2, '0') +
+            String(now.getSeconds()).padStart(2, '0');
+
+          const fileName = `變賣清單_${timestamp}.pdf`;
+          const blobUrl = URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
+          anchor.href = blobUrl;
+          anchor.download = fileName;
+          anchor.click();
+          URL.revokeObjectURL(blobUrl);
+        },
+        error: () => this.messageService.errorBubble('列印失敗'),
+      });
   }
 }
