@@ -17,6 +17,7 @@ import { ButtonDirective } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
+import * as XLSX from 'xlsx-js-style';
 
 import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -293,94 +294,92 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements 
   //        匯出 Excel（你原本 그대로）
   // =========================
   exportExcel(): void {
-    import('xlsx-js-style').then((xlsx) => {
-      const wb = xlsx.utils.book_new();
+    const wb = XLSX.utils.book_new();
 
-      const chunk3 = (arr: string[]) => {
-        const out: any[] = [];
-        for (let i = 0; i < arr.length; i += 3) {
-          out.push([arr[i] ?? '', arr[i + 1] ?? '', arr[i + 2] ?? '']);
+    const chunk3 = (arr: string[]) => {
+      const out: any[] = [];
+      for (let i = 0; i < arr.length; i += 3) {
+        out.push([arr[i] ?? '', arr[i + 1] ?? '', arr[i + 2] ?? '']);
+      }
+      return out;
+    };
+
+    this.tltGroups.forEach((group: any) => {
+      const aoa: any[][] = [];
+      let maxTableCols = 3;
+
+      group.subTables.forEach((sub: any, si: number) => {
+        const firstRow = sub?.rows?.[0] ?? {};
+        const totalCount = Number(firstRow?.total_count ?? 0);
+        const returnQty = Number(firstRow?.return_qty ?? 0);
+        const returnAmt = Number(firstRow?.return_amt ?? 0);
+
+        if (si === 0) {
+          aoa.push(['南紡流通事業股份有限公司', '專櫃日對帳單', '']);
+
+          const infoItems: string[] = [
+            this.showBusType
+              ? `大分類：${`${group.header.busType ?? ''}/${group.header.busTypeName ?? ''}`.replace(/\/$/, '')}`
+              : '大分類：',
+            `銷售日期：${this.formatDate(group.header.txnDate || '')}`,
+            `製表日期：${this.printedAt}`,
+
+            `專櫃：${group.header.tltNo} / ${group.header.tltName}`,
+            `樓層：${group.header.floor || '－'}  抽成類別：${sub.tltId || '無'}`,
+            `交易總件數／退貨件數：${totalCount} / ${returnQty}`,
+
+            `區域：${group.header.area || '－'}`,
+            '',
+            `退貨金額：${this.moneyFormat(returnAmt)}`,
+          ];
+          aoa.push(...chunk3(infoItems));
+          aoa.push(['']);
+        } else {
+          aoa.push([`抽成類別：${sub.tltId || '無'}`, '', '']);
         }
-        return out;
-      };
 
-      this.tltGroups.forEach((group: any) => {
-        const aoa: any[][] = [];
-        let maxTableCols = 3;
+        const headers = ['序號', ...this.selectedColumns.filter((c: any) => c.field !== '__index').map((c: any) => c.header)];
+        aoa.push(headers);
+        maxTableCols = Math.max(maxTableCols, headers.length);
 
-        group.subTables.forEach((sub: any, si: number) => {
-          const firstRow = sub?.rows?.[0] ?? {};
-          const totalCount = Number(firstRow?.total_count ?? 0);
-          const returnQty = Number(firstRow?.return_qty ?? 0);
-          const returnAmt = Number(firstRow?.return_amt ?? 0);
-
-          if (si === 0) {
-            aoa.push(['南紡流通事業股份有限公司', '專櫃日對帳單', '']);
-
-            const infoItems: string[] = [
-              this.showBusType
-                ? `大分類：${`${group.header.busType ?? ''}/${group.header.busTypeName ?? ''}`.replace(/\/$/, '')}`
-                : '大分類：',
-              `銷售日期：${this.formatDate(group.header.txnDate || '')}`,
-              `製表日期：${this.printedAt}`,
-
-              `專櫃：${group.header.tltNo} / ${group.header.tltName}`,
-              `樓層：${group.header.floor || '－'}  抽成類別：${sub.tltId || '無'}`,
-              `交易總件數／退貨件數：${totalCount} / ${returnQty}`,
-
-              `區域：${group.header.area || '－'}`,
-              '',
-              `退貨金額：${this.moneyFormat(returnAmt)}`,
-            ];
-            aoa.push(...chunk3(infoItems));
-            aoa.push(['']);
-          } else {
-            aoa.push([`抽成類別：${sub.tltId || '無'}`, '', '']);
-          }
-
-          const headers = ['序號', ...this.selectedColumns.filter((c: any) => c.field !== '__index').map((c: any) => c.header)];
-          aoa.push(headers);
-          maxTableCols = Math.max(maxTableCols, headers.length);
-
-          sub.rows.forEach((r: any, idx: number) => {
-            const row = [
-              idx + 1,
-              ...this.selectedColumns
-                .filter((c: any) => c.field !== '__index')
-                .map((c: any) => (typeof c.format === 'function' ? c.format(r[c.field]) : r[c.field]) ?? ''),
-            ];
-            aoa.push(row);
-          });
-
-          aoa.push([
-            '小計',
+        sub.rows.forEach((r: any, idx: number) => {
+          const row = [
+            idx + 1,
             ...this.selectedColumns
               .filter((c: any) => c.field !== '__index')
-              .map((c: any) => (this.subtotalFields.includes(c.field) ? this.moneyFormat(sub.subtotal[c.field] ?? 0) : '')),
-          ]);
-
-          if (si === group.subTables.length - 1) {
-            aoa.push([
-              '總計',
-              ...this.selectedColumns
-                .filter((c: any) => c.field !== '__index')
-                .map((c: any) => (this.subtotalFields.includes(c.field) ? this.moneyFormat(group.grandAll[c.field] ?? 0) : '')),
-            ]);
-          }
-
-          aoa.push(['']);
+              .map((c: any) => (typeof c.format === 'function' ? c.format(r[c.field]) : r[c.field]) ?? ''),
+          ];
+          aoa.push(row);
         });
 
-        const ws = xlsx.utils.aoa_to_sheet(aoa);
-        ws['!cols'] = Array(Math.max(maxTableCols, 3)).fill({ wch: 20 });
+        aoa.push([
+          '小計',
+          ...this.selectedColumns
+            .filter((c: any) => c.field !== '__index')
+            .map((c: any) => (this.subtotalFields.includes(c.field) ? this.moneyFormat(sub.subtotal[c.field] ?? 0) : '')),
+        ]);
 
-        const safeName = `${group.header.tltNo}`.substring(0, 31).replace(/[\\/?*\[\]]/g, '_');
-        xlsx.utils.book_append_sheet(wb, ws, safeName || '報表');
+        if (si === group.subTables.length - 1) {
+          aoa.push([
+            '總計',
+            ...this.selectedColumns
+              .filter((c: any) => c.field !== '__index')
+              .map((c: any) => (this.subtotalFields.includes(c.field) ? this.moneyFormat(group.grandAll[c.field] ?? 0) : '')),
+          ]);
+        }
+
+        aoa.push(['']);
       });
 
-      const fileName = `專櫃日對帳單_${new Date().toISOString()}.xlsx`;
-      xlsx.writeFile(wb, fileName);
+      const ws = XLSX.utils.aoa_to_sheet(aoa);
+      ws['!cols'] = Array(Math.max(maxTableCols, 3)).fill({ wch: 20 });
+
+      const safeName = `${group.header.tltNo}`.substring(0, 31).replace(/[\\/?*\[\]]/g, '_');
+      XLSX.utils.book_append_sheet(wb, ws, safeName || '報表');
     });
+
+    const fileName = `專櫃日對帳單_${new Date().toISOString()}.xlsx`;
+    XLSX.writeFile(wb, fileName);
   }
 
   private formatDate(dateStr: string): string {

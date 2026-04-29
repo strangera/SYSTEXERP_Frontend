@@ -49,15 +49,7 @@ export class Cpm12070Service {
 
   /** 匯出 PDF */
   exportCPM12070PDF(body: Partial<CPM12070Request>): Observable<HttpResponse<Blob>> {
-    return this.http.post(`${this.apiUrl}/exportCPM12070`, { ...body, ExportType: 'PDF' }, {
-      observe: 'response',
-      responseType: 'blob'
-    });
-  }
-
-  /** 匯出 Excel */
-  exportCPM12070Excel(body: Partial<CPM12070Request>): Observable<HttpResponse<Blob>> {
-    return this.http.post(`${this.apiUrl}/exportCPM12070`, { ...body, ExportType: 'EXCEL' }, {
+    return this.http.post(`${this.apiUrl}/exportCPM12070`, { ...body }, {
       observe: 'response',
       responseType: 'blob'
     });

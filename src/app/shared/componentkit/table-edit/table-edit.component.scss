@@ -93,14 +93,9 @@
       .p-inputtext,
       .p-inputnumber,
       .p-dropdown,
-      .p-autocomplete {
-        width: 100% !important; // 強制輸入框填滿單元格
-        min-width: 80px; // 設定最小寬度，防止被壓到看不見
-      }
-
-      // 修正 InputNumber 在表格內的特殊結構
+      .p-autocomplete,
       .p-inputnumber-input {
-        width: 100% !important;
+        width: 100% !important; // 強制輸入框填滿單元格
       }
     }
     .p-datatable-thead > tr > th {

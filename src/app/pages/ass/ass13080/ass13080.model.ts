@@ -1,22 +1,45 @@
 import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 
 export interface QueryASS13080Request extends BaseQueryRequest {
+  /** 商場代碼(0=不限制) */
+  MID?: number | null;
+  /** 分店編號 */
+  STO_NO?: string | null;
+  /** 變賣單號 */
   ASSET_SALENO?: string | null;
+  /** 資產代號 */
   ASSET_ID?: string | null;
+  /** 品項編號 */
   GOODS_ID?: string | null;
+  /** 購入日期起 */
   GET_DATE_S?: string | null;
+  /** 購入日期訖 */
   GET_DATE_E?: string | null;
+  /** 資產狀態 */
   ASSET_STATUS?: string | null;
+  /** 攤提代號 */
   DEPRE_ID?: string | null;
+  /** 保管單位 */
   HOLD_ORG_ID?: string | null;
+  /** 保管人 */
   HOLD_EMP_ID?: string | null;
+  /** 使用單位 */
   USE_ORG_ID?: string | null;
+  /** 使用人 */
   USE_EMP_ID?: string | null;
+  /** 會計科目(折舊會計科目) */
   STYPE_ID?: string | null;
+  /** 財產(資產)類型[1:資產,2:列管品] */
+  DEPRE_YN?: string | null;
+  /** 購入金額起 */
   GET_COST_S?: number | null;
+  /** 購入金額訖 */
   GET_COST_E?: number | null;
+  /** 驗收單號 */
   SUBCHECK_ID?: string | null;
+  /** 入帳日期起 */
   BILL_DATE_S?: string | null;
+  /** 入帳日期訖 */
   BILL_DATE_E?: string | null;
 }
 

@@ -113,6 +113,20 @@ export interface FaClass2Item {
   NOTES?: string | null;
 }
 
+export interface FaHosItem {
+  WH_ID: string;
+  WH_NAME: string;
+}
+
+export interface FaSItemQuery {
+  MATERIAL_TYPE: string;
+}
+
+export interface FaSItem {
+  GOODS_ID: string;
+  GOODS_NAME: string;
+}
+
 /**
  * queryFASITEM_DropDownList 請求（例：MATERIAL_TYPE = 品項類別） */
 export interface FaSitemQuery {

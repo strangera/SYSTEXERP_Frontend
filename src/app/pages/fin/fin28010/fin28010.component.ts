@@ -12,14 +12,11 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 @Component({
   selector: 'app-fin28010',
   templateUrl: './fin28010.component.html',
   standalone: true,
-  imports: [CalendarComponent, DatePipe
-    , ButtonModule, InputTextComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [CalendarComponent, ButtonModule, InputTextComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, ButtonComponent, TranslateModule]
 })
 
 export class FIN28010Component extends BasicQueryPageComponent<any> implements OnInit {

@@ -10,11 +10,12 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { FIN73010Service } from './../../../service/api/fin/fin73010.service';
 
 // FIN73010-零用金支付表
@@ -33,6 +34,7 @@ import { FIN73010Service } from './../../../service/api/fin/fin73010.service';
     InputTextComponent,
     DropdownComponent,
     TableComponent,
+    TableReportComponent,
     TranslateModule]
 
 })
@@ -50,7 +52,7 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
     Keep_OrgID: [null], // 保管單位
 
     //分頁查詢
-    // ...createPaginationConfig([{ field: 'PCS_No', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'PCS_No', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------
@@ -58,11 +60,11 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
   lastQueryBody: any = null; // 紀錄最後一次查詢條件
 
   data: Fin73010data[] = [];
-  sumData: Record<string, number> | null = { PCS_Net: 0, PCS_Tax: 0, PCS_Amt: 0 }; // 合計資料
+  footerData: Fin73010data | null = null;
   columns: Column[] = [
     // { field: 'RowType', header: '列別' },
     { field: 'SeqNo', header: '序號' },
-    { field: 'RowTypeDesc', header: '列別' },
+    // { field: 'RowTypeDesc', header: '列別' },
     { field: 'PCS_No', header: '零用金單號' },
     { field: 'PCS_Date', header: '零用金申請日期', format: formatDate },
     { field: 'PCS_UsrNo', header: '零用金申請人員代碼' },
@@ -86,12 +88,12 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
     { field: 'ORG_ID', header: '費用科目組織代碼' },
     { field: 'Dtl_OrgName', header: '費用科目組織名稱' },
     { field: 'PUR_Date', header: '憑證日期', format: formatDate },
-    { field: 'PCS_Net', header: '未稅金額', format: formatAmount },
-    { field: 'PCS_Tax', header: '稅額', format: formatAmount },
-    { field: 'PCS_Amt', header: '含稅金額', format: formatAmount },
+    { field: 'PCS_Net', header: '未稅金額', format: formatAmount, isSubTotal: true, isTotal: true },
+    { field: 'PCS_Tax', header: '稅額', format: formatAmount, isSubTotal: true, isTotal: true },
+    { field: 'PCS_Amt', header: '含稅金額', format: formatAmount, isSubTotal: true, isTotal: true }
   ];
 
-  PCS_No_Options: { No: string; Name: string; Label: string }[] = []; // 零用金單號選項
+  PCS_No_Options: { PCS_No: string }[] = []; // 零用金單號選項
   UsrNo_Options: { No: string; Name: string; Label: string }[] = []; // 零用金申請人/保管人選項
   PCS_Status_Options: { No: string; Name: string; }[] = [
     { No: '1', Name: '建立' },
@@ -106,7 +108,7 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
   // ----------------------------------------------------------------
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly fin73010Service: FIN73010Service,
+    public fin73010Service: FIN73010Service,
   ) {
     super();
   }
@@ -119,24 +121,17 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log('request:', frm.value);
+      this.loading = true;
+      const payload = frm.value;
       this.fin73010Service.queryFIN73010(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
-            this.lastQueryBody = frm.value;
-            this.data = response.Data
-            // this.data = response.Data.filter((item: Fin73010data) => item.RowType !== 2); // 只顯示明細列 (html:howTotal、showPaginator)
-            // 直接抓response為2的資料欄位，只會有1筆不用逐欄位相加
-            // const sumRow = response.Data.find((item: Fin73010data) => item.RowType === 2);
-            // if (sumRow) {
-            //   this.sumData = {
-            //     PCS_Net: sumRow.PCS_Net,
-            //     PCS_Tax: sumRow.PCS_Tax,
-            //     PCS_Amt: sumRow.PCS_Amt
-            //   };
-            // }
-            console.log('Result', this.data);
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+            this.lastQueryBody = payload;
+            this.data = response.Data.QueryData
+            this.footerData = response.Data.SumData;
+            console.log('Result', response.Data);
+            this.totalRecords = response.TotalCount;
+            this.queryStateService.setQueryState(this.ProgNo, payload);
           } else {
             console.error('API error:', response.Status, response.Message);
           }
@@ -151,6 +146,17 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
       });
     });
   }
+
+  queryFunction = (body: any) => {
+    return this.fin73010Service.queryFIN73010(body).pipe(
+      map((response) => {
+        return {
+          Data: response.Data.QueryData,
+          TotalCount: response.TotalCount
+        };
+      })
+    );
+  };
 
   btn_pdf_Loading = false;
   btn_excel_Loading = false;
@@ -178,10 +184,10 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
 
   loadOptions() {
     // 零用金單號 下拉 (POS2064MPCS_NoDropDownList 進行中，先用/Controllers/FIN70000/queryFIN73010 代替)
-    // this.dropDownListService().pipe(untilDestroyed(this)).subscribe(res => {
-    //   this.SYS3100_Options = res.Data.map(item => ({ ...item, Label: `${item.No} - ${item.Name}`, }));
-    //   console.log('組織', this.SYS3100_Options);
-    // })
+    this.fin73010Service.queryPOS2064MPCS_NoDropDownList({}).pipe(untilDestroyed(this)).subscribe(res => {
+      this.PCS_No_Options = res.Data.map(item => ({ ...item }));
+      console.log('零用金單號', this.PCS_No_Options);
+    })
 
     //零用金申請/保管人 下拉
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe({

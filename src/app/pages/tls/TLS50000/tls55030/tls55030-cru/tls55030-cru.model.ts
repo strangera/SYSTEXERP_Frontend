@@ -48,9 +48,14 @@ export const columns: EditColumn[] = [
     header: '稅額',
     type: 'inputNumber',
     width: '12rem',
-    onBlur: (rowData) => {
-      // 稅額手動輸入時也確保是整數
-      rowData.Rebate_Tax = Math.round(rowData.Rebate_Tax);
+    onBlur: (rowData: IRebateDetailForCRU) => {
+      // 1. 確保手動輸入的稅額是整數
+      rowData.Rebate_Tax = Math.round(rowData.Rebate_Tax || 0);
+      // 2. 當稅額變動時，重新加總折讓金額 (總額 = 未稅 + 稅額)
+      // 這樣可以確保三者關係始終符合：Rebate_Net + Rebate_Tax = Rebate_Amt_New
+      rowData.Rebate_Amt_New = Math.round((rowData.Rebate_Net || 0) + rowData.Rebate_Tax);
+      // 註：不建議反推 Rebate_Net，因為未稅額通常是根據單價數量計算出來的，
+      // 手動微調稅額通常是為了湊齊總額或符合發票上的稅金。
     },
     validate: [validateRequired, validateMinNumber(1)]
   }

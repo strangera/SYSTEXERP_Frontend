@@ -37,7 +37,10 @@ export interface Fin73010data {
 
 export interface FIN73010Response {
   Status: string;
-  Data: Fin73010data[]; // 查詢結果資料陣列
+  Data: {
+    QueryData: Fin73010data[]; // 查詢結果資料陣列
+    SumData: Fin73010data;
+  }
   Error: {
     Code: string;
     Message: string
@@ -48,12 +51,36 @@ export interface FIN73010Response {
   TotalPage: number; // 總頁數
 }
 
+export interface POS2064MPC_Response {
+  Status: string;
+  Data: POS2064MPC[];
+  Error: {
+    Code: string;
+    Message: string;
+    Details: string;
+  },
+  TotalCount: number,
+  TotalPage: number
+}
+
+export interface POS2064MPC {
+  PCS_No: string;
+  PCS_Date: string;
+  PCS_UsrNo: string;
+}
+
 
 @Injectable({ providedIn: 'root' })
 export class FIN73010Service {
   // FIN73010-零用金支付表
-  apiUrl: string = environment.ApiUrl + '/Controllers/FIN70000';
+  apiUrl: string = environment.ApiUrl + '/FIN0000/FIN70000';
   constructor(private http: HttpClient) { }
+
+  // 零用金單號 下拉選單
+  queryPOS2064MPCS_NoDropDownList(body: any): Observable<POS2064MPC_Response> {
+    return this.http.post<POS2064MPC_Response>(`${this.apiUrl}/queryPOS2064MPCS_NoDropDownList`, body);
+  }
+
 
   // 查詢 零用金支付表
   queryFIN73010(body: any): Observable<FIN73010Response> {

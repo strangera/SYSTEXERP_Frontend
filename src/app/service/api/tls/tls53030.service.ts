@@ -30,6 +30,7 @@ export interface TLS53030ExportPDFRequest {
   SYS_StoreNo: string;          // 公司編號/店號 - 必填
   HOS_No: string;               // 倉別代碼 - 必填
   PST_Date: string;             // 盤點基準日期 - ISO 8601 格式 - 必填
+  showDiff?: true
 }
 
 // Operation request interface for TLS53030 (盤點結案/反結案/作廢)

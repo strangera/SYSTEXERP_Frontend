@@ -1,4 +1,4 @@
-import { DatePipe, NgIf } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -6,7 +6,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Fin28010Service } from '@service/api/fin/fin28010.service';
 import { IDropdownItem } from '@service/utility/dropdown-api.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { formatAmount } from '@shared/componentkit/table/table.model';
@@ -25,7 +24,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
   templateUrl: './fin28010-cru.component.html',
   standalone: true,
   imports: [
-    NgIf,
     MenubarComponent,
     ButtonComponent,
     PanelModule,
@@ -36,8 +34,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
     CalendarComponent,
     TranslateModule,
     TableEditComponent,
-    CustomFooterTableComponent,
-    DatePipe
   ]
 })
 export class FIN28010CRUComponent extends BasicCruPageComponent<any> implements OnInit {

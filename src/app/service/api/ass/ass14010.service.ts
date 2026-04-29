@@ -151,4 +151,9 @@ export class Ass14010Service {
   exportPDFPaymentVoucher(body: any): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/exportPDFPaymentVoucher`, body, { responseType: 'blob' });
   }
+
+  // 驗收單號
+  queryFAASSCHKM_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryFAASSCHKM_DropDownList`, body);
+  }
 }
