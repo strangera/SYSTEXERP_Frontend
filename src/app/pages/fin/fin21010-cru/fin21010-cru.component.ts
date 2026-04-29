@@ -20,7 +20,6 @@ import { ValidationService } from '../../../shared/service/validation.service';
 @Component({
   selector: 'app-fin21010-cru',
   templateUrl: './fin21010-cru.component.html',
-  styleUrl: './fin21010-cru.component.scss',
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf, TranslateModule]
 })
