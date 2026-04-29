@@ -37,7 +37,10 @@ export interface Fin73010data {
 
 export interface FIN73010Response {
   Status: string;
-  Data: Fin73010data[]; // 查詢結果資料陣列
+  Data: {
+    QueryData: Fin73010data[]; // 查詢結果資料陣列
+    SumData: Fin73010data;
+  }
   Error: {
     Code: string;
     Message: string
