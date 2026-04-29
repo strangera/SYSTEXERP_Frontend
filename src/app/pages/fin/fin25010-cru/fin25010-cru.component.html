@@ -41,7 +41,7 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="傳票型態" controlName="Voucher_Kind" [control]="dataForm.controls.Voucher_Kind"
-            [options]="voucherKindOptions" optionLabel="label" optionValue="value" [submitted]="submitted"
+            [options]="voucherKindOptions | async" optionLabel="label" optionValue="value" [submitted]="submitted"
             [editable]="false"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">

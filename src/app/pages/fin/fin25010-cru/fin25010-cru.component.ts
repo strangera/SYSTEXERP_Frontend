@@ -64,18 +64,7 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
   // 廠客代號選項
   venNoOptions = this.dropDown.queryPos2013({ VEN_Flag: '' });
   // 傳票型態選項
-  voucherKindOptions = [
-    { label: 'AS - 贊助金傳票', value: 'AS' },
-    { label: 'AT - 電匯EDI傳票', value: 'AT' },
-    { label: 'BT - 銀行資金調撥傳票', value: 'BT' },
-    { label: 'CA - 零用金拋轉傳票', value: 'CA' },
-    { label: 'CH - 票據兌現傳票', value: 'CH' },
-    { label: 'CM - 支票沖轉傳票', value: 'CM' },
-    { label: 'CR - 退票沖轉票據傳票', value: 'CR' },
-    { label: 'CT - 開票傳票', value: 'CT' },
-    { label: 'CW - 撤票沖轉票據傳票', value: 'CW' },
-    { label: 'DB - 存出保證金傳票收回拋轉', value: 'DB' }
-  ];
+  voucherKindOptions = this.dropDown.queryGls1010();
   // 付款方式選項
   venPayTypeOptions = [
     { label: '電匯', value: '1' },
