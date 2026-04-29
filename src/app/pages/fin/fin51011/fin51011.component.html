@@ -1,20 +1,27 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button label="選擇伺服器檔案並轉入" icon="pi pi-server" (click)="openImportDialog()"></app-button>
   </div>
 
-  <p-accordion>
-    <p-accordionTab header="轉入作業" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
-      <div class="flex justify-content-start">
-        <p-button label="轉入檔案" icon="pi pi-file-import" (click)="openImportDialog()"></p-button>
-      </div>
+  <p-accordion [multiple]="true">
+    <p-accordionTab header="手動上傳檔案" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm">
+        <div class="grid p-fluid">
+          <app-file-upload #fileUpload class="col-12" name="myFile" [accept]="allowedFileTypes" [multiple]="false"
+            chooseLabel="選擇 Excel 檔案" uploadLabel="上傳本地檔案" cancelLabel="清除" [auto]="false" [customUpload]="true"
+            mode="advanced" (select)="files = $event.files" [loading]="loading"
+            emptyMessage="拖曳檔案到此處或點擊「選擇 Excel 檔案」按鈕。" (uploadHandler)="handleCustomUpload($event)">
+          </app-file-upload>
+        </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 
-<p-dialog header="選擇轉入檔案" [(visible)]="displayDialog" [modal]="true" [style]="{width: '70vw'}" [draggable]="false"
+<p-dialog header="選擇轉入檔案 (伺服器)" [(visible)]="displayDialog" [modal]="true" [style]="{width: '70vw'}" [draggable]="false"
   [resizable]="false">
-
   <div class="grid align-items-center p-fluid mb-2">
     <div class="col-12 md:col-6">
       <span class="p-input-icon-left">

@@ -73,6 +73,7 @@ export const finRoutes: Routes = [
   // 資材系統
   { path: 'fin51010', loadComponent: () => import('./fin51010/fin51010.component').then(m => m.FIN51010Component), data: { progNo: 'FIN51010' } },
   { path: 'fin51010cru', loadComponent: () => import('./fin51010-cru/fin51010-cru.component').then(m => m.FIN51010CRUComponent), data: { progNo: 'FIN51010' } },
+  { path: 'fin51011', loadComponent: () => import('./fin51011/fin51011.component').then(m => m.FIN51011Component), data: { progNo: 'FIN51011' } },
   // 總帳報表-傳票列印
   { path: 'fin55010', loadComponent: () => import('./fin55010/fin55010.component').then(m => m.FIN55010Component), data: { progNo: 'FIN55010' } },
   { path: 'fin55010cru', loadComponent: () => import('./fin55010-cru/fin55010-cru.component').then(m => m.FIN55010CRUComponent), data: { progNo: 'FIN55010' } },

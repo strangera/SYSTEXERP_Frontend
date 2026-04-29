@@ -1,4 +1,4 @@
-import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -8,7 +8,6 @@ import { Fin24010Service } from '@service/api/fin/fin24010.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
@@ -22,9 +21,9 @@ import { filter, finalize, map, switchMap, tap } from 'rxjs';
   standalone: true,
   templateUrl: './fin24010-report.component.html',
   imports: [
-    NgIf, AsyncPipe, DatePipe, ReactiveFormsModule, FormsModule,
+    NgIf, AsyncPipe, ReactiveFormsModule, FormsModule,
     TranslateModule, InputTextComponent, DropdownComponent,
-    InputNumberComponent, CalendarComponent, ButtonComponent, PanelModule
+    InputNumberComponent, CalendarComponent, PanelModule
   ]
 })
 export class FIN24010ReportComponent implements OnInit {
