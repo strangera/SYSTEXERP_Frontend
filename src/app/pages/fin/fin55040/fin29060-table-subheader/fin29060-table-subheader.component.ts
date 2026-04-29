@@ -117,6 +117,12 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   @Input() showSubTotal = false;
   /** 群組小計顯示文字，預設 '小計' */
   @Input() subtotalLabel = '小計';
+  /** 群組表頭小計欄位設定，預設使用 ACP_Amt / PayAmt / NotPayAmt */
+  @Input() subTotalGroupHeaders: { field: string; label: string }[] = [
+    { field: 'ACP_Amt',    label: '廠商立帳合計' },
+    { field: 'PayAmt',     label: '廠商沖銷合計' },
+    { field: 'NotPayAmt',  label: '廠商未沖銷合計' },
+  ];
   groupTotals: Record<string, Record<string, number>> = {};
   // 資料總計
   /** 是否顯示總計 @default false */

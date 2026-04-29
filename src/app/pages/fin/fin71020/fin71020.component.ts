@@ -36,11 +36,11 @@ import { FIN71020Data } from './fin71020.model';
 export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-    usrNo: this.formBuilder.control<string | void>(void 0),
-    SKeepQuotaAmt: this.formBuilder.control<number | void>(void 0),
-    EKeepQuotaAmt: this.formBuilder.control<number | void>(void 0),
-    remark: this.formBuilder.control<string | void>(void 0),
-    orgId: this.formBuilder.control<string | void>(void 0),
+    Keep_UsrNo: this.formBuilder.control<string | void>(void 0),
+    Keep_QuotaAmt_S: this.formBuilder.control<number | void>(void 0),
+    Keep_QuotaAmt_E: this.formBuilder.control<number | void>(void 0),
+    Keep_Remark: this.formBuilder.control<string | void>(void 0),
+    Keep_Orgid: this.formBuilder.control<string | void>(void 0),
     ...createPaginationConfig([{ field: 'Keep_UsrNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
@@ -57,59 +57,26 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
 
   public readonly columns: Column[] = [
     { field: 'Keep_UsrNo', header: '保管人代碼' },
+    { field: 'Keep_UsrName', header: '保管人名稱' },
     { field: 'Keep_QuotaAmt', header: '零用金額度' },
     { field: 'Keep_Remark', header: '說明' },
   ];
 
-  // Dropdown options
-  // usercode: any[] = [];
-  // Feespayable: any[] = [
-  //   { value: 210101, label: '銀行短期借款' },
-  //   { value: 210201, label: '應付商業本票-中華' },
-  //   { value: 210202, label: '應付商業本票-合庫' },
-  //   { value: 210203, label: '應付商業本票-聯邦' },
-  //   { value: 210301, label: '應付商業本票折價' },
-  //   { value: 210401, label: '一年或一年營業週期內到期長期負債' },
-  //   { value: 2111, label: '應付票據' },
-  //   { value: 211101, label: '應付票據-專櫃' },
-  //   { value: 211102, label: '應付票據-自營' },
-  //   { value: 211103, label: '應付票據-固資及費用' },
-  // ];
-  // Inputtax: any[] = [
-  //   { value: 1, label: '1101_庫存現金' },
-  //   { value: 2, label: '110101_庫存現金-營收及正負差' },
-  //   { value: 3, label: '110102_庫存現金-其他收入' },
-  //   { value: 4, label: '110103_庫存現金-財務部' },
-  //   { value: 5, label: '110111_庫存現金-外幣' },
-  //   { value: 6, label: '110112_庫存現金-人民幣' },
-  //   { value: 7, label: '110199_庫存現金-其他' },
-  //   { value: 8, label: '1102_零用金' },
-  //   { value: 9, label: '110200_零用金-總經理室' },
-  //   { value: 10, label: '110201_零用金-採購組' }
-  // ];
-  // statusOptions: any[] = [
-  //   { value: 1, label: '未異動' },
-  //   { value: 2, label: '到期' },
-  //   { value: 3, label: '兌現' },
-  // ];
-  // FNCCodeOptions: any[] = [];
-  // AccountcodeOptions: any[] = [];
-  // displayOptions: any[] = [];
-  // displayOptions2: any[] = [];
-  // Billingordernumber: any[] = [
-  //   { value: 1, label: 'B20150208001' },
-  //   { value: 2, label: 'B20150208002' },
-  //   { value: 3, label: 'B20150410001' },
-  // ];
-  // // Table data
-  // data: any[] = [];
-  // filteredData: any[] = [...this.data];
-  // columns: any[] = [
-  //   { field: 'custodianCode', header: '保管人代碼', visible: true },
-  //   { field: 'pettyCashAmount', header: '零用金額度', visible: true },
-  //   { field: 'description', header: '說明', visible: true }
-  // ];
-  // vendorOptions: any[] = [];
+  // 保管人下拉選單（顯示 代碼 - 名稱）
+  public readonly usrNoDisplayOptions = computed(() =>
+    this.service.usrNoOptions().map(opt => ({
+      ...opt,
+      displayLabel: `${opt.Keep_UsrNo} - ${opt.Keep_UsrName}`,
+    }))
+  );
+
+  // 保管單位下拉選單（顯示 代碼 - 名稱）
+  public readonly orgIdDisplayOptions = computed(() =>
+    this.service.orgIdOptions().map(opt => ({
+      ...opt,
+      displayLabel: `${opt.Org_No} - ${opt.Org_Name}`,
+    }))
+  );
 
   constructor(
     public readonly service: FIN71020Service,
@@ -127,16 +94,39 @@ export class FIN71020Component extends BasicQueryPageComponent<FIN71020Data> imp
     this.logger.debug(`init:`, []);
   }
 
+  public onDelete(data: FIN71020Data | FIN71020Data[]): void {
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) return;
+
+    this.messageService.confirm({
+      header: '刪除確認',
+      message: `是否確認刪除 ${items.length} 筆資料？`,
+      accept: () => {
+        const ids = items.map(item => item.ID);
+        this.tableLoading.set(!0);
+        this.service.deleteFIN71020({ IDs: ids }).pipe(
+          finalize(() => this.tableLoading.set(!1)),
+        ).subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit();
+          },
+        });
+      },
+    });
+  }
+
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const raw = { ...this.queryForm.getRawValue() };
-      const payload = Object.fromEntries(Object.entries(raw).filter(([_, v]) =>
-        v !== null && v !== void 0 && (!(Array.isArray(v)) || v.length > 0)
-      ));
+      const raw = this.queryForm.getRawValue();
+      const payload = Object.fromEntries(
+        Object.entries(raw).filter(([, v]) => v !== null && v !== undefined && v !== '')
+      );
 
       this.tableLoading.set(!0);
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
-      this.logger.debug(`submit:`, [raw, payload]);
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.logger.debug(`submit:`, [payload]);
       this.service.loadFIN71020(payload).pipe(
         finalize(() => this.tableLoading.set(!1)),
       ).subscribe({
