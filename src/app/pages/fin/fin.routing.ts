@@ -380,7 +380,7 @@ export const finRoutes: Routes = [
   { path: 'fin73020', loadComponent: () => import('./fin73020/fin73020.component').then(m => m.FIN73020Component), data: { progNo: 'FIN73020' } },
   // { path: 'fin73020cru', loadComponent: () => import('./fin73020-cru/fin73020-cru.component').then(m => m.FIN73020CRUComponent),data: { progNo: 'FIN73020'} },
   // 支付申請單
-  // { path: 'fin73030', loadComponent: () => import('./fin73030/fin73030.component').then(m => m.FIN73030Component),data:{progNo:'FIN73030'} },
+  { path: 'fin73030', loadComponent: () => import('./fin73030/fin73030.component').then(m => m.FIN73030Component), data: { progNo: 'FIN73030' } },
   // 零用金撥補明細表
   // { path: 'fin73040', loadComponent: () => import('./fin73040/fin73040.component').then(m => m.FIN73040Component),data:{progNo:'FIN73040'} },
 ];
