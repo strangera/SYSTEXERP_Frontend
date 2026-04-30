@@ -18,7 +18,7 @@ import { SortOption } from '@shared/models/api/base-api.interface';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { Observable, finalize, map, tap } from 'rxjs';
+import { Observable, distinctUntilChanged, finalize, map, tap } from 'rxjs';
 import { ASS17020TableReportComponent } from '../ass17020/ass17020-table-report.component';
 import {
   ColumnGroup,
@@ -186,7 +186,7 @@ export class ASS17040Component
 
   private setupCategoryListeners(): void {
     this.queryForm.controls.bigCategoryCode.valueChanges
-      .pipe(untilDestroyed(this))
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
       .subscribe((big) => {
         this.queryForm.patchValue(
           { midCategoryCode: null, smallCategoryCode: null },
@@ -200,7 +200,7 @@ export class ASS17040Component
       });
 
     this.queryForm.controls.midCategoryCode.valueChanges
-      .pipe(untilDestroyed(this))
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
       .subscribe((mid) => {
         this.queryForm.patchValue({ smallCategoryCode: null }, { emitEvent: false });
         this.smallCategoryOptions = [];
@@ -208,6 +208,15 @@ export class ASS17040Component
           this.loadSmallCategoryOptions(mid);
         }
       });
+
+    const initialBig = this.queryForm.controls.bigCategoryCode.value;
+    const initialMid = this.queryForm.controls.midCategoryCode.value;
+    if (initialBig) {
+      this.loadMidCategoryOptions(initialBig);
+    }
+    if (initialMid) {
+      this.loadSmallCategoryOptions(initialMid);
+    }
   }
 
   private sanitizeDeptKey(key: string): string {
