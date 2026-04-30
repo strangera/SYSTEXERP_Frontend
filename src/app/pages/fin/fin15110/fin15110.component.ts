@@ -328,7 +328,6 @@ export class FIN15110Component
 
       case '6': // 二收及二電發票表-明細表
         return [
-          { field: 'RowNo', header: '序號', visible: true, showSort: true },
           { field: 'InvoiceTypeName', header: '發票類別', visible: true, showSort: true },
           { field: 'DataSourceName', header: '資料來源', visible: true, showSort: true },
           { field: 'EcrNo', header: '收銀機號', visible: true, showSort: true },
@@ -342,7 +341,6 @@ export class FIN15110Component
           { field: 'ZeroTaxAmount', header: '零稅金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
           { field: 'SalesTotalAmount', header: '銷售總金額', visible: true, showSort: true, format: formatAmount, isTotal: true },
           { field: 'InvoiceStatusName', header: '發票狀態', visible: true, showSort: true },
-          { field: 'VoidDate', header: '發票作廢日期', visible: true, showSort: true, format: formatDate },
           { field: 'DeclareYM', header: '申報年月', visible: true, showSort: true },
           { field: 'CombineFlagName', header: '彙加註記', visible: true, showSort: true },
         ];
