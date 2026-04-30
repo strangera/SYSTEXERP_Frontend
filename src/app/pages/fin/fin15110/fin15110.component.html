@@ -79,7 +79,8 @@
   </p-accordion>
 </div>
 
-<div class="card mt-5">
+<!-- 一般報表 (Type 1~6) -->
+<div class="card mt-5" *ngIf="queryForm.value.displayMode !== '7'">
   <app-customFooter-table
     tableKey="FIN15110"
     [data]="data"
@@ -121,4 +122,99 @@
       </div>
     </header>
   </app-customFooter-table>
+</div>
+
+<!-- 彙總表 (Type 7) - 3 層合併表頭 -->
+<div class="card mt-5" *ngIf="queryForm.value.displayMode === '7'">
+  <!-- 匯出按鈕列 -->
+  <div class="flex gap-2 mb-3">
+    <p-button
+      styleClass="p-2"
+      label="二電發票報表 .PDF"
+      [loading]="btnLoading"
+      icon="pi pi-file-pdf"
+      (click)="onExportPDF()"
+      [disabled]="data.length === 0"
+    ></p-button>
+    <p-button
+      styleClass="p-2"
+      label="二電發票報表 .xlsx"
+      [loading]="btnLoading2"
+      icon="pi pi-file-excel"
+      (click)="onExportExcel()"
+      [disabled]="data.length === 0"
+    ></p-button>
+  </div>
+
+  <p-table
+    [value]="data"
+    [loading]="loading"
+    styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
+    [scrollable]="true"
+    scrollHeight="600px"
+  >
+    <ng-template pTemplate="header">
+      <!-- 第 1 層 -->
+      <tr>
+        <th rowspan="3" class="text-center" style="min-width:40px; background-color:var(--table-header-bg-group)">序號</th>
+        <th rowspan="3" class="text-center" style="min-width:90px; background-color:var(--table-header-bg-group)">發票日期</th>
+        <th colspan="8" class="text-center" style="background-color:var(--table-header-bg-group)">轉帳報表</th>
+        <th colspan="8" class="text-center" style="background-color:var(--table-header-bg-group)">跨日作廢</th>
+        <th rowspan="3" class="text-center" style="min-width:70px; background-color:var(--table-header-bg-group)">無原交易資料<br/>銷售總額</th>
+      </tr>
+      <!-- 第 2 層 -->
+      <tr>
+        <th colspan="3" class="text-center" style="background-color:var(--table-header-bg)">二聯式收銀機發票</th>
+        <th colspan="5" class="text-center" style="background-color:var(--table-header-bg)">二聯式電子發票</th>
+        <th colspan="3" class="text-center" style="background-color:var(--table-header-bg)">二聯式收銀機發票</th>
+        <th colspan="5" class="text-center" style="background-color:var(--table-header-bg)">二聯式電子發票</th>
+      </tr>
+      <!-- 第 3 層 -->
+      <tr>
+        <th class="text-center" style="min-width:70px; background-color:var(--table-header-bg)">應稅總金額</th>
+        <th class="text-center" style="min-width:60px; background-color:var(--table-header-bg)">免稅金額</th>
+        <th class="text-center" style="min-width:60px; background-color:var(--table-header-bg)">零稅金額</th>
+        <th class="text-center" style="min-width:80px; background-color:var(--table-header-bg)">無統編<br/>應稅總金額</th>
+        <th class="text-center" style="min-width:70px; background-color:var(--table-header-bg)">有統編<br/>未稅金額</th>
+        <th class="text-center" style="min-width:60px; background-color:var(--table-header-bg)">有統編<br/>稅額</th>
+        <th class="text-center" style="min-width:60px; background-color:var(--table-header-bg)">免稅金額</th>
+        <th class="text-center" style="min-width:60px; background-color:var(--table-header-bg)">零稅金額</th>
+        <th class="text-center" style="min-width:70px; background-color:var(--table-header-bg)">應稅總金額</th>
+        <th class="text-center" style="min-width:60px; background-color:var(--table-header-bg)">免稅金額</th>
+        <th class="text-center" style="min-width:60px; background-color:var(--table-header-bg)">零稅金額</th>
+        <th class="text-center" style="min-width:80px; background-color:var(--table-header-bg)">無統編<br/>應稅總金額</th>
+        <th class="text-center" style="min-width:70px; background-color:var(--table-header-bg)">有統編<br/>未稅金額</th>
+        <th class="text-center" style="min-width:60px; background-color:var(--table-header-bg)">有統編<br/>稅額</th>
+        <th class="text-center" style="min-width:60px; background-color:var(--table-header-bg)">免稅金額</th>
+        <th class="text-center" style="min-width:60px; background-color:var(--table-header-bg)">零稅金額</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+      <tr>
+        <td class="text-center">{{ rowIndex + 1 }}</td>
+        <td class="text-center">{{ row.InvoiceDate }}</td>
+        <td class="text-right" *ngFor="let field of type7DataFields">
+          {{ fmt(row[field]) }}
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <tr class="font-bold">
+        <td class="text-center" colspan="2">合計</td>
+        <td class="text-right" *ngFor="let field of type7DataFields">
+          {{ getType7Sum(field) }}
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="19" class="text-center p-5 text-500 font-bold">
+          <i class="pi pi-search mr-2"></i>查無資料
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
 </div>

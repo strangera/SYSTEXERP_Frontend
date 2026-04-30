@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import {
   FormGroup,
@@ -62,7 +62,9 @@ import {
     MultiSelectComponent,
     DropdownRangeComponent,
     DropdownComponent,
-    InputTextComponent
+    InputTextComponent,
+    NgIf,
+    NgFor,
   ],
 })
 export class FIN15110Component
@@ -89,6 +91,36 @@ export class FIN15110Component
   /** 匯出按鈕 Loading 狀態 */
   btnLoading = false;
   btnLoading2 = false;
+
+  /** 金額格式化（供 template 使用） */
+  readonly fmt = formatAmount;
+
+  /** Type 7 彙總表：17 個資料欄位名稱（不含發票日期） */
+  readonly type7DataFields = [
+    'ConvCashRegTaxableTotalAmount',
+    'ConvCashRegTaxFreeAmount',
+    'ConvCashRegZeroTaxAmount',
+    'ConvElectronicNoUniformTaxableTotalAmount',
+    'ConvElectronicWithUniformNetAmount',
+    'ConvElectronicWithUniformTaxAmount',
+    'ConvElectronicTaxFreeAmount',
+    'ConvElectronicZeroTaxAmount',
+    'VoidCashRegTaxableTotalAmount',
+    'VoidCashRegTaxFreeAmount',
+    'VoidCashRegZeroTaxAmount',
+    'VoidElectronicNoUniformTaxableTotalAmount',
+    'VoidElectronicWithUniformNetAmount',
+    'VoidElectronicWithUniformTaxAmount',
+    'VoidElectronicTaxFreeAmount',
+    'VoidElectronicZeroTaxAmount',
+    'NoOriginalTxnSalesAmount',
+  ];
+
+  /** Type 7 合計列各欄加總 */
+  getType7Sum(field: string): string {
+    const sum = this.data.reduce((acc, row) => acc + (row[field] ?? 0), 0);
+    return this.fmt(sum);
+  }
 
   /** 下拉選項 */
   ECRNoOptions: IDropdownItem[] = [];
@@ -484,6 +516,7 @@ export class FIN15110Component
       case '6': // 二收及二電發票表-明細表
         this.footerData = [
           {
+            group_name: '合計',
             TaxableTotalAmount: data.TaxableTotalAmount,
             TaxAmount: data.TaxAmount,
             TaxFreeAmount: data.TaxFreeAmount,
