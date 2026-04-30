@@ -5,8 +5,9 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount } from '@shared/componentkit/table/table.model';
 import { MenuItem } from 'primeng/api';
 import { filter, finalize, map, switchMap, tap } from 'rxjs';
 import { FIN55050Service } from '../../../service/api/fin/fin55050.service';
@@ -37,10 +38,10 @@ interface VoucherMeta {
   selector: 'app-fin29050-report',
   standalone: true,
   imports: [
-    TableComponent,
     TranslateModule,
     NgIf,
-    ButtonComponent
+    ButtonComponent,
+    TableReportComponent
   ],
   templateUrl: './fin29050Report.component.html'
 })
@@ -58,14 +59,14 @@ export class FIN29050ReportComponent implements OnInit {
   rows: (DetailRow & { __rowid: number; AccSubject: string })[] = [];
   sumData: Record<string, number> | null = null;
 
-  columns: Column[] = [
-    { field: 'AccSubject', header: '會計科目', visible: true },
-    { field: 'Ven_Name', header: '廠商編號/簡稱', visible: true },
-    { field: 'Org_Name', header: '部門名稱', visible: true },
-    { field: 'NoteDesc', header: '摘要', visible: true },
-    { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount, isTotal: true },
-    { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount, isTotal: true },
-    { field: 'Remark', header: '備註', visible: true },
+  columns: ReportColumn[] = [
+    { field: 'AccSubject', header: '會計科目', align: 'left' },
+    { field: 'Ven_Name', header: '廠商編號/簡稱', align: 'left' },
+    { field: 'Org_Name', header: '部門名稱', align: 'left' },
+    { field: 'NoteDesc', header: '摘要', align: 'left' },
+    { field: 'AccAmt_D', header: '借方金額', format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'AccAmt_C', header: '貸方金額', format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'Remark', header: '備註', align: 'left' },
   ];
 
   private readonly route = inject(ActivatedRoute);

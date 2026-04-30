@@ -33,11 +33,10 @@
   </div>
 
   <div class="card">
-    <app-table tableKey="FIN55050CRU" dataKey="__rowid" [data]="rows" [columns]="columns" [showCheckBox]="false"
-      [showManage]="false" [showDelete]="false" [multiSortMeta]="[]" [totalRecords]="rows.length" [lazy]="false"
-      [loading]="isLoading()" [showSerialNo]="true" [showPaginator]="false" [showReportMode]="false"
-      [showCaption]="false" [showTotal]="true" [sumData]="sumData">
-    </app-table>
+    <app-table-report tableKey="FIN55050CRU" dataKey="__rowid" [data]="rows" [columns]="columns" [showManage]="false"
+      [showDelete]="false" [totalRecords]="rows.length" [lazy]="false" [loading]="isLoading()" [showReportMode]="false"
+      [showCaption]="false" [footerData]="sumData">
+    </app-table-report>
 
     <div *ngIf="initialized && !isLoading() && rows.length === 0"
       class="mt-3 p-3 surface-100 text-600 text-center border-round">

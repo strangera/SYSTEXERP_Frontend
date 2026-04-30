@@ -37,6 +37,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input({ required: true }) columns: ReportColumn[] = [];        // 用來儲存查詢結果
   @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
   virtualData: any = [];
+  @Input() ItemSize = 46;
   @Input() lazy = true;
   @Input() dataKey: string | undefined;         // 用來儲存查詢結果
   selectedColumns: ReportColumn[] = [];     // 用來儲存查詢結果
@@ -168,9 +169,16 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.dt.virtualScroll = false;
           this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
         } else {
-          if (this.data.length === this.totalRecords) { this.dt.lazy = false; }
+          if (this.data.length === this.totalRecords) {
+            this.dt.lazy = false;
+            this.dt.scrollHeight = this.autoHeight ? undefined as any : '600px';
+            if (!this.showManage) {
+              this.ItemSize = 20;
+            }
+          } else {
+            this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
+          }
           this.dt.virtualScroll = true;
-          this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';
           this.virtualData = Array.from({ length: this.data.length });
           this.cdr.detectChanges();
           this.virtualData = this.data;
