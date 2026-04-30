@@ -91,6 +91,14 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() showDetail = true;    // 是否顯示 管理欄位(明細按鈕)
   @Output() detail = new EventEmitter<any>();// 明細事件
   @Input() showEdit = true;     // 是否顯示 管理欄位(編輯按鈕)
+  @Input() editTooltip: string | ((rowData: any) => string) = '編輯';
+  // 新增一個輔助方法來解析 Tooltip
+  getEditTooltip(rowData: any): string {
+    if (typeof this.editTooltip === 'function') {
+      return this.editTooltip(rowData);
+    }
+    return this.editTooltip;
+  }
   @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
   @Input() detailDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止明細條件
   @Output() edit = new EventEmitter<any>(); // 編輯事件
