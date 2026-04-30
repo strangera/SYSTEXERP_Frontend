@@ -6,22 +6,50 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <app-table
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar-range-quick
+            label="申請日期"
+            [startControl]="dialogQueryForm.controls.applyDateFrom"
+            [endControl]="dialogQueryForm.controls.applyDateTo"
+            [submitted]="submitted"
+            (input)="inputEnter()"
+          />
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            class="flex-grow-1"
+            label="保管單位"
+            controlName="ECR_Name"
+            [control]="dialogQueryForm.controls.ECR_Name"
+            (input)="inputEnter()"
+          />
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            class="flex-grow-1"
+            label="保管人"
+            controlName="ECR_Name2"
+            [control]="dialogQueryForm.controls.ECR_Name2"
+            (input)="inputEnter()"
+          />
+        </div>
+
+        <app-table-report
           tableKey="fin11200DetailTable"
           dataKey="ECR_No"
-          title="加入零用金申請單據"
+          title="新增請款"
           class="col-12"
           [data]="data"
+          [totalRecords]="totalRecords()"
           [columns]="columns"
           [showManage]="false"
           [showCheckBox]="true"
-          [showInsert]="true"
           (insert)="dialogVisible = true; this.selectedItemsDialog = []"
           (delete)="onDelete($event)"
           [selectedItems]="selectedData"
           (selectionChange)="selectedData = $event"
           [showReportMode]="false"
-        ></app-table>
+        ></app-table-report>
       </div>
       <div
         *ngIf="!isFormReadable"
@@ -38,7 +66,7 @@
   </p-panel>
 </div>
 
-<app-dialog
+<!-- <app-dialog
   [visible]="dialogVisible"
   header="零用金申請單據"
   (visibleChange)="dialogVisible = $event"
@@ -46,11 +74,11 @@
   [disable]="selectedItemsDialog.length === 0"
 >
   <form [formGroup]="dialogQueryForm" class="flex pb-2 align-items-end gap-2">
-    <app-input-text
-      class="flex-grow-1"
+    <app-calendar-range-quick
       label="申請日期"
-      controlName="ECR_No"
-      [control]="dialogQueryForm.controls.ECR_No"
+      [startControl]="dialogQueryForm.controls.applyDateFrom"
+      [endControl]="dialogQueryForm.controls.applyDateTo"
+      [submitted]="submitted"
       (input)="inputEnter()"
     />
     <app-input-text
@@ -83,4 +111,4 @@
     scrollHeight="350px"
     [showCaption]="false"
   ></app-table>
-</app-dialog>
+</app-dialog> -->

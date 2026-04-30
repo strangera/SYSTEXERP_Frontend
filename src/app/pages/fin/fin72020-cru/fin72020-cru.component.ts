@@ -1,8 +1,9 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { PanelModule } from 'primeng/panel';
 import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
@@ -35,7 +36,9 @@ import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
         DialogComponent,
         InputTextComponent,
         TranslateModule,
-        YearMonthComponent
+        YearMonthComponent,
+        CalendarRangeQuickComponent,
+        TableReportComponent,
     ],
 })
 
@@ -52,6 +55,7 @@ export class FIN72020CRUComponent extends BasicCruPageComponent<Pos1018> impleme
 
     data: POS1002[] = [];
     selectedData: POS1002[] = [];
+    public readonly totalRecords = signal<number>(0);
     columns: Column[] = [
         { field: 'ECR_No', header: '零用金單號', visible: true },
         { field: 'ECR_Name', header: '申請日期', visible: true },
@@ -75,14 +79,14 @@ export class FIN72020CRUComponent extends BasicCruPageComponent<Pos1018> impleme
         if (this.isFormCreateable) {
             this.minDate = this.setMinDate();
         }
-        this.eCRNoService.getPOS1002BillDropDownList().pipe(untilDestroyed(this)).subscribe(data => {
-            const mappedData = data.Data.map((item: { No: string; Name: string }) => ({
-                ECR_No: item.No,
-                ECR_Name: item.Name
-            }));
-            this.originalDialogData = mappedData;
-            this.dialogData = mappedData;
-        });
+        // this.eCRNoService.getPOS1002BillDropDownList().pipe(untilDestroyed(this)).subscribe(data => {
+        //     const mappedData = data.Data.map((item: { No: string; Name: string }) => ({
+        //         ECR_No: item.No,
+        //         ECR_Name: item.Name
+        //     }));
+        //     this.originalDialogData = mappedData;
+        //     this.dialogData = mappedData;
+        // });
     }
     setMinDate(): Date | undefined {
         if (this.isFormCreateable) {
@@ -133,7 +137,9 @@ export class FIN72020CRUComponent extends BasicCruPageComponent<Pos1018> impleme
     }
 
     dialogQueryForm = this.formBuilder.group({
-        ECR_No: [''], // 申請日期
+        applyDateFrom: [''], // 申請日期
+        applyDateTo: [''],
+        // ECR_No: [''], // 申請日期
         ECR_Name: [''], // 保管單位
         ECR_Name2: [''] // 保管人
     });
@@ -145,12 +151,22 @@ export class FIN72020CRUComponent extends BasicCruPageComponent<Pos1018> impleme
         return !this.data || !this.data.some((item: POS1002) => item.ECR_No === event.ECR_No);
     }
     inputEnter() {
-        const filterECRNo = this.dialogQueryForm.controls.ECR_No.value?.trim().toLowerCase() || '';
+        const applyDateFrom = this.dialogQueryForm.controls.applyDateFrom.value;
+        const applyDateTo = this.dialogQueryForm.controls.applyDateTo.value;
         const filterECRName = this.dialogQueryForm.controls.ECR_Name.value?.trim().toLowerCase() || '';
+
         this.dialogData = this.originalDialogData.filter(item => {
-            const matchECRNo = item.ECR_No.toLowerCase().includes(filterECRNo);
-            const matchECRName = item.ECR_Name.toLowerCase().includes(filterECRName);
-            return matchECRNo && matchECRName;
+            const itemDate = item.ECR_No ? new Date(item.ECR_No) : null;
+            const fromDate = applyDateFrom ? new Date(applyDateFrom) : null;
+            const toDate = applyDateTo ? new Date(applyDateTo) : null;
+
+            const ecrName = item.ECR_Name?.toLowerCase() || '';
+
+            const matchApplyDateFrom = !fromDate || (itemDate && itemDate >= fromDate);
+            const matchApplyDateTo = !toDate || (itemDate && itemDate <= toDate);
+            const matchECRName = !filterECRName || ecrName.includes(filterECRName);
+
+            return matchApplyDateFrom && matchApplyDateTo && matchECRName;
         });
     }
     saveDialog() {

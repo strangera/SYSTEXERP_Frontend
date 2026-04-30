@@ -32,48 +32,61 @@
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick
+            <app-calendar
+              calendarType="dateOne"
+              label="產生日期"
+              [control]="queryForm.controls.applyDate"
+              [submitted]="submitted"
+            ></app-calendar>
+            <!-- <app-calendar-range-quick
               label="產生日期"
               [startControl]="queryForm.controls.applyDateFrom"
               [endControl]="queryForm.controls.applyDateTo"
               [submitted]="submitted"
-            />
+            /> -->
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="保管單位"
-              controlName="keepingUnit"
-              [options]="keepingUnit_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.keepingUnit"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <label for="cashApplicant" class="block">零用金申請人</label>
+            <p-inputGroup>
+              <input
+                type="text"
+                pInputText
+                formControlName="PettycashapplicantName"
+                placeholder="請選擇"
+                readonly
+              />
+              <button
+                type="button"
+                aria-label="搜尋"
+                pButton
+                icon="pi pi-angle-down"
+                (click)="openUserDialog('Pettycashapplicant')"
+              ></button>
+            </p-inputGroup>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="零用金申請人"
-              controlName="Pettycashapplicant"
-              [options]="Pettycashapplicant_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.Pettycashapplicant"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <label for="cashApplicant" class="block">零用金保管人</label>
+            <p-inputGroup>
+              <input
+                type="text"
+                pInputText
+                formControlName="PettycashcustodianName"
+                placeholder="請選擇"
+                readonly
+              />
+              <button
+                type="button"
+                aria-label="搜尋"
+                pButton
+                icon="pi pi-angle-down"
+                (click)="openUserDialog('Pettycashcustodian')"
+              ></button>
+            </p-inputGroup>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="零用金保管人"
-              controlName="Pettycashcustodian"
-              [options]="Pettycashcustodian_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.Pettycashcustodian"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="狀態"
@@ -84,6 +97,27 @@
               [control]="queryForm.controls.status"
               [submitted]="submitted"
             ></app-dropdown>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <label for="keepingUnit" class="block">零用金保管單位</label>
+            <p-inputGroup>
+              <input
+                type="text"
+                pInputText
+                controlName="keepingUnit"
+                formControlName="keepingUnitName"
+                placeholder="請選擇"
+                readonly
+              />
+              <button
+                type="button"
+                aria-label="搜尋"
+                pButton
+                icon="pi pi-angle-down"
+                (click)="openKeepDeptDialog()"
+              ></button>
+            </p-inputGroup>
           </div>
         </div>
         <div
@@ -98,7 +132,7 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table
+    <app-table-report
       tableKey="FIN72020"
       [data]="data"
       [columns]="columns"
@@ -107,18 +141,153 @@
       [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event"
       (delete)="onDelete($event)"
-      [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
-      [rows]="30"
-      [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
       [showDelete]="false"
       [showCheckBox]="false"
       dataKey="id"
-      [multiSortMeta]="[{ field: 'HOS_No', order: 1 }]"
       [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
       [loading]="loading"
       [isRowSelectable]="isRowSelectable"
-    ></app-table>
+    ></app-table-report>
   </div>
 </div>
+
+<p-dialog
+  header="使用者代碼"
+  [(visible)]="userDialogVisible"
+  [modal]="true"
+  [style]="{ width: '70vw' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="userQueryForm">
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-6">
+        <label for="user_No" class="block mb-2">使用者代碼</label>
+        <input id="user_No" pInputText formControlName="user_No" />
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="user_Name" class="block mb-2">使用者名稱</label>
+        <input id="user_Name" pInputText formControlName="user_Name" />
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="Org_ID" class="block mb-2">組織代碼</label>
+        <input id="Org_ID" pInputText formControlName="Org_ID" />
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="Org_Name" class="block mb-2">組織名稱</label>
+        <input id="Org_Name" pInputText formControlName="Org_Name" />
+      </div>
+    </div>
+
+    <div class="flex gap-2 mb-3">
+      <p-button
+        type="button"
+        label="查詢"
+        icon="pi pi-search"
+        (click)="queryUsers()"
+      ></p-button>
+
+      <p-button
+        type="button"
+        label="清除"
+        icon="pi pi-times"
+        (click)="clearUserQuery()"
+      ></p-button>
+    </div>
+  </form>
+
+  <p-table
+    [value]="userResultData"
+    [scrollable]="true"
+    scrollHeight="350px"
+    [tableStyle]="{ 'min-width': '50rem' }"
+    selectionMode="single"
+    [(selection)]="selectedUser"
+    (onRowSelect)="onSelectUser($event.data)"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>使用者代碼</th>
+        <th>使用者名稱</th>
+        <th>組織代碼</th>
+        <th>組織名稱</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row>
+      <tr [pSelectableRow]="row" style="cursor: pointer">
+        <td>{{ row.user_No }}</td>
+        <td>{{ row.user_Name }}</td>
+        <td>{{ row.Org_ID }}</td>
+        <td>{{ row.Org_Name }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>
+
+<p-dialog
+  header="組織代碼"
+  [(visible)]="keepDeptDialogVisible"
+  [modal]="true"
+  [style]="{ width: '60vw' }"
+  [draggable]="false"
+  [resizable]="false"
+>
+  <form [formGroup]="keepDeptQueryForm">
+    <div class="grid p-fluid">
+      <div class="col-12 md:col-6">
+        <label for="Org_ID" class="block mb-2">組織代碼</label>
+        <input pInputText formControlName="Org_ID" placeholder="組織代碼" />
+      </div>
+
+      <div class="col-12 md:col-6">
+        <label for="Org_Name" class="block mb-2">組織名稱</label>
+        <input pInputText formControlName="Org_Name" placeholder="組織名稱" />
+      </div>
+    </div>
+
+    <div class="flex gap-2 mb-3">
+      <p-button
+        type="button"
+        label="查詢"
+        icon="pi pi-search"
+        (click)="queryKeepDept()"
+      ></p-button>
+
+      <p-button
+        type="button"
+        label="清除"
+        icon="pi pi-times"
+        (click)="clearKeepDeptQuery()"
+      ></p-button>
+    </div>
+  </form>
+
+  <p-table
+    [value]="keepDeptResultData"
+    [scrollable]="true"
+    scrollHeight="320px"
+    selectionMode="single"
+    [(selection)]="selectedKeepDept"
+    (onRowSelect)="onSelectKeepDept($event.data)"
+    [tableStyle]="{ 'min-width': '40rem' }"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>組織代碼</th>
+        <th>組織名稱</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row>
+      <tr [pSelectableRow]="row" style="cursor: pointer">
+        <td>{{ row.No }}</td>
+        <td>{{ row.Name }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>
