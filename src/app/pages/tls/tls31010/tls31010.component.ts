@@ -14,7 +14,6 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -49,7 +48,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 
 export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    TXN_Date: [yesterday],//交易日期
+    TXN_Date: [null],//交易日期
     tlt_building: [[]],// 館別
     tlt_floor: [[]],// 樓層
     area_no: [[]],// 區域
