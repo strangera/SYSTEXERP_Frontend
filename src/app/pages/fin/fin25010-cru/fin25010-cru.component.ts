@@ -57,8 +57,8 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
 
     // 檢視
     PAM_No: [null],  // 匯款來源單號
-    D_Date: [null],  // 建立日期
-    PTA_Date: [null],  // 收/付款日
+    CRT_Date: [null],  // 建立日期
+    D_Date: [null],  // 收/付款日
     WSLIP_NO: [null],  // 匯款單號
   });
   // 廠客代號選項
