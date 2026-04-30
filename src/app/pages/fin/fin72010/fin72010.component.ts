@@ -1,10 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { AccordionModule } from 'primeng/accordion';
+import { ConfirmationService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { DialogModule } from 'primeng/dialog';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { InputTextModule } from 'primeng/inputtext';
+import { TableModule } from 'primeng/table';
+import { ToastModule } from 'primeng/toast';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -49,7 +58,17 @@ export interface sample72010 {
     InputNumberRangeComponent,
     DropdownComponent,
     TableComponent,
-    TranslateModule]
+    TranslateModule,
+    InputGroupModule,
+    InputGroupAddonModule,
+    InputTextModule,
+    ButtonModule,
+    ToastModule,
+    ConfirmPopupModule,
+    DialogModule,
+    TableModule,
+  ],
+  providers: [ConfirmationService]
 })
 export class FIN72010Component extends BasicQueryPageComponent<sample72010> implements OnInit {
   // 查詢
@@ -65,9 +84,12 @@ export class FIN72010Component extends BasicQueryPageComponent<sample72010> impl
     startKeepQuota: [null, Validators.max(9999999999)], // 起始零用金金額
     endKeepQuota: [null, Validators.max(9999999999)], // 結束零用金金額
     Pettycashapplicant: [null], // 申請人
+    PettycashapplicantName: [''], // 申請人名稱
     Pettycashcustodian: [null], // 保管人
+    PettycashcustodianName: [''], // 保管人名稱
     status: [null], // 狀態
     keepingUnit: [null], // 保管單位
+    keepingUnitName: [''], // 保管單位名稱
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'KeepQuota_No', order: 1 }]), // 分頁和排序參數
@@ -104,7 +126,7 @@ export class FIN72010Component extends BasicQueryPageComponent<sample72010> impl
 
   data: sample72010[] = [];
   columns: Column[] = [
-    { field: 'type01', header: '零用金單號', visible: false },
+    { field: 'type01', header: '零用金單號', visible: true },
     { field: 'type02', header: '申請日期', visible: true },
     { field: 'type03', header: '零用金申請人', visible: true },
     { field: 'type04', header: '申請人組織', visible: true },
@@ -115,7 +137,7 @@ export class FIN72010Component extends BasicQueryPageComponent<sample72010> impl
     { field: 'type09', header: '費用科目組織', visible: true },
     { field: 'type10', header: '項目摘要', visible: true },
     { field: 'type11', header: '明細類別', visible: true },
-    { field: 'type12', header: '項目摘要', visible: true },
+    { field: 'type12', header: '項目摘要', visible: false },
     { field: 'type13', header: '發票/收據號碼', visible: true },
     { field: 'type14', header: '日期', visible: true },
     { field: 'type15', header: '未稅金額', visible: true },
@@ -125,15 +147,49 @@ export class FIN72010Component extends BasicQueryPageComponent<sample72010> impl
 
   selectedItems: sample72010[] = [];// 多選項目
 
+
+  // 「零用金申請人」與「零用金保管人」使用者對話框的變數
+  userDialogVisible = false;
+  userQueryForm!: FormGroup;
+
+  userResultData: any[] = [];
+  selectedUser: any = null;
+  selectedUserName = '';
+  // 目前選擇的使用者類別
+  currentUserTarget: 'Pettycashapplicant' | 'Pettycashcustodian' | null = null;
+
+  //「保管單位」對話框的變數
+  keepDeptDialogVisible = false;
+  keepDeptQueryForm!: FormGroup;
+
+  keepDeptResultData: any[] = [];
+  selectedKeepDept: any = null;
+
   // ----------------------------------------------------------------
   constructor(
     private readonly dropDownListService: DropDownListService,
+    private confirmationService: ConfirmationService,
+    private fb: FormBuilder,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN72010', 'FIN/FIN72010cru', this.queryForm, (form) => this.onSubmit(form));
+
+    // 零用金申請人與零用金保管人
+    this.userQueryForm = this.fb.group({
+      user_No: [''],
+      user_Name: [''],
+      Org_ID: [''],
+      Org_Name: ['']
+    });
+
+    // 保管單位
+    this.keepDeptQueryForm = this.formBuilder.group({
+      Org_ID: [''],
+      Org_Name: ['']
+    });
   }
 
   onSubmit(frm: FormGroup) {
@@ -220,4 +276,135 @@ export class FIN72010Component extends BasicQueryPageComponent<sample72010> impl
   isRowSelectable(rowData: sample72010): boolean {
     return rowData.CanDel
   }
+
+
+
+
+
+  openUserDialog(target: 'Pettycashapplicant' | 'Pettycashcustodian'): void {
+    this.currentUserTarget = target;
+
+    this.userDialogVisible = true;
+    this.userResultData = [];
+    this.selectedUser = null;
+  }
+
+  queryUsers(): void {
+    const request = this.userQueryForm.getRawValue();
+
+    console.log('查詢條件', request);
+
+    // 模擬 API 回應資料
+    this.userResultData = [
+      { user_No: 'U001', user_Name: '使用者1', Org_ID: 'D001', Org_Name: '部門1' },
+      { user_No: 'U002', user_Name: '使用者2', Org_ID: 'D002', Org_Name: '部門2' },
+      { user_No: 'U003', user_Name: '使用者3', Org_ID: 'D003', Org_Name: '部門3' },
+    ];
+
+    // this.userService.queryUsers(request)
+    //   .pipe(finalize(() => {}))
+    //   .subscribe({
+    //     next: res => {
+    //       this.userResultData = res.Data ?? [];
+    //     },
+    //     error: err => {
+    //       console.error('查詢失敗', err);
+    //     }
+    //   });
+  }
+
+  clearUserQuery(): void {
+    this.userQueryForm.reset({
+      user_No: '',
+      user_Name: '',
+      Org_ID: '',
+      Org_Name: ''
+    });
+    this.userResultData = [];
+    this.selectedUser = null;
+  }
+
+  onSelectUser(row: any): void {
+    console.log('選到的使用者', row);
+
+    //this.selectedUserName = `${row.user_No} - ${row.user_Name}`;
+    if (!this.currentUserTarget) return;
+
+    this.queryForm.patchValue({
+      [this.currentUserTarget]: row.user_No,
+      [`${this.currentUserTarget}Name`]: `${row.user_No} - ${row.user_Name}`
+    });
+
+    this.userDialogVisible = false;
+    this.currentUserTarget = null;
+  }
+
+  openKeepDeptDialog(): void {
+    this.keepDeptDialogVisible = true;
+    this.keepDeptResultData = [];
+    this.selectedKeepDept = null;
+
+    this.keepDeptQueryForm.reset({
+      Org_ID: '',
+      Org_Name: ''
+    });
+  }
+
+  queryKeepDept(): void {
+    // const { Org_ID, Org_Name } = this.keepDeptQueryForm.getRawValue();
+
+    const request = this.keepDeptQueryForm.getRawValue();
+
+    console.log('查詢條件', request);
+
+    // 模擬 API 回應資料
+    this.keepDeptResultData = [
+      { No: 'D001', Name: '部門1' },
+      { No: 'D002', Name: '部門2' },
+      { No: 'D003', Name: '部門3' },
+    ];
+
+    // this.ass16020Service.querySYS3100_DropDownList()
+    //   .pipe(finalize(() => {}))
+    //   .subscribe({
+    //     next: res => {
+    //       if (res.Status !== '0000') return;
+
+    //       const allData = res.Data ?? [];
+
+    //       this.keepDeptResultData = allData.filter(item => {
+    //         const matchOrgId =
+    //           !Org_ID || item.No?.includes(Org_ID);
+
+    //         const matchOrgName =
+    //           !Org_Name || item.Name?.includes(Org_Name);
+
+    //         return matchOrgId && matchOrgName;
+    //       });
+    //     },
+    //     error: err => {
+    //       console.error('查詢保管單位失敗', err);
+    //     }
+    //   });
+  }
+
+  clearKeepDeptQuery(): void {
+    this.keepDeptQueryForm.reset({
+      Org_ID: '',
+      Org_Name: ''
+    });
+
+    this.keepDeptResultData = [];
+    this.selectedKeepDept = null;
+  }
+
+  onSelectKeepDept(row: any): void {
+    this.queryForm.patchValue({
+      keepingUnit: row.No,
+      keepingUnitName: row.Name
+    });
+
+    this.keepDeptDialogVisible = false;
+  }
+
 }

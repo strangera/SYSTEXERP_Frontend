@@ -1,6 +1,6 @@
 import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
@@ -9,8 +9,16 @@ import { ExpandableEditTableComponent } from '@shared/componentkit/expandable-ed
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { DialogModule } from 'primeng/dialog';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { InputTextModule } from 'primeng/inputtext';
 import { PanelModule } from 'primeng/panel';
+import { TableModule } from 'primeng/table';
+import { ToastModule } from 'primeng/toast';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -88,7 +96,15 @@ export interface POS2064 {
     ButtonComponent,
     TranslateModule,
     TableEditComponent,
-    ButtonModule]
+    ButtonModule,
+    InputGroupModule,
+    InputGroupAddonModule,
+    InputTextModule,
+    ToastModule,
+    ConfirmPopupModule,
+    DialogModule,
+    TableModule,
+  ]
 })
 export class FIN72010CRUComponent extends BasicCruPageComponent<sample72010> implements OnInit {
   isRefreshing = false; // 是否是重製表單狀態(預設為false)
@@ -98,11 +114,13 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<sample72010> imp
     KeepQuota_No: [null, [Validators.maxLength(20)]], // 零用金單號
     applyDate: [null], // 申請日期
     Pettycashapplicant: [null], // 申請人
+    PettycashapplicantName: [''], // 申請人名稱
     Pettycashcustodian: [null], // 保管人
-    Debitamount: [null, Validators.max(9999999999)], // 申請人組織代號
-    keepingUnit: [null, [Validators.maxLength(20)]], // 申請人組織代號
+    PettycashcustodianName: [''], // 保管人名稱
+    //Debitamount: [null, Validators.max(9999999999)], // 申請人組織代號
+    applicantUnit: [null, [Validators.maxLength(20)]], // 申請人組織代號
     custodianUnit: [null, [Validators.maxLength(20)]], // 保管人組織代號
-    keepingUnitName: [null, [Validators.maxLength(20)]], // 保管單位名稱
+    keepingUnitName: ['', [Validators.maxLength(20)]], // 保管單位名稱
   });
   // 基本資料dropdown
   KeepQuota_No_Options: apiOption[] = [
@@ -127,6 +145,24 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<sample72010> imp
   ];
 
   vendorOptions: option[] = [];  //廠商編號: 資料讀 POS2013
+  // -----------------------------------------------------------------------
+  // 「零用金申請人」與「零用金保管人」使用者對話框的變數
+  userDialogVisible = false;
+  userQueryForm!: FormGroup;
+
+  userResultData: any[] = [];
+  selectedUser: any = null;
+  selectedUserName = '';
+  // 目前選擇的使用者類別
+  currentUserTarget: 'Pettycashapplicant' | 'Pettycashcustodian' | null = null;
+
+  //「保管單位」對話框的變數
+  keepDeptDialogVisible = false;
+  keepDeptQueryForm!: FormGroup;
+
+  keepDeptResultData: any[] = [];
+  selectedKeepDept: any = null;
+
   // ---POS2064 -------------
   POS2064Detail: POS2064[] = [];
   // ---------明細 (POS2064) 編輯表格 至少要一筆-------------------------------------------------------
@@ -187,6 +223,8 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<sample72010> imp
 
   constructor(
     private tls51070Service: Tls51070Service,
+    private confirmationService: ConfirmationService,
+    private fb: FormBuilder,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -210,6 +248,21 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<sample72010> imp
           this.isRefreshing = false;
         });
     }
+
+    // 零用金申請人與零用金保管人
+    this.userQueryForm = this.fb.group({
+      user_No: [''],
+      user_Name: [''],
+      Org_ID: [''],
+      Org_Name: ['']
+    });
+
+    // 保管單位
+    this.keepDeptQueryForm = this.formBuilder.group({
+      Org_ID: [''],
+      Org_Name: ['']
+    });
+
   }
 
   // #region onSubmit
@@ -265,21 +318,21 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<sample72010> imp
 
         // 等廠商編號好了再寫入POS2064欄位(廠商下拉)
         this.POS2064DataColumn = [
-          { field: 'type01', header: '會計費用科目', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: this.vendorOptions },
+          { field: 'type01', header: '費用會計科目', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'value', options: this.vendorOptions },
           { field: 'type02', header: '項目摘要', type: 'input', width: '12rem' },
-          { field: 'type03', header: '組織代號', type: 'input', width: '12rem' },
-          { field: 'type04', header: '明細類別', type: 'input', width: '12rem' },
-          { field: 'type05', header: '發票格式', type: 'input', width: '12rem' },
+          { field: 'type03', header: '組織代號', type: 'dropdown', width: '12rem' },
+          { field: 'type04', header: '明細類別', type: 'dropdown', width: '12rem' },
+          { field: 'type05', header: '發票格式', type: 'dropdown', width: '12rem' },
           { field: 'type06', header: '發票/收據號碼', type: 'input', width: '12rem' },
           { field: 'type07', header: '發票日期', type: 'input', width: '12rem' },
           { field: 'type08', header: '申報年月', type: 'input', width: '12rem' },
           { field: 'type09', header: '廠商統一編號', type: 'input', width: '12rem' },
-          { field: 'type10', header: '發票用途', type: 'input', width: '12rem' },
+          { field: 'type10', header: '發票用途', type: 'dropdown', width: '12rem' },
           { field: 'type11', header: '發票總金額', type: 'input', width: '12rem' },
-          { field: 'type12', header: '課稅別', type: 'input', width: '12rem' },
+          { field: 'type12', header: '課稅別', type: 'dropdown', width: '12rem' },
           { field: 'type13', header: '發票未稅金額', type: 'input', width: '12rem' },
           { field: 'type14', header: '發票稅額', type: 'input', width: '12rem' },
-          { field: 'type15', header: '扣抵代號', type: 'input', width: '12rem' },
+          { field: 'type15', header: '扣抵代號', type: 'dropdown', width: '12rem' },
           { field: 'type16', header: '彙總張數', type: 'input', width: '12rem' },
         ];
       });
@@ -392,4 +445,125 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<sample72010> imp
 
     return { isValid: true, errorMessage: '' };
   };
+
+
+
+  openUserDialog(target: 'Pettycashapplicant' | 'Pettycashcustodian'): void {
+    this.currentUserTarget = target;
+
+    this.userDialogVisible = true;
+    this.userResultData = [];
+    this.selectedUser = null;
+  }
+
+  queryUsers(): void {
+    const request = this.userQueryForm.getRawValue();
+
+    console.log('查詢條件', request);
+
+    // 模擬 API 回應資料
+    this.userResultData = [
+      { user_No: 'U001', user_Name: '使用者1', Org_ID: 'D001', Org_Name: '部門1' },
+      { user_No: 'U002', user_Name: '使用者2', Org_ID: 'D002', Org_Name: '部門2' },
+      { user_No: 'U003', user_Name: '使用者3', Org_ID: 'D003', Org_Name: '部門3' },
+    ];
+
+    // this.userService.queryUsers(request)
+    //   .pipe(finalize(() => {}))
+    //   .subscribe({
+    //     next: res => {
+    //       this.userResultData = res.Data ?? [];
+    //     },
+    //     error: err => {
+    //       console.error('查詢失敗', err);
+    //     }
+    //   });
+  }
+
+  clearUserQuery(): void {
+    this.userQueryForm.reset({
+      user_No: '',
+      user_Name: '',
+      Org_ID: '',
+      Org_Name: ''
+    });
+    this.userResultData = [];
+    this.selectedUser = null;
+  }
+
+  onSelectUser(row: any): void {
+    console.log('選到的使用者', row);
+
+    //this.selectedUserName = `${row.user_No} - ${row.user_Name}`;
+    if (!this.currentUserTarget) return;
+
+    this.dataForm.patchValue({
+      [this.currentUserTarget]: row.user_No,
+      [`${this.currentUserTarget}Name`]: `${row.user_No} - ${row.user_Name}`
+    });
+
+
+    if (this.currentUserTarget === 'Pettycashapplicant') {
+      this.dataForm.patchValue({
+        applicantUnit: row.Org_ID, // 申請人組織代號
+      });
+    }
+    else if (this.currentUserTarget === 'Pettycashcustodian') {
+      this.dataForm.patchValue({
+        custodianUnit: row.Org_ID, // 保管人組織代號
+      });
+    }
+
+    this.userDialogVisible = false;
+    this.currentUserTarget = null;
+  }
+
+  openKeepDeptDialog(): void {
+    this.keepDeptDialogVisible = true;
+    this.keepDeptResultData = [];
+    this.selectedKeepDept = null;
+
+    this.keepDeptQueryForm.reset({
+      Org_ID: '',
+      Org_Name: ''
+    });
+  }
+
+  queryKeepDept(): void {
+    // const { Org_ID, Org_Name } = this.keepDeptQueryForm.getRawValue();
+
+    const request = this.keepDeptQueryForm.getRawValue();
+
+    console.log('查詢條件', request);
+
+    // 模擬 API 回應資料
+    this.keepDeptResultData = [
+      { No: 'D001', Name: '部門1' },
+      { No: 'D002', Name: '部門2' },
+      { No: 'D003', Name: '部門3' },
+    ];
+
+
+  }
+
+  clearKeepDeptQuery(): void {
+    this.keepDeptQueryForm.reset({
+      Org_ID: '',
+      Org_Name: ''
+    });
+
+    this.keepDeptResultData = [];
+    this.selectedKeepDept = null;
+  }
+
+  onSelectKeepDept(row: any): void {
+    this.dataForm.patchValue({
+      // keepingUnit: row.No,
+      keepingUnitName: `${row.No} - ${row.Name}`
+    });
+
+    this.keepDeptDialogVisible = false;
+  }
+
+
 }
