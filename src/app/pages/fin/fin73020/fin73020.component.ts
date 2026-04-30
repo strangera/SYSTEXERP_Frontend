@@ -291,24 +291,26 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     } as any);
   }
 
-  public queryFIN73020ForReport = (body: any) =>
-    this.service.queryFIN73020(this.buildPayload(body || {})).pipe(
-      map((res: any) => {
-        const src = res?.Data as any;
-        const rows: FIN73020Data[] = Array.isArray(src) ? src : src ? [src] : [];
+ public queryFIN73020ForReport = (body: any) =>
+  this.service.queryFIN73020(this.buildPayload(body || {})).pipe(
+    map((res: any) => {
+      const src = res?.Data as any;
+      const apiRows: FIN73020Data[] = Array.isArray(src) ? src : src ? [src] : [];
+      const rows = this.normalizeDisplayRows(apiRows);
 
-        this.initRows(rows);
+      this.initRows(rows);
 
-        const totalCount =
-          Number(res?.TotalCount ?? rows.length) || rows.length;
+      const totalCount = rows.length === 0
+        ? 0
+        : Number(res?.TotalCount ?? rows.length) || rows.length;
 
-        return {
-          Data: rows,
-          TotalCount: totalCount,
-          GrandTotal: null,
-        };
-      })
-    );
+      return {
+        Data: rows,
+        TotalCount: totalCount,
+        GrandTotal: null,
+      };
+    })
+  );
 
   onSubmit(frm: FormGroup): void {
     this.submitted = true;
@@ -341,23 +343,25 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
       .queryFIN73020(payload)
       .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
       .subscribe({
-        next: (res: any) => {
-          const rows: FIN73020Data[] = Array.isArray(res?.Data) ? res.Data : [];
+       next: (res: any) => {
+  const apiRows: FIN73020Data[] = Array.isArray(res?.Data) ? res.Data : [];
+  const rows = this.normalizeDisplayRows(apiRows);
 
-          this.initRows(rows);
+  this.initRows(rows);
 
-          const realTotal =
-            Number(res?.TotalCount ?? rows.length) || rows.length;
+  const realTotal = rows.length === 0
+    ? 0
+    : Number(res?.TotalCount ?? rows.length) || rows.length;
 
-          this.lastQueryBody = { ...payload };
-          this._currentSortBy = payload.SortBy ?? this.defaultSort;
-          this.totalRecords = realTotal;
-          this.viewTotalRecords = realTotal;
-          this.data = rows;
+  this.lastQueryBody = { ...payload };
+  this._currentSortBy = payload.SortBy ?? this.defaultSort;
+  this.totalRecords = realTotal;
+  this.viewTotalRecords = realTotal;
+  this.data = rows;
 
-          this.cdr.detectChanges();
-          this.saveQueryState();
-        },
+  this.cdr.detectChanges();
+  this.saveQueryState();
+},
         error: err => {
           console.error('FIN73020 API error:', err);
           this.data = [];
@@ -482,4 +486,22 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
 
     return `FIN73020${defaultExt}`;
   }
+  private isOnlyGrandTotalRow(rows: FIN73020Data[]): boolean {
+  if (rows.length !== 1) return false;
+
+  const row: any = rows[0];
+
+  return String(row?.NOTeDesc ?? '').trim() === '總計'
+    && Object.keys(row).every(key =>
+      key === 'NOTeDesc' ||
+      key === 'dataKey' ||
+      row[key] === null ||
+      row[key] === undefined ||
+      row[key] === ''
+    );
+}
+
+private normalizeDisplayRows(rows: FIN73020Data[]): FIN73020Data[] {
+  return this.isOnlyGrandTotalRow(rows) ? [] : rows;
+}
 }
