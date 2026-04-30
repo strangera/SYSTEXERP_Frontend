@@ -97,7 +97,7 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
     inputDateTo: [null as Date | null], // 購入日期(訖)
     assetStatus: [null as string | null], // 資產狀態
     assetType: [null as string | null], // 資產類型
-    accountCode: [null as string | null], // 會計科目代號（TODO:QueryASS13090Request與AmorASS13090Request無對應欄位）
+    accountCode: [null as string | null], // 會計科目代號
     inputAmountFrom: [null as number | null], // 購入金額(起)
     inputAmountTo: [null as number | null], // 購入金額(訖)
     purchaseNo: [null as string | null], // 採購單號 → SUBPOENA_ID
@@ -384,6 +384,7 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
       ASSET_COST_E: (raw['inputAmountTo'] as number | null) ?? null,
       DEPRE_STATUS: depreStatus ?? null,
       DEPRE_YM: this.formatDepreYm(raw['amortYearMonth'] as Date | string | null),
+      STYPE_ID: (raw['accountCode'] as string | null) ?? null,
       PageSize: pageSize,
       PageIndex: pageIndex,
       SortBy: override.SortBy ?? undefined,
@@ -523,6 +524,7 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
       GOODS_ID: (q['GOODS_ID'] as string | null) ?? null,
       ASSET_STATUS: (q['ASSET_STATUS'] as string | null) ?? null,
       DEPRE_YN: (q['DEPRE_YN'] as string | null) ?? null,
+      STYPE_ID: (q['STYPE_ID'] as string | null) ?? null,
       SUBPOENA_ID: (q['SUBPOENA_ID'] as string | null) ?? null,
       GET_DATE_S: (q['GET_DATE_S'] as string | null) ?? null,
       GET_DATE_E: (q['GET_DATE_E'] as string | null) ?? null,

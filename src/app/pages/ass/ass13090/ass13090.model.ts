@@ -33,6 +33,8 @@ export interface QueryASS13090Request extends BaseQueryRequest {
   DEPRE_STATUS?: string | null;
   /** 攤提年月(YYYY-MM) */
   DEPRE_YM?: string | null;
+  /** 會計科目代號(借方或貸方) */
+  STYPE_ID?: string | null;
 }
 
 export interface PrintASS13090Request {
@@ -60,6 +62,8 @@ export interface PrintASS13090Request {
   DEPRE_STATUS?: string | null;
   /** 攤提年月(YYYY-MM) */
   DEPRE_YM?: string | null;
+  /** 會計科目代號(借方或貸方) */
+  STYPE_ID?: string | null;
   /** 排序欄位 */
   SortField?: string | null;
   /** 排序順序 */
@@ -92,6 +96,8 @@ export interface AmorASS13090Request extends BaseQueryRequest {
   DEPRE_STATUS?: string | null;
   /** 攤提年月(YYYY-MM) */
   DEPRE_YM?: string | null;
+  /** 會計科目代號(借方或貸方) */
+  STYPE_ID?: string | null;
 }
 
 /** queryASS13090 回傳資料包裝 */
