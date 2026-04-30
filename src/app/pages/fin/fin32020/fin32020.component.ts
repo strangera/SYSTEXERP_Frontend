@@ -198,18 +198,18 @@ readonly defaultSort: SortItem[] = [
 
     return cleaned.length ? cleaned : fallback;
   }
+private initRows(rows: Fin32020Row[]): Fin32020Row[] {
+  const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-  private initRows(rows: Fin32020Row[]): Fin32020Row[] {
-    rows.forEach((r, idx) => {
-      (r as any)._rowKey = idx + 1;
+  rows.forEach((r, idx) => {
+    (r as any)._rowKey = `${seed}_${idx}`;
+    r._Details = [];
+    (r as any)._detailLoaded = false;
+    (r as any).expansionLoading = false;
+  });
 
-      // 一開始不要用主查詢 queryFIN32020 回來的 _Details
-      r._Details = [];
-      (r as any)._detailLoaded = false;
-    });
-
-    return rows;
-  }
+  return rows;
+}
 
   private saveQueryState(): void {
     this.queryStateService.setQueryState(
