@@ -78,28 +78,36 @@ export class FIN32020CRUComponent
 
 
   // GLS1005 科目下拉（只顯示 value 六位）
-  adjAccNoOptions$ = this.fin32020Service.getGLS1005DropDown().pipe(
-    map((res) => {
-      const list = Array.isArray(res?.Data) ? res.Data : [];
+  adjAccNoOptions$ = this.fin32020Service
+    .getAdjAcc({
+      CAR_AccNo: null,
+      CAR_type: null,
+      pageIndex: 1,
+      pageSize: 9999,
+      SortBy: [{ field: 'CAR_AccNo', order: 1 }],
+    } as any)
+    .pipe(
+      map((res) => {
+        const list = Array.isArray(res?.Data) ? res.Data : [];
 
-      return list
-        .map((x) => {
-          const no = String(x.No ?? '').trim();
-          const name = String(x.Name ?? '').trim();
+        return list
+          .map((x) => {
+            const no = String(x.CAR_AccNo ?? '').trim();
+            const name = String(x.AccCName ?? '').trim();
 
-          return {
-            label: `${no}-${name}`,
-            value: no,
-          };
-        })
-        .filter((x) => x.value.length === 6);
-    }),
-    catchError((err) => {
-      console.error('getGLS1005DropDown error:', err);
-      return of([]);
-    }),
-    shareReplay(1)
-  );
+            return {
+              label: `${no}-${name}`,
+              value: no,
+            };
+          })
+          .filter((x) => !!x.value);
+      }),
+      catchError((err) => {
+        console.error('getAdjAcc dropdown error:', err);
+        return of([]);
+      }),
+      shareReplay(1)
+    );
 
   defaultDetailRow = {
     SeqNo: null,
@@ -322,47 +330,53 @@ export class FIN32020CRUComponent
     super();
   }
 
-ngOnInit(): void {
-  this.initializePage('FIN32020', this.dataForm);
+  ngOnInit(): void {
+    this.initializePage('FIN32020', this.dataForm);
 
-  if (this.rowdata) {
-    this.patchFromRowdata(this.rowdata);
+    if (this.rowdata) {
+      this.patchFromRowdata(this.rowdata);
 
-    if (
-      (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) &&
-      this.rowdata.ADJ_No
-    ) {
-      this.detailLoading = true;
+      if (
+        (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) &&
+        this.rowdata.ADJ_No
+      ) {
+        this.detailLoading = true;
 
-      this.fin32020Service.queryFIN32020Detail(this.rowdata.ADJ_No).subscribe({
-        next: (res) => {
-          const details = Array.isArray(res?.Data) ? res.Data : [];
+        this.fin32020Service.queryFIN32020Detail(this.rowdata.ADJ_No).subscribe({
+          next: (res) => {
+            const details = Array.isArray(res?.Data) ? res.Data : [];
 
-          this.patchFromRowdata({
-            ...this.rowdata!,
-            _Details: details,
-          });
+            this.patchFromRowdata({
+              ...this.rowdata!,
+              _Details: details,
+            });
 
-          this.detailLoading = false;
-        },
-        error: (err) => {
-          console.error('FIN32020 query detail error:', err);
-          this.detailLoading = false;
-        },
-      });
+            this.detailLoading = false;
+          },
+          error: (err) => {
+            console.error('FIN32020 query detail error:', err);
+            this.detailLoading = false;
+          },
+        });
+      }
+    } else {
+      this.detailData = [{ ...this.defaultDetailRow, SeqNo: 1 }];
     }
-  } else {
-    this.detailData = [{ ...this.defaultDetailRow, SeqNo: 1 }];
-  }
 
-  if (this.crudstatus === CRUDStatus.Create) {
-    this.dataForm.patchValue({ adjust_Date: new Date() });
+    if (this.crudstatus === CRUDStatus.Create) {
+      this.dataForm.patchValue({ adjust_Date: new Date() });
+    }
   }
-}
 
   private afterSaveSuccess(): void {
     this.loading = false;
     this.submitted = false;
+
+    this.messageService?.successBubble?.(
+      this.crudstatus === CRUDStatus.Create
+        ? '新增成功'
+        : '修改成功'
+    );
 
     this.router.navigate(['account/fin/fin32020'], {
       queryParams: { refresh: 1 },
@@ -803,58 +817,58 @@ ngOnInit(): void {
       SortBy: [],
     };
   }
- loadMoreARS(container?: HTMLElement): void {
-  if (this.arsLoading || this.arsQuerying || !this.arsHasMore) return;
+  loadMoreARS(container?: HTMLElement): void {
+    if (this.arsLoading || this.arsQuerying || !this.arsHasMore) return;
 
-  this.arsLoading = true;
-  this.arsQuerying = true;
+    this.arsLoading = true;
+    this.arsQuerying = true;
 
-  const req = this.buildARSQuery(this.arsPageIndex);
+    const req = this.buildARSQuery(this.arsPageIndex);
 
-  this.fin32020Service.getARS(req).subscribe({
-    next: (res) => {
-      const rawList = Array.isArray(res.Data) ? res.Data : [];
+    this.fin32020Service.getARS(req).subscribe({
+      next: (res) => {
+        const rawList = Array.isArray(res.Data) ? res.Data : [];
 
-      if (this.arsPageIndex === 1) {
-        this.arsList = rawList;
-      } else {
-        const existingKeys = new Set(
-          (this.arsList || []).map((x: any) => String(x.ARS_No ?? '').trim())
-        );
+        if (this.arsPageIndex === 1) {
+          this.arsList = rawList;
+        } else {
+          const existingKeys = new Set(
+            (this.arsList || []).map((x: any) => String(x.ARS_No ?? '').trim())
+          );
 
-        const appendList = rawList.filter((x: any) => {
-          const key = String(x?.ARS_No ?? '').trim();
-          return key && !existingKeys.has(key);
-        });
+          const appendList = rawList.filter((x: any) => {
+            const key = String(x?.ARS_No ?? '').trim();
+            return key && !existingKeys.has(key);
+          });
 
-        this.arsList = [...this.arsList, ...appendList];
-      }
+          this.arsList = [...this.arsList, ...appendList];
+        }
 
-      if (rawList.length < this.arsPageSize) {
-        this.arsHasMore = false;
-      } else {
-        this.arsPageIndex += 1;
-      }
+        if (rawList.length < this.arsPageSize) {
+          this.arsHasMore = false;
+        } else {
+          this.arsPageIndex += 1;
+        }
 
-      this.arsLoading = false;
-      this.arsQuerying = false;
+        this.arsLoading = false;
+        this.arsQuerying = false;
 
-      // 資料 append 後，如果使用者還停在底部附近，就繼續下一頁
-      if (container && this.arsHasMore) {
-        requestAnimationFrame(() => {
-          if (this.isNearBottom(container)) {
-            this.loadMoreARS(container);
-          }
-        });
-      }
-    },
-    error: (err) => {
-      console.error('FIN32020 getARS error:', err);
-      this.arsLoading = false;
-      this.arsQuerying = false;
-    },
-  });
-}
+        // 資料 append 後，如果使用者還停在底部附近，就繼續下一頁
+        if (container && this.arsHasMore) {
+          requestAnimationFrame(() => {
+            if (this.isNearBottom(container)) {
+              this.loadMoreARS(container);
+            }
+          });
+        }
+      },
+      error: (err) => {
+        console.error('FIN32020 getARS error:', err);
+        this.arsLoading = false;
+        this.arsQuerying = false;
+      },
+    });
+  }
 
   private buildAdjAccQuery(pageIndex: number) {
     const raw = this.adjAccSearchForm.getRawValue();
@@ -868,74 +882,74 @@ ngOnInit(): void {
     };
   }
   loadMoreAdjAcc(container?: HTMLElement): void {
-  if (this.adjAccLoading || this.adjAccQuerying || !this.adjAccHasMore) return;
+    if (this.adjAccLoading || this.adjAccQuerying || !this.adjAccHasMore) return;
 
-  this.adjAccLoading = true;
-  this.adjAccQuerying = true;
+    this.adjAccLoading = true;
+    this.adjAccQuerying = true;
 
-  const body = this.buildAdjAccQuery(this.adjAccPageIndex);
+    const body = this.buildAdjAccQuery(this.adjAccPageIndex);
 
-  this.fin32020Service.getAdjAcc(body).subscribe({
-    next: (res) => {
-      const rawList = Array.isArray(res.Data) ? res.Data : [];
+    this.fin32020Service.getAdjAcc(body).subscribe({
+      next: (res) => {
+        const rawList = Array.isArray(res.Data) ? res.Data : [];
 
-      if (this.adjAccPageIndex === 1) {
-        this.adjAccList = rawList.sort((a: any, b: any) => {
-          const aNo = String(a?.CAR_AccNo ?? '');
-          const bNo = String(b?.CAR_AccNo ?? '');
-          return aNo.localeCompare(bNo, 'zh-Hant', { numeric: true });
-        });
-      } else {
-        const existingKeys = new Set(
-          (this.adjAccList || []).map((x: any) =>
-            String(x.CAR_AccNo ?? '').trim()
-          )
-        );
-
-        const appendList = rawList.filter((x: any) => {
-          const key = String(x?.CAR_AccNo ?? '').trim();
-          return key && !existingKeys.has(key);
-        });
-
-        this.adjAccList = [...this.adjAccList, ...appendList].sort(
-          (a: any, b: any) => {
+        if (this.adjAccPageIndex === 1) {
+          this.adjAccList = rawList.sort((a: any, b: any) => {
             const aNo = String(a?.CAR_AccNo ?? '');
             const bNo = String(b?.CAR_AccNo ?? '');
             return aNo.localeCompare(bNo, 'zh-Hant', { numeric: true });
-          }
-        );
-      }
+          });
+        } else {
+          const existingKeys = new Set(
+            (this.adjAccList || []).map((x: any) =>
+              String(x.CAR_AccNo ?? '').trim()
+            )
+          );
 
-      if (rawList.length < this.adjAccPageSize) {
-        this.adjAccHasMore = false;
-      } else {
-        this.adjAccPageIndex += 1;
-      }
+          const appendList = rawList.filter((x: any) => {
+            const key = String(x?.CAR_AccNo ?? '').trim();
+            return key && !existingKeys.has(key);
+          });
 
-      this.adjAccLoading = false;
-      this.adjAccQuerying = false;
+          this.adjAccList = [...this.adjAccList, ...appendList].sort(
+            (a: any, b: any) => {
+              const aNo = String(a?.CAR_AccNo ?? '');
+              const bNo = String(b?.CAR_AccNo ?? '');
+              return aNo.localeCompare(bNo, 'zh-Hant', { numeric: true });
+            }
+          );
+        }
 
-      if (container && this.adjAccHasMore) {
-        requestAnimationFrame(() => {
-          if (this.isNearBottom(container)) {
-            this.loadMoreAdjAcc(container);
-          }
-        });
-      }
-    },
-    error: (err) => {
-      console.error('FIN32020 getAdjAcc error:', err);
-      this.adjAccLoading = false;
-      this.adjAccQuerying = false;
-    },
-  });
-}
-private isNearBottom(container?: HTMLElement, threshold = 80): boolean {
-  if (!container) return false;
+        if (rawList.length < this.adjAccPageSize) {
+          this.adjAccHasMore = false;
+        } else {
+          this.adjAccPageIndex += 1;
+        }
 
-  return (
-    container.scrollTop + container.clientHeight >=
-    container.scrollHeight - threshold
-  );
-}
+        this.adjAccLoading = false;
+        this.adjAccQuerying = false;
+
+        if (container && this.adjAccHasMore) {
+          requestAnimationFrame(() => {
+            if (this.isNearBottom(container)) {
+              this.loadMoreAdjAcc(container);
+            }
+          });
+        }
+      },
+      error: (err) => {
+        console.error('FIN32020 getAdjAcc error:', err);
+        this.adjAccLoading = false;
+        this.adjAccQuerying = false;
+      },
+    });
+  }
+  private isNearBottom(container?: HTMLElement, threshold = 80): boolean {
+    if (!container) return false;
+
+    return (
+      container.scrollTop + container.clientHeight >=
+      container.scrollHeight - threshold
+    );
+  }
 }
