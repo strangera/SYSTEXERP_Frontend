@@ -82,6 +82,8 @@ export const finRoutes: Routes = [
   // 總帳報表-分類帳
   { path: 'fin55050', loadComponent: () => import('./fin55050/fin55050.component').then(m => m.FIN55050Component), data: { progNo: 'FIN55050' } },
   { path: 'fin55050cru', loadComponent: () => import('./fin55050-cru/fin55050-cru.component').then(m => m.FIN55050CRUComponent), data: { progNo: 'FIN55050' } },
+  // 總帳報表-分類帳彙總報表
+  { path: 'fin55060', loadComponent: () => import('./fin55060/fin55060.component').then(m => m.FIN55060Component), data: { progNo: 'FIN55060' } },
   // 總帳報表-試算表
   { path: 'fin55070', loadComponent: () => import('./fin55070/fin55070.component').then(m => m.FIN55070Component), data: { progNo: 'FIN55070' } },
   // 總帳報表-損益表
