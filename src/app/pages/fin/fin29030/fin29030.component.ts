@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Fin29030Service } from './../../../service/api/fin/fin29030.service';
 import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 // Shared
@@ -12,11 +12,12 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { Column, formatAmount, formatDate, } from '@shared/componentkit/table/table.model';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { Column, createPaginationConfig, formatAmount, formatDate, } from '@shared/componentkit/table/table.model';
 import { option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -39,6 +40,7 @@ import { TableSubheaderComponent } from '../fin42010/fin42010-table/fin42010-tab
     ButtonComponent,
     ButtonModule,
     TableComponent,
+    TableReportComponent,
     TableSubheaderComponent,
     TranslateModule,
     InputTextRangeComponent,
@@ -55,12 +57,16 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
     IssueDateFrom: [], // 開票日期
     IssueDateTo: [], // 開票日期
     BNK_No: [], // 銀行代號
-    CHK_NoFrom: [null, [Validators.max(999999999999)]], // 開票單號
-    CHK_NoTo: [null, [Validators.max(999999999999)]], // 開票單號
+    CHK_NoFrom: [null], // 支票號碼
+    CHK_NoTo: [null], // 支票號碼
     VEN_No: [], // 廠客代號
     ExpireDate: [], // 到期日
     CHK_Status: [null], // 票據狀態
+
+    //分頁查詢
+    ...createPaginationConfig([{ field: 'PAM_No', order: 1 }]), // 分頁和排序參數
   });
+  lastQueryBody = null;
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
@@ -79,10 +85,10 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
 
   selectedItems: FIN29030Data[] = [];
   data: FIN29030Data[] = [];
+  footerData: FIN29030Data | null = null;
   filteredData = [...this.data];
   columns: Column[] = [
-    { field: 'RowType', header: '列別', visible: true },
-    { field: 'SummaryText', header: '小計文字', visible: true },
+
     { field: 'PAM_No', header: '付款編號', visible: true },
     { field: 'CHK_No', header: '支票號碼', visible: true },
     { field: 'TicketStatusName', header: '票據狀態', visible: true },
@@ -91,7 +97,7 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
     { field: 'ExpireDate', header: '到期日', visible: true, format: formatDate },
     { field: 'VEN_No', header: '廠客代號', visible: true },
     { field: 'VEN_Name', header: '廠客名稱', visible: true },
-    { field: 'TicketAmt', header: '票面金額', visible: true, format: formatAmount },
+    { field: 'TicketAmt', header: '票面金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
   ];
 
   // 控制變數
@@ -114,9 +120,10 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
     this.fin29030Service.queryFIN29030(frm.value).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
-          this.data = response.Data || [];
+          this.data = response.Data.filter((item: FIN29030Data) => item.RowType === 0) || [];
           console.log('Result', this.data);
           this.totalRecords = response.TotalCount;
+          this.lastQueryBody = frm.value;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
         } else {
           console.error('API error:', response.Status, response.Message);
@@ -185,6 +192,17 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
       // console.log('廠客代號 下拉', response);
     });
   }
+
+  queryFunction = (body: any) => {
+    return this.fin29030Service.queryFIN29030(body).pipe(
+      map((response) => {
+        return {
+          Data: response.Data.filter((item: FIN29030Data) => item.RowType === 0) || null,
+          TotalCount: response.TotalCount
+        };
+      })
+    );
+  };
 
   private getTimestamp(): string {
     const now = new Date();
