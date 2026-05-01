@@ -233,17 +233,18 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   private parseSysIdToNodes(val: string | null): TreeNode[] {
     if (!val || this.sysTreeOptions.length === 0) return [];
 
-    const nodes: TreeNode[] = [];
     const isAllSelected = val === 'xx';
     const keys = isAllSelected ? [] : val.split('#');
+    const nodes: TreeNode[] = [];
 
     const findNodes = (treeNodes: TreeNode[]) => {
       treeNodes.forEach(node => {
-        // 如果是 xx (全選)，直接加入節點；否則比對 key
+        // 如果是全選，或是該節點的 key 在資料清單中
         if (isAllSelected || keys.includes(node.key!)) {
           nodes.push(node);
         }
-        if (node.children) {
+        // 遞迴處理子節點，不跳過任何層級
+        if (node.children && node.children.length > 0) {
           findNodes(node.children);
         }
       });
@@ -255,14 +256,21 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
 
   private parseSAString(val: string | null, type: string): any[] {
     if (!val) return [];
+
     if (val === 'xx') {
-      // 如果是全選，拿對應的 optionsList 裡所有的 value
+      // 取得對應的選項清單
       const options = this.getOptionsArray(type);
-      // 這裡要注意你的 optionValue 是 'No' 還是 'value'
+      if (!options) return [];
+
+      // 根據 type 決定欄位
       const valueField = (type === 'FLOOR_ID' || type === 'AREA_ID') ? 'No' : 'value';
-      return options ? options.map((opt: any) => opt[valueField]) : [];
+
+      // 【關鍵修正】：回填時也要去重，確保還原後的陣列長度與「全選判定」的基準一致
+      return [...new Set(options.map((opt: any) => opt[valueField]))];
     }
-    return val.split('#');
+
+    // 非 xx 的情況，如果是串接字串，也要做一次去重保險
+    return [...new Set(val.split('#'))];
   }
   private getOptionsArray(type: string): any {
     switch (type) {
@@ -284,21 +292,43 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
       const today = new Date();
       const expireDate = new Date(today);
       expireDate.setDate(today.getDate() + 90);
-      const formatForSA = (selectedIds: any[], totalOptions: any[]) => {
-        // 確保它是陣列，如果不是陣列（例如是 null 或已經是字串），就回傳原始值或處理它
-        if (!Array.isArray(selectedIds)) {
-          return selectedIds;
-        }
+      const formatForSA = (selectedIds: any[], totalOptions: any[], type: string) => {
+        if (!Array.isArray(selectedIds)) return selectedIds;
         if (selectedIds.length === 0) return null;
-        if (totalOptions && selectedIds.length === totalOptions.length && totalOptions.length > 0) {
+
+        // 1. 選中項去重
+        const uniqueSelected = [...new Set(selectedIds.filter(id => id !== null && id !== undefined && id !== ''))];
+
+        // 2. 決定欄位
+        const valueField = (type === 'FLOOR_ID' || type === 'AREA_ID') ? 'No' : 'value';
+
+        // 3. 總選項去重 (增加類型判斷)
+        const totalOptionsUnique = totalOptions ? [...new Set(totalOptions.map((opt: any) => {
+          // 如果 opt 是字串 (如 allSysIdCodes)，直接回傳本身
+          if (typeof opt === 'string') return opt;
+          // 如果是物件，根據欄位抓取值
+          return opt[valueField];
+        }).filter(val => val !== undefined))] : [];
+
+        const totalCount = totalOptionsUnique.length;
+
+        console.log(`--- ${type} 除錯資訊 ---`);
+        console.log('唯一選中數量:', uniqueSelected.length);
+        console.log('唯一總選項數量:', totalCount);
+
+        if (totalCount > 0 && uniqueSelected.length === totalCount) {
           return 'xx';
         }
-        return selectedIds.join('#');
+
+        return uniqueSelected.join('#');
       };
       const allSysIdCodes = [
-        ...(this.sysSubModuleList?.map(m => m.SYS_Code) || []),
-        ...(this.sysIdOptionsList?.map(c => c.SYS_Code) || [])
+        ...new Set([
+          ...(this.sysSubModuleList?.map(m => m.SYS_Code) || []),
+          ...(this.sysIdOptionsList?.map(c => c.SYS_Code) || [])
+        ])
       ];
+      console.log('SYS_ID 總清單長度應為:', allSysIdCodes.length);
       const body = {
         ...frm.value,
         id: this.rowdata?.id,
@@ -312,16 +342,14 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
         userContractReportRole: this.reportRoleData.map(role => {
           // 【關鍵修正】：從選中的 TreeNodes 中提取 key 陣列
           const sysIdArray = (role.SYS_ID_TreeNodes as TreeNode[])?.map(node => node.key) || [];
-
           return {
             USER_ID: frm.get('user_No')?.value,
-            ORG_ID: formatForSA(role.ORG_ID, this.getOptionsArray('ORG_ID')),
-            // 這裡傳入提取後的陣列
-            SYS_ID: formatForSA(sysIdArray, allSysIdCodes),
-            FLOOR_ID: formatForSA(frm.value.FLOOR_ID, this.getOptionsArray('FLOOR_ID')),
-            AREA_ID: formatForSA(frm.value.AREA_ID, this.getOptionsArray('AREA_ID')),
-            STORE_ID: formatForSA(frm.value.STORE_ID, this.getOptionsArray('STORE_ID')),
-            BTYPE_ID: formatForSA(frm.value.BTYPE_ID, this.getOptionsArray('BTYPE_ID')),
+            ORG_ID: formatForSA(role.ORG_ID, this.getOptionsArray('ORG_ID'), 'ORG_ID'),
+            SYS_ID: formatForSA(sysIdArray, allSysIdCodes, 'SYS_ID'),
+            FLOOR_ID: formatForSA(frm.value.FLOOR_ID, this.getOptionsArray('FLOOR_ID'), 'FLOOR_ID'),
+            AREA_ID: formatForSA(frm.value.AREA_ID, this.getOptionsArray('AREA_ID'), 'AREA_ID'),
+            STORE_ID: formatForSA(frm.value.STORE_ID, this.getOptionsArray('STORE_ID'), 'STORE_ID'),
+            BTYPE_ID: formatForSA(frm.value.BTYPE_ID, this.getOptionsArray('BTYPE_ID'), 'BTYPE_ID'),
           };
         })
       };
