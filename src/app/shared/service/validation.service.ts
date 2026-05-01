@@ -586,4 +586,21 @@ export class ValidationService {
       return null;
     };
   }
+
+  invoicePeriodValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+      if (!value || value.length < 6) return null;
+
+      const year = parseInt(value.substring(0, 4), 10);
+      const month = parseInt(value.substring(4, 6), 10);
+
+      // 邏輯：今天 2026/05/01，當期起點是 202605
+      // 鎖死不可小於 202605
+      if (year < 2026 || (year === 2026 && month < 5)) {
+        return { invalidMinMonthDate: true }; // 借用現有的錯誤 key
+      }
+      return null;
+    };
+  }
 }
