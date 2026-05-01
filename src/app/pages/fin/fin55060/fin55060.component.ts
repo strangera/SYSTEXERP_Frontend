@@ -63,13 +63,13 @@ type TableRow = ApiDetail & {
 })
 export class FIN55060Component extends BasicQueryPageComponent<TableRow> implements OnInit {
   queryForm = this.formBuilder.group({
-    TXN_BDATE: [new Date('2025-08-01'), [Validators.required]],
-    TXN_EDATE: [new Date('2025-08-03'), [Validators.required]],
+    TXN_BDATE: [null, [Validators.required]],
+    TXN_EDATE: [null, [Validators.required]],
     OrgId: [null],
     PTAFrom: [null],
     PTATo: [null],
-    AccNoFrom: ['1101', [Validators.required]],
-    AccNoTo: ['1112', [Validators.required]],
+    AccNoFrom: [null, [Validators.required]],
+    AccNoTo: [null, [Validators.required]],
     VendorFrom: [null],
     VendorTo: [null],
   });
