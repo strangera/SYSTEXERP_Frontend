@@ -591,6 +591,12 @@ export interface QueryCapItemDropdownResponse {
 export interface QueryAbatAcctRequest {
   /** 會計科目 */
   AccNo?: string | null;
+  /** 傳票號碼 (模糊查詢) */
+  VouNo?: string | null;
+  /** 立沖代號 (模糊查詢) */
+  PTA?: string | null;
+  /** 廠商代號 (精確查詢) */
+  VEN_No?: string | null;
 }
 
 /**
@@ -610,6 +616,8 @@ export interface QueryAbatAcctResponse {
   /** 立沖代號 */
   PTA?: string | null;
   /** 廠商代號 */
+  VEN_No?: string | null;
+  /** 廠商統一編號 */
   VEN_Uniform?: string | null;
   /** 廠商簡稱 */
   VEN_ShortName?: string | null;
