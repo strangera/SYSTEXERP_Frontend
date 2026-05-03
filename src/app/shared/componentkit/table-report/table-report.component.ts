@@ -65,6 +65,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   public get multiSortMeta() { // 暴露內部 p-table 的多重排序狀態
     return this.dt?.multiSortMeta || [];
   }
+  private isSyncingSort = false;
   @Input() allowMultilineHeader = false; // 是否允許標題使用 \n 換行
   // Header(左) 相關
   @Input() showFilter = true;      // 是否顯示 Filter
@@ -179,6 +180,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         } else {
           if (this.data.length === this.totalRecords) {
             this.dt.lazy = false;
+            this.lazy = false;
             this.dt.scrollHeight = this.autoHeight ? undefined as any : '600px';
             if (!this.showManage) {
               this.ItemSize = 20;
@@ -232,8 +234,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       this.cdr.detectChanges();
       return;
     }
-    if (this._loading) return;
-
+    if (this.isSyncingSort || this._loading) return;
     if (event.multiSortMeta && event.multiSortMeta.length > 0) {
       const lastSort = event.multiSortMeta[event.multiSortMeta.length - 1];
       this.dt.multiSortMeta = [lastSort];
@@ -346,8 +347,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     if (this.lazy) {
       const target = event.originalEvent.target;
       const pageSize = this.lastQueryBody?.pageSize ?? this.lastQueryBody?.PageSize ?? 30;
-      if (this.data.length < this.totalRecords && this.data.length >= pageSize) {
-        if (target.scrollHeight - target.scrollTop - target.clientHeight <= 2) {
+      if (this.data.length >= pageSize) {
+        const isBottom = target.scrollHeight - target.scrollTop - target.clientHeight < 10;
+        if (isBottom && this.data.length < this.totalRecords) {
           this.loadMoreData();
         }
       }
@@ -523,23 +525,17 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
  * 將上次查詢的排序條件同步回 p-table 元件，確保 UI 狀態一致
  */
   private syncTableSortMeta() {
-    // 確保 dt 已初始化且有排序資料
     if (!this.dt || !this.lastQueryBody?.SortBy) return;
 
+    this.isSyncingSort = true; // 開啟旗標
     const sortBy = this.lastQueryBody.SortBy;
     const meta = Array.isArray(sortBy) ? [...sortBy] : [sortBy];
+    this.dt.multiSortMeta = meta.map(m => ({ field: m.field || m.Field, order: m.order || m.Order }));
 
-    // 1. 同步資料
-    this.dt.multiSortMeta = meta.map(m => ({
-      field: m.field || m.Field,
-      order: m.order || m.Order
-    }));
-
-    // 3. 核心：通知 TableService 排序已變動，這會讓 Header 的小箭頭亮起來
-    // PrimeNG 內部是靠這個 Observable 來通知 Header 元件更新 UI
     setTimeout(() => {
       this.dt.tableService.onSort(this.dt.multiSortMeta || []);
       this.cdr.detectChanges();
+      this.isSyncingSort = false; // 關閉旗標
     }, 0);
   }
   /** 確保分頁參數統一為小寫，避免 PascalCase 導致重複查詢或參數丟失 */

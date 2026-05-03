@@ -81,7 +81,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   // Table
   data: TLS24010Data[] = [];
   columns = columns;
-  historyRequestBody?: TLS24010Request;
+  historyRequestBody: TLS24010Request | null = null;
   totalRecords = 0;
   selectedRowData?: TLS24010Data;
   addButton: AddButton[] = [];
@@ -100,7 +100,10 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     private readonly validation: ValidationService,
     private readonly datePipe: DatePipe,
     private readonly fileExportService: FileExportService
-  ) { super(); }
+  ) {
+    super();
+    this.tableQueryFunction = this.tableQueryFunction.bind(this);
+  }
   ngOnInit(): void {
     this.initializePage('TLS24010', 'tls/tls24010cru', this.queryForm, (form) => this.onSubmit(form));
     this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(this.datePipe.transform(yesterday, 'yyyy-MM-dd')).pipe(untilDestroyed(this)).subscribe(options => {
@@ -160,7 +163,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       }
     });
   }
-  public tableQueryFunction = (body: TLS24010Request): Observable<ApiResponse<TLS24010Data[]>> => {
+  tableQueryFunction(body: TLS24010Request): Observable<ApiResponse<TLS24010Data[]>> {
     return this.tls24010Service.queryTLS24010(body, this.TLT_NoOptions);
   }
   onSubmit(frm: FormGroup): void {
@@ -172,8 +175,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         TXN_No: (!rawTxnNo || rawTxnNo === '' || isNaN(Number(rawTxnNo))) ? null : rawTxnNo
       }
       this.tableQueryFunction(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.historyRequestBody = body;
         this.data = res.Data;
+        this.historyRequestBody = body;
         this.totalRecords = res.TotalCount;
         if (frm.get('TXN_GUIPaper')?.value === TXN_GUIPAPER.折讓單交易取消) {
           this.addButton = [
