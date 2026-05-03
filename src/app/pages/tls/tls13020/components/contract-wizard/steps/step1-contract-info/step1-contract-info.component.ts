@@ -17,7 +17,7 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { Tls12010Service } from '@service/api/tls/tls12010.service';
-import { RenewalBasicInfo, RenewalLocationInfo, RenewalQueryResponse, TLS12040Service } from '@service/api/tls/tls12040.service';
+import { RenewalBasicInfo, RenewalLocationInfo, RenewalQueryResponse } from '@service/api/tls/tls12040.service';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
@@ -78,7 +78,6 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
 
   // 注入服務
   private readonly messageService = inject(NotificationService);
-  private readonly tls12040Service = inject(TLS12040Service);
   private readonly tls12010Service = inject(Tls12010Service);
   private readonly tls13010Service = inject(TLS13010Service);
   private readonly businessClassificationService = inject(BusinessClassificationService);
@@ -761,7 +760,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     this.lastRenewalVenNo = venNo;
     this.loading = true;
 
-    this.tls12040Service.queryContractForRenewal(venNo).subscribe({
+    this.tls13010Service.queryContractForRenewal(venNo).subscribe({
       next: (renewalData) => {
         // 回填基本資料到表單
         this.patchFormForRenewal(renewalData.BasicInfo, renewalData.next_contract_subno);

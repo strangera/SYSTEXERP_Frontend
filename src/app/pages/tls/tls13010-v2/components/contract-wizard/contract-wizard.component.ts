@@ -1528,11 +1528,6 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
           break;
 
         case CommissionType.BASE_COMMISSION: // 包底抽成 (4)
-          if (!data['limit_amt'] || Number(data['limit_amt']) <= 0) {
-            errorCount++;
-            errorTypes.add('金額必須大於 0');
-            errorFields.push('limit_amt');
-          }
           if (!data['limit_charge_rate'] || Number(data['limit_charge_rate']) <= 0) {
             errorCount++;
             errorTypes.add('抽成率必須大於 0');
