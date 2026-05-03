@@ -70,46 +70,41 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
    * 設定 money_type 與 sam_termno 的聯動邏輯
    */
   private setupFormLinkage(): void {
-    // 1. 取得初始值並立即更新下拉選單內容
+    // 1. 初始處理
     const initialMoneyType = this.queryForm.controls.money_type.value;
-    if (initialMoneyType) {
-      this.updateSamTermnoOptions(initialMoneyType);
-    }
+    this.updateSamTermnoOptions(initialMoneyType);
 
-    // 2. 監聽後續變更
+    // 2. 監聽變更
     this.queryForm.controls.money_type.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(moneyType => {
-        const oldTermno = this.queryForm.controls.sam_termno.value;
+        // 先更新下拉選單的內容
         this.updateSamTermnoOptions(moneyType);
 
         if (moneyType) {
-          // 檢查原本選的期數是否還在「新」的選項中
+          // 有選結帳方式：檢查原本選的期數是否還在新的選項中
+          const oldTermno = this.queryForm.controls.sam_termno.value;
           const isStillValid = this.sam_termnoOptions.some(opt => opt.value === oldTermno);
 
-          // 只有當原本的值失效時，才強制重置為 1
-          // 這樣你在手動選 2 的時候，就不會因為 updateValueAndValidity 而被重置回 1
           if (!isStillValid) {
-            this.queryForm.controls.sam_termno.setValue(1, { emitEvent: false });
+            // 如果原本的期數不在新選單裡，預設帶入該結帳方式的第一個期數（通常是 1）
+            const defaultVal = this.sam_termnoOptions[0]?.value ?? null;
+            this.queryForm.controls.sam_termno.setValue(defaultVal as any, { emitEvent: false });
           }
         } else {
-          // 表單是 nonNullable，避免塞 null；重置為預設 1
-          this.queryForm.controls.sam_termno.setValue(1, { emitEvent: false });
+          // 【核心修改】：當結帳方式被清空（刪掉）時，帳次直接清空
+          // 因為是 nonNullable，這裡 setValue(null) 會根據定義轉為 null 或空
+          this.queryForm.controls.sam_termno.setValue(null as any, { emitEvent: false });
         }
       });
   }
 
   private updateSamTermnoOptions(moneyType: string | null): void {
     if (moneyType && this.SAM_TERMNO_MAP[moneyType as keyof typeof this.SAM_TERMNO_MAP]) {
-      // 根據 money_type 取得對應的期數陣列 (e.g., [1, 2, 3])
       const termNumbers = this.SAM_TERMNO_MAP[moneyType as keyof typeof this.SAM_TERMNO_MAP];
-
-      // 轉換成 Dropdown 需要的格式 { label: string, value: number }
-      this.sam_termnoOptions = termNumbers.map(num => ({
-        label: `${num}`,
-        value: num
-      }));
+      this.sam_termnoOptions = termNumbers.map(num => ({ label: `${num}`, value: num }));
     } else {
+      // 當結帳方式被清空時，選單選項也要清空
       this.sam_termnoOptions = [];
     }
   }
@@ -124,9 +119,8 @@ export class TLS2E020Component extends BasicQueryPageComponent<Tls2e020Data> imp
       const body = {
         ...val,
         sam_yyymm: convertDateToYYYYMM(val.sam_yyymm),
-        // 修正：如果沒選值就傳 null 或 undefined，不要強轉成 0
-        sam_termno: val.sam_termno ? Number(val.sam_termno) : null,
-        money_type: val.money_type ? val.money_type : null
+        sam_termno: null,
+        money_type: null
       } as Tls2e020QueryBody;
 
       this.tls2e020Service.queryTls2e020(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
