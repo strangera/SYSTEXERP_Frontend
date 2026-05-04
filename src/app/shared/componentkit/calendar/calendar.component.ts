@@ -42,6 +42,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
   @Input() override controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false;
+  Validators: any;
 
   // 使用 setter 確保 calendarType 變更時立即套用配置
   @Input()
