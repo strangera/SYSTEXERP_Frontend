@@ -26,7 +26,6 @@ const FORMAT_RULES: Record<string, { lengths: number[], chars: string[] }> = {
   imports: [ReadonlyCalendarDisplayComponent, NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
 })
 export class CalendarComponent extends BasicKitComponent implements OnInit, OnDestroy {
-  readonly Validators = Validators;
   private valueChangeSubscription?: Subscription;
   private _calendarType: CalendarType = 'dateOne';
   private readonly calendarMaxLength: Record<CalendarType, number> = {
@@ -71,7 +70,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
   @Output() yearChangeEvent = new EventEmitter<CalendarYearChangeEvent>();
   @Input() helpMsg?: string;
   @Input() showErrorMessage = true;
-
+  private initialRequired = false;
   private readonly calendarConfig = {
     timeOne: { timeOnly: true, showTime: true, dateFormat: undefined, view: 'date', customPlaceholder: '請選擇時間' },
     dateOne: { timeOnly: false, showTime: false, dateFormat: 'yy/mm/dd', view: 'date', customPlaceholder: '請選擇日期' },
@@ -80,47 +79,50 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     dateYearOne: { timeOnly: false, showTime: false, dateFormat: 'yy', view: 'year', customPlaceholder: '請選擇年份' },
   };
 
-  /**
-   * 套用 calendarType 對應的配置
-   */
-  /**
- * 套用 calendarType 對應的配置
- */
   private applyCalendarConfig(): void {
     const config = this.calendarConfig[this._calendarType];
-    if (config) {
-      this.timeOnly = config.timeOnly;
-      this.showTime = config.showTime;
-      this.dateFormat = config.dateFormat;
-      this.view = config.view as 'date' | 'month' | 'year';
+    if (!config || !this.control) return;
 
-      const maxLen = this.calendarMaxLength[this._calendarType];
-      this.maxLength = maxLen; // 這是 BasicKitComponent 的屬性，會連動影響 placeholder
+    // 1. 同步 UI 配置
+    this.timeOnly = config.timeOnly;
+    this.showTime = config.showTime;
+    this.dateFormat = config.dateFormat;
+    this.view = config.view as 'date' | 'month' | 'year';
 
-      if (this.control) {
-        // 1. 檢查原始是否具有必填驗證器
-        const hadRequiredBefore = this.control.hasValidator(Validators.required);
-        // 2. 建立新的驗證器清單
-        // 這裡建議過濾掉舊的 maxLength 避免重複堆疊，並加入新的長度限制
-        const newValidators = [Validators.maxLength(maxLen)];
-        // 如果原本有必填，確保它被加回去
-        if (hadRequiredBefore) {
-          newValidators.push(Validators.required);
-        }
-        // 3. 重新設定驗證器
-        this.control.setValidators(newValidators);
-        // 4. 更新控制項狀態 (不觸發事件以避免無窮迴圈)
-        this.control.updateValueAndValidity({ emitEvent: false });
-        // 5. 【關鍵修正】手動同步父類別的 isRequired 狀態
-        // 這樣可以確保即使在輸入值後，因為 HTML 綁定的是這個變數，星號依然能正確顯示
-        this.isRequired = this.control.hasValidator(Validators.required);
-      }
-      // 處理 Placeholder
-      if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
-        this.placeholder = config.customPlaceholder;
-      }
-      // 手動觸發變更偵測，確保 UI 同步更新
-      this.cdr.markForCheck();
+    const maxLen = this.calendarMaxLength[this._calendarType];
+    this.maxLength = maxLen; // 更新 BasicKitComponent 的屬性
+
+    // 2. 重新組合驗證器
+    // 我們不再依賴會變動的 this.isRequired，直接使用 ngOnInit 鎖定的 initialRequired
+    const newValidators: any[] = [];
+
+    // A. 加入對應目前類型的長度限制
+    newValidators.push(Validators.maxLength(maxLen));
+
+    // B. 加入全形卡控 (確保 service 存在)
+    if (this.validationService) {
+      newValidators.push(this.validationService.containsFullWidth.bind(this.validationService));
+    }
+
+    // C. 關鍵：如果初始設定是必填，強制塞回，確保 handleSubmit 會擋，星星也會在
+    if (this.initialRequired) {
+      newValidators.push(Validators.required);
+    }
+
+    // 執行替換
+    this.control.setValidators(newValidators);
+
+    /**
+     * 務必呼叫這行！
+     * 這會重新跑一遍驗證邏輯，更新 control.status 與 control.valid。
+     * 這樣你的 handleSubmit(frm) 判斷 frm.valid 時才會拿到正確結果。
+     */
+    this.control.updateValueAndValidity({ emitEvent: false });
+
+    // 3. Placeholder 處理
+    // 只有在使用者沒有自訂 placeholder 或還是預設值時，才套用 config 的建議值
+    if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
+      this.placeholder = config.customPlaceholder;
     }
   }
 
@@ -130,7 +132,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
 
   ngOnInit() {
     this.initControl(this.control);
-
+    this.initialRequired = this.control.hasValidator(Validators.required);
     // 1. 動態加入全形卡控驗證器
     const validators: any[] = [this.validationService.containsFullWidth.bind(this.validationService)];
 
