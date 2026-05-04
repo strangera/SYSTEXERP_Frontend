@@ -1061,6 +1061,15 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       }
     }
 
+    // 地點起訖日必填卡控
+    const locationsWithMissingDates = this.wizardState.locationData.filter(
+      loc => loc._status !== 'deleted' && loc.location_no?.trim() && (!loc.tlt_bdate || !loc.tlt_edate)
+    );
+    if (locationsWithMissingDates.length > 0) {
+      this.messageService.warnBubble('櫃位地點起訖日為必填');
+      return false;
+    }
+
     return true;
   }
 
@@ -1519,11 +1528,6 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
           break;
 
         case CommissionType.BASE_COMMISSION: // 包底抽成 (4)
-          if (!data['limit_amt'] || Number(data['limit_amt']) <= 0) {
-            errorCount++;
-            errorTypes.add('金額必須大於 0');
-            errorFields.push('limit_amt');
-          }
           if (!data['limit_charge_rate'] || Number(data['limit_charge_rate']) <= 0) {
             errorCount++;
             errorTypes.add('抽成率必須大於 0');
@@ -1662,11 +1666,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
 
         const successMessage = [
           `異動訊息:${isInsert ? '新增成功' : '修改成功'}`,
-          `招募編號為:${formData.apply_no || response.applyNo || ''}`,
-          `版本編號為:${formData.contract_subno || ''}`,
-          `專櫃編號為:${formData.tlt_no || response.tltNo || ''}`,
-          `廠商編號:${formData.ven_uniform || ''}`,
-          `品牌(專櫃名稱):${formData.tlt_name || ''}`
+          `招商編號：${formData.apply_no || response.applyNo || ''}`,
+          `版本編號：${formData.contract_subno || ''}`,
+          `專櫃編號：${formData.tlt_no || response.tltNo || ''}`,
+          `廠商編號：${formData.ven_uniform || ''}`,
+          `品牌（專櫃名稱）：${formData.tlt_name || ''}`
         ].join('\n');
 
         // 新增契約時刷新使用者資料權限，否則看不到剛新增的資料

@@ -43,6 +43,13 @@ export interface FAASSCHKMASS15070DropDownItem {
   CHECK_DATE?: string | null;
 }
 
+/** FIN70000 / POS2064MPCS_NoDropDownList 回傳列 */
+export interface Pos2064MpcsNoDropDownItem {
+  PCS_No?: string | null;
+  PCS_Date?: string | null;
+  PCS_UsrNo?: string | null;
+}
+
 /**
  * 查詢 FACLASSM_DropDownList 時的請求 body
 */

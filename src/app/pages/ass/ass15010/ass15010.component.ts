@@ -4,14 +4,10 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11010Service } from '@service/api/ass/ass11010.service';
-import { ASS11020Service } from '@service/api/ass/ass11020.service';
-import { ASS11030Service } from '@service/api/ass/ass11030.service';
 import { ASS15010Service } from '@service/api/ass/ass15010.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ASS11010Data } from '@pages/ass/ass11010/ass11010.model';
-import { ASS11020Data } from '@pages/ass/ass11020/ass11020.model';
-import { ASS11030Data } from '@pages/ass/ass11030/ass11030.model';
 import {
   QueryASS15010ApiRequest,
   QueryASS15010Response,
@@ -28,6 +24,7 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { distinctUntilChanged } from 'rxjs';
 import { finalize } from 'rxjs';
 
 /** 3.1.5.1 財產標籤列印作業 */
@@ -108,8 +105,6 @@ export class ASS15010Component
     private readonly ass15010Service: ASS15010Service,
     private readonly dropdownApi: DropdownApiService,
     private readonly ass11010Service: ASS11010Service,
-    private readonly ass11020Service: ASS11020Service,
-    private readonly ass11030Service: ASS11030Service,
     private readonly datePipe: DatePipe,
     private readonly fileExportService: FileExportService,
   ) {
@@ -119,6 +114,7 @@ export class ASS15010Component
   ngOnInit(): void {
     this.initializePage('ASS15010', '', this.queryForm, (frm) => this.onSubmit(frm));
     this.loadDropdowns();
+    this.setupClassCascades();
   }
 
   private loadDropdowns(): void {
@@ -137,21 +133,8 @@ export class ASS15010Component
       }));
     });
 
-    this.ass11020Service.queryASS11020({}).pipe(untilDestroyed(this)).subscribe((res) => {
-      if (res.Status !== '0000' || !res.Data) return;
-      this.midClassOptions = res.Data.map((item: ASS11020Data) => ({
-        label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
-        value: item.M_CLASS_ID,
-      }));
-    });
-
-    this.ass11030Service.queryASS11030({}).pipe(untilDestroyed(this)).subscribe((res) => {
-      if (res.Status !== '0000' || !res.Data) return;
-      this.smallClassOptions = res.Data.map((item: ASS11030Data) => ({
-        label: `${item.S_CLASS_ID} - ${item.S_CLASS_NAME}`,
-        value: item.S_CLASS_ID,
-      }));
-    });
+    this.midClassOptions = [];
+    this.smallClassOptions = [];
 
     this.dropdownApi
       .queryTblUser()
@@ -166,6 +149,61 @@ export class ASS15010Component
       .subscribe((opts) => {
         this.holdOrgOptions = opts ?? [];
       });
+  }
+
+  private setupClassCascades(): void {
+    const bCtrl = this.queryForm.controls.bClassId;
+    const mCtrl = this.queryForm.controls.mClassId;
+    const sCtrl = this.queryForm.controls.sClassId;
+
+    bCtrl.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe((bClassId) => {
+        mCtrl.patchValue(null, { emitEvent: false });
+        sCtrl.patchValue(null, { emitEvent: false });
+        this.midClassOptions = [];
+        this.smallClassOptions = [];
+        if (!bClassId) return;
+        this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+          this.midClassOptions = (options ?? []).map((item) => ({
+            value: String(item.value),
+            label: item.label,
+          }));
+        });
+      });
+
+    mCtrl.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe((mClassId) => {
+        sCtrl.patchValue(null, { emitEvent: false });
+        this.smallClassOptions = [];
+        if (!mClassId) return;
+        this.dropdownApi.queryFaClass2({ M_CLASS_ID: mClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+          this.smallClassOptions = (options ?? []).map((item) => ({
+            value: String(item.value),
+            label: item.label,
+          }));
+        });
+      });
+
+    const initialBClassId = bCtrl.value;
+    const initialMClassId = mCtrl.value;
+    if (initialBClassId) {
+      this.dropdownApi.queryFaClass1({ B_CLASS_ID: initialBClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+        this.midClassOptions = (options ?? []).map((item) => ({
+          value: String(item.value),
+          label: item.label,
+        }));
+      });
+    }
+    if (initialMClassId) {
+      this.dropdownApi.queryFaClass2({ M_CLASS_ID: initialMClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+        this.smallClassOptions = (options ?? []).map((item) => ({
+          value: String(item.value),
+          label: item.label,
+        }));
+      });
+    }
   }
 
   private toOptionalDateStr(d: Date | null): string | undefined {

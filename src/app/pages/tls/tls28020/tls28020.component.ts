@@ -62,7 +62,7 @@ export class TLS28020Component extends BasicQueryPageComponent<ITLS28020Data> im
       exportFormat: [{ '1': '現金袋' }, { '2': '帳務袋' }, { '3': '零用金袋' }],
     },
     { field: 'ECR_No', header: '收銀機號' },
-    { field: 'TLT_No', header: '錢箱號' },
+    { field: 'TLT_No', header: '專櫃編號' },
     { field: 'GET_TIME', header: '領袋時間', format: formatDateTime },
     { field: 'BAK_TIME', header: '繳袋時間', format: formatDateTime },
     { field: 'CRT_Date', header: '建立日期', format: formatDateTime, visible: false },

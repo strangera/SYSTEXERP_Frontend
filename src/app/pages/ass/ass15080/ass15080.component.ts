@@ -4,8 +4,6 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS15080Service } from '@service/api/ass/ass15080.service';
 import { ASS11010Service } from '@service/api/ass/ass11010.service';
-import { ASS11020Service } from '@service/api/ass/ass11020.service';
-import { ASS11030Service } from '@service/api/ass/ass11030.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import {
@@ -20,7 +18,7 @@ import { SortOption } from '@shared/models/api/base-api.interface';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
+import { distinctUntilChanged, finalize } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -103,8 +101,6 @@ export class ASS15080Component
     private readonly dropDownListService: DropDownListService,
     private readonly dropdownApiService: DropdownApiService,
     private readonly ass11010Service: ASS11010Service,
-    private readonly ass11020Service: ASS11020Service,
-    private readonly ass11030Service: ASS11030Service
   ) {
     super();
   }
@@ -117,14 +113,15 @@ export class ASS15080Component
       (form) => this.onSubmit(form)
     );
     this.loadDropdownOptions();
+    this.setupClassCascades();
   }
 
   private loadDropdownOptions(): void {
     this.loadAccNoOptions();
     this.loadOrgOptions();
     this.loadBigClassOptions();
-    this.loadMidClassOptions();
-    this.loadSmallClassOptions();
+    this.mClassOptions = [];
+    this.sClassOptions = [];
     this.loadGoodsOptions();
   }
 
@@ -179,44 +176,59 @@ export class ASS15080Component
       });
   }
 
-  private loadMidClassOptions(): void {
-    this.ass11020Service
-      .queryASS11020({})
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res) => {
-          this.mClassOptions =
-            res.Status === '0000'
-              ? (res.Data ?? []).map((item) => ({
-                  label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
-                  value: item.M_CLASS_ID,
-                }))
-              : [];
-        },
-        error: () => {
-          this.mClassOptions = [];
-        },
-      });
-  }
+  private setupClassCascades(): void {
+    const bCtrl = this.queryForm.controls.bClassId;
+    const mCtrl = this.queryForm.controls.mClassId;
+    const sCtrl = this.queryForm.controls.sClassId;
 
-  private loadSmallClassOptions(): void {
-    this.ass11030Service
-      .queryASS11030({})
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res) => {
-          this.sClassOptions =
-            res.Status === '0000'
-              ? (res.Data ?? []).map((item) => ({
-                  label: `${item.S_CLASS_ID} - ${item.S_CLASS_NAME}`,
-                  value: item.S_CLASS_ID,
-                }))
-              : [];
-        },
-        error: () => {
-          this.sClassOptions = [];
-        },
+    bCtrl.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe((bClassId) => {
+        mCtrl.patchValue(null, { emitEvent: false });
+        sCtrl.patchValue(null, { emitEvent: false });
+        this.mClassOptions = [];
+        this.sClassOptions = [];
+        if (!bClassId) return;
+        this.dropdownApiService.queryFaClass1({ B_CLASS_ID: bClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+          this.mClassOptions = (options ?? []).map((item) => ({
+            value: String(item.value),
+            label: item.label,
+          }));
+        });
       });
+
+    mCtrl.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe((mClassId) => {
+        sCtrl.patchValue(null, { emitEvent: false });
+        this.sClassOptions = [];
+        if (!mClassId) return;
+        this.dropdownApiService.queryFaClass2({ M_CLASS_ID: mClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+          this.sClassOptions = (options ?? []).map((item) => ({
+            value: String(item.value),
+            label: item.label,
+          }));
+        });
+      });
+
+    const initialBClassId = bCtrl.value;
+    const initialMClassId = mCtrl.value;
+    if (initialBClassId) {
+      this.dropdownApiService.queryFaClass1({ B_CLASS_ID: initialBClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+        this.mClassOptions = (options ?? []).map((item) => ({
+          value: String(item.value),
+          label: item.label,
+        }));
+      });
+    }
+    if (initialMClassId) {
+      this.dropdownApiService.queryFaClass2({ M_CLASS_ID: initialMClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+        this.sClassOptions = (options ?? []).map((item) => ({
+          value: String(item.value),
+          label: item.label,
+        }));
+      });
+    }
   }
 
   private loadGoodsOptions(): void {

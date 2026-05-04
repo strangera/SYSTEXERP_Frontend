@@ -64,7 +64,7 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
   columns: Column[] = [
     // { field: 'RowType', header: '列別' },
     { field: 'SeqNo', header: '序號' },
-    { field: 'RowTypeDesc', header: '列別' },
+    // { field: 'RowTypeDesc', header: '列別' },
     { field: 'PCS_No', header: '零用金單號' },
     { field: 'PCS_Date', header: '零用金申請日期', format: formatDate },
     { field: 'PCS_UsrNo', header: '零用金申請人員代碼' },
@@ -88,9 +88,9 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
     { field: 'ORG_ID', header: '費用科目組織代碼' },
     { field: 'Dtl_OrgName', header: '費用科目組織名稱' },
     { field: 'PUR_Date', header: '憑證日期', format: formatDate },
-    { field: 'PCS_Net', header: '未稅金額', format: formatAmount, isTotal: true },
-    { field: 'PCS_Tax', header: '稅額', format: formatAmount, isTotal: true },
-    { field: 'PCS_Amt', header: '含稅金額', format: formatAmount, isTotal: true }
+    { field: 'PCS_Net', header: '未稅金額', format: formatAmount, isSubTotal: true, isTotal: true },
+    { field: 'PCS_Tax', header: '稅額', format: formatAmount, isSubTotal: true, isTotal: true },
+    { field: 'PCS_Amt', header: '含稅金額', format: formatAmount, isSubTotal: true, isTotal: true }
   ];
 
   PCS_No_Options: { PCS_No: string }[] = []; // 零用金單號選項
@@ -122,18 +122,14 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
     this.handleSubmit(frm, () => {
       console.log('request:', frm.value);
       this.loading = true;
-      const payload = frm.getRawValue();
-      this.fin73010Service.queryFIN73010(payload).subscribe({
+      const payload = frm.value;
+      this.fin73010Service.queryFIN73010(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.lastQueryBody = payload;
-            // this.data = response.Data.filter((item: Fin73010data) => item.RowType !== 2); // 只顯示明細列 (html:showTotal、showPaginator)
-            this.data = response.Data.filter((item: Fin73010data) => item.RowType !== 2);
-            // const sumData = response.Data.filter((item: Fin73010data) => item.RowType === 2);
-            // this.footerData = Array.isArray(sumData) && sumData.length > 0
-            //   ? { ...sumData[0], RowTypeDesc: '' }
-            //   : null;
-            console.log('Result', this.data);
+            this.data = response.Data.QueryData
+            this.footerData = response.Data.SumData;
+            console.log('Result', response.Data);
             this.totalRecords = response.TotalCount;
             this.queryStateService.setQueryState(this.ProgNo, payload);
           } else {
@@ -155,7 +151,7 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
     return this.fin73010Service.queryFIN73010(body).pipe(
       map((response) => {
         return {
-          Data: response.Data,
+          Data: response.Data.QueryData,
           TotalCount: response.TotalCount
         };
       })

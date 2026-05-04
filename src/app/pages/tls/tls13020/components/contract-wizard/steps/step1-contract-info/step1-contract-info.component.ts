@@ -17,7 +17,7 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { Tls12010Service } from '@service/api/tls/tls12010.service';
-import { RenewalBasicInfo, RenewalLocationInfo, RenewalQueryResponse, TLS12040Service } from '@service/api/tls/tls12040.service';
+import { RenewalBasicInfo, RenewalLocationInfo, RenewalQueryResponse } from '@service/api/tls/tls12040.service';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
@@ -78,7 +78,6 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
 
   // 注入服務
   private readonly messageService = inject(NotificationService);
-  private readonly tls12040Service = inject(TLS12040Service);
   private readonly tls12010Service = inject(Tls12010Service);
   private readonly tls13010Service = inject(TLS13010Service);
   private readonly businessClassificationService = inject(BusinessClassificationService);
@@ -381,10 +380,24 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       });
     if (busClassSub) this.subscriptions.push(busClassSub);
 
-    // 監聽契約日期變更，同步營運日期
+    // 監聽契約日期變更，同步營運日期 & 自動帶入空白的地點起訖日
     const tltBdateSub = this.form.get('tlt_bdate')?.valueChanges.subscribe(value => {
       if (value && !this.form.get('tlt_contract_bdate')?.value) {
         this.form.patchValue({ tlt_contract_bdate: value }, { emitEvent: false });
+      }
+      // 自動帶入：地點起始日為空者，填入契約起始日
+      if (value) {
+        let changed = false;
+        this.locationData.forEach(loc => {
+          if (loc._status !== 'deleted' && !loc.tlt_bdate) {
+            loc.tlt_bdate = value;
+            changed = true;
+          }
+        });
+        if (changed) {
+          this.updateDisplayLocationData();
+          this.emitDataChange();
+        }
       }
     });
     if (tltBdateSub) this.subscriptions.push(tltBdateSub);
@@ -392,6 +405,20 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     const tltEdateSub = this.form.get('tlt_edate')?.valueChanges.subscribe(value => {
       if (value && !this.form.get('tlt_contract_edate')?.value) {
         this.form.patchValue({ tlt_contract_edate: value }, { emitEvent: false });
+      }
+      // 自動帶入：地點截止日為空者，填入契約截止日
+      if (value) {
+        let changed = false;
+        this.locationData.forEach(loc => {
+          if (loc._status !== 'deleted' && !loc.tlt_edate) {
+            loc.tlt_edate = value;
+            changed = true;
+          }
+        });
+        if (changed) {
+          this.updateDisplayLocationData();
+          this.emitDataChange();
+        }
       }
     });
     if (tltEdateSub) this.subscriptions.push(tltEdateSub);
@@ -733,7 +760,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     this.lastRenewalVenNo = venNo;
     this.loading = true;
 
-    this.tls12040Service.queryContractForRenewal(venNo).subscribe({
+    this.tls13010Service.queryContractForRenewal(venNo).subscribe({
       next: (renewalData) => {
         // 回填基本資料到表單
         this.patchFormForRenewal(renewalData.BasicInfo, renewalData.next_contract_subno);

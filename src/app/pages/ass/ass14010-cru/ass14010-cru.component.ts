@@ -61,6 +61,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     TX_AMT: [{ value: null as number | null, disabled: true }], // 稅額
     AMT: [{ value: null as number | null, disabled: true }], // 含稅金額
     REDU_CODE: [null], // 扣抵別
+    RECEIPT_STATUS: ['1'], //(1.可刪除 2.不可刪除)
     //------
 
     TICKET_BE: [{ value: 0, disabled: true }], // 付款天數(明細加總)
@@ -333,6 +334,26 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   onSupplierDataChange(eventData: Ass14010Supplier[]) {
     // 1. 變更後的資料同步回 itemData
     this.supplierData = eventData;
+
+    // 2. 實作「發票號清空連帶清除 單據資料」
+    // 檢查是否還有任何發票號碼存在
+    const hasReceiptNo = this.supplierData.some(item =>
+      item.RECEIPT_NO && item.RECEIPT_NO.trim() !== ''
+    );
+
+    // 如果發票號碼被清空（例如使用者刪除文字或整列），則清空單據資料
+    if (!hasReceiptNo) {
+      this.itemData = []; // 清空單據明細表格
+
+      // 同步更新主表單中的驗收單號與金額欄位
+      this.dataForm.patchValue({
+        TOKEN_NO: '',
+        NTX_AMT: 0,
+        TX_AMT: 0,
+        AMT: 0,
+        TICKET_BE: 0
+      });
+    }
 
     //更新付款天數
     this.updateTokenNoSum()

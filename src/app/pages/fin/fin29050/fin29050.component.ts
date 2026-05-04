@@ -1,6 +1,6 @@
 import { AsyncPipe, DatePipe, Location } from '@angular/common';
 import { HttpResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -13,6 +13,7 @@ import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, Observable } from 'rxjs';
+import { NavigationHelperService } from 'src/app/reports/services/navigation-helper.service';
 import { FIN29050Data, FIN29050Service, QueryFIN29050Request } from '../../../service/api/fin/fin29050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -92,6 +93,7 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
   ngOnInit(): void {
     this.initializePage('FIN29050', '/fin/fin29050cru', this.queryForm, (frm) => this.onSubmit(frm));
   }
+  private readonly navHelper = inject(NavigationHelperService);
 
   override onDetail(row: FIN29050Data) {
     const vouNo = row?.VoucherNo;
@@ -99,23 +101,13 @@ export class FIN29050Component extends BasicQueryPageComponent<FIN29050Data> imp
       this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
       return;
     }
-    try {
-      const handoff = {
-        vouNo,
-        fromRoute: window.location.pathname,
-        ts: Date.now(),
-      };
-      // 導到 FIN55050 的 CRU，使用 FIN55050 的 localStorage key
-      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
-      localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
-      console.log('[FIN29050] 已儲存 handoff(for FIN55050):', handoff);
-    } catch (err) {
-      console.error('[FIN29050] handoff save failed:', err);
-      this.messageService?.warnBubble?.('寫入交接資料失敗。');
-    }
-    const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
-    const finalUrl = `${window.location.origin}${externalUrl}`;
-    window.open(finalUrl, '_blank', 'noopener');
+
+    const handoff = {
+      vouNo,
+      fromRoute: window.location.pathname,
+      ts: Date.now(),
+    };
+    this.navHelper.openInNewTab('/reports/fin/fin29050', handoff);
   }
 
   onSubmit(frm: FormGroup): void {

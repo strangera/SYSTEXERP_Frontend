@@ -15,7 +15,7 @@ import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/tab
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, map, Observable, of } from 'rxjs';
+import { distinctUntilChanged, finalize, map, Observable, of } from 'rxjs';
 import type { Option } from '@service/utility/dropdown-api.model';
 import { QueryASS17060DetailRow, QueryASS17060Request } from './ass17060.model';
 
@@ -111,24 +111,46 @@ export class ASS17060Component extends BasicQueryPageComponent<QueryASS17060Deta
   }
 
   private setupCategoryCascade(): void {
-    this.queryForm.controls.BClassID.valueChanges.pipe(untilDestroyed(this)).subscribe((b) => {
-      this.queryForm.patchValue({ MClassID: null, SClassID: null }, { emitEvent: false });
-      this.midCategoryOptions = [];
-      this.smallCategoryOptions = [];
-      if (!b) return;
-      this.dropdownApiService.queryFaClass1({ B_CLASS_ID: b }).pipe(untilDestroyed(this)).subscribe((opts) => {
+    const bCtrl = this.queryForm.controls.BClassID;
+    const mCtrl = this.queryForm.controls.MClassID;
+    const sCtrl = this.queryForm.controls.SClassID;
+
+    bCtrl.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe((b) => {
+        mCtrl.patchValue(null, { emitEvent: false });
+        sCtrl.patchValue(null, { emitEvent: false });
+        this.midCategoryOptions = [];
+        this.smallCategoryOptions = [];
+        if (!b) return;
+        this.dropdownApiService.queryFaClass1({ B_CLASS_ID: b }).pipe(untilDestroyed(this)).subscribe((opts) => {
+          this.midCategoryOptions = opts ?? [];
+        });
+      });
+
+    mCtrl.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe((m) => {
+        sCtrl.patchValue(null, { emitEvent: false });
+        this.smallCategoryOptions = [];
+        if (!m) return;
+        this.dropdownApiService.queryFaClass2({ M_CLASS_ID: m }).pipe(untilDestroyed(this)).subscribe((opts) => {
+          this.smallCategoryOptions = opts ?? [];
+        });
+      });
+
+    const initialB = bCtrl.value;
+    const initialM = mCtrl.value;
+    if (initialB) {
+      this.dropdownApiService.queryFaClass1({ B_CLASS_ID: initialB }).pipe(untilDestroyed(this)).subscribe((opts) => {
         this.midCategoryOptions = opts ?? [];
       });
-    });
-
-    this.queryForm.controls.MClassID.valueChanges.pipe(untilDestroyed(this)).subscribe((m) => {
-      this.queryForm.patchValue({ SClassID: null }, { emitEvent: false });
-      this.smallCategoryOptions = [];
-      if (!m) return;
-      this.dropdownApiService.queryFaClass2({ M_CLASS_ID: m }).pipe(untilDestroyed(this)).subscribe((opts) => {
+    }
+    if (initialM) {
+      this.dropdownApiService.queryFaClass2({ M_CLASS_ID: initialM }).pipe(untilDestroyed(this)).subscribe((opts) => {
         this.smallCategoryOptions = opts ?? [];
       });
-    });
+    }
   }
 
   private toStartOfDayIso(d: Date): string {

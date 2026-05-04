@@ -42,8 +42,7 @@
 <div class="card">
   <app-table-report dataKey="TXN_No" tableKey="TLS24010Table" [lastQueryBody]="historyRequestBody" [data]="data"
     [columns]="columns" [totalRecords]="totalRecords" [showReportMode]="false" [showEdit]="false" [showDelete]="false"
-    [queryFunction]="tableQueryFunction" groupRowsBy="ODM_No" [loading]="loading" [addButton]="addButton"
-    (detail)="onDetailData($event)">
+    [queryFunction]="tableQueryFunction" [loading]="loading" [addButton]="addButton" (detail)="onDetailData($event)">
   </app-table-report>
 </div>
 <p-menu #menu [model]="items" [popup]="true" styleClass="w-auto" />

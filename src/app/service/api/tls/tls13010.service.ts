@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { catchError, map, Observable, tap } from 'rxjs';
+import { catchError, map, Observable, tap, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../../core/services/error-handler.service';
 import { CleanSubmitData } from '@pages/tls/tls13010-v2/core/models/workflow/clean-submit.interface';
+import { RenewalQueryResponse, RenewalQueryRequest } from './tls12040.service';
 
 interface TLS13010FareRequest {
   talentId: string;
@@ -257,6 +258,49 @@ export class TLS13010Service {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryVendorInfo`, { venNo }).pipe(
       tap((res) => console.log('查詢廠商聯絡資訊結果:', res)),
       catchError(this.errorHandler.handleError)
+    );
+  }
+
+  /**
+   * 續約用 - 查詢廠商最新版次契約完整資料（從契約表 TLS13010 查詢）
+   * @param ven_no 廠商編號 (唯一值，如 27669188-1)
+   * @returns 最新版次契約的完整資料（含扣款、抽成、條件）
+   * @description 此方法不使用通用錯誤處理器，由呼叫端自行處理錯誤訊息
+   * TODO: 待後端確認 TLS13010 對應的續約查詢 endpoint，目前暫用 queryContractForRenewal
+   */
+  queryContractForRenewal(ven_no: string): Observable<RenewalQueryResponse> {
+    const payload: RenewalQueryRequest = { ven_no };
+
+    console.log('🔄 [TLS13010] 查詢續約資料，廠商編號:', ven_no);
+
+    return this.http.post<any>(
+      `${this.apiUrl}/TLS0000/TLS1000/queryContractForRenewal`,
+      payload
+    ).pipe(
+      tap((res) => console.log('[TLS13010] 查詢續約資料結果:', res)),
+      map((response) => {
+        if (response.Status === '0000') {
+          return response.Data as RenewalQueryResponse;
+        }
+        const errorMsg = response.Data || response.Message || '查詢續約資料失敗';
+        throw { isBusinessError: true, message: errorMsg, status: response.Status };
+      }),
+      catchError((error) => {
+        console.warn('⚠️ [TLS13010] 查詢續約資料失敗:', error);
+
+        let errorMessage = '查詢續約資料失敗';
+        if (error.isBusinessError) {
+          errorMessage = error.message;
+        } else if (error?.error?.Data) {
+          errorMessage = error.error.Data;
+        } else if (error?.error?.Message) {
+          errorMessage = error.error.Message;
+        } else if (error?.status === 404) {
+          errorMessage = '該廠商尚無契約資料';
+        }
+
+        return throwError(() => ({ message: errorMessage, originalError: error }));
+      })
     );
   }
 
