@@ -18,6 +18,7 @@ import { ASS12010Service } from '@service/api/ass/ass12010.service';
 import { ASS12020Service } from '@service/api/ass/ass12020.service';
 import { Fin11040Service } from '@service/api/fin/fin11040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -139,6 +140,7 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
     private readonly fin11040Service: Fin11040Service,
     private readonly ass11100Service: ASS11100Service,
     private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService
   ) {
     super();
   }
@@ -176,18 +178,13 @@ export class ASS12020CRUComponent extends BasicCruPageComponent<ASS12020Detail> 
   /** 載入品項編號 (queryFIN11040)、倉別 (queryASS11100) 下拉選項 */
   private loadOptions(): void {
     forkJoin({
-      items: this.fin11040Service.queryFIN11040({ PageSize: 1000, PageIndex: 1 }),
+      items: this.dropdownApiService.queryASS11040_DropDownList(),
       wh: this.ass11100Service.queryASS11100({ PageSize: 100, PageIndex: 1 }),
     })
       .pipe(untilDestroyed(this))
       .subscribe({
         next: ({ items, wh }) => {
-          if (items.Status === '0000' && Array.isArray(items.Data)) {
-            this.itemCodeOptions = items.Data.map(item => ({
-              value: item.INV_ItemNo,
-              label: `${item.INV_ItemNo} - ${item.INV_ItemName}`,
-            }));
-          }
+          this.itemCodeOptions = items ?? [];
           if (wh.Status === '0000' && Array.isArray(wh.Data)) {
             this.whIdOptions = wh.Data.map(item => ({
               value: item.WH_ID ?? '',

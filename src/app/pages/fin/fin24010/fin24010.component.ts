@@ -62,7 +62,7 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
     VouStatus: [null], // 傳票狀態
     ACP_Status_Param: [null], // 應付狀態 (VARCHAR(1))
     SubDetailNo_Param: [null], // 對象別編號 (VARCHAR(30))
-    HasUnpaid: ['N'], // 是否有未付款
+    HasUnpaid: [null], // 是否有未付款
     CheckChangedUser: [null], // 是否只顯示銀行資料有差異
   });
   data: QueryFIN24010Response[] = [];
@@ -117,7 +117,6 @@ export class FIN24010Component extends BasicQueryPageComponent<QueryFIN24010Resp
   HasUnpaidOptions = [
     { label: '有未付款', value: 'Y' },
     { label: '沒有未付款', value: 'N' },
-    { label: '全部', value: null }
   ];// 是否有未付款 (Y/N)
   CheckChangedUserOptions = [{ label: '是', value: 'Y' }, { label: '否', value: null }]; // 是否只顯示銀行資料有差異
 

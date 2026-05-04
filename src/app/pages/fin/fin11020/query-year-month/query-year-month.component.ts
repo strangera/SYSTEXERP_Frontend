@@ -26,7 +26,7 @@ export class YearMonthComponent extends BasicKitComponent implements OnInit, OnC
   @Input() evenMonth = false;
   @Input() readonly = false;
   @Output() valueChanges = new EventEmitter<any>()
-
+  @Input() minDate?: Date;
   yearControl = new FormControl<Date | string | null>(null);
   monthControl = new FormControl<string | null>(null);
 

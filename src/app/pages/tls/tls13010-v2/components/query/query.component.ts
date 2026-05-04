@@ -369,7 +369,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   // ========== 審核功能 ==========
   onApprove(rowData: ContractItem): void {
     this.messageService.confirm({
-      message: `確定要審核合約 ${rowData.apply_no} 嗎？`,
+      message: `確定要審核 ${rowData.tlt_no} ${rowData.tlt_name} 嗎？`,
       accept: () => {
         this.apiService.approveTLS13010({ talentId: rowData.talent_id }).subscribe({
           next: (res: any) => {

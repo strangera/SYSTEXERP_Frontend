@@ -316,15 +316,18 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
     return cleaned.length ? cleaned : fallback;
   }
 
-  private initRows(rows: Ass16070Row[]): Ass16070Row[] {
-    rows.forEach((r, idx) => {
-      (r as any)._rowKey = idx + 1;
-      (r as any)._detailLoaded = false;
-      r.Details = [];
-    });
+ private initRows(rows: Ass16070Row[]): Ass16070Row[] {
+  const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-    return rows;
-  }
+  rows.forEach((r, idx) => {
+    (r as any)._rowKey = `${seed}_${idx}`;
+    (r as any)._detailLoaded = false;
+    (r as any).expansionLoading = false;
+    r.Details = [];
+  });
+
+  return rows;
+}
 
   private saveQueryState(): void {
     this.queryStateService.setQueryState(

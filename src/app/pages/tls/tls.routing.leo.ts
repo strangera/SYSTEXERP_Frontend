@@ -45,6 +45,12 @@ export const tlsRoutes: Routes = [
   { path: 'tls27040cru', loadComponent: () => import('./tls27040-cru/tls27040-cru.component').then(m => m.TLS27040CRUComponent), data: { progNo: 'TLS27040' } },
   // 查詢無系統帳資料報表
   { path: 'tls27050', loadComponent: () => import('./tls27050/tls27050.component').then(m => m.TLS27050Component), data: { progNo: 'TLS27050' } },
+  // 總袋作業
+  { path: 'tls28020', loadComponent: () => import('./tls28020/tls28020.component').then(m => m.TLS28020Component), data: { progNo: 'TLS28020' } },
+  // 總袋狀況表
+  { path: 'tls28030', loadComponent: () => import('./tls28030/tls28030.component').then(m => m.TLS28030Component), data: { progNo: 'TLS28030' } },
+  // 收銀員領袋表
+  { path: 'tls28050', loadComponent: () => import('./tls28050/tls28050.component').then(m => m.TLS28050Component), data: { progNo: 'TLS28050' } },
   // 專櫃暫存傳票查詢作業
   { path: 'tls2c040', loadComponent: () => import('./tls2c040/tls2c040.component').then(m => m.TLS2C040Component), data: { progNo: 'TLS2C040' } },
   // 專櫃暫存傳票查詢作業 CRU

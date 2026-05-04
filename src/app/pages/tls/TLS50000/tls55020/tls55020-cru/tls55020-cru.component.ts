@@ -178,7 +178,7 @@ export class TLS55020CRUComponent extends BasicCruPageComponent<Tls55020MasterDa
     { field: 'CRD_NoTXN_CouponNoTXN_PayDesc', header: '信用卡卡號/券號/應收付款對象' },
     { field: 'TERM_Name', header: '分期數' },
   ];
-
+  isEditModeEnabled = false;
   constructor(
     public readonly tls55020Service: Tls55020Service,
     private readonly dropdown: DropdownApiService,
@@ -201,12 +201,12 @@ export class TLS55020CRUComponent extends BasicCruPageComponent<Tls55020MasterDa
         // 條件：GUI_Track + TXN_GUIBegNo 為空或全為0，且 TXN_TotGUI 為 0
         const isInvoiceEmpty = (!this.rowdata.GUI_Track || this.rowdata.GUI_Track === '00') && (!this.rowdata.TXN_GUIBegNo || this.rowdata.TXN_GUIBegNo === '00000000');
         const isAmountZero = this.rowdata.TXN_TotGUI === 0;
-        const allowQtyDiscEdit = isInvoiceEmpty && isAmountZero;
+        this.isEditModeEnabled = isInvoiceEmpty && isAmountZero;
 
         this.data = (detail.ProductDetailList || []).map(item => ({
           ...item,
           isEditable: item.PLU_MagNo === '1000000000001',
-          isQtyDiscEditable: allowQtyDiscEdit // 符合條件則開啟該行編輯權限
+          isQtyDiscEditable: this.isEditModeEnabled // 符合條件則開啟該行編輯權限
         }));
         this.data2 = detail.PaymentDetailsList.map(item => ({
           ...item,
@@ -223,14 +223,14 @@ export class TLS55020CRUComponent extends BasicCruPageComponent<Tls55020MasterDa
         this.loading = false;
         return;
       }
-      // 2. 業務邏輯驗證：整筆交易銷售金額加總必須為 0
-      // 注意：這裡要加總所有的 data (包含不可編輯的)，確認結果
-      const totalSaleAmt = this.data.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0);
-
-      if (totalSaleAmt !== 0) {
-        this.messageService.errorBubble(`修改後整筆交易銷售金額為 ${totalSaleAmt}，不符合金額必須為 0 的限制`);
-        this.loading = false;
-        return;
+      // 只有在開放編輯模式 (allowQtyDiscEdit 成立) 時，才卡總額必須為 0
+      if (this.isEditModeEnabled) {
+        const totalSaleAmt = this.data.reduce((sum, item) => sum + (Number(item.TXN_SaleAmt) || 0), 0);
+        if (totalSaleAmt !== 0) {
+          this.messageService.errorBubble(`修改後整筆交易銷售金額為 ${totalSaleAmt}，不符合金額必須為 0 的限制`);
+          this.loading = false;
+          return;
+        }
       }
       const updatedDetails = this.data.filter(item => item.isEditable).map(item => ({
         ...item,

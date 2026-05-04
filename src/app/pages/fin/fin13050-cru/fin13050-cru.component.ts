@@ -11,6 +11,7 @@ import {
 import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { forkJoin } from 'rxjs';
 
@@ -173,7 +174,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_GUIDate: [null as Date | null, [Validators.required]],
     PUR_RepYYYYMM: [null as Date | null, [Validators.required, this.repYYYYMMEvenValidator]],
 
-    PUR_VenNo: ['', [Validators.required]],
+    PUR_VenNo: ['', [Validators.required, this.validationService.noChineseValidator]], //僅輸入數字或連號
     PUR_VenName: [{ value: '', disabled: true }],
     PUR_VenUniform: ['', [Validators.required, digitsOnly, Validators.minLength(8), Validators.maxLength(8)]],
 
@@ -195,6 +196,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
     private readonly fin13050Service: FIN13050Service,
     private readonly route: ActivatedRoute,
+    private readonly validationService: ValidationService,
   ) {
     super();
   }

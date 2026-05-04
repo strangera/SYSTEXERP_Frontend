@@ -80,7 +80,8 @@ import { EditColumn, EditColumnExtend, FieldChangeEvent as StepFieldChangeEvent 
 })
 export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Detail> implements OnInit {
 
-  @ViewChild('purchaseTableEdit') purchaseTableEditComponent!: TableEditComponent;
+  @ViewChild('purchaseTableEdit') purchaseTableEditComponent?: TableEditComponent;
+  @ViewChild('bankTableEdit') bankTableEditComponent?: TableEditComponent;
 
   private readonly venUsrTemplate = viewChild.required<TemplateRef<any>>('venUsrTemplate');
 
@@ -187,96 +188,98 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly aps4023RelatedRows = signal<FIN53010Aps4023Row[]>([]);
 
   public readonly ars3001RelatedColumns: ReportColumn[] = [
-    { field: 'org_id', header: '組織代號', visible: true },
-    { field: 'ven_no', header: '廠商代號', visible: true },
+    { field: 'org_id', header: '組織代號', visible: true, align: 'left' },
+    { field: 'ven_no', header: '廠商代號', visible: true, align: 'left' },
     { field: 'ars_amt', header: '金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'pta_date', header: '預計收款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'ars_date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'acc_no', header: '會計科目代號', visible: true },
-    { field: 'note_desc', header: '摘要', visible: true },
-    { field: 'sub_detail_no', header: '對象別編號', visible: true },
-    { field: 'match_key', header: '對帳KEY值', visible: true },
+    { field: 'pta_date', header: '預計收款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
+    { field: 'ars_date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
+    { field: 'acc_no', header: '會計科目代號', visible: true, align: 'left' },
+    { field: 'note_desc', header: '摘要', visible: true, align: 'left' },
+    { field: 'sub_detail_no', header: '對象別編號', visible: true, align: 'left' },
+    { field: 'match_key', header: '對帳KEY值', visible: true, align: 'left' },
   ];
 
   public readonly aps3001RelatedColumns: ReportColumn[] = [
-    { field: 'org_id', header: '組織代號', visible: true },
-    { field: 'VEN_No', header: '廠商代號', visible: true },
+    { field: 'org_id', header: '組織代號', visible: true, align: 'left' },
+    { field: 'VEN_No', header: '廠商代號', visible: true, align: 'left' },
     {
       field: 'VEN_PayType_Name', header: '付款方式', visible: true, format: (v, _i, row) => {
         const r = row as FIN53010Aps3001Row;
         return String(v ?? r?.VEN_PayType ?? '');
-      }
+      },
+      align: 'left'
     },
     { field: 'ACP_Amt', header: '金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'ACP_ExpectPayDate', header: '預計付款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'ACP_Date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'VEN_BNK_No', header: '匯款銀行代號', visible: true },
-    { field: 'VEN_BankAccountNo', header: '銀行帳號', visible: true },
-    { field: 'VEN_AccountName', header: '帳號名稱', visible: true },
-    { field: 'VEN_CTRLYN', header: '票據禁止背書轉讓', visible: true },
-    { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true },
-    { field: 'AccNo', header: '會計科目代號', visible: true },
-    { field: 'AccCName', header: '會計科目名稱', visible: true },
-    { field: 'NoteDesc', header: '摘要', visible: true },
-    { field: 'SubDetailNo', header: '對象別編號', visible: true },
-    { field: 'PTA', header: '對帳KEY值', visible: true },
+    { field: 'ACP_ExpectPayDate', header: '預計付款日', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
+    { field: 'ACP_Date', header: '立帳日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
+    { field: 'VEN_BNK_No', header: '匯款銀行代號', visible: true, align: 'left' },
+    { field: 'VEN_BankAccountNo', header: '銀行帳號', visible: true, align: 'left' },
+    { field: 'VEN_AccountName', header: '帳號名稱', visible: true, align: 'left' },
+    { field: 'VEN_CTRLYN', header: '票據禁止背書轉讓', visible: true, align: 'left' },
+    { field: 'VEN_CheckTitle', header: '票據抬頭', visible: true, align: 'left' },
+    { field: 'AccNo', header: '會計科目代號', visible: true, align: 'left' },
+    { field: 'AccCName', header: '會計科目名稱', visible: true, align: 'left' },
+    { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
+    { field: 'SubDetailNo', header: '對象別編號', visible: true, align: 'left' },
+    { field: 'PTA', header: '對帳KEY值', visible: true, align: 'left' },
   ];
 
   public readonly aps2002_CRelatedColumns: ReportColumn[] = [
-    { field: 'Orig_RepYYYYMM', header: '原發票申報年月', visible: true },
-    { field: 'InvoiceNo', header: '發票號碼/憑證單號', visible: true },
-    { field: 'VoucherType', header: '發票格式', visible: true },
-    { field: 'Orig_InvoiceDate', header: '原發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'CreditDate', header: '退出/折讓日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'RepYYYYMM', header: '申報年月', visible: true },
-    { field: 'CreditTypeDesc', header: '區別', visible: true },
+    { field: 'Orig_RepYYYYMM', header: '原發票申報年月', visible: true, align: 'left' },
+    { field: 'InvoiceNo', header: '發票號碼/憑證單號', visible: true, align: 'left' },
+    { field: 'VoucherType', header: '發票格式', visible: true, align: 'left' },
+    { field: 'Orig_InvoiceDate', header: '原發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
+    { field: 'CreditDate', header: '退出/折讓日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
+    { field: 'RepYYYYMM', header: '申報年月', visible: true, align: 'left' },
+    { field: 'CreditTypeDesc', header: '區別', visible: true, align: 'left' },
     { field: 'Orig_Amount', header: '原發票總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'BuyerUniformNo', header: '銷受人統一編號', visible: true },
+    { field: 'BuyerUniformNo', header: '銷受人統一編號', visible: true, align: 'left' },
     { field: 'ReturnedAmount', header: '已退回/折讓總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'CreditAmount', header: '退回/折讓總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'TaxTypeDesc', header: '課稅別', visible: true },
+    { field: 'TaxTypeDesc', header: '課稅別', visible: true, align: 'left' },
     { field: 'CreditNetAmount', header: '退回/折讓未稅金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'CreditTaxAmount', header: '退回/折讓稅額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
   ];
 
   public readonly aps2002RelatedColumns: ReportColumn[] = [
-    { field: 'VoucherType', header: '發票格式', visible: true },
+    { field: 'VoucherType', header: '發票格式', visible: true, align: 'left' },
     {
       field: 'TrackNo',
       header: '字軌／發票號碼',
+      align: 'left'
     },
-    { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'DeclareYM', header: '申報年月', visible: true },
-    { field: 'VendorTaxID', header: '廠商統一編號', visible: true },
-    { field: 'InvoiceUsage', header: '發票用途', visible: true },
+    { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
+    { field: 'DeclareYM', header: '申報年月', visible: true, align: 'left' },
+    { field: 'VendorTaxID', header: '廠商統一編號', visible: true, align: 'left' },
+    { field: 'InvoiceUsage', header: '發票用途', visible: true, align: 'left' },
     { field: 'InvoiceAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'TaxType', header: '課稅別', visible: true },
+    { field: 'TaxType', header: '課稅別', visible: true, align: 'left' },
     { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'DeductionCodeDesc', header: '扣抵代號', visible: true },
-    { field: 'CategoryType', header: '類別區分', visible: true },
-    { field: 'SourceDocNo', header: '憑證單號', visible: true },
-    { field: 'TotalCount', header: '彙總張數', visible: true },
+    { field: 'DeductionCodeDesc', header: '扣抵代號', visible: true, align: 'left' },
+    { field: 'CategoryType', header: '類別區分', visible: true, align: 'left' },
+    { field: 'SourceDocNo', header: '憑證單號', visible: true, align: 'left' },
+    { field: 'TotalCount', header: '彙總張數', visible: true, align: 'left' },
   ];
 
   public readonly aps4023_CRelatedColumns: ReportColumn[] = [
-    { field: 'Original_Invoice_DeclareYM', header: '原發票申報年月', visible: true },
-    { field: 'Invoice_Number', header: '發票號碼/憑證單號', visible: true },
-    { field: 'Invoice_Type', header: '發票格式', visible: true },
-    { field: 'Original_Invoice_Date', header: '原發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'Credit_Invoice_Date', header: '退出折讓日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'DeclareYM', header: '申報年月', visible: true },
-    { field: 'Credit_Type_Flag', header: '區別', visible: true },
-    { field: 'Buyer_Uniform_No', header: '買受人統一編號', visible: true },
+    { field: 'Original_Invoice_DeclareYM', header: '原發票申報年月', visible: true, align: 'left' },
+    { field: 'Invoice_Number', header: '發票號碼/憑證單號', visible: true, align: 'left' },
+    { field: 'Invoice_Type', header: '發票格式', visible: true, align: 'left' },
+    { field: 'Original_Invoice_Date', header: '原發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
+    { field: 'Credit_Invoice_Date', header: '退出折讓日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
+    { field: 'DeclareYM', header: '申報年月', visible: true, align: 'left' },
+    { field: 'Credit_Type_Flag', header: '區別', visible: true, align: 'left' },
+    { field: 'Buyer_Uniform_No', header: '買受人統一編號', visible: true, align: 'left' },
     { field: 'Returned_Amount_Zero', header: '已退回/折讓總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'Returned_Amount', header: '退回/折讓總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'Tax_Type', header: '課稅別', visible: true },
+    { field: 'Tax_Type', header: '課稅別', visible: true, align: 'left' },
     { field: 'pur_net', header: '退回/折讓未稅金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'pur_tax', header: '退回/折讓稅額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
   ];
 
   public readonly aps4023RelatedColumns: ReportColumn[] = [
-    { field: 'InvoiceType', header: '發票格式', visible: true },
+    { field: 'InvoiceType', header: '發票格式', visible: true, align: 'left' },
     {
       field: 'InvoiceNo',
       header: '字軌／發票號碼',
@@ -284,18 +287,19 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         const r = row as Record<string, unknown>;
         return `${String(r['InvoicePrefix'] ?? '')}${String(r['InvoiceNo'] ?? '')}`;
       },
+      align: 'left'
     },
-    { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : '') },
-    { field: 'DeclareYM', header: '申報年月', visible: true },
-    { field: 'BuyerUniform', header: '買受人統一編號', visible: true },
+    { field: 'InvoiceDate', header: '發票日期', visible: true, format: v => (v ? reportFormatDate(String(v)) : ''), align: 'left' },
+    { field: 'DeclareYM', header: '申報年月', visible: true, align: 'left' },
+    { field: 'BuyerUniform', header: '買受人統一編號', visible: true, align: 'left' },
     { field: 'TotalAmount', header: '發票總金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'TaxType', header: '課稅別', visible: true },
+    { field: 'TaxType', header: '課稅別', visible: true, align: 'left' },
     { field: 'NetAmount', header: '發票未稅金額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
     { field: 'TaxAmount', header: '發票稅額', visible: true, format: v => reportFormatAmount(v), align: 'right' },
-    { field: 'SourceDocNo', header: '憑證單號', visible: true },
-    { field: 'SummaryCount', header: '彙開註記', visible: true },
-    { field: 'AssetFlag', header: '資產註記', visible: true },
-    { field: 'InvoiceType', header: '發票使用別', visible: false },
+    { field: 'SourceDocNo', header: '憑證單號', visible: true, align: 'left' },
+    { field: 'SummaryCount', header: '彙開註記', visible: true, align: 'left' },
+    { field: 'AssetFlag', header: '資產註記', visible: true, align: 'left' },
+    { field: 'InvoiceType', header: '發票使用別', visible: false, align: 'left' },
   ];
 
   public selectedItems: FIN53010Data[] = [];
@@ -527,9 +531,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   });
 
   public readonly templateColumns: (Omit<Column, 'field'> & { field: keyof FIN52030Data; })[] = [
-    { field: 'TempNo', header: '傳票號碼' },
-    { field: 'TempName', header: '傳票代號' },
-    { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions.find(({ value }) => value === v)?.label ?? v },
+    { field: 'TempNo', header: '傳票號碼', align: 'left' },
+    { field: 'TempName', header: '傳票代號', align: 'left' },
+    { field: 'VouType', header: '傳票類型', format: v => this.service.vouTypeOptions.find(({ value }) => value === v)?.label ?? v, align: 'left' },
   ];
 
   public readonly stepAPColumns: EditColumn[] = [
@@ -550,54 +554,62 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly stepARColumns: EditColumn[] = [
     { field: 'org_id', header: '組織代號', type: 'dropdown', textAlign: 'left', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ven_no', header: '廠商代號', type: 'dropdown', textAlign: 'left', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'ars_amt', header: '金額', type: 'inputNumber', disabled: () => true },
-    { field: 'pta_date', header: '預計收款日', type: 'date' },
-    { field: 'ars_date', header: '立帳日期', type: 'date', disabled: () => true },
+    { field: 'ars_amt', header: '金額', type: 'inputNumber', disabled: () => true, textAlign: 'right' },
+    { field: 'pta_date', header: '預計收款日', type: 'date', textAlign: 'left' },
+    { field: 'ars_date', header: '立帳日期', type: 'date', disabled: () => true, textAlign: 'left' },
     { field: 'acc_no', header: '會計科目代號', type: 'dropdown', textAlign: 'left', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'note_desc', header: '摘要', type: 'input' },
+    { field: 'note_desc', header: '摘要', type: 'input', textAlign: 'left' },
   ];
 
   public readonly stepSalesColumns: EditColumn[] = [
-    { field: 'invoice_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions(), optionLabel: 'label', optionValue: 'value' },
-    { field: 'invoice_prefix', header: '字軌', type: 'input', maxLength: 2 },
-    { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8 },
+    { field: 'invoice_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'invoice_prefix', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left' },
+    { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left' },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date' },
     { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month' },
     { field: 'buyer_uniform', header: '買受人統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
-    { field: 'total_amount', header: '發票總金額', type: 'inputNumber' },
-    { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value' },
-    { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber' },
-    { field: 'tax_amount', header: '發票稅額', type: 'inputNumber' },
-    { field: 'source_doc_no', header: '憑證單號', type: 'input' },
-    { field: 'summary_count', header: '彙整單號', type: 'inputNumber' },
-    { field: 'asset_flag', header: '資產註記', type: 'dropdown', options: () => this.service.assetTypeOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'total_amount', header: '發票總金額', type: 'inputNumber', textAlign: 'right' },
+    { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber', textAlign: 'right' },
+    { field: 'tax_amount', header: '發票稅額', type: 'inputNumber', textAlign: 'right' },
+    { field: 'source_doc_no', header: '憑證單號', type: 'input', textAlign: 'left' },
+    { field: 'summary_count', header: '彙整單號', type: 'inputNumber', textAlign: 'left' },
+    { field: 'asset_flag', header: '資產註記', type: 'dropdown', options: () => this.service.assetTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
   ];
 
   public readonly stepPurchaseColumns: EditColumn[] = [
-    { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions(), optionLabel: 'label', optionValue: 'value' },
-    { field: 'track_no', header: '字軌', type: 'input', maxLength: 2 },
-    { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8 },
+    { field: 'voucher_type', header: '發票格式', type: 'dropdown', options: () => this.service.purGUIPaperOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'track_no', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left' },
+    { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left' },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date' },
     { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month' },
     { field: 'vendor_tax_id', header: '廠商統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
-    { field: 'invoice_usage', header: '發票用途', type: 'dropdown', options: () => this.service.purDirectTypeOptions(), optionLabel: 'label', optionValue: 'value' },
-    { field: 'invoice_amount', header: '發票總金額', type: 'inputNumber' },
-    { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value' },
-    { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber' },
-    { field: 'tax_amount', header: '發票稅額', type: 'inputNumber' },
-    { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value' },
-    { field: 'category_type', header: '類別區分', type: 'dropdown', options: () => this.service.purTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'source_doc_no', header: '憑證單號', type: 'input' },
-    { field: 'total_count', header: '彙整張數', type: 'inputNumber', validate: [this.validatePURCombCnt] },
+    { field: 'invoice_usage', header: '發票用途', type: 'dropdown', options: () => this.service.purDirectTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'invoice_amount', header: '發票總金額', type: 'inputNumber', textAlign: 'right' },
+    { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber', textAlign: 'right' },
+    { field: 'tax_amount', header: '發票稅額', type: 'inputNumber', textAlign: 'right' },
+    { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
+    { field: 'category_type', header: '類別區分', type: 'dropdown', options: () => this.service.purTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true, textAlign: 'left' },
+    { field: 'source_doc_no', header: '憑證單號', type: 'input', textAlign: 'left' },
+    { field: 'total_count', header: '彙整張數', type: 'inputNumber', validate: [this.validatePURCombCnt], textAlign: 'right' },
   ];
 
+  private validateBankRequired(value: any, rowData: any, data: any[], field: string, header: string): { isValid: boolean, errorMessage: string[] } {
+    if (value === '' || value === null || value === undefined) {
+      return { isValid: false, errorMessage: [`${header}不可為空`] };
+    }
+    return { isValid: true, errorMessage: [] };
+  }
+
   public readonly stepBankColumns: EditColumn[] = [
-    { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'bank_no', header: '銀行代號', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'deposit_amt', header: '存款', type: 'inputNumber', disabled: () => true },
-    { field: 'withdraw_amt', header: '提款', type: 'inputNumber', disabled: () => true },
-    { field: 'note_desc', header: '摘要', type: 'input' },
-    { field: 'txn_date', header: '日期', type: 'date', disabled: () => true },
+    { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)], textAlign: 'left' },
+    { field: 'bank_no', header: '銀行代號', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)], textAlign: 'left' },
+    { field: 'deposit_amt', header: '存款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)], textAlign: 'right' },
+    { field: 'withdraw_amt', header: '提款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)], textAlign: 'right' },
+    { field: 'status', header: '狀態', type: 'dropdown', options: [{ label: '作廢', value: '0' }, { label: '建立', value: '1' }], optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)], textAlign: 'left' },
+    { field: 'note_desc', header: '摘要', type: 'input', textAlign: 'left' },
+    { field: 'txn_date', header: '日期', type: 'date', disabled: () => true, textAlign: 'left' },
   ];
 
   private areDetailMapsReady(): boolean {
@@ -1065,7 +1077,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public onSubmit(): void {
     const valid = this.purchaseTableEditComponent?.validateAndShowErrors();
-    if (valid === false) {
+    const bankValid = this.bankTableEditComponent?.validateAndShowErrors();
+
+    if (valid === false || bankValid === false) {
       return;
     }
 

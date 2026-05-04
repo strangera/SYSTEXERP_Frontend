@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -59,8 +59,7 @@ export class FIN72040Component extends BasicQueryPageComponent<sample72040> impl
     //  POS2064M 收支主檔(I/O)
     //  POS2064 收支明細檔(I/O) 
     //  tblUser 使用者資料檔(O)
-
-    KeepQuota_No: [null, [Validators.maxLength(20)]], // 零用金單號
+    KeepQuota_No: [null, [Validators.required]], // 支出請款單號
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'KeepQuota_No', order: 1 }]), // 分頁和排序參數
@@ -97,18 +96,19 @@ export class FIN72040Component extends BasicQueryPageComponent<sample72040> impl
 
   // ----------------------------------------------------------------
   constructor(
-    private readonly dropDownListService: DropDownListService,
+    private readonly dropdownApiService: DropdownApiService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN72040', 'FIN/FIN72040cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      console.log('零用金維護request:', JSON.stringify(frm.value, null, 2));
+      console.log('撥補request:', JSON.stringify(frm.value, null, 2));
       this.loading = false;
       // this.tls51080Service.queryTLS51080(frm.value).subscribe({
       //   next: (response) => {
@@ -132,66 +132,11 @@ export class FIN72040Component extends BasicQueryPageComponent<sample72040> impl
     });
   }
 
-  //---刪除檢查---
-  onDelete(data: sample72040 | sample72040[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
-
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-    //確認是否全部都可以刪除
-    const canDelete = items.every((item) => item.CanDel);
-
-    if (!canDelete) {
-      console.error('Some items cannot be deleted');
-      this.messageService.errorBubble('無法刪除：組織階層互相關連');
-      return;
-    }
-
-    // const deleteBody = {
-    //   idList: idList, // 符合 API 的 idList 格式
-    // };
-    // this.tls51080Service.deleteTLS51080(deleteBody).subscribe({
-    //   next: (response) => {
-    //     if (response.Status === '0000') {
-    //       this.messageService.successBubble('選中項目刪除成功');
-    //     } else {
-    //       console.error('API error:', response.Status, response.Message);
-    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-    //     }
-    //   },
-    //   error: (err: string) => {
-    //     console.error('API error:', err);
-    //     this.messageService.errorBubble('刪除失敗');
-    //   },
-    //   complete: () => {
-    //     this.onSubmit(this.queryForm);
-    //   },
-    // });
-
-    this.selectedItems = [];
-  }
-
   isRowSelectable(rowData: sample72040): boolean {
     return rowData.CanDel
   }
 
-  // 列印明細
+  // 撥補
   btnLoading = false;
   onBtnToss(rowData: sample72040) {
     if (!rowData || !rowData.id) {
@@ -218,5 +163,17 @@ export class FIN72040Component extends BasicQueryPageComponent<sample72040> impl
     //       this.messageService.errorBubble('匯出失敗');
     //     }
     //   });
+  }
+
+  loadOptions() {
+    //  this.dropdownApiService.queryAps1002().pipe(untilDestroyed(this)).subscribe((response) => {
+    //       const list = Array.isArray(response) ? response : [];
+    //       this.KeepQuota_Options = list.map((item: any) => ({
+    //         No: item.BNK_DepositAccNo, // 公司銀行科目 代號
+    //         Name: item.ACCCNAME,
+    //         Label: item.BNK_DepositAccNo + '-' + item.ACCCNAME, // 代碼+名稱
+    //       }));
+    //       // console.log('銀行代號 下拉:', response);
+    //     });
   }
 }

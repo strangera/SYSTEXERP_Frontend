@@ -1,11 +1,6 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button> -->
   </div>
   <p-accordion>
     <p-accordionTab
@@ -50,16 +45,14 @@
       [data]="data"
       [columns]="columns"
       [addButton]="addButton"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
       [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event"
-      (delete)="onDelete($event)"
       [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
       [rows]="30"
       [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
       [showDelete]="false"
       [showCheckBox]="false"
+      [showManage]="false"
       dataKey="id"
       [multiSortMeta]="[{ field: 'HOS_No', order: 1 }]"
       [totalRecords]="totalRecords"

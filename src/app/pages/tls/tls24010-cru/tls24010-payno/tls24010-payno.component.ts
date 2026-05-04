@@ -1,9 +1,10 @@
 import { DatePipe } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS5008Data, Tls24010Service } from '@service/api/tls/tls24010.service';
 import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { forkJoin } from 'rxjs';
@@ -20,18 +21,22 @@ import { forkJoin } from 'rxjs';
 })
 export class Tls24010PaynoComponent implements OnInit, OnChanges {
   @Input() data: POS5008Data[] = [];
+  messageService = inject(NotificationService);
   payNoData: POS5008Data[] = [];
   checkPayNoList: string[] = []; // 已審核的付款別清單
   private previousData: POS5008Data[] = [];
+  PAY_TypeOptions: IDropdownItem[] = [];
   columns: EditColumn[] = [
-    { field: 'PAY_No', header: '付款別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'PAY_No', onChange: (rowData: any, value: any, col: EditColumn, index: number) => this.handlePayNoChange(rowData) },
+    {
+      field: 'PAY_No', header: '付款別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'PAY_No',
+      onChange: (rowData: any, value: any, col: EditColumn, index: number) => this.handlePayNoChange(rowData)
+    },
     { field: 'TXN_PayAmt', header: '金額', type: 'inputNumber', disabled: () => true },
     { field: 'CRD_Type', header: '信用卡別', type: 'dropdown', options: getSYS1000Options('CRD_Type'), optionLabel: 'label', optionValue: 'value', disabled: (value: any, index?: number, rowData?: any) => rowData.PAY_Type !== "0" },
     { field: 'CRD_NoTXN_CouponNoTXN_PayDesc', header: '信用卡卡號/券號/應收付款對象', type: 'input', disabled: (value: any, index?: number, rowData?: any) => rowData.PAY_No === "10" },
     { field: 'TERM_No', header: '分期數', type: 'dropdown', options: SystemOptionsService.getOptions('T109'), optionLabel: 'SYS_Name', optionValue: 'SYS_Code', disabled: (value: any, index?: number, rowData?: any) => rowData.PAY_Type !== "0" || rowData.PAY_No === "12" || rowData.PAY_No === "14" },
   ];
 
-  PAY_TypeOptions: IDropdownItem[] = [];
 
   constructor(
     private readonly dropDownListService: DropDownListService,
@@ -80,17 +85,19 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
         PAY_Name: item.Name,
         label: item.Name
       }));
-
-      // 下拉選單排除掉已被審核的項目
-      const filteredOptions = this.PAY_TypeOptions.filter(
-        item => !this.checkPayNoList.includes(item.No)
-      );
+      const updatedOptions = this.PAY_TypeOptions.map(item => {
+        const isChecked = this.checkPayNoList.includes(item.No);
+        return {
+          ...item,
+          label: isChecked ? `${item.Name} (已審核)` : item.Name,
+        };
+      });
 
       this.columns = this.columns.map(col => {
         if (col.field === 'PAY_No') {
           return {
             ...col,
-            options: filteredOptions
+            options: updatedOptions
           };
         }
         return col;
@@ -155,6 +162,14 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
   }
 
   onFieldChange(event: { rowData: POS5008Data, field: string, value: string, index?: number }): void {
+    if (event.field === 'PAY_No') {
+      if (this.checkPayNoList.includes(event.value)) {
+        this.messageService.warnBubble('該付款別已審核，不可選擇');
+        event.rowData.PAY_No = ''; // 重置為空值
+        this.cdr.markForCheck();
+        return;
+      }
+    }
     const selectedItem = this.PAY_TypeOptions.find(item => item.No === event.rowData.PAY_No);
     let shouldUpdateView = false;
 

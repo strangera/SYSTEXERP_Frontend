@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import * as XLSX from 'xlsx-js-style';
 import { NotificationService } from '../component/notification-message/notification.service';
 
 export interface ImportExcelColumn {
@@ -24,7 +25,6 @@ export class ExcelImportService {
     columns: ImportExcelColumn[],
     customValidator?: (rowData: any) => string
   ): Promise<{ data: any[], hasErrors: boolean, errorBlob?: Blob }> {
-    const XLSX = await import('xlsx-js-style');
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e: any) => {

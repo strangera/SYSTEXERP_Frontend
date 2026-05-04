@@ -356,6 +356,12 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
   handleReturnSelection(selectedReturns: IReturnDetailData[]) {
     this.data2 = [...this.data2, ...selectedReturns];
     this.selectedItems2 = [];
+    // --- 關鍵修改：如果是退貨類別，自動帶入第一筆的倉別名稱 ---
+    if (this.dataForm.controls.DIS_EntryType.value === '1' && selectedReturns.length > 0) {
+      const firstReturn = selectedReturns[0];
+      // 雖然畫面上「品名」欄位在退貨模式下是 hidden，但我們還是把值存入 form，方便 onSubmit 取用
+      this.dataForm.controls.Rebate_Name.setValue(firstReturn.HOS_NAME || '退貨');
+    }
     this.updateReturnSummaryAmounts(); // <--- 使用新的方法來更新金額和狀態
   }
 
@@ -531,7 +537,9 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
           Rebate_Amt: Math.round(item.Rebate_Amt_New || 0),
           Rebate_Net: Math.round(item.Rebate_Net || 0),
           Rebate_Tax: Math.round(item.Rebate_Tax || 0),
-          Rebate_Name: formValue.DIS_EntryType === '1' ? '退貨' : formValue.Rebate_Name || '',
+          Rebate_Name: formValue.DIS_EntryType === '1'
+            ? (formValue.Rebate_Name || '退貨')
+            : (formValue.Rebate_Name || ''),
         })),
         returnDetails: this.data2.map(item => ({
           id: item.id || 0,

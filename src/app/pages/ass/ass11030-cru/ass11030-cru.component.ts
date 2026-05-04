@@ -2,8 +2,8 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11010Service } from '@service/api/ass/ass11010.service';
-import { ASS11020Service } from '@service/api/ass/ass11020.service';
 import { ASS11030Service } from '@service/api/ass/ass11030.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -13,7 +13,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { distinctUntilChanged, finalize } from 'rxjs';
 import { ASS11030Data, ASS11030InsertRequest, ASS11030UpdateRequest } from '../ass11030/ass11030.model';
 
 // 3.1.1.3 資產列管品及耗材分類管理作業-小分類維護作業 CRU
@@ -51,13 +51,11 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
   public readonly bigClassOptions = signal<{ label: string; value: string }[]>([]);
   // 中分類代碼/名稱下拉選項（篩選後的選項）
   public readonly midClassOptions = signal<{ label: string; value: string }[]>([]);
-  // 儲存所有中分類資料（用於根據大分類篩選）
-  private allMidClassData: { label: string; value: string; bClassId: string }[] = [];
 
   constructor(
     public readonly service: ASS11030Service,
     private readonly ass11010Service: ASS11010Service,
-    private readonly ass11020Service: ASS11020Service,
+    private readonly dropdownApi: DropdownApiService,
     private readonly logger: NGXLogger,
     private readonly notification: NotificationService,
   ) {
@@ -84,7 +82,7 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
 
     // 3. 最後載入下拉選項
     this.loadBigClassOptions();
-    this.loadMidClassOptions();
+    this.loadInitialMidClassOptions();
   }
 
   /**
@@ -104,56 +102,40 @@ export class ASS11030CRUComponent extends BasicCruPageComponent<ASS11030Data> im
   }
 
   /**
-   * 載入中分類下拉選項
-   */
-  private loadMidClassOptions(): void {
-    this.ass11020Service.queryASS11020({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        this.allMidClassData = res.Data.map(item => ({
-          label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
-          value: item.M_CLASS_ID,
-          bClassId: item.B_CLASS_ID,
-        }));
-
-        // 根據目前選擇的大分類篩選中分類選項
-        this.filterMidClassOptions();
-      },
-    });
-  }
-
-  /**
-   * 根據大分類代碼篩選中分類選項
-   */
-  private filterMidClassOptions(): void {
-    const selectedBClassId = this.dataForm.controls.B_CLASS_ID.value;
-    if (selectedBClassId) {
-      // 篩選出屬於該大分類的中分類
-      const filtered = this.allMidClassData.filter(item => item.bClassId === selectedBClassId);
-      this.midClassOptions.set(filtered);
-    } else {
-      // 若未選擇大分類，顯示所有中分類
-      this.midClassOptions.set(this.allMidClassData);
-    }
-  }
-
-  /**
    * 設定大分類代碼變更時重新篩選中分類選項
    */
   private setupBigClassFilterSync(): void {
-    this.dataForm.controls.B_CLASS_ID.valueChanges.subscribe(() => {
-      // 重新篩選中分類選項
-      this.filterMidClassOptions();
+    this.dataForm.controls.B_CLASS_ID.valueChanges
+      .pipe(distinctUntilChanged())
+      .subscribe((bClassId) => {
+        // 大分類變更 -> 清中分類，再重載中分類選項
+        this.dataForm.controls.M_CLASS_ID.patchValue('', { emitEvent: false });
+        this.midClassOptions.set([]);
+        if (!bClassId) return;
+        this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId }).subscribe(options => {
+          this.midClassOptions.set(
+            (options ?? []).map(item => ({
+              value: String(item.value),
+              label: item.label,
+            })),
+          );
+        });
+      });
+  }
 
-      // 只有在中分類選項已載入後才檢查是否需要清除
-      if (this.allMidClassData.length > 0) {
-        const currentMClassId = this.dataForm.controls.M_CLASS_ID.value;
-        const isValidOption = this.midClassOptions().some(opt => opt.value === currentMClassId);
-        if (!isValidOption) {
-          // 清除不符合的中分類選擇
-          this.dataForm.controls.M_CLASS_ID.setValue('');
-        }
-      }
+  private loadInitialMidClassOptions(): void {
+    const bClassId = this.dataForm.controls.B_CLASS_ID.value;
+    if (!bClassId) {
+      this.midClassOptions.set([]);
+      return;
+    }
+    this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId }).subscribe(options => {
+      this.midClassOptions.set(
+        (options ?? []).map(item => ({
+          value: String(item.value),
+          label: item.label,
+        })),
+      );
     });
   }
 

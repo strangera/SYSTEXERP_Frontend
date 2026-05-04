@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
@@ -10,12 +11,10 @@ import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
 
@@ -29,7 +28,6 @@ import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
     PanelModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarComponent,
     TableComponent,
     NgIf,
     DialogComponent,
@@ -40,7 +38,7 @@ import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
 })
 export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> implements OnInit {
   dataForm = this.formBuilder.group({
-    GUI_YYMM: [null, [Validators.required]], // 發票年月
+    GUI_YYMM: [null, [Validators.required, this.validationService.invoicePeriodValidator()]], // 發票年月
   });
   monthOptions = monthOptions;
   minDate?: Date;
@@ -54,9 +52,9 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
   ]
 
   constructor(
-    private validationService: ValidationService,
     private eCRNoService: ECRNoService,
-    private fin11200Service: Fin11200Service
+    private fin11200Service: Fin11200Service,
+    private validationService: ValidationService
   ) {
     super();
   }
@@ -64,6 +62,10 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
   ngOnInit(): void {
     this.initializePage('FIN11200', this.dataForm);
     if (this.isFormCreateable) {
+      // 依然可以預設當期，但不用再寫監聽彈回邏輯了
+      this.dataForm.controls.GUI_YYMM.setValue('202605' as any);
+
+      // minDate 仍然保留，用來在 UI 上擋掉 2025 (讓使用者根本不能選舊年份)
       this.minDate = this.setMinDate();
     }
     this.eCRNoService.getPOS1002BillDropDownList().pipe(untilDestroyed(this)).subscribe(data => {
@@ -75,17 +77,11 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
       this.dialogData = mappedData;
     });
   }
-  setMinDate(): Date | undefined {
-    if (this.isFormCreateable) {
-      const today = new Date();
-      const currentMonth = today.getMonth();
-      if ((currentMonth + 1) % 2 !== 0) {
-        return new Date(today.getFullYear(), currentMonth, 1);
-      } else {
-        return new Date(today.getFullYear(), currentMonth - 1, 1);
-      }
-    }
-    return undefined;
+  setMinDate(): Date {
+    const today = new Date();
+    // 只要限制年份，通常設為該年 1 月 1 日即可
+    // 如果要嚴格限制到月，p-calendar view="year" 主要還是看年份
+    return new Date(today.getFullYear(), 0, 1);
   }
 
   onSubmit(frm: FormGroup) {
@@ -111,15 +107,6 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
         }
       });
     });
-  }
-
-  private formatDateToYYYYMM(date: Date | null): string | null {
-    if (!date) {
-      return null;
-    }
-    const year = date.getFullYear().toString();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    return year + month;
   }
 
   dialogQueryForm = this.formBuilder.group({

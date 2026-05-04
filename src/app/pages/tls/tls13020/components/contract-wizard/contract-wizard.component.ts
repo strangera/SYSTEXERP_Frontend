@@ -30,7 +30,8 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 // V2 服務
-import { RenewalQueryResponse, TLS12040Service } from '@service/api/tls/tls12040.service';
+import { RenewalQueryResponse } from '@service/api/tls/tls12040.service';
+import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
 import { CrudTrackingService } from '../../../tls13010-v2/core/services/crud-tracking.service';
@@ -226,7 +227,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   constructor(
     public override router: Router,
-    private apiService: TLS12040Service,
+    private apiService: TLS13010Service,
     private tlsBaseService: TlsContractBaseService,
     public sharedDropdownService: SharedDropdownService,
     private validatorService: ContractValidatorService,
@@ -490,11 +491,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   // ========== 資料載入 ==========
   private async loadContractData(rowData: any): Promise<void> {
     try {
-      const request = { apply_no: rowData.apply_no, id: rowData.id };
-      const response = await this.apiService.queryTLS12040Detail(request).toPromise();
+      const talentId = rowData.talent_id || rowData.apply_no;
+      const response = await this.apiService.queryTLS13010Detail(talentId).toPromise();
 
       if (response?.Status === '0000' && response.Data) {
-        const data = response.Data;
+        const data = Array.isArray(response.Data) ? response.Data[0] : response.Data;
 
         // 處理字串欄位 trim（資料庫固定長度欄位會帶空白）
         if (data.tlt_term_type) {
@@ -548,13 +549,13 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
         this.step1DataReady = true;
 
         // 載入 Step 2 代扣款資料
-        await this.loadFareData(rowData.apply_no);
+        await this.loadFareData(talentId);
 
         // 載入 Step 3 抽成資料
-        await this.loadCommissionData(rowData.apply_no);
+        await this.loadCommissionData(talentId);
 
         // 載入 Step 4 條件資料
-        await this.loadConditionData(rowData.apply_no, data.tlt_term_type);
+        await this.loadConditionData(talentId, data.tlt_term_type);
       }
     } catch (error) {
       console.error('載入合約資料失敗:', error);
@@ -620,8 +621,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   private async loadFareData(applyNo: string): Promise<void> {
     try {
-      const request = { apply_no: applyNo, showAll: true };
-      const response = await this.apiService.queryTLS12040Fare(request).toPromise();
+      const request = { talentId: applyNo, showAll: true };
+      const response = await this.apiService.queryTLS13010Fare(request).toPromise();
 
       if (response?.Status === '0000' && response.Data) {
         const faresByType = response.Data.FaresByType || {};
@@ -657,7 +658,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   private async loadCommissionData(applyNo: string): Promise<void> {
     try {
-      const response = await this.apiService.queryTLS12040Charge(applyNo).toPromise();
+      const response = await this.apiService.queryTLS13010Charge(applyNo).toPromise();
 
       if (response?.Status === '0000' && response.Data) {
         const chargeSettings = response.Data.ChargeSettings || [];
@@ -719,8 +720,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
         return;
       }
 
-      const request = { apply_no: applyNo, CurrentTltTermType: commissionType };
-      const response = await this.apiService.queryTLS12040Commission(request).toPromise();
+      const request = { TalentId: applyNo, CurrentTltTermType: commissionType };
+      const response = await this.apiService.queryTLS13010Commission(request).toPromise();
 
       if (response?.Status === '0000' && response.Data?.ExistingData) {
         // ExistingData 是物件，需根據抽成類型取出對應陣列
@@ -1217,7 +1218,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       const submitData = this.assembleSubmitData();
 
       // 呼叫 API
-      const response = await this.apiService.submitFinalTLS12040(submitData).toPromise();
+      const response = await this.apiService.submitFinalTLS13010(submitData).toPromise();
 
       if (response?.success) {
         // 組合詳細成功訊息（與 TLS13010-v2 一致）
@@ -1226,11 +1227,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
         const successMessage = [
           `異動訊息:${isInsert ? '新增成功' : '修改成功'}`,
-          `招募編號為:${formData.apply_no || response.applyNo || ''}`,
-          `版本編號為:${formData.contract_subno || ''}`,
-          `專櫃編號為:${formData.tlt_no || response.tltNo || ''}`,
-          `廠商編號:${formData.ven_uniform || ''}`,
-          `品牌(專櫃名稱):${formData.tlt_name || ''}`
+          `招商編號：${formData.apply_no || response.applyNo || ''}`,
+          `版本編號：${formData.contract_subno || ''}`,
+          `專櫃編號：${formData.tlt_no || response.tltNo || ''}`,
+          `廠商編號：${formData.ven_uniform || ''}`,
+          `品牌（專櫃名稱）：${formData.tlt_name || ''}`
         ].join('\n');
 
         // 新增契約時刷新使用者資料權限，否則看不到剛新增的資料

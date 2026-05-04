@@ -57,6 +57,7 @@ export class TLS55020Component extends BasicQueryPageComponent<Tls55020MasterDat
   ECR_NoOptions$: Observable<Option[] | null> = new Observable<Option[] | null>();
   TLT_NoOptions$: Observable<Option[] | null> = new Observable<Option[] | null>();
   data: Tls55020MasterData[] = [];
+  totalRecords = 0;
   columns: ReportColumn[] = [
     { field: 'TXN_Date', header: '交易日期', format: formatDate },
     { field: 'ECR_No', header: '機號' },
@@ -76,8 +77,14 @@ export class TLS55020Component extends BasicQueryPageComponent<Tls55020MasterDat
     { field: 'tlt_term_type', header: '抽成別', format: (val) => getSYS1000('tlt_term_type', val) },
     { field: 'TXN_Remark', header: '備註' }
   ];
-  totalRecords = 0;
   lastQueryBody: Tls55020QueryRequest | null = null;
+
+  public editDisabled = (rowData: Tls55020MasterData): boolean => {
+    return rowData.CanEdit === false;
+  };
+  public getEditTooltip = (rowData: Tls55020MasterData): string => {
+    return rowData.CanEdit ? '編輯' : '已關帳不能修正';
+  };
   constructor(
     public readonly tls55020Service: Tls55020Service,
     private readonly dropDown: DropdownApiService,

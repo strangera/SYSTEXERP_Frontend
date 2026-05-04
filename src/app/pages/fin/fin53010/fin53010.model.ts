@@ -196,6 +196,7 @@ export interface InsertAPS4002DataBody {
   VEN_No?: string | null;
   Remark?: string | null;
   Source_Date?: string | null;
+  Status?: string | null;
 }
 
 /** Swagger insertFIN53010DetailData_NextRequest（五陣列一律送出，無資料為 []） */
@@ -867,6 +868,7 @@ export interface FIN53010StepBankDeposit {
   bank_no?: string;
   deposit_amt?: number;
   withdraw_amt?: number;
+  status?: string;
   note_desc?: string;
   txn_date?: Date | null;
 }

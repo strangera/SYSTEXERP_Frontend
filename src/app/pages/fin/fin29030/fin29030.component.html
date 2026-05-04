@@ -21,41 +21,40 @@
             <app-calendar-range
               calendarType="dateRange"
               label="開票日期"
-              [startControl]="queryForm.controls.ticketDateFrom"
-              [endControl]="queryForm.controls.ticketDateTo"
+              [startControl]="queryForm.controls.IssueDateFrom"
+              [endControl]="queryForm.controls.IssueDateTo"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="銀行代號"
-              controlName="bankCode"
-              [options]="bankCodeOptions"
+              controlName="BNK_No"
+              [options]="BNK_No_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.bankCode"
+              [control]="queryForm.controls.BNK_No"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="開票單號"
-              [startControl]="queryForm.controls.startTransferSource"
-              [endControl]="queryForm.controls.endTransferSource"
+            <app-input-text-range
+              label="支票號碼"
+              [startControl]="queryForm.controls.CHK_NoFrom"
+              [endControl]="queryForm.controls.CHK_NoTo"
               [submitted]="submitted"
-            ></app-input-number-range>
+            ></app-input-text-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="廠客代號"
-              controlName="factoryID"
-              [options]="factoryIDOptions"
+              controlName="VEN_No"
+              [options]="VEN_No_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.factoryID"
+              [control]="queryForm.controls.VEN_No"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -63,43 +62,75 @@
             <app-calendar
               calendarType="dateOne"
               label="到期日"
-              [control]="queryForm.controls.endDate"
+              [control]="queryForm.controls.ExpireDate"
               [submitted]="submitted"
             ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="票據狀態"
-              controlName="ticketStatus"
-              [options]="statusOptions"
+              controlName="CHK_Status"
+              [options]="CHK_Status_Options"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ticketStatus"
+              [control]="queryForm.controls.CHK_Status"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table-report
+    [data]="data"
+    [dataKey]="'CHK_No'"
+    [tableKey]="'FIN29030_Data'"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [showCheckBox]="false"
+    [showManage]="false"
+    [showSort]="false"
+    [showReorder]="false"
+    [showReportMode]="false"
+    [showDelete]="false"
+    [groupRowsBy]="'PAM_No'"
+    [showFooterTotal]="false"
+    [footerData]="footerData"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [lazy]="true"
+    [loading]="loading"
+    [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction"
+  >
+    <header>
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button
+          styleClass="p-2"
+          label="開票明細檔.PDF"
+          [loading]="btnPDFLoading"
+          icon="pi pi-file"
+          (click)="onReport(queryForm, 'PDF')"
+          [disabled]="data.length === 0"
+        ></p-button>
+        <p-button
+          styleClass="p-2"
+          label="開票明細檔.XLSX"
+          [loading]="btnExcelLoading"
+          icon="pi pi-file"
+          (click)="onReport(queryForm, 'Excel')"
+          [disabled]="data.length === 0"
+        ></p-button>
+      </div>
+    </header>
+  </app-table-report>
 </div>

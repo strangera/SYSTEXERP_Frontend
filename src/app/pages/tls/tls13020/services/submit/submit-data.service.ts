@@ -41,8 +41,8 @@ export class SubmitDataService {
       commissions: this.cleanCommissionItems(commissionItems, isNewContract),
       conditions: this.assembleConditions(conditionItems, commissionType, isNewContract),
       metadata: {
-        apply_no: formValue['apply_no'] || '',
-        contractId: formValue['apply_no'] || '',
+        talentId: formValue['talent_id'] || '',
+        contractId: formValue['talent_id'] || '',
         commissionType,
         isNewContract,
         submittedAt: new Date().toISOString(),

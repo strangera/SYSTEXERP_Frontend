@@ -74,8 +74,7 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
   }
 
   editDisabledByVouNo = (rowData: any): boolean => {
-    if (!rowData) return false;
-    return rowData.Details?.some((detail: any) => detail.STATUS === 'Y');
+    return rowData.STATUS === 'Y';
   }
 
   ngOnInit(): void {

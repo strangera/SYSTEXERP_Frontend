@@ -141,7 +141,9 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     // 🔧 處理字串格式的日期，轉為 Date 物件並移除時間
     if (this.control.value && typeof this.control.value === 'string') {
       try {
-        const dateValue = this.parseDateWithoutTime(this.control.value);
+        const shouldKeepTime = this.showTime || this.calendarType === 'dateTimeOne' || this.calendarType === 'timeOne';
+        const dateValue = this.parseDateWithOptionalTime(this.control.value, shouldKeepTime);
+        // const dateValue = this.parseDateWithoutTime(this.control.value); // !!!有問題的方法，會導致時間被強制歸0
         if (dateValue) {
           this.control.setValue(dateValue, { emitEvent: false });
         }
@@ -319,6 +321,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
    * 解析日期字串並移除時間部分
    * 支援格式: YYYYMM, YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD 等
    */
+  // !!!有問題的方法，會導致時間被強制歸0，請在自己的作業提交前做轉換避免在共通元件做處理(不懂之處請參考PrimeNg文檔)
   private parseDateWithoutTime(value: string): Date | null {
     if (!value) return null;
 
@@ -367,9 +370,48 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     // 最後嘗試原生解析
     const parsed = new Date(value);
     if (!isNaN(parsed.getTime())) {
+      // 這裡強制 new Date(年, 月, 日)，導致「時、分、秒」全部遺失變回 00:00
       return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
     }
 
+    return null;
+  }
+
+
+  /**
+ * 修改後的解析方法：增加一個 keepTime 參數
+ */
+  private parseDateWithOptionalTime(value: string, keepTime = false): Date | null {
+    if (!value) return null;
+    const dateStr = value.trim();
+
+    // 嘗試 YYYY-MM-DD 或 YYYY/MM/DD 格式
+    let match = dateStr.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      const day = parseInt(match[3], 10);
+      const date = new Date(year, month, day);
+      return isNaN(date.getTime()) ? null : date;
+    }
+
+    // 處理 YYYY/MM 格式 (dateMonthOne 常見格式)
+    match = dateStr.match(/^(\d{4})[-/](\d{1,2})$/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      return new Date(year, month, 1);
+    }
+
+    const parsed = new Date(value);
+    if (!isNaN(parsed.getTime())) {
+      if (keepTime) {
+        // 如果需要時間（如 dateTimeOne），直接回傳解析後的 Date 物件
+        return parsed;
+      }
+      // 如果不需要時間，才執行歸零邏輯
+      return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    }
     return null;
   }
 

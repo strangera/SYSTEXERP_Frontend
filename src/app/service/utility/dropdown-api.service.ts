@@ -2,10 +2,10 @@ import { AuthService } from './../system/auth.service';
 // !!! 新版下拉方法
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '../../shared/utils/rxjs-operators/validate-api-response';
 import { Observable, of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { ApiResponse } from '../../shared/utils/rxjs-operators/validate-api-response';
 import {
   Aps1001ComboItem,
   Aps1001ComboQuery,
@@ -23,16 +23,16 @@ import {
   CssDropDownItem,
   EcrItem,
   EcrQuery,
-  FasItemDropdownItem,
   ENG1001Item,
   FAASSCHKMASS15070DropDownItem,
   FaClass1Item,
   FaClass1Query,
   FaClass2Item,
   FaClass2Query,
-  FaHosItem,
   FaClassMItem,
   FaClassMQuery,
+  FaHosItem,
+  FasItemDropdownItem,
   FaSitemItem,
   FaSitemQuery,
   GLS1005AccSubCodeItem,
@@ -366,8 +366,8 @@ export class DropdownApiService {
   }
 
   /** 查詢會計科目設定檔(GLS1005) (只取 支存、活存、定存) */
-  queryGls1005For1103(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryGLS1005For1103_DropDownList').pipe(
+  queryGls1005For1103(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1005For1103_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -387,8 +387,8 @@ export class DropdownApiService {
   }
 
   /** 查詢會計科目設定檔(GLS1005) (只取 應付票據科目) */
-  queryGls1005_BNK_CheckOutAcc(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryGls1005_BNK_CheckOutAcc').pipe(
+  queryGls1005_BNK_CheckOutAcc(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryGls1005_BNK_CheckOutAcc', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -909,8 +909,8 @@ export class DropdownApiService {
   }
 
   /** 查詢銀行+分行資料表(APS1001 JOIN APS1004) */
-  queryAps1001(body: Aps1001Query): Observable<Aps1001Item[] | null> {
-    return this.queryDropdownWithParams<Aps1001Item, Aps1001Query>('/queryAPS1001_DropDownList', body).pipe(
+  queryAps1001(body: Aps1001Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Aps1001Item, Aps1001Query>('/queryAPS1001_DropDownList', 'No', 'Name', body).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

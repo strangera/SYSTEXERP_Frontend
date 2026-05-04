@@ -89,19 +89,9 @@
             <div>{{ groupRowsByName }}：{{ rowData[groupRowsBy] }}</div>
 
             <div class="flex items-center gap-6">
-              <span>
-                廠商立帳合計：{{
-                getGroupSubtotal(rowData[groupRowsBy], "ACP_Amt") | number
-                }}
-              </span>
-              <span>
-                廠商沖銷合計：{{
-                getGroupSubtotal(rowData[groupRowsBy], "PayAmt") | number
-                }}
-              </span>
-              <span>
-                廠商未沖銷合計：{{
-                getGroupSubtotal(rowData[groupRowsBy], "NotPayAmt") | number
+              <span *ngFor="let sth of subTotalGroupHeaders">
+                {{ sth.label }}：{{
+                  getGroupSubtotal(rowData[groupRowsBy], sth.field) | number
                 }}
               </span>
             </div>

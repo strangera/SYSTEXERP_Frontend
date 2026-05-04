@@ -1,135 +1,115 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NavigationExtras } from '@angular/router';
-// Permissions
-import { FunsrightInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-
-// Services for dropdowns
+import { AsyncPipe, DatePipe } from '@angular/common';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
+
+import { ITLS28050Data, QueryTLS28050Request, TLS28050Service } from '@service/api/tls/tls28050.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-
-const now = new Date();
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls28050',
   templateUrl: './tls28050.component.html',
-  styleUrls: ['./tls28050.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule,
+    CalendarRangeComponent, DropdownComponent, ButtonComponent,
+    TableReportComponent, TranslateModule, AsyncPipe
+  ],
+  providers: [DatePipe]
 })
-export class TLS28050Component {
+export class TLS28050Component extends BasicQueryPageComponent<ITLS28050Data> implements OnInit {
 
-  // 程式編號
-  ProgNo: string = '220048';
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    date: [now, [Validators.required]],  // 日期
-    bagType: [],  // 表類
-    floor: []  // 樓層
+    TXN_Date_S: [new Date(), [Validators.required]],
+    TXN_Date_E: [new Date(), [Validators.required]],
+    BAG_TYPE: [null],
+    SYS_StoreNo: [null],
+    ECR_No: [null],
+    TLT_No: [null],
+    Status: [null], // 0=全部
   });
 
-  // 表格資料
-  data: any[] = [
+  totalRecords = 0;
+  data: ITLS28050Data[] = [];
+  lastQueryBody: QueryTLS28050Request | null = null;
 
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'categoryName', header: '櫃號名稱', visible: true },
-    { field: 'description', header: '說明', visible: true },
-    { field: 'buildingName', header: '樓層名稱', visible: true },
-    { field: 'status', header: '狀態', visible: true },
-    { field: 'sequence', header: '序號', visible: true },
-    { field: 'subCategoryName', header: '櫃號名稱', visible: true },
-    { field: 'subDescription', header: '說明', visible: true },
-    { field: 'subBuildingName', header: '樓層名稱', visible: true },
-    { field: 'subStatus', header: '狀態', visible: true },
+  // 下拉選項
+  statusOptions = [
+    { label: '未領袋', value: '1' },
+    { label: '未繳袋', value: '2' },
+    { label: '未領袋且未繳袋', value: '3' },
   ];
 
-  // 下拉選單選項
-  bagTypeOptions: any[] = [];
-  floorOptions: any[] = [];
+  bagTypeOptions: IDropdownItem[] = [
+    { No: '1', Name: '現金袋' },
+    { No: '2', Name: '帳務袋' },
+    { No: '3', Name: '零用金袋' },
+  ];
+
+  ECR_NoOptions$ = this.dropdown.queryPos1002();
+  TLT_NoOptions$ = this.dropdown.queryTltTalent();
+
+  columns: ReportColumn[] = [
+    { field: 'TXN_Date', header: '交易日期', format: formatDate },
+    { field: 'ECR_No', header: '收銀機代碼' },
+    { field: 'TLT_No', header: '專櫃編號' },
+    { field: 'BAG_TYPE', header: '繳袋型態' },
+    { field: 'Get_Status', header: '領取狀態' },
+    { field: 'Bak_Status', header: '繳回狀態' },
+    { field: 'Get_Time', header: '領取時間' }, // SP 已經轉字串，不需 formatDateTime
+    { field: 'Bak_Time', header: '繳回時間' },
+
+    // 稽核人員資訊 (預設隱藏)
+    { field: 'CRT_USR_No', header: '領取人員代碼', visible: false },
+    { field: 'CRT_USR_Name', header: '領取人員姓名', visible: false },
+    { field: 'UPD_USR_No', header: '繳回人員代碼', visible: false },
+    { field: 'UPD_USR_Name', header: '繳回人員姓名', visible: false },
+    { field: 'CRT_Date', header: '建立時間', visible: false },
+    { field: 'UPD_Date', header: '更新時間', visible: false },
+  ];
 
   constructor(
-    private formBuilder: FormBuilder,
-  ) { }
+    public readonly tls28050Service: TLS28050Service,
+    private readonly dropdown: DropdownApiService,
+    private readonly datePipe: DatePipe
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    this.initializePage('TLS28050');
   }
 
   onSubmit(frm: FormGroup) {
-
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm
-        },
-        skipLocationChange: true
+    this.handleSubmit(frm, () => {
+      const body: QueryTLS28050Request = {
+        TXN_Date_S: this.datePipe.transform(frm.value.TXN_Date_S, 'yyyy-MM-dd') ?? '',
+        TXN_Date_E: this.datePipe.transform(frm.value.TXN_Date_E, 'yyyy-MM-dd') ?? '',
+        BAG_TYPE: frm.value.BAG_TYPE,
+        ECR_No: frm.value.ECR_No,
+        TLT_No: frm.value.TLT_No,
+        Status: frm.value.Status ?? '0',
       };
-    }
-  }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm
-        },
-        skipLocationChange: true
-      };
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm
-      },
-      skipLocationChange: true
-    };
+      this.tls28050Service.queryTLS28050(body)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(res => {
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount;
+          this.lastQueryBody = body;
+        });
+    });
   }
 }

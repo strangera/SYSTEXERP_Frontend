@@ -29,6 +29,14 @@ export interface FIN29100Data {
   CheckExpireDate: string;
 }
 
+export interface FIN29100Response {
+  Data: FIN29100Data[];
+  Summary: {
+    TxnAmount: number;
+    TxnFee: number;
+  };
+}
+
 /**
  * 取得公司銀行帳戶列表
  */
@@ -70,8 +78,8 @@ export class FIN29100Service {
 
   constructor(private http: HttpClient) { }
 
-  queryFIN29100(data: QueryFIN29100Request): Observable<BaseQueryResponse<FIN29100Data>> {
-    return this.http.post<BaseQueryResponse<FIN29100Data>>(`${this.apiUrl}/queryFIN29100`, data);
+  queryFIN29100(data: QueryFIN29100Request): Observable<BaseQueryResponse<FIN29100Response>> {
+    return this.http.post<BaseQueryResponse<FIN29100Response>>(`${this.apiUrl}/queryFIN29100`, data);
   }
 
   exportFIN29100_PDF(data: QueryFIN29100Request): Observable<HttpResponse<Blob>> {

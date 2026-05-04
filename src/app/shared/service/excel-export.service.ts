@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import * as XLSX from 'xlsx-js-style';
 import { WorkBook, WorkSheet } from 'xlsx-js-style';
 
 // 更新 ExcelColumn 介面以符合你的需求
@@ -28,7 +29,6 @@ export class ExcelExportService {
    * @param fileName 匯出檔案的名稱（不含副檔名）。
    */
   public async exportTemplate(columns: ExcelColumn[], fileName = 'template'): Promise<void> {
-    const XLSX = await import('xlsx-js-style');
     return new Promise((resolve, reject) => {
       try {
         if (!columns || columns.length === 0) {
@@ -124,7 +124,6 @@ export class ExcelExportService {
    * @param columns 可選，用於定義匯出欄位、標頭和格式的陣列。
    */
   public async exportData(data: any[], fileName = 'export', columns?: ExcelColumn[]): Promise<void> {
-    const XLSX = await import('xlsx-js-style');
     return new Promise((resolve, reject) => {
       try {
         if (!data || data.length === 0) {
