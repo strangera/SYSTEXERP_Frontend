@@ -104,7 +104,7 @@
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-ri="rowIndex"
     let-index="rowIndex">
     <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" [pReorderableRow]="index"
-      (click)="itemClick.emit(rowData)">
+      (click)="itemClick.emit(rowData)" [ngClass]="getPTAGroupClass(rowIndex)">
       <ng-container *ngIf="!loading; else loadingTemplate">
         <td *ngIf="!showSubTotal && data.length && showReorder">
           <span class="pi pi-bars" pReorderableRowHandle></span>
@@ -179,27 +179,14 @@
         </td>
       </ng-template>
     </tr>
-    <!-- 在每個 ACP_No 群組的最後一筆後，顯示該 ACP 的未沖餘額（由後端或 fullData 計算） -->
-    <ng-container *ngIf="
-        rowIndex === data.length - 1 ||
-        (data[rowIndex + 1] && data[rowIndex + 1].ACP_No !== rowData.ACP_No)
-      ">
-      <tr class="p-rowgroup-acp-subtotal" style="background: #ffffff; font-weight: 600">
-        <td [attr.colspan]="getVisibleHeaderCount">
-          <div class="flex justify-content-end pr-4">
-            <span class="mr-3">未沖餘額：</span>
-            <span class="font-bold">
-              {{ getACPSubtotal(rowData.ACP_No) | number }}
-            </span>
-          </div>
-        </td>
-      </tr>
-    </ng-container>
   </ng-template>
   <ng-template pTemplate="footer" let-columns *ngIf="showTotal">
     <tr>
-      <td class="text-center font-bold">總計</td>
+      <td class="text-right font-bold">{{ totalLabelColumn ? '' : '總計' }}</td>
       <td *ngFor="let col of columns" class="text-center font-bold pr-2">
+        <ng-container *ngIf="totalLabelColumn && col.field === totalLabelColumn">
+          總計
+        </ng-container>
         <ng-container *ngIf="col.isTotal">
           {{
           col.format ? col.format(getTotal(col.field)) : getTotal(col.field)
