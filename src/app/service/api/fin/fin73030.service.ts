@@ -1,24 +1,14 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { Observable, map, take } from 'rxjs';
+import { Observable, take } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
-  FIN73030Option,
   FIN73030Query,
   FIN73030FilterBody,
   FIN73030TableRow,
   QueryFIN73030SPResponse,
 } from '@pages/fin/fin73030/fin73030.model';
-
-/** 支出請款單號下拉（後端路徑依 Swagger；若與 No 清單共用可改呼叫） */
-export interface POS2064MPCS_RqstNoDropDownResponse {
-  Status: string;
-  Message?: string;
-  Data: Array<Record<string, unknown>>;
-  TotalCount?: number;
-  TotalPage?: number;
-}
 
 @Injectable({ providedIn: 'root' })
 export class FIN73030Service {
@@ -32,38 +22,6 @@ export class FIN73030Service {
       `${this.apiUrl}/queryFIN73030`,
       body,
     );
-  }
-
-  /**
-   * 支出請款單號下拉（請款單號專用）。
-   * 若後端尚未提供此端點，可暫改呼叫 FIN73010 的 `queryPOS2064MPCS_NoDropDownList` 並將回傳欄位 map 成 PCS_RqstNo。
-   */
-  queryPOS2064MPCS_RqstNoDropDownList(body: { SYS_StoreNo?: string | null }): Observable<FIN73030Option[]> {
-    return this.http
-      .post<POS2064MPCS_RqstNoDropDownResponse>(`${this.apiUrl}/queryPOS2064MPCS_RqstNoDropDownList`, body ?? {})
-      .pipe(
-        map((res) => {
-          if (res.Status !== '0000' || !Array.isArray(res.Data)) {
-            return [];
-          }
-          return res.Data.map((row) => this.mapRowToRqstOption(row));
-        }),
-      );
-  }
-
-  private mapRowToRqstOption(row: Record<string, unknown>): FIN73030Option {
-    const no =
-      String(
-        (row['PCS_RqstNo'] as string) ??
-          (row['pcs_RqstNo'] as string) ??
-          (row['PCS_No'] as string) ??
-          '',
-      ).trim();
-    const name = String((row['PCS_RqstNoName'] as string) ?? (row['Name'] as string) ?? '').trim();
-    return {
-      value: no,
-      label: name || no || '',
-    };
   }
 
   exportPDFFIN73030(body: FIN73030FilterBody): Observable<HttpResponse<Blob>> {

@@ -7,7 +7,8 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
-import { finalize } from 'rxjs';
+import { finalize, map } from 'rxjs';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -94,6 +95,7 @@ export class FIN73030Component extends BasicQueryPageComponent<FIN73030TableRow>
   constructor(
     public readonly service: FIN73030Service,
     private readonly fileExportService: FileExportService,
+    private readonly dropdownApiService: DropdownApiService,
   ) {
     super();
   }
@@ -104,10 +106,17 @@ export class FIN73030Component extends BasicQueryPageComponent<FIN73030TableRow>
   }
 
   private loadPcsRqstNoOptions(): void {
-    const store = this.authService.currentUserValue?.SYS_StoreNo ?? null;
-    this.service
-      .queryPOS2064MPCS_RqstNoDropDownList({ SYS_StoreNo: store })
-      .pipe(untilDestroyed(this))
+    this.dropdownApiService
+      .queryPOS2064MPCS_NoDropDownList()
+      .pipe(
+        untilDestroyed(this),
+        map((items) =>
+          (items ?? []).map((item) => ({
+            label: String(item.label ?? ''),
+            value: String(item.value ?? ''),
+          })),
+        ),
+      )
       .subscribe((opts) => {
         this.pcsRqstNoOptions = opts.filter((o) => o.value);
       });
