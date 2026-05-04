@@ -251,7 +251,7 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
         field: 'PUR_VoucherType', header: '發票格式', validate: [validateRequired], type: 'dropdown',
         options: this.PUR_VoucherTypeOptions,
         optionLabel: 'value', optionValue: 'value',
-        width: '75px', showClear: false
+        width: '50px', showClear: false, minWidth: '50px'
       },
     ]
   }
