@@ -1,9 +1,8 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -19,42 +18,48 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
-              calendarType="dateMonthOne"
               label="年月"
-              controlName="year"
-              [control]="queryForm.controls.year"
+               calendarType="dateMonthOne"
+              controlName="YM"
+              [control]="queryForm.controls.YM"
               [submitted]="submitted"
             ></app-calendar>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="部門"
-              controlName=" department"
-              [options]="departmentOptions"
-              optionLabel="label"
+              controlName="Org_ID"
+              [options]="orgOptions"
+              optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.department"
+              [showClear]="true"
+              [control]="queryForm.controls.Org_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="類別"
-              [control]="queryForm.controls.type"
-              [options]="typeOptions"
+              groupname="ReportType"
+              [options]="reportTypeOptions"
+              [control]="queryForm.controls.ReportType"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="單位金額表示"
-              groupname="systemtyperadio"
-              [control]="queryForm.controls.unit"
-              [options]="unitOptions"
+              groupname="AmtUnit"
+              [options]="amtUnitOptions"
+              [control]="queryForm.controls.AmtUnit"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
         </div>
+
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
@@ -65,9 +70,47 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-<div class="card">
+
+<div class="card" *ngIf="showTable">
   <div class="col-12">
-    <app-table-subheader-report [data]="data"></app-table-subheader-report>
-    <!-- <app-table [data]="data" [columns]="columns"></app-table> -->
+    <app-table-report
+      tableKey="FIN42030"
+      [lastQueryBody]="historyRequestBody"
+      [data]="data"
+      [columns]="columns"
+      [totalRecords]="totalRecords"
+      [showDelete]="false"
+      [showManage]="false"
+      [showReportMode]="false"
+      [queryFunction]="queryFIN42030ForReport"
+    >
+      <header>
+        <div class="flex justify-content-between align-items-center w-full">
+          <div class="font-bold">
+            FIN42030 預算同期比較表
+          </div>
+
+          <div class="flex gap-2">
+            <p-button
+              styleClass="p-2"
+              label="預算同期比較表.PDF"
+              [loading]="btnLoading"
+              icon="pi pi-file"
+              (click)="onExportPDF()"
+              [disabled]="data.length === 0"
+            ></p-button>
+
+            <p-button
+              styleClass="p-2"
+              label="預算同期比較表.XLSX"
+              [loading]="btnLoading"
+              icon="pi pi-file-excel"
+              (click)="onExportXLSX()"
+              [disabled]="data.length === 0"
+            ></p-button>
+          </div>
+        </div>
+      </header>
+    </app-table-report>
   </div>
 </div>

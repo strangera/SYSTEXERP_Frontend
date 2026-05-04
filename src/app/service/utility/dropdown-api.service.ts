@@ -60,6 +60,7 @@ import {
   Pos2004LogoQuery,
   Pos2004Query,
   Pos2004WithBrandItem,
+  Pos2064MpcsNoDropDownItem,
   Pos2013Item,
   Pos2013LogoRequest,
   Pos2013Query,
@@ -883,6 +884,27 @@ export class DropdownApiService {
   queryPos2001(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<IDropdownItem>('/queryPOS2001_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
+    );
+  }
+
+  /** 查詢零用金單號（FIN70000 / POS2064MPCS_NoDropDownList） */
+  queryPOS2064MPCS_NoDropDownList(): Observable<Option[] | null> {
+    return this.queryDropdown<Pos2064MpcsNoDropDownItem>('/FIN0000/FIN70000/POS2064MPCS_NoDropDownList').pipe(
+      map(items => {
+        if (!items) return null;
+        return items
+          .map(item => {
+            const pcsNo = String(item.PCS_No ?? '').trim();
+            if (!pcsNo) return null;
+            return {
+              ...item,
+              value: pcsNo,
+              label: pcsNo,
+            };
+          })
+          .filter((x): x is Option => x !== null);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 

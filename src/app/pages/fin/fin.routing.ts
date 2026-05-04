@@ -382,5 +382,5 @@ export const finRoutes: Routes = [
   // 支付申請單
   // { path: 'fin73030', loadComponent: () => import('./fin73030/fin73030.component').then(m => m.FIN73030Component),data:{progNo:'FIN73030'} },
   // 零用金撥補明細表
-  // { path: 'fin73040', loadComponent: () => import('./fin73040/fin73040.component').then(m => m.FIN73040Component),data:{progNo:'FIN73040'} },
+  { path: 'fin73040', loadComponent: () => import('./fin73040/fin73040.component').then(m => m.FIN73040Component),data:{progNo:'FIN73040'} },
 ];
