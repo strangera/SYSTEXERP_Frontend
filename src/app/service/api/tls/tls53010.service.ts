@@ -146,6 +146,10 @@ export interface QueryLOGOaccorHOSResponse {
   HOS_NAME: string;
 }
 
+export interface TLS53010ExportRequest {
+  PST_NoList: string[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -175,14 +179,11 @@ export class TLS53010Service {
   }
 
   // 匯出商品基本資料
-  exportTLS53010Detail(data: TLS53010DetailQueryRequest): Observable<HttpResponse<Blob>> {
+  exportTLS53010Detail(data: TLS53010ExportRequest): Observable<HttpResponse<Blob>> {
     return this.http.post(
       `${this.apiUrl}/exportTLS53010Detail`,
       data,
-      {
-        observe: 'response',
-        responseType: 'blob'
-      }
+      { observe: 'response', responseType: 'blob' }
     );
   }
 
