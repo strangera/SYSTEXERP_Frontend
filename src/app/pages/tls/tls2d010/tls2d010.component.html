@@ -38,6 +38,11 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="樓層" controlName="tlt_floorList" [options]="tlt_floorListOption | async"
+              optionLabel="Name" optionValue="No" [control]="queryForm.controls.tlt_floorList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="建立者" controlName="CRT_USR_No" [options]="CRT_USR_NoOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.CRT_USR_No" [submitted]="submitted"></app-dropdown>
           </div>

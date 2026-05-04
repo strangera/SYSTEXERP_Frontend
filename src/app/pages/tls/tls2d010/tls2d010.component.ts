@@ -1,8 +1,10 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { formatDate } from '@shared/componentkit/table/table.model';
 import { formatAmount } from '@shared/componentkit/table2/table2.model';
@@ -29,6 +31,7 @@ import { DropDownListService, IAPS1003Item, IDropdownItem } from './../../../ser
   styleUrls: ['./tls2d010.component.scss'],
   standalone: true,
   imports: [
+    AsyncPipe,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -53,6 +56,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     org_idList: [[] as number[]], // 組織
     tpy_YYYYMM: [], // 扣款年月
     tpy_date: [], // 扣款日期
+    tlt_floorList: [null], // 樓層
     pod_noList: [[]], // 維護日
     CRT_USR_No: [''],
     GUI_FLAG: [''],
@@ -89,6 +93,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   org_idOptions: IDropdownItem[] = [];
   CAP_ItemOptions: IAPS1003Item[] = [];
   CRT_USR_NoOptions: IDropdownItem[] = [];
+  tlt_floorListOption = this.dropdown.querySys3900();
   pod_noOptions: any[] = [];
 
   get f() {
@@ -102,6 +107,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
     private dropDownListService: DropDownListService,
     public sharedDropdownService: SharedDropdownService,
     private readonly fileExportService: FileExportService,
+    public readonly dropdown: DropdownApiService,
   ) {
     super();
   }
