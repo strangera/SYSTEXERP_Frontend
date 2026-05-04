@@ -26,6 +26,7 @@ const FORMAT_RULES: Record<string, { lengths: number[], chars: string[] }> = {
   imports: [ReadonlyCalendarDisplayComponent, NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
 })
 export class CalendarComponent extends BasicKitComponent implements OnInit, OnDestroy {
+  readonly Validators = Validators;
   private valueChangeSubscription?: Subscription;
   private _calendarType: CalendarType = 'dateOne';
   private readonly calendarMaxLength: Record<CalendarType, number> = {
@@ -42,7 +43,6 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
   @Input() override controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false;
-  Validators: any;
 
   // 使用 setter 確保 calendarType 變更時立即套用配置
   @Input()
@@ -83,6 +83,9 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
   /**
    * 套用 calendarType 對應的配置
    */
+  /**
+ * 套用 calendarType 對應的配置
+ */
   private applyCalendarConfig(): void {
     const config = this.calendarConfig[this._calendarType];
     if (config) {
@@ -95,19 +98,29 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
       this.maxLength = maxLen; // 這是 BasicKitComponent 的屬性，會連動影響 placeholder
 
       if (this.control) {
-        // 更新驗證器，保留原有的，但加入 maxLength；若有 required 一併保留以維持 hasValidator(Validators.required) 為 true（標籤 * 顯示）
+        // 1. 檢查原始是否具有必填驗證器
         const hadRequiredBefore = this.control.hasValidator(Validators.required);
-        const currentValidators = this.control.validator ? [this.control.validator] : [];
-        const newValidators = [...currentValidators, Validators.maxLength(maxLen)];
+        // 2. 建立新的驗證器清單
+        // 這裡建議過濾掉舊的 maxLength 避免重複堆疊，並加入新的長度限制
+        const newValidators = [Validators.maxLength(maxLen)];
+        // 如果原本有必填，確保它被加回去
         if (hadRequiredBefore) {
           newValidators.push(Validators.required);
         }
+        // 3. 重新設定驗證器
         this.control.setValidators(newValidators);
+        // 4. 更新控制項狀態 (不觸發事件以避免無窮迴圈)
         this.control.updateValueAndValidity({ emitEvent: false });
+        // 5. 【關鍵修正】手動同步父類別的 isRequired 狀態
+        // 這樣可以確保即使在輸入值後，因為 HTML 綁定的是這個變數，星號依然能正確顯示
+        this.isRequired = this.control.hasValidator(Validators.required);
       }
+      // 處理 Placeholder
       if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
         this.placeholder = config.customPlaceholder;
       }
+      // 手動觸發變更偵測，確保 UI 同步更新
+      this.cdr.markForCheck();
     }
   }
 

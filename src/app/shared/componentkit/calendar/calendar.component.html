@@ -1,6 +1,6 @@
 <label [hidden]="!showLabel || label === ''" [for]="controlName">
   {{ label }}
-  <span *ngIf="control.hasValidator(Validators.required)" class="text-red-500">*</span>
+  <span *ngIf="isRequired" class="text-red-500">*</span>
   <ng-content select="header"></ng-content>
 </label>
 
