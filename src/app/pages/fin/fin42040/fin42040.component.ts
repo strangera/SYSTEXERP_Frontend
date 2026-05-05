@@ -1,417 +1,409 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-// Services
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
+import {
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FIN42040Data } from '@service/api/fin/fin42040.service';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { AccordionModule } from 'primeng/accordion';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TableSubheaderComponent } from './fin42040-table/fin42040-table.component';
+import { ButtonModule } from 'primeng/button';
+import { finalize, map, shareReplay } from 'rxjs/operators';
 
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
+// import { YearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import {
+  FIN42040Data,
+  FIN42040QueryRequest,
+  FIN42040Service,
+} from '../../../service/api/fin/fin42040.service';
+
+@UntilDestroy()
 @Component({
   selector: 'app-fin42040',
   templateUrl: './fin42040.component.html',
-  styleUrl: './fin42040.component.scss',
+  styleUrls: ['./fin42040.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule, TableSubheaderComponent]
+  imports: [
+    CommonModule,
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    ButtonComponent,
+    ButtonModule,
+    TranslateModule,
+    TableReportComponent,
+    RadiobuttonComponent,
+    CalendarComponent
+
+  ],
 })
-export class FIN42040Component extends BasicQueryPageComponent<FIN42040Data> implements OnInit {
-  // Upload files
-  // fileType: string = '';
-  // uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+export class FIN42040Component
+  extends BasicQueryPageComponent<any>
+  implements OnInit
+{
+  data: FIN42040Data[] = [];
+  totalRecords = 0;
+  showTable = true;
+  btnLoading = false;
+  historyRequestBody: FIN42040QueryRequest | null = null;
+
+  readonly defaultSort: any[] = [
+    { field: 'Org_ID', order: 1 },
+    { field: 'Acc_No', order: 1 },
+    { field: 'Item_No', order: 1 },
+  ];
+
   queryForm = this.formBuilder.group({
-    year: [],
-    version: [],
-    organizationNumber: [, Validators.required],
-    month: [],
-    amountStart: [], // 金額 起
-    amountEnd: [], // 金額 迄
-    remark: [],
-    status: [],
-    department: [],
-    unit: [],
-    type: [],
-    compareyear: [],
+    YM: ['', [Validators.required]],
+    CompareYM: ['', [Validators.required]],
+    Org_ID: [''],
+    ReportType: [1, [Validators.required]],
+    AmtUnit: [1, [Validators.required]],
+
+    ...createPaginationConfig([
+      { field: 'Org_ID', order: 1 },
+      { field: 'Acc_No', order: 1 },
+      { field: 'Item_No', order: 1 },
+    ]),
+    pageSize: [30],
   });
 
-  // Dropdown options
+  reportTypeOptions = [
+    { label: '統制', value: 1 },
+    { label: '明細', value: 2 },
+  ];
 
-  FNCCodeOptions = [];
-  AccountcodeOptions = [];
-  departmentOptions = [];
-  displayOptions2 = [];
-  AnalysisdateCOptions = [];
-  vendorOptions = [];
-  FlippingstateOptions = [];
-  organizationNumberOptions = [];
-  statusOptions = [{ value: 1, label: '是' },
-  { value: 2, label: '否' }];
-  unitOptions = [{ value: 1, label: '元' },
-  { value: 2, label: '千' },
-  { value: 3, label: '萬' }];
-  typeOptions = [{ value: 1, label: '統制' },
-  { value: 2, label: '明細' },];
+  amtUnitOptions = [
+    { label: '元', value: 1 },
+    { label: '千', value: 2 },
+    { label: '萬', value: 3 },
+  ];
 
+  orgOptions: any[] = [];
 
-  // 用於顯示在表格標題上的比較年月，例如 "2026年01月"
-  compareMonthLabel = '';
-  compareYearValue = this.queryForm.get('compareyear')?.value;
-
-  isShowCompareMonthLabel = false; // 是否顯示比較年月標籤
-
-  // Table data
-  data: FIN42040Data[] = [];
-  filteredData = [...this.data];
   columns = [
-    { field: 'subjectName', header: '科目名稱', visible: true },
-    { field: 'currentAmount', header: '本期金額', visible: true },
-    { field: 'currentRatio', header: '本期佔比(%)', visible: true },
-    { field: 'budgetAmount', header: '預算同期金額', visible: true },
-    { field: 'budgetRatio', header: '預算同期佔比(%)', visible: true },
-    { field: 'growthRate', header: '預算同期增減率(%)', visible: true },
-    { field: 'currentTotalAmount', header: '本期累計金額', visible: true },
-    { field: 'currentTotalRatio', header: '本期累計佔比(%)', visible: true },
-    { field: 'totalBudgetAmount', header: '預算累計金額', visible: true },
-    { field: 'totalBudgetRatio', header: '預算累計佔比(%)', visible: true },
-    { field: 'totalGrowthRate', header: '增減率(%)', visible: true }
+    { field: 'Org_ID', header: '部門代號', visible: true },
+    { field: 'Org_Name', header: '部門名稱', visible: true, style: 'text-left' },
+    { field: 'Acc_No', header: '科目代號', visible: true },
+    { field: 'Acc_Name', header: '科目名稱', visible: true, style: 'text-left' },
+    { field: 'Item_No', header: '項目代號', visible: true },
+    { field: 'Item_Name', header: '項目名稱', visible: true, style: 'text-left' },
+
+    {
+      field: 'CurrentAmount',
+      header: '本期金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat.bind(this),
+      isTotal: true,
+    },
+    {
+      field: 'CurrentRatio',
+      header: '本期佔比',
+      visible: true,
+      style: 'text-right',
+      format: this.ratioFormat.bind(this),
+    },
+    {
+      field: 'CompareAmount',
+      header: '比較年月金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat.bind(this),
+      isTotal: true,
+    },
+    {
+      field: 'CompareRatio',
+      header: '比較年月佔比',
+      visible: true,
+      style: 'text-right',
+      format: this.ratioFormat.bind(this),
+    },
+    {
+      field: 'GrowthRate',
+      header: '增減率',
+      visible: true,
+      style: 'text-right',
+      format: this.ratioFormat.bind(this),
+    },
+    {
+      field: 'CurrentAccumAmount',
+      header: '本期累計金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat.bind(this),
+      isTotal: true,
+    },
+    {
+      field: 'CurrentAccumRatio',
+      header: '本期累計佔比',
+      visible: true,
+      style: 'text-right',
+      format: this.ratioFormat.bind(this),
+    },
+    {
+      field: 'CompareAccumAmount',
+      header: '比較累計金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat.bind(this),
+      isTotal: true,
+    },
+    {
+      field: 'CompareAccumRatio',
+      header: '比較累計佔比',
+      visible: true,
+      style: 'text-right',
+      format: this.ratioFormat.bind(this),
+    },
+    {
+      field: 'AccumGrowthRate',
+      header: '累計增減率',
+      visible: true,
+      style: 'text-right',
+      format: this.ratioFormat.bind(this),
+    },
   ];
 
   constructor(
-    // private router: Router,
-    // private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
+    private fin42040Service: FIN42040Service,
+    private tls11010Service: Tls11010Service
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '140008';
-    this.initializePage('FIN42040', 'fin/fin42040cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage(
+      'FIN42040',
+      'fin/fin42040',
+      this.queryForm,
+      (form) => this.onSubmit(form)
+    );
+
+    this.queryForm.patchValue(
+      {
+        SortBy: this.defaultSort,
+        pageSize: 30,
+      },
+      { emitEvent: false }
+    );
+
+    this.loadDropdowns();
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+  private loadDropdowns(): void {
+    this.tls11010Service
+      .getOrgOptions()
+      .pipe(
+        shareReplay({ bufferSize: 1, refCount: false }),
+        untilDestroyed(this)
+      )
+      .subscribe((res: any[]) => {
+        this.orgOptions = (res || []).map((x: any) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        }));
+      });
+  }
 
-    // if (frm.valid && this.canQuery()) {
-    //   // Submit logic here
-    // }
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const raw = this.queryForm.getRawValue() as any;
 
-    this.loading = false;
-    this.notificationService.unblockUi();
+      const payload: FIN42040QueryRequest = {
+        ...raw,
+        YM: this.normalizeYM(raw.YM),
+        CompareYM: this.normalizeYM(raw.CompareYM),
+        Org_ID: raw.Org_ID || undefined,
+        ReportType: Number(raw.ReportType ?? 1),
+        AmtUnit: Number(raw.AmtUnit ?? 1),
+        pageIndex: Number(raw.pageIndex ?? 1),
+        pageSize: Number(raw.pageSize ?? 30),
+        SortBy:
+          Array.isArray(raw.SortBy) && raw.SortBy.length
+            ? raw.SortBy
+            : this.defaultSort,
+      };
 
-    this.compareYearValue = frm.value.compareyear;
-    // 根據 compareyear 的值動態設定 compareMonthLabel，例如 "2026年01月"
-    if (this.compareYearValue) {
-      const date = new Date(this.compareYearValue);
-      const year = date.getFullYear() - 1911; // 西元年轉民國年
-      const month = String(date.getMonth() + 1).padStart(2, '0');
+      Object.keys(payload).forEach((k) => {
+        const v = (payload as any)[k];
+        if (v === null || v === undefined) delete (payload as any)[k];
+        if (Array.isArray(v) && v.length === 0) delete (payload as any)[k];
+        if (typeof v === 'string' && v.trim() === '') delete (payload as any)[k];
+      });
 
-      this.compareMonthLabel = `${year}年${month}月`;
-    } else {
-      this.compareMonthLabel = '';
+      this.loading = true;
+      this.data = [];
+      this.totalRecords = 0;
+      this.historyRequestBody = { ...payload };
+
+      this.fin42040Service
+        .queryFIN42040(payload)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (resp: any) => {
+            const rows = Array.isArray(resp?.Data)
+              ? resp.Data
+              : Array.isArray(resp?.Data?.QueryData)
+                ? resp.Data.QueryData
+                : [];
+
+            this.data = rows;
+            this.totalRecords = Number(resp?.TotalCount ?? rows.length ?? 0);
+            this.historyRequestBody = { ...payload };
+
+            this.queryStateService?.setQueryState?.(
+              this.ProgNo,
+              this.queryForm.value
+            );
+          },
+          error: () => {
+            this.data = [];
+            this.totalRecords = 0;
+          },
+        });
+    });
+  }
+
+  public queryFIN42040ForReport = (body: any) =>
+    this.fin42040Service
+      .queryFIN42040({
+        ...body,
+        YM: this.normalizeYM(body?.YM ?? this.queryForm.value?.YM),
+        CompareYM: this.normalizeYM(
+          body?.CompareYM ?? this.queryForm.value?.CompareYM
+        ),
+      })
+      .pipe(
+        map((resp: any) => ({
+          Data: Array.isArray(resp?.Data)
+            ? resp.Data
+            : Array.isArray(resp?.Data?.QueryData)
+              ? resp.Data.QueryData
+              : [],
+          TotalCount: Number(resp?.TotalCount ?? 0),
+          GrandTotal: null,
+        }))
+      );
+
+  onExportPDF(): void {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
     }
-    // 如果 compareDate 有值則顯示比較年月標籤，否則隱藏
-    this.isShowCompareMonthLabel = !!this.compareYearValue;
 
-    this.data = [
-      {
-        subjectName: '營業收入',
-        currentAmount: null,
-        currentRatio: null,
-        budgetAmount: null,
-        budgetRatio: null,
-        growthRate: null,
-        currentTotalAmount: null,
-        currentTotalRatio: null,
-        totalBudgetAmount: null,
-        totalBudgetRatio: null,
-        totalGrowthRate: null,
-      },
-      {
-        subjectName: '4101銷貨收入',
-        currentAmount: 59736807,
-        currentRatio: 81.0,
-        budgetAmount: 52432592,
-        budgetRatio: 77.25,
-        growthRate: 13.93,
-        currentTotalAmount: 59736807,
-        currentTotalRatio: 81.0,
-        totalBudgetAmount: 52432592,
-        totalBudgetRatio: 77.25,
-        totalGrowthRate: 13.93,
-      },
-      {
-        subjectName: '4121銷貨折讓',
-        currentAmount: -1615089,
-        currentRatio: -2.19,
-        budgetAmount: -845372,
-        budgetRatio: -1.25,
-        growthRate: 91.04,
-        currentTotalAmount: -1615089,
-        currentTotalRatio: -2.19,
-        totalBudgetAmount: -845372,
-        totalBudgetRatio: -1.25,
-        totalGrowthRate: 91.04,
-      },
-      {
-        subjectName: '4201營業租金收入',
-        currentAmount: 7344077,
-        currentRatio: 9.96,
-        budgetAmount: 7531472,
-        budgetRatio: 11.10,
-        growthRate: -2.49,
-        currentTotalAmount: 7344077,
-        currentTotalRatio: 9.96,
-        totalBudgetAmount: 7531472,
-        totalBudgetRatio: 11.10,
-        totalGrowthRate: -2.49,
-      },
-      {
-        subjectName: '4301其他營業收入',
-        currentAmount: 1574000,
-        currentRatio: 2.13,
-        budgetAmount: 1891572,
-        budgetRatio: 2.79,
-        growthRate: -16.79,
-        currentTotalAmount: 1574000,
-        currentTotalRatio: 2.13,
-        totalBudgetAmount: 1891572,
-        totalBudgetRatio: 2.79,
-        totalGrowthRate: -16.79,
-      },
-      {
-        subjectName: '4302其他營業收入扣款',
-        currentAmount: 6713066,
-        currentRatio: 9.10,
-        budgetAmount: 6861445,
-        budgetRatio: 10.11,
-        growthRate: -2.16,
-        currentTotalAmount: 6713066,
-        currentTotalRatio: 9.10,
-        totalBudgetAmount: 6861445,
-        totalBudgetRatio: 10.11,
-        totalGrowthRate: -2.16,
-      },
-      {
-        subjectName: '營業收入合計：',
-        currentAmount: 73752921,
-        currentRatio: 100.0,
-        budgetAmount: 67871109,
-        budgetRatio: 100.0,
-        growthRate: 8.67,
-        currentTotalAmount: 73752921,
-        currentTotalRatio: 100.0,
-        totalBudgetAmount: 67871109,
-        totalBudgetRatio: 100.0,
-        totalGrowthRate: 8.67,
-      },
-      {
-        subjectName: '營業成本',
-        currentAmount: null,
-        currentRatio: null,
-        budgetAmount: null,
-        budgetRatio: null,
-        growthRate: null,
-        currentTotalAmount: null,
-        currentTotalRatio: null,
-        totalBudgetAmount: null,
-        totalBudgetRatio: null,
-        totalGrowthRate: null,
-      },
-      {
-        subjectName: '5101銷貨成本',
-        currentAmount: 14559353,
-        currentRatio: 19.74,
-        budgetAmount: 12421952,
-        budgetRatio: 18.30,
-        growthRate: 17.21,
-        currentTotalAmount: 14559353,
-        currentTotalRatio: 19.74,
-        totalBudgetAmount: 12421952,
-        totalBudgetRatio: 18.30,
-        totalGrowthRate: 17.21,
-      },
-      {
-        subjectName: '5201其他營業支出',
-        currentAmount: 916550,
-        currentRatio: 1.24,
-        budgetAmount: 794930,
-        budgetRatio: 1.17,
-        growthRate: 15.30,
-        currentTotalAmount: 916550,
-        currentTotalRatio: 1.24,
-        totalBudgetAmount: 794930,
-        totalBudgetRatio: 1.17,
-        totalGrowthRate: 15.30,
-      },
-      {
-        subjectName: '營業成本合計：',
-        currentAmount: 15475903,
-        currentRatio: 20.98,
-        budgetAmount: 13216882,
-        budgetRatio: 19.47,
-        growthRate: 17.09,
-        currentTotalAmount: 15475903,
-        currentTotalRatio: 20.98,
-        totalBudgetAmount: 13216882,
-        totalBudgetRatio: 19.47,
-        totalGrowthRate: 17.09,
-      },
-      {
-        subjectName: '營業毛利：',
-        currentAmount: 58277018,
-        currentRatio: null,
-        budgetAmount: 54654227,
-        budgetRatio: null,
-        growthRate: null,
-        currentTotalAmount: 58277018,
-        currentTotalRatio: null,
-        totalBudgetAmount: 54654227,
-        totalBudgetRatio: null,
-        totalGrowthRate: null,
-      },
-      {
-        subjectName: '營業費用',
-        currentAmount: null,
-        currentRatio: null,
-        budgetAmount: null,
-        budgetRatio: null,
-        growthRate: null,
-        currentTotalAmount: null,
-        currentTotalRatio: null,
-        totalBudgetAmount: null,
-        totalBudgetRatio: null,
-        totalGrowthRate: null,
-      },
-      {
-        subjectName: '6101薪資',
-        currentAmount: 3378008,
-        currentRatio: 4.58,
-        budgetAmount: 3415298,
-        budgetRatio: 5.03,
-        growthRate: -1.09,
-        currentTotalAmount: 3378008,
-        currentTotalRatio: 4.58,
-        totalBudgetAmount: 3415298,
-        totalBudgetRatio: 5.03,
-        totalGrowthRate: -1.09,
-      },
-      {
-        subjectName: '6102租金支出',
-        currentAmount: 26285949,
-        currentRatio: 35.64,
-        budgetAmount: 25811484,
-        budgetRatio: 38.03,
-        growthRate: 1.84,
-        currentTotalAmount: 26285949,
-        currentTotalRatio: 35.64,
-        totalBudgetAmount: 25811484,
-        totalBudgetRatio: 38.03,
-        totalGrowthRate: 1.84,
-      },
-      {
-        subjectName: '6103文具用品',
-        currentAmount: 53785,
-        currentRatio: 0.07,
-        budgetAmount: 42156,
-        budgetRatio: 0.06,
-        growthRate: 27.59,
-        currentTotalAmount: 53785,
-        currentTotalRatio: 0.07,
-        totalBudgetAmount: 42156,
-        totalBudgetRatio: 0.06,
-        totalGrowthRate: 27.59,
-      },
-      {
-        subjectName: '6104旅費',
-        currentAmount: 14165,
-        currentRatio: 0.02,
-        budgetAmount: 113951,
-        budgetRatio: 0.17,
-        growthRate: -87.57,
-        currentTotalAmount: 14165,
-        currentTotalRatio: 0.02,
-        totalBudgetAmount: 113951,
-        totalBudgetRatio: 0.17,
-        totalGrowthRate: -87.57,
-      },
-      {
-        subjectName: '6105運費',
-        currentAmount: 32828,
-        currentRatio: 0.04,
-        budgetAmount: 42119,
-        budgetRatio: 0.06,
-        growthRate: -22.06,
-        currentTotalAmount: 32828,
-        currentTotalRatio: 0.04,
-        totalBudgetAmount: 42119,
-        totalBudgetRatio: 0.06,
-        totalGrowthRate: -22.06,
-      },
-      {
-        subjectName: '6106郵電費',
-        currentAmount: 81305,
-        currentRatio: 0.11,
-        budgetAmount: 137368,
-        budgetRatio: 0.20,
-        growthRate: -40.81,
-        currentTotalAmount: 81305,
-        currentTotalRatio: 0.11,
-        totalBudgetAmount: 137368,
-        totalBudgetRatio: 0.20,
-        totalGrowthRate: -40.81,
-      },
-      {
-        subjectName: '6107修繕費',
-        currentAmount: 290424,
-        currentRatio: 0.39,
-        budgetAmount: 421165,
-        budgetRatio: 0.62,
-        growthRate: -31.04,
-        currentTotalAmount: 290424,
-        currentTotalRatio: 0.39,
-        totalBudgetAmount: 421165,
-        totalBudgetRatio: 0.62,
-        totalGrowthRate: -31.04,
-      },
-      {
-        subjectName: '6108維護費',
-        currentAmount: 7378896,
-        currentRatio: 10.00,
-        budgetAmount: 7511593,
-        budgetRatio: 11.07,
-        growthRate: -1.77,
-        currentTotalAmount: 7378896,
-        currentTotalRatio: 10.00,
-        totalBudgetAmount: 7511593,
-        totalBudgetRatio: 11.07,
-        totalGrowthRate: -1.77,
-      },
-      {
-        subjectName: '6109廣告費',
-        currentAmount: 4014865,
-        currentRatio: 5.44,
-        budgetAmount: 3795596,
-        budgetRatio: 5.59,
-        growthRate: 5.78,
-        currentTotalAmount: 4014865,
-        currentTotalRatio: 5.44,
-        totalBudgetAmount: 3795596,
-        totalBudgetRatio: 5.59,
-        totalGrowthRate: 5.78,
-      },
-    ];
+    this.btnLoading = true;
+
+    this.fin42040Service
+      .exportFIN42040PDF(this.historyRequestBody)
+      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (resp) => this.handleFileExport(resp, '.pdf'),
+      });
   }
 
+  onExportXLSX(): void {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+
+    this.btnLoading = true;
+
+    this.fin42040Service
+      .exportFIN42040Excel(this.historyRequestBody)
+      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (resp) => this.handleFileExport(resp, '.xlsx'),
+      });
+  }
+
+  private handleFileExport(
+    response: HttpResponse<Blob>,
+    fileExtension: string
+  ): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  private getFilenameFromHeader(
+    contentDisposition: string | null,
+    defaultExtension: string
+  ): string {
+    if (!contentDisposition) return `FIN42040_去年同期比較表${defaultExtension}`;
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        return decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+      } catch {
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `FIN42040_去年同期比較表${defaultExtension}`;
+  }
+
+  private normalizeYM(value: any): string {
+    if (!value) return '';
+
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      const y = value.getFullYear();
+      const m = String(value.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    }
+
+    const s = String(value).trim().replace(/[^\d]/g, '');
+    return s.length >= 6 ? s.substring(0, 6) : s;
+  }
+
+  moneyFormat(value: any): string {
+    return Number(value ?? 0).toLocaleString('en-US');
+  }
+
+  ratioFormat(value: any): string {
+    const n = Number(value ?? 0);
+    return Number.isFinite(n) ? n.toLocaleString('en-US') : '0';
+  }
 }
