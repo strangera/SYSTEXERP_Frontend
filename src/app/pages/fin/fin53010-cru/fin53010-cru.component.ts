@@ -1562,4 +1562,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.vouTermSearchTemp.set((event.target as HTMLInputElement).value?.toString() || '');
   }
 
+  public clearVenUsr(rowData: FIN53010DetailTable): void {
+    rowData.DetailNo = '';
+    rowData.DetailName = '';
+  }
+
 }
