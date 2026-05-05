@@ -814,18 +814,21 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           const venOpt = getVenOpt(String(row.DetailNo ?? ''));
           const amt = (row.AccAmtD ?? 0) + (row.AccAmtC ?? 0);
           const noteDesc = this.resolveNoteDescForStep(row);
+          const venPayType = venOpt?.['VEN_PayType'] ?? undefined
+          /** 付款方式不為開票時，票據抬頭為空白 */
+          const venCheckTitle = (venPayType === '2') ? (row.DetailName ?? venOpt?.['VEN_Name'] ?? undefined) : ''
 
           if (vt === '3') {
             ap.push({
               org_id: row.ORG_ID ?? '100000',
               ven_no: row.DetailNo,
-              ven_pay_type: venOpt?.['VEN_PayType'] ?? undefined,
+              ven_pay_type: venPayType,
               acp_amt: amt || undefined,
               acp_date: vouDate,
               ven_bnk_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
               ven_bank_account: this.formatVenBankAccount(venOpt),
               ven_ctrlyn: venOpt?.['VEN_CTRLYN'] ?? undefined,
-              ven_check_title: row.DetailName ?? venOpt?.['VEN_Name'] ?? undefined,
+              ven_check_title: venCheckTitle,
               acc_no: row.AccNo,
               note_desc: noteDesc,
             });
