@@ -49,15 +49,12 @@ interface VoucherMeta {
 })
 export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   override ProgNo = 'FIN55050';
-
-  // ✅ 給 Menubar 用的自訂麵包屑
   crumbs: MenuItem[] = [
     { label: '人資財會模組' },
     { label: '總帳管理系統' },
     { label: '報表查詢' },
     { label: '分類帳', disabled: true }
   ];
-
   vouNo = '';
   initialized = false;
   meta: VoucherMeta | null = null;
@@ -66,13 +63,13 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
   sumData: Record<string, number> | null = null;
 
   columns: Column[] = [
-    { field: 'AccSubject', header: '會計科目', visible: true },
-    { field: 'Ven_Name', header: '廠商編號/簡稱', visible: true },
-    { field: 'Org_Name', header: '部門名稱', visible: true },
-    { field: 'NoteDesc', header: '摘要', visible: true },
-    { field: 'AccAmt_D', header: '借方金額', visible: true, format: formatAmount, isTotal: true },
-    { field: 'AccAmt_C', header: '貸方金額', visible: true, format: formatAmount, isTotal: true },
-    { field: 'Remark', header: '備註', visible: true },
+    { field: 'AccSubject', header: '會計科目', align: 'left' },
+    { field: 'Ven_Name', header: '廠商編號/簡稱', align: 'left' },
+    { field: 'Org_Name', header: '部門名稱', align: 'left' },
+    { field: 'NoteDesc', header: '摘要', align: 'left' },
+    { field: 'AccAmt_D', header: '借方金額', format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'AccAmt_C', header: '貸方金額', format: formatAmount, isTotal: true, align: 'right' },
+    { field: 'Remark', header: '備註', align: 'left' },
   ];
 
   constructor(private fin55050Service: FIN55050Service) {
@@ -80,7 +77,6 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   ngOnInit(): void {
-    // 1) ProgNo：優先讀 localStorage；沒有就回寫預設值
     try {
       const savedProg = localStorage.getItem('FIN55050_CRU_PROGNO');
       this.ProgNo = savedProg && savedProg.trim() ? savedProg : 'FIN55050';
@@ -89,8 +85,6 @@ export class FIN55050CRUComponent extends BasicCruPageComponent<any> implements 
       this.ProgNo = 'FIN55050';
       try { localStorage.setItem('FIN55050_CRU_PROGNO', this.ProgNo); } catch { }
     }
-
-    // 2) 初始化頁面（註冊 Menubar 權限路徑）
     try {
       this.initializePage(this.ProgNo);
     } catch (err) {
