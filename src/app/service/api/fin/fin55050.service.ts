@@ -92,6 +92,7 @@ export interface ExportFIN55050Payload {
   VouStatusList: string[];
   IsTarget: string;
   ReportMode: string;
+  ACCT_KEY: string;
 }
 
 export interface DropDownResp<T = { No: string; Name: string }[]> {
