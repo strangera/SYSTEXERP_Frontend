@@ -17,12 +17,11 @@ import { Column, createPaginationConfig, formatAmount, formatDate, } from '@shar
 import { option } from '@shared/models/sys/sysb000.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize, map } from 'rxjs';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TableSubheaderComponent } from '../fin42010/fin42010-table/fin42010-table.component';
 
 //1.2.9.3 開票明細表
@@ -39,7 +38,6 @@ import { TableSubheaderComponent } from '../fin42010/fin42010-table/fin42010-tab
     DropdownComponent,
     ButtonComponent,
     ButtonModule,
-    TableComponent,
     TableReportComponent,
     TableSubheaderComponent,
     TranslateModule,
@@ -69,6 +67,8 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
   lastQueryBody = null;
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
+  // ... 其他變數
+  isLazy = true; // 控制是否啟用 Lazy 模式
 
   BNK_No_Options: option[] = []; // 銀行代號 下拉
   VEN_No_Options: option[] = []; // 廠客代號 下拉
@@ -88,7 +88,6 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
   footerData: FIN29030Data | null = null;
   filteredData = [...this.data];
   columns: Column[] = [
-
     { field: 'PAM_No', header: '付款編號', visible: true },
     { field: 'CHK_No', header: '支票號碼', visible: true },
     { field: 'TicketStatusName', header: '票據狀態', visible: true },
@@ -97,7 +96,7 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
     { field: 'ExpireDate', header: '到期日', visible: true, format: formatDate },
     { field: 'VEN_No', header: '廠客代號', visible: true },
     { field: 'VEN_Name', header: '廠客名稱', visible: true },
-    { field: 'TicketAmt', header: '票面金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
+    { field: 'TicketAmt', header: '票面金額', visible: true, format: formatAmount, isSubTotal: true, align: 'right' },
   ];
 
   // 控制變數
@@ -105,7 +104,7 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
 
   constructor(
     private readonly dropdownApiService: DropdownApiService,
-    private readonly fin29030Service: Fin29030Service,
+    public fin29030Service: Fin29030Service,
   ) {
     super();
   }
@@ -116,27 +115,29 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
   }
 
   onSubmit(frm: FormGroup) {
+    this.isLazy = true;
     console.log('開票request:', JSON.stringify(frm.value, null, 2));
-    this.fin29030Service.queryFIN29030(frm.value).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.data = response.Data.filter((item: FIN29030Data) => item.RowType === 0) || [];
-          console.log('Result', this.data);
-          this.totalRecords = response.TotalCount;
-          this.lastQueryBody = frm.value;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        } else {
-          console.error('API error:', response.Status, response.Message);
+    this.handleSubmit(frm, () => {
+      this.fin29030Service.queryFIN29030(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.totalRecords = res.TotalCount;
+        this.data = res.Data;
+        this.lastQueryBody = frm.value;
+
+        // 2. 第一次查詢就判斷：如果資料已抓完，直接關閉 lazy
+        if (this.data.length >= this.totalRecords && this.totalRecords > 0) {
+          this.isLazy = false;
         }
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
+      })
     });
+  }
+
+  onTableDataChange(currentData: any[]) {
+    this.data = currentData;
+    // 每次滾動載入更多資料後（例如載入第 31 筆後），檢查是否達到總數
+    if (this.data.length >= this.totalRecords && this.totalRecords > 0) {
+      this.isLazy = false; // 關閉此變數會讓 table-report 停止偵測滾動
+      console.log('29030 已達總筆數，關閉 Lazy 模式');
+    }
   }
 
   btnPDFLoading = false;
@@ -192,17 +193,6 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
       // console.log('廠客代號 下拉', response);
     });
   }
-
-  queryFunction = (body: any) => {
-    return this.fin29030Service.queryFIN29030(body).pipe(
-      map((response) => {
-        return {
-          Data: response.Data.filter((item: FIN29030Data) => item.RowType === 0) || null,
-          TotalCount: response.TotalCount
-        };
-      })
-    );
-  };
 
   private getTimestamp(): string {
     const now = new Date();
