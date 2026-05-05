@@ -239,6 +239,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       return this.onEdit({ ...rowData, type, TXN_GUIPaper: this.historyRequestBody?.TXN_GUIPaper }, this.historyRequestBody);
     }
     if (type === FIX_TYPE.交易資料作廢) {
+      const isCheckStatus = rowData?.Check_Status === 'Y';
       const isCross = this.isCrossPeriod(rowData.TXN_Date) && rowData.TXN_GUIBegNo !== '00000000';
       // --- 預設時間為 23:00 的 Date 物件 ---
       const defaultVoidDate = new Date();
@@ -257,6 +258,15 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
           this.tls24010Service.queryTLS24010IsClose(formattedDate).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(closeRes => {
             if (closeRes.Data === 'Y') {
               this.messageService.errorBubble('此作廢日期已關帳，請選擇其他日期');
+              setTimeout(() => {
+                this.onEditData(rowData, type);
+              }, 0);
+              return;
+            }
+            // 作廢日期等同交易日期(當日作廢)，要多判斷是否審核
+            const txnDateStr = this.datePipe.transform(rowData.TXN_Date, 'yyyy-MM-dd');
+            if (formattedDate === txnDateStr && isCheckStatus) {
+              this.messageService.errorBubble('有支付工具已審核，不可當日作廢，請選擇其他日期');
               setTimeout(() => {
                 this.onEditData(rowData, type);
               }, 0);
