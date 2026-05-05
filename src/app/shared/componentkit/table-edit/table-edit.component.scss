@@ -40,6 +40,14 @@
       .button-group .insert-button {
         width: auto !important;
       }
+      .caption-center .p-multiselect {
+        border-radius: 6px;
+        background-color: unset;
+        background: #ffffff;
+        border: 1px solid #d1d5db;
+        width: 100%;
+        height: 100%;
+      }
     }
     .invalid-row {
       color: var(--red-500) !important;
