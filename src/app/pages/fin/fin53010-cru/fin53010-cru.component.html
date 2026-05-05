@@ -100,7 +100,7 @@
 <div class="card">
   <div class="grid p-fluid">
     <div class="col-12">
-      <p-panel header="資料" class="line-height-3 m-0 mb-3">
+      <p-panel header="資料" [toggleable]="true" class="line-height-3 m-0 mb-3">
         <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="!isFormReadable" [disabled]="isFormReadable"
           (fieldChange)="onFieldChange($event)" (dataChange)="onDataChange($event)"
           (rowReorderData)="onRowReorder($event)" [data]="tableData()" [defaultInsertData]="defaultInsertData()"
