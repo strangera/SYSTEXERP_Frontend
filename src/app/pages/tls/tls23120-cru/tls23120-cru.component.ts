@@ -267,20 +267,9 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  private downloadBlob(resp: any, fallbackFileName: string) {
+  private downloadBlob(resp: any, fileName: string) {
     const blob = resp?.body as Blob | undefined;
     if (!blob) return;
-
-    const cd =
-      resp?.headers?.get?.('content-disposition') ||
-      resp?.headers?.get?.('Content-Disposition');
-
-    let fileName = fallbackFileName;
-    if (cd) {
-      const m = /filename\*=UTF-8''([^;]+)|filename="?([^"]+)"?/i.exec(cd);
-      const raw = decodeURIComponent(m?.[1] || m?.[2] || '');
-      if (raw) fileName = raw;
-    }
 
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
