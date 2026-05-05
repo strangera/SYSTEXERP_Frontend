@@ -460,6 +460,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         header: '廠商/員工代號',
         textAlign: 'left',
         type: 'template',
+        templateDisplayField: 'DetailName',
         templateRef: this.venUsrTemplate(),
       },
       {
