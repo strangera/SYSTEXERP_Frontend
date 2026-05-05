@@ -442,6 +442,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         header: '科目代號/名稱',
         textAlign: 'left',
         type: 'dropdown',
+        width: '280px',
         required: !0,
         showClear: !1,
         options: () => this.service.accNoOptions(),
