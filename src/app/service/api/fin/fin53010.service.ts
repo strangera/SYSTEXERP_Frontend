@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { FIN52030Data, FIN52030DetailData, FIN52030DetailDataResponse, FIN52030Payload } from '@pages/fin/fin52030/fin52030.model';
-import { AccDescOption, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps4023DetailDataByInvoiceNumberRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
+import { AccDescOption, Aps4023DetailDataByInvoiceNumberData, FIN53010Data, FIN53010DataDetail, FIN53010DeleteResult, FIN53010DetailDataByVouNoForUpdateResult, FIN53010DetailDataByVouNoResult, FIN53010InsertResult, FIN53010Payload, FIN53010UpdateResult, GetCalculatedPayDateRequest, GetCalculatedPayDateResult, Gls1005Fin53010DropdownItem, InsertFIN53010Request, NoteDescResponse, Pos2013Fin53010DropdownItem, QueryAps4023DetailDataByInvoiceNumberRequest, QueryFIN53010DetailDataByVouNoForUpdateRequest, QueryFIN53010DetailDataByVouNoRequest, QueryPos2013Fin53010Request, UpdateFIN53010Request, VoidFIN53010Request } from '@pages/fin/fin53010/fin53010.model';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -35,6 +35,8 @@ export class FIN53010Service {
   public readonly detailByVouNoForUpdateLoading = signal<boolean>(!1);
   /** 依發票號碼查 APS4023（queryAPS4023DetatilData_ByInvoiceNumber） */
   public readonly aps4023ByInvoiceLoading = signal<boolean>(!1);
+  /** 依廠商與立帳日期查預計付款日（getCalculatedPayDate） */
+  public readonly calculatedPayDateLoading = signal<boolean>(!1);
 
   public readonly cru = signal<boolean>(!1);
 
@@ -211,6 +213,31 @@ export class FIN53010Service {
           }),
         );
     });
+  }
+
+  public getCalculatedPayDate(payload: GetCalculatedPayDateRequest): Observable<GetCalculatedPayDateResult> {
+    this.calculatedPayDateLoading.set(true);
+    return this.http.post<GetCalculatedPayDateResult>(`${apiUrl}/getCalculatedPayDate`, payload).pipe(
+      take(1),
+      tap(res => this.logger.debug('getCalculatedPayDate:', [payload, res])),
+      catchError(err => {
+        this.logger.error('API getCalculatedPayDate 失敗:', err);
+        const body = err?.error as Partial<GetCalculatedPayDateResult> | undefined;
+        const msg = typeof body?.Message === 'string' && body.Message
+          ? body.Message
+          : (typeof err?.message === 'string' && err.message ? err.message : '查詢預計付款日失敗');
+        return of({
+          Status: '9999',
+          Data: null as string | null,
+          Message: msg,
+          Error: body?.Error ?? null,
+          Meta: body?.Meta ?? { Timestamp: '', RequestId: '' },
+          TotalCount: 0,
+          TotalPage: 0,
+        } as GetCalculatedPayDateResult);
+      }),
+      finalize(() => this.calculatedPayDateLoading.set(false)),
+    );
   }
 
   /** 查詢會計科目（GLS1005 FIN53010 專用下拉） */

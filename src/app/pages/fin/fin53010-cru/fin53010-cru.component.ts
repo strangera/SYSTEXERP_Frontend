@@ -347,12 +347,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       || this.service.detailByVouNoForUpdateLoading()
       || this.lookupVouLoading()
       || this.service.bankNoLoading()
-      || this.service.aps4023ByInvoiceLoading();
+      || this.service.aps4023ByInvoiceLoading()
+      || this.service.calculatedPayDateLoading();
   });
 
   /** 銷項／進項步驟表：已依 API 成功帶入的發票字串（列索引 → 完整 10 碼），避免重複請求 */
   private readonly lastSalesInvoiceLookupKey = new Map<number, string>();
   private readonly lastPurchaseInvoiceLookupKey = new Map<number, string>();
+  /** 應付帳款預計付款日：列索引查詢去重鍵（列索引 → ven_no|yyyy-MM-dd） */
+  private readonly lastStepApPayDateLookupKey = new Map<number, string>();
+  private hasShownStepApPayDateError = false;
 
   // 載入資料的 effect（不 destroy，以便刪除明細重載或依傳票編號重載時仍能同步表單）
   public readonly dataEffect = effect(() => {
@@ -543,7 +547,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'ven_no', header: '廠商代號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ven_pay_type', header: '付款方式', textAlign: 'left', type: 'dropdown', options: () => this.service.venPayTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'acp_amt', header: '金額', textAlign: 'right', width: '7rem', type: 'inputNumber', disabled: () => true },
-    { field: 'acp_expect_pay_date', header: '預計付款日', textAlign: 'left', width: '9rem', type: 'date' },
+    { field: 'acp_expect_pay_date', header: '預計付款日', textAlign: 'left', width: '9rem', type: 'date', disabled: () => true },
     { field: 'acp_date', header: '立帳日期', textAlign: 'left', width: '9rem', type: 'date', disabled: () => true },
     { field: 'ven_bnk_no', header: '匯款銀行代號', textAlign: 'left', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ven_bank_account', header: '銀行帳號/帳戶名稱', textAlign: 'left', type: 'input', disabled: () => true },
@@ -849,6 +853,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.stepAPRows.set(ap);
         this.stepARRows.set(ar);
         this.stepBankRows.set(bk);
+        this.autoFillStepApExpectedPayDate(ap, onCleanup);
       } finally {
         this.stepRowsSyncBusy.set(!1);
       }
@@ -866,6 +871,64 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (a && b) return `${a} / ${b}`;
     const s = (a ?? b ?? '') as string;
     return s || undefined;
+  }
+
+  private autoFillStepApExpectedPayDate(rows: FIN53010StepAP[], onCleanup: (cleanupFn: () => void) => void): void {
+    this.hasShownStepApPayDateError = false;
+    if (!rows.length) {
+      this.lastStepApPayDateLookupKey.clear();
+      return;
+    }
+    const subscriptions: { unsubscribe: () => void; }[] = [];
+    for (let index = 0; index < rows.length; index++) {
+      const row = rows[index];
+      // 若使用者或既有資料已有預計付款日，保留原值不覆寫
+      if (row.acp_expect_pay_date) continue;
+      const venNo = String(row.ven_no ?? '').trim();
+      const acpDate = row.acp_date instanceof Date ? row.acp_date : null;
+      const dateYmd = this.dateToYmdOrUndefined(acpDate);
+      if (!venNo || !dateYmd) continue;
+      const dedupeKey = `${venNo}|${dateYmd}`;
+      if (this.lastStepApPayDateLookupKey.get(index) === dedupeKey) continue;
+
+      const sub = this.service.getCalculatedPayDate({
+        VenNo: venNo,
+        _Date: dateYmd,
+      }).pipe(take(1)).subscribe({
+        next: res => {
+          if (res.Status !== '0000') {
+            if (!this.hasShownStepApPayDateError) {
+              this.hasShownStepApPayDateError = true;
+              this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '預計付款日帶入失敗');
+            }
+            return;
+          }
+          const rawDate = res.Data;
+          if (!rawDate) return;
+          const parsed = new Date(rawDate);
+          if (Number.isNaN(parsed.getTime())) return;
+          this.lastStepApPayDateLookupKey.set(index, dedupeKey);
+          this.stepAPRows.update(currentRows => {
+            if (!currentRows[index]) return currentRows;
+            // 保留使用者後續手動輸入值，僅在欄位仍為空時自動帶入
+            if (currentRows[index].acp_expect_pay_date) return currentRows;
+            const next = [...currentRows];
+            next[index] = { ...next[index], acp_expect_pay_date: parsed };
+            return next;
+          });
+        },
+        error: () => {
+          if (!this.hasShownStepApPayDateError) {
+            this.hasShownStepApPayDateError = true;
+            this.messageService.errorBubble('預計付款日帶入失敗');
+          }
+        },
+      });
+      subscriptions.push(sub);
+    }
+    onCleanup(() => {
+      subscriptions.forEach(sub => sub.unsubscribe());
+    });
   }
 
   private resolveNoteDescForStep(row: FIN53010DetailTable): string {

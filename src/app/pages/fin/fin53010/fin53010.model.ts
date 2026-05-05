@@ -441,6 +441,17 @@ export interface QueryAps4023DetailDataByInvoiceNumberRequest {
   InvoiceNumber?: string | null;
 }
 
+/** getCalculatedPayDate Request */
+export interface GetCalculatedPayDateRequest {
+  VenNo?: string | null;
+  _Date?: string | null;
+}
+
+/** getCalculatedPayDate Response */
+export type GetCalculatedPayDateResult = Omit<BaseQueryResponse<string | null>, 'Data'> & {
+  Data: string | null;
+};
+
 /** queryAPS4023DetatilData_ByInvoiceNumber 200 Data（發票主檔） */
 export interface Aps4023DetailDataByInvoiceNumberData {
   ID?: number;
