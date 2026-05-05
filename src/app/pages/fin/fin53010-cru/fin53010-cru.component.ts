@@ -1361,9 +1361,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         case 'AccNo':
           // 自動帶入科目名稱
           rowData.AccCName = this.service.accNoMap().get(String(event.value))?.label ?? '';
-          // 自動帶入摘要
-          rowData.NoteDesc = String(this.service.noteDescMap()
-            .get(event.value)?.data?.[0].label || event.value || '');
+          // 如果摘要為空，自動帶入摘要
+          if (!rowData.NoteDesc) {
+            rowData.NoteDesc = String(this.service.noteDescMap()
+              .get(event.value)?.data?.[0].label || event.value || '');
+          }
           // 取得立沖代號下拉選單
           this.service.getPTADropdownOptions(String(event.value));
           break;
