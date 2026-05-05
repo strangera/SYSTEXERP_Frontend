@@ -1160,8 +1160,15 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       ).subscribe({
         next: res => {
           if (res.Status !== '0000') return;
+          const insertVouNo = this.isFormCreateable
+            ? (res.Data as any).VouNo
+            : undefined;
+          this.messageService.successBubble(
+            this.isFormCreateable
+              ? (insertVouNo ? `新增成功，傳票號碼：${insertVouNo}` : '新增成功')
+              : '更新成功',
+          );
           this.onCancel();
-          this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
         },
       });
     });

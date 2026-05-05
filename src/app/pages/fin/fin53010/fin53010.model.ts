@@ -226,6 +226,7 @@ export interface InsertFIN53010Request {
 export interface InsertFIN53010ResponseItem {
   gls3002_id?: number;
   DetailCount?: number;
+  VouNo?: string | null;
 }
 
 /** Swagger UpdateFIN53010Detail */
