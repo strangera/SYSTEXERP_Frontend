@@ -1136,7 +1136,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (accNo === '123208') {
       const allowedOrgIds = ['107400', '107500', '100200', '100210', '100300', '100310', '106000'];
       if (!allowedOrgIds.includes(orgId)) {
-        return { isValid: false, errorMessage: '組織代號有誤' };
+        return { isValid: false, errorMessage: '組織代號有誤。只可以輸入以下組織代號: 107400, 107500, 100200, 100210, 100300, 100310, 106000' };
       }
     }
 
