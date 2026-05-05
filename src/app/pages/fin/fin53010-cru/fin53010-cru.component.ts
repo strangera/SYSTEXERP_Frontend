@@ -79,6 +79,7 @@ import { EditColumn, EditColumnExtend, FieldChangeEvent as StepFieldChangeEvent 
   ],
 })
 export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Detail> implements OnInit {
+  private static readonly SUMMARY_INVOICE_REGEX = /([A-Za-z]{2})(\d{8})\*(\d{2})\*/;
 
   @ViewChild('purchaseTableEdit') purchaseTableEditComponent?: TableEditComponent;
   @ViewChild('bankTableEdit') bankTableEditComponent?: TableEditComponent;
@@ -952,6 +953,148 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }, { injector: this.injector });
   }
 
+  private parseSummaryInvoiceToken(raw: string | null | undefined): Pick<FIN53010StepSalesInvoiceRow, 'invoice_type' | 'invoice_prefix' | 'invoice_no'> | null {
+    const text = String(raw ?? '').trim();
+    if (!text) return null;
+    const hit = FIN53010CRUComponent.SUMMARY_INVOICE_REGEX.exec(text);
+    if (!hit) return null;
+    const [, prefix, invoiceNo, invoiceType] = hit;
+    return {
+      invoice_type: invoiceType,
+      invoice_prefix: prefix.toUpperCase(),
+      invoice_no: invoiceNo,
+    };
+  }
+
+  private buildInvoiceDedupKey(invoiceType: string | null | undefined, prefix: string | null | undefined, invoiceNo: string | null | undefined): string {
+    return `${String(invoiceType ?? '').trim().toUpperCase()}|${String(prefix ?? '').trim().toUpperCase()}|${String(invoiceNo ?? '').trim()}`;
+  }
+
+  private hydrateSalesRowByInvoice(index: number, prefix: string, no: string): void {
+    if (this.isFormReadable) return;
+    if (index < 0) return;
+    if (prefix.length !== 2 || no.length !== 8) return;
+    const full = `${prefix}${no}`;
+    if (this.lastSalesInvoiceLookupKey.get(index) === full) return;
+
+    this.service.queryAps4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
+      next: res => {
+        if (res.Status !== '0000') {
+          this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '查詢發票失敗');
+          return;
+        }
+        const d = res.Data;
+        if (!d) {
+          this.messageService.errorBubble('查無資料');
+          return;
+        }
+        this.lastSalesInvoiceLookupKey.set(index, full);
+        const patch = this.mapAps4023ToSalesRow(d, prefix, no);
+        this.stepSalesRows.update(rows => {
+          const next = [...rows];
+          if (!next[index]) return rows;
+          next[index] = { ...next[index], ...patch };
+          return next;
+        });
+      },
+    });
+  }
+
+  private hydratePurchaseRowByInvoice(index: number, prefix: string, no: string): void {
+    if (this.isFormReadable) return;
+    if (index < 0) return;
+    if (prefix.length !== 2 || no.length !== 8) return;
+    const full = `${prefix}${no}`;
+    if (this.lastPurchaseInvoiceLookupKey.get(index) === full) return;
+
+    this.service.queryAps4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
+      next: res => {
+        if (res.Status !== '0000') {
+          this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '查詢發票失敗');
+          return;
+        }
+        const d = res.Data;
+        if (!d) {
+          this.messageService.errorBubble('查無資料');
+          return;
+        }
+        this.lastPurchaseInvoiceLookupKey.set(index, full);
+        const patch = this.mapAps4023ToPurchaseRow(d, prefix, no);
+        this.stepPurchaseRows.update(rows => {
+          const next = [...rows];
+          if (!next[index]) return rows;
+          const merged = { ...next[index], ...patch };
+          const discNo = String(merged.deduction_code ?? '');
+          const purType = (discNo === '1' || discNo === '3') ? '1' : discNo ? '2' : merged.category_type;
+          next[index] = { ...merged, category_type: purType };
+          return next;
+        });
+      },
+    });
+  }
+
+  private appendStepInvoiceRowsFromSummaryForStep(step: number): void {
+    if (this.isFormReadable) return;
+    if (step !== 5 && step !== 6) return;
+
+    const accVoucherTypeMap = this.service.accVoucherTypeMap();
+    const rows = this.tableData();
+    const salesRowsToAppend: FIN53010StepSalesInvoiceRow[] = [];
+    const purchaseRowsToAppend: FIN53010StepPurchaseInvoiceRow[] = [];
+    const salesKeys = new Set(
+      this.stepSalesRows().map(r =>
+        this.buildInvoiceDedupKey(r.invoice_type, r.invoice_prefix, r.invoice_no),
+      ),
+    );
+    const purchaseKeys = new Set(
+      this.stepPurchaseRows().map(r =>
+        this.buildInvoiceDedupKey(r.voucher_type, r.track_no, r.invoice_no),
+      ),
+    );
+
+    for (const row of rows) {
+      const accNo = String(row.AccNo ?? '').trim();
+      if (!accNo) continue;
+      const vt = String(accVoucherTypeMap.get(accNo) ?? '').trim();
+      if (vt !== '5' && vt !== '6') continue; // 5:進項發票, 6:銷項發票
+      const noteDesc = this.resolveNoteDescForStep(row);
+      const parsed = this.parseSummaryInvoiceToken(noteDesc);
+      if (!parsed) continue;
+
+      if (vt === '6') {
+        const key = this.buildInvoiceDedupKey(parsed.invoice_type, parsed.invoice_prefix, parsed.invoice_no);
+        if (salesKeys.has(key)) continue;
+        salesKeys.add(key);
+        salesRowsToAppend.push({ ...parsed });
+        continue;
+      }
+
+      const key = this.buildInvoiceDedupKey(parsed.invoice_type, parsed.invoice_prefix, parsed.invoice_no);
+      if (purchaseKeys.has(key)) continue;
+      purchaseKeys.add(key);
+      purchaseRowsToAppend.push({
+        voucher_type: parsed.invoice_type,
+        track_no: parsed.invoice_prefix,
+        invoice_no: parsed.invoice_no,
+      });
+    }
+
+    if (salesRowsToAppend.length) {
+      const salesStartIndex = this.stepSalesRows().length;
+      this.stepSalesRows.update(current => [...current, ...salesRowsToAppend]);
+      salesRowsToAppend.forEach((r, offset) => {
+        this.hydrateSalesRowByInvoice(salesStartIndex + offset, String(r.invoice_prefix ?? '').trim(), String(r.invoice_no ?? '').trim());
+      });
+    }
+    if (purchaseRowsToAppend.length) {
+      const purchaseStartIndex = this.stepPurchaseRows().length;
+      this.stepPurchaseRows.update(current => [...current, ...purchaseRowsToAppend]);
+      purchaseRowsToAppend.forEach((r, offset) => {
+        this.hydratePurchaseRowByInvoice(purchaseStartIndex + offset, String(r.track_no ?? '').trim(), String(r.invoice_no ?? '').trim());
+      });
+    }
+  }
+
   public goNextStep(): void {
     if (!this.isFormCreateable && !this.isFormEditable) return;
     if (this.nextStepBusy()) return;
@@ -962,6 +1105,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.stepNavigateBusy.set(!0);
     window.setTimeout(() => {
       this.currentStep.set(nextStep);
+      this.appendStepInvoiceRowsFromSummaryForStep(nextStep);
       this.clearStepNavigateBusyAfterRender();
     }, 0);
   }
@@ -976,6 +1120,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.stepNavigateBusy.set(!0);
     window.setTimeout(() => {
       this.currentStep.set(prevStep);
+      this.appendStepInvoiceRowsFromSummaryForStep(prevStep);
       this.clearStepNavigateBusyAfterRender();
     }, 0);
   }
@@ -989,6 +1134,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.stepNavigateBusy.set(!0);
     window.setTimeout(() => {
       this.currentStep.set(step);
+      this.appendStepInvoiceRowsFromSummaryForStep(step);
       this.clearStepNavigateBusyAfterRender();
     }, 0);
   }
@@ -1283,30 +1429,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const prefix = String(row.invoice_prefix ?? '').trim();
     const no = String(row.invoice_no ?? '').trim();
     if (prefix.length !== 2 || no.length !== 8) return;
-    const full = `${prefix}${no}`;
-    if (this.lastSalesInvoiceLookupKey.get(idx) === full) return;
-
-    this.service.queryAps4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
-      next: res => {
-        if (res.Status !== '0000') {
-          this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '查詢發票失敗');
-          return;
-        }
-        const d = res.Data;
-        if (!d) {
-          this.messageService.errorBubble('查無資料');
-          return;
-        }
-        this.lastSalesInvoiceLookupKey.set(idx, full);
-        const patch = this.mapAps4023ToSalesRow(d, prefix, no);
-        this.stepSalesRows.update(rows => {
-          const next = [...rows];
-          if (!next[idx]) return rows;
-          next[idx] = { ...next[idx], ...patch };
-          return next;
-        });
-      },
-    });
+    this.hydrateSalesRowByInvoice(idx, prefix, no);
   }
 
   /** 檢核彙總張數
@@ -1343,33 +1466,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const prefix = String(row.track_no ?? '').trim();
     const no = String(row.invoice_no ?? '').trim();
     if (prefix.length !== 2 || no.length !== 8) return;
-    const full = `${prefix}${no}`;
-    if (this.lastPurchaseInvoiceLookupKey.get(idx) === full) return;
-
-    this.service.queryAps4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
-      next: res => {
-        if (res.Status !== '0000') {
-          this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '查詢發票失敗');
-          return;
-        }
-        const d = res.Data;
-        if (!d) {
-          this.messageService.errorBubble('查無資料');
-          return;
-        }
-        this.lastPurchaseInvoiceLookupKey.set(idx, full);
-        const patch = this.mapAps4023ToPurchaseRow(d, prefix, no);
-        this.stepPurchaseRows.update(rows => {
-          const next = [...rows];
-          if (!next[idx]) return rows;
-          const merged = { ...next[idx], ...patch };
-          const discNo = String(merged.deduction_code ?? '');
-          const purType = (discNo === '1' || discNo === '3') ? '1' : discNo ? '2' : merged.category_type;
-          next[idx] = { ...merged, category_type: purType };
-          return next;
-        });
-      },
-    });
+    this.hydratePurchaseRowByInvoice(idx, prefix, no);
   }
 
   private mapAps4023ToSalesRow(
