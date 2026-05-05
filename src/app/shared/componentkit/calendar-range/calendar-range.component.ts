@@ -62,6 +62,8 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
     this.placeholder = config.placeholder;
     this.placeholder2 = config.placeholder;
     this.calendarOneType = config.calendarOneType as 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne';
+    this.initControl(this.startControl);
+    this.initControl(this.endControl);
     this.checkRequiredValidator(this.startControl, 0);
     this.checkRequiredValidator(this.endControl, 1);
     this.initQuickSelectUnit();
@@ -73,6 +75,7 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
     this.startControl.valueChanges.subscribe(() => {
       this.validateRange();
     });
+    this.endControl.valueChanges.subscribe(() => { void 0; });
   }
 
   validateRange() {
