@@ -328,7 +328,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
       // 會員卡
       vip_yn: ['N'],
-      credit_card: [0],
+      credit_card: [null],
 
       // 目標營業額
       total_amt: [null],
