@@ -146,6 +146,7 @@
     (selectionChange)="selectedItems = $event"
     [queryFunction]="queryFIN34020ForReport"
     [lastQueryBody]="lastQueryBody"
+    [footerData]="buildFooterFromTotals()"
   >
     <header>
       <div class="flex justify-content-end gap-2">

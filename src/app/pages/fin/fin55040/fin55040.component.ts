@@ -19,6 +19,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -51,7 +52,8 @@ export interface GroupedFIN55040Detail extends FIN55040Detail {
     InputTextRangeComponent,
     ButtonComponent,
     TableComponent,
-    TranslateModule
+    TranslateModule,
+    MultiSelectComponent,
   ]
 })
 // FIN55040立沖科目明細表
@@ -67,7 +69,7 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     PTA_Start: [''], // 立沖代號 GLS3003.PTA
     PTA_End: [''],
     SubDetailNo: [''], // 對象別編號 GLS3001.SubDetailNo
-    PostFlag: [''], // 傳票狀態 GLS3001.PostFlag (0.作廢 1.建立 2.確認 3.過帳)
+    PostFlag: [[] as string[]], // 傳票狀態 GLS3001.PostFlag (0.作廢 1.建立 2.確認 3.過帳)
     IsSubDetail: [null], // 是否為對象別(是-->IS NOT NULL, 否-->IS NULL)
 
     ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
@@ -190,12 +192,7 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
             }
           });
 
-          // 攤平後進行排序確保分組正確，同科目內先沖帳(Status='2')後立帳(Status='1')
-          flattenedList.sort((a, b) => {
-            const accCmp = a.AccNo.localeCompare(b.AccNo);
-            if (accCmp !== 0) return accCmp;
-            return b.Status.localeCompare(a.Status); // DESC: '2' > '1'
-          });
+          // 後端 groupData 已按 raw PTA ASC + Status DESC 排序，攤平後順序不變，無需前端再排
 
           this.fullData = flattenedList;
           // 改為直接賦值：

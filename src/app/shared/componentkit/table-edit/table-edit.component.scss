@@ -24,6 +24,9 @@
     }
   }
   .p-datatable {
+    .p-datatable-table {
+      table-layout: auto !important; // 改為 auto 讓瀏覽器根據內容計算寬度
+    }
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
     }
@@ -76,6 +79,7 @@
     }
     .p-datatable-wrapper {
       border: 1px solid var(--surface-d);
+      overflow-x: auto !important;
     }
     // 可選行的hover效果
     .p-selectable-row:not(.p-disabled-row) {
@@ -96,6 +100,7 @@
       .p-autocomplete,
       .p-inputnumber-input {
         width: 100% !important; // 強制輸入框填滿單元格
+        min-width: 100px;
       }
     }
     .p-datatable-thead > tr > th {

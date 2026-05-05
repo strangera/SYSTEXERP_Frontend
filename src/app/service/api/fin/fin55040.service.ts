@@ -15,7 +15,7 @@ export interface fin55040request {
   PTA_Start: string;
   PTA_End: string;
   SubDetailNo: string;
-  PostFlag: string;
+  PostFlag: string[] | null;
   IsSubDetail: boolean;
 }
 
