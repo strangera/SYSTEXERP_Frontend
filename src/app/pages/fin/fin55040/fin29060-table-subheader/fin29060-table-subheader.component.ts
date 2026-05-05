@@ -127,6 +127,50 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   // 資料總計
   /** 是否顯示總計 @default false */
   @Input() showTotal = false;
+  /** 「總計」文字顯示在哪個欄位（field）；不設定則顯示在序號欄 */
+  @Input() totalLabelColumn?: string;
+  /** 依此欄位值（去除首字前綴）做交替色區隔，例如 'PTA' */
+  @Input() ptaGroupByField?: string;
+  private _ptaGroupIndices: number[] = [];
+
+  private recomputePTAGroups() {
+    if (!this.ptaGroupByField || !this.data.length) {
+      this._ptaGroupIndices = [];
+      return;
+    }
+    // 計算每個 base PTA 的筆數，只有多筆才做交替色
+    const getPTABase = (raw: string) => {
+      const withoutPrefix = raw.length > 1 ? raw.substring(1) : raw;
+      const lastHyphen = withoutPrefix.lastIndexOf('-');
+      return lastHyphen > 0 ? withoutPrefix.substring(0, lastHyphen) : withoutPrefix;
+    };
+    const groupCounts = new Map<string, number>();
+    for (const row of this.data) {
+      const key = getPTABase(row[this.ptaGroupByField] as string ?? '');
+      groupCounts.set(key, (groupCounts.get(key) ?? 0) + 1);
+    }
+
+    const indices: number[] = [];
+    let groupIdx = 0;
+    let prevKey = '';
+    for (let i = 0; i < this.data.length; i++) {
+      const raw = this.data[i]?.[this.ptaGroupByField] as string ?? '';
+      const key = getPTABase(raw);
+      if (i > 0 && key !== prevKey && (groupCounts.get(key) ?? 0) > 1) {
+        groupIdx = (groupIdx + 1) % 2;
+      }
+      // 只有多筆組才標記顏色
+      indices[i] = (groupCounts.get(key) ?? 0) > 1 ? groupIdx : -1;
+      prevKey = key;
+    }
+    this._ptaGroupIndices = indices;
+  }
+
+  getPTAGroupClass(rowIndex: number): string {
+    if (!this.ptaGroupByField) return '';
+    const idx = this._ptaGroupIndices[rowIndex];
+    return idx === 0 ? 'pta-group-0' : idx === 1 ? 'pta-group-alt' : '';
+  }
   // 管理 欄位
   /** 是否顯示 管理欄位 @default true */
   @Input() showManage = true;
@@ -203,6 +247,7 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
 
     if (changes['data']) {
       this.virtualData = [...this.data];
+      this.recomputePTAGroups();
 
       console.log('[ngOnChanges] data 改變', {
         dataLength: this.data.length,

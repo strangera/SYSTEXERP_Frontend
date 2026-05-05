@@ -60,7 +60,7 @@ export class FIN34020Component extends BasicQueryPageComponent<any> {
   data: QueryFIN34020Row[] = [];
   totalRecords = 0;
   selectedItems: QueryFIN34020Row[] = [];
-
+totalSummary: Record<string, number> = {};
   lastQueryBody: any = null;
   tableVer = 0;
 
@@ -332,41 +332,67 @@ export class FIN34020Component extends BasicQueryPageComponent<any> {
     return payload;
   }
 
-  private parseQueryResponse(
-    res: any
-  ): { rows: QueryFIN34020Row[]; total: number } {
-    const rows = Array.isArray(res?.Data)
+private parseQueryResponse(
+  res: any
+): {
+  rows: QueryFIN34020Row[];
+  total: number;
+  totalSummary: Record<string, number>;
+} {
+  const rows = Array.isArray(res?.Data?.QueryData)
+    ? (res.Data.QueryData as QueryFIN34020Row[])
+    : Array.isArray(res?.Data)
       ? (res.Data as QueryFIN34020Row[])
       : [];
 
-    const total =
-      Number(res?.TotalCount ?? (res?.Data as any)?.TotalCount ?? rows.length) ||
-      rows.length;
+  const totalSummary = this.coerceTotals(res?.Data?.TotalSummary);
 
-    const mapped = rows.map((r: any, idx: number) => ({
-      ...r,
-      _rowKey: `${r.ARS_No ?? ''}|${r.VEN_No ?? ''}|${idx}`,
-    }));
+  const total =
+    Number(res?.TotalCount ?? rows.length) || rows.length;
 
-    return { rows: mapped, total };
+  const mapped = rows.map((r: any, idx: number) => ({
+    ...r,
+    _rowKey: `${r.ARS_No ?? ''}|${r.VEN_No ?? ''}|${idx}`,
+  }));
+
+  return { rows: mapped, total, totalSummary };
+}
+private coerceTotals(src: any): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!src) return out;
+
+  for (const k of Object.keys(src)) {
+    const v = src[k];
+    out[k] = typeof v === 'number' ? v : Number(v) || 0;
   }
 
+  return out;
+}
+buildFooterFromTotals(): Record<string, any> | undefined {
+  if (!this.totalSummary) return undefined;
+
+  return {
+    ARS_Amt: this.totalSummary['Total_ARS_Amt'] ?? 0,
+    RcvOrAdjAmt: this.totalSummary['Total_RcvOrAdjAmt'] ?? 0,
+    UnpaidBalanceAmt: this.totalSummary['Total_UnpaidBalanceAmt'] ?? 0,
+  };
+}
+
   /** 給 app-table-report 用 */
-  public queryFIN34020ForReport = (body: any) =>
-    this.fin34020Service.queryFIN34020(this.buildPayload(body || {})).pipe(
-      map((res: ApiResponse<any>) => {
-        const parsed = this.parseQueryResponse(res);
+public queryFIN34020ForReport = (body: any) =>
+  this.fin34020Service.queryFIN34020(this.buildPayload(body || {})).pipe(
+    map((res: ApiResponse<any>) => {
+      const parsed = this.parseQueryResponse(res);
 
-        const totalCount =
-          parsed.rows.length === 0 ? (this.data?.length ?? 0) : parsed.total;
+      this.totalSummary = parsed.totalSummary;
 
-        return {
-          Data: parsed.rows,
-          TotalCount: totalCount,
-          GrandTotal: null,
-        };
-      })
-    );
+      return {
+        Data: parsed.rows,
+        TotalCount: parsed.total,
+        GrandTotal: parsed.totalSummary,
+      };
+    })
+  );
 
   /** 查詢按鈕：一定從第一頁開始，並建立 lastQueryBody 給 table-report / 匯出 用 */
   onSubmit(_frm: any) {
@@ -401,6 +427,7 @@ export class FIN34020Component extends BasicQueryPageComponent<any> {
 
           this.data = parsed.rows;
           this.totalRecords = parsed.total;
+          this.totalSummary = parsed.totalSummary;
 
           this.lastQueryBody = {
             ...raw,

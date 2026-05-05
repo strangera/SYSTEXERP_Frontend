@@ -4,7 +4,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS53010Data, TLS53010Service } from '@service/api/tls/tls53010.service';
+import { TLS53010Data, TLS53010ExportRequest, TLS53010Service } from '@service/api/tls/tls53010.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -16,6 +16,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import saveAs from 'file-saver';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -33,6 +34,7 @@ import { finalize } from 'rxjs';
     CalendarRangeComponent,
     TableComponent,
     TranslateModule,
+    ButtonModule
   ]
 })
 export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> implements OnInit {
@@ -92,12 +94,6 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
       icon: 'pi pi-print text-cyan-500',
       action: (rowData: TLS53010Data) => { this.onPrint(rowData); },
       loading: (rowData: TLS53010Data) => this.getLoadingState(rowData.id, 'print'),
-    },
-    {
-      label: '匯出',
-      icon: 'pi pi-file-export text-green-500',
-      action: (rowData: TLS53010Data) => { this.onExport(rowData); },
-      loading: (rowData: TLS53010Data) => this.getLoadingState(rowData.id, 'export'),
     },
   ];
 
@@ -216,25 +212,28 @@ export class TLS53010Component extends BasicQueryPageComponent<TLS53010Data> imp
         }
       });
   }
-
+  exportSelectedLoading = false;
   // 匯出
-  onExport(rowData: TLS53010Data) {
-    this.setLoadingState(rowData.id, 'export', true);
+  onExportSelected() {
+    if (this.selectedItems.length === 0) {
+      // 這裡可以依據你的專案習慣加入訊息提示，例如：this.messageService.warning('請至少選擇一筆資料');
+      return;
+    }
 
-    this.tls53010Service.exportTLS53010Detail(this.createDetailQueryRequest(rowData))
+    this.exportSelectedLoading = true;
+
+    // 提取所有勾選項目的 PST_No
+    const request: TLS53010ExportRequest = {
+      PST_NoList: this.selectedItems.map(item => item.PST_No)
+    };
+
+    this.tls53010Service.exportTLS53010Detail(request)
       .pipe(
         untilDestroyed(this),
-        finalize(() => {
-          this.setLoadingState(rowData.id, 'export', false);
-        })
+        finalize(() => this.exportSelectedLoading = false)
       )
-      .subscribe({
-        next: (response: HttpResponse<Blob>) => {
-          this.downloadFile(response, '盤點單明細報表.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        },
-        error: (err: any) => {
-          console.error('匯出失敗:', err);
-        }
+      .subscribe((response: HttpResponse<Blob>) => {
+        this.downloadFile(response, '盤點單明細報表.xlsx', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
       });
   }
 

@@ -98,7 +98,7 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
     const paperValue = String(this.changeEditData[0]?.TXN_GUIPaper ?? '');
     const showGuiNo = ['2', '3'].includes(paperValue);
     if (showGuiNo) {
-      baseColumns.push({ field: 'TXN_GUINo', header: '發票號碼', type: 'input', maxLength: 10, validate: [validateRequired], });
+      baseColumns.push({ field: 'TXN_GUINo', header: '發票號碼', type: 'input', maxLength: 10, minWidth: '120px', validate: [validateRequired], });
     }
 
     // 加入剩餘欄位

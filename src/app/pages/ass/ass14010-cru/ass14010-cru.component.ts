@@ -75,7 +75,8 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     { value: "0", label: '發票' },
     { value: "1", label: '單據' },
   ];
-  TOKEN_NO_Options: { value: string; label: string }[] = []; // 驗收單號 下拉選項 (ass15070: queryFAASSCHKMASS15070_DropDownList)
+  TOKEN_NO_Options:
+    { SUBCHECK_ID: string; TAX_AMT: number; NTAX_AMT: number; AMT: number }[] = []; // 驗收單號 下拉選項 (ass15070: queryFAASSCHKMASS15070_DropDownList)
   INV_FORMAT_Options: { value: string; label: string }[] = []; // 發票格式 下拉選項 (fin15030: queryTDS1007_DropDownList)
   TAX_CODE_Options: { value: string; label: string }[] = [
     { value: "1", label: '應稅' },
@@ -172,6 +173,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
             this.ass14010Service.insertASS14010(payload).subscribe(() => {
               this.messageService.successBubble('新增成功');
               this.dataForm.reset();
+              // 還原子表單
+              this.supplierData = [];
+              this.itemData = [];
             });
             this.loading = false
           }
@@ -281,9 +285,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
         }));
 
         // 2. 處理驗收單號
-        this.TOKEN_NO_Options = (resTok.Data ?? []).map((res: { SUBPOENA_ID: string; }) => ({
-          label: res.SUBPOENA_ID,
-          value: res.SUBPOENA_ID,
+        this.TOKEN_NO_Options = (resTok.Data ?? []).map((res: any) => ({
+          SUBCHECK_ID: res.SUBCHECK_ID,
+          TAX_AMT: res.TAX_AMT,
+          NTAX_AMT: res.NTAX_AMT,
+          AMT: res.AMT
         }));
 
         // 3. 處理發票格式
@@ -323,11 +329,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       { field: 'TOTAL_AMT', header: '含稅金額', type: 'inputNumber', disabled: () => true },
     ];
     this.itemColumn = [
-      // { field: 'TOKEN_NO', header: '驗收單號', type: 'dropdown', options: this.TOKEN_NO_Options, optionLabel: 'label', optionValue: 'value' },
-      { field: 'TOKEN_NO', header: '驗收單號', type: 'input' },
-      { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', aggregate: 'sum' },
-      { field: 'TX_AMT', header: '稅額', type: 'inputNumber', aggregate: 'sum' },
-      { field: 'AMT', header: '含稅金額', type: 'inputNumber', aggregate: 'sum' },
+      { field: 'TOKEN_NO', header: '驗收單號', type: 'dropdown', options: this.TOKEN_NO_Options, optionLabel: 'SUBCHECK_ID', optionValue: 'SUBCHECK_ID' },
+      // { field: 'TOKEN_NO', header: '驗收單號', type: 'input' },
+      { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
+      { field: 'TX_AMT', header: '稅額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
+      { field: 'AMT', header: '含稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
     ];
   }
   //依據明細驗收單號進行主檔token_no刷新
@@ -393,7 +399,22 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   //依據明細驗收單號進行主檔token_no刷新
   onItemDataChange(eventData: Ass14010Items[]) {
     // 1. 變更後的資料同步回 itemData
-    this.itemData = eventData;
+    // 遍歷 eventData，若 TOKEN_NO 有值且金額為空，則從 Options 抓取對應金額
+    this.itemData = eventData.map(item => {
+      if (item.TOKEN_NO) {
+        const matchedOption = this.TOKEN_NO_Options.find(opt => opt.SUBCHECK_ID === item.TOKEN_NO);
+        if (matchedOption) {
+          return {
+            ...item,
+            // 只有在金額欄位尚未輸入或需要連動時才自動填入
+            NTX_AMT: matchedOption.NTAX_AMT,
+            TX_AMT: matchedOption.TAX_AMT,
+            AMT: matchedOption.AMT
+          };
+        }
+      }
+      return item;
+    });
 
     // 2. 取得所有不為空的 TOKEN_NO 並用逗號結合
     const tokenNos = this.itemData
