@@ -189,7 +189,7 @@ export const TLS13010_SPECIFIC_DEFAULTS = {
   cash_yn: 'Y',                      // 是否為業主收現：是
   total_amt: '',                     // 目標營業額：空字串
   total_amt_vendor: '',              // 廠商目標營業額：空字串
-  credit_card: '',                   // 會員卡折數：空字串
+  credit_card: null,                 // 會員卡折數：null
   cap_saletype1: '',                 // 滿仟送佰：空字串
   cap_saletype2: '',                 // 會員卡集點：空字串
   cap_saletype3: '',                 // 收取禮劵：空字串
@@ -211,7 +211,7 @@ export const TLS12040_SPECIFIC_DEFAULTS = {
   cash_yn: 'N',                      // 是否為業主收現：否
   total_amt: 0,                      // 目標營業額：0
   total_amt_vendor: 0,               // 廠商目標營業額：0
-  credit_card: 0,                    // 會員卡折數：0
+  credit_card: null,                 // 會員卡折數：null
   cap_saletype1: 'N',                // 滿仟送佰：否
   cap_saletype2: 'N',                // 會員卡集點：否
   cap_saletype3: 'N',                // 收取禮劵：否

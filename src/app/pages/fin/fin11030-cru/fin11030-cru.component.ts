@@ -65,6 +65,16 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
     if (this.isFormCreateable) {
       this.minDate = this.setMinDate();
       this.dataForm.get('SAL_GUIYYYYMM')?.setValidators([Validators.required]);
+
+      // --- 新增預設值邏輯 ---
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const currentPeriodMonth = month % 2 === 0 ? month - 1 : month;
+      const defaultYYYYMM = `${year}${currentPeriodMonth.toString().padStart(2, '0')}`;
+
+      this.dataForm.get('SAL_GUIYYYYMM')?.setValue(defaultYYYYMM);
+      // --------------------
     }
     this.dataForm.get('SAL_GUIEndNo')?.valueChanges.pipe(untilDestroyed(this)).subscribe(endNoValue => {
       const begNoValue = this.dataForm.get('SAL_GUIBegNo')?.value;

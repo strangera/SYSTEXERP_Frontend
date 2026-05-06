@@ -73,6 +73,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
     VouStatusList: [null],
     IsTarget: [null],
     ReportMode: ['1'],
+    ACCT_KEY: [null, [Validators.maxLength(30)]],
   });
   data: GroupedFIN55050Detail[] = [];
   selectedItems: GroupedFIN55050Detail[] = [];
@@ -116,6 +117,7 @@ export class FIN55050Component extends BasicQueryPageComponent<FIN55050Detail> i
         VouStatusList: raw?.VouStatusList ?? [],
         IsTarget: raw?.IsTarget ?? '',
         ReportMode: raw?.ReportMode ?? '',
+        ACCT_KEY: raw?.ACCT_KEY ?? '',
       };
       this.fin55050Service.queryFIN55050(payload).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((response) => {
         this.lastQueryConditions = payload;

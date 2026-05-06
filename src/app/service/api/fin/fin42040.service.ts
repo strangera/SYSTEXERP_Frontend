@@ -1,24 +1,93 @@
-import { Injectable } from "@angular/core";
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpResponse } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+import { environment } from '../../../../environments/environment';
+import { ErrorHandlerService } from '../../../core/services/error-handler.service';
+import { BaseQueryRequest } from '../../../shared/models/api/base-api.interface';
 
-
-// Response 資料結構
-export interface FIN42040Data {
-    subjectName: string;     // 科目名稱
-    currentAmount: number | null; // 本期金額
-    currentRatio?: number | null; // 本期佔比(%)
-    budgetAmount?: number | null; // 預算同期金額
-    budgetRatio?: number | null; // 預算同期佔比(%)
-    growthRate?: number | null; // 預算同期增減率(%)
-    currentTotalAmount?: number | null; // 本期累計金額
-    currentTotalRatio?: number | null; // 本期累計佔比(%)
-    totalBudgetAmount?: number | null; // 預算累計金額
-    totalBudgetRatio?: number | null; // 預算累計佔比(%)
-    totalGrowthRate?: number | null; // 增減率(%)
+export interface FIN42040QueryRequest extends BaseQueryRequest {
+  YM?: string;
+  CompareYM?: string;
+  Org_ID?: string;
+  ReportType?: number;
+  AmtUnit?: number;
 }
 
-@Injectable({
-    providedIn: 'root'
-})
+export interface FIN42040Data {
+  Org_ID?: string;
+  Org_Name?: string;
+  Acc_No?: string;
+  Acc_Name?: string;
+  Item_No?: string;
+  Item_Name?: string;
+
+  CurrentAmount?: number;
+  CurrentRatio?: number;
+  CompareAmount?: number;
+  CompareRatio?: number;
+  GrowthRate?: number;
+
+  CurrentAccumAmount?: number;
+  CurrentAccumRatio?: number;
+  CompareAccumAmount?: number;
+  CompareAccumRatio?: number;
+  AccumGrowthRate?: number;
+}
+
+@Injectable({ providedIn: 'root' })
 export class FIN42040Service {
-    constructor() { }
+  private apiUrl = environment.ApiUrl;
+
+  constructor(
+    private http: HttpClient,
+    private errorHandler: ErrorHandlerService
+  ) {}
+
+  queryFIN42040(body: FIN42040QueryRequest): Observable<any> {
+    const url = `${this.apiUrl}/FIN0000/FIN4000/queryFIN42040`;
+
+    return this.http.post<any>(url, body).pipe(
+      tap((res) => console.log('🎯 FIN42040 查詢結果:', res)),
+      catchError((err) => this.errorHandler.handleError(err))
+    );
+  }
+
+  exportFIN42040Excel(body: FIN42040QueryRequest): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/FIN0000/FIN4000/exportFIN42040`;
+    const payload = this.stripPaging(body);
+
+    return this.http.post(url, payload, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  exportFIN42040PDF(body: FIN42040QueryRequest): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/FIN0000/FIN4000/exportFIN42040PDF`;
+    const payload = this.stripPaging(body);
+
+    return this.http.post(url, payload, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  private stripPaging<T extends Record<string, any>>(input: T): any {
+    if (!input) return input;
+
+    const {
+      PageSize,
+      PageIndex,
+      OrderBy,
+      Offset,
+      pageSize,
+      pageIndex,
+      orderBy,
+      offset,
+      ...rest
+    } = input as any;
+
+    return rest;
+  }
 }

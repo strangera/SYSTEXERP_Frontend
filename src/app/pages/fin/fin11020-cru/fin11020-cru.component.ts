@@ -78,6 +78,13 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
     this.initializePage('FIN11020', this.dataForm);
     if (this.isFormCreateable) {
       this.dataForm.get('GUI_YYMM')?.setValidators([Validators.required, this.validationService.minMonthValidator2]);
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const currentPeriodMonth = month % 2 === 0 ? month - 1 : month;
+      const formattedMonth = currentPeriodMonth.toString().padStart(2, '0');
+      const defaultYYYYMM = `${year}${formattedMonth}`;
+      this.dataForm.get('GUI_YYMM')?.setValue(defaultYYYYMM as any, { emitEvent: false });
     }
     const totQtyValue = this.dataForm.get('GUI_TotQty')?.value;
     if (totQtyValue && totQtyValue !== 0) {

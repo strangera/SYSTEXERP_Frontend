@@ -95,7 +95,6 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     // 2. 重新組合驗證器
     // 我們不再依賴會變動的 this.isRequired，直接使用 ngOnInit 鎖定的 initialRequired
     const newValidators: any[] = [];
-
     // A. 加入對應目前類型的長度限制
     newValidators.push(Validators.maxLength(maxLen));
 
@@ -105,20 +104,13 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     }
 
     // C. 關鍵：如果初始設定是必填，強制塞回，確保 handleSubmit 會擋，星星也會在
-    if (this.initialRequired) {
+    if (this.initialRequired || this.control.hasValidator(Validators.required)) {
+      this.initialRequired = true; // 鎖定狀態
       newValidators.push(Validators.required);
     }
-
-    // 執行替換
     this.control.setValidators(newValidators);
-
-    /**
-     * 務必呼叫這行！
-     * 這會重新跑一遍驗證邏輯，更新 control.status 與 control.valid。
-     * 這樣你的 handleSubmit(frm) 判斷 frm.valid 時才會拿到正確結果。
-     */
+    // 務必 update，否則 handleSubmit 抓到的 valid 是舊的
     this.control.updateValueAndValidity({ emitEvent: false });
-
     // 3. Placeholder 處理
     // 只有在使用者沒有自訂 placeholder 或還是預設值時，才套用 config 的建議值
     if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
