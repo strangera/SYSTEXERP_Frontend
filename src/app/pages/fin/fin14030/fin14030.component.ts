@@ -1,10 +1,16 @@
 import { CommonModule, JsonPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin14030Service } from '@service/api/fin/fin14030.service';
+import { FIN15080Service } from '@service/api/fin/fin15080.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -19,30 +25,32 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 
-// 本期發票月
 const today = new Date();
 let invoiceYear = today.getFullYear();
-let invoiceMonth = today.getMonth() + 1; // JS 月份 0~11
+let invoiceMonth = today.getMonth() + 1;
 
-// 如果不是偶數月，就加 1 個月
 if (invoiceMonth % 2 !== 0) {
   invoiceMonth += 1;
+
   if (invoiceMonth > 12) {
     invoiceMonth = 1;
     invoiceYear += 1;
   }
 }
 
-// 將年月轉成 YYYYMM 字串
-export const invoiceDate = invoiceYear.toString() + invoiceMonth.toString().padStart(2, '0');
+export const invoiceDate =
+  invoiceYear.toString() + invoiceMonth.toString().padStart(2, '0');
 
 interface REP_TaxNo_list {
-  No: string,
-  Lable: string,
-  STO_Status: string, // 使否為使用中
+  No: string;
+  Label: string;
+  STO_Status: string;
+  STO_TaxNo: string;
+  STO_TaxName: string;
+  REP_BegGUIYM?: string;
+  REP_EndGUIYM?: string;
 }
 
-//1.1.4.3 形成申報書
 @Component({
   selector: 'app-fin14030',
   templateUrl: './fin14030.component.html',
@@ -51,28 +59,34 @@ interface REP_TaxNo_list {
   imports: [
     MenubarComponent,
     ButtonComponent,
-    Button, // dialog
-    JsonPipe, // dialog
-    DialogModule, // dialog
+    // Button,
+    // JsonPipe,
+    DialogModule,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarComponent,
+    // CalendarComponent,
     CommonModule,
     DropdownComponent,
-    TableComponent,
+    // TableComponent,
     TranslateModule,
-    YearMonthComponent]
+    YearMonthComponent,
+  ],
 })
+export class FIN14030Component
+  extends BasicQueryPageComponent<unknown>
+  implements OnInit
+{
+  pageReady = false;
 
-export class FIN14030Component extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
-    Mid: [this.authService.getUserInfo()?.mid ?? null, [Validators.required]], // section抓
-    STO_No: [this.authService.getUserInfo()?.SYS_StoreNo ?? null, [Validators.required]], // section抓
-    REP_GUIYM: [invoiceDate, Validators.required], //申報年月
-    REP_TaxNo: [null, Validators.required], //稅籍編號
-
-    // ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
+    Mid: [this.authService.getUserInfo()?.mid ?? null, [Validators.required]],
+    STO_No: [
+      this.authService.getUserInfo()?.SYS_StoreNo ?? null,
+      [Validators.required],
+    ],
+    REP_GUIYM: [invoiceDate, Validators.required],
+    REP_TaxNo: ['' as string, Validators.required],
   });
 
   // ---彈出視窗控制選項---
@@ -85,21 +99,22 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
 
   totalRecords = 0; // 總記錄數
   data: Record<string, string>[] = [];
-  selectedItems: Record<string, string> = {}; // 用於儲存選中的項目
+  selectedItems: Record<string, string> = {};
 
   pdfUrl: import('@angular/platform-browser').SafeResourceUrl | null = null;
 
-  REP_TaxNo_Options: REP_TaxNo_list[] = []; //稅籍編號 選項
+  REP_TaxNo_Options: REP_TaxNo_list[] = [];
 
-  columns: Column[] = [
-    { field: 'field', header: '欄位' }, // 欄位定義
-  ];
+  columns: Column[] = [{ field: 'field', header: '欄位' }];
+
   constructor(
     private fin14030Service: Fin14030Service,
+    private fin15080Service: FIN15080Service,
     private sanitizer: DomSanitizer
   ) {
     super();
   }
+
   ngOnInit(): void {
     // 一開始先隱藏畫面
     this.pageReady = false;
@@ -137,149 +152,172 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
           }
         },
         error: (error) => {
-          console.error('Error loading options:', error);
-        }
+          console.error('取得稅籍編號下拉失敗:', error);
+          this.REP_TaxNo_Options = [];
+          this.messageService.errorBubble('稅籍編號清單取得失敗');
+        },
       });
   }
 
-  onSubmit(frm: FormGroup) {
+  private buildTaxNoOptions(rows: any[]): REP_TaxNo_list[] {
+    const map = new Map<string, REP_TaxNo_list>();
+
+    rows.forEach((x) => {
+      const taxNo = String(x?.STO_TaxNo ?? '').trim();
+      const taxName = String(x?.STO_TaxName ?? '').trim();
+      const status = String(x?.STO_Status ?? '').trim();
+
+      if (!taxNo) return;
+
+      const option: REP_TaxNo_list = {
+        Label: `${taxNo}-${taxName}`,
+        No: taxNo,
+        STO_Status: status,
+        STO_TaxNo: taxNo,
+        STO_TaxName: taxName,
+        REP_BegGUIYM: String(x?.REP_BegGUIYM ?? '').trim(),
+        REP_EndGUIYM: String(x?.REP_EndGUIYM ?? '').trim(),
+      };
+
+      const exists = map.get(taxNo);
+
+      if (!exists) {
+        map.set(taxNo, option);
+        return;
+      }
+
+      if (status === '1') {
+        map.set(taxNo, option);
+      }
+    });
+
+    return Array.from(map.values());
+  }
+
+  onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
         Mid: Number(frm.value.Mid),
-      }
-      // 可以用 202406 , 703902231 測試
+        REP_GUIYM: this.convertDateToYYYYMM(frm.value.REP_GUIYM),
+      };
 
       console.log('申報request', body);
 
-      // 輸入申報年月和稅籍編號條件，按【申報書預覽】，即可預覽該申報年月的申報書，同時顯示「審核」
-      // 視窗，可以執行「審核」與「反審核」的功能。
+      this.loading = true;
 
-      // 這裡彈窗顯示
-      // this.dialogData = body;
-      // this.auditMode = '審核';   // 或者根據狀態切換 '反審核'
+      this.fin14030Service
+        .printFIN14030(body)
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (response) => {
+            if (response.Status === '0000' && response.Data?.printURL) {
+              let rawUrl = response.Data.printURL.startsWith('http')
+                ? response.Data.printURL
+                : `${environment.BaseUrl}${response.Data.printURL}`;
 
-      this.fin14030Service.printFIN14030(body).pipe(untilDestroyed(this)).subscribe({
-        next: (response) => {
-          if (response.Status === '0000' && response.Data?.printURL) {
-            // 補上 API 主機網址 (假設後端回傳的是相對路徑)
-            let rawUrl = response.Data.printURL.startsWith('http')
-              ? response.Data.printURL
-              : `${environment.BaseUrl}${response.Data.printURL}`;
+              rawUrl = decodeURIComponent(rawUrl);
 
-            rawUrl = decodeURIComponent(rawUrl);  // 中文解碼
+              this.pdfUrl =
+                this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
+            }
 
-            // 直接在新分頁打開
-            // window.open(rawUrl, '_blank');
-
-            // ⬇️ 用 sanitizer 包裝
-            this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
-            // this.showDialog = true;
             this.loading = false;
-          }
-        },
-        error: () => {
-          // this.showDialog = false;
-          this.loading = false;
-
-          // 清空pdf 關掉審核/反審核按鈕
-          this.pdfUrl = null
-        },
-      });
+          },
+          error: () => {
+            this.loading = false;
+            this.pdfUrl = null;
+          },
+        });
     });
   }
 
-  // 確認審核
-  confirmCheck(frm: FormGroup) {
+  confirmCheck(frm: FormGroup): void {
     this.messageService.confirm({
       message: `是否執行審核?`,
       header: `確認審核`,
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        // 按【審核】鈕後，系統詢問【是否執行審核?】，按【是】，更新審核日期=系統日期、
-        // 審核人員=操作人員、設定狀態=已審核，並同時寫入操作記錄檔，執行審核後資料則不
-
         const body = {
           ...frm.value,
           Mid: Number(frm.value.Mid),
           REP_GUIYM: this.convertDateToYYYYMM(frm.value.REP_GUIYM),
-          REP_AuditStatus: '1' // 0=未審核, 1=已審核
-        }
-        // 可以用 202406 , 703902231 測試
+          REP_AuditStatus: '1',
+        };
 
         console.log('審核request', body);
 
-        this.fin14030Service.ApproveFIN14030(body).pipe(untilDestroyed(this)).subscribe({
-          next: (response) => {
-            if (response.Data.IsApproveSuccess) {
-              this.messageService.successBubble('審核成功');
-            } else {
-              this.messageService.errorBubble(response.Data.MsgApprove);
-              // this.showDialog = false;
-            }
-          },
-          error: (error) => {
-            this.messageService.errorBubble('審核失敗，請稍後再試');
-            console.error('審核錯誤:', error);
-            // this.showDialog = false;
-          }
-        });
-      }
+        this.fin14030Service
+          .ApproveFIN14030(body)
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: (response) => {
+              if (response.Data.IsApproveSuccess) {
+                this.messageService.successBubble('審核成功');
+              } else {
+                this.messageService.errorBubble(response.Data.MsgApprove);
+              }
+            },
+            error: (error) => {
+              this.messageService.errorBubble('審核失敗，請稍後再試');
+              console.error('審核錯誤:', error);
+            },
+          });
+      },
     });
-    // this.showDialog = false;
+
     this.loading = false;
   }
 
-  //確認反審核
-  cancelRecheck(frm: FormGroup) {
+  cancelRecheck(frm: FormGroup): void {
     this.messageService.confirm({
       message: `是否確認反審核?`,
       header: `確認反審核`,
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
-        // 按【反審核】鈕，系統詢問【是否執行反審核?】，按【是】，清除該筆設定的審核日
-        // 期、審核人員、更新設定狀態=未審核，並同時寫入操作記錄檔。
-
         const body = {
           ...frm.value,
           Mid: Number(frm.value.Mid),
           REP_GUIYM: this.convertDateToYYYYMM(frm.value.REP_GUIYM),
-          REP_AuditStatus: '0' // 0=未審核, 1=已審核
-        }
-        // 可以用 202406 , 703902231 測試
+          REP_AuditStatus: '0',
+        };
 
         console.log('反審核request', body);
 
-        this.fin14030Service.ApproveFIN14030(body).pipe(untilDestroyed(this)).subscribe({
-          next: (response) => {
-            if (response.Data.IsApproveSuccess) {
-              this.messageService.successBubble('反審核成功');
-            } else {
-              this.messageService.errorBubble(response.Data.MsgApprove);
-            }
-          },
-          error: (error) => {
-            this.messageService.errorBubble('反審核失敗，請稍後再試');
-            console.error('審核錯誤:', error);
-          }
-        });
-      }
+        this.fin14030Service
+          .ApproveFIN14030(body)
+          .pipe(untilDestroyed(this))
+          .subscribe({
+            next: (response) => {
+              if (response.Data.IsApproveSuccess) {
+                this.messageService.successBubble('反審核成功');
+              } else {
+                this.messageService.errorBubble(response.Data.MsgApprove);
+              }
+            },
+            error: (error) => {
+              this.messageService.errorBubble('反審核失敗，請稍後再試');
+              console.error('審核錯誤:', error);
+            },
+          });
+      },
     });
-    // this.showDialog = false;
+
     this.loading = false;
   }
 
   convertDateToYYYYMM(value: any): string {
     if (!value) return '';
 
-    // 若是 YYYYMM 字串 → 直接回傳
     if (typeof value === 'string' && /^\d{6}$/.test(value)) {
       return value;
     }
 
-    // 若是 Date → 格式化
     if (value instanceof Date) {
-      return value.getFullYear() + String(value.getMonth() + 1).padStart(2, '0');
+      return (
+        value.getFullYear() +
+        String(value.getMonth() + 1).padStart(2, '0')
+      );
     }
 
     throw new Error('convertDateToYYYYMM: 不支援的日期格式');

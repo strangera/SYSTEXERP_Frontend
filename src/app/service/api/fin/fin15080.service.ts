@@ -69,4 +69,10 @@ export class FIN15080Service {
     );
   }
 
+    return this.http.post<any>(url, req).pipe(
+      map((res) => {
+        return res?.Data?.TDS1003STO_TaxNos ?? [];
+      })
+    );
+  }
 }

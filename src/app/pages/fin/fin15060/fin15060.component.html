@@ -14,37 +14,31 @@
         id="queryForm"
         (ngSubmit)="onSubmit(queryForm)"
       >
-        <div class="grid p-fluid">
-          <!-- 申報年月 -->
-          <app-year-month
-            class="col-12 md:col-6 lg:col-4"
-            label="申報年月"
-            [control]="queryForm.controls.INV_YM"
-            [submitted]="submitted"
-            [evenMonth]="true"
-          ></app-year-month>
-          <!-- 稅籍編號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="稅籍編號"
-              [options]="stoTaxNoOptions"
-              [optionLabel]="'label'"
-              [optionValue]="'STO_TaxNo'"
-              [control]="queryForm.controls.STO_TaxNo"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-        </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        <form
+          [formGroup]="queryForm"
+          id="queryForm"
+          (ngSubmit)="onSubmit(queryForm)"
         >
-          <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
-        </div>
-      </form>
-    </p-accordionTab>
-  </p-accordion>
-</div>
+          <div class="grid p-fluid">
+            <app-year-month
+              class="col-12 md:col-6 lg:col-4"
+              label="申報年月"
+              [control]="queryForm.controls.INV_YM"
+              [submitted]="submitted"
+              [evenMonth]="true"
+            ></app-year-month>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
+                label="稅籍編號"
+                [options]="stoTaxNoOptions"
+                [optionLabel]="'label'"
+                [optionValue]="'STO_TaxNo'"
+                [control]="queryForm.controls.STO_TaxNo"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+          </div>
 
 <div class="card" *ngIf="pageReady">
   <div class="flex justify-content-end gap-2" style="margin-bottom: -42px">
@@ -58,20 +52,4 @@
       [loading]="pdfBtnLoding"
     />
   </div>
-  <app-table
-    tableKey="FIN15060"
-    dataKey="INV_GUINo"
-    [data]="data"
-    [columns]="columns"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [totalRecords]="totalRecords"
-    [multiSortMeta]="[{ field: 'INV_GUIDate', order: -1 }]"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true"
-    [loading]="loading"
-    [showManage]="false"
-    [showDelete]="false"
-    [showReportMode]="false"
-  ></app-table>
-</div>
+</ng-container>
