@@ -8,15 +8,15 @@
       <form [formGroup]="queryForm" id="queryForm">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" controlName="cls_date" label="匯檔發票日期"
+            <app-calendar calendarType="dateOne" controlName="cls_date" label="發票日期" [readonly]="true"
               [control]="queryForm.controls.cls_date" [submitted]="submitted"></app-calendar>
           </div>
         </div>
-        <h6>最近關帳日期：
+        <h6>最後發票鎖定日期：
           <span *ngIf="loadingDates">讀取中...</span>
           <span *ngIf="!loadingDates">{{ closeDate}}</span>
         </h6>
-        <h6>最近匯總日期：
+        <h6>最近執行鎖定時間：
           <span *ngIf="loadingDates">讀取中...</span>
           <span *ngIf="!loadingDates">{{ summaryDate }}</span>
         </h6>
