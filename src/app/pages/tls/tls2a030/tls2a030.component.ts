@@ -4,7 +4,6 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -41,7 +40,6 @@ interface SalesRecord {
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    TableReportComponent,
     CalendarRangeQuickComponent,
     DropdownRangeComponent,
     ButtonComponent,
