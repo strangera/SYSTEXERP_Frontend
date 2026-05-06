@@ -518,6 +518,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         triggerFields: ['AccNo'],
         optionLabel: 'label',
         optionValue: 'value',
+        // 若該 AccNo 的下拉選項已查回但載入回來的 PTA 不在其中（已立沖打平的舊值）→ 改用文字輸入框
+        dropdownFallbackToInput: true,
+        isOptionsLoaded: (row: { AccNo?: string }) =>
+          !!row?.AccNo && this.service.ptaOptions().has(row.AccNo),
       },
       {
         field: 'ReflNo',
