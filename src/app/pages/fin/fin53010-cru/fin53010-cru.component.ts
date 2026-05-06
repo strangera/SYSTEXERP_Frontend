@@ -866,10 +866,13 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           }
         }
 
-        this.stepAPRows.set(ap);
-        this.stepARRows.set(ar);
-        this.stepBankRows.set(bk);
-        this.autoFillStepApExpectedPayDate(ap, onCleanup);
+        const apWithSer = ap.map((r, i) => ({ ...r, SerNo: i + 1 }));
+        const arWithSer = ar.map((r, i) => ({ ...r, SerNo: i + 1 }));
+        const bkWithSer = bk.map((r, i) => ({ ...r, SerNo: i + 1 }));
+        this.stepAPRows.set(apWithSer);
+        this.stepARRows.set(arWithSer);
+        this.stepBankRows.set(bkWithSer);
+        this.autoFillStepApExpectedPayDate(apWithSer, onCleanup);
       } finally {
         this.stepRowsSyncBusy.set(!1);
       }
@@ -1114,15 +1117,17 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     if (salesRowsToAppend.length) {
       const salesStartIndex = this.stepSalesRows().length;
-      this.stepSalesRows.update(current => [...current, ...salesRowsToAppend]);
-      salesRowsToAppend.forEach((r, offset) => {
+      const salesRowsWithSer = salesRowsToAppend.map((r, offset) => ({ ...r, SerNo: salesStartIndex + offset + 1 }));
+      this.stepSalesRows.update(current => [...current, ...salesRowsWithSer]);
+      salesRowsWithSer.forEach((r, offset) => {
         this.hydrateSalesRowByInvoice(salesStartIndex + offset, String(r.invoice_prefix ?? '').trim(), String(r.invoice_no ?? '').trim());
       });
     }
     if (purchaseRowsToAppend.length) {
       const purchaseStartIndex = this.stepPurchaseRows().length;
-      this.stepPurchaseRows.update(current => [...current, ...purchaseRowsToAppend]);
-      purchaseRowsToAppend.forEach((r, offset) => {
+      const purchaseRowsWithSer = purchaseRowsToAppend.map((r, offset) => ({ ...r, SerNo: purchaseStartIndex + offset + 1 }));
+      this.stepPurchaseRows.update(current => [...current, ...purchaseRowsWithSer]);
+      purchaseRowsWithSer.forEach((r, offset) => {
         this.hydratePurchaseRowByInvoice(purchaseStartIndex + offset, String(r.track_no ?? '').trim(), String(r.invoice_no ?? '').trim());
       });
     }
@@ -1427,7 +1432,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   }
 
   public onStepAPDataChange(data: FIN53010StepAP[]): void {
-    this.stepAPRows.set(data);
+    this.stepAPRows.set(data.map((row, i) => ({ ...row, SerNo: i + 1 })));
   }
 
   public onInsertStepApRow(): void {
@@ -1444,29 +1449,30 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     const newRow: FIN53010StepAP = {
       ...this.buildStepApRowFromDetailTableRow(source, vouDate),
       id: undefined,
+      SerNo: current.length + 1,
     };
     this.stepAPRows.set([...current, newRow]);
   }
 
   public onStepARDataChange(data: FIN53010StepAR[]): void {
-    this.stepARRows.set(data);
+    this.stepARRows.set(data.map((row, i) => ({ ...row, SerNo: i + 1 })));
   }
 
   public onStepSalesDataChange(data: FIN53010StepSalesInvoiceRow[]): void {
-    this.stepSalesRows.set(data);
+    this.stepSalesRows.set(data.map((row, i) => ({ ...row, SerNo: i + 1 })));
   }
 
   public onStepPurchaseDataChange(data: FIN53010StepPurchaseInvoiceRow[]): void {
-    const normalized = data.map(row => {
+    const normalized = data.map((row, i) => {
       const discNo = String(row.deduction_code ?? '');
       const purType = (discNo === '1' || discNo === '3') ? '1' : discNo ? '2' : row.category_type;
-      return { ...row, category_type: purType };
+      return { ...row, category_type: purType, SerNo: i + 1 };
     });
     this.stepPurchaseRows.set(normalized);
   }
 
   public onStepBankDataChange(data: FIN53010StepBankDeposit[]): void {
-    this.stepBankRows.set(data);
+    this.stepBankRows.set(data.map((row, i) => ({ ...row, SerNo: i + 1 })));
   }
 
   /** 銷項步驟表：字軌 2 碼 + 發票號碼 8 碼齊備時查 APS4023 並帶入該列 */

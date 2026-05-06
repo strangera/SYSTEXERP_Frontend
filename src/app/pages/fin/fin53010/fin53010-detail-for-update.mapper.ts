@@ -188,10 +188,10 @@ export function mapFin53010ForUpdateResponseToStepRows(
   }
 
   return {
-    stepAPRows: arr(data._APS3001s).map(mapAps3001RowToStepAP),
-    stepARRows: arr(data._ARS3001s).map(mapArs3001RowToStepAR),
-    stepSalesRows: arr(data._APS4023s).map(mapAps4023RowToStepSales),
-    stepPurchaseRows: arr(data._APS2002s).map(mapAps2002RowToStepPurchase),
-    stepBankRows: arr(data._APS4002s).map(mapAps4002RowToStepBank),
+    stepAPRows: arr(data._APS3001s).map(mapAps3001RowToStepAP).map((r, i) => ({ ...r, SerNo: i + 1 })),
+    stepARRows: arr(data._ARS3001s).map(mapArs3001RowToStepAR).map((r, i) => ({ ...r, SerNo: i + 1 })),
+    stepSalesRows: arr(data._APS4023s).map(mapAps4023RowToStepSales).map((r, i) => ({ ...r, SerNo: i + 1 })),
+    stepPurchaseRows: arr(data._APS2002s).map(mapAps2002RowToStepPurchase).map((r, i) => ({ ...r, SerNo: i + 1 })),
+    stepBankRows: arr(data._APS4002s).map(mapAps4002RowToStepBank).map((r, i) => ({ ...r, SerNo: i + 1 })),
   };
 }

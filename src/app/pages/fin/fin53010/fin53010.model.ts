@@ -805,6 +805,8 @@ export type FIN53010DetailDataByVouNoForUpdateResult = Omit<BaseQueryResponse<Qu
 export interface FIN53010StepAP {
   /** 更新 APS3001 時帶入 */
   id?: number;
+  /** 顯示用序號（10 為單位遞增），不送 API */
+  SerNo?: number;
   org_id?: string;
   ven_no?: string;
   ven_pay_type?: string;
@@ -823,6 +825,8 @@ export interface FIN53010StepAP {
 export interface FIN53010StepAR {
   /** 更新 ARS3001 時帶入 */
   id?: number;
+  /** 顯示用序號（10 為單位遞增），不送 API */
+  SerNo?: number;
   org_id?: string;
   ven_no?: string;
   ars_amt?: number;
@@ -836,6 +840,8 @@ export interface FIN53010StepAR {
 export interface FIN53010StepSalesInvoiceRow {
   /** APS4023 主檔 ID（insert／update APS4023Data 用） */
   id?: number;
+  /** 顯示用序號（10 為單位遞增），不送 API */
+  SerNo?: number;
   invoice_type?: string;
   invoice_prefix?: string;
   invoice_no?: string;
@@ -855,6 +861,8 @@ export interface FIN53010StepSalesInvoiceRow {
 export interface FIN53010StepPurchaseInvoiceRow {
   /** 更新 APS2002 時帶入 */
   id?: number;
+  /** 顯示用序號（10 為單位遞增），不送 API */
+  SerNo?: number;
   voucher_type?: string;
   track_no?: string;
   invoice_no?: string;
@@ -876,6 +884,8 @@ export interface FIN53010StepPurchaseInvoiceRow {
 export interface FIN53010StepBankDeposit {
   /** 更新 APS4002 時帶入 */
   id?: number;
+  /** 顯示用序號（10 為單位遞增），不送 API */
+  SerNo?: number;
   ven_no?: string;
   bank_no?: string;
   deposit_amt?: number;
