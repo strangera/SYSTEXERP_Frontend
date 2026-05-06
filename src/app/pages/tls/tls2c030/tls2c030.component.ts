@@ -136,6 +136,7 @@ export class TLS2C030Component extends BasicQueryPageComponent<TLS2C030Data> imp
       .subscribe(response => {
         // 處理回應
         this.messageService.successBubble(response.Message);
+        this.refreshCloseDate();
         this.onSubmit(this.queryForm); // 重新查詢資料
       });
   }
@@ -164,7 +165,27 @@ export class TLS2C030Component extends BasicQueryPageComponent<TLS2C030Data> imp
       .subscribe(response => {
         // 處理回應
         this.messageService.successBubble(response.Message);
+        this.refreshCloseDate();
         this.onSubmit(this.queryForm); // 重新查詢資料
+      });
+  }
+
+  private refreshCloseDate() {
+    this.tls2c010Service.getTLS2C010Date()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        // 1. 更新最新的關帳日期變數
+        this.closeDate = res.Data.CLS_DATE || '';
+
+        // 2. 自動計算並更新表單中的日期 (預設為最新關帳日 + 1 天)
+        if (this.closeDate) {
+          const nextDate = new Date(this.closeDate);
+          nextDate.setDate(nextDate.getDate() + 1);
+
+          this.queryForm.patchValue({
+            onedatedd: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || ''
+          });
+        }
       });
   }
 
