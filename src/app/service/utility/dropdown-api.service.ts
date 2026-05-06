@@ -55,15 +55,17 @@ import {
   Pos20031Item,
   Pos20031Query,
   Pos20032Query,
+  Pos2004ExtendedItem,
   Pos2004Item,
   Pos2004LogoItem,
   Pos2004LogoQuery,
   Pos2004Query,
+  Pos2004SearchKey,
   Pos2004WithBrandItem,
-  Pos2064MpcsNoDropDownItem,
   Pos2013Item,
   Pos2013LogoRequest,
   Pos2013Query,
+  Pos2064MpcsNoDropDownItem,
   queryPOS1002_DropDownListItem,
   Sys1000Query,
   Sys5000SubModuleItem,
@@ -754,6 +756,13 @@ export class DropdownApiService {
   /** 查詢商品資料(POS2004) (依照專櫃編號TLT_No查詢) */
   queryPos2004(body: Pos2004Query): Observable<Pos2004Item[] | null> {
     return this.queryDropdownWithParams<Pos2004Item, Pos2004Query>('/queryPOS2004_DropDownList', body).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢商品資料(POS2004) (依照專櫃編號TLT_No查詢) */
+  queryPOS2004_BySearchKey(body: Pos2004SearchKey): Observable<Pos2004ExtendedItem[] | null> {
+    return this.queryDropdownWithParams<Pos2004ExtendedItem, Pos2004SearchKey>('/queryPOS2004_BySearchKey', body).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
