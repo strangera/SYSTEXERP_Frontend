@@ -1,6 +1,7 @@
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN15080Service } from '@service/api/fin/fin15080.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -34,6 +35,7 @@ import { YearMonthComponent } from '../fin11020/query-year-month/query-year-mont
     TableComponent,
     TranslateModule,
     CalendarComponent,
+    CommonModule,
     ButtonModule,
     YearMonthComponent,
     DropdownComponent
@@ -51,6 +53,9 @@ export class FIN15060Component extends BasicQueryPageComponent<FIN15060Data> imp
   selectedItems: FIN15060Data[] = [];
   pdfBtnLoding = false;
   stoTaxNoOptions: any[] = [];
+
+  // 控制畫面是否顯示
+  pageReady = false;
 
   columns: Column[] = [
     { field: 'INV_DeclareYM', header: '所屬年月份', visible: true },
@@ -79,6 +84,8 @@ export class FIN15060Component extends BasicQueryPageComponent<FIN15060Data> imp
   }
 
   ngOnInit(): void {
+    // 一開始先隱藏畫面
+    this.pageReady = false;
     this.initializePage('FIN15060', 'fin/fin15060cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadStoTaxNoOptions(); // 載入稅籍選單
     // 設定INV_YM預設值
@@ -95,13 +102,15 @@ export class FIN15060Component extends BasicQueryPageComponent<FIN15060Data> imp
     const storeNo = this.authService.currentUserValue?.SYS_StoreNo || '10';
     const mid = this.authService.currentUserValue?.mid || 0;
 
-    this.fin15080Service.getStoTaxNoOptions({ mid, STO_No: storeNo }).subscribe({
+    this.fin15080Service.getStoTaxNoOptions({ mid, STO_No: storeNo }).pipe(
+      untilDestroyed(this), finalize(() => {
+        this.pageReady = true;
+      })
+    ).subscribe({
       next: (opts) => {
         this.stoTaxNoOptions = opts.filter(x => x.STO_Status === '1');
-
-        // console.log('稅籍編號 options', this.stoTaxNoOptions);
-
         // 預設第一筆 作為表單內容
+        console.log('stoTaxNoOptions', this.stoTaxNoOptions);
         if (this.stoTaxNoOptions.length > 0) {
           this.queryForm.patchValue({
             STO_TaxNo: this.stoTaxNoOptions[0].STO_TaxNo,
