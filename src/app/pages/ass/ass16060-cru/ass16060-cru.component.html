@@ -1,100 +1,98 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="default"
-      label="確認審核"
-      *ngIf="isEditMode"
-    ></app-button>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+
+  <p-panel [header]="formTitle" class="line-height-3 m-0 mb-3">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="倉別"
-            controlName="warehouse"
-            [options]="warehouse"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.warehouse"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="退回人代號"
-            controlName="returnerCode"
-            [options]="returnerCode"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.returnerCode"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="部門代號"
-            controlName="departmentCode"
-            [options]="departmentCode"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.departmentCode"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateOne"
-            label="申請日期"
-            [control]="dataForm.controls.applyDate"
-            [submitted]="submitted"
-          ></app-calendar>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-textarea
-            label="退回說明"
-            controlName="retExp"
-            [control]="dataForm.controls.retExp"
-            [submitted]="submitted"
-          ></app-input-textarea>
-        </div>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="倉別"
+          controlName="WH_ID"
+          [options]="warehouseOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [control]="df().WH_ID"
+          [disabled]="isFormReadable"
+          [submitted]="submitted"
+        ></app-dropdown>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="退回人代號"
+          controlName="RETURN_EMP_ID"
+          [options]="returnEmpOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [control]="df().RETURN_EMP_ID"
+          [disabled]="isFormReadable"
+          [submitted]="submitted"
+        ></app-dropdown>
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="部門代號"
+          controlName="ORG_ID"
+          [options]="orgOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [control]="df().ORG_ID"
+          [disabled]="isFormReadable"
+          [submitted]="submitted"
+        ></app-dropdown>
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
+          calendarType="dateOne"
+          label="申請日期"
+          controlName="APPLY_DATE"
+          [control]="df().APPLY_DATE"
+          [disabled]="isFormReadable"
+          [submitted]="submitted"
+        ></app-calendar>
+        <app-input-textarea
+          class="col-12 md:col-6 lg:col-4"
+          label="退回說明"
+          controlName="REMARK"
+          [control]="df().REMARK"
+          [readonly]="isFormReadable"
+          [submitted]="submitted"
+        ></app-input-textarea>
       </div>
 
-      <!-- 動態表單欄位... -->
+      <br />
+
       <app-table-edit
         tableKey="ASS16060Detail"
-        class="col-12"
-        [data]="data"
-        [columns]="columns"
-        [showCheckBox]="true"
-        (delete)="onDelete($event)"
-        (selectionChange)="selectedRows = $event"
-        [selectedItems]="selectedRows"
+        [data]="tableData()"
+        [columns]="editColumns"
+        [selectedItems]="selectedItems"
+        (selectionChange)="selectedItems = $event"
+        (insert)="onTableInsert()"
+        (dataChange)="tableData.set($event)"
         [showCheckBox]="!isFormReadable"
-        (dataChange)="data = $event"
+        [showDelete]="!isFormReadable"
+        [showInsert]="false"
         [disabled]="isFormReadable"
-        [tableRequired]="true"
+        [canInsert]="true"
+        [loading]="tableLoading()"
+        [tableRequired]="false"
       ></app-table-edit>
 
-      <div class="pt-1"></div>
-    </form>
-    <div class="col pt-4">
       <div
-        *ngIf="!isFormReadable"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        class="grid justify-content-end gap-2 m-0 mt-4 border-top-1 surface-border pt-3"
       >
         <app-button
           btnType="cancel"
           [form]="dataForm"
-          (clickEvent)="resetTable()"
+          [disabled]="isFormReadable"
+          (clickEvent)="clearDetailTable()"
         ></app-button>
         <app-button
           btnType="submit"
-          (clickEvent)="submitForm(dataForm)"
+          [loading]="loading"
+          [disabled]="isFormReadable"
         ></app-button>
       </div>
-    </div>
+    </form>
   </p-panel>
 </div>

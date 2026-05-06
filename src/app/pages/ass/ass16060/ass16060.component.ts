@@ -2,7 +2,7 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS16060QueryRequest, ASS16060QueryRow } from './ass16060.model';
+import { ass16060QueryRowToCruFormValue, ASS16060QueryRequest, ASS16060QueryRow } from './ass16060.model';
 import { ASS16060Service } from '@service/api/ass/ass16060.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Sys1000Query } from '@service/utility/dropdown-api.model';
@@ -16,6 +16,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ReportColumn, formatDate } from '@shared/componentkit/table-report/table-report.model';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -237,8 +238,9 @@ export class ASS16060Component
     });
   }
 
-  /** 管理欄檢視：後端未串時僅提示 */
-  onTableDetail(_row: ASS16060QueryRow): void {
-    this.messageService.infoBubble('待 API 串接');
+  /** 管理欄檢視 → CRU Read（表頭由列表可取得欄位帶入；明細待 detail API） */
+  onTableDetail(row: ASS16060QueryRow): void {
+    if (!this.hasPermission(this.Actions.Query)) return;
+    this.navigateWithState(CRUDStatus.Read, ass16060QueryRowToCruFormValue(row));
   }
 }
