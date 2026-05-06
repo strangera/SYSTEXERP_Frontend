@@ -7,6 +7,7 @@ import { Fin14040Service } from '@service/api/fin/fin14040.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -67,6 +68,9 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
     // ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
   });
 
+  // 控制畫面是否顯示
+  pageReady = false;
+
   totalRecords = 0; // 總記錄數
   data: Record<string, string>[] = [];
   selectedItems: Record<string, string> = {}; // 用於儲存選中的項目
@@ -84,6 +88,8 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
     super();
   }
   ngOnInit(): void {
+    // 一開始先隱藏畫面
+    this.pageReady = false;
     this.initializePage('FIN14040', '/FIN/FIN14040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
@@ -93,7 +99,9 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
       {
         "mid": this.queryForm.get("Mid")?.value,
         "STO_No": this.queryForm.get("STO_No")?.value
-      }).pipe(untilDestroyed(this)).subscribe({
+      }).pipe(untilDestroyed(this), finalize(() => {
+        this.pageReady = true;
+      })).subscribe({
         next: (response) => {
           const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
           this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string; STO_Status: string }) => ({

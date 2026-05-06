@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -7,6 +8,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -285,6 +287,7 @@ export interface TDS1002 {
     FormsModule,
     ReactiveFormsModule,
     CalendarComponent,
+    CommonModule,
     DropdownComponent,
     InputTextComponent,
     InputTextRangeComponent,
@@ -303,6 +306,9 @@ export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implemen
 
     // ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
   });
+
+  // 控制畫面是否顯示
+  pageReady = false;
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: TDS1002[] = [];
@@ -336,6 +342,8 @@ export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implemen
   }
 
   ngOnInit(): void {
+    // 一開始先隱藏畫面
+    this.pageReady = false;
     this.initializePage('FIN15090', '/FIN/FIN15090cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOption();
   }
@@ -393,7 +401,11 @@ export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implemen
     this.fin15090Service.queryTDS1003_STO_TaxNo_DropDownList({
       mid: this.authService.getUserInfo()?.mid ?? null,
       STO_No: this.authService.getUserInfo()?.SYS_StoreNo ?? null,
-    }).pipe(untilDestroyed(this))
+    }).pipe(
+      untilDestroyed(this), finalize(() => {
+        this.pageReady = true;
+      })
+    )
       .subscribe({
         next: (response) => {
           console.log('response.Data', response.Data);
