@@ -45,11 +45,13 @@ export class FIN15080Service {
           const taxName = x?.STO_TaxName ?? '';
           const beg = x?.REP_BegGUIYM ?? '';
           const end = x?.REP_EndGUIYM ?? '';
+          const period = beg
+            ? `${beg}~${end || ''}` // end 空就顯示成 201412~
+            : '';
 
           // 顯示文字：STO_TaxNo/STO_TaxName/REP_BegGUIYM~REP_EndGUIYM
           // 例如：703902223/南紡流通事業股份有限公司/202012~
-          // 更新: 保留STO_TaxNo-STO_TaxName不需要日期
-          const label = [taxNo + '-' + taxName];
+          const label = [taxNo, taxName];
 
           // value 做成唯一 key，避免相同 STO_TaxNo 被視為同一筆
           // 例如：703902223_202012_
@@ -69,10 +71,4 @@ export class FIN15080Service {
     );
   }
 
-    return this.http.post<any>(url, req).pipe(
-      map((res) => {
-        return res?.Data?.TDS1003STO_TaxNos ?? [];
-      })
-    );
-  }
 }
