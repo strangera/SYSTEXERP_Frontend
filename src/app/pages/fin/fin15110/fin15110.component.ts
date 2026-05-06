@@ -153,7 +153,7 @@ export class FIN15110Component
       TXN_Uniform: { field: 'TXN_Uniform', header: '統一編號', visible: true, showSort: true },
       TXN_SaleAmt: {
         field: 'TXN_SaleAmt',
-        header: '銷售金額',
+        header: '發票總金額',
         visible: true,
         showSort: true,
         format: formatAmount,
@@ -225,6 +225,7 @@ export class FIN15110Component
 
           baseColumns.Ecr_No,
           baseColumns.TXN_Date,
+          baseColumns.TXN_SaleAmt,
           baseColumns.TXN_SaleTax,
           baseColumns.TXN_SaleNoTax,
           baseColumns.TXN_SaleZeroTax,
@@ -252,7 +253,7 @@ export class FIN15110Component
           { field: 'TXN_Uniform', header: '統一編號', visible: true, showSort: true },
           {
             field: 'TXN_SaleAmt',
-            header: '銷售金額',
+            header: '發票總金額',
             visible: true,
             showSort: true,
             format: formatAmount,
@@ -488,6 +489,7 @@ export class FIN15110Component
             TXN_SaleAmt: data.TotalTXN_SaleAmt,
             TXN_SaleTax: data.TotalTXN_SaleTax,
             TXN_SaleNoTax: data.TotalTXN_SaleNoTax,
+            TXN_SaleZeroTax: data.TotalTXN_SaleZeroTax ?? this.data.reduce((sum: number, row: Record<string, number>) => sum + (row['TXN_SaleZeroTax'] ?? 0), 0),
           },
         ];
         break;
@@ -590,6 +592,7 @@ export class FIN15110Component
               const d = Array.isArray(res.Data) ? res.Data[0] : res.Data;
 
               this.data = d.FIN15110s ?? [];
+              console.log('[FIN15110] response d keys:', Object.keys(d));
               // 彙總表不使用後端 TotalCount，直接以資料筆數呈現
               this.totalRecords = isSummary ? this.data.length : (d.TotalCount ?? this.data.length);
 
