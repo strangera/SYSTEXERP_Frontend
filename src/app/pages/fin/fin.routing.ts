@@ -209,7 +209,8 @@ export const finRoutes: Routes = [
   { path: 'fin41050cru', loadComponent: () => import('./fin41050-cru/fin41050-cru.component').then(m => m.FIN41050CRUComponent), data: { progNo: 'FIN41050' } },
 
   // 部門預算審核作業
-  // { path: 'fin41060', loadComponent: () => import('./fin41060/fin41060.component').then(m => m.Fin41060Component),data:{progNo:'Fin41060'} },
+  { path: 'fin41060', loadComponent: () => import('./fin41060/fin41060.component').then(m => m.FIN41060Component), data: { progNo: 'FIN41060' } },
+  { path: 'fin41060cru', loadComponent: () => import('./fin41060-cru/fin41060-cru.component').then(m => m.FIN41060CRUComponent), data: { progNo: 'FIN41060' } },
   // 預計損益表
   { path: 'fin42010', loadComponent: () => import('./fin42010/fin42010.component').then(m => m.FIN42010Component), data: { progNo: 'FIN42010' } },
   // 預算、實績比較表
@@ -380,7 +381,7 @@ export const finRoutes: Routes = [
   { path: 'fin73020', loadComponent: () => import('./fin73020/fin73020.component').then(m => m.FIN73020Component), data: { progNo: 'FIN73020' } },
   // { path: 'fin73020cru', loadComponent: () => import('./fin73020-cru/fin73020-cru.component').then(m => m.FIN73020CRUComponent),data: { progNo: 'FIN73020'} },
   // 支付申請單
-  // { path: 'fin73030', loadComponent: () => import('./fin73030/fin73030.component').then(m => m.FIN73030Component),data:{progNo:'FIN73030'} },
+  { path: 'fin73030', loadComponent: () => import('./fin73030/fin73030.component').then(m => m.FIN73030Component), data: { progNo: 'FIN73030' } },
   // 零用金撥補明細表
   { path: 'fin73040', loadComponent: () => import('./fin73040/fin73040.component').then(m => m.FIN73040Component),data:{progNo:'FIN73040'} },
 ];

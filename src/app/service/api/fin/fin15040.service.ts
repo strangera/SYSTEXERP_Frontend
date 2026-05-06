@@ -29,6 +29,7 @@ export interface FIN15040QueryRequest extends BaseQueryRequest {
   PUR_DiscNo?: string;           // 扣抵代號
   SYS_ORIGIN?: string[];         // 系統別
   INV_Cancel?: string;           // 發票狀態
+  ECR_No?: string[];             // 收銀機號
 }
 
 export interface FIN15040PrintRequest extends FIN15040QueryRequest {

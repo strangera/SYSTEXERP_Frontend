@@ -368,6 +368,13 @@ export interface Pos2004Query {
 }
 
 /**
+ * 查詢 POS2004_DropDownList 時的請求 body
+ */
+export interface Pos2004SearchKey {
+  SearchKey: string;
+}
+
+/**
  * 查詢 POS2004_DropDownList 回傳的項目型別
  */
 export interface Pos2004Item {
@@ -375,6 +382,14 @@ export interface Pos2004Item {
   PLU_No: string;
   PLU_Name: string;
   PLU_SalePrc: number;
+}
+
+/**
+ * 查詢 商品下拉選單 Response (擴充版)
+ */
+export interface Pos2004ExtendedItem extends Pos2004Item {
+  PLU_Unit: string
+  PLU_OrgPLUNo: string
 }
 
 /**

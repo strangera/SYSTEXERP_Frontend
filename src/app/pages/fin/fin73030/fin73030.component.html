@@ -4,58 +4,29 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      [header]="'查詢條件'"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="支出請款單號"
-              controlName="paymentRequestNo"
-              [options]="paymentRequestNoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.paymentRequestNo"
-              [submitted]="submitted">
-            </app-dropdown>
+            <app-dropdown label="支出請款單號" controlName="PCS_RqstNo" [options]="pcsRqstNoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.PCS_RqstNo" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-       
-                         <app-calendar-range
-              label="產生日期"
-              controlName="createDateStart"
-              [startControl]="queryForm.controls.createDateStart"
-              [endControl]="queryForm.controls.createDateEnd"
-              [submitted]="submitted">
-            </app-calendar-range>
+            <app-calendar-range label="產生日期" startControlName="PCS_RqstDate_S" endControlName="PCS_RqstDate_E"
+              [startControl]="queryForm.controls.PCS_RqstDate_S" [endControl]="queryForm.controls.PCS_RqstDate_E"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
-       
-
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="狀態"
-              controlName="status"
-              [options]="statusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.status"
-              [submitted]="submitted">
-            </app-dropdown>
+            <app-dropdown label="狀態" controlName="PCS_Status" [options]="statusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.PCS_Status" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4 flex align-items-end">
-            <p-checkbox
-              inputId="printSignOff"
-              [formControl]="queryForm.controls.printSignOff"
-              binary="true"
-              label="列印簽核欄">
-            </p-checkbox>
+            <p-checkbox inputId="printSignOff" [binary]="true" [formControl]="queryForm.controls.printSignOff"
+              label="列印簽核欄"></p-checkbox>
           </div>
         </div>
 
@@ -72,14 +43,18 @@
   <app-table-report
     apiUrl="queryFIN73030"
     [lastQueryBody]="lastQueryBody"
-    [queryFunction]="service.queryFIN73030.bind(service)"
+    [lazy]="false"
     [data]="data"
-    dataKey="dataKey"
-    tableKey="FIN73030_Data"
-    [columns]="columns"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    [showManage]="false"
-  >
+    (dataChange)="data = $event" dataKey="rowKey" tableKey="FIN73030" [columns]="columns"
+    [expansionColumns]="expansionColumns" expansionDataKey="expansionLines" [totalRecords]="totalRecords"
+    [loading]="loading" [showManage]="false">
+    <header>
+      <div class="flex justify-content-end align-items-center gap-2">
+        <p-button styleClass="p-2" label="匯出 PDF" icon="pi pi-file-pdf" (onClick)="onExportPdf()"
+          [disabled]="exportDisabled()" [loading]="exportPdfLoading"></p-button>
+        <p-button styleClass="p-2" label="匯出 Excel" icon="pi pi-file-excel" (onClick)="onExportExcel()"
+          [disabled]="exportDisabled()" [loading]="exportExcelLoading"></p-button>
+      </div>
+    </header>
   </app-table-report>
 </div>

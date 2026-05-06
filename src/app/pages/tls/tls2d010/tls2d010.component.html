@@ -38,10 +38,14 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="樓層" controlName="tlt_floorList" [options]="tlt_floorListOption | async"
+              optionLabel="Name" optionValue="No" [control]="queryForm.controls.tlt_floorList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="建立者" controlName="CRT_USR_No" [options]="CRT_USR_NoOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.CRT_USR_No" [submitted]="submitted"></app-dropdown>
           </div>
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="活動代碼/名稱" controlName="pod_noList" [options]="pod_noOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.pod_noList" [submitted]="submitted"></app-multi-select>
@@ -69,6 +73,31 @@
     (detail)="onDetail(setCounterType($event))" [showCheckBox]="true" dataKey="id"
     [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [showManage]="true" [loading]="loading"
-    [showExcelExport]="true" [showExcel]="true" [exportExcelLoading]="excelLoading" (exportExcel)="downloadTemplate()"
-    (importExcel)="onImportExcel($event)" (delete)="onDelete($event)"></app-table>
+    [showExcelImport]="false" [showCustomExcelImport]="true" (importExcel)="openImportDialog()" [showExcel]="true"
+    [exportExcelLoading]="excelLoading" (exportExcel)="downloadTemplate()" (delete)="onDelete($event)">
+  </app-table>
 </div>
+
+<app-dialog [visible]="dialogVisible" header="匯入前的資料刪除" (visibleChange)="onDialogClose($event)" [showFooter]="false">
+  <div class="grid p-fluid">
+    <div class="col-12 md:col-6 lg:col-4">
+      <app-calendar label="扣款年月" calendarType="dateMonthOne" [control]="deleteForm.controls.tpy_YYYYMM"
+        [submitted]="submitted"></app-calendar>
+    </div>
+    <div class="col-12 md:col-6 lg:col-4">
+      <app-multi-select label="樓層" controlName="tlt_floorList" [options]="tlt_floorListOption | async"
+        optionLabel="Name" optionValue="No" [control]="deleteForm.controls.tlt_floorList" [submitted]="submitted"
+        appendTo="body"></app-multi-select>
+    </div>
+    <div class="col-12 md:col-6 lg:col-4">
+      <app-dropdown label="建立者" controlName="CRT_USR_No" [options]="CRT_USR_NoOptions" optionLabel="label"
+        optionValue="value" [control]="deleteForm.controls.CRT_USR_No" [submitted]="submitted"></app-dropdown>
+    </div>
+  </div>
+  <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+    <app-button btnType="cancel" (click)="onDialogClose(false)"></app-button>
+    <app-button btnType="submit" [loading]="loading" (click)="onSaveDialog()" />
+  </div>
+</app-dialog>
+
+<input type="file" #fileInput style="display: none" (change)="handleFileSelect($event)" accept=".xlsx, .xls">

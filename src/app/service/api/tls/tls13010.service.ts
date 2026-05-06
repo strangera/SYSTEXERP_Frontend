@@ -268,10 +268,10 @@ export class TLS13010Service {
    * @description 此方法不使用通用錯誤處理器，由呼叫端自行處理錯誤訊息
    * TODO: 待後端確認 TLS13010 對應的續約查詢 endpoint，目前暫用 queryContractForRenewal
    */
-  queryContractForRenewal(ven_no: string): Observable<RenewalQueryResponse> {
-    const payload: RenewalQueryRequest = { ven_no };
+  queryContractForRenewal(ven_no: string, tlt_no?: string): Observable<RenewalQueryResponse> {
+    const payload: RenewalQueryRequest = { ven_no, ...(tlt_no ? { tlt_no } : {}) };
 
-    console.log('🔄 [TLS13010] 查詢續約資料，廠商編號:', ven_no);
+    console.log('🔄 [TLS13010] 查詢續約資料，廠商編號:', ven_no, '專櫃編號:', tlt_no);
 
     return this.http.post<any>(
       `${this.apiUrl}/TLS0000/TLS1000/queryContractForRenewal`,
@@ -301,6 +301,25 @@ export class TLS13010Service {
 
         return throwError(() => ({ message: errorMessage, originalError: error }));
       })
+    );
+  }
+
+  /**
+   * 查詢契約清單（只查 TLTTALENT，含最新版去重，供續約查詢 dialog 使用）
+   * 後端已做 ROW_NUMBER 去重 + 使用者權限過濾，前端不需再做
+   */
+  queryTLTALENTList(payload: {
+    tlt_no?: string;
+    tlt_name?: string;
+    ven_uniformList?: string[];
+    apply_typeList?: string[];
+  }): Observable<any> {
+    return this.http.post<any>(
+      `${this.apiUrl}/TLS0000/TLS1000/queryTLTALENTList`,
+      payload
+    ).pipe(
+      tap((res) => console.log('[queryTLTALENTList] 結果:', res)),
+      catchError(this.errorHandler.handleError)
     );
   }
 

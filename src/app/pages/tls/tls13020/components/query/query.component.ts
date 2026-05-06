@@ -45,6 +45,7 @@ export interface ContractItem {
   ven_no: string;
   approve_status: string;
   tlt_term_type: string;
+  source_type: string;
   CanEdit: boolean;
   CanVoid: boolean;
 }
@@ -78,30 +79,30 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
   // ========== 表格按鈕 ==========
   public readonly addButton: AddButton[] = [
-    {
-      label: '審核',
-      icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: ContractItem) => this.onApprove(rowData),
-      disabled: (rowData: ContractItem) => rowData.approve_status !== '1' || !this.hasPermission(Actions.Audit)
-    },
-    {
-      label: '反審核',
-      icon: 'pi pi-undo text-orange-500',
-      action: (rowData: ContractItem) => this.onUnapprove(rowData),
-      disabled: (rowData: ContractItem) => rowData.approve_status !== '2' || !this.hasPermission(Actions.AntiAudit)
-    },
-    {
-      label: '作廢',
-      icon: 'pi pi-times-circle text-red-500',
-      action: (rowData: ContractItem) => this.onVoid(rowData),
-      disabled: (rowData: ContractItem) => this.isVoidDisabled(rowData) || !this.hasPermission(Actions.Invalidate)
-    }
+    // {
+    //   label: '審核',
+    //   icon: 'pi pi-check-circle text-green-500',
+    //   action: (rowData: ContractItem) => this.onApprove(rowData),
+    //   disabled: (rowData: ContractItem) => rowData.approve_status !== '1' || !this.hasPermission(Actions.Audit)
+    // },
+    // {
+    //   label: '反審核',
+    //   icon: 'pi pi-undo text-orange-500',
+    //   action: (rowData: ContractItem) => this.onUnapprove(rowData),
+    //   disabled: (rowData: ContractItem) => rowData.approve_status !== '2' || !this.hasPermission(Actions.AntiAudit)
+    // },
+    // {
+    //   label: '作廢',
+    //   icon: 'pi pi-times-circle text-red-500',
+    //   action: (rowData: ContractItem) => this.onVoid(rowData),
+    //   disabled: (rowData: ContractItem) => this.isVoidDisabled(rowData) || !this.hasPermission(Actions.Invalidate)
+    // }
   ];
 
   // ========== 查詢表單 ==========
   queryForm = this.formBuilder.group({
     apply_no: [null as string | null],
-    apply_type: ['2' as string | null],
+    apply_typeList: [['2'] as string[]],
     bus_type: [null as string | null],
     tlt_no: [null as string | null],
     tlt_name: ['', [Validators.maxLength(50)]],
@@ -152,7 +153,8 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'approve_status', header: '合約狀態', visible: true, format: formatApproveStatus }
+    { field: 'approve_status', header: '合約狀態', visible: true, format: formatApproveStatus },
+    { field: 'source_type', header: '來源處', visible: true }
   ];
 
   // ========== 下拉選單選項 ==========

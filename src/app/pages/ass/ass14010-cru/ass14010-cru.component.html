@@ -59,7 +59,7 @@
           (dataChange)="onSupplierDataChange($event)"
           [canInsert]="supplierData.length < 1"
           [rowValidate]="validateSupplierRow"
-          [disabled]="dataForm.get('RECEIPT_STATUS')?.value === '2'"
+          [disabled]="isFormReadable"
         ></app-table-edit>
         <app-table-edit
           title="單據資料"
@@ -70,7 +70,7 @@
           (dataChange)="onItemDataChange($event)"
           [rowValidate]="validateItemRow"
           [showFooter]="true"
-          [disabled]="dataForm.get('RECEIPT_STATUS')?.value === '2'"
+          [disabled]="isFormReadable"
         ></app-table-edit>
       </div>
       <div

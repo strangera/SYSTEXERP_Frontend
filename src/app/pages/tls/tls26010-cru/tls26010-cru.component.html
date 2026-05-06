@@ -89,6 +89,7 @@
         dataStatusField="status"
         [loading]="ecrLoading"
         [keepDeletedData]="true"
+        [disabled]="isFormReadable"
       ></app-table-edit>
 
       <!-- TLT明細檔 -->
@@ -122,6 +123,7 @@
         [showExcelImport]="true"
         (exportExcel)="onExportTltExcel()"
         (importExcel)="onImportTltExcel($event)"
+        [disabled]="isFormReadable"
       ></app-table-edit>
 
       <!-- 收銀機 Dialog選單 -->

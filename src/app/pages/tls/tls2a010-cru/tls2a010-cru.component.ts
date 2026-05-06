@@ -71,14 +71,11 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
     ],
   };
 
-  /** PAY_NO 對應分類 */
+  /** PAY_Type 對應分類 */
   payNoCategory: Record<string, string> = {
-    '12': 'CREDIT', '14': 'CREDIT', '41': 'CREDIT', '42': 'CREDIT', '43': 'CREDIT', '44': 'CREDIT',
-    '20': 'VOUCHER', '24': 'VOUCHER', '25': 'VOUCHER', '26': 'VOUCHER', '27': 'VOUCHER',
-    '30': 'VOUCHER', '62': 'VOUCHER', '71': 'VOUCHER', '72': 'VOUCHER', '73': 'VOUCHER',
-    '52': 'TPAY', '54': 'TPAY', '55': 'TPAY', '57': 'TPAY',
-    '99': 'VOID',
+    '0': 'CREDIT', '6': 'VOUCHER', 'F': 'VOUCHER', 'I': 'TPAY', 'M': 'TPAY', 'V': 'TPAY'
   };
+
 
   columns: EditColumn[] = [
     {
@@ -107,7 +104,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
       optionLabel: 'label',
       optionValue: 'value',
       options: (row: any) => {
-        const category = this.payNoCategory[row.PAY_NO];
+        const category = this.payNoCategory[row.PAY_Type];
         return this.checkStatusOptions[category] || [];
       }
     },

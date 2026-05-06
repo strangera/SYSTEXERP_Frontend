@@ -63,6 +63,18 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
   }
   ngOnInit(): void {
     this.initializePage('FIN11030', '/FIN/FIN11030cru', this.queryForm, (form) => this.onSubmit(form));
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    // 計算當期起始月 (單數月)
+    const currentPeriodMonth = month % 2 === 0 ? month - 1 : month;
+    const defaultYYYYMM = `${year}${currentPeriodMonth.toString().padStart(2, '0')}`;
+
+    // 設定查詢條件起訖預設值
+    this.queryForm.patchValue({
+      SAL_GUIYYYYMM_start: defaultYYYYMM as any,
+      SAL_GUIYYYYMM_end: defaultYYYYMM as any
+    });
     this.queryForm.get('SAL_GUIYYYYMM_start')?.valueChanges.subscribe(value => {
       const endDate = this.queryForm.get('SAL_GUIYYYYMM_end')?.value;
       if (value && (!endDate || endDate === '')) {
