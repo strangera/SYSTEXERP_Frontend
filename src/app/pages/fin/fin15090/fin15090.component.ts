@@ -171,6 +171,8 @@ export interface TDS1002 {
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
+    CalendarComponent,
+    CommonModule,
     DropdownComponent,
     TranslateModule,
     YearMonthComponent,
@@ -192,7 +194,10 @@ export class FIN15090Component
     REP_TaxNo: ['' as string, [Validators.required, Validators.maxLength(10)]],
   });
 
-  totalRecords = 0;
+  // 控制畫面是否顯示
+  pageReady = false;
+
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: TDS1002[] = [];
   selectedRows: TDS1002[] = [];
 
@@ -221,15 +226,9 @@ export class FIN15090Component
   }
 
   ngOnInit(): void {
+    // 一開始先隱藏畫面
     this.pageReady = false;
-
-    this.initializePage(
-      'FIN15090',
-      '/FIN/FIN15090cru',
-      this.queryForm,
-      (form) => this.onSubmit(form)
-    );
-
+    this.initializePage('FIN15090', '/FIN/FIN15090cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOption();
   }
 
@@ -348,7 +347,50 @@ export class FIN15090Component
     const ids = selectedRows.map((row) => row.id);
   }
 
-  isRowSelectable(row: TDS1002): boolean {
-    return true;
+  loadOption() {
+    this.fin15090Service.queryTDS1003_STO_TaxNo_DropDownList({
+      mid: this.authService.getUserInfo()?.mid ?? null,
+      STO_No: this.authService.getUserInfo()?.SYS_StoreNo ?? null,
+    }).pipe(
+      untilDestroyed(this), finalize(() => {
+        this.pageReady = true;
+      })
+    )
+      .subscribe({
+        next: (response) => {
+          console.log('response.Data', response.Data);
+
+          const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
+          // 根據實際回傳陣列改寫
+          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string; STO_Status: string }) => ({
+            // Label: item.STO_TaxNo + "/" + item.STO_TaxName + "/" + item.REP_BegGUIYM + "~" + item.REP_EndGUIYM,
+            Label: item.STO_TaxNo + "-" + item.STO_TaxName,
+            No: item.STO_TaxNo,
+            STO_Status: item.STO_Status
+          }));
+
+          console.log('稅籍編號選項.Data', response);
+
+          // 找出 STO_Status === '1' 的稅籍
+          const active = this.REP_TaxNo_Options.find(x => x.STO_Status === '1');
+
+          // 排序：使用中(1) 的排在未使用中(2) 前面，但保持其他順序
+          this.REP_TaxNo_Options.sort((a, b) => {
+            if (a.STO_Status === '1' && b.STO_Status !== '1') return -1;
+            if (a.STO_Status !== '1' && b.STO_Status === '1') return 1;
+            return 0; // 都一樣就保持原順序
+          });
+
+          if (active) { //如果有使用中的設定為稅及編號預設值
+            console.log('當期使用中的稅籍編號', active);
+            this.queryForm.patchValue({
+              REP_TaxNo: active.No as any,
+            });
+          } else {
+            console.log('當期無使用中的稅籍編號', active);
+          }
+        },
+        error: () => { this.loading = false; },
+      });
   }
 }

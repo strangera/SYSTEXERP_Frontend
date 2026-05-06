@@ -1,11 +1,7 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import {
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN15080Service } from '@service/api/fin/fin15080.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -59,7 +55,8 @@ type StoTaxNoOption = {
     DropdownComponent,
     TableComponent,
     TranslateModule,
-    // CalendarComponent,
+    CalendarComponent,
+    CommonModule,
     ButtonModule,
     YearMonthComponent,
   ],
@@ -81,6 +78,9 @@ export class FIN15060Component
   selectedItems: FIN15060Data[] = [];
   pdfBtnLoding = false;
   stoTaxNoOptions: StoTaxNoOption[] = [];
+
+  // 控制畫面是否顯示
+  pageReady = false;
 
   columns: Column[] = [
     { field: 'INV_DeclareYM', header: '所屬年月份', visible: true },
@@ -133,20 +133,11 @@ export class FIN15060Component
   }
 
   ngOnInit(): void {
+    // 一開始先隱藏畫面
     this.pageReady = false;
-
-    this.initializePage(
-      'FIN15060',
-      'fin/fin15060cru',
-      this.queryForm,
-      (form) => this.onSubmit(form)
-    );
-
-    this.setDefaultInvYm();
-    this.loadStoTaxNoOptions();
-  }
-
-  private setDefaultInvYm(): void {
+    this.initializePage('FIN15060', 'fin/fin15060cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadStoTaxNoOptions(); // 載入稅籍選單
+    // 設定INV_YM預設值
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth() + 1;
 
@@ -163,68 +154,26 @@ export class FIN15060Component
     const storeNo = this.authService.currentUserValue?.SYS_StoreNo || '10';
     const mid = this.authService.currentUserValue?.mid || 0;
 
-    this.pageReady = false;
-    this.loading = true;
-
-    this.fin15080Service
-      .getStoTaxNoOptions({ mid, STO_No: storeNo })
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.pageReady = true;
-        })
-      )
-      .subscribe({
-        next: (rows) => {
-          this.stoTaxNoOptions = this.buildStoTaxNoOptions(rows);
-
-          const active =
-            this.stoTaxNoOptions.find(
-              (x) => String(x.STO_Status).trim() === '1'
-            ) ?? this.stoTaxNoOptions[0];
-
-          if (active) {
-            this.queryForm.controls.STO_TaxNo.setValue(active.STO_TaxNo);
-          }
-        },
-        error: (err) => {
-          console.error('取得稅籍下拉失敗：', err);
-          this.stoTaxNoOptions = [];
-          this.messageService.errorBubble('稅籍清單取得失敗');
-        },
-      });
-  }
-
-  private buildStoTaxNoOptions(rows: any[]): StoTaxNoOption[] {
-    const map = new Map<string, StoTaxNoOption>();
-
-    rows.forEach((x) => {
-      const taxNo = String(x?.STO_TaxNo ?? '').trim();
-      const taxName = String(x?.STO_TaxName ?? '').trim();
-      const status = String(x?.STO_Status ?? '').trim();
-
-      if (!taxNo) return;
-
-      const option: StoTaxNoOption = {
-        label: `${taxNo}-${taxName}`,
-        STO_TaxNo: taxNo,
-        STO_TaxName: taxName,
-        STO_Status: status,
-        REP_BegGUIYM: String(x?.REP_BegGUIYM ?? '').trim(),
-        REP_EndGUIYM: String(x?.REP_EndGUIYM ?? '').trim(),
-        STO_No: String(x?.STO_No ?? '').trim(),
-      };
-
-      const exists = map.get(taxNo);
-
-      if (!exists) {
-        map.set(taxNo, option);
-        return;
-      }
-
-      if (status === '1') {
-        map.set(taxNo, option);
-      }
+    this.fin15080Service.getStoTaxNoOptions({ mid, STO_No: storeNo }).pipe(
+      untilDestroyed(this), finalize(() => {
+        this.pageReady = true;
+      })
+    ).subscribe({
+      next: (opts) => {
+        this.stoTaxNoOptions = opts.filter(x => x.STO_Status === '1');
+        // 預設第一筆 作為表單內容
+        console.log('stoTaxNoOptions', this.stoTaxNoOptions);
+        if (this.stoTaxNoOptions.length > 0) {
+          this.queryForm.patchValue({
+            STO_TaxNo: this.stoTaxNoOptions[0].STO_TaxNo,
+          });
+        }
+      },
+      error: (err) => {
+        console.error('取得稅籍下拉失敗：', err);
+        this.stoTaxNoOptions = [];
+        this.messageService.errorBubble('稅籍清單取得失敗');
+      },
     });
 
     return Array.from(map.values());

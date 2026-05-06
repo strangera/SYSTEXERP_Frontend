@@ -83,7 +83,10 @@ export class FIN14040Component
     Tax_No: ['' as string, Validators.required],
   });
 
-  totalRecords = 0;
+  // 控制畫面是否顯示
+  pageReady = false;
+
+  totalRecords = 0; // 總記錄數
   data: Record<string, string>[] = [];
   selectedItems: Record<string, string> = {};
 
@@ -101,48 +104,37 @@ export class FIN14040Component
   }
 
   ngOnInit(): void {
+    // 一開始先隱藏畫面
     this.pageReady = false;
-
-    this.initializePage(
-      'FIN14040',
-      '/FIN/FIN14040cru',
-      this.queryForm,
-      (form) => this.onSubmit(form)
-    );
-
+    this.initializePage('FIN14040', '/FIN/FIN14040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
+  loadOptions() {
+    //取得 稅籍編號 下拉
+    this.fin14040Service.queryTDS1003_STO_TaxNo_DropDownList(
+      {
+        "mid": this.queryForm.get("Mid")?.value,
+        "STO_No": this.queryForm.get("STO_No")?.value
+      }).pipe(untilDestroyed(this), finalize(() => {
+        this.pageReady = true;
+      })).subscribe({
+        next: (response) => {
+          const taxNos = response.Data?.TDS1003STO_TaxNos ?? [];
+          this.REP_TaxNo_Options = taxNos.map((item: { STO_TaxNo: string; STO_TaxName: string; REP_BegGUIYM: string; REP_EndGUIYM: string; STO_Status: string }) => ({
+            Label: item.STO_TaxNo + "-" + item.STO_TaxName,
+            No: item.STO_TaxNo,
+            STO_Status: item.STO_Status
+          }));
 
-  loadOptions(): void {
-    const mid = Number(this.queryForm.get('Mid')?.value ?? 0);
-    const STO_No = String(this.queryForm.get('STO_No')?.value ?? '');
+          // 規格更新， 只使用STO_Status === '1' 的REP_TaxNo_Options
+          this.REP_TaxNo_Options = this.REP_TaxNo_Options.filter(x => x.STO_Status === '1');
+          console.log('稅籍編號 options', this.REP_TaxNo_Options);
 
-    this.pageReady = false;
-    this.loading = true;
-
-    this.fin15080Service
-      .getStoTaxNoOptions({
-        mid,
-        STO_No,
-      })
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.pageReady = true;
-        }),
-        untilDestroyed(this)
-      )
-      .subscribe({
-        next: (rows) => {
-          this.REP_TaxNo_Options = this.buildTaxNoOptions(rows);
-
-          const active =
-            this.REP_TaxNo_Options.find(
-              (x) => String(x.STO_Status).trim() === '1'
-            ) ?? this.REP_TaxNo_Options[0];
-
-          if (active) {
-            this.queryForm.controls.Tax_No.setValue(active.No);
+          // 預設第一筆 作為表單內容
+          if (this.REP_TaxNo_Options.length > 0) {
+            this.queryForm.patchValue({
+              Tax_No: this.REP_TaxNo_Options[0].No as any,
+            });
           }
         },
         error: (error) => {
