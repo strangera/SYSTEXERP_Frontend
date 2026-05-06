@@ -51,6 +51,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls28030', loadComponent: () => import('./tls28030/tls28030.component').then(m => m.TLS28030Component), data: { progNo: 'TLS28030' } },
   // 收銀員領袋表
   { path: 'tls28050', loadComponent: () => import('./tls28050/tls28050.component').then(m => m.TLS28050Component), data: { progNo: 'TLS28050' } },
+  // 日結前檢查作業
+  { path: 'tls2c020', loadComponent: () => import('./tls2c020/tls2c020.component').then(m => m.TLS2C020Component), data: { progNo: 'TLS2C020' } },
   // 日結關帳作業
   { path: 'tls2c030', loadComponent: () => import('./tls2c030/tls2c030.component').then(m => m.TLS2C030Component), data: { progNo: 'TLS2C030' } },
   // 專櫃暫存傳票查詢作業
