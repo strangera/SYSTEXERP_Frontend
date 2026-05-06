@@ -13,7 +13,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { TooltipModule } from 'primeng/tooltip';
-import { finalize } from 'rxjs';
+import { finalize, switchMap } from 'rxjs';
 import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 @Component({
   selector: 'app-tls2a010-cru',
@@ -235,13 +235,21 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
         dataStatus: item.dataStatus
       })),
     };
+    const deletePayload = {
+      PAY_Type: this.PAY_Type ?? '',
+      TXN_Date: payload.selectList.length > 0 ? payload.selectList[0].TXN_Date : ''
+    };
     this.handleSubmit(frm, () => {
-      this.tls2a010Service.insertTLS2A010(payload).pipe(finalize(() => this.loading = false)).subscribe({
-        next: () => {
-          this.messageService.successBubble('審核成功');
+      this.tls2a010Service.deletePOS30011Detail(deletePayload).pipe(switchMap(() => this.tls2a010Service.insertTLS2A010(payload)),
+        finalize(() => {
+          this.loading = false;
           this.messageService.unblockUi();
+        })
+      ).subscribe({
+        next: () => {
+          this.messageService.successBubble('缺單審核成功');
           this.onCancel();
-        },
+        }
       });
     })
   }
