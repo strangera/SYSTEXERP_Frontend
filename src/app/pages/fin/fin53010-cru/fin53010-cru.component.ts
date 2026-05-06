@@ -750,6 +750,29 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return this.currentStep() === flow[flow.length - 1];
   });
 
+  /** 傳票明細中傳票型態為應付（3）之列數，與 stepRowsSyncEffect 篩選規則一致 */
+  public readonly payableDetailRowCount = computed(() => {
+    const map = this.service.accVoucherTypeMap();
+    let n = 0;
+    for (const row of this.tableData()) {
+      const vt = map.get(String(row.AccNo ?? ''));
+      if (String(vt) === '3') n++;
+    }
+    return n;
+  });
+
+  /** 依明細順序提供可對應的應付來源列（vt=3） */
+  public readonly payableDetailSourceRows = computed(() => {
+    const map = this.service.accVoucherTypeMap();
+    return this.tableData().filter(row => String(map.get(String(row.AccNo ?? ''))) === '3');
+  });
+
+  /** 應付步驟表是否允許插入列（不含唯讀；模板須再與 !isFormReadable 一併綁定） */
+  public readonly stepAPTableCanInsert = computed(() => {
+    const max = this.payableDetailRowCount();
+    return max > 0 && this.stepAPRows().length < max;
+  });
+
   private readonly stepFlowEffect = effect(() => {
     if (this.isFormReadable) return;
     if (!this.isFormCreateable && !this.isFormEditable) return;
@@ -819,24 +842,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           const venOpt = getVenOpt(String(row.DetailNo ?? ''));
           const amt = (row.AccAmtD ?? 0) + (row.AccAmtC ?? 0);
           const noteDesc = this.resolveNoteDescForStep(row);
-          const venPayType = venOpt?.['VEN_PayType'] ?? undefined
-          /** 付款方式不為開票時，票據抬頭為空白 */
-          const venCheckTitle = (venPayType === '2') ? (row.DetailName ?? venOpt?.['VEN_Name'] ?? undefined) : ''
 
           if (vt === '3') {
-            ap.push({
-              org_id: row.ORG_ID ?? '100000',
-              ven_no: row.DetailNo,
-              ven_pay_type: venPayType,
-              acp_amt: amt || undefined,
-              acp_date: vouDate,
-              ven_bnk_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
-              ven_bank_account: this.formatVenBankAccount(venOpt),
-              ven_ctrlyn: venOpt?.['VEN_CTRLYN'] ?? undefined,
-              ven_check_title: venCheckTitle,
-              acc_no: row.AccNo,
-              note_desc: noteDesc,
-            });
+            ap.push(this.buildStepApRowFromDetailTableRow(row, vouDate));
           } else if (vt === '4') {
             ar.push({
               org_id: row.ORG_ID ?? '100000',
@@ -879,6 +887,27 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (a && b) return `${a} / ${b}`;
     const s = (a ?? b ?? '') as string;
     return s || undefined;
+  }
+
+  private buildStepApRowFromDetailTableRow(row: FIN53010DetailTable, vouDate: Date): FIN53010StepAP {
+    const venOpt = this.service.findVendorOptionByVenNo(String(row.DetailNo ?? ''));
+    const amt = (row.AccAmtD ?? 0) + (row.AccAmtC ?? 0);
+    const venPayType = venOpt?.['VEN_PayType'] ?? undefined;
+    /** 付款方式不為開票時，票據抬頭為空白 */
+    const venCheckTitle = (venPayType === '2') ? (row.DetailName ?? venOpt?.['VEN_Name'] ?? undefined) : '';
+    return {
+      org_id: row.ORG_ID ?? '100000',
+      ven_no: row.DetailNo,
+      ven_pay_type: venPayType,
+      acp_amt: amt || undefined,
+      acp_date: vouDate,
+      ven_bnk_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
+      ven_bank_account: this.formatVenBankAccount(venOpt),
+      ven_ctrlyn: venOpt?.['VEN_CTRLYN'] ?? undefined,
+      ven_check_title: venCheckTitle,
+      acc_no: row.AccNo,
+      note_desc: this.resolveNoteDescForStep(row),
+    };
   }
 
   private autoFillStepApExpectedPayDate(rows: FIN53010StepAP[], onCleanup: (cleanupFn: () => void) => void): void {
@@ -1399,6 +1428,24 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public onStepAPDataChange(data: FIN53010StepAP[]): void {
     this.stepAPRows.set(data);
+  }
+
+  public onInsertStepApRow(): void {
+    if (!this.stepAPTableCanInsert()) return;
+
+    const current = this.stepAPRows();
+    const sources = this.payableDetailSourceRows();
+    const nextIndex = current.length;
+    const source = sources[nextIndex];
+    if (!source) return;
+
+    const vouRaw = this.dataForm.controls.VouDate.value;
+    const vouDate = vouRaw instanceof Date ? vouRaw : (vouRaw ? new Date(vouRaw) : new Date());
+    const newRow: FIN53010StepAP = {
+      ...this.buildStepApRowFromDetailTableRow(source, vouDate),
+      id: undefined,
+    };
+    this.stepAPRows.set([...current, newRow]);
   }
 
   public onStepARDataChange(data: FIN53010StepAR[]): void {

@@ -115,8 +115,9 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 3) {
 <div class="card">
   <p-panel header="應付帳款" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepAPRows()"
-      [columns]="stepAPColumns" [tableKey]="'FIN53010_step_ap'"
+    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [canInsert]="false"
+      [showInsert]="!isFormReadable && stepAPTableCanInsert()" [data]="stepAPRows()" [columns]="stepAPColumns"
+      [tableKey]="'FIN53010_step_ap'" (insert)="onInsertStepApRow()"
       (dataChange)="onStepAPDataChange($event)"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
