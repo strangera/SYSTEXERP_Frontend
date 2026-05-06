@@ -1,77 +1,81 @@
-<div class="card">
-  <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-  </div>
-  <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
-        <div class="grid p-fluid">
-          <!-- 申報年月 -->
-          <app-year-month
-            class="col-12 md:col-6 lg:col-4"
-            label="申報年月"
-            [control]="queryForm.controls.INV_YM"
-            [submitted]="submitted"
-            [evenMonth]="true"
-          ></app-year-month>
-          <!-- 稅籍編號 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="稅籍編號"
-              [options]="stoTaxNoOptions"
-              [optionLabel]="'label'"
-              [optionValue]="'STO_TaxNo'"
-              [control]="queryForm.controls.STO_TaxNo"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-        </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
-        </div>
-      </form>
-    </p-accordionTab>
-  </p-accordion>
-</div>
+<ng-container *ngIf="pageReady">
+  <div class="card">
+    <div class="flex gap-2 mb-2">
+      <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    </div>
 
-<div class="card">
-  <div class="flex justify-content-end gap-2" style="margin-bottom: -42px">
-    <p-button
-      [style]="{ 'z-index': '999' }"
-      label="列印報表"
-      severity="info"
-      icon="pi pi-print"
-      (click)="onExportPdf()"
-      [disabled]="!hasPermission('60') || queryForm.invalid"
-      [loading]="pdfBtnLoding"
-    />
+    <p-accordion>
+      <p-accordionTab
+        header="{{ 'query-conditions' | translate }}"
+        [selected]="true"
+        class="line-height-3 m-0"
+        [headerStyleClass]="'query-accordionTab'"
+      >
+        <form
+          [formGroup]="queryForm"
+          id="queryForm"
+          (ngSubmit)="onSubmit(queryForm)"
+        >
+          <div class="grid p-fluid">
+            <app-year-month
+              class="col-12 md:col-6 lg:col-4"
+              label="申報年月"
+              [control]="queryForm.controls.INV_YM"
+              [submitted]="submitted"
+              [evenMonth]="true"
+            ></app-year-month>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
+                label="稅籍編號"
+                [options]="stoTaxNoOptions"
+                [optionLabel]="'label'"
+                [optionValue]="'STO_TaxNo'"
+                [control]="queryForm.controls.STO_TaxNo"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+          </div>
+
+          <div
+            class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+          >
+            <app-button btnType="clear" [form]="queryForm"></app-button>
+            <app-button btnType="query" [loading]="loading"></app-button>
+          </div>
+        </form>
+      </p-accordionTab>
+    </p-accordion>
   </div>
-  <app-table
-    tableKey="FIN15060"
-    dataKey="INV_GUINo"
-    [data]="data"
-    [columns]="columns"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [totalRecords]="totalRecords"
-    [multiSortMeta]="[{ field: 'INV_GUIDate', order: -1 }]"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true"
-    [loading]="loading"
-    [showManage]="false"
-    [showDelete]="false"
-    [showReportMode]="false"
-  ></app-table>
-</div>
+
+  <div class="card">
+    <div class="flex justify-content-end gap-2" style="margin-bottom: -42px">
+      <p-button
+        [style]="{ 'z-index': '999' }"
+        label="列印報表"
+        severity="info"
+        icon="pi pi-print"
+        (click)="onExportPdf()"
+        [disabled]="!hasPermission('60') || queryForm.invalid"
+        [loading]="pdfBtnLoding"
+      />
+    </div>
+
+    <app-table
+      tableKey="FIN15060"
+      dataKey="INV_GUINo"
+      [data]="data"
+      [columns]="columns"
+      [selectedItems]="selectedItems"
+      (selectionChange)="selectedItems = $event"
+      [totalRecords]="totalRecords"
+      [multiSortMeta]="[{ field: 'INV_GUIDate', order: -1 }]"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+      [showManage]="false"
+      [showDelete]="false"
+      [showReportMode]="false"
+    ></app-table>
+  </div>
+</ng-container>

@@ -1,68 +1,74 @@
-<div class="flex gap-2 mb-2">
-  <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-  <!-- <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button> -->
-</div>
-<p-accordion>
-  <p-accordionTab
-    header="{{ 'query-conditions' | translate }}"
-    [selected]="true"
-  >
-    <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
-      <div class="grid p-fluid gap-2">
-        <div class="col-12 md:col-6 lg:col-4">
-          <!-- 申報年月 -->
-          <app-year-month
-            label="申報年月"
-            [control]="queryForm.controls.REP_GUIYM"
-            [evenMonth]="true"
-            [submitted]="submitted"
-          ></app-year-month>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="稅籍編號"
-            controlName="REP_TaxNo"
-            [options]="REP_TaxNo_Options"
-            optionLabel="Label"
-            optionValue="No"
-            [control]="queryForm.controls.REP_TaxNo"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-      </div>
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
-        <app-button btnType="clear" [form]="queryForm"></app-button>
-        <ng-container *ngIf="pdfUrl !== null">
-          <app-button
-            label="審核"
-            (click)="confirmCheck(queryForm)"
-            [disabled]="!hasPermission(Actions.Audit)"
-          ></app-button>
-          <app-button
-            label="反審核"
-            (click)="cancelRecheck(queryForm)"
-            [disabled]="!hasPermission(Actions.AntiAudit)"
-          ></app-button>
-        </ng-container>
-        <app-button
-          btnType="query"
-          [loading]="loading"
-          label="{{ '申報書預覽' | translate }}"
-        ></app-button>
-      </div>
-    </form>
-  </p-accordionTab>
-</p-accordion>
-<div class="card" *ngIf="pdfUrl !== null">
-  <!-- PDF 預覽區 -->
-  <div style="height: 90vh">
-    <iframe
-      [src]="pdfUrl"
-      width="100%"
-      height="100%"
-      style="border: none"
-    ></iframe>
+<ng-container *ngIf="pageReady">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
-</div>
+
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+    >
+      <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid gap-2">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-year-month
+              label="申報年月"
+              [control]="queryForm.controls.REP_GUIYM"
+              [evenMonth]="true"
+              [submitted]="submitted"
+            ></app-year-month>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="稅籍編號"
+              controlName="REP_TaxNo"
+              [options]="REP_TaxNo_Options"
+              optionLabel="Label"
+              optionValue="No"
+              [control]="queryForm.controls.REP_TaxNo"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+        </div>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+
+          <ng-container *ngIf="pdfUrl !== null">
+            <app-button
+              label="審核"
+              (click)="confirmCheck(queryForm)"
+              [disabled]="!hasPermission(Actions.Audit)"
+            ></app-button>
+
+            <app-button
+              label="反審核"
+              (click)="cancelRecheck(queryForm)"
+              [disabled]="!hasPermission(Actions.AntiAudit)"
+            ></app-button>
+          </ng-container>
+
+          <app-button
+            btnType="query"
+            [loading]="loading"
+            label="{{ '申報書預覽' | translate }}"
+          ></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+
+  <div class="card" *ngIf="pdfUrl !== null">
+    <div style="height: 90vh">
+      <iframe
+        [src]="pdfUrl"
+        width="100%"
+        height="100%"
+        style="border: none"
+      ></iframe>
+    </div>
+  </div>
+</ng-container>
