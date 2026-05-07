@@ -34,6 +34,7 @@ export class FIN15080Service {
       STO_No?: string;
       STO_Status?: string;
       STO_TaxNo?: string;  // ⬅️ 真正的稅籍編號另外存
+      STO_TaxName?: string;
     }[]
   > {
     const url = `${environment.ApiUrl}/Share/queryTDS1003_STO_TaxNo_DropDownList`;
@@ -51,7 +52,7 @@ export class FIN15080Service {
 
           // 顯示文字：STO_TaxNo/STO_TaxName/REP_BegGUIYM~REP_EndGUIYM
           // 例如：703902223/南紡流通事業股份有限公司/202012~
-          const label = [taxNo, taxName];
+          const label = `${taxNo}-${taxName}`;
 
           // value 做成唯一 key，避免相同 STO_TaxNo 被視為同一筆
           // 例如：703902223_202012_
@@ -65,6 +66,7 @@ export class FIN15080Service {
             STO_No: x?.STO_No ?? '',
             STO_Status: x?.STO_Status ?? '',
             STO_TaxNo: taxNo,   // 真正稅籍編號留在這裡，送報表時用
+            STO_TaxName: taxName,
           };
         });
       })
