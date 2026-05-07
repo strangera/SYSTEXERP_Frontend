@@ -34,6 +34,7 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
 
   closeDate: string | undefined;
   summaryDate: string | undefined;
+  importDate: string | undefined; // 新增：存儲匯入日期
   loadingDates = false;
 
   constructor(
@@ -151,36 +152,49 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   /**
-   * 取得最近的關帳日期和匯總日期
+   * 取得最近的關帳日期、彙總日期以及建議的匯入日期
    */
   fetchDates(): void {
     this.loadingDates = true;
 
+    // 1. 取得關帳日期
     const closeDateApi$ = this.tls2c050Service.getTLS2C050Date().pipe(
       map(response => response.Data?.CLS_DATE ?? 'N/A')
     );
 
+    // 2. 取得彙總日期
     const summaryDateApi$ = this.tls2c050Service.getTLS2C050Date_invoice().pipe(
       map(response => response.Data?.invoice_lock_date ?? 'N/A')
     );
 
-    forkJoin([closeDateApi$, summaryDateApi$])
-      .pipe(
-        finalize(() => this.loadingDates = false)
-      )
+    // 3. 取得原匯檔發票日期 (新 API)
+    const importDateApi$ = this.tls2c050Service.GetTLS2C050ImportDate().pipe(
+      map(response => response.Data?.CLS_DATE ?? null)
+    );
+
+    forkJoin([closeDateApi$, summaryDateApi$, importDateApi$])
+      .pipe(finalize(() => (this.loadingDates = false)))
       .subscribe({
-        next: ([closeDate, summaryDate]) => {
-          this.closeDate = closeDate;// 假設 closeDate 已經被正確轉換為一個 Date 物件
-          const originalDate = new Date(closeDate);
-
-          // 取得原本的日期，並加上 1 天
-          // setDate(getDate() + 1) 是在 JavaScript 中處理日期加減的標準方式
-          originalDate.setDate(originalDate.getDate() + 1);
-
-          // 將計算後的新日期更新到表單欄位
-          this.queryForm.patchValue({ cls_date: originalDate });
+        next: ([closeDate, summaryDate, importDate]) => {
+          this.closeDate = closeDate;
           this.summaryDate = summaryDate;
+          this.importDate = importDate ?? 'N/A';
+
+          // 如果有取得 importDate，則將其設為表單預設值
+          if (importDate) {
+            const targetDate = new Date(importDate);
+            this.queryForm.patchValue({
+              cls_date: targetDate
+            });
+          } else {
+            // 若沒抓到 importDate 的備案：清空或維持原樣
+            this.queryForm.patchValue({ cls_date: null });
+          }
         },
+        error: (err) => {
+          console.error('Fetch dates failed', err);
+          this.messageService.errorBubble('取得日期資訊失敗');
+        }
       });
   }
 }
