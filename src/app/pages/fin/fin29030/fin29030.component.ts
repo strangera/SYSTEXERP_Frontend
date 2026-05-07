@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Fin29030Service } from './../../../service/api/fin/fin29030.service';
+import { FIN29030Detail, Fin29030Service } from './../../../service/api/fin/fin29030.service';
 import { DropdownApiService } from './../../../service/utility/dropdown-api.service';
 // Shared
 import { CommonModule } from '@angular/common';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FIN29030Data } from '@service/api/fin/fin29030.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
@@ -49,7 +48,7 @@ import { TableSubheaderComponent } from '../fin42010/fin42010-table/fin42010-tab
     CalendarRangeComponent
   ]
 })
-export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> implements OnInit {
+export class FIN29030Component extends BasicQueryPageComponent<FIN29030Detail> implements OnInit {
   //
   queryForm = this.formBuilder.group({
     IssueDateFrom: [], // 開票日期
@@ -67,8 +66,6 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
   lastQueryBody = null;
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
-  // ... 其他變數
-  isLazy = true; // 控制是否啟用 Lazy 模式
 
   BNK_No_Options: option[] = []; // 銀行代號 下拉
   VEN_No_Options: option[] = []; // 廠客代號 下拉
@@ -83,9 +80,10 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
       { value: '5', label: '退票' }
     ];
 
-  selectedItems: FIN29030Data[] = [];
-  data: FIN29030Data[] = [];
-  footerData: FIN29030Data | null = null;
+  selectedItems: FIN29030Detail[] = [];
+  data: FIN29030Detail[] = [];
+  footerData: any | null = null;
+  subtotalData: any | null = null;
   filteredData = [...this.data];
   columns: Column[] = [
     { field: 'PAM_No', header: '付款編號', visible: true },
@@ -115,29 +113,16 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Data> imp
   }
 
   onSubmit(frm: FormGroup) {
-    this.isLazy = true;
     console.log('開票request:', JSON.stringify(frm.value, null, 2));
     this.handleSubmit(frm, () => {
-      this.fin29030Service.queryFIN29030(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.totalRecords = res.TotalCount;
-        this.data = res.Data;
+      this.fin29030Service.queryFIN29030(frm.value).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((response) => {
         this.lastQueryBody = frm.value;
-
-        // 2. 第一次查詢就判斷：如果資料已抓完，直接關閉 lazy
-        if (this.data.length >= this.totalRecords && this.totalRecords > 0) {
-          this.isLazy = false;
-        }
-      })
+        this.data = response.Data;
+        this.footerData = response.Totals;
+        this.subtotalData = response.SubTotals;
+        this.totalRecords = response.TotalCount ?? this.data.length;
+      });
     });
-  }
-
-  onTableDataChange(currentData: any[]) {
-    this.data = currentData;
-    // 每次滾動載入更多資料後（例如載入第 31 筆後），檢查是否達到總數
-    if (this.data.length >= this.totalRecords && this.totalRecords > 0) {
-      this.isLazy = false; // 關閉此變數會讓 table-report 停止偵測滾動
-      console.log('29030 已達總筆數，關閉 Lazy 模式');
-    }
   }
 
   btnPDFLoading = false;

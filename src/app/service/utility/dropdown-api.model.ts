@@ -71,25 +71,21 @@ export interface FaClassMItem {
 }
 
 /**
- * 查詢 FACLASS1_DropDownList 時的請求 body
+ * 查詢 FACLASS1_DropDownList 時的請求 body（資材大分類代碼 = FACLASSM.CLASS_ID）
  */
 export interface FaClass1Query {
-  M_CLASS_ID?: string | null;
-  M_CLASS_NAME?: string | null;
-  B_CLASS_ID?: string | null;
-  B_CLASS_NAME?: string | null;
-  NOTES_KEYWORD?: string | null;
+  CLASS_ID?: string | null;
 }
 
 /**
  * queryFACLASS1_DropDownList 回傳的項目型別
  */
 export interface FaClass1Item {
-  RowNum?: string;
-  M_CLASS_ID: string;
-  M_CLASS_NAME: string;
-  B_CLASS_ID: string;
-  B_CLASS_NAME: string;
+  RowNum?: string | null;
+  M_CLASS_ID?: string | null;
+  M_CLASS_NAME?: string | null;
+  B_CLASS_ID?: string | null;
+  B_CLASS_NAME?: string | null;
   NOTES?: string | null;
 }
 
@@ -97,26 +93,23 @@ export interface FaClass1Item {
  * 查詢 FACLASS2_DropDownList 時的請求 body
  */
 export interface FaClass2Query {
-  S_CLASS_ID?: string | null;
-  S_CLASS_NAME?: string | null;
-  M_CLASS_ID?: string | null;
-  M_CLASS_NAME?: string | null;
+  /** 大分類代碼（FACLASSM.CLASS_ID） */
   B_CLASS_ID?: string | null;
-  B_CLASS_NAME?: string | null;
-  NOTES_KEYWORD?: string | null;
+  /** 資材中分類代碼 */
+  CLASS_ID?: string | null;
 }
 
 /**
  * queryFACLASS2_DropDownList 回傳的項目型別
  */
 export interface FaClass2Item {
-  RowNum?: string;
-  S_CLASS_ID: string;
-  S_CLASS_NAME: string;
-  M_CLASS_ID: string;
-  M_CLASS_NAME: string;
-  B_CLASS_ID: string;
-  B_CLASS_NAME: string;
+  RowNum?: string | null;
+  S_CLASS_ID?: string | null;
+  S_CLASS_NAME?: string | null;
+  M_CLASS_ID?: string | null;
+  M_CLASS_NAME?: string | null;
+  B_CLASS_ID?: string | null;
+  B_CLASS_NAME?: string | null;
   NOTES?: string | null;
 }
 

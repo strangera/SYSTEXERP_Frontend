@@ -117,16 +117,20 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
 
   private loadMidCategoryOptions(bClassId: string): void {
     this.dropdownApiService
-      .queryFaClass1({ B_CLASS_ID: bClassId })
+      .queryFaClass1({ CLASS_ID: bClassId })
       .pipe(untilDestroyed(this))
       .subscribe(opts => {
         this.midCategoryOptions = opts ?? [];
       });
   }
 
-  private loadSmallCategoryOptions(mClassId: string): void {
+  private loadSmallCategoryOptions(bClassId: string, mClassId: string): void {
+    if (!mClassId) {
+      this.smallCategoryOptions = [];
+      return;
+    }
     this.dropdownApiService
-      .queryFaClass2({ M_CLASS_ID: mClassId })
+      .queryFaClass2({ B_CLASS_ID: bClassId || undefined, CLASS_ID: mClassId })
       .pipe(untilDestroyed(this))
       .subscribe(opts => {
         this.smallCategoryOptions = opts ?? [];
@@ -168,7 +172,8 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
       }
       prevM = m;
       if (m) {
-        this.loadSmallCategoryOptions(m);
+        const b = this.queryForm.controls.bClassId.value ?? '';
+        this.loadSmallCategoryOptions(b, m);
       } else {
         this.smallCategoryOptions = [];
       }

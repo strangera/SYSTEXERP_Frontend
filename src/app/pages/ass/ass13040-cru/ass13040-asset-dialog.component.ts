@@ -177,7 +177,7 @@ export class ASS13040AssetDialogComponent implements OnInit {
         this.queryForm.controls.sClassId.setValue(null);
         if (!value) return;
         this.dropdownApiService
-          .queryFaClass1({ B_CLASS_ID: value })
+          .queryFaClass1({ CLASS_ID: value })
           .pipe(untilDestroyed(this))
           .subscribe(opts => {
             this.mClassOptions = opts ?? [];
@@ -190,8 +190,9 @@ export class ASS13040AssetDialogComponent implements OnInit {
         this.sClassOptions = [];
         this.queryForm.controls.sClassId.setValue(null);
         if (!value) return;
+        const bVal = this.queryForm.controls.bClassId.value ?? undefined;
         this.dropdownApiService
-          .queryFaClass2({ M_CLASS_ID: value })
+          .queryFaClass2({ B_CLASS_ID: bVal, CLASS_ID: value })
           .pipe(untilDestroyed(this))
           .subscribe(opts => {
             this.sClassOptions = opts ?? [];
