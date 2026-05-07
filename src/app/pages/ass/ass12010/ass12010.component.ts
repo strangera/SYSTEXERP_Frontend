@@ -263,9 +263,9 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
       label: '審核',
       icon: 'pi pi-check',
       action: (rowData: ASS12010Data) => this.onApprove(rowData),
-      disabled: () => {
-        return !this.hasPermission(Actions.Audit);
-      }
+      // disabled: () => {
+      // return !this.hasPermission(Actions.Audit);
+      // }
     },
     {
       label: '下載報表',
