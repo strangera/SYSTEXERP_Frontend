@@ -14,24 +14,21 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map, shareReplay } from 'rxjs/operators';
 
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 
-
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import {
   FIN42030Data,
   FIN42030QueryRequest,
   FIN42030Service,
 } from '../../../service/api/fin/fin42030.service';
-
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 @UntilDestroy()
 @Component({
@@ -51,8 +48,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
     TranslateModule,
     TableReportComponent,
     RadiobuttonComponent,
-    // YearMonthComponent,
-    CalendarComponent
+    CalendarComponent,
   ],
 })
 export class FIN42030Component
@@ -65,23 +61,15 @@ export class FIN42030Component
   btnLoading = false;
   historyRequestBody: FIN42030QueryRequest | null = null;
 
-  readonly defaultSort: any[] = [
-    { field: 'Org_ID', order: 1 },
-    { field: 'Acc_No', order: 1 },
-    { field: 'Item_No', order: 1 },
-  ];
+  readonly defaultSort: any[] = [{ field: 'SortNo', order: 1 }];
 
   queryForm = this.formBuilder.group({
-    YM: ['', [Validators.required]],
+     YM: [null as Date | string | null, [Validators.required]],
     Org_ID: [''],
     ReportType: [1, [Validators.required]],
     AmtUnit: [1, [Validators.required]],
 
-    ...createPaginationConfig([
-      { field: 'Org_ID', order: 1 },
-      { field: 'Acc_No', order: 1 },
-      { field: 'Item_No', order: 1 },
-    ]),
+    ...createPaginationConfig([{ field: 'SortNo', order: 1 }]),
     pageSize: [30],
   });
 
@@ -99,13 +87,17 @@ export class FIN42030Component
   orgOptions: any[] = [];
 
   columns = [
-    { field: 'Org_ID', header: '部門代號', visible: true },
-    { field: 'Org_Name', header: '部門名稱', visible: true, style: 'text-left' },
-    { field: 'Acc_No', header: '科目代號', visible: true },
-    { field: 'Acc_Name', header: '科目名稱', visible: true, style: 'text-left' },
-    { field: 'Item_No', header: '項目代號', visible: true },
-    { field: 'Item_Name', header: '項目名稱', visible: true, style: 'text-left' },
+    { field: 'SortNo', header: '排序', visible: false },
+    { field: 'LevelNo', header: '層級', visible: false },
+    { field: 'RowType', header: '列型態', visible: false },
 
+    { field: 'AccountCode', header: '科目代號', visible: true },
+    {
+      field: 'AccountName',
+      header: '科目名稱',
+      visible: true,
+      style: 'text-left',
+    },
     {
       field: 'CurrentAmount',
       header: '本期金額',
@@ -189,24 +181,27 @@ export class FIN42030Component
     super();
   }
 
-  ngOnInit(): void {
-    this.initializePage(
-      'FIN42030',
-      'fin/fin42030',
-      this.queryForm,
-      (form) => this.onSubmit(form)
-    );
+ngOnInit(): void {
+  this.initializePage(
+    'FIN42030',
+    'fin/fin42030',
+    this.queryForm,
+    (form) => this.onSubmit(form)
+  );
 
-    this.queryForm.patchValue(
-      {
-        SortBy: this.defaultSort,
-        pageSize: 30,
-      },
-      { emitEvent: false }
-    );
+  const now = new Date();
 
-    this.loadDropdowns();
-  }
+  this.queryForm.patchValue(
+    {
+      YM: now, // ⭐ 這行就是預設「今年本月」
+      SortBy: this.defaultSort,
+      pageSize: 30,
+    },
+    { emitEvent: false }
+  );
+
+  this.loadDropdowns();
+}
 
   private loadDropdowns(): void {
     this.tls11010Service
@@ -231,7 +226,10 @@ export class FIN42030Component
       const payload: FIN42030QueryRequest = {
         ...raw,
         YM: this.normalizeYM(raw.YM),
-        Org_ID: raw.Org_ID || undefined,
+        Org_ID:
+          !raw.Org_ID || raw.Org_ID === '100000'
+            ? undefined
+            : raw.Org_ID,
         ReportType: Number(raw.ReportType ?? 1),
         AmtUnit: Number(raw.AmtUnit ?? 1),
         pageIndex: Number(raw.pageIndex ?? 1),
@@ -396,11 +394,12 @@ export class FIN42030Component
   }
 
   moneyFormat(value: any): string {
-    return Number(value ?? 0).toLocaleString('en-US');
+    return value == null ? '' : Number(value).toLocaleString('en-US');
   }
 
   ratioFormat(value: any): string {
-    const n = Number(value ?? 0);
-    return Number.isFinite(n) ? n.toLocaleString('en-US') : '0';
+    if (value == null) return '';
+    const n = Number(value);
+    return Number.isFinite(n) ? n.toLocaleString('en-US') : '';
   }
 }
