@@ -55,6 +55,7 @@ export interface FIN55030Detail {
 export interface FIN55030Data {
   AccNo: string;
   AccCName: string;
+  ACCDC: string; // '借方' 或 '貸方'，來自 GLS1005
   data: FIN55030Detail[];
   summary: { PTA1_Total: number; PTA2_Total: number; };
 }
