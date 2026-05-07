@@ -339,6 +339,7 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
 
     const isOrgMode = mode === 'KEEPER_ORG' || mode === 'USER_ORG';
     const isEmpMode = mode === 'KEEPER_EMP' || mode === 'USER_EMP';
+    const includeAllOrg = this.generateForm.getRawValue().IncludeAllOrg ?? false;
 
     for (let i = 0; i < this.generateRows.length; i++) {
       const row = this.generateRows[i];
@@ -349,7 +350,7 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
       const chkEmp1 = String(row.InventoryEmp_ID_1 ?? '').trim();
       const chkEmp2 = String(row.InventoryEmp_ID_2 ?? '').trim();
 
-      if (isOrgMode && !orgId) {
+      if (isOrgMode && !includeAllOrg && !orgId) {
         this.messageService.warnBubble(`第${rowNo}筆：部門代碼為必填`);
         return;
       }
