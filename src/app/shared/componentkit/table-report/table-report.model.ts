@@ -8,7 +8,7 @@ export interface ReportColumn {
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   width?: string;    // 欄位寬度，例如 '80px'、'10rem'
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
-  exportFormat?: Record<string, string>[];
+  exportFormat?: Record<string, string>[]; // transformOptionsForExport(getSYS1000Options('field'))
   groupField?: string; //
   isSubTotal?: boolean; // 是否為小計欄位
   isTotal?: boolean; // 是否為總計欄位

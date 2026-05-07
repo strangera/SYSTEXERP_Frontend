@@ -14,7 +14,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { formatDate, ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
   selector: 'app-fin11070',

@@ -13,7 +13,7 @@ import { FIN15080Service } from '../../../service/api/fin/fin15080.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 type StoTaxNoOption = {
   label: string;
@@ -90,17 +90,17 @@ export class FIN15080Component extends BasicQueryPageComponent<any> {
         })
       )
       .subscribe({
-       next: (rows) => {
-  this.stoTaxNoOptions = this.buildStoTaxNoOptions(rows);
+        next: (rows) => {
+          this.stoTaxNoOptions = this.buildStoTaxNoOptions(rows);
 
-  const active =
-    this.stoTaxNoOptions.find((x) => String(x.STO_Status).trim() === '1') ??
-    this.stoTaxNoOptions[0];
+          const active =
+            this.stoTaxNoOptions.find((x) => String(x.STO_Status).trim() === '1') ??
+            this.stoTaxNoOptions[0];
 
-  if (active) {
-    this.queryForm.controls.Business_ID.setValue(active.value);
-  }
-},
+          if (active) {
+            this.queryForm.controls.Business_ID.setValue(active.value);
+          }
+        },
         error: (err) => {
           console.error('取得稅籍下拉失敗：', err);
           this.stoTaxNoOptions = [];
@@ -111,42 +111,42 @@ export class FIN15080Component extends BasicQueryPageComponent<any> {
 
   /** 整理稅籍選項：顯示 稅籍編號-公司名稱，不顯示日期，稅籍編號重複只留一筆 */
   private buildStoTaxNoOptions(rows: any[]): StoTaxNoOption[] {
-  const map = new Map<string, StoTaxNoOption>();
+    const map = new Map<string, StoTaxNoOption>();
 
-  rows.forEach((x) => {
-    const taxNo = String(x?.STO_TaxNo ?? '').trim();
-    const taxName = String(x?.STO_TaxName ?? '').trim();
-    const status = String(x?.STO_Status ?? '').trim();
+    rows.forEach((x) => {
+      const taxNo = String(x?.STO_TaxNo ?? '').trim();
+      const taxName = String(x?.STO_TaxName ?? '').trim();
+      const status = String(x?.STO_Status ?? '').trim();
 
-    if (!taxNo) return;
+      if (!taxNo) return;
 
-    const option: StoTaxNoOption = {
-      label: `${taxNo}-${taxName}`,
-      value: taxNo,
-      REP_BegGUIYM: String(x?.REP_BegGUIYM ?? '').trim(),
-      REP_EndGUIYM: String(x?.REP_EndGUIYM ?? '').trim(),
-      STO_No: String(x?.STO_No ?? '').trim(),
-      STO_Status: status,
-      STO_TaxNo: taxNo,
-      STO_TaxName: taxName,
-    };
+      const option: StoTaxNoOption = {
+        label: `${taxNo}-${taxName}`,
+        value: taxNo,
+        REP_BegGUIYM: String(x?.REP_BegGUIYM ?? '').trim(),
+        REP_EndGUIYM: String(x?.REP_EndGUIYM ?? '').trim(),
+        STO_No: String(x?.STO_No ?? '').trim(),
+        STO_Status: status,
+        STO_TaxNo: taxNo,
+        STO_TaxName: taxName,
+      };
 
-    const exists = map.get(taxNo);
+      const exists = map.get(taxNo);
 
-    // 沒有重複：直接放
-    if (!exists) {
-      map.set(taxNo, option);
-      return;
-    }
+      // 沒有重複：直接放
+      if (!exists) {
+        map.set(taxNo, option);
+        return;
+      }
 
-    // 有重複：如果新資料是啟用狀態，就取代舊資料
-    if (status === '1') {
-      map.set(taxNo, option);
-    }
-  });
+      // 有重複：如果新資料是啟用狀態，就取代舊資料
+      if (status === '1') {
+        map.set(taxNo, option);
+      }
+    });
 
-  return Array.from(map.values());
-}
+    return Array.from(map.values());
+  }
 
   /** 列印 */
   onSubmit(): void {

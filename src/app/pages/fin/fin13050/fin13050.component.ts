@@ -21,7 +21,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { formatAmount, formatYYYYMMDD } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
   selector: 'app-fin13050',

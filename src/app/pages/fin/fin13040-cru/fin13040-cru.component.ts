@@ -17,7 +17,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 import { TableEditComponent } from './fin13040-table-edit/fin13040-table-edit.component';
 import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
 

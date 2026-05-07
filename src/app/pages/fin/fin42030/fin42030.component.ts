@@ -18,9 +18,9 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 
 
 import {
@@ -29,9 +29,8 @@ import {
   FIN42030Service,
 } from '../../../service/api/fin/fin42030.service';
 
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 
 @UntilDestroy()
 @Component({
@@ -57,8 +56,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 })
 export class FIN42030Component
   extends BasicQueryPageComponent<any>
-  implements OnInit
-{
+  implements OnInit {
   data: FIN42030Data[] = [];
   totalRecords = 0;
   showTable = true;

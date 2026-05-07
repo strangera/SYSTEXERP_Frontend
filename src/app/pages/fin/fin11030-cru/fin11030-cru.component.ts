@@ -15,7 +15,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 import { APS2001Data } from '../fin11030/fin11030.model';
 // 1.1.3 銷項品項資料設定 CRU
 @Component({

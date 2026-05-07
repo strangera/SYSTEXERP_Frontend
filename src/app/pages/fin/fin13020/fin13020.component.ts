@@ -1,26 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpResponse } from '@angular/common/http';
+import { Component } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // UI
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import type { AddButton } from '@shared/componentkit/table-report/table-report.model';
+import { ValidationService } from '@shared/service/validation.service';
+import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ValidationService } from '@shared/service/validation.service';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
-import type { AddButton } from '@shared/componentkit/table-report/table-report.model';
-import { environment } from 'src/environments/environment';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
   selector: 'app-fin13020',

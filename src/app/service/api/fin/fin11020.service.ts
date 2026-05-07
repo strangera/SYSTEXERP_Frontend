@@ -3,6 +3,54 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
+
+export interface MainInvoiceData {
+  ID: number;
+  GUI_YYMM: string;
+  GUI_SerNo: number;
+  GUI_Track: string;
+  GUI_BegNo: string;
+  GUI_EndNo: string;
+  GUI_TotQty: number;
+  GUI_AssignQty: number;
+  GUI_Status: string;
+  GUI_Type?: string;
+  GUI_VERIFY1?: string;
+  GUI_VERIFY1_Name?: string;
+  GUI_VERIFY2?: string | null;
+  GUI_VERIFY2_Name?: string | null;
+  GUI_File?: string;
+  CRT_Date?: string;
+  CRT_USR_No?: string;
+  CRT_USR_Name?: string;
+  UPD_Date?: string | null;
+  UPD_USR_No?: string | null;
+  UPD_USR_Name?: string | null;
+  details: SubInvoiceData[]; // 包含子表資料
+}
+
+interface SubInvoiceData {
+  STO_No: string;
+  GUI_YYMM: string;
+  GUI_SerNo: number;
+  GUI_Track: string;
+  GUI_BegNo: string;
+  GUI_EndNo: string;
+  GUI_TotQty: number;
+  GUI_AssignQty: number;
+  GUI_Status: string;
+  GUI_ProcStatus?: string | null;
+  GUI_ProcDate?: string | null;
+  GUI_Type?: string;
+  STO_Uniform?: string;
+  CRT_Date?: string;
+  CRT_USR_No?: string;
+  CRT_USR_Name?: string;
+  UPD_Date?: string | null;
+  UPD_USR_No?: string | null;
+  UPD_USR_Name?: string | null;
+}
+
 @Injectable({
   providedIn: 'root',
 })

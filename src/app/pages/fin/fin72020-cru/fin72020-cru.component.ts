@@ -15,7 +15,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 import { monthOptions, POS1002, Pos1018 } from '../fin11200/fin11200.model';
 
 @Component({
