@@ -133,6 +133,18 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   }
 
   onExportExcel(): void {
+    // 1. 取得查詢表單中的日期
+    const startDate = this.queryForm.get('SaleDateStart')?.value;
+    const endDate = this.queryForm.get('SaleDateEnd')?.value;
+
+    // 2. 格式化日期 (假設是 Date 物件或可格式化的字串)
+    // 如果您的日期格式已經是字串 YYYY/MM/DD，可直接使用，否則建議用 DatePipe 或簡單處理
+    const formattedStart = startDate ? this.formatDateToYYYYMMDD(startDate) : '';
+    const formattedEnd = endDate ? this.formatDateToYYYYMMDD(endDate) : '';
+
+    // 3. 設定新的檔案名稱
+    const customFilename = `溢欠彙總表_${formattedStart}_${formattedEnd}.xlsx`;
+
     const raw = this.queryForm.getRawValue();
 
     const payload = {
@@ -162,13 +174,24 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
         const contentDisposition = res.headers.get('content-disposition');
         let filename = '溢欠彙總表.xlsx';
         if (contentDisposition) {
-          const match = contentDisposition.match(/filename="?([^"]+)"?/);
-          if (match) filename = decodeURIComponent(match[1]);
+          // const match = contentDisposition.match(/filename="?([^"]+)"?/);
+          // if (match) filename = decodeURIComponent(match[1]);
+          // 優先找 filename*= (UTF-8 編碼格式)
+          const filenameStarMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+          if (filenameStarMatch) {
+            filename = decodeURIComponent(filenameStarMatch[1]);
+          } else {
+            // 如果沒有 filename*，再找一般的 filename=
+            const filenameMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+            if (filenameMatch) {
+              filename = decodeURIComponent(filenameMatch[1]);
+            }
+          }
         }
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = filename;
+        a.download = customFilename;
         a.click();
         window.URL.revokeObjectURL(url);
         this.btnLoading2 = false;
@@ -421,5 +444,15 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
+  private formatDateToYYYYMMDD(date: any): string {
+    if (!date) return '';
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return ''; // 防止無效日期
 
+    const year = d.getFullYear();
+    const month = ('0' + (d.getMonth() + 1)).slice(-2);
+    const day = ('0' + d.getDate()).slice(-2);
+
+    return `${year}${month}${day}`;
+  }
 }
