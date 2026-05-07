@@ -3,7 +3,6 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS15080Service } from '@service/api/ass/ass15080.service';
-import { ASS11010Service } from '@service/api/ass/ass11010.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import {
@@ -100,7 +99,6 @@ export class ASS15080Component
     private readonly ass15080Service: ASS15080Service,
     private readonly dropDownListService: DropDownListService,
     private readonly dropdownApiService: DropdownApiService,
-    private readonly ass11010Service: ASS11010Service,
   ) {
     super();
   }
@@ -157,18 +155,15 @@ export class ASS15080Component
   }
 
   private loadBigClassOptions(): void {
-    this.ass11010Service
-      .queryASS11010({})
+    this.dropdownApiService
+      .queryFaClassM({})
       .pipe(untilDestroyed(this))
       .subscribe({
-        next: (res) => {
-          this.bClassOptions =
-            res.Status === '0000'
-              ? (res.Data ?? []).map((item) => ({
-                  label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
-                  value: item.CLASS_ID,
-                }))
-              : [];
+        next: (opts) => {
+          this.bClassOptions = (opts ?? []).map((item) => ({
+            label: item.label,
+            value: String(item.value),
+          }));
         },
         error: () => {
           this.bClassOptions = [];
@@ -189,7 +184,7 @@ export class ASS15080Component
         this.mClassOptions = [];
         this.sClassOptions = [];
         if (!bClassId) return;
-        this.dropdownApiService.queryFaClass1({ B_CLASS_ID: bClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+        this.dropdownApiService.queryFaClass1({ CLASS_ID: bClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
           this.mClassOptions = (options ?? []).map((item) => ({
             value: String(item.value),
             label: item.label,
@@ -203,7 +198,11 @@ export class ASS15080Component
         sCtrl.patchValue(null, { emitEvent: false });
         this.sClassOptions = [];
         if (!mClassId) return;
-        this.dropdownApiService.queryFaClass2({ M_CLASS_ID: mClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+        const bForSmall = bCtrl.value ?? undefined;
+        this.dropdownApiService
+          .queryFaClass2({ B_CLASS_ID: bForSmall, CLASS_ID: mClassId })
+          .pipe(untilDestroyed(this))
+          .subscribe((options) => {
           this.sClassOptions = (options ?? []).map((item) => ({
             value: String(item.value),
             label: item.label,
@@ -214,15 +213,18 @@ export class ASS15080Component
     const initialBClassId = bCtrl.value;
     const initialMClassId = mCtrl.value;
     if (initialBClassId) {
-      this.dropdownApiService.queryFaClass1({ B_CLASS_ID: initialBClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+      this.dropdownApiService.queryFaClass1({ CLASS_ID: initialBClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
         this.mClassOptions = (options ?? []).map((item) => ({
           value: String(item.value),
           label: item.label,
         }));
       });
     }
-    if (initialMClassId) {
-      this.dropdownApiService.queryFaClass2({ M_CLASS_ID: initialMClassId }).pipe(untilDestroyed(this)).subscribe((options) => {
+    if (initialMClassId && initialBClassId) {
+      this.dropdownApiService
+        .queryFaClass2({ B_CLASS_ID: initialBClassId, CLASS_ID: initialMClassId })
+        .pipe(untilDestroyed(this))
+        .subscribe((options) => {
         this.sClassOptions = (options ?? []).map((item) => ({
           value: String(item.value),
           label: item.label,

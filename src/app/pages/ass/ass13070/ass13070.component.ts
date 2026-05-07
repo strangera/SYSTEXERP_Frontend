@@ -2,7 +2,6 @@ import { AsyncPipe } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS11010Service } from '@service/api/ass/ass11010.service';
 import { ASS12040Service } from '@service/api/ass/ass12040.service';
 import { ASS13070Service } from '@service/api/ass/ass13070.service';
 import { TblUserOrgidItem } from '@service/utility/dropdown-api.model';
@@ -114,7 +113,6 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
 
   constructor(
     public readonly service: ASS13070Service,
-    private readonly ass11010Service: ASS11010Service,
     private readonly ass12040Service: ASS12040Service,
     private readonly dropdownApi: DropdownApiService,
   ) {
@@ -138,16 +136,13 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
   }
 
   private loadBigClassOptions(): void {
-    this.ass11010Service.queryASS11010({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        this.bigClassOptions.set(
-          (res.Data ?? []).map(item => ({
-            label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
-            value: item.CLASS_ID,
-          })),
-        );
-      },
+    this.dropdownApi.queryFaClassM({}).subscribe((opts) => {
+      this.bigClassOptions.set(
+        (opts ?? []).map((item) => ({
+          label: item.label,
+          value: String(item.value),
+        })),
+      );
     });
   }
 
@@ -179,7 +174,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
           if (!bClassId) {
             return of([] as ClassOption[]);
           }
-          return this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId } as any).pipe(
+          return this.dropdownApi.queryFaClass1({ CLASS_ID: bClassId }).pipe(
             map(midOptions => (midOptions ?? []) as ClassOption[]),
           );
         }),
@@ -201,7 +196,9 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
           if (!mClassId) {
             return of([] as ClassOption[]);
           }
-          return this.dropdownApi.queryFaClass2({ M_CLASS_ID: mClassId } as any).pipe(
+          return this.dropdownApi
+            .queryFaClass2({ B_CLASS_ID: bCtrl.value ?? undefined, CLASS_ID: mClassId })
+            .pipe(
             map(smallOptions => (smallOptions ?? []) as ClassOption[]),
           );
         }),
@@ -216,7 +213,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
 
     if (initialBClassId) {
       this.dropdownApi
-        .queryFaClass1({ B_CLASS_ID: initialBClassId } as any)
+        .queryFaClass1({ CLASS_ID: initialBClassId })
         .subscribe(midOptions => {
           const mids = (midOptions ?? []) as ClassOption[];
           this.midClassOptions.set(mids);
@@ -232,7 +229,7 @@ export class ASS13070Component extends BasicQueryPageComponent<ASS13070QueryRow>
           // 再載入小分類
           if (initialMClassId) {
             this.dropdownApi
-              .queryFaClass2({ M_CLASS_ID: initialMClassId } as any)
+              .queryFaClass2({ B_CLASS_ID: initialBClassId ?? undefined, CLASS_ID: initialMClassId })
               .subscribe(smallOptions => {
                 const smalls = (smallOptions ?? []) as ClassOption[];
                 this.smallClassOptions.set(smalls);

@@ -3,7 +3,6 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS11010Service } from '@service/api/ass/ass11010.service';
 import { ASS13050Service } from '@service/api/ass/ass13050.service';
 import { TblUserOrgidItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -175,7 +174,6 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
 
   constructor(
     private readonly ass13050Service: ASS13050Service,
-    private readonly ass11010Service: ASS11010Service,
     private readonly dropdownApi: DropdownApiService,
     private readonly fileExportService: FileExportService,
   ) {
@@ -274,15 +272,12 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
   }
 
   private loadBigClassOptions(): void {
-    this.ass11010Service.queryASS11010({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        const options = res.Data.map(item => ({
-          label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
-          value: item.CLASS_ID,
-        }));
-        this.bigClassOptions.set(options);
-      },
+    this.dropdownApi.queryFaClassM({}).subscribe((opts) => {
+      const options = (opts ?? []).map((item) => ({
+        label: item.label,
+        value: String(item.value),
+      }));
+      this.bigClassOptions.set(options);
     });
   }
 
@@ -292,18 +287,21 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
       this.midClassOptions.set([]);
       return;
     }
-    this.dropdownApi.queryFaClass1({ B_CLASS_ID: bClassId }).subscribe((opts) => {
+    this.dropdownApi.queryFaClass1({ CLASS_ID: bClassId }).subscribe((opts) => {
       this.midClassOptions.set(opts ?? []);
     });
   }
 
   private loadSmallClassOptions(): void {
+    const bClassId = this.queryForm.controls.B_CLASS_ID.value;
     const mClassId = this.queryForm.controls.M_CLASS_ID.value;
     if (!mClassId) {
       this.smallClassOptions.set([]);
       return;
     }
-    this.dropdownApi.queryFaClass2({ M_CLASS_ID: mClassId }).subscribe((opts) => {
+    this.dropdownApi
+      .queryFaClass2({ B_CLASS_ID: bClassId ?? undefined, CLASS_ID: mClassId })
+      .subscribe((opts) => {
       this.smallClassOptions.set(opts ?? []);
     });
   }
