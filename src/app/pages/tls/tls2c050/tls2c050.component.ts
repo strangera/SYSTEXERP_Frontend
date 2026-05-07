@@ -107,34 +107,19 @@ export class TLS2C050Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   /**
-   * 執行發票反鎖定
-   */
+  * 執行發票反鎖定
+  * 改為直接使用最近執行鎖定時間 (summaryDate)
+  */
   onUnLock(): void {
-    if (this.queryForm.invalid) {
-      this.submitted = true;
+    // 1. 檢查是否有最近執行鎖定時間
+    if (!this.closeDate || this.closeDate === 'N/A') {
+      this.messageService.warnBubble('目前無最後發票鎖定日期，無法執行反鎖定。');
       return;
     }
 
-    const date = this.queryForm.controls.cls_date.value;
-    if (!date) {
-      return;
-    }
-
-    // 檢查是否小於等於最後關帳日期
-    if (this.closeDate && this.closeDate !== 'N/A') {
-      const selectedDate = new Date(date);
-      const lastCloseDate = new Date(this.closeDate);
-
-      if (selectedDate <= lastCloseDate) {
-        this.messageService.warnBubble('已關帳，無法進行調整。');
-        return;
-      }
-    }
-
-    const dateStr = formatDateToYYYY_MM_DD(date);
-    if (dateStr) {
-      this.executeApi(this.tls2c050Service.unLockTLS2C050(dateStr));
-    }
+    // 3. 直接使用 summaryDate 執行 API
+    // 假設 summaryDate 的格式已經是 YYYY-MM-DD，若不是，請視情況使用 formatDateToYYYY_MM_DD
+    this.executeApi(this.tls2c050Service.unLockTLS2C050(this.closeDate));
   }
 
   /**
