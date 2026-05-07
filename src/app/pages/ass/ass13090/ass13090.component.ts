@@ -42,7 +42,15 @@ const ASS13090_COLUMNS_CONFIGURED: ReportColumn[] = [
   { field: 'BILL_DATE', header: '入帳日期', visible: true },
   { field: 'SYS_Name', header: '資產類型', visible: true },
   { field: 'ASSET_COST', header: '購入金額', visible: true },
-  { field: 'DEPRE_STATUS', header: '攤提狀態', visible: true },
+  {
+    field: 'DEPRE_STATUS',
+    header: '攤提狀態',
+    visible: true,
+    cellClass: (row: QueryASS13090QueryDataRow) =>
+      row.DEPRE_STATUS === '未攤提'
+        ? 'text-red-500'
+        : '',
+  },
 ];
 
 const ASS13090_COLUMNS_UNAMORTIZED: ReportColumn[] = [
@@ -51,13 +59,13 @@ const ASS13090_COLUMNS_UNAMORTIZED: ReportColumn[] = [
   { field: 'GET_DATE', header: '購入日期', visible: true },
   { field: 'BILL_DATE', header: '入帳日期', visible: true },
   { field: 'SYS_Name', header: '資產類型', visible: true },
-  { field: 'ASSET_COST', header: '購入金額', visible: true },
+  { field: 'GET_COST', header: '購入金額', visible: true },
   {
-    field: 'DEPRE_STATUS',
+    field: 'DEPRE_STATUS_TEXT',
     header: '折舊狀態',
     visible: true,
-    cellClass: (row: QueryASS13090QueryDataRow) =>
-      row.DEPRE_STATUS === '未設定' || row.DEPRE_STATUS === '未攤提'
+    cellClass: (row: AmorASS13090Response) =>
+      row.DEPRE_STATUS_TEXT === '未設定'
         ? 'text-red-500'
         : '',
   },
@@ -89,7 +97,7 @@ const ASS13090_COLUMNS_UNAMORTIZED: ReportColumn[] = [
     ButtonModule,
   ],
 })
-export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090QueryDataRow> implements OnInit {
+export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090QueryDataRow | AmorASS13090Response> implements OnInit {
   queryForm = this.formBuilder.group({
     amortCode: [null as string | null], // 攤提代號
     itemCode: [null as string | null], // 品項編號
@@ -102,12 +110,12 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
     inputAmountTo: [null as number | null], // 購入金額(訖)
     purchaseNo: [null as string | null], // 採購單號 → SUBPOENA_ID
     amortYearMonth: [null as Date | string | null], // 攤提年月
-    conditionFilter: ['1'], // 1:已設定攤提 → DEPRE_STATUS Y；0:未設定 → N
+    conditionFilter: [], // 1:已設定攤提 → DEPRE_STATUS Y；0:未設定 → N
     pageSize: [30],
     pageIndex: [1],
   });
 
-  data: QueryASS13090QueryDataRow[] = [];
+  data: QueryASS13090QueryDataRow[] | AmorASS13090Response[] = [];
   totalRecords = 0;
   readonly tableLoading = signal(false);
   /** 上次查詢條件（含分頁／排序；餵給 table-report lazy / sort） */
@@ -303,7 +311,7 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
           }
           this.selectedRows = [];
           this.messageService.successBubble(res.Data?.ResultMsg || '攤提設定完成');
-          this.onSubmit(this.queryForm);
+          this.onAmortizationSettingClick(this.queryForm);
         },
         error: err => this.messageService.warnBubble(this.queryErrorToMessage(err)),
       });
@@ -455,14 +463,14 @@ export class ASS13090Component extends BasicQueryPageComponent<QueryASS13090Quer
       GET_DATE: row.GET_DATE ?? null,
       BILL_DATE: row.BILL_DATE ?? null,
       SYS_Name: row.SYS_Name ?? null,
-      ASSET_COST: row.GET_COST ?? null,
-      DEPRE_STATUS: row.DEPRE_STATUS_TEXT ?? null,
+      GET_COST: row.GET_COST ?? null,
+      DEPRE_STATUS_TEXT: row.DEPRE_STATUS_TEXT ?? null,
       RowNum: row.RowNum ?? null,
     }));
   }
 
   private unwrapApiRowsByLayout(data: unknown, layoutMode: ResultLayoutMode): QueryASS13090QueryDataRow[] {
-    return layoutMode === ResultLayoutMode.Query ? this.unwrapAmorApiRows(data) : this.unwrapAss13090ApiRows(data);
+    return layoutMode === ResultLayoutMode.AmortizationSetting ? this.unwrapAmorApiRows(data) : this.unwrapAss13090ApiRows(data);
   }
 
   private pickAss13090TotalCount(res: ApiResponse<unknown>, data: unknown, rowCount: number): number {
