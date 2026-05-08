@@ -197,7 +197,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
     }
     const export$ = this.tls57090Service.exportTLS57090PDF(this.historyRequestBody);
 
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading).subscribe();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (isLoading) => this.btnLoading = isLoading, `${this.ProgNo}_產出進貨退貨單據統計表_${this.getTimestamp()}`).subscribe();
   }
 
   onExportXLSX() {
@@ -206,6 +206,15 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
       return;
     }
     const export$ = this.tls57090Service.exportTLS57090Excel(this.historyRequestBody);
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading, `${this.ProgNo}_產出進貨退貨單據統計表_${this.getTimestamp()}`).subscribe();
+  }
+
+  private getTimestamp(): string {
+    const now = new Date();
+    return now.getFullYear().toString() +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0');
   }
 }
