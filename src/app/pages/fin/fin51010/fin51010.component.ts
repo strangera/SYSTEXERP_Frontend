@@ -215,4 +215,29 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
     // 2. 選中的項目中，若包含「未過帳」(PostFlag === '0') 則禁用 (依據您的邏輯)
     return this.selectedItems.some(item => item.PostFlag === '0');
   }
+
+  /** 讀取HR傳票資料 */
+  hrLoading = false;
+  onReadHR() {
+    // this.messageService.confirm({
+    //   header: '匯入確認',
+    //   message: '是否執行轉入雇主負擔保費項目？',
+    //   icon: 'pi pi-question-circle',
+    //   accept: () => {
+    this.hrLoading = true; // 鎖定 UI 防止重複點擊
+    this.fin51010Service.importHRVouFIN51010().pipe(finalize(() => this.hrLoading = false), untilDestroyed(this)).subscribe((res) => {
+      if (res.Data?.ErrCode === 0) {
+        this.messageService.successBubble(res.Data.ErrMsg);
+        this.loadSheetTypeCount();
+        this.queryForm.patchValue({
+          SrcSheetType: 'HR', // 假設 HR 是代表 HR 傳票的類型
+        });
+        this.onSubmit(this.queryForm);
+      } else {
+        this.messageService.errorBubble(res.Data?.ErrMsg);
+      }
+    });
+    //   }
+    // });
+  }
 }
