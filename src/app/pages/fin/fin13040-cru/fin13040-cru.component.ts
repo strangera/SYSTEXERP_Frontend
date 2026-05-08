@@ -63,6 +63,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_Net: [{ value: 0, disabled: true }],
     Invoice_Cancel: [{ value: 'N', disabled: true }],
     INV_DeclareYM: ['', Validators.required],
+    INV_REMARK: [''],
 
   });
 
@@ -109,6 +110,18 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('FIN13040', this.dataForm);
     this.loadBuyerUniformOptions();
     this.loadInvoiceTypeOptions();
+
+    // 新增模式：預設申報年月（當期雙數月）及發票日期（今天）
+    if (this.crudstatus === CRUDStatus.Create) {
+      const today = new Date();
+      const month = today.getMonth() + 1; // 1-12
+      const evenMonth = month % 2 === 0 ? month : month + 1;
+      const evenMonthStr = String(evenMonth).padStart(2, '0');
+      this.dataForm.patchValue({
+        INV_DeclareYM: `${today.getFullYear()}${evenMonthStr}`,
+        InvoiceDate: today,
+      });
+    }
 
     // 若為編輯模式，僅停用發票號碼欄位（發票格式仍可變更）
     if (this.crudstatus === CRUDStatus.Edit) {
@@ -231,6 +244,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       PUR_Tax: header.PUR_Tax ?? this.dataForm.controls.PUR_Tax.value ?? 0,
       PUR_Amt: header.PUR_Amt ?? this.dataForm.controls.PUR_Amt.value ?? 0,
       Invoice_Cancel: header.Invoice_Cancel ?? this.dataForm.controls.Invoice_Cancel.value ?? 'N',
+      INV_REMARK: header.INV_REMARK ?? '',
     });
   }
 
@@ -491,9 +505,10 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     this.handleSubmit(form, () => {
       console.log('Form submitted with values:', form.value);
       const v = form.getRawValue();
-      const selectedBuyer = this.Buyer_Uniform_Options.find(o => o.value === (v.Buyer_Uniform && typeof v.Buyer_Uniform === 'object')
+      const uniformValue = (v.Buyer_Uniform && typeof v.Buyer_Uniform === 'object')
         ? v.Buyer_Uniform.value
-        : v.Buyer_Uniform);
+        : v.Buyer_Uniform;
+      const selectedBuyer = this.Buyer_Uniform_Options.find(o => o.value === uniformValue);
       if (!selectedBuyer) {
         alert('請選擇買受人統編');
         this.loading = false;
@@ -537,6 +552,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         PUR_TaxType: v.PUR_TaxType,
         Voucher_No: v.Voucher_No, // Updated to use v.Voucher_No
         AssetType: v.AssetType ?? '',
+        INV_REMARK: v.INV_REMARK ?? '',
         InvoiceTime: new Date().toISOString(),
         Invoice_Cancel: v.Invoice_Cancel ?? this.dataForm.value.Invoice_Cancel ?? 'N',
         PUR_Net: this.dataForm.value.PUR_Net ?? 0,

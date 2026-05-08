@@ -64,11 +64,18 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
   lastQueryBody: any = null;
   footerData: any = {};
 
-  addButton: AddButton[] = [{
-    label: '列印', icon: 'pi pi-file-pdf',
-    action: (row: any) => this.onPrint(row),
-    disabled: () => !this.hasPermission(this.Actions.Query)
-  }];
+  addButton: AddButton[] = [
+    {
+      label: '列印', icon: 'pi pi-file-pdf',
+      action: (row: any) => this.onPrint(row),
+      disabled: () => !this.hasPermission(this.Actions.Query)
+    },
+    {
+      label: '作廢', icon: 'pi pi-ban',
+      action: (row: any) => this.onVoid(row),
+      disabled: (row: any) => row?.INV_Cancel === 'Y' || !this.hasPermission(this.Actions.Edit)
+    }
+  ];
 
   queryFn = (body: any) => this.fin13040Service.queryFIN13040(body).pipe(
     map(res => ({
@@ -194,6 +201,25 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
         this.footerData = { PUR_Net: d?.TotalNet, PUR_Tax: d?.TotalTax, PUR_Amt: d?.TotalAmt };
         this.queryStateService.setQueryState(this.ProgNo, v);
       });
+    });
+  }
+
+  onVoid(row: any): void {
+    if (!row?.ID) return;
+    this.messageService.confirm({
+      header: '確認作廢',
+      message: `確定要作廢發票 ${row.InvoiceNumber} 嗎？此操作無法復原。`,
+      type: 'delete',
+      accept: () => {
+        this.fin13040Service.voidFIN13040({ ID: row.ID }).pipe(untilDestroyed(this)).subscribe({
+          next: (res) => {
+            if (res?.Status === '0000') {
+              this.messageService.successBubble(`發票 ${row.InvoiceNumber} 已作廢`);
+              this.onSubmit(this.queryForm);
+            }
+          }
+        });
+      }
     });
   }
 

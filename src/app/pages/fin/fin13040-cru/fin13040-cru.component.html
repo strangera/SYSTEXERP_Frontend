@@ -73,6 +73,10 @@
           <app-input-number label="含稅金額" [control]="dataForm.controls.PUR_Amt" [submitted]="submitted"
             [useGrouping]="true" [readonly]="true"></app-input-number>
         </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="備註" [control]="dataForm.controls.INV_REMARK"
+            [submitted]="submitted"></app-input-text>
+        </div>
       </div>
       <br />
       <div class="grid p-fluid">
