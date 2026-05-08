@@ -70,7 +70,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
   @Output() yearChangeEvent = new EventEmitter<CalendarYearChangeEvent>();
   @Input() helpMsg?: string;
   @Input() showErrorMessage = true;
-
+  private initialRequired = false;
   private readonly calendarConfig = {
     timeOne: { timeOnly: true, showTime: true, dateFormat: undefined, view: 'date', customPlaceholder: '請選擇時間' },
     dateOne: { timeOnly: false, showTime: false, dateFormat: 'yy/mm/dd', view: 'date', customPlaceholder: '請選擇日期' },
@@ -79,34 +79,42 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     dateYearOne: { timeOnly: false, showTime: false, dateFormat: 'yy', view: 'year', customPlaceholder: '請選擇年份' },
   };
 
-  /**
-   * 套用 calendarType 對應的配置
-   */
   private applyCalendarConfig(): void {
     const config = this.calendarConfig[this._calendarType];
-    if (config) {
-      this.timeOnly = config.timeOnly;
-      this.showTime = config.showTime;
-      this.dateFormat = config.dateFormat;
-      this.view = config.view as 'date' | 'month' | 'year';
+    if (!config || !this.control) return;
 
-      const maxLen = this.calendarMaxLength[this._calendarType];
-      this.maxLength = maxLen; // 這是 BasicKitComponent 的屬性，會連動影響 placeholder
+    // 1. 同步 UI 配置
+    this.timeOnly = config.timeOnly;
+    this.showTime = config.showTime;
+    this.dateFormat = config.dateFormat;
+    this.view = config.view as 'date' | 'month' | 'year';
 
-      if (this.control) {
-        // 更新驗證器，保留原有的，但加入 maxLength；若有 required 一併保留以維持 hasValidator(Validators.required) 為 true（標籤 * 顯示）
-        const hadRequiredBefore = this.control.hasValidator(Validators.required);
-        const currentValidators = this.control.validator ? [this.control.validator] : [];
-        const newValidators = [...currentValidators, Validators.maxLength(maxLen)];
-        if (hadRequiredBefore) {
-          newValidators.push(Validators.required);
-        }
-        this.control.setValidators(newValidators);
-        this.control.updateValueAndValidity({ emitEvent: false });
-      }
-      if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
-        this.placeholder = config.customPlaceholder;
-      }
+    const maxLen = this.calendarMaxLength[this._calendarType];
+    this.maxLength = maxLen; // 更新 BasicKitComponent 的屬性
+
+    // 2. 重新組合驗證器
+    // 我們不再依賴會變動的 this.isRequired，直接使用 ngOnInit 鎖定的 initialRequired
+    const newValidators: any[] = [];
+    // A. 加入對應目前類型的長度限制
+    newValidators.push(Validators.maxLength(maxLen));
+
+    // B. 加入全形卡控 (確保 service 存在)
+    if (this.validationService) {
+      newValidators.push(this.validationService.containsFullWidth.bind(this.validationService));
+    }
+
+    // C. 關鍵：如果初始設定是必填，強制塞回，確保 handleSubmit 會擋，星星也會在
+    if (this.initialRequired || this.control.hasValidator(Validators.required)) {
+      this.initialRequired = true; // 鎖定狀態
+      newValidators.push(Validators.required);
+    }
+    this.control.setValidators(newValidators);
+    // 務必 update，否則 handleSubmit 抓到的 valid 是舊的
+    this.control.updateValueAndValidity({ emitEvent: false });
+    // 3. Placeholder 處理
+    // 只有在使用者沒有自訂 placeholder 或還是預設值時，才套用 config 的建議值
+    if (!this.customPlaceholder || this.customPlaceholder === '請選擇') {
+      this.placeholder = config.customPlaceholder;
     }
   }
 
@@ -116,7 +124,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
 
   ngOnInit() {
     this.initControl(this.control);
-
+    this.initialRequired = this.control.hasValidator(Validators.required);
     // 1. 動態加入全形卡控驗證器
     const validators: any[] = [this.validationService.containsFullWidth.bind(this.validationService)];
 
@@ -141,7 +149,9 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     // 🔧 處理字串格式的日期，轉為 Date 物件並移除時間
     if (this.control.value && typeof this.control.value === 'string') {
       try {
-        const dateValue = this.parseDateWithoutTime(this.control.value);
+        const shouldKeepTime = this.showTime || this.calendarType === 'dateTimeOne' || this.calendarType === 'timeOne';
+        const dateValue = this.parseDateWithOptionalTime(this.control.value, shouldKeepTime);
+        // const dateValue = this.parseDateWithoutTime(this.control.value); // !!!有問題的方法，會導致時間被強制歸0
         if (dateValue) {
           this.control.setValue(dateValue, { emitEvent: false });
         }
@@ -319,6 +329,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
    * 解析日期字串並移除時間部分
    * 支援格式: YYYYMM, YYYYMMDD, YYYY-MM-DD, YYYY/MM/DD 等
    */
+  // !!!有問題的方法，會導致時間被強制歸0，請在自己的作業提交前做轉換避免在共通元件做處理(不懂之處請參考PrimeNg文檔)
   private parseDateWithoutTime(value: string): Date | null {
     if (!value) return null;
 
@@ -367,9 +378,48 @@ export class CalendarComponent extends BasicKitComponent implements OnInit, OnDe
     // 最後嘗試原生解析
     const parsed = new Date(value);
     if (!isNaN(parsed.getTime())) {
+      // 這裡強制 new Date(年, 月, 日)，導致「時、分、秒」全部遺失變回 00:00
       return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
     }
 
+    return null;
+  }
+
+
+  /**
+ * 修改後的解析方法：增加一個 keepTime 參數
+ */
+  private parseDateWithOptionalTime(value: string, keepTime = false): Date | null {
+    if (!value) return null;
+    const dateStr = value.trim();
+
+    // 嘗試 YYYY-MM-DD 或 YYYY/MM/DD 格式
+    let match = dateStr.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      const day = parseInt(match[3], 10);
+      const date = new Date(year, month, day);
+      return isNaN(date.getTime()) ? null : date;
+    }
+
+    // 處理 YYYY/MM 格式 (dateMonthOne 常見格式)
+    match = dateStr.match(/^(\d{4})[-/](\d{1,2})$/);
+    if (match) {
+      const year = parseInt(match[1], 10);
+      const month = parseInt(match[2], 10) - 1;
+      return new Date(year, month, 1);
+    }
+
+    const parsed = new Date(value);
+    if (!isNaN(parsed.getTime())) {
+      if (keepTime) {
+        // 如果需要時間（如 dateTimeOne），直接回傳解析後的 Date 物件
+        return parsed;
+      }
+      // 如果不需要時間，才執行歸零邏輯
+      return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+    }
     return null;
   }
 

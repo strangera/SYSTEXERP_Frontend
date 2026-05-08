@@ -89,6 +89,7 @@ export interface UpdateASS11040Request {
   GOODS_NAME?: string | null;
   BAR_CODE?: string | null;
   PHOTO_URL?: string | null;
+  ORG_ID?: string | null;
   MATERIAL_TYPE?: string | null;
   B_CLASS_ID?: string | null;
   M_CLASS_ID?: string | null;
@@ -138,39 +139,21 @@ export interface QueryFACLASSMRequest {
 }
 
 /**
- * 中分類查詢
+ * queryFACLASS1_DropDownList 請求（對應 SP_FACLASS1_Query，以 FACLASSM.CLASS_ID 篩選）
  */
 export interface QueryFACLASS1Request {
-  /** 中分類代碼 */
-  M_CLASS_ID?: string | null;
-  /** 中分類名稱 */
-  M_CLASS_NAME?: string | null;
-  /** 大分類代碼 */
-  B_CLASS_ID?: string | null;
-  /** 大分類名稱 */
-  B_CLASS_NAME?: string | null;
-  /** 說明關鍵字 */
-  NOTES_KEYWORD?: string | null;
+  /** 資材大分類代碼 */
+  CLASS_ID?: string | null;
 }
 
 /**
- * 小分類查詢
+ * queryFACLASS2_DropDownList 請求
  */
 export interface QueryFACLASS2Request {
-  /** 小分類代碼 */
-  S_CLASS_ID?: string | null;
-  /** 小分類名稱 */
-  S_CLASS_NAME?: string | null;
-  /** 中分類代碼 */
-  M_CLASS_ID?: string | null;
-  /** 中分類名稱 */
-  M_CLASS_NAME?: string | null;
-  /** 大分類代碼 */
+  /** 大分類代碼（FACLASSM.CLASS_ID） */
   B_CLASS_ID?: string | null;
-  /** 大分類名稱 */
-  B_CLASS_NAME?: string | null;
-  /** 說明關鍵字 */
-  NOTES_KEYWORD?: string | null;
+  /** 資材中分類代碼 */
+  CLASS_ID?: string | null;
 }
 
 /** Response / 包裝介面 */
@@ -204,6 +187,10 @@ export interface QueryASS11040Response {
   GOODS_ID?: string | null;
   /** 品項名稱 */
   GOODS_NAME?: string | null;
+  /** 會計歸屬單位代碼 */
+  ORG_ID?: string | null;
+  /** 會計歸屬單位名稱 */
+  ORG_NAME?: string | null;
   /** 大分類代碼 */
   B_CLASS_ID?: string | null;
   /** 大分類名稱 */
@@ -218,8 +205,6 @@ export interface QueryASS11040Response {
   S_CLASS_NAME?: string | null;
   /** 品項類別屬性代碼 */
   MATERIAL_TYPE?: string | null;
-  /** 品項類別屬性名稱 */
-  MATERIAL_TYPE_NAME?: string | null;
   /** 備註說明 */
   NOTES?: string | null;
   /** 條碼 */
@@ -236,20 +221,16 @@ export interface QueryASS11040Response {
   WEIGHT_KG?: number | null;
   /** 基本單位代碼 */
   UNIT?: string | null;
-  /** 基本單位名稱 */
-  UNIT_NAME?: string | null;
   /** 包裝單位代碼 */
   PACK_UNIT?: string | null;
-  /** 包裝單位名稱 */
-  PACK_UNIT_NAME?: string | null;
   /** 包裝數量 */
   PACK_NUM?: number | null;
+  /** 成本單價 */
+  COST_PRICE?: number | null;
   /** 稅別代碼 */
   TAX_CODE?: string | null;
   /** 保固方式代碼 */
   MT_MODE?: string | null;
-  /** 保固方式名稱 */
-  MT_MODE_NAME?: string | null;
   /** 維保廠商 */
   MT_SUPP?: string | null;
   /** 保固年 */
@@ -260,8 +241,6 @@ export interface QueryASS11040Response {
   MT_DAY?: number | null;
   /** 保養方式代碼 */
   IVN_MODE?: string | null;
-  /** 保養方式名稱 */
-  IVN_MODE_NAME?: string | null;
   /** 保養廠商 */
   IVN_SUPP?: string | null;
   /** 可維修年 */
@@ -329,18 +308,11 @@ export interface FACLASSMData {
 }
 
 /**
- * 中分類查詢回應 (外層包裝)
- */
-export interface QueryFACLASS1DataWrapper {
-  Data: FACLASS1Data[];
-}
-
-/**
- * 中分類資料
+ * queryFACLASS1_DropDownList 列資料
  */
 export interface FACLASS1Data {
   /** 序號 */
-  RowNum?: number | null;
+  RowNum?: string | null;
   /** 中分類代碼 */
   M_CLASS_ID?: string | null;
   /** 中分類名稱 */
@@ -354,18 +326,16 @@ export interface FACLASS1Data {
 }
 
 /**
- * 小分類查詢回應 (外層包裝)
+ * @deprecated 新版 API 的 `Data` 直接為 `FACLASS1Data[]`，請使用 `FACLASS1Data[]` 或 `ApiResponse<FACLASS1Data[]>`
  */
-export interface QueryFACLASS2DataWrapper {
-  Data: FACLASS2Data[];
-}
+export type QueryFACLASS1DataWrapper = FACLASS1Data[];
 
 /**
- * 小分類資料
+ * queryFACLASS2_DropDownList 列資料
  */
 export interface FACLASS2Data {
   /** 序號 */
-  RowNum?: number | null;
+  RowNum?: string | null;
   /** 小分類代碼 */
   S_CLASS_ID?: string | null;
   /** 小分類名稱 */
@@ -381,3 +351,8 @@ export interface FACLASS2Data {
   /** 說明 */
   NOTES?: string | null;
 }
+
+/**
+ * @deprecated 新版 API 的 `Data` 直接為 `FACLASS2Data[]`，請使用 `FACLASS2Data[]` 或 `ApiResponse<FACLASS2Data[]>`
+ */
+export type QueryFACLASS2DataWrapper = FACLASS2Data[];

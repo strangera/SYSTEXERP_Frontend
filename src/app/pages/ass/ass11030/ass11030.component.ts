@@ -1,9 +1,9 @@
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS11010Service } from '@service/api/ass/ass11010.service';
-import { ASS11020Service } from '@service/api/ass/ass11020.service';
 import { ASS11030Service } from '@service/api/ass/ass11030.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -11,14 +11,15 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { removeEmptyValues } from '@shared/utils/object-utils';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, Observable } from 'rxjs';
+import { distinctUntilChanged, finalize, Observable } from 'rxjs';
 import { ASS11030Data, ASS11030QueryRequest } from './ass11030.model';
 
 // 3.1.1.3 資產列管品及耗材分類管理作業-小分類維護作業
+@UntilDestroy()
 @Component({
   selector: 'app-ass11030',
   templateUrl: './ass11030.component.html',
@@ -69,8 +70,7 @@ export class ASS11030Component extends BasicQueryPageComponent<ASS11030Data> imp
 
   constructor(
     public readonly service: ASS11030Service,
-    private readonly ass11010Service: ASS11010Service,
-    private readonly ass11020Service: ASS11020Service,
+    private readonly dropdownApiService: DropdownApiService,
     private readonly logger: NGXLogger,
   ) {
     super();
@@ -80,56 +80,105 @@ export class ASS11030Component extends BasicQueryPageComponent<ASS11030Data> imp
     this.initializePage('ASS11030', '/ass/ass11030cru', this.queryForm, this.onSubmit.bind(this));
     this.logger.debug(`ASS11030 init:`, [this.queryForm]);
     this.loadBigClassOptions();
-    this.loadMidClassOptions();
-    this.loadSmallClassOptions();
+    this.setupClassCascades();
   }
 
   /**
-   * 載入大分類下拉選項
+   * 載入大分類下拉選項（FACLASSM）
    */
   private loadBigClassOptions(): void {
-    this.ass11010Service.queryASS11010({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        const options = res.Data.map(item => ({
-          label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
-          value: item.CLASS_ID,
-        }));
-        this.bigClassOptions.set(options);
-      },
-    });
+    this.dropdownApiService
+      .queryFaClassM({})
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: options => {
+          this.bigClassOptions.set(
+            (options ?? []).map(item => ({
+              value: String(item.value),
+              label: item.label,
+            })),
+          );
+        },
+        error: () => {
+          this.bigClassOptions.set([]);
+        },
+      });
   }
 
-  /**
-   * 載入中分類下拉選項
-   */
-  private loadMidClassOptions(): void {
-    this.ass11020Service.queryASS11020({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        const options = res.Data.map(item => ({
-          label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
-          value: item.M_CLASS_ID,
-        }));
-        this.midClassOptions.set(options);
-      },
-    });
-  }
+  private setupClassCascades(): void {
+    const bCtrl = this.queryForm.controls.B_CLASS_ID;
+    const mCtrl = this.queryForm.controls.M_CLASS_ID;
+    const sCtrl = this.queryForm.controls.S_CLASS_ID;
 
-  /**
-   * 載入小分類下拉選項
-   */
-  private loadSmallClassOptions(): void {
-    this.service.queryASS11030({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        const options = res.Data.map(item => ({
-          label: `${item.S_CLASS_ID} - ${item.S_CLASS_NAME}`,
-          value: item.S_CLASS_ID,
-        }));
-        this.smallClassOptions.set(options);
-      },
-    });
+    bCtrl.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe(bClassId => {
+        mCtrl.patchValue(null, { emitEvent: false });
+        sCtrl.patchValue(null, { emitEvent: false });
+        this.midClassOptions.set([]);
+        this.smallClassOptions.set([]);
+        if (!bClassId) return;
+        this.dropdownApiService
+          .queryFaClass1({ CLASS_ID: bClassId })
+          .pipe(untilDestroyed(this))
+          .subscribe(options => {
+            this.midClassOptions.set(
+              (options ?? []).map(item => ({
+                value: String(item.value),
+                label: item.label,
+              })),
+            );
+          });
+      });
+
+    mCtrl.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe(mClassId => {
+        sCtrl.patchValue(null, { emitEvent: false });
+        this.smallClassOptions.set([]);
+        if (!mClassId) return;
+        const bForSmall = bCtrl.value ?? undefined;
+        this.dropdownApiService
+          .queryFaClass2({ B_CLASS_ID: bForSmall, CLASS_ID: mClassId })
+          .pipe(untilDestroyed(this))
+          .subscribe(options => {
+            this.smallClassOptions.set(
+              (options ?? []).map(item => ({
+                value: String(item.value),
+                label: item.label,
+              })),
+            );
+          });
+      });
+
+    const initialBClassId = bCtrl.value;
+    const initialMClassId = mCtrl.value;
+    if (initialBClassId) {
+      this.dropdownApiService
+        .queryFaClass1({ CLASS_ID: initialBClassId })
+        .pipe(untilDestroyed(this))
+        .subscribe(options => {
+          this.midClassOptions.set(
+            (options ?? []).map(item => ({
+              value: String(item.value),
+              label: item.label,
+            })),
+          );
+        });
+    }
+    if (initialMClassId && initialBClassId) {
+      this.dropdownApiService
+        .queryFaClass2({ B_CLASS_ID: initialBClassId, CLASS_ID: initialMClassId })
+        .pipe(untilDestroyed(this))
+        .subscribe(options => {
+          this.smallClassOptions.set(
+            (options ?? []).map(item => ({
+              value: String(item.value),
+              label: item.label,
+            })),
+          );
+        });
+    }
   }
 
   /**
@@ -137,13 +186,18 @@ export class ASS11030Component extends BasicQueryPageComponent<ASS11030Data> imp
    */
   public queryFunction = (body: ASS11030QueryRequest): Observable<ApiResponse<ASS11030Data[]>> => {
     const rawFormValue = this.queryForm.getRawValue();
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const pageSize: number = body.PageSize || (body as any).pageSize;
+    const pageIndex: number = body.PageIndex || (body as any).pageIndex;
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+
     const payload: ASS11030QueryRequest = {
       S_CLASS_ID: rawFormValue.S_CLASS_ID || undefined,
       M_CLASS_ID: rawFormValue.M_CLASS_ID || undefined,
       B_CLASS_ID: rawFormValue.B_CLASS_ID || undefined,
       NOTES_KEYWORD: rawFormValue.NOTES_KEYWORD || undefined,
-      PageSize: body.PageSize,
-      PageIndex: body.PageIndex,
+      PageSize: pageSize,
+      PageIndex: pageIndex,
       SortBy: body.SortBy,
     };
     // 移除空值

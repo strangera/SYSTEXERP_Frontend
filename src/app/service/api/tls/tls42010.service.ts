@@ -59,7 +59,10 @@ export interface POS1004Detail {
 
 /** 下拉選單資料型態 */
 export interface USRLevelOption {
-  USR_Level: string;
+  keyUSR_Level: string,
+  valueUSR_Level: string,
+  ECR_KBType: string,
+  ECR_KBDesc: string,
 }
 
 export interface KBFuncOption {

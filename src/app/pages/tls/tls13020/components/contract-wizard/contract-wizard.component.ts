@@ -11,7 +11,7 @@
  */
 import { CommonModule, NgIf, NgSwitch, NgSwitchCase } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
@@ -19,6 +19,12 @@ import { firstValueFrom } from 'rxjs';
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { StepsModule } from 'primeng/steps';
+
+// Shared table / multiselect
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column } from '@shared/componentkit/table/table.model';
 
 // 基礎組件
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -30,7 +36,8 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 // V2 服務
-import { RenewalQueryResponse, TLS12040Service } from '@service/api/tls/tls12040.service';
+import { RenewalQueryResponse } from '@service/api/tls/tls12040.service';
+import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
 import { CrudTrackingService } from '../../../tls13010-v2/core/services/crud-tracking.service';
@@ -76,6 +83,7 @@ interface WizardState {
   renewalData: {
     sourceContractId: string;
     sourceApplyNo: string;
+    sourceContractNo: string;
     sourceContractSubno: number;
     nextContractSubno: number;
   } | null;
@@ -96,6 +104,9 @@ interface WizardState {
     StepsModule,
     ButtonModule,
     MenubarComponent,
+    InputTextComponent,
+    MultiSelectComponent,
+    TableComponent,
     ButtonComponent,
     DialogComponent,
     Step1ContractInfoComponent,
@@ -205,6 +216,33 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   showSuccessDialog = false;
   successDialogItems: { label: string; value: string }[] = [];
 
+  // ---- 合約查詢對話框（續約用） ----
+  showContractSearchDialog = false;
+  isSearchingContracts = false;
+  contractSearchResults: any[] = [];
+  selectedSearchRow: any = null;
+
+  // 搜尋表單（三個條件）
+  contractSearchForm = new FormGroup({
+    tlt_no: new FormControl(''),
+    tlt_name: new FormControl(''),
+    ven_uniformList: new FormControl([] as string[])
+  });
+
+  // 廠商下拉選項（統一編號）
+  vendorUIDOptions: any[] = [];
+
+  // 查詢結果欄位定義
+  readonly searchColumns: Column[] = [
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'ven_uniform', header: '廠商統一編號', visible: true },
+    { field: 'ven_no', header: '廠商編號', visible: true },
+    { field: 'contract_subno', header: '合約版次', visible: true },
+    { field: 'tlt_bdate', header: '合約起始', visible: true },
+    { field: 'tlt_edate', header: '合約截止', visible: true }
+  ];
+
   // 原始抽成別（編輯模式用）
   originalCommissionType?: string;
 
@@ -226,7 +264,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   constructor(
     public override router: Router,
-    private apiService: TLS12040Service,
+    private apiService: TLS13010Service,
     private tlsBaseService: TlsContractBaseService,
     public sharedDropdownService: SharedDropdownService,
     private validatorService: ContractValidatorService,
@@ -243,6 +281,12 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
     // 載入 Step 3 所需的折扣選項（需在 handleRouterState 之前載入）
     await this.loadDiscountOptions();
+
+    // 載入廠商統一編號下拉（合約查詢用）
+    this.sharedDropdownService.getVendorOptions('1').subscribe({
+      next: (opts) => this.vendorUIDOptions = opts,
+      error: () => this.vendorUIDOptions = []
+    });
 
     // 設定動態驗證監聽器
     this.setupDynamicValidators();
@@ -328,7 +372,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
       // 會員卡
       vip_yn: ['N'],
-      credit_card: [0],
+      credit_card: [null],
 
       // 目標營業額
       total_amt: [null],
@@ -478,6 +522,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       this.dataForm.get('apply_type')?.setValue('2');
       this.tlsBaseService.setCurrentUserAsNegotiator(this.dataForm);
       await this.loadFareData('');
+      this.showContractSearchDialog = true; // 新增模式自動開啟合約查詢
       return;
     }
 
@@ -490,11 +535,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
   // ========== 資料載入 ==========
   private async loadContractData(rowData: any): Promise<void> {
     try {
-      const request = { apply_no: rowData.apply_no, id: rowData.id };
-      const response = await this.apiService.queryTLS12040Detail(request).toPromise();
+      const talentId = rowData.talent_id || rowData.apply_no;
+      const response = await this.apiService.queryTLS13010Detail(talentId).toPromise();
 
       if (response?.Status === '0000' && response.Data) {
-        const data = response.Data;
+        const data = Array.isArray(response.Data) ? response.Data[0] : response.Data;
 
         // 處理字串欄位 trim（資料庫固定長度欄位會帶空白）
         if (data.tlt_term_type) {
@@ -523,8 +568,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
         // 同步 contractInfo
         this.wizardState.contractInfo = this.dataForm.getRawValue() as ContractInfo;
 
-        // 載入位置資料（與 v1 loadLocationData 一致）
-        const locationDetails = data.LocationDetails || [];
+        // 載入位置資料（API 可能用 LocationDetails 或 Locations）
+        const locationDetails = data.LocationDetails || data.Locations || [];
         if (Array.isArray(locationDetails) && locationDetails.length > 0) {
           this.wizardState.locationData = locationDetails.map((item: any) => ({
             id: item.id,
@@ -548,13 +593,13 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
         this.step1DataReady = true;
 
         // 載入 Step 2 代扣款資料
-        await this.loadFareData(rowData.apply_no);
+        await this.loadFareData(talentId);
 
         // 載入 Step 3 抽成資料
-        await this.loadCommissionData(rowData.apply_no);
+        await this.loadCommissionData(talentId);
 
         // 載入 Step 4 條件資料
-        await this.loadConditionData(rowData.apply_no, data.tlt_term_type);
+        await this.loadConditionData(talentId, data.tlt_term_type);
       }
     } catch (error) {
       console.error('載入合約資料失敗:', error);
@@ -608,20 +653,32 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     if (!dateStr) return null;
 
     const datePart = dateStr.split(/[T\s]/)[0];
-    const match = datePart.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
-    if (match) {
-      const year = parseInt(match[1], 10);
-      const month = parseInt(match[2], 10) - 1;
-      const day = parseInt(match[3], 10);
+
+    // YYYY-MM-DD 或 YYYY/MM/DD
+    const matchYMD = datePart.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+    if (matchYMD) {
+      const year = parseInt(matchYMD[1], 10);
+      const month = parseInt(matchYMD[2], 10) - 1;
+      const day = parseInt(matchYMD[3], 10);
       return new Date(year, month, day);
     }
+
+    // MM/DD/YYYY（API 有時回傳此格式）
+    const matchMDY = datePart.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (matchMDY) {
+      const month = parseInt(matchMDY[1], 10) - 1;
+      const day = parseInt(matchMDY[2], 10);
+      const year = parseInt(matchMDY[3], 10);
+      return new Date(year, month, day);
+    }
+
     return null;
   }
 
-  private async loadFareData(applyNo: string): Promise<void> {
+  private async loadFareData(talentId: string): Promise<void> {
     try {
-      const request = { apply_no: applyNo, showAll: true };
-      const response = await this.apiService.queryTLS12040Fare(request).toPromise();
+      const request = { talentId: talentId, showAll: true };
+      const response = await this.apiService.queryTLS13010Fare(request).toPromise();
 
       if (response?.Status === '0000' && response.Data) {
         const faresByType = response.Data.FaresByType || {};
@@ -655,9 +712,9 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     }
   }
 
-  private async loadCommissionData(applyNo: string): Promise<void> {
+  private async loadCommissionData(talentId: string): Promise<void> {
     try {
-      const response = await this.apiService.queryTLS12040Charge(applyNo).toPromise();
+      const response = await this.apiService.queryTLS13010Charge(talentId).toPromise();
 
       if (response?.Status === '0000' && response.Data) {
         const chargeSettings = response.Data.ChargeSettings || [];
@@ -711,7 +768,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     }
   }
 
-  private async loadConditionData(applyNo: string, commissionType: string): Promise<void> {
+  private async loadConditionData(talentId: string, commissionType: string): Promise<void> {
     try {
       // 一般抽成不需要條件資料
       if (commissionType === '3') {
@@ -719,8 +776,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
         return;
       }
 
-      const request = { apply_no: applyNo, CurrentTltTermType: commissionType };
-      const response = await this.apiService.queryTLS12040Commission(request).toPromise();
+      const request = { TalentId: talentId, CurrentTltTermType: commissionType };
+      const response = await this.apiService.queryTLS13010Commission(request).toPromise();
 
       if (response?.Status === '0000' && response.Data?.ExistingData) {
         // ExistingData 是物件，需根據抽成類型取出對應陣列
@@ -857,7 +914,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       items.forEach((item: any) => {
         allItems.push({
           ...item,
-          id: undefined,
+          id: this.generateTempId(),  // 每筆獨立 temp ID，避免 findIndex 找錯 index
           apply_no: undefined,
           talent_id: undefined,
           cap_type: type as any,
@@ -987,7 +1044,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
     this.wizardState.conditionItems = items.map((item: any) => ({
       ...item,
-      id: undefined,
+      id: this.generateTempId(),  // 每筆獨立 temp ID，避免 updateItemInArray 找錯 index
       apply_no: undefined,
       talent_id: undefined,
       cag_bdate: this.formatDateToString(formStartDate),
@@ -1217,7 +1274,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       const submitData = this.assembleSubmitData();
 
       // 呼叫 API
-      const response = await this.apiService.submitFinalTLS12040(submitData).toPromise();
+      const response = await this.apiService.submitFinalTLS13010(submitData).toPromise();
 
       if (response?.success) {
         // 組合詳細成功訊息（與 TLS13010-v2 一致）
@@ -1226,11 +1283,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
         const successMessage = [
           `異動訊息:${isInsert ? '新增成功' : '修改成功'}`,
-          `招募編號為:${formData.apply_no || response.applyNo || ''}`,
-          `版本編號為:${formData.contract_subno || ''}`,
-          `專櫃編號為:${formData.tlt_no || response.tltNo || ''}`,
-          `廠商編號:${formData.ven_uniform || ''}`,
-          `品牌(專櫃名稱):${formData.tlt_name || ''}`
+          `招商編號：${formData.apply_no || response.applyNo || ''}`,
+          `版本編號：${formData.contract_subno || ''}`,
+          `專櫃編號：${formData.tlt_no || response.tltNo || ''}`,
+          `廠商編號：${formData.ven_uniform || ''}`,
+          `品牌（專櫃名稱）：${formData.tlt_name || ''}`
         ].join('\n');
 
         // 新增契約時刷新使用者資料權限，否則看不到剛新增的資料
@@ -1274,7 +1331,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       isIntentionLetter ? [] : this.wizardState.conditionItems,
       this.isFormCreateable || this.isRenewalMode,
       this.isRenewalMode,
-      this.currentCommissionType
+      this.currentCommissionType,
+      this.wizardState.renewalData?.sourceContractNo
     );
   }
 
@@ -1296,6 +1354,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
     this.wizardState.renewalData = {
       sourceContractId: renewalData.source_talent_id,
       sourceApplyNo: renewalData.source_apply_no,
+      sourceContractNo: renewalData.source_contract_no,
       sourceContractSubno: renewalData.source_contract_subno,
       nextContractSubno: renewalData.next_contract_subno
     };
@@ -1508,5 +1567,45 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
   onSuccessDialogClose(visible: boolean): void {
     if (!visible) this.onSuccessConfirm();
+  }
+
+  // ========== 合約查詢對話框（續約用） ==========
+
+  openContractSearchDialog(): void {
+    this.showContractSearchDialog = true;
+  }
+
+  async searchContracts(): Promise<void> {
+    this.isSearchingContracts = true;
+    this.contractSearchResults = [];
+
+    const f = this.contractSearchForm.value;
+    const payload: Record<string, unknown> = {};
+    if (f.tlt_no?.trim()) payload['tlt_no'] = f.tlt_no.trim();
+    if (f.tlt_name?.trim()) payload['tlt_name'] = f.tlt_name.trim();
+    if (f.ven_uniformList?.length) payload['ven_uniformList'] = f.ven_uniformList;
+
+    try {
+      const response = await firstValueFrom(this.apiService.queryTLTALENTList(payload));
+      if (response?.Status === '0000' && Array.isArray(response.Data)) {
+        // 後端已做最新版去重 + 只查 TLTTALENT，直接使用
+        this.contractSearchResults = response.Data;
+      } else {
+        this.contractSearchResults = [];
+      }
+    } catch {
+      this.contractSearchResults = [];
+    } finally {
+      this.isSearchingContracts = false;
+    }
+  }
+
+  onSelectContractRow(row: any): void {
+    this.selectedSearchRow = row; // 記住選擇，重新開啟時 radio 仍顯示
+    this.showContractSearchDialog = false;
+    // 觸發 Step1 載入續約資料
+    setTimeout(() => {
+      this.step1Component?.triggerRenewalFromSearch(row.ven_no, row.tlt_no);
+    }, 100);
   }
 }

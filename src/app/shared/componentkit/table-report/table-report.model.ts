@@ -8,7 +8,7 @@ export interface ReportColumn {
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   width?: string;    // 欄位寬度，例如 '80px'、'10rem'
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
-  exportFormat?: Record<string, string>[];
+  exportFormat?: Record<string, string>[]; // transformOptionsForExport(getSYS1000Options('field'))
   groupField?: string; //
   isSubTotal?: boolean; // 是否為小計欄位
   isTotal?: boolean; // 是否為總計欄位
@@ -42,15 +42,25 @@ export interface TableQueryPayload {
   mode: 'single' | 'multiple';
   multiSortMeta: SortMeta[];
 }
-//formatDate：會輸出 2024/05/27 格式
+// formatDate：會輸出 2024/05/27 格式
 export const formatDate = (dateStr: string) => {
   if (!dateStr) return '';
-  const date = new Date(dateStr);
+
+  let processedStr = dateStr;
+
+  // 新增判斷：處理 YYYYMMDD 格式 (例如 20260114)
+  const yyyymmddRegex = /^(\d{4})(\d{2})(\d{2})$/;
+  if (yyyymmddRegex.test(dateStr)) {
+    processedStr = dateStr.replace(yyyymmddRegex, '$1-$2-$3');
+  }
+
+  const date = new Date(processedStr);
   if (isNaN(date.getTime())) return '';
 
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
+
   return `${year}/${month}/${day}`;
 };
 

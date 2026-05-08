@@ -67,6 +67,7 @@ export class FIN32010CRUComponent extends BasicCruPageComponent<any> implements 
     ARS_StatusCode: [{ value: null, disabled: false }],
     SubDetailNo: [{ value: null, disabled: true }],
     PTA_Key: [{ value: null, disabled: true }],
+    AcctKey: [{ value: null }],
     PostFlagCode: [{ value: null, disabled: true }],
   })
 
@@ -173,7 +174,8 @@ export class FIN32010CRUComponent extends BasicCruPageComponent<any> implements 
       ARS_No: form.get('ARS_No')?.value ?? form.get('ARS_ID')?.value ?? '',
       PTA_Date: ptaDate,
       NoteDesc: form.get('NoteDesc')?.value ?? '',
-      ARS_Status: normalizeStatus(rawStatus)
+      ARS_Status: normalizeStatus(rawStatus),
+      AcctKey: form.get('AcctKey')?.value ?? null
     };
 
     this.loading = true;

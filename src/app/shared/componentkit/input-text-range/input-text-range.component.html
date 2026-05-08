@@ -14,7 +14,8 @@
   <div class="col pb-0">
     <p-inputGroup id="input-text-start">
       <app-input-text class="w-full" [label]="startLabel" [showLabel]="false" [controlName]="startControlName"
-        [control]="startControl" [submitted]="submitted" (blurEvent)="onStartInputChange($event)" />
+        [control]="startControl" [submitted]="submitted" (blurEvent)="onStartInputChange($event)"
+        [errorForGroup]="errorForGroup" />
     </p-inputGroup>
   </div>
   <div class="flex flex-column justify-content-center align-items-center pt-3" [ngStyle]="{ 'height': '33.56px' }">

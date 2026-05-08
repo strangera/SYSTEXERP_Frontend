@@ -116,11 +116,14 @@ export class TLS22040CRUComponent extends BasicCruPageComponent<any> implements 
       }))
     }
     this.tls22040Service.callSpCrtMig(payload).subscribe({
-      next: () => {
-        this.messageService.successBubble('重送成功');
+      next: (res) => {
+        if (res.Success)
+          this.messageService.successBubble('重送成功');
+        else {
+          this.messageService.errorBubble(res.ErrMsg);
+        }
         this.loading = false;
       },
-
     });
   }
 

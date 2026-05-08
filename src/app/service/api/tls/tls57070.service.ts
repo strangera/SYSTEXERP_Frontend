@@ -15,6 +15,7 @@ export interface Tls57070Request {
   HOS_NOList?: string[]; // 院區編號列表
   LOGO_NoList?: string[]; // 專櫃編號列表
   ShowType?: string; // 顯示類型
+  ShowSTK_SYSADJUSTCOST?: string;
 }
 
 /**

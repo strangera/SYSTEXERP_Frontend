@@ -1,5 +1,5 @@
 import { AsyncPipe, Location } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -9,6 +9,7 @@ import { Column, formatAmount, formatDate } from '@shared/componentkit/table/tab
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
+import { NavigationHelperService } from 'src/app/reports/services/navigation-helper.service';
 import { FIN29060Data, FIN29060Service, FIN29060TotalData, QueryFIN29060Request } from '../../../service/api/fin/fin29060.service';
 import { FIN55050Detail } from '../../../service/api/fin/fin55050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -78,35 +79,28 @@ export class FIN29060Component extends BasicQueryPageComponent<FIN29060Data> imp
     private readonly fileExportService: FileExportService,
     private readonly location: Location,
   ) { super(); }
-
+  private readonly navHelper = inject(NavigationHelperService); // 注入導覽小幫手
   ngOnInit(): void {
     this.initializePage('FIN29060', '/FIN/FIN29060CRU', this.queryForm, (frm) => this.onSubmit(frm));
   }
+
   onDetailWithColValue(event: { row: FIN29060Data; col: any; value: any }) {
+    // 處理應付帳款編號 (跳轉至 FIN24010)
     if (event.col.field === 'ACP_No') {
       const acpNo = event.row?.ACP_No;
-      const handoff = {
-        acpNo,
-        fromRoute: window.location.pathname,
-        ts: Date.now(),
-      };
-      localStorage.setItem('FIN24010_CRU_HANDOFF', JSON.stringify(handoff));
-      localStorage.setItem('FIN24010_CRU_PROGNO', 'FIN24010');
-      const externalUrl = this.location.prepareExternalUrl(`/account/fin/fin24010cru?acpid=${encodeURIComponent(acpNo ?? '')}`);
-      const finalUrl = `${window.location.origin}${externalUrl}`;
-      window.open(finalUrl, '_blank', 'noopener');
-    } else if (event.col.field === 'PayVoucherNo') {
+      if (!acpNo) return;
+      this.navHelper.openInNewTab('/reports/fin/fin24010', { acpid: acpNo });
+    }
+    // 處理付款傳票編號 (跳轉至通用傳票報表)
+    else if (event.col.field === 'PayVoucherNo') {
       const vouNo = event.row?.PayVoucherNo;
-      const handoff = {
-        vouNo,
-        fromRoute: window.location.pathname,
-        ts: Date.now(),
-      };
-      localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
-      localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
-      const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
-      const finalUrl = `${window.location.origin}${externalUrl}`;
-      window.open(finalUrl, '_blank', 'noopener');
+      if (!vouNo) {
+        this.messageService?.warnBubble?.('無法開啟，缺少傳票號碼。');
+        return;
+      }
+      // 指向你剛剛做好的 Report 頁面路徑，不再使用 localStorage
+      // 參數名統一為 vouno，與 Report 元件 ngOnInit 接收的名稱一致
+      this.navHelper.openInNewTab('/reports/fin/fin29060', { vouno: vouNo });
     }
   }
 

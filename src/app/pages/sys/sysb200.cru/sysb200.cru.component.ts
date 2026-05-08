@@ -2,9 +2,10 @@ import { AsyncPipe, NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { PanelModule } from 'primeng/panel';
-import { finalize, map, Observable } from 'rxjs';
+import { finalize } from 'rxjs';
 import { Sysb200Service } from '../../../service/api/sys/sysb200.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -18,7 +19,6 @@ import {
   validateMaxLength,
   validateNoChinese,
 } from '../../../shared/componentkit/table/validate-field.model';
-import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 import { Tlsb200Model } from './tlsb200.model';
 function safeValidator(
   validator: (value: any, ...args: any[]) => { isValid: boolean; errorMessage: string[] }
@@ -118,12 +118,12 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   ];
 
 
-  bankOptions$!: Observable<any[]>;
+  bankOptions$ = this.dropDown.queryAps1001NoBranch();
 
   constructor(
     override readonly formBuilder: FormBuilder,
-    private sysbc00Service: Sysbc00Service,
-    private sysb200Service: Sysb200Service
+    private sysb200Service: Sysb200Service,
+    private readonly dropDown: DropdownApiService
   ) {
     super();
   }
@@ -173,8 +173,6 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
     }
 
-    this.loadBankOptions();
-
     if (this.crudstatus === 'Create') {
       this.isReadonly = false;
     } else {
@@ -187,15 +185,6 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
         this.dataForm.get('VEN_No')?.disable();
       }
     }
-  }
-
-  loadBankOptions() {
-    this.bankOptions$ = this.sysbc00Service.querySYSBC00({}).pipe(
-      map(res => (res.Data ?? []).map(item => ({
-        label: `${item.BNK_No} ${item.BNK_Name}`,
-        value: item.BNK_No
-      })))
-    );
   }
 
   approve() {
@@ -217,6 +206,11 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   resetTable() {
     this.contacts = [];
     this.selectedRows = [];
+  }
+
+  // 離開：導回查詢頁
+  goBack() {
+    super.onCancel();
   }
 
   // 取消：還原表單與 contacts（不導回查詢頁）

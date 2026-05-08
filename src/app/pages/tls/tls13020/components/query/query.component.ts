@@ -19,12 +19,12 @@ import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/
 
 // Shared Services
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { formatApproveStatus } from '@shared/constants/business.constants';
+import { formatApplyType, formatApproveStatus } from '@shared/constants/business.constants';
 import { Actions } from '@shared/service/permission-guard.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 
 // API Service
-import { TLS12040Service } from '@service/api/tls/tls12040.service';
+import { TLS13010Service } from '@service/api/tls/tls13010.service';
 
 // Models
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
@@ -38,12 +38,14 @@ import { TranslateModule } from '@ngx-translate/core';
 export interface ContractItem {
   id: number;
   apply_no: string;
+  talent_id: string;
   tlt_no: string;
   tlt_name: string;
   ven_uniform: string;
   ven_no: string;
   approve_status: string;
   tlt_term_type: string;
+  source_type: string;
   CanEdit: boolean;
   CanVoid: boolean;
 }
@@ -77,30 +79,30 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
   // ========== 表格按鈕 ==========
   public readonly addButton: AddButton[] = [
-    {
-      label: '審核',
-      icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: ContractItem) => this.onApprove(rowData),
-      disabled: (rowData: ContractItem) => rowData.approve_status !== '1' || !this.hasPermission(Actions.Audit)
-    },
-    {
-      label: '反審核',
-      icon: 'pi pi-undo text-orange-500',
-      action: (rowData: ContractItem) => this.onUnapprove(rowData),
-      disabled: (rowData: ContractItem) => rowData.approve_status !== '2' || !this.hasPermission(Actions.AntiAudit)
-    },
-    {
-      label: '作廢',
-      icon: 'pi pi-times-circle text-red-500',
-      action: (rowData: ContractItem) => this.onVoid(rowData),
-      disabled: (rowData: ContractItem) => this.isVoidDisabled(rowData) || !this.hasPermission(Actions.Invalidate)
-    }
+    // {
+    //   label: '審核',
+    //   icon: 'pi pi-check-circle text-green-500',
+    //   action: (rowData: ContractItem) => this.onApprove(rowData),
+    //   disabled: (rowData: ContractItem) => rowData.approve_status !== '1' || !this.hasPermission(Actions.Audit)
+    // },
+    // {
+    //   label: '反審核',
+    //   icon: 'pi pi-undo text-orange-500',
+    //   action: (rowData: ContractItem) => this.onUnapprove(rowData),
+    //   disabled: (rowData: ContractItem) => rowData.approve_status !== '2' || !this.hasPermission(Actions.AntiAudit)
+    // },
+    // {
+    //   label: '作廢',
+    //   icon: 'pi pi-times-circle text-red-500',
+    //   action: (rowData: ContractItem) => this.onVoid(rowData),
+    //   disabled: (rowData: ContractItem) => this.isVoidDisabled(rowData) || !this.hasPermission(Actions.Invalidate)
+    // }
   ];
 
   // ========== 查詢表單 ==========
   queryForm = this.formBuilder.group({
-    apply_no: [null as string | null, [Validators.maxLength(8)]],
-    apply_type: ['2' as string | null],
+    apply_no: [null as string | null],
+    apply_typeList: [['2'] as string[]],
     bus_type: [null as string | null],
     tlt_no: [null as string | null],
     tlt_name: ['', [Validators.maxLength(50)]],
@@ -151,7 +153,9 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'approve_status', header: '合約狀態', visible: true, format: formatApproveStatus }
+    { field: 'approve_status', header: '合約狀態', visible: true, format: formatApproveStatus },
+    { field: 'source_type', header: '來源處', visible: true },
+    { field: 'apply_type', header: '申請案件內容', visible: true, format: formatApplyType },
   ];
 
   // ========== 下拉選單選項 ==========
@@ -176,7 +180,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   get applyTypeOptions() { return this.sharedDropdownService.applyTypeOptions; }
 
   constructor(
-    private apiService: TLS12040Service,
+    private apiService: TLS13010Service,
     public sharedDropdownService: SharedDropdownService,
     public override router: Router
   ) {
@@ -246,6 +250,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       const formValue = form.value;
       const queryRequest = {
         ...formValue,
+        apply_typeList: (formValue.apply_typeList && formValue.apply_typeList.length > 0) ? formValue.apply_typeList : ['2'],
         contract_subno_from: formValue.contract_subno_from ? String(formValue.contract_subno_from) : undefined,
         contract_subno_to: formValue.contract_subno_to ? String(formValue.contract_subno_to) : undefined,
         rece_yn: formValue.rece_yn ? 'Y' : undefined,
@@ -253,7 +258,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
         cash_yn: formValue.cash_yn ? 'Y' : undefined
       };
 
-      this.apiService.queryTLS12040(queryRequest).subscribe({
+      this.apiService.queryTLS13010(queryRequest).subscribe({
         next: (response: any) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
@@ -342,7 +347,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
   private performApprove(rowData: ContractItem): void {
     this.messageService.blockUi();
-    this.apiService.approveTLS12040({ apply_no: rowData.apply_no }).subscribe({
+    this.apiService.approveTLS13010({ talentId: rowData.talent_id }).subscribe({
       next: (response: any) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('審核成功');
@@ -381,7 +386,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
   private performUnapprove(rowData: ContractItem): void {
     this.messageService.blockUi();
-    this.apiService.unapproveTLS12040({ apply_no: rowData.apply_no }).subscribe({
+    this.apiService.unapproveTLS13010({ talentId: rowData.talent_id }).subscribe({
       next: (response: any) => {
         if (response.Status === '0000') {
           this.messageService.successBubble('反審核成功');
@@ -417,7 +422,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     this.messageService.confirm({
       message: `確定要作廢合約 ${rowData.apply_no} 嗎？作廢後無法恢復。`,
       accept: () => {
-        this.apiService.voidTLS12040({ apply_no: rowData.apply_no }).subscribe({
+        this.apiService.voidTLS13010({ talentId: rowData.talent_id }).subscribe({
           next: (response: any) => {
             if (response.Status === '0000') {
               this.messageService.successBubble('作廢成功');

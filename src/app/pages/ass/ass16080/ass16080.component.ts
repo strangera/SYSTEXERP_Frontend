@@ -121,7 +121,7 @@ export class ASS16080Component extends BasicQueryPageComponent<QueryASS16080Resp
   ];
 
   expansionColumns: ReportColumn[] = [
-    { field: 'RowNo', header: '序號' },
+    // { field: 'RowNo', header: '序號' },
     { field: 'GOODS_ID', header: '品項編號' },
     { field: 'GOODS_NAME', header: '品項名稱' },
     { field: 'UNIT', header: '單位名稱' },
@@ -256,15 +256,21 @@ export class ASS16080Component extends BasicQueryPageComponent<QueryASS16080Resp
         },
       });
 
-    this.dropDownListService
-      .queryPOS2013_DropDownList({})
+0
+
+          const toOpt = (items: { No?: string; Name?: string }[]) =>
+      (items ?? []).map(item => ({
+        label: `${item.No ?? ''} - ${item.Name ?? ''}`,
+        value: item.No ?? '',
+      }));
+
+
+          this.dropDownListService
+      .querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
-      .subscribe((res) => {
-        const list = res.Data ?? [];
-        this.orgIdOptions = list.map((item: { No?: string; Name?: string }) => ({
-          value: item.No ?? '',
-          label: `${item.No ?? ''} - ${item.Name ?? ''}`,
-        }));
+      .subscribe(res => {
+        if (res.Status !== '0000') return;
+        this.orgIdOptions = toOpt(res.Data ?? []);
       });
 
     this.dropDownListService
@@ -306,14 +312,17 @@ export class ASS16080Component extends BasicQueryPageComponent<QueryASS16080Resp
     return cleaned.length ? cleaned : fallback;
   }
 
-  private initRows(rows: QueryASS16080Response[]): QueryASS16080Response[] {
-    rows.forEach((r, idx) => {
-      (r as any)._rowKey = idx + 1;
-      (r as any)._detailLoaded = false;
-      r.Details = [];
-    });
-    return rows;
-  }
+private initRows(rows: QueryASS16080Response[]): QueryASS16080Response[] {
+  const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+  rows.forEach((r, idx) => {
+    (r as any)._rowKey = `${seed}_${idx}`;
+    (r as any)._detailLoaded = false;
+    r.Details = [];
+  });
+
+  return rows;
+}
 
   private saveQueryState(): void {
     this.queryStateService.setQueryState(

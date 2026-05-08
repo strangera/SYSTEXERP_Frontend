@@ -55,6 +55,8 @@ export class ValidationService {
       dateNotAfterToday: '日期必須大於等於今日',
       containsFullWidth: '不可輸入全形字元，請切換為半形輸入。',
       accNoClassNoMismatch: '「科目代號」與「三碼代號」不符',
+      requireOneGroup: '請輸入「退出/折讓單號」或「發票號碼」擇一輸入',
+      bnkIdDuplicate: '此【公司銀行科目】已有【帳戶編號】使用，請重新輸入。',
     };
     return config[validatorName];
   }
@@ -581,6 +583,23 @@ export class ValidationService {
         }
       }
 
+      return null;
+    };
+  }
+
+  invoicePeriodValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+      if (!value || value.length < 6) return null;
+
+      const year = parseInt(value.substring(0, 4), 10);
+      const month = parseInt(value.substring(4, 6), 10);
+
+      // 邏輯：今天 2026/05/01，當期起點是 202605
+      // 鎖死不可小於 202605
+      if (year < 2026 || (year === 2026 && month < 5)) {
+        return { invalidMinMonthDate: true }; // 借用現有的錯誤 key
+      }
       return null;
     };
   }

@@ -179,6 +179,14 @@ export class ContractValidatorService {
       warnings.push({ field: 'location', message: '建議設定至少一個櫃位地點' });
     }
 
+    // 地點起訖日必填卡控
+    const locationsWithMissingDates = validLocations.filter(
+      loc => loc.location_no?.trim() && (!loc.tlt_bdate || !loc.tlt_edate)
+    );
+    if (locationsWithMissingDates.length > 0) {
+      errors.push({ field: 'location_dates', message: '櫃位地點起訖日為必填' });
+    }
+
     // Email 格式驗證
     const email = form.get('email')?.value;
     if (email && !this.isValidEmail(email)) {

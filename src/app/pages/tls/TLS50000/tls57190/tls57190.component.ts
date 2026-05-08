@@ -3,7 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls52010Service } from '@service/api/tls/tls52010.service';
 import { TLS57190Data, TLS57190DetailRequest, TLS57190QueryRequest, TLS57190Service } from '@service/api/tls/tls57190.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ProductAutocompleteComponent } from '@shared/biz-components/product-autocomplete/product-autocomplete';
@@ -59,7 +58,6 @@ export class TLS57190Component extends BasicQueryPageComponent<TLS57190Data> imp
     private readonly datepipe: DatePipe,
     private readonly dropdown: DropdownApiService,
     private readonly fileExportService: FileExportService,
-    private readonly tls52010Service: Tls52010Service
   ) {
     super();
   }

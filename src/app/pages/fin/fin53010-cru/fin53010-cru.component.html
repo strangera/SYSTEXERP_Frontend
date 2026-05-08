@@ -48,7 +48,7 @@
             [disabled]="!isFormCreateable" [control]="df().VouDate" [submitted]="submitted"></app-calendar>
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="傳票狀態" controlName="PostFlag"
             [options]="service.postFlagOptions" optionLabel="label" optionValue="value" [control]="df().PostFlag"
-            [submitted]="submitted"></app-dropdown>
+            [submitted]="submitted" [disabled]="true"></app-dropdown>
           <app-input-text class="col-12 md:col-6 lg:col-4" label="傳票摘要" controlName="Remark" [control]="df().Remark"
             [submitted]="submitted"></app-input-text>
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="補發票" controlName="INVOptions" [showClear]="!1"
@@ -100,13 +100,12 @@
 <div class="card">
   <div class="grid p-fluid">
     <div class="col-12">
-      <p-panel header="資料" class="line-height-3 m-0 mb-3">
+      <p-panel header="資料" [toggleable]="true" class="line-height-3 m-0 mb-3">
         <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="!isFormReadable" [disabled]="isFormReadable"
           (fieldChange)="onFieldChange($event)" (dataChange)="onDataChange($event)"
           (rowReorderData)="onRowReorder($event)" [data]="tableData()" [defaultInsertData]="defaultInsertData()"
           [footerData]="footerData()" [loading]="tableLoading()" [tableKey]="'FIN52030_detail'" [tableRequired]="true"
-          [columns]="columns()" [scrollable]="true" [virtualScroll]="true"
-          [virtualScrollItemSize]="46"></app-table-edit>
+          [columns]="columns()" [scrollable]="true" [rowValidate]="validateRow"></app-table-edit>
       </p-panel>
     </div>
   </div>
@@ -115,8 +114,9 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 3) {
 <div class="card">
   <p-panel header="應付帳款" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepAPRows()"
-      [columns]="stepAPColumns" [tableKey]="'FIN53010_step_ap'"
+    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [canInsert]="false"
+      [showInsert]="!isFormReadable && stepAPTableCanInsert()" [data]="stepAPRows()" [columns]="stepAPColumns"
+      [tableKey]="'FIN53010_step_ap'" (insert)="onInsertStepApRow()"
       (dataChange)="onStepAPDataChange($event)"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
@@ -154,28 +154,8 @@
 
 @if ((isFormCreateable || isFormEditable) && currentStep() === 5) {
 <div class="card">
-  <p-panel header="銷項發票" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepSalesRows()"
-      [columns]="stepSalesColumns" [tableKey]="'FIN53010_step_sales'" (dataChange)="onStepSalesDataChange($event)"
-      (fieldChange)="onStepSalesInvoiceFieldChange($event)"></app-table-edit>
-    <div class="flex justify-content-between mt-3">
-      <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
-        (click)="goPrevStep()"></app-button>
-      @if (canGoNext()) {
-      <app-button btnType="next" label="下一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
-        (click)="goNextStep()"></app-button>
-      } @else {
-      <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
-      }
-    </div>
-  </p-panel>
-</div>
-}
-
-@if ((isFormCreateable || isFormEditable) && currentStep() === 6) {
-<div class="card">
   <p-panel header="進項發票" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
+    <app-table-edit #purchaseTableEdit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
       [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'"
       (dataChange)="onStepPurchaseDataChange($event)"
       (fieldChange)="onStepPurchaseInvoiceFieldChange($event)"></app-table-edit>
@@ -193,10 +173,30 @@
 </div>
 }
 
+@if ((isFormCreateable || isFormEditable) && currentStep() === 6) {
+<div class="card">
+  <p-panel header="銷項發票" class="line-height-3 m-0">
+    <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepSalesRows()"
+      [columns]="stepSalesColumns" [tableKey]="'FIN53010_step_sales'" (dataChange)="onStepSalesDataChange($event)"
+      (fieldChange)="onStepSalesInvoiceFieldChange($event)"></app-table-edit>
+    <div class="flex justify-content-between mt-3">
+      <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goPrevStep()"></app-button>
+      @if (canGoNext()) {
+      <app-button btnType="next" label="下一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
+        (click)="goNextStep()"></app-button>
+      } @else {
+      <app-button btnType="submit" [loading]="loading" (clickEvent)="onSubmit()"></app-button>
+      }
+    </div>
+  </p-panel>
+</div>
+}
+
 @if ((isFormCreateable || isFormEditable) && currentStep() === 7) {
 <div class="card">
   <p-panel header="銀行存款" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepBankRows()"
+    <app-table-edit #bankTableEdit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepBankRows()"
       [columns]="stepBankColumns" [tableKey]="'FIN53010_step_bank'"
       (dataChange)="onStepBankDataChange($event)"></app-table-edit>
     <div class="flex justify-content-between mt-3">
@@ -280,7 +280,8 @@
 </div>
 }
 
-<ng-template #venUsrTemplate let-rowData let-col="col" let-overlayPanel="overlayPanel">
+<ng-template #venUsrTemplate let-rowData let-col="col" let-overlayPanel="overlayPanel" let-index="index"
+  let-onValueChange="onValueChange">
   <div class="col-12">
     <div class="flex justify-content-between align-items-center mb-3">
       <h6 class="mb-0">選擇廠商/員工</h6>
@@ -307,7 +308,7 @@
         </ng-template>
         <ng-template pTemplate="body" let-item>
           <tr class="cursor-pointer hover:surface-hover"
-            (click)="selectTemplateItem(rowData, item); overlayPanel.hide()">
+            (click)="selectTemplateItem(rowData, item); onValueChange(rowData, rowData.DetailNo, col, index); overlayPanel.hide()">
             <td>{{ item.value }}</td>
             <td>{{ item.label }}</td>
           </tr>
@@ -321,8 +322,10 @@
     </div>
 
     <div class="flex justify-content-end gap-2 mt-3 pt-2 border-top-1 surface-border">
+      <app-button [btnType]="'textclear'"
+        (click)="clearVenUsr(rowData); onValueChange(rowData, rowData.DetailNo, col, index); overlayPanel.hide()"></app-button>
       <button pButton label="取消" class="p-button-text" (click)="overlayPanel.hide()"></button>
-      <button pButton label="清除" class="p-button-outlined" (click)="templateSearchTerm = ''"></button>
+      <button pButton label="清除查詢" class="p-button-outlined" (click)="templateSearchTerm = ''"></button>
     </div>
   </div>
 </ng-template>

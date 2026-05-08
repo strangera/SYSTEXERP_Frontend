@@ -59,6 +59,7 @@ export interface Tls55020MasterData {
   GUI_Track: string;
   TXN_GUIBegNo: string;
   TXN_GUIEndNo: string;
+  TXN_TotGUI: number;
   TXN_CustCnt: number;
   TXN_MemCard: string;
   TXN_Uniform: string;
@@ -73,6 +74,7 @@ export interface Tls55020MasterData {
   ORG_ECR_No: string;
   TXN_Ret_No: string;
   tlt_term_type: string;
+  CanEdit: boolean;
 }
 
 /** 商品明細資料 */
@@ -98,7 +100,8 @@ export interface ProductDetail {
   Contract_No: string;
   Contract_SubNo: string;
 
-  isEditable?: boolean; // 新增這行，用來標記是否允許修改
+  isQtyDiscEditable?: boolean; // 控制數量與折扣是否可編輯
+  isEditable?: boolean; // 用來標記是否允許修改
 }
 
 /** 支付明細資料 */

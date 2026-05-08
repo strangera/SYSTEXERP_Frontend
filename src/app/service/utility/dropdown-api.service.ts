@@ -2,10 +2,10 @@ import { AuthService } from './../system/auth.service';
 // !!! 新版下拉方法
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { Observable, of } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
-import { environment } from 'src/environments/environment';
+import { environment } from '../../../environments/environment';
+import { ApiResponse } from '../../shared/utils/rxjs-operators/validate-api-response';
 import {
   Aps1001ComboItem,
   Aps1001ComboQuery,
@@ -31,6 +31,8 @@ import {
   FaClass2Query,
   FaClassMItem,
   FaClassMQuery,
+  FaHosItem,
+  FasItemDropdownItem,
   FaSitemItem,
   FaSitemQuery,
   GLS1005AccSubCodeItem,
@@ -53,14 +55,17 @@ import {
   Pos20031Item,
   Pos20031Query,
   Pos20032Query,
+  Pos2004ExtendedItem,
   Pos2004Item,
   Pos2004LogoItem,
   Pos2004LogoQuery,
   Pos2004Query,
+  Pos2004SearchKey,
   Pos2004WithBrandItem,
   Pos2013Item,
   Pos2013LogoRequest,
   Pos2013Query,
+  Pos2064MpcsNoDropDownItem,
   queryPOS1002_DropDownListItem,
   Sys1000Query,
   Sys5000SubModuleItem,
@@ -272,6 +277,16 @@ export class DropdownApiService {
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
+  /** 查詢倉別(FAHOS)資料表下拉選單 - 回傳 WH_ID / WH_NAME */
+  queryFaHos(body: object = {}): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FaHosItem, object>(
+      '/queryFAHOS_DropDownList',
+      'WH_ID',
+      'WH_NAME',
+      body,
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
   /**
    * 查詢品項(FASITEM)下拉 — 預設 MATERIAL_TYPE=3（列管耗材）；回傳 GOODS_ID / GOODS_NAME
    */
@@ -353,8 +368,8 @@ export class DropdownApiService {
   }
 
   /** 查詢會計科目設定檔(GLS1005) (只取 支存、活存、定存) */
-  queryGls1005For1103(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryGLS1005For1103_DropDownList').pipe(
+  queryGls1005For1103(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryGLS1005For1103_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -374,8 +389,8 @@ export class DropdownApiService {
   }
 
   /** 查詢會計科目設定檔(GLS1005) (只取 應付票據科目) */
-  queryGls1005_BNK_CheckOutAcc(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryGls1005_BNK_CheckOutAcc').pipe(
+  queryGls1005_BNK_CheckOutAcc(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryGls1005_BNK_CheckOutAcc', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -745,6 +760,13 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢商品資料(POS2004) (依照專櫃編號TLT_No查詢) */
+  queryPOS2004_BySearchKey(body: Pos2004SearchKey): Observable<Pos2004ExtendedItem[] | null> {
+    return this.queryDropdownWithParams<Pos2004ExtendedItem, Pos2004SearchKey>('/queryPOS2004_BySearchKey', body).pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
   /** * 查詢商品資料(POS2004 By Talent)
  * 依照專櫃編號連動品牌，查詢該品牌下的所有商品
  */
@@ -874,9 +896,30 @@ export class DropdownApiService {
     );
   }
 
+  /** 查詢零用金單號（FIN70000 / POS2064MPCS_NoDropDownList） */
+  queryPOS2064MPCS_NoDropDownList(): Observable<Option[] | null> {
+    return this.queryDropdown<Pos2064MpcsNoDropDownItem>('/FIN0000/FIN70000/POS2064MPCS_NoDropDownList').pipe(
+      map(items => {
+        if (!items) return null;
+        return items
+          .map(item => {
+            const pcsNo = String(item.PCS_No ?? '').trim();
+            if (!pcsNo) return null;
+            return {
+              ...item,
+              value: pcsNo,
+              label: pcsNo,
+            };
+          })
+          .filter((x): x is Option => x !== null);
+      }),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
   /** 查詢銀行+分行資料表(APS1001 JOIN APS1004) */
-  queryAps1001(body: Aps1001Query): Observable<Aps1001Item[] | null> {
-    return this.queryDropdownWithParams<Aps1001Item, Aps1001Query>('/queryAPS1001_DropDownList', body).pipe(
+  queryAps1001(body: Aps1001Query): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Aps1001Item, Aps1001Query>('/queryAPS1001_DropDownList', 'No', 'Name', body).pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -901,6 +944,19 @@ export class DropdownApiService {
       '/ASS0000/ASS1000/queryASS11040_DropDownList',
       'No',
       'Name'
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
+  }
+
+  /**
+   * queryFASITEM_DropDownList（固定 MATERIAL_TYPE=3，耗材品項）。
+   * 回傳列：RowNo、GOODS_ID、GOODS_NAME → 下拉 value/label 使用 GOODS_ID、GOODS_NAME。
+   */
+  queryFasItemDropDownList(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<FasItemDropdownItem>(
+      '/queryFASITEM_DropDownList',
+      'GOODS_ID',
+      'GOODS_NAME',
+      { MATERIAL_TYPE: '3' }
     ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
   /** 查詢子模組代碼(SYS5000) */
@@ -933,9 +989,9 @@ export class DropdownApiService {
             value: item.No
           });
           return acc;
-        }, {} as Record<string, any>);
+        }, {} as Record<string, Option & { items: Option[] }>);
 
-        return Object.values(grouped);
+        return Object.values(grouped) as Option[];
       }),
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );

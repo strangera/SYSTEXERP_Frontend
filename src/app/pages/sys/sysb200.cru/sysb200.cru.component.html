@@ -1,7 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="back" (click)="onCancel()"></app-button>
+    <app-button btnType="back" (click)="goBack()"></app-button>
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
@@ -104,7 +104,7 @@
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="付款期限" controlName="VEN_PayConditionDay"
+          <app-input-number label="付款天數" controlName="VEN_PayConditionDay"
             [control]="dataForm.controls.VEN_PayConditionDay" [submitted]="submitted" [min]="0"></app-input-number>
         </div>
       </div>

@@ -1,6 +1,9 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button label="只列印盤點差異.PDF" icon="pi pi-print" styleClass="p-button-warning p-button-sm" (click)="onPrintDiff()"
+      [loading]="btnLoading">
+    </app-button>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
@@ -39,13 +42,23 @@
             optionValue="value"></app-dropdown>
         </div>
       </div>
-
       <!-- 明細資料表 -->
       <div class="col-12">
-        <app-table-edit tableKey="TLS53030Detail" [columns]="detailColumns" [data]="detailData"
+        <app-table-edit tableKey="TLS53030Detail" [columns]="detailColumns" [data]="filteredDetailData"
           (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" [tableRequired]="true"
           [disabled]="isFormReadable" [showInsert]="false" [showDelete]="false" [showCheckBox]="false"
-          [canInsert]="false" [loading]="detailLoading" [showPaginator]="true" />
+          [canInsert]="false" [loading]="detailLoading" [showPaginator]="true">
+
+          <div class="col-12 flex justify-content-end mb-2">
+            <p-selectButton [options]="filterOptions" [ngModel]="filterMode" optionLabel="label" optionValue="value"
+              [ngModelOptions]="{standalone: true}" (onChange)="onFilterChange($event)" [disabled]="detailLoading">
+              <ng-template let-item pTemplate="item">
+                <i [class]="item.icon" class="mr-2"></i>
+                <span>{{ item.label }} ({{ item.value === 'ALL' ? totalCount : diffCount }})</span>
+              </ng-template>
+            </p-selectButton>
+          </div>
+        </app-table-edit>
       </div>
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

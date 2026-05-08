@@ -128,6 +128,7 @@ function mapStepPurchaseToInsert2002(
   const ven = deps.getVendorOption(row.vendor_tax_id);
   const voucherType = String(row.voucher_type ?? '').trim();
   const purComb = (voucherType === '26' || voucherType === '27') ? 'A' : undefined;
+  const purVenUniform = row.vendor_tax_id?.slice(0, 8);
   return {
     PUR_GUINo: purGuino,
     PUR_VoucherType: row.voucher_type,
@@ -135,11 +136,11 @@ function mapStepPurchaseToInsert2002(
     PUR_GUIDate: toYmd(row.invoice_date ?? undefined, deps.datePipe),
     PUR_VenNo: row.vendor_tax_id,
     PUR_VenName: vendorDisplayName(ven),
-    PUR_VenUniform: ven?.['VEN_Uniform'] != null ? String(ven['VEN_Uniform']) : row.vendor_tax_id,
+    PUR_VenUniform: purVenUniform,
     PUR_Net: row.net_amount,
     PUR_Tax: row.tax_amount,
     PUR_Amt: row.invoice_amount,
-    PUR_Uniform: row.vendor_tax_id,
+    // PUR_Uniform: row.vendor_tax_id,
     PUR_TaxType: row.tax_type,
     PUR_DiscNo: row.deduction_code,
     PUR_RepYYYYMM: toYyyyMm(row.declare_ym ?? undefined, deps.datePipe),
@@ -159,6 +160,7 @@ function mapStepBankToInsert4002(row: FIN53010StepBankDeposit, deps: Fin53010Pay
     VEN_No: row.ven_no,
     Remark: row.note_desc,
     Source_Date: toYmd(row.txn_date ?? undefined, deps.datePipe),
+    Status: row.status,
   };
 }
 
@@ -181,11 +183,11 @@ function buildInsertNext(
         ? stepAR.map(r => mapStepArToInsert(r, deps))
         : [],
     insertAPS4023Datas:
-      activeSteps.includes(5) && stepSales.length
+      activeSteps.includes(6) && stepSales.length
         ? stepSales.map(r => mapStepSalesToInsert4023(r))
         : [],
     insertAPS2002Datas:
-      activeSteps.includes(6) && stepPurchase.length
+      activeSteps.includes(5) && stepPurchase.length
         ? stepPurchase.map((r, i) => mapStepPurchaseToInsert2002(r, i, deps))
         : [],
     insertAPS4002Datas:
@@ -301,19 +303,18 @@ function buildUpdateNext(
   stepBank: FIN53010StepBankDeposit[],
   deps: Fin53010PayloadDepsWithVou,
 ): UpdateFIN53010DetailDataNextBody | null {
+  /** 後端契約：updateAPS3001Datas／updateARS3001Datas 為陣列；無 id 或省略 id 視為子檔新增（依 API 實作為準）。 */
   const next: UpdateFIN53010DetailDataNextBody = {};
   if (activeSteps.includes(3) && stepAP.length) {
-    const r = stepAP[0];
-    next.updateAPS3001Datas = [mapStepApToUpdate(r, deps, r.id)];
+    next.updateAPS3001Datas = stepAP.map(r => mapStepApToUpdate(r, deps, r.id));
   }
   if (activeSteps.includes(4) && stepAR.length) {
-    const r = stepAR[0];
-    next.updateARS3001Datas = [mapStepArToUpdate(r, deps, r.id)];
+    next.updateARS3001Datas = stepAR.map(r => mapStepArToUpdate(r, deps, r.id));
   }
-  if (activeSteps.includes(5) && stepSales.length) {
+  if (activeSteps.includes(6) && stepSales.length) {
     next.updateAPS4023Datas = stepSales.map(r => mapStepSalesToUpdate4023(r));
   }
-  if (activeSteps.includes(6) && stepPurchase.length) {
+  if (activeSteps.includes(5) && stepPurchase.length) {
     next.updateAPS2002Datas = stepPurchase.map((r, i) => mapStepPurchaseToUpdate2002(r, i, deps, r.id));
   }
   if (activeSteps.includes(7) && stepBank.length) {
@@ -342,7 +343,7 @@ function buildUpdateDetails(
     const accAmt = (AccAmtD ?? 0) + (AccAmtC ?? 0);
     const accDc = AccAmtD ? 'D' : AccAmtC ? 'C' : '';
     const ser = typeof rest.SerNo === 'number' ? rest.SerNo : index + 1;
-    const pta = rest.recKey != null ? String(rest.recKey) : undefined;
+    const pta = rest.PTA != null ? String(rest.PTA) : undefined;
     const id = typeof rest.id === 'number' ? rest.id : undefined;
     const body: UpdateFIN53010DetailBody = {
       id,

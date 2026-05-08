@@ -14,8 +14,8 @@
             [submitted]="submitted" [options]="TLTTALENT_DropDownList | async" optionLabel="label" optionValue="No" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機號/名稱" [control]="queryForm.controls.ECR_NoList"
             [submitted]="submitted" [options]="ECR_NoOptions | async" optionLabel="label" optionValue="No" />
-          <app-input-number class="col-12 md:col-6 lg:col-4" label="金額" controlName="ACT_PayAmt"
-            [control]="queryForm.controls.ACT_PayAmt" [submitted]="submitted" [max]="99999999"
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="金額" controlName="TSDP_DepositAmt"
+            [control]="queryForm.controls.TSDP_DepositAmt" [submitted]="submitted" [max]="99999999"
             [maxFractionDigits]="4"></app-input-number>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -27,7 +27,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" [editDisabled]="editDisabled"
+  <app-table-report dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" [editDisabled]="editDisabled"
     (detail)="onDetail($event)" [totalRecords]="totalRecords" [loading]="loading" [isRowSelectable]="isRowSelectable"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
     [showCheckBox]="true" [lastQueryBody]="lastQueryBody"

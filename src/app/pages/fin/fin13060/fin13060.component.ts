@@ -16,7 +16,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { FIN13050Service } from '@service/api/fin/fin13050.service';

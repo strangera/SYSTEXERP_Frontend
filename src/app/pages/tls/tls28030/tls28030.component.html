@@ -1,131 +1,54 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-                    <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-                </div> -->
+  <div class="flex align-items-center gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
-  <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
-        <div class="col-12 md:col-6 lg:col-2">
-          <app-calendar-range
-            calendarType="dateRange"
-            label="入帳日"
-            [startControl]="queryForm.controls.startAccountDate"
-            [endControl]="queryForm.controls.endAccountDate"
-            [submitted]="submitted"
-          ></app-calendar-range>
-        </div>
-        <div class="col-12 md:col-6 lg:col-3">
-          <app-calendar-range
-            calendarType="dateRange"
-            label="繳袋日期"
-            [startControl]="queryForm.controls.startPaymentDate"
-            [endControl]="queryForm.controls.endPaymentDate"
-            [submitted]="submitted"
-          ></app-calendar-range>
-        </div>
 
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="袋子條碼"
-              controlName="bagBarcode"
-              [control]="queryForm.controls.bagBarcode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-calendar-range label="入帳日" [startControl]="queryForm.controls.TXN_Date_S"
+              [endControl]="queryForm.controls.TXN_Date_E" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="收銀機號"
-              controlName="cashierCode"
-              [control]="queryForm.controls.cashierCode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-calendar-range label="繳袋日期" [startControl]="queryForm.controls.MOD_Date_S"
+              [endControl]="queryForm.controls.MOD_Date_E" [submitted]="submitted"></app-calendar-range>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="專櫃編號"
-              controlName="counterCode"
-              [control]="queryForm.controls.counterCode"
-              [submitted]="submitted"
-            ></app-input-text>
+
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No" optionLabel="label"
+            optionValue="value" [options]="ECR_NoOptions$ | async" [control]="queryForm.controls.ECR_No"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="TLT_No" optionLabel="label"
+            optionValue="value" [options]="TLT_NoOptions$ | async" [control]="queryForm.controls.TLT_No"></app-dropdown>
+
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="館別" [options]="buildingOptions$ | async"
+            optionLabel="Name" optionValue="No" controlName="ECR_Group"
+            [control]="queryForm.controls.ECR_Group"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="樓層" [options]="floorOptions$ | async" optionLabel="Name"
+            optionValue="No" controlName="ECR_LocNo" [control]="queryForm.controls.ECR_LocNo"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="機台屬性" [options]="machineTypeOptions" optionLabel="label"
+            optionValue="value" controlName="ECR_Type" [control]="queryForm.controls.ECR_Type"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="狀態" [options]="statusOptions" optionLabel="label"
+            optionValue="value" controlName="Check_Status" [control]="queryForm.controls.Check_Status"></app-dropdown>
+
+          <div class="col-12 md:col-6 lg:col-4 flex align-items-center gap-2">
+            <p-checkbox label="只顯示虛擬機台" [binary]="true" formControlName="IsVirtualOnly"></p-checkbox>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <label>只顯示虛擬機台</label>
-            <p-checkbox
-              label="是"
-              controlName="showVirtualMachine"
-            ></p-checkbox>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="樓層"
-              controlName="floor"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.floor"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="機台屬性"
-              controlName="machineAttribute"
-              [options]="machineAttributeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.machineAttribute"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="狀態"
-              controlName="status"
-              [options]="statusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.status"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
 
-<!-- <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
-</div> -->
+<div class="card">
+  <app-table-report apiUrl="queryTLS28030" tableKey="tls28030" [data]="data" [columns]="columns"
+    [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false" [showManage]="false" [lazy]="false"
+    [lastQueryBody]="lastQueryBody" [queryFunction]="tls28030Service.queryTLS28030.bind(tls28030Service)">
+  </app-table-report>
+</div>

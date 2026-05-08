@@ -57,7 +57,7 @@ export type FIN53010DataDetail = Omit<BaseQueryResponse<QueryFIN53010Detail>, 'D
  * ORG_ID: 組織編號
  * SerNo: 顯示用序號，10 為單位遞增
  * SubDetailNo: 對象編號
- * clearingCode: 立沖代號
+ * PTA: 立沖代號
  * id: 明細檔流水號
  * index: 索引
  */
@@ -80,7 +80,7 @@ export interface FIN53010Detail {
  * AccName: 科目名稱
  * DetailName: 廠商/員工名稱
  * ReflNo: 參考編號
- * clearingCode: 立沖代號
+ * PTA: 立沖代號
  * recKey: 對帳KEY值
  */
 export interface FIN53010DetailTable extends FIN53010Detail {
@@ -89,7 +89,7 @@ export interface FIN53010DetailTable extends FIN53010Detail {
   AccCName?: string;
   DetailName?: string;
   ReflNo?: string;
-  clearingCode?: string;
+  PTA?: string;
   recKey?: number;
 }
 
@@ -159,7 +159,7 @@ export interface InsertAPS2002DataBody {
   PUR_Net?: number;
   PUR_Tax?: number;
   PUR_Amt?: number;
-  PUR_Uniform?: string | null;
+  // PUR_Uniform?: string | null;
   PUR_TaxType?: string | null;
   PUR_DiscNo?: string | null;
   PUR_RepYYYYMM?: string | null;
@@ -196,6 +196,7 @@ export interface InsertAPS4002DataBody {
   VEN_No?: string | null;
   Remark?: string | null;
   Source_Date?: string | null;
+  Status?: string | null;
 }
 
 /** Swagger insertFIN53010DetailData_NextRequest（五陣列一律送出，無資料為 []） */
@@ -225,6 +226,7 @@ export interface InsertFIN53010Request {
 export interface InsertFIN53010ResponseItem {
   gls3002_id?: number;
   DetailCount?: number;
+  VouNo?: string | null;
 }
 
 /** Swagger UpdateFIN53010Detail */
@@ -438,6 +440,17 @@ export interface Gls1005Fin53010DropdownItem {
 export interface QueryAps4023DetailDataByInvoiceNumberRequest {
   InvoiceNumber?: string | null;
 }
+
+/** getCalculatedPayDate Request */
+export interface GetCalculatedPayDateRequest {
+  VenNo?: string | null;
+  _Date?: string | null;
+}
+
+/** getCalculatedPayDate Response */
+export type GetCalculatedPayDateResult = Omit<BaseQueryResponse<string | null>, 'Data'> & {
+  Data: string | null;
+};
 
 /** queryAPS4023DetatilData_ByInvoiceNumber 200 Data（發票主檔） */
 export interface Aps4023DetailDataByInvoiceNumberData {
@@ -792,6 +805,8 @@ export type FIN53010DetailDataByVouNoForUpdateResult = Omit<BaseQueryResponse<Qu
 export interface FIN53010StepAP {
   /** 更新 APS3001 時帶入 */
   id?: number;
+  /** 顯示用序號（10 為單位遞增），不送 API */
+  SerNo?: number;
   org_id?: string;
   ven_no?: string;
   ven_pay_type?: string;
@@ -810,6 +825,8 @@ export interface FIN53010StepAP {
 export interface FIN53010StepAR {
   /** 更新 ARS3001 時帶入 */
   id?: number;
+  /** 顯示用序號（10 為單位遞增），不送 API */
+  SerNo?: number;
   org_id?: string;
   ven_no?: string;
   ars_amt?: number;
@@ -819,11 +836,12 @@ export interface FIN53010StepAR {
   note_desc?: string;
 }
 
-/** FIN53010 新增多步驟：銷項發票（Voucher_Type=5）單列 */
+/** FIN53010 新增多步驟：銷項發票（Voucher_Type=6）單列 */
 export interface FIN53010StepSalesInvoiceRow {
   /** APS4023 主檔 ID（insert／update APS4023Data 用） */
   id?: number;
-  add_flag?: boolean;
+  /** 顯示用序號（10 為單位遞增），不送 API */
+  SerNo?: number;
   invoice_type?: string;
   invoice_prefix?: string;
   invoice_no?: string;
@@ -839,11 +857,12 @@ export interface FIN53010StepSalesInvoiceRow {
   asset_flag?: string;
 }
 
-/** FIN53010 新增多步驟：進項發票（Voucher_Type=6）單列 */
+/** FIN53010 新增多步驟：進項發票（Voucher_Type=5）單列 */
 export interface FIN53010StepPurchaseInvoiceRow {
   /** 更新 APS2002 時帶入 */
   id?: number;
-  add_flag?: boolean;
+  /** 顯示用序號（10 為單位遞增），不送 API */
+  SerNo?: number;
   voucher_type?: string;
   track_no?: string;
   invoice_no?: string;
@@ -865,10 +884,13 @@ export interface FIN53010StepPurchaseInvoiceRow {
 export interface FIN53010StepBankDeposit {
   /** 更新 APS4002 時帶入 */
   id?: number;
+  /** 顯示用序號（10 為單位遞增），不送 API */
+  SerNo?: number;
   ven_no?: string;
   bank_no?: string;
   deposit_amt?: number;
   withdraw_amt?: number;
+  status?: string;
   note_desc?: string;
   txn_date?: Date | null;
 }

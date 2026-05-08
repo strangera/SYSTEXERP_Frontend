@@ -112,6 +112,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     this.refreshPageDisplay();// 初次重繪畫面樣式
     // 編輯 / 檢視 模式查 API (保留你原本這段)
     if (!this.isFormCreateable && this.rowdata && this.rowdata?.USR_Level) {
+      this.dataForm.controls.USR_Level.disable({ emitEvent: false });
       this.tls42010Service.queryTLS42010_Detail({ USR_Level: [this.rowdata.USR_Level] }).subscribe(res => {
         this.rawDetailData = res?.Data ?? [];
         this.applyDetail(this.rawDetailData);
@@ -444,7 +445,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           return Tls42010Mapper.toBackend(
             k,
             idx + 1,
-            frm.value,
+            frm.getRawValue(),
             this.crudstatus,
             this.rowdata,
             baseSize, // 這裡傳入的是「單格」的基礎寬高
@@ -464,10 +465,10 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       // 4. 發送請求
       const payload = {
         ID: this.isFormCreateable ? undefined : this.rowdata?.id,
-        ECR_KBType: frm.value.ECR_KBType,
-        USR_Level: frm.value.USR_Level,
-        ECR_KBDesc: frm.value.ECR_KBDesc,
-        TSB_Name: frm.value.TSB_Name,
+        ECR_KBType: frm.getRawValue().ECR_KBType,
+        USR_Level: frm.getRawValue().USR_Level,
+        ECR_KBDesc: frm.getRawValue().ECR_KBDesc,
+        TSB_Name: frm.getRawValue().TSB_Name,
         POS1004: detailList,
         POS1004Disc: detailList
       };

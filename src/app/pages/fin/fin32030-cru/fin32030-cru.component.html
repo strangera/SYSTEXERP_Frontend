@@ -108,8 +108,8 @@
         label="票據總金額"
         [control]="billTotalAmountControl"
         [readonly]="true"
-        [minFractionDigits]="2"
-        [maxFractionDigits]="2"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="0"
       />
     </div>
 
@@ -371,8 +371,8 @@
     <app-dropdown
       class="col-12 md:col-4"
       label="廠商代號/名稱"
-      controlName="VEN_Uniform"
-      [control]="abatAcctFilterForm.controls.VEN_Uniform"
+      controlName="VEN_No"
+      [control]="abatAcctFilterForm.controls.VEN_No"
       [options]="abatAcctVendorOptions"
       optionLabel="label"
       optionValue="value"
@@ -393,7 +393,7 @@
   <app-table
     #abatAcctDialogTable
     tableKey="AbatAcctQuery"
-    dataKey="PTA"
+    dataKey="RowNum"
     [data]="abatAcctDialogData"
     [columns]="abatAcctDialogColumns"
     [loading]="abatAcctDialogLoading"

@@ -1,0 +1,75 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="部門代號"
+            controlName="Org_ID"
+            [control]="dataForm.controls.Org_ID"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="部門名稱"
+            controlName="Org_Name"
+            [control]="dataForm.controls.Org_Name"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="年度"
+            controlName="Budget_Year"
+            [control]="dataForm.controls.Budget_Year"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="版本"
+            controlName="Budget_Version"
+            [control]="dataForm.controls.Budget_Version"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="審核狀態"
+            controlName="Audit_Status_NM"
+            [control]="dataForm.controls.Audit_Status_NM"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+
+      @if (showAuditButtons) {
+        <div
+          class="flex flex-wrap justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
+        >
+          <app-button
+            label="審核"
+            icon="pi pi-check-circle"
+            [loading]="loading"
+            [disabled]="false"
+            (clickEvent)="onApprove()"
+          ></app-button>
+          <app-button
+            label="反審核"
+            icon="pi pi-undo"
+            severity="danger"
+            [loading]="loading"
+            [disabled]="false"
+            (clickEvent)="onAntiApprove()"
+          ></app-button>
+        </div>
+      }
+    </form>
+  </p-panel>
+</div>

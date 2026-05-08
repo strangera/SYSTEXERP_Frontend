@@ -328,7 +328,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
       // 會員卡
       vip_yn: ['N'],
-      credit_card: [0],
+      credit_card: [null],
 
       // 目標營業額
       total_amt: [null],
@@ -1229,11 +1229,11 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
 
         const successMessage = [
           `異動訊息:${isInsert ? '新增成功' : '修改成功'}`,
-          `招募編號為:${formData.apply_no || response.applyNo || ''}`,
-          `版本編號為:${formData.contract_subno || ''}`,
-          `專櫃編號為:${formData.tlt_no || response.tltNo || ''}`,
-          `廠商編號:${formData.ven_uniform || ''}`,
-          `品牌(專櫃名稱):${formData.tlt_name || ''}`
+          `招商編號：${formData.apply_no || response.applyNo || ''}`,
+          `版本編號：${formData.contract_subno || ''}`,
+          `專櫃編號：${formData.tlt_no || response.tltNo || ''}`,
+          `廠商編號：${formData.ven_uniform || ''}`,
+          `品牌（專櫃名稱）：${formData.tlt_name || ''}`
         ].join('\n');
 
         // 新增契約時刷新使用者資料權限，否則看不到剛新增的資料

@@ -12,28 +12,36 @@ import { CellInput } from './table-edit-cell.model'; // 假設路徑正確
   selector: 'app-percent-cell',
   host: { 'table-edit-id': '複製時請自行取唯一名' },
   template: `
-    <p-iconField iconPosition="right">
-      <div class="flex align-items-center gap-1">
-        <input pInputText class="min-w-max" [placeholder]="isDisabled() ? '' :'請輸入' + cellInput.col.header"
-               [(ngModel)]="cellInput.rowData[cellInput.col.field]"
-               [ngModelOptions]="{ standalone: true }"
-               [disabled]="isDisabled()"
-               (ngModelChange)="cellInput.onValueChange(cellInput.rowData, $event, cellInput.col, cellInput.index)"
-               [maxlength]="3 + (cellInput.col.maxFractionDigits ?? 0)"
-               [style]="{'width': cellInput.col.width, 'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available' }"
-               [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
-               [pKeyFilter]="percentKeyFilter"
-               (blur)="handleBlur()"(keydown.enter)="handleEnter($event)"
-               [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }" />
-        <span class="d-block">%</span>
-      </div>
+<p-iconField iconPosition="right">
+  <div class="flex align-items-center gap-1" [style.width]="cellInput.col.width">
+    <input
+      pInputText
+      class="w-full"
+      [placeholder]="isDisabled() ? '' : '請輸入' + cellInput.col.header"
+      [(ngModel)]="cellInput.rowData[cellInput.col.field]"
+      [ngModelOptions]="{ standalone: true }"
+      [disabled]="isDisabled()"
+      (ngModelChange)="cellInput.onValueChange(cellInput.rowData, $event, cellInput.col, cellInput.index)"
+      [maxlength]="3 + (cellInput.col.maxFractionDigits ?? 0)"
+      [style]="{
+        'width': '100%',
+        'text-align': cellInput.col.textAlign || 'right'
+      }"
+      [variant]="cellInput.rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
+      [pKeyFilter]="percentKeyFilter"
+      (blur)="handleBlur()"
+      (keydown.enter)="handleEnter($event)"
+      [ngClass]="{'ng-invalid ng-dirty': cellInput.rowData._validationErrors?.[cellInput.col.field] }" />
 
-      <p-inputIcon *ngIf="cellInput.rowData._validationErrors?.[cellInput.col.field]"
-                   styleClass="pi pi-exclamation-circle text-red-500"
-                   [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
-                   tooltipPosition="bottom" />
-    </p-iconField>
-  `,
+    <span class="flex-none">%</span>
+  </div>
+
+  <p-inputIcon *ngIf="cellInput.rowData._validationErrors?.[cellInput.col.field]"
+               styleClass="pi pi-exclamation-circle text-red-500"
+               [pTooltip]="cellInput.rowData._validationErrors?.[cellInput.col.field]"
+               tooltipPosition="bottom" />
+</p-iconField>
+`,
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [

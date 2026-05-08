@@ -11,19 +11,19 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
 import { ValidationService } from '@shared/service/validation.service';
+import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
 
 // UI
+import { NgIf } from '@angular/common';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
-import { NgIf } from '@angular/common';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 type RuleError = {
   /** 哪一個欄位出錯（用來 setErrors / markAsTouched） */
@@ -275,9 +275,9 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
           const remaining =
             this.originalRemainingAmt !== null &&
-            !isNaN(this.originalRemainingAmt) &&
-            currentTotal !== null &&
-            !isNaN(currentTotal)
+              !isNaN(this.originalRemainingAmt) &&
+              currentTotal !== null &&
+              !isNaN(currentTotal)
               ? this.roundToInt(this.originalRemainingAmt - currentTotal)
               : this.originalRemainingAmt;
 

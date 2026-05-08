@@ -12,7 +12,7 @@ import { InputTextRangeComponent } from '../../../shared/componentkit/input-text
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 // 本期發票月
 const today = new Date();
 let invoiceYear = today.getFullYear();

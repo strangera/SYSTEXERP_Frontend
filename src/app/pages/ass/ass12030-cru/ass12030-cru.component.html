@@ -46,7 +46,7 @@
           <app-dropdown
             label="部門代號"
             controlName="ORG_ID"
-            [options]="orgIdOptions"
+            [options]="orgIdOptions | async"
             optionLabel="label"
             optionValue="value"
             [control]="dataForm.controls.ORG_ID"
@@ -99,7 +99,7 @@
         (insert)="onTableInsert()"
         [tableRequired]="true"
         [disabled]="isFormReadable"
-        [showInsert]="!isFormReadable"
+        [showInsert]="false"
         [showDelete]="!isFormReadable"
         [canInsert]="true"
       ></app-table-edit>
@@ -154,7 +154,7 @@
         [showDelete]="false"
         [showCheckBox]="true"
         [selectionMode]="'single'"
-        dataKey="BATCH_NO"
+        dataKey="FAQuotationM_ID"
         [data]="applyPurchaseData"
         [columns]="applyPurchaseColumns"
         [selectedItems]="selectedPurchaseRow ? [selectedPurchaseRow] : []"

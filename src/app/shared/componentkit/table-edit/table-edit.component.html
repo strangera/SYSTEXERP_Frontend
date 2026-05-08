@@ -23,7 +23,7 @@
           pButton icon="pi pi-trash" severity="danger" class="p-button-text" [rounded]="true"
           [disabled]="selectedItems?.length <= 0" />
       </div>
-      <div class="flex-grow-1 p-2">
+      <div class="flex-grow-1 p-2 caption-center">
         <ng-content select="header"></ng-content>
       </div>
       <div class="flex gap-2 py-2">
@@ -97,9 +97,15 @@
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
         <th *ngIf="_tableData.length && showReorder" rowspan="2" class="w-1rem text-center"></th>
-        <th
-          [attr.colspan]="canInsert && !disabled &&_tableData.length > 0 &&_tableData[_tableData.length - 1]._isAutoInsertCandidate &&!showCheckBox ? 2: 1"
-          class="w-1rem text-center">
+        <th [attr.colspan]="
+            canInsert &&
+            !disabled &&
+            _tableData.length > 0 &&
+            _tableData[_tableData.length - 1]._isAutoInsertCandidate &&
+            !showCheckBox
+              ? 2
+              : 1
+          " class="w-1rem text-center">
           {{ serialName }}
         </th>
         <th *ngIf="showCheckBox && !disabled && data.length" class="w-1rem text-center">
@@ -119,7 +125,9 @@
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
     <tr [attr.data-key]="rowData[dataKey]" [pSelectableRowIndex]="rowIndex" [pSelectableRowDisabled]="
-        !isRowSelectable(rowData, rowIndex, _tableData) || disabled || !!rowEditDisabled(rowData)
+        !isRowSelectable(rowData, rowIndex, _tableData) ||
+        disabled ||
+        !!rowEditDisabled(rowData)
       " [pSelectableRow]="rowData" [pReorderableRow]="!rowData._isAutoInsertCandidate ? rowIndex : -1" [ngClass]="{
         'invalid-row': this.validationService.hasRowError(rowData),
         'insert-row': rowData._isAutoInsertCandidate,
@@ -131,46 +139,63 @@
             'text-blue-500': rowData._isAutoInsertCandidate,
           }"></span>
       </td>
-      <td class="text-center w-1rem"
-        [attr.colspan]="rowData._isAutoInsertCandidate && data.length && showCheckBox ? 2 : 1"
-        (click)="rowData._isAutoInsertCandidate ? focusFirstInput(rowIndex) : null"
-        [pTooltip]="rowData._rowValidationError?.errorMessage || ''" tooltipPosition="bottom">
-
+      <td class="text-center w-1rem" [attr.colspan]="
+          rowData._isAutoInsertCandidate && data.length && showCheckBox ? 2 : 1
+        " (click)="
+          rowData._isAutoInsertCandidate ? focusFirstInput(rowIndex) : null
+        " [pTooltip]="rowData._rowValidationError?.errorMessage || ''" tooltipPosition="bottom">
         <div class="flex align-items-center justify-content-center gap-1">
           <i [ngClass]="{
-    'pi': true,
-    'pi-exclamation-circle text-red-500': rowData._rowValidationError?.isValid === false && !rowData._isAutoInsertCandidate,
-    'pi-pencil text-400': rowData._isAutoInsertCandidate && !disabled
-  }">
-          </i>
+              pi: true,
+              'pi-exclamation-circle text-red-500':
+                rowData._rowValidationError?.isValid === false &&
+                !rowData._isAutoInsertCandidate,
+              'pi-pencil text-400': rowData._isAutoInsertCandidate && !disabled,
+            }"></i>
 
-          <span [ngClass]="{'text-400 italic': rowData._isAutoInsertCandidate}">
+          <span [ngClass]="{ 'text-400 italic': rowData._isAutoInsertCandidate }">
             {{
             rowData._isAutoInsertCandidate
-            ? (disabled ? "" : "點此填寫...")
-            : (rowData._rowValidationError?.isValid === false ? "" : rowIndex + 1)
+            ? disabled
+            ? ""
+            : "點此填寫..."
+            : rowData._rowValidationError?.isValid === false
+            ? ""
+            : rowIndex + 1
             }}
           </span>
         </div>
       </td>
       <td *ngIf="showCheckBox && !disabled && !rowData._isAutoInsertCandidate" class="w-1rem text-center">
         <p-tableCheckbox class="flex justify-content-center" [pSelectableRow]="rowData" [value]="rowData" [disabled]="
-            !isRowSelectable(rowData, rowIndex, _tableData) || disabled || !!rowEditDisabled(rowData)
+            !isRowSelectable(rowData, rowIndex, _tableData) ||
+            disabled ||
+            !!rowEditDisabled(rowData)
           " />
       </td>
       <td *ngFor="let col of columns; let colIndex = index" (click)="col.type ? $event.stopPropagation() : null"
-        (keydown)="onCellKeydown($event, rowIndex, colIndex)"
-        [style]="{ width: col.width, 'text-align': col.textAlign || 'center' }" [ngClass]="getTdClass(rowData, col)">
+        (keydown)="onCellKeydown($event, rowIndex, colIndex)" [style]="{
+        'width': col.width ? col.width : 'auto',
+        'min-width': col.minWidth ? col.minWidth : undefined,
+        'max-width': col.maxWidth ? col.maxWidth : undefined,
+        'text-align': col.textAlign || 'center'
+    }" [ngClass]="getTdClass(rowData, col)">
         <ng-container *ngIf="!col.hidden || !col.hidden(rowData, rowIndex)">
           <ng-container *ngIf="col.type === 'custom' && customCellTemp">
-            <ng-container
-              *ngTemplateOutlet="customCellTemp; context: { rowData: rowData, col: col, index: rowIndex }"></ng-container>
+            <ng-container *ngTemplateOutlet="
+                customCellTemp;
+                context: { rowData: rowData, col: col, index: rowIndex }
+              "></ng-container>
           </ng-container>
-          <ng-container *ngIf="col.type && col.type !== 'custom' && getEditComponent(col.type) as componentType">
+          <ng-container *ngIf="
+              col.type &&
+              col.type !== 'custom' &&
+              getEditComponent(col.type) as componentType
+            ">
             <ng-container *ngComponentOutlet="
-          componentType;
-          inputs: { cellInput: cellInputData(rowData, col, rowIndex) }
-        "></ng-container>
+                componentType;
+                inputs: { cellInput: cellInputData(rowData, col, rowIndex) }
+              "></ng-container>
           </ng-container>
           <span *ngIf="!col.type">
             {{
@@ -189,8 +214,9 @@
         <span class="font-bold">{{ footerSummaryLabel }}</span>
       </td>
       <ng-container *ngFor="let col of columns; let i = index">
-        <td *ngIf="i >= tableUtilityService.getFirstAggregateIndex(columns, footerData)"
-          [style]="{ 'text-align': col.textAlign || 'center' }">
+        <td *ngIf="
+            i >= tableUtilityService.getFirstAggregateIndex(columns, footerData)
+          " [style]="{ 'text-align': col.textAlign || 'center' }">
           <span class="font-bold">
             {{
             col.format
@@ -208,15 +234,20 @@
         <span class="font-bold">{{ footerSummaryLabel }}</span>
       </td>
       <ng-container *ngFor="let col of columns; let i = index">
-        <td *ngIf="i >= tableUtilityService.getFirstCalculatedAggregateIndex(columns, _calculatedFooterData)"
-          [style]="{ 'text-align': col.textAlign || 'center' }">
+        <td *ngIf="
+            i >=
+            tableUtilityService.getFirstCalculatedAggregateIndex(
+              columns,
+              _calculatedFooterData
+            )
+          " [style]="{ 'text-align': col.textAlign || 'center' }">
           <span class="font-bold">
             {{
             col.aggregate && _calculatedFooterData[col.field] !== undefined
-            ? (col.format
+            ? col.format
             ? col.format(_calculatedFooterData[col.field])
-            : _calculatedFooterData[col.field])
-            : ''
+            : _calculatedFooterData[col.field]
+            : ""
             }}
           </span>
         </td>
@@ -226,7 +257,11 @@
   <ng-template pTemplate="summary">
     <div class="flex align-items-center justify-content-end p-2">
       總筆數:
-      {{ _tableData.length - (canInsert && !disabled && _tableData.length > 0 ? 1 : 0) }} 筆
+      {{
+      _tableData.length -
+      (canInsert && !disabled && _tableData.length > 0 ? 1 : 0)
+      }}
+      筆
     </div>
   </ng-template>
   <ng-template pTemplate="emptymessage">

@@ -53,6 +53,7 @@
       [submitted]="submitted"
       (dataChange)="onStep1DataChange($event)"
       (renewalDataLoaded)="onRenewalDataLoaded($event)"
+      (openSearchDialog)="openContractSearchDialog()"
     ></app-step1-contract-info>
 
     <!-- Step 2: Deduction -->
@@ -122,6 +123,78 @@
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
   </div>
 </div>
+
+<!-- 合約查詢對話框（續約用） -->
+<app-dialog
+  [visible]="showContractSearchDialog"
+  (visibleChange)="showContractSearchDialog = $event"
+  header="查詢原合約"
+  width="1100px"
+  [showFooter]="false"
+>
+  <!-- 搜尋條件 -->
+  <form
+    [formGroup]="contractSearchForm"
+    (ngSubmit)="searchContracts()"
+    class="grid p-fluid mb-2"
+  >
+    <div class="col-12 md:col-4">
+      <app-input-text
+        label="專櫃編號"
+        controlName="tlt_no"
+        [control]="contractSearchForm.controls.tlt_no"
+      ></app-input-text>
+    </div>
+    <div class="col-12 md:col-4">
+      <app-input-text
+        label="櫃位名稱"
+        controlName="tlt_name"
+        [control]="contractSearchForm.controls.tlt_name"
+      ></app-input-text>
+    </div>
+    <div class="col-12 md:col-4">
+      <app-multi-select
+        label="廠商統一編號"
+        [options]="vendorUIDOptions"
+        optionLabel="label"
+        optionValue="value"
+        [control]="contractSearchForm.controls.ven_uniformList"
+      ></app-multi-select>
+    </div>
+  </form>
+  <div class="mb-3">
+    <app-button
+      btnType="query"
+      label="查詢"
+      (click)="searchContracts()"
+      [loading]="isSearchingContracts"
+    ></app-button>
+  </div>
+
+  <!-- 查詢結果表格 -->
+  <app-table
+    tableKey="TLS13020_SEARCH"
+    [data]="contractSearchResults"
+    [columns]="searchColumns"
+    [showCheckBox]="true"
+    [selectionMode]="'single'"
+    [selectedItems]="selectedSearchRow"
+    [showManage]="false"
+    [showDelete]="false"
+    [showReportMode]="false"
+    [showFilter]="false"
+    [loading]="isSearchingContracts"
+    dataKey="tlt_no"
+    (itemClick)="onSelectContractRow($event)"
+  ></app-table>
+  <p *ngIf="contractSearchResults.length > 0" class="text-sm text-500 mt-1">
+    共
+    {{
+      contractSearchResults.length
+    }}
+    筆（每個專櫃最後一版），點選列即可帶入續約資料
+  </p>
+</app-dialog>
 
 <!-- 成功確認對話框 -->
 <app-dialog

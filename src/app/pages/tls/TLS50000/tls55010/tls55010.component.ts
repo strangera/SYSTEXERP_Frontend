@@ -1,5 +1,5 @@
-import { DatePipe } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { DatePipe, NgSwitch, NgSwitchCase, NgSwitchDefault } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -21,8 +21,31 @@ import { finalize } from 'rxjs';
 @Component({
   selector: 'app-tls55010',
   templateUrl: './tls55010.component.html',
+  styles: `
+  /* 定義進入動畫，讓圖示出現時更平滑 */
+.animated {
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.fadeIn { animation-name: fadeIn; }
+
+/* 錯誤時的小抖動，提醒使用者注意 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+.shake { animation-name: shake; }
+  `,
   standalone: true,
-  imports: [DropdownComponent, PanelModule, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, InputTextComponent]
+  imports: [NgSwitch, NgSwitchDefault, NgSwitchCase, DropdownComponent, PanelModule, TableReportComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, InputTextComponent]
 })
 export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -41,17 +64,14 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
   ]
   constructor(
     private readonly tls55010Service: Tls55010Service,
-    private readonly datePipe: DatePipe
+    private readonly datePipe: DatePipe,
+    private readonly cdr: ChangeDetectorRef
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS55010', '/tls/tls55010cru');
-    this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
-      this.cls_date = res.Data.CLS_DATE;
-      const closeDate = new Date(res.Data.CLS_DATE);
-      closeDate.setDate(closeDate.getDate() + 1);
-      this.queryForm.patchValue({ TXN_Date: closeDate });
-    });
+    // 初始化時獲取日期
+    this.refreshCloseDate();
     this.data = getSYS1000Options('IMSCLOSE').map((item: { value: string; label: string }) => ({
       ...item, check_content: item.label, details: []
     }));
@@ -87,54 +107,69 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
     })
   }
   onQuery(frm: FormGroup) {
-    this.showHistory = false; // 關閉歷史
-    this.isConfirmDate = false; // 切換回檢查表格
+    this.showHistory = false; // 關閉歷史紀錄視窗
+    this.isConfirmDate = false; // 切換回檢查結果表格
+
     this.handleSubmit(frm, () => {
       const body = {
         TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || '',
-      }
-      // 1. 先將 Column 類型切換為 html，這樣元件才會走 [innerHTML] 路徑
-      this.columns = this.columns.map(c =>
-        c.field === 'isPassed' ? { ...c, type: 'html' } : c
-      );
+      };
 
-      // 2. 直接修改資料內容為 Spinner HTML
-      // 因為 Template 讀取的是 rowData['isPassed']
+      // 1. 初始化狀態：將所有檢查項目的狀態設為 'loading'，並清空先前的細節
       this.data.forEach((item: any) => {
-        item.isPassed = `<i class="pi pi-spin pi-spinner text-primary" style="font-size: 1.2rem"></i>`;
+        item.checkStatus = 'loading';
+        item.details = [];
       });
-      this.messageService.infoBubble('日結檢查中,請稍候...');
-      this.tls55010Service.checkTLS55010(body).pipe(untilDestroyed(this),
-        finalize(() => {
-          this.loading = false
-          this.columns = this.columns.map(c =>
-            c.field === 'isPassed' ? { ...c, type: undefined } : c
-          );
-        })).subscribe((res) => {
-          this.messageService.successBubble(res.Message);
-          this.isConfirmDate = false;
-          this.data.forEach((item: any) => {
-            item.isPassed = 'OK';
-            item.details = [];
-          });
-          const checkItemMap = new Map<string, any>();
-          this.data.forEach((item: any) => {
-            checkItemMap.set(item.value, item);
-          });
-          res.Data.forEach((error: any) => {
-            const stepCode = String(error.step_num);
-            const targetItem = checkItemMap.get(stepCode);
-            if (targetItem) {
-              targetItem.isPassed = '有問題';
-              const newDetail = {
-                cls_date: error.cls_date,
-                check_result: error.check_result,
-                mid: error.mid,
-                master_key: error.master_key
-              };
-              targetItem.details.push(newDetail);
+
+      this.messageService.infoBubble('日結檢查中，請稍候...');
+
+      // 開始 API 呼叫
+      this.tls55010Service.checkTLS55010(body)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => {
+            this.loading = false;
+            // 2. 呼叫結束後，檢查哪些還是 loading 的，代表它們通過了（後端沒回傳錯誤）
+            this.data.forEach((item: any) => {
+              if (item.checkStatus === 'loading') {
+                item.checkStatus = 'success';
+              }
+            });
+            this.cdr.detectChanges(); // 強制觸發畫面更新，確保動畫流暢
+          })
+        )
+        .subscribe({
+          next: (res) => {
+            this.messageService.successBubble(res.Message);
+
+            // 3. 建立 Map 方便快速索引檢查項目
+            const checkItemMap = new Map<string, any>();
+            this.data.forEach((item: any) => {
+              checkItemMap.set(String(item.value), item);
+            });
+
+            // 4. 根據後端回傳的 Data (錯誤列表) 更新特定項目的狀態為 'error'
+            if (res.Data && Array.isArray(res.Data)) {
+              res.Data.forEach((error: any) => {
+                const stepCode = String(error.step_num);
+                const targetItem = checkItemMap.get(stepCode);
+
+                if (targetItem) {
+                  targetItem.checkStatus = 'error';
+                  // 填充展開表格需要的明細資料
+                  targetItem.details.push({
+                    cls_date: error.cls_date,
+                    check_result: error.check_result,
+                    mid: error.mid,
+                    master_key: error.master_key
+                  });
+                }
+              });
             }
-          });
+          },
+          error: (err) => {
+            this.data.forEach((item: any) => (item.checkStatus = 'error'));
+          }
         });
     });
   }
@@ -168,9 +203,7 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
         this.messageService.successBubble(res.Message);
         this.isConfirmDate = true;
         this.lastDate = body.TXN_Date as unknown as Tls55010DateRequest;
-        this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
-          this.cls_date = res.Data.CLS_DATE;
-        });
+        this.refreshCloseDate();
         this.dataForm.patchValue(res.Data.Data._gls6001);
         this.data2 = res.Data.Data._gls6002s.map((item: any) => ({
           ...item,
@@ -267,7 +300,29 @@ export class TLS55010Component extends BasicQueryPageComponent<CheckTls55010Data
         this.messageService.successBubble(res.Message);
         this.dataForm.reset();
         this.data2 = [];
+        this.refreshCloseDate();
       });
+    });
+  }
+
+  /**
+ * 從後端獲取最新關帳日，並同步更新表單結帳日期為 關帳日 + 1
+ */
+  private refreshCloseDate(): void {
+    this.tls55010Service.getTLS55010Date().pipe(untilDestroyed(this)).subscribe((res) => {
+      if (res?.Data?.CLS_DATE) {
+        this.cls_date = res.Data.CLS_DATE;
+
+        // 計算下一天
+        const closeDate = new Date(res.Data.CLS_DATE);
+        closeDate.setDate(closeDate.getDate() + 1);
+
+        // 更新表單日期
+        this.queryForm.patchValue({ TXN_Date: closeDate });
+
+        // 如果有涉及 ChangeDetection 也可以手動觸發一下
+        this.cdr.detectChanges();
+      }
     });
   }
 }

@@ -1,0 +1,78 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="部門代號/名稱"
+          controlName="Org_ID"
+          [options]="Org_ID_Options"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.Org_ID"
+          [submitted]="submitted"
+        ></app-dropdown>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="版本"
+          controlName="Budget_Version"
+          [control]="dataForm.controls.Budget_Version"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+      <div class="grid p-fluid">
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="年"
+          controlName="Budget_Year"
+          [control]="dataForm.controls.Budget_Year"
+          [submitted]="submitted"
+        ></app-input-text>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="月"
+          controlName="Budget_Month"
+          [control]="dataForm.controls.Budget_Month"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+      <div class="grid p-fluid">
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="會計科目"
+          controlName="AccNo"
+          [options]="AccNo_Options"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.AccNo"
+          [submitted]="submitted"
+        ></app-dropdown>
+        <app-input-number
+          class="col-12 md:col-6 lg:col-4"
+          label="預算金額"
+          descLabel=""
+          [control]="dataForm.controls.Budget"
+          [submitted]="submitted"
+        ></app-input-number>
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="備註"
+          controlName="Remark"
+          [control]="dataForm.controls.Remark"
+          [submitted]="submitted"
+        ></app-input-text>
+      </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit"></app-button>
+      </div>
+    </form>
+  </p-panel>
+</div>

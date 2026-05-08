@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
-import { FIN71020Data, FIN71020Insert, FIN71020OrgNo, FIN71020Update, FIN71020UsrNo } from '@pages/fin/fin71020/fin71020.model';
+import { FIN71020Data, FIN71020Delete, FIN71020Insert, FIN71020OrgNo, FIN71020Update, FIN71020UsrNo } from '@pages/fin/fin71020/fin71020.model';
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
 import { finalize, Observable, take, tap } from 'rxjs';
@@ -29,11 +29,24 @@ export class FIN71020Service {
     );
   };
 
-  public saveFIN71020(payload: FIN71020Insert | FIN71020Update, type: 'insert' | 'update' = 'insert'): Observable<BaseQueryResponse<unknown>> {
-    payload = type === 'insert' ? payload as FIN71020Insert : payload as FIN71020Update;
-    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/${type}`, payload).pipe(
+  public insertFIN71020(payload: FIN71020Insert): Observable<BaseQueryResponse<unknown>> {
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/insertFIN71020`, payload).pipe(
       take(1),
-      tap(res => this.logger.debug('FIN71020新增/修改結果:', [res])),
+      tap(res => this.logger.debug('FIN71020新增結果:', [res])),
+    );
+  }
+
+  public updateFIN71020(payload: FIN71020Update): Observable<BaseQueryResponse<unknown>> {
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/updateFIN71020`, payload).pipe(
+      take(1),
+      tap(res => this.logger.debug('FIN71020修改結果:', [res])),
+    );
+  }
+
+  public deleteFIN71020(payload: FIN71020Delete): Observable<BaseQueryResponse<unknown>> {
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/deleteFIN71020`, payload).pipe(
+      take(1),
+      tap(res => this.logger.debug('FIN71020刪除結果:', [res])),
     );
   }
 

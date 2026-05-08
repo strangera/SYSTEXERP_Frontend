@@ -21,7 +21,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 export interface Option {
   label: string;
@@ -73,6 +73,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     CrtVouUsrNo: ['', [Validators.maxLength(20)]],          // 傳票建立者
     AssetType: [null],                                      // 資產註記
     HasUniform: [null],                                     // 是否有統一編號
+    ECR_No: [null],                                         // 收銀機號                                     // 是否有統一編號
     PUR_DiscNo: [null],                                         // 折抵代號 (dropdown)
     INV_Cancel: [null],                                      // 發票狀態
     ...createPaginationConfig([{ field: 'INV_GUIType', order: 1 }, { field: 'INV_GUINumber', order: 1 }])
@@ -116,8 +117,11 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
   // SYS1000
   systemTypeOptions = getSYS1000Options('SYS_ORIGIN');      // 系統別 (POS4023.SYS_ORIGIN)
   salTypeOptions = getSYS1000Options('T205');                 // 使用別 (POS4023.SAL_Type)
-  taxTypeOptions = getSYS1000Options('PLU_TaxType');          // 課稅別 (POS4023.PLU_TaxType)
+  taxTypeOptions = [...getSYS1000Options('PLU_TaxType'), { label: '零稅率', value: '3' }];  // 課稅別 (POS4023.PLU_TaxType) + 零稅率(INV_NoneTax='1')
   assetNotationOptions = getSYS1000Options('AssetType');   // 資產註記
+
+  // 收銀機號
+  ecrOptions: Option[] = [];
 
   // 是否有統一編號
   hasUniformOptions: Option[] = [
@@ -240,6 +244,14 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
         .filter(item => ['31', '32', '35', '36', '37'].includes(item.INV_GUIType))
         .sort((a, b) => a.INV_GUIType.localeCompare(b.INV_GUIType))
         .map(item => ({ label: `${item.INV_GUIType}-${item.INV_GUIName}`, value: item.INV_GUIType }));
+    });
+
+    // 收銀機號
+    this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
+      this.ecrOptions = options.Data.map(item => ({
+        label: `${item.No} - ${item.Name}`,
+        value: item.No
+      }));
     });
   }
 

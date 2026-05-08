@@ -1,12 +1,18 @@
 import { getSYS1000 } from "@service/system/sys1000.service";
 import { EditColumn } from "@shared/componentkit/table-edit/table-edit.model";
-import { validateMinNumber, validateRequired } from "@shared/componentkit/table-edit/validate-field.model";
+import { validateDuplicate, validateMaxLength, validateMinNumber, validateRequired } from "@shared/componentkit/table-edit/validate-field.model";
 import { formatDate } from "@shared/componentkit/table-report/table-report.model";
 import { formatAmount } from "@shared/componentkit/table/table.model";
-
+import { AA00000000 } from "../../tls55040/tls55040-cru/tls55040-cru.component";
+import { IRebateDetailForCRU } from "./tls55030-cru.component";
+export function toUpperCase(rowData: IRebateDetailForCRU): void {
+  if (rowData && rowData.PUR_GUINo) {
+    rowData.PUR_GUINo = rowData.PUR_GUINo.toUpperCase();
+  }
+}
 export const columns: EditColumn[] = [
-  { field: 'TABTYPE', header: '單據別', format: (value) => getSYS1000('TABTYPE', value) },
-  { field: 'PUR_GUINo', header: '發票/收據編號' },
+  { field: 'TABTYPE', header: '單據別', format: (value) => getSYS1000('TABTYPE', value), width: '85px' },
+  { field: 'PUR_GUINo', header: '發票/收據編號', type: 'input', validate: [validateDuplicate, validateRequired, validateMaxLength(10), AA00000000], onBlur: (rowData) => toUpperCase(rowData), width: '100px' },
   { field: 'PUR_TaxType', header: '課稅別', format: (value) => getSYS1000('PUR_TaxType', value) },
   { field: 'PUR_DirectType', header: '發票用途', format: (value) => getSYS1000('PUR_DirectType', value) },
   { field: 'PUR_Amt', header: '發票金額', format: formatAmount },
@@ -26,14 +32,17 @@ export const columns: EditColumn[] = [
     validate: [validateRequired, validateMinNumber(1)]
   },
   {
-    field: 'Rebate_Net', header: '未稅金額', type: 'inputNumber', width: '12rem',
-    onBlur: (rowData) => {
-      // 1. 先計算總額並四捨五入
-      rowData.Rebate_Amt_New = Math.round(rowData.Rebate_Net * 1.05);
-      // 2. 稅額 = 總額 - 未稅額
-      rowData.Rebate_Tax = Math.round(rowData.Rebate_Amt_New - rowData.Rebate_Net);
-      // 3. 確保未稅額也是整數
-      rowData.Rebate_Net = Math.round(rowData.Rebate_Net);
+    field: 'Rebate_Net',
+    header: '未稅金額',
+    type: 'inputNumber',
+    width: '12rem',
+    onBlur: (rowData: IRebateDetailForCRU) => {
+      // 1. 確保手動輸入的未稅金額是整數
+      rowData.Rebate_Net = Math.round(rowData.Rebate_Net || 0);
+
+      // 2. 直接加總：總額 = 未稅額 + 稅額 (不再使用 * 1.05 反推)
+      // 這樣可以保持兩者手動輸入後的數據一致性
+      rowData.Rebate_Amt_New = Math.round(rowData.Rebate_Net + (rowData.Rebate_Tax || 0));
     },
     validate: [validateRequired, validateMinNumber(1)]
   },
@@ -42,9 +51,12 @@ export const columns: EditColumn[] = [
     header: '稅額',
     type: 'inputNumber',
     width: '12rem',
-    onBlur: (rowData) => {
-      // 稅額手動輸入時也確保是整數
-      rowData.Rebate_Tax = Math.round(rowData.Rebate_Tax);
+    onBlur: (rowData: IRebateDetailForCRU) => {
+      // 1. 確保手動輸入的稅額是整數
+      rowData.Rebate_Tax = Math.round(rowData.Rebate_Tax || 0);
+
+      // 2. 直接加總：總額 = 未稅額 + 稅額
+      rowData.Rebate_Amt_New = Math.round((rowData.Rebate_Net || 0) + rowData.Rebate_Tax);
     },
     validate: [validateRequired, validateMinNumber(1)]
   }

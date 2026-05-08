@@ -105,12 +105,17 @@ export class TLS2G010Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   // 空白範本下載
-  onDownloadBlankTemplate() {
-    this.loading = true;
-    this.messageService.infoBubble('空白範本下載中，請稍後...');
-    this.tls2g010Service.downloadEmptyTemplate().pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-      const url = `${environment.ApiUrl}${res.Data.PrintTPLURL}`;
-      window.open(url, '_blank');
+  onDownloadBlankTemplate(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.value,
+        BudgetYYMM: convertDateToYYYYMM(frm.value.BudgetYYMM),
+      }
+      this.messageService.infoBubble('空白範本下載中，請稍後...');
+      this.tls2g010Service.downloadEmptyTemplate(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        const url = `${environment.ApiUrl}${res.Data.PrintTPLURL}`;
+        window.open(url, '_blank');
+      });
     });
   }
 }

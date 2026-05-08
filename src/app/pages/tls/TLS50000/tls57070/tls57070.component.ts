@@ -46,6 +46,7 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
     HOS_NOList: [null], // 倉別條件
     LOGO_NoList: [null], // 品牌條件
     ShowType: ['M', [Validators.required]], // 顯示方式(M:彙總，D:明細)
+    ShowSTK_SYSADJUSTCOST: [null as string | null],
   });
   HOS_NOListOptions = this.dropdown.queryPos2034(); // 倉別選項
   LOGO_NoListOptions = this.dropdown.queryPluLogo(); // 品牌選項
@@ -53,6 +54,10 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
     { label: '彙總', value: 'M' },
     { label: '明細', value: 'D' },
   ]
+  sysAdjustCostOptions = [
+    { label: '有金額', value: '1' },
+    { label: '無金額', value: '0' }
+  ];
   totalRecords = 0;
   lastQueryBody: any
   DetailSumData: any
@@ -207,6 +212,7 @@ export class TLS57070Component extends BasicQueryPageComponent<Tls57070DataItem>
       const body = {
         ...frm.value,
         STK_YM: convertDateToYYYYMM(frm.value.STK_YM),
+        ShowSTK_SYSADJUSTCOST: frm.value.ShowSTK_SYSADJUSTCOST,
         SortBy: frm.value.ShowType === 'M' ?
           [{ field: 'LOGO_No', order: 1 }]
           : [{ field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 }]

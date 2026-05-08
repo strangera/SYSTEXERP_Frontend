@@ -11,6 +11,7 @@ import {
 import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { forkJoin } from 'rxjs';
 
@@ -27,7 +28,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 /* ---------------------------
  * Validators
@@ -67,7 +68,6 @@ interface DropdownOption {
   selector: 'app-fin13050-cru',
   standalone: true,
   templateUrl: './fin13050-cru.component.html',
-  styleUrls: ['./fin13050-cru.component.scss'],
   imports: [
     MenubarComponent,
     ButtonComponent,
@@ -174,7 +174,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_GUIDate: [null as Date | null, [Validators.required]],
     PUR_RepYYYYMM: [null as Date | null, [Validators.required, this.repYYYYMMEvenValidator]],
 
-    PUR_VenNo: ['', [Validators.required]],
+    PUR_VenNo: ['', [Validators.required, this.validationService.noChineseValidator]], //僅輸入數字或連號
     PUR_VenName: [{ value: '', disabled: true }],
     PUR_VenUniform: ['', [Validators.required, digitsOnly, Validators.minLength(8), Validators.maxLength(8)]],
 
@@ -196,6 +196,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
     private readonly fin13050Service: FIN13050Service,
     private readonly route: ActivatedRoute,
+    private readonly validationService: ValidationService,
   ) {
     super();
   }

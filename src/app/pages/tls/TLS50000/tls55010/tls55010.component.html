@@ -44,7 +44,28 @@
   @else if (!isConfirmDate) {
   <app-table-report dataKey="value" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showSummary]="false"
     (detail)="onDetail($event)" [showDelete]="false" [expansionColumns]="expansionColumns" expansionDataKey="details"
-    [showManage]="false" [showCaption]="false" [showSort]="false" [totalRecords]="0"></app-table-report>
+    [showManage]="false" [showCaption]="false" [showSort]="false" [totalRecords]="0"
+    [customTemplates]="{ 'isPassed': statusTemplate }"></app-table-report>
+  <ng-template #statusTemplate let-rowData>
+    <div class="flex justify-content-center align-items-center" [ngSwitch]="rowData.checkStatus">
+
+      <!-- 1. 轉圈圈動畫：使用 PrimeNG 內建指令或原生 class -->
+      <i *ngSwitchCase="'loading'" class="pi pi-spin pi-spinner text-primary text-xl"></i>
+
+      <!-- 2. 成功狀態：綠色勾勾 -->
+      <i *ngSwitchCase="'success'" class="pi pi-check-circle text-green-500 text-xl animated fadeIn"></i>
+
+      <!-- 3. 失敗狀態：紅色叉叉與文字 -->
+      <div *ngSwitchCase="'error'" class="text-red-500 flex align-items-center gap-1 animated shake">
+        <i class="pi pi-exclamation-circle"></i>
+        <span>有問題</span>
+      </div>
+
+      <!-- 4. 預設狀態 -->
+      <span *ngSwitchDefault class="text-500">待檢查</span>
+
+    </div>
+  </ng-template>
   }
   @else {
   <form [formGroup]="dataForm" id="dataForm" class="flex flex-column gap-3" (ngSubmit)="onReverse(dataForm)">

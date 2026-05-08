@@ -114,7 +114,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
       }
     },
     { field: 'AccCName', header: '科目名稱', width: '180px', textAlign: 'left' },
-    { field: 'NoteDesc', header: '摘要', type: 'input', textAlign: 'left' },
+    { field: 'NoteDesc', header: '摘要', type: 'input', textAlign: 'left', width: '300px' },
     { field: 'Debit_Amt', header: '借方金額', width: '120px', format: formatAmount, textAlign: 'right', aggregate: 'sum' },
     { field: 'Credit_Amt', header: '貸方金額', width: '120px', format: formatAmount, textAlign: 'right', aggregate: 'sum' },
     {

@@ -1,11 +1,6 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button> -->
   </div>
   <p-accordion>
     <p-accordionTab
@@ -23,11 +18,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="支出請款單號"
-              controlName="KeepQuota_No"
-              [options]="KeepQuota_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.KeepQuota_No"
+              controlName="PCS_RqstNo"
+              [options]="PCS_RqstNo_Options"
+              optionLabel="PCS_RqstNo"
+              optionValue="PCS_RqstNo"
+              [control]="queryForm.controls.PCS_RqstNo"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -49,24 +44,38 @@
       tableKey="FIN72040"
       [data]="data"
       [columns]="columns"
-      [addButton]="addButton"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
       [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event"
-      (delete)="onDelete($event)"
       [expansionRowsPerPageOptions]="[30, 60, 90, 120, 150]"
       [rows]="30"
       [rowsPerPageOptions]="[30, 60, 90, 120, 150]"
       [showDelete]="false"
-      [showCheckBox]="false"
-      dataKey="id"
+      [showCheckBox]="true"
+      [showReportMode]="false"
+      [showManage]="false"
+      [showSort]="false"
+      dataKey="IDX"
       [multiSortMeta]="[{ field: 'HOS_No', order: 1 }]"
       [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
       [loading]="loading"
-      [isRowSelectable]="isRowSelectable"
-    ></app-table>
+    >
+      <header>
+        <p-button
+          [ngStyle]="{ width: '35px', height: '35px' }"
+          [style]="{ width: '35px', height: '35px' }"
+          pTooltip="撥補"
+          tooltipPosition="top"
+          pButton
+          icon="pi pi-upload rotate-180"
+          severity="success"
+          class="p-button-rounded p-button-text"
+          [disabled]="selectedItems.length === 0"
+          (click)="onBtnToss()"
+          [loading]="btnLoading"
+        />
+      </header>
+    </app-table>
   </div>
 </div>

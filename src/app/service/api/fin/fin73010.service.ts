@@ -1,209 +1,99 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { delay, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
-import { FIN73010Data, FIN73010Option, FIN73010Query } from '@pages/fin/fin73010/fin73010.model';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
+export interface Fin73010data {
+  "SeqNo": number, // 序號
+  "PCS_No": string, // 零用金單號
+  "PCS_Date": Date, // 零用金申請日期
+  "PCS_UsrNo": string, // 零用金申請人員代碼
+  "PCS_UsrName": string, // 零用金申請人員姓名
+  "PCS_OrgID": string, // 零用金申請人員組織代碼
+  "PCS_OrgName": string, // 零用金申請人員組織名稱
+  "Keep_UsrNo": string, // 零用金保管人代碼
+  "Keep_UsrName": string, // 零用金保管人姓名
+  "Keep_OrgID": string, // 零用金保管人組織代碼
+  "Keep_OrgName": string, // 零用金保管人組織名稱
+  "PCS_Status": string, // 單據狀態
+  "PCS_StatusName": string, // 單據狀態名稱
+  "PCS_RqstNo": string, // 支出請款單號
+  "PCS_SeqNo": number, // 項次
+  "AccNo": string, // 費用會計科目編號
+  "AccName": string, // 費用會計科目名稱
+  "NOTeDesc": string, // 項目摘要
+  "PCS_DtlType": string, // 明細類別
+  "PCS_DtlTypeName": string, // 明細類別名稱
+  "PCS_GUINo": string, //發票 / 收據號碼
+  "ORG_ID": string, // 費用科目組織代碼
+  "Dtl_OrgName": string, // 費用科目組織名稱
+  "PUR_Date": Date, // 憑證日期
+  "PCS_Net": number, // 未稅金額
+  "PCS_Tax": number, // 稅額
+  "PCS_Amt": number, // 含稅金額
+  "RowTypeDesc": string, // 列別說明
+  "RowType": number // 列別 (0=明細 1=小計 2=總計)
+}
+
+export interface FIN73010Response {
+  Status: string;
+  Data: {
+    QueryData: Fin73010data[]; // 查詢結果資料陣列
+    SumData: Fin73010data;
+  }
+  Error: {
+    Code: string;
+    Message: string
+    Details: string;
+  }
+  Message: string;
+  TotalCount: number; // 總筆數
+  TotalPage: number; // 總頁數
+}
+
+export interface POS2064MPC_Response {
+  Status: string;
+  Data: POS2064MPC[];
+  Error: {
+    Code: string;
+    Message: string;
+    Details: string;
+  },
+  TotalCount: number,
+  TotalPage: number
+}
+
+export interface POS2064MPC {
+  PCS_No: string;
+  PCS_Date: string;
+  PCS_UsrNo: string;
+}
+
 
 @Injectable({ providedIn: 'root' })
 export class FIN73010Service {
-  private readonly mockData: FIN73010Data[] = [
-    {
-      dataKey: 'C201407170001-2014051401',
-      pettyCashNo: 'C201407170001',
-      applyDate: '2014/07/10',
-      applicantNo: '2014000044',
-      applicantName: '王小明',
-      applicantDept: '104200-營運部',
-      custodianNo: '2014000044',
-      custodianName: '王小明',
-      custodianDept: '104200-營運部',
-      status: '撥補',
-      expenseAccountNo: '620401',
-      expenseAccountName: '室內雜項費',
-      expenseDeptNo: '101000',
-      expenseDeptName: '總營企管部(停用)',
-      subjectSummary: '10305-5/14出差-腳手架',
-      detailCategory: '收據',
-      invoiceReceiptNo: '2014051401',
-      expenseDate: '2014/05/14',
-      amountUntaxed: 1410,
-      tax: 70,
-      total: 1480,
-    },
-    {
-      dataKey: 'C201407170001-2014051402',
-      pettyCashNo: 'C201407170001',
-      applyDate: '2014/07/10',
-      applicantNo: '2014000044',
-      applicantName: '王小明',
-      applicantDept: '104200-營運部',
-      custodianNo: '2014000044',
-      custodianName: '王小明',
-      custodianDept: '104200-營運部',
-      status: '撥補',
-      expenseAccountNo: '620401',
-      expenseAccountName: '室內雜項費',
-      expenseDeptNo: '101000',
-      expenseDeptName: '總營企管部(停用)',
-      subjectSummary: '10305-5/14出差-腳手架',
-      detailCategory: '收據',
-      invoiceReceiptNo: '2014051402',
-      expenseDate: '2014/05/14',
-      amountUntaxed: 1367,
-      tax: 68,
-      total: 1435,
-    },
-    {
-      dataKey: 'C201407170001-NA-1',
-      pettyCashNo: 'C201407170001',
-      applyDate: '2014/07/10',
-      applicantNo: '2014000044',
-      applicantName: '王小明',
-      applicantDept: '104200-營運部',
-      custodianNo: '2014000044',
-      custodianName: '王小明',
-      custodianDept: '104200-營運部',
-      status: '撥補',
-      expenseAccountNo: '620401',
-      expenseAccountName: '室內雜項費',
-      expenseDeptNo: '101000',
-      expenseDeptName: '總營企管部(停用)',
-      subjectSummary: '10305-5/14出差-腳手架',
-      detailCategory: '不扣抵憑證',
-      invoiceReceiptNo: '',
-      expenseDate: '2014/05/14',
-      amountUntaxed: 440,
-      tax: 0,
-      total: 440,
-    },
-    {
-      dataKey: 'C201407170001-NA-2',
-      pettyCashNo: 'C201407170001',
-      applyDate: '2014/07/10',
-      applicantNo: '2014000044',
-      applicantName: '王小明',
-      applicantDept: '104200-營運部',
-      custodianNo: '2014000044',
-      custodianName: '王小明',
-      custodianDept: '104200-營運部',
-      status: '撥補',
-      expenseAccountNo: '622201',
-      expenseAccountName: '文康費-招待費',
-      expenseDeptNo: '101000',
-      expenseDeptName: '總營企管部(停用)',
-      subjectSummary: '10305-招商會議餐-餐券',
-      detailCategory: '不扣抵憑證',
-      invoiceReceiptNo: '',
-      expenseDate: '2014/05/14',
-      amountUntaxed: 2074,
-      tax: 0,
-      total: 2074,
-    },
-  ];
+  // FIN73010-零用金支付表
+  apiUrl: string = environment.ApiUrl + '/FIN0000/FIN70000';
+  constructor(private http: HttpClient) { }
 
-  constructor() { }
-
-  public queryFIN73010(query: FIN73010Query): Observable<BaseQueryResponse<FIN73010Data>> {
-    return of(this.mockData).pipe(
-      delay(200),
-      map((data): BaseQueryResponse<FIN73010Data> => {
-        let filtered = [...data];
-
-        if (query.pettyCashNo) {
-          filtered = filtered.filter(x => x.pettyCashNo === query.pettyCashNo);
-        }
-
-        if (query.applicantNo) {
-          filtered = filtered.filter(x => x.applicantNo === query.applicantNo);
-        }
-
-        if (query.custodianNo) {
-          filtered = filtered.filter(x => x.custodianNo === query.custodianNo);
-        }
-
-        if (query.status) {
-          filtered = filtered.filter(x => x.status === query.status);
-        }
-
-        if (query.custodianDeptNo) {
-          filtered = filtered.filter(x => x.custodianDept.startsWith(query.custodianDeptNo!));
-        }
-
-        if (query.applyDateStart) {
-          filtered = filtered.filter(x => this.normalizeDate(x.applyDate) >= query.applyDateStart!);
-        }
-
-        if (query.applyDateEnd) {
-          filtered = filtered.filter(x => this.normalizeDate(x.applyDate) <= query.applyDateEnd!);
-        }
-
-        const totalCount = filtered.length;
-        const pageIndex = query.pageIndex || 1;
-        const pageSize = query.pageSize || 10;
-        const start = (pageIndex - 1) * pageSize;
-        const pageData = filtered.slice(start, start + pageSize);
-
-        return {
-          Status: 'success',
-          Message: 'Success',
-          Data: pageData,
-          TotalCount: totalCount,
-          TotalPage: Math.ceil(totalCount / pageSize),
-        };
-      })
-    );
+  // 零用金單號 下拉選單
+  queryPOS2064MPCS_NoDropDownList(body: any): Observable<POS2064MPC_Response> {
+    return this.http.post<POS2064MPC_Response>(`${this.apiUrl}/queryPOS2064MPCS_NoDropDownList`, body);
   }
 
-  public getPettyCashNoOptions(): Observable<FIN73010Option[]> {
-    return of([
-      { label: '請選擇', value: '' },
-      { label: 'C201407170001', value: 'C201407170001' },
-      { label: 'C201407170002', value: 'C201407170002' },
-    ]);
+
+  // 查詢 零用金支付表
+  queryFIN73010(body: any): Observable<FIN73010Response> {
+    return this.http.post<FIN73010Response>(`${this.apiUrl}/queryFIN73010`, body);
   }
 
-  public getApplicantOptions(): Observable<FIN73010Option[]> {
-    return of([
-      { label: '請選擇', value: '' },
-      { label: '2014000044-王小明', value: '2014000044' },
-      { label: '2014000088-陳小華', value: '2014000088' },
-    ]);
+  // 匯出 零用金支付表 PDF
+  exportPDFFIN73010(body: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportPDFFIN73010`, body, { responseType: 'blob' });
   }
 
-  public getCustodianOptions(): Observable<FIN73010Option[]> {
-    return of([
-      { label: '請選擇', value: '' },
-      { label: '2014000044-王小明', value: '2014000044' },
-      { label: '2014000099-林小芳', value: '2014000099' },
-    ]);
-  }
-
-  public getStatusOptions(): Observable<FIN73010Option[]> {
-    return of([
-      { label: '請選擇', value: '' },
-      { label: '撥補', value: '撥補' },
-      { label: '未撥補', value: '未撥補' },
-      { label: '作廢', value: '作廢' },
-    ]);
-  }
-
-  public getCustodianDeptOptions(): Observable<FIN73010Option[]> {
-    return of([
-      { label: '請選擇', value: '' },
-      { label: '104200-營運部', value: '104200' },
-      { label: '101000-總營企管部', value: '101000' },
-    ]);
-  }
-
-  private normalizeDate(value: Date | string): string {
-    if (value instanceof Date) {
-      const year = value.getFullYear();
-      const month = String(value.getMonth() + 1).padStart(2, '0');
-      const day = String(value.getDate()).padStart(2, '0');
-      return `${year}${month}${day}`;
-    }
-
-    return (value || '').replace(/\D/g, '');
+  // 匯出 零用金支付表 Excel
+  exportExcelFIN73010(body: any): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportExcelFIN73010`, body, { responseType: 'blob' });
   }
 }

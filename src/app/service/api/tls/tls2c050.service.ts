@@ -26,6 +26,15 @@ export class TLS2C050Service {
   }
 
   /**
+   * 取得原匯檔發票日期(發票日期)此日期為最後發票鎖定日期的次日
+   * @returns 回傳最近匯入日期的 HTTP 響應
+   */
+  GetTLS2C050ImportDate(): Observable<ApiResponse<{ CLS_DATE: string }>> {
+    const url = `${this.apiUrl}/TLS0000/TLS2000/GetTLS2C050ImportDate`;
+    return this.http.post<ApiResponse<{ CLS_DATE: string }>>(url, {});
+  }
+
+  /**
    * 取得發票彙總作業最近關帳日期
    * @returns 回傳最近關帳日期的 HTTP 響應
    */

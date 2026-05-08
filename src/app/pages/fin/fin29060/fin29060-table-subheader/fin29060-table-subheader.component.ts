@@ -85,13 +85,27 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   getGroupSum(groupValue: any, field: string): number {
     if (!this.totalData?.length) return 0;
     const entry = this.totalData.find(td => String(td?.[this.groupRowsBy] ?? '') === String(groupValue ?? ''));
-    return entry ? (Number(entry[`${field}_Subtotal`] || entry[field]) || 0) : 0;
+    if (!entry) return 0;
+
+    // 處理後端拼字 PayAmy 與前端欄位 PayAmt 的差異
+    const normalizedField = field === 'PayAmt' ? 'PayAmy' : field;
+
+    // 優先找 [欄位]_Subtotal，找不到則找 [欄位]
+    return Number(entry[`${normalizedField}_Subtotal`] || entry[normalizedField]) || 0;
   }
 
   /** 直接從 totalData 拿後端算好的總計 */
   getTotalSum(field: string): number {
-    const totalEntry = this.totalData?.find(td => !td?.[this.groupRowsBy] || td[this.groupRowsBy] === '');
-    return totalEntry ? (Number(totalEntry[`${field}_Total`] || totalEntry[field]) || 0) : 0;
+    if (!this.totalData?.length) return 0;
+    // 總計通常是 VendorNo 為空字串或 null 的那一筆
+    const totalEntry = this.totalData.find(td => !td?.[this.groupRowsBy] || td[this.groupRowsBy] === '');
+    if (!totalEntry) return 0;
+
+    // 處理後端拼字 PayAmy 與前端欄位 PayAmt 的差異
+    const normalizedField = field === 'PayAmt' ? 'PayAmy' : field;
+
+    // 優先找 [欄位]_Total，找不到則找 [欄位]
+    return Number(totalEntry[`${normalizedField}_Total`] || totalEntry[normalizedField]) || 0;
   }
 
   detailRow(rowData: any, col: Column, value: any) {

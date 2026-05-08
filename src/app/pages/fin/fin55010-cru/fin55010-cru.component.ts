@@ -16,6 +16,8 @@ interface DetailRow {
   VouNo?: string | null;
   VouType_Name?: string | null;
   VouStatus?: string | null;
+  VoucherType?: string | null;
+  VoucherType_Name?: string | null;
   ACCNO?: string | null;
   AccCName?: string | null;
   Org_Name?: string | null;
@@ -29,6 +31,8 @@ interface DetailRow {
 interface VoucherMeta {
   vouDate: string;
   vouType: string;
+  VoucherType: string;
+  VoucherType_Name: string;
   vouNo: string;
   vouStatus: string;
 }
@@ -124,6 +128,8 @@ export class FIN55010CRUComponent extends BasicCruPageComponent<any> implements 
         vouType: head.VouType_Name ?? '',
         vouNo: head.VouNo ?? vouNo,
         vouStatus: head.VouStatus ?? '',
+        VoucherType: head.VoucherType ?? '',
+        VoucherType_Name: head.VoucherType_Name ?? ''
       };
       this.rows = list.map((r, i) => ({
         ...r,

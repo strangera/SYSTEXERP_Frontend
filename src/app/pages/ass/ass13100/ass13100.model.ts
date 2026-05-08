@@ -59,11 +59,11 @@ export interface InsertASS13100GenListItem {
  * 新增清點單 Request（API 規格）
  */
 export interface InsertASS13100Request {
-  /** 欄位說明 */
+  /** 清點單產生方式 1=保管單位, 2=使用單位, 3=保管人, 4=使用人 */
   COL_NOTES?: string | null;
   /** 清點日期，ISO 字串 */
-  CHK_DATE: string;
-  /** 是否直接帶入全部部門 */
+  CHK_DATE?: string | null;
+  /** 是否直接帶入全部部門*/
   AllOrg: boolean;
   /** 單位/人員清點設定明細 */
   GenList: InsertASS13100GenListItem[];
@@ -84,6 +84,18 @@ export interface InsertASS13100ResponseData {
  * 新增頁：單位/人員清點設定明細列（前端表單用，送出時對應為 GenList）
  */
 export type InventoryGenerateMode = 'KEEPER_ORG' | 'USER_ORG' | 'KEEPER_EMP' | 'USER_EMP';
+
+/** 清點單產生方式對應 COL_NOTES */
+export enum InventoryGenerateModeColNotes {
+  /** 保管單位 */
+  KEEPER_ORG = '1',
+  /** 使用單位 */
+  USER_ORG = '2',
+  /** 保管人 */
+  KEEPER_EMP = '3',
+  /** 使用人 */
+  USER_EMP = '4',
+}
 
 export interface ASS13100GenerateUnitRow {
   /** 部門代碼（單位清點時必填）→ ORG_ID */
@@ -228,4 +240,12 @@ export interface ASS13100ExportPDFRequest {
   CHK_ID_S: string;
   /** 清點單號(迄) */
   CHK_ID_E: string;
+}
+
+/** 清點單狀態 */
+export enum Status {
+  /** 清點中 */
+  Progress = '1',
+  /** 已結案 */
+  Completed = '2',
 }
