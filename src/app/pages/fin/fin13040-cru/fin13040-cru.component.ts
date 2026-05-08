@@ -1,12 +1,13 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin13040Service } from '@service/api/fin/fin13040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ValidationService } from '@shared/service/validation.service';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -51,7 +52,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     GUI_Track: ['', [Validators.maxLength(2)]],
     INV_GUINumber: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2}\d{8}$/)]],
     InvoiceDate: [null as Date | null, Validators.required],
-    Buyer_Uniform: ['', Validators.required],
+    Buyer_Uniform: ['', [Validators.required, (c: AbstractControl) => this.validationService.companyIdValidator(c)]],
     PUR_TaxType: ['', Validators.required],
     Voucher_No: [null], // Added Voucher_No control
     AssetType: [''],
@@ -89,7 +90,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
 
   constructor(
     private dropDownListService: DropDownListService,
-    private fin13040Service: Fin13040Service
+    private fin13040Service: Fin13040Service,
+    private validationService: ValidationService
   ) {
     super();
   }

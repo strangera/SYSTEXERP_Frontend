@@ -66,6 +66,22 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+          <div
+            class="col-12 md:col-6 lg:col-4 flex align-items-center"
+            *ngIf="
+              ['2', '3', '6', '7'].includes(queryForm.value.displayMode || '')
+            "
+          >
+            <p-checkbox
+              formControlName="IncludeExchange"
+              [binary]="true"
+              inputId="includeExchange"
+              [disabled]="queryForm.controls.IncludeExchange.disabled"
+            ></p-checkbox>
+            <label for="includeExchange" class="ml-2 cursor-pointer">
+              包含換開發票
+            </label>
+          </div>
         </div>
 
         <div
@@ -130,7 +146,7 @@
   <div class="flex gap-2 mb-3">
     <p-button
       styleClass="p-2"
-      label="二電發票報表 .PDF"
+      label="匯出PDF"
       [loading]="btnLoading"
       icon="pi pi-file-pdf"
       (click)="onExportPDF()"
@@ -138,7 +154,7 @@
     ></p-button>
     <p-button
       styleClass="p-2"
-      label="二電發票報表 .xlsx"
+      label="匯出EXCEL"
       [loading]="btnLoading2"
       icon="pi pi-file-excel"
       (click)="onExportExcel()"
@@ -217,7 +233,7 @@
           class="text-center"
           style="background-color: var(--table-header-bg)"
         >
-          二聯式電子發票
+          電子發票
         </th>
         <th
           colspan="3"
@@ -231,7 +247,7 @@
           class="text-center"
           style="background-color: var(--table-header-bg)"
         >
-          二聯式電子發票
+          電子發票
         </th>
       </tr>
       <!-- 第 3 層 -->
