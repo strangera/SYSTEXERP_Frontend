@@ -19,9 +19,9 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Fin29060TableSubheaderComponent } from './fin29060-table-subheader/fin29060-table-subheader.component';
 
@@ -71,6 +71,7 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     SubDetailNo: [''], // 對象別編號 GLS3001.SubDetailNo
     PostFlag: [[] as string[]], // 傳票狀態 GLS3001.PostFlag (0.作廢 1.建立 2.確認 3.過帳)
     IsSubDetail: [null], // 是否為對象別(是-->IS NOT NULL, 否-->IS NULL)
+    ACCT_KEY: [''], // 帳鍵 GLS3002.ACCT_KEY
 
     ...createPaginationConfig([{ field: 'AccNo', order: 1 }]),
   });
@@ -78,10 +79,12 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     // AccNo 設定為 visible: false 但保留，因為 HTML [groupRowsBy]="'AccNo'" 需要它
     { field: 'PTA', header: '立沖編號', visible: true },
     { field: 'VouNo', header: '傳票號碼', visible: true, type: 'detail' },
+
     { field: 'NoteDesc', header: '摘要', visible: true, align: 'left' },
     { field: 'PTA1', header: '借方金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
     { field: 'PTA2', header: '貸方金額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
-    { field: 'PTA3', header: '餘額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true }
+    { field: 'PTA3', header: '餘額', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
+    { field: 'ACCT_KEY', header: '對帳KEY值', visible: true, align: 'left' },
   ];
   data: fin55040response[] = [];
   totalRecords = 0;

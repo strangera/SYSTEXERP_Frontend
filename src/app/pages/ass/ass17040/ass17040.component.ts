@@ -53,8 +53,7 @@ import {
 })
 export class ASS17040Component
   extends BasicQueryPageComponent<ASS17040FlatRow>
-  implements OnInit
-{
+  implements OnInit {
   readonly queryForm = this.formBuilder.nonNullable.group({
     Sdate: [null as Date | null, [Validators.required]],
     Edate: [null as Date | null, [Validators.required]],
@@ -92,7 +91,7 @@ export class ASS17040Component
       header: '品項單價',
       align: 'right',
       sortField: 'GoodsPrice',
-      format: (v) => formatAmountWithDecimals(v, 2),
+      format: (v) => formatAmount(v as number),
     },
   ];
 

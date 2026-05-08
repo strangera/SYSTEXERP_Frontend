@@ -6,14 +6,8 @@
 
   <!-- 工具列 -->
   <div class="flex flex-wrap items-center justify-start gap-1 mb-3 toolbar">
-    <button
-      pButton
-      type="button"
-      label="專櫃日對帳單.PDF"
-      icon="pi pi-file-pdf"
-      class="p-button-sm p-button-danger"
-      (click)="exportPDF()"
-    ></button>
+    <button pButton type="button" label="專櫃日對帳單.PDF" icon="pi pi-file-pdf" class="p-button-sm p-button-danger"
+      (click)="exportPDF()"></button>
 
     <!-- <button
       pButton
@@ -24,14 +18,8 @@
       (click)="exportExcel()"
     ></button> -->
 
-    <button
-      pButton
-      type="button"
-      icon="pi pi-arrow-left"
-      label="回上頁"
-      class="p-button-sm p-button-secondary"
-      (click)="goBack()"
-    ></button>
+    <button pButton type="button" icon="pi pi-arrow-left" label="回上頁" class="p-button-sm p-button-secondary"
+      (click)="goBack()"></button>
   </div>
 
   <!-- 內容：TLT_NO 群組，群組內按 TLT_ID 多表 -->
@@ -48,16 +36,14 @@
             南紡流通事業股份有限公司
           </div>
           <div class="col-12 text-center text-xl font-bold">
-            專櫃日對帳單
+            專櫃日對帳單{{group.header.day_lock === 'Y' ? '（已確帳）' : '（未確帳）'}}
           </div>
 
           <!-- 三列資訊區：寬度與表格同寬，左右對齊表格左右，中間對齊整頁中央 -->
           <div class="col-12">
             <!-- 第一列：左 大分類 / 中 銷售日期 / 右 製表日期 -->
-            <div
-              class="mb-1"
-              style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; width: 100%;"
-            >
+            <div class="mb-1"
+              style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; width: 100%;">
               <div style="text-align: left;">
                 <ng-container *ngIf="showBusType; else noBusType">
                   大分類：{{ group.header.busType }} / {{ group.header.busTypeName }}
@@ -75,10 +61,8 @@
             </div>
 
             <!-- 第二列：左 專櫃 / 中 樓層＋抽成類別 / 右 交易總件數 / 退貨件數 -->
-            <div
-              class="mb-1"
-              style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; width: 100%;"
-            >
+            <div class="mb-1"
+              style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; width: 100%;">
               <!-- 左：專櫃 -->
               <div style="text-align: left;">
                 專櫃：{{ group.header.tltNo }} / {{ group.header.tltName }}
@@ -96,20 +80,18 @@
               <!-- 右：交易總件數／退貨件數 -->
               <div style="text-align: right;">
                 交易總件數：{{
-                  (sub?.rows?.[0]?.total_count || 0) | number: '1.0-0'
+                (sub?.rows?.[0]?.total_count || 0) | number: '1.0-0'
                 }}
                 /
                 退貨件數：{{
-                  (sub?.rows?.[0]?.return_qty || 0) | number: '1.0-0'
+                (sub?.rows?.[0]?.return_qty || 0) | number: '1.0-0'
                 }}
               </div>
             </div>
 
             <!-- 第三列：左 區域 / 中 空白 / 右 退貨金額 -->
-            <div
-              class="mb-1"
-              style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; width: 100%;"
-            >
+            <div class="mb-1"
+              style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; width: 100%;">
               <!-- 左：區域 -->
               <div style="text-align: left;">
                 區域：{{ group.header.area || '－' }}
@@ -123,42 +105,35 @@
               <!-- 右：退貨金額 -->
               <div style="text-align: right;">
                 退貨金額：{{
-                  (sub?.rows?.[0]?.return_amt || 0) | number: '1.0-0'
+                (sub?.rows?.[0]?.return_amt || 0) | number: '1.0-0'
                 }}
               </div>
             </div>
           </div>
         </div>
 
-<!-- si>0：只顯示置中的抽成類別橫幅（與上面三欄寬度對齊，略偏右） -->
-<ng-template #onlyTltIdBanner>
-  <div
-    class="mb-2"
-    style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; width: 100%;"
-  >
-    <div></div>
+        <!-- si>0：只顯示置中的抽成類別橫幅（與上面三欄寬度對齊，略偏右） -->
+        <ng-template #onlyTltIdBanner>
+          <div class="mb-2"
+            style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; width: 100%;">
+            <div></div>
 
-    <!-- 在這裡加一點 margin-left，數值可自行微調 -->
-    <div style="text-align: center; margin-left: 60px;">
-      <span class="commission-line inline-block">
-        <span class="commission-label">抽成類別：</span>
-        <span class="commission-value">{{ sub.tltId }}</span>
-      </span>
-    </div>
+            <!-- 在這裡加一點 margin-left，數值可自行微調 -->
+            <div style="text-align: center; margin-left: 60px;">
+              <span class="commission-line inline-block">
+                <span class="commission-label">抽成類別：</span>
+                <span class="commission-value">{{ sub.tltId }}</span>
+              </span>
+            </div>
 
-    <div></div>
-  </div>
-</ng-template>
+            <div></div>
+          </div>
+        </ng-template>
 
         <!-- 該子表的表格 -->
-        <p-table
-          [value]="sub.rows"
-          [columns]="selectedColumns"
-          [paginator]="false"
-          scrollable="true"
+        <p-table [value]="sub.rows" [columns]="selectedColumns" [paginator]="false" scrollable="true"
           [style]="{ width: '100%' }"
-          [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines th-center'"
-        >
+          [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines th-center'">
           <!-- 表頭 -->
           <ng-template pTemplate="header">
             <tr>
