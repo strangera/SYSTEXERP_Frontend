@@ -52,6 +52,7 @@ import {
   Pos1002StatusItem,
   Pos1006Item,
   Pos1008Item,
+  Pos2002LocationItem,
   Pos20031Item,
   Pos20031Query,
   Pos20032Query,
@@ -726,8 +727,8 @@ export class DropdownApiService {
   }
 
   /** 查詢位置代碼資料表(POS2002) */
-  queryPos2002Location(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS2002_Location_DropDownList').pipe(
+  queryPos2002Location(): Observable<Pos2002LocationItem[] | null> {
+    return this.queryDropdown<Pos2002LocationItem>('/queryPOS2002_Location_DropDownList').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
