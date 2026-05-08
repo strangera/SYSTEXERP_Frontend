@@ -26,6 +26,11 @@ export class Fin13040Service {
     return this.http.post<any>(`${this.apiUrl}/UpdateFIN13040`, data);
   }
 
+  /** 作廢發票 */
+  voidFIN13040(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/VoidFIN13040`, data);
+  }
+
   /** 三聯式發票列印 */
   printFIN13040(data: any): Observable<HttpResponse<Blob>> {
     return this.http.post(`${this.apiUrl}/PrintFIN13040`, data, {
