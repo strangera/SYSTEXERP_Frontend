@@ -39,6 +39,7 @@ interface TltGroup {
     floor?: string;
     area?: string;
     txnDate?: string;
+    day_lock?: string;
   };
   subTables: SubTable[];
   grandAll: Record<string, number>;
@@ -194,6 +195,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements 
           floor: first?.floor_desc ?? first?.FLOOR_NO ?? '－',
           area: first?.AREA_NO ?? first?.area_no ?? '－',
           txnDate: first?.TXN_DATE ?? first?.sad_date ?? '',
+          day_lock: first?.day_lock ?? 'N',
         };
 
         const grandAll = this.calcSum(rowsOfThisTlt, this.subtotalFields);

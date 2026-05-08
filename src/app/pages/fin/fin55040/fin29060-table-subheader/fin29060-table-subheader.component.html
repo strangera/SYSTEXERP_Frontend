@@ -101,6 +101,24 @@
     </tr>
   </ng-template>
 
+  <!-- 群組 Footer：科目餘額 -->
+  <ng-template pTemplate="groupfooter" let-rowData *ngIf="showGroupFooter">
+    <tr style="font-weight: bold; background-color: #e8f0fe;">
+      <!-- 序號欄 -->
+      <td class="text-right" style="white-space: nowrap; padding-right: 8px;">{{ groupFooterLabel }}</td>
+      <!-- 各欄位：PTA1/PTA2 顯示餘額，其餘空白 -->
+      <td *ngFor="let col of selectedColumns" class="text-right pr-2">
+        <ng-container *ngIf="col.field === 'PTA1'">
+          {{ getGroupNetBalance(rowData[groupRowsBy]).debit | number }}
+        </ng-container>
+        <ng-container *ngIf="col.field === 'PTA2'">
+          {{ getGroupNetBalance(rowData[groupRowsBy]).credit | number }}
+        </ng-container>
+      </td>
+      <td [hidden]="!IsPrint || !showManage"></td>
+    </tr>
+  </ng-template>
+
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-ri="rowIndex"
     let-index="rowIndex">
     <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" [pReorderableRow]="index"

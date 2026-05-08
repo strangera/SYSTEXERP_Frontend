@@ -125,13 +125,12 @@
       [fullData]="fullData"
       [totalData]="totalData"
       [groupRowsByName]="'科目代號'"
-      [showSubTotal]="true"
+      [showSubTotal]="false"
       [showTotal]="true"
-      [subTotalGroupHeaders]="[
-        { field: 'PTA1',    label: '廠商立帳合計' },
-        { field: 'PTA2',    label: '廠商沖銷合計' },
-        { field: 'Balance', label: '廠商未沖銷合計' }
-      ]"
+      [subTotalGroupHeaders]="[]"
+      [showGroupFooter]="true"
+      [accdcMap]="accdcMap"
+      [groupHeaderTemplate]="accGroupHeader"
       (detailWithColValue)="onDetailWithColValue($event)"
     >
       <header>

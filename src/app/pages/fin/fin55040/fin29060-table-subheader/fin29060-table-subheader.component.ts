@@ -124,6 +124,13 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
     { field: 'NotPayAmt',  label: '廠商未沖銷合計' },
   ];
   groupTotals: Record<string, Record<string, number>> = {};
+  // 群組 Footer 科目餘額
+  /** 是否顯示群組 Footer（科目餘額列）@default false */
+  @Input() showGroupFooter = false;
+  /** 群組 Footer 顯示標籤 @default '科目餘額' */
+  @Input() groupFooterLabel = '科目餘額';
+  /** ACCDC 對照表，key = groupRowsBy 的值，value = '借方' 或 '貸方' @default {} */
+  @Input() accdcMap: Record<string, string> = {};
   // 資料總計
   /** 是否顯示總計 @default false */
   @Input() showTotal = false;
@@ -675,6 +682,33 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
 
     // fallback: 計算目前 data 的小計
     return this.tableUtilityService.getGroupSubtotal(this.data, this.groupRowsBy, groupValue, field);
+  }
+
+  /**
+   * 依 ACCDC 計算群組科目餘額，回傳 { debit, credit }。
+   * 若 ACCDC='借方'：net = PTA1 - PTA2；net>0→借方，net<0→貸方(正值)
+   * 若 ACCDC='貸方'：net = PTA2 - PTA1；net>0→貸方，net<0→借方(正值)
+   * Fallback（無 ACCDC）：以符號判斷
+   */
+  getGroupNetBalance(groupValue: string): { debit: number; credit: number } {
+    const pta1 = this.getGroupSubtotal(groupValue, 'PTA1');
+    const pta2 = this.getGroupSubtotal(groupValue, 'PTA2');
+    // DB 值：'D' = 借方, 'C' = 貸方；fallback 用符號判斷
+    const accdc = this.accdcMap[groupValue] ?? (pta1 >= pta2 ? 'D' : 'C');
+
+    if (accdc === 'D') {
+      // 借方科目：net = 借 - 貸
+      const net = pta1 - pta2;
+      return net >= 0
+        ? { debit: net, credit: 0 }
+        : { debit: 0, credit: -net };
+    } else {
+      // 貸方科目：net = 貸 - 借
+      const net = pta2 - pta1;
+      return net >= 0
+        ? { debit: 0, credit: net }
+        : { debit: -net, credit: 0 };
+    }
   }
 
   // 全表總計
