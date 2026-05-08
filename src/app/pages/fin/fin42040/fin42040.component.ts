@@ -206,6 +206,7 @@ this.queryForm.patchValue(
 );
 
     this.loadDropdowns();
+
   }
 
   private loadDropdowns(): void {
@@ -257,27 +258,31 @@ this.queryForm.patchValue(
       this.data = [];
       this.totalRecords = 0;
       this.historyRequestBody = { ...payload };
+      this.updateAmountColumnHeaders();
 
       this.fin42040Service
         .queryFIN42040(payload)
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe({
-          next: (resp: any) => {
-            const rows = Array.isArray(resp?.Data)
-              ? resp.Data
-              : Array.isArray(resp?.Data?.QueryData)
-                ? resp.Data.QueryData
-                : [];
+         next: (resp: any) => {
+  const rows = Array.isArray(resp?.Data)
+    ? resp.Data
+    : Array.isArray(resp?.Data?.QueryData)
+      ? resp.Data.QueryData
+      : [];
 
-            this.data = rows;
-            this.totalRecords = Number(resp?.TotalCount ?? rows.length ?? 0);
-            this.historyRequestBody = { ...payload };
+  this.data = rows;
+  this.totalRecords = Number(resp?.TotalCount ?? rows.length ?? 0);
+  this.historyRequestBody = { ...payload };
 
-            this.queryStateService?.setQueryState?.(
-              this.ProgNo,
-              this.queryForm.value
-            );
-          },
+  // 查詢成功後才依照本次查詢條件改表頭
+  this.updateAmountColumnHeaders(payload.AmtUnit);
+
+  this.queryStateService?.setQueryState?.(
+    this.ProgNo,
+    this.queryForm.value
+  );
+},
           error: () => {
             this.data = [];
             this.totalRecords = 0;
@@ -411,4 +416,33 @@ this.queryForm.patchValue(
     const n = Number(value);
     return Number.isFinite(n) ? n.toLocaleString('en-US') : '';
   }
+  private getAmtUnitText(unit?: any): string {
+  const value = Number(unit ?? this.queryForm?.get('AmtUnit')?.value ?? 1);
+
+  switch (value) {
+    case 2:
+      return '千元';
+    case 3:
+      return '萬元';
+    case 1:
+    default:
+      return '元';
+  }
+}
+
+private updateAmountColumnHeaders(unit?: any): void {
+  const unitText = this.getAmtUnitText(unit);
+
+  const amountHeaderMap: Record<string, string> = {
+    CurrentAmount: `本期金額(${unitText})`,
+    CompareAmount: `比較年月金額(${unitText})`,
+    CurrentAccumAmount: `本期累計金額(${unitText})`,
+    CompareAccumAmount: `比較累計金額(${unitText})`,
+  };
+
+  this.columns = this.columns.map((col) => ({
+    ...col,
+    header: amountHeaderMap[col.field] ?? col.header,
+  }));
+}
 }
