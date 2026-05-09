@@ -512,7 +512,7 @@ export class FIN15110Component
             TXN_SaleAmt: data.TotalTXN_SaleAmt,
             TXN_SaleTax: data.TotalTXN_SaleTax,
             TXN_SaleNoTax: data.TotalTXN_SaleNoTax,
-            TXN_SaleZeroTax: data.TotalTXN_SaleZeroTax ?? this.data.reduce((sum: number, row: Record<string, number>) => sum + (row['TXN_SaleZeroTax'] ?? 0), 0),
+            TXN_SaleZeroTax: data.TotalTXN_SaleZeroTax,
           },
         ];
         break;

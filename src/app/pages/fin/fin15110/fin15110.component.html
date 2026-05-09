@@ -379,7 +379,9 @@
         <td class="text-center">{{ row.InvoiceDate }}</td>
         <ng-container *ngFor="let field of type7DataFields; let i = index">
           <td class="text-right">{{ fmt(row[field]) }}</td>
-          <td class="text-right" *ngIf="i === 15">{{ fmt(getType7RowTotal(row)) }}</td>
+          <td class="text-right" *ngIf="i === 15">
+            {{ fmt(getType7RowTotal(row)) }}
+          </td>
         </ng-container>
       </tr>
     </ng-template>
