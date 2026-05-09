@@ -53,7 +53,7 @@ export class FIN51011Component extends BasicQueryPageComponent<unknown> implemen
   // --- 通用/原本上傳變數 ---
   queryForm = this.formBuilder.group({});
   files: File[] = [];
-  allowedFileTypes = '.csv,.txt';
+  allowedFileTypes = '.csv';
 
   // --- 彈窗查詢變數 ---
   displayDialog = false;
