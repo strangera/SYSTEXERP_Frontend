@@ -338,14 +338,14 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
           const inv = packs
             .flatMap(p => Array.isArray(p?.invoice?.InvoiceDetail) ? p.invoice.InvoiceDetail : [])
             .map((r: any, i: number) => {
-              const isNormal = String(r?.TXN_StatusName ?? '') === '正常交易';
+              const isOrgBlank = ['正常交易', '預售交易'].includes(String(r?.TXN_StatusName ?? ''));
               const dateOnly = this.formatDate(r?.TXN_Date);
               const txnNoPadded = this.padTxnNo(r?.TXN_No);
               return {
                 ...r,
-                ORG_TXN_Date: isNormal ? '' : (r?.ORG_TXN_Date ?? ''),
-                ORG_ECR_No: isNormal ? '' : (r?.ORG_ECR_No ?? ''),
-                ORG_TXN_No: isNormal ? '' : (r?.ORG_TXN_No ?? ''),
+                ORG_TXN_Date: isOrgBlank ? '' : (r?.ORG_TXN_Date ?? ''),
+                ORG_ECR_No: isOrgBlank ? '' : (r?.ORG_ECR_No ?? ''),
+                ORG_TXN_No: isOrgBlank ? '' : (r?.ORG_TXN_No ?? ''),
                 TXN_DateOnly: dateOnly,
                 _grpKey: `${dateOnly}/${r?.ECR_No ?? ''}/${txnNoPadded}`,
                 _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
@@ -439,6 +439,11 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     const safeSort = this.sanitizeSortBy(body?.SortBy);
     const sortBy = safeSort.length ? safeSort : this.getDefaultSortBy(this.viewMode);
 
+    // ★ 同步最新排序到 historyRequestBody，讓匯出依畫面排序
+    if (this.historyRequestBody) {
+      this.historyRequestBody = { ...this.historyRequestBody, SortBy: sortBy };
+    }
+
     return this.tls23040Service.queryTLS23040({
       ...body,
       pageSize: 30,
@@ -456,14 +461,14 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
           rows = packs
             .flatMap(p => Array.isArray(p?.invoice?.InvoiceDetail) ? p.invoice.InvoiceDetail : [])
             .map((r: any, i: number) => {
-              const isNormal = String(r?.TXN_StatusName ?? '') === '正常交易';
+              const isOrgBlank = ['正常交易', '預售交易'].includes(String(r?.TXN_StatusName ?? ''));
               const dateOnly = this.formatDate(r?.TXN_Date);
               const txnNoPadded = this.padTxnNo(r?.TXN_No);
               return {
                 ...r,
-                ORG_TXN_Date: isNormal ? '' : (r?.ORG_TXN_Date ?? ''),
-                ORG_ECR_No: isNormal ? '' : (r?.ORG_ECR_No ?? ''),
-                ORG_TXN_No: isNormal ? '' : (r?.ORG_TXN_No ?? ''),
+                ORG_TXN_Date: isOrgBlank ? '' : (r?.ORG_TXN_Date ?? ''),
+                ORG_ECR_No: isOrgBlank ? '' : (r?.ORG_ECR_No ?? ''),
+                ORG_TXN_No: isOrgBlank ? '' : (r?.ORG_TXN_No ?? ''),
                 TXN_DateOnly: dateOnly,
                 _grpKey: `${dateOnly}/${r?.ECR_No ?? ''}/${txnNoPadded}`,
                 _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
