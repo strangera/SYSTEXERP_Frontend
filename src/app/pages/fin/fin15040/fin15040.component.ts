@@ -63,7 +63,8 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     INV_GUINumber_E: ['', [Validators.maxLength(8)]],       // 發票號碼訖
     INV_YM1_S: [''],                                      // 資料所屬年月起
     INV_YM1_E: [''],                                      // 資料所屬年月訖
-    INV_YM2: ['', [Validators.required]], // 申報年月
+    INV_YM2_S: [''], // 申報年月起
+    INV_YM2_E: [''], // 申報年月訖
     PUR_Uniform: ['', [Validators.maxLength(8)]],           // 廠商統一編號
     PUR_TaxType: [null],                                    // 課稅別
     Source_Doc_No_S: ['', [Validators.maxLength(16)]],      // 憑證單號起
@@ -77,7 +78,8 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     HasUniform: [null],                                     // 是否有統一編號
     ECR_No: [null],                                         // 收銀機號                                     // 是否有統一編號
     PUR_DiscNo: [null],                                         // 折抵代號 (dropdown)
-    IncludeNextDayVoid: [false],                             // 包含隔日作廢
+    IncludeNextDayVoid: [true],                              // 包含隔日作廢
+    ExcludeB2B: [true],                                      // 排除B2B發票
     INV_Cancel: [null],                                      // 發票狀態
     ...createPaginationConfig([{ field: 'INV_GUIType', order: 1 }, { field: 'INV_GUINumber', order: 1 }])
   });
@@ -161,13 +163,15 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
   ngOnInit(): void {
     this.initializePage('FIN15040', 'fin/fin15040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
-    // 設定INV_YM2預設值
+    // 設定申報年月起訖預設值（當期雙月）
     const currentDate = new Date();
-    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    const currentMonth = currentDate.getMonth() + 1;
     if (currentMonth % 2 !== 0) {
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
-    this.queryForm.get('INV_YM2')?.setValue(this.datePipe.transform((currentDate), 'yyyyMM'));
+    const defaultYM = this.datePipe.transform(currentDate, 'yyyyMM') ?? '';
+    this.queryForm.get('INV_YM2_S')?.setValue(defaultYM);
+    this.queryForm.get('INV_YM2_E')?.setValue(defaultYM);
   }
 
   onSubmit(frm: FormGroup): void {
@@ -225,12 +229,8 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
 
   private validateRequiredFields(): boolean {
     if (this.queryForm.invalid) {
-      const errors: string[] = [];
-      if (!this.queryForm.get('INV_YM2')?.value) errors.push('請填寫申報年月');
-      if (errors.length > 0) {
-        this.messageService.errorBubble(errors.join('<br>'));
-        return false;
-      }
+      this.messageService.errorBubble('請確認查詢條件是否填寫正確');
+      return false;
     }
     return true;
   }
