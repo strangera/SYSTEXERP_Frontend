@@ -210,6 +210,16 @@
           rowspan="3"
           class="text-center"
           style="
+            min-width: 80px;
+            background-color: var(--table-header-bg-group);
+          "
+        >
+          合計金額
+        </th>
+        <th
+          rowspan="3"
+          class="text-center"
+          style="
             min-width: 70px;
             background-color: var(--table-header-bg-group);
           "
@@ -367,24 +377,26 @@
       <tr>
         <td class="text-center">{{ rowIndex + 1 }}</td>
         <td class="text-center">{{ row.InvoiceDate }}</td>
-        <td class="text-right" *ngFor="let field of type7DataFields">
-          {{ fmt(row[field]) }}
-        </td>
+        <ng-container *ngFor="let field of type7DataFields; let i = index">
+          <td class="text-right">{{ fmt(row[field]) }}</td>
+          <td class="text-right" *ngIf="i === 15">{{ fmt(getType7RowTotal(row)) }}</td>
+        </ng-container>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="footer">
       <tr class="font-bold">
         <td class="text-center" colspan="2">合計</td>
-        <td class="text-right" *ngFor="let field of type7DataFields">
-          {{ getType7Sum(field) }}
-        </td>
+        <ng-container *ngFor="let field of type7DataFields; let i = index">
+          <td class="text-right">{{ getType7Sum(field) }}</td>
+          <td class="text-right" *ngIf="i === 15">{{ getType7TotalSum() }}</td>
+        </ng-container>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="19" class="text-center p-5 text-500 font-bold">
+        <td colspan="20" class="text-center p-5 text-500 font-bold">
           <i class="pi pi-search mr-2"></i>
           查無資料
         </td>

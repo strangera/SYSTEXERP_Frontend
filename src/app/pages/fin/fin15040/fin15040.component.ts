@@ -10,6 +10,7 @@ import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-t
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -48,7 +49,8 @@ export interface Option {
     CommonModule,
     MultiSelectComponent,
     CustomFooterTableComponent,
-    YearMonthComponent
+    YearMonthComponent,
+    CheckboxModule
   ]
 })
 export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> implements OnInit {
@@ -75,6 +77,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     HasUniform: [null],                                     // 是否有統一編號
     ECR_No: [null],                                         // 收銀機號                                     // 是否有統一編號
     PUR_DiscNo: [null],                                         // 折抵代號 (dropdown)
+    IncludeNextDayVoid: [false],                             // 包含隔日作廢
     INV_Cancel: [null],                                      // 發票狀態
     ...createPaginationConfig([{ field: 'INV_GUIType', order: 1 }, { field: 'INV_GUINumber', order: 1 }])
   });

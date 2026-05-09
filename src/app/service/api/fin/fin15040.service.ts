@@ -30,6 +30,7 @@ export interface FIN15040QueryRequest extends BaseQueryRequest {
   SYS_ORIGIN?: string[];         // 系統別
   INV_Cancel?: string;           // 發票狀態
   ECR_No?: string[];             // 收銀機號
+  IncludeNextDayVoid?: boolean;  // 包含隔日作廢
 }
 
 export interface FIN15040PrintRequest extends FIN15040QueryRequest {

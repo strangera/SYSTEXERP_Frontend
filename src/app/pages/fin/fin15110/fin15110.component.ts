@@ -125,6 +125,17 @@ export class FIN15110Component
     return this.fmt(sum);
   }
 
+  /** Type 7 單列前16欄金額加總（不含無原交易資料銷售總額） */
+  getType7RowTotal(row: any): number {
+    return this.type7DataFields.slice(0, 16).reduce((sum, field) => sum + (row[field] ?? 0), 0);
+  }
+
+  /** Type 7 合計金額欄的最終總計 */
+  getType7TotalSum(): string {
+    const sum = this.data.reduce((acc, row) => acc + this.getType7RowTotal(row), 0);
+    return this.fmt(sum);
+  }
+
   /** 下拉選項 */
   ECRNoOptions: IDropdownItem[] = [];
   displayModeOptions = [
