@@ -516,11 +516,11 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
         //   isAmountMatched = true;
         // }
       }
-      if (!isAmountMatched) {
-        this.messageService.errorBubble(errorMessage);
-        this.loading = false;
-        return;
-      }
+      // if (!isAmountMatched) {
+      //   this.messageService.errorBubble(errorMessage);
+      //   this.loading = false;
+      //   return;
+      // }
       const paramBody = {
         DIS_No: this.isFormCreateable ? undefined : formValue.DIS_No,
         ACP_YYYYMM: this.datePipe.transform(formValue.ACP_YYYYMM, 'yyyyMM') || '',
