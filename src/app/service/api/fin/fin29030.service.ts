@@ -10,8 +10,8 @@ export interface FIN29030Detail {
   PaymentBank: string; // 付款銀行
   IssueDate: Date; // 開票日期
   ExpireDate: Date; // 到期日
-  VEN_No: string; // 廠客代號
-  VEN_Name: string; // 廠客名稱
+  VenNo: string; // 廠客代號
+  VenName: string; // 廠客名稱
   TicketAmt: number // 票面金額/小計金額
 }
 
@@ -71,15 +71,12 @@ export class Fin29030Service {
           rawData = rawData || {};
         }
         const rawSubTotals = rawData.fIN29030SubTotals || [];
-        // const allDetails = rawSubTotals.flatMap((sub: any) => sub.fIN29030Details || []);
-        const allDetails = rawSubTotals.flatMap((sub: any) =>
-          (sub.fIN29030Details || []).map((detail: any) => ({
-            ...detail,
-            // 關鍵修正：將 API 的 VenNo 映射到前端 Table 使用的 VEN_No
-            VEN_No: detail.VenNo,
-            VEN_Name: detail.VenName
-          }))
-        );
+        const allDetails = rawSubTotals.flatMap((sub: any) => sub.fIN29030Details || []);
+        // const allDetails = rawSubTotals.flatMap((sub: any) =>
+        //   (sub.fIN29030Details || []).map((detail: any) => ({
+        //     ...detail,
+        //   }))
+        // );
         const subTotals = rawSubTotals.map((sub: any) => ({
           PAM_No: sub.PAM_No, // 建議加上，幫助 groupRowsBy 識別
           SummaryText: sub.SummaryText,
