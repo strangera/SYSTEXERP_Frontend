@@ -23,6 +23,11 @@ interface VOID_TLS13010Request {
   talentId: string;
 }
 
+interface EARLY_TERMINATION_TLS13010Request {
+  talentId: string;
+  tlt_contract_edate: string; // YYYY-MM-DD
+}
+
 interface TLS13010CommissionRequest {
   TalentId: string;
   CurrentTltTermType: string;
@@ -250,6 +255,13 @@ export class TLS13010Service {
   voidTLS13010(request: VOID_TLS13010Request) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/voidTLS13010`, request).pipe(
       tap((res) => console.log('作廢結果:', res)),
+    );
+  }
+
+  /** 提前撤櫃 */
+  earlyTerminationTLS13010(request: EARLY_TERMINATION_TLS13010Request) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/earlyTerminationTLS13010`, request).pipe(
+      tap((res) => console.log('提前撤櫃結果:', res)),
     );
   }
 

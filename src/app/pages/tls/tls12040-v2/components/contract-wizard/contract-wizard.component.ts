@@ -546,6 +546,12 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
         // 通知 step1：API 資料已就緒，觸發 ngOnChanges → loadDependentDropdowns
         this.step1DataReady = true;
 
+        // 觸發 OnPush 唯讀元件重繪（詳見 step1 的 refreshReadonlyDisplay 說明）
+        // 用 setTimeout(50) 讓 Angular 先處理 step1DataReady 引起的 ngOnChanges
+        setTimeout(() => {
+          this.step1Component?.refreshReadonlyDisplay();
+        }, 50);
+
         // 載入 Step 2 代扣款資料
         await this.loadFareData(rowData.apply_no);
 
