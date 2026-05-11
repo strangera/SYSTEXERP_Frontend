@@ -57,9 +57,14 @@ export const finRoutes: Routes = [
   { path: 'fin13070', loadComponent: () => import('./fin13070/fin13070.component').then(m => m.FIN13070Component), data: { progNo: 'FIN13070' } },
   //折讓資料刪除作業
   { path: 'fin13080', loadComponent: () => import('./fin13080/fin13080.component').then(m => m.FIN13080Component), data: { progNo: 'FIN13080' } },
+<<<<<<< HEAD
     // 申報書維護
   { path: 'fin13100', loadComponent: () => import('./fin13100/fin13100.component').then(m => m.FIN13100Component), data: { progNo: 'FIN13100' } },
   { path: 'fin13100cru', loadComponent: () => import('./fin13100-cru/fin13100-cru.component').then(m => m.FIN13100CRUComponent), data: { progNo: 'FIN13100' } },
+=======
+  //補登進項稅額作業
+  { path: 'fin13090', loadComponent: () => import('./fin13090/fin13090.component').then(m => m.FIN13090Component), data: { progNo: 'FIN13090' } },
+>>>>>>> feature/eugeneFIN13090pre
   // 申報書維護
   { path: 'fin14010', loadComponent: () => import('./fin14010/fin14010.component').then(m => m.FIN14010Component), data: { progNo: 'FIN14010' } },
   { path: 'fin14010cru', loadComponent: () => import('./fin14010-cru/fin14010-cru.component').then(m => m.FIN14010CRUComponent), data: { progNo: 'FIN14010' } },
@@ -386,5 +391,5 @@ export const finRoutes: Routes = [
   // 支付申請單
   { path: 'fin73030', loadComponent: () => import('./fin73030/fin73030.component').then(m => m.FIN73030Component), data: { progNo: 'FIN73030' } },
   // 零用金撥補明細表
-  { path: 'fin73040', loadComponent: () => import('./fin73040/fin73040.component').then(m => m.FIN73040Component),data:{progNo:'FIN73040'} },
+  { path: 'fin73040', loadComponent: () => import('./fin73040/fin73040.component').then(m => m.FIN73040Component), data: { progNo: 'FIN73040' } },
 ];
