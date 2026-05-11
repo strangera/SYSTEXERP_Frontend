@@ -24,7 +24,7 @@ export const columns: ReportColumn[] = [
   { field: 'TermNo', header: '分期期數', format: (value) => getSYS1000('T109', value), exportFormat: transformOptionsForExport(getSYS1000Options('T109')) }, // 對應 TermNo
   { field: 'acquiring_Bank', header: '收單行' }, // 變更標題為 '收單行'
   { field: 'FileName', header: '請款來源' }, // 新增
-  { field: 'BatCloseDate', header: '檔案日期', format: formatDate }, // 對應 BatCloseDate (DATE), 移至後方
+  { field: 'BatCloseDate', header: '入帳日', format: formatDate }, // 對應 BatCloseDate (DATE), 移至後方
   { field: 'CRT_USR_No', header: '建立者' }, // 對應 CRT_USR_No
   { field: 'CRT_Date', header: '建立日期', format: formatDateTime }, // 對應 CRT_Date (DATETIME)
   { field: 'UPD_USR_No', header: '修改者' }, // 對應 UPD_USR_No
