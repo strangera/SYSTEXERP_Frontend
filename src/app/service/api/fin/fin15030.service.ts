@@ -25,6 +25,7 @@ export interface FIN15030QueryRequest extends BaseQueryRequest {
   Voucher_No_E?: string;       // 傳票編號訖
   SAL_Type?: string[];         // 使用別
   SYS_ORIGIN?: string[];       // 系統別
+  IncludeNextDayVoid?: boolean; // 包含隔日作廢
 }
 
 /**

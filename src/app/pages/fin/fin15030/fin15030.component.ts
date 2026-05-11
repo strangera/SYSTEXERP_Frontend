@@ -7,6 +7,7 @@ import { FIN15030Data, FIN15030PrintRequest, FIN15030QueryRequest, FIN15030Servi
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { CheckboxModule } from 'primeng/checkbox';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn, formatAmount, formatDate } from '@shared/componentkit/table-report/table-report.model';
 import { ValidationService } from '@shared/service/validation.service';
@@ -48,7 +49,8 @@ export interface Option {
     MultiSelectComponent,
     CommonModule,
     TableReportComponent,
-    YearMonthComponent
+    YearMonthComponent,
+    CheckboxModule
   ]
 })
 export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> implements OnInit {
@@ -71,6 +73,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票號碼訖 (string(16))
     SAL_Type: [null],           // 使用別 (dropdown)
     SYS_ORIGIN: [null],         // 系統別 (dropdown)
+    IncludeNextDayVoid: [true], // 包含隔日作廢 (預設打勾)
     ...createPaginationConfig([{ field: 'INV_GUIType', order: 1 }, { field: 'TXN_GUINo', order: 1 }])
   });
 
