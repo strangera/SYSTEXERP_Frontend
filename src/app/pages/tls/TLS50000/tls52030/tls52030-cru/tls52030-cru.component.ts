@@ -1,5 +1,5 @@
 import { AsyncPipe, NgIf } from '@angular/common';
-import { Component, OnInit, ViewChild, } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -123,7 +123,8 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
   ]
   constructor(
     public readonly tls52030Service: Tls52030Service,
-    private readonly dropdown: DropdownApiService
+    private readonly dropdown: DropdownApiService,
+    private readonly cdr: ChangeDetectorRef
   ) { super(); }
 
   ngOnInit(): void {
@@ -232,18 +233,46 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
           ? this.tls52030Service.insertTLS52030(submitData)
           : this.tls52030Service.updateTLS52030(submitData);
 
-        request$.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe({
-          next: () => {
-            this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
+        request$.pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        ).subscribe({
+          next: (res) => {
             if (this.isFormCreateable) {
-              this.dataForm.reset();
+              // 參考 TLS52010 使用 confirm 顯示單號
+              // 假設後端 Response 結構為 { Data: { odm_No: '...' } } 或 Message
+              const odmNo = res.Data?.ODM_No || '—';
+              this.messageService.confirm({
+                header: '新增成功',
+                message: `進貨驗收單號：<strong>${odmNo}</strong>`,
+                icon: 'check',
+                showIcon: true,
+                acceptLabel: '返回',
+                accept: () => this.onCancel(),
+                rejectLabel: '繼續新增',
+                reject: () => this.resetFormForContinueNew(),
+              });
             } else {
+              this.messageService.successBubble('修改成功');
               this.onCancel();
             }
           }
         });
       });
     })
+  }
+  private resetFormForContinueNew(): void {
+    this.dataForm.reset({
+      ODM_No: '系統自動產生',
+      ODM_USR_No: this.user?.user_No,
+      ODM_USR_Name: this.user?.user_Name,
+      ODM_Date: new Date(),
+      APRV_Date: new Date(),
+    });
+    this.data = [];
+    this.selectedItems = [];
+    this.calculateTotals();
+    this.cdr.detectChanges();
   }
   dialogVisible = false;
   dialogLoading = false;
