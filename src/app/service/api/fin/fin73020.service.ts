@@ -13,7 +13,7 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class FIN73020Service {
-  private readonly baseUrl = `${environment.ApiUrl}/Controllers/FIN70000`;
+  private readonly baseUrl = `${environment.ApiUrl}/FIN0000/FIN70000`;
 
   constructor(private readonly http: HttpClient) {}
 

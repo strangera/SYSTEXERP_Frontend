@@ -250,7 +250,7 @@ ngOnInit(): void {
       this.data = [];
       this.totalRecords = 0;
       this.historyRequestBody = { ...payload };
-this.updateAmountColumnHeaders(payload.AmtUnit);
+      this.updateAmountColumnHeaders(payload.AmtUnit);
       this.fin42030Service
         .queryFIN42030(payload)
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
