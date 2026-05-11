@@ -28,27 +28,27 @@ export interface TLS32010QueryRequest extends BaseQueryRequest {
 
 // 查詢結果 Model (保持不變)
 export interface TLS32010Data {
-  序號: number;
-  館別: string;
-  組織名稱: string;
-  櫃別名稱: string;
-  專櫃編號: string;
-  櫃位名稱: string;
-  位置編號: string;
-  坪數: number;        // 建議改為 number，前端 formatAmount 會處理
-  營業目標: number;
-  營業實績: number;
-  交易筆數: number;
-  客單價: number;
-  月坪效: number;
-  達成率: number;
-  坪數_排名: string;
-  營業目標_排名: string;
-  營業實績_排名: string;
-  交易筆數_排名: string;
-  客單價_排名: string;
-  月坪效_排名: string;
-  達成率_排名: string;
+  RowNo: number | null; // 改大寫
+  BuildingDesc: string; // 改大寫
+  OrgName: string;
+  CabinetKindName: string;
+  TltNo: string;
+  TltName: string;
+  LocationNoList: string;
+  TltSpace: number;
+  Budget: number;
+  SaleAmt: number;
+  CustCnt: number;
+  AvgTicketAmt: number;
+  MonthlySpaceEfficiency: number;
+  AchievementRate: number;
+  TltSpaceRank: number | null;
+  BudgetRank: number | null;
+  SaleAmtRank: number | null;
+  CustCntRank: number | null;
+  AvgTicketAmtRank: number | null;
+  MonthlySpaceEfficiencyRank: number | null;
+  AchievementRateRank: number | null;
 }
 
 @Injectable({
