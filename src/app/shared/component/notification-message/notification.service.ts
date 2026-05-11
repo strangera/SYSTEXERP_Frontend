@@ -76,6 +76,9 @@ export class NotificationService {
       .replace(/\/r\/n/g, '<br>')
       .replace(/\/r/g, '<br>')
       .replace(/\/n/g, '<br>')
+      .replace(/\r\n/g, '<br>')
+      .replace(/\r/g, '<br>')
+      .replace(/\n/g, '<br>')
       .replace(/\\r\\n/g, '<br>')
       .replace(/\\r/g, '<br>')
       .replace(/\\n/g, '<br>') : '';
