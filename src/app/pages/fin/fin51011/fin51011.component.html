@@ -43,7 +43,8 @@
   <div style="min-height: 300px;">
     <app-table-report [data]="fileList" [columns]="cols" [totalRecords]="totalRecords" [loading]="loading"
       [showDelete]="false" [showReportMode]="false" [showFilter]="false" [showManage]="false" [showCheckBox]="true"
-      [lazy]="false" (selectionChange)="selectedFiles = $event" emptyMessage="請輸入條件查詢檔案">
+      [lazy]="false" (selectionChange)="selectedFiles = $event" emptyMessage="請輸入條件查詢檔案"
+      (selectButton)="onDownload($event)">
     </app-table-report>
   </div>
 

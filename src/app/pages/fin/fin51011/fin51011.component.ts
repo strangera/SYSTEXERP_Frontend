@@ -66,9 +66,33 @@ export class FIN51011Component extends BasicQueryPageComponent<unknown> implemen
 
   cols: ReportColumn[] = [
     { field: 'FileName', header: '檔案名稱', align: 'left' },
-    { field: 'LastWriteTime', header: '最後修改時間', align: 'center' }
+    { field: 'LastWriteTime', header: '最後修改時間', align: 'center' },
+    {
+      field: 'download',
+      header: '下載',
+      type: 'button', // 使用 table-report 內建的按鈕樣式
+      buttonLabel: '下載',
+      align: 'center',
+      width: '100px'
+    }
   ];
-
+  onDownload(rowData: FIN51011Data) {
+    this.loading = true;
+    this.fin51011Service.downloadFile(rowData.FileName)
+      .pipe(
+        finalize(() => this.loading = false),
+        untilDestroyed(this)
+      )
+      .subscribe((blob) => {
+        // 建立一個隱藏的 <a> 標籤來觸發下載
+        const a = document.createElement('a');
+        const objectUrl = URL.createObjectURL(blob);
+        a.href = objectUrl;
+        a.download = rowData.FileName; // 設定下載檔名
+        a.click();
+        URL.revokeObjectURL(objectUrl); // 釋放記憶體
+      });
+  }
   constructor(
     private fin51011Service: FIN51011Service,
     private tls27010Service: TLS27010Service
@@ -85,34 +109,32 @@ export class FIN51011Component extends BasicQueryPageComponent<unknown> implemen
   // ==========================================
   handleCustomUpload(event: FileUploadHandlerEvent) {
     if (event.files && event.files.length > 0) {
-      const clientIp = this.authService.currentUserValue?.client_ip || '';
       this.loading = true;
 
-      const renamedFiles: File[] = event.files.map(originalFile => {
-        const uniform = this.authService.currentUserValue?.STR_Uniform || '';
-        const date = new Date();
-        const year = date.getFullYear().toString().slice(-2);
-        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-        const day = date.getDate().toString().padStart(2, '0');
-        const formattedDate = `${year}${month}${day}`;
-        const extension = originalFile.name.split('.').pop()?.toLowerCase();
-        const newName = `TSCDM${uniform}_${formattedDate}.${extension}`;
+      // 取出第一個檔案（依照你的 API 設計目前一次處理一個）
+      const fileToUpload = event.files[0];
 
-        return new File([originalFile], newName, {
-          type: originalFile.type,
-          lastModified: originalFile.lastModified,
-        });
-      });
-
-      this.tls27010Service.uploadTLS27010(renamedFiles, clientIp)
+      // 呼叫 FIN51011 專用的上傳 API，而不是 TLS27010
+      this.fin51011Service.uploadFIN51011(fileToUpload)
         .pipe(
           untilDestroyed(this),
           finalize(() => this.loading = false)
         )
-        .subscribe(response => {
-          this.messageService.successBubble(response.Message);
-          this.files = [];
-          this.fileUpload?.fileUpload?.clear();
+        .subscribe(res => {
+          // 判斷回傳結果（注意：這裡要依照你的 ApiResponse 格式判斷）
+          const uploadResult = res?.Data;
+          if (res?.Status === '0000' && uploadResult?.Success) {
+            this.messageService.successBubble(`檔案 [${fileToUpload.name}] 轉入成功，共 ${uploadResult.SuccessCount} 筆`);
+            this.files = [];
+            this.fileUpload?.fileUpload?.clear();
+          } else {
+            // 處理失敗邏輯（如顯示錯誤報告）
+            if (uploadResult?.ErrorFilePath) {
+              this.errorReportService.showImportError(uploadResult.ErrorFilePath, '檔案檢核失敗，請查看錯誤報告');
+            } else {
+              this.messageService.errorBubble(uploadResult?.Errors?.join('；') || '轉入失敗');
+            }
+          }
         });
     }
   }
