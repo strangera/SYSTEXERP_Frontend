@@ -10,8 +10,8 @@ export interface FIN29030Detail {
   PaymentBank: string; // 付款銀行
   IssueDate: Date; // 開票日期
   ExpireDate: Date; // 到期日
-  VenNo: string; // 廠客代號
-  VenName: string; // 廠客名稱
+  VEN_No: string; // 廠客代號
+  VEN_Name: string; // 廠客名稱
   TicketAmt: number // 票面金額/小計金額
 }
 
@@ -20,7 +20,7 @@ export interface FIN29030SubTotal {
   PAM_No: string;
   SummaryText: string;
   SubTotalTicketAmt: number;
-  fIN29020_Details: FIN29030Detail[];
+  fIN29030_Details: FIN29030Detail[];
 }
 
 // 3. API Data 回傳的結構 (包含總計與列表)
@@ -30,7 +30,7 @@ export interface FIN29030Result {
   PageIndex: number;
   PageSize: number
   TotalTicketAmt: number;    // API 提供的總金額
-  fIN29020_SubTotals: FIN29030SubTotal[];
+  fIN29030_SubTotals: FIN29030SubTotal[];
 }
 
 // 4. 完整的 Response (Data 為單一物件)
@@ -71,9 +71,17 @@ export class Fin29030Service {
           rawData = rawData || {};
         }
         const rawSubTotals = rawData.fIN29030SubTotals || [];
-        const allDetails = rawSubTotals.flatMap((sub: any) => sub.fIN29030Details || []);
+        // const allDetails = rawSubTotals.flatMap((sub: any) => sub.fIN29030Details || []);
+        const allDetails = rawSubTotals.flatMap((sub: any) =>
+          (sub.fIN29030Details || []).map((detail: any) => ({
+            ...detail,
+            // 關鍵修正：將 API 的 VenNo 映射到前端 Table 使用的 VEN_No
+            VEN_No: detail.VenNo,
+            VEN_Name: detail.VenName
+          }))
+        );
         const subTotals = rawSubTotals.map((sub: any) => ({
-          PAM_No: sub.PAM_No ?? 0,
+          PAM_No: sub.PAM_No, // 建議加上，幫助 groupRowsBy 識別
           SummaryText: sub.SummaryText,
           TicketAmt: sub.SubTotalTicketAmt ?? 0,
         }));
@@ -87,7 +95,8 @@ export class Fin29030Service {
           Data: allDetails,
           SubTotals: subTotals,
           Totals: totals,
-          TotalCount: rawResponse.TotalCount ?? allDetails.length
+          // TotalCount: rawResponse.TotalCount ?? allDetails.length
+          TotalCount: rawData.TotalCount ?? rawResponse.TotalCount ?? allDetails.length
         };
       })
     );
