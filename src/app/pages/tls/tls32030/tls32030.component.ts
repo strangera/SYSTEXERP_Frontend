@@ -5,6 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { formatAmount, formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -111,27 +112,27 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'TltNo', header: '專櫃編號', align: 'left' },
     { field: 'TltName', header: '專櫃名稱', align: 'left' },
     { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準' },
-    { field: 'Base_Space', header: '坪數', align: 'right', groupField: '基準' },
-    { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', groupField: '基準' },
-    { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', groupField: '基準' },
-    { field: 'Base_Target', header: '目標', align: 'right', groupField: '基準' },
+    { field: 'Base_Space', header: '坪數', align: 'right', groupField: '基準', format: (value) => formatAmountWithDecimals(value, 2) },
+    { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', groupField: '基準', format: formatAmount },
+    { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', groupField: '基準', format: formatAmount },
+    { field: 'Base_Target', header: '目標', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Base_DaySpaceEff', header: '日坪效', align: 'right', groupField: '基準' },
     { field: 'Base_AchieveRate', header: '達成率', align: 'right', groupField: '基準' },
-    { field: 'Base_AvgTicket', header: '客單價', align: 'right', groupField: '基準' },
+    { field: 'Base_AvgTicket', header: '客單價', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較' },
-    { field: 'Comp_Space', header: '坪數', align: 'right', groupField: '比較' },
-    { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', groupField: '比較' },
-    { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', groupField: '比較' },
-    { field: 'Comp_Target', header: '目標', align: 'right', groupField: '比較' },
+    { field: 'Comp_Space', header: '坪數', align: 'right', groupField: '比較', format: (value) => formatAmountWithDecimals(value, 2) },
+    { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Comp_Target', header: '目標', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Comp_DaySpaceEff', header: '日坪效', align: 'right', groupField: '比較' },
     { field: 'Comp_AchieveRate', header: '達成率', align: 'right', groupField: '比較' },
-    { field: 'Comp_AvgTicket', header: '客單價', align: 'right', groupField: '比較' },
-    { field: 'Diff_SaleAmt', header: '銷售金額差異', align: 'right', groupField: '差異' },
-    { field: 'Diff_TxnCnt', header: '交易筆數差異', align: 'right', groupField: '差異' },
-    { field: 'Diff_Target', header: '目標差異', align: 'right', groupField: '差異' },
-    { field: 'Diff_DaySpaceEff', header: '日坪效差異', align: 'right', groupField: '差異' },
+    { field: 'Comp_AvgTicket', header: '客單價', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Diff_SaleAmt', header: '銷售金額差異', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_TxnCnt', header: '交易筆數差異', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_Target', header: '目標差異', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_DaySpaceEff', header: '日坪效差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_AchieveRate', header: '達成率差異', align: 'right', groupField: '差異' },
-    { field: 'Diff_AvgTicket', header: '客單價差異', align: 'right', groupField: '差異' }
+    { field: 'Diff_AvgTicket', header: '客單價差異', align: 'right', groupField: '差異', format: formatAmount }
   ];
   columnGroup = [
     { header: '基準', field: '基準' },

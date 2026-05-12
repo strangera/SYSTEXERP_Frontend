@@ -12,7 +12,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -80,7 +80,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
     { field: 'PerformanceRate', header: '營業實績佔比', align: 'right', groupField: '營業佔比', format: (value) => formatPercentage(value, 2) },
     { field: 'TxnCount', header: '交易筆數', align: 'right', groupField: '客單價', format: formatAmount, isTotal: true },
     { field: 'AvgTicket', header: '客單價', align: 'right', groupField: '客單價', format: formatAmount, isTotal: true },
-    { field: 'tlt_space', header: '坪數', align: 'right', groupField: '營業坪效', isTotal: true },
+    { field: 'tlt_space', header: '坪數', align: 'right', groupField: '營業坪效', isTotal: true, format: (value) => formatAmountWithDecimals(value, 2) },
     { field: 'MonthlyPSM', header: '坪效', align: 'right', groupField: '營業坪效', isTotal: true },
     { field: 'MonthlyBudgetTotal', header: '月營業目標', align: 'right', groupField: '月累計', format: formatAmount, isTotal: true },
     { field: 'MonthlySalesTotal', header: '營業實績', align: 'right', groupField: '月累計', format: formatAmount, isTotal: true },

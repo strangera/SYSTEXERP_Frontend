@@ -14,7 +14,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -71,14 +71,14 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     { field: 'TltNo', header: '櫃位編號', align: 'left', groupField: '單位' },
     { field: 'TltName', header: '櫃位名稱', align: 'left', groupField: '單位' },
     { field: 'LocationNoList', header: '位置編號', align: 'left', groupField: '單位' },
-    { field: 'TltSpace', header: '坪數', align: 'right', format: formatAmount },
+    { field: 'TltSpace', header: '坪數', align: 'right', format: (value) => formatAmountWithDecimals(value, 2) },
     { field: 'Budget', header: '營業目標', align: 'right', format: formatAmount },
     { field: 'SaleAmt', header: '營業實績', align: 'right', format: formatAmount },
     { field: 'CustCnt', header: '交易筆數', align: 'right', format: formatAmount },
     { field: 'AvgTicketAmt', header: '客單價', align: 'right', format: formatAmount },
     { field: 'MonthlySpaceEfficiency', header: '月坪效', align: 'right', format: formatAmount },
     { field: 'AchievementRate', header: '達成率', align: 'right', format: (value: number) => value ? `${value.toFixed(1)}%` : '0.0%' },
-    { field: 'TltSpaceRank', header: '坪數', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'TltSpaceRank', header: '坪數', align: 'right', groupField: '排名順位' },
     { field: 'BudgetRank', header: '營業目標', align: 'right', format: formatAmountCN, groupField: '排名順位' },
     { field: 'SaleAmtRank', header: '營業實績', align: 'right', format: formatAmountCN, groupField: '排名順位' },
     { field: 'CustCntRank', header: '交易筆數', align: 'right', groupField: '排名順位' },
