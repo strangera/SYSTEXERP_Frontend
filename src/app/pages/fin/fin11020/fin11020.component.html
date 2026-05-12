@@ -1,27 +1,38 @@
 <div class="card fin11020">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <p-fileUpload #fileUpload mode="basic" chooseIcon="pi pi-upload" accept=".csv"
-      (onSelect)="onFileUpload($event);fileUpload.clear()" [auto]="true" chooseLabel="匯入CSV"
-      [chooseIcon]="uploadLoading ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"
-      [disabled]="uploadLoading || !this.hasPermission(Actions.ImportCSV)" />
+
+    <p-fileUpload #fileUpload mode="basic" accept=".csv" [auto]="true" chooseLabel="匯入CSV"
+      [chooseIcon]="uploadLoading() ? 'pi pi-spin pi-spinner' : 'pi pi-upload'"
+      [disabled]="uploadLoading() || !hasPermission(Actions.ImportCSV)"
+      (onSelect)="onFileUpload($event); fileUpload.clear()" />
+
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
+
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
+    <p-accordionTab [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+      <ng-template pTemplate="header">
+        {{ 'query-conditions' | translate }}
+      </ng-template>
+
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-year-month class="col-12 md:col-6 lg:col-4" label="發票年月(起)" [control]="queryForm.controls.GUI_YYMM_start"
-            [submitted]="submitted"></app-year-month>
-          <app-year-month class="col-12 md:col-6 lg:col-4" label="發票年月(迄)" [control]="queryForm.controls.GUI_YYMM_end"
-            [submitted]="submitted"></app-year-month>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="track"
-            [control]="queryForm.controls.GUI_Track" [submitted]="submitted" />
+          <!-- 這裡使用了之前重構的 YearMonthComponent -->
+          <app-year-month class="col-12 md:col-6 lg:col-4" label="發票年月(起)" [control]="controls.GUI_YYMM_start"
+            [submitted]="submitted" />
+
+          <app-year-month class="col-12 md:col-6 lg:col-4" label="發票年月(迄)" [control]="controls.GUI_YYMM_end"
+            [submitted]="submitted" />
+
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="GUI_Track"
+            [control]="controls.GUI_Track" [submitted]="submitted" />
+
           <app-input-text-range class="col-12 md:col-6 lg:col-4" startLabel="發票起始號碼" endLabel="發票結束號碼"
-            [startControl]="queryForm.controls.GUI_No_start" [endControl]="queryForm.controls.GUI_No_end"
-            [submitted]="submitted" [errorForGroup]="true" />
+            [startControl]="controls.GUI_No_start" [endControl]="controls.GUI_No_end" [submitted]="submitted"
+            [errorForGroup]="true" />
         </div>
+
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
@@ -30,14 +41,13 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <app-table-report dataKey="ID" [data]="data" [columns]="columns" [expansionColumns]="subColumns"
-    (edit)="onEdit($event)" expansionDataKey="POS10171Details" (detail)="onDetail($event)" [showCheckBox]="true"
-    (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
-    [isRowSelectable]="isRowSelectable" [totalRecords]="totalRecords" [editDisabled]="editDisabled" [loading]="loading"
-    [lastQueryBody]="lastQueryBody" [queryFunction]="fin11020Service.queryFIN11020.bind(fin11020Service)">
-    <ng-template pTemplate="expansion" let-item>
-      123
-    </ng-template>
+  <app-table-report dataKey="ID" [data]="data()" [columns]="columns" [expansionColumns]="subColumns"
+    expansionDataKey="POS10171Details" [showCheckBox]="true" [totalRecords]="totalRecords()" [loading]="loading"
+    [lastQueryBody]="lastQueryBody" [selectedItems]="selectedRows()" [isRowSelectable]="isRowSelectable"
+    [editDisabled]="editDisabled" [queryFunction]="fin11020Service.queryFIN11020.bind(fin11020Service)"
+    (edit)="onEdit($event)" (detail)="onDetail($event)" (delete)="onDelete($event)"
+    (selectionChange)="selectedRows.set($event)">
   </app-table-report>
 </div>

@@ -146,4 +146,12 @@ export class Fin51010Service {
       body
     );
   }
+
+  /** 匯入HR傳票資料作業 (呼叫 SP) */
+  importHRVouFIN51010(): Observable<ApiResponse<TransferFIN51010Response>> {
+    return this.http.post<ApiResponse<TransferFIN51010Response>>(
+      `${this.apiUrl}/FIN0000/GLS1000/Import_HR_VouFIN51010`,
+      {} // 無參數仍需傳遞空物件
+    );
+  }
 }

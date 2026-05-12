@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, finalize, map, Subject, takeUntil } from 'rxjs';
 
@@ -49,7 +49,7 @@ interface SortMeta { field: string; order: SortOrder }
     DropdownComponent,
   ],
 })
-export class TLS23120Component extends BasicQueryPageComponent<any> implements OnDestroy {
+export class TLS23120Component extends BasicQueryPageComponent<any> implements OnDestroy, OnInit {
   private readonly QUERY_KEY = this.ProgNo || 'TLS23120';
   private destroy$ = new Subject<void>();
 
@@ -303,6 +303,7 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
             total_count: item?.total_count ?? d?.total_count ?? 0,
             return_qty: item?.return_qty ?? d?.return_qty ?? 0,
             return_amt: item?.return_amt ?? d?.return_amt ?? 0,
+            day_lock: item?.day_lock ?? d?.day_lock ?? 'N',
           });
         }
       }

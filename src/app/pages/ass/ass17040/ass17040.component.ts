@@ -53,8 +53,7 @@ import {
 })
 export class ASS17040Component
   extends BasicQueryPageComponent<ASS17040FlatRow>
-  implements OnInit
-{
+  implements OnInit {
   readonly queryForm = this.formBuilder.nonNullable.group({
     Sdate: [null as Date | null, [Validators.required]],
     Edate: [null as Date | null, [Validators.required]],
@@ -92,7 +91,7 @@ export class ASS17040Component
       header: '品項單價',
       align: 'right',
       sortField: 'GoodsPrice',
-      format: (v) => formatAmountWithDecimals(v, 2),
+      format: (v) => formatAmount(v as number),
     },
   ];
 
@@ -155,20 +154,20 @@ export class ASS17040Component
       return;
     }
     this.dropdown
-      .queryFaClass1({ B_CLASS_ID: bClassId })
+      .queryFaClass1({ CLASS_ID: bClassId })
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         this.midCategoryOptions = opts ?? [];
       });
   }
 
-  private loadSmallCategoryOptions(mClassId: string): void {
+  private loadSmallCategoryOptions(bClassId: string, mClassId: string): void {
     if (!mClassId) {
       this.smallCategoryOptions = [];
       return;
     }
     this.dropdown
-      .queryFaClass2({ M_CLASS_ID: mClassId })
+      .queryFaClass2({ B_CLASS_ID: bClassId || undefined, CLASS_ID: mClassId })
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         this.smallCategoryOptions = opts ?? [];
@@ -205,7 +204,8 @@ export class ASS17040Component
         this.queryForm.patchValue({ smallCategoryCode: null }, { emitEvent: false });
         this.smallCategoryOptions = [];
         if (mid) {
-          this.loadSmallCategoryOptions(mid);
+          const big = this.queryForm.controls.bigCategoryCode.value ?? '';
+          this.loadSmallCategoryOptions(big, mid);
         }
       });
 
@@ -215,7 +215,7 @@ export class ASS17040Component
       this.loadMidCategoryOptions(initialBig);
     }
     if (initialMid) {
-      this.loadSmallCategoryOptions(initialMid);
+      this.loadSmallCategoryOptions(initialBig ?? '', initialMid);
     }
   }
 

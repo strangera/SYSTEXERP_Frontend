@@ -13,7 +13,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownOption } from '../../../shared/models/api/base-api.interface';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
   selector: 'app-fin11010-cru',

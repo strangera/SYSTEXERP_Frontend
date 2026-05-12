@@ -34,6 +34,7 @@
               optionValue="value"
               [control]="queryForm.controls.apply_typeList"
               [submitted]="submitted"
+              [readonly]="true"
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -371,7 +372,7 @@
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
     [showCheckBox]="true"
-    dataKey="id"
+    dataKey="row_id"
     [multiSortMeta]="[{ field: 'apply_no', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"

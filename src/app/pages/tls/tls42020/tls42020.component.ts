@@ -13,7 +13,7 @@ import { formatDateTime } from '@shared/componentkit/table-report/table-report.m
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { ErrorReportService } from '@shared/service/error-report.service'; // 匯入 ErrorReportService
-import { saveAs } from 'file-saver'; // 匯入 file-saver
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
@@ -102,7 +102,7 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     { field: 'PLU_SalePrc', header: '商品售價', format: formatAmount },
   ];
 
-  constructor() {
+  constructor(private readonly fileExportService: FileExportService) {
     super();
   }
 
@@ -177,13 +177,13 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
 
   /** * 下載範例檔案 - 改用 saveAs
    */
+  /**
+ * 下載範例檔案 - 直接處理 Blob
+ */
   downloadTemplate() {
-    this.tls42020Service.downloadRule().subscribe(res => {
-      // 假設 Service 已改為回傳 Blob，若維持 Base64 則需保留原本 atob 邏輯
-      // 這裡範例改為配合 TLS51110 的 Blob 寫法
-      const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      saveAs(blob, 'TLS42020收銀菜單設定_範例檔案.xlsx');
-    });
+    this.tls42020Service.downloadRule()
+    const export$ = this.tls42020Service.downloadRule();
+    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (isLoading) => this.btnLoading = isLoading).subscribe();
   }
 
   btnLoading = false;

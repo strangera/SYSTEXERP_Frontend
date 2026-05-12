@@ -39,7 +39,9 @@ import { CellInput } from './table-edit-cell.model';
         <ng-container *ngTemplateOutlet="cellInput.col.templateRef!; context: {
           $implicit: cellInput.rowData,
           col: cellInput.col,
-          overlayPanel: dialogRef
+          overlayPanel: dialogRef,
+          index: cellInput.index,
+          onValueChange: cellInput.onValueChange
         }"></ng-container>
       </ng-container>
     </p-dialog>
@@ -69,9 +71,9 @@ export class TemplateCellComponent {
    * @returns 顯示用的字串
    */
   public templateDisplayValue(rowData: any, col: EditColumn): string {
-    // 邏輯直接從 TableEditComponent 搬過來
     const displayField = col.templateDisplayField;
-    return displayField ? rowData[displayField] : rowData[col.field] || '';
+    const raw = displayField ? rowData?.[displayField] : rowData?.[col.field];
+    return raw === null || raw === undefined ? '' : String(raw);
   }
 
   // 模擬原本 overlayPanel 的介面，讓外部 template 不需要改 code 就能呼叫 .hide()

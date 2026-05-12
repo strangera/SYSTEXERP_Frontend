@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { YearMonthComponent } from '@pages/fin/fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '@pages/fin/fin11020/query-year-month.component';
 import { Tls55030ListData, Tls55030QueryBody, Tls55030Service } from '@service/api/tls/tls55030.service';
 import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';

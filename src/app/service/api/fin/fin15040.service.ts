@@ -15,7 +15,8 @@ export interface FIN15040QueryRequest extends BaseQueryRequest {
   INV_GUINumber_E?: string;      // 發票號碼訖
   INV_YM1_S?: string;            // 資料所屬年月起
   INV_YM1_E?: string;            // 資料所屬年月訖
-  INV_YM2?: string;              // 申報年月
+  INV_YM2_S?: string;            // 申報年月起
+  INV_YM2_E?: string;            // 申報年月訖
   PUR_Uniform?: string;          // 廠商統一編號
   PUR_TaxType?: string[];        // 課稅別
   Source_Doc_No_S?: string;      // 憑證單號起
@@ -30,6 +31,8 @@ export interface FIN15040QueryRequest extends BaseQueryRequest {
   SYS_ORIGIN?: string[];         // 系統別
   INV_Cancel?: string;           // 發票狀態
   ECR_No?: string[];             // 收銀機號
+  IncludeNextDayVoid?: boolean;  // 包含隔日作廢
+  ExcludeB2B?: boolean;          // 排除B2B發票 (INV_TXNType <> '3')
 }
 
 export interface FIN15040PrintRequest extends FIN15040QueryRequest {

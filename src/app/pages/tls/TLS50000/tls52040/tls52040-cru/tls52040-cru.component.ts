@@ -1,5 +1,5 @@
 import { AsyncPipe, NgIf } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -117,7 +117,8 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
   ];
   constructor(
     public readonly tls52040Service: Tls52040Service,
-    private readonly dropdown: DropdownApiService
+    private readonly dropdown: DropdownApiService,
+    private readonly cdr: ChangeDetectorRef
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS52040', this.dataForm);
@@ -152,6 +153,19 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
       //   });
       // });
     }
+  }
+  private resetFormForContinueNew(): void {
+    this.dataForm.reset({
+      RJM_No: '系統自動產生',
+      APPLY_USR_No: this.user?.user_No,
+      APPLY_USR_Name: this.user?.user_Name,
+      APPLY_Date: new Date(),
+      APRV_Date: new Date(),
+    });
+    this.data = [];
+    this.selectedItems = [];
+    this.calculateTotals();
+    this.cdr.detectChanges();
   }
   @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent
   onSubmit(frm: FormGroup) {
@@ -225,12 +239,30 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
           ? this.tls52040Service.insertTLS52040(submitData)
           : this.tls52040Service.updateTLS52040(submitData);
 
-        request$.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-          this.messageService.successBubble(res.Message || this.isFormCreateable ? '新增成功' : '更新成功');
-          const returnValue = {
-            Status: 'insert',
-          };
-          this.onCancel(returnValue);
+        request$.pipe(
+          finalize(() => this.loading = false),
+          untilDestroyed(this)
+        ).subscribe({
+          next: (res) => {
+            if (this.isFormCreateable) {
+              // 對齊後端回傳的 InsertRJMResult { id, rjm_No }
+              const rjmNo = res.Data?.RJM_No || '—';
+
+              this.messageService.confirm({
+                header: '新增成功',
+                message: `退貨驗收單號：<strong>${rjmNo}</strong>`,
+                icon: 'check',
+                showIcon: true,
+                acceptLabel: '返回',
+                accept: () => this.onCancel(),
+                rejectLabel: '繼續新增',
+                reject: () => this.resetFormForContinueNew(),
+              });
+            } else {
+              this.messageService.successBubble('修改成功');
+              this.onCancel();
+            }
+          }
         });
       });
     })

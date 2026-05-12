@@ -23,7 +23,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 export interface Option {
   label: string;
@@ -99,6 +99,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     { field: 'INV_YM', header: '申報年月', visible: true },
     { field: 'TXN_Net', header: '退出折讓單金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'TXN_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_TotalAmt', header: '折讓總金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
@@ -178,6 +179,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
             group_name: '合計',
             TXN_Net: d.TotalNet,
             TXN_Tax: d.TotalTax,
+            TXN_TotalAmt: (d.TotalNet ?? 0) + (d.TotalTax ?? 0),
           };
         }
       }),

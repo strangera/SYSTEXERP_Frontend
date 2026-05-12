@@ -34,6 +34,7 @@ import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import {
   ApiResponse,
   Ass16070DetailResponse,
@@ -42,7 +43,6 @@ import {
   QueryDDLASS16070Request,
   QueryDDLASS16070Response,
 } from '../../../service/api/ass/ass16070.service';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
 import { Column } from '../../../shared/componentkit/table2/table2.model';
 
@@ -316,18 +316,18 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
     return cleaned.length ? cleaned : fallback;
   }
 
- private initRows(rows: Ass16070Row[]): Ass16070Row[] {
-  const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  private initRows(rows: Ass16070Row[]): Ass16070Row[] {
+    const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
-  rows.forEach((r, idx) => {
-    (r as any)._rowKey = `${seed}_${idx}`;
-    (r as any)._detailLoaded = false;
-    (r as any).expansionLoading = false;
-    r.Details = [];
-  });
+    rows.forEach((r, idx) => {
+      (r as any)._rowKey = `${seed}_${idx}`;
+      (r as any)._detailLoaded = false;
+      (r as any).expansionLoading = false;
+      r.Details = [];
+    });
 
-  return rows;
-}
+    return rows;
+  }
 
   private saveQueryState(): void {
     this.queryStateService.setQueryState(
@@ -632,14 +632,9 @@ export class ASS16070Component extends BasicQueryPageComponent<Ass16070Row> {
     );
 
     this.submitted = false;
-    this.data = [];
-    this.selectedItems = [];
-    this.totalRecords = 0;
-    this.viewTotalRecords = 0;
-    this.footerData = undefined;
-    this.lastQueryBody = null;
     this._currentSortBy = this.defaultSort;
 
+    // 只清查詢條件保存，不清畫面查詢結果
     this.queryStateService.clearQueryState(this.ProgNo);
     this.queryStateService.clearQueryState(`${this.ProgNo}_ext`);
   }

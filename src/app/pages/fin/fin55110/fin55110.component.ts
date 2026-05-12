@@ -1,20 +1,20 @@
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonModule } from 'primeng/button';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { FIN55110Service } from '@service/api/fin/fin55110.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize, Observable } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
+import { FIN55110Service } from '@service/api/fin/fin55110.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { finalize, Observable } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-fin55110',
@@ -130,7 +130,7 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
 
               this.columns = [
                 { field: 'AccNo', header: '會計科目代號' },
-                { field: 'AccCName', header: '會計科目名稱' },
+                { field: 'AccCName', header: '會計科目名稱', align: 'left' },
                 ...monthKeys.map((key) => {
                   const flatKey = `MonthlyAmounts.${key}`;
                   // 從大分類合計列加總每月金額（SQL 已算好，直接取用）
@@ -138,6 +138,7 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
                   return {
                     field: flatKey,
                     header: key,
+                    align: 'right' as const,
                     format: (value: any, __?: number, row?: any) =>
                       row != null
                         ? (row.MonthlyAmounts?.[key] ?? 0).toLocaleString()
@@ -149,7 +150,7 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
               if (orgList.length === 0) {
                 footer['TotalAmount'] = totalRows.reduce((s: number, r: any) => s + (Number(r.TotalAmount) || 0), 0);
                 this.columns.push(
-                  { field: 'TotalAmount', header: '查詢期間合計\n(全部)', format: (v: number) => v?.toLocaleString?.() }
+                  { field: 'TotalAmount', header: '查詢期間合計\n(全部)', align: 'right', format: (v: number) => v?.toLocaleString?.() }
                 );
               } else {
                 for (const orgId of orgList) {
@@ -160,6 +161,7 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
                   this.columns.push({
                     field: flatKey,
                     header: `查詢期間合計\n${label}`,
+                    align: 'right' as const,
                     format: (value: any, __?: number, row?: any) =>
                       row != null
                         ? (row.OrgTotals?.[capturedOrgId] ?? 0).toLocaleString()
@@ -170,8 +172,8 @@ export class FIN55110Component extends BasicQueryPageComponent<any> implements O
 
               footer['GrandTotal'] = totalRows.reduce((s: number, r: any) => s + (Number(r.GrandTotal) || 0), 0);
               this.columns.push(
-                { field: 'GrandTotal', header: '總計', format: (v: number) => v?.toLocaleString?.() },
-                { field: 'Percent', header: '百分比' }
+                { field: 'GrandTotal', header: '總計', align: 'right', format: (v: number) => v?.toLocaleString?.() },
+                { field: 'Percent', header: '百分比', align: 'right' }
               );
               this.footerData = footer;
 

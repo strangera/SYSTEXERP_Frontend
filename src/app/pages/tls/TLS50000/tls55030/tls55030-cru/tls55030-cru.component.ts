@@ -489,8 +489,8 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       // ---------------------------------------------------------
       // 2. 核心卡控邏輯調整
       // ---------------------------------------------------------
-      let isAmountMatched = false;
-      let errorMessage = '';
+      const isAmountMatched = false;
+      const errorMessage = '';
 
       if (entryType === '1') {
         // 類別為「退貨」：檢查【發票折讓總金額】是否等於【退貨明細總金額】
@@ -498,29 +498,29 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
         const totalRebateAbs = Math.abs(formValue.totalRebateAmount || 0);
         const totalReturnAmt = Math.round(formValue.RJM_TotalBuyAmt || 0);
 
-        if (totalRebateAbs !== totalReturnAmt) {
-          isAmountMatched = false;
-          errorMessage = '【退貨總金額】與【折讓總金額】不相符';
-        } else {
-          isAmountMatched = true;
-        }
+        // if (totalRebateAbs !== totalReturnAmt) {
+        //   isAmountMatched = false;
+        //   errorMessage = '【退貨總金額】與【折讓總金額】不相符';
+        // } else {
+        //   isAmountMatched = true;
+        // }
       } else {
         // 類別為「一般折讓」或「活動券」：檢查【發票折讓總金額】是否等於【折讓單開立金額】
         const totalRebateAbs = Math.abs(formValue.totalRebateAmount || 0);
         const openRebateAmt = Math.round(formValue.Rebate_Amt || 0);
 
-        if (totalRebateAbs !== openRebateAmt) {
-          isAmountMatched = false;
-          errorMessage = '【折讓單開立金額】與【發票折讓明細總額】不相符';
-        } else {
-          isAmountMatched = true;
-        }
+        // if (totalRebateAbs !== openRebateAmt) {
+        //   isAmountMatched = false;
+        //   errorMessage = '【折讓單開立金額】與【發票折讓明細總額】不相符';
+        // } else {
+        //   isAmountMatched = true;
+        // }
       }
-      if (!isAmountMatched) {
-        this.messageService.errorBubble(errorMessage);
-        this.loading = false;
-        return;
-      }
+      // if (!isAmountMatched) {
+      //   this.messageService.errorBubble(errorMessage);
+      //   this.loading = false;
+      //   return;
+      // }
       const paramBody = {
         DIS_No: this.isFormCreateable ? undefined : formValue.DIS_No,
         ACP_YYYYMM: this.datePipe.transform(formValue.ACP_YYYYMM, 'yyyyMM') || '',

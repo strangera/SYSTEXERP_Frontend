@@ -208,26 +208,6 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     this.selectedRows = [];
   }
 
-  // 離開：導回查詢頁
-  goBack() {
-    super.onCancel();
-  }
-
-  // 取消：還原表單與 contacts（不導回查詢頁）
-  override onCancel(returnValue?: any) {
-    // 還原表單值
-    if (this.originalForm) {
-      this.dataForm.reset(this.originalForm);
-    } else {
-      this.dataForm.reset();
-    }
-    // 還原 contacts
-    this.contacts = JSON.parse(JSON.stringify(this.originalContacts || []));
-    // 重置狀態
-    this.submitted = false;
-    this.loading = false;
-  }
-
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       console.log("表單 valid 狀態：", form.valid);

@@ -1,7 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="back" (click)="goBack()"></app-button>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">

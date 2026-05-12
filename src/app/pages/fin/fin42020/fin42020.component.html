@@ -21,26 +21,26 @@
             <app-calendar
               calendarType="dateMonthOne"
               label="年月"
-              controlName="year"
-              [control]="queryForm.controls.year"
+              controlName="YM"
+              [control]="queryForm.controls.YM"
               [submitted]="submitted"
             ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="部門"
-              controlName=" department"
-              [options]="departmentOptions"
+              controlName=" Org_ID"
+              [options]="ORG_ID_Options()"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.department"
+              [control]="queryForm.controls.Org_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="類別"
-              [control]="queryForm.controls.type"
+              [control]="queryForm.controls.ReportType"
               [options]="typeOptions"
               [submitted]="submitted"
             ></app-radiobutton>
@@ -49,7 +49,7 @@
             <app-radiobutton
               label="單位金額表示"
               groupname="systemtyperadio"
-              [control]="queryForm.controls.unit"
+              [control]="queryForm.controls.AmtUnit"
               [options]="unitOptions"
               [submitted]="submitted"
             ></app-radiobutton>
@@ -59,7 +59,11 @@
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button
+            btnType="query"
+            [loading]="loading"
+            (click)="onSubmit(queryForm)"
+          ></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -70,14 +74,16 @@
     <p-button
       styleClass="p-2"
       label="預算、實績比較表.PDF"
-      [loading]="btnLoading"
+      (click)="onExportPDF()"
+      [loading]="exportPDFLoading"
       icon="pi pi-file"
       [disabled]="data.length === 0 || !hasPermission(Actions.Print)"
     ></p-button>
     <p-button
       styleClass="p-2"
       label="預算、實績比較表.XLSX"
-      [loading]="btnLoading"
+      (click)="onExportExcel()"
+      [loading]="exportExcelLoading"
       icon="pi pi-file"
       [disabled]="data.length === 0 || !hasPermission(Actions.Print)"
     ></p-button>

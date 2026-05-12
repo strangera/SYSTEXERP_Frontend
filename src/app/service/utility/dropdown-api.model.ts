@@ -16,6 +16,20 @@ export interface IDropdownItem {
   Name: string;
 }
 
+/**
+ * queryPOS2002_Location_DropDownList 回傳項目
+ */
+export interface Pos2002LocationItem {
+  location_no?: string | null;
+  tlt_building?: string | null;
+  tlt_floor?: string | null;
+  area_no?: string | null;
+  tlt_space?: number | null;
+  building_desc?: string | null;
+  floor_desc?: string | null;
+  area_desc?: string | null;
+}
+
 /** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME） */
 export interface FasItemDropdownItem {
   RowNo?: string;
@@ -71,25 +85,21 @@ export interface FaClassMItem {
 }
 
 /**
- * 查詢 FACLASS1_DropDownList 時的請求 body
+ * 查詢 FACLASS1_DropDownList 時的請求 body（資材大分類代碼 = FACLASSM.CLASS_ID）
  */
 export interface FaClass1Query {
-  M_CLASS_ID?: string | null;
-  M_CLASS_NAME?: string | null;
-  B_CLASS_ID?: string | null;
-  B_CLASS_NAME?: string | null;
-  NOTES_KEYWORD?: string | null;
+  CLASS_ID?: string | null;
 }
 
 /**
  * queryFACLASS1_DropDownList 回傳的項目型別
  */
 export interface FaClass1Item {
-  RowNum?: string;
-  M_CLASS_ID: string;
-  M_CLASS_NAME: string;
-  B_CLASS_ID: string;
-  B_CLASS_NAME: string;
+  RowNum?: string | null;
+  M_CLASS_ID?: string | null;
+  M_CLASS_NAME?: string | null;
+  B_CLASS_ID?: string | null;
+  B_CLASS_NAME?: string | null;
   NOTES?: string | null;
 }
 
@@ -97,26 +107,23 @@ export interface FaClass1Item {
  * 查詢 FACLASS2_DropDownList 時的請求 body
  */
 export interface FaClass2Query {
-  S_CLASS_ID?: string | null;
-  S_CLASS_NAME?: string | null;
-  M_CLASS_ID?: string | null;
-  M_CLASS_NAME?: string | null;
+  /** 大分類代碼（FACLASSM.CLASS_ID） */
   B_CLASS_ID?: string | null;
-  B_CLASS_NAME?: string | null;
-  NOTES_KEYWORD?: string | null;
+  /** 資材中分類代碼 */
+  CLASS_ID?: string | null;
 }
 
 /**
  * queryFACLASS2_DropDownList 回傳的項目型別
  */
 export interface FaClass2Item {
-  RowNum?: string;
-  S_CLASS_ID: string;
-  S_CLASS_NAME: string;
-  M_CLASS_ID: string;
-  M_CLASS_NAME: string;
-  B_CLASS_ID: string;
-  B_CLASS_NAME: string;
+  RowNum?: string | null;
+  S_CLASS_ID?: string | null;
+  S_CLASS_NAME?: string | null;
+  M_CLASS_ID?: string | null;
+  M_CLASS_NAME?: string | null;
+  B_CLASS_ID?: string | null;
+  B_CLASS_NAME?: string | null;
   NOTES?: string | null;
 }
 
@@ -368,6 +375,13 @@ export interface Pos2004Query {
 }
 
 /**
+ * 查詢 POS2004_DropDownList 時的請求 body
+ */
+export interface Pos2004SearchKey {
+  SearchKey: string;
+}
+
+/**
  * 查詢 POS2004_DropDownList 回傳的項目型別
  */
 export interface Pos2004Item {
@@ -375,6 +389,14 @@ export interface Pos2004Item {
   PLU_No: string;
   PLU_Name: string;
   PLU_SalePrc: number;
+}
+
+/**
+ * 查詢 商品下拉選單 Response (擴充版)
+ */
+export interface Pos2004ExtendedItem extends Pos2004Item {
+  PLU_Unit: string
+  PLU_OrgPLUNo: string
 }
 
 /**

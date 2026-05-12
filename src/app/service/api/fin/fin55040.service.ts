@@ -17,6 +17,7 @@ export interface fin55040request {
   SubDetailNo: string;
   PostFlag: string[] | null;
   IsSubDetail: boolean;
+  ACCT_KEY: string;
 }
 
 // 攤平後的
@@ -38,6 +39,7 @@ export interface FIN55040Detail {
   VouNo: string;
   AccNo: string;
   AccCName: string;
+  ACCT_KEY: string;
   NoteDesc: string;
   PTA1: number;
   PTA2: number;

@@ -127,5 +127,8 @@ export const finRoutes: Routes = [
   // 應付帳款明細表
   { path: 'fin29050', loadComponent: () => import('./fin29050/fin29050.component').then(m => m.FIN29050Component), data: { progNo: 'FIN29050' } },
   { path: 'fin29050cru', loadComponent: () => import('./fin29050-cru/fin29050-cru.component').then(m => m.FIN29050CRUComponent), data: { progNo: 'FIN29050' } },
-
+  // 傳票過帳作業-傳票過帳
+  { path: 'fin54020', loadComponent: () => import('./fin54020/fin54020.component').then(m => m.FIN54020Component), data: { progNo: 'FIN54020' } },
+  // 傳票過帳作業-傳票反過帳
+  { path: 'fin54025', loadComponent: () => import('./fin54025/fin54025.component').then(m => m.FIN54025Component) },
 ];

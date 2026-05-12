@@ -303,14 +303,13 @@ function buildUpdateNext(
   stepBank: FIN53010StepBankDeposit[],
   deps: Fin53010PayloadDepsWithVou,
 ): UpdateFIN53010DetailDataNextBody | null {
+  /** 後端契約：updateAPS3001Datas／updateARS3001Datas 為陣列；無 id 或省略 id 視為子檔新增（依 API 實作為準）。 */
   const next: UpdateFIN53010DetailDataNextBody = {};
   if (activeSteps.includes(3) && stepAP.length) {
-    const r = stepAP[0];
-    next.updateAPS3001Datas = [mapStepApToUpdate(r, deps, r.id)];
+    next.updateAPS3001Datas = stepAP.map(r => mapStepApToUpdate(r, deps, r.id));
   }
   if (activeSteps.includes(4) && stepAR.length) {
-    const r = stepAR[0];
-    next.updateARS3001Datas = [mapStepArToUpdate(r, deps, r.id)];
+    next.updateARS3001Datas = stepAR.map(r => mapStepArToUpdate(r, deps, r.id));
   }
   if (activeSteps.includes(6) && stepSales.length) {
     next.updateAPS4023Datas = stepSales.map(r => mapStepSalesToUpdate4023(r));

@@ -29,7 +29,7 @@ import { ButtonModule } from 'primeng/button';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 // 本期發票月
 const today = new Date();

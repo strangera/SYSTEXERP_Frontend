@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS13100Service } from '@service/api/ass/ass13100.service';
-import { IDropdownItem, Sys1000Query } from '@service/utility/dropdown-api.model';
+import { IDropdownItem, Pos2002LocationItem, Sys1000Query } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -141,10 +141,10 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
 
     this.dropdownApi
       .queryPos2002Location()
-      ?.subscribe((list: IDropdownItem[] | null) => {
+      ?.subscribe((list: Pos2002LocationItem[] | null) => {
         this.locationOptions = (list ?? []).map(x => ({
-          label: x.Name,
-          value: x.No,
+          label: x.location_no + '-' + x.tlt_floor,
+          value: x.location_no ?? '',
         }));
       });
     this.dropdownApi
@@ -339,6 +339,7 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
 
     const isOrgMode = mode === 'KEEPER_ORG' || mode === 'USER_ORG';
     const isEmpMode = mode === 'KEEPER_EMP' || mode === 'USER_EMP';
+    const includeAllOrg = this.generateForm.getRawValue().IncludeAllOrg ?? false;
 
     for (let i = 0; i < this.generateRows.length; i++) {
       const row = this.generateRows[i];
@@ -349,7 +350,7 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
       const chkEmp1 = String(row.InventoryEmp_ID_1 ?? '').trim();
       const chkEmp2 = String(row.InventoryEmp_ID_2 ?? '').trim();
 
-      if (isOrgMode && !orgId) {
+      if (isOrgMode && !includeAllOrg && !orgId) {
         this.messageService.warnBubble(`第${rowNo}筆：部門代碼為必填`);
         return;
       }

@@ -91,20 +91,19 @@
 
 <div class="card">
   <app-table-report
-    tableKey="fin29030"
-    [lastQueryBody]="lastQueryBody"
+    tableKey="FIN29030"
+    dataKey="CHK_No"
     [data]="data"
     [columns]="columns"
     [totalRecords]="totalRecords"
-    [showDelete]="false"
+    [loading]="loading"
+    groupRowsBy="PAM_No"
+    [showSort]="false"
+    [lastQueryBody]="lastQueryBody"
     [showManage]="false"
+    [showDelete]="false"
     [showReportMode]="false"
     [queryFunction]="fin29030Service.queryFIN29030.bind(fin29030Service)"
-    [loading]="loading"
-    [lazy]="isLazy"
-    [subTotalData]="footerData"
-    groupRowsBy="PAM_No"
-    (dataChange)="onTableDataChange($event)"
   >
     <header>
       <div class="flex justify-content-end align-items-center gap-2">

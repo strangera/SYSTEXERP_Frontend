@@ -201,4 +201,10 @@
   .pta-group-alt td {
     background-color: #f0f6ff !important;
   }
+
+  // 防止 PrimeNG rowGroupMode="subheader" 的群組表頭在 scrollable table 中
+  // 變成 sticky 並蓋住第一筆資料列
+  .p-datatable-tbody > tr.p-rowgroup-header {
+    position: static !important;
+  }
 }

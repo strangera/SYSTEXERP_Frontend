@@ -14,15 +14,14 @@ import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize, map, shareReplay } from 'rxjs/operators';
 
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-// import { YearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import {
@@ -49,8 +48,7 @@ import {
     TranslateModule,
     TableReportComponent,
     RadiobuttonComponent,
-    CalendarComponent
-
+    CalendarComponent,
   ],
 })
 export class FIN42040Component
@@ -63,24 +61,16 @@ export class FIN42040Component
   btnLoading = false;
   historyRequestBody: FIN42040QueryRequest | null = null;
 
-  readonly defaultSort: any[] = [
-    { field: 'Org_ID', order: 1 },
-    { field: 'Acc_No', order: 1 },
-    { field: 'Item_No', order: 1 },
-  ];
+  readonly defaultSort: any[] = [{ field: 'SortNo', order: 1 }];
 
   queryForm = this.formBuilder.group({
-    YM: ['', [Validators.required]],
-    CompareYM: ['', [Validators.required]],
+    YM: [null as Date | string | null, [Validators.required]],
+    CompareYM: [null as Date | string | null, [Validators.required]],
     Org_ID: [''],
     ReportType: [1, [Validators.required]],
     AmtUnit: [1, [Validators.required]],
 
-    ...createPaginationConfig([
-      { field: 'Org_ID', order: 1 },
-      { field: 'Acc_No', order: 1 },
-      { field: 'Item_No', order: 1 },
-    ]),
+    ...createPaginationConfig([{ field: 'SortNo', order: 1 }]),
     pageSize: [30],
   });
 
@@ -98,13 +88,17 @@ export class FIN42040Component
   orgOptions: any[] = [];
 
   columns = [
-    { field: 'Org_ID', header: '部門代號', visible: true },
-    { field: 'Org_Name', header: '部門名稱', visible: true, style: 'text-left' },
-    { field: 'Acc_No', header: '科目代號', visible: true },
-    { field: 'Acc_Name', header: '科目名稱', visible: true, style: 'text-left' },
-    { field: 'Item_No', header: '項目代號', visible: true },
-    { field: 'Item_Name', header: '項目名稱', visible: true, style: 'text-left' },
+    { field: 'SortNo', header: '排序', visible: false },
+    { field: 'LevelNo', header: '層級', visible: false },
+    { field: 'RowType', header: '列型態', visible: false },
 
+    { field: 'AccountCode', header: '科目代號', visible: true },
+    {
+      field: 'AccountName',
+      header: '科目名稱',
+      visible: true,
+      style: 'text-left',
+    },
     {
       field: 'CurrentAmount',
       header: '本期金額',
@@ -196,15 +190,23 @@ export class FIN42040Component
       (form) => this.onSubmit(form)
     );
 
-    this.queryForm.patchValue(
-      {
-        SortBy: this.defaultSort,
-        pageSize: 30,
-      },
-      { emitEvent: false }
-    );
+   const now = new Date();
+const lastYear = new Date();
+
+lastYear.setFullYear(now.getFullYear() - 1);
+
+this.queryForm.patchValue(
+  {
+    YM: now,           // ⭐ 今年本月
+    CompareYM: lastYear, // ⭐ 去年同月
+    SortBy: this.defaultSort,
+    pageSize: 30,
+  },
+  { emitEvent: false }
+);
 
     this.loadDropdowns();
+
   }
 
   private loadDropdowns(): void {
@@ -231,7 +233,10 @@ export class FIN42040Component
         ...raw,
         YM: this.normalizeYM(raw.YM),
         CompareYM: this.normalizeYM(raw.CompareYM),
-        Org_ID: raw.Org_ID || undefined,
+        Org_ID:
+          !raw.Org_ID || raw.Org_ID === '100000'
+            ? undefined
+            : raw.Org_ID,
         ReportType: Number(raw.ReportType ?? 1),
         AmtUnit: Number(raw.AmtUnit ?? 1),
         pageIndex: Number(raw.pageIndex ?? 1),
@@ -253,27 +258,31 @@ export class FIN42040Component
       this.data = [];
       this.totalRecords = 0;
       this.historyRequestBody = { ...payload };
+      this.updateAmountColumnHeaders();
 
       this.fin42040Service
         .queryFIN42040(payload)
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe({
-          next: (resp: any) => {
-            const rows = Array.isArray(resp?.Data)
-              ? resp.Data
-              : Array.isArray(resp?.Data?.QueryData)
-                ? resp.Data.QueryData
-                : [];
+         next: (resp: any) => {
+  const rows = Array.isArray(resp?.Data)
+    ? resp.Data
+    : Array.isArray(resp?.Data?.QueryData)
+      ? resp.Data.QueryData
+      : [];
 
-            this.data = rows;
-            this.totalRecords = Number(resp?.TotalCount ?? rows.length ?? 0);
-            this.historyRequestBody = { ...payload };
+  this.data = rows;
+  this.totalRecords = Number(resp?.TotalCount ?? rows.length ?? 0);
+  this.historyRequestBody = { ...payload };
 
-            this.queryStateService?.setQueryState?.(
-              this.ProgNo,
-              this.queryForm.value
-            );
-          },
+  // 查詢成功後才依照本次查詢條件改表頭
+  this.updateAmountColumnHeaders(payload.AmtUnit);
+
+  this.queryStateService?.setQueryState?.(
+    this.ProgNo,
+    this.queryForm.value
+  );
+},
           error: () => {
             this.data = [];
             this.totalRecords = 0;
@@ -399,11 +408,41 @@ export class FIN42040Component
   }
 
   moneyFormat(value: any): string {
-    return Number(value ?? 0).toLocaleString('en-US');
+    return value == null ? '' : Number(value).toLocaleString('en-US');
   }
 
   ratioFormat(value: any): string {
-    const n = Number(value ?? 0);
-    return Number.isFinite(n) ? n.toLocaleString('en-US') : '0';
+    if (value == null) return '';
+    const n = Number(value);
+    return Number.isFinite(n) ? n.toLocaleString('en-US') : '';
   }
+  private getAmtUnitText(unit?: any): string {
+  const value = Number(unit ?? this.queryForm?.get('AmtUnit')?.value ?? 1);
+
+  switch (value) {
+    case 2:
+      return '千元';
+    case 3:
+      return '萬元';
+    case 1:
+    default:
+      return '元';
+  }
+}
+
+private updateAmountColumnHeaders(unit?: any): void {
+  const unitText = this.getAmtUnitText(unit);
+
+  const amountHeaderMap: Record<string, string> = {
+    CurrentAmount: `本期金額(${unitText})`,
+    CompareAmount: `比較年月金額(${unitText})`,
+    CurrentAccumAmount: `本期累計金額(${unitText})`,
+    CompareAccumAmount: `比較累計金額(${unitText})`,
+  };
+
+  this.columns = this.columns.map((col) => ({
+    ...col,
+    header: amountHeaderMap[col.field] ?? col.header,
+  }));
+}
 }

@@ -19,7 +19,7 @@ import { AddButton, Column, createPaginationConfig } from '@shared/componentkit/
 
 // Shared Services
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { formatApproveStatus } from '@shared/constants/business.constants';
+import { formatApplyType, formatApproveStatus } from '@shared/constants/business.constants';
 import { Actions } from '@shared/service/permission-guard.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 
@@ -154,7 +154,8 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'approve_status', header: '合約狀態', visible: true, format: formatApproveStatus },
-    { field: 'source_type', header: '來源處', visible: true }
+    { field: 'source_type', header: '來源處', visible: true },
+    { field: 'apply_type', header: '申請案件內容', visible: true, format: formatApplyType },
   ];
 
   // ========== 下拉選單選項 ==========
@@ -249,6 +250,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       const formValue = form.value;
       const queryRequest = {
         ...formValue,
+        apply_typeList: (formValue.apply_typeList && formValue.apply_typeList.length > 0) ? formValue.apply_typeList : ['2'],
         contract_subno_from: formValue.contract_subno_from ? String(formValue.contract_subno_from) : undefined,
         contract_subno_to: formValue.contract_subno_to ? String(formValue.contract_subno_to) : undefined,
         rece_yn: formValue.rece_yn ? 'Y' : undefined,

@@ -6,7 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { Fin11020Service } from '../../../service/api/fin/fin11020.service';
+import { Fin11020Service, MainInvoiceData } from '../../../service/api/fin/fin11020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -16,8 +16,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { MainInvoiceData } from '../fin11020/fin11020.model';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 //1.1.1.2 發票基本資料維護 CRU
 @Component({
@@ -107,7 +106,6 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
             } else {
               this.dataForm.get('GUI_Qty')?.setValue(null, { emitEvent: false });
               this.dataForm.get('GUI_TotQty')?.setValue(null, { emitEvent: false });
-              console.warn('總張數無法被 50 整除，資料格式可能有誤');
             }
           }
         }

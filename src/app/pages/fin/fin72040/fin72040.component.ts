@@ -47,8 +47,8 @@ export class FIN72040Component extends BasicQueryPageComponent<fin72040Data> imp
     //  POS2064 收支明細檔(I/O) 
     //  tblUser 使用者資料檔(O)
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo || null, [Validators.required]], // 公司編號/店號(必填)
-    // PCS_RqstNo: [null, [Validators.required]], // TC+YYYYMMDDXXXX, 必填
-    PCS_RqstNo: ['TC202508180001', [Validators.required]],
+    PCS_RqstNo: [null, [Validators.required]], // TC+YYYYMMDDXXXX, 必填
+    // PCS_RqstNo: ['TC202508180001', [Validators.required]],
 
     //分頁查詢
     // ...createPaginationConfig([{ field: 'PCS_RqstNo', order: 1 }]), // 分頁和排序參數

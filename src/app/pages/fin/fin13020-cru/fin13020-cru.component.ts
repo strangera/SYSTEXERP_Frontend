@@ -6,8 +6,8 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
-import { environment } from 'src/environments/environment';
 import { finalize, map, switchMap } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
@@ -20,7 +20,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
   selector: 'app-fin13020-cru',
@@ -270,71 +270,71 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
   /**
    * 共用：把 API 回來的資料套進畫面
    */
-private applyInvoiceDto(dto: any, track: string, no: string): void {
-  const invoiceType = String(dto.InvoiceType ?? '');
-  let voucherType = invoiceType;
-  if (invoiceType === '31' || invoiceType === '35') voucherType = '33';
-  else if (invoiceType === '32') voucherType = '34';
+  private applyInvoiceDto(dto: any, track: string, no: string): void {
+    const invoiceType = String(dto.InvoiceType ?? '');
+    let voucherType = invoiceType;
+    if (invoiceType === '31' || invoiceType === '35') voucherType = '33';
+    else if (invoiceType === '32') voucherType = '34';
 
-  this.originalRemainingAmt = this.buildOriginalRemainingAmt(dto);
+    this.originalRemainingAmt = this.buildOriginalRemainingAmt(dto);
 
-  const dtoPurAmt = this.toIntOrNull(dto.PUR_Amt);
-  const dtoCreditType = this.calcCreditTypeByRemainingAmt(dtoPurAmt, this.originalRemainingAmt);
-
-  this.dataForm.patchValue(
-    {
-      GUI_Track: dto.InvoiceTrack ?? track,
-      PUR_GUINo: this.normalizeInvoiceNumber(dto.InvoiceNumber ?? no, dto.InvoiceTrack ?? track),
-      Inv_Date: dto.InvoiceDate ?? null,
-      PUR_VoucherType: voucherType,
-      PUR_TaxType: dto.PUR_TaxType ?? '',
-      Inv_Net: dto.PUR_Net ?? null,
-      Inv_Tax: dto.PUR_Tax ?? null,
-      Total_hitory_PUR_Amt: dto.Total_hitory_PUR_Amt ?? null,
-      Total_Amt: this.originalRemainingAmt,
-      Credit_Type: dtoCreditType,
-      Source_Doc_No: dto.Source_Doc_No ?? '',
-      Voucher_No: dto.Voucher_No ?? '',
-    },
-    { emitEvent: false }
-  );
-
-  const details = Array.isArray(dto.Details) ? dto.Details : [];
-  this.detailRows = details.map((d: any) => ({
-    ID: d.ID ?? null,
-    PLU_Name: d.PLU_Name ?? '',
-    TXN_Qty: d.TXN_Qty ?? null,
-    PLU_SalePrc: d.PLU_SalePrc ?? null,
-    TXN_SaleAmt: d.TXN_SaleAmt ?? null,
-  }));
-
-  this.syncPurAmtFromDetails();
-
-  if (
-    this.crudstatus === CRUDStatus.Create &&
-    this.originalRemainingAmt !== null &&
-    this.originalRemainingAmt <= 0
-  ) {
-    this.messageService.errorBubble('此發票已無可退出/折讓金額，不可新增');
-  }
-
-  if (!this.detailRows.length) {
-    const purAmt = this.toIntOrNull(dto.PUR_Amt);
-    const purNet = this.toIntOrNull(dto.PUR_Net);
-    const purTax = this.toIntOrNull(dto.PUR_Tax);
+    const dtoPurAmt = this.toIntOrNull(dto.PUR_Amt);
+    const dtoCreditType = this.calcCreditTypeByRemainingAmt(dtoPurAmt, this.originalRemainingAmt);
 
     this.dataForm.patchValue(
       {
-        PUR_Net: purNet,
-        PUR_Tax: purTax,
-        PUR_Amt: purAmt,
+        GUI_Track: dto.InvoiceTrack ?? track,
+        PUR_GUINo: this.normalizeInvoiceNumber(dto.InvoiceNumber ?? no, dto.InvoiceTrack ?? track),
+        Inv_Date: dto.InvoiceDate ?? null,
+        PUR_VoucherType: voucherType,
+        PUR_TaxType: dto.PUR_TaxType ?? '',
+        Inv_Net: dto.PUR_Net ?? null,
+        Inv_Tax: dto.PUR_Tax ?? null,
+        Total_hitory_PUR_Amt: dto.Total_hitory_PUR_Amt ?? null,
+        Total_Amt: this.originalRemainingAmt,
+        Credit_Type: dtoCreditType,
+        Source_Doc_No: dto.Source_Doc_No ?? '',
+        Voucher_No: dto.Voucher_No ?? '',
       },
       { emitEvent: false }
     );
 
-    this.updateCreditTypeByRemainingAmt(purAmt);
+    const details = Array.isArray(dto.Details) ? dto.Details : [];
+    this.detailRows = details.map((d: any) => ({
+      ID: d.ID ?? null,
+      PLU_Name: d.PLU_Name ?? '',
+      TXN_Qty: d.TXN_Qty ?? null,
+      PLU_SalePrc: d.PLU_SalePrc ?? null,
+      TXN_SaleAmt: d.TXN_SaleAmt ?? null,
+    }));
+
+    this.syncPurAmtFromDetails();
+
+    if (
+      this.crudstatus === CRUDStatus.Create &&
+      this.originalRemainingAmt !== null &&
+      this.originalRemainingAmt <= 0
+    ) {
+      this.messageService.errorBubble('此發票已無可退出/折讓金額，不可新增');
+    }
+
+    if (!this.detailRows.length) {
+      const purAmt = this.toIntOrNull(dto.PUR_Amt);
+      const purNet = this.toIntOrNull(dto.PUR_Net);
+      const purTax = this.toIntOrNull(dto.PUR_Tax);
+
+      this.dataForm.patchValue(
+        {
+          PUR_Net: purNet,
+          PUR_Tax: purTax,
+          PUR_Amt: purAmt,
+        },
+        { emitEvent: false }
+      );
+
+      this.updateCreditTypeByRemainingAmt(purAmt);
+    }
   }
-}
 
   /**
    * 剩餘總金額優先自己算，不直接相信 API Total_Amt
@@ -514,29 +514,29 @@ private applyInvoiceDto(dto: any, track: string, no: string): void {
       }, 0);
       const detailTotal = this.roundToInt(detailTotalRaw);
 
-const purAmtInt = this.toIntOrNull(formValue.PUR_Amt);
-if (this.detailRows.length > 0 && purAmtInt !== null && purAmtInt !== detailTotal) {
-  this.messageService.errorBubble('明細的金額加總必須等於「退回/折讓總金額」');
-  return;
-}
+      const purAmtInt = this.toIntOrNull(formValue.PUR_Amt);
+      if (this.detailRows.length > 0 && purAmtInt !== null && purAmtInt !== detailTotal) {
+        this.messageService.errorBubble('明細的金額加總必須等於「退回/折讓總金額」');
+        return;
+      }
 
-const remainingAmt = this.toIntOrNull(formValue.Total_Amt);
-if (remainingAmt !== null && purAmtInt !== null && purAmtInt > remainingAmt) {
-  this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
-  return;
-}
+      const remainingAmt = this.toIntOrNull(formValue.Total_Amt);
+      if (remainingAmt !== null && purAmtInt !== null && purAmtInt > remainingAmt) {
+        this.messageService.errorBubble('退回/折讓總金額不可大於剩餘總金額');
+        return;
+      }
 
-if (this.crudstatus === CRUDStatus.Create) {
-  if (remainingAmt !== null && remainingAmt <= 0) {
-    this.messageService.errorBubble('此發票已無可退出/折讓金額，不可新增');
-    return;
-  }
-}
+      if (this.crudstatus === CRUDStatus.Create) {
+        if (remainingAmt !== null && remainingAmt <= 0) {
+          this.messageService.errorBubble('此發票已無可退出/折讓金額，不可新增');
+          return;
+        }
+      }
 
-const creditType = this.calcCreditTypeByRemainingAmt(
-  formValue.PUR_Amt,
-  remainingAmt
-);
+      const creditType = this.calcCreditTypeByRemainingAmt(
+        formValue.PUR_Amt,
+        remainingAmt
+      );
 
       const intNet = this.toIntOrNull(formValue.PUR_Net);
       const intTax = this.toIntOrNull(formValue.PUR_Tax);
@@ -903,50 +903,50 @@ const creditType = this.calcCreditTypeByRemainingAmt(
     });
   }
 
-private updateCreditTypeByRemainingAmt(purAmt: number | null): void {
-  const creditControl = this.dataForm.get('Credit_Type');
-  const remainingControl = this.dataForm.get('Total_Amt');
+  private updateCreditTypeByRemainingAmt(purAmt: number | null): void {
+    const creditControl = this.dataForm.get('Credit_Type');
+    const remainingControl = this.dataForm.get('Total_Amt');
 
-  if (!creditControl || !remainingControl) return;
+    if (!creditControl || !remainingControl) return;
 
-  const remainingRaw = remainingControl.value;
-  const remaining =
-    remainingRaw === null || remainingRaw === undefined || remainingRaw === ''
-      ? null
-      : this.roundToInt(Number(remainingRaw));
+    const remainingRaw = remainingControl.value;
+    const remaining =
+      remainingRaw === null || remainingRaw === undefined || remainingRaw === ''
+        ? null
+        : this.roundToInt(Number(remainingRaw));
 
-  if (
-    purAmt === null ||
-    purAmt === undefined ||
-    isNaN(Number(purAmt)) ||
-    Number(purAmt) <= 0 ||
-    remaining === null ||
-    isNaN(remaining) ||
-    remaining <= 0
-  ) {
-    creditControl.setValue('', { emitEvent: false });
-    return;
+    if (
+      purAmt === null ||
+      purAmt === undefined ||
+      isNaN(Number(purAmt)) ||
+      Number(purAmt) <= 0 ||
+      remaining === null ||
+      isNaN(remaining) ||
+      remaining <= 0
+    ) {
+      creditControl.setValue('', { emitEvent: false });
+      return;
+    }
+
+    const p = this.roundToInt(Number(purAmt));
+    const r = this.roundToInt(remaining);
+
+    if (p === r) creditControl.setValue('R', { emitEvent: false });
+    else if (p < r) creditControl.setValue('C', { emitEvent: false });
+    else creditControl.setValue('', { emitEvent: false });
   }
 
-  const p = this.roundToInt(Number(purAmt));
-  const r = this.roundToInt(remaining);
+  private calcCreditTypeByRemainingAmt(purAmt: any, remainingAmt: any): 'R' | 'C' | '' {
+    const p = this.toIntOrNull(purAmt);
+    const r = this.toIntOrNull(remainingAmt);
 
-  if (p === r) creditControl.setValue('R', { emitEvent: false });
-  else if (p < r) creditControl.setValue('C', { emitEvent: false });
-  else creditControl.setValue('', { emitEvent: false });
-}
+    if (p === null || r === null || p <= 0 || r <= 0) return '';
 
-private calcCreditTypeByRemainingAmt(purAmt: any, remainingAmt: any): 'R' | 'C' | '' {
-  const p = this.toIntOrNull(purAmt);
-  const r = this.toIntOrNull(remainingAmt);
+    if (p === r) return 'R';   // 全退 = 退出
+    if (p < r) return 'C';     // 部分退 = 折讓
 
-  if (p === null || r === null || p <= 0 || r <= 0) return '';
-
-  if (p === r) return 'R';   // 全退 = 退出
-  if (p < r) return 'C';     // 部分退 = 折讓
-
-  return '';
-}
+    return '';
+  }
   private roundToInt(value: number): number {
     return Math.round(value);
   }
@@ -1123,17 +1123,17 @@ private calcCreditTypeByRemainingAmt(purAmt: any, remainingAmt: any): 'R' | 'C' 
     }, 0);
 
     let sum = this.roundToInt(sumRaw);
-const hasDetails = (this.detailRows ?? []).length > 0;
+    const hasDetails = (this.detailRows ?? []).length > 0;
 
-if (
-  hasDetails &&
-  this.originalRemainingAmt !== null &&
-  !isNaN(this.originalRemainingAmt) &&
-  sum > this.roundToInt(this.originalRemainingAmt)
-) {
-  this.messageService.errorBubble('明細加總不可大於剩餘總金額');
-  sum = this.roundToInt(this.originalRemainingAmt);
-}
+    if (
+      hasDetails &&
+      this.originalRemainingAmt !== null &&
+      !isNaN(this.originalRemainingAmt) &&
+      sum > this.roundToInt(this.originalRemainingAmt)
+    ) {
+      this.messageService.errorBubble('明細加總不可大於剩餘總金額');
+      sum = this.roundToInt(this.originalRemainingAmt);
+    }
 
     this.dataForm.get('PUR_Amt')?.setValue(hasDetails ? sum : null, { emitEvent: true });
 
