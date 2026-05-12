@@ -112,7 +112,7 @@ export class FIN41020CRUComponent extends BasicCruPageComponent<FIN41020Data> im
         Details: this.data
           .filter(item => item.MonthNo !== '合計')
           .map(item => ({
-            MonthNo: String(Number(item.MonthNo.replace('月', ''))),
+            MonthNo: item.MonthNo.replace('月', ''),
             Budget: item.Budget,
             Remark: item.Remark
           }))
