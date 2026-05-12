@@ -140,26 +140,26 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
 
   columns: Column[] = [
     { field: 'paper_type', header: '營業形態代號', visible: false },
-    { field: 'paper_type_desc', header: '營業形態', visible: true },
+    { field: 'paper_type_desc', header: '營業形態', visible: true, align: 'left' },
 
-    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
-    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
-    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
-    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
+    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
+    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
+    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
+    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
+    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
+    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
     // { field: 'MonthlyPayment', header: '月坪貢獻(未稅)', visible: true, groupField: 'space' },
 
-    { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' },
-    { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp' },
-    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp' },
+    { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp', format: formatAmount, align: 'right' },
+    { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp', format: formatAmount, align: 'right' },
+    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp', format: formatAmount, align: 'right' },
 
-    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
+    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount, align: 'right' },
+    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount, align: 'right' },
+    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2), align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },

@@ -75,21 +75,21 @@ export class Tls31070CRUComponent extends BasicCruPageComponent<TLS31070Response
   historyRequestBody: TLS31070DetailRequest | null = null; //歷史查詢條件
   columns: Column[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
 
-    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
-    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
-    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
-    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
-    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
+    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
+    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
+    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
+    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
+    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
+    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
 
-    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
+    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount, align: 'right' },
+    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount, align: 'right' },
+    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2), align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },

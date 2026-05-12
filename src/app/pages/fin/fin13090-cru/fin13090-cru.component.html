@@ -1,0 +1,43 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <!-- <div class="grid p-fluid">
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="發票格式"
+          controlName="VouNo"
+          [options]="GUIType_Options"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.VouNo"
+          [submitted]="submitted"
+        ></app-dropdown>
+      </div> -->
+      <div class="grid p-fluid">
+        <app-table-edit
+          title="發票資料"
+          class="col-12"
+          [columns]="detailColumn"
+          [data]="detailData"
+          [loading]="loading"
+          [defaultInsertData]="defaultdetail"
+          (dataChange)="onDetailChange($event)"
+          [canInsert]="detailData.length < 1"
+          [rowValidate]="validateDetail"
+          [disabled]="isFormReadable"
+        ></app-table-edit>
+      </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit"></app-button>
+      </div>
+    </form>
+  </p-panel>
+</div>
