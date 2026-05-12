@@ -521,8 +521,8 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       this.tlsBaseService.initializeEmptyForm(this.dataForm, 'TLS13020');
       this.dataForm.get('apply_type')?.setValue('2');
       this.tlsBaseService.setCurrentUserAsNegotiator(this.dataForm);
-      await this.loadFareData('');
       this.showContractSearchDialog = true; // 新增模式自動開啟合約查詢
+      await this.loadFareData('');
       return;
     }
 

@@ -92,8 +92,8 @@ export class FIN29030Component extends BasicQueryPageComponent<FIN29030Detail> i
     { field: 'PaymentBank', header: '付款銀行', visible: true },
     { field: 'IssueDate', header: '開票日期', visible: true, format: formatDate },
     { field: 'ExpireDate', header: '到期日', visible: true, format: formatDate },
-    { field: 'VEN_No', header: '廠客代號', visible: true },
-    { field: 'VEN_Name', header: '廠客名稱', visible: true },
+    { field: 'VenNo', header: '廠客代號', visible: true },
+    { field: 'VenName', header: '廠客名稱', visible: true },
     { field: 'TicketAmt', header: '票面金額', visible: true, format: formatAmount, isSubTotal: true },
   ];
 

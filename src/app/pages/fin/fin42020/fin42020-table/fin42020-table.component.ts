@@ -1,23 +1,12 @@
-import { CommonModule, NgClass, NgFor, NgIf } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { TableModule } from 'primeng/table';
-import { TagModule } from 'primeng/tag';
-
-// 假設這裡定義了查詢請求的介面 (雖然在父元件 service 中，但為了型別參考保持結構)
-export interface QueryFIN42020Request {
-  DateFrom: string; // YYYY-MM-DD
-  DateTo: string; // YYYY-MM-DD
-  CmpDateFrom: string; // 比較期開始日期 YYYY-MM-DD (新增，假設為比較報表專用)
-  CmpDateTo: string; // 比較期結束日期 YYYY-MM-DD (新增，假設為比較報表專用)
-  // ... 其他欄位
-}
 
 export interface Fin42020Column {
   field: string;
   header: string;
-  format?: (value: any, rowIndex?: number, rowData?: any) => any;
-  // 新增 align 屬性
   align?: 'left' | 'center' | 'right';
+  format?: (value: unknown) => string;
 }
 
 @Component({
@@ -26,167 +15,198 @@ export interface Fin42020Column {
   templateUrl: 'fin42020-table.component.html',
   styleUrls: ['fin42020-table.component.scss'],
   standalone: true,
-  imports: [TableModule, TagModule, NgFor, NgIf, NgClass, CommonModule],
+  imports: [CommonModule, TableModule],
 })
-// 實作 OnChanges 接口
 export class TableSubheaderComponent implements OnInit, OnChanges {
-  @Input() data: any[] = []; // 用來儲存查詢結果
-  // 欄位定義改為在程式碼中初始化
-  columns: Fin42020Column[] = [];
-  @Input() dataKey: string | undefined; // 用來儲存查詢結果
-  @Input() loading = false;
-  @Input() footerData: any = {};
+  @Input() data: any[] = [];
 
-  // 接收 historyRequestBody
-  @Input() historyRequestBody: any; // 使用假設的介面
+  public columns: Fin42020Column[] = [];
+  public detailData: any[] = []; // 明細資料
+  public hasSearched = false; // 是否已搜尋
 
-  // 新增屬性：用於儲存分離出來的群組小計資料
-  public groupedFooters: Record<string, any> = {};
+  // 需要加線的欄位
+  private readonly lineStyleFields: string[] = [
+    'CurrentAmount',
+    'CurrentRatio',
+    'LastYearAmount',
+    'LastYearRatio',
+    'GrowthRate',
+    'BudgetAmount',
+    'BudgetGrowthRate',
+    'CurrentAccumAmount',
+    'CurrentAccumRatio',
+    'LastYearAccumAmount',
+    'LastYearAccumRatio',
+    'AccumGrowthRate',
+    'BudgetAccumAmount',
+    'BudgetAccumGrowthRate',
+  ];
 
-  // 新增屬性：用於儲存過濾掉小計後的明細資料
-  public detailData: any[] = [];
-
-  constructor() { }
-
-  ngOnInit() {
-    this.initializeColumns(); // 初始化欄位 (會使用初始的 historyRequestBody: null)
-    this.processData();
+  ngOnInit(): void {
+    this.initializeColumns();
+    this.setTableData();
   }
 
-  // 監聽 @Input() data 及動態標題的變化
-  public hasSearched = false; // 是否已搜尋
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
       this.hasSearched = true;
-      this.processData();
-    }
-    // 當 historyRequestBody 變更時，重新初始化欄位
-    if (changes['historyRequestBody']) {
-      this.initializeColumns();
+      this.setTableData();
     }
   }
 
-  // 核心邏輯：分離小計和明細資料 (保持不變)
-  private processData(): void {
-    this.groupedFooters = {};
-    this.detailData = [];
-
-    if (!this.data || this.data.length === 0) {
-      return;
-    }
-
-    this.data.forEach(row => {
-      const groupKey = row.LTYPE_NAME;
-      // 判斷是否為小計行 (LTYPE_ID 不為空，但其餘 ID 欄位為空)
-      if ((row.STYPE_ID === null || row.STYPE_ID === '') && (row.MTYPE_ID === null || row.MTYPE_ID === '') && (row.LTYPE_ID !== null && row.LTYPE_ID !== '')) {
-        // 小計行：儲存到 groupedFooters，並以 LTYPE_NAME 作為 key
-        this.groupedFooters[groupKey] = row;
-      } else if (row.LTYPE_ID === null && row.MTYPE_ID === null && row.STYPE_ID === null) {
-        // 總計行：由父元件的 footerData 處理，此處忽略
-      } else {
-        // 明細行：儲存到 detailData
-        this.detailData.push(row);
-      }
-    });
-  }
-
-  /**
-   * 將 YYYY-MM-DD 格式的日期轉換為「民國 YYY 年度 MM 月」所需的組成部分。
-   * @param isoDate YYYY-MM-DD 格式的日期字串
-   * @returns 包含 rocYear 和 month 的物件，如果轉換失敗則為 null
-   */
-  private toROCDateInfo(isoDate: string | null | undefined): { rocYear: string, month: string, year: number } | null {
-    if (!isoDate) return null;
-    // 分割字串，避免 new Date() 的時區轉換問題
-    const parts = isoDate.split('-');
-    if (parts.length < 2) return null;
-
-    const year = parseInt(parts[0], 10);
-    const month = parseInt(parts[1], 10);
-    const rocYear = (year - 1911).toString();
-    const monthString = month.toString().padStart(2, '0');
-
-    return { rocYear, month: monthString, year };
-  }
-
-  /**
-   * 根據 historyRequestBody 的日期參數動態產生欄位標題
-   */
   private initializeColumns(): void {
-
-    // 重新定義 columns 陣列 (欄位定義保持不變)
     this.columns = [
-      { field: 'STYPE_NAME', header: '科目名稱', align: 'left' },
+      { field: 'AccountName', header: '科目名稱', align: 'left' },
 
       // 本月
-      { field: 'MONTH_CURRENT_AMOUNT', header: '金額', format: formatAmount2, align: 'right' },
-      { field: 'MONTH_CURRENT_RATIO', header: '佔比(%)', format: formatPercent2Decimals, align: 'right' },
-      { field: 'MONTH_LAST_AMOUNT', header: '金額', format: formatAmount2, align: 'right' },
-      { field: 'MONTH_LAST_RATIO', header: '佔比(%)', format: formatPercent2Decimals, align: 'right' },
-      { field: 'MONTH_GROWTH_RATE', header: '增減率(%)', format: formatPercent2Decimals, align: 'right' },
-      { field: 'MONTH_BUDGET', header: '預算', format: formatAmount2, align: 'right' },
-      { field: 'MONTH_BUDGET_RATE', header: '預算比增減率', format: formatPercent2Decimals, align: 'right' },
+      { field: 'CurrentAmount', header: '金額', format: formatAmount, align: 'right' },
+      { field: 'CurrentRatio', header: '佔比(%)', format: formatPercent, align: 'right' },
+      { field: 'LastYearAmount', header: '金額', format: formatAmount, align: 'right' },
+      { field: 'LastYearRatio', header: '佔比(%)', format: formatPercent, align: 'right' },
+      { field: 'GrowthRate', header: '增減率(%)', format: formatPercent, align: 'right' },
+      { field: 'BudgetAmount', header: '預算', format: formatAmount, align: 'right' },
+      { field: 'BudgetGrowthRate', header: '預算比增減率', format: formatPercent, align: 'right' },
 
       // 累計
-      { field: 'ACC_CURRENT_AMOUNT', header: '金額', format: formatAmount2, align: 'right' },
-      { field: 'ACC_CURRENT_RATIO', header: '佔比(%)', format: formatPercent2Decimals, align: 'right' },
-      { field: 'ACC_LAST_AMOUNT', header: '金額', format: formatAmount2, align: 'right' },
-      { field: 'ACC_LAST_RATIO', header: '佔比(%)', format: formatPercent2Decimals, align: 'right' },
-      { field: 'ACC_GROWTH_RATE', header: '增減率(%)', format: formatPercent2Decimals, align: 'right' },
-      { field: 'ACC_BUDGET', header: '預算', format: formatAmount2, align: 'right' },
-      { field: 'ACC_BUDGET_RATE', header: '預算比增減率', format: formatPercent2Decimals, align: 'right' },
+      { field: 'CurrentAccumAmount', header: '金額', format: formatAmount, align: 'right' },
+      { field: 'CurrentAccumRatio', header: '佔比(%)', format: formatPercent, align: 'right' },
+      { field: 'LastYearAccumAmount', header: '金額', format: formatAmount, align: 'right' },
+      { field: 'LastYearAccumRatio', header: '佔比(%)', format: formatPercent, align: 'right' },
+      { field: 'AccumGrowthRate', header: '增減率(%)', format: formatPercent, align: 'right' },
+      { field: 'BudgetAccumAmount', header: '預算', format: formatAmount, align: 'right' },
+      { field: 'BudgetAccumGrowthRate', header: '預算比增減率', format: formatPercent, align: 'right' },
     ];
   }
 
-  // 定義一個陣列，列出所有需要加上上邊框的欄位名稱
-  nullBorderFields: string[] = [
-    'MONTH_CURRENT_AMOUNT',
-    'MONTH_CURRENT_RATIO',
-    'MONTH_LAST_AMOUNT',
-    'MONTH_LAST_RATIO',
-    'MONTH_GROWTH_RATE',
-    'MONTH_BUDGET',
-    'MONTH_BUDGET_RATE',
-    'ACC_CURRENT_AMOUNT',
-    'ACC_CURRENT_RATIO',
-    'ACC_LAST_AMOUNT',
-    'ACC_LAST_RATIO',
-    'ACC_GROWTH_RATE',
-    'ACC_BUDGET',
-    'ACC_BUDGET_RATE'
-  ];
-
-  // 方法：判斷是否需要加上上邊框（當欄位名稱在 nullBorderFields 中且該欄位值為 null 時）
-  shouldShowTopBorder(rowData: any, field: string): boolean {
-    const allNull = this.nullBorderFields.every(f => rowData?.[f] === null);
-    return allNull && this.nullBorderFields.includes(field);
+  /**
+ * 將父元件傳進來的 data 指定給表格實際顯示的資料來源。
+ *
+ * 目前沒有另外拆分 group footer 或 footer，
+ * 所以直接讓 detailData 等於 data。
+ */
+  private setTableData(): void {
+    this.detailData = this.data ?? [];
   }
 
-  // 方法：在 groupfooter 模板中用來取得小計資料 (保持不變)
-  getGroupFooterData(rowData: any): any {
-    const groupKey = rowData.LTYPE_NAME;
-    return this.groupedFooters[groupKey];
+  /**
+ * 判斷目前這一列是否為小計 / 合計列。
+ */
+  // TOTAL：通常代表合計列
+  // CALC ：通常代表計算列，例如營業淨利、稅前損益等
+  public isSummaryRow(rowData: any): boolean {
+    const rowType = rowData?.RowType;
+
+    return (
+      rowType === 'TOTAL' ||
+      rowType === 'CALC' ||
+      rowType === 2 ||
+      rowType === 3
+    );
+  }
+
+  /**
+ * 取得儲存格的線條樣式。
+ */
+  // 主要用途：
+  // 1. 一般明細列不加線
+  // 2. AccountName 欄位不加線
+  // 3. 只有金額 / 比率欄位才加線
+  // 4. TOTAL / CALC 列的數值欄位上方加雙線
+  // 5. 如果下一列是 HEADER，或目前是最後一列，才補底部單線
+  public getCellLineStyle(
+    rowData: any,
+    field: string,
+    rowIndex: number
+  ): Record<string, string> {
+    // 建立一個樣式物件，最後會回傳給 [ngStyle]
+    const style: Record<string, string> = {};
+
+    // 科目名稱欄位不加線
+    if (field === 'AccountName') {
+      return style;
+    }
+    // 如果不是指定要畫線的欄位，也不加線
+    if (!this.lineStyleFields.includes(field)) {
+      return style;
+    }
+    // 如果目前這列不是 TOTAL / CALC，也不加線
+    if (!this.isSummaryRow(rowData)) {
+      return style;
+    }
+
+    // 取得目前表格實際顯示的資料
+    const dataList = this.detailData ?? [];
+
+    // 判斷目前這列是不是最後一列
+    const isLastRow = rowIndex === dataList.length - 1;
+
+    // 取得下一列資料
+    // 如果目前已經是最後一列，就沒有下一列
+    const nextRow = isLastRow ? null : dataList[rowIndex + 1];
+
+    // 取得下一列的 RowType
+    const nextRowType = nextRow?.RowType;
+
+    // 判斷下一列是否為 HEADER
+    const isNextHeader =
+      nextRowType === 'HEADER' ||
+      nextRowType === 0;
+
+    // TOTAL / CALC 列的數值欄位，上方加雙線
+    style['border-top'] = '3px double #3b82f6';
+
+    // 只有在以下情況才補底部單線：
+    // 1. 目前是最後一列
+    // 2. 下一列是 HEADER
+    // 如果下一列也是 TOTAL / CALC，就不補底線，
+    if (isLastRow || isNextHeader) {
+      style['border-bottom'] = '1px solid #93c5fd';
+    }
+
+    return style;
   }
 }
 
-// 格式化函式 (保持不變，且放在 component 類別外部作為共用函式)
-const formatAmount2 = (val: number | string | null | undefined): string => {
-  if (val === null || val === undefined || val === '') {
+/**
+ * 格式化金額。
+ *
+ * 功能：
+ * 1. null / undefined / 空字串 顯示空白
+ * 2. 可以轉成數字時，加上千分位
+ * 3. 不能轉成數字時，直接顯示原值
+ */
+const formatAmount = (value: unknown): string => {
+  if (value === null || value === undefined || value === '') {
     return '';
   }
-  const num = Number(val);
-  if (isNaN(num)) {
-    return String(val);
+
+  const num = Number(value);
+
+  if (Number.isNaN(num)) {
+    return String(value);
   }
+
   return num.toLocaleString();
 };
-export const formatPercent2Decimals = (val: number | string | null | undefined): string => {
-  if (val === null || val === undefined || val === '') {
+
+/**
+ * 格式化百分比。
+ *
+ * 功能：
+ * 1. null / undefined / 空字串 顯示空白
+ * 2. 可以轉成數字時，顯示到小數點第 2 位
+ * 3. 不能轉成數字時，直接顯示原值
+ */
+const formatPercent = (value: unknown): string => {
+  if (value === null || value === undefined || value === '') {
     return '';
   }
-  const num = Number(val);
-  if (isNaN(num)) {
-    return String(val);
+
+  const num = Number(value);
+
+  if (Number.isNaN(num)) {
+    return String(value);
   }
+
   return num.toFixed(2);
 };

@@ -133,30 +133,42 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
       accept: () => {
         const idList = this.selectedItems.map(item => item.id).join(',');
         const body = { GLS6001_IDList: idList };
-
         this.btnLoading = true;
-        this.fin51010Service.transferFIN51010(body).pipe(finalize(() => { this.btnLoading = false; }), untilDestroyed(this)).subscribe(res => {
-          if (res.Data.ErrCode === 0) {
+
+        this.fin51010Service.transferFIN51010(body).pipe(
+          finalize(() => { this.btnLoading = false; }),
+          untilDestroyed(this)
+        ).subscribe(res => {
+          // 取得訊息內容
+          const msg = res.Data.ErrMsg || '';
+
+          // 【優化判定】：即便 ErrCode 是 0，但如果沒抓到傳票編號，也視為失敗
+          const isSuccess = res.Data.ErrCode === 0 && msg.includes('傳票編號');
+
+          if (isSuccess) {
+            // 換行處理
+            const formattedMsg = msg.replace(/\n/g, '<br>');
             setTimeout(() => {
               this.messageService.confirm({
                 header: '拋轉成功',
-                message: res.Data.ErrMsg || '資料已成功拋轉！',
+                message: formattedMsg,
                 icon: 'pi pi-check-circle',
                 acceptLabel: '確定',
                 showRejectButton: false,
                 accept: () => {
-                  // 按下確定後，才刷新資料
                   this.selectedItems = [];
                   this.onSubmit(this.queryForm);
                   this.loadSheetTypeCount();
                 }
               });
-            }, 200); // 延遲 200 毫秒
+            }, 200);
           } else {
+            // 顯示失敗：可能是 ErrCode != 0，或者是 ErrCode 為 0 但其實沒產生單號
             setTimeout(() => {
               this.messageService.confirm({
                 header: '拋轉失敗',
-                message: res.Data.ErrMsg || '拋轉失敗',
+                // 如果 Code 是 0 但沒單號，提示「未產生傳票編號」
+                message: res.Data.ErrCode === 0 ? '拋轉異常：未產生傳票編號。' : msg,
                 icon: 'pi pi-exclamation-triangle',
                 acceptLabel: '關閉',
                 showRejectButton: false
@@ -214,5 +226,30 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
     }
     // 2. 選中的項目中，若包含「未過帳」(PostFlag === '0') 則禁用 (依據您的邏輯)
     return this.selectedItems.some(item => item.PostFlag === '0');
+  }
+
+  /** 讀取HR傳票資料 */
+  hrLoading = false;
+  onReadHR() {
+    // this.messageService.confirm({
+    //   header: '匯入確認',
+    //   message: '是否執行轉入雇主負擔保費項目？',
+    //   icon: 'pi pi-question-circle',
+    //   accept: () => {
+    this.hrLoading = true; // 鎖定 UI 防止重複點擊
+    this.fin51010Service.importHRVouFIN51010().pipe(finalize(() => this.hrLoading = false), untilDestroyed(this)).subscribe((res) => {
+      if (res.Data?.ErrCode === 0) {
+        this.messageService.successBubble(res.Data.ErrMsg);
+        this.loadSheetTypeCount();
+        this.queryForm.patchValue({
+          SrcSheetType: 'HR', // 假設 HR 是代表 HR 傳票的類型
+        });
+        this.onSubmit(this.queryForm);
+      } else {
+        this.messageService.errorBubble(res.Data?.ErrMsg);
+      }
+    });
+    //   }
+    // });
   }
 }

@@ -1,17 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-// import { NavigationExtras, Router } from '@angular/router';
-// Services
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-// import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-// import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
+import { DatePipe } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FIN42020Data } from '@service/api/fin/fin42020.service';
+import { FIN42020Data, FIN42020Service, QueryFIN42020Request } from '@service/api/fin/fin42020.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -28,34 +26,15 @@ import { TableSubheaderComponent } from './fin42020-table/fin42020-table.compone
   imports: [MenubarComponent, AccordionModule, FormsModule, ButtonModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule, TableSubheaderComponent]
 })
 export class FIN42020Component extends BasicQueryPageComponent<FIN42020Data> implements OnInit {
-  // Upload files
-  // fileType: string = '';
-  // uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
   queryForm = this.formBuilder.group({
-    year: [],
-    version: [],
-    organizationNumber: ['', Validators.required],
-    month: [],
-    amountStart: [], // 金額 起
-    amountEnd: [], // 金額 迄
-    remark: [],
-    status: [],
-    department: [],
-    unit: [],
-    type: [],
+    YM: ['', Validators.required],
+    Org_ID: [],
+    ReportType: ['', Validators.required],
+    AmtUnit: ['', Validators.required],
   });
 
   // Dropdown options
-  FNCCodeOptions = [];
-  AccountcodeOptions = [];
-  departmentOptions = [{ value: 'D001', label: '總部' }, { value: 'D002', label: '人事部' }];
-  displayOptions2 = [];
-  AnalysisdateCOptions = [];
-  vendorOptions = [];
-  FlippingstateOptions = [];
-  organizationNumberOptions = [];
-  statusOptions = [{ value: 1, label: '是' },
-  { value: 2, label: '否' }];
+  ORG_ID_Options = signal<{ label: string; value: string }[]>([]);
   unitOptions = [{ value: 1, label: '元' },
   { value: 2, label: '千' },
   { value: 3, label: '萬' }];
@@ -66,13 +45,16 @@ export class FIN42020Component extends BasicQueryPageComponent<FIN42020Data> imp
   data: FIN42020Data[] = [];
   filteredData = [...this.data];
 
-  // 控制變數
-  btnLoading = false;
+  lastPrintQueryBody: QueryFIN42020Request | null = null;
+
+  // 按鈕載入狀態
+  exportPDFLoading = false;
+  exportExcelLoading = false;
 
   constructor(
-    // private router: Router,
-    // private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
+    private fin42020Service: FIN42020Service,
+    private datePipe: DatePipe,
+    private readonly fileExportService: FileExportService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -80,274 +62,70 @@ export class FIN42020Component extends BasicQueryPageComponent<FIN42020Data> imp
   ngOnInit(): void {
     this.ProgNo = '140006';
     this.initializePage('FIN42020', 'fin/fin42020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadDropdownOptions();
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+  onSubmit(form: FormGroup) {
+    this.handleSubmit(form, () => {
+      form.value.YM = this.datePipe.transform(form.value.YM, 'yyyyMM');
+      this.fin42020Service.queryFIN42020(form.value)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+          this.lastPrintQueryBody = form.getRawValue();
+        });
+    });
 
-    // if (frm.valid && this.canQuery()) {
-    //   // Submit logic here
-    // }
+  }
 
-    this.loading = false;
-    this.notificationService.unblockUi();
+  onExportPDF(): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
 
-    this.data = [
-      {
-        STYPE_NAME: '營業收入',
-        MONTH_CURRENT_AMOUNT: null,
-        MONTH_CURRENT_RATIO: null,
-        MONTH_LAST_AMOUNT: null,
-        MONTH_LAST_RATIO: null,
-        MONTH_GROWTH_RATE: null,
-        MONTH_BUDGET: null,
-        MONTH_BUDGET_RATE: null,
+    const raw = this.lastPrintQueryBody!;
+    const printRequest: QueryFIN42020Request = {
+      ...raw,
+      YM: this.datePipe.transform(raw.YM, 'yyyyMM') ?? ''
+    };
 
-        ACC_CURRENT_AMOUNT: null,
-        ACC_CURRENT_RATIO: null,
-        ACC_LAST_AMOUNT: null,
-        ACC_LAST_RATIO: null,
-        ACC_GROWTH_RATE: null,
-        ACC_BUDGET: null,
-        ACC_BUDGET_RATE: null,
+    const req$ = this.fin42020Service.exportFIN42020PDF({ ...printRequest });
+    this.fileExportService
+      .executeFileExport(req$, '.pdf', v => (this.exportPDFLoading = v))
+      .subscribe();
+  }
+
+  onExportExcel(): void {
+    if (!this.data || this.data.length === 0) {
+      return;
+    }
+
+    const raw = this.lastPrintQueryBody!;
+    const printRequest: QueryFIN42020Request = {
+      ...raw,
+      YM: this.datePipe.transform(raw.YM, 'yyyyMM') ?? ''
+    };
+
+    const req$ = this.fin42020Service.exportFIN42020Excel({ ...printRequest });
+    this.fileExportService
+      .executeFileExport(req$, '.excel', v => (this.exportExcelLoading = v))
+      .subscribe();
+  }
+
+
+  /** 載入下拉選單選項 */
+  private loadDropdownOptions(): void {
+    // 部門代號
+    this.fin42020Service.querySYS3100_DropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+        this.ORG_ID_Options.set(options);
       },
-      {
-        STYPE_NAME: '營業收入合計：',
-        MONTH_CURRENT_AMOUNT: 0,
-        MONTH_CURRENT_RATIO: 0.0,
-        MONTH_LAST_AMOUNT: 0,
-        MONTH_LAST_RATIO: 0.0,
-        MONTH_GROWTH_RATE: 0.0,
-        MONTH_BUDGET: 0,
-        MONTH_BUDGET_RATE: 0.0,
-
-        ACC_CURRENT_AMOUNT: 0,
-        ACC_CURRENT_RATIO: 0.0,
-        ACC_LAST_AMOUNT: 0,
-        ACC_LAST_RATIO: 0.0,
-        ACC_GROWTH_RATE: 0.0,
-        ACC_BUDGET: 0,
-        ACC_BUDGET_RATE: 0.0,
-      },
-      {
-        STYPE_NAME: '營業成本',
-        MONTH_CURRENT_AMOUNT: null,
-        MONTH_CURRENT_RATIO: null,
-        MONTH_LAST_AMOUNT: null,
-        MONTH_LAST_RATIO: null,
-        MONTH_GROWTH_RATE: null,
-        MONTH_BUDGET: null,
-        MONTH_BUDGET_RATE: null,
-
-        ACC_CURRENT_AMOUNT: null,
-        ACC_CURRENT_RATIO: null,
-        ACC_LAST_AMOUNT: null,
-        ACC_LAST_RATIO: null,
-        ACC_GROWTH_RATE: null,
-        ACC_BUDGET: null,
-        ACC_BUDGET_RATE: null,
-      },
-      {
-        STYPE_NAME: '營業成本合計：',
-        MONTH_CURRENT_AMOUNT: 0,
-        MONTH_CURRENT_RATIO: 0.0,
-        MONTH_LAST_AMOUNT: 0,
-        MONTH_LAST_RATIO: 0.0,
-        MONTH_GROWTH_RATE: 0.0,
-        MONTH_BUDGET: 0,
-        MONTH_BUDGET_RATE: 0.0,
-
-        ACC_CURRENT_AMOUNT: 0,
-        ACC_CURRENT_RATIO: 0.0,
-        ACC_LAST_AMOUNT: 0,
-        ACC_LAST_RATIO: 0.0,
-        ACC_GROWTH_RATE: 0.0,
-        ACC_BUDGET: 0,
-        ACC_BUDGET_RATE: 0.0,
-      },
-      {
-        STYPE_NAME: '營業毛利：',
-        MONTH_CURRENT_AMOUNT: 0,
-        MONTH_CURRENT_RATIO: null,
-        MONTH_LAST_AMOUNT: 0,
-        MONTH_LAST_RATIO: null,
-        MONTH_GROWTH_RATE: null,
-        MONTH_BUDGET: 0,
-        MONTH_BUDGET_RATE: null,
-
-        ACC_CURRENT_AMOUNT: 0,
-        ACC_CURRENT_RATIO: null,
-        ACC_LAST_AMOUNT: 0,
-        ACC_LAST_RATIO: null,
-        ACC_GROWTH_RATE: null,
-        ACC_BUDGET: 0,
-        ACC_BUDGET_RATE: null,
-      },
-      {
-        STYPE_NAME: '營業費用',
-        MONTH_CURRENT_AMOUNT: null,
-        MONTH_CURRENT_RATIO: null,
-        MONTH_LAST_AMOUNT: null,
-        MONTH_LAST_RATIO: null,
-        MONTH_GROWTH_RATE: null,
-        MONTH_BUDGET: null,
-        MONTH_BUDGET_RATE: null,
-
-        ACC_CURRENT_AMOUNT: null,
-        ACC_CURRENT_RATIO: null,
-        ACC_LAST_AMOUNT: null,
-        ACC_LAST_RATIO: null,
-        ACC_GROWTH_RATE: null,
-        ACC_BUDGET: null,
-        ACC_BUDGET_RATE: null,
-      },
-      {
-        STYPE_NAME: '營業費用合計：',
-        MONTH_CURRENT_AMOUNT: 0,
-        MONTH_CURRENT_RATIO: 0.0,
-        MONTH_LAST_AMOUNT: 0,
-        MONTH_LAST_RATIO: 0.0,
-        MONTH_GROWTH_RATE: 0.0,
-        MONTH_BUDGET: 0,
-        MONTH_BUDGET_RATE: 0.0,
-
-        ACC_CURRENT_AMOUNT: 0,
-        ACC_CURRENT_RATIO: 0.0,
-        ACC_LAST_AMOUNT: 0,
-        ACC_LAST_RATIO: 0.0,
-        ACC_GROWTH_RATE: 0.0,
-        ACC_BUDGET: 0,
-        ACC_BUDGET_RATE: 0.0,
-      },
-      {
-        STYPE_NAME: '營業淨利(淨損)：',
-        MONTH_CURRENT_AMOUNT: 0,
-        MONTH_CURRENT_RATIO: null,
-        MONTH_LAST_AMOUNT: 0,
-        MONTH_LAST_RATIO: null,
-        MONTH_GROWTH_RATE: null,
-        MONTH_BUDGET: 0,
-        MONTH_BUDGET_RATE: null,
-
-        ACC_CURRENT_AMOUNT: 0,
-        ACC_CURRENT_RATIO: null,
-        ACC_LAST_AMOUNT: 0,
-        ACC_LAST_RATIO: null,
-        ACC_GROWTH_RATE: null,
-        ACC_BUDGET: 0,
-        ACC_BUDGET_RATE: null,
-      },
-      {
-        STYPE_NAME: '營業外收入及支出',
-        MONTH_CURRENT_AMOUNT: null,
-        MONTH_CURRENT_RATIO: null,
-        MONTH_LAST_AMOUNT: null,
-        MONTH_LAST_RATIO: null,
-        MONTH_GROWTH_RATE: null,
-        MONTH_BUDGET: null,
-        MONTH_BUDGET_RATE: null,
-
-        ACC_CURRENT_AMOUNT: null,
-        ACC_CURRENT_RATIO: null,
-        ACC_LAST_AMOUNT: null,
-        ACC_LAST_RATIO: null,
-        ACC_GROWTH_RATE: null,
-        ACC_BUDGET: null,
-        ACC_BUDGET_RATE: null,
-      },
-      {
-        STYPE_NAME: '營業外收入及支出合計：',
-        MONTH_CURRENT_AMOUNT: 0,
-        MONTH_CURRENT_RATIO: 0.0,
-        MONTH_LAST_AMOUNT: 0,
-        MONTH_LAST_RATIO: 0.0,
-        MONTH_GROWTH_RATE: 0.0,
-        MONTH_BUDGET: 0,
-        MONTH_BUDGET_RATE: 0.0,
-
-        ACC_CURRENT_AMOUNT: 0,
-        ACC_CURRENT_RATIO: 0.0,
-        ACC_LAST_AMOUNT: 0,
-        ACC_LAST_RATIO: 0.0,
-        ACC_GROWTH_RATE: 0.0,
-        ACC_BUDGET: 0,
-        ACC_BUDGET_RATE: 0.0,
-      },
-      {
-        STYPE_NAME: '稅前盈餘：',
-        MONTH_CURRENT_AMOUNT: 0,
-        MONTH_CURRENT_RATIO: null,
-        MONTH_LAST_AMOUNT: 0,
-        MONTH_LAST_RATIO: null,
-        MONTH_GROWTH_RATE: null,
-        MONTH_BUDGET: 0,
-        MONTH_BUDGET_RATE: null,
-
-        ACC_CURRENT_AMOUNT: 0,
-        ACC_CURRENT_RATIO: null,
-        ACC_LAST_AMOUNT: 0,
-        ACC_LAST_RATIO: null,
-        ACC_GROWTH_RATE: null,
-        ACC_BUDGET: 0,
-        ACC_BUDGET_RATE: null,
-      },
-      {
-        STYPE_NAME: '所得稅費用',
-        MONTH_CURRENT_AMOUNT: null,
-        MONTH_CURRENT_RATIO: null,
-        MONTH_LAST_AMOUNT: null,
-        MONTH_LAST_RATIO: null,
-        MONTH_GROWTH_RATE: null,
-        MONTH_BUDGET: null,
-        MONTH_BUDGET_RATE: null,
-
-        ACC_CURRENT_AMOUNT: null,
-        ACC_CURRENT_RATIO: null,
-        ACC_LAST_AMOUNT: null,
-        ACC_LAST_RATIO: null,
-        ACC_GROWTH_RATE: null,
-        ACC_BUDGET: null,
-        ACC_BUDGET_RATE: null,
-      },
-      {
-        STYPE_NAME: '所得稅費用合計：',
-        MONTH_CURRENT_AMOUNT: 0,
-        MONTH_CURRENT_RATIO: 0.0,
-        MONTH_LAST_AMOUNT: 0,
-        MONTH_LAST_RATIO: 0.0,
-        MONTH_GROWTH_RATE: 0.0,
-        MONTH_BUDGET: 0,
-        MONTH_BUDGET_RATE: 0.0,
-
-        ACC_CURRENT_AMOUNT: 0,
-        ACC_CURRENT_RATIO: 0.0,
-        ACC_LAST_AMOUNT: 0,
-        ACC_LAST_RATIO: 0.0,
-        ACC_GROWTH_RATE: 0.0,
-        ACC_BUDGET: 0,
-        ACC_BUDGET_RATE: 0.0,
-      },
-      {
-        STYPE_NAME: '本期淨利(淨損)：',
-        MONTH_CURRENT_AMOUNT: 0,
-        MONTH_CURRENT_RATIO: null,
-        MONTH_LAST_AMOUNT: 0,
-        MONTH_LAST_RATIO: null,
-        MONTH_GROWTH_RATE: null,
-        MONTH_BUDGET: 0,
-        MONTH_BUDGET_RATE: null,
-
-        ACC_CURRENT_AMOUNT: 0,
-        ACC_CURRENT_RATIO: null,
-        ACC_LAST_AMOUNT: 0,
-        ACC_LAST_RATIO: null,
-        ACC_GROWTH_RATE: null,
-        ACC_BUDGET: 0,
-        ACC_BUDGET_RATE: null,
-      },
-    ]
+    });
   }
 }

@@ -250,7 +250,7 @@ ngOnInit(): void {
       this.data = [];
       this.totalRecords = 0;
       this.historyRequestBody = { ...payload };
-
+      this.updateAmountColumnHeaders(payload.AmtUnit);
       this.fin42030Service
         .queryFIN42030(payload)
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
@@ -401,4 +401,33 @@ ngOnInit(): void {
     const n = Number(value);
     return Number.isFinite(n) ? n.toLocaleString('en-US') : '';
   }
+  private getAmtUnitText(unit?: any): string {
+  const value = Number(unit ?? this.queryForm?.get('AmtUnit')?.value ?? 1);
+
+  switch (value) {
+    case 2:
+      return '千元';
+    case 3:
+      return '萬元';
+    case 1:
+    default:
+      return '元';
+  }
+}
+
+private updateAmountColumnHeaders(unit?: any): void {
+  const unitText = this.getAmtUnitText(unit);
+
+  const amountHeaderMap: Record<string, string> = {
+    CurrentAmount: `本期金額(${unitText})`,
+    BudgetSamePeriodAmount: `預算同期金額(${unitText})`,
+    CurrentAccumAmount: `本期累計金額(${unitText})`,
+    BudgetAccumAmount: `預算累計金額(${unitText})`,
+  };
+
+  this.columns = this.columns.map((col) => ({
+    ...col,
+    header: amountHeaderMap[col.field] ?? col.header,
+  }));
+}
 }

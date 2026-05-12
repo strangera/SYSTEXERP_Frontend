@@ -17,6 +17,7 @@ export interface ReportColumn {
   align?: 'left' | 'center' | 'right';
   reportType?: reportType; // 共通匯出格式類型
   type?: TableTypes; // 欄位類型
+  buttonLabel?: string;
   cellClass?: (rowData: any, field?: string) => string;// 新增動態樣式 Callback，不影響舊邏輯
   link?: boolean; // 是否為連結
   linkDisabled?: (rowData: any) => boolean;

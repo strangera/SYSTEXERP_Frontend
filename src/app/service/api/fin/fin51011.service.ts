@@ -52,15 +52,11 @@ export class FIN51011Service {
    * POST /FIN0000/GLS1000/uploadFIN51011
    * Request body: multipart/form-data
    */
-  uploadFIN51011(file: File): Observable<ApiResponse<number>> {
-    if (!file) {
-      throw new Error('No file provided');
-    }
+  uploadFIN51011(file: File): Observable<ApiResponse<FIN51011UploadResult>> {
     const formData = new FormData();
-    // 根據 Swagger 文件，欄位名稱為 'file'
-    formData.append('file', file, file.name);
-
-    return this.http.post<ApiResponse<number>>(
+    // 這裡的 'file' 必須跟後端 Controller 參數名稱 [IFormFile file] 一模一樣
+    formData.append('Files', file, file.name);
+    return this.http.post<ApiResponse<FIN51011UploadResult>>(
       `${this.baseUrl}/uploadFIN51011`,
       formData
     );
@@ -75,5 +71,14 @@ export class FIN51011Service {
       `${this.baseUrl}/uploadFIN51011FileName`,
       payload
     );
+  }
+
+  /** 下載檔案 */
+  downloadFile(fileName: string): Observable<Blob> {
+    // 注意這裡要設定 responseType: 'blob'
+    return this.http.get(`${this.baseUrl}/downloadFIN51011`, {
+      params: { fileName },
+      responseType: 'blob'
+    });
   }
 }

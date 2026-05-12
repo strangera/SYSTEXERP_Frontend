@@ -16,6 +16,20 @@ export interface IDropdownItem {
   Name: string;
 }
 
+/**
+ * queryPOS2002_Location_DropDownList 回傳項目
+ */
+export interface Pos2002LocationItem {
+  location_no?: string | null;
+  tlt_building?: string | null;
+  tlt_floor?: string | null;
+  area_no?: string | null;
+  tlt_space?: number | null;
+  building_desc?: string | null;
+  floor_desc?: string | null;
+  area_desc?: string | null;
+}
+
 /** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME） */
 export interface FasItemDropdownItem {
   RowNo?: string;

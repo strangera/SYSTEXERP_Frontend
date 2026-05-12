@@ -66,6 +66,22 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+          <div
+            class="col-12 md:col-6 lg:col-4 flex align-items-center"
+            *ngIf="
+              ['2', '3', '6', '7'].includes(queryForm.value.displayMode || '')
+            "
+          >
+            <p-checkbox
+              formControlName="IncludeExchange"
+              [binary]="true"
+              inputId="includeExchange"
+              [disabled]="queryForm.controls.IncludeExchange.disabled"
+            ></p-checkbox>
+            <label for="includeExchange" class="ml-2 cursor-pointer">
+              包含換開發票
+            </label>
+          </div>
         </div>
 
         <div
@@ -130,7 +146,7 @@
   <div class="flex gap-2 mb-3">
     <p-button
       styleClass="p-2"
-      label="二電發票報表 .PDF"
+      label="匯出PDF"
       [loading]="btnLoading"
       icon="pi pi-file-pdf"
       (click)="onExportPDF()"
@@ -138,7 +154,7 @@
     ></p-button>
     <p-button
       styleClass="p-2"
-      label="二電發票報表 .xlsx"
+      label="匯出EXCEL"
       [loading]="btnLoading2"
       icon="pi pi-file-excel"
       (click)="onExportExcel()"
@@ -194,6 +210,16 @@
           rowspan="3"
           class="text-center"
           style="
+            min-width: 80px;
+            background-color: var(--table-header-bg-group);
+          "
+        >
+          合計金額
+        </th>
+        <th
+          rowspan="3"
+          class="text-center"
+          style="
             min-width: 70px;
             background-color: var(--table-header-bg-group);
           "
@@ -217,7 +243,7 @@
           class="text-center"
           style="background-color: var(--table-header-bg)"
         >
-          二聯式電子發票
+          電子發票
         </th>
         <th
           colspan="3"
@@ -231,7 +257,7 @@
           class="text-center"
           style="background-color: var(--table-header-bg)"
         >
-          二聯式電子發票
+          電子發票
         </th>
       </tr>
       <!-- 第 3 層 -->
@@ -351,24 +377,28 @@
       <tr>
         <td class="text-center">{{ rowIndex + 1 }}</td>
         <td class="text-center">{{ row.InvoiceDate }}</td>
-        <td class="text-right" *ngFor="let field of type7DataFields">
-          {{ fmt(row[field]) }}
-        </td>
+        <ng-container *ngFor="let field of type7DataFields; let i = index">
+          <td class="text-right">{{ fmt(row[field]) }}</td>
+          <td class="text-right" *ngIf="i === 15">
+            {{ fmt(getType7RowTotal(row)) }}
+          </td>
+        </ng-container>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="footer">
       <tr class="font-bold">
         <td class="text-center" colspan="2">合計</td>
-        <td class="text-right" *ngFor="let field of type7DataFields">
-          {{ getType7Sum(field) }}
-        </td>
+        <ng-container *ngFor="let field of type7DataFields; let i = index">
+          <td class="text-right">{{ getType7Sum(field) }}</td>
+          <td class="text-right" *ngIf="i === 15">{{ getType7TotalSum() }}</td>
+        </ng-container>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="19" class="text-center p-5 text-500 font-bold">
+        <td colspan="20" class="text-center p-5 text-500 font-bold">
           <i class="pi pi-search mr-2"></i>
           查無資料
         </td>
