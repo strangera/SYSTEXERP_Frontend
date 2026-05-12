@@ -2,31 +2,34 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatDateToYYYY_MM_DD } from '@shared/componentkit/table/table.model';
+import saveAs from 'file-saver';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
+import { RadioButtonModule } from 'primeng/radiobutton';
 import { debounceTime, distinctUntilChanged, finalize, map, Subject, takeUntil } from 'rxjs';
-
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
 import { FloorService } from '../../../service/basic/querySYS3900.service';
 import { RegionService } from '../../../service/basic/querySYS3A00.service';
 import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
 import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
-
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-
-import { TranslateModule } from '@ngx-translate/core';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputTextModule } from 'primeng/inputtext';
-import { RadioButtonModule } from 'primeng/radiobutton';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 
 type FilterMode = 'location' | 'busType' | 'org' | 'counter';
-type SortOrder = 1 | -1;
-interface SortMeta { field: string; order: SortOrder }
 
 @Component({
   selector: 'app-tls23120',
@@ -47,14 +50,15 @@ interface SortMeta { field: string; order: SortOrder }
     TranslateModule,
     CalendarComponent,
     DropdownComponent,
+    TableReportComponent,
+    ButtonModule,
+    DialogComponent,
   ],
 })
-export class TLS23120Component extends BasicQueryPageComponent<any> implements OnDestroy, OnInit {
+export class TLS23120Component extends BasicQueryPageComponent<any> implements OnInit, OnDestroy {
   private readonly QUERY_KEY = this.ProgNo || 'TLS23120';
   private destroy$ = new Subject<void>();
 
-  sortMeta: SortMeta[] = [];
-  readonly defaultSort: SortMeta[] = [{ field: 'TLT_NO', order: 1 as const }];
 
   data: any[] = [];
   totalRecords = 0;
@@ -74,7 +78,6 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     TXN_Date: [this.yesterday, [Validators.required]],
     filterMode: ['counter' as FilterMode],
-
     TLT_No: [null as string | null],
     bus_type: [],                 // 大分類（可能單選/多選）
     ShowBusType: true,
@@ -82,8 +85,26 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
     area_no: [[] as string[]],    // 區域（多選）
     tlt_floor: [[] as string[]],  // 樓層（多選）
     org_id: [],                   // 組織（可能單選/多選）
+    PageSize: [30],
+    PageIndex: [1],
   });
+  dialogForm = this.formBuilder.group({
+    SMTP_No: [null, [Validators.required]], // 寄件者
+  })
 
+  columns: ReportColumn[] = [
+    { field: 'sad_date', header: '銷售日期', format: formatDate },
+    { field: 'tlt_no', header: '專櫃編號' },
+    { field: 'tlt_name', header: '櫃位名稱' },
+    { field: 'org_Name', header: '組織名稱' },
+    { field: 'location_no', header: '櫃位' },
+    { field: 'tlt_building_name', header: '館別' },
+    { field: 'area_name', header: '區域' },
+    { field: 'tlt_floor_name', header: '樓層' },
+    { field: 'bus_type_name', header: '大分類' },
+    { field: 'bus_class_name', header: '中分類' },
+    { field: 'bus_sclass_name', header: '小分類' },
+  ];
   organizationOptions: any[] = [];
   bus_typeOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
@@ -96,9 +117,14 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
     { label: '是', value: true },
     { label: '否', value: false },
   ];
+  SMTP_NoOptions = this.dropdown.queryNTY1001_DropDownList();
+  selectedItems: any[] = [];
+  dialogVisible = false;
+  dialogLoading = false;
 
   constructor(
-    private tls23120Service: TLS23120Service,
+    public readonly tls23120Service: TLS23120Service,
+    public readonly dropdown: DropdownApiService,
     private counterNameService: CounterNameService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private floorService: FloorService,
@@ -109,22 +135,19 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    const fromCru = !!history.state?.fromCru;
-
-    if (fromCru) {
-      // ✅ 只有從 CRU 回來才還原
-      this.restoreQueryForm();
-    } else {
-      // ✅ 其他頁回來：清掉舊狀態 + 回預設
-      try {
-        this.queryStateService.clearQueryState(this.QUERY_KEY);
-      } catch { }
-      this.resetToDefault();
-    }
-
+    // const fromCru = !!history.state?.fromCru;
     this.initializePage('TLS23120', 'tls/tls23120cru', this.queryForm, (form) => this.onSubmit(form));
 
-    this.sortMeta = this.defaultSort.map(s => ({ ...s }));
+    // if (fromCru) {
+    //   // ✅ 只有從 CRU 回來才還原
+    //   this.restoreQueryForm();
+    // } else {
+    //   // ✅ 其他頁回來：清掉舊狀態 + 回預設
+    //   try {
+    //     this.queryStateService.clearQueryState(this.QUERY_KEY);
+    //   } catch { }
+    //   this.resetToDefault();
+    // }
 
     this.regionService.getRegionOptions().subscribe(data => this.regionOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
@@ -174,98 +197,114 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
     this.destroy$.complete();
   }
 
-  onSubmit(form: FormGroup): void {
+  override onDetail(event: any): void {
     this.saveQueryForm();
 
-    this.handleSubmit(form, () => {
-      const payload = this.buildQueryPayload(true); // ✅ 查詢需要分頁
+    // this.handleSubmit(form, () => {
+    const val = this.queryForm.getRawValue() as any;
+    // const payload = this.buildQueryPayload(event); // ✅ 查詢需要分頁
+    const payload: any = {
+      TXN_Date: formatDateToYYYY_MM_DD(event?.sad_date),
+      TLT_No: (event?.tlt_no),
+      ShowBusType: val?.ShowBusType ?? null,
+    };
+    // this.historyRequestBody = { ...payload };
 
-      this.historyRequestBody = { ...payload };
+    this.loading = true;
+    this.messageService?.blockUi();
 
-      this.loading = true;
-      this.messageService?.blockUi();
+    this.tls23120Service.queryDetailTLS23120(payload).pipe(
+      finalize(() => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      })
+    ).subscribe({
+      next: (res: any) => {
+        const details = this.extractDetails(res);
+        this.data = details.map((r: any, i: number) => {
+          const row = this.normalizeRow(r);
+          return { ...row, _rowKey: `${row?.TLT_NO ?? ''}|${row?.TXN_DATE ?? ''}|${i}` };
+        });
 
-      this.tls23120Service.queryTLS23120(payload).pipe(
-        finalize(() => {
-          this.loading = false;
-          this.messageService?.unblockUi();
-        })
-      ).subscribe({
-        next: (res: any) => {
-          const details = this.extractDetails(res);
-          this.data = details.map((r: any, i: number) => {
-            const row = this.normalizeRow(r);
-            return { ...row, _rowKey: `${row?.TLT_NO ?? ''}|${row?.TXN_DATE ?? ''}|${i}` };
-          });
+        // this.totalRecords =
+        //   (typeof res?.TotalCount === 'number' && res.TotalCount >= 0)
+        //     ? res.TotalCount
+        //     : this.data.length;
 
-          this.totalRecords =
-            (typeof res?.TotalCount === 'number' && res.TotalCount >= 0)
-              ? res.TotalCount
-              : this.data.length;
-
-          if (this.pendingNavigateAfterQuery) {
-            this.pendingNavigateAfterQuery = false;
-
-            if (!this.data?.length) {
-              this.messageService?.warnBubble?.('查無資料');
-              return;
-            }
-
-            const formRaw = this.queryForm.getRawValue() as any;
-
-            // ✅ 給 CRU：除了 data/queryFormValue/pageSize，再多帶 exportBody
-            const exportBody = this.buildQueryPayload(false); // ✅ 匯出不要分頁
-
-            this.router.navigate(['/account/tls/tls23120cru'], {
-              state: {
-                data: this.data,
-                queryFormValue: formRaw,
-                pageSize: 30,
-                exportBody, // ✅ 新增：CRU 匯出 PDF 直接用這個打後端
-              },
-            });
-          }
-        },
-        error: () => {
+        if (this.pendingNavigateAfterQuery) {
           this.pendingNavigateAfterQuery = false;
-          this.data = [];
-          this.totalRecords = 0;
-        },
+
+          if (!this.data?.length) {
+            this.messageService?.warnBubble?.('查無資料');
+            return;
+          }
+
+          const formRaw = this.queryForm.getRawValue() as any;
+
+          // ✅ 給 CRU：除了 data/queryFormValue/pageSize，再多帶 exportBody
+          const exportBody = this.buildQueryPayload(event); // ✅ 匯出不要分頁
+
+          this.router.navigate(['/account/tls/tls23120cru'], {
+            state: {
+              data: this.data,
+              queryFormValue: formRaw,
+              pageSize: 30,
+              exportBody, // ✅ 新增：CRU 匯出 PDF 直接用這個打後端
+            },
+          });
+        }
+      },
+      error: () => {
+        this.pendingNavigateAfterQuery = false;
+        this.data = [];
+        // this.totalRecords = 0;
+      },
+    });
+    // });
+  }
+
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.value,
+        TXN_Date: formatDateToYYYY_MM_DD(frm.value.TXN_Date),
+      };
+      this.tls23120Service.queryTLS23120(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data;
+        this.historyRequestBody = body;
+        this.totalRecords = res.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
 
-  onQueryAndOpen(): void {
+  onQueryAndOpen(event: any): void {
     if (this.loading) return;
     this.pendingNavigateAfterQuery = true;
-    this.onSubmit(this.queryForm);
+    this.onDetail(event);
   }
 
   // ========= 核心：組 payload（查詢/匯出共用） =========
-  private buildQueryPayload(withPaging: boolean): any {
+  private buildQueryPayload(rowData: any): any {
     const val = this.queryForm.getRawValue() as any;
-    const fm = this.queryForm.controls.filterMode.value as FilterMode;
+    // const fm = this.queryForm.controls.filterMode.value as FilterMode;
 
     const payload: any = {
-      TXN_Date: this.toDateOnly(val?.TXN_Date),
-
-      TLT_No: (fm === 'counter') ? (val?.TLT_No ?? null) : null,
-      tlt_building: (fm === 'location') ? (val?.tlt_building ?? null) : null,
-      area_no: (fm === 'location') ? (Array.isArray(val?.area_no) ? val.area_no : null) : null,
-      tlt_floor: (fm === 'location') ? (Array.isArray(val?.tlt_floor) ? val.tlt_floor : null) : null,
-      bus_type: (fm === 'busType') ? (val?.bus_type ?? null) : null,
-      org_id: (fm === 'org') ? (val?.org_id ?? null) : null,
-
+      TXN_Date: formatDateToYYYY_MM_DD(rowData?.sad_date),
+      TLT_No: (rowData?.tlt_no),
+      // TLT_No: (fm === 'counter') ? (val?.TLT_No ?? null) : null,
+      // tlt_building: (fm === 'location') ? (val?.tlt_building ?? null) : null,
+      // area_no: (fm === 'location') ? (Array.isArray(val?.area_no) ? val.area_no : null) : null,
+      // tlt_floor: (fm === 'location') ? (Array.isArray(val?.tlt_floor) ? val.tlt_floor : null) : null,
+      // bus_type: (fm === 'busType') ? (val?.bus_type ?? null) : null,
+      // org_id: (fm === 'org') ? (val?.org_id ?? null) : null,
       ShowBusType: val?.ShowBusType ?? null,
-      SortBy: this.sortMeta,
     };
 
-    if (withPaging) {
-      payload.pageIndex = 1;
-      payload.PageIndex = 1;
-      payload.pageSize = 30;
-      payload.PageSize = 30;
-    }
+    // if (withPaging) {
+    //   payload.pageIndex = 1;
+    //   payload.PageSize = 30;
+    // }
 
     // 清除空值
     Object.keys(payload).forEach((k) => {
@@ -365,29 +404,6 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
   }
   moneyFormat = (value: any): string =>
     value != null && value !== '' ? Number(value || 0).toLocaleString('en-US') : '0';
-  // ===== columns / format / queryState 還原（你原本保留即可） =====
-  columns = [
-    { field: 'TXN_DATE', header: '銷售日期', visible: true, format: this.formatDateTimeYMDHM.bind(this) },
-    { field: 'TLT_NO', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'bus_type', header: '大分類編號', visible: true },
-    { field: 'bus_type_name', header: '大分類名稱', visible: true },
-    { field: 'FLOOR_NO', header: '樓層', visible: true },
-    { field: 'TLT_ID', header: '抽成類別', visible: true },
-    { field: 'total_count', header: '總交易筆數', visible: true, isTotal: true, style: 'text-right' },
-    { field: 'return_qty', header: '退貨件數', visible: true, isTotal: true, style: 'text-right' },
-    { field: 'return_amt', header: '退貨金額', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'AREA_NO', header: '區域', visible: true },
-    { field: 'SYS_Name', header: '區分', visible: true },
-    { field: 'sad_sale_qty', header: '銷貨筆數', visible: true, isTotal: true, style: 'text-right' },
-    { field: 'sad_sale_namt', header: '淨銷貨', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'sad_sale_tax', header: '營業稅', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'sad_sale_amt', header: '銷貨金額', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'sad_preorder_qty', header: '預售筆數', visible: true, isTotal: true, style: 'text-right' },
-    { field: 'sad_preorder_amt', header: '預售金額', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'sad_settle_qty', header: '結帳筆數', visible: true, isTotal: true, style: 'text-right' },
-    { field: 'sad_settle_amt', header: '結帳金額', visible: true, isTotal: true, style: 'text-right', format: this.moneyFormat },
-  ];
 
   formatDateTimeYMDHM(val: string | Date): string {
     if (!val) return '';
@@ -425,9 +441,6 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
 
     // ShowBusType 預設顯示/隱藏欄位同步一次
     this.syncBusTypeColumns(true);
-
-    // 排序也回預設（你有 defaultSort）
-    this.sortMeta = this.defaultSort.map(s => ({ ...s }));
   }
 
   private reviveDate(x: any) {
@@ -462,5 +475,65 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
+  }
+
+  exportZip() {
+    const body: any = {
+      selectList: this.selectedItems.map(item => ({
+        TXN_Date: formatDateToYYYY_MM_DD(item.sad_date),
+        TLT_No: item.tlt_no,
+      }))
+    };
+
+    const firstDate = this.selectedItems[0].sad_date.replace(/-/g, '');
+    const customFileName = `專櫃日對帳單${firstDate}.zip`;
+    this.btnLoading = true;
+    this.tls23120Service.exportTLS23120Zip(body)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => this.btnLoading = false)
+      )
+      .subscribe({
+        next: (response) => {
+          const blob = new Blob([response.body || response], { type: 'application/zip' });
+          saveAs(blob, customFileName);
+        },
+        error: (err) => {
+          console.error('ZIP 匯出失敗:', err);
+        }
+      });
+  }
+
+  netReport() {
+    const body: any = {
+      selectList: this.selectedItems.map(item => ({
+        TXN_Date: formatDateToYYYY_MM_DD(item.sad_date),
+        TLT_No: item.tlt_no,
+      }))
+    };
+
+    this.btnLoading = true;
+    this.tls23120Service.onlineTLS23120(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(res => {
+      this.messageService.successBubble(res.Data || '網路對帳執行成功');
+    });
+  }
+
+  autoMail(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body: any = {
+        SMTP_No: frm.value.SMTP_No,
+        selectList: this.selectedItems.map(item => ({
+          TXN_Date: formatDateToYYYY_MM_DD(item.sad_date),
+          TLT_No: item.tlt_no,
+          VEN_Name: item.VEN_Name,
+          email: item.email,
+        }))
+      };
+
+      this.dialogLoading = true;
+      this.tls23120Service.autoMailTLS23120(body).pipe(untilDestroyed(this), finalize(() => [this.loading = false, this.dialogLoading = false, this.dialogVisible = false])).subscribe(res => {
+        this.messageService.successBubble(res.Message);
+      });
+    })
   }
 }
