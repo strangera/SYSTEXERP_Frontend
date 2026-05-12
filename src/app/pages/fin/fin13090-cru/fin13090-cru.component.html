@@ -5,19 +5,18 @@
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <div class="grid p-fluid">
-        <!-- <app-dropdown
+      <!-- <div class="grid p-fluid">
+        <app-dropdown
           class="col-12 md:col-6 lg:col-4"
-          label="供應商代碼/名稱"
-          controlName="SUPPLIER_ID"
-          [options]="SUPPLIER_ID_Options"
+          label="發票格式"
+          controlName="VouNo"
+          [options]="GUIType_Options"
           optionLabel="label"
           optionValue="value"
-          [control]="dataForm.controls.SUPPLIER_ID"
+          [control]="dataForm.controls.VouNo"
           [submitted]="submitted"
-        ></app-dropdown> -->
-      </div>
-      <hr />
+        ></app-dropdown>
+      </div> -->
       <div class="grid p-fluid">
         <app-table-edit
           title="發票資料"

@@ -49,7 +49,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
     TaxTotal: [null] // 進項稅額貸方
   });
   //---------下拉選單-------------------------------------------------------
-  SUPPLIER_ID_Options: { value: string; label: string }[] = []; // 供應商編號 下拉選項 (ass12050: queryPOS2013_DropDownList)
+  GUIType_Options: { value: string; label: string }[] = []; // 供應商編號 下拉選項 (ass12050: queryPOS2013_DropDownList)
   // ---------明細 表格-------------------------------------------------------
   orgDetailData: fin13090Detail[] = []; // 原始供應商備份
   detailData: fin13090Detail[] = [];
@@ -83,7 +83,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
   onSubmit(frm: FormGroup) {// 驗證單據明細
     // --------------------------
-    //必須至少有一筆供應商資料
+    //必須至少有一筆明細資料
     if (this.detailData.length < 1) {
       this.messageService.errorBubble('明細資料不可為空。');
       return;
@@ -155,22 +155,16 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
     }
   }
 
-  // 讀取dopropdown選項
   loadOptions() {
-    // 定義所有 API 任務
-    const supplier$ = this.dropDownListService.queryPOS2013_DropDownList({});
-
-    // 同時發送，等待全部回傳
-    forkJoin([supplier$])
+    const quiOption$ = this.fin13090Service.getGUITypeDropdown({});
+    forkJoin([quiOption$])
       .pipe(untilDestroyed(this))
       .subscribe(([resSup]) => {
-        // 1. 處理供應商選項
-        this.SUPPLIER_ID_Options = (resSup.Data ?? []).map((item: any) => ({
-          value: item.VEN_No ?? item.No ?? '',
-          label: `${item.VEN_No ?? item.No ?? ''} - ${item.Name ?? ''}`,
+        this.GUIType_Options = (resSup.Data ?? []).map((item: any) => ({
+          value: item.INV_GUIType,
+          label: `${item.INV_GUIType} - ${item.INV_GUIName}`,
         }));
 
-        // 5. 選項都到位後建立 supplierColumn
         this.initSupplierColumns();
       });
   }
@@ -180,7 +174,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   //欄位名稱初始化
   private initSupplierColumns() {
     this.detailColumn = [
-      { field: 'PUR_VoucherType', header: '發票格式', type: 'input' },  // 發票格式 (憑證類別 21~29)
+      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label' },  // 發票格式 (憑證類別 21~29)
       { field: 'PUR_GUINo', header: '發票號碼', type: 'date' }, // 發票號碼
       { field: 'PUR_GUIDate', header: '發票日期', type: 'date' }, // 發票日期
       { field: 'PUR_RepYYYYMM', header: '申報年月', type: 'input' }, // 申報年月 (固定為雙數月)

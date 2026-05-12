@@ -52,7 +52,7 @@ export class FIN13090Component extends BasicQueryPageComponent<fin13090Item> imp
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
     { field: 'PostFlag', header: '傳票狀態代碼', visible: true }, // (1=建立 2=確認 3=過帳)
     { field: 'PostFlagName', header: '傳票狀態名稱', visible: true },
-    { field: 'TaxTotal', header: '進項稅額貸方', visible: true, format: formatAmount },
+    { field: 'TaxTotal', header: '進項稅額貸方', visible: true, format: formatAmount, align: 'right' },
   ];
 
   constructor(
