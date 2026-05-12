@@ -57,7 +57,7 @@ export class ASS11090Component extends BasicQueryPageComponent<ASS11090Data> imp
     DEPRE_ACCNO2: new FormControl<string | null>(null),
     /** 折舊年限 */
     EXP_YEAR: new FormControl<number | null>(null),
-    /** 備注關鍵字 */
+    /** 備註關鍵字 */
     NOTES_KW: new FormControl<string | null>(null),
     PageSize: new FormControl<number>(30),
     PageIndex: new FormControl<number>(1),
@@ -83,7 +83,7 @@ export class ASS11090Component extends BasicQueryPageComponent<ASS11090Data> imp
     { field: 'DEPRE_ACCNO_NAME', header: '折舊科目(借)' },
     { field: 'DEPRE_ACCNO2_NAME', header: '累計折舊科目(貸)' },
     { field: 'EXP_YEAR', header: '折舊年限' },
-    { field: 'NOTES', header: '備注' },
+    { field: 'NOTES', header: '備註' },
   ];
 
   // 大分類代碼/名稱下拉選項

@@ -39,7 +39,7 @@ export interface ASS11090Data {
   DEPRE_STYPE_ACCNO2_NAME?: string;
   /** 折舊年限 */
   EXP_YEAR?: number;
-  /** 備注 */
+  /** 備註 */
   NOTES?: string;
   /** 明細資料 */
   VouAccDetails?: VouAccDetail[];
@@ -87,7 +87,7 @@ export interface ASS11090QueryRequest extends BaseQueryRequest {
   ACC_NAME_KW?: string;
   /** 折舊年限 */
   EXP_YEAR?: number;
-  /** 備注關鍵字 */
+  /** 備註關鍵字 */
   NOTES_KW?: string;
 }
 
@@ -131,7 +131,7 @@ export interface ASS11090UpdateRequest {
   DEPRE_STYPE_ACCNO2?: string;
   /** 折舊年限 */
   EXP_YEAR?: number;
-  /** 備注 */
+  /** 備註 */
   NOTES?: string;
   /** 明細資料 */
   DETAILS?: ASS11090DetailItem[];
