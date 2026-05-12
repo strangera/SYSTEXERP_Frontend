@@ -65,30 +65,30 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
   historyRequestBody: TLS32010QueryRequest | null = null;
   data: TLS32010Data[] = [];
   columns: ReportColumn[] = [
-    { field: 'BuildingDesc', header: '館別' }, // field 改大寫
-    { field: 'OrgName', header: '組織名稱' },
-    { field: 'CabinetKindName', header: '櫃別' },
-    { field: 'TltNo', header: '櫃位編號', groupField: 'dept' },
-    { field: 'TltName', header: '櫃位名稱', groupField: 'dept' },
-    { field: 'LocationNoList', header: '位置編號', groupField: 'dept' },
-    { field: 'TltSpace', header: '坪數', format: formatAmount },
-    { field: 'Budget', header: '營業目標', format: formatAmount },
-    { field: 'SaleAmt', header: '營業實績', format: formatAmount },
-    { field: 'CustCnt', header: '交易筆數', format: formatAmount },
-    { field: 'AvgTicketAmt', header: '客單價', format: formatAmount },
-    { field: 'MonthlySpaceEfficiency', header: '月坪效', format: formatAmount },
-    { field: 'AchievementRate', header: '達成率', format: (value: number) => value ? `${value.toFixed(1)}%` : '0.0%' },
-    { field: 'TltSpaceRank', header: '坪數', format: formatAmountCN, groupField: 'tier' },
-    { field: 'BudgetRank', header: '營業目標', format: formatAmountCN, groupField: 'tier' },
-    { field: 'SaleAmtRank', header: '營業實績', format: formatAmountCN, groupField: 'tier' },
-    { field: 'CustCntRank', header: '交易筆數', groupField: 'tier' },
-    { field: 'AvgTicketAmtRank', header: '客單價', format: formatAmountCN, groupField: 'tier' },
-    { field: 'MonthlySpaceEfficiencyRank', header: '月坪效', format: formatAmountCN, groupField: 'tier' },
-    { field: 'AchievementRateRank', header: '達成率', format: formatAmountCN, groupField: 'tier' },
+    { field: 'BuildingDesc', header: '館別', align: 'left' },
+    { field: 'OrgName', header: '組織名稱', align: 'left' },
+    { field: 'CabinetKindName', header: '櫃別', align: 'left' },
+    { field: 'TltNo', header: '櫃位編號', align: 'left', groupField: '單位' },
+    { field: 'TltName', header: '櫃位名稱', align: 'left', groupField: '單位' },
+    { field: 'LocationNoList', header: '位置編號', align: 'left', groupField: '單位' },
+    { field: 'TltSpace', header: '坪數', align: 'right', format: formatAmount },
+    { field: 'Budget', header: '營業目標', align: 'right', format: formatAmount },
+    { field: 'SaleAmt', header: '營業實績', align: 'right', format: formatAmount },
+    { field: 'CustCnt', header: '交易筆數', align: 'right', format: formatAmount },
+    { field: 'AvgTicketAmt', header: '客單價', align: 'right', format: formatAmount },
+    { field: 'MonthlySpaceEfficiency', header: '月坪效', align: 'right', format: formatAmount },
+    { field: 'AchievementRate', header: '達成率', align: 'right', format: (value: number) => value ? `${value.toFixed(1)}%` : '0.0%' },
+    { field: 'TltSpaceRank', header: '坪數', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'BudgetRank', header: '營業目標', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'SaleAmtRank', header: '營業實績', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'CustCntRank', header: '交易筆數', align: 'right', groupField: '排名順位' },
+    { field: 'AvgTicketAmtRank', header: '客單價', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'MonthlySpaceEfficiencyRank', header: '月坪效', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'AchievementRateRank', header: '達成率', align: 'right', format: formatAmountCN, groupField: '排名順位' },
   ];
   columnGroup = [
-    { field: 'dept', header: '單位' },
-    { field: 'tier', header: '排名順位' }
+    { field: '單位', header: '單位' },
+    { field: '排名順位', header: '排名順位' }
   ];
   footerData: TLS32010Data | null = null;
   reportTypeOptions = [

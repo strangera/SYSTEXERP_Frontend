@@ -67,7 +67,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report [data]="data" [columns]="columns" [totalRecords]="totalRecords" [showReportMode]="false"
+  <app-table-report apiUrl="queryTLS31010" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
     [columnGroup]="columnGroup" [loading]="loading" [showManage]="false" [showDelete]="false" [footerData]="footerData"
     [lastQueryBody]="lastQueryBody" [queryFunction]="tls31010Service.queryTLS31010.bind(tls31010Service)">
     <header>

@@ -3,10 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { FloorService } from '@service/basic/querySYS3900.service';
-import { RegionService } from '@service/basic/querySYS3A00.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
@@ -108,56 +105,44 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
   ];
 
   columns: Column[] = [
-    { field: 'building_desc', header: '館別' },
-    { field: 'Org_Name', header: '組織' },
-    { field: 'SYS_Name', header: '櫃別' },
-    { field: 'TltNo', header: '專櫃編號' },
-    { field: 'TltName', header: '專櫃名稱' },
-    { field: 'Base_LocationNo', header: '位置編號', groupField: 'Base' },
-    { field: 'Base_Space', header: '坪數', groupField: 'Base' },
-    { field: 'Base_SaleAmt', header: '銷售金額', groupField: 'Base' },
-    { field: 'Base_TxnCnt', header: '交易筆數', groupField: 'Base' },
-    { field: 'Base_Target', header: '目標', groupField: 'Base' },
-    { field: 'Base_DaySpaceEff', header: '日坪效', groupField: 'Base' },
-    { field: 'Base_AchieveRate', header: '達成率', groupField: 'Base' },
-    { field: 'Base_AvgTicket', header: '客單價', groupField: 'Base' },
-    { field: 'Comp_LocationNo', header: '位置編號', groupField: 'Comp' },
-    { field: 'Comp_Space', header: '坪數', groupField: 'Comp' },
-    { field: 'Comp_SaleAmt', header: '銷售金額', groupField: 'Comp' },
-    { field: 'Comp_TxnCnt', header: '交易筆數', groupField: 'Comp' },
-    { field: 'Comp_Target', header: '目標', groupField: 'Comp' },
-    { field: 'Comp_DaySpaceEff', header: '日坪效', groupField: 'Comp' },
-    { field: 'Comp_AchieveRate', header: '達成率', groupField: 'Comp' },
-    { field: 'Comp_AvgTicket', header: '客單價', groupField: 'Comp' },
-
-    { field: 'Diff_SaleAmt', header: '銷售金額差異', groupField: 'Diff' },
-    { field: 'Diff_TxnCnt', header: '交易筆數差異', groupField: 'Diff' },
-    { field: 'Diff_Target', header: '目標差異', groupField: 'Diff' },
-    { field: 'Diff_DaySpaceEff', header: '日坪效差異', groupField: 'Diff' },
-    { field: 'Diff_AchieveRate', header: '達成率差異', groupField: 'Diff' },
-    { field: 'Diff_AvgTicket', header: '客單價差異', groupField: 'Diff' },
-
-    { field: 'Diff_SaleAmt', header: '銷售金額差異', groupField: 'Diff' },
-    { field: 'Diff_TxnCnt', header: '交易筆數差異', groupField: 'Diff' },
-    { field: 'Diff_Target', header: '目標差異', groupField: 'Diff' },
-    { field: 'Diff_DaySpaceEff', header: '日坪效差異', groupField: 'Diff' },
-    { field: 'Diff_AchieveRate', header: '達成率差異', groupField: 'Diff' },
-    { field: 'Diff_AvgTicket', header: '客單價差異', groupField: 'Diff' },
-
+    { field: 'building_desc', header: '館別', align: 'left' },
+    { field: 'Org_Name', header: '組織', align: 'left' },
+    { field: 'SYS_Name', header: '櫃別', align: 'left' },
+    { field: 'TltNo', header: '專櫃編號', align: 'left' },
+    { field: 'TltName', header: '專櫃名稱', align: 'left' },
+    { field: 'Base_LocationNo', header: '位置編號', align: 'left', groupField: '基準' },
+    { field: 'Base_Space', header: '坪數', align: 'right', groupField: '基準' },
+    { field: 'Base_SaleAmt', header: '銷售金額', align: 'right', groupField: '基準' },
+    { field: 'Base_TxnCnt', header: '交易筆數', align: 'right', groupField: '基準' },
+    { field: 'Base_Target', header: '目標', align: 'right', groupField: '基準' },
+    { field: 'Base_DaySpaceEff', header: '日坪效', align: 'right', groupField: '基準' },
+    { field: 'Base_AchieveRate', header: '達成率', align: 'right', groupField: '基準' },
+    { field: 'Base_AvgTicket', header: '客單價', align: 'right', groupField: '基準' },
+    { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較' },
+    { field: 'Comp_Space', header: '坪數', align: 'right', groupField: '比較' },
+    { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', groupField: '比較' },
+    { field: 'Comp_TxnCnt', header: '交易筆數', align: 'right', groupField: '比較' },
+    { field: 'Comp_Target', header: '目標', align: 'right', groupField: '比較' },
+    { field: 'Comp_DaySpaceEff', header: '日坪效', align: 'right', groupField: '比較' },
+    { field: 'Comp_AchieveRate', header: '達成率', align: 'right', groupField: '比較' },
+    { field: 'Comp_AvgTicket', header: '客單價', align: 'right', groupField: '比較' },
+    { field: 'Diff_SaleAmt', header: '銷售金額差異', align: 'right', groupField: '差異' },
+    { field: 'Diff_TxnCnt', header: '交易筆數差異', align: 'right', groupField: '差異' },
+    { field: 'Diff_Target', header: '目標差異', align: 'right', groupField: '差異' },
+    { field: 'Diff_DaySpaceEff', header: '日坪效差異', align: 'right', groupField: '差異' },
+    { field: 'Diff_AchieveRate', header: '達成率差異', align: 'right', groupField: '差異' },
+    { field: 'Diff_AvgTicket', header: '客單價差異', align: 'right', groupField: '差異' }
   ];
   columnGroup = [
-    { header: '基準', field: 'Base' },
-    { header: '比較', field: 'Comp' },
-    { header: '差異', field: 'Diff' },
+    { header: '基準', field: '基準' },
+    { header: '比較', field: '比較' },
+    { header: '差異', field: '差異' },
     { header: '成長率', field: 'Growth' }
   ];
 
   constructor(
     public readonly tls32030Service: TLS32030Service,
     private dropdown: DropdownApiService,
-    private floorService: FloorService,
-    private regionService: RegionService,
-    private dropDownListService: DropDownListService,
     private readonly fileExportService: FileExportService
   ) {
     super();
@@ -199,7 +184,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       this.queryForm.controls.CompareMonth.setValue(null, { emitEvent: false });
       this.queryForm.controls.CompareHalfYear.setValue(null, { emitEvent: false });
 
-      // 重新設定 Base / Compare 預設值（同時處理 DayType 切換和首次初始化）
+      // 重新設定 基準 / Compare 預設值（同時處理 DayType 切換和首次初始化）
       if (type === '2') {
         const currentWeek = this.getCurrentWeekNumber(today);
         this.queryForm.controls.week.setValue(currentWeek, { emitEvent: false });
@@ -221,7 +206,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
       // 1-3. 重新計算日期（欄位標頭維持固定，不需要動態更新）
       this.calculateDateRanges(type);
     });
-    // 2. 訂閱 Base 輔助欄位變化 (不變)
+    // 2. 訂閱 基準 輔助欄位變化 (不變)
     this.queryForm.controls.year.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.setWeekOptions(this.queryForm.controls.year.value); // 年份變動時，更新週次選項
       this.calculateDateRanges(this.queryForm.controls.DayType.value)
@@ -508,7 +493,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     */
   calculateInitialRanges(defaultType: string): void {
     const today = new Date();
-    // 基準期 Base: 今年
+    // 基準期 基準: 今年
     this.queryForm.controls.year.setValue(today, { emitEvent: false });
 
     // 比較期 Compare: 預設為去年同期
