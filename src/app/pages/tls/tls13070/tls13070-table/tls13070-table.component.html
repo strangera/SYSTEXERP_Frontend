@@ -1,7 +1,7 @@
 <p-table #dt [value]="virtualData.length > 0 ? virtualData : data" [scrollable]="true" [dataKey]="dataKey"
   scrollHeight="450px" sortMode="multiple" [rowTrackBy]="trackByFn" [resizableColumns]="true"
   [reorderableColumns]="true" [loading]="isLoading" [totalRecords]="totalRecords"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" [virtualScroll]="false" [loading]="loading"
+  styleClass="p-datatable-sm p-datatable-gridlines " [virtualScroll]="false" [loading]="loading"
   [virtualScrollItemSize]="46" [lazy]="true" [virtualScrollDelay]="0" [virtualScrollOptions]="{
       inline: true,
       trackBy: trackByFn,
