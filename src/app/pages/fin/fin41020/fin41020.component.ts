@@ -81,14 +81,16 @@ export class FIN41020Component extends BasicQueryPageComponent<FIN41020Data> imp
       message: `是否確認刪除 ${selectedItems.length} 筆資料？`,
       accept: () => {
         const deleteRequest: DeleteFIN41020Request = {
-          ORG_ID: selectedItems[0].OrgId,
-          BudgetYear: selectedItems[0].BudgetYear,
-          BudgetVersion: selectedItems[0].BudgetVersion,
-        };
+          Items: selectedItems.map(item => ({
+            ORG_ID: item.OrgId,
+            BudgetYear: item.BudgetYear,
+            BudgetVersion: item.BudgetVersion
+          }))
+        }
         this.fin41020Service.deleteFIN41020(deleteRequest)
           .pipe(untilDestroyed(this))
           .subscribe(response => {
-            if (response.Data.ErrCode !== 0) {
+            if (response.Status !== "0000") {
               this.messageService.errorBubble(response.Data.ErrMsg || '刪除失敗');
             }
             else {
