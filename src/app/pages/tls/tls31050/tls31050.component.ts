@@ -139,7 +139,7 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31050Request | null = null; //歷史查詢條件
   columns: Column[] = [
-    { field: 'tlt_term_type', header: '抽成別代碼', visible: false },
+    { field: 'tlt_term_type', header: '抽成別代碼', visible: false, align: 'left' },
     { field: 'tlt_term_desc', header: '抽成別名稱', visible: true, align: 'left' },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },

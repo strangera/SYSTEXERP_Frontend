@@ -140,7 +140,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
   historyRequestBody: TLS31030Request | null = null; //歷史查詢條件
 
   columns: Column[] = [
-    { field: 'bus_type', header: '大分類代碼', visible: false }, // queryTLS31030
+    { field: 'bus_type', header: '大分類代碼', visible: false, align: 'left' }, // queryTLS31030
     { field: 'bus_type_name', header: '大分類名稱', visible: true, align: 'left' }, // queryTLS31030
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },

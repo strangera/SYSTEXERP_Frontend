@@ -138,7 +138,7 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31060Request | null = null; //歷史查詢條件
   columns: Column[] = [
-    { field: 'org_id', header: '組織代號', visible: false },
+    { field: 'org_id', header: '組織代號', visible: false, align: 'left' },
     { field: 'org_name', header: '組織名稱', visible: true, align: 'left' },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },

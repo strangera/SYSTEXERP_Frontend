@@ -48,7 +48,13 @@ export interface QuerySYSB200Request {
 
 export interface SYSB200DetailRequest {
   pos2013_id: number;
+}
 
+export interface BankBranchItem {
+  BNK_No?: string | null;
+  BNK_Name?: string | null;
+  BNK_BranchNo?: string | null;
+  BNK_BranchName?: string | null;
 }
 
 @Injectable({
@@ -77,5 +83,9 @@ export class Sysb200Service {
   }
   updateStatusSYSB200(body: UpdateStatusSYSB200Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${API_URL}/updateStatusSYSB200`, body);
+  }
+
+  queryBankBranchDropdown(): Observable<ApiResponse<BankBranchItem[]>> {
+    return this.http.post<ApiResponse<BankBranchItem[]>>(`${environment.ApiUrl}/FIN0000/ARS1000/queryBankBranchDropdown`, {});
   }
 }
