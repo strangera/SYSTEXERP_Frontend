@@ -60,12 +60,13 @@
       </ng-container>
     </tr>
     <tr *ngIf="rowData && isGroupLastRow(rowData, rowIndex) && hasSubtotalColumns()"
-      class="font-bold text-center text-sm bg-gray-200 text-primary">
+      class="font-bold text-sm bg-gray-200 text-primary">
       <td class="w-1rem text-center">
         <span class="font-bold">小計</span>
       </td>
       <ng-container *ngFor="let col of columns">
-        <td class="text-center">
+        <!-- 套用與明細列相同的對齊邏輯 -->
+        <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}">
           <span class="font-bold"> {{ getGroupSubtotal(rowData, col) }}</span>
         </td>
       </ng-container>
@@ -82,15 +83,14 @@
     </ng-container>
   </ng-template>
   <ng-template pTemplate="footer" let-columns let-rowData>
-    <tr *ngIf="footerData" class="font-bold text-center text-sm bg-gray-200 text-primary">
+    <tr *ngIf="footerData" class="font-bold text-sm bg-gray-200 text-primary">
       <td class="w-1rem text-center">
         <span class="font-bold">總計</span>
       </td>
       <ng-container *ngFor="let col of columns">
-        <td class="text-center">
-          <span class="font-bold">
-            {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }}
-          </span>
+        <!-- 套用動態對齊 -->
+        <td [ngStyle]="{'text-align': col.align ? col.align : 'center'}">
+          <span class="font-bold"> {{ col.format ? col.format(footerData[col.field]) : footerData[col.field] }} </span>
         </td>
       </ng-container>
     </tr>
