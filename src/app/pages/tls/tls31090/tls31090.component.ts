@@ -16,7 +16,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, ColumnGroup } from '@shared/componentkit/table/table.model';
+import { Column, ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -90,28 +90,28 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
   btnExcelLoading = false;
 
   columns: Column[] = [
-    { field: 'BusTypeName', header: '大分類名稱', visible: true },
-    { field: 'TimeType', header: '時段類型', visible: true }, // (營業實績 / 交易筆數 / 營業實績佔比)
+    { field: 'BusTypeName', header: '大分類名稱', visible: true, align: 'left' },
+    { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
 
-    { field: 'H08', header: '08時段', visible: true },
-    { field: 'H09', header: '09時段', visible: true },
-    { field: 'H10', header: '10時段', visible: true },
-    { field: 'H11', header: '11時段', visible: true },
-    { field: 'H12', header: '12時段', visible: true },
-    { field: 'H13', header: '13時段', visible: true },
-    { field: 'H14', header: '14時段', visible: true },
-    { field: 'H15', header: '15時段', visible: true },
-    { field: 'H16', header: '16時段', visible: true },
-    { field: 'H17', header: '17時段', visible: true },
-    { field: 'H18', header: '18時段', visible: true },
-    { field: 'H19', header: '19時段', visible: true },
-    { field: 'H20', header: '20時段', visible: true },
-    { field: 'H21', header: '21時段', visible: true },
-    { field: 'H22', header: '22時段', visible: true },
-    { field: 'H23', header: '23時段', visible: true },
-    { field: 'Reentry', header: '補登', visible: true },
-    { field: 'PresaleCheckout', header: '預售結帳', visible: true },
-    { field: 'Subtotal', header: '小計', visible: true },
+    { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H11', header: '11時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H12', header: '12時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H13', header: '13時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H14', header: '14時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H15', header: '15時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H16', header: '16時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H17', header: '17時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H18', header: '18時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H19', header: '19時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H20', header: '20時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H21', header: '21時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Reentry', header: '補登', visible: true, format: formatAmount, align: 'right' },
+    { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },

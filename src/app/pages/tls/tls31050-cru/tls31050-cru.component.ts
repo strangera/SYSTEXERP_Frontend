@@ -74,11 +74,11 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31050DetailRequest | null = null; //歷史查詢條件
   columns: Column[] = [
-    { field: 'building_desc', header: '館別', visible: true },
-    { field: 'org_name', header: '組織名稱', visible: true },
-    { field: 'tlt_kind', header: '櫃別', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'location_no', header: '位置編號', visible: true },
+    { field: 'building_desc', header: '館別', visible: true, align: 'left' },
+    { field: 'org_name', header: '組織名稱', visible: true, align: 'left' },
+    { field: 'tlt_kind', header: '櫃別', visible: true, align: 'left' },
+    { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
+    { field: 'location_no', header: '位置編號', visible: true, align: 'left' },
     { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
