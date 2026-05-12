@@ -70,7 +70,7 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
   data: TLS31080DetailResponse[] = [];
   historyRequestBody: any = null; //歷史查詢條件
   columns: Column[] = [
-    { field: 'tlt_no', header: '專櫃代號', visible: true },
+    { field: 'tlt_no', header: '專櫃代號', visible: true, align: 'left' },
     { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
     { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
     { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)

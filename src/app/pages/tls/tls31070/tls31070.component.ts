@@ -139,7 +139,7 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   historyRequestBody: TLS31070Request | null = null; //歷史查詢條件
 
   columns: Column[] = [
-    { field: 'paper_type', header: '營業形態代號', visible: false },
+    { field: 'paper_type', header: '營業形態代號', visible: false, align: 'left' },
     { field: 'paper_type_desc', header: '營業形態', visible: true, align: 'left' },
 
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },

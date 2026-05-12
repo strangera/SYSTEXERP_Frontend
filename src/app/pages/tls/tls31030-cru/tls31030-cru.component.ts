@@ -76,11 +76,11 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030DetailIt
   historyRequestBody: TLS31030DetailRequest | null = null; //歷史查詢條件
 
   columns: Column[] = [
-    { field: 'building_desc', header: '館別', visible: true },
-    { field: 'org_name', header: '組織名稱', visible: true },
-    { field: 'tlt_kind', header: '櫃別', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'location_no', header: '位置編號', visible: true },
+    { field: 'building_desc', header: '館別', visible: true, align: 'left' },
+    { field: 'org_name', header: '組織名稱', visible: true, align: 'left' },
+    { field: 'tlt_kind', header: '櫃別', visible: true, align: 'left' },
+    { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
+    { field: 'location_no', header: '位置編號', visible: true, align: 'left' },
     { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
     // { field: 'bus_type', header: '大分類', visible: true }, // queryTLS31030
     // { field: 'bus_type_name', header: '大分類名稱', visible: true }, // queryTLS31030

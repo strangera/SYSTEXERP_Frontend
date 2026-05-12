@@ -68,11 +68,11 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
   historyRequestBody: TLS31020DetailRequest | null = null; //歷史查詢條件
 
   columns: Column[] = [
-    { field: 'building_desc', header: '館別', visible: true },
-    { field: 'org_name', header: '組織名稱', visible: true },
-    { field: 'tlt_kind', header: '櫃別', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'location_no', header: '位置編號', visible: true },
+    { field: 'building_desc', header: '館別', visible: true, align: 'left' },
+    { field: 'org_name', header: '組織名稱', visible: true, align: 'left' },
+    { field: 'tlt_kind', header: '櫃別', visible: true, align: 'left' },
+    { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
+    { field: 'location_no', header: '位置編號', visible: true, align: 'left' },
     { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
     // { field: 'bus_type', header: '大分類', visible: true }, // queryTLS31030
     // { field: 'bus_type_name', header: '大分類名稱', visible: true }, // queryTLS31030
@@ -91,8 +91,8 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
     // { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
     // { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
 
-    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
-    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
+    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount, align: 'right' },
+    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
   ];
   columnGroup: ColumnGroup[] = [
