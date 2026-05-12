@@ -159,21 +159,32 @@ export interface ASS16020ReportRequest {
     INV_ID: string;     // 盤點單號
 }
 
+export interface PrintASS16020Response {
+    ErrCode: number; // 0=成功 1=參數錯誤 2=卡控 ERROR_NUMBER()=系統錯誤
+    ErrMsg: string;
+    SurplusCount: number; // 盤盈項數
+    LossCount: number; // 盤損項數
+    TotalDiffAmt: number; // 總差異金額
+    Details: ASS16020ReportData[]; // 明細
+}
+
 export interface ASS16020ReportData {
-    MainCategoryNo: string;     // 大分類編號
-    MainCategoryName: string;     // 大分類名稱
-    MidCategoryNo: string;     // 中分類編號
-    MidCategoryName: string;     // 中分類名稱
-    SmallCategoryNo: string;     // 小分類編號
-    SmallCategoryName: string;     // 小分類名稱
-    Inventoryordernumber: string;     // 盤點序號
-    ItemNo: string;     // 品項編號
-    ItemName: string;   // 品項名稱
-    StockQty: number;     // 庫存數量
-    InventoryQty: number;     // 盤點數量
-    DiffQty: number;     // 差異數量
-    AvgUnitPrice: number;     // 平均單價
-    DiffAmount: number;     // 差異金額
+    RowNo: number; // 流水序號
+    B_CLASS_ID: string;     // 大分類編號
+    BClassName: string;     // 大分類名稱
+    M_CLASS_ID: string;     // 中分類編號
+    MClassName: string;     // 中分類名稱
+    S_CLASS_ID: string;     // 小分類編號
+    SClassName: string;     // 小分類名稱
+    FASITEM_ID: string;     // 品項編號
+    GOODS_NAME: string;   // 品項名稱
+    AVER_AMT: number;     // 平均單價
+    QTY: number;     // 庫存數量
+    StockAmt: number;     // 庫存金額 (差異報表用)
+    FINE_QTY: number;     // 盤點數量
+    InvAmt: number;     // 盤點金額 (差異報表用)
+    DIFF_QTY: number;     // 差異數量
+    DIFF_AMT: number;     // 差異金額
 }
 
 export interface ASS16020Request {
@@ -230,15 +241,25 @@ export class Ass16020Service {
         return this.http.post<BaseQueryNoArrayResponse<ExecASS16020Response>>(`${this.apiUrl}/updateCloseASS16020`, payload);
     }
 
-    // 報表列印
-    printASS16020(payload: PrintASS16020Request): Observable<ApiResponse<null>> {
-        return this.http.post<ApiResponse<null>>(`${this.apiUrl}/printASS16020`, payload);
+    // 查詢報表
+    queryPrintASS16020(payload: PrintASS16020Request): Observable<ApiResponse<PrintASS16020Response>> {
+        return this.http.post<ApiResponse<PrintASS16020Response>>(`${this.apiUrl}/queryPrintASS16020`, payload);
+    }
+
+    // 報表列印 (Excel)
+    exportExcelASS16020(payload: PrintASS16020Request): Observable<HttpResponse<Blob>> {
+        return this.http
+            .post(`${this.apiUrl}/exportASS16020`, payload, {
+                responseType: 'blob',
+                observe: 'response',
+            })
+            .pipe(take(1));
     }
 
     // 報表列印 (PDF)
     exportPDFASS16020(payload: PrintASS16020Request): Observable<HttpResponse<Blob>> {
         return this.http
-            .post(`${this.apiUrl}/exportPDFASS16020`, payload, {
+            .post(`${this.apiUrl}/printASS16020`, payload, {
                 responseType: 'blob',
                 observe: 'response',
             })

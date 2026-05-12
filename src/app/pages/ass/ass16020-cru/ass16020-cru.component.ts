@@ -202,23 +202,61 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
 
                 this.reportdataForm.controls.INV_ID.setValue(this.lastPrintQueryBody?.INV_ID || '');
                 request = { INV_ID: this.reportdataForm.getRawValue().INV_ID, };
+
+                this.ass16020Service.queryPrintASS16020(this.lastPrintQueryBody as PrintASS16020Request)
+                    .subscribe(response => {
+                        if (response.Data.ErrCode !== 0) {
+                            this.messageService.errorBubble(response.Data.ErrMsg || '查詢報表失敗');
+                        }
+                        else {
+                            this.reportData = response.Data.Details;
+                            this.group_name = [
+                                { group_name: '小計' },
+                                { group_name: '盤盈項數' },
+                                { group_name: '盤損項數' },
+                                { group_name: '總差異金額' },
+                                // { group_name: '說明' },
+                            ]
+
+                            // 計算小計
+                            const TotalQTY = response.Data.Details.reduce((total, item) => total + (item.QTY ?? 0), 0);
+                            const TotalFINE_QTY = response.Data.Details.reduce((total, item) => total + (item.FINE_QTY ?? 0), 0);
+                            const TotalDIFF_QTY = response.Data.Details.reduce((total, item) => total + (item.DIFF_QTY ?? 0), 0);
+                            const TotalAVER_AMT = response.Data.Details.reduce((total, item) => total + (item.AVER_AMT ?? 0), 0);
+                            const TotalDIFF_AMT = response.Data.Details.reduce((total, item) => total + (item.DIFF_AMT ?? 0), 0);
+
+                            this.footerData = [
+                                { group_name: '小計', QTY: TotalQTY, FINE_QTY: TotalFINE_QTY, DIFF_QTY: TotalDIFF_QTY, AVER_AMT: TotalAVER_AMT, DIFF_AMT: TotalDIFF_AMT },
+                                { group_name: '盤盈項數', DIFF_AMT: response.Data.SurplusCount },
+                                { group_name: '盤損項數', DIFF_AMT: response.Data.LossCount },
+                                { group_name: '總差異金額', DIFF_AMT: response.Data.TotalDiffAmt },
+                                // { group_name: '說明', DIFF_AMT: '' },
+                            ];
+                            // 總筆數
+                            this.totalRecords = this.reportData.length;
+                        }
+
+                    });
+            }
+            else {
+                this.ass16020Service.queryDetailASS16020(request)
+                    .subscribe(response => {
+                        this.dataForm.patchValue({
+                            WH_ID: response.Data.WH_ID,
+                            INV_ID: response.Data.INV_ID,
+                            SInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
+                            EInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
+                            EMP_ID: response.Data.EMP_ID,
+                            EMP_NAME: response.Data.EMP_NAME,
+                            EMP_ID2: response.Data.EMP_ID2,
+                            EMP_NAME2: response.Data.EMP_NAME2,
+                            NOTES: response.Data.NOTES
+                        });
+                        this.data = response.Data.Details;
+                    });
             }
 
-            this.ass16020Service.queryDetailASS16020(request)
-                .subscribe(response => {
-                    this.dataForm.patchValue({
-                        WH_ID: response.Data.WH_ID,
-                        INV_ID: response.Data.INV_ID,
-                        SInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
-                        EInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
-                        EMP_ID: response.Data.EMP_ID,
-                        EMP_NAME: response.Data.EMP_NAME,
-                        EMP_ID2: response.Data.EMP_ID2,
-                        EMP_NAME2: response.Data.EMP_NAME2,
-                        NOTES: response.Data.NOTES
-                    });
-                    this.data = response.Data.Details;
-                });
+
         }
         else {
             this.isEditMode = false;
@@ -354,6 +392,22 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
         const req$ = this.ass16020Service.exportPDFASS16020(printRequest);
         this.fileExportService
             .executeFileExport(req$, '.pdf', v => (this.exportPdfLoading = v))
+            .subscribe();
+    }
+
+    onExportExcel(): void {
+        if (!this.reportData || this.reportData.length === 0) {
+            return;
+        }
+
+        const printRequest: PrintASS16020Request = {
+            INV_ID: this.lastPrintQueryBody?.INV_ID || '',
+            REPORT_TYPE: this.lastPrintQueryBody?.REPORT_TYPE || ''
+        }
+
+        const req$ = this.ass16020Service.exportExcelASS16020(printRequest);
+        this.fileExportService
+            .executeFileExport(req$, '.excel', v => (this.exportExcelLoading = v))
             .subscribe();
     }
 

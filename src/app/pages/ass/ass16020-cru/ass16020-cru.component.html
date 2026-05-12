@@ -176,7 +176,8 @@
                 <p-button
                   styleClass="p-2"
                   label="盤點維護報表.XLSX"
-                  [loading]="btnLoading"
+                  (click)="onExportExcel()"
+                  [loading]="exportExcelLoading"
                   icon="pi pi-file"
                   [disabled]="
                     reportData.length === 0 ||
