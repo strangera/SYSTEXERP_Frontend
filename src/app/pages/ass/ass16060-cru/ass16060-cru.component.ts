@@ -3,7 +3,7 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import {
   ASS16060CruRowData,
-  ASS16060InsertDetailRow,
+  ASS16060DetailItem,
   ASS16060InsertRequest,
   ASS16060Service,
 } from '@service/api/ass/ass16060.service';
@@ -22,12 +22,14 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
 
-/** 領用退料 CRU — 明細列 */
+/** 領用退料 CRU — 明細列（畫面僅序號+四欄；序號由 table-edit 內建） */
 export interface ASS16060TableItem {
   GOODS_ID?: string;
+  /** 僅 UI；後端 DetailTable 欄位未定，暫不送出 */
   UNIT?: string;
-  QUANTITY?: number;
-  ITEM_REMARK?: string;
+  QTY?: number;
+  /** 單項說明 → API DetailTable.NOTES */
+  NOTES?: string;
 }
 
 @UntilDestroy()
@@ -85,17 +87,17 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060CruRowDa
       maxLength: 8,
     },
     {
-      field: 'QUANTITY',
+      field: 'QTY',
       header: '數量',
       type: 'inputNumber',
       min: 0,
       max: 99_999_999,
-      maxLength: 8,
-      maxFractionDigits: 0,
-      placeholder: '最多8位數',
+      maxLength: 12,
+      maxFractionDigits: 4,
+      placeholder: '數量',
     },
     {
-      field: 'ITEM_REMARK',
+      field: 'NOTES',
       header: '單項說明',
       type: 'input',
     },
@@ -186,8 +188,8 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060CruRowDa
     return {
       GOODS_ID: undefined,
       UNIT: undefined,
-      QUANTITY: undefined,
-      ITEM_REMARK: undefined,
+      QTY: undefined,
+      NOTES: undefined,
     };
   }
 
@@ -202,6 +204,37 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060CruRowDa
     this.selectedItems = [];
   }
 
+  private detailRowHasAny(item: ASS16060TableItem): boolean {
+    const str = (v: unknown) => v != null && String(v).trim() !== '';
+    return str(item.GOODS_ID) || item.QTY != null || str(item.UNIT) || str(item.NOTES);
+  }
+
+  private toReturnDateIso(date: Date | string | null): string {
+    if (date == null) return new Date().toISOString();
+    if (date instanceof Date) return date.toISOString();
+    const d = new Date(date);
+    return Number.isNaN(d.getTime()) ? new Date().toISOString() : d.toISOString();
+  }
+
+  private buildDetailTable(items: ASS16060TableItem[]): ASS16060DetailItem[] {
+    const rows = items.filter((item) => this.detailRowHasAny(item));
+    let line = 1;
+    const out: ASS16060DetailItem[] = [];
+    for (const item of rows) {
+      out.push({
+        LINE_NUM: line++,
+        GOODS_ID: item.GOODS_ID?.trim() ? item.GOODS_ID : null,
+        QTY: item.QTY != null ? Number(item.QTY) : null,
+        GOODS_PRICE: null,
+        TAX_CODE: null,
+        AMT: null,
+        CHECK_QTY: null,
+        NOTES: item.NOTES?.trim() ? item.NOTES.trim() : null,
+      });
+    }
+    return out;
+  }
+
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       if (!this.isFormCreateable) {
@@ -214,29 +247,18 @@ export class ASS16060CRUComponent extends BasicCruPageComponent<ASS16060CruRowDa
 
       this.tableLoading.set(true);
 
-      const detailRows: ASS16060InsertDetailRow[] = [];
-      for (const item of tableItems) {
-        const hasAny =
-          (item.GOODS_ID != null && item.GOODS_ID !== '') ||
-          item.QUANTITY != null ||
-          (item.UNIT != null && item.UNIT !== '') ||
-          (item.ITEM_REMARK != null && item.ITEM_REMARK !== '');
-        if (!hasAny) continue;
-        detailRows.push({
-          GOODS_ID: item.GOODS_ID || undefined,
-          UNIT: item.UNIT || undefined,
-          QTY: item.QUANTITY != null ? Number(item.QUANTITY) : undefined,
-          ITEM_REMARK: item.ITEM_REMARK || undefined,
-        });
-      }
+      const detailTable = this.buildDetailTable(tableItems);
 
       const insertPayload: ASS16060InsertRequest = {
+        MID: 0,
+        STO_NO: '',
         WH_ID: raw.WH_ID ?? '',
-        RETURN_EMP_ID: raw.RETURN_EMP_ID ?? '',
+        EMP_ID: raw.RETURN_EMP_ID ?? '',
         ORG_ID: raw.ORG_ID ?? '',
-        APPLY_DATE: raw.APPLY_DATE ?? new Date(),
-        REMARK: raw.REMARK || undefined,
-        DetailJson: detailRows.length > 0 ? JSON.stringify(detailRows) : undefined,
+        RETURN_DATE: this.toReturnDateIso(raw.APPLY_DATE),
+        NOTES: raw.REMARK?.trim() ? raw.REMARK.trim() : undefined,
+        CRT_USR_No: this.authService.currentUserValue?.user_No ?? '',
+        DetailTable: detailTable,
       };
 
       this.service

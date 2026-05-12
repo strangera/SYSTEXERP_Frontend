@@ -43,8 +43,7 @@ import { map } from 'rxjs/operators';
 })
 export class ASS16060Component
   extends BasicQueryPageComponent<ASS16060QueryRow>
-  implements OnInit
-{
+  implements OnInit {
   readonly defaultPageSize = 30;
 
   readonly queryForm = this.formBuilder.group({
@@ -72,19 +71,22 @@ export class ASS16060Component
   orgOptions = signal<{ label: string; value: string | number }[]>([]);
 
   readonly columns: ReportColumn[] = [
-    { field: 'RETURN_NO', header: '退回單號', visible: true },
-    { field: 'RETURN_EMP_ID', header: '退回人代號', visible: true },
-    { field: 'WH_NAME', header: '倉別', visible: true },
+    { field: 'MTRETURN_ID', header: '退回單號', visible: true },
+    { field: 'EMP_ID', header: '退回人員代號', visible: true },
+    { field: 'EMP_NAME', header: '退回人員名稱', visible: true },
+    { field: 'WH_ID', header: '倉別代號', visible: true },
+    { field: 'WH_NAME', header: '倉別名稱', visible: true },
     { field: 'ORG_ID', header: '部門代號', visible: true },
+    { field: 'ORG_NAME', header: '部門名稱', visible: true },
     {
       field: 'RETURN_DATE',
       header: '退回日期',
       visible: true,
       format: (v: string) => formatDate(v),
     },
-    { field: 'RETURN_STATUS_NAME', header: '退回狀態', visible: true },
+    { field: 'STATUS_NAME', header: '退回狀態', visible: true },
     {
-      field: 'DETAIL_COUNT',
+      field: 'DetailCount',
       header: '明細筆數',
       visible: true,
       align: 'right',
@@ -164,12 +166,12 @@ export class ASS16060Component
 
     const payload: ASS16060QueryRequest = {
       WH_ID: raw.whId || undefined,
-      RETURN_STATUS: raw.returnStatus || undefined,
-      RETURN_NO: raw.returnNo || undefined,
-      RETURN_EMP_ID: raw.returnEmpId || undefined,
+      MTRETURNM_STATUS: raw.returnStatus || undefined,
+      MTRETURN_ID: raw.returnNo || undefined,
+      EMP_ID: raw.returnEmpId || undefined,
       ORG_ID: raw.orgId || undefined,
-      RETURN_DATE_S: this.toApiDateValue(raw.returnDateFrom),
-      RETURN_DATE_E: this.toApiDateValue(raw.returnDateTo),
+      RETURN_DATE_START: this.toApiDateValue(raw.returnDateFrom),
+      RETURN_DATE_END: this.toApiDateValue(raw.returnDateTo),
       PageSize: pageSize,
       PageIndex: pageIndex,
       SortBy: sortBy as ASS16060QueryRequest['SortBy'],
@@ -193,11 +195,7 @@ export class ASS16060Component
           return { ...res, Data: [] as ASS16060QueryRow[], TotalCount: 0 };
         }
         const rows = res.Data ?? [];
-        const mapped = rows.map((row, idx) => ({
-          ...row,
-          ID: row.ID ?? row.RETURN_NO ?? `row-${idx}`,
-        }));
-        return { ...res, Data: mapped, TotalCount: res.TotalCount ?? mapped.length };
+        return { ...res, Data: rows, TotalCount: res.TotalCount ?? rows.length };
       }),
     );
   };

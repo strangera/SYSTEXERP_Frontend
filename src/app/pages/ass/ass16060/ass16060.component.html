@@ -89,7 +89,7 @@
     <app-table-report
       tableKey="ASS16060"
       [data]="tableData()"
-      dataKey="ID"
+      [dataKey]="'MTRETURN_ID'"
       [columns]="columns"
       [totalRecords]="totalRecords()"
       [loading]="tableLoading()"
@@ -101,7 +101,6 @@
       [showDelete]="false"
       [showCheckBox]="false"
       [lazy]="true"
-      (dataChange)="tableData.set($event)"
       (detail)="onTableDetail($event)"
     >
     </app-table-report>

@@ -14,23 +14,29 @@ export interface ASS16060CruRowData {
   REMARK?: string | null;
 }
 
-/** 新增 API 明細列（占位，後端定案後調整） */
-export interface ASS16060InsertDetailRow {
-  GOODS_ID?: string;
-  UNIT?: string;
-  QTY?: number;
-  ITEM_REMARK?: string;
+/** insertASS16060 — DetailTable 列（ASS16060DetailItem） */
+export interface ASS16060DetailItem {
+  LINE_NUM?: number | null;
+  GOODS_ID?: string | null;
+  QTY?: number | null;
+  GOODS_PRICE?: number | null;
+  TAX_CODE?: string | null;
+  AMT?: number | null;
+  CHECK_QTY?: number | null;
+  NOTES?: string | null;
 }
 
-/** 新增 API 請求（占位） */
+/** insertASS16060 — 請求本體 */
 export interface ASS16060InsertRequest {
+  MID: number;
+  STO_NO: string;
   WH_ID: string;
-  RETURN_EMP_ID: string;
+  EMP_ID: string;
   ORG_ID: string;
-  APPLY_DATE: string | Date;
-  REMARK?: string | null;
-  /** 明細 JSON 字串 */
-  DetailJson?: string;
+  RETURN_DATE: string;
+  NOTES?: string | null;
+  CRT_USR_No: string;
+  DetailTable: ASS16060DetailItem[];
 }
 
 @Injectable({
