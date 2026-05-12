@@ -5,29 +5,31 @@
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-      <!-- <div class="grid p-fluid">
-        <app-dropdown
+      <div class="grid p-fluid">
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
-          label="發票格式"
-          controlName="VouNo"
-          [options]="GUIType_Options"
-          optionLabel="label"
-          optionValue="value"
+          label="傳票編號"
           [control]="dataForm.controls.VouNo"
           [submitted]="submitted"
-        ></app-dropdown>
-      </div> -->
+          [disabled]="crudstatus !== 'Create'"
+        />
+        <app-input-number
+          class="col-12 md:col-6 lg:col-4"
+          label="進項稅額貸方"
+          [control]="dataForm.controls.TaxTotal"
+          [submitted]="submitted"
+          [disabled]="crudstatus !== 'Create'"
+        />
+      </div>
       <div class="grid p-fluid">
         <app-table-edit
           title="發票資料"
           class="col-12"
           [columns]="detailColumn"
           [data]="detailData"
-          [loading]="loading"
+          (dataChange)="detailData = $event"
+          [loading]="detailloading"
           [defaultInsertData]="defaultdetail"
-          (dataChange)="onDetailChange($event)"
-          [canInsert]="detailData.length < 1"
-          [rowValidate]="validateDetail"
           [disabled]="isFormReadable"
         ></app-table-edit>
       </div>
@@ -35,7 +37,11 @@
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         *ngIf="!isFormReadable"
       >
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button
+          btnType="cancel"
+          [form]="dataForm"
+          (click)="clearSubForm()"
+        ></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>

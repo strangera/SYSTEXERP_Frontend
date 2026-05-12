@@ -1,10 +1,10 @@
-import { NgIf } from '@angular/common';
+import { CommonModule, NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { fin13090Detail, Fin13090Service } from '@service/api/fin/fin13090.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -15,10 +15,10 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateMaxLength, validateMinLength, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
-import { forkJoin } from 'rxjs';
-
+import { finalize, forkJoin } from 'rxjs';
 
 //3.1.4.1  進貨發票建檔作業 CRU
 @Component({
@@ -35,6 +35,7 @@ import { forkJoin } from 'rxjs';
     InputNumberComponent,
     DropdownComponent,
     CalendarComponent,
+    CommonModule,
     NgIf,
     TableEditComponent,
     TranslateModule],
@@ -43,14 +44,18 @@ import { forkJoin } from 'rxjs';
 export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    VouNo: [null], // 傳票編號
-    VouDate: [null], // 傳票日期
-    PostFlag: [null], // 傳票狀態代碼
+    VouNo: [null, [Validators.required]], // 傳票編號
+    // VouDate: [null], // 傳票日期
+    // PostFlag: [null], // 傳票狀態代碼
     TaxTotal: [null] // 進項稅額貸方
   });
   //---------下拉選單-------------------------------------------------------
-  GUIType_Options: { value: string; label: string }[] = []; // 供應商編號 下拉選項 (ass12050: queryPOS2013_DropDownList)
+  GUIType_Options: { value: string; label: string }[] = []; // 發票格式 (憑證類別 21~29)
+  VEN_Uniform_Option: { value: string; label: string }[] = []; // 廠商編號
+  PUR_DirectType_Options: { value: string; label: string }[] = []; // 發票用途
+  PUR_TaxType_Options: { value: string; label: string }[] = []; // 課稅別
   // ---------明細 表格-------------------------------------------------------
+  detailloading = false;
   orgDetailData: fin13090Detail[] = []; // 原始供應商備份
   detailData: fin13090Detail[] = [];
   detailColumn: EditColumn[] = []; //等下拉讀取完成後寫入定義
@@ -70,7 +75,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   };
   constructor(
     private fin13090Service: Fin13090Service,
-    private readonly dropDownListService: DropDownListService,
+    private dropdownApiService: DropdownApiService
   ) {
     super(); // 呼叫父類建構子
   }
@@ -88,57 +93,57 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       this.messageService.errorBubble('明細資料不可為空。');
       return;
     }
-    for (let i = 0; i < this.detailData.length; i++) {
-      const row = this.detailData[i];
-      const result = this.validateDetail(row);
-      if (!result.isValid) {
-        this.messageService.unblockUi();
-        this.messageService.errorBubble(`明細資料 第 ${i + 1} 筆錯誤: ${result.errorMessage}`);
-        return;
-      }
-    }
     this.handleSubmit(frm, () => {
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (this.canAdd()) {
-            // console.log('提交的payload', payload);
-            // this.ass14010Service.insertASS14010(payload).subscribe(() => {
-            //   this.messageService.successBubble('新增成功');
-            //   this.dataForm.reset();
-            //   // 還原子表單
-            //   this.supplierData = [];
-            //   this.itemData = [];
-            // });
-            this.loading = false
-          }
-          break;
-        case CRUDStatus.Edit:
-          if (this.canEdit()) {
-            this.loading = false;
-            // this.ass14010Service.updateASS14010(payload).subscribe((res) => {
-            //   if (res.Data.O_MSGTYPE === 'S') {
-            //     this.messageService.successBubble('更新成功');
-            //     this.onCancel();
-            //   } else {
-            //     this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
-            //   }
-            // });
-            this.loading = false
-          }
-          break;
+      const getVouNo = this.dataForm.get('VouNo')?.value
+      if (getVouNo) {
+        const payload = {
+          VouNo: getVouNo,
+          Details: [
+            this.detailData
+          ]
+        }
+        console.log('送出請求', payload);
+        switch (this.crudstatus) {
+          case CRUDStatus.Create:
+            if (this.canAdd()) {
+              this.fin13090Service.saveFIN13090(payload).subscribe(() => {
+                this.messageService.successBubble('新增成功');
+                this.dataForm.reset();
+                // 還原子表單
+                this.detailData = [];
+              });
+              this.loading = false
+            }
+            break;
+          case CRUDStatus.Edit:
+            if (this.canEdit()) {
+              this.loading = false;
+              this.fin13090Service.saveFIN13090(payload).subscribe((res) => {
+                if (res.Data.O_MSGTYPE === 'S') {
+                  this.messageService.successBubble('更新成功');
+                  this.onCancel();
+                } else {
+                  this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
+                }
+              });
+              this.loading = false
+            }
+            break;
+        }
       }
     });
   }
   get13090Detail(VouNo: string | null) {
     if (VouNo) {
+      this.detailloading = true
       this.fin13090Service
         .queryFIN13090Detail({ VouNo })
-        .pipe(untilDestroyed(this))
+        .pipe(untilDestroyed(this), finalize(() => (this.detailloading = false)))
         .subscribe(res => {
           console.log('明細資料', res);
           // 2. 程式碼存取時要加上索引
           if (res.Data) {
-            const detailRow = res.Data.Supplier;
+            const detailRow = res.Data.Details;
             this.detailData = Array.isArray(detailRow)
               ? [...detailRow]
               : (detailRow ? [detailRow] : []);
@@ -151,65 +156,93 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
             this.detailData = [];
           }
         });
-
     }
   }
 
   loadOptions() {
-    const quiOption$ = this.fin13090Service.getGUITypeDropdown({});
-    forkJoin([quiOption$])
+    const GUIType$ = this.fin13090Service.getGUITypeDropdown({});
+    const PUR_DirectType$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_DirectType' })
+    const PUR_TaxType$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_TaxType' })
+    const VEN_Uniform$ = this.dropdownApiService.queryPos2013({ VEN_Flag: '' })
+
+    forkJoin([GUIType$, VEN_Uniform$, PUR_DirectType$, PUR_TaxType$])
       .pipe(untilDestroyed(this))
-      .subscribe(([resSup]) => {
-        this.GUIType_Options = (resSup.Data ?? []).map((item: any) => ({
+      .subscribe(([guiType, venUniform, directType, taxType]) => {
+        this.GUIType_Options = (guiType.Data ?? []).map((item: any) => ({ //發票格式
           value: item.INV_GUIType,
           label: `${item.INV_GUIType} - ${item.INV_GUIName}`,
         }));
-
+        this.VEN_Uniform_Option = (venUniform ?? []).map((item: any) => ({ // 廠商統一編號
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+        }));
+        this.PUR_DirectType_Options = (directType ?? []).map((item: any) => ({ // 發票用途
+          value: item.No,
+          label: item.Name,
+        }));
+        this.PUR_TaxType_Options = (taxType ?? []).map((item: any) => ({ // 課稅別
+          value: item.No,
+          label: item.Name,
+        }));
         this.initSupplierColumns();
       });
   }
 
-  //---發票明細---
-
-  //欄位名稱初始化
+  //---明細---
   private initSupplierColumns() {
     this.detailColumn = [
-      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label' },  // 發票格式 (憑證類別 21~29)
-      { field: 'PUR_GUINo', header: '發票號碼', type: 'date' }, // 發票號碼
-      { field: 'PUR_GUIDate', header: '發票日期', type: 'date' }, // 發票日期
-      { field: 'PUR_RepYYYYMM', header: '申報年月', type: 'input' }, // 申報年月 (固定為雙數月)
-      { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'input' },  // 廠商統一編號
-      { field: 'PUR_DirectType', header: '發票用途', type: 'input' }, // 發票用途 (1=營業用 2=共同使用)
-      { field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber' }, // 發票總金額（含稅）
+      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label' },  // 發票格式 (憑證類別 21~29)
+      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', validate: [validateRequired, validateMinLength(10), validateMaxLength(10)] }, // 發票號碼
+      { field: 'PUR_GUIDate', header: '發票日期', type: 'date', validate: [validateRequired] }, // 發票日期
+      {
+        field: 'PUR_RepYYYYMM', header: '申報年月', type: 'input',
+        validate: [this.validateEvenMonth]
+      }, // 申報年月 (固定為雙數月)
+      { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'dropdown', validate: [validateRequired], options: this.VEN_Uniform_Option, optionValue: 'value', optionLabel: 'label' },  // 廠商統一編號
+      { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label' }, // 發票用途 (1=營業用 2=共同使用)
+      { field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber', validate: [validateRequired] }, // 發票總金額（含稅）
 
-      { field: 'PUR_TaxType', header: '課稅別', type: 'input' },  // 課稅別 (0=免稅 1=應稅 2=零稅)
-      { field: 'PUR_Net', header: '發票未稅金額', type: 'inputNumber' },  // 發票未稅金額
-      { field: 'PUR_Tax', header: '發票稅額', type: 'inputNumber' }, // 發票稅額
+      { field: 'PUR_TaxType', header: '課稅別', type: 'dropdown', validate: [validateRequired], options: this.PUR_TaxType_Options, optionValue: 'value', optionLabel: 'label' },  // 課稅別 (0=免稅 1=應稅 2=零稅)
+      { field: 'PUR_Net', header: '發票未稅金額', type: 'inputNumber', validate: [validateRequired] },  // 發票未稅金額
+      { field: 'PUR_Tax', header: '發票稅額', type: 'inputNumber', validate: [validateRequired] }, // 發票稅額
     ];
   }
-  onDetailChange(eventData: fin13090Detail[]) {
-    console.log('eventData', eventData)
-  }
 
+  // 驗證申報年月 (必須為偶數月)
+  validateEvenMonth = (value: any) => {
+    // 1. 檢查是否為空 (若非必填可直接通過，若必填則交由 validateRequired)
+    if (!value) return { isValid: true, errorMessage: [] };
 
-  //驗證供應商資料
-  validateDetail = (rowData: fin13090Detail): { isValid: boolean; errorMessage: string } => {
-    // 1. 檢查發票號碼是否為空
-    // const RECEIPT_NO = rowData?.RECEIPT_NO?.trim();
-    // if (!RECEIPT_NO) {
-    //   return { isValid: false, errorMessage: '發票號碼不能為空。' };
-    // }
-    // 2. 檢查發票號碼格式 (假設格式為兩碼英文+八碼數字，例如 AB12345678)
-    // const receiptNoPattern = /^[A-Z]{2}\d{8}$/;
-    // if (!receiptNoPattern.test(RECEIPT_NO)) {
-    //   return { isValid: false, errorMessage: '發票號碼格式不正確，應為兩碼英文加八碼數字。' };
-    // }
-    // 3. 發票總金額應為未稅金額加稅額總金額
-    // const expectedTotal = (Number(rowData.TOTAL_NTX_AMT) || 0) + (Number(rowData.TOTAL_TX_AMT) || 0);
-    // if (Number(rowData.TOTAL_AMT) !== expectedTotal) {
-    //   return { isValid: false, errorMessage: `含稅金額應為未稅金額加稅額，應為 (${expectedTotal}) 元。` };
-    // }
+    const valStr = String(value);
+    const month = parseInt(valStr.substring(4, 6), 10);
 
-    return { isValid: true, errorMessage: '' };
+    // 2. 基本格式檢查 (YYYYMM)
+    if (!/^\d{6}$/.test(valStr) || month < 1 || month > 12) {
+      return {
+        isValid: false,
+        errorMessage: [`格式錯誤，應為 YYYYMM (如 202402)`]
+      };
+    }
+
+    // 3. 偶數月檢查
+    if (month % 2 !== 0) {
+      return {
+        isValid: false,
+        errorMessage: [`必須為雙數月`]
+      };
+    }
+
+    return { isValid: true, errorMessage: [] };
+  };
+
+  //清除明細內容
+  clearSubForm() {
+    // 1. 先從備份中深拷貝出一份原始資料 (此時日期會變成字串)
+    const restoredData = JSON.parse(JSON.stringify(this.orgDetailData));
+    this.detailData = restoredData.map((item: any) => ({
+      ...item,
+      // 修正日期欄位
+      PUR_GUIDate: item.PUR_GUIDate ? new Date(item.PUR_GUIDate) : null,
+    }));
   }
 }

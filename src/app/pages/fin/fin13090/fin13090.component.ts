@@ -7,7 +7,6 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
-import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -50,9 +49,9 @@ export class FIN13090Component extends BasicQueryPageComponent<fin13090Item> imp
   columns: Column[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
-    { field: 'PostFlag', header: '傳票狀態代碼', visible: true }, // (1=建立 2=確認 3=過帳)
-    { field: 'PostFlagName', header: '傳票狀態名稱', visible: true },
-    { field: 'TaxTotal', header: '進項稅額貸方', visible: true, format: formatAmount, align: 'right' },
+    // { field: 'PostFlag', header: '傳票狀態代碼', visible: true }, // (1=建立 2=確認 3=過帳)
+    { field: 'PostFlagName', header: '傳票狀態', visible: true },
+    // { field: 'TaxTotal', header: '進項稅額貸方', visible: true, format: formatAmount, align: 'right' },
   ];
 
   constructor(
