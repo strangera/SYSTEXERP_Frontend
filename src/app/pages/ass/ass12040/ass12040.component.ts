@@ -1,5 +1,6 @@
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12040Service } from '@service/api/ass/ass12040.service';
@@ -16,7 +17,6 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, formatAmount2, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { Actions } from '@shared/service/permission-guard.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { NGXLogger } from 'ngx-logger';
@@ -175,12 +175,10 @@ export class ASS12040Component extends BasicQueryPageComponent<ASS12040QueryRow>
       },
     });
 
-    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        this.supplierIdOptions.set(toOpt(res.Data ?? []));
-      },
-    });
+    this.dropdownApiService.queryPos2013({ VEN_Flag: '' })
+      .pipe(untilDestroyed(this)).subscribe(res => {
+        this.supplierIdOptions.set(res ?? []);
+      });
 
     this.dropDownListService
       .querySYS1000_DropDownList({ SYS_Type: 'SUBPOENA_STATUS' })
