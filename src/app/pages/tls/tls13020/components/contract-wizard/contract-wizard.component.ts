@@ -371,7 +371,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<any> implemen
       rent_period: [0],
 
       // 會員卡
-      vip_yn: ['N'],
+      vip_yn: ['Y'],
       credit_card: [null],
 
       // 目標營業額
