@@ -7,7 +7,7 @@ import { footerShowTotal, TLS31020DetailItem, TLS31020DetailRequest, TLS31020Det
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -15,7 +15,7 @@ import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { formatAmountWithDecimals } from '../tls2f010-cru/tls2f010-table-report.model';
+import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls31020cru',
@@ -68,7 +68,7 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31020DetailRequest | null = null; //歷史查詢條件
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'building_desc', header: '館別', visible: true, align: 'left' },
     { field: 'org_name', header: '組織名稱', visible: true, align: 'left' },
     { field: 'tlt_kind', header: '櫃別', visible: true, align: 'left' },

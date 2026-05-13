@@ -11,13 +11,14 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 // 各時段之樓層營業報表
 @Component({
@@ -69,7 +70,7 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
   totalRecords = 0;
   data: TLS31080DetailResponse[] = [];
   historyRequestBody: any = null; //歷史查詢條件
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃代號', visible: true, align: 'left' },
     { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
     { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
