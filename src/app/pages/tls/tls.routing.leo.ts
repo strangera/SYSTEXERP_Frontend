@@ -360,5 +360,7 @@ export const tlsRoutes: Routes = [
   { path: 'tls32050cru', loadComponent: () => import('./tls32050-cru/tls32050-cru.component').then(m => m.Tls32050CRUComponent), data: { progNo: 'Tls32050' } },
   // 各櫃業績報表
   { path: 'tls32060', loadComponent: () => import('./tls32060/tls32060.component').then(m => m.TLS32060Component), data: { progNo: 'TLS32060' } },
+  // 整檔下傳作業
+  { path: 'tls47010', loadComponent: () => import('./tls47010/tls47010.component').then(m => m.TLS47010Component), data: { progNo: 'TLS47010' } },
 
 ];

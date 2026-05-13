@@ -781,3 +781,15 @@ export interface queryPOS1002_DropDownListItem {
   Name: string;
   ECR_TLT_No?: string;
 }
+
+/**
+ * 查詢過濾後的收銀機設定檔 (POS1002 Filtered) 回傳項目
+ * 對應後端 SQL: ECR_No, ECR_Name, ECR_TLT_No, ECR_TLT_Name, ECR_Status
+ */
+export interface Pos1002FilteredItem {
+  No: string;        // ECR_No
+  Name: string;      // ECR_Name
+  ECR_TLT_No: string;
+  ECR_TLT_Name: string;
+  ECR_Status: string;
+}

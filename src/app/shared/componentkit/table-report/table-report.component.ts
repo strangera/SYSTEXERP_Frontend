@@ -183,7 +183,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
             this.lazy = false;
             this.dt.scrollHeight = this.autoHeight ? undefined as any : '600px';
             if (!this.showManage) {
-              this.ItemSize = 20;
+              this.ItemSize = 46;
             }
           } else {
             this.dt.scrollHeight = this.autoHeight ? undefined as any : '450px';

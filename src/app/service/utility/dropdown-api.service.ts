@@ -47,6 +47,7 @@ import {
   PluLogoItem,
   PluLogoOrderPrcRateInnerItem,
   Pos1002EcrTypeQuery,
+  Pos1002FilteredItem,
   Pos1002GroupItem,
   Pos1002GroupQuery,
   Pos1002StatusItem,
@@ -460,6 +461,20 @@ export class DropdownApiService {
   queryPos1002(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<queryPOS1002_DropDownListItem>('/queryPOS1002_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /**
+ * 查詢過濾後的收銀機設定檔 (POS1002)
+ * 條件：SYS_StoreNo = '10', 未過期, Type IN ('1','2')
+ */
+  queryPos1002Filtered(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Pos1002FilteredItem>(
+      '/queryPOS1002_Filtered_DropDownList', // 請確認與後端 Controller 的 Route 一致
+      'No',
+      'Name'
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 
