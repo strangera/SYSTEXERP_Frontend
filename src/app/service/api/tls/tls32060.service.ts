@@ -50,6 +50,7 @@ export interface TLS32060Response extends BaseQueryRequest {
 
   "Base_Target": number, // 本期銷售目標
   "Base_SaleAmt": number, // 本期銷售金額
+  "Base_PreOrderAmt": number, // 本期預售實績
   "Base_AchieveRate": number, // 本期達成率（銷售金額 / 目標）
   "Base_TxnCnt": number, // 本期交易筆數
   "Base_CustCnt": number, // 本期來客數
@@ -58,6 +59,7 @@ export interface TLS32060Response extends BaseQueryRequest {
   "Comp_SaleAmt": number, // 上期銷售金額
   "Comp_TxnCnt": number, // 上期交易筆數
   "Comp_AvgTicket": number, // 上期客單價
+  "Comp_PreOrderAmt": number, // 上期預售實績
   "Growth_SaleAmtPct": number, // 成長比(銷售金額成長率)
   "Diff_SaleAmt": number, // 銷售金額差異（本期 - 上期）
   "Diff_TxnCnt": number, // 交易筆數差異

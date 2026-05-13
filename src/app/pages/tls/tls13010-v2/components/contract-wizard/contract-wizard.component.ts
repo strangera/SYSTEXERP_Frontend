@@ -458,7 +458,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       check_type: [''],
       check_typeList: [[] as string[]],
       paytype: [''],
-      vip_yn: [''],
+      vip_yn: ['Y'],
       credit_card: [null],
       invoice_type: ['', [Validators.required]],
 

@@ -317,6 +317,17 @@ export class TLS13010Service {
   }
 
   /**
+   * TLS13020 續約維護 - 查詢每個專櫃最新版次合約
+   * 只讀 TLTTALENT，每個 tlt_no 只回傳 contract_subno 最大的那筆
+   */
+  queryTLS13020(payload: any) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13020`, payload).pipe(
+      tap((res) => console.log('[queryTLS13020] 結果:', res)),
+      catchError(this.errorHandler.handleError)
+    );
+  }
+
+  /**
    * 查詢契約清單（只查 TLTTALENT，含最新版去重，供續約查詢 dialog 使用）
    * 後端已做 ROW_NUMBER 去重 + 使用者權限過濾，前端不需再做
    */

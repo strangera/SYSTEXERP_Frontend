@@ -17,7 +17,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -26,7 +26,7 @@ import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { formatAmountWithDecimals } from '../tls2f010-cru/tls2f010-table-report.model';
+import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls31050',
@@ -139,7 +139,7 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
   footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31050Request | null = null; //歷史查詢條件
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'tlt_term_type', header: '抽成別代碼', visible: false, align: 'left' },
     { field: 'tlt_term_desc', header: '抽成別名稱', visible: true, align: 'left' },
 

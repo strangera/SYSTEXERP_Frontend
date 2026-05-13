@@ -17,7 +17,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -26,7 +26,7 @@ import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { formatAmountWithDecimals } from '../tls2f010-cru/tls2f010-table-report.model';
+import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls31070',
@@ -139,7 +139,7 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31070Request | null = null; //歷史查詢條件
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'paper_type', header: '營業形態代號', visible: false, align: 'left' },
     { field: 'paper_type_desc', header: '營業形態', visible: true, align: 'left' },
 

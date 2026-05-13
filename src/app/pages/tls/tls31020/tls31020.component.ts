@@ -14,8 +14,8 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { formatAmountWithDecimals } from '@shared/componentkit/table-report/table-report.model';
-import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -133,7 +133,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31020Request | null = null; //歷史查詢條件
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     // { field: 'tlt_floor', header: '樓層代碼', visible: false },
     { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
 

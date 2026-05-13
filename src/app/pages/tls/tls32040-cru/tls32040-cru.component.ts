@@ -7,14 +7,14 @@ import { TLS32040DetailRequest, TLS32040DetailResponse, TLS32040Request, TLS3204
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { Column, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { formatAmountWithDecimals } from '../tls2f010-cru/tls2f010-table-report.model';
+import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls32040-cru',
@@ -60,7 +60,7 @@ export class Tls32040CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
   data: TLS32040DetailResponse[] = [];
   historyRequestBody: TLS32040DetailRequest | null = null; //歷史查詢條件
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'RowType', header: '列別', visible: true, align: 'left' },
     { field: 'TeamId', header: '單位代碼', visible: true, align: 'left' },
     { field: 'TeamName', header: '單位名稱', visible: true, align: 'left' },
