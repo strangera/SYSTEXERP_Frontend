@@ -98,6 +98,10 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       this.messageService.errorBubble('明細資料不可為空。');
       return;
     }
+    // 2. 檢查明細必填欄位
+    if (!this.validateAllRows()) {
+      return; // 驗證失敗，攔截不送出
+    }
     this.handleSubmit(frm, () => {
       const getVouNo = this.dataForm.get('VouNo')?.value
       if (getVouNo) {
@@ -289,18 +293,30 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
     return { isValid: true, errorMessage: [] };
   };
 
-  //明細變動檢查
-  // onDetailChange(newData: fin13090Detail[]) {
-  //   this.detailData = newData;
-  //   // 廠商統一編號PUR_VenUniform有變更時自動帶入到row (PUR_VenNo: 對應 VEN_No、PUR_VenUniform:對應 No、PUR_VenName對應 Name)
+  // 明細送出前的驗證
+  validateAllRows(): boolean {
+    for (let i = 0; i < this.detailData.length; i++) {
+      const row = this.detailData[i];
 
-  //   // 只有在稅額有變動，或者資料筆數增減（新增/刪除行）時才重新計算
-  //   this.calculateTaxTotal();
-  // }
+      for (const col of this.detailColumn) {
+        const isRequired = col.validate?.includes(validateRequired);
+
+        if (isRequired) {
+          const value = (row as any)[col.field];
+          if (value === null || value === undefined || value === '') {
+            this.messageService.errorBubble(`第 ${i + 1} 筆明細的「${col.header}」為必填項目。`);
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  }
+
+  //明細變動檢查
   onDetailChange(newData: fin13090Detail[]) {
     // 遍歷每一筆資料進行檢查與自動帶入
     newData.forEach(row => {
-
       // --- 處理日期連動申報年月 ---
       if (row.PUR_GUIDate) {
         const dateValue = new Date(row.PUR_GUIDate); // 確保轉為 Date 物件
@@ -317,15 +333,6 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
           if (row.PUR_RepYYYYMM !== targetYYYYMM) {
             row.PUR_RepYYYYMM = targetYYYYMM;
           }
-        }
-      }
-
-      // --- 處理廠商編號連動 (防呆：如果 onChange 沒動，這裡補做) ---
-      if (row.PUR_VenNo) {
-        const vendor = this.VEN_Uniform_Option.find(v => v.VEN_No === row.PUR_VenNo);
-        if (vendor) {
-          if (row.PUR_VenUniform !== vendor.No) row.PUR_VenUniform = vendor.No;
-          if (row.PUR_VenName !== vendor.Name) row.PUR_VenName = vendor.Name;
         }
       }
     });
@@ -348,7 +355,6 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       TaxTotal: total
     });
   }
-
 
   //清除明細內容
   clearSubForm() {
