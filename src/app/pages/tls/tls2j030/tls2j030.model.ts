@@ -226,6 +226,7 @@ export interface TLS2J030Data {
   INV_ItemName?: string;
   INV_Qty?: number;
   INV_SaleAmt?: number;  // 編輯時使用 (注：TXN_SaleAmt 已在換開發票欄位中定義，用於後端回傳/查看時使用)
+  isClose?: string; // 是否已關帳 (Y/N)
 }
 export interface TLS2J030Source {
   TXN_Date: string;
@@ -238,4 +239,5 @@ export interface TLS2J030Source {
   TXN_TotSaleTax: number;
   TXN_TotSaleNoTax: number;
   TXN_TotTax: number;
+  isClose: string; // 是否已關帳 (Y/N)
 }
