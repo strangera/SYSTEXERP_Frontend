@@ -107,10 +107,9 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
             PUR_GUINo: item.PUR_GUINo,
             PUR_GUIDate: item.PUR_GUIDate,
             PUR_RepYYYYMM: item.PUR_RepYYYYMM,
-            PUR_VenNo: item.PUR_VenNo, // 廠商編號（由 PUR_VenUniform 帶出）
+            PUR_VenNo: item.PUR_VenNo,
             PUR_VenName: item.PUR_VenName,
             PUR_VenUniform: item.PUR_VenUniform,
-            // PUR_Uniform: item.PUR_Uniform,
             ACP_Type: item.ACP_Type,
             PUR_DirectType: item.PUR_DirectType,
             PUR_TaxType: item.PUR_TaxType,
@@ -289,12 +288,13 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
   // 明細送出前的驗證
   validateAllRows(): boolean {
+    //必填
     for (let i = 0; i < this.detailData.length; i++) {
       const row = this.detailData[i];
-
       for (const col of this.detailColumn) {
         const isRequired = col.validate?.includes(validateRequired);
 
+        // 1. 必填欄位驗證
         if (isRequired) {
           const value = (row as any)[col.field];
           if (value === null || value === undefined || value === '') {
@@ -302,8 +302,22 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
             return false;
           }
         }
+
+        // 2. 金額邏輯驗證：總金額 = 未稅金額 + 稅額
+        const amt = Number(row.PUR_Amt) || 0;
+        const net = Number(row.PUR_Net) || 0;
+        const tax = Number(row.PUR_Tax) || 0;
+
+        // 檢查是否符合加總邏輯 (若不相等則報錯)
+        if (amt !== (net + tax)) {
+          this.messageService.errorBubble(
+            `第 ${i + 1} 筆明細金額計算有誤：總金額(${amt}) 應等於 未稅金額(${net}) + 稅額(${tax}) 相加`
+          );
+          return false;
+        }
       }
     }
+
     return true;
   }
 

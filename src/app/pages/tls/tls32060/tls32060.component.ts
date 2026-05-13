@@ -191,10 +191,12 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Base_CustCnt', header: '本期來客數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Base_PreOrderAmt', header: '本期預售實績', visible: true, format: formatAmount, align: 'right' },
 
     { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Comp_PreOrderAmt', header: '上期預售實績', visible: true, format: formatAmount, align: 'right' },
     { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
 
     { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount, align: 'right' },
