@@ -309,4 +309,56 @@ export const tlsRoutes: Routes = [
   { path: 'tls56060cru', loadComponent: () => import('./TLS50000/tls56060/tls56060-cru/tls56060-cru.component').then(m => m.TLS56060CRUComponent), data: { progNo: 'TLS56060' } },
   // 商品報廢維護 CRU
   { path: 'tls56070cru', loadComponent: () => import('./TLS50000/tls56070/tls56070-cru/tls56070-cru.component').then(m => m.TLS56070CRUComponent), data: { progNo: 'TLS56070' } },
+
+  // 即時業績查詢
+  { path: 'tls31010', loadComponent: () => import('./tls31010/tls31010.component').then(m => m.TLS31010Component), data: { progNo: 'TLS31010' } },
+  // 各樓層之營業報表
+  { path: 'tls31020', loadComponent: () => import('./tls31020/tls31020.component').then(m => m.TLS31020Component), data: { progNo: 'TLS31020' } },
+  // 各樓層之營業報表 CRU
+  { path: 'tls31020cru', loadComponent: () => import('./tls31020cru/tls31020cru.component').then(m => m.Tls31020cruComponent), data: { progNo: 'Tls31020' } },
+  // 各大分類之營業報表
+  { path: 'tls31030', loadComponent: () => import('./tls31030/tls31030.component').then(m => m.TLS31030Component), data: { progNo: 'TLS31030' } },
+  // 各大分類之營業報表 CRU
+  { path: 'tls31030cru', loadComponent: () => import('./tls31030-cru/tls31030-cru.component').then(m => m.Tls31030CruComponent), data: { progNo: 'Tls31030' } },
+  // 各櫃別之營業報表
+  { path: 'tls31040', loadComponent: () => import('./tls31040/tls31040.component').then(m => m.TLS31040Component), data: { progNo: 'TLS31040' } },
+  // 各櫃別之營業報表 CRU
+  { path: 'tls31040cru', loadComponent: () => import('./tls31040-cru/tls31040-cru.component').then(m => m.Tls31040CRUComponent), data: { progNo: 'Tls31040' } },
+  // 各抽成別之營業報表
+  { path: 'tls31050', loadComponent: () => import('./tls31050/tls31050.component').then(m => m.TLS31050Component), data: { progNo: 'TLS31050' } },
+  // 各抽成別之營業報表 CRU
+  { path: 'tls31050cru', loadComponent: () => import('./tls31050-cru/tls31050-cru.component').then(m => m.Tls31050CRUComponent), data: { progNo: 'Tls31050' } },
+  // 各組織之營業報表
+  { path: 'tls31060', loadComponent: () => import('./tls31060/tls31060.component').then(m => m.TLS31060Component), data: { progNo: 'TLS31060' } },
+  // 各組織之營業報表 CRU
+  { path: 'tls31060cru', loadComponent: () => import('./tls31060-cru/tls31060-cru.component').then(m => m.Tls31060CRUComponent), data: { progNo: 'Tls31060' } },
+  // 各營業型態之營業報表
+  { path: 'tls31070', loadComponent: () => import('./tls31070/tls31070.component').then(m => m.TLS31070Component), data: { progNo: 'TLS31070' } },
+  // 各營業型態之營業報表 CRU
+  { path: 'tls31070cru', loadComponent: () => import('./tls31070-cru/tls31070-cru.component').then(m => m.Tls31070CRUComponent), data: { progNo: 'Tls31070' } },
+  // 各時段之樓層營業報表
+  { path: 'tls31080', loadComponent: () => import('./tls31080/tls31080.component').then(m => m.TLS31080Component), data: { progNo: 'TLS31080' } },
+  // 各時段之樓層營業報表 CRU
+  { path: 'tls31080cru', loadComponent: () => import('./tls31080-cru/tls31080-cru.component').then(m => m.Tls31080CRUComponent), data: { progNo: 'Tls31080' } },
+  // 時段之業種營業報表
+  { path: 'tls31090', loadComponent: () => import('./tls31090/tls31090.component').then(m => m.TLS31090Component), data: { progNo: 'TLS31090' } },
+  // 時段之業種營業報表 CRU
+  { path: 'tls31090cru', loadComponent: () => import('./tls31090-cru/tls31090-cru.component').then(m => m.Tls31090CRUComponent), data: { progNo: 'Tls31090' } },
+  // 銷售排名分析報表
+  { path: 'tls32010', loadComponent: () => import('./tls32010/tls32010.component').then(m => m.TLS32010Component), data: { progNo: 'TLS32010' } },
+  // 期間業績分析報表
+  { path: 'tls32020', loadComponent: () => import('./tls32020/tls32020.component').then(m => m.TLS32020Component), data: { progNo: 'TLS32020' } },
+  // 成長率分析報表
+  { path: 'tls32030', loadComponent: () => import('./tls32030/tls32030.component').then(m => m.TLS32030Component), data: { progNo: 'TLS32030' } },
+  // 組織業績總表
+  { path: 'tls32040', loadComponent: () => import('./tls32040/tls32040.component').then(m => m.TLS32040Component), data: { progNo: 'TLS32040' } },
+  // 組織業績總表 CRU
+  { path: 'tls32040cru', loadComponent: () => import('./tls32040-cru/tls32040-cru.component').then(m => m.Tls32040CRUComponent), data: { progNo: 'Tls32040' } },
+  // 中分類業績報表
+  { path: 'tls32050', loadComponent: () => import('./tls32050/tls32050.component').then(m => m.TLS32050Component), data: { progNo: 'TLS32050' } },
+  // 中分類業績報表 CRU
+  { path: 'tls32050cru', loadComponent: () => import('./tls32050-cru/tls32050-cru.component').then(m => m.Tls32050CRUComponent), data: { progNo: 'Tls32050' } },
+  // 各櫃業績報表
+  { path: 'tls32060', loadComponent: () => import('./tls32060/tls32060.component').then(m => m.TLS32060Component), data: { progNo: 'TLS32060' } },
+
 ];

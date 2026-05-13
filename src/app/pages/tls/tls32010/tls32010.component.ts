@@ -85,6 +85,7 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
     { field: 'AvgTicketAmtRank', header: '客單價', align: 'right', format: formatAmountCN, groupField: '排名順位' },
     { field: 'MonthlySpaceEfficiencyRank', header: '月坪效', align: 'right', format: formatAmountCN, groupField: '排名順位' },
     { field: 'AchievementRateRank', header: '達成率', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'PreOrderAmt', header: '預售業績', align: 'right', format: formatAmountCN },
   ];
   columnGroup = [
     { field: '單位', header: '單位' },

@@ -50,7 +50,7 @@ export class SYS0780ReportComponent extends BasicCruPageComponent<unknown> imple
     APPLY_DATE: [new Date(), [Validators.required]],
     prog_no: [{ value: null as string | null, disabled: true }],
     org_no: [null as string | null, [Validators.required]],
-    role_no: [null as string | null, [Validators.required]],
+    role_no: [null as string | null],
     user_NoList: [[] as string[], [Validators.required]],
     user_No: [this.authService.currentUserValue?.user_No || null, [Validators.required]],
   });
