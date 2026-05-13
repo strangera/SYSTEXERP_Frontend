@@ -47,25 +47,30 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
     VouNo: [null, [Validators.required]], // 傳票編號
     // VouDate: [null], // 傳票日期
     // PostFlag: [null], // 傳票狀態代碼
-    TaxTotal: [null] // 進項稅額貸方
+    TaxTotal: [0] // 進項稅額貸方
   });
   //---------下拉選單-------------------------------------------------------
   GUIType_Options: { value: string; label: string }[] = []; // 發票格式 (憑證類別 21~29)
   VEN_Uniform_Option: { value: string; label: string }[] = []; // 廠商編號
   PUR_DirectType_Options: { value: string; label: string }[] = []; // 發票用途
   PUR_TaxType_Options: { value: string; label: string }[] = []; // 課稅別
+  ACP_Type_Options: { value: string; label: string }[] = []; // 應付帳款類別（1=進退貨帳款2=專櫃帳款3=事務性帳款4=預付貨款5=電子商務6=發票媒申7=總帳管理9=固定資產）
   // ---------明細 表格-------------------------------------------------------
   detailloading = false;
   orgDetailData: fin13090Detail[] = []; // 原始供應商備份
   detailData: fin13090Detail[] = [];
   detailColumn: EditColumn[] = []; //等下拉讀取完成後寫入定義
   defaultdetail = {
-    'id': 0, // APS2002 主鍵 新增為0 
+    'id': 0, // APS2002 主鍵 新增為0
+    'ACP_Type': null, // 應付帳款類別
     'PUR_VoucherType': null, // 發票格式 (憑證類別 21~29)
     'PUR_GUINo': null, // 發票號碼
     'PUR_GUIDate': null, // 發票日期
     'PUR_RepYYYYMM': null, // 申報年月 (固定為雙數月)
+    'PUR_VenNo': null, // 廠商編號
+    'PUR_VenName': null, // 廠商名稱
     'PUR_VenUniform': null, // 廠商統一編號
+    'PUR_Uniform': null, // 買受人統一編號
     'PUR_DirectType': null, // 發票用途 (1=營業用 2=共同使用)
     'PUR_Amt': null, // 發票總金額（含稅）
 
@@ -105,8 +110,10 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
             PUR_GUIDate: item.PUR_GUIDate,
             PUR_RepYYYYMM: item.PUR_RepYYYYMM,
             PUR_VenNo: item.PUR_VenUniform, // 廠商編號（由 PUR_VenUniform 帶出）
+            PUR_VenName: item.PUR_VenName,
             PUR_VenUniform: item.PUR_VenUniform,
-            // ACP_Type: item.ACP_Type,
+            PUR_Uniform: item.PUR_Uniform,
+            ACP_Type: item.ACP_Type,
             PUR_DirectType: item.PUR_DirectType,
             PUR_TaxType: item.PUR_TaxType,
             PUR_Net: item.PUR_Net,
@@ -149,7 +156,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       }
     });
   }
-  get13090Detail(VouNo: string | null) {
+  get13090Detail(VouNo: string | null) { // 20140116003
     if (VouNo) {
       this.detailloading = true
       this.fin13090Service
@@ -200,6 +207,16 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
           value: item.No,
           label: item.Name,
         }));
+        this.ACP_Type_Options = [
+          { value: "1", label: "1-進退貨帳款" },
+          { value: "2", label: "2-專櫃帳款" },
+          { value: "3", label: "3-事務性帳款" },
+          { value: "4", label: "4-預付貨款" },
+          { value: "5", label: "5-電子商務" },
+          { value: "6", label: "6-發票媒申" },
+          { value: "7", label: "7-總帳管理" },
+          { value: "9", label: "9-固定資產" },
+        ]
         this.initSupplierColumns();
       });
   }
@@ -216,6 +233,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       }, // 申報年月 (固定為雙數月)
       { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'dropdown', validate: [validateRequired], options: this.VEN_Uniform_Option, optionValue: 'value', optionLabel: 'label' },  // 廠商統一編號
       { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label' }, // 發票用途 (1=營業用 2=共同使用)
+      { field: 'ACP_Type', header: '應付帳款類別', type: 'dropdown', validate: [validateRequired], options: this.ACP_Type_Options, optionValue: 'value', optionLabel: 'label' }, // 應付帳款類別
       { field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber', validate: [validateRequired] }, // 發票總金額（含稅）
 
       { field: 'PUR_TaxType', header: '課稅別', type: 'dropdown', validate: [validateRequired], options: this.PUR_TaxType_Options, optionValue: 'value', optionLabel: 'label' },  // 課稅別 (0=免稅 1=應稅 2=零稅)
@@ -250,6 +268,41 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
     return { isValid: true, errorMessage: [] };
   };
+
+  //明細變動檢查
+  onDetailChange(newData: fin13090Detail[]) {
+    // 檢查 PUR_Tax 是否有變動
+    // const isTaxChanged = this.checkTaxFieldChanged(this.detailData, newData);
+    this.detailData = newData;
+    // 只有在稅額有變動，或者資料筆數增減（新增/刪除行）時才重新計算
+    // if (isTaxChanged) {
+    this.calculateTaxTotal();
+    // }
+  }
+
+  // 檢查 PUR_Tax 欄位是否有變化的輔助方法
+  private checkTaxFieldChanged(oldData: fin13090Detail[], newData: fin13090Detail[]): boolean {
+    // 1. 如果長度不同（代表有新增或刪除），一定需要重新計算
+    if (oldData.length !== newData.length) return true;
+
+    // 2. 比對每一筆的 PUR_Tax
+    return newData.some((item, index) => item.PUR_Tax !== oldData[index]?.PUR_Tax);
+  }
+
+  // 2. 實作加總邏輯
+  calculateTaxTotal() {
+    // 使用 reduce 累加所有明細的 PUR_Tax
+    const total = this.detailData.reduce((sum, item) => {
+      const tax = Number(item.PUR_Tax) || 0; // 確保是數字，避免 null 或 undefined
+      return sum + tax;
+    }, 0);
+
+    // 3. 更新到 dataForm 的 TaxTotal 欄位
+    this.dataForm.patchValue({
+      TaxTotal: total
+    });
+  }
+
 
   //清除明細內容
   clearSubForm() {
