@@ -62,7 +62,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   detailColumn: EditColumn[] = []; //等下拉讀取完成後寫入定義
   defaultdetail = {
     'id': 0, // APS2002 主鍵 新增為0
-    'ACP_Type': null, // 應付帳款類別
+    'ACP_Type': "7", // 應付帳款類別 (預設值7總帳管理)
     'PUR_VoucherType': null, // 發票格式 (憑證類別 21~29)
     'PUR_GUINo': null, // 發票號碼
     'PUR_GUIDate': null, // 發票日期
@@ -70,11 +70,10 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
     'PUR_VenNo': null, // 廠商編號
     'PUR_VenName': null, // 廠商名稱
     'PUR_VenUniform': null, // 廠商統一編號
-    // 'PUR_Uniform': null, // 買受人統一編號
     'PUR_DirectType': null, // 發票用途 (1=營業用 2=共同使用)
     'PUR_Amt': null, // 發票總金額（含稅）
 
-    'PUR_TaxType': null, // 課稅別 (0=免稅 1=應稅 2=零稅)
+    'PUR_TaxType': "1", // 課稅別 (0=免稅 1=應稅 2=零稅) 預設值1應稅
     'PUR_Net': null, // 發票未稅金額
     'PUR_Tax': null  // 發票稅額
   };
