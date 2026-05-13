@@ -474,6 +474,15 @@ export class DropdownApiService {
       'No',
       'Name'
     ).pipe(
+      map(options => {
+        if (!options) return null;
+        // 重新加工 label
+        return options.map(opt => ({
+          ...opt,
+          // opt 內已經包含 Pos1002FilteredItem 的所有欄位
+          label: `${opt['No']} - ${opt['Name']} ${opt['ECR_TLT_Name'] ? `- ${opt['ECR_TLT_Name']}` : ''}`,
+        }));
+      }),
       shareReplay({ bufferSize: 1, refCount: true })
     );
   }
