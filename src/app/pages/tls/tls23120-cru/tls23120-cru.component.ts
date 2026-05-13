@@ -19,6 +19,7 @@ import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import * as XLSX from 'xlsx-js-style';
 
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -65,6 +66,7 @@ interface TltGroup {
     NgSwitchDefault,
     DatePipe,
     DecimalPipe,
+    ButtonComponent,
   ],
 })
 export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -382,12 +384,13 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> implements 
     const d = String(date.getDate()).padStart(2, '0');
     return `${y}/${m}/${d}`;
   }
-  goBack(): void {
-    this.router.navigate(['/account/tls/tls23120'], { state: { fromCru: true } });
-  }
 
-  // onCancel 也同樣
   override onCancel(): void {
-    this.router.navigate(['/account/tls/tls23120'], { state: { fromCru: true } });
+    this.router.navigate(['/account/tls/tls23120'], {
+      state: {
+        fromCru: true,
+        fromRoute: this.router.url
+      }
+    });
   }
 }

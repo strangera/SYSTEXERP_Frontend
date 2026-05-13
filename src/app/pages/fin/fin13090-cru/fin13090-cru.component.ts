@@ -98,19 +98,35 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       if (getVouNo) {
         const payload = {
           VouNo: getVouNo,
-          Details: [
-            this.detailData
-          ]
+          Details: this.detailData.map(item => ({
+            id: item.id,
+            PUR_VoucherType: item.PUR_VoucherType,
+            PUR_GUINo: item.PUR_GUINo,
+            PUR_GUIDate: item.PUR_GUIDate,
+            PUR_RepYYYYMM: item.PUR_RepYYYYMM,
+            PUR_VenNo: item.PUR_VenUniform, // 廠商編號（由 PUR_VenUniform 帶出）
+            PUR_VenUniform: item.PUR_VenUniform,
+            // ACP_Type: item.ACP_Type,
+            PUR_DirectType: item.PUR_DirectType,
+            PUR_TaxType: item.PUR_TaxType,
+            PUR_Net: item.PUR_Net,
+            PUR_Tax: item.PUR_Tax,
+            PUR_Amt: item.PUR_Amt
+          }))
         }
         console.log('送出請求', payload);
         switch (this.crudstatus) {
           case CRUDStatus.Create:
             if (this.canAdd()) {
-              this.fin13090Service.saveFIN13090(payload).subscribe(() => {
-                this.messageService.successBubble('新增成功');
-                this.dataForm.reset();
-                // 還原子表單
-                this.detailData = [];
+              this.fin13090Service.saveFIN13090(payload).subscribe((res) => {
+                if (res.Status === '0000') {
+                  this.messageService.successBubble('新增成功');
+                  this.dataForm.reset();
+                  // 還原子表單
+                  this.detailData = [];
+                } else {
+                  this.messageService.errorBubble('新增失敗: ' + res.Message || '新增失敗');
+                }
               });
               this.loading = false
             }
@@ -119,11 +135,11 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
             if (this.canEdit()) {
               this.loading = false;
               this.fin13090Service.saveFIN13090(payload).subscribe((res) => {
-                if (res.Data.O_MSGTYPE === 'S') {
+                if (res.Status === '0000') {
                   this.messageService.successBubble('更新成功');
                   this.onCancel();
                 } else {
-                  this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
+                  this.messageService.errorBubble('更新失敗: ' + res.Message || '更新失敗');
                 }
               });
               this.loading = false
@@ -172,9 +188,9 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
           value: item.INV_GUIType,
           label: `${item.INV_GUIType} - ${item.INV_GUIName}`,
         }));
-        this.VEN_Uniform_Option = (venUniform ?? []).map((item: any) => ({ // 廠商統一編號
-          value: item.No,
-          label: `${item.No} - ${item.Name}`,
+        this.VEN_Uniform_Option = (venUniform ?? []).map((item: any) => ({ // 廠商統一編號 (有-)
+          value: item.VEN_No,
+          label: `${item.VEN_No} - ${item.Name}`,
         }));
         this.PUR_DirectType_Options = (directType ?? []).map((item: any) => ({ // 發票用途
           value: item.No,
