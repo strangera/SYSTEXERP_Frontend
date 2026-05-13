@@ -119,6 +119,7 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'Base_DaySpaceEff', header: '日坪效', align: 'right', groupField: '基準' },
     { field: 'Base_AchieveRate', header: '達成率', align: 'right', groupField: '基準' },
     { field: 'Base_AvgTicket', header: '客單價', align: 'right', groupField: '基準', format: formatAmount },
+    { field: 'Base_PreOrderAmt', header: '預售實績', align: 'right', groupField: '基準', format: formatAmount },
     { field: 'Comp_LocationNo', header: '位置編號', align: 'left', groupField: '比較' },
     { field: 'Comp_Space', header: '坪數', align: 'right', groupField: '比較', format: (value) => formatAmountWithDecimals(value, 2) },
     { field: 'Comp_SaleAmt', header: '銷售金額', align: 'right', groupField: '比較', format: formatAmount },
@@ -127,18 +128,28 @@ export class TLS32030Component extends BasicQueryPageComponent<TLS32030Data> imp
     { field: 'Comp_DaySpaceEff', header: '日坪效', align: 'right', groupField: '比較' },
     { field: 'Comp_AchieveRate', header: '達成率', align: 'right', groupField: '比較' },
     { field: 'Comp_AvgTicket', header: '客單價', align: 'right', groupField: '比較', format: formatAmount },
+    { field: 'Comp_PreOrderAmt', header: '預售實績', align: 'right', groupField: '比較', format: formatAmount },
     { field: 'Diff_SaleAmt', header: '銷售金額差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_TxnCnt', header: '交易筆數差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_Target', header: '目標差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_DaySpaceEff', header: '日坪效差異', align: 'right', groupField: '差異', format: formatAmount },
     { field: 'Diff_AchieveRate', header: '達成率差異', align: 'right', groupField: '差異' },
-    { field: 'Diff_AvgTicket', header: '客單價差異', align: 'right', groupField: '差異', format: formatAmount }
+    { field: 'Diff_AvgTicket', header: '客單價差異', align: 'right', groupField: '差異', format: formatAmount },
+    { field: 'Diff_PreOrderAmt', header: '預售實績', align: 'right', groupField: '差異', format: formatAmount },
+
+    { field: 'Growth_SaleAmtPct', header: '銷售總金額', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'Growth_TxnCntPct', header: '銷售總筆數', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'Growth_TargetPct', header: '營業目標(預算)', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'Growth_DaySpaceEffPct', header: '日坪效', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'Growth_AchieveRatePct', header: '達成率', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'Growth_AvgTicketPct', header: '客單價', align: 'right', groupField: '成長率', format: formatAmount },
+    { field: 'Growth_PreOrderAmtPct', header: '預售實績', align: 'right', groupField: '成長率', format: formatAmount }
   ];
   columnGroup = [
     { header: '基準', field: '基準' },
     { header: '比較', field: '比較' },
     { header: '差異', field: '差異' },
-    { header: '成長率', field: 'Growth' }
+    { header: '成長率', field: '成長率' }
   ];
 
   constructor(
