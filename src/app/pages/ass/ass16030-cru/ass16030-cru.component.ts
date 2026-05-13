@@ -76,6 +76,8 @@ export class ASS16030CRUComponent
   // 品項明細表格資料
   detailData: DetailRow[] = [];
   selectedRows: DetailRow[] = [];
+  /** 進頁面當下載入的明細快照，供「取消」按鈕復原使用 */
+  private initialDetailSnapshot: DetailRow[] = [];
 
   // Dropdown options（皆採用 `<code> - <name>` 格式）
   userOptions: Option[] = [];
@@ -229,8 +231,20 @@ export class ASS16030CRUComponent
             GOODS_PRICE: r.GOODS_PRICE ?? 0,
             NOTES: r.NOTES ?? null,
           }));
+          // 保留初始載入的明細快照，供「取消」復原使用
+          this.initialDetailSnapshot = this.detailData.map(d => ({ ...d }));
         },
       });
+  }
+
+  /**
+   * 取消按鈕：將明細表格與選取狀態還原為進頁面當下的內容。
+   * 主檔表單部分由 `app-button btnType="cancel" [form]="dataForm"` 內建機制 reset。
+   */
+  onCancelReset(): void {
+    this.detailData = this.initialDetailSnapshot.map(d => ({ ...d }));
+    this.selectedRows = [];
+    this.submitted = false;
   }
 
   onSubmit(frm: FormGroup): void {

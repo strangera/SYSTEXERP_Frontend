@@ -253,9 +253,9 @@ export class ASS16030Component
       APRV_EMP_ID: raw.APRV_EMP_ID,
       WH_ID: raw.WH_ID,
       STATUS: raw.STATUS,
-      PageSize: body.PageSize ?? body.pageSize ?? 30,
-      PageIndex: body.PageIndex ?? body.pageIndex ?? 1,
-      SortBy: body.SortBy,
+      PageSize: body?.PageSize ?? body?.pageSize ?? 30,
+      PageIndex: body?.PageIndex ?? body?.pageIndex ?? 1,
+      SortBy: body?.SortBy,
     };
     return this.ass16030Service.queryASS16030(
       removeEmptyValues(payload) as ASS16030QueryRequest,
@@ -271,7 +271,6 @@ export class ASS16030Component
         PageIndex: raw.PageIndex ?? 1,
       } as ASS16030QueryRequest;
 
-      this.queryStateService.setQueryState(this.ProgNo, raw);
       this.queryFunction(this.lastQueryBody)
         .pipe(
           untilDestroyed(this),
@@ -279,9 +278,9 @@ export class ASS16030Component
         )
         .subscribe({
           next: res => {
-            if (res.Status !== '0000') return;
             this.data = res.Data ?? [];
             this.totalRecords = res.TotalCount ?? 0;
+            this.queryStateService.setQueryState(this.ProgNo, raw);
           },
         });
     });

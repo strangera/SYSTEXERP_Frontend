@@ -27,6 +27,15 @@ export interface ASS16030QueryData {
   NOTES?: string | null;
 }
 
+// ====== 查詢 Response 內層 wrapper（後端實際回傳是 nested 結構）======
+// 後端 ApiResponse.Data 為 { TotalRows, TotalPages, QueryData: T[] }，
+// service 需 pipe(map) 把 QueryData 攤平到 Data，將 TotalRows 提升到 TotalCount。
+export interface ASS16030QueryResultWrapper {
+  TotalRows?: number;
+  TotalPages?: number;
+  QueryData?: ASS16030QueryData[];
+}
+
 // ====== 查詢 Request ======
 export interface ASS16030QueryRequest extends BaseQueryRequest {
   MTAPPLY_ID?: string | null;
