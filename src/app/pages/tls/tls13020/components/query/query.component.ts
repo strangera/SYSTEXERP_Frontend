@@ -178,7 +178,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   public readonly addButton: AddButton[] = [
     {
       label: '續約',
-      icon: 'pi pi-refresh text-blue-500',
+      icon: 'pi pi-copy text-blue-500',
       action: (rowData: ContractItem) => this.onRenewal(rowData),
       disabled: () => !this.hasPermission(Actions.Create)
     }
