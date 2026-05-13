@@ -1,301 +1,294 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-//import { NavigationExtras, Router } from '@angular/router';
-// Services
-
-// Shared
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { AccordionModule } from 'primeng/accordion';
-//import { AuthService } from '../../../service/system/auth.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-//import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ASS16030Data } from '@service/api/ass/ass16030.service';
+import { ASS16030Service } from '@service/api/ass/ass16030.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import {
+  formatDate,
+  ReportColumn,
+} from '@shared/componentkit/table-report/table-report.model';
+import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
+import { removeEmptyValues } from '@shared/utils/object-utils';
+import { AccordionModule } from 'primeng/accordion';
+import { Observable } from 'rxjs';
+import { finalize } from 'rxjs/operators';
+import {
+  ASS16030QueryData,
+  ASS16030QueryRequest,
+} from './ass16030.model';
 
+@UntilDestroy()
 @Component({
   selector: 'app-ass16030',
   templateUrl: './ass16030.component.html',
   styleUrl: './ass16030.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarRangeComponent, CalendarComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    NgIf,
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarRangeQuickComponent,
+    ButtonComponent,
+    TableReportComponent,
+    TranslateModule,
+  ],
 })
-export class ASS16030Component extends BasicQueryPageComponent<ASS16030Data> implements OnInit {
+export class ASS16030Component
+  extends BasicQueryPageComponent<ASS16030QueryData>
+  implements OnInit
+{
   queryForm = this.formBuilder.group({
-    bigCategoryCode: [],
-    midCategoryCode: [],
-    smallCategoryCode: [],
-    Querybystatus: [],
-    propertynumber: [],
-    propertytype: [],
-    Itemnumber: [],
-    Accountcode: [],
-    custodyunit: [],
-    SApplicationdate: [],
-    EApplicationdate: [],
-    SReviewdate: [],
-    EReviewdate: [],
-    basedate: [],
-    Inventoryordernumber: [],
-    Inventorystatus: [],
-    SInventorydate: [],
-    EInventorydate: [],
-    SClosingdate: [],
-    EClosingdate: [],
-    Counter: [],
-    illustrate: [],
-    Reporttype: [],
-    Receiptnumber: [],
-    Applicantcode: [],
-    reviewer: [],
-    Shippingdate: [],
-    Kurabe: [],
-    status: [],
-    Departmentcode: [],
-
+    MTAPPLY_ID: [null as string | null],
+    EMP_ID: [null as string | null],
+    FASITEM_ID: [null as number | null],
+    APPLY_DATE_S: [null as Date | null],
+    APPLY_DATE_E: [null as Date | null],
+    APRV_DATE_S: [null as Date | null],
+    APRV_DATE_E: [null as Date | null],
+    ORG_ID: [null as string | null],
+    CHECK_DATE: [null as Date | null],
+    APRV_EMP_ID: [null as string | null],
+    WH_ID: [null as string | null],
+    STATUS: [null as string | null],
+    PageSize: [30],
+    PageIndex: [1],
   });
-  // Table data
-  data: ASS16030Data[] = [];
-  Reporttype = [{ value: 1, label: '全部' },
-  { value: 2, label: '差異' },];
-  // filteredData: any[] = [...this.data];
-  columns = [
-    { field: 'issuanceNote', header: '領用單號', visible: true },
-    { field: 'applicantCode', header: '申請人代號', visible: true },
-    { field: 'departmentCode', header: '部門代號', visible: true },
-    { field: 'applicationDate', header: '申請日期', visible: true },
-    { field: 'issuanceStatus', header: '領用單狀態', visible: true },
-    { field: 'approver', header: '審核者', visible: true },
-    { field: 'approvalDate', header: '審核日期', visible: true },
-    { field: 'issuanceDate', header: '發料日期', visible: true },
-    { field: 'detailCount', header: '明細筆數', visible: true },
+
+  data: ASS16030QueryData[] = [];
+  totalRecords = 0;
+  lastQueryBody?: ASS16030QueryRequest;
+
+  // Dropdown options（皆採用 `<code> - <name>` 格式）
+  userOptions: Option[] = [];
+  orgOptions: Option[] = [];
+  whOptions: Option[] = [];
+  statusOptions: Option[] = [];
+  fasitemOptions: Option[] = [];
+
+  columns: ReportColumn[] = [
+    { field: 'MTAPPLY_ID', header: '領用單號' },
+    { field: 'EMP_ID', header: '申請人代碼' },
+    {
+      field: 'EMP_NAME',
+      header: '申請人名稱',
+      format: (_v, _i, row) =>
+        row?.EMP_NAME ??
+        this.userOptions.find(o => o.value === row?.EMP_ID)?.['Name'] ??
+        '',
+    },
+    { field: 'ORG_ID', header: '部門代碼' },
+    {
+      field: 'ORG_NAME',
+      header: '部門名稱',
+      format: (_v, _i, row) =>
+        row?.ORG_NAME ??
+        this.orgOptions.find(o => o.value === row?.ORG_ID)?.['Name'] ??
+        '',
+    },
+    {
+      field: 'APPLY_DATE',
+      header: '申請日期',
+      format: v => formatDate(v),
+    },
+    {
+      field: 'MTAPPLY_STATUS',
+      header: '領用單狀態',
+      format: (_v, _i, row) =>
+        row?.MTAPPLY_STATUS_NAME ??
+        this.statusOptions.find(o => o.value === row?.MTAPPLY_STATUS)?.['Name'] ??
+        row?.MTAPPLY_STATUS ??
+        '',
+    },
+    { field: 'APRV_EMP_ID', header: '審核者代碼' },
+    {
+      field: 'APRV_EMP_NAME',
+      header: '審核者名稱',
+      format: (_v, _i, row) =>
+        row?.APRV_EMP_NAME ??
+        this.userOptions.find(o => o.value === row?.APRV_EMP_ID)?.['Name'] ??
+        '',
+    },
+    {
+      field: 'APRV_DATE',
+      header: '審核日期',
+      format: v => (v ? formatDate(v) : ''),
+    },
+    {
+      field: 'CHECK_DATE',
+      header: '發料日期',
+      format: v => (v ? formatDate(v) : ''),
+    },
+    {
+      field: 'LINE_NUM',
+      header: '明細筆數',
+      align: 'right',
+    },
   ];
 
-  // Dropdown options
-  Departmentcode = [
-    { value: 1, label: 'D001' },
-    { value: 2, label: 'D002' },
-  ];
-  Kurabe = [
-    { value: 1, label: '001' },
-    { value: 2, label: '002' },
-  ];
-  Itemnumber = [
-
-    { value: 1, label: '3A24210000001' },
-    { value: 2, label: '3A24210000002' },
-    { value: 3, label: '3A24210000003' },
-    { value: 4, label: '3A24210000004' },
-    { value: 5, label: '3A24210000005' },
-    { value: 6, label: '3A24210000006' },
-    { value: 7, label: '3A24210000007' },
-    { value: 8, label: '3A24210000008' },
-    { value: 9, label: '3A24210000009' },
-    { value: 10, label: '3A24210000010' },
-  ];
-  Inventorystatus = [
-    { value: 1, label: '盤點中' },
-    { value: 2, label: '登錄完成' },
-    { value: 3, label: '已結案' },
-
-  ];
-  Inventoryordenumber = [
-    { value: 1, label: '202406002' },
-
-  ];
-  custodyunit = [
-    { value: 1, label: '101000' },
-    { value: 2, label: '102000' },
-    { value: 3, label: '103000' },
-    { value: 4, label: '104000' },
-    { value: 5, label: '105000' },
-    { value: 6, label: '106000' },
-    { value: 7, label: '107000' },
-    { value: 8, label: '108000' },
-    { value: 9, label: '109000' },
-    { value: 10, label: '10A000' },
-  ];
-  Accountcode = [
-    { value: 1, label: '1501' },
-    { value: 2, label: '150101' },
-    { value: 3, label: '1511' },
-    { value: 4, label: '151101' },
-    { value: 5, label: '1512' },
-    { value: 6, label: '151201' },
-    { value: 7, label: '1521' },
-    { value: 8, label: '152101' },
-    { value: 9, label: '1522' },
-    { value: 10, label: '152201' },
-  ];
-  reviewer = [
-    { value: 1, label: '人員A' },
-    { value: 2, label: '人員B' },
-  ];
-  usercode = [
-    { value: 1, label: 'B001' },
-    { value: 2, label: 'B002' },
-    { value: 3, label: 'B003' },
-    { value: 4, label: 'B004' },
-    { value: 5, label: 'B005' },
-  ];
-
-  Querybystatus = [
-    { value: 1, label: '移轉' },
-    { value: 2, label: '報廢除帳' },
-    { value: 3, label: '變賣除帳' },
-    { value: 4, label: '新購' },
-  ];
-  assetCodeOptions = [
-    { value: 1, label: '1A232300000010000001' },
-    { value: 2, label: '1A232300000020000001' },
-    { value: 3, label: '1A232300000040000001' },
-    { value: 4, label: '1A232300000050000001' },
-    { value: 5, label: '1A232300000060000001' },
-    { value: 6, label: '1A232300000090000001' },
-    { value: 7, label: '1A232400000010000001' },
-    { value: 8, label: '1A232400000040000001' },
-    { value: 9, label: '1A232400000060000001' },
-  ];
-  propertytype = [
-    { value: 1, label: '資產' },
-    { value: 2, label: '列管品' },
-  ];
-  status = [
-    { value: 1, label: '領用申請' },
-    { value: 2, label: '審核確認' },
-    { value: 2, label: '領用發料' },
-  ];
+  // TODO: 確認 MTAPPLY_STATUS code 值；推測 1=領用申請
+  readonly APPLY_STATUS_CODE = '1';
 
   constructor(
-    // private router: Router,
-    // private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    // private authService: AuthService,
+    private ass16030Service: ASS16030Service,
+    private dropDownListService: DropDownListService,
+    private dropdownApiService: DropdownApiService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '310042';
-    this.initializePage('ASS16030', '/ass/ass16030cru', this.queryForm, (form) => this.onSubmit(form));
-
+    this.initializePage(
+      'ASS16030',
+      'ass/ass16030cru',
+      this.queryForm,
+      form => this.onSubmit(form),
+    );
+    this.loadDropdowns();
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
+  private loadDropdowns(): void {
+    // 申請人 / 審核者（同一份）
+    this.dropDownListService
+      .queryTBLUSER_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.userOptions = (res?.Data ?? []).map(item => ({
+          ...item,
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+      });
 
-    // if (frm.valid && this.canQuery()) {
-    //   // Submit logic here
-    // }
+    // 部門代號
+    this.dropDownListService
+      .querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.orgOptions = (res?.Data ?? []).map(item => ({
+          ...item,
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+      });
 
-    this.loading = false;
-    this.notificationService.unblockUi();
+    // 倉別
+    this.dropDownListService
+      .queryFAHOS_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const list = (res?.Data ?? []) as {
+          WH_ID?: string | null;
+          WH_NAME?: string | null;
+        }[];
+        this.whOptions = list.map(item => ({
+          ...item,
+          No: item.WH_ID ?? '',
+          Name: item.WH_NAME ?? '',
+          label: `${item.WH_ID ?? ''} - ${item.WH_NAME ?? ''}`,
+          value: item.WH_ID ?? '',
+        }));
+      });
 
-    // 查詢假資料
-    this.data = [
-      {
-        issuanceNote: 'REC2600001',   // 領用單號
-        applicantCode: 'B001',            // 申請人代號
-        departmentCode: 'D010',           // 部門代號
-        applicationDate: '2026-03-01',    // 申請日期
-        issuanceStatus: '領用申請',          // 領用單狀態
-        approver: '王主任',               // 審核者
-        approvalDate: '',                 // 審核日期
-        issuanceDate: '',                 // 發料日期
-        detailCount: '3'                  // 明細筆數
-      },
-      {
-        issuanceNote: 'REC2600002',
-        applicantCode: 'B002',
-        departmentCode: 'D020',
-        applicationDate: '2026-03-02',
-        issuanceStatus: '審核確認',
-        approver: '李課長',
-        approvalDate: '2026-03-03',
-        issuanceDate: '',
-        detailCount: '5'
-      },
-      {
-        issuanceNote: 'REC2600003',
-        applicantCode: 'B003',
-        departmentCode: 'D030',
-        applicationDate: '2026-03-04',
-        issuanceStatus: '領用發料',
-        approver: '陳經理',
-        approvalDate: '2026-03-05',
-        issuanceDate: '2026-03-06',
-        detailCount: '2'
-      },
-      {
-        issuanceNote: 'REC2600004',
-        applicantCode: 'B004',
-        departmentCode: 'D010',
-        applicationDate: '2026-03-05',
-        issuanceStatus: '審核確認',
-        approver: '王主任',
-        approvalDate: '2026-03-06',
-        issuanceDate: '',
-        detailCount: '4'
-      },
-      {
-        issuanceNote: 'REC2600005',
-        applicantCode: 'B005',
-        departmentCode: 'D040',
-        applicationDate: '2026-03-07',
-        issuanceStatus: '領用發料',
-        approver: '林襄理',
-        approvalDate: '2026-03-08',
-        issuanceDate: '2026-03-09',
-        detailCount: '6'
-      }
-    ];
+    // 領用單狀態
+    this.dropDownListService
+      .querySYS1000_DropDownList({ SYS_Type: 'MTAPPLY_STATUS' })
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.statusOptions = (res?.Data ?? []).map(item => ({
+          ...item,
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+      });
+
+    // 品項下拉（使用 dropdown-api.service.ts，符合 data-display-conventions skill 規範）
+    this.dropdownApiService
+      .queryFasItemDropdown()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.fasitemOptions = res ?? [];
+      });
   }
 
-  // onCreate() {
-  //   if (this.canAdd()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Create,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['FIN3000/FIN34030CRU'], extras);
-  //   }
-  // }
+  /** queryFunction：提供給 app-table-report lazy loading 使用 */
+  queryFunction = (
+    body: ASS16030QueryRequest & { pageSize?: number; pageIndex?: number },
+  ): Observable<ApiResponse<ASS16030QueryData[]>> => {
+    const raw = this.queryForm.getRawValue();
+    const payload: ASS16030QueryRequest = {
+      MTAPPLY_ID: raw.MTAPPLY_ID,
+      EMP_ID: raw.EMP_ID,
+      FASITEM_ID: raw.FASITEM_ID,
+      APPLY_DATE_S: raw.APPLY_DATE_S
+        ? new Date(raw.APPLY_DATE_S).toISOString()
+        : null,
+      APPLY_DATE_E: raw.APPLY_DATE_E
+        ? new Date(raw.APPLY_DATE_E).toISOString()
+        : null,
+      APRV_DATE_S: raw.APRV_DATE_S
+        ? new Date(raw.APRV_DATE_S).toISOString()
+        : null,
+      APRV_DATE_E: raw.APRV_DATE_E
+        ? new Date(raw.APRV_DATE_E).toISOString()
+        : null,
+      ORG_ID: raw.ORG_ID,
+      CHECK_DATE: raw.CHECK_DATE
+        ? new Date(raw.CHECK_DATE).toISOString()
+        : null,
+      APRV_EMP_ID: raw.APRV_EMP_ID,
+      WH_ID: raw.WH_ID,
+      STATUS: raw.STATUS,
+      PageSize: body.PageSize ?? body.pageSize ?? 30,
+      PageIndex: body.PageIndex ?? body.pageIndex ?? 1,
+      SortBy: body.SortBy,
+    };
+    return this.ass16030Service.queryASS16030(
+      removeEmptyValues(payload) as ASS16030QueryRequest,
+    );
+  };
 
-  // onEdit(data: any) {
-  //   if (this.canEdit()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Edit,
-  //         rowdata: data,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['/demoCRU'], extras);
-  //   }
-  // }
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const raw = frm.getRawValue();
+      this.lastQueryBody = {
+        ...raw,
+        PageSize: raw.PageSize ?? 30,
+        PageIndex: raw.PageIndex ?? 1,
+      } as ASS16030QueryRequest;
 
-  // onDetail(data: any) {
-  //   let extras: NavigationExtras = {
-  //     state: {
-  //       crudstatus: CRUDStatus.Read,
-  //       rowdata: data,
-  //       queryform: this.queryForm,
-  //     },
-  //     skipLocationChange: true,
-  //   };
-  //   this.router.navigate(['/demoCRU'], extras);
-  // }
+      this.queryStateService.setQueryState(this.ProgNo, raw);
+      this.queryFunction(this.lastQueryBody)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => (this.loading = false)),
+        )
+        .subscribe({
+          next: res => {
+            if (res.Status !== '0000') return;
+            this.data = res.Data ?? [];
+            this.totalRecords = res.TotalCount ?? 0;
+          },
+        });
+    });
+  }
+
+  /** 修改按鈕 disabled 條件：僅「領用申請」狀態可編輯 */
+  editDisabled = (row: ASS16030QueryData): boolean => {
+    return row.MTAPPLY_STATUS !== this.APPLY_STATUS_CODE;
+  };
 }

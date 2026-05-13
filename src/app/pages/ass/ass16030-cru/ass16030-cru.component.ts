@@ -1,8 +1,18 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS16030Data, ASS16030Request } from '@service/api/ass/ass16030.service';
+import {
+  ASS16030DetailItem,
+  ASS16030InsertRequest,
+  ASS16030QueryData,
+  ASS16030UpdateRequest,
+} from '@pages/ass/ass16030/ass16030.model';
+import { ASS16030Service } from '@service/api/ass/ass16030.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -11,83 +21,323 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateDuplicate, validateMaxLength, validateMaxNumber } from '@shared/componentkit/table-edit/validate-field.model';
+import {
+  validateDuplicate,
+  validateMaxNumber,
+} from '@shared/componentkit/table-edit/validate-field.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs/operators';
 
+/** 品項明細表格列的資料結構（含前端內部欄位） */
+interface DetailRow {
+  FASITEM_ID: number | null;
+  UNIT: string;
+  QTY: number | null;
+  NOTES: string | null;
+  // TODO: 待規格確認 GOODS_PRICE 來源（從 FASITEM 帶入？手動輸入？）暫送 0
+  GOODS_PRICE: number;
+}
+
+@UntilDestroy()
 @Component({
-    selector: 'app-ass16030-cru',
-    templateUrl: './ass16030-cru.component.html',
-    styleUrl: './ass16030-cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        TableEditComponent,
-        NgIf,
-        TranslateModule,
-        DropdownComponent,
-        InputTextComponent,
-        CalendarComponent,
-    ],
+  selector: 'app-ass16030-cru',
+  templateUrl: './ass16030-cru.component.html',
+  styleUrl: './ass16030-cru.component.scss',
+  standalone: true,
+  imports: [
+    NgIf,
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TableEditComponent,
+    TranslateModule,
+    DropdownComponent,
+    CalendarComponent,
+  ],
 })
-export class ASS16030CRUComponent extends BasicCruPageComponent<ASS16030Data> implements OnInit {
-    dataForm = this.formBuilder.nonNullable.group({
-        id: [],
-        applicantCode: ['', [Validators.required, Validators.maxLength(60)]], // 申請人代號
-        departmentCode: ['', [Validators.required, Validators.maxLength(60)]], // 部門代號
-        applicationDate: ['', [Validators.required, Validators.maxLength(60)]], // 申請日期
-        illustrate: ['', [Validators.maxLength(30)]], // 建議需求日(天)
-        inventoryNo: ['', [Validators.required, Validators.maxLength(30)]], // 倉別
-    });
-    data: ASS16030Request[] = [];
-    selectedRows: ASS16030Request[] = [];
-    deleteRows: ASS16030Request[] = [];
-    columns: EditColumn[] = [
-        { field: 'itemCode', header: '品項代碼', type: 'dropdown', validate: [validateDuplicate, validateMaxLength(10)] },
-        { field: 'unit', header: '單位', type: 'input', maxLength: 8, validate: [validateMaxLength(100)] },
-        { field: 'quantity', header: '數量', type: 'inputNumber', maxLength: 8, validate: [validateMaxNumber(99999999)] },
-        { field: 'itemRemark', header: '單項說明', type: 'autoComplete' },
-    ];
+export class ASS16030CRUComponent
+  extends BasicCruPageComponent<ASS16030QueryData>
+  implements OnInit
+{
+  dataForm = this.formBuilder.group({
+    MTAPPLY_ID: [null as string | null], // 唯讀，修改時由 rowdata 帶入；新增時由後端產生
+    EMP_ID: [null as string | null, [Validators.required]],
+    ORG_ID: [null as string | null, [Validators.required]],
+    APPLY_DATE: [null as Date | null, [Validators.required]],
+    REQUIRE_DAYS: [null as number | null, [Validators.min(0), Validators.max(99)]],
+    WH_ID: [null as string | null, [Validators.required]],
+    NOTES: [null as string | null],
+  });
 
-    inventoryNoOptions = [];
-    applicantCodeOptions = [];
-    departmentCodeOptions = [];
+  // 品項明細表格資料
+  detailData: DetailRow[] = [];
+  selectedRows: DetailRow[] = [];
 
-    constructor(
+  // Dropdown options（皆採用 `<code> - <name>` 格式）
+  userOptions: Option[] = [];
+  orgOptions: Option[] = [];
+  whOptions: Option[] = [];
+  fasitemOptions: Option[] = [];
+
+  columns: EditColumn[] = [
+    {
+      field: 'FASITEM_ID',
+      header: '品項編號',
+      type: 'dropdown',
+      options: () => this.fasitemOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+      validate: [validateDuplicate],
+      onChange: (rowData: DetailRow, value: number) => {
+        // 選取品項後自動帶入 UNIT
+        const item = this.fasitemOptions.find(x => x['value'] === value);
+        // TODO: 待 queryFASITEM response 確認包含 UNIT 後自動帶入；若無則以空字串處理
+        rowData['UNIT'] = (item?.['UNIT'] as string | undefined) ?? '';
+      },
+    },
+    {
+      field: 'UNIT',
+      header: '單位',
+      type: 'input',
+      maxLength: 8,
+      disabled: () => true, // 唯讀，由品項選取 onChange 帶入
+    },
+    {
+      field: 'QTY',
+      header: '數量',
+      type: 'inputNumber',
+      validate: [validateMaxNumber(99999999)],
+    },
+    {
+      field: 'NOTES',
+      header: '單項說明',
+      type: 'input',
+    },
+  ];
+
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
+
+  constructor(
+    private ass16030Service: ASS16030Service,
+    private dropDownListService: DropDownListService,
+    private dropdownApiService: DropdownApiService,
+  ) {
+    super();
+  }
+
+  ngOnInit(): void {
+    this.initializePage('ASS16030', this.dataForm);
+    this.loadDropdowns();
+
+    if (
+      this.crudstatus === CRUDStatus.Edit ||
+      this.crudstatus === CRUDStatus.Read
     ) {
-        super();
+      this.loadDetail(this.rowdata!);
     }
-    ngOnInit(): void {
-        this.initializePage('ASS16030', this.dataForm);
-    }
+  }
 
-    @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
-    onSubmit(frm: FormGroup) {
-        this.handleSubmit(frm, () => {
-            const valid = this.tableEditComponent.validateAndShowErrors();
-            if (!valid) {
-                this.loading = false;
-                return;
-            }
+  private loadDropdowns(): void {
+    this.dropDownListService
+      .queryTBLUSER_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.userOptions = (res?.Data ?? []).map(item => ({
+          ...item,
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+      });
 
-        });
-    }
-    resetTable() {
-        this.data = [];
-        this.selectedRows = [];
-    }
+    this.dropDownListService
+      .querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.orgOptions = (res?.Data ?? []).map(item => ({
+          ...item,
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+      });
 
-    // 刪除資料的方法
-    onDelete(rows: ASS16030Request[]) {
-        // 將畫面資料中刪除這些 row
-        this.data = this.data.filter(item => !rows.includes(item));
-        // 將有 id 的項目（表示是資料庫已存在的）加進 deleteRows，避免重複
-        rows.filter(item => item.id !== undefined && !this.deleteRows.some(d => d.id === item.id)).forEach(item => this.deleteRows.push(item));
-        // 清空選取列
-        this.selectedRows = [];
-    }
+    this.dropDownListService
+      .queryFAHOS_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        const list = (res?.Data ?? []) as {
+          WH_ID?: string | null;
+          WH_NAME?: string | null;
+        }[];
+        this.whOptions = list.map(item => ({
+          ...item,
+          No: item.WH_ID ?? '',
+          Name: item.WH_NAME ?? '',
+          label: `${item.WH_ID ?? ''} - ${item.WH_NAME ?? ''}`,
+          value: item.WH_ID ?? '',
+        }));
+      });
+
+    // 品項下拉（使用 dropdown-api.service.ts，符合 data-display-conventions skill 規範）
+    this.dropdownApiService
+      .queryFasItemDropdown()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.fasitemOptions = res ?? [];
+      });
+  }
+
+  /**
+   * 載入明細資料（Edit / Read 模式）
+   * TODO: 待後端提供領用單詳情 API 後改用單筆查詢；
+   *       目前以再呼叫一次 queryASS16030（帶 MTAPPLY_ID filter）取得扁平結構，
+   *       filter 出該單號的所有明細列組裝 DetailRow[]。
+   */
+  private loadDetail(rowdata: ASS16030QueryData): void {
+    // 先用 rowdata 的主檔欄位填入 form
+    this.dataForm.patchValue({
+      MTAPPLY_ID: rowdata.MTAPPLY_ID,
+      EMP_ID: rowdata.EMP_ID,
+      ORG_ID: rowdata.ORG_ID,
+      APPLY_DATE: rowdata.APPLY_DATE ? new Date(rowdata.APPLY_DATE) : null,
+      WH_ID: rowdata.WH_ID,
+      NOTES: rowdata.NOTES ?? null,
+    });
+
+    // 查詢明細：以 MTAPPLY_ID 做 filter 取得扁平結構
+    this.ass16030Service
+      .queryASS16030({ MTAPPLY_ID: rowdata.MTAPPLY_ID, PageSize: 1000, PageIndex: 1 })
+      .pipe(untilDestroyed(this))
+      .subscribe({
+        next: res => {
+          if (res.Status !== '0000') return;
+          const rows = (res.Data ?? []).filter(
+            r => r.MTAPPLY_ID === rowdata.MTAPPLY_ID && r.FASITEM_ID != null,
+          );
+
+          this.detailData = rows.map(r => ({
+            FASITEM_ID: r.FASITEM_ID ?? null,
+            UNIT:
+              (this.fasitemOptions.find(x => x['value'] === r.FASITEM_ID)?.[
+                'UNIT'
+              ] as string | undefined) ?? '',
+            QTY: r.QTY ?? null,
+            // TODO: 待規格確認 GOODS_PRICE 來源；暫送 0
+            GOODS_PRICE: r.GOODS_PRICE ?? 0,
+            NOTES: r.NOTES ?? null,
+          }));
+        },
+      });
+  }
+
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      // 驗證明細表格
+      const tableValid = this.tableEditComponent?.validateAndShowErrors() ?? true;
+      if (!tableValid) {
+        this.loading = false;
+        return;
+      }
+
+      // DETAILS 至少一筆（API minItems: 1）
+      if (this.detailData.length === 0) {
+        this.messageService.warnBubble('品項明細至少需填寫一筆');
+        this.loading = false;
+        return;
+      }
+
+      const formVal = frm.getRawValue();
+      const details: ASS16030DetailItem[] = this.detailData
+        .filter(d => d.FASITEM_ID != null)
+        .map(d => ({
+          FASITEM_ID: d.FASITEM_ID as number,
+          QTY: d.QTY ?? 0,
+          // TODO: 待規格確認 GOODS_PRICE 來源；暫送 0
+          GOODS_PRICE: d.GOODS_PRICE ?? 0,
+          NOTES: d.NOTES ?? null,
+        }));
+
+      if (details.length === 0) {
+        this.messageService.warnBubble('品項明細至少需填寫一筆有效品項');
+        this.loading = false;
+        return;
+      }
+
+      if (this.isFormCreateable) {
+        const payload: ASS16030InsertRequest = {
+          EMP_ID: formVal.EMP_ID ?? '',
+          ORG_ID: formVal.ORG_ID ?? '',
+          APPLY_DATE: formVal.APPLY_DATE
+            ? new Date(formVal.APPLY_DATE).toISOString()
+            : '',
+          REQUIRE_DAYS: formVal.REQUIRE_DAYS ?? null,
+          WH_ID: formVal.WH_ID ?? '',
+          NOTES: formVal.NOTES ?? null,
+          DETAILS: details,
+        };
+
+        this.ass16030Service
+          .insertASS16030(payload)
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => (this.loading = false)),
+          )
+          .subscribe({
+            next: res => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble('新增成功');
+                this.onCancel();
+              } else {
+                this.messageService.errorBubble('新增失敗：' + (res.Message ?? ''));
+              }
+            },
+          });
+      } else if (this.isFormEditable) {
+        const payload: ASS16030UpdateRequest = {
+          MTAPPLY_ID: formVal.MTAPPLY_ID ?? '',
+          EMP_ID: formVal.EMP_ID ?? '',
+          ORG_ID: formVal.ORG_ID ?? '',
+          APPLY_DATE: formVal.APPLY_DATE
+            ? new Date(formVal.APPLY_DATE).toISOString()
+            : '',
+          REQUIRE_DAYS: formVal.REQUIRE_DAYS ?? null,
+          WH_ID: formVal.WH_ID ?? '',
+          NOTES: formVal.NOTES ?? null,
+          DETAILS: details,
+        };
+
+        this.ass16030Service
+          .updateASS16030(payload)
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => (this.loading = false)),
+          )
+          .subscribe({
+            next: res => {
+              if (res.Status === '0000') {
+                this.messageService.successBubble('修改成功');
+                this.onCancel();
+              } else {
+                this.messageService.errorBubble('修改失敗：' + (res.Message ?? ''));
+              }
+            },
+          });
+      }
+    });
+  }
+
+  /** 列印申請單（PDF）— stub */
+  onPrint(): void {
+    // TODO: 待後端 API 上線 — Swagger 中尚無 /ASS0000/ASS1000/exportPDFASS16030
+    this.messageService.warnBubble('列印申請單 API 尚未上線，請等待後端完成後再試');
+  }
+
+  /** 刪除明細列 */
+  onDeleteDetail(rows: DetailRow[]): void {
+    this.detailData = this.detailData.filter(item => !rows.includes(item));
+    this.selectedRows = [];
+  }
 }
