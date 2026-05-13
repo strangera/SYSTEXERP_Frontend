@@ -92,15 +92,9 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   }
 
   onSubmit(frm: FormGroup) {// 驗證單據明細
-    // --------------------------
-    //必須至少有一筆明細資料
-    if (this.detailData.length < 1) {
-      this.messageService.errorBubble('明細資料不可為空。');
-      return;
-    }
-    // 2. 檢查明細必填欄位
+    // 檢查明細必填欄位
     if (!this.validateAllRows()) {
-      return; // 驗證失敗，攔截不送出
+      return;
     }
     this.handleSubmit(frm, () => {
       const getVouNo = this.dataForm.get('VouNo')?.value

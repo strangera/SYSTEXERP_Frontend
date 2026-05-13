@@ -16,7 +16,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { ChartModule } from 'primeng/chart';
@@ -25,7 +25,7 @@ import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { formatAmountWithDecimals } from '../tls2f010-cru/tls2f010-table-report.model';
+import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 import { TLS32040ChartResponse } from './../../../service/api/tls/tls32040.service';
 
 const today = new Date();
@@ -170,7 +170,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
   chart_options: any = []; // 圖檔欄位
   historyRequestBody: TLS32040Request | null = null; //歷史查詢條件
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     // { field: 'RowType', header: '列別', visible: true },
     { field: 'TeamId', header: '單位代碼', visible: true, align: 'left' },
     { field: 'TeamName', header: '單位名稱', visible: true, align: 'left' },

@@ -16,7 +16,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -24,6 +24,7 @@ import { TableModule } from 'primeng/table';
 import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls31080',
@@ -89,7 +90,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
   btnPDFLoading = false;
   btnExcelLoading = false;
 
-  columns: Column[] = [
+  columns: ReportColumn[] = [
     { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
     { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
 
