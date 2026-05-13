@@ -24,6 +24,7 @@ import { debounceTime, finalize, map, of, switchMap, tap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { formatAmountWithDecimals } from '../tls2f010-cru/tls2f010-table-report.model';
 
 const today = new Date();
 const yesterday = new Date(today);
@@ -199,7 +200,7 @@ export class TLS32060Component extends BasicQueryPageComponent<TLS32060Response>
     { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Space', header: '營業坪數', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
     { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' }
   ];
   tlt_kind_Option = [

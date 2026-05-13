@@ -21,6 +21,7 @@ import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { formatAmountWithDecimals } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls31030-cru',
@@ -84,31 +85,31 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030DetailIt
     { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
     // { field: 'bus_type', header: '大分類', visible: true }, // queryTLS31030
     // { field: 'bus_type_name', header: '大分類名稱', visible: true }, // queryTLS31030
-    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
-    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
-    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
-    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
-    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
+    { field: 'budget', header: '營業目標', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
+    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
+    { field: 'AchievementRate', header: '達成率', visible: true, groupField: '營業額', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: '營業佔比', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: '營業佔比', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
+    { field: 'AvgTicket', header: '客單價', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
+    { field: 'tlt_space', header: '坪數', visible: true, groupField: '營業坪效', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
+    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
 
     // { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' }, // queryTLS31030
     // { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
     // { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
 
-    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount, align: 'right' },
-    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount, align: 'right' },
-    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
+    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
+    { field: 'CompletionRate', header: '完成率', visible: true, groupField: '月累計', format: (value) => formatPercentage(value, 2), align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
-    { field: 'budgetAmt', header: '營業額' },
-    { field: 'sum', header: '營業佔比' },
-    { field: 'custCnt', header: '客單價' },
-    { field: 'space', header: '營業坪效' },
+    { field: '營業額', header: '營業額' },
+    { field: '營業佔比', header: '營業佔比' },
+    { field: '客單價', header: '客單價' },
+    { field: '營業坪效', header: '營業坪效' },
     // { field: 'temp', header: '臨時櫃' }, // queryTLS31030
-    { field: 'month', header: '月累計' },
+    { field: '月累計', header: '月累計' },
   ]
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },

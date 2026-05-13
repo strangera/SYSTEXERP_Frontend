@@ -14,6 +14,7 @@ import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { formatAmountWithDecimals } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls32040-cru',
@@ -79,7 +80,7 @@ export class Tls32040CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
     { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Space', header: '營業坪數', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
 
     { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' },
     { field: 'BaseCustCnt', header: '本期顧客數', visible: true, format: formatAmount, align: 'right' },

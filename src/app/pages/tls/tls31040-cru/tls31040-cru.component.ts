@@ -22,6 +22,7 @@ import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { formatAmountWithDecimals } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls31040-cru',
@@ -91,7 +92,7 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
     { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
     { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
-    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
+    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
     { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
 
     // { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' }, // queryTLS31030

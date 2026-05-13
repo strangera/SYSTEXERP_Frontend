@@ -21,6 +21,7 @@ import { finalize } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { formatAmountWithDecimals } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls31050-cru',
@@ -81,39 +82,39 @@ export class Tls31050CRUComponent extends BasicCruPageComponent<TLS31050Response
     { field: 'location_no', header: '位置編號', visible: true, align: 'left' },
     { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
 
-    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount, align: 'right' },
+    { field: 'budget', header: '營業目標', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
+    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
 
-    { field: 'NormalSales', header: '正品', groupField: 'budgetAmt', visible: true, format: formatAmount, align: 'right' }, // 正品
-    { field: 'SpecialSales', header: '特價 ', groupField: 'budgetAmt', visible: true, format: formatAmount, align: 'right' }, // 特價
-    { field: 'Discount95Sales', header: '95折 ', groupField: 'budgetAmt', visible: true, format: formatAmount, align: 'right' }, // 95折
-    { field: 'Discount90Sales', header: '9折 ', groupField: 'budgetAmt', visible: true, format: formatAmount, align: 'right' }, // 9折
-    { field: 'Discount80Sales', header: '8折 ', groupField: 'budgetAmt', visible: true, format: formatAmount, align: 'right' }, // 8折
-    { field: 'Discount70Sales', header: '7折 ', groupField: 'budgetAmt', visible: true, format: formatAmount, align: 'right' }, // 7折
-    { field: 'AchievementRate', header: '達成率', groupField: 'budgetAmt', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'NormalSales', header: '正品', groupField: '營業額', visible: true, format: formatAmount, align: 'right' }, // 正品
+    { field: 'SpecialSales', header: '特價 ', groupField: '營業額', visible: true, format: formatAmount, align: 'right' }, // 特價
+    { field: 'Discount95Sales', header: '95折 ', groupField: '營業額', visible: true, format: formatAmount, align: 'right' }, // 95折
+    { field: 'Discount90Sales', header: '9折 ', groupField: '營業額', visible: true, format: formatAmount, align: 'right' }, // 9折
+    { field: 'Discount80Sales', header: '8折 ', groupField: '營業額', visible: true, format: formatAmount, align: 'right' }, // 8折
+    { field: 'Discount70Sales', header: '7折 ', groupField: '營業額', visible: true, format: formatAmount, align: 'right' }, // 7折
+    { field: 'AchievementRate', header: '達成率', groupField: '營業額', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
 
-    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
-    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: '營業佔比', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: '營業佔比', format: (value) => formatPercentage(value, 2), align: 'right' },
 
-    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
-    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount, align: 'right' },
+    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
+    { field: 'AvgTicket', header: '客單價', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
 
-    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
-    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space', format: formatAmount, align: 'right' },
+    { field: 'tlt_space', header: '坪數', visible: true, groupField: '營業坪效', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
+    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
     // { field: 'MonthlyPayment', header: '月坪貢獻(未稅)', visible: true, groupField: 'space' },
 
     // { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
     // { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
 
-    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'CompletionRate', header: '完成率', visible: true, groupField: '月累計', format: (value) => formatPercentage(value, 2), align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
-    { field: 'budgetAmt', header: '營業額' },
-    { field: 'sum', header: '營業佔比' },
-    { field: 'custCnt', header: '客單價' },
-    { field: 'space', header: '營業坪效' },
+    { field: '營業額', header: '營業額' },
+    { field: '營業佔比', header: '營業佔比' },
+    { field: '客單價', header: '客單價' },
+    { field: '營業坪效', header: '營業坪效' },
     // { field: 'temp', header: '臨時櫃' }, // queryTLS31030
-    { field: 'month', header: '月累計' },
+    { field: '月累計', header: '月累計' },
   ]
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },
