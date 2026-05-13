@@ -181,15 +181,19 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
     { field: 'Base_AchieveRate', header: '本期達成率', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
     { field: 'Base_TxnCnt', header: '本期交易筆數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Base_AvgTicket', header: '本期客單價', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Base_PreOrderAmt', header: '本期預售實績', visible: true, format: formatAmount, align: 'right' }, // 本期預售實績 放在本期客單價後面
 
     { field: 'Comp_SaleAmt', header: '上期銷售金額', visible: true, format: formatAmount, align: 'right' },
     { field: 'Comp_TxnCnt', header: '上期交易筆數', visible: true, format: formatAmount, align: 'right' },
     { field: 'Comp_AvgTicket', header: '上期客單價', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Comp_PreOrderAmt', header: '上期預售實績', visible: true, format: formatAmount, align: 'right' }, // 上期預售實績 放在上期客單價後面
     { field: 'Growth_SaleAmtPct', header: '成長比', visible: true, format: (value) => formatPercentage(value, 2), align: 'right' },
 
     { field: 'Diff_SaleAmt', header: '銷售金額差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount, align: 'right' },
+    { field: 'Diff_PreOrderAmt', header: '預售差異', visible: true, format: formatAmount, align: 'right' }, // 預售差異 放在客單價差異後面
+
     { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
     { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' }
   ];
