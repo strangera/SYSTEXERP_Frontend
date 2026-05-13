@@ -668,16 +668,59 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
         YYYYMM: `${formData.APPLY_Date.getFullYear()}${(formData.APPLY_Date.getMonth() + 1).toString().padStart(2, '0')}`,
         Details: details,
       };
-      const request$ = this.isFormCreateable ? this.tls52020Service.insertTLS52020(submitData) : this.tls52020Service.updateTLS52020(submitData);
-      request$.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(() => {
-        this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
+      const request$ = this.isFormCreateable
+        ? this.tls52020Service.insertTLS52020(submitData)
+        : this.tls52020Service.updateTLS52020(submitData);
+
+      request$.pipe(
+        finalize(() => this.loading = false),
+        untilDestroyed(this)
+      ).subscribe(res => {
         if (this.isFormCreateable) {
-          this.onCancel(); // 或者調用 reset 邏輯
+          // 取得回傳的進貨單號 (假設 Message 回傳的是單號)
+          const crnNo = (res.Message ?? '').trim();
+
+          this.messageService.confirm({
+            header: '新增成功',
+            message: `退貨單號：<strong>${crnNo || '—'}</strong>`,
+            icon: 'check',
+            showIcon: true,
+            acceptLabel: '返回',
+            accept: () => this.onCancel(),
+            rejectLabel: '繼續新增',
+            reject: () => this.resetFormForContinueNew(),
+          });
         } else {
+          this.messageService.successBubble(res.Message || '修改成功');
           this.onCancel();
         }
       });
     });
+  }
+
+  /** 新增成功後選擇「繼續新增」時，還原表單與明細 */
+  private resetFormForContinueNew(): void {
+    this.dataForm.patchValue({
+      CRN_No: '系統自動產生',
+      VEN_No: null,
+      LOGO_No: null,
+      HOS_No: null,
+      CRN_TotalBuyNet: 0,
+      CRN_TotalBuyTax: 0,
+      CRN_TotalBuyAmt: 0,
+      CRN_TotalSaleAmt: 0,
+      APPLY_USR_No: this.user?.user_No ?? null,
+      APPLY_USR_Name: this.user?.user_Name ?? null,
+      APPLY_Date: new Date(),
+      CRN_Remark: null,
+    });
+
+    this.clearDetails(); // 清空 data 陣列與計算總額
+    this.vendorOptions = this.dropdown.queryPos2013TltTalent(); // 還原廠商下拉選單
+    this.filteredLogoOptions = this.fullLogoOptions;
+    this.filteredWarehouseOptions = this.fullWarehouseOptions;
+
+    this.cdr.detectChanges();
   }
   onReset() { this.data = [...this.originalData]; }
 }
