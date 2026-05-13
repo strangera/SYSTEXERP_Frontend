@@ -37,7 +37,7 @@ export class FIN13100Component extends BasicQueryPageComponent<any> {
     VouDateStart: [null],
     VouDateEnd: [null],
 
-    ...createPaginationConfig([{ field: 'VouNo', order: 1 }]),
+    ...createPaginationConfig([{ field: 'VouNo', order: -1 }]),
   });
 
   data: any[] = [];
