@@ -487,11 +487,12 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
 
     const firstDate = this.selectedItems[0].sad_date.replace(/-/g, '');
     const customFileName = `專櫃日對帳單${firstDate}.zip`;
+    this.loading = true;
     this.btnLoading = true;
     this.tls23120Service.exportTLS23120Zip(body)
       .pipe(
         untilDestroyed(this),
-        finalize(() => this.btnLoading = false)
+        finalize(() => [this.btnLoading = false, this.loading = false])
       )
       .subscribe({
         next: (response) => {
@@ -511,9 +512,9 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
         TLT_No: item.tlt_no,
       }))
     };
-
+    this.loading = true
     this.btnLoading = true;
-    this.tls23120Service.onlineTLS23120(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(res => {
+    this.tls23120Service.onlineTLS23120(body).pipe(untilDestroyed(this), finalize(() => [this.btnLoading = false, this.loading = false])).subscribe(res => {
       this.messageService.successBubble(res.Data || '網路對帳執行成功');
     });
   }
@@ -529,9 +530,10 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
           email: item.email,
         }))
       };
-
+      this.loading = true;
+      this.btnLoading = true;
       this.dialogLoading = true;
-      this.tls23120Service.autoMailTLS23120(body).pipe(untilDestroyed(this), finalize(() => [this.loading = false, this.dialogLoading = false, this.dialogVisible = false])).subscribe(res => {
+      this.tls23120Service.autoMailTLS23120(body).pipe(untilDestroyed(this), finalize(() => [this.btnLoading = false, this.loading = false, this.dialogLoading = false, this.dialogVisible = false])).subscribe(res => {
         this.messageService.successBubble(res.Message);
       });
     })
