@@ -342,7 +342,8 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
         contract_subno_to: formValue.contract_subno_to ? String(formValue.contract_subno_to) : undefined,
         rece_yn: formValue.rece_yn ? 'Y' : undefined,
         pos_yn: formValue.pos_yn ? 'Y' : undefined,
-        cash_yn: formValue.cash_yn ? 'Y' : undefined
+        cash_yn: formValue.cash_yn ? 'Y' : undefined,
+        tlt_openflagList: ['1']  // 固定只查營業中
       };
 
       this.apiService.queryTLS13020(queryRequest).subscribe({
@@ -381,14 +382,14 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
 
   // ========== 導航（使用 BasicQueryPageComponent 標準模式）==========
 
-  // /**
-  //  * 編輯 - 額外檢查合約是否可編輯
-  //  */
-  // override onEdit(rowData: ContractItem): void {
-  //   if (this.hasPermission(Actions.Edit) && this.canEditContract(rowData)) {
-  //     this.navigateWithState(CRUDStatus.Edit, rowData);
-  //   }
-  // }
+  /**
+   * 編輯 - 額外檢查合約是否可編輯
+   */
+  override onEdit(rowData: ContractItem): void {
+    if (this.hasPermission(Actions.Edit) && this.canEditContract(rowData)) {
+      this.navigateWithState(CRUDStatus.Edit, rowData);
+    }
+  }
 
   /**
    * 續約 - 以該列的 ven_no 帶入資料進入續約精靈
@@ -403,8 +404,8 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
    * 點擊行
    */
   onRowClick(rowData: ContractItem): void {
-    if (this.hasPermission(Actions.Edit) && this.canEditContract(rowData)) {
-      this.navigateWithState(CRUDStatus.Edit, rowData);
+    if (this.hasPermission(Actions.Query)) {
+      this.navigateWithState(CRUDStatus.Read, rowData);
     }
   }
 
