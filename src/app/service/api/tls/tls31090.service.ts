@@ -45,6 +45,7 @@ export interface TLS31090Response {
   Reentry: number;
   PresaleCheckout: number; // 預售結帳
   Subtotal: number;
+  AVN_PreOrderAmt: number; // 預售業績
 }
 
 export interface TLS31090DetailResponse {

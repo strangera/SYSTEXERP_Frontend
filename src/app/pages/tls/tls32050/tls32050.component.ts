@@ -193,7 +193,8 @@ export class TLS32050Component extends BasicQueryPageComponent<TLS32050Response>
     { field: 'Diff_TxnCnt', header: '交易筆數差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Diff_AvgTicket', header: '客單價差異', visible: true, format: formatAmount, align: 'right' },
     { field: 'Space', header: '營業坪數', visible: true, format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
-    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' }
+    { field: 'Base_DaySpaceEff', header: '本期日平均坪效', visible: true, format: formatAmount, align: 'right' },
+    { field: 'AVN_PreOrderAmt', header: '預售金額', visible: true, format: formatAmount, align: 'right' }
   ];
   tlt_kind_Option = [
     { value: "1", label: "正櫃" },

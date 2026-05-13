@@ -112,6 +112,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     { field: 'Reentry', header: '補登', visible: true, format: formatAmount, align: 'right' },
     { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
     { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
+    { field: 'AVN_PreOrderAmt', header: '預售業績', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
