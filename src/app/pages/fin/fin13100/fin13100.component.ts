@@ -30,6 +30,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
   ],
 })
 export class FIN13100Component extends BasicQueryPageComponent<any> {
+  private defaultQueryFormValue: any;
   queryForm = this.formBuilder.group({
     VouNoStart: [null],
     VouNoEnd: [null],
@@ -60,14 +61,14 @@ export class FIN13100Component extends BasicQueryPageComponent<any> {
       format: (v: any, _i?: number, row?: any) =>
         v || this.formatPostFlag(row?.PostFlag),
     },
-    {
-      field: 'TaxTotal',
-      header: '銷項稅額-貸方',
-      visible: true,
-      align: 'right',
-      format: (v: any) => this.money(v),
-      exportFormat: 'number:comma2',
-    },
+    // {
+    //   field: 'TaxTotal',
+    //   header: '銷項稅額-貸方',
+    //   visible: true,
+    //   align: 'right',
+    //   format: (v: any) => this.money(v),
+    //   exportFormat: 'number:comma2',
+    // },
   ];
 
   constructor(private fin13100Service: FIN13100Service) {
@@ -75,10 +76,16 @@ export class FIN13100Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
+
     this.initializePage('FIN13100', 'FIN/FIN13100CRU');
 
+    // 記錄第一次進頁面的預設值
+    this.defaultQueryFormValue = this.queryForm.getRawValue();
+
     const fromCru = !!history.state?.fromCru;
-    if (fromCru) {
+    const hasQueryState = this.queryStateService.getQueryState(this.ProgNo);
+
+    if (fromCru && hasQueryState) {
       this.handleQueryRestore(this.queryForm, this.ProgNo, (f) => this.onSubmit(f));
     }
   }
@@ -130,24 +137,27 @@ export class FIN13100Component extends BasicQueryPageComponent<any> {
   }
 
   onClearForm(): void {
-    this.queryForm.reset();
+    setTimeout(() => {
+      (this.queryStateService as any).clearQueryState?.(this.ProgNo);
 
-    this.queryForm.patchValue(
-      {
-        pageIndex: 1,
-        pageSize: 30,
-        SortBy: [{ field: 'VouNo', order: 1 }],
-      },
-      { emitEvent: false }
-    );
+      this.queryForm.reset(
+        {
+          VouNoStart: null,
+          VouNoEnd: null,
+          VouDateStart: null,
+          VouDateEnd: null,
+          pageIndex: 1,
+          pageSize: 30,
+          SortBy: [{ field: 'VouNo', order: 1 }],
+        },
+        { emitEvent: true }
+      );
 
-    this.data = [];
-    this.totalRecords = 0;
-    this.lastQueryBody = null;
-
-    (this.queryStateService as any).clearQueryState?.(this.ProgNo);
+      this.queryForm.markAsPristine();
+      this.queryForm.markAsUntouched();
+      this.submitted = false;
+    });
   }
-
   private toDateString(v: any): string | null {
     if (!v) return null;
 

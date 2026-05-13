@@ -15,12 +15,13 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { FIN32020TableEditComponent } from '../fin32020-cru/fin32020table-edit/fin32020table-edit.component';
 import {
   EditColumn,
   FieldChangeEvent,
 } from '../fin32020-cru/fin32020table-edit/fin32020table-edit.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-fin13100-cru',
@@ -55,25 +56,24 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
 
   detailRows: any[] = [];
   detailLoading = false;
-
+  assetTypeOptions = getSYS1000Options('AssetType');
   invoiceTypeOptions = [
 
   ];
-Buyer_Uniform_Options: any[] = [];
+  Buyer_Uniform_Options: any[] = [];
   taxTypeOptions = [
     { label: '免稅', value: '0' },
     { label: '應稅', value: '1' },
     { label: '零稅', value: '2' },
   ];
 
-  assetTypeOptions = [
-    { label: '', value: '' },
-    { label: '資產', value: 'Y' },
-    { label: '非資產', value: 'N' },
-  ];
+  // assetTypeOptions = [
+  //   { label: '', value: '' },
+  //   { label: '資產', value: 'Y' },
+  //   { label: '非資產', value: 'N' },
+  // ];
 
   defaultDetailRow: any = {
-    RowId: null,
     id: 0,
     INV_GUIType: '31',
     InvoiceNo: '',
@@ -89,133 +89,133 @@ Buyer_Uniform_Options: any[] = [];
     AssetType: '',
   };
 
-detailColumns: EditColumn[] = [
-  {
-    field: 'INV_GUIType',
-    header: '發票格式',
-    type: 'dropdown',
-    width: '150px',
-    options: this.invoiceTypeOptions,
-    optionLabel: 'label',
-    optionValue: 'value',
-  },
-{
-  field: 'InvoiceNo',
-  header: '發票號碼',
-  type: 'input',
-  width: '150px',
-},
-  {
-    field: 'InvoiceDate',
-    header: '發票日期',
-    type: 'date',
-    width: '150px',
-    format: (v: any) => this.formatDate(v),
-  },
+  detailColumns: EditColumn[] = [
     {
-    field: 'INV_YM',
-    header: '資料所屬年月',
-    type: 'input',
-    width: '130px',
-  },
-{
-  field: 'INV_DeclareYM',
-  header: '申報年月',
-  type: 'input',
-  width: '130px',
-  disabled: () => true,
-},
+      field: 'INV_GUIType',
+      header: '發票格式',
+      type: 'dropdown',
+      width: '150px',
+      options: this.invoiceTypeOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+    },
+    {
+      field: 'InvoiceNo',
+      header: '發票號碼',
+      type: 'input',
+      width: '150px',
+    },
+    {
+      field: 'InvoiceDate',
+      header: '發票日期',
+      type: 'date',
+      width: '150px',
+      format: (v: any) => this.formatDate(v),
+    },
+    {
+      field: 'INV_YM',
+      header: '資料所屬年月',
+      type: 'input',
+      width: '130px',
+    },
+    {
+      field: 'INV_DeclareYM',
+      header: '申報年月',
+      type: 'input',
+      width: '130px',
+      disabled: () => true,
+    },
 
- {
-  field: 'TXN_Uniform',
-  header: '買受人統一編號',
-  type: 'dropdown',
-  width: '220px',
-  options: this.Buyer_Uniform_Options,
-  optionLabel: 'label',
-  optionValue: 'value',
-},
-  {
-    field: 'SaleAmt',
-    header: '發票總金額',
-    type: 'inputNumber',
-    width: '130px',
-    textAlign: 'right',
-    format: (v: any) => this.money(v),
-  },
-  {
-    field: 'TaxType',
-    header: '課稅別',
-    type: 'dropdown',
-    width: '120px',
-    options: this.taxTypeOptions,
-    optionLabel: 'label',
-    optionValue: 'value',
-  },
-  {
-    field: 'Net',
-    header: '發票未稅金額',
-    type: 'inputNumber',
-    width: '140px',
-    textAlign: 'right',
-    format: (v: any) => this.money(v),
-  },
-  {
-    field: 'Tax',
-    header: '發票稅額',
-    type: 'inputNumber',
-    width: '120px',
-    textAlign: 'right',
-    format: (v: any) => this.money(v),
-  },
-  {
-    field: 'Source_Doc_No',
-    header: '憑證單號',
-    type: 'input',
-    width: '150px',
-  },
-  {
-    field: 'AssetType',
-    header: '資產註記',
-    type: 'dropdown',
-    width: '120px',
-    options: this.assetTypeOptions,
-    optionLabel: 'label',
-    optionValue: 'value',
-  },
-];
+    {
+      field: 'TXN_Uniform',
+      header: '買受人統一編號',
+      type: 'dropdown',
+      width: '220px',
+      options: this.Buyer_Uniform_Options,
+      optionLabel: 'label',
+      optionValue: 'value',
+    },
+    {
+      field: 'SaleAmt',
+      header: '發票總金額',
+      type: 'inputNumber',
+      width: '130px',
+      textAlign: 'right',
+      format: (v: any) => this.money(v),
+    },
+    {
+      field: 'TaxType',
+      header: '課稅別',
+      type: 'dropdown',
+      width: '120px',
+      options: this.taxTypeOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+    },
+    {
+      field: 'Net',
+      header: '發票未稅金額',
+      type: 'inputNumber',
+      width: '140px',
+      textAlign: 'right',
+      format: (v: any) => this.money(v),
+    },
+    {
+      field: 'Tax',
+      header: '發票稅額',
+      type: 'inputNumber',
+      width: '120px',
+      textAlign: 'right',
+      format: (v: any) => this.money(v),
+    },
+    {
+      field: 'Source_Doc_No',
+      header: '憑證單號',
+      type: 'input',
+      width: '150px',
+    },
+    {
+      field: 'AssetType',
+      header: '資產註記',
+      type: 'dropdown',
+      width: '120px',
+      options: this.assetTypeOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+    },
+  ];
   get isRead(): boolean {
     return this.crudstatus === CRUDStatus.Read;
   }
 
-  constructor(private fin13100Service: FIN13100Service,  private dropDownListService: DropDownListService,) {
+  constructor(private fin13100Service: FIN13100Service, private dropDownListService: DropDownListService,) {
     super();
   }
-private calcDeclareYM(yyyymm: any): string | null {
-  const value = this.normalizeYYYYMM(yyyymm);
-  if (!value) return null;
+  private calcDeclareYM(yyyymm: any): string | null {
+    const value = this.normalizeYYYYMM(yyyymm);
+    if (!value) return null;
 
-  const year = Number(value.substring(0, 4));
-  let month = Number(value.substring(4, 6));
+    const year = Number(value.substring(0, 4));
+    let month = Number(value.substring(4, 6));
 
-  if (isNaN(year) || isNaN(month)) return null;
+    if (isNaN(year) || isNaN(month)) return null;
 
-  // 奇數月 → +1
-  if (month % 2 === 1) {
-    month += 1;
+    // 奇數月 → +1
+    if (month % 2 === 1) {
+      month += 1;
+    }
+
+    // 保底
+    if (month > 12) {
+      month = 12;
+    }
+
+    return `${year}${String(month).padStart(2, '0')}`;
   }
-
-  // 保底
-  if (month > 12) {
-    month = 12;
-  }
-
-  return `${year}${String(month).padStart(2, '0')}`;
-}
   ngOnInit(): void {
     this.initializePage('FIN13100', this.dataForm);
-this.loadInvoiceTypeOptions();
-this.loadBuyerUniformOptions();
+    this.loadInvoiceTypeOptions();
+    this.loadBuyerUniformOptions();
     const row: any = (this as any).rowdata;
     if (row) {
       this.dataForm.patchValue(
@@ -233,67 +233,67 @@ this.loadBuyerUniformOptions();
 
     this.dataForm.disable();
   }
-private loadInvoiceTypeOptions(): void {
-  this.fin13100Service.queryFIN13060_TDS1007DropDownList().subscribe({
-    next: (res: any) => {
-      const allow = new Set(['31', '32', '35']);
-      const list = Array.isArray(res?.Data) ? res.Data : [];
+  private loadInvoiceTypeOptions(): void {
+    this.fin13100Service.queryFIN13060_TDS1007DropDownList().subscribe({
+      next: (res: any) => {
+        const allow = new Set(['31', '32', '35']);
+        const list = Array.isArray(res?.Data) ? res.Data : [];
 
-      this.invoiceTypeOptions = list
-        .filter((x: any) => allow.has(String(x.No ?? '').trim()))
-        .map((x: any) => ({
-          value: String(x.No ?? '').trim(),
-          label: `${x.No}-${x.Name}`,
-        }));
+        this.invoiceTypeOptions = list
+          .filter((x: any) => allow.has(String(x.No ?? '').trim()))
+          .map((x: any) => ({
+            value: String(x.No ?? '').trim(),
+            label: `${x.No}-${x.Name}`,
+          }));
 
-      const col = this.detailColumns.find((x) => x.field === 'INV_GUIType');
-      if (col) {
-        col.options = this.invoiceTypeOptions;
-      }
-    },
-    error: (err) => {
-      console.error('queryFIN13060_TDS1007DropDownList error:', err);
-      this.invoiceTypeOptions = [];
-    },
-  });
-}
-/** 載入買受人統一編號下拉清單 */
-loadBuyerUniformOptions(): void {
-  this.dropDownListService
-    .queryPOS2013_DropDownList({})
-    .subscribe((res: any) => {
-      const data = res?.Data ?? [];
+        const col = this.detailColumns.find((x) => x.field === 'INV_GUIType');
+        if (col) {
+          col.options = this.invoiceTypeOptions;
+        }
+      },
+      error: (err) => {
+        console.error('queryFIN13060_TDS1007DropDownList error:', err);
+        this.invoiceTypeOptions = [];
+      },
+    });
+  }
+  /** 載入買受人統一編號下拉清單 */
+  loadBuyerUniformOptions(): void {
+    this.dropDownListService
+      .queryPOS2013_DropDownList({})
+      .subscribe((res: any) => {
+        const data = res?.Data ?? [];
 
-      const uniqueDataMap = new Map();
+        const uniqueDataMap = new Map();
 
-      data.forEach((item: any) => {
-        if (item.No) {
-          uniqueDataMap.set(item.No, item);
+        data.forEach((item: any) => {
+          if (item.No) {
+            uniqueDataMap.set(item.No, item);
+          }
+        });
+
+        this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map(
+          (item: any) => ({
+            label: `${item.No} - ${item.Name}`,
+            value: item.No,
+            VEN_No: item.VEN_No,
+            VEN_Name: item.Name,
+          })
+        );
+
+        // 動態更新欄位 options
+        const col = this.detailColumns.find(
+          (x) => x.field === 'TXN_Uniform'
+        );
+
+        if (col) {
+          col.type = 'dropdown';
+          col.options = this.Buyer_Uniform_Options;
+          col.optionLabel = 'label';
+          col.optionValue = 'value';
         }
       });
-
-      this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map(
-        (item: any) => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No,
-          VEN_No: item.VEN_No,
-          VEN_Name: item.Name,
-        })
-      );
-
-      // 動態更新欄位 options
-      const col = this.detailColumns.find(
-        (x) => x.field === 'TXN_Uniform'
-      );
-
-      if (col) {
-        col.type = 'dropdown';
-        col.options = this.Buyer_Uniform_Options;
-        col.optionLabel = 'label';
-        col.optionValue = 'value';
-      }
-    });
-}
+  }
   private loadDetail(vouNo: string): void {
     if (!vouNo) return;
 
@@ -322,6 +322,8 @@ loadBuyerUniformOptions(): void {
       complete: () => {
         this.detailLoading = false;
         this.messageService.unblockUi();
+        this.originalFormValue = this.dataForm.getRawValue();
+        this.originalDetailRows = JSON.parse(JSON.stringify(this.detailRows));
       },
     });
   }
@@ -337,64 +339,115 @@ loadBuyerUniformOptions(): void {
     this.recalcTotal();
   }
 
-onDetailFieldChange(event: FieldChangeEvent): void {
-  const row = event.rowData;
-  const field = event.field;
+  onDetailFieldChange(event: FieldChangeEvent): void {
+    if (this.isRestoring) return;
+    const row = event.rowData;
+    const field = event.field;
 
-if (field === 'InvoiceNo') {
-  const fixed = this.formatInvoiceNo(row.InvoiceNo);
+    if (!row) return;
 
-  if (row.InvoiceNo !== fixed) {
-    row.InvoiceNo = fixed;
-
-    const index = event.index ?? this.detailRows.findIndex((x) => x.RowId === row.RowId);
-
-    if (index >= 0) {
-      this.detailTableEdit?.applyDialogValue(row, index, {
-        InvoiceNo: fixed,
-      });
+    // 確保每列都有唯一 RowId，避免第二列以後套到第一列
+    if (!row.RowId) {
+      row.RowId = this.createRowId();
     }
-  }
-}
 
-  if (field === 'InvoiceDate') {
-    const ym = this.toYYYYMM(row.InvoiceDate);
+    const getTableIndex = (): number => {
+      const tableData = this.detailTableEdit?._tableData ?? [];
 
-    if (ym) {
-      row.INV_YM = ym;
-      row.INV_DeclareYM = this.calcDeclareYM(ym);
+      // 優先用物件參考找
+      const sameRefIndex = tableData.findIndex((x: any) => x === row);
+      if (sameRefIndex >= 0) return sameRefIndex;
+
+      // 再用 RowId 找
+      return tableData.findIndex((x: any) => x.RowId === row.RowId);
+    };
+
+    if (field === 'InvoiceNo') {
+      const fixed = this.formatInvoiceNo(row.InvoiceNo);
+
+      if (row.InvoiceNo !== fixed) {
+        row.InvoiceNo = fixed;
+
+        const index = getTableIndex();
+
+        if (index >= 0) {
+          this.detailTableEdit?.applyDialogValue(row, index, {
+            RowId: row.RowId,
+            InvoiceNo: fixed,
+          });
+        }
+      }
     }
+
+    if (field === 'InvoiceDate') {
+      const ym = this.toYYYYMM(row.InvoiceDate);
+
+      if (ym) {
+        row.INV_YM = ym;
+        row.INV_DeclareYM = this.calcDeclareYM(ym);
+
+        const index = getTableIndex();
+
+        if (index >= 0) {
+          this.detailTableEdit?.applyDialogValue(row, index, {
+            RowId: row.RowId,
+            INV_YM: row.INV_YM,
+            INV_DeclareYM: row.INV_DeclareYM,
+          });
+        }
+      }
+    }
+
+    if (field === 'INV_YM') {
+      row.INV_DeclareYM = this.calcDeclareYM(row.INV_YM);
+
+      const index = getTableIndex();
+
+      if (index >= 0) {
+        this.detailTableEdit?.applyDialogValue(row, index, {
+          RowId: row.RowId,
+          INV_DeclareYM: row.INV_DeclareYM,
+        });
+      }
+    }
+
+    if (field === 'SaleAmt' || field === 'Net' || field === 'Tax' || field === 'TaxType') {
+      this.applyTaxRule(row, field);
+
+      const index = getTableIndex();
+
+      if (index >= 0) {
+        this.detailTableEdit?.applyDialogValue(row, index, {
+          RowId: row.RowId,
+          SaleAmt: row.SaleAmt,
+          Net: row.Net,
+          Tax: row.Tax,
+          TaxType: row.TaxType,
+        });
+      }
+    }
+
+    this.syncDetailDataFromTableEdit();
+    this.recalcTotal();
   }
+  private formatInvoiceNo(value: any): string {
+    if (!value) return '';
 
-  if (field === 'INV_YM') {
-    row.INV_DeclareYM = this.calcDeclareYM(row.INV_YM);
+    let text = String(value).replace(/[^a-zA-Z0-9]/g, '');
+
+    let prefix = text.substring(0, 2).replace(/[^a-zA-Z]/g, '');
+    let numberPart = text.substring(2).replace(/\D/g, '');
+
+    prefix = prefix.toUpperCase().substring(0, 2);
+    numberPart = numberPart.substring(0, 8);
+
+    return prefix + numberPart;
   }
-
-  if (field === 'SaleAmt' || field === 'Net' || field === 'Tax' || field === 'TaxType') {
-    this.applyTaxRule(row, field);
-  }
-
-  this.syncDetailDataFromTableEdit();
-  this.recalcTotal();
-}
-private formatInvoiceNo(value: any): string {
-  if (!value) return '';
-
-  let text = String(value).replace(/[^a-zA-Z0-9]/g, '');
-
-  let prefix = text.substring(0, 2).replace(/[^a-zA-Z]/g, '');
-  let numberPart = text.substring(2).replace(/\D/g, '');
-
-  prefix = prefix.toUpperCase().substring(0, 2);
-  numberPart = numberPart.substring(0, 8);
-
-  return prefix + numberPart;
-}
   onDetailDelete(_: any): void {
     this.syncDetailDataFromTableEdit();
     this.recalcTotal();
   }
-
+  private isRestoring = false;
   private syncDetailDataFromTableEdit(): void {
     if (!this.detailTableEdit) return;
 
@@ -408,37 +461,35 @@ private formatInvoiceNo(value: any): string {
 
   private applyTaxRule(row: any, changedField: string): void {
     const taxType = String(row?.TaxType ?? '');
-    const saleAmt = this.toNumber(row?.SaleAmt);
     const net = this.toNumber(row?.Net);
 
+    // 免稅 / 零稅
     if (taxType === '0' || taxType === '2') {
       row.Tax = 0;
-
-      if (changedField === 'SaleAmt') {
-        row.Net = saleAmt;
-      }
-
-      if (changedField === 'Net') {
-        row.SaleAmt = net;
-      }
-
+      row.SaleAmt = net;
       return;
     }
 
+    // 應稅
     if (taxType === '1') {
-      if (changedField === 'SaleAmt') {
-        const calcNet = Math.round(saleAmt / 1.05);
-        row.Net = calcNet;
-        row.Tax = saleAmt - calcNet;
-      }
 
+      // 未稅金額改變
       if (changedField === 'Net') {
         row.Tax = Math.round(net * 0.05);
         row.SaleAmt = net + row.Tax;
       }
 
+      // 稅額改變
       if (changedField === 'Tax') {
         row.SaleAmt = net + this.toNumber(row.Tax);
+      }
+
+      // 總金額改變 → 重新回算未稅
+      if (changedField === 'SaleAmt') {
+        const saleAmt = this.toNumber(row?.SaleAmt);
+
+        row.Net = Math.round(saleAmt / 1.05);
+        row.Tax = saleAmt - row.Net;
       }
     }
   }
@@ -472,13 +523,13 @@ private formatInvoiceNo(value: any): string {
     }
 
     const invalid = rows.some((x) =>
-  !String(x.INV_GUIType ?? '').trim() ||
-  !/^[A-Z]{2}\d{8}$/.test(String(x.InvoiceNo ?? '').trim()) ||
-  !x.InvoiceDate ||
-  !String(x.INV_YM ?? '').trim() ||
-  !String(x.INV_DeclareYM ?? '').trim() ||
-  !String(x.TaxType ?? '').trim()
-);
+      !String(x.INV_GUIType ?? '').trim() ||
+      !/^[A-Z]{2}\d{8}$/.test(String(x.InvoiceNo ?? '').trim()) ||
+      !x.InvoiceDate ||
+      !String(x.INV_YM ?? '').trim() ||
+      !String(x.INV_DeclareYM ?? '').trim() ||
+      !String(x.TaxType ?? '').trim()
+    );
 
     if (invalid) {
       this.messageService.warnBubble(
@@ -525,21 +576,38 @@ private formatInvoiceNo(value: any): string {
         error: (err) => {
           this.messageService.errorBubble(
             err?.error?.ResponseBase?.ReturnMessage ||
-              err?.error?.ReturnMessage ||
-              err?.error?.Message ||
-              err?.message ||
-              '儲存失敗，請聯絡系統管理員'
+            err?.error?.ReturnMessage ||
+            err?.error?.Message ||
+            err?.message ||
+            '儲存失敗，請聯絡系統管理員'
           );
         },
       });
   }
-
+  private originalFormValue: any = null;
+  private originalDetailRows: any[] = [];
   override onCancel(): void {
-    this.router.navigate(['/account/fin', 'fin13100'], {
-      state: { fromCru: true },
+    this.isRestoring = true;
+
+    if (this.originalFormValue) {
+      this.dataForm.reset(this.originalFormValue, { emitEvent: false });
+    }
+
+    this.detailRows = this.originalDetailRows.length
+      ? JSON.parse(JSON.stringify(this.originalDetailRows))
+      : [];
+
+    this.detailRows = [...this.detailRows];
+
+    this.submitted = false;
+    this.recalcTotal();
+
+    this.dataForm.disable({ emitEvent: false });
+
+    setTimeout(() => {
+      this.isRestoring = false;
     });
   }
-
   private normalizeDetailRow(x: any, vouNo: string, index: number): any {
     return {
       RowId: x.RowId ?? x.id ?? `${Date.now()}_${index}`,
@@ -550,8 +618,8 @@ private formatInvoiceNo(value: any): string {
       InvoiceDate: x.InvoiceDate ?? null,
       INV_YM: this.normalizeYYYYMM(x.INV_YM),
       INV_DeclareYM:
-  this.normalizeYYYYMM(x.INV_DeclareYM) ??
-  this.calcDeclareYM(x.INV_YM),
+        this.normalizeYYYYMM(x.INV_DeclareYM) ??
+        this.calcDeclareYM(x.INV_YM),
       TXN_Uniform: x.TXN_Uniform ?? '',
       SaleAmt: this.toNullableNumber(x.SaleAmt),
       TaxType: x.TaxType ?? '1',
@@ -584,7 +652,11 @@ private formatInvoiceNo(value: any): string {
     if (isNaN(n)) return '';
     return n.toLocaleString('en-US');
   }
-
+  goBack(): void {
+    this.router.navigate(['/account/fin', 'fin13100'], {
+      state: { fromCru: true },
+    });
+  }
   private normalizeYYYYMM(v: any): string | null {
     if (!v) return null;
 
