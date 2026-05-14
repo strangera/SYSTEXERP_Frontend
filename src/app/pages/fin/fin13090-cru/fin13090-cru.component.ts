@@ -249,12 +249,12 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       { field: 'PUR_VenName', header: '廠商名稱', type: 'input', disabled: () => true }, //檢查帶入項目
 
       { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label' }, // 發票用途 (1=營業用 2=共同使用)
-      { field: 'ACP_Type', header: '應付帳款類別', type: 'dropdown', validate: [validateRequired], options: this.ACP_Type_Options, optionValue: 'value', optionLabel: 'label' }, // 應付帳款類別
+      // { field: 'ACP_Type', header: '應付帳款類別', type: 'dropdown', validate: [validateRequired], options: this.ACP_Type_Options, optionValue: 'value', optionLabel: 'label' }, // 應付帳款類別(前端都帶入7)
       { field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber', validate: [validateRequired] }, // 發票總金額（含稅）
 
       { field: 'PUR_TaxType', header: '課稅別', type: 'dropdown', validate: [validateRequired], options: this.PUR_TaxType_Options, optionValue: 'value', optionLabel: 'label' },  // 課稅別 (0=免稅 1=應稅 2=零稅)
-      { field: 'PUR_Net', header: '發票未稅金額', type: 'inputNumber', validate: [validateRequired] },  // 發票未稅金額
-      { field: 'PUR_Tax', header: '發票稅額', type: 'inputNumber', validate: [validateRequired] }, // 發票稅額
+      { field: 'PUR_Net', header: '發票未稅金額', type: 'inputNumber', validate: [validateRequired], disabled: () => true },  // 發票未稅金額(稅額自動計算)
+      { field: 'PUR_Tax', header: '發票稅額', type: 'inputNumber', validate: [validateRequired], disabled: () => true }, // 發票稅額(稅額自動計算)
     ];
   }
 
@@ -341,6 +341,24 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
             row.PUR_RepYYYYMM = targetYYYYMM;
           }
         }
+      }
+      // --- 明細稅額計算 (課稅別 變更)---
+      const amt = Number(row.PUR_Amt) || 0;
+      const taxType = String(row.PUR_TaxType); // 確保是字串比較
+
+      if (taxType === '1') {
+        // 應稅：稅額 = round(總額 / 21), 未稅 = 總額 - 稅額
+        const tax = Math.round(amt / 21);
+        row.PUR_Tax = tax;
+        row.PUR_Net = amt - tax;
+      } else if (taxType === '0' || taxType === '2') {
+        // 免稅 或 零稅：稅額 = 0, 未稅 = 總額
+        row.PUR_Tax = 0;
+        row.PUR_Net = amt;
+      } else {
+        // 預防萬一其他稅別
+        row.PUR_Tax = 0;
+        row.PUR_Net = amt;
       }
     });
 
