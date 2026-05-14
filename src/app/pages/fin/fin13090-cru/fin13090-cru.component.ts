@@ -15,7 +15,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateMaxLength, validateMinLength, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
@@ -223,7 +223,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   private initSupplierColumns() {
     this.detailColumn = [
       { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label' },  // 發票格式 (憑證類別 21~29)
-      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', validate: [validateRequired, validateMinLength(10), validateMaxLength(10)] }, // 發票號碼
+      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', validate: [validateRequired, this.validateGUINo] }, // 發票號碼
       {
         field: 'PUR_GUIDate', header: '發票日期', type: 'date', validate: [validateRequired]
       }, // 發票日期
@@ -279,6 +279,26 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       return {
         isValid: false,
         errorMessage: [`必須為雙數月`]
+      };
+    }
+
+    return { isValid: true, errorMessage: [] };
+  };
+
+  // 驗證發票號碼 (2碼大寫英文 + 8碼數字)
+  validateGUINo = (value: string) => {
+    // 1. 檢查是否為空 (若非必填可直接通過，交由 validateRequired 處理)
+    if (!value) return { isValid: true, errorMessage: [] };
+
+    const valStr = String(value).trim(); // 去除前後空白
+
+    // 2. 正規表示式檢查：2碼大寫英文 + 8碼數字
+    const guiRegex = /^[A-Z]{2}\d{8}$/;
+
+    if (!guiRegex.test(valStr)) {
+      return {
+        isValid: false,
+        errorMessage: [`發票號碼格式錯誤，應為2碼大寫英文+8碼數字 (如: AB12345678)`]
       };
     }
 
