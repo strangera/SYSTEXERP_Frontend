@@ -35,8 +35,8 @@ export class FIN13090Component extends BasicQueryPageComponent<fin13090Item> imp
   queryForm = this.formBuilder.group({
     VouNoStart: [null], // 傳票編號_起
     VouNoEnd: [null], // 傳票編號_迄
-    VouDateStart: [null], // 傳票日期_起
-    VouDateEnd: [null], // 傳票日期_迄
+    VouDateStart: [new Date()], // 傳票日期_起 (預設當日)
+    VouDateEnd: [new Date()], // 傳票日期_迄 (預設當日)
 
     ...createPaginationConfig([{ field: 'VouNo', order: 1 }]),
   });
@@ -70,6 +70,7 @@ export class FIN13090Component extends BasicQueryPageComponent<fin13090Item> imp
   onSubmit(frm: FormGroup): void {
     console.log('補登進項稅額作業_request:', JSON.stringify(frm.value, null, 2));
     this.handleSubmit(frm, () => {
+      this.queryStateService.setQueryState(this.ProgNo, frm.value);
       this.fin13090Service.queryFIN13090(this.queryForm.value).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe((response) => {
         this.lastQueryBody = frm.value;
         this.data = response.Data;

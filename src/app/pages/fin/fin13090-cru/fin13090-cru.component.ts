@@ -86,7 +86,6 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
   ngOnInit(): void {
     this.initializePage('FIN13090', this.dataForm);
-    this.get13090Detail(this.dataForm.get('VouNo')?.value || null);
     this.loadOptions();
   }
 
@@ -180,22 +179,16 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
   loadOptions() {
     const GUIType$ = this.fin13090Service.getGUITypeDropdown({});
-    const PUR_DirectType$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_DirectType' })
-    const PUR_TaxType$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_TaxType' })
-    const VEN_Uniform$ = this.dropdownApiService.queryPos2013({ VEN_Flag: '' })
+    const PUR_DirectType$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_DirectType' });
+    const PUR_TaxType$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_TaxType' });
 
-    forkJoin([GUIType$, VEN_Uniform$, PUR_DirectType$, PUR_TaxType$])
+    // 快速 API 先完成 → 初始化欄位 + 載入明細
+    forkJoin([GUIType$, PUR_DirectType$, PUR_TaxType$])
       .pipe(untilDestroyed(this))
-      .subscribe(([guiType, venUniform, directType, taxType]) => {
-        this.GUIType_Options = (guiType.Data ?? []).map((item: any) => ({ //發票格式
+      .subscribe(([guiType, directType, taxType]) => {
+        this.GUIType_Options = (guiType.Data ?? []).map((item: any) => ({ // 發票格式
           value: item.INV_GUIType,
           label: `${item.INV_GUIType} - ${item.INV_GUIName}`,
-        }));
-        this.VEN_Uniform_Option = (venUniform ?? []).map((item: any) => ({ // 廠商統一編號 (有-)
-          No: item.No,
-          VEN_No: item.VEN_No,
-          Name: item.Name,
-          Label: `${item.VEN_No} - ${item.Name}`,
         }));
         this.PUR_DirectType_Options = (directType ?? []).map((item: any) => ({ // 發票用途
           value: item.No,
@@ -214,8 +207,26 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
           { value: "6", label: "6-發票媒申" },
           { value: "7", label: "7-總帳管理" },
           { value: "9", label: "9-固定資產" },
-        ]
+        ];
         this.initSupplierColumns();
+        // 欄位定義好後立刻載入明細，不等 POS2013
+        this.get13090Detail(this.dataForm.get('VouNo')?.value || null);
+      });
+
+    // POS2013 速度較慢，獨立載入；完成後更新廠商下拉選單
+    this.dropdownApiService.queryPos2013({ VEN_Flag: '1' })
+      .pipe(untilDestroyed(this))
+      .subscribe(venUniform => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.VEN_Uniform_Option = (venUniform ?? []).map((item: any) => ({ // 廠商統一編號
+          No: item.No,
+          VEN_No: item.VEN_No,
+          Name: item.Name,
+          Label: `${item.VEN_No} - ${item.Name}`,
+        }));
+        // 更新已初始化欄位的 options reference
+        const venCol = this.detailColumn.find(c => c.field === 'PUR_VenNo');
+        if (venCol) venCol.options = this.VEN_Uniform_Option;
       });
   }
 
@@ -223,7 +234,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   private initSupplierColumns() {
     this.detailColumn = [
       { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label' },  // 發票格式 (憑證類別 21~29)
-      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', validate: [validateRequired, this.validateGUINo] }, // 發票號碼
+      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', maxLength: 10, validate: [validateRequired, this.validateGUINo] }, // 發票號碼
       {
         field: 'PUR_GUIDate', header: '發票日期', type: 'date', validate: [validateRequired]
       }, // 發票日期

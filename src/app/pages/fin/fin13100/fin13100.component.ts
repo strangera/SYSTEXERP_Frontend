@@ -42,8 +42,8 @@ export class FIN13100Component extends BasicQueryPageComponent<FIN13100Row> impl
   queryForm = this.formBuilder.group({
     VouNoStart: [null as string | null],
     VouNoEnd: [null as string | null],
-    VouDateStart: [null as Date | null],
-    VouDateEnd: [null as Date | null],
+    VouDateStart: [new Date() as Date | null],
+    VouDateEnd: [new Date() as Date | null],
     ...createPaginationConfig([{ field: 'VouNo', order: 1 }]),
   });
 
