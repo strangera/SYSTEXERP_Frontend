@@ -161,6 +161,8 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', visible: true, groupField: '月累計', format: (value) => formatPercentage(value, 2), align: 'right' },
+
+    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
@@ -374,6 +376,8 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
 
           AchievementRate: this.footerTotal.AvgAchievementRate,
           CompletionRate: this.footerTotal.AvgCompletionRate,
+
+          PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
         } : null;
 
         this.historyRequestBody = formValue;                 // 查詢條件
