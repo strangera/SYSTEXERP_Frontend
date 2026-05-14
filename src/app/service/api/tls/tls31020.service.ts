@@ -66,6 +66,7 @@ export interface TLS31020Item {
   MonthlyBudgetTotal: number;
   MonthlySalesTotal: number;
   CompletionRate: number;
+  PreOrderAmt: number;
 }
 
 export interface TLS31020DetailItem {
@@ -105,6 +106,7 @@ export interface TLS31020Total {
   TotalMonthlyBudget: number;
   TotalMonthlySales: number;
   AvgCompletionRate: number;
+  TotalPreOrderAmt: number;
 }
 
 export interface footerShowTotal {
@@ -125,6 +127,8 @@ export interface footerShowTotal {
   MonthlyBudgetTotal?: number;   //TotalMonthlyBudget 月累計營業目標總計
   MonthlySalesTotal?: number;    //TotalMonthlySales 月累計營業實績總計
   CompletionRate?: number;       //AvgCompletionRate 平均完成率
+
+  PreOrderAmt?: number; // 預售實績
 }
 
 export interface TLS31020Response {

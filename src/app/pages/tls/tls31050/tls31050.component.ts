@@ -4,8 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
-import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
-import { TLS31050Item, TLS31050PrintRequest, TLS31050Request, TLS31050Response, Tls31050Service } from '@service/api/tls/tls31050.service';
+import { footer31050Total, TLS31050Item, TLS31050PrintRequest, TLS31050Request, TLS31050Response, Tls31050Service, TLS31050Total } from '@service/api/tls/tls31050.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -135,9 +134,9 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
 
   totalRecords = 0;
   data: TLS31050Item[] = [];
-  footerTotal: TLS31020Total | null = null; // 總計取得原始資料
-  footershowTotal: footerShowTotal | null = null; // 總計資料轉換名稱
-  footershowPercent: footerShowTotal | null = null; // 總計資料轉換百分比
+  footerTotal: TLS31050Total | null = null; // 總計取得原始資料
+  footershowTotal: footer31050Total | null = null; // 總計資料轉換名稱
+  footershowPercent: footer31050Total | null = null; // 總計資料轉換百分比
   historyRequestBody: TLS31050Request | null = null; //歷史查詢條件
   columns: ReportColumn[] = [
     { field: 'tlt_term_type', header: '抽成別代碼', visible: false, align: 'left' },
@@ -160,6 +159,8 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
     { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', visible: true, groupField: '月累計', format: (value) => formatPercentage(value, 2), align: 'right' },
+
+    { field: 'PreOrderSaleAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
@@ -371,6 +372,8 @@ export class TLS31050Component extends BasicQueryPageComponent<TLS31050Response>
           MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
           MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
           CompletionRate: this.footerTotal.AvgCompletionRate,
+
+          PreOrderSaleAmt: this.footerTotal.TotalPreOrderSaleAmt
         } : null;
 
         this.historyRequestBody = formValue;                 // 查詢條件
