@@ -2,7 +2,6 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
-
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -10,33 +9,32 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="傳票編號"
-              [startControl]="queryForm.controls.VouNoStart"
-              [endControl]="queryForm.controls.VouNoEnd"
-              [submitted]="submitted">
-            </app-input-text-range>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="傳票日期"
-              [startControl]="queryForm.controls.VouDateStart"
-              [endControl]="queryForm.controls.VouDateEnd"
-              [submitted]="submitted">
-            </app-calendar-range>
-          </div>
+          <app-input-text-range
+            class="col-12 md:col-6 lg:col-4"
+            label="傳票編號"
+            [startControl]="queryForm.controls.VouNoStart"
+            [endControl]="queryForm.controls.VouNoEnd"
+            [submitted]="submitted"
+          />
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            calendarType="dateRange"
+            label="傳票日期"
+            [startControl]="queryForm.controls.VouDateStart"
+            [endControl]="queryForm.controls.VouDateEnd"
+            [submitted]="submitted"
+          ></app-calendar-range>
         </div>
 
-
-
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" [form]="queryForm" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" [loading]="loading" (onClick)="onSubmit(queryForm)"></app-button>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -44,24 +42,20 @@
 </div>
 
 <div class="card">
-  <app-table-report
-    tableKey="FIN13100"
-    [data]="data"
-    [columns]="columns"
-    [totalRecords]="totalRecords"
-    [loading]="loading"
-    [lazy]="true"
-    [dataKey]="'VouNo'"
-    [showManage]="true"
-    [showEdit]="true"
-    [showDetail]="true"
-    [showDelete]="false"
-    [showCheckBox]="false"
-    [apiUrl]="'queryFIN13100'"
-    [lastQueryBody]="lastQueryBody"
-    [queryFunction]="queryFIN13100Fn"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    (dataChange)="data = $event">
-  </app-table-report>
+  <div class="col-12">
+    <app-table
+      tableKey="FIN13100"
+      [data]="data"
+      [columns]="columns"
+      [showCheckBox]="false"
+      [loading]="loading"
+      [showDelete]="false"
+      [multiSortMeta]="[{ field: 'VouNo', order: 1 }]"
+      [totalRecords]="totalRecords"
+      [lazy]="true"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
+    ></app-table>
+  </div>
 </div>

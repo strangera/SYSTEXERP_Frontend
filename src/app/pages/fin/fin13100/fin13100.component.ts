@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
@@ -11,7 +11,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 
 interface FIN13100Row {
@@ -31,12 +31,11 @@ interface FIN13100Row {
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
-    FormsModule,
     ReactiveFormsModule,
     TranslateModule,
     InputTextRangeComponent,
     CalendarRangeComponent,
-    TableReportComponent,
+    TableComponent,
   ],
 })
 export class FIN13100Component extends BasicQueryPageComponent<FIN13100Row> implements OnInit {
@@ -50,11 +49,8 @@ export class FIN13100Component extends BasicQueryPageComponent<FIN13100Row> impl
 
   data: FIN13100Row[] = [];
   totalRecords = 0;
-  lastQueryBody: Record<string, unknown> | null = null;
 
-  queryFIN13100Fn = (body: Record<string, unknown>) => this.fin13100Service.queryFIN13100(body);
-
-  columns: Column<FIN13100Row>[] = [
+  columns: Column[] = [
     { field: 'VouNo', header: '傳票編號', visible: true },
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
     { field: 'PostFlagName', header: '傳票狀態', visible: true },
@@ -73,7 +69,6 @@ export class FIN13100Component extends BasicQueryPageComponent<FIN13100Row> impl
       const payload = { ...frm.value };
       payload.VouDateStart = this.toDateString(payload.VouDateStart);
       payload.VouDateEnd = this.toDateString(payload.VouDateEnd);
-      this.lastQueryBody = { ...payload };
 
       this.fin13100Service
         .queryFIN13100(payload)
@@ -84,19 +79,6 @@ export class FIN13100Component extends BasicQueryPageComponent<FIN13100Row> impl
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
         });
     });
-  }
-
-  onClearForm(): void {
-    this.queryForm.reset({
-      VouNoStart: null,
-      VouNoEnd: null,
-      VouDateStart: null,
-      VouDateEnd: null,
-      pageIndex: 1,
-      pageSize: 30,
-      SortBy: [{ field: 'VouNo', order: 1 }],
-    });
-    this.submitted = false;
   }
 
   private toDateString(v: Date | string | null | undefined): string | null {
