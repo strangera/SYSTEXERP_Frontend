@@ -31,13 +31,6 @@ export class FIN13100Service {
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/getFIN13100GUITypeDropdown`, {})
       .pipe(tap((res) => console.log('FIN13100 發票格式下拉:', res)));
   }
-  /** 發票格式下拉：參考 FIN13060，來源 TDS1007 */
-queryFIN13060_TDS1007DropDownList(): Observable<any> {
-  return this.http
-    .post<any>(`${this.apiUrl}/queryFIN13060_TDS1007DropDownList`, {})
-    .pipe(tap((res) => console.log('FIN13100 發票格式下拉:', res)));
-}
-
   /** CRU頁：存檔，payload 要送 Details */
   saveFIN13100(data: {
     VouNo: string;

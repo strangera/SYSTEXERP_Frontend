@@ -4,7 +4,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 
 import { FIN13100Service } from '../../../service/api/fin/fin13100.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -57,9 +57,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
   detailRows: any[] = [];
   detailLoading = false;
   assetTypeOptions = getSYS1000Options('AssetType');
-  invoiceTypeOptions = [
-
-  ];
+  invoiceTypeOptions: { value: string; label: string }[] = [];
   Buyer_Uniform_Options: any[] = [];
   taxTypeOptions = [
     { label: '免稅', value: '0' },
@@ -68,9 +66,6 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
   ];
 
   // assetTypeOptions = [
-  //   { label: '', value: '' },
-  //   { label: '資產', value: 'Y' },
-  //   { label: '非資產', value: 'N' },
   // ];
 
   defaultDetailRow: any = {
@@ -94,7 +89,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
       field: 'INV_GUIType',
       header: '發票格式',
       type: 'dropdown',
-      width: '150px',
+      width: '220px',
       options: this.invoiceTypeOptions,
       optionLabel: 'label',
       optionValue: 'value',
@@ -214,8 +209,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
   }
   ngOnInit(): void {
     this.initializePage('FIN13100', this.dataForm);
-    this.loadInvoiceTypeOptions();
-    this.loadBuyerUniformOptions();
+
     const row: any = (this as any).rowdata;
     if (row) {
       this.dataForm.patchValue(
@@ -227,72 +221,51 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
         },
         { emitEvent: false }
       );
-
-      this.loadDetail(String(row.VouNo ?? '').trim());
     }
 
     this.dataForm.disable();
-  }
-  private loadInvoiceTypeOptions(): void {
-    this.fin13100Service.queryFIN13060_TDS1007DropDownList().subscribe({
-      next: (res: any) => {
-        const allow = new Set(['31', '32', '35']);
-        const list = Array.isArray(res?.Data) ? res.Data : [];
 
-        this.invoiceTypeOptions = list
-          .filter((x: any) => allow.has(String(x.No ?? '').trim()))
-          .map((x: any) => ({
-            value: String(x.No ?? '').trim(),
-            label: `${x.No}-${x.Name}`,
-          }));
+    // 等兩個下拉選項都載完，再載明細，避免 dropdown 顯示 value 而非 label
+    forkJoin({
+      guiType: this.fin13100Service.getFIN13100GUITypeDropdown(),
+      uniform: this.dropDownListService.queryPOS2013_DropDownList({}),
+    }).subscribe({
+      next: ({ guiType, uniform }) => {
+        // 發票格式
+        const guiList = Array.isArray(guiType?.Data) ? guiType.Data : [];
+        this.invoiceTypeOptions = guiList.map((x: any) => ({
+          value: String(x.INV_GUIType ?? '').trim(),
+          label: `${x.INV_GUIType}-${x.INV_GUIName}`,
+        }));
+        const guiCol = this.detailColumns.find((x) => x.field === 'INV_GUIType');
+        if (guiCol) guiCol.options = this.invoiceTypeOptions;
 
-        const col = this.detailColumns.find((x) => x.field === 'INV_GUIType');
-        if (col) {
-          col.options = this.invoiceTypeOptions;
+        // 買受人統一編號
+        const uniformData: any[] = (uniform as any)?.Data ?? uniform ?? [];
+        const uniqueMap = new Map<string, any>();
+        uniformData.forEach((item: any) => {
+          if (item.No) uniqueMap.set(item.No, item);
+        });
+        this.Buyer_Uniform_Options = Array.from(uniqueMap.values()).map((item: any) => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+          VEN_No: item.VEN_No,
+          VEN_Name: item.Name,
+        }));
+        const uniformCol = this.detailColumns.find((x) => x.field === 'TXN_Uniform');
+        if (uniformCol) {
+          uniformCol.options = this.Buyer_Uniform_Options;
+          uniformCol.optionLabel = 'label';
+          uniformCol.optionValue = 'value';
         }
       },
-      error: (err) => {
-        console.error('queryFIN13060_TDS1007DropDownList error:', err);
-        this.invoiceTypeOptions = [];
+      complete: () => {
+        // options 都好了，再載明細
+        if (row) {
+          this.loadDetail(String(row.VouNo ?? '').trim());
+        }
       },
     });
-  }
-  /** 載入買受人統一編號下拉清單 */
-  loadBuyerUniformOptions(): void {
-    this.dropDownListService
-      .queryPOS2013_DropDownList({})
-      .subscribe((res: any) => {
-        const data = res?.Data ?? [];
-
-        const uniqueDataMap = new Map();
-
-        data.forEach((item: any) => {
-          if (item.No) {
-            uniqueDataMap.set(item.No, item);
-          }
-        });
-
-        this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map(
-          (item: any) => ({
-            label: `${item.No} - ${item.Name}`,
-            value: item.No,
-            VEN_No: item.VEN_No,
-            VEN_Name: item.Name,
-          })
-        );
-
-        // 動態更新欄位 options
-        const col = this.detailColumns.find(
-          (x) => x.field === 'TXN_Uniform'
-        );
-
-        if (col) {
-          col.type = 'dropdown';
-          col.options = this.Buyer_Uniform_Options;
-          col.optionLabel = 'label';
-          col.optionValue = 'value';
-        }
-      });
   }
   private loadDetail(vouNo: string): void {
     if (!vouNo) return;
@@ -571,7 +544,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
       .subscribe({
         next: () => {
           this.messageService.successBubble('儲存成功');
-          this.onCancel();
+          this.goBack();
         },
         error: (err) => {
           this.messageService.errorBubble(
@@ -615,7 +588,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
       VouNo: x.VouNo ?? vouNo,
       INV_GUIType: x.INV_GUIType ?? '',
       InvoiceNo: x.InvoiceNo ?? '',
-      InvoiceDate: x.InvoiceDate ?? null,
+      InvoiceDate: x.InvoiceDate ? new Date(x.InvoiceDate) : null,
       INV_YM: this.normalizeYYYYMM(x.INV_YM),
       INV_DeclareYM:
         this.normalizeYYYYMM(x.INV_DeclareYM) ??

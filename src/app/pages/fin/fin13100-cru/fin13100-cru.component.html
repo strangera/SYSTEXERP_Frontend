@@ -12,11 +12,11 @@
             label="傳票編號"
             controlName="VouNo"
             [control]="dataForm.controls.VouNo"
-            [submitted]="submitted">
-          </app-input-text>
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
-        <div class="col-12 md:col-6 lg:col-4">
+        <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             label="傳票日期"
             controlName="VouDate"
@@ -32,19 +32,17 @@
             [control]="dataForm.controls.PostFlag"
             [submitted]="submitted">
           </app-input-text>
-        </div>
+        </div> -->
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="銷項稅額-貸方"
             controlName="TotalTaxAmt"
             [control]="dataForm.controls.TotalTaxAmt"
-            [submitted]="submitted">
-          </app-input-number>
+            [submitted]="submitted"
+          ></app-input-number>
         </div>
       </div>
-
-
 
       <app-fin32020table-edit
         title="列表明細"
@@ -66,22 +64,20 @@
         [scrollable]="false"
         (dataChange)="onDetailRowsChange($event)"
         (fieldChange)="onDetailFieldChange($event)"
-        (delete)="onDetailDelete($event)">
-      </app-fin32020table-edit>
+        (delete)="onDetailDelete($event)"
+      ></app-fin32020table-edit>
 
       <div
         class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
-        *ngIf="!isRead">
+        *ngIf="!isRead"
+      >
         <app-button
           btnType="cancel"
           [type]="'button'"
-          (click)="onCancel()">
-        </app-button>
+          (click)="onCancel()"
+        ></app-button>
 
-        <app-button
-          btnType="submit"
-          [loading]="loading">
-        </app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
   </p-panel>
