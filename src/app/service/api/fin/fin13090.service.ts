@@ -26,8 +26,8 @@ export interface fin13090Detail {
   PUR_Amt: number, // 發票總金額（含稅）
 
   PUR_TaxType: string, // 課稅別 (0=免稅 1=應稅 2=零稅)
-  PUR_Net: string, // 發票未稅金額
-  PUR_Tax: string  // 發票稅額
+  PUR_Net: number, // 發票未稅金額
+  PUR_Tax: number  // 發票稅額
 }
 
 export interface fin13090response {
