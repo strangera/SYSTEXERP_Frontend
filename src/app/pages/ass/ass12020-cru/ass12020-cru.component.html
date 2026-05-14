@@ -15,12 +15,15 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-dropdown
             label="供應商編號"
             controlName="SUPPLIER_ID"
+            [options]="supplierOptions"
+            optionLabel="label"
+            optionValue="value"
             [control]="dataForm.controls.SUPPLIER_ID"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
@@ -47,6 +50,7 @@
         [columns]="editColumns"
         [data]="data"
         (dataChange)="data = $event"
+        (fieldChange)="onDetailFieldChange($event)"
         (insert)="onTableInsert()"
         [tableRequired]="true"
         [disabled]="isFormReadable"
