@@ -67,10 +67,9 @@ export class ASS13040AssetDialogComponent implements OnInit {
       header: '單位',
       visible: true,
       format: (_value, _index, row) => {
-        const unit = row?.Unit ?? '';
         const unitName = row?.UnitName ?? '';
-        if (unit && unitName) return `${unit} - ${unitName}`;
-        return unit || unitName;
+        if (unitName) return `${unitName}`;
+        return unitName;
       },
     },
     { field: 'ASSET_STATUSName', header: '狀態', visible: true },
