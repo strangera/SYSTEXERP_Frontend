@@ -11,13 +11,11 @@ import {
 import { ActivatedRoute } from '@angular/router';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
 import { forkJoin } from 'rxjs';
 
 import {
   FIN13050Service,
-  VendorOption,
 } from '../../../service/api/fin/fin13050.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -96,8 +94,8 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     { value: '1', label: '已立帳' },
   ];
 
-  PUR_VenUniformOptions: VendorOption[] = [];
-  VendorNoOptions: DropdownOption[] = [];
+  vendorOptions: DropdownOption[] = [];
+  private pos2013Map = new Map<string, { venName: string; venUniform: string }>();
 
   private readonly labelOf: Record<string, string> = {
     ACP_Type: '應付帳款類型',
@@ -174,9 +172,9 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_GUIDate: [null as Date | null, [Validators.required]],
     PUR_RepYYYYMM: [null as Date | null, [Validators.required, this.repYYYYMMEvenValidator]],
 
-    PUR_VenNo: ['', [Validators.required, this.validationService.noChineseValidator]], //僅輸入數字或連號
+    PUR_VenNo: ['', [Validators.required]],
     PUR_VenName: [{ value: '', disabled: true }],
-    PUR_VenUniform: ['', [Validators.required, digitsOnly, Validators.minLength(8), Validators.maxLength(8)]],
+    PUR_VenUniform: ['', [digitsOnly, Validators.minLength(8), Validators.maxLength(8)]],
 
     PUR_Amt: [null as number | null, [Validators.required, Validators.min(0.01)]],
     PUR_Net: [null as number | null, [Validators.required, Validators.min(0.01)]],
@@ -196,7 +194,6 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
     private readonly fin13050Service: FIN13050Service,
     private readonly route: ActivatedRoute,
-    private readonly validationService: ValidationService,
   ) {
     super();
   }
@@ -319,7 +316,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     };
 
     this.dataForm.patchValue(patch, { emitEvent: false });
-    this.syncVendorFromDropdown();
+    this.syncVendorName();
   }
 
   private loadAllDropdowns(): void {
@@ -355,26 +352,27 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private loadVendorOptions(): void {
-    forkJoin({
-      uniform: this.fin13050Service.queryVendorUniformOptions(''),
-      vendor: this.fin13050Service.queryVendorNoOptions(''),
-    })
+    this.fin13050Service.queryPOS2013VendorList()
       .pipe(untilDestroyed(this))
       .subscribe({
-        next: ({ uniform, vendor }) => {
-          this.PUR_VenUniformOptions = uniform ?? [];
-          this.VendorNoOptions = (vendor ?? []).map((x: any) => {
-            const venNo = String(x.value ?? x.VEN_No ?? '').trim();
-            const venName = String(x.venName ?? x.VEN_Name ?? '').trim();
-            const venUniform = String(x.venUniform ?? x.VEN_Uniform ?? '').trim();
-            return {
+        next: (res) => {
+          const list: { VEN_No?: string; Name?: string; No?: string }[] =
+            Array.isArray(res?.Data) ? res.Data : [];
+          this.pos2013Map.clear();
+          this.vendorOptions = [];
+          for (const v of list) {
+            const venNo = String(v.VEN_No ?? '').trim();
+            const venName = String(v.Name ?? '').trim();
+            const venUniform = String(v.No ?? '').trim();
+            if (!venNo) continue;
+            this.pos2013Map.set(venNo, { venName, venUniform });
+            this.vendorOptions.push({
               value: venNo,
-              label: venNo ? `${venNo} - ${venName}` : venName,
+              label: venName ? `${venNo} - ${venName}` : venNo,
               venName,
-              venUniform,
-            };
-          });
-          this.syncVendorFromDropdown();
+            });
+          }
+          this.syncVendorName();
         },
       });
   }
@@ -383,22 +381,17 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.get('PUR_VenNo')?.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe(() => {
-        this.syncVendorFromDropdown();
+        this.syncVendorName();
       });
   }
 
-  private syncVendorFromDropdown(): void {
-    const venNoCtrl = this.dataForm.get('PUR_VenNo');
-    if (!venNoCtrl) return;
-
-    const venNo = venNoCtrl.value;
-    const picked = this.VendorNoOptions.find((o) => o.value === venNo);
+  private syncVendorName(): void {
+    const venNo = (this.dataForm.get('PUR_VenNo')?.value ?? '').toString().trim();
+    const info = this.pos2013Map.get(venNo);
+    if (!info) return;
 
     this.dataForm.patchValue(
-      {
-        PUR_VenName: picked?.venName ?? this.dataForm.get('PUR_VenName')?.value ?? '',
-        PUR_VenUniform: picked?.venUniform ?? this.dataForm.get('PUR_VenUniform')?.value ?? '',
-      },
+      { PUR_VenName: info.venName, PUR_VenUniform: info.venUniform },
       { emitEvent: false },
     );
   }
