@@ -99,6 +99,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
       header: '發票號碼',
       type: 'input',
       width: '150px',
+      maxLength: 10,
     },
     {
       field: 'InvoiceDate',
@@ -112,6 +113,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
       header: '資料所屬年月',
       type: 'input',
       width: '130px',
+      disabled: () => true,
     },
     {
       field: 'INV_DeclareYM',
@@ -154,6 +156,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
       width: '140px',
       textAlign: 'right',
       format: (v: any) => this.money(v),
+      disabled: () => true,
     },
     {
       field: 'Tax',
@@ -162,6 +165,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
       width: '120px',
       textAlign: 'right',
       format: (v: any) => this.money(v),
+      disabled: () => true,
     },
     {
       field: 'Source_Doc_No',
@@ -228,7 +232,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
     // 等兩個下拉選項都載完，再載明細，避免 dropdown 顯示 value 而非 label
     forkJoin({
       guiType: this.fin13100Service.getFIN13100GUITypeDropdown(),
-      uniform: this.dropDownListService.queryPOS2013_DropDownList({}),
+      uniform: this.dropDownListService.queryPOS2013_DropDownList({ VEN_Flag: '1' }),
     }).subscribe({
       next: ({ guiType, uniform }) => {
         // 發票格式
@@ -385,6 +389,8 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     if (field === 'SaleAmt' || field === 'Net' || field === 'Tax' || field === 'TaxType') {
+      // (onInput) 比 [(ngModel)] 先觸發，先手動同步確保 applyTaxRule 讀到最新值
+      if (event.value !== undefined) row[field] = event.value;
       this.applyTaxRule(row, field);
 
       const index = getTableIndex();
@@ -434,33 +440,18 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
 
   private applyTaxRule(row: any, changedField: string): void {
     const taxType = String(row?.TaxType ?? '');
-    const net = this.toNumber(row?.Net);
+    const saleAmt = this.toNumber(row?.SaleAmt);
 
-    // 免稅 / 零稅
+    // 免稅 / 零稅：Tax = 0，Net = SaleAmt（SaleAmt 不動）
     if (taxType === '0' || taxType === '2') {
       row.Tax = 0;
-      row.SaleAmt = net;
+      row.Net = saleAmt;
       return;
     }
 
-    // 應稅
+    // 應稅：SaleAmt 或 TaxType 切換時從 SaleAmt 重算 Net / Tax
     if (taxType === '1') {
-
-      // 未稅金額改變
-      if (changedField === 'Net') {
-        row.Tax = Math.round(net * 0.05);
-        row.SaleAmt = net + row.Tax;
-      }
-
-      // 稅額改變
-      if (changedField === 'Tax') {
-        row.SaleAmt = net + this.toNumber(row.Tax);
-      }
-
-      // 總金額改變 → 重新回算未稅
-      if (changedField === 'SaleAmt') {
-        const saleAmt = this.toNumber(row?.SaleAmt);
-
+      if (changedField === 'SaleAmt' || changedField === 'TaxType') {
         row.Net = Math.round(saleAmt / 1.05);
         row.Tax = saleAmt - row.Net;
       }
@@ -501,12 +492,13 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
       !x.InvoiceDate ||
       !String(x.INV_YM ?? '').trim() ||
       !String(x.INV_DeclareYM ?? '').trim() ||
-      !String(x.TaxType ?? '').trim()
+      !String(x.TaxType ?? '').trim() ||
+      x.SaleAmt === null || x.SaleAmt === undefined || x.SaleAmt === ''
     );
 
     if (invalid) {
       this.messageService.warnBubble(
-        '請確認必填欄位：發票格式、發票號碼10碼、發票日期、資料所屬年月、申報年月、課稅別'
+        '請確認必填欄位：發票格式、發票號碼10碼、發票日期、資料所屬年月、申報年月、課稅別、發票金額'
       );
       return;
     }
@@ -627,7 +619,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
   }
   goBack(): void {
     this.router.navigate(['/account/fin', 'fin13100'], {
-      state: { fromCru: true },
+      state: { fromRoute: this.router.url },
     });
   }
   private normalizeYYYYMM(v: any): string | null {
