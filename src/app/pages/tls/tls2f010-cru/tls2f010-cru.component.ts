@@ -532,6 +532,10 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
 
   // 查詢並載入
   querySourceInvoice(): void {
+    if (this.dataForm.invalid) {
+      this.dataForm.markAllAsTouched();
+      return;
+    }
     this.queryLoading = true;
     const formValue = this.dataForm.getRawValue();
     const params = {
@@ -553,6 +557,16 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
           // 設定新增明細候選列的預設值（取自後端回傳的第一筆明細）
           const firstDetail = details[0] ?? null;
           const firstMain = mains[0] ?? null;
+          const commYmValue = this.dataForm.controls.sam_yyymm.value;
+          let defaultInvoiceDate: Date | null = null;
+
+          if (commYmValue instanceof Date) {
+            // 計算該年月的最後一天：設定為下個月的第 0 天
+            defaultInvoiceDate = new Date(commYmValue.getFullYear(), commYmValue.getMonth() + 1, 0);
+          } else {
+            // 如果不是 Date 型別（例如是字串），則維持抓取當下月份月底作為 fallback
+            defaultInvoiceDate = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+          }
           if (firstDetail || firstMain) {
             // TAX_TYPE 與 Deduct (Deduct_Code) 要找對應的 option value
             const taxVal = (this.taxTypeOptions ?? []).find((o: any) => String(o.label ?? '').includes('應稅'))?.value ?? '';
@@ -568,7 +582,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
               // 不預設 PUR_GUINO
               PUR_GUINO: '',
               // 預設發票日期為當月最後一天
-              PUR_GUIDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0),
+              PUR_GUIDate: defaultInvoiceDate,
               DEC_YM: this.dataForm.controls.COMM_YM.value || null,
               // 預設單據別：若主表 (firstMain) 有 tlttalent.invoice_type 或 invoice_type，帶入該值
               GUIType: String(firstMain?.tlttalent?.invoice_type ?? firstMain?.invoice_type ?? ''),
