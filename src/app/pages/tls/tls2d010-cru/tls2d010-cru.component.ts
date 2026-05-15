@@ -193,7 +193,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     };
     this.talentLastQueryBody = body;
     this.dropDownListService
-      .queryTLTTALENTDropDownList({ ...body, isNewData: true })
+      .queryTLTTALENTDropDownList({ ...body })
       .pipe(untilDestroyed(this), finalize(() => (this.talentDialogLoading = false)))
       .subscribe((res: any) => {
         const raw = res?.Data ?? [];
@@ -204,7 +204,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   }
   // 提供給 app-table-report 的查詢函式（滾動載入下一頁專櫃資料）
   queryTalentDialog = (body: any) => {
-    // 若 dialog 上方有輸入 tlt_no，轉成 tlt_noList 並加上 isNewData
+    // 若 dialog 上方有輸入 tlt_no，轉成 tlt_noList
     try {
       const val: any = this.talentDialogQueryForm?.get('tlt_no')?.value;
       let tlt_noList: string[] | undefined;
@@ -216,10 +216,10 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
           if (nv) tlt_noList = [nv];
         }
       }
-      const payload = { ...body, isNewData: true, ...(tlt_noList ? { tlt_noList } : {}) };
+      const payload = { ...body, ...(tlt_noList ? { tlt_noList } : {}) };
       return this.dropDownListService.queryTLTTALENTDropDownList(payload);
     } catch (e) {
-      return this.dropDownListService.queryTLTTALENTDropDownList({ ...body, isNewData: true });
+      return this.dropDownListService.queryTLTTALENTDropDownList({ ...body });
     }
   };
 
@@ -231,7 +231,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     const body: any = {
       pageIndex: 1,
       pageSize: 30,
-      isNewData: true,
       ...(tlt_noList ? { tlt_noList } : {}),
     };
     this.talentLastQueryBody = body;
@@ -434,7 +433,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   // ===== 載入選單 =====
   private loadTltAndPodOptions(): void {
     forkJoin({
-      tlt: this.dropDownListService.queryTLTTALENTDropDownList({ isNewData: true }),
+      tlt: this.dropDownListService.queryTLTTALENTDropDownList(),
       pod: this.dropDownListService.queryTALPORDERM_DropDownList(),
       acc: this.dropDownListService.queryGLS1005_DropDownList(),
       org: this.dropDownListService.querySYS3100_DropDownList(),
