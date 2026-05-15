@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
+import { HttpResponse } from '@angular/common/http';
 import { Component, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { Tls13070Cag, Tls13070Level, Tls13070Limit, Tls13070Rent, Tls13070Response } from '@service/api/tls/tls13070.service';
+import { Tls13070Cag, Tls13070Level, Tls13070Limit, Tls13070Rent, Tls13070Response, Tls13070Service } from '@service/api/tls/tls13070.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { BasicPrintDataComponent } from '@shared/componentextends/basic-print/basic-print-data.component';
 import { ButtonModule } from 'primeng/button';
@@ -59,8 +60,11 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
   bLength = 0;
   cLength = 0;
   dLength = 0;
+  btnLoading = false;
+
   constructor(
     public readonly sanitizer: DomSanitizer,
+    public readonly tls13070Service: Tls13070Service,
   ) {
     super();
     this.onScroll = this.onScroll.bind(this);
@@ -231,5 +235,38 @@ export class Tls13070TableComponent extends BasicPrintDataComponent implements O
     });
 
     return flatData;
+  }
+
+  onExportXLSX() {
+    if (!this.lastQueryBody) {
+      return;
+    }
+    this.btnLoading = true;
+    this.tls13070Service.exportTLS13070Excel(this.lastQueryBody).pipe(
+      untilDestroyed(this),
+      finalize(() => this.btnLoading = false)
+    ).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        this.handleFileExport(response, '.xlsx');
+      },
+      error: (err) => {
+        console.error('Excel 匯出失敗:', err);
+      }
+    });
+  }
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const filename = '櫃位合約一覽表' + fileExtension; // 預設檔名
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    }
   }
 }
