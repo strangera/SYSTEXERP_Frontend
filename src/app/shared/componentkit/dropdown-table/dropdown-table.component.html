@@ -29,6 +29,9 @@
 
 <p-overlayPanel #op [style]="{'min-width': '700px', 'max-width': '90vw'}" [appendTo]="'body'">
   <ng-container *ngIf="showOverlay && formGroup">
+    <div class="flex justify-content-end mb-1">
+      <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-sm p-button-secondary" (click)="hideOverlay()"></button>
+    </div>
     <form [formGroup]="formGroup" class="grid p-fluid">
       <ng-content />
       <app-table class="col-12" [dataKey]="optionValue" [data]="dialogData" [selectedItems]="selectedItems"

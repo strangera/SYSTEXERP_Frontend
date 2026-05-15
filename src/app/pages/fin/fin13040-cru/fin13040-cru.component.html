@@ -34,9 +34,20 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="買受人統一編號" controlName="Buyer_Uniform" [control]="dataForm.controls.Buyer_Uniform"
-            [submitted]="submitted">
-          </app-input-text>
+          <app-dropdown-table
+            [control]="dataForm.controls.Buyer_Uniform"
+            [submitted]="submitted"
+            optionLabel="label"
+            optionValue="value"
+            [suggestions]="filteredBuyerOptions"
+            [fieldsConfig]="buyerFieldsConfig"
+            (inputValueChanged)="onBuyerInputChange($event)"
+            [formGroup]="buyerOpForm"
+            [dialogData]="Buyer_Uniform_Options"
+            [dialogColumns]="buyerDialogColumns"
+            [totalRecords]="Buyer_Uniform_Options.length"
+            [lazy]="false">
+          </app-dropdown-table>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
