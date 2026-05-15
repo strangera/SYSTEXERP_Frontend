@@ -74,7 +74,7 @@
 <app-dialog [visible]="dialogVisible" header="選擇採購單" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0" [height]="'500px'">
   <app-table-report dataKey="PO_No" [showReportMode]="false" [data]="dialogData" [columns]="dialogColumns"
-    [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
+    [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false" [showSort]="false"
     (selectionChange)="selectedItemsDialog = $event" [showManage]="false" [showCheckBox]="true"
     [isRowSelectable]="isRowSelectable.bind(this)" [totalRecords]="totalRecords" [loading]="dialogLoading"
     [lastQueryBody]="dialogLastQueryParams" [queryFunction]="tls52030Service.getPOS2016.bind(tls52030Service)" ]>
