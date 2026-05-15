@@ -10,15 +10,14 @@ import { finalize, map, take } from 'rxjs/operators';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 
-import { FIN73020Service } from '../../../service/api/fin/fin73020.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { FIN73020Service } from '../../../service/api/fin/fin73020.service';
 
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '../../../shared/componentkit/table-report/table-report.model';
 import {
@@ -53,7 +52,7 @@ interface SortItem {
     MenubarComponent,
     ButtonComponent,
     DropdownComponent,
-    InputTextComponent,
+    // InputTextComponent,
     CalendarRangeComponent,
     TableReportComponent,
   ],
@@ -90,7 +89,7 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
   applicantOptions: FIN73020Option[] = [];
   custodianOptions: FIN73020Option[] = [];
   custodianDeptOptions: FIN73020Option[] = [];
-
+  rqstNoOptions: FIN73020Option[] = [];
   statusOptions: FIN73020Option[] = [
     { label: '請選擇', value: '' },
     { label: '建立', value: '1' },
@@ -111,31 +110,24 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
 
   columns: ReportColumn[] = [
     { field: 'SeqNo', header: '序號' },
-    { field: 'PCS_No', header: '零用金單號' },
-    { field: 'PCS_Date', header: '零用金申請日期', format: v => this.formatDate(v) },
-    { field: 'PCS_UsrNo', header: '申請人代碼' },
-    { field: 'PCS_UsrName', header: '申請人姓名' },
-    { field: 'PCS_OrgID', header: '申請人組織代碼' },
-    { field: 'PCS_OrgName', header: '申請人組織名稱' },
-    { field: 'Keep_UsrNo', header: '保管人代碼' },
-    { field: 'Keep_UsrName', header: '保管人姓名' },
-    { field: 'Keep_OrgID', header: '保管人組織代碼' },
-    { field: 'Keep_OrgName', header: '保管人組織名稱' },
-    { field: 'PCS_StatusName', header: '單據狀態' },
     { field: 'PCS_RqstNo', header: '支出請款單號' },
-    { field: 'PCS_SeqNo', header: '項次' },
-    { field: 'AccNo', header: '費用科目編號' },
-    { field: 'AccName', header: '費用科目名稱' },
+    { field: 'PCS_RqstDate', header: '產生日期', format: v => this.formatDate(v) },
+    { field: 'PCS_StatusName', header: '狀態' },
+    { field: 'PCS_No', header: '零用金單號' },
+    { field: 'PCS_Date', header: '申請日期', format: v => this.formatDate(v) },
+    { field: 'PCS_UsrNo', header: '申請人' },
+    { field: 'PCS_OrgID', header: '申請人組織' },
+    { field: 'Keep_UsrNo', header: '零用金保管人' },
+    { field: 'EXP_ACC', header: '費用會計科目' },
+    { field: 'ORG_ID', header: '科目組織代號' },
     { field: 'NOTeDesc', header: '項目摘要' },
     { field: 'PCS_DtlTypeName', header: '明細類別' },
-    { field: 'PCS_GUINo', header: '發票/收據號碼' },
-    { field: 'ORG_ID', header: '費用科目組織代碼' },
-    { field: 'Dtl_OrgName', header: '費用科目組織名稱' },
-    { field: 'PUR_Date', header: '憑證日期', format: v => this.formatDate(v) },
+    { field: 'PCS_GUINo', header: '發票收據號碼' },
+    { field: 'PUR_Date', header: '日期', format: v => this.formatDate(v) },
     { field: 'PCS_Net', header: '未稅金額', align: 'right', format: v => this.money(v) },
     { field: 'PCS_Tax', header: '稅額', align: 'right', format: v => this.money(v) },
-    { field: 'PCS_Amt', header: '含稅金額', align: 'right', format: v => this.money(v) },
-    { field: 'RowTypeDesc', header: '列別說明' },
+    { field: 'PCS_Amt', header: '總額', align: 'right', format: v => this.money(v) },
+    { field: 'Voucher_No', header: '傳票號碼' },
   ];
 
   constructor(
@@ -161,32 +153,55 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     this.loadDropdownOptions();
   }
 
-  private loadDropdownOptions(): void {
-    this.dropDownListService
-      .queryTBLUSER_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        const list = res.Data ?? [];
+ private loadDropdownOptions(): void {
 
-        const opts = list.map((x: any) => ({
+  // 零用金申請人 + 保管人
+  this.dropDownListService
+    .queryTBLUSER_DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe(res => {
+      const list = res.Data ?? [];
+
+      const opts = [
+        { label: '請選擇', value: '' },
+        ...list.map((x: any) => ({
           value: x.No ?? '',
           label: `${x.No ?? ''} - ${x.Name ?? ''}`,
-        }));
+        })),
+      ];
 
-        this.applicantOptions = opts;
-        this.custodianOptions = opts;
-      });
+      this.applicantOptions = opts;
+      this.custodianOptions = opts;
+    });
 
-    this.dropDownListService
-      .querySYS3100_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        this.custodianDeptOptions = (res.Data ?? []).map((x: any) => ({
+  // 支出請款單號
+  this.service
+    .queryPOS2064MPCS_RqstNoDropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe(res => {
+      this.rqstNoOptions = [
+        { label: '請選擇', value: '' },
+        ...(res.Data ?? []).map((x: any) => ({
+          value: x.PCS_RqstNo ?? '',
+          label: `${x.PCS_RqstNo ?? ''}`,
+        })),
+      ];
+    });
+
+  // 保管單位
+  this.dropDownListService
+    .querySYS3100_DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe(res => {
+      this.custodianDeptOptions = [
+        { label: '請選擇', value: '' },
+        ...(res.Data ?? []).map((x: any) => ({
           value: x.No ?? '',
           label: `${x.No ?? ''} - ${x.Name ?? ''}`,
-        }));
-      });
-  }
+        })),
+      ];
+    });
+}
 
   formatDate(val: any): string {
     if (!val) return '';
@@ -291,26 +306,26 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     } as any);
   }
 
- public queryFIN73020ForReport = (body: any) =>
-  this.service.queryFIN73020(this.buildPayload(body || {})).pipe(
-    map((res: any) => {
-      const src = res?.Data as any;
-      const apiRows: FIN73020Data[] = Array.isArray(src) ? src : src ? [src] : [];
-      const rows = this.normalizeDisplayRows(apiRows);
+  public queryFIN73020ForReport = (body: any) =>
+    this.service.queryFIN73020(this.buildPayload(body || {})).pipe(
+      map((res: any) => {
+        const src = res?.Data as any;
+        const apiRows: FIN73020Data[] = Array.isArray(src) ? src : src ? [src] : [];
+        const rows = this.normalizeDisplayRows(apiRows);
 
-      this.initRows(rows);
+        this.initRows(rows);
 
-      const totalCount = rows.length === 0
-        ? 0
-        : Number(res?.TotalCount ?? rows.length) || rows.length;
+        const totalCount = rows.length === 0
+          ? 0
+          : Number(res?.TotalCount ?? rows.length) || rows.length;
 
-      return {
-        Data: rows,
-        TotalCount: totalCount,
-        GrandTotal: null,
-      };
-    })
-  );
+        return {
+          Data: rows,
+          TotalCount: totalCount,
+          GrandTotal: null,
+        };
+      })
+    );
 
   onSubmit(frm: FormGroup): void {
     this.submitted = true;
@@ -343,25 +358,25 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
       .queryFIN73020(payload)
       .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
       .subscribe({
-       next: (res: any) => {
-  const apiRows: FIN73020Data[] = Array.isArray(res?.Data) ? res.Data : [];
-  const rows = this.normalizeDisplayRows(apiRows);
+        next: (res: any) => {
+          const apiRows: FIN73020Data[] = Array.isArray(res?.Data) ? res.Data : [];
+          const rows = this.normalizeDisplayRows(apiRows);
 
-  this.initRows(rows);
+          this.initRows(rows);
 
-  const realTotal = rows.length === 0
-    ? 0
-    : Number(res?.TotalCount ?? rows.length) || rows.length;
+          const realTotal = rows.length === 0
+            ? 0
+            : Number(res?.TotalCount ?? rows.length) || rows.length;
 
-  this.lastQueryBody = { ...payload };
-  this._currentSortBy = payload.SortBy ?? this.defaultSort;
-  this.totalRecords = realTotal;
-  this.viewTotalRecords = realTotal;
-  this.data = rows;
+          this.lastQueryBody = { ...payload };
+          this._currentSortBy = payload.SortBy ?? this.defaultSort;
+          this.totalRecords = realTotal;
+          this.viewTotalRecords = realTotal;
+          this.data = rows;
 
-  this.cdr.detectChanges();
-  this.saveQueryState();
-},
+          this.cdr.detectChanges();
+          this.saveQueryState();
+        },
         error: err => {
           console.error('FIN73020 API error:', err);
           this.data = [];
@@ -487,21 +502,21 @@ export class FIN73020Component extends BasicQueryPageComponent<FIN73020Data> imp
     return `FIN73020${defaultExt}`;
   }
   private isOnlyGrandTotalRow(rows: FIN73020Data[]): boolean {
-  if (rows.length !== 1) return false;
+    if (rows.length !== 1) return false;
 
-  const row: any = rows[0];
+    const row: any = rows[0];
 
-  return String(row?.NOTeDesc ?? '').trim() === '總計'
-    && Object.keys(row).every(key =>
-      key === 'NOTeDesc' ||
-      key === 'dataKey' ||
-      row[key] === null ||
-      row[key] === undefined ||
-      row[key] === ''
-    );
-}
+    return String(row?.NOTeDesc ?? '').trim() === '總計'
+      && Object.keys(row).every(key =>
+        key === 'NOTeDesc' ||
+        key === 'dataKey' ||
+        row[key] === null ||
+        row[key] === undefined ||
+        row[key] === ''
+      );
+  }
 
-private normalizeDisplayRows(rows: FIN73020Data[]): FIN73020Data[] {
-  return this.isOnlyGrandTotalRow(rows) ? [] : rows;
-}
+  private normalizeDisplayRows(rows: FIN73020Data[]): FIN73020Data[] {
+    return this.isOnlyGrandTotalRow(rows) ? [] : rows;
+  }
 }

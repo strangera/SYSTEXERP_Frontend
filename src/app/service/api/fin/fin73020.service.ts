@@ -41,6 +41,18 @@ export class FIN73020Service {
       responseType: 'blob' as 'json',
     }) as Observable<HttpResponse<Blob>>;
   }
+  queryPOS2064MPCS_RqstNoDropDownList(): Observable<any> {
+  return this.http.post<any>(
+    `${this.baseUrl}/POS2064MPCS_RqstNoDropDownList`,
+    {}
+  );
+}
+queryPOS2064MPCS_NoDropDownList(): Observable<any> {
+  return this.http.post<any>(
+    `${this.baseUrl}/POS2064MPCS_NoDropDownList`,
+    {}
+  );
+}
 
   getStatusOptions(): Observable<FIN73020Option[]> {
     return of([

@@ -17,12 +17,15 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-dropdown
               label="支出請款單號"
               controlName="PCS_RqstNo"
+              [options]="rqstNoOptions"
+              optionLabel="label"
+              optionValue="value"
               [control]="queryForm.controls.PCS_RqstNo"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -61,7 +64,7 @@
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="單據狀態"
+              label="狀態"
               controlName="PCS_Status"
               [options]="statusOptions"
               optionLabel="label"
