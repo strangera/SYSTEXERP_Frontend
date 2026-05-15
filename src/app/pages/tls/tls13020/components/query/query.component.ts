@@ -343,7 +343,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
         rece_yn: formValue.rece_yn ? 'Y' : undefined,
         pos_yn: formValue.pos_yn ? 'Y' : undefined,
         cash_yn: formValue.cash_yn ? 'Y' : undefined,
-        tlt_openflagList: ['1']  // 固定只查營業中
+        tlt_openflagList: ['']  // 固定只查營業中
       };
 
       this.apiService.queryTLS13020(queryRequest).subscribe({
