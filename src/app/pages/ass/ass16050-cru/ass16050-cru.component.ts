@@ -1,190 +1,177 @@
-import { NgFor, NgIf } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-// import { Router } from '@angular/router';
-import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { PanelModule } from 'primeng/panel';
-// import { AuthService } from '../../../service/system/auth.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-// import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ASS16050Data, ASS16050Request } from '@service/api/ass/ass16050.service';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { ASS16050Service } from '@service/api/ass/ass16050.service';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateDuplicate, validateMaxLength, validateMaxNumber } from '@shared/componentkit/table-edit/validate-field.model';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import {
+  formatAmount,
+  ReportColumn,
+} from '@shared/componentkit/table-report/table-report.model';
+import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import {
+  Ass16050GroupedRecord,
+  Ass16050ItemRow,
+} from '../ass16050/ass16050.model';
 
-
-
+@UntilDestroy()
 @Component({
   selector: 'app-ass16050-cru',
   templateUrl: './ass16050-cru.component.html',
   styleUrls: ['./ass16050-cru.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, NgFor, NgIf, TranslateModule, TableEditComponent,]
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    MenubarComponent,
+    ButtonComponent,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarComponent,
+    PanelModule,
+    TableReportComponent,
+  ],
 })
-export class ASS16050CRUComponent extends BasicCruPageComponent<ASS16050Data> implements OnInit {
-  accordionTabCss = '';
-  data: ASS16050Request[] = [];
-  selectedRows: ASS16050Request[] = [];
-  deleteRows: ASS16050Request[] = [];
-  columns: EditColumn[] = [
-    { field: 'itemCode', header: '品項編碼', type: 'dropdown', disabled: () => true, validate: [validateDuplicate, validateMaxLength(10)] },
-    { field: 'itemName', header: '品項名稱', type: 'dropdown', disabled: () => true, validate: [validateDuplicate, validateMaxLength(100)] },
-    { field: 'applyQty', header: '申請數量', type: 'inputNumber', disabled: () => true, maxLength: 8, validate: [validateMaxNumber(99999999)] },
-    { field: 'issuedQty', header: '已發數量', type: 'inputNumber', disabled: () => true, validate: [validateMaxNumber(99999999)] },
-  ];
-
-  // 表單定義
-  dataForm = this.formBuilder.nonNullable.group({
-    issueNo: [{ value: '', disabled: true }], // 領用單號
-    departmentCode: [{ value: '', disabled: true }], // 部門代號
-    applicantCode: [{ value: '', disabled: true }], // 申請人代號
-    applicationDate: [{ value: '', disabled: true }], // 申請日期
-    shippingDate: [{ value: '', disabled: true }], // 發料日期
-    receiptStatus: [{ value: '', disabled: true }], // 驗收單狀態
-    detailCount: [{ value: '', disabled: true }], // 明細筆數
+export class ASS16050CRUComponent
+  extends BasicCruPageComponent<Ass16050GroupedRecord>
+  implements OnInit
+{
+  /** 明細顯示用主檔 Form（全部欄位於 Read mode 自動 disabled） */
+  readonly dataForm = this.formBuilder.group({
+    MTAPPLY_ID: new FormControl<string | null>(null),
+    ORG_ID: new FormControl<string | null>(null),
+    EMP_ID: new FormControl<string | null>(null),
+    APPLY_DATE: new FormControl<Date | null>(null),
+    CHECK_DATE: new FormControl<Date | null>(null),
+    MTAPPLY_STATUS: new FormControl<string | null>(null),
+    detailCount: new FormControl<string | null>(null),
   });
 
-  // 下拉選項
-  departmentCode = []; // 部門代號選項
-  Kurabe = [
-    { value: 1, label: '001' },
-    { value: 2, label: '002' },
-  ];
-  Itemnumber = [
-    { value: 1, label: '3A24210000001' },
-    { value: 2, label: '3A24210000002' },
-    { value: 3, label: '3A24210000003' },
-    { value: 4, label: '3A24210000004' },
-    { value: 5, label: '3A24210000005' },
-    { value: 6, label: '3A24210000006' },
-    { value: 7, label: '3A24210000007' },
-    { value: 8, label: '3A24210000008' },
-    { value: 9, label: '3A24210000009' },
-    { value: 10, label: '3A24210000010' },
+  detailColumns: ReportColumn[] = [
+    { field: 'FASITEM_ID', header: '品項編號' },
+    {
+      field: 'QTY',
+      header: '申請數量',
+      align: 'right',
+      format: (v) => formatAmount(v),
+    },
+    {
+      // 已發數量（DISPATCH_QTY）待後端補上欄位
+      field: 'DISPATCH_QTY',
+      header: '已發數量',
+      align: 'right',
+      format: (v) => (v == null ? '' : formatAmount(v)),
+    },
   ];
 
-  // ----------------------------------------------------------------
+  detailItems: Ass16050ItemRow[] = [];
+  orgOptions: Option[] = [];
+  userOptions: Option[] = [];
+  statusOptions: Option[] = [];
+  dispatchLoading = false;
+
   constructor(
-    // private router: Router,
-    // private formBuilder: FormBuilder,
-    // private messageService: NotificationService,
-    // private authService: AuthService,
-    private translate: TranslateService,
+    private readonly ass16050Service: ASS16050Service,
+    private readonly dropdownApiService: DropdownApiService,
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化程式
-    this.ProgNo = '310044';
+    // initializePage 會自動 patchValue(rowdata) + form.disable() (Read mode)
     this.initializePage('ASS16050', this.dataForm);
 
-    // 初始化使用者權限
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      // rowdata: any,
-    };
-
-    // 根據狀態決定表單邏輯
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-
-        break;
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-
-        // this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        // this.Read(state.rowdata);
-        break;
+    if (this.rowdata) {
+      this.detailItems = this.rowdata.items ?? [];
+      // rowdata 內的日期為 ISO 字串，patchValue 無法直接轉成 Date，需手動轉
+      this.dataForm.patchValue({
+        APPLY_DATE: this.rowdata.APPLY_DATE
+          ? new Date(this.rowdata.APPLY_DATE)
+          : null,
+        CHECK_DATE: this.rowdata.CHECK_DATE
+          ? new Date(this.rowdata.CHECK_DATE)
+          : null,
+        detailCount: String(this.rowdata.detailCount ?? 0),
+      });
     }
 
-    // 測試用假資料
-    this.data = [
-      {
-        id: 1,
-        itemCode: '3A24210000001',
-        itemName: '筆記型電腦',
-        applyQty: '10',
-        issuedQty: '5',
-      },
-    ]
+    this.loadDropdowns();
   }
 
-  // 編輯狀態下的讀取方法
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
+  private loadDropdowns(): void {
+    this.dropdownApiService
+      .querySys3100()
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.orgOptions = opts ?? [];
+      });
+
+    this.dropdownApiService
+      .queryTblUser()
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        this.userOptions = opts ?? [];
+      });
+
+    this.dropdownApiService
+      .querySys1000({ SYS_Type: 'MTAPPLY_STATUS' })
+      .pipe(untilDestroyed(this))
+      .subscribe((res) => {
+        this.statusOptions = (res ?? []).map((item) => ({
+          value: item.No,
+          label: `${item.No} - ${item.Name}`,
+        }));
+      });
   }
 
-  // 讀檔狀態下的讀取方法
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  // 表單提交邏輯
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
+  // ─── 結案/發料 ────────────────────────────────────────────────────────
+  onDispatch(): void {
+    if (!this.rowdata) return;
+    if (!this.hasPermission(this.Actions.Edit)) {
+      this.messageService.errorBubble('您沒有結案權限');
       return;
     }
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    this.messageService.confirm({
+      header: '結案確認',
+      message: `確定要對領用單 ${this.rowdata.MTAPPLY_ID} 執行結案/發料嗎？`,
+      acceptLabel: '確定',
+      rejectLabel: '取消',
+      accept: () => this.executeDispatch(),
+    });
   }
 
-  // 最終表單提交
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
+  private executeDispatch(): void {
+    if (!this.rowdata) return;
 
-  resetTable() {
-    this.data = [];
-    this.selectedRows = [];
+    this.dispatchLoading = true;
+    this.ass16050Service
+      .dispatchASS16050({ MTAPPLY_ID: this.rowdata.MTAPPLY_ID })
+      .pipe(
+        finalize(() => (this.dispatchLoading = false)),
+        untilDestroyed(this),
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.Status !== '0000') {
+            this.messageService.errorBubble(res.Message || '結案失敗');
+            return;
+          }
+          this.messageService.successBubble(res.Message || '結案成功');
+          this.onCancel();
+        },
+      });
   }
-
-  // 刪除資料的方法
-  onDelete(rows: ASS16050Request[]) {
-    // 將畫面資料中刪除這些 row
-    this.data = this.data.filter(item => !rows.includes(item));
-    // 將有 id 的項目（表示是資料庫已存在的）加進 deleteRows，避免重複
-    rows.filter(item => item.id !== undefined && !this.deleteRows.some(d => d.id === item.id)).forEach(item => this.deleteRows.push(item));
-    // 清空選取列
-    this.selectedRows = [];
-  }
-
-  // 取消操作
-  // onCancel() {
-  //   this.router.navigate(['ASS1000/ASS16050']);
-  // }
 }
