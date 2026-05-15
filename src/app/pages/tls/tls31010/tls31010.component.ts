@@ -85,6 +85,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
     { field: 'MonthlyBudgetTotal', header: '月營業目標', align: 'right', groupField: '月累計', format: formatAmount, isTotal: true },
     { field: 'MonthlySalesTotal', header: '營業實績', align: 'right', groupField: '月累計', format: formatAmount, isTotal: true },
     { field: 'CompletionRate', header: '完成率', align: 'right', groupField: '月累計', format: (value) => formatPercentage(value, 2), isTotal: true },
+    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right', isTotal: true },
   ];
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
