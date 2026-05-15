@@ -136,7 +136,10 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
       const body = {
         ...frm.getRawValue(),
         ID: this.rowdata?.id || undefined,
-        TALTALENT_BILL_NOTES_DETAILDetails: this.selectedRows
+        TALTALENT_BILL_NOTES_DETAILDetails: this.selectedRows.map(x => ({
+          ...x,
+          talent_id: Number(x.talent_id),
+        }))
       }
       const serviceCall = this.isFormCreateable
         ? this.tls21030Service.insertTLS21030(body)
