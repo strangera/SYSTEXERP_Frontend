@@ -66,8 +66,7 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
   /** table-report 需要：queryFunction(body) => Observable */
   queryFIN13060Fn = (body: any) => this.fin13060Service.queryFIN13060(body);
 
-  /** 先都開放（需要規則再補） */
-  editDisabled = (_row: any): boolean => false;
+  editDisabled = (row: any): boolean => !row?.CanEdit;
   detailDisabled = (_row: any): boolean => false;
 
   // 查詢表單：鍵名與後端一模一樣
