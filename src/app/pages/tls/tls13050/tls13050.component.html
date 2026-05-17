@@ -65,6 +65,7 @@
   <app-table tableKey="TargetAchievement" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" [showCheckBox]="false" dataKey="apply_no" [rows]="30"
     [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
-    [multiSortMeta]="[{ field: 'check_day', order: 0 }]" [totalRecords]="totalRecords" [lazy]="false"
-    [loading]="loading" [showManage]="false" [showDelete]="false"></app-table>
+    [multiSortMeta]="[{ field: 'check_day', order: 0 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
+    [showManage]="false" [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
 </div>
