@@ -1,81 +1,104 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" label="確認審核" icon="undefined"></app-button>
+
+    <!-- 確認審核：僅 Edit 模式且有 Edit 權限時顯示 -->
+    <app-button
+      *ngIf="isFormEditable"
+      btnType="default"
+      label="確認審核"
+      [loading]="loading"
+      (click)="onApprove()"
+    ></app-button>
+
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
+
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
+
+        <!-- 申請人代號（唯讀） -->
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
           label="申請人代號"
-          controlName="applicantCode"
-          [options]="applicantCodeOptions"
+          controlName="EMP_ID"
+          [options]="empIdOptions"
           optionLabel="label"
           optionValue="value"
-          [control]="dataForm.controls.applicantCode"
+          [control]="dataForm.controls.EMP_ID"
           [submitted]="submitted"
+          [disabled]="true"
         ></app-dropdown>
+
+        <!-- 部門代號（唯讀） -->
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
           label="部門代號"
-          controlName="departmentCode"
-          [options]="departmentCodeOptions"
+          controlName="ORG_ID"
+          [options]="orgIdOptions"
           optionLabel="label"
           optionValue="value"
-          [control]="dataForm.controls.departmentCode"
+          [control]="dataForm.controls.ORG_ID"
           [submitted]="submitted"
+          [disabled]="true"
         ></app-dropdown>
+
+        <!-- 申請日期（唯讀） -->
         <app-calendar
           class="col-12 md:col-6 lg:col-4"
           calendarType="dateOne"
           label="申請日期"
-          [control]="dataForm.controls.applicationDate"
+          controlName="APPLY_DATE"
+          [control]="dataForm.controls.APPLY_DATE"
           [submitted]="submitted"
+          [disabled]="true"
         ></app-calendar>
+
+        <!-- 建議需求(日)（唯讀） -->
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
-          label="建議需求日(天)"
-          controlName="illustrate"
-          [control]="dataForm.controls.illustrate"
+          label="建議需求(日)"
+          controlName="NOTES"
+          [control]="dataForm.controls.NOTES"
           [submitted]="submitted"
+          [readonly]="true"
         ></app-input-text>
+
+        <!-- 倉別（唯讀） -->
         <app-dropdown
           class="col-12 md:col-6 lg:col-4"
           label="倉別"
-          controlName="inventoryNo"
-          [options]="inventoryNoOptions"
+          controlName="WH_ID"
+          [options]="whIdOptions"
           optionLabel="label"
           optionValue="value"
-          [control]="dataForm.controls.inventoryNo"
+          [control]="dataForm.controls.WH_ID"
           [submitted]="submitted"
+          [disabled]="true"
         ></app-dropdown>
+
+        <!-- 說明（唯讀） -->
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="說明"
+          controlName="DESCRIPTION"
+          [control]="dataForm.controls.DESCRIPTION"
+          [submitted]="submitted"
+          [readonly]="true"
+        ></app-input-text>
+
+        <!-- 明細表格（唯讀） -->
         <app-table-edit
           tableKey="ASS16040Detail"
           class="col-12"
-          [data]="data"
-          [columns]="columns"
-          [showCheckBox]="true"
-          (delete)="onDelete($event)"
-          (selectionChange)="selectedRows = $event"
-          [selectedItems]="selectedRows"
-          [showCheckBox]="!isFormReadable"
-          (dataChange)="data = $event"
-          [disabled]="isFormReadable"
-          [tableRequired]="true"
+          [data]="detailData"
+          [columns]="detailColumns"
+          [showCheckBox]="false"
+          [showReorder]="false"
+          [disabled]="true"
         ></app-table-edit>
-      </div>
-      <div
-        *ngIf="!isFormReadable"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
-        <app-button
-          btnType="cancel"
-          [form]="dataForm"
-          (clickEvent)="resetTable()"
-        ></app-button>
-        <app-button btnType="submit" [loading]="loading"></app-button>
+
       </div>
     </form>
   </p-panel>
