@@ -12,12 +12,12 @@ import { SortMeta } from 'primeng/api';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 
@@ -26,7 +26,7 @@ import { TLS41020Service } from '../../../service/api/tls/tls41020.service';
 import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
 
 // 與後端一致：order 用 1 / -1
-type ApiSort = { field: string; order: number };
+interface ApiSort { field: string; order: number }
 
 @UntilDestroy()
 @Component({
@@ -73,18 +73,40 @@ export class TLS41020Component extends BasicQueryPageComponent<any> implements O
 
   columns: any[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'ECR_Name', header: '收銀機名稱', visible: true },
     { field: 'EDC_BegDate', header: '啟用日期', visible: true, format: this.formatDateTime },
     { field: 'EDC_EndDate', header: '停用日期', visible: true, format: this.formatDateTime },
+
+    // 刷卡機狀態
     { field: 'EDC_Status1Name', header: '中信刷卡機狀態', visible: true },
     { field: 'EDC_Status2Name', header: '聯合刷卡機狀態', visible: true },
+    { field: 'EDC_Status3Name', header: '第三台刷卡機狀態', visible: true }, // 補字串名稱
+
+    // 專櫃與地點資料
     { field: 'ECR_TLT_No', header: '專櫃編號', visible: true },
     { field: 'ECR_TLT_Name', header: '櫃位名稱', visible: true },
     { field: 'ECR_LocNo', header: '地點代號', visible: true },
     { field: 'LOCATION_Name', header: '地點名稱', visible: true },
+
+    // 第一台 (中信)
     { field: 'EDC_IP1', header: '中信刷卡機IP', visible: true },
     { field: 'EDC_TmID1', header: '中信刷卡機端末機號', visible: true },
+
+    // 第二台 (聯合)
     { field: 'EDC_IP2', header: '聯合刷卡機IP', visible: true },
     { field: 'EDC_TmID2', header: '聯合刷卡機端末機號', visible: true },
+
+    // 第三台 (後端新增)
+    { field: 'EDC_IP3', header: '第三台刷卡機IP', visible: true },
+    { field: 'EDC_TmID3', header: '第三台刷卡機端末機號', visible: true },
+
+    // 審核異動欄位 (通常預設隱藏 visible: false，保留給使用者去欄位控制開啟)
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: this.formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: this.formatDateTime },
+    { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
   ];
 
   private readonly _allowSortFields = new Set(
@@ -241,31 +263,31 @@ export class TLS41020Component extends BasicQueryPageComponent<any> implements O
   onClearForm(): void {
     const defaultPageSize = 20;
 
-this.queryForm.reset(
-  {
-    ECR_No: null,
-    EDC_No: null,
-    EDC_BegDate_From: null,
-    EDC_BegDate_To: null,
-    EDC_EdnDate_From: null,
-    EDC_EdnDate_To: null,
-    EDC_Status1: null,
-    EDC_Status2: null,
-    ECR_TLT_No: null,
-    EDC_IP1: null,
-    EDC_IP2: null,
-    EDC_IP3: null,
-    EDC_TmID1: null,
-    EDC_TmID2: null,
-    EDC_TmID3: null,
+    this.queryForm.reset(
+      {
+        ECR_No: null,
+        EDC_No: null,
+        EDC_BegDate_From: null,
+        EDC_BegDate_To: null,
+        EDC_EdnDate_From: null,
+        EDC_EdnDate_To: null,
+        EDC_Status1: null,
+        EDC_Status2: null,
+        ECR_TLT_No: null,
+        EDC_IP1: null,
+        EDC_IP2: null,
+        EDC_IP3: null,
+        EDC_TmID1: null,
+        EDC_TmID2: null,
+        EDC_TmID3: null,
 
-    // ✅ 這裡要用 createPaginationConfig 的欄位名稱
-    pageIndex: 1,
-    pageSize: 20,
-    SortBy: this.defaultSort,
-  } as any,
-  { emitEvent: false }
-);
+        // ✅ 這裡要用 createPaginationConfig 的欄位名稱
+        pageIndex: 1,
+        pageSize: 20,
+        SortBy: this.defaultSort,
+      } as any,
+      { emitEvent: false }
+    );
 
     this.submitted = false;
     this.data = [];
@@ -381,11 +403,11 @@ this.queryForm.reset(
   }
 
   /** ✅ pageSize 入口：form.PageSize → fallback 20 */
-private getPageSize(): number {
-  const raw: any = this.queryForm.getRawValue();
-  const fromForm = Number(raw?.pageSize);
-  return Number.isFinite(fromForm) && fromForm > 0 ? fromForm : 20;
-}
+  private getPageSize(): number {
+    const raw: any = this.queryForm.getRawValue();
+    const fromForm = Number(raw?.pageSize);
+    return Number.isFinite(fromForm) && fromForm > 0 ? fromForm : 20;
+  }
   /** table-report 送回來的 multiSortMeta / SortBy → ApiSort[]，並套 mapping + allow list */
   private normalizeSortForApi(sortBy: any): ApiSort[] | null {
     const meta: SortMeta[] = Array.isArray(sortBy) ? sortBy : [];
@@ -453,43 +475,43 @@ private getPageSize(): number {
   }
 
   /** 組 API payload（SortBy 送 1/-1） */
-private buildPayload(
-  raw: any,
-  opts: { pageIndex: number; pageSize: number; sort: ApiSort[] }
-) {
-  const payload: any = {
-    ECR_No: raw?.ECR_No,
-    EDC_No: raw?.EDC_No,
+  private buildPayload(
+    raw: any,
+    opts: { pageIndex: number; pageSize: number; sort: ApiSort[] }
+  ) {
+    const payload: any = {
+      ECR_No: raw?.ECR_No,
+      EDC_No: raw?.EDC_No,
 
-    EDC_BegDateStart: raw?.EDC_BegDate_From,
-    EDC_BegDateEnd: raw?.EDC_BegDate_To,
-    EDC_EndDateStart: raw?.EDC_EdnDate_From,
-    EDC_EndDateEnd: raw?.EDC_EdnDate_To,
+      EDC_BegDateStart: raw?.EDC_BegDate_From,
+      EDC_BegDateEnd: raw?.EDC_BegDate_To,
+      EDC_EndDateStart: raw?.EDC_EdnDate_From,
+      EDC_EndDateEnd: raw?.EDC_EdnDate_To,
 
-    EDC_Status1: raw?.EDC_Status1 ?? null,
-    EDC_Status2: raw?.EDC_Status2 ?? null,
-    ECR_TLT_No: raw?.ECR_TLT_No,
+      EDC_Status1: raw?.EDC_Status1 ?? null,
+      EDC_Status2: raw?.EDC_Status2 ?? null,
+      ECR_TLT_No: raw?.ECR_TLT_No,
 
-    EDC_IP1: raw?.EDC_IP1,
-    EDC_IP2: raw?.EDC_IP2,
-    EDC_IP3: raw?.EDC_IP3,
-    EDC_TmID1: raw?.EDC_TmID1,
-    EDC_TmID2: raw?.EDC_TmID2,
-    EDC_TmID3: raw?.EDC_TmID3,
+      EDC_IP1: raw?.EDC_IP1,
+      EDC_IP2: raw?.EDC_IP2,
+      EDC_IP3: raw?.EDC_IP3,
+      EDC_TmID1: raw?.EDC_TmID1,
+      EDC_TmID2: raw?.EDC_TmID2,
+      EDC_TmID3: raw?.EDC_TmID3,
 
-    // ✅ API 一律大寫
-    SortBy: opts.sort,
-    pageIndex: opts.pageIndex,
-    pageSize: opts.pageSize,
-  };
+      // ✅ API 一律大寫
+      SortBy: opts.sort,
+      pageIndex: opts.pageIndex,
+      pageSize: opts.pageSize,
+    };
 
-  Object.keys(payload).forEach((k) => {
-    const v = payload[k];
-    if (v === '' || v == null) delete payload[k];
-  });
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v == null) delete payload[k];
+    });
 
-  return payload;
-}
+    return payload;
+  }
 
 
   /** 日期格式化 (yyyy/MM/dd) */
