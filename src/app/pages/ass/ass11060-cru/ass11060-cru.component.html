@@ -61,6 +61,8 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             [useGrouping]="false"
+            [min]="0"
+            [max]="9"
             label="廠商送貨期限(天)"
             controlName="DELIVERY_LIMIT"
             [control]="dataForm.controls.DELIVERY_LIMIT"

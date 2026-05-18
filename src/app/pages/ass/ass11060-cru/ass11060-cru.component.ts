@@ -51,8 +51,8 @@ export class ASS11060CRUComponent extends BasicCruPageComponent<QueryASS11060Res
     FACTO_FAX: ['', [Validators.maxLength(12)]],
     /** 送貨方式 */
     DELIVERY: [null as string | null],
-    /** 廠商送貨期限 */
-    DELIVERY_LIMIT: [null as number | null],
+    /** 廠商送貨期限（只能 1 碼：0–9） */
+    DELIVERY_LIMIT: [null as number | null, [Validators.min(0), Validators.max(9)]],
     /** 退貨處理方式 */
     RETURN_ORDER: [null as string | null],
     /** 附註 */
