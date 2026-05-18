@@ -23,11 +23,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="支出請款單號"
-              controlName="KeepQuota_No"
-              [options]="KeepQuota_Options"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.KeepQuota_No"
+              controlName="PCS_No"
+              [options]="PCS_RqstNo_Options()"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.PCS_No"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -35,15 +35,9 @@
             <app-calendar
               calendarType="dateOne"
               label="產生日期"
-              [control]="queryForm.controls.applyDate"
+              [control]="queryForm.controls.PCS_RqstDate"
               [submitted]="submitted"
             ></app-calendar>
-            <!-- <app-calendar-range-quick
-              label="產生日期"
-              [startControl]="queryForm.controls.applyDateFrom"
-              [endControl]="queryForm.controls.applyDateTo"
-              [submitted]="submitted"
-            /> -->
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -52,7 +46,7 @@
               <input
                 type="text"
                 pInputText
-                formControlName="PettycashapplicantName"
+                formControlName="PCS_UsrDisplay"
                 placeholder="請選擇"
                 readonly
               />
@@ -61,7 +55,7 @@
                 aria-label="搜尋"
                 pButton
                 icon="pi pi-angle-down"
-                (click)="openUserDialog('Pettycashapplicant')"
+                (click)="openUserDialog('PCS_UsrNo')"
               ></button>
             </p-inputGroup>
           </div>
@@ -73,7 +67,7 @@
               <input
                 type="text"
                 pInputText
-                formControlName="PettycashcustodianName"
+                formControlName="Keep_UsrDisplay"
                 placeholder="請選擇"
                 readonly
               />
@@ -82,7 +76,7 @@
                 aria-label="搜尋"
                 pButton
                 icon="pi pi-angle-down"
-                (click)="openUserDialog('Pettycashcustodian')"
+                (click)="openUserDialog('Keep_UsrNo')"
               ></button>
             </p-inputGroup>
           </div>
@@ -90,34 +84,25 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="狀態"
-              controlName="status"
+              controlName="PCS_Status"
               [options]="status_Options"
               optionLabel="Label"
               optionValue="No"
-              [control]="queryForm.controls.status"
+              [control]="queryForm.controls.PCS_Status"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <label for="keepingUnit" class="block">零用金保管單位</label>
-            <p-inputGroup>
-              <input
-                type="text"
-                pInputText
-                controlName="keepingUnit"
-                formControlName="keepingUnitName"
-                placeholder="請選擇"
-                readonly
-              />
-              <button
-                type="button"
-                aria-label="搜尋"
-                pButton
-                icon="pi pi-angle-down"
-                (click)="openKeepDeptDialog()"
-              ></button>
-            </p-inputGroup>
+            <app-dropdown
+              label="保管單位"
+              controlName="Keep_OrgID"
+              [options]="keepingUnit_Options()"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Keep_OrgID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
         <div
@@ -144,10 +129,14 @@
       [showDelete]="false"
       [showCheckBox]="false"
       dataKey="id"
-      [totalRecords]="totalRecords"
+      [totalRecords]="totalRecords()"
+      [lastQueryBody]="lastQueryBody"
+      [queryFunction]="fin72020Service.queryFIN72020.bind(fin72020Service)"
       [lazy]="true"
       [loading]="loading"
-      [isRowSelectable]="isRowSelectable"
+      [editDisabled]="editDisabled"
+      [detailDisabled]="detailDisabled"
+      [addButton]="addButton"
     ></app-table-report>
   </div>
 </div>
@@ -188,7 +177,7 @@
         type="button"
         label="查詢"
         icon="pi pi-search"
-        (click)="queryUsers()"
+        (click)="queryUserData()"
       ></p-button>
 
       <p-button
@@ -201,7 +190,7 @@
   </form>
 
   <p-table
-    [value]="userResultData"
+    [value]="userResultData()"
     [scrollable]="true"
     scrollHeight="350px"
     [tableStyle]="{ 'min-width': '50rem' }"
@@ -224,69 +213,6 @@
         <td>{{ row.user_Name }}</td>
         <td>{{ row.Org_ID }}</td>
         <td>{{ row.Org_Name }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
-</p-dialog>
-
-<p-dialog
-  header="組織代碼"
-  [(visible)]="keepDeptDialogVisible"
-  [modal]="true"
-  [style]="{ width: '60vw' }"
-  [draggable]="false"
-  [resizable]="false"
->
-  <form [formGroup]="keepDeptQueryForm">
-    <div class="grid p-fluid">
-      <div class="col-12 md:col-6">
-        <label for="Org_ID" class="block mb-2">組織代碼</label>
-        <input pInputText formControlName="Org_ID" placeholder="組織代碼" />
-      </div>
-
-      <div class="col-12 md:col-6">
-        <label for="Org_Name" class="block mb-2">組織名稱</label>
-        <input pInputText formControlName="Org_Name" placeholder="組織名稱" />
-      </div>
-    </div>
-
-    <div class="flex gap-2 mb-3">
-      <p-button
-        type="button"
-        label="查詢"
-        icon="pi pi-search"
-        (click)="queryKeepDept()"
-      ></p-button>
-
-      <p-button
-        type="button"
-        label="清除"
-        icon="pi pi-times"
-        (click)="clearKeepDeptQuery()"
-      ></p-button>
-    </div>
-  </form>
-
-  <p-table
-    [value]="keepDeptResultData"
-    [scrollable]="true"
-    scrollHeight="320px"
-    selectionMode="single"
-    [(selection)]="selectedKeepDept"
-    (onRowSelect)="onSelectKeepDept($event.data)"
-    [tableStyle]="{ 'min-width': '40rem' }"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th>組織代碼</th>
-        <th>組織名稱</th>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="body" let-row>
-      <tr [pSelectableRow]="row" style="cursor: pointer">
-        <td>{{ row.No }}</td>
-        <td>{{ row.Name }}</td>
       </tr>
     </ng-template>
   </p-table>

@@ -9,96 +9,86 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar-range-quick
             label="申請日期"
-            [startControl]="dialogQueryForm.controls.applyDateFrom"
-            [endControl]="dialogQueryForm.controls.applyDateTo"
+            [startControl]="dataForm.controls.DateFrom"
+            [endControl]="dataForm.controls.DateTo"
             [submitted]="submitted"
-            (input)="inputEnter()"
           />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            class="flex-grow-1"
+          <app-dropdown
             label="保管單位"
-            controlName="ECR_Name"
-            [control]="dialogQueryForm.controls.ECR_Name"
-            (input)="inputEnter()"
-          />
+            controlName="Keep_OrgID"
+            [options]="KeepOrgID_Options()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.Keep_OrgID"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            class="flex-grow-1"
+          <app-dropdown
             label="保管人"
-            controlName="ECR_Name2"
-            [control]="dialogQueryForm.controls.ECR_Name2"
-            (input)="inputEnter()"
-          />
+            controlName="Keep_UsrNo"
+            [options]="KeepUsrNo_Options()"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.Keep_UsrNo"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
-
-        <app-table-report
-          tableKey="fin11200DetailTable"
-          dataKey="ECR_No"
-          title="新增請款"
-          class="col-12"
-          [data]="data"
-          [totalRecords]="totalRecords()"
-          [columns]="columns"
-          [showManage]="false"
-          [showCheckBox]="true"
-          (insert)="dialogVisible = true; this.selectedItemsDialog = []"
-          (delete)="onDelete($event)"
-          [selectedItems]="selectedData"
-          (selectionChange)="selectedData = $event"
-          [showReportMode]="false"
-        ></app-table-report>
       </div>
       <div
-        *ngIf="!isFormReadable"
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
       >
-        <app-button
-          btnType="cancel"
-          [form]="dataForm"
-          (clickEvent)="resetTable()"
-        ></app-button>
-        <app-button btnType="submit" [loading]="loading"></app-button>
+        <app-button btnType="clear" [form]="dataForm"></app-button>
+        <app-button btnType="query" [loading]="loading"></app-button>
       </div>
     </form>
+    <app-table-report
+      tableKey="fin11200DetailTable"
+      dataKey="PCS_No"
+      title="新增請款"
+      class="col-12"
+      [data]="data"
+      [totalRecords]="totalRecords()"
+      [columns]="columns"
+      [showManage]="false"
+      [showCheckBox]="true"
+      (insert)="dialogVisible = true; this.selectedItemsDialog = []"
+      (delete)="onDelete($event)"
+      [selectedItems]="selectedData"
+      (selectionChange)="selectedData = $event"
+      [showReportMode]="false"
+    ></app-table-report>
+
+    <div
+      *ngIf="!isFormReadable"
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+    >
+      <app-button
+        btnType="cancel"
+        [form]="dataForm"
+        (clickEvent)="resetTable()"
+      ></app-button>
+      <app-button
+        btnType="submit"
+        [loading]="loading"
+        (clickEvent)="onClaim()"
+      ></app-button>
+    </div>
   </p-panel>
 </div>
 
-<!-- <app-dialog
+<app-dialog
   [visible]="dialogVisible"
   header="零用金申請單據"
   (visibleChange)="dialogVisible = $event"
   (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0"
 >
-  <form [formGroup]="dialogQueryForm" class="flex pb-2 align-items-end gap-2">
-    <app-calendar-range-quick
-      label="申請日期"
-      [startControl]="dialogQueryForm.controls.applyDateFrom"
-      [endControl]="dialogQueryForm.controls.applyDateTo"
-      [submitted]="submitted"
-      (input)="inputEnter()"
-    />
-    <app-input-text
-      class="flex-grow-1"
-      label="保管單位"
-      controlName="ECR_Name"
-      [control]="dialogQueryForm.controls.ECR_Name"
-      (input)="inputEnter()"
-    />
-    <app-input-text
-      class="flex-grow-1"
-      label="保管人"
-      controlName="ECR_Name2"
-      [control]="dialogQueryForm.controls.ECR_Name2"
-      (input)="inputEnter()"
-    />
-  </form>
   <app-table
     tableKey="fin11200DialogTable"
-    dataKey="ECR_No"
+    dataKey="PCS_No"
     [data]="dialogData"
     [columns]="columns"
     [selectedItems]="selectedItemsDialog"
@@ -111,4 +101,4 @@
     scrollHeight="350px"
     [showCaption]="false"
   ></app-table>
-</app-dialog> -->
+</app-dialog>
