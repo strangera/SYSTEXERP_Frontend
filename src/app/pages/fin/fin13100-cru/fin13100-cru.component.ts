@@ -10,7 +10,6 @@ import { FIN13100Service } from '../../../service/api/fin/fin13100.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -35,7 +34,6 @@ import {
     ReactiveFormsModule,
     InputTextComponent,
     InputNumberComponent,
-    CalendarComponent,
     FIN32020TableEditComponent,
     NgIf,
     TranslateModule,
@@ -49,8 +47,6 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
 
   dataForm = this.formBuilder.nonNullable.group({
     VouNo: [''],
-    VouDate: [null as any],
-    PostFlag: [''],
     TotalTaxAmt: [0 as any],
   });
 
@@ -64,9 +60,6 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
     { label: '應稅', value: '1' },
     { label: '零稅', value: '2' },
   ];
-
-  // assetTypeOptions = [
-  // ];
 
   defaultDetailRow: any = {
     id: 0,
@@ -219,8 +212,6 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
       this.dataForm.patchValue(
         {
           VouNo: row.VouNo ?? '',
-          VouDate: row.VouDate ?? null,
-          PostFlag: row.PostFlagName ?? this.formatPostFlag(row.PostFlag),
           TotalTaxAmt: row.TaxTotal ?? 0,
         },
         { emitEvent: false }
@@ -411,16 +402,7 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
   }
   private formatInvoiceNo(value: any): string {
     if (!value) return '';
-
-    let text = String(value).replace(/[^a-zA-Z0-9]/g, '');
-
-    let prefix = text.substring(0, 2).replace(/[^a-zA-Z]/g, '');
-    let numberPart = text.substring(2).replace(/\D/g, '');
-
-    prefix = prefix.toUpperCase().substring(0, 2);
-    numberPart = numberPart.substring(0, 8);
-
-    return prefix + numberPart;
+    return String(value).replace(/[^a-zA-Z0-9]/g, '').toUpperCase().substring(0, 10);
   }
   onDetailDelete(_: any): void {
     this.syncDetailDataFromTableEdit();
@@ -486,20 +468,20 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
       return;
     }
 
-    const invalid = rows.some((x) =>
-      !String(x.INV_GUIType ?? '').trim() ||
-      !/^[A-Z]{2}\d{8}$/.test(String(x.InvoiceNo ?? '').trim()) ||
-      !x.InvoiceDate ||
-      !String(x.INV_YM ?? '').trim() ||
-      !String(x.INV_DeclareYM ?? '').trim() ||
-      !String(x.TaxType ?? '').trim() ||
-      x.SaleAmt === null || x.SaleAmt === undefined || x.SaleAmt === ''
-    );
+    const missingFields: string[] = [];
+    rows.forEach((x, i) => {
+      const rowLabel = `第 ${i + 1} 筆`;
+      if (!String(x.INV_GUIType ?? '').trim()) missingFields.push(`${rowLabel}：發票格式`);
+      if (!/^[A-Z]{2}\d{8}$/.test(String(x.InvoiceNo ?? '').trim())) missingFields.push(`${rowLabel}：發票號碼（需 2 大寫字母 + 8 數字）`);
+      if (!x.InvoiceDate) missingFields.push(`${rowLabel}：發票日期`);
+      if (!String(x.INV_YM ?? '').trim()) missingFields.push(`${rowLabel}：資料所屬年月`);
+      if (!String(x.INV_DeclareYM ?? '').trim()) missingFields.push(`${rowLabel}：申報年月`);
+      if (!String(x.TaxType ?? '').trim()) missingFields.push(`${rowLabel}：課稅別`);
+      if (x.SaleAmt === null || x.SaleAmt === undefined || x.SaleAmt === '') missingFields.push(`${rowLabel}：發票金額`);
+    });
 
-    if (invalid) {
-      this.messageService.warnBubble(
-        '請確認必填欄位：發票格式、發票號碼10碼、發票日期、資料所屬年月、申報年月、課稅別、發票金額'
-      );
+    if (missingFields.length > 0) {
+      this.messageService.warnBubble('請確認以下必填欄位：\n' + missingFields.join('、'));
       return;
     }
 
@@ -653,20 +635,4 @@ export class FIN13100CRUComponent extends BasicCruPageComponent<any> implements 
     return date ? date.replace(/-/g, '/') : '';
   }
 
-  private formatPostFlag(v: any): string {
-    const value = String(v ?? '').trim();
-
-    switch (value) {
-      case '0':
-        return '0-作廢';
-      case '1':
-        return '1-建立';
-      case '2':
-        return '2-確認';
-      case '3':
-        return '3-過帳';
-      default:
-        return value;
-    }
-  }
 }
