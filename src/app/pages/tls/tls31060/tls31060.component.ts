@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe, formatDate } from '@angular/common';
+import { AsyncPipe, CommonModule, DatePipe, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { footerShowTotal, TLS31020Total } from '@service/api/tls/tls31020.service';
 import { TLS31060Item, TLS31060PrintRequest, TLS31060Request, TLS31060Response, Tls31060Service } from '@service/api/tls/tls31060.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -36,6 +37,7 @@ import { formatAmountWithDecimals, ReportColumn } from '../tls2f010-cru/tls2f010
   imports: [
     MenubarComponent,
     AccordionModule,
+    AsyncPipe,
     FormsModule,
     ReactiveFormsModule,
     RadiobuttonComponent,
@@ -60,6 +62,7 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
     TXN_DateS: [yesterday, [Validators.required]],//交易日期_起
     TXN_DateE: [yesterday, [Validators.required]],//交易日期_迄
     // 合約查詢條件
+    TLT_NO: [[]],// 專櫃編號
     tlt_building: [[]],// 館別
     tlt_floor: [[]],// 樓層
     area_no: [[]],// 區域
@@ -196,12 +199,14 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
   bus_class_Option: IDropdownItem[] = []; // 中分類
   bus_sclass_Option: IDropdownItem[] = []; // 小分類
   org_id_Option: IDropdownItem[] = []; // 組織
+  tlt_noListOption = this.dropdown.queryTltTalent(); // 專櫃編號選項
 
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly tls31060Service: Tls31060Service,
     private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
     private datePipe: DatePipe,
+    private readonly dropdown: DropdownApiService,
   ) { super(); }
 
   ngOnInit(): void {
