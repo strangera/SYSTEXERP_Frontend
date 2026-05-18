@@ -49,7 +49,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   lastQueryBody: any = null;
 
   isRowSelectable = (row: any): boolean => !row?.Voucher_No;
-  editDisabled = (row: any): boolean => !this.isRowSelectable(row);
+  editDisabled = (row: any): boolean => !this.isRowSelectable(row) || !row?.CanEdit;
   detailDisabled = (row: any): boolean => !this.isRowSelectable(row);
 
   queryForm = this.formBuilder.group({

@@ -1338,10 +1338,11 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     // 準備收款項目明細
     const recvDetails = this.step2TableData
       .filter((item: { CAP_Item?: string; ARS_Amt?: number }) => item.CAP_Item && item.ARS_Amt !== null && item.ARS_Amt !== undefined)
-      .map((item: { CAP_Item: string; ARS_Amt: number; NoteDesc?: string }) => ({
+      .map((item: { CAP_Item: string; ARS_Amt: number; NoteDesc?: string; AbatAcct?: string }) => ({
         CAP_Item: item.CAP_Item,
         ARS_Amt: item.ARS_Amt,
-        NoteDesc: item.NoteDesc || null
+        NoteDesc: item.NoteDesc || null,
+        AbatAcct: item.AbatAcct || null
       }));
 
     // 準備票據明細
