@@ -1,11 +1,6 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import {
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { TLS41020Service } from '../../../service/api/tls/tls41020.service';
@@ -18,7 +13,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-// 2.4.1.2 收銀機EDC資料維護 CRU
 @Component({
   selector: 'app-tls41020-cru',
   templateUrl: './tls41020-cru.component.html',
@@ -37,40 +31,47 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     CalendarRangeComponent,
   ],
 })
-export class TLS41020CRUComponent
-  extends BasicCruPageComponent<any>
-  implements OnInit {
+export class TLS41020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   ECRNoOptions: any[] = [];
   EDC_Status_Option = [
     { value: 'A', label: '啟用' },
     { value: 'C', label: '停用' },
   ];
 
+  // 抽出統一的 IP Pattern
+  readonly ipPattern = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+
   dataForm = this.formBuilder.nonNullable.group({
     id: [''],
     SYS_StoreNo: [''],
     ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
-
     EDC_BegDate: ['', Validators.required],
     EDC_EndDate: ['', Validators.required],
     EDC_Status1: ['', Validators.required],
     EDC_Status2: [''],
     EDC_Status3: [''],
+    // ✅ 加入第 4、5 台狀態
+    EDC_Status4: [''],
+    EDC_Status5: [''],
     EDC_IP1: [
       '',
       [
         Validators.required,
         Validators.maxLength(20),
-        Validators.pattern(
-          /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/,
-        ),
+        Validators.pattern(this.ipPattern),
       ],
     ],
-    EDC_IP2: ['', [Validators.maxLength(20)]],
-    EDC_IP3: ['', [Validators.maxLength(20)]],
+    EDC_IP2: ['', [Validators.maxLength(20), Validators.pattern(this.ipPattern)]], // 補上格式驗證
+    EDC_IP3: ['', [Validators.maxLength(20), Validators.pattern(this.ipPattern)]], // 補上格式驗證
+    // ✅ 加入第 4、5 台 IP 與格式驗證
+    EDC_IP4: ['', [Validators.maxLength(20), Validators.pattern(this.ipPattern)]],
+    EDC_IP5: ['', [Validators.maxLength(20), Validators.pattern(this.ipPattern)]],
     EDC_TmID1: ['', [Validators.required, Validators.maxLength(8)]],
     EDC_TmID2: ['', [Validators.maxLength(8)]],
     EDC_TmID3: ['', [Validators.maxLength(8)]],
+    // ✅ 加入第 4、5 台端末機代碼
+    EDC_TmID4: ['', [Validators.maxLength(8)]],
+    EDC_TmID5: ['', [Validators.maxLength(8)]],
   });
 
   constructor(
@@ -86,15 +87,14 @@ export class TLS41020CRUComponent
     if (id != null) {
       this.dataForm.patchValue({ id: String(id) });
     }
-
     this.updateDisabledState();
+
     this.ECRNoService.getECRNo().subscribe((res) => {
-      this.ECRNoOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
+      this.ECRNoOptions = res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
     });
   }
 
@@ -109,12 +109,18 @@ export class TLS41020CRUComponent
         'EDC_Status1',
         'EDC_Status2',
         'EDC_Status3',
+        'EDC_Status4', // ✅ 編輯狀態解鎖
+        'EDC_Status5', // ✅ 編輯狀態解鎖
         'EDC_IP1',
         'EDC_IP2',
         'EDC_IP3',
+        'EDC_IP4', // ✅ 編輯狀態解鎖
+        'EDC_IP5', // ✅ 編輯狀態解鎖
         'EDC_TmID1',
         'EDC_TmID2',
         'EDC_TmID3',
+        'EDC_TmID4', // ✅ 編輯狀態解鎖
+        'EDC_TmID5', // ✅ 編輯狀態解鎖
       ];
       Object.keys(this.dataForm.controls).forEach((key) => {
         const control = this.dataForm.get(key);
@@ -127,30 +133,25 @@ export class TLS41020CRUComponent
     } else if (this.crudstatus === CRUDStatus.Read) {
       this.dataForm.disable();
     } else {
-      this.dataForm.enable(); // 新增狀態全部開放
+      this.dataForm.enable();
     }
   }
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-      let payload = form.getRawValue();
-
-      //  從 localStorage 取得門市代號
+      const payload = form.getRawValue();
       const userInfoStr = localStorage.getItem('UserInfo');
       const storeNo = userInfoStr ? JSON.parse(userInfoStr)?.SYS_StoreNo : null;
-
       if (this.crudstatus === CRUDStatus.Create && storeNo) {
         payload.SYS_StoreNo = storeNo;
       }
 
-      //  將日期轉為 ISO 字串（去除毫秒部分）
-     const toDateOnly = (value: any): string => {
-  if (!value) return '';
-  const d = value instanceof Date ? value : new Date(value);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-};
-
+      const toDateOnly = (value: any): string => {
+        if (!value) return '';
+        const d = value instanceof Date ? value : new Date(value);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+      };
       payload.EDC_BegDate = toDateOnly(payload.EDC_BegDate);
       payload.EDC_EndDate = toDateOnly(payload.EDC_EndDate);
 
@@ -162,14 +163,9 @@ export class TLS41020CRUComponent
                 this.messageService.successBubble('新增成功');
                 this.dataForm.reset();
               },
-              error: () => {
-                //  所有錯誤統一顯示成收銀機號重複
-                this.messageService.errorBubble('新增失敗：收銀機號重複');
-              },
             });
           }
           break;
-
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             this.tls41020Service.updateTLS41020(payload).subscribe(() => {
@@ -186,11 +182,11 @@ export class TLS41020CRUComponent
     this.dataForm.reset();
     this.updateDisabledState();
   }
-  override onCancel(): void {
-  sessionStorage.setItem('TLS41020_fromCru', '1'); // 保險：避免瀏覽器上一頁沒帶 state
-  this.router.navigate(['/account/tls', 'tls41020'], {
-    state: { fromCru: true },
-  });
-}
 
+  override onCancel(): void {
+    sessionStorage.setItem('TLS41020_fromCru', '1');
+    this.router.navigate(['/account/tls', 'tls41020'], {
+      state: { fromCru: true },
+    });
+  }
 }
