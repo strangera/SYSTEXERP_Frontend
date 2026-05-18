@@ -1,10 +1,11 @@
-import { CommonModule, DatePipe, formatDate } from '@angular/common';
+import { AsyncPipe, CommonModule, DatePipe, formatDate } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26050Service } from '@service/api/tls/tls26050.service';
 import { footerShowTotal, TLS31020Item, TLS31020PrintRequest, TLS31020Request, TLS31020Response, Tls31020Service, TLS31020Total } from '@service/api/tls/tls31020.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService, IDropdownItem, ITLTBUSSCLASSInfo } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -33,6 +34,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
   imports: [
     MenubarComponent,
     AccordionModule,
+    AsyncPipe,
     FormsModule,
     ReactiveFormsModule,
     CommonModule,
@@ -57,6 +59,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     TXN_DateS: [yesterday],//交易日期開始
     TXN_DateE: [yesterday],  // 交易日期結束
     // 合約查詢條件
+    TLT_NO: [[]],// 專櫃編號
     tlt_building: [[]],// 館別
     tlt_floor: [[]],// 樓層
     area_no: [[]],// 區域
@@ -193,12 +196,14 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   bus_sclass_Option: IDropdownItem[] = []; // 小分類
   org_id_Option: IDropdownItem[] = []; // 組織
   tlt_no_id_Option: IDropdownItem[] = []; // 專櫃編號
+  tlt_noListOption = this.dropdown.queryTltTalent(); // 專櫃編號選項
 
   constructor(
     private readonly dropDownListService: DropDownListService,
     public readonly tls31020Service: Tls31020Service,
     private tls26050Service: TLS26050Service, // 日期的api，套用現有模式
     private datePipe: DatePipe,
+    private readonly dropdown: DropdownApiService,
   ) { super(); }
 
   ngOnInit(): void {

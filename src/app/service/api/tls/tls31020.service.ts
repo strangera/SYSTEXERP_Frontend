@@ -7,17 +7,18 @@ import { environment } from '../../../../environments/environment';
 export interface TLS31020Request {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
-  tlt_building: string[]
-  tlt_floor: string[]
-  area_no: string[]
-  bus_type: string[]
-  bus_class: string[][]
-  bus_sclass: string[][]
-  tlt_kind: string[]
-  tlt_term_type: string[]
-  org_id: string[]
-  TaxType: string
-  IsRece_Yn: string
+  TLT_NO: string[];
+  tlt_building: string[];
+  tlt_floor: string[];
+  area_no: string[];
+  bus_type: string[];
+  bus_class: string[][];
+  bus_sclass: string[][];
+  tlt_kind: string[];
+  tlt_term_type: string[];
+  org_id: string[];
+  TaxType: string;
+  IsRece_Yn: string;
 }
 
 export interface TLS31020PrintRequest extends TLS31020Request {
