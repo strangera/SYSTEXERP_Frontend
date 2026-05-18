@@ -148,7 +148,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   constructor(
     private readonly fin51010Service: Fin51010Service,
     private readonly dropdown: DropdownApiService,
-    private readonly tLS2C040Service: TLS2C040Service
+    public readonly tLS2C040Service: TLS2C040Service,
   ) {
     super();
   }
@@ -182,7 +182,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
       if (res.Data) {
         this.arData = res.Data._GLS6004List || [];
         this.arFooterData = { ar_amt: res.Data?.Total_ar_amt };
-        this.arTotalRecords = this.arData.length; // 修正：應為 arData 的長度
+        this.arTotalRecords = res.TotalCount;
       }
     });
 
@@ -192,7 +192,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
       if (res.Data) {
         this.apData = res.Data._GLS6005List || [];
         this.apFooterData = { ap_amt: res.Data?.Total_AP_Amt };
-        this.apTotalRecords = this.apData.length; // 修正：應為 apData 的長度
+        this.apTotalRecords = res.TotalCount;
       }
     });
   }
