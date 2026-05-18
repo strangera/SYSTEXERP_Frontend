@@ -199,7 +199,7 @@
       <td class="text-center"
         [colSpan]="(showReorder ? 1 : 0) + (showCheckBox ? 1 : 0) + (expansionColumns.length ? 1 : 0) + tableUtility.getFirstSubtotalIndex(columns)">
         <span class="font-bold">
-          {{ subTotalLabel }} {{ groupRowsBy ? '(' + tableUtility.getGroupValue(rowData, groupRowsBy,columns) + ')' : ''
+          {{ subTotalLabel }} {{ groupRowsBy && showSubTotalGroupValue ? '(' + tableUtility.getGroupValue(rowData, groupRowsBy,columns) + ')' : ''
           }}
         </span>
       </td>

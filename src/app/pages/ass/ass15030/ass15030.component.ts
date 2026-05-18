@@ -1,11 +1,13 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 // Shared
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS15030Service } from '@service/api/ass/ass15030.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CheckboxModule } from 'primeng/checkbox';
+import { finalize, map, Observable } from 'rxjs';
 import { Option } from '../../../service/utility/dropdown-api.model';
 import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -16,40 +18,14 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
+import { formatDate } from '../../../shared/componentkit/table-report/table-report.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-//
-
-interface Ass15030MockRow {
-  seq: number;
-  assetCode: string;
-  itemCode: string;
-  itemName: string;
-  keeperUnit: string;
-  usefulYears: number;
-  changedUsefulYears: number;
-  afterChangedUsefulYears: number;
-  purchasedMonths: number;
-  postedMonths: number;
-  amortizedMonths: number;
-  currentYearDepreciation: number;
-  propertyRemark: string;
-  accountCode: string;
-  bigCategoryCode: string;
-  midCategoryCode: string;
-  smlCategoryCode: string;
-  baseYYMM: string;
-  purchaseDate: string;
-  entryDate: string;
-  acquireAmountTotal: number;
-  changeAmountTotal: number;
-  afterChangeAmountTotal: number;
-  reserveResidualValueTotal: number;
-  currentDepreciationTotal: number;
-  accumulatedDepreciationTotal: number;
-  undepreciatedAmountTotal: number;
-  currentScrapOrSale: boolean;
-  reportType: '1' | '2';
-}
+import { removeEmptyValues } from '../../../shared/utils/object-utils';
+import {
+  QueryASS15030DetailResponse,
+  QueryASS15030Request,
+  QueryASS15030SumResponse,
+} from './ass15030.model';
 
 //3.1.5.3  財產目錄
 @UntilDestroy()
@@ -61,6 +37,10 @@ interface Ass15030MockRow {
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, DropdownComponent, CalendarRangeComponent, CalendarComponent, CheckboxModule, ButtonComponent, TableReportComponent, TranslateModule, ButtonModule]
 })
 export class ASS15030Component extends BasicQueryPageComponent<any> implements OnInit {
+  private static readonly SUBTOTAL_SEQ = '小計';
+  private static readonly GRANDTOTAL_SEQ = '總合計';
+  private static readonly GROUP_KEY_FIELD = '__groupKey';
+
   queryForm = this.formBuilder.group({
     paperType: ['1'], // 報表型態 1=折舊前試算 2=拋轉
     accountCode: [null as string | null], // 會計科目代碼
@@ -73,54 +53,58 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
     entryDateFrom: [null as Date | null], // 入帳日期(起)
     entryDateTo: [null as Date | null], // 入帳日期(訖)
     itemCode: [null as string | null], // 品項編號
-    baseYYMM: [null as string | null], // 基準日 YYYYMM
+    baseYYMM: [null as string | null, [Validators.required]], // 基準日 YYYYMM
     showReceiveAmount: [false], // 是否顯示取得金額為0 (勾選=true)
     showScrapData: [false], // 是否顯示當期報廢、變賣資料 (勾選=true)
     reportStyle: ['1'], // 報表樣式 1=彙總 2=明細
   });
   data: any[] = [];
   totalRecords = 0;
+  subTotalData: any[] = [];
+  footerData: any | null = null;
   readonly tableLoading = signal(false);
+  exportPdfLoading = false;
   exportExcelLoading = false;
-  private allMockRows: Ass15030MockRow[] = [];
+  private readonly defaultPageSize = 30;
+  lastQueryBody?: QueryASS15030Request & { pageIndex?: number; pageSize?: number };
 
   private readonly summaryColumns: any[] = [
-    { field: 'seq', header: '項次', visible: true },
-    { field: 'itemCode', header: '品項編號', visible: true },
-    { field: 'itemName', header: '品項名稱', visible: true },
-    { field: 'keeperUnitName', header: '保管單位', visible: true },
-    { field: 'acquireAmountTotal', header: '取得價格\n合計', visible: true },
-    { field: 'changeAmountTotal', header: '異動價格\n合計', visible: true },
-    { field: 'afterChangeAmountTotal', header: '異動後價格\n合計', visible: true },
-    { field: 'reserveResidualValueTotal', header: '預留總值\n合計', visible: true },
-    { field: 'previousDepreciationAmount', header: '前期折舊金額', visible: true },
-    { field: 'currentDepreciationTotal', header: '本期\n折舊金額\n合計', visible: true },
-    { field: 'accumulatedDepreciationTotal', header: '累計\n折舊金額\n合計', visible: true },
-    { field: 'undepreciatedAmountTotal', header: '未折舊金額\n合計', visible: true },
+    { field: 'SEQ', header: '項次', visible: true },
+    { field: 'GOODS_ID', header: '品項編號', visible: true },
+    { field: 'GOODS_NAME', header: '品項名稱', visible: true },
+    { field: 'HOLD_ORG_NAME', header: '保管單位', visible: true },
+    { field: 'GET_COST_TTL', header: '取得價格\n合計', visible: true, isSubTotal: true },
+    { field: 'FIX_AMT_TTL', header: '異動價格\n合計', visible: true, isSubTotal: true },
+    { field: 'AFT_AMT_TTL', header: '異動後價格\n合計', visible: true, isSubTotal: true },
+    { field: 'RESI_VALUE_TTL', header: '預留總值\n合計', visible: true, isSubTotal: true },
+    { field: 'PRE_DEPRE_TTL', header: '前期折舊金額', visible: true, isSubTotal: true },
+    { field: 'CUR_DEPRE_TTL', header: '本期\n折舊金額\n合計', visible: true, isSubTotal: true },
+    { field: 'ACC_DEPRE_TTL', header: '累計\n折舊金額\n合計', visible: true, isSubTotal: true },
+    { field: 'UNDEPRE_TTL', header: '未折舊金額\n合計', visible: true, isSubTotal: true },
   ];
 
   private readonly detailColumns: any[] = [
-    { field: 'seq', header: '項次', visible: true },
-    { field: 'assetCode', header: '財產編號', visible: true },
-    { field: 'itemName', header: '項目名稱', visible: true },
-    { field: 'purchaseDate', header: '購入\n日期', visible: true },
-    { field: 'entryDate', header: '入帳\n日期', visible: true },
-    { field: 'keeperUnitName', header: '保管單位', visible: true },
-    { field: 'acquireAmountTotal', header: '取得價格', visible: true },
-    { field: 'changeAmountTotal', header: '異動價格', visible: true },
-    { field: 'afterChangeAmountTotal', header: '異動後價格', visible: true },
-    { field: 'reserveResidualValueTotal', header: '預留\n殘值', visible: true },
-    { field: 'usefulYears', header: '耐用\n年數', visible: true },
-    { field: 'changedUsefulYears', header: '異動\n耐用\n年數', visible: true },
-    { field: 'afterChangedUsefulYears', header: '異動後\n耐用\n年數', visible: true },
-    { field: 'purchasedMonths', header: '已購入\n月數', visible: true },
-    { field: 'postedMonths', header: '已入帳\n月數', visible: true },
-    { field: 'amortizedMonths', header: '已攤提\n月數', visible: true },
-    { field: 'currentYearDepreciation', header: '本年\n折舊金額', visible: true },
-    { field: 'currentDepreciationTotal', header: '本期\n折舊金額', visible: true },
-    { field: 'accumulatedDepreciationTotal', header: '累計\n折舊金額', visible: true },
-    { field: 'undepreciatedAmountTotal', header: '未折舊金額', visible: true },
-    { field: 'propertyRemark', header: '財產註記', visible: true },
+    { field: 'SEQ', header: '項次', visible: true },
+    { field: 'ASSET_ID', header: '財產編號', visible: true },
+    { field: 'GOODS_NAME', header: '項目名稱', visible: true },
+    { field: 'GET_DATE', header: '購入\n日期', visible: true, format: (v: string) => formatDate(v) },
+    { field: 'BILL_DATE', header: '入帳\n日期', visible: true, format: (v: string) => formatDate(v) },
+    { field: 'HOLD_ORG_ID', header: '保管單位', visible: true },
+    { field: 'FIR_GET_COST', header: '取得價格', visible: true, isSubTotal: true },
+    { field: 'MODIFY_AMT', header: '異動價格', visible: true, isSubTotal: true },
+    { field: 'GET_COST', header: '異動後價格', visible: true, isSubTotal: true },
+    { field: 'RESI_VALUE', header: '預留\n殘值', visible: true, isSubTotal: true },
+    { field: 'FIR_EXP_YEAR', header: '耐用\n年數', visible: true, isSubTotal: true },
+    { field: 'MODIFY_YEAR', header: '異動\n耐用\n年數', visible: true, isSubTotal: true },
+    { field: 'EXP_YEAR', header: '異動後\n耐用\n年數', visible: true, isSubTotal: true },
+    { field: 'BUY_MONTHS', header: '已購入\n月數', visible: true, isSubTotal: true },
+    { field: 'BILL_MONTHS', header: '已入帳\n月數', visible: true, isSubTotal: true },
+    { field: 'DEPRE_MONTHS', header: '已攤提\n月數', visible: true, isSubTotal: true },
+    { field: 'DEPRE_AMOUNT', header: '本年\n折舊金額', visible: true, isSubTotal: true },
+    { field: 'THIS_DEPRE_AMT', header: '本期\n折舊金額', visible: true, isSubTotal: true },
+    { field: 'TAL_DEPRE_AMT', header: '累計\n折舊金額', visible: true, isSubTotal: true },
+    { field: 'NO_DEPRE_AMT', header: '未折舊金額', visible: true, isSubTotal: true },
+    { field: 'NOTES', header: '財產註記', visible: true },
   ];
 
   columns: any[] = [...this.summaryColumns];
@@ -142,6 +126,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private readonly dropdownApiService: DropdownApiService,
+    private readonly ass15030Service: ASS15030Service,
   ) {
     super();
   }
@@ -150,11 +135,9 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('ASS15030', '', this.queryForm, frm => this.onSubmit(frm));
     this.loadDropdownOptions();
     this.setupCategoryCascade();
-    this.seedMockData();
   }
 
   onSubmit(frm: FormGroup): void {
-    // TODO 串接查詢 API
     this.handleSubmit(
       frm,
       () => {
@@ -162,49 +145,79 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
           this.tableLoading.set(false);
           return;
         }
-        try {
-          this.columns = this.getColumnsByReportStyle(this.queryForm.controls.reportStyle.value);
-          this.data = this.filterMockData();
-          this.totalRecords = this.data.length;
-          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-        } catch {
-          this.data = [];
-          this.totalRecords = 0;
-          this.messageService.warnBubble('查詢失敗，請稍後再試');
-        } finally {
-          this.loading = false;
-          this.tableLoading.set(false);
-        }
+        this.columns = this.getColumnsByReportStyle(this.queryForm.controls.reportStyle.value);
+        const request = this.buildRequest({
+          pageSize: this.defaultPageSize,
+          pageIndex: 1,
+          SortBy: this.lastQueryBody?.SortBy,
+        });
+        this.lastQueryBody = request;
+
+        this.tableLoading.set(true);
+        this.queryFunction(request)
+          .pipe(
+            untilDestroyed(this),
+            finalize(() => {
+              this.tableLoading.set(false);
+              this.loading = false;
+            }),
+          )
+          .subscribe({
+            next: res => {
+              this.data = res.Data ?? [];
+              this.totalRecords = res.TotalCount ?? 0;
+              this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+            },
+            error: () => {
+              this.data = [];
+              this.totalRecords = 0;
+              this.subTotalData = [];
+              this.footerData = null;
+            },
+          });
       },
       v => this.tableLoading.set(v),
     );
   }
 
+  queryFunction = (body: {
+    pageSize?: number;
+    PageSize?: number;
+    pageIndex?: number;
+    PageIndex?: number;
+    SortBy?: unknown;
+  }): Observable<{ Data: any[]; TotalCount: number }> => {
+    const rawPageIndex = Number(body.pageIndex ?? body.PageIndex ?? 1) || 1;
+    const apiPageSize = Number(body.PageSize ?? this.defaultPageSize) || this.defaultPageSize;
+    const apiPageIndex = rawPageIndex;
+    const request = this.buildRequest({
+      ...body,
+      pageIndex: apiPageIndex,
+      PageIndex: apiPageIndex,
+      pageSize: apiPageSize,
+      PageSize: apiPageSize,
+    });
+    this.lastQueryBody = request;
+    return this.queryByReportStyle(request).pipe(
+      map(({ rows, totalCount }) => {
+        const part = this.partitionRows(rows, apiPageIndex);
+        this.syncSummaryRowsFromPage(part, apiPageIndex);
+        const effectivePageSize = Math.max(1, part.details.length);
+        this.lastQueryBody = {
+          ...(request as QueryASS15030Request),
+          pageIndex: rawPageIndex,
+          pageSize: effectivePageSize,
+        };
+        return {
+          Data: this.mapDetailsWithDataKey(part.details, apiPageIndex),
+          TotalCount: totalCount,
+        };
+      }),
+    );
+  };
+
   onSubmitQuery(frm: FormGroup): void {
     this.onSubmit(frm);
-  }
-
-  onClearForm(): void {
-    this.queryForm.reset({
-      paperType: '1',
-      accountCode: null,
-      keeperUnit: null,
-      purchaseDateFrom: null,
-      purchaseDateTo: null,
-      bigCategoryCode: null,
-      midCategoryCode: null,
-      smlCategoryCode: null,
-      entryDateFrom: null,
-      entryDateTo: null,
-      itemCode: null,
-      baseYYMM: null,
-      showReceiveAmount: false,
-      showScrapData: false,
-      reportStyle: '1',
-    });
-    this.data = [];
-    this.totalRecords = 0;
-    this.columns = [...this.summaryColumns];
   }
 
   override onCreate(): void {
@@ -257,7 +270,7 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
         this.smlCategoryCodeOptions = [];
         if (!bigCode) return;
         this.dropdownApiService
-          .queryFaClass1({ B_CLASS_ID: bigCode })
+          .queryFaClass1({ CLASS_ID: bigCode })
           .pipe(untilDestroyed(this))
           .subscribe(opts => (this.midCategoryCodeOptions = opts ?? []));
       });
@@ -269,176 +282,238 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
         this.smlCategoryCodeOptions = [];
         if (!midCode) return;
         this.dropdownApiService
-          .queryFaClass2({ M_CLASS_ID: midCode })
+          .queryFaClass2({ CLASS_ID: midCode })
           .pipe(untilDestroyed(this))
           .subscribe(opts => (this.smlCategoryCodeOptions = opts ?? []));
       });
   }
 
-  private seedMockData(): void {
-    this.allMockRows = [
-      {
-        seq: 1,
-        assetCode: 'FA-2025-0001',
-        itemCode: 'A0001',
-        itemName: '辦公桌',
-        keeperUnit: 'D001',
-        usefulYears: 5,
-        changedUsefulYears: 0,
-        afterChangedUsefulYears: 5,
-        purchasedMonths: 12,
-        postedMonths: 11,
-        amortizedMonths: 11,
-        currentYearDepreciation: 8000,
-        propertyRemark: '正常使用',
-        accountCode: '150101',
-        bigCategoryCode: 'A',
-        midCategoryCode: 'A01',
-        smlCategoryCode: 'A0101',
-        baseYYMM: '202601',
-        purchaseDate: '2025-01-10',
-        entryDate: '2025-01-20',
-        acquireAmountTotal: 50000,
-        changeAmountTotal: 0,
-        afterChangeAmountTotal: 50000,
-        reserveResidualValueTotal: 5000,
-        currentDepreciationTotal: 1200,
-        accumulatedDepreciationTotal: 6800,
-        undepreciatedAmountTotal: 43200,
-        currentScrapOrSale: false,
-        reportType: '1',
-      },
-      {
-        seq: 2,
-        assetCode: 'FA-2024-0002',
-        itemCode: 'B0002',
-        itemName: '筆電',
-        keeperUnit: 'D002',
-        usefulYears: 3,
-        changedUsefulYears: 1,
-        afterChangedUsefulYears: 4,
-        purchasedMonths: 18,
-        postedMonths: 17,
-        amortizedMonths: 17,
-        currentYearDepreciation: 1800,
-        propertyRemark: '已異動耐用年數',
-        accountCode: '151201',
-        bigCategoryCode: 'C',
-        midCategoryCode: 'C01',
-        smlCategoryCode: 'C0102',
-        baseYYMM: '202602',
-        purchaseDate: '2024-08-15',
-        entryDate: '2024-08-18',
-        acquireAmountTotal: 0,
-        changeAmountTotal: 5000,
-        afterChangeAmountTotal: 5000,
-        reserveResidualValueTotal: 300,
-        currentDepreciationTotal: 700,
-        accumulatedDepreciationTotal: 2000,
-        undepreciatedAmountTotal: 3000,
-        currentScrapOrSale: true,
-        reportType: '2',
-      },
-      {
-        seq: 3,
-        assetCode: 'FA-2023-0003',
-        itemCode: 'C0003',
-        itemName: '空調主機',
-        keeperUnit: 'D001',
-        usefulYears: 8,
-        changedUsefulYears: 0,
-        afterChangedUsefulYears: 8,
-        purchasedMonths: 36,
-        postedMonths: 35,
-        amortizedMonths: 35,
-        currentYearDepreciation: 42000,
-        propertyRemark: '大型設備',
-        accountCode: '152201',
-        bigCategoryCode: 'D',
-        midCategoryCode: 'D01',
-        smlCategoryCode: 'D0101',
-        baseYYMM: '202603',
-        purchaseDate: '2023-03-01',
-        entryDate: '2023-03-05',
-        acquireAmountTotal: 150000,
-        changeAmountTotal: -10000,
-        afterChangeAmountTotal: 140000,
-        reserveResidualValueTotal: 10000,
-        currentDepreciationTotal: 3500,
-        accumulatedDepreciationTotal: 56000,
-        undepreciatedAmountTotal: 84000,
-        currentScrapOrSale: false,
-        reportType: '1',
-      },
-    ];
+  private buildRequest(body?: {
+    pageSize?: number;
+    PageSize?: number;
+    pageIndex?: number;
+    PageIndex?: number;
+    SortBy?: unknown;
+  }): QueryASS15030Request {
+    const q = this.queryForm.getRawValue();
+    const pageSize = body?.pageSize ?? body?.PageSize ?? this.defaultPageSize;
+    const pageIndex = body?.pageIndex ?? body?.PageIndex ?? 1;
+    const sortBy = Array.isArray(body?.SortBy) ? body?.SortBy : undefined;
+
+    const payload: QueryASS15030Request = {
+      STYPE_ID: q.accountCode || undefined,
+      HOLD_ORG_ID: q.keeperUnit || undefined,
+      GET_DATE_S: this.toApiDateValue(q.purchaseDateFrom),
+      GET_DATE_E: this.toApiDateValue(q.purchaseDateTo),
+      B_CLASS_ID: q.bigCategoryCode || undefined,
+      M_CLASS_ID: q.midCategoryCode || undefined,
+      S_CLASS_ID: q.smlCategoryCode || undefined,
+      BILL_DATE_S: this.toApiDateValue(q.entryDateFrom),
+      BILL_DATE_E: this.toApiDateValue(q.entryDateTo),
+      GOODS_ID: q.itemCode || undefined,
+      BaseYM: this.toBaseYm(q.baseYYMM),
+      Type: q.paperType || undefined,
+      SHOW_ZERO: q.showReceiveAmount ? '1' : '0',
+      SHOW_HANDLE: q.showScrapData ? '1' : '0',
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: sortBy,
+    };
+
+    return removeEmptyValues(payload) as QueryASS15030Request;
   }
 
-  private filterMockData(): any[] {
-    const q = this.queryForm.getRawValue();
+  private queryByReportStyle(
+    request: QueryASS15030Request,
+  ): Observable<{ rows: any[]; totalCount: number }> {
+    const reportStyle = this.queryForm.controls.reportStyle.value;
+    if (reportStyle === '2') {
+      return this.ass15030Service.queryASS15030Detail(request).pipe(
+        map(res => {
+          const list = res.Status === '0000' ? (res.Data ?? []) : [];
+          const rows = this.mapDetailRows(list);
+          const totalCount = list[0]?.TOTAL_COUNT ?? res.TotalCount ?? rows.length;
+          return { rows, totalCount };
+        }),
+      );
+    }
+    return this.ass15030Service.queryASS15030Sum(request).pipe(
+      map(res => {
+        const list = res.Status === '0000' ? (res.Data ?? []) : [];
+        const rows = this.mapSummaryRows(list);
+        const totalCount = list[0]?.TOTAL_COUNT ?? res.TotalCount ?? rows.length;
+        return { rows, totalCount };
+      }),
+    );
+  }
 
-    const purchaseFrom = this.toDate(q.purchaseDateFrom);
-    const purchaseTo = this.toDate(q.purchaseDateTo);
-    const entryFrom = this.toDate(q.entryDateFrom);
-    const entryTo = this.toDate(q.entryDateTo);
+  private mapSummaryRows(rows: QueryASS15030SumResponse[]): any[] {
+    return (rows ?? []).map((row, idx) => ({
+      ...row,
+      SEQ: this.normalizeSeqValue(row.SEQ, `${idx + 1}`),
+      GOODS_ID: this.isSubtotalRow(row.SEQ) ? null : (row.GOODS_ID ?? ''),
+      GOODS_NAME: this.isSubtotalRow(row.SEQ) ? null : (row.GOODS_NAME ?? ''),
+      HOLD_ORG_NAME: this.isSubtotalRow(row.SEQ) ? null : (row.HOLD_ORG_NAME ?? ''),
+      GET_COST_TTL: row.GET_COST_TTL ?? 0,
+      FIX_AMT_TTL: row.FIX_AMT_TTL ?? 0,
+      AFT_AMT_TTL: row.AFT_AMT_TTL ?? 0,
+      RESI_VALUE_TTL: row.RESI_VALUE_TTL ?? 0,
+      PRE_DEPRE_TTL: row.PRE_DEPRE_TTL ?? 0,
+      CUR_DEPRE_TTL: row.CUR_DEPRE_TTL ?? 0,
+      ACC_DEPRE_TTL: row.ACC_DEPRE_TTL ?? 0,
+      UNDEPRE_TTL: row.UNDEPRE_TTL ?? 0,
+    }));
+  }
 
-    return this.allMockRows
-      .filter(row => !q.paperType || row.reportType === q.paperType)
-      .filter(row => !q.accountCode || row.accountCode === q.accountCode)
-      .filter(row => !q.keeperUnit || row.keeperUnit === q.keeperUnit)
-      .filter(row => !q.bigCategoryCode || row.bigCategoryCode === q.bigCategoryCode)
-      .filter(row => !q.midCategoryCode || row.midCategoryCode === q.midCategoryCode)
-      .filter(row => !q.smlCategoryCode || row.smlCategoryCode === q.smlCategoryCode)
-      .filter(row => !q.itemCode || row.itemCode === q.itemCode)
-      .filter(row => !q.baseYYMM || row.baseYYMM === q.baseYYMM)
-      .filter(row => {
-        const d = this.toDate(row.purchaseDate);
-        if (!d) return false;
-        if (purchaseFrom && d < purchaseFrom) return false;
-        if (purchaseTo && d > purchaseTo) return false;
-        return true;
-      })
-      .filter(row => {
-        const d = this.toDate(row.entryDate);
-        if (!d) return false;
-        if (entryFrom && d < entryFrom) return false;
-        if (entryTo && d > entryTo) return false;
-        return true;
-      })
-      .filter(row => (q.showReceiveAmount ? true : row.acquireAmountTotal !== 0))
-      .filter(row => (q.showScrapData ? true : !row.currentScrapOrSale))
-      .map(row => ({
-        ...row,
-        keeperUnitName: this.getOptionLabel(this.keeperUnitOptions, row.keeperUnit) || row.keeperUnit,
-        previousDepreciationAmount: Math.max(
-          0,
-          row.accumulatedDepreciationTotal - row.currentDepreciationTotal,
-        ),
-      }));
+  private mapDetailRows(rows: QueryASS15030DetailResponse[]): any[] {
+    return (rows ?? []).map((row, idx) => ({
+      ...row,
+      SEQ: this.normalizeSeqValue(row.SEQ, `${idx + 1}`),
+      ASSET_ID: this.isSubtotalRow(row.SEQ) ? null : (row.ASSET_ID ?? ''),
+      GOODS_NAME: this.isSubtotalRow(row.SEQ) ? null : (row.GOODS_NAME ?? ''),
+      GET_DATE: this.isSubtotalRow(row.SEQ) ? null : (row.GET_DATE ?? ''),
+      BILL_DATE: this.isSubtotalRow(row.SEQ) ? null : (row.BILL_DATE ?? ''),
+      HOLD_ORG_ID: this.isSubtotalRow(row.SEQ) ? null : (row.HOLD_ORG_ID ?? ''),
+      FIR_GET_COST: row.FIR_GET_COST ?? 0,
+      MODIFY_AMT: row.MODIFY_AMT ?? 0,
+      GET_COST: row.GET_COST ?? 0,
+      RESI_VALUE: row.RESI_VALUE ?? 0,
+      FIR_EXP_YEAR: row.FIR_EXP_YEAR ?? 0,
+      MODIFY_YEAR: row.MODIFY_YEAR ?? 0,
+      EXP_YEAR: row.EXP_YEAR ?? 0,
+      BUY_MONTHS: row.BUY_MONTHS ?? 0,
+      BILL_MONTHS: row.BILL_MONTHS ?? 0,
+      DEPRE_MONTHS: row.DEPRE_MONTHS ?? 0,
+      DEPRE_AMOUNT: row.DEPRE_AMOUNT ?? 0,
+      THIS_DEPRE_AMT: row.THIS_DEPRE_AMT ?? 0,
+      TAL_DEPRE_AMT: row.TAL_DEPRE_AMT ?? 0,
+      NO_DEPRE_AMT: row.NO_DEPRE_AMT ?? 0,
+      NOTES: row.NOTES ?? '',
+    }));
   }
 
   private getColumnsByReportStyle(reportStyle: string | null | undefined): any[] {
     return reportStyle === '2' ? [...this.detailColumns] : [...this.summaryColumns];
   }
 
-  onExportExcel(): void {
-    this.exportExcelLoading = true;
-    try {
-      // TODO: 匯出報表 API
-      const payload = {
-        query: this.queryForm.getRawValue(),
-        columns: this.columns.map(col => col.header),
-        data: this.data,
-        exportedAt: new Date().toISOString(),
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], {
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      });
-      this.downloadBlob(blob, `ASS15030_${this.getTimestamp()}.xlsx`);
-    } catch {
-      this.messageService.errorBubble('檔案匯出失敗，請重試。');
-    } finally {
-      this.exportExcelLoading = false;
+  private normalizeSeqValue(seq: string | undefined, fallback: string): string {
+    const trimmed = String(seq ?? '').trim();
+    return trimmed || fallback;
+  }
+
+  private isSubtotalRow(seq: string | undefined): boolean {
+    return String(seq ?? '').trim() === ASS15030Component.SUBTOTAL_SEQ;
+  }
+
+  private isGrandTotalRow(seq: string | undefined): boolean {
+    return String(seq ?? '').trim() === ASS15030Component.GRANDTOTAL_SEQ;
+  }
+
+  private partitionRows(rows: any[], pageIndex: number): { details: any[]; subTotals: any[]; grandTotal: any | null } {
+    const details: any[] = [];
+    const subTotals: any[] = [];
+    let grandTotal: any | null = null;
+    let groupNo = 1;
+    let currentGroupKey = this.buildGroupKey(pageIndex, groupNo);
+
+    for (const row of rows ?? []) {
+      if (this.isSubtotalRow(row?.SEQ)) {
+        subTotals.push({
+          ...row,
+          [ASS15030Component.GROUP_KEY_FIELD]: currentGroupKey,
+        });
+        groupNo += 1;
+        currentGroupKey = this.buildGroupKey(pageIndex, groupNo);
+      } else if (this.isGrandTotalRow(row?.SEQ)) {
+        grandTotal = row;
+      } else {
+        details.push({
+          ...row,
+          [ASS15030Component.GROUP_KEY_FIELD]: currentGroupKey,
+        });
+      }
     }
+    return { details, subTotals, grandTotal };
+  }
+
+  private mergeSubTotals(existing: any[], incoming: any[]): any[] {
+    return [...(existing ?? []), ...(incoming ?? [])];
+  }
+
+  private mapDetailsWithDataKey(details: any[], pageIndex: number): any[] {
+    return (details ?? []).map((item, idx) => ({
+      ...item,
+      dataKey: item.dataKey ?? `${pageIndex}-${item[ASS15030Component.GROUP_KEY_FIELD] ?? 'g'}-${item.SEQ ?? idx}-${idx}`,
+    }));
+  }
+
+  private buildGroupKey(pageIndex: number, groupNo: number): string {
+    return `P${pageIndex}_G${groupNo}`;
+  }
+
+  private syncSummaryRowsFromPage(
+    part: { details: any[]; subTotals: any[]; grandTotal: any | null },
+    pageIndex: number,
+  ): void {
+    if (pageIndex <= 1) {
+      this.subTotalData = [...part.subTotals];
+      this.footerData = part.grandTotal;
+      return;
+    }
+
+    this.subTotalData = this.mergeSubTotals(this.subTotalData, part.subTotals);
+    if (part.grandTotal) {
+      this.footerData = part.grandTotal;
+    }
+  }
+
+  onExportPdf(): void {
+    const request = this.buildRequest({
+      PageSize: this.lastQueryBody?.PageSize ?? 0,
+      PageIndex: this.lastQueryBody?.PageIndex ?? 0,
+      SortBy: this.lastQueryBody?.SortBy,
+    });
+    this.exportPdfLoading = true;
+    const isDetail = this.queryForm.controls.reportStyle.value === '2';
+    const export$ = isDetail
+      ? this.ass15030Service.exportPDFASS15080Detail(request)
+      : this.ass15030Service.exportPDFASS15080Sum(request);
+    export$
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.exportPdfLoading = false)),
+      )
+      .subscribe({
+        next: blob => {
+          const reportName = isDetail ? '財產目錄_明細' : '財產目錄_彙總';
+          this.downloadBlob(blob, `${reportName}_${this.getTimestamp()}.pdf`);
+        },
+      });
+  }
+
+  onExportExcel(): void {
+    const request = this.buildRequest({
+      PageSize: this.lastQueryBody?.PageSize ?? 0,
+      PageIndex: this.lastQueryBody?.PageIndex ?? 0,
+      SortBy: this.lastQueryBody?.SortBy,
+    });
+    const isDetail = this.queryForm.controls.reportStyle.value === '2';
+    const export$ = isDetail
+      ? this.ass15030Service.exportExcelASS15030Detail(request)
+      : this.ass15030Service.exportExcelASS15030Sum(request);
+    this.exportExcelLoading = true;
+    export$
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.exportExcelLoading = false)),
+      )
+      .subscribe({
+        next: blob => {
+          const reportName = isDetail ? '財產目錄_明細' : '財產目錄_彙總';
+          this.downloadBlob(blob, `${reportName}_${this.getTimestamp()}.xlsx`);
+        },
+        error: () => this.messageService.warnBubble('匯出 Excel 失敗，請稍後再試'),
+      });
   }
 
   private downloadBlob(blob: Blob, fileName: string): void {
@@ -462,14 +537,24 @@ export class ASS15030Component extends BasicQueryPageComponent<any> implements O
     );
   }
 
-  private toDate(value: unknown): Date | null {
-    if (!value) return null;
-    if (value instanceof Date) return value;
-    const date = new Date(String(value));
-    return Number.isNaN(date.getTime()) ? null : date;
+  private toApiDateValue(value: unknown): string | undefined {
+    if (value == null || value === '') return undefined;
+    if (value instanceof Date) return value.toISOString();
+    if (typeof value === 'string') return value;
+    return undefined;
   }
 
-  private getOptionLabel(options: Option[], value: string): string {
-    return options.find(x => x.value === value)?.label ?? '';
+  private toBaseYm(value: unknown): string | undefined {
+    if (value == null || value === '') return undefined;
+    if (value instanceof Date) {
+      const y = value.getFullYear();
+      const m = (value.getMonth() + 1).toString().padStart(2, '0');
+      return `${y}${m}`;
+    }
+    if (typeof value === 'string') {
+      const nums = value.replace(/\D/g, '');
+      if (nums.length >= 6) return nums.substring(0, 6);
+    }
+    return undefined;
   }
 }
