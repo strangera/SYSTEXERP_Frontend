@@ -100,6 +100,7 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
 
   totalRecords = 0;
   data: FIN13030Data[] = [];
+  editDisabledFn = (row: any) => !row?.CanEdit;
   exportExcelLoading = false;
   exportPdfLoading = false;
   selectedItems: FIN13030Data[] = [];

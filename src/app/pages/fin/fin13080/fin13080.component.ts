@@ -119,6 +119,11 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
       return;
     }
 
+    if (rowData.some(r => !r?.CanDel)) {
+      this.messageService.warnBubble('已審核之申報年月資料不可刪除');
+      return;
+    }
+
     this.messageService.confirm({
       header: '是否確認刪除',
       accept: () => {

@@ -85,7 +85,7 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     }))
   );
 
-  editDisabled = (row: any) => row?.InvoiceType === '35';
+  editDisabled = (row: any) => row?.InvoiceType === '35' || !row?.CanEdit;
 
   queryForm = this.formBuilder.group({
     ...createPaginationConfig([{ field: 'InvoiceType', order: 1 }]),
