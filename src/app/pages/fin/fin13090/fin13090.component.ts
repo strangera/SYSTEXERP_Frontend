@@ -6,6 +6,7 @@ import { fin13090Item, Fin13090Service } from '@service/api/fin/fin13090.service
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -26,6 +27,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
     ReactiveFormsModule,
     CalendarRangeComponent,
     InputTextRangeComponent,
+    MultiSelectComponent,
     TableComponent,
     ButtonModule,
   ],
@@ -37,9 +39,15 @@ export class FIN13090Component extends BasicQueryPageComponent<fin13090Item> imp
     VouNoEnd: [null], // 傳票編號_迄
     VouDateStart: [new Date()], // 傳票日期_起 (預設當日)
     VouDateEnd: [new Date()], // 傳票日期_迄 (預設當日)
+    InvoiceStatus: [[]], // 發票狀態多選：Y=發票已入 N=發票未入 空=全部
 
     ...createPaginationConfig([{ field: 'VouNo', order: 1 }]),
   });
+
+  invoiceStatusOptions = [
+    { label: '發票已入', value: 'Y' },
+    { label: '發票未入', value: 'N' },
+  ];
 
   selectedItems: fin13090Item[] = [];
   data: fin13090Item[] = [];
