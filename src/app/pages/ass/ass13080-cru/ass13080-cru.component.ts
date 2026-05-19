@@ -1,14 +1,13 @@
-import { DatePipe } from '@angular/common';
-import { NgIf } from '@angular/common';
-import { Component, computed, OnInit } from '@angular/core';
+import { DatePipe, NgIf } from '@angular/common';
+import { Component, OnInit, computed } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { QueryASS11040DataWrapper, QueryASS11040Request, QueryASS11040Response } from '@pages/ass/ass11040/ass11040.model';
 import { ASS11040Service } from '@service/api/ass/ass11040.service';
 import { ASS13010Service } from '@service/api/ass/ass13010.service';
 import { ASS13080Service } from '@service/api/ass/ass13080.service';
-import { DropDownListService, ISYS1000Request, IPOS2013Request } from '@service/utility/dropDownList.service';
-import { QueryASS11040DataWrapper, QueryASS11040Request, QueryASS11040Response } from '@pages/ass/ass11040/ass11040.model';
+import { DropDownListService, IPOS2013Request, ISYS1000Request } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
@@ -17,12 +16,21 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
-import { distinctUntilChanged, finalize, map, switchMap, throwError } from 'rxjs';
+import {
+  EMPTY,
+  Observable,
+  catchError,
+  distinctUntilChanged,
+  finalize,
+  map,
+  switchMap,
+  throwError,
+} from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { DetailASS13010Response } from '../ass13010/ass13010.model';
 import {
-  ApproveASS13080Request,
   ASS13080Detail,
+  ApproveASS13080Request,
   CancelASS13080Request,
   CreateASS13080Request,
   QueryFAASSETChooseListASS13060Request,
@@ -55,44 +63,77 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
   public readonly CRUDStatus = CRUDStatus;
   public readonly dataForm = this.formBuilder.group({
     id: new FormControl<number | null>(null),
+    /** 變賣單號 */
     soldNo: new FormControl<string | null>(null),
+    /** 資產編號 */
     assetNo: new FormControl<string | null>(null, { nonNullable: false }),
+    /** 品項編號 */
     goodsId: new FormControl<string | null>(null),
+    /** 資產狀態 */
     assetStatus: new FormControl<string | null>(null),
-    /** DEPRE_YN 1:資產 2:列管品 */
+    /** 資產類型 DEPRE_YN 1:資產 2:列管品 */
     assetType: new FormControl<string | null>(null),
+    /** 攤提代號 */
     acpNo: new FormControl<string | null>(null),
+    /** 採購單號 */
     poNo: new FormControl<string | null>(null),
+    /** 購入日期 */
     buyDate: new FormControl<Date | null>(null),
+    /** 購入金額 */
     buyAmt: new FormControl<number | null>(null),
+    /** 異動金額 */
     chgAmt: new FormControl<number | null>(null),
+    /** 供應商編號 */
     vendorNo: new FormControl<string | null>(null),
+    /** 設備編號 */
     deviceNo: new FormControl<string | null>(null),
+    /** 會計科目(借) */
     accNoDr: new FormControl<string | null>(null),
+    /** 會計科目(貸) */
     accNoCr: new FormControl<string | null>(null),
+    /** 入帳日期 */
     txnDate: new FormControl<Date | null>(null),
+    /** 折舊會計科目 */
     deprAccNo: new FormControl<string | null>(null),
+    /** 累計折舊科目 */
     accuDeprAccNo: new FormControl<string | null>(null),
+    /** 折舊年限 */
     deprYears: new FormControl<number | null>(null),
+    /** 異動年限 */
     chgYears: new FormControl<number | null>(null),
+    /** 預留殘值 */
     residualAmt: new FormControl<number | null>(null),
+    /** 折舊到期 */
     deprDue: new FormControl<number | null>(null),
+    /** 未攤提金額 */
     unamortAmt: new FormControl<number | null>(null),
+    /** 已攤提金額 */
     amortAmt: new FormControl<number | null>(null),
+    /** 已攤提月數 */
     amortMonths: new FormControl<number | null>(null),
+    /** 保管人 */
     keepUserNo: new FormControl<string | null>(null),
+    /** 保管單位 */
     keepOrgId: new FormControl<string | null>(null),
+    /** 使用人 */
     useUserNo: new FormControl<string | null>(null),
+    /** 使用單位 */
     useOrgId: new FormControl<string | null>(null),
+    /** 位置編號 */
     locNo: new FormControl<string | null>(null),
+    /** 維修合約編號 */
     maintContractNo: new FormControl<string | null>(null),
-
+    /** 變賣日期 */
     soldDate: new FormControl<Date | null>(null, [Validators.required]),
+    /** 變賣廠商 */
     soldVendorNo: new FormControl<string | null>(null, [Validators.required]),
+    /** 入帳傳票編號 */
     soldVoucherNo: new FormControl<string | null>(null),
+    /** 變賣金額(含稅) */
     soldAmtTax: new FormControl<number | null>(null, [Validators.required]),
+    /** 變賣說明 */
     soldRemark: new FormControl<string | null>(null, [Validators.required]),
-
+    /** 資產註記 */
     assetRemark: new FormControl<string | null>(null),
   });
   public readonly df = computed(() => this.dataForm.controls);
@@ -100,10 +141,7 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
   assetsOptions: { value: string; label: string }[] = [];
   goodsOptions: { value: string; label: string }[] = [];
   assetStatusOptions: { value: string; label: string }[] = [];
-  assetTypeOptions: { value: string; label: string }[] = [
-    { value: '1', label: '資產' },
-    { value: '2', label: '列管品' },
-  ];
+  assetTypeOptions: { value: string; label: string }[] = [];
   acpOptions: { value: string; label: string }[] = [];
   orgOptions: { value: string; label: string }[] = [];
   userOptions: { value: string; label: string }[] = [];
@@ -150,6 +188,35 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
       });
   }
 
+  /** 自 ASS13060 列表依 ASSET_ID 解析一筆（與新增選資產邏輯一致） */
+  private resolveChooseRowForAssetId(
+    rows: QueryFAASSETChooseListASS13060Response[],
+    assetId: string
+  ): QueryFAASSETChooseListASS13060Response | null {
+    const trimmed = assetId.trim();
+    return (
+      rows.find(r => (r.ASSET_ID ?? '').trim() === trimmed) ?? (rows.length > 0 ? rows[0] : null)
+    );
+  }
+
+  /** 已有 choose 列時呼叫 detailASS13010（body.ID = 資產主鍵） */
+  private fetchDetailForChooseRow(
+    choose: QueryFAASSETChooseListASS13060Response
+  ): Observable<{ detail: DetailASS13010Response; choose: QueryFAASSETChooseListASS13060Response }> {
+    return this.ass13010Service.detailASS13010({ ID: String(choose.ID) }).pipe(
+      map(dRes => {
+        if (dRes.Status !== '0000') {
+          throw new Error(dRes.Message ?? '載入資產明細失敗');
+        }
+        const detail = Array.isArray(dRes.Data) ? dRes.Data[0] : dRes.Data;
+        if (!detail) {
+          throw new Error('查無資產明細');
+        }
+        return { detail, choose };
+      })
+    );
+  }
+
   /**
    * 先以 ASSET_ID 查 queryFAASSETChooseListASS13060 取得主鍵 ID，再呼叫 detailASS13010（Swagger 要求 body: { ID }）
    */
@@ -167,14 +234,11 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
             return throwError(() => new Error(cRes.Message ?? '載入資產列表失敗'));
           }
           const rows = cRes.Data ?? [];
-          const choose =
-            rows.find(r => (r.ASSET_ID ?? '').trim() === assetId) ?? (rows.length > 0 ? rows[0] : null);
+          const choose = this.resolveChooseRowForAssetId(rows, assetId);
           if (!choose?.ID) {
             return throwError(() => new Error('查無資產主鍵，無法載入明細'));
           }
-          return this.ass13010Service.detailASS13010({ ID: String(choose.ID) }).pipe(
-            map(dRes => ({ dRes, choose }))
-          );
+          return this.fetchDetailForChooseRow(choose);
         }),
         untilDestroyed(this),
         finalize(() => {
@@ -182,18 +246,7 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
         })
       )
       .subscribe({
-        next: ({ dRes, choose }) => {
-          if (dRes.Status !== '0000') {
-            this.messageService.errorBubble('操作失敗：' + (dRes.Message ?? '載入資產明細失敗'));
-            return;
-          }
-          const detail = dRes.Data;
-          if (!detail) {
-            this.messageService.warnBubble('查無資產明細');
-            return;
-          }
-          this.applyAssetDetailToForm(detail, choose);
-        },
+        next: ({ detail, choose }) => this.applyAssetDetailToForm(detail, choose),
         error: (err: unknown) => {
           const msg = err instanceof Error ? err.message : '請稍後再試';
           this.messageService.errorBubble('操作失敗：' + msg);
@@ -283,40 +336,79 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
       useOrgId: row.USE_ORG_ID ?? null,
       locNo: row.LOC_NO ?? null,
       maintContractNo: row.MAINT_CONTRACT_NO ?? null,
-      assetRemark: row.ASSET_REMARK ?? null,
+      assetRemark: row.NOTES ?? null,
     };
   }
 
   /** detailASS13010（Swagger 欄位）→ 表單資產區塊 */
   private mapDetailASS13010ToFormFields(d: DetailASS13010Response): {
+    /** 品項編號 */
     goodsId: string | null;
+    /** 資產狀態 */
     assetStatus: string | null;
+    /** 資產類型 */
     assetType: string | null;
+    /** 攤提代號 */
     acpNo: string | null;
+    /** 採購單號 */
     poNo: string | null;
+    /** 購入日期 */
     buyDate: Date | null;
+    /** 購入金額 */
     buyAmt: number | null;
+    /** 異動金額 */
     chgAmt: number | null;
+    /** 供應商編號 */
     vendorNo: string | null;
+    /** 設備編號 */
     deviceNo: string | null;
+    /** 會計科目(借) */
     accNoDr: string | null;
+    /** 會計科目(貸) */
     accNoCr: string | null;
+    /** 入帳日期 */
     txnDate: Date | null;
+    /** 折舊會計科目 */
     deprAccNo: string | null;
+    /** 累計折舊科目 */
     accuDeprAccNo: string | null;
+    /** 折舊年限 */
     deprYears: number | null;
+    /** 異動年限 */
     chgYears: number | null;
+    /** 預留殘值 */
     residualAmt: number | null;
+    /** 折舊到期 */
     deprDue: number | null;
+    /** 未攤提金額 */
     unamortAmt: number | null;
+    /** 已攤提金額 */
     amortAmt: number | null;
+    /** 已攤提月數 */
     amortMonths: number | null;
+    /** 保管人 */
     keepUserNo: string | null;
+    /** 保管單位 */
     keepOrgId: string | null;
+    /** 使用人 */
     useUserNo: string | null;
+    /** 使用單位 */
     useOrgId: string | null;
+    /** 位置編號 */
     locNo: string | null;
+    /** 維修合約編號 */
     maintContractNo: string | null;
+    /** 變賣日期 */
+    soldDate: Date | null;
+    /** 變賣廠商 */
+    soldVendorNo: string | null;
+    /** 入帳傳票編號 */
+    soldVoucherNo: string | null;
+    /** 變賣金額(含稅) */
+    soldAmtTax: number | null;
+    /** 變賣說明 */
+    soldRemark: string | null;
+    /** 資產註記 */
     assetRemark: string | null;
   } {
     const depreYn = d.DEPRE_YN;
@@ -334,34 +426,68 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
       accNoDr: d.STYPE_D ?? null,
       accNoCr: d.STYPE_C ?? null,
       txnDate: d.BILL_DATE ? new Date(d.BILL_DATE) : null,
-      deprAccNo: d.STYPE_ID ?? null,
-      accuDeprAccNo: d.STYPE_ID2 ?? null,
-      deprYears: d.EXP_YEAR ?? null,
+      deprAccNo: null,
+      accuDeprAccNo: null,
+      deprYears: null,
       chgYears: null,
       residualAmt: d.RESI_VALUE ?? null,
       deprDue: null,
       unamortAmt: null,
-      amortAmt: d.TAL_DEPRE_AMT ?? null,
-      amortMonths: d.TAL_DEPRE_MON ?? null,
-      keepUserNo: d.HOLD_EMP_ID ?? null,
-      keepOrgId: d.HOLD_ORG_ID ?? null,
-      useUserNo: d.USE_EMP_ID ?? null,
-      useOrgId: d.USE_ORG_ID ?? null,
+      amortAmt: null,
+      amortMonths: null,
+      keepUserNo: null,
+      keepOrgId: null,
+      useUserNo: null,
+      useOrgId: null,
       locNo: d.LOCATION_ID ?? null,
       maintContractNo: d.FIX_N ?? null,
+      soldDate: d.HANDLE_DATE ? new Date(d.HANDLE_DATE) : null,
+      soldVendorNo: d.HANDLE_VENDOR ?? null,
+      soldVoucherNo: d.HANDLE_VID ?? null,
+      soldAmtTax: d.ONSALE_AMT ?? null,
+      soldRemark: d.HANDLE_NOTE ?? null,
       assetRemark: d.NOTES ?? null,
     };
   }
 
+  /** queryFAASSETChooseListASS13060 → 保管/折舊欄位 */
+  private mapChooseToFormFields(choose: QueryFAASSETChooseListASS13060Response) {
+    return {
+      deprAccNo: choose.STYPE_ID ?? null,
+      accuDeprAccNo: choose.STYPE_ID2 ?? null,
+      deprYears: choose.FIR_EXP_YEAR ?? null,
+      chgYears: choose.UPD_EXP_YEAR_SUM ?? null,
+      amortAmt: choose.SUM_DEPRE_AMOUNT ?? null,
+      amortMonths: choose.SUM_DEPRE_MONTH ?? null,
+      chgAmt: choose.ChangeAmt ?? null,
+      keepUserNo: choose.HOLD_EMP_ID ?? null,
+      keepOrgId: choose.HOLD_ORG_ID ?? null,
+      useUserNo: choose.USE_EMP_ID ?? null,
+      useOrgId: choose.USE_ORG_ID ?? null,
+    };
+  }
+
+  /** 編輯／明細：僅以主檔覆寫「資產」區塊，不碰變賣欄位 */
+  private patchAssetFieldsFromDetail(
+    detail: DetailASS13010Response,
+    chooseRow: QueryFAASSETChooseListASS13060Response
+  ): void {
+    const fromDetail = this.mapDetailASS13010ToFormFields(detail);
+    const fromChoose = this.mapChooseToFormFields(chooseRow);
+    const patch = {
+      ...fromDetail,
+      ...fromChoose,
+      unamortAmt: this.computeUnamortAmt(fromDetail.buyAmt, fromChoose.chgAmt, fromChoose.amortAmt),
+    };
+    this.dataForm.patchValue(patch, { emitEvent: false });
+  }
+
+  /** 新增：選定資產後帶入明細（同 patchAssetFieldsFromDetail） */
   private applyAssetDetailToForm(
     detail: DetailASS13010Response,
     chooseRow: QueryFAASSETChooseListASS13060Response
   ): void {
-    const base = this.mapDetailASS13010ToFormFields(detail);
-    base.chgAmt = chooseRow.ChangeAmt ?? null;
-    base.chgYears = chooseRow.UPD_EXP_YEAR_SUM ?? null;
-    base.unamortAmt = this.computeUnamortAmt(base.buyAmt, base.chgAmt, base.amortAmt);
-    this.dataForm.patchValue(base, { emitEvent: false });
+    this.patchAssetFieldsFromDetail(detail, chooseRow);
   }
 
   private toDateStr(d: Date | null): string | undefined {
@@ -393,11 +519,40 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
     };
     this.ass13080Service
       .queryFAASSETChooseListASS13060(assetListReq)
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        if (res.Status !== '0000') return;
-        this.assetsOptions = this.faAssetChooseListToOpts(res.Data ?? []);
-      });
+      .pipe(
+        untilDestroyed(this),
+        switchMap(cRes => {
+          if (cRes.Status !== '0000') {
+            return EMPTY;
+          }
+          const rows = cRes.Data ?? [];
+          this.assetsOptions = this.faAssetChooseListToOpts(rows);
+
+          const isViewOrEdit =
+            this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read;
+          const assetId = String((this.rowdata as Partial<ASS13080Detail> | undefined)?.ASSET_ID ?? '').trim();
+          if (!isViewOrEdit || !assetId) {
+            return EMPTY;
+          }
+          const choose = this.resolveChooseRowForAssetId(rows, assetId);
+          if (!choose?.ID) {
+            this.messageService.warnBubble('查無資產主鍵，無法載入資產明細');
+            return EMPTY;
+          }
+          this.loading = true;
+          return this.fetchDetailForChooseRow(choose).pipe(
+            finalize(() => {
+              this.loading = false;
+            }),
+            catchError((err: unknown) => {
+              const msg = err instanceof Error ? err.message : '請稍後再試';
+              this.messageService.warnBubble(msg);
+              return EMPTY;
+            })
+          );
+        })
+      )
+      .subscribe(({ detail, choose }) => this.patchAssetFieldsFromDetail(detail, choose));
 
     const q11040: QueryASS11040Request = { PageSize: 9999, PageIndex: 1 };
     this.ass11040Service
@@ -424,6 +579,14 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
       .subscribe(res => {
         if (res.Status !== '0000') return;
         this.assetStatusOptions = this.toOpt(res.Data ?? []);
+      });
+
+    this.dropDownListService
+      .querySYS1000_DropDownList({ SYS_Type: 'ASSET_TYPE' } as any)
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res.Status !== '0000') return;
+        this.assetTypeOptions = this.toOpt(res.Data ?? []);
       });
 
     this.dropDownListService
@@ -508,11 +671,11 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
         assetNo: row.ASSET_ID ?? null,
         ...asset,
         unamortAmt,
-        soldDate: row.SOLD_DATE ? new Date(row.SOLD_DATE) : null,
-        soldVendorNo: row.SOLD_VENDOR_NO ?? null,
-        soldVoucherNo: row.SOLD_VOUCHER_NO ?? null,
-        soldAmtTax: row.SOLD_AMT_TAX ?? null,
-        soldRemark: row.SOLD_REMARK ?? null,
+        soldDate: row.HANDLE_DATE ? new Date(row.HANDLE_DATE) : row.SOLD_DATE ? new Date(row.SOLD_DATE) : null,
+        soldVendorNo: row.HANDLE_VENDOR ?? row.SOLD_VENDOR_NO ?? null,
+        soldVoucherNo: row.HANDLE_VID ?? row.SOLD_VOUCHER_NO ?? null,
+        soldAmtTax: row.ONSALE_AMT ?? row.SOLD_AMT_TAX ?? null,
+        soldRemark: row.HANDLE_NOTE ?? row.SOLD_REMARK ?? null,
       },
       { emitEvent: false }
     );

@@ -112,6 +112,18 @@ export interface ASS13080Detail {
   SOLD_AMT_TAX?: number | null;
   SOLD_REMARK?: string | null;
   ASSET_REMARK?: string | null;
+  /** 處分日期(報廢或變賣) */
+  HANDLE_DATE?: string | null;
+  /** 處分廠商 */
+  HANDLE_VENDOR?: string | null;
+  /** 處分傳票編號 */
+  HANDLE_VID?: string | null;
+  /** 處分說明 */
+  HANDLE_NOTE?: string | null;
+  /** 變賣金額 */
+  ONSALE_AMT?: number | null;
+  /** 資產註記 */
+  NOTES?: string | null;
 }
 
 export interface CreateASS13080Request {
@@ -171,18 +183,29 @@ export interface QueryFAASSETChooseListASS13060Response {
   PurchaseAmt?: number | null;
   ChangeAmt?: number | null;
   TotalAmt?: number | null;
+  /** 原折舊年限 */
   FIR_EXP_YEAR?: number | null;
+  /** 異動折舊年限 */
   UPD_EXP_YEAR_SUM?: number | null;
+  /** 累計已攤提月數 */
   SUM_DEPRE_MONTH?: number | null;
+  /** 累計已攤提金額 */
   SUM_DEPRE_AMOUNT?: number | null;
+  /** 折舊會計科目 */
   STYPE_ID?: string | null;
+  /** 累計折舊會計科目 */
   STYPE_ID2?: string | null;
+  /** 保管人 */
   HOLD_EMP_ID?: string | null;
   user_Name?: string | null;
+  /** 保管單位 */
   HOLD_ORG_ID?: string | null;
   Org_Name?: string | null;
+  /** 使用人 */
   USE_EMP_ID?: string | null;
+  /** 使用單位 */
   USE_ORG_ID?: string | null;
+  USE_ORG_NAME?: string | null;
 }
 
 export interface QueryFAASSETChooseListASS13060Result {
