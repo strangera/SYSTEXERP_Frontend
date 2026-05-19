@@ -92,8 +92,12 @@ export interface QueryASS11040Data {
   WEIGHT_KG?: number | null;
   /** 基本單位代碼 */
   UNIT?: string | null;
+  /** 基本單位名稱 */
+  UNIT_NAME?: string | null;
   /** 包裝單位代碼 */
   PACK_UNIT?: string | null;
+  /** 包裝單位名稱 */
+  PACK_UNIT_NAME?: string | null;
   /** 包裝數量 */
   PACK_NUM?: number | null;
   /** 成本單價 */
