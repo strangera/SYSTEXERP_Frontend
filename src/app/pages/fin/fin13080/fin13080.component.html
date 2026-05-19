@@ -42,7 +42,7 @@
   <div class="col-12">
     <app-table tableKey="FIN13080" [data]="data" [columns]="columns" [(selectedItems)]="selectedItems"
       [showRowEdit]="false" [showEdit]="false" [showManage]="false" [loading]="loading" [showDelete]="false"
-      [showCheckBox]="true" [multiSortMeta]="[{ field: 'No', order: 1 }]" [totalRecords]="totalRecords"
+      [showCheckBox]="true" [isRowSelectable]="isRowSelectable" [multiSortMeta]="[{ field: 'No', order: 1 }]" [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
       (delete)="onDelete(selectedItems)">
       <header>
