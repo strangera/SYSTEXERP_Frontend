@@ -67,6 +67,7 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
   queryFIN13060Fn = (body: any) => this.fin13060Service.queryFIN13060(body);
 
   editDisabled = (row: any): boolean => !row?.CanEdit;
+  isRowSelectable = (row: any): boolean => !!row?.CanDel;
   detailDisabled = (_row: any): boolean => false;
 
   // 查詢表單：鍵名與後端一模一樣
@@ -559,6 +560,11 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
   }
 
   onDelete(event: any): void {
+    const rows: any[] = Array.isArray(event) ? event : (event?.data ?? [event]);
+    if (rows.some(r => !r?.CanDel)) {
+      this.messageService.warnBubble('已審核之申報年月資料不可刪除');
+      return;
+    }
     const ids = this.normalizeIds(event);
     if (!ids.length) {
       this.messageService.warnBubble('請先選擇要刪除的資料');

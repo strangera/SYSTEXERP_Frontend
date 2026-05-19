@@ -48,8 +48,8 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   selectedItems: any[] = [];
   lastQueryBody: any = null;
 
-  isRowSelectable = (row: any): boolean => !row?.Voucher_No;
-  editDisabled = (row: any): boolean => !this.isRowSelectable(row) || !row?.CanEdit;
+  isRowSelectable = (row: any): boolean => !row?.Voucher_No && !!row?.CanDel;
+  editDisabled = (row: any): boolean => !!row?.Voucher_No || !row?.CanEdit;
   detailDisabled = (row: any): boolean => !this.isRowSelectable(row);
 
   queryForm = this.formBuilder.group({
@@ -177,6 +177,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   onDelete = (selection: any | any[]) => {
     const rows = Array.isArray(selection) ? selection : [selection];
     if (rows.some(r => r?.Voucher_No)) return this.messageService.warnBubble('已產生傳票之資料不可刪除');
+    if (rows.some(r => !r?.CanDel)) return this.messageService.warnBubble('已審核之申報年月資料不可刪除');
 
     const ids = rows.map(r => r.id).filter(id => id != null);
     this.messageService.confirm({
