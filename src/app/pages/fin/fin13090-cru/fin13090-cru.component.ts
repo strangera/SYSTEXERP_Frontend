@@ -55,6 +55,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   PUR_DirectType_Options: { value: string; label: string }[] = []; // 發票用途
   PUR_TaxType_Options: { value: string; label: string }[] = []; // 課稅別
   ACP_Type_Options: { value: string; label: string }[] = []; // 應付帳款類別（1=進退貨帳款2=專櫃帳款3=事務性帳款4=預付貨款5=電子商務6=發票媒申7=總帳管理9=固定資產）
+  readonly rowSelectableFn = (row: any) => !row?.IsLocked;
   // ---------明細 表格-------------------------------------------------------
   detailloading = false;
   orgDetailData: fin13090Detail[] = []; // 原始供應商備份
@@ -235,68 +236,77 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
   //---明細---
   private initSupplierColumns() {
+    const locked = (_v: any, _i: any, row: any) => !!row?.IsLocked;
     this.detailColumn = [
-      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label' },  // 發票格式 (憑證類別 21~29)
-      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', maxLength: 10, validate: [validateRequired, this.validateGUINo] }, // 發票號碼
+      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', maxLength: 10, validate: [validateRequired, this.validateGUINo], disabled: locked },
       {
-        field: 'PUR_GUIDate', header: '發票日期', type: 'date', validate: [validateRequired]
-      }, // 發票日期
+        field: 'PUR_GUIDate', header: '發票日期', type: 'date', validate: [validateRequired], disabled: locked
+      },
       {
         field: 'PUR_RepYYYYMM', header: '申報年月', type: 'input',
-        validate: [this.validateEvenMonth], disabled: () => true //雙數月檢查
-      }, // 申報年月 (固定為雙數月)
+        validate: [this.validateEvenMonth], disabled: () => true
+      },
       {
         field: 'PUR_VenNo', header: '廠商編號', type: 'dropdown', validate: [validateRequired]
         , options: this.VEN_Uniform_Option, optionValue: 'VEN_No', optionLabel: 'Label',
+        disabled: locked,
         onChange: (event: string, row: fin13090Detail) => {
           const selectedValue = event;
           console.log('PUR_VenNo', selectedValue);
           const vendor = this.VEN_Uniform_Option.find(v => v.VEN_No === selectedValue);
           if (vendor) {
-            // 自動帶入對應欄位 (PUR_VenName、PUR_VenUniform)
-            row.PUR_VenName = vendor.Name;      // 廠商名稱
-            row.PUR_VenUniform = vendor.No;     // 廠商統一編號
+            row.PUR_VenName = vendor.Name;
+            row.PUR_VenUniform = vendor.No;
           }
         }
-      },  // 廠商統一編號
-      { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'input', disabled: () => true }, //檢查帶入項目
-      { field: 'PUR_VenName', header: '廠商名稱', type: 'input', disabled: () => true }, //檢查帶入項目
+      },
+      { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'input', disabled: () => true },
+      { field: 'PUR_VenName', header: '廠商名稱', type: 'input', disabled: () => true },
 
-      { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label' }, // 發票用途 (1=營業用 2=共同使用)
-      // { field: 'ACP_Type', header: '應付帳款類別', type: 'dropdown', validate: [validateRequired], options: this.ACP_Type_Options, optionValue: 'value', optionLabel: 'label' }, // 應付帳款類別(前端都帶入7)
+      { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      // { field: 'ACP_Type', header: '應付帳款類別', type: 'dropdown', validate: [validateRequired], options: this.ACP_Type_Options, optionValue: 'value', optionLabel: 'label' },
       {
         field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber', validate: [validateRequired],
+        disabled: locked,
         calculate: (rowData: fin13090Detail, value: any) => {
           const amt = Number(value) || 0;
           if (String(rowData.PUR_TaxType) === '1') {
-            const tax = Math.round(amt / 21);
-            return { PUR_Tax: tax, PUR_Net: amt - tax };
+            const net = Math.round(amt / 1.05);
+            return { PUR_Net: net, PUR_Tax: amt - net };
           }
-          return { PUR_Tax: 0, PUR_Net: amt };
+          return { PUR_Net: amt, PUR_Tax: 0 };
         }
       },
       {
         field: 'PUR_TaxType', header: '課稅別', type: 'dropdown', validate: [validateRequired], options: this.PUR_TaxType_Options, optionValue: 'value', optionLabel: 'label',
+        disabled: locked,
         calculate: (rowData: fin13090Detail, value: any) => {
           const amt = Number(rowData.PUR_Amt) || 0;
           if (String(value) === '1') {
-            const tax = Math.round(amt / 21);
-            return { PUR_Tax: tax, PUR_Net: amt - tax };
+            const net = Math.round(amt / 1.05);
+            return { PUR_Net: net, PUR_Tax: amt - net };
           }
-          return { PUR_Tax: 0, PUR_Net: amt };
+          return { PUR_Net: amt, PUR_Tax: 0 };
         }
       },
       {
         field: 'PUR_Net', header: '發票未稅金額', type: 'inputNumber', validate: [validateRequired],
-        calculate: (rowData: fin13090Detail, value: any) => ({
-          PUR_Tax: (Number(rowData.PUR_Amt) || 0) - (Number(value) || 0)
-        })
+        disabled: locked,
+        calculate: (_rowData: fin13090Detail, value: any) => {
+          const net = Number(value) || 0;
+          const tax = Math.round(net * 0.05);
+          return { PUR_Tax: tax, PUR_Amt: net + tax };
+        }
       },
       {
         field: 'PUR_Tax', header: '發票稅額', type: 'inputNumber', validate: [validateRequired],
-        calculate: (rowData: fin13090Detail, value: any) => ({
-          PUR_Net: (Number(rowData.PUR_Amt) || 0) - (Number(value) || 0)
-        })
+        disabled: locked,
+        calculate: (rowData: fin13090Detail, value: any) => {
+          const tax = Number(value) || 0;
+          const net = Number(rowData.PUR_Net) || 0;
+          return { PUR_Amt: net + tax };
+        }
       },
     ];
   }
