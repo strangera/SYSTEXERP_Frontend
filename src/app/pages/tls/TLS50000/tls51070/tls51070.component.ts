@@ -421,6 +421,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   // #reigion Excel匯入
   onImportExcelSubmit(event: FileUploadHandlerEvent) {
     if (!event || !event.files || event.files.length === 0) return;
+    this.excelLoading = true;
     const file = event.files[0];
     const sheetName = this.importForm.get('sheetName')?.value || '';
 
@@ -428,6 +429,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
       untilDestroyed(this),
       finalize(() => {
         this.excelUploadComponent.clearFiles();
+        this.excelLoading = false;
       })
     ).subscribe(res => {
       const data = res?.Data;
