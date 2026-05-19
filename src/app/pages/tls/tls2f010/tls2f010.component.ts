@@ -51,7 +51,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     PUR_GUIDate_Start: [null],
     PUR_GUIDate_End: [null],
     COMM_MONEY_TYPE: [null],
-    COMM_YM: [new Date()],
+    COMM_YM: [null],
     sam_termno: [null],
     DEC_YM: [null],
     ven_uniform: [null],
