@@ -69,45 +69,76 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
   readonly defaultSort: SortItem[] = [{ field: 'CheckNo', order: 1 }];
   private _currentSortBy: SortItem[] = this.defaultSort;
 
-  columns: Column[] = [
-    { field: 'CheckNo', header: '票據號碼' },
-    { field: 'VEN_No', header: '廠客代號' },
-    { field: 'VEN_Name', header: '廠客名稱' },
+ columns: Column[] = [
+  { field: 'RowNo', header: '序號' },
 
-    { field: 'BNK_No', header: '票面銀行代號' },
-    { field: 'BNK_Name', header: '票面銀行名稱' },
+  { field: 'CheckNo', header: '票據號碼' },
 
-    { field: 'CHK_ColleDate', header: '託收日', format: (v: any) => this.formatDate(v) },
+  { field: 'VEN_No', header: '廠客代號' },
+  { field: 'VEN_Name', header: '廠客名稱' },
 
-    { field: 'AccNo', header: '科目代號' },
-    { field: 'AccName', header: '科目名稱' },
+  { field: 'BNK_No', header: '全省銀行代號' },
+  { field: 'BNK_Name', header: '銀行名稱' },
 
-    { field: 'BNK_AccNo', header: '公司銀行科目代號' },
-    { field: 'BNK_AccName', header: '公司銀行科目名稱' },
+  {
+    field: 'CHK_ColleDate',
+    header: '託收日期',
+    format: (v: any) => this.formatDate(v),
+  },
 
-    { field: 'CHK_ReceDate', header: '收票日', format: (v: any) => this.formatDate(v) },
-    { field: 'Sales_Id', header: '收票業務員' },
+  { field: 'AccNo', header: '科目代號' },
+  { field: 'AccName', header: '科目名稱' },
 
-    { field: 'RCV_No', header: '收款單號' },
+  { field: 'BNK_AccNo', header: '公司銀行科目代號' },
+  { field: 'BNK_AccName', header: '公司銀行科目名稱' },
 
-    { field: 'CHK_ExpireDate', header: '到期日', format: (v: any) => this.formatDate(v) },
-    { field: 'CHK_CashDate', header: '兌現日', format: (v: any) => this.formatDate(v) },
+  {
+    field: 'CHK_ReceDate',
+    header: '收票日期',
+    format: (v: any) => this.formatDate(v),
+  },
 
-    { field: 'CHK_Amt', header: '票面金額', format: (v: any) => this.moneyFormat(v) },
+  { field: 'Sales_Id', header: '收票業務員代碼' },
 
-    { field: 'CHK_Type_Name', header: '票據種類' },
-    { field: 'Ticket_YN_Name', header: '是否客票' },
+  { field: 'RCV_No', header: '收款單號' },
 
-    { field: 'CHK_Comment', header: '備註' },
+  {
+    field: 'CHK_ExpireDate',
+    header: '到期日',
+    format: (v: any) => this.formatDate(v),
+  },
 
-    { field: 'ORG_ID', header: '組織代號' },
-    { field: 'Org_Name', header: '組織名稱' },
+  {
+    field: 'CHK_CashDate',
+    header: '兌現日',
+    format: (v: any) => this.formatDate(v),
+  },
 
-    { field: 'Tran_Status_Name', header: '狀態' },
-    { field: 'CHK_Status_Name', header: '票據狀態' },
+  {
+    field: 'CHK_Amt',
+    header: '票面金額',
+    format: (v: any) => this.moneyFormat(v),
+  },
 
-    { field: 'VouNo', header: '傳票號碼' },
-  ];
+  { field: 'CHK_Type', header: '票據種類' },
+  { field: 'CHK_Type_Name', header: '票據種類名稱' },
+
+  { field: 'Ticket_YN', header: '是否客票' },
+  { field: 'Ticket_YN_Name', header: '是否客票名稱' },
+
+  { field: 'CHK_Comment', header: '備註' },
+
+  { field: 'ORG_ID', header: '組織代號' },
+  { field: 'Org_Name', header: '組織名稱' },
+
+  { field: 'Tran_Status', header: '狀態' },
+  { field: 'Tran_Status_Name', header: '狀態名稱' },
+
+  { field: 'CHK_Status', header: '票據狀態' },
+  { field: 'CHK_Status_Name', header: '票據狀態名稱' },
+
+  { field: 'VouNo', header: '傳票號碼' },
+];
 
   // 下拉 options
   vendorOptions: any[] = [];
@@ -362,7 +393,9 @@ if (fromCru) {
       ChkNo: (raw?.ChkNo ?? '').trim() || undefined,
       VenNo: (raw?.VenNo ?? '').trim() || undefined,
 
-      BankNoList: Array.isArray(raw?.BankNoList) && raw.BankNoList.length ? raw.BankNoList.join(',') : undefined,
+      BankNoList: Array.isArray(raw?.BankNoList) && raw.BankNoList.length
+  ? raw.BankNoList.join(',')
+  : undefined,
       CustBankAccNo: (raw?.CustBankAccNo ?? '').trim() || undefined,
 
       ColleDateFrom: this.toYmd(raw?.ColleDateFrom),
