@@ -303,6 +303,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       payload.PUR_GUIDate_From = this.formatDateOnly(purFrom);
       payload.PUR_GUIDate_To = this.formatDateOnly(purTo);
       payload.COMM_MONEY_TYPE = Array.isArray(raw.COMM_MONEY_TYPE) ? raw.COMM_MONEY_TYPE.join(',') : (raw.COMM_MONEY_TYPE || '');
+      payload.sam_termno = raw.sam_termno ?? null;
       payload.COMM_YM = this.formatYearMonth(raw.COMM_YM);
       // Ensure DEC_YM is normalized to YYYYMM for payload.
       payload.DEC_YM = decYm;
@@ -505,6 +506,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     payload.PUR_GUIDate_From = this.formatDateOnly(purFrom);
     payload.PUR_GUIDate_To = this.formatDateOnly(purTo);
     payload.COMM_MONEY_TYPE = Array.isArray(raw.COMM_MONEY_TYPE) ? raw.COMM_MONEY_TYPE.join(',') : (raw.COMM_MONEY_TYPE || '');
+    payload.sam_termno = raw.sam_termno ?? null;
     payload.COMM_YM = this.formatYearMonth(raw.COMM_YM);
     payload.DEC_YM = this.normalizeYearMonth(raw.DEC_YM);
     payload.ven_uniform = raw.ven_uniform || '';
