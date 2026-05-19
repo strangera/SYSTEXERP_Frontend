@@ -33,44 +33,20 @@ export class ASS17020TableReportUtilityService {
    */
   splitTripleHeaderSegments(columns: ReportColumn[]): TripleHeaderSegments {
     const empty: TripleHeaderSegments = { prefix: [], grouped: [], suffix: [], isValid: false };
-    if (!columns?.length) {
-      return { ...empty, prefix: [...(columns ?? [])] };
-    }
+    if (!columns?.length) return { ...empty, prefix: [...(columns ?? [])] };
 
-    let first = -1;
-    for (let i = 0; i < columns.length; i++) {
-      if (this.isColumnVisible(columns[i]) && columns[i].groupField) {
-        first = i;
-        break;
-      }
-    }
-    if (first === -1) {
+    const visibleCols = columns.map((col, index) => ({ col, index }))
+      .filter(item => this.isColumnVisible(item.col));
+    const groupIndices = visibleCols.filter(item => item.col.groupField).map(item => item.index);
+    // 1. 如果沒有群組欄位，直接回傳
+    if (groupIndices.length === 0) {
       return { prefix: [...columns], grouped: [], suffix: [], isValid: false };
     }
 
-    let last = first;
-    for (let i = columns.length - 1; i >= 0; i--) {
-      if (this.isColumnVisible(columns[i]) && columns[i].groupField) {
-        last = i;
-        break;
-      }
-    }
-
-    for (let i = 0; i < first; i++) {
-      if (this.isColumnVisible(columns[i]) && columns[i].groupField) {
-        return empty;
-      }
-    }
-    for (let i = first; i <= last; i++) {
-      if (this.isColumnVisible(columns[i]) && !columns[i].groupField) {
-        return empty;
-      }
-    }
-    for (let i = last + 1; i < columns.length; i++) {
-      if (this.isColumnVisible(columns[i]) && columns[i].groupField) {
-        return empty;
-      }
-    }
+    const first = groupIndices[0];
+    const last = groupIndices.at(-1)!;
+    // 2. 檢查結構是否連續 (使用輔助函式)
+    if (!this.isStructureValid(columns, first, last)) return empty;
 
     return {
       prefix: columns.slice(0, first),
@@ -78,6 +54,18 @@ export class ASS17020TableReportUtilityService {
       suffix: columns.slice(last + 1),
       isValid: true,
     };
+  }
+  /** 輔助函式：檢查分佈是否連續 (將複雜邏輯抽離) */
+  private isStructureValid(columns: ReportColumn[], first: number, last: number): boolean {
+    for (let i = 0; i < columns.length; i++) {
+      const isVisible = this.isColumnVisible(columns[i]);
+      const hasGroup = !!columns[i].groupField;
+
+      if (i < first && isVisible && hasGroup) return false;      // 前綴不該有群組
+      if (i >= first && i <= last && isVisible && !hasGroup) return false; // 群組區不該缺群組
+      if (i > last && isVisible && hasGroup) return false;       // 後綴不該有群組
+    }
+    return true;
   }
 
   /** 群組區內依第一次出現順序列出不重複的 groupField */
@@ -116,11 +104,18 @@ export class ASS17020TableReportUtilityService {
     return true;
   }
 
-  private safeUrlCache = new Map<string, SafeUrl>();
+  private readonly safeUrlCache = new Map<string, SafeUrl>();
 
   getImage(url: any): SafeUrl | string {
-    // 1. 基本防呆：如果是空值，直接回傳一個透明或佔位圖的 base64，或是一個空字串
     if (!url || typeof url !== 'string' || url.trim() === '') {
+      return '';
+    }
+
+    // 1. 確保該 URL 只包含預期的字元 (例如：只允許字母、數字、/、.、_、-)
+    // 並且絕對不能包含 'javascript:' 或 'data:' 這些危險協議
+    const dangerousPattern = /javascript:|data:|vbscript:/i;
+    if (dangerousPattern.test(url)) {
+      console.error('偵測到惡意 URL 協議:', url);
       return '';
     }
 
@@ -129,24 +124,26 @@ export class ASS17020TableReportUtilityService {
     }
 
     try {
-      const baseUrl = environment.ApiUrl.endsWith('/')
-        ? environment.ApiUrl.slice(0, -1)
-        : environment.ApiUrl;
+      const baseUrl = environment.ApiUrl.endsWith('/') ? environment.ApiUrl.slice(0, -1) : environment.ApiUrl;
 
-      // 2. 處理路徑：統一移除 ~ 並確保開頭沒有 /
-      let cleanPath = url.replace(/~/g, '');
+      let cleanPath = url.replaceAll('~', '');
       if (cleanPath.startsWith('/')) {
         cleanPath = cleanPath.slice(1);
       }
 
-      // 3. 拼接並處理可能的重複斜線
       const finalUrl = `${baseUrl}/${cleanPath}`;
+
+      // 2. 二次確認拼接後的 URL 是合法的
+      // 這裡我們強制要求 URL 必須以我們的 API 域名開頭
+      if (!finalUrl.startsWith(environment.ApiUrl)) {
+        return '';
+      }
 
       const safeUrl = this.sanitizer.bypassSecurityTrustUrl(finalUrl);
       this.safeUrlCache.set(url, safeUrl);
       return safeUrl;
     } catch (e) {
-      console.error('URL轉換出錯:', e);
+      console.error(`Exception while doing something: ${e}`);
       return '';
     }
   }
@@ -248,7 +245,7 @@ export class ASS17020TableReportUtilityService {
     const groupColumn = columns.find(c => c.field === groupRowsBy);
 
     // 如果該分組欄位有定義 format，就用 format 過的值，否則直接轉字串
-    if (groupColumn && groupColumn.format) {
+    if (groupColumn?.format) {
       return String(groupColumn.format(rawValue, 0, rowData) ?? '');
     }
     return String(rawValue ?? '');
