@@ -16,7 +16,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 @Component({
   selector: 'app-tls41020-cru',
   templateUrl: './tls41020-cru.component.html',
-  styleUrl: './tls41020-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,

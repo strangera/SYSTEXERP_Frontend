@@ -2,7 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -26,11 +26,9 @@ interface ApiSort {
   order: number;
 }
 
-@UntilDestroy()
 @Component({
   selector: 'app-tls41020',
   templateUrl: './tls41020.component.html',
-  styleUrl: './tls41020.component.scss',
   standalone: true,
   imports: [
     CommonModule,
