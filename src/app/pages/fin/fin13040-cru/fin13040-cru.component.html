@@ -12,9 +12,15 @@
           </app-dropdown>
         </div> -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="使用別" controlName="SAL_Type" [options]="SAL_Type_Options" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.SAL_Type" [submitted]="submitted">
-          </app-dropdown>
+          <app-dropdown
+            label="使用別"
+            controlName="SAL_Type"
+            [options]="SAL_Type_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.SAL_Type"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
       </div>
       <div class="grid p-fluid">
@@ -22,15 +28,30 @@
           <app-input-text label="字軌" [control]="dataForm.controls.GUI_Track" [submitted]="submitted"></app-input-text>
         </div> -->
         <div class="col-12 md:col-6 lg:col-4" *ngIf="showInvoiceNumberField">
-          <app-input-text label="發票號碼" [control]="dataForm.controls.INV_GUINumber" [submitted]="submitted"
-            [readonly]="isInvoiceNumberReadonly"></app-input-text>
+          <app-input-text
+            label="發票號碼"
+            [control]="dataForm.controls.INV_GUINumber"
+            [submitted]="submitted"
+            [readonly]="isInvoiceNumberReadonly"
+          ></app-input-text>
         </div>
-        <app-year-month class="col-12 md:col-6 lg:col-4" label="申報年月" [control]="dataForm.controls.INV_DeclareYM"
-          controlName="INV_DeclareYM" [submitted]="submitted" [evenMonth]="true"
-          (valueChanges)="loadGuiTrackOptions($event)"></app-year-month>
+        <app-year-month
+          class="col-12 md:col-6 lg:col-4"
+          label="申報年月"
+          [control]="dataForm.controls.INV_DeclareYM"
+          controlName="INV_DeclareYM"
+          [submitted]="submitted"
+          [evenMonth]="true"
+          (valueChanges)="loadGuiTrackOptions($event)"
+        ></app-year-month>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar label="發票日期" calendarType="dateOne" controlName="InvoiceDate"
-            [control]="dataForm.controls.InvoiceDate" [submitted]="submitted"></app-calendar>
+          <app-calendar
+            label="發票日期"
+            calendarType="dateOne"
+            controlName="InvoiceDate"
+            [control]="dataForm.controls.InvoiceDate"
+            [submitted]="submitted"
+          ></app-calendar>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -46,63 +67,118 @@
             [dialogData]="Buyer_Uniform_Options"
             [dialogColumns]="buyerDialogColumns"
             [totalRecords]="Buyer_Uniform_Options.length"
-            [lazy]="false">
-          </app-dropdown-table>
+            [lazy]="false"
+          ></app-dropdown-table>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="課稅別" controlName="PUR_TaxType" [options]="taxTypeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.PUR_TaxType" [submitted]="submitted">
-          </app-dropdown>
+          <app-dropdown
+            label="課稅別"
+            controlName="PUR_TaxType"
+            [options]="taxTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.PUR_TaxType"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="是否作廢" controlName="Invoice_Cancel" [options]="Invoice_CancelOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.Invoice_Cancel" [submitted]="submitted">
-          </app-dropdown>
+          <app-dropdown
+            label="是否作廢"
+            controlName="Invoice_Cancel"
+            [options]="Invoice_CancelOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.Invoice_Cancel"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="傳票號碼 " [control]="dataForm.controls.Voucher_No"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="傳票號碼 "
+            [control]="dataForm.controls.Voucher_No"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="資產註記" [control]="dataForm.controls.AssetType" [options]="AssetNoteOptions"
-            optionLabel="label" optionValue="value" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            label="資產註記"
+            [control]="dataForm.controls.AssetType"
+            [options]="AssetNoteOptions"
+            optionLabel="label"
+            optionValue="value"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="發票抬頭" [control]="dataForm.controls.PUR_InvoiceTitle"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="發票抬頭"
+            [control]="dataForm.controls.PUR_InvoiceTitle"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="未稅金額" [control]="dataForm.controls.PUR_Net" [submitted]="submitted"
-            [useGrouping]="true" [readonly]="true"></app-input-number>
+          <app-input-number
+            label="未稅金額"
+            [control]="dataForm.controls.PUR_Net"
+            [submitted]="submitted"
+            [useGrouping]="true"
+            [readonly]="true"
+          ></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="稅額" [control]="dataForm.controls.PUR_Tax" [submitted]="submitted"
-            [useGrouping]="true" [readonly]="true"></app-input-number>
+          <app-input-number
+            label="稅額"
+            [control]="dataForm.controls.PUR_Tax"
+            [submitted]="submitted"
+            [useGrouping]="true"
+            [readonly]="true"
+          ></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="含稅金額" [control]="dataForm.controls.PUR_Amt" [submitted]="submitted"
-            [useGrouping]="true" [readonly]="true"></app-input-number>
+          <app-input-number
+            label="含稅金額"
+            [control]="dataForm.controls.PUR_Amt"
+            [submitted]="submitted"
+            [useGrouping]="true"
+            [readonly]="true"
+          ></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="備註" [control]="dataForm.controls.INV_REMARK"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="備註"
+            [control]="dataForm.controls.INV_REMARK"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
       <br />
       <div class="grid p-fluid">
         <div class="col-12">
-          <app-table-edit #tableEdit [tableKey]="'InvoiceSeqNo'" [columns]="columns" [data]="data" [showInsert]="false"
-            [disabled]="isFormReadable" (dataChange)="data = $event" [autoInsertDefaultRow]="true"
-            (fieldChange)="updateMasterAmounts()">
-
-          </app-table-edit>
+          <app-table-edit
+            #tableEdit
+            [tableKey]="'InvoiceSeqNo'"
+            [columns]="columns"
+            [data]="data"
+            [showInsert]="false"
+            [disabled]="isFormReadable"
+            (dataChange)="data = $event"
+            [autoInsertDefaultRow]="true"
+            (fieldChange)="updateMasterAmounts()"
+          ></app-table-edit>
         </div>
       </div>
 
-      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <div
+        *ngIf="!isFormReadable"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
         <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit" [loading]="loading" [form]="dataForm"></app-button>
+        <app-button
+          btnType="submit"
+          [loading]="loading"
+          [form]="dataForm"
+        ></app-button>
       </div>
     </form>
   </p-panel>

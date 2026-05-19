@@ -55,6 +55,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   PUR_DirectType_Options: { value: string; label: string }[] = []; // 發票用途
   PUR_TaxType_Options: { value: string; label: string }[] = []; // 課稅別
   ACP_Type_Options: { value: string; label: string }[] = []; // 應付帳款類別（1=進退貨帳款2=專櫃帳款3=事務性帳款4=預付貨款5=電子商務6=發票媒申7=總帳管理9=固定資產）
+  readonly rowSelectableFn = (row: any) => !row?.IsLocked;
   // ---------明細 表格-------------------------------------------------------
   detailloading = false;
   orgDetailData: fin13090Detail[] = []; // 原始供應商備份
@@ -168,6 +169,9 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
             // 深拷備份(切斷與原始資料物件的參考連結)
             this.orgDetailData = JSON.parse(JSON.stringify(this.detailData));
+
+            // 進項稅額貸方固定從 API 回傳（GLS3002 AccAmt 合計），不自行計算
+            this.dataForm.patchValue({ TaxTotal: res.Data.TaxTotal ?? 0 });
             console.log('明細資料', this.detailData);
           } else {
             // 如果整個 res.Data 都是空的，也要清空表格防止舊資料殘留
@@ -232,40 +236,78 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
   //---明細---
   private initSupplierColumns() {
+    const locked = (_v: any, _i: any, row: any) => !!row?.IsLocked;
     this.detailColumn = [
-      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label' },  // 發票格式 (憑證類別 21~29)
-      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', maxLength: 10, validate: [validateRequired, this.validateGUINo] }, // 發票號碼
+      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', maxLength: 10, validate: [validateRequired, this.validateGUINo], disabled: locked },
       {
-        field: 'PUR_GUIDate', header: '發票日期', type: 'date', validate: [validateRequired]
-      }, // 發票日期
+        field: 'PUR_GUIDate', header: '發票日期', type: 'date', validate: [validateRequired], disabled: locked
+      },
       {
         field: 'PUR_RepYYYYMM', header: '申報年月', type: 'input',
-        validate: [this.validateEvenMonth], disabled: () => true //雙數月檢查
-      }, // 申報年月 (固定為雙數月)
+        validate: [this.validateEvenMonth], disabled: () => true
+      },
       {
         field: 'PUR_VenNo', header: '廠商編號', type: 'dropdown', validate: [validateRequired]
         , options: this.VEN_Uniform_Option, optionValue: 'VEN_No', optionLabel: 'Label',
+        disabled: locked,
         onChange: (event: string, row: fin13090Detail) => {
           const selectedValue = event;
           console.log('PUR_VenNo', selectedValue);
           const vendor = this.VEN_Uniform_Option.find(v => v.VEN_No === selectedValue);
           if (vendor) {
-            // 自動帶入對應欄位 (PUR_VenName、PUR_VenUniform)
-            row.PUR_VenName = vendor.Name;      // 廠商名稱
-            row.PUR_VenUniform = vendor.No;     // 廠商統一編號
+            row.PUR_VenName = vendor.Name;
+            row.PUR_VenUniform = vendor.No;
           }
         }
-      },  // 廠商統一編號
-      { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'input', disabled: () => true }, //檢查帶入項目
-      { field: 'PUR_VenName', header: '廠商名稱', type: 'input', disabled: () => true }, //檢查帶入項目
+      },
+      { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'input', disabled: () => true },
+      { field: 'PUR_VenName', header: '廠商名稱', type: 'input', disabled: () => true },
 
-      { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label' }, // 發票用途 (1=營業用 2=共同使用)
-      // { field: 'ACP_Type', header: '應付帳款類別', type: 'dropdown', validate: [validateRequired], options: this.ACP_Type_Options, optionValue: 'value', optionLabel: 'label' }, // 應付帳款類別(前端都帶入7)
-      { field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber', validate: [validateRequired] }, // 發票總金額（含稅）
-
-      { field: 'PUR_TaxType', header: '課稅別', type: 'dropdown', validate: [validateRequired], options: this.PUR_TaxType_Options, optionValue: 'value', optionLabel: 'label' },  // 課稅別 (0=免稅 1=應稅 2=零稅)
-      { field: 'PUR_Net', header: '發票未稅金額', type: 'inputNumber', validate: [validateRequired], disabled: () => true },  // 發票未稅金額(稅額自動計算)
-      { field: 'PUR_Tax', header: '發票稅額', type: 'inputNumber', validate: [validateRequired], disabled: () => true }, // 發票稅額(稅額自動計算)
+      { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      // { field: 'ACP_Type', header: '應付帳款類別', type: 'dropdown', validate: [validateRequired], options: this.ACP_Type_Options, optionValue: 'value', optionLabel: 'label' },
+      {
+        field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber', validate: [validateRequired],
+        disabled: locked,
+        calculate: (rowData: fin13090Detail, value: any) => {
+          const amt = Number(value) || 0;
+          if (String(rowData.PUR_TaxType) === '1') {
+            const net = Math.round(amt / 1.05);
+            return { PUR_Net: net, PUR_Tax: amt - net };
+          }
+          return { PUR_Net: amt, PUR_Tax: 0 };
+        }
+      },
+      {
+        field: 'PUR_TaxType', header: '課稅別', type: 'dropdown', validate: [validateRequired], options: this.PUR_TaxType_Options, optionValue: 'value', optionLabel: 'label',
+        disabled: locked,
+        calculate: (rowData: fin13090Detail, value: any) => {
+          const amt = Number(rowData.PUR_Amt) || 0;
+          if (String(value) === '1') {
+            const net = Math.round(amt / 1.05);
+            return { PUR_Net: net, PUR_Tax: amt - net };
+          }
+          return { PUR_Net: amt, PUR_Tax: 0 };
+        }
+      },
+      {
+        field: 'PUR_Net', header: '發票未稅金額', type: 'inputNumber', validate: [validateRequired],
+        disabled: locked,
+        calculate: (_rowData: fin13090Detail, value: any) => {
+          const net = Number(value) || 0;
+          const tax = Math.round(net * 0.05);
+          return { PUR_Tax: tax, PUR_Amt: net + tax };
+        }
+      },
+      {
+        field: 'PUR_Tax', header: '發票稅額', type: 'inputNumber', validate: [validateRequired],
+        disabled: locked,
+        calculate: (rowData: fin13090Detail, value: any) => {
+          const tax = Number(value) || 0;
+          const net = Number(rowData.PUR_Net) || 0;
+          return { PUR_Amt: net + tax };
+        }
+      },
     ];
   }
 
@@ -348,6 +390,14 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       }
     }
 
+    // 發票稅額加總必須等於進項稅額貸方（GLS3002 AccAmt 合計）
+    const taxTotal = Number(this.dataForm.get('TaxTotal')?.value) || 0;
+    const inputTaxSum = this.detailData.reduce((sum, item) => sum + (Number(item.PUR_Tax) || 0), 0);
+    if (inputTaxSum !== taxTotal) {
+      this.messageService.errorBubble(`發票稅額合計 (${inputTaxSum}) 必須等於進項稅額貸方 (${taxTotal})`);
+      return false;
+    }
+
     return true;
   }
 
@@ -373,43 +423,10 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
           }
         }
       }
-      // --- 明細稅額計算 (課稅別 變更)---
-      const amt = Number(row.PUR_Amt) || 0;
-      const taxType = String(row.PUR_TaxType); // 確保是字串比較
-
-      if (taxType === '1') {
-        // 應稅：稅額 = round(總額 / 21), 未稅 = 總額 - 稅額
-        const tax = Math.round(amt / 21);
-        row.PUR_Tax = tax;
-        row.PUR_Net = amt - tax;
-      } else if (taxType === '0' || taxType === '2') {
-        // 免稅 或 零稅：稅額 = 0, 未稅 = 總額
-        row.PUR_Tax = 0;
-        row.PUR_Net = amt;
-      } else {
-        // 預防萬一其他稅別
-        row.PUR_Tax = 0;
-        row.PUR_Net = amt;
-      }
     });
 
-    // 更新資料源並重新計算總計
+    // 更新資料源
     this.detailData = [...newData];
-    this.calculateTaxTotal();
-  }
-
-  // 2. 實作加總邏輯
-  calculateTaxTotal() {
-    // 使用 reduce 累加所有明細的 PUR_Tax
-    const total = this.detailData.reduce((sum, item) => {
-      const tax = Number(item.PUR_Tax) || 0; // 確保是數字，避免 null 或 undefined
-      return sum + tax;
-    }, 0);
-
-    // 3. 更新到 dataForm 的 TaxTotal 欄位
-    this.dataForm.patchValue({
-      TaxTotal: total
-    });
   }
 
   //清除明細內容

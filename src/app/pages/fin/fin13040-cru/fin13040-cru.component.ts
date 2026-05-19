@@ -545,10 +545,14 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         return;
       }
 
-      const toISO = (d: any): string | null => {
+      const toDateOnly = (d: Date | string | null | undefined): string | null => {
         if (!d) return null;
         const date = new Date(d);
-        return isNaN(date.getTime()) ? null : date.toISOString();
+        if (isNaN(date.getTime())) return null;
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
       };
 
       const header = {
@@ -558,7 +562,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         InvoiceType: v.InvoiceType ?? '35',
         SAL_Type: v.SAL_Type,
         InvoiceNumber: v.INV_GUINumber,
-        InvoiceDate: toISO(v.InvoiceDate),
+        InvoiceDate: toDateOnly(v.InvoiceDate),
         INV_DeclareYM: this.formatDeclareYM(v.InvoiceDate),
         Buyer_Uniform: (v.Buyer_Uniform && typeof v.Buyer_Uniform === 'object')
           ? v.Buyer_Uniform.value

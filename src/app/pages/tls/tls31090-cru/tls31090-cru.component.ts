@@ -196,10 +196,10 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
       CatLNos: CatLNosValue
     };
     //用Json顯示request
-    console.log('時段之業種營業報表request', request);
+    console.log('各時段之大分類營業報表request', request);
 
     this.tls31090Service.queryTLS31090Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-      console.log('時段之業種營業報表response', res.Data);
+      console.log('各時段之大分類營業報表response', res.Data);
       this.data = res.Data ?? [];               // 查詢資料
       this.totalRecords = res.Data.length;      // 長度計算筆數
       this.historyRequestBody = request;        // 查詢條件
