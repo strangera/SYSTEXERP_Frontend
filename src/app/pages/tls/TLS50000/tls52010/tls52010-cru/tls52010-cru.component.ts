@@ -208,24 +208,24 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
           this.calculateTotals();
           this.cdr.detectChanges();
 
-          // 🎯 確保 API 更新完 DOM 結構後，焦點依然穩固全選在數量格
-          setTimeout(() => {
-            if (!this.tableEditComponent) return;
-            const tableEl = document.querySelector(`[table-edit-id] .p-datatable-tbody`);
-            if (tableEl && tableEl.children[index]) {
-              const targetRow = tableEl.children[index];
-              const quantityInput = targetRow.querySelector('.p-inputnumber-input') as HTMLInputElement;
-              if (quantityInput) {
-                // 如果目前的焦點已經不在這行，或者使用者已經打完字，就不要重複搶焦點
-                if (document.activeElement === quantityInput) {
-                  quantityInput.select();
-                } else {
-                  quantityInput.focus();
-                  quantityInput.select();
-                }
-              }
-            }
-          }, 40);
+          // // 🎯 確保 API 更新完 DOM 結構後，焦點依然穩固全選在數量格
+          // setTimeout(() => {
+          //   if (!this.tableEditComponent) return;
+          //   const tableEl = document.querySelector(`[table-edit-id] .p-datatable-tbody`);
+          //   if (tableEl && tableEl.children[index]) {
+          //     const targetRow = tableEl.children[index];
+          //     const quantityInput = targetRow.querySelector('.p-inputnumber-input') as HTMLInputElement;
+          //     if (quantityInput) {
+          //       // 如果目前的焦點已經不在這行，或者使用者已經打完字，就不要重複搶焦點
+          //       if (document.activeElement === quantityInput) {
+          //         quantityInput.select();
+          //       } else {
+          //         quantityInput.focus();
+          //         quantityInput.select();
+          //       }
+          //     }
+          //   }
+          // }, 40);
 
         } else {
           this.messageService.errorBubble('查無該商品資訊');

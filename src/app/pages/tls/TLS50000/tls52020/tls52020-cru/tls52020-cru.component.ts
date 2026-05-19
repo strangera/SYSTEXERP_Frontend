@@ -192,22 +192,22 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
           this.calculateTotals();
           this.cdr.detectChanges();
 
-          // 🎯 當成功查到商品並自動帶入後，等 DOM 渲染完自動全選數量
-          setTimeout(() => {
-            const tableEl = document.querySelector(`[table-edit-id] .p-datatable-tbody`);
-            if (tableEl && tableEl.children[index]) {
-              const targetRow = tableEl.children[index];
-              const quantityInput = targetRow.querySelector('.p-inputnumber-input') as HTMLInputElement;
-              if (quantityInput) {
-                if (document.activeElement === quantityInput) {
-                  quantityInput.select();
-                } else {
-                  quantityInput.focus();
-                  quantityInput.select(); // 執行全選，讓使用者按 2 直接覆蓋 1
-                }
-              }
-            }
-          }, 40);
+          // // 🎯 當成功查到商品並自動帶入後，等 DOM 渲染完自動全選數量
+          // setTimeout(() => {
+          //   const tableEl = document.querySelector(`[table-edit-id] .p-datatable-tbody`);
+          //   if (tableEl && tableEl.children[index]) {
+          //     const targetRow = tableEl.children[index];
+          //     const quantityInput = targetRow.querySelector('.p-inputnumber-input') as HTMLInputElement;
+          //     if (quantityInput) {
+          //       if (document.activeElement === quantityInput) {
+          //         quantityInput.select();
+          //       } else {
+          //         quantityInput.focus();
+          //         quantityInput.select(); // 執行全選，讓使用者按 2 直接覆蓋 1
+          //       }
+          //     }
+          //   }
+          // }, 40);
 
         } else {
           this.messageService.errorBubble('查無該商品資訊');
