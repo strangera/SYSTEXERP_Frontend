@@ -154,4 +154,34 @@ export class Fin51010Service {
       {} // 無參數仍需傳遞空物件
     );
   }
+
+  /** 查詢 PT 進項發票資料 */
+  queryPTInvoice(body: { id: number }): Observable<ApiResponse<QueryFIN51010InvoiceLine[]>> {
+    return this.http.post<ApiResponse<QueryFIN51010InvoiceLine[]>>(
+      `${this.apiUrl}/FIN0000/GLS1000/queryPTInvoice`, body
+    );
+  }
+
+  /** 查詢 WT 進項發票資料 */
+  queryWTInvoice(body: { id: number }): Observable<ApiResponse<QueryFIN51010InvoiceLine[]>> {
+    return this.http.post<ApiResponse<QueryFIN51010InvoiceLine[]>>(
+      `${this.apiUrl}/FIN0000/GLS1000/queryWTInvoice`, body
+    );
+  }
+}
+/** 假設進項發票的欄位結構與傳票明細類似，或是你有特定的發票 Interface */
+export interface QueryFIN51010InvoiceLine {
+  SerNo: number;
+  AccNo: string;
+  AccCName: string;
+  NoteDesc: string;
+  Debit_Amt: number;
+  Credit_Amt: number;
+  ORG_ID: string;
+  Org_Name: string;
+  ProjectNo: string;
+  PTA: string;
+  DetailNo: string;
+  SubDetailNo: string;
+  // 這裡可自行增減後端發票特有的欄位（例如發票號碼等）
 }

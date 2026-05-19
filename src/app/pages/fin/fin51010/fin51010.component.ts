@@ -228,6 +228,12 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
     return this.selectedItems.some(item => item.PostFlag === '0');
   }
 
+  /** 判斷單筆資料是否禁用編輯（用於表格內的操作列） */
+  isEditDisabled = (rowData: QueryFIN51010Response): boolean => {
+    // 當傳票拋轉狀態為 '1' (已拋轉) 時，回傳 true 禁用編輯
+    return rowData?.Trans_Status === '1';
+  };
+
   /** 讀取HR傳票資料 */
   hrLoading = false;
   onReadHR() {

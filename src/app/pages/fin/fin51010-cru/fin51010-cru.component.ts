@@ -145,6 +145,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   private ledgerOptions$ = this.dropdown.queryGls1005_ledgerMD().pipe(shareReplay(1));
   private sys3100Options$ = this.dropdown.querySys3100().pipe(shareReplay(1));
   initTable = false;
+
   constructor(
     private readonly fin51010Service: Fin51010Service,
     private readonly dropdown: DropdownApiService,
@@ -162,8 +163,13 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     const mainId = this.rowdata?.id;
     if (!mainId) return;
     this.formTitle = '傳票資料'
+    // 清空上一次的發票資料
+    this.invoiceData = [];
     // 1. 主資料 (Detail)
-    this.fin51010Service.queryFIN51010Detail({ GLS6001_ID: mainId }).pipe(finalize(() => (this.loading = false)), untilDestroyed(this)).subscribe((res) => {
+    this.fin51010Service.queryFIN51010Detail({ GLS6001_ID: mainId }).pipe(
+      finalize(() => (this.loading = false)),
+      untilDestroyed(this)
+    ).subscribe((res) => {
       if (res.Data && res.Data.length > 0) {
         const mainData = res.Data[0];
         this.dataForm.patchValue(mainData);
@@ -173,6 +179,12 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
           ORG_ID: line.ORG_ID?.trim(),
         }));
         this.initTable = true;
+
+        // 【核心改動】：拿到主表資料後，根據它的 SrcSheetType 決定載入哪種發票
+        const sheetType = mainData.SrcSheetType?.trim();
+        if (sheetType === 'PT' || sheetType === 'WT') {
+          this.loadInvoiceData(sheetType, mainId);
+        }
       }
     });
 
@@ -226,5 +238,46 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
 
   onClear() {
     this.initData();
+  }
+
+
+  // 1. 在類別屬性區宣告發票相關變數
+  invoiceData: any[] = [];
+  invoiceTotalRecords = 0;
+  invoiceLoading = false;
+  // 2. 定義進項發票的 Columns (結構與你的傳票明細 columns 一致，但改為 ReportColumn 格式)
+  invoiceColumns: ReportColumn[] = [
+    { field: 'SerNo', header: '序號', width: '60px', align: 'left' },
+    { field: 'AccNo', header: '科目代號', width: '120px', align: 'left' },
+    { field: 'AccCName', header: '科目名稱', width: '180px', align: 'left' },
+    { field: 'NoteDesc', header: '摘要', align: 'left', width: '300px' },
+    { field: 'Debit_Amt', header: '借方金額', width: '120px', format: formatAmount, align: 'right' },
+    { field: 'Credit_Amt', header: '貸方金額', width: '120px', format: formatAmount, align: 'right' },
+    { field: 'ORG_ID', header: '組織代號', width: '120px', align: 'left' },
+    { field: 'Org_Name', header: '組織名稱', width: '120px', align: 'left' },
+    { field: 'ProjectNo', header: '活動代號', width: '120px', align: 'left' },
+    { field: 'PTA', header: '立沖代號', width: '120px', align: 'left' },
+    { field: 'DetailNo', header: '廠商編號', width: '120px', align: 'left' },
+    { field: 'SubDetailNo', header: '對象別編號', width: '120px', align: 'left' },
+  ];
+  /** 新增：依據 PT 或 WT 調用不同 API 載入進項發票 */
+  loadInvoiceData(type: 'PT' | 'WT', mainId: number) {
+    return; // !!等候端API開發好
+    this.invoiceLoading = true;
+
+    // 根據類別分流 API
+    const apiCall$ = type === 'PT'
+      ? this.fin51010Service.queryPTInvoice({ id: mainId })
+      : this.fin51010Service.queryWTInvoice({ id: mainId });
+
+    apiCall$.pipe(
+      finalize(() => this.invoiceLoading = false),
+      untilDestroyed(this)
+    ).subscribe(res => {
+      if (res.Data) {
+        this.invoiceData = res.Data || [];
+        this.invoiceTotalRecords = res.TotalCount || res.Data.length;
+      }
+    });
   }
 }

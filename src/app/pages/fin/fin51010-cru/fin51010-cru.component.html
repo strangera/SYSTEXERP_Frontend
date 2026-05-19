@@ -84,7 +84,20 @@
             </app-table-report>
           </div>
         </p-tabPanel>
-
+        <!-- 新增：進項發票 Tab 頁籤 (僅在 PT 或 WT 時顯示) -->
+        <p-tabPanel header="進項發票"
+          *ngIf="dataForm.get('SrcSheetType')?.value === 'PT' || dataForm.get('SrcSheetType')?.value === 'WT'">
+          <div class="relative">
+            <div *ngIf="invoiceLoading"
+              class="absolute w-full h-full flex justify-content-center align-items-center surface-0 opacity-50 z-2">
+              <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            </div>
+            <!-- 使用唯讀報表組件，關閉管理欄位與刪除按鈕 -->
+            <app-table-report [data]="invoiceData" [columns]="invoiceColumns" [showManage]="false"
+              [totalRecords]="invoiceTotalRecords" [showDelete]="false" [showCaption]="false">
+            </app-table-report>
+          </div>
+        </p-tabPanel>
       </p-tabView>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (click)="onClear()"></app-button>
