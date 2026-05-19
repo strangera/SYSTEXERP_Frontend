@@ -165,12 +165,6 @@ export class ASS13090CRUComponent extends BasicCruPageComponent<DetailASS13090Ma
   }
 
   private loadDetailData(): void {
-    const depreId = this.resolveDepreId();
-    if (!depreId) {
-      this.messageService.warnBubble('缺少攤提代號，無法載入明細');
-      return;
-    }
-
     this.loading = true;
     this.amortRecordTableLoading.set(true);
     this.ass13090Service
@@ -179,7 +173,7 @@ export class ASS13090CRUComponent extends BasicCruPageComponent<DetailASS13090Ma
           this.authService.getUserInfo()?.SYS_StoreNo ??
           this.authService.currentUserValue?.SYS_StoreNo ??
           null,
-        DEPRE_ID: depreId,
+        DEPRE_ID: this.rowdata?.ASSET_ID ?? '',
       })
       .pipe(
         untilDestroyed(this),
@@ -203,11 +197,6 @@ export class ASS13090CRUComponent extends BasicCruPageComponent<DetailASS13090Ma
           this.messageService.warnBubble('明細載入失敗，請稍後再試');
         },
       });
-  }
-
-  private resolveDepreId(): string {
-    const row = this.rowdata as { DEPRE_ID?: string | null } | null;
-    return String(row?.DEPRE_ID ?? '').trim();
   }
 
   private toDateOrNull(v?: string | null): Date | null {
@@ -271,6 +260,7 @@ export class ASS13090CRUComponent extends BasicCruPageComponent<DetailASS13090Ma
   }
 
   private resolveContinuedId(): number | null {
+    // TODO: 調整ID取得來源
     const raw = (this.rowdata as { ID?: unknown } | null)?.ID;
     if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
     if (typeof raw === 'string' && raw.trim() !== '' && !Number.isNaN(Number(raw))) return Number(raw);
