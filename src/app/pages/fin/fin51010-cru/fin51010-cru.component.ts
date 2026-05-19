@@ -5,7 +5,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin51010Service, QueryFIN51010DetailLine, QueryFIN51010Response, UpdateFIN51010Request } from '@service/api/fin/fin51010.service';
 import { TLS2C040Service } from '@service/api/tls/tls2c040.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -247,18 +247,21 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   invoiceLoading = false;
   // 2. 定義進項發票的 Columns (結構與你的傳票明細 columns 一致，但改為 ReportColumn 格式)
   invoiceColumns: ReportColumn[] = [
-    { field: 'SerNo', header: '序號', width: '60px', align: 'left' },
-    { field: 'AccNo', header: '科目代號', width: '120px', align: 'left' },
-    { field: 'AccCName', header: '科目名稱', width: '180px', align: 'left' },
-    { field: 'NoteDesc', header: '摘要', align: 'left', width: '300px' },
-    { field: 'Debit_Amt', header: '借方金額', width: '120px', format: formatAmount, align: 'right' },
-    { field: 'Credit_Amt', header: '貸方金額', width: '120px', format: formatAmount, align: 'right' },
-    { field: 'ORG_ID', header: '組織代號', width: '120px', align: 'left' },
-    { field: 'Org_Name', header: '組織名稱', width: '120px', align: 'left' },
-    { field: 'ProjectNo', header: '活動代號', width: '120px', align: 'left' },
-    { field: 'PTA', header: '立沖代號', width: '120px', align: 'left' },
-    { field: 'DetailNo', header: '廠商編號', width: '120px', align: 'left' },
-    { field: 'SubDetailNo', header: '對象別編號', width: '120px', align: 'left' },
+    { field: 'voucher_type', header: '發票格式', format: v => getSYS1000('VoucherType', v), align: 'left' },
+    { field: 'track_no', header: '字軌', align: 'left' },
+    { field: 'invoice_no', header: '發票號碼', align: 'left' },
+    { field: 'invoice_date', header: '發票日期', align: 'left', format: formatDate },
+    { field: 'declare_ym', header: '申報年月', align: 'left' },
+    { field: 'vendor_tax_id', header: '廠商統一編號', align: 'left' },
+    { field: 'invoice_usage', header: '發票用途', align: 'left', format: v => getSYS1000('PUR_DirectType', v) },
+    { field: 'invoice_amount', header: '發票總金額', align: 'right' },
+    { field: 'tax_type', header: '課稅別', format: v => getSYS1000('PUR_TaxType', v), align: 'left' },
+    { field: 'net_amount', header: '發票未稅金額', align: 'right' },
+    { field: 'tax_amount', header: '發票稅額', align: 'right' },
+    { field: 'deduction_code', header: '扣抵代號', format: v => getSYS1000('PUR_DiscNo', v), align: 'left' },
+    { field: 'category_type', header: '類別區分', format: v => getSYS1000('PUR_Type', v), align: 'left' },
+    { field: 'source_doc_no', header: '憑證單號', align: 'left' },
+    { field: 'total_count', header: '彙整張數', align: 'right' },
   ];
   /** 新增：依據 PT 或 WT 調用不同 API 載入進項發票 */
   loadInvoiceData(type: 'PT' | 'WT', mainId: number) {
