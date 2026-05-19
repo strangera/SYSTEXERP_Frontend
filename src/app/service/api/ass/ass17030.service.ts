@@ -68,4 +68,16 @@ export class ASS17030Service {
     const key = `${pageIndex}_${index}_${row.RowNo ?? ''}_${row.Goods ?? ''}`;
     return { ...row, _rowKey: key };
   }
+
+  exportPDFASS17030(body: QueryASS17030Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportPDFASS17030`, body, {
+      responseType: 'blob',
+    });
+  }
+
+  exportExcelASS17030(body: QueryASS17030Request): Observable<Blob> {
+    return this.http.post(`${this.apiUrl}/exportExcelASS17030`, body, {
+      responseType: 'blob',
+    });
+  }
 }

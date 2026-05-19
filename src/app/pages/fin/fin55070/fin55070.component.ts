@@ -93,17 +93,30 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
         ...frm.value
       }
       this.fin55070Service.queryFIN55070(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
-        this.data = response.Data
-        this.footerData = response.Data.reduce((footer, row) => {
-          footer.Prior_DAmt += Number(row.Prior_DAmt) || 0;
-          footer.Prior_CAmt += Number(row.Prior_CAmt) || 0;
-          footer.Curr_DAmt += Number(row.Curr_DAmt) || 0;
-          footer.Curr_CAmt += Number(row.Curr_CAmt) || 0;
-          footer.Total_DAmt += Number(row.Total_DAmt) || 0;
-          footer.Total_CAmt += Number(row.Total_CAmt) || 0;
-          return footer;
-        }, this.footerData);
-        this.historyRequestBody = body;
+        if (response.Data.length > 0) {
+          this.data = response.Data
+          this.footerData = response.Data.reduce((footer, row) => {
+            footer.Prior_DAmt += Number(row.Prior_DAmt) || 0;
+            footer.Prior_CAmt += Number(row.Prior_CAmt) || 0;
+            footer.Curr_DAmt += Number(row.Curr_DAmt) || 0;
+            footer.Curr_CAmt += Number(row.Curr_CAmt) || 0;
+            footer.Total_DAmt += Number(row.Total_DAmt) || 0;
+            footer.Total_CAmt += Number(row.Total_CAmt) || 0;
+            return footer;
+          }, this.footerData);
+          this.historyRequestBody = body;
+        } else {
+          this.data = [];
+          this.footerData = {
+            Prior_DAmt: 0,
+            Prior_CAmt: 0,
+            Curr_DAmt: 0,
+            Curr_CAmt: 0,
+            Total_DAmt: 0,
+            Total_CAmt: 0,
+          };
+          this.historyRequestBody = null;
+        }
         this.totalRecords = response.TotalCount || this.data.length || 0;
       });
     });

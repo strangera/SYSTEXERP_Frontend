@@ -5,7 +5,7 @@
   [reorderableColumns]="true" (onColReorder)="onColReorder($event)" (onLazyLoad)="onLazyLoad()"
   styleClass="p-datatable-sm p-datatable-gridlines" [selectAll]="isAllSelected"
   (selectAllChange)="onSelectAllChange($event)" (selectionChange)="onSelectionChange($event)"
-  [rowSelectable]="rowSelectableWrapper" [lazy]="lazy" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
+  [rowSelectable]="rowSelectableWrapper" [lazy]="lazy" [virtualScrollItemSize]="ItemSize" [virtualScrollDelay]="0"
   [virtualScrollOptions]="{
     inline: true,
     trackBy: trackByFn,
@@ -103,7 +103,7 @@
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex"
     let-expanded="expanded">
     <tr [attr.data-key]="dataKey ? rowData?.[dataKey] : undefined" [pSelectableRow]="rowData"
-      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [style]="{ height: '46px' }"
+      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [style]="{ height: ItemSize + 'px' }"
       [pSelectableRowDisabled]="!isRowSelectable(rowData)" [pReorderableRow]="index" [pSelectableRowIndex]="rowIndex"
       (click)="itemClick.emit(rowData)">
       <td *ngIf="showReorder" class="text-center" pFrozenColumn>{{ rowIndex + 1 }}</td>
@@ -170,9 +170,9 @@
       <td [hidden]="!showManage" [ngClass]="{ 'flex justify-content-center gap-2': showManage }"
         [style]="{ height: '46px'}" class="no-wrap icon-button" alignFrozen="right" pFrozenColumn [frozen]="true"
         [style.text-align]="'center'">
-        <p-button [text]="true" [outlined]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil"
-          (click)="edit.emit(rowData)" *ngIf="showEdit" [disabled]="editDisabled(rowData) || !hasPermission('30')"
-          [loading]="buttonsLoading" />
+        <p-button [text]="true" [outlined]="true" [pTooltip]="getEditTooltip(rowData)" tooltipPosition="top"
+          icon="pi pi-pencil" (click)="edit.emit(rowData)" *ngIf="showEdit"
+          [disabled]="editDisabled(rowData) || !hasPermission('30')" [loading]="buttonsLoading" />
         <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detail.emit(rowData)" *ngIf="showDetail"
           [loading]="buttonsLoading" [disabled]="detailDisabled(rowData) || !hasPermission('10')" />
         <ng-container *ngIf="addButton.length">

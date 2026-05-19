@@ -62,6 +62,24 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
     this.placeholder = config.placeholder;
     this.placeholder2 = config.placeholder;
     this.calendarOneType = config.calendarOneType as 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne';
+    if (this.formLabelService) {
+      if (this.label) {
+        // 模式 A: 單一標籤模式 (例如：建立日期(起迄))
+        const fullLabel = this.label + this.descLabel;
+        this.formLabelService.registerLabel(this.startControlName, fullLabel);
+        this.formLabelService.registerLabel(this.endControlName, fullLabel);
+      } else {
+        // 模式 B: 雙標籤模式 (例如：起始日期 / 結束日期)
+        if (this.startControlName && this.startLabel) {
+          this.formLabelService.registerLabel(this.startControlName, this.startLabel);
+        }
+        if (this.endControlName && this.endLabel) {
+          this.formLabelService.registerLabel(this.endControlName, this.endLabel);
+        }
+      }
+    }
+    this.initControl(this.startControl);
+    this.initControl(this.endControl);
     this.checkRequiredValidator(this.startControl, 0);
     this.checkRequiredValidator(this.endControl, 1);
     this.initQuickSelectUnit();
@@ -73,6 +91,7 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
     this.startControl.valueChanges.subscribe(() => {
       this.validateRange();
     });
+    this.endControl.valueChanges.subscribe(() => { void 0; });
   }
 
   validateRange() {

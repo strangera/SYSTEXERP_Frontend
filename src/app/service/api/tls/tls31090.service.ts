@@ -45,6 +45,7 @@ export interface TLS31090Response {
   Reentry: number;
   PresaleCheckout: number; // 預售結帳
   Subtotal: number;
+  AVN_PreOrderAmt: number; // 預售業績
 }
 
 export interface TLS31090DetailResponse {
@@ -80,27 +81,27 @@ export class Tls31090Service {
   apiUrl: string = environment.ApiUrl + '/TLS0000/TLS3000';
   constructor(private http: HttpClient) { }
 
-  // 查詢各時段之業種營業報表
+  // 查詢各各時段之大分類營業報表
   queryTLS31090(body: TLS31090Request): Observable<any> {
     return this.http.post<TLS31090Response>(`${this.apiUrl}/queryTLS31090`, body);
   }
 
 
-  // 匯出各時段之業種營業報表 (EXCEL)
+  // 匯出各各時段之大分類營業報表 (EXCEL)
   exportTLS31090(body: TLS31090Request): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/exportTLS31090`, body, {
       responseType: 'blob'
     });
   }
 
-  // 匯出各時段之業種營業報表 (PDF)
+  // 匯出各各時段之大分類營業報表 (PDF)
   exportTLS31090PDF(body: TLS31090Request): Observable<Blob> {
     return this.http.post(`${this.apiUrl}/exportTLS31090PDF`, body, {
       responseType: 'blob'
     });
   }
 
-  // 查詢各時段之業種營業報表 明細
+  // 查詢各各時段之大分類營業報表 明細
   queryTLS31090Detail(body: TLS31090Request): Observable<any> {
     return this.http.post<TLS31090DetailResponse>(`${this.apiUrl}/queryTLS31090Detail`, body);
   }

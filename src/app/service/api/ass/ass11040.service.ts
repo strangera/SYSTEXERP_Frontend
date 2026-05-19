@@ -3,12 +3,12 @@ import { Injectable } from '@angular/core';
 import {
   CreateASS11040Request,
   CreateASS11040Response,
+  FACLASS1Data,
+  FACLASS2Data,
+  QueryASS11040DataResponse,
   QueryASS11040DataWrapper,
   QueryASS11040Request,
-  QueryASS11040Response,
-  QueryFACLASS1DataWrapper,
   QueryFACLASS1Request,
-  QueryFACLASS2DataWrapper,
   QueryFACLASS2Request,
   QueryFACLASSMDataWrapper,
   QueryFACLASSMRequest,
@@ -56,16 +56,27 @@ export class ASS11040Service {
   }
 
   /**
-   * 中分類下拉選單（回傳結構為 Data: { Data: FACLASS1Data[] }）
+   * 中分類下拉選單（queryFACLASS1_DropDownList）
+   * 新版：`ApiResponse.Data` 直接為 `FACLASS1Data[]`（舊版曾為巢狀 `{ Data: FACLASS1Data[] }`）
    */
-  queryFACLASS1_DropDownList(params: QueryFACLASS1Request): Observable<ApiResponse<QueryFACLASS1DataWrapper>> {
-    return this.http.post<ApiResponse<QueryFACLASS1DataWrapper>>(`${this.apiUrl}/queryFACLASS1_DropDownList`, params);
+  queryFACLASS1_DropDownList(params: QueryFACLASS1Request): Observable<ApiResponse<FACLASS1Data[]>> {
+    return this.http.post<ApiResponse<FACLASS1Data[]>>(`${this.apiUrl}/queryFACLASS1_DropDownList`, params);
   }
 
   /**
-   * 小分類下拉選單（回傳結構為 Data: { Data: FACLASS2Data[] }）
+   * 小分類下拉選單（queryFACLASS2_DropDownList）
+   * 新版：`ApiResponse.Data` 直接為 `FACLASS2Data[]`（舊版曾為巢狀 `{ Data: FACLASS2Data[] }`）
    */
-  queryFACLASS2_DropDownList(params: QueryFACLASS2Request): Observable<ApiResponse<QueryFACLASS2DataWrapper>> {
-    return this.http.post<ApiResponse<QueryFACLASS2DataWrapper>>(`${this.apiUrl}/queryFACLASS2_DropDownList`, params);
+  queryFACLASS2_DropDownList(params: QueryFACLASS2Request): Observable<ApiResponse<FACLASS2Data[]>> {
+    return this.http.post<ApiResponse<FACLASS2Data[]>>(`${this.apiUrl}/queryFACLASS2_DropDownList`, params);
+  }
+
+  /**
+   * 查詢品項資料（queryFASITEM_DropDownList）
+   */
+  queryFASITEM_DropDownList(
+    params: QueryASS11040Request
+  ): Observable<ApiResponse<QueryASS11040DataResponse>> {
+    return this.http.post<ApiResponse<QueryASS11040DataResponse>>(`${this.apiUrl}/queryFASITEM_DropDownList`, params);
   }
 }

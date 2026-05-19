@@ -195,8 +195,10 @@ export class ASS16080CRUComponent
   }
 
   onBack(): void {
-    this.router.navigate(['account/ass/ass16080']);
-  }
+  this.router.navigate(['account/ass/ass16080'], {
+    state: { fromCru: true },
+  });
+}
 
   private loadDropdownOptions(): void {
     this.ass11100Service
@@ -336,14 +338,14 @@ export class ASS16080CRUComponent
   }
 
   private afterSaveSuccess(): void {
-    this.loading = false;
-    this.submitted = false;
+  this.loading = false;
+  this.submitted = false;
 
-    this.router.navigate(['account/ass/ass16080'], {
-      queryParams: { refresh: 1 },
-      state: { fromCru: true },
-    });
-  }
+  this.router.navigate(['account/ass/ass16080'], {
+    queryParams: { refresh: 1 },
+    state: { fromCru: true },
+  });
+}
 
   onUpdateOut(): void {
     const payload = this.buildUpdateOutPayload();

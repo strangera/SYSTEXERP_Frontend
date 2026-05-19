@@ -32,14 +32,17 @@ export const columns: EditColumn[] = [
     validate: [validateRequired, validateMinNumber(1)]
   },
   {
-    field: 'Rebate_Net', header: '未稅金額', type: 'inputNumber', width: '12rem',
-    onBlur: (rowData) => {
-      // 1. 先計算總額並四捨五入
-      rowData.Rebate_Amt_New = Math.round(rowData.Rebate_Net * 1.05);
-      // 2. 稅額 = 總額 - 未稅額
-      rowData.Rebate_Tax = Math.round(rowData.Rebate_Amt_New - rowData.Rebate_Net);
-      // 3. 確保未稅額也是整數
-      rowData.Rebate_Net = Math.round(rowData.Rebate_Net);
+    field: 'Rebate_Net',
+    header: '未稅金額',
+    type: 'inputNumber',
+    width: '12rem',
+    onBlur: (rowData: IRebateDetailForCRU) => {
+      // 1. 確保手動輸入的未稅金額是整數
+      rowData.Rebate_Net = Math.round(rowData.Rebate_Net || 0);
+
+      // 2. 直接加總：總額 = 未稅額 + 稅額 (不再使用 * 1.05 反推)
+      // 這樣可以保持兩者手動輸入後的數據一致性
+      rowData.Rebate_Amt_New = Math.round(rowData.Rebate_Net + (rowData.Rebate_Tax || 0));
     },
     validate: [validateRequired, validateMinNumber(1)]
   },
@@ -51,11 +54,9 @@ export const columns: EditColumn[] = [
     onBlur: (rowData: IRebateDetailForCRU) => {
       // 1. 確保手動輸入的稅額是整數
       rowData.Rebate_Tax = Math.round(rowData.Rebate_Tax || 0);
-      // 2. 當稅額變動時，重新加總折讓金額 (總額 = 未稅 + 稅額)
-      // 這樣可以確保三者關係始終符合：Rebate_Net + Rebate_Tax = Rebate_Amt_New
+
+      // 2. 直接加總：總額 = 未稅額 + 稅額
       rowData.Rebate_Amt_New = Math.round((rowData.Rebate_Net || 0) + rowData.Rebate_Tax);
-      // 註：不建議反推 Rebate_Net，因為未稅額通常是根據單價數量計算出來的，
-      // 手動微調稅額通常是為了湊齊總額或符合發票上的稅金。
     },
     validate: [validateRequired, validateMinNumber(1)]
   }

@@ -18,7 +18,7 @@ import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
-import { finalize } from 'rxjs';
+import { finalize, switchMap } from 'rxjs';
 import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { Column, ColumnGroup } from 'src/app/shared/componentkit/table/table.model';
@@ -288,14 +288,19 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     }
 
     const raw = this.queryForm.value;
+    const formattedDate = raw.TXN_Date && raw.TXN_Date instanceof Date
+      ? `${raw.TXN_Date.getFullYear()}-${String(raw.TXN_Date.getMonth() + 1).padStart(2, '0')}-${String(raw.TXN_Date.getDate()).padStart(2, '0')}`
+      : '';
+    const deletePayload = {
+      PAY_Type: this.PAY_Type,
+      TXN_Date: formattedDate,
+    }
     const payload: any = {
       PAY_Type: this.PAY_Type,
       isCheck: true,
       selectList: [],
       // === 全選時後端會用查詢條件重查所有資料，selectList直接給[] ===
-      TXN_Date: raw.TXN_Date && raw.TXN_Date instanceof Date
-        ? `${raw.TXN_Date.getFullYear()}-${String(raw.TXN_Date.getMonth() + 1).padStart(2, '0')}-${String(raw.TXN_Date.getDate()).padStart(2, '0')}`
-        : '',
+      TXN_Date: formattedDate,
       Floor_No: raw.Floor_No ?? '',
       ECR_No_Start: raw.ECR_No_Start ?? '',
       ECR_No_End: raw.ECR_No_End ?? '',
@@ -311,16 +316,12 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       }))
     }
     this.loading = true;
-    this.tls2a010Service
-      .updateTLS2A010(payload)
-      .pipe(finalize(() => this.loading = false))
-      .subscribe({
-        next: () => {
-          this.messageService.successBubble('審核完成');
-          this.onSubmit(this.queryForm);
-          this.loading = false;
-        },
-      });
+    this.tls2a010Service.deletePOS30011Detail(deletePayload).pipe(switchMap(() => this.tls2a010Service.updateTLS2A010(payload)), finalize(() => this.loading = false)).subscribe({
+      next: () => {
+        this.messageService.successBubble('審核完成');
+        this.onSubmit(this.queryForm);
+      },
+    });
   }
   onUnreview(selectedItems: any[]): void {
     if (!selectedItems || selectedItems.length === 0) {

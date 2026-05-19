@@ -57,6 +57,12 @@ export const finRoutes: Routes = [
   { path: 'fin13070', loadComponent: () => import('./fin13070/fin13070.component').then(m => m.FIN13070Component), data: { progNo: 'FIN13070' } },
   //折讓資料刪除作業
   { path: 'fin13080', loadComponent: () => import('./fin13080/fin13080.component').then(m => m.FIN13080Component), data: { progNo: 'FIN13080' } },
+  //補登進項稅額作業
+  { path: 'fin13090', loadComponent: () => import('./fin13090/fin13090.component').then(m => m.FIN13090Component), data: { progNo: 'FIN13090' } },
+  { path: 'fin13090cru', loadComponent: () => import('./fin13090-cru/fin13090-cru.component').then(m => m.FIN13090CRUComponent), data: { progNo: 'FIN13090' } },
+  // 申報書維護
+  { path: 'fin13100', loadComponent: () => import('./fin13100/fin13100.component').then(m => m.FIN13100Component), data: { progNo: 'FIN13100' } },
+  { path: 'fin13100cru', loadComponent: () => import('./fin13100-cru/fin13100-cru.component').then(m => m.FIN13100CRUComponent), data: { progNo: 'FIN13100' } },
   // 申報書維護
   { path: 'fin14010', loadComponent: () => import('./fin14010/fin14010.component').then(m => m.FIN14010Component), data: { progNo: 'FIN14010' } },
   { path: 'fin14010cru', loadComponent: () => import('./fin14010-cru/fin14010-cru.component').then(m => m.FIN14010CRUComponent), data: { progNo: 'FIN14010' } },
@@ -143,7 +149,7 @@ export const finRoutes: Routes = [
   // 匯款明細表
   { path: 'fin29020', loadComponent: () => import('./fin29020/fin29020.component').then(m => m.FIN29020Component), data: { progNo: 'FIN29020' } },
   // 開票明細表
-  // { path: 'fin29030', loadComponent: () => import('./fin29030/fin29030.component').then(m => m.FIN29030Component),data:{progNo:'FIN29030'} },
+  { path: 'fin29030', loadComponent: () => import('./fin29030/fin29030.component').then(m => m.FIN29030Component), data: { progNo: 'FIN29030' } },
   // AP及ARNET之報表
   { path: 'fin29040', loadComponent: () => import('./fin29040/fin29040.component').then(m => m.FIN29040Component) },
   // 應付帳款明細表
@@ -209,7 +215,8 @@ export const finRoutes: Routes = [
   { path: 'fin41050cru', loadComponent: () => import('./fin41050-cru/fin41050-cru.component').then(m => m.FIN41050CRUComponent), data: { progNo: 'FIN41050' } },
 
   // 部門預算審核作業
-  // { path: 'fin41060', loadComponent: () => import('./fin41060/fin41060.component').then(m => m.Fin41060Component),data:{progNo:'Fin41060'} },
+  { path: 'fin41060', loadComponent: () => import('./fin41060/fin41060.component').then(m => m.FIN41060Component), data: { progNo: 'FIN41060' } },
+  { path: 'fin41060cru', loadComponent: () => import('./fin41060-cru/fin41060-cru.component').then(m => m.FIN41060CRUComponent), data: { progNo: 'FIN41060' } },
   // 預計損益表
   { path: 'fin42010', loadComponent: () => import('./fin42010/fin42010.component').then(m => m.FIN42010Component), data: { progNo: 'FIN42010' } },
   // 預算、實績比較表
@@ -380,7 +387,7 @@ export const finRoutes: Routes = [
   { path: 'fin73020', loadComponent: () => import('./fin73020/fin73020.component').then(m => m.FIN73020Component), data: { progNo: 'FIN73020' } },
   // { path: 'fin73020cru', loadComponent: () => import('./fin73020-cru/fin73020-cru.component').then(m => m.FIN73020CRUComponent),data: { progNo: 'FIN73020'} },
   // 支付申請單
-  // { path: 'fin73030', loadComponent: () => import('./fin73030/fin73030.component').then(m => m.FIN73030Component),data:{progNo:'FIN73030'} },
+  { path: 'fin73030', loadComponent: () => import('./fin73030/fin73030.component').then(m => m.FIN73030Component), data: { progNo: 'FIN73030' } },
   // 零用金撥補明細表
-  // { path: 'fin73040', loadComponent: () => import('./fin73040/fin73040.component').then(m => m.FIN73040Component),data:{progNo:'FIN73040'} },
+  { path: 'fin73040', loadComponent: () => import('./fin73040/fin73040.component').then(m => m.FIN73040Component), data: { progNo: 'FIN73040' } },
 ];

@@ -14,7 +14,6 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
@@ -24,6 +23,11 @@ import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
+import { Tls57120RangeGroupComponent } from './tls57120-range-group.component';
+
+const now = new Date();
+const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
 @Component({
   selector: 'app-tls57120',
@@ -36,13 +40,13 @@ import { finalize } from 'rxjs';
     ReactiveFormsModule,
     DropdownComponent,
     CalendarComponent,
-    CalendarRangeComponent,
     InputNumberComponent,
     ButtonComponent,
     ButtonModule,
     TranslateModule,
     TableReportComponent,
     AsyncPipe,
+    Tls57120RangeGroupComponent
   ]
 })
 export class TLS57120Component extends BasicQueryPageComponent<QueryTLS57120DataItem> implements OnInit {
@@ -56,9 +60,9 @@ export class TLS57120Component extends BasicQueryPageComponent<QueryTLS57120Data
     /** 品牌 */
     LOGO_No: [null as string | null],
     /** 日期時間範圍(起) */
-    DateFrom: [null as Date | null],
+    DateFrom: [firstDayOfMonth as Date | null], // 預帶當月 1 號
     /** 日期時間範圍(訖) */
-    DateTo: [null as Date | null],
+    DateTo: [lastDayOfMonth as Date | null],     // 預帶當月月底
     /** 期間天數 */
     PeriodDays: [null as number | null],
     /** 顯示行數 */
@@ -153,9 +157,9 @@ export class TLS57120Component extends BasicQueryPageComponent<QueryTLS57120Data
   }
 
   onSubmit(frm: FormGroup) {
-    // 自訂驗證
-    if (!this.validateDateOrPeriod()) {
-      this.messageService.errorBubble('日期時間範圍(起訖) 與 期間天數 請擇一填寫');
+    // 3. 改用標準的 frm.invalid 驗證即可，紅框會自動亮起，不跳彈窗
+    if (frm.invalid) {
+      this.submitted = true;
       return;
     }
 
@@ -166,6 +170,7 @@ export class TLS57120Component extends BasicQueryPageComponent<QueryTLS57120Data
         BaseYM: convertDateToYYYYMM(formValue.BaseYM),
         HOS_NO: formValue.HOS_No || undefined,
         LOGO_No: formValue.LOGO_No || undefined,
+        // 如果被 disabled，欄位值會是 undefined / null，直接寫入即可
         DateFrom: formValue.DateFrom ? this.datePipe.transform(formValue.DateFrom, 'yyyy-MM-dd') || undefined : undefined,
         DateTo: formValue.DateTo ? this.datePipe.transform(formValue.DateTo, 'yyyy-MM-dd') || undefined : undefined,
         PeriodDays: formValue.PeriodDays || undefined,

@@ -117,12 +117,12 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       field: 'RCV_Amt',
       header: '收款金額',
       type: 'inputNumber',
-      minFractionDigits: 2,
-      maxFractionDigits: 2,
+      minFractionDigits: 0,
+      maxFractionDigits: 0,
       min: 0,
       textAlign: 'right',
       aggregate: 'sum',
-      format: (value: number) => value?.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00',
+      format: (value: number) => value?.toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0',
       disabled: () => this.isFormReadable // 檢視模式不可編輯,新增/編輯模式可編輯
     }
   ];
@@ -186,12 +186,12 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       field: 'ARS_Amt',
       header: '收款金額',
       type: 'inputNumber',
-      minFractionDigits: 2,
-      maxFractionDigits: 2,
+      minFractionDigits: 0,
+      maxFractionDigits: 0,
       min: 0,
       textAlign: 'right',
       aggregate: 'sum',
-      format: (value: number) => value?.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00',
+      format: (value: number) => value?.toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0',
       validate: [
         (value: number) => ({
           isValid: value !== null && value !== undefined && value >= 0,
@@ -346,12 +346,12 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       field: 'CHK_Amt',
       header: '票面金額',
       type: 'inputNumber',
-      minFractionDigits: 2,
-      maxFractionDigits: 2,
+      minFractionDigits: 0,
+      maxFractionDigits: 0,
       min: 0,
       textAlign: 'right',
       aggregate: 'sum',
-      format: (value: number) => value?.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00',
+      format: (value: number) => value?.toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0',
       validate: [
         (value: any) => ({
           isValid: value !== null && value !== undefined && value >= 0,
@@ -418,7 +418,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
   abatAcctFilterForm = this.formBuilder.group({
     VouNo: [''],
     PTA: [''],
-    VEN_Uniform: [null as string | null],
+    VEN_No: [null as string | null],
   });
   abatAcctVendorOptions: { label: string; value: string }[] = [];
   abatAcctDialogColumns: Column[] = [
@@ -427,10 +427,10 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     { field: 'DebitAmt', header: '借方(餘額)', visible: true, format: formatAmountWithFraction, align: 'right' },
     { field: 'CreditAmt', header: '貸方(餘額)', visible: true, format: formatAmountWithFraction, align: 'right' },
     { field: 'PTA', header: '立沖代號', visible: true },
-    { field: 'VEN_Uniform', header: '廠商代號', visible: true },
+    { field: 'VEN_No', header: '廠商代號', visible: true },
     { field: 'VEN_ShortName', header: '廠商簡稱', visible: true },
   ];
-  private abatAcctAllData: QueryAbatAcctResponse[] = []; // API 回傳的完整資料（供 client-side 篩選）
+  private currentAbatAcctAccNo: string | null = null; // 當前開啟沖帳對話框的科目代號
 
   // 收款項目下拉選項 (格式: CAP_Item - CAP_Name)
   recvItemOptions: { label: string; value: string; Voucher_Type?: string | null }[] = [];
@@ -909,12 +909,13 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     }
 
     this.currentEditingAbatAcctRowIndex = rowIndex;
+    this.currentAbatAcctAccNo = rowData.AccNo ?? null;
     this.showAbatAcctDialog = true;
     this.abatAcctFilterForm.reset();
     this.abatAcctDialogSelectedItem = null;
     this.abatAcctDialogData = [];
-    this.abatAcctAllData = [];
-    this.abatAcctVendorOptions = [];
+    // 廠商下拉直接使用已載入的 POS2013 全廠商清單
+    this.abatAcctVendorOptions = [...this.vendorOptions];
 
     const currentAbatAcct = rowData.AbatAcct;
 
@@ -926,20 +927,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         untilDestroyed(this)
       )
       .subscribe(response => {
-        this.abatAcctAllData = response.Data || [];
-        this.abatAcctDialogData = [...this.abatAcctAllData];
-
-        // 建立廠商代號篩選選項 (去重)
-        const vendorMap = new Map<string, string>();
-        this.abatAcctAllData.forEach(item => {
-          if (item.VEN_Uniform) {
-            vendorMap.set(item.VEN_Uniform, item.VEN_ShortName || '');
-          }
-        });
-        this.abatAcctVendorOptions = Array.from(vendorMap.entries()).map(([venUniform, venShortName]) => ({
-          label: `${venUniform} - ${venShortName}`,
-          value: venUniform
-        }));
+        this.abatAcctDialogData = response.Data || [];
 
         // 預選已選擇的沖帳代號
         if (currentAbatAcct) {
@@ -963,24 +951,23 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     this.abatAcctDialogSelectedItem = null;
   }
 
-  /** 沖帳代號篩選 (client-side) */
+  /** 沖帳代號篩選 (server-side) */
   filterAbatAcct(): void {
     const filters = this.abatAcctFilterForm.value;
-    let filtered = [...this.abatAcctAllData];
-
-    if (filters.VouNo) {
-      const keyword = filters.VouNo.toLowerCase();
-      filtered = filtered.filter(item => item.VouNo?.toLowerCase().includes(keyword));
-    }
-    if (filters.PTA) {
-      const keyword = filters.PTA.toLowerCase();
-      filtered = filtered.filter(item => item.PTA?.toLowerCase().includes(keyword));
-    }
-    if (filters.VEN_Uniform) {
-      filtered = filtered.filter(item => item.VEN_Uniform === filters.VEN_Uniform);
-    }
-
-    this.abatAcctDialogData = filtered;
+    this.abatAcctDialogLoading = true;
+    this.fin32030Service.queryAbatAcct({
+      AccNo: this.currentAbatAcctAccNo,
+      VouNo: filters.VouNo || null,
+      PTA: filters.PTA || null,
+      VEN_No: filters.VEN_No || null,
+    })
+      .pipe(
+        finalize(() => this.abatAcctDialogLoading = false),
+        untilDestroyed(this)
+      )
+      .subscribe(response => {
+        this.abatAcctDialogData = response.Data || [];
+      });
   }
 
   /** 沖帳代號選擇事件 */
@@ -1351,10 +1338,11 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
     // 準備收款項目明細
     const recvDetails = this.step2TableData
       .filter((item: { CAP_Item?: string; ARS_Amt?: number }) => item.CAP_Item && item.ARS_Amt !== null && item.ARS_Amt !== undefined)
-      .map((item: { CAP_Item: string; ARS_Amt: number; NoteDesc?: string }) => ({
+      .map((item: { CAP_Item: string; ARS_Amt: number; NoteDesc?: string; AbatAcct?: string }) => ({
         CAP_Item: item.CAP_Item,
         ARS_Amt: item.ARS_Amt,
-        NoteDesc: item.NoteDesc || null
+        NoteDesc: item.NoteDesc || null,
+        AbatAcct: item.AbatAcct || null
       }));
 
     // 準備票據明細
@@ -1408,7 +1396,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         Check_No: null,
         CHK_No: null,
         ARS_Amt: ar.RCV_Amt || 0,
-        ARS_Status: 'A'
+        ARS_Status: 'N'
       }));
 
     // 新增模式：使用 insertFIN32030Complete
@@ -1421,7 +1409,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         CompNo: '', // 後端會自動填入
         VouNo: null,
         Remark: step1Value.Remark || null,
-        Status: 'A',
+        Status: 'N',
         UserId: '', // 後端會自動填入
         UserName: '', // 後端會自動填入
         RecvDetails: recvDetails,
@@ -1481,7 +1469,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
           Check_No: null,
           CHK_No: null,
           ARS_Amt: ar.RCV_Amt || 0,
-          ARS_Status: 'A'
+          ARS_Status: 'N'
         }));
 
       // 合併舊資料（有 Id，Update 格式）和新資料（沒有 Id，Insert 格式）
@@ -1502,7 +1490,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         CompNo: '', // 後端會自動填入
         VouNo: null,
         Remark: step1Value.Remark || null,
-        Status: 'A',
+        Status: 'N',
         UserId: '', // 後端會自動填入
         UserName: '', // 後端會自動填入
         RecvDetails: recvDetails,

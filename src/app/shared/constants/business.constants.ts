@@ -215,6 +215,10 @@ export const formatApplyStatus = (value: string): string => {
   return formatSingleOption(value, APPLY_STATUS_OPTIONS);
 };
 
+export const formatApplyType = (value: string): string => {
+  return formatSingleOption(value, APPLY_TYPE_OPTIONS);
+};
+
 export const formatTltctypemtotal = (value: string): string => {
   return formatSingleOption(value, TLT_CTYPE_MTOTAL_OPTIONS);
 };

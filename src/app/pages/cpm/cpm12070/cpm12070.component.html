@@ -37,9 +37,6 @@
         <p-button styleClass="p-2" label="產出顧客意見類別統計表.PDF" icon="pi pi-file" (click)="onExportPDF()"
           [disabled]="data.length === 0" [loading]="btnLoading">
         </p-button>
-        <p-button styleClass="p-2" label="產出顧客意見類別統計表.XLSX" icon="pi pi-file" (click)="onExportXLSX()"
-          [disabled]="data.length === 0" [loading]="btnLoading">
-        </p-button>
       </div>
     </header>
   </app-table-report>

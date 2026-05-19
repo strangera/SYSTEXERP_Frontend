@@ -7,8 +7,7 @@ import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatAmount, formatDate } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmount, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
@@ -24,7 +23,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { removeEmptyValues } from '../../../shared/utils/object-utils';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 export interface Option {
   label: string;

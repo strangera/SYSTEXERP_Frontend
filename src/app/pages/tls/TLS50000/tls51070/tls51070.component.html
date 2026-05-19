@@ -112,6 +112,6 @@
     </div>
   </form>
 
-  <app-file-upload #excelUploadComponent [accept]="'.xlsx,.xls'" [customUpload]="true"
+  <app-file-upload #excelUploadComponent [accept]="'.xlsx,.xls'" [customUpload]="true" [loading]="excelLoading"
     (uploadHandler)="onImportExcelSubmit($event)" chooseLabel="匯入檔案"></app-file-upload>
 </app-dialog>

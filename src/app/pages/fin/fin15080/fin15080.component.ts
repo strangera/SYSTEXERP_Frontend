@@ -1,55 +1,57 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
-import { Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { finalize } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 import { FIN15080Service } from '../../../service/api/fin/fin15080.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { QueryYearMonthComponent } from '@shared/componentkit/query-year-month/query-year-month.component';
-import { TableModule } from 'primeng/table';
-import { ButtonModule } from 'primeng/button';
-import { environment } from '../../../../environments/environment';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
-// 可以順便抽一個型別
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
+
 type StoTaxNoOption = {
   label: string;
-  value: string;           // 唯一 key
+  value: string;
   REP_BegGUIYM?: string;
   REP_EndGUIYM?: string;
   STO_No?: string;
   STO_Status?: string;
-  STO_TaxNo?: string;      // 真正的稅籍編號
+  STO_TaxNo?: string;
+  STO_TaxName?: string;
 };
+
 @Component({
   selector: 'app-fin15080',
   templateUrl: './fin15080.component.html',
   styleUrls: ['./fin15080.component.scss'],
   standalone: true,
   imports: [
+    CommonModule,
     MenubarComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    // CalendarComponent,
     ButtonComponent,
     TranslateModule,
-    MultiSelectComponent,
+    DropdownComponent,
     TableModule,
     ButtonModule,
-    YearMonthComponent
+    YearMonthComponent,
   ],
 })
 export class FIN15080Component extends BasicQueryPageComponent<any> {
-  // 給 <app-multi-select> 的 options
-stoTaxNoOptions: StoTaxNoOption[] | null = [];
+  stoTaxNoOptions: StoTaxNoOption[] = [];
+  pageReady = false;
 
   queryForm = this.formBuilder.group({
-    DeclareYM: [this.getDefaultDeclareYM(), Validators.required],     // 申報年月
-    Business_ID: [null, Validators.required],   // 稅籍編號（MultiSelect 值）
+    DeclareYM: [this.getDefaultDeclareYM(), Validators.required],
+    Business_ID: ['' as string, Validators.required],
   });
 
   constructor(private fin15080Service: FIN15080Service) {
@@ -57,119 +59,163 @@ stoTaxNoOptions: StoTaxNoOption[] | null = [];
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN15080', '/fin/fin15080cru', this.queryForm, () => this.onSubmit());
-    this.loadStoTaxNoOptions(); // 載入稅籍選單
+    this.pageReady = false;
+
+    this.initializePage(
+      'FIN15080',
+      '/fin/fin15080cru',
+      this.queryForm,
+      () => this.onSubmit()
+    );
+
+    this.loadStoTaxNoOptions();
   }
- 
 
   /** 載入稅籍下拉 */
-private loadStoTaxNoOptions(): void {
-  const { mid, SYS_StoreNo } = this.getUserInfoFromLocal();
+  private loadStoTaxNoOptions(): void {
+    const { mid, SYS_StoreNo } = this.getUserInfoFromLocal();
 
-  // 讓 <app-multi-select> 顯示 loading：傳 null 進去
-  this.stoTaxNoOptions = null;
+    this.pageReady = false;
+    this.loading = true;
 
-  this.fin15080Service.getStoTaxNoOptions({ mid, STO_No: SYS_StoreNo }).subscribe({
-    next: (opts) => {
-      this.stoTaxNoOptions = opts ?? [];
+    this.fin15080Service
+      .getStoTaxNoOptions({
+        mid,
+        STO_No: SYS_StoreNo,
+      })
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.pageReady = true;
+        })
+      )
+      .subscribe({
+        next: (rows) => {
+          this.stoTaxNoOptions = this.buildStoTaxNoOptions(rows);
 
-      // ✅ 找出 STO_Status === '1' 的那筆（你要的那筆）
-      const active = this.stoTaxNoOptions.find(x => x.STO_Status === '1');
+          const active =
+            this.stoTaxNoOptions.find((x) => String(x.STO_Status).trim() === '1') ??
+            this.stoTaxNoOptions[0];
 
-      if (active) {
-        this.queryForm.patchValue({
-          // MultiSelect 是多選 → 設成陣列（用唯一 value）
-          Business_ID: [active.value] as any,
-        });
-      }
-    },
-    error: (err) => {
-      console.error('取得稅籍下拉失敗：', err);
-      this.stoTaxNoOptions = [];
-      this.messageService.errorBubble('稅籍清單取得失敗');
-    },
-  });
-}
-
-onSubmit(): void {
-  this.submitted = true;
-  if (this.queryForm.invalid) {
-    this.queryForm.markAllAsTouched();
-    this.messageService.warnBubble('請完整填寫查詢條件');
-    return;
+          if (active) {
+            this.queryForm.controls.Business_ID.setValue(active.value);
+          }
+        },
+        error: (err) => {
+          console.error('取得稅籍下拉失敗：', err);
+          this.stoTaxNoOptions = [];
+          this.messageService.errorBubble('稅籍清單取得失敗');
+        },
+      });
   }
 
-  const f = this.queryForm.getRawValue();
-  const { mid, SYS_StoreNo } = this.getUserInfoFromLocal();
+  /** 整理稅籍選項：顯示 稅籍編號-公司名稱，不顯示日期，稅籍編號重複只留一筆 */
+  private buildStoTaxNoOptions(rows: any[]): StoTaxNoOption[] {
+    const map = new Map<string, StoTaxNoOption>();
 
-  // MultiSelect 可能回傳陣列 → 這裡取第一筆
-  const selectedKey = Array.isArray(f.Business_ID)
-    ? (f.Business_ID[0] ?? '')
-    : (f.Business_ID ?? '');
+    rows.forEach((x) => {
+      const taxNo = String(x?.STO_TaxNo ?? '').trim();
+      const taxName = String(x?.STO_TaxName ?? '').trim();
+      const status = String(x?.STO_Status ?? '').trim();
 
-  if (!selectedKey) {
-    this.messageService.warnBubble('請選擇稅籍編號');
-    return;
-  }
+      if (!taxNo) return;
 
-  // 用唯一 key 找回那一筆 option
-  const selectedOption = this.stoTaxNoOptions?.find(o => o.value === selectedKey);
-  const taxNo = selectedOption?.STO_TaxNo ?? '';
+      const option: StoTaxNoOption = {
+        label: `${taxNo}-${taxName}`,
+        value: taxNo,
+        REP_BegGUIYM: String(x?.REP_BegGUIYM ?? '').trim(),
+        REP_EndGUIYM: String(x?.REP_EndGUIYM ?? '').trim(),
+        STO_No: String(x?.STO_No ?? '').trim(),
+        STO_Status: status,
+        STO_TaxNo: taxNo,
+        STO_TaxName: taxName,
+      };
 
-  if (!taxNo) {
-    this.messageService.errorBubble('找不到對應的稅籍編號');
-    console.error('selectedKey:', selectedKey, 'selectedOption:', selectedOption);
-    return;
-  }
+      const exists = map.get(taxNo);
 
-  const payload = {
-    Mid: mid,
-    STO_No: SYS_StoreNo,
-    REP_GUIYM: this.toYYYYMM(f.DeclareYM),
-    REP_TaxNo: taxNo,   // ⬅️ 真正送到後端的是 STO_TaxNo
-  };
-
-  this.loading = true;
-  this.messageService.blockUi();
-
-  this.fin15080Service.printFIN15080(payload).subscribe({
-    next: (res) => {
-      this.loading = false;
-      this.messageService.unblockUi();
-
-      const urlFromData =
-        res?.Data?.[0]?.printURL ??
-        res?.Data?.printURL ??
-        res?.printURL;
-
-      if (!urlFromData) {
-        this.messageService.errorBubble('取得列印網址失敗（printURL 為空）');
-        console.error('API 回傳無 printURL：', res);
+      // 沒有重複：直接放
+      if (!exists) {
+        map.set(taxNo, option);
         return;
       }
 
-      const finalUrl = urlFromData.startsWith('http')
-        ? urlFromData
-        : this.joinUrlNoEncode(environment.ApiUrl, urlFromData);
+      // 有重複：如果新資料是啟用狀態，就取代舊資料
+      if (status === '1') {
+        map.set(taxNo, option);
+      }
+    });
 
-      window.open(finalUrl, '_blank', 'noopener');
-    },
-    error: (err) => {
-      this.loading = false;
-      this.messageService.unblockUi();
-      this.messageService.errorBubble('列印失敗，請稍後再試');
-      console.error('PrintFIN15080 發生錯誤：', err);
-    },
-  });
-}
+    return Array.from(map.values());
+  }
 
+  /** 列印 */
+  onSubmit(): void {
+    this.submitted = true;
 
-  /** 解析 localStorage.UserInfo */
+    if (this.queryForm.invalid) {
+      this.queryForm.markAllAsTouched();
+      this.messageService.warnBubble('請完整填寫查詢條件');
+      return;
+    }
+
+    const f = this.queryForm.getRawValue();
+    const { mid, SYS_StoreNo } = this.getUserInfoFromLocal();
+
+    const selectedTaxNo = String(f.Business_ID ?? '').trim();
+
+    if (!selectedTaxNo) {
+      this.messageService.warnBubble('請選擇稅籍編號');
+      return;
+    }
+
+    const payload = {
+      Mid: mid,
+      STO_No: SYS_StoreNo,
+      REP_GUIYM: this.toYYYYMM(f.DeclareYM),
+      REP_TaxNo: selectedTaxNo,
+    };
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.fin15080Service.printFIN15080(payload).subscribe({
+      next: (res) => {
+        this.loading = false;
+        this.messageService.unblockUi();
+
+        const urlFromData =
+          res?.Data?.[0]?.printURL ??
+          res?.Data?.printURL ??
+          res?.printURL;
+
+        if (!urlFromData) {
+          this.messageService.errorBubble('取得列印網址失敗（printURL 為空）');
+          console.error('API 回傳無 printURL：', res);
+          return;
+        }
+
+        const finalUrl = urlFromData.startsWith('http')
+          ? urlFromData
+          : this.joinUrlNoEncode(environment.ApiUrl, urlFromData);
+
+        window.open(finalUrl, '_blank', 'noopener');
+      },
+      error: (err) => {
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.messageService.errorBubble('列印失敗，請稍後再試');
+        console.error('PrintFIN15080 發生錯誤：', err);
+      },
+    });
+  }
+
   private getUserInfoFromLocal(): { mid: number; SYS_StoreNo: string } {
     let mid = 0;
     let SYS_StoreNo = '';
+
     try {
       const raw = localStorage.getItem('UserInfo');
+
       if (raw) {
         const obj = JSON.parse(raw);
         mid = Number(obj?.mid ?? 0);
@@ -178,42 +224,46 @@ onSubmit(): void {
     } catch (e) {
       console.error('解析 localStorage.UserInfo 失敗：', e);
     }
+
     return { mid, SYS_StoreNo };
   }
 
-  /** 月份轉 YYYYMM */
   private toYYYYMM(val: any): string {
     if (!val) return '';
+
     if (val instanceof Date) {
       const y = val.getFullYear();
       const m = String(val.getMonth() + 1).padStart(2, '0');
       return `${y}${m}`;
     }
+
     const s = String(val);
     const m = s.match(/^(\d{4})[\/\-]?(\d{2})/);
-    if (m) return `${m[1]}${m[2]}`;
+
+    if (m) {
+      return `${m[1]}${m[2]}`;
+    }
+
     return s;
   }
 
-  /** 簡單字串相接（不 encode） */
   private joinUrlNoEncode(base: string, path: string): string {
     const cleanBase = base.replace(/\/+$/, '');
     const cleanPath = String(path).replace(/^\/+/, '');
     return `${cleanBase}/${cleanPath}`;
   }
-  /** 申報年月預設值：當年當月，若為奇數月就 +1 → 變成偶數月，格式 YYYYMM */
-private getDefaultDeclareYM(): string {
-  const now = new Date();
-  const year = now.getFullYear();
-  let month = now.getMonth() + 1; // 1~12
 
-  // 當月是奇數月就 +1
-  if (month % 2 === 1) {
-    month = month + 1;
+  private getDefaultDeclareYM(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+
+    let month = now.getMonth() + 1;
+
+    if (month % 2 === 1) {
+      month = month + 1;
+    }
+
+    const mm = String(month).padStart(2, '0');
+    return `${year}${mm}`;
   }
-
-  const mm = String(month).padStart(2, '0');
-  return `${year}${mm}`; // 例如 202512
-}
-
 }

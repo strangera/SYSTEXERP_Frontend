@@ -73,6 +73,7 @@ export const finRoutes: Routes = [
   // 資材系統
   { path: 'fin51010', loadComponent: () => import('./fin51010/fin51010.component').then(m => m.FIN51010Component), data: { progNo: 'FIN51010' } },
   { path: 'fin51010cru', loadComponent: () => import('./fin51010-cru/fin51010-cru.component').then(m => m.FIN51010CRUComponent), data: { progNo: 'FIN51010' } },
+  { path: 'fin51011', loadComponent: () => import('./fin51011/fin51011.component').then(m => m.FIN51011Component), data: { progNo: 'FIN51011' } },
   // 總帳報表-傳票列印
   { path: 'fin55010', loadComponent: () => import('./fin55010/fin55010.component').then(m => m.FIN55010Component), data: { progNo: 'FIN55010' } },
   { path: 'fin55010cru', loadComponent: () => import('./fin55010-cru/fin55010-cru.component').then(m => m.FIN55010CRUComponent), data: { progNo: 'FIN55010' } },
@@ -81,6 +82,8 @@ export const finRoutes: Routes = [
   // 總帳報表-分類帳
   { path: 'fin55050', loadComponent: () => import('./fin55050/fin55050.component').then(m => m.FIN55050Component), data: { progNo: 'FIN55050' } },
   { path: 'fin55050cru', loadComponent: () => import('./fin55050-cru/fin55050-cru.component').then(m => m.FIN55050CRUComponent), data: { progNo: 'FIN55050' } },
+  // 總帳報表-分類帳彙總報表
+  { path: 'fin55060', loadComponent: () => import('./fin55060/fin55060.component').then(m => m.FIN55060Component), data: { progNo: 'FIN55060' } },
   // 總帳報表-試算表
   { path: 'fin55070', loadComponent: () => import('./fin55070/fin55070.component').then(m => m.FIN55070Component), data: { progNo: 'FIN55070' } },
   // 總帳報表-損益表
@@ -124,5 +127,8 @@ export const finRoutes: Routes = [
   // 應付帳款明細表
   { path: 'fin29050', loadComponent: () => import('./fin29050/fin29050.component').then(m => m.FIN29050Component), data: { progNo: 'FIN29050' } },
   { path: 'fin29050cru', loadComponent: () => import('./fin29050-cru/fin29050-cru.component').then(m => m.FIN29050CRUComponent), data: { progNo: 'FIN29050' } },
-
+  // 傳票過帳作業-傳票過帳
+  { path: 'fin54020', loadComponent: () => import('./fin54020/fin54020.component').then(m => m.FIN54020Component), data: { progNo: 'FIN54020' } },
+  // 傳票過帳作業-傳票反過帳
+  { path: 'fin54025', loadComponent: () => import('./fin54025/fin54025.component').then(m => m.FIN54025Component) },
 ];

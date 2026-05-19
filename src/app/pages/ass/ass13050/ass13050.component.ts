@@ -3,9 +3,6 @@ import { Component, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS11010Service } from '@service/api/ass/ass11010.service';
-import { ASS11020Service } from '@service/api/ass/ass11020.service';
-import { ASS11030Service } from '@service/api/ass/ass11030.service';
 import { ASS13050Service } from '@service/api/ass/ass13050.service';
 import { TblUserOrgidItem } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
@@ -14,7 +11,6 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ColumnGroup, formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
@@ -23,7 +19,7 @@ import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { combineLatest, finalize, map, Observable, startWith } from 'rxjs';
+import { combineLatest, distinctUntilChanged, finalize, map, Observable, startWith } from 'rxjs';
 import { ASS13050QueryRow, QueryASS13050Request } from './ass13050.model';
 
 // 3.1.3.5 移轉交接表
@@ -43,7 +39,6 @@ import { ASS13050QueryRow, QueryASS13050Request } from './ass13050.model';
     ButtonComponent,
     CalendarComponent,
     DropdownComponent,
-    MultiSelectComponent,
     RadiobuttonComponent,
     MenubarComponent,
     TableReportComponent,
@@ -57,12 +52,12 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
     NEW_HOLD_EMP_ID: new FormControl<string | null>(null),
     NEW_USE_ORG_ID: new FormControl<string | null>(null, [Validators.required]),
     NEW_USE_EMP_ID: new FormControl<string | null>(null),
-    PURCHASE_TYPE: new FormControl<string[]>([]),
+    DEPRE_YN: new FormControl<string | null>(null),
     B_CLASS_ID: new FormControl<string | null>(null),
     M_CLASS_ID: new FormControl<string | null>(null),
     S_CLASS_ID: new FormControl<string | null>(null),
     ASSET_ID: new FormControl<string | null>(null),
-    TITLE: new FormControl<number | null>(null),
+    GOODS_NAME: new FormControl<number | null>(null),
     HOLD_ORG_ID: new FormControl<string | null>(null),
     HOLD_EMP_ID: new FormControl<string | null>(null),
     USE_ORG_ID: new FormControl<string | null>(null),
@@ -177,9 +172,6 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
 
   constructor(
     private readonly ass13050Service: ASS13050Service,
-    private readonly ass11010Service: ASS11010Service,
-    private readonly ass11020Service: ASS11020Service,
-    private readonly ass11030Service: ASS11030Service,
     private readonly dropdownApi: DropdownApiService,
     private readonly fileExportService: FileExportService,
   ) {
@@ -189,8 +181,7 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
   ngOnInit(): void {
     this.initializePage('ASS13050', '', this.queryForm, () => this.onSubmit());
     this.loadBigClassOptions();
-    this.loadMidClassOptions();
-    this.loadSmallClassOptions();
+    this.setupClassCascades();
   }
 
   queryFunction = (body: QueryASS13050Request): Observable<ApiResponse<ASS13050QueryRow[]>> => {
@@ -258,12 +249,12 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
       NEW_HOLD_EMP_ID: rawValue.NEW_HOLD_EMP_ID || undefined,
       NEW_USE_ORG_ID: rawValue.NEW_USE_ORG_ID || undefined,
       NEW_USE_EMP_ID: rawValue.NEW_USE_EMP_ID || undefined,
-      PURCHASE_TYPE: rawValue.PURCHASE_TYPE?.length ? rawValue.PURCHASE_TYPE : undefined,
+      DEPRE_YN: rawValue.DEPRE_YN || undefined,
       B_CLASS_ID: rawValue.B_CLASS_ID || undefined,
       M_CLASS_ID: rawValue.M_CLASS_ID || undefined,
       S_CLASS_ID: rawValue.S_CLASS_ID || undefined,
       ASSET_ID: rawValue.ASSET_ID || undefined,
-      TITLE: rawValue.TITLE ?? undefined,
+      GOODS_NAME: rawValue.GOODS_NAME ?? undefined,
       HOLD_ORG_ID: rawValue.HOLD_ORG_ID || undefined,
       HOLD_EMP_ID: rawValue.HOLD_EMP_ID || undefined,
       USE_ORG_ID: rawValue.USE_ORG_ID || undefined,
@@ -279,41 +270,76 @@ export class ASS13050Component extends BasicQueryPageComponent<ASS13050QueryRow>
   }
 
   private loadBigClassOptions(): void {
-    this.ass11010Service.queryASS11010({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        const options = res.Data.map(item => ({
-          label: `${item.CLASS_ID} - ${item.CLASS_NAME}`,
-          value: item.CLASS_ID,
-        }));
-        this.bigClassOptions.set(options);
-      },
+    this.dropdownApi.queryFaClassM({}).subscribe((opts) => {
+      const options = (opts ?? []).map((item) => ({
+        label: item.label,
+        value: String(item.value),
+      }));
+      this.bigClassOptions.set(options);
     });
   }
 
   private loadMidClassOptions(): void {
-    this.ass11020Service.queryASS11020({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        const options = res.Data.map(item => ({
-          label: `${item.M_CLASS_ID} - ${item.M_CLASS_NAME}`,
-          value: item.M_CLASS_ID,
-        }));
-        this.midClassOptions.set(options);
-      },
+    const bClassId = this.queryForm.controls.B_CLASS_ID.value;
+    if (!bClassId) {
+      this.midClassOptions.set([]);
+      return;
+    }
+    this.dropdownApi.queryFaClass1({ CLASS_ID: bClassId }).subscribe((opts) => {
+      this.midClassOptions.set(opts ?? []);
     });
   }
 
   private loadSmallClassOptions(): void {
-    this.ass11030Service.queryASS11030({}).subscribe({
-      next: res => {
-        if (res.Status !== '0000') return;
-        const options = res.Data.map(item => ({
-          label: `${item.S_CLASS_ID} - ${item.S_CLASS_NAME}`,
-          value: item.S_CLASS_ID,
-        }));
-        this.smallClassOptions.set(options);
-      },
+    const bClassId = this.queryForm.controls.B_CLASS_ID.value;
+    const mClassId = this.queryForm.controls.M_CLASS_ID.value;
+    if (!mClassId) {
+      this.smallClassOptions.set([]);
+      return;
+    }
+    this.dropdownApi
+      .queryFaClass2({ B_CLASS_ID: bClassId ?? undefined, CLASS_ID: mClassId })
+      .subscribe((opts) => {
+      this.smallClassOptions.set(opts ?? []);
     });
+  }
+
+  private setupClassCascades(): void {
+    this.queryForm.controls.B_CLASS_ID.valueChanges.pipe(
+      distinctUntilChanged(),
+      untilDestroyed(this),
+    ).subscribe((bClassId) => {
+      this.queryForm.patchValue(
+        { M_CLASS_ID: null, S_CLASS_ID: null },
+        { emitEvent: false },
+      );
+      this.midClassOptions.set([]);
+      this.smallClassOptions.set([]);
+      if (!bClassId) {
+        return;
+      }
+      this.loadMidClassOptions();
+    });
+
+    this.queryForm.controls.M_CLASS_ID.valueChanges.pipe(
+      distinctUntilChanged(),
+      untilDestroyed(this),
+    ).subscribe((mClassId) => {
+      this.queryForm.patchValue({ S_CLASS_ID: null }, { emitEvent: false });
+      this.smallClassOptions.set([]);
+      if (!mClassId) {
+        return;
+      }
+      this.loadSmallClassOptions();
+    });
+
+    const initialBClassId = this.queryForm.controls.B_CLASS_ID.value;
+    const initialMClassId = this.queryForm.controls.M_CLASS_ID.value;
+    if (initialBClassId) {
+      this.loadMidClassOptions();
+    }
+    if (initialMClassId) {
+      this.loadSmallClassOptions();
+    }
   }
 }

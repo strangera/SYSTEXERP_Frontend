@@ -26,6 +26,9 @@ export interface PrintBudgetUrlData {
 export interface ImportResultData {
   IsImportSuccess: boolean;
   ErrorMsg: string | null;
+  ErrorFilePath: string | null;
+  SuccessCount: number;
+  ErrorCount: number;
 }
 @Injectable({
   providedIn: 'root'
@@ -50,8 +53,8 @@ export class TLS2G010Service {
    * POST /TLS0000/TLS2000/PrintTLS2G010EmptyTPL
    * @returns 包含檔案下載 URL 的 Observable
    */
-  public downloadEmptyTemplate(): Observable<ApiResponse<PrintTPLUrlData>> {
-    return this.http.post<ApiResponse<PrintTPLUrlData>>(`${this.apiUrl}/PrintTLS2G010EmptyTPL`, {});
+  public downloadEmptyTemplate(body: any): Observable<ApiResponse<PrintTPLUrlData>> {
+    return this.http.post<ApiResponse<PrintTPLUrlData>>(`${this.apiUrl}/PrintTLS2G010EmptyTPL`, body);
   }
 
   /**

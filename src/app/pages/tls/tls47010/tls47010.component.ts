@@ -1,3 +1,4 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import {
   FormsModule,
@@ -5,6 +6,7 @@ import {
   Validators
 } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { AccordionModule } from 'primeng/accordion';
 import { TLS47010Service } from '../../../service/api/tls/tls47010.service';
 import { DataTypeService } from '../../../service/basic/queryDEFTBL.service';
@@ -27,10 +29,11 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     ReactiveFormsModule,
     MultiSelectComponent,
     TranslateModule,
+    AsyncPipe
   ],
 })
 export class TLS47010Component extends BasicQueryPageComponent<any> implements OnInit {
-  ECRNoOptions: any[] = []; // 收銀機號下拉選單
+  ECRNoOptions = this.dropDown.queryPos1002Filtered();
   dataTypeOptions: any[] = [];
 
   queryForm = this.formBuilder.group({
@@ -42,21 +45,13 @@ export class TLS47010Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private dataTypeService: DataTypeService,
     private tls47010Service: TLS47010Service,
+    private readonly dropDown: DropdownApiService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS47010', '/tls/tls47010cru', this.queryForm);
-
-    this.tls47010Service.ECROptions({}).subscribe((res) => {
-      this.ECRNoOptions =
-        res?.Data?.map((x: any) => ({
-          label: `${x.ECR_No} - ${x.ECR_Name} - ${x.ECR_TLT_Name}`,
-          value: x.ECR_No,
-        })) || [];
-    });
-
     this.dataTypeService.getDataOptions().subscribe((res) => {
       this.dataTypeOptions = res.map((x: any) => ({
         label: `${x.No} - ${x.Name}`,

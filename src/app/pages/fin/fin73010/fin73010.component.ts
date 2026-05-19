@@ -11,6 +11,7 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -32,6 +33,7 @@ import { FIN73010Service } from './../../../service/api/fin/fin73010.service';
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
+    TableComponent,
     TableReportComponent,
     TranslateModule]
 
@@ -62,7 +64,7 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
   columns: Column[] = [
     // { field: 'RowType', header: '列別' },
     { field: 'SeqNo', header: '序號' },
-    { field: 'RowTypeDesc', header: '列別' },
+    // { field: 'RowTypeDesc', header: '列別' },
     { field: 'PCS_No', header: '零用金單號' },
     { field: 'PCS_Date', header: '零用金申請日期', format: formatDate },
     { field: 'PCS_UsrNo', header: '零用金申請人員代碼' },
@@ -86,9 +88,9 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
     { field: 'ORG_ID', header: '費用科目組織代碼' },
     { field: 'Dtl_OrgName', header: '費用科目組織名稱' },
     { field: 'PUR_Date', header: '憑證日期', format: formatDate },
-    { field: 'PCS_Net', header: '未稅金額', format: formatAmount, isTotal: true },
-    { field: 'PCS_Tax', header: '稅額', format: formatAmount, isTotal: true },
-    { field: 'PCS_Amt', header: '含稅金額', format: formatAmount, isTotal: true }
+    { field: 'PCS_Net', header: '未稅金額', format: formatAmount, isSubTotal: true, isTotal: true },
+    { field: 'PCS_Tax', header: '稅額', format: formatAmount, isSubTotal: true, isTotal: true },
+    { field: 'PCS_Amt', header: '含稅金額', format: formatAmount, isSubTotal: true, isTotal: true }
   ];
 
   PCS_No_Options: { PCS_No: string }[] = []; // 零用金單號選項
@@ -120,17 +122,14 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
     this.handleSubmit(frm, () => {
       console.log('request:', frm.value);
       this.loading = true;
-      const payload = frm.getRawValue();
-      this.fin73010Service.queryFIN73010(payload).subscribe({
+      const payload = frm.value;
+      this.fin73010Service.queryFIN73010(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
             this.lastQueryBody = payload;
-            this.data = response.Data.filter((item: Fin73010data) => item.RowType !== 2); // 只顯示明細列 (html:showTotal、showPaginator)
-            const sumData = response.Data.filter((item: Fin73010data) => item.RowType === 2);
-            this.footerData = Array.isArray(sumData) && sumData.length > 0
-              ? { ...sumData[0], RowTypeDesc: '' }
-              : null;
-            console.log('Result', this.footerData);
+            this.data = response.Data.QueryData
+            this.footerData = response.Data.SumData;
+            console.log('Result', response.Data);
             this.totalRecords = response.TotalCount;
             this.queryStateService.setQueryState(this.ProgNo, payload);
           } else {
@@ -151,14 +150,8 @@ export class FIN73010Component extends BasicQueryPageComponent<Fin73010data> imp
   queryFunction = (body: any) => {
     return this.fin73010Service.queryFIN73010(body).pipe(
       map((response) => {
-        // 在這裡統一處理資料過濾
-        const filteredData = response.Data.filter(
-          (item: Fin73010data) => item.RowType !== 2
-        );
-
-        // 更新總筆數（視 API 設計而定，如果 TotalCount 包含總計列，可能需要 -1）
         return {
-          Data: filteredData,
+          Data: response.Data.QueryData,
           TotalCount: response.TotalCount
         };
       })

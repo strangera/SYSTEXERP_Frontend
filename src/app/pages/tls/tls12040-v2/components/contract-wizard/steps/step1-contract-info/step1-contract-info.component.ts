@@ -381,10 +381,24 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       });
     if (busClassSub) this.subscriptions.push(busClassSub);
 
-    // 監聽契約日期變更，同步營運日期
+    // 監聽契約日期變更，同步營運日期 & 自動帶入空白的地點起訖日
     const tltBdateSub = this.form.get('tlt_bdate')?.valueChanges.subscribe(value => {
       if (value && !this.form.get('tlt_contract_bdate')?.value) {
         this.form.patchValue({ tlt_contract_bdate: value }, { emitEvent: false });
+      }
+      // 自動帶入：地點起始日為空者，填入契約起始日
+      if (value) {
+        let changed = false;
+        this.locationData.forEach(loc => {
+          if (loc._status !== 'deleted' && !loc.tlt_bdate) {
+            loc.tlt_bdate = value;
+            changed = true;
+          }
+        });
+        if (changed) {
+          this.updateDisplayLocationData();
+          this.emitDataChange();
+        }
       }
     });
     if (tltBdateSub) this.subscriptions.push(tltBdateSub);
@@ -392,6 +406,20 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     const tltEdateSub = this.form.get('tlt_edate')?.valueChanges.subscribe(value => {
       if (value && !this.form.get('tlt_contract_edate')?.value) {
         this.form.patchValue({ tlt_contract_edate: value }, { emitEvent: false });
+      }
+      // 自動帶入：地點截止日為空者，填入契約截止日
+      if (value) {
+        let changed = false;
+        this.locationData.forEach(loc => {
+          if (loc._status !== 'deleted' && !loc.tlt_edate) {
+            loc.tlt_edate = value;
+            changed = true;
+          }
+        });
+        if (changed) {
+          this.updateDisplayLocationData();
+          this.emitDataChange();
+        }
       }
     });
     if (tltEdateSub) this.subscriptions.push(tltEdateSub);
@@ -470,8 +498,10 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
 
   /**
    * 檢查條件並計算預收租金期數
+   * isLoadingExistingData 為 true 時（資料載入中），不自動計算，避免進畫面就跳提示訊息
    */
   private calculateRentPeriodIfPossible(): void {
+    if (this.isLoadingExistingData) return;
     const rentAhead = this.form.get('rent_ahead')?.value;
     const startDate = this.form.get('tlt_bdate')?.value;
     const endDate = this.form.get('tlt_edate')?.value;
@@ -479,6 +509,26 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       return;
     }
     this.dateValidationService.calculateAndSetRentPeriod(this.form, this.messageService);
+  }
+
+  /**
+   * 觸發所有 OnPush 唯讀子元件（ReadonlyCalendarDisplayComponent、DropdownComponent readonly）重新顯示
+   * 背景：patchValue({emitEvent:false}) 不發出 valueChanges，OnPush 元件訂閱了 control.valueChanges
+   *       才呼叫 markForCheck()，所以不會更新顯示。
+   * 做法：對所有 controls 呼叫 updateValueAndValidity({emitEvent:true})，
+   *       讓每個 control 發出 valueChanges → 各自的 OnPush 元件 markForCheck() → Angular 下次 CD 重繪。
+   * 保護：設 isLoadingExistingData=true，防止 bus_type/bus_class 監聽器清空分類值；
+   *       600ms 後重置（大於 form listener 的最大 debounceTime 500ms）。
+   * 由父元件（ContractWizardComponent）在 step1DataReady 設定後呼叫。
+   */
+  public refreshReadonlyDisplay(): void {
+    this.isLoadingExistingData = true;
+    Object.values(this.form.controls).forEach(control => {
+      control.updateValueAndValidity({ emitEvent: true });
+    });
+    setTimeout(() => {
+      this.isLoadingExistingData = false;
+    }, 600);
   }
 
   /**

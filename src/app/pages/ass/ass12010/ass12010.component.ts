@@ -1,9 +1,9 @@
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11040Service } from '@service/api/ass/ass11040.service';
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12010Service } from '@service/api/ass/ass12010.service';
-import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -11,6 +11,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AddButton, formatDate, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
@@ -35,6 +36,7 @@ import { ASS12010Data, ASS12010QueryRequest } from './ass12010.model';
     TranslateModule,
     ButtonComponent,
     DropdownComponent,
+    InputTextComponent,
     CalendarRangeQuickComponent,
     MenubarComponent,
     TableReportComponent,
@@ -82,7 +84,6 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
 
   // 下拉選單選項
   public readonly whIdOptions = signal<{ label: string; value: string }[]>([]);
-  public readonly needIdOptions = signal<{ label: string; value: string }[]>([]);
   public readonly goodsIdOptions = signal<{ label: string; value: string }[]>([]);
   public readonly empIdOptions = signal<{ label: string; value: string }[]>([]);
   public readonly orgIdOptions = signal<{ label: string; value: string }[]>([]);
@@ -91,7 +92,7 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
   constructor(
     public readonly service: ASS12010Service,
     private readonly ass11100Service: ASS11100Service,
-    private readonly fin11040Service: Fin11040Service,
+    private readonly ass11040Service: ASS11040Service,
     private readonly dropdownApiService: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
     private readonly logger: NGXLogger,
@@ -122,8 +123,8 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
       },
     });
 
-    // 部門代號
-    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe({
+    // 部門代號（querySYS3100_DropDownList）
+    this.dropDownListService.querySYS3100_DropDownList().subscribe({
       next: res => {
         if (res.Status !== '0000') return;
         const options = res.Data.map(item => ({
@@ -161,21 +162,20 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
     });
 
     // 品項代碼 (GOODS_ID)
-    this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
+    this.ass11040Service.queryFASITEM_DropDownList({ PageSize: 9999, PageIndex: 1 }).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
-        const data: TDS1008Data[] = res.Data ?? [];
-        const options = data
-          .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
+        const list = res.Data?.Data ?? [];
+        const options = list
+          .filter(item => item.GOODS_ID != null && item.GOODS_ID !== '')
           .map(item => ({
-            label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
-            value: item.INV_ItemNo,
+            label: `${item.GOODS_ID} - ${item.GOODS_NAME ?? ''}`,
+            value: item.GOODS_ID!,
           }));
         this.goodsIdOptions.set(options);
       },
     });
 
-    // TODO: 需求單號 (NEED_ID) 待 API 規格確認後載入
   }
 
   /**
@@ -263,9 +263,9 @@ export class ASS12010Component extends BasicQueryPageComponent<ASS12010Data> imp
       label: '審核',
       icon: 'pi pi-check',
       action: (rowData: ASS12010Data) => this.onApprove(rowData),
-      disabled: () => {
-        return !this.hasPermission(Actions.Audit);
-      }
+      // disabled: () => {
+      // return !this.hasPermission(Actions.Audit);
+      // }
     },
     {
       label: '下載報表',

@@ -9,7 +9,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
+import { validateNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import { finalize, map, Observable, of, shareReplay } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -53,7 +53,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   private pluOptionsCache = new Map<string, Observable<any[]>>();
   private latestPluData = new Map<string, any[]>();
   columns: EditColumn[] = [
-    { field: 'SBM_BtnNo', header: '菜單按鍵序號', type: 'input', validate: [validateRequired] },
+    { field: 'SBM_BtnNo', header: '菜單按鍵序號', type: 'input', validate: [validateRequired, validateNumber] },
     {
       field: 'PLU_MagNo',
       header: '商品管理碼',

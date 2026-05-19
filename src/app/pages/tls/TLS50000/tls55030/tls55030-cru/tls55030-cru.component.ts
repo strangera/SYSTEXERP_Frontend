@@ -356,6 +356,12 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
   handleReturnSelection(selectedReturns: IReturnDetailData[]) {
     this.data2 = [...this.data2, ...selectedReturns];
     this.selectedItems2 = [];
+    // --- 關鍵修改：如果是退貨類別，自動帶入第一筆的倉別名稱 ---
+    if (this.dataForm.controls.DIS_EntryType.value === '1' && selectedReturns.length > 0) {
+      const firstReturn = selectedReturns[0];
+      // 雖然畫面上「品名」欄位在退貨模式下是 hidden，但我們還是把值存入 form，方便 onSubmit 取用
+      this.dataForm.controls.Rebate_Name.setValue(firstReturn.HOS_NAME || '退貨');
+    }
     this.updateReturnSummaryAmounts(); // <--- 使用新的方法來更新金額和狀態
   }
 
@@ -483,8 +489,8 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
       // ---------------------------------------------------------
       // 2. 核心卡控邏輯調整
       // ---------------------------------------------------------
-      let isAmountMatched = false;
-      let errorMessage = '';
+      const isAmountMatched = false;
+      const errorMessage = '';
 
       if (entryType === '1') {
         // 類別為「退貨」：檢查【發票折讓總金額】是否等於【退貨明細總金額】
@@ -492,29 +498,29 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
         const totalRebateAbs = Math.abs(formValue.totalRebateAmount || 0);
         const totalReturnAmt = Math.round(formValue.RJM_TotalBuyAmt || 0);
 
-        if (totalRebateAbs !== totalReturnAmt) {
-          isAmountMatched = false;
-          errorMessage = '【退貨總金額】與【折讓總金額】不相符';
-        } else {
-          isAmountMatched = true;
-        }
+        // if (totalRebateAbs !== totalReturnAmt) {
+        //   isAmountMatched = false;
+        //   errorMessage = '【退貨總金額】與【折讓總金額】不相符';
+        // } else {
+        //   isAmountMatched = true;
+        // }
       } else {
         // 類別為「一般折讓」或「活動券」：檢查【發票折讓總金額】是否等於【折讓單開立金額】
         const totalRebateAbs = Math.abs(formValue.totalRebateAmount || 0);
         const openRebateAmt = Math.round(formValue.Rebate_Amt || 0);
 
-        if (totalRebateAbs !== openRebateAmt) {
-          isAmountMatched = false;
-          errorMessage = '【折讓單開立金額】與【發票折讓明細總額】不相符';
-        } else {
-          isAmountMatched = true;
-        }
+        // if (totalRebateAbs !== openRebateAmt) {
+        //   isAmountMatched = false;
+        //   errorMessage = '【折讓單開立金額】與【發票折讓明細總額】不相符';
+        // } else {
+        //   isAmountMatched = true;
+        // }
       }
-      if (!isAmountMatched) {
-        this.messageService.errorBubble(errorMessage);
-        this.loading = false;
-        return;
-      }
+      // if (!isAmountMatched) {
+      //   this.messageService.errorBubble(errorMessage);
+      //   this.loading = false;
+      //   return;
+      // }
       const paramBody = {
         DIS_No: this.isFormCreateable ? undefined : formValue.DIS_No,
         ACP_YYYYMM: this.datePipe.transform(formValue.ACP_YYYYMM, 'yyyyMM') || '',
@@ -531,7 +537,9 @@ export class TLS55030CRUComponent extends BasicCruPageComponent<Tls55030ListData
           Rebate_Amt: Math.round(item.Rebate_Amt_New || 0),
           Rebate_Net: Math.round(item.Rebate_Net || 0),
           Rebate_Tax: Math.round(item.Rebate_Tax || 0),
-          Rebate_Name: formValue.DIS_EntryType === '1' ? '退貨' : formValue.Rebate_Name || '',
+          Rebate_Name: formValue.DIS_EntryType === '1'
+            ? (formValue.Rebate_Name || '退貨')
+            : (formValue.Rebate_Name || ''),
         })),
         returnDetails: this.data2.map(item => ({
           id: item.id || 0,

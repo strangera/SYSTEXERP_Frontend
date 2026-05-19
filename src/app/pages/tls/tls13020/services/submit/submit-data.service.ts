@@ -22,7 +22,8 @@ export class SubmitDataService {
     conditionItems: ConditionItem[],
     isNewContract: boolean,
     isRenewalMode: boolean,
-    commissionType: string
+    commissionType: string,
+    sourceContractNo?: string
   ): Record<string, unknown> {
     // 續約模式下確保 apply_type 為 '2'
     if (isRenewalMode) {
@@ -34,17 +35,30 @@ export class SubmitDataService {
         operation: isNewContract ? 'INSERT' : 'UPDATE',
         data: {
           ...formValue,
+          // 日期欄位需截掉 T00:00:00，後端 DateOnly 不接受 DateTime 格式
+          tlt_bdate: this.formatDateToString(formValue['tlt_bdate']),
+          tlt_edate: this.formatDateToString(formValue['tlt_edate']),
+          tlt_contract_bdate: this.formatDateToString(formValue['tlt_contract_bdate']),
+          tlt_contract_edate: this.formatDateToString(formValue['tlt_contract_edate']),
+          apply_date: this.formatDateToString(formValue['apply_date']),
+          feedback_date: this.formatDateToString(formValue['feedback_date']),
+          due_date: this.formatDateToString(formValue['due_date']),
+          contact_Date: this.formatDateToString(formValue['contact_Date']),
+          // 續約時帶入原合約的 contract_no（TLTTALENT.contract_no NOT NULL）
+          contract_no: sourceContractNo || formValue['contract_no'] || null,
           locationInfo: this.cleanLocationItems(locationData)
         }
       },
       deductions: this.cleanDeductionItems(fareItems, isNewContract),
       commissions: this.cleanCommissionItems(commissionItems, isNewContract),
-      conditions: this.assembleConditions(conditionItems, commissionType, isNewContract),
+      conditions: this.assembleConditions(conditionItems, commissionType, isNewContract, String(formValue['talent_id'] || '')),
       metadata: {
-        apply_no: formValue['apply_no'] || '',
-        contractId: formValue['apply_no'] || '',
+        talentId: formValue['talent_id'] || '',
+        contractId: formValue['talent_id'] || '',
         commissionType,
         isNewContract,
+        isRenewal: isRenewalMode,
+        sourceContractNo: sourceContractNo || '',
         submittedAt: new Date().toISOString(),
         totalOperations: 0
       }
@@ -60,14 +74,19 @@ export class SubmitDataService {
     return !str.startsWith('temp_') && !str.includes('new_') && !isNaN(Number(str)) && Number(str) > 0;
   }
 
-  /** 清理位置資料 */
+  /** 清理位置資料（格式對齊 TLS13010-V2 CleanLocationInfo） */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private cleanLocationItems(locations: LocationItem[]): any[] {
     return locations.map(loc => ({
-      ...loc,
-      id: this.hasValidId(loc.id) ? loc.id : undefined,
+      id: this.hasValidId(loc.id) ? Number(loc.id) : undefined,
+      location_no: loc.location_no || '',
+      tlt_building: loc.tlt_building || '',
+      tlt_floor: loc.tlt_floor || '',
+      area_no: loc.area_no || '',
+      tlt_space: loc.tlt_space || 0,
       tlt_bdate: this.formatDateToString(loc.tlt_bdate),
-      tlt_edate: this.formatDateToString(loc.tlt_edate)
+      tlt_edate: this.formatDateToString(loc.tlt_edate),
+      _status: loc._status || 'original'
     }));
   }
 
@@ -297,7 +316,8 @@ export class SubmitDataService {
   private assembleConditions(
     conditionItems: ConditionItem[],
     commissionType: string,
-    isCreateMode: boolean
+    isCreateMode: boolean,
+    talentId: string
   ): Record<string, { toInsert: unknown[]; toUpdate: unknown[]; toDelete: unknown[] }> {
     const emptyCrud = () => ({ toInsert: [] as unknown[], toUpdate: [] as unknown[], toDelete: [] as unknown[] });
 
@@ -334,7 +354,7 @@ export class SubmitDataService {
 
       if (status === 'original') return; // 未變更不處理
 
-      const cleanItem = this.buildCleanConditionItem(item, commissionType, status !== 'new' && !isCreateMode);
+      const cleanItem = this.buildCleanConditionItem(item, commissionType, talentId);
 
       if (isCreateMode || status === 'new') {
         bucket.toInsert.push(cleanItem);
@@ -348,16 +368,15 @@ export class SubmitDataService {
 
   /**
    * 根據抽成類型，明確提取需要的欄位
-   * INSERT 不帶 apply_no（由後端從 contractInfo 關聯）
-   * UPDATE 帶 apply_no（識別既有資料）
+   * 對齊 TLS13010-V2：帶 talent_id（INSERT 時為空字串，後端由 contractInfo 關聯）
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private buildCleanConditionItem(item: any, commissionType: string, includeApplyNo: boolean): Record<string, unknown> {
+  private buildCleanConditionItem(item: any, commissionType: string, talentId: string): Record<string, unknown> {
     // 基礎欄位：所有類型共用
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const base: Record<string, any> = {
       ...(this.hasValidId(item.id) ? { id: Number(item.id) } : {}),
-      apply_no: includeApplyNo ? (item.apply_no || null) : null,
+      talent_id: talentId,
       cag_bdate: this.formatDateToString(item.cag_bdate),
       cag_edate: this.formatDateToString(item.cag_edate)
     };

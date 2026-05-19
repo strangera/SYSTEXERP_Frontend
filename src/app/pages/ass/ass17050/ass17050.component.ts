@@ -1,14 +1,14 @@
 import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
-import { finalize } from 'rxjs';
+import { distinctUntilChanged, finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -16,7 +16,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { apiOption } from '../../../shared/models/sys/sysb000.model';
 import { Ass17050Service } from './../../../service/api/ass/ass17050.service';
 import { RadiobuttonComponent } from './../../../shared/componentkit/radiobutton/radiobutton.component';
 
@@ -68,6 +67,7 @@ export interface ass17050 {
   "TOTAL_AMT": string // 合計金額
 }
 
+@UntilDestroy()
 @Component({
   selector: 'app-ass17050',
   templateUrl: './ass17050.component.html',
@@ -182,9 +182,9 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
 
   selectedItems: ass17050[] = [];// 多選項目
 
-  largeOption: apiOption[] = [];
-  middleOption: apiOption[] = [];
-  smallOption: apiOption[] = [];
+  largeOption: { value: string; label: string }[] = [];
+  middleOption: { value: string; label: string }[] = [];
+  smallOption: { value: string; label: string }[] = [];
   ORG_ID_Options: { value: string; label: string }[] = []; // 部門代號 下拉
   FASITEM_ID_Options: { value: string; label: string }[] = []; // 品項編號 下拉
 
@@ -200,76 +200,8 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
     this.initializePage('ASS17050', 'ASS/ASS17050', this.queryForm, (form) => this.onSubmit(form));
 
     this.loadOptions();
-    //初始導入所有大分類、中分類、小分類表單 (ass11030)
-    this.loadCATOptions();
-
-    // 監聽 大分類 是否為''
-    this.queryForm.get('B_CLASS_ID')!.valueChanges.subscribe((newValue) => {
-      // console.log('大分類變更為:', newValue);
-      if (!newValue) {
-        // 讀取整份 大分類、中分類、小分類 dropDown
-        this.loadCATOptions();
-      } else {
-        // 若大分類為空 禁用中分類、小分類
-        this.queryForm.get('M_CLASS_ID')?.enable();
-        this.queryForm.get('S_CLASS_ID')?.enable();
-      }
-    });
-
-    //觀察表單 中分類變化
-    this.queryForm.get('B_CLASS_ID')?.valueChanges.subscribe((lno) => {
-      if (lno) {
-        this.ass17050Service
-          .queryFACLASS1_DropDownList({ CLASS_ID: lno })
-          .subscribe((res) => {
-            // console.log('中分類', res);
-            this.middleOption = res.Data.map((item: any) => ({
-              No: item.M_CLASS_ID,
-              Name: item.M_CLASS_NAME,
-              Label: item.M_CLASS_ID + '-' + item.M_CLASS_NAME,
-            }));
-            this.queryForm.get('M_CLASS_ID')?.setValue(null);
-            this.queryForm.get('S_CLASS_ID')?.setValue(null);
-            this.smallOption = [];
-          });
-      } else {
-        this.middleOption = [];
-        this.smallOption = [];
-        this.queryForm.get('M_CLASS_ID')?.setValue(null);
-        this.queryForm.get('S_CLASS_ID')?.setValue(null);
-      }
-    });
-    //觀察表單 小分類變化
-    this.queryForm.get('M_CLASS_ID')?.valueChanges.subscribe((mno) => {
-      const lno = this.queryForm.get('B_CLASS_ID')?.value;
-      if (lno && mno) {
-        //新版api改成list傳送
-        this.ass17050Service
-          .queryFACLASS2_DropDownList({ B_CLASS_ID: lno, CLASS_ID: mno })
-          .subscribe((res) => {
-            // console.log('小分類', res);
-            const rawData = res.Data;
-
-            // 2. 進行格式轉換
-            const mappedOptions = rawData.map((item: any) => ({
-              No: item.S_CLASS_ID,
-              Name: item.S_CLASS_NAME,
-              Label: item.S_CLASS_ID + '-' + item.S_CLASS_NAME
-            }));
-
-            // console.log('轉換後的小分類', mappedOptions);
-
-            // 3. 進行去重 (Distinct)
-            // 在 filter 的參數中必須加上 (item, index, self)
-            this.smallOption = mappedOptions.filter((item: any, index: number, self: any[]) =>
-              index === self.findIndex((t) => t.No === item.No)
-            );
-          });
-      } else {
-        this.smallOption = [];
-        this.queryForm.get('S_CLASS_ID')?.setValue(null);
-      }
-    });
+    this.loadBigClassOptions();
+    this.setupClassCascades();
   }
 
   onSubmit(frm: FormGroup) {
@@ -356,35 +288,94 @@ export class ASS17050Component extends BasicQueryPageComponent<ass17050> impleme
       });
   }
 
-  //讀取 大分類表單 (該情況禁止 中小下拉選擇)
-  loadCATOptions() {
-    {
-      // 查詢 大分類(queryFACLASSM_DropDownList)
-      this.dropdownApi
-        .queryFaClassM().pipe(untilDestroyed(this))
-        .subscribe((response) => {
-          // console.log('大分類表單', response);
-          if (response) {
-            const mappedData = response.map((item: any) => ({
-              No: item.B_CLASS_ID,
-              Name: item.B_CLASS_NAME,
-              Label: `${item.B_CLASS_ID}-${item.B_CLASS_NAME}`,
+  private loadBigClassOptions(): void {
+    this.dropdownApi
+      .queryFaClassM()
+      .pipe(untilDestroyed(this))
+      .subscribe((opts) => {
+        const list: { value: string; label: string }[] = (opts ?? []).map(
+          (o) => ({
+            value: String(o.value),
+            label: o.label,
+          }),
+        );
+        this.largeOption = list
+          .filter(
+            (item, idx, self) =>
+              idx === self.findIndex((t) => t.value === item.value),
+          );
+      });
+  }
+
+  private setupClassCascades(): void {
+    const bCtrl = this.queryForm.controls.B_CLASS_ID;
+    const mCtrl = this.queryForm.controls.M_CLASS_ID;
+    const sCtrl = this.queryForm.controls.S_CLASS_ID;
+
+    bCtrl.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe((bId) => {
+        mCtrl.patchValue(null, { emitEvent: false });
+        sCtrl.patchValue(null, { emitEvent: false });
+        this.middleOption = [];
+        this.smallOption = [];
+        if (!bId) return;
+        this.dropdownApi
+          .queryFaClass1({ CLASS_ID: bId })
+          .pipe(untilDestroyed(this))
+          .subscribe((opts) => {
+            this.middleOption = (opts ?? []).map((o) => ({
+              value: String(o.value),
+              label: o.label,
             }));
+          });
+      });
 
-            // 利用 Map 以 No 作為 Key 來去重
-            const uniqueData = [...new Map(mappedData.map(item => [item.No, item])).values()];
+    mCtrl.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe((mId) => {
+        sCtrl.patchValue(null, { emitEvent: false });
+        this.smallOption = [];
+        if (!mId) return;
+        const bId = bCtrl.value ?? undefined;
+        this.dropdownApi
+          .queryFaClass2({ B_CLASS_ID: bId, CLASS_ID: mId })
+          .pipe(untilDestroyed(this))
+          .subscribe((opts) => {
+            const mapped = (opts ?? []).map((o) => ({
+              value: String(o.value),
+              label: o.label,
+            }));
+            this.smallOption = mapped.filter(
+              (item, index, self) =>
+                index === self.findIndex((t) => t.value === item.value),
+            );
+          });
+      });
 
-            // 3. 排序 (以 No 進行升冪排序)
-            this.largeOption = uniqueData.sort((a, b) => {
-              // 如果 No 是字串格式 (例如 'A01', 'A02')
-              return a.No.localeCompare(b.No);
-            });
-          }
+    const initialB = bCtrl.value;
+    const initialM = mCtrl.value;
+    if (initialB) {
+      this.dropdownApi
+        .queryFaClass1({ CLASS_ID: initialB })
+        .pipe(untilDestroyed(this))
+        .subscribe((opts) => {
+          this.middleOption = (opts ?? []).map((o) => ({
+            value: String(o.value),
+            label: o.label,
+          }));
         });
-
-      // 禁用中分類、小分類
-      this.queryForm.get('M_CLASS_ID')?.disable();
-      this.queryForm.get('S_CLASS_ID')?.disable();
+    }
+    if (initialB && initialM) {
+      this.dropdownApi
+        .queryFaClass2({ B_CLASS_ID: initialB, CLASS_ID: initialM })
+        .pipe(untilDestroyed(this))
+        .subscribe((opts) => {
+          this.smallOption = (opts ?? []).map((o) => ({
+            value: String(o.value),
+            label: o.label,
+          }));
+        });
     }
   }
 

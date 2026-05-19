@@ -56,7 +56,8 @@ export class ValidationService {
       containsFullWidth: '不可輸入全形字元，請切換為半形輸入。',
       accNoClassNoMismatch: '「科目代號」與「三碼代號」不符',
       requireOneGroup: '請輸入「退出/折讓單號」或「發票號碼」擇一輸入',
-      bnkIdDuplicate: '此帳戶編號已存在，請重新輸入。',
+      bnkIdDuplicate: '此【公司銀行科目】已有【帳戶編號】使用，請重新輸入。',
+      invalidCompanyId: '統一編號格式錯誤',
     };
     return config[validatorName];
   }
@@ -583,6 +584,52 @@ export class ValidationService {
         }
       }
 
+      return null;
+    };
+  }
+
+  // 公司統一編號（8碼數字，加權檢核碼驗證）
+  // 演算法：每位數字乘以對應權重 [1,2,1,2,1,2,4,1]，
+  // 乘積若為兩位數則將十位與個位相加，最終各位結果總和需為 5 的倍數。
+  // 特例：第7碼為 7 時（7×4=28，2+8=10），提供兩種合法總和（取 1 或 0 皆可接受）。
+  companyIdValidator(control: { value: string | null }): ValidationErrors | null {
+    const value = control.value;
+    if (!value) return null;
+    if (!/^\d{8}$/.test(value)) return { invalidCompanyId: true };
+
+    const weights = [1, 2, 1, 2, 1, 2, 4, 1];
+    const digitSums: number[] = [];
+    let altDigit = -1;
+
+    for (let i = 0; i < 8; i++) {
+      let product = parseInt(value[i]) * weights[i];
+      if (product >= 10) product = Math.floor(product / 10) + (product % 10);
+      // 僅第 7 碼(index 6)數字為 7 時會再次 >= 10（7×4=28 → 2+8=10）
+      if (product >= 10) { altDigit = product % 10; product = Math.floor(product / 10); }
+      digitSums.push(product);
+    }
+
+    const sum = digitSums.reduce((a, b) => a + b, 0);
+    const valid = altDigit !== -1
+      ? (sum % 5 === 0) || ((sum - digitSums[6] + altDigit) % 5 === 0)
+      : sum % 5 === 0;
+
+    return valid ? null : { invalidCompanyId: true };
+  }
+
+  invoicePeriodValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const value = control.value;
+      if (!value || value.length < 6) return null;
+
+      const year = parseInt(value.substring(0, 4), 10);
+      const month = parseInt(value.substring(4, 6), 10);
+
+      // 邏輯：今天 2026/05/01，當期起點是 202605
+      // 鎖死不可小於 202605
+      if (year < 2026 || (year === 2026 && month < 5)) {
+        return { invalidMinMonthDate: true }; // 借用現有的錯誤 key
+      }
       return null;
     };
   }

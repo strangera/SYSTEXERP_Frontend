@@ -275,7 +275,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
             if (Number(txnNoValue) !== 99999999) {
               form.get('ECR_No')?.disable({ emitEvent: false });
               form.get('TXN_No')?.disable({ emitEvent: false });
-              form.get('NCML_TxnDate')?.disable({ emitEvent: false });
+              form.get('NCML_TXN_Date')?.disable({ emitEvent: false });
             } else {
               form.get('TXN_No')?.disable({ emitEvent: false });
             }
@@ -395,7 +395,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
             if (Number(txnNoValue) !== 99999999) {
               form.get('ECR_No')?.disable({ emitEvent: false });
               form.get('TXN_No')?.disable({ emitEvent: false });
-              form.get('CTBC_TxnTime')?.disable({ emitEvent: false });
+              form.get('CTBC_TXN_Date')?.disable({ emitEvent: false });
             } else {
               form.get('TXN_No')?.disable({ emitEvent: false });
             }
@@ -466,7 +466,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
             if (Number(txnNoValue) !== 99999999) {
               form.get('ECR_No')?.disable({ emitEvent: false });
               form.get('TXN_No')?.disable({ emitEvent: false });
-              form.get('CTBC_TxnDate')?.disable({ emitEvent: false });
+              form.get('CTBC_TXN_Date')?.disable({ emitEvent: false });
             } else {
               form.get('TXN_No')?.disable({ emitEvent: false });
             }
@@ -643,7 +643,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
     });
   }
 
-  /** 當收銀機號變更時，根據選項自動帶入專櫃編號 */
+  /** 當收銀機號變更時，根據選項自動帶入專櫃編號，交易序號改為99999999 */
   onECRNoChange(frm: FormGroup) {
     const selectedEcrNo = frm.get('ECR_No')?.value;
     if (selectedEcrNo) {
@@ -651,11 +651,25 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<TLS27040Data> im
         if (options) {
           // 1. 尋找對應的選項物件
           const selectedOption = options.find(opt => opt.value === selectedEcrNo);
-          if (selectedOption && selectedOption['ECR_TLT_No']) {
-            frm.patchValue({ TLT_No: selectedOption['ECR_TLT_No'] });
+          const updateValues: any = {};
+          if (this.isFormEditable) {
+            updateValues.TXN_No = 99999999;
           }
+          if (selectedOption && selectedOption['ECR_TLT_No']) {
+            updateValues.TLT_No = selectedOption['ECR_TLT_No'];
+          }
+          frm.patchValue(updateValues);
         }
       });
     }
+  }
+
+  /** 當帳務日期變更時，交易序號改為99999999 */
+  onDateChange(frm: FormGroup, fieldName: string) {
+    const dateValue = frm.get(fieldName)?.value;
+    if (dateValue && this.isFormEditable) {
+      frm.patchValue({ TXN_No: 99999999 }, { emitEvent: false });
+    }
+    console.log('Date changed:', dateValue);
   }
 }

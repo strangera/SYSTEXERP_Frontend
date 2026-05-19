@@ -333,7 +333,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
   }
   loadDataLazy(event: TableLazyLoadEvent) {
-    if (this.totalRecords === 0 || !this.IsPrint || this.rowEditing) { return; }
+    if (this.totalRecords === 0 || this.rowEditing) { return; }
+    const hasSortChanged = JSON.stringify(event.multiSortMeta) !== JSON.stringify(this.multiSortMeta);
+    if (!this.IsPrint && !hasSortChanged) { return; }
     const pageSize = event.rows && event.rows > 0 ? event.rows : 30;
     const pageIndex = (event.first ?? 0) / pageSize + 1;
     this.selectedPage = pageIndex;

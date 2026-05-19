@@ -20,14 +20,16 @@ export class FileExportService {
   public executeFileExport(
     exportObservable: Observable<HttpResponse<Blob>>,
     fileExtension: string,
-    btnLoadingSetter?: (isLoading: boolean) => void
+    btnLoadingSetter?: (isLoading: boolean) => void,
+    customFilename?: string // 新增參數
   ): Observable<HttpResponse<Blob>> {
     if (btnLoadingSetter) btnLoadingSetter(true);
 
     return exportObservable.pipe(
       tap({
         next: (response: HttpResponse<Blob>) => {
-          this.handleResponse(response, fileExtension);
+          // 將自定義檔名傳遞下去
+          this.handleResponse(response, fileExtension, false, customFilename);
         },
         error: (err) => {
           this.messageService.errorBubble('檔案匯出失敗，請重試。');
@@ -39,15 +41,30 @@ export class FileExportService {
   }
 
 
-  public handleResponse(response: HttpResponse<Blob>, fileExtension: string, saveAs = false) {
+  public handleResponse(
+    response: HttpResponse<Blob>,
+    fileExtension: string,
+    saveAs = false,
+    customFilename?: string // 新增參數
+  ) {
     const blob = response.body;
     if (!blob || blob.size === 0) {
       this.messageService.warnBubble('目前無資料可供下載。');
       return;
     }
 
-    const contentDisposition = response.headers.get('Content-Disposition');
-    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    // 邏輯：優先使用傳入的 customFilename，若無則從 Header 抓，最後才用預設值
+    let filename = customFilename;
+
+    if (!filename) {
+      const contentDisposition = response.headers.get('Content-Disposition');
+      filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    } else {
+      // 確保自定義檔名包含正確的副檔名
+      if (!filename.toLowerCase().endsWith(fileExtension.toLowerCase())) {
+        filename += fileExtension;
+      }
+    }
     const contentType = response.headers.get('Content-Type');
 
     // 1. 先執行自動下載 (保底：存到瀏覽器預設下載目錄)

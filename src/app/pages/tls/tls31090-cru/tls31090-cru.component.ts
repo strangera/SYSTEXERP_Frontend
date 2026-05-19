@@ -11,13 +11,14 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, ColumnGroup } from '@shared/componentkit/table/table.model';
+import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 
 @Component({
   selector: 'app-tls31090-cru',
@@ -68,28 +69,28 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
   totalRecords = 0;
   data: TLS31090DetailResponse[] = [];
   historyRequestBody: any = null; //歷史查詢條件
-  columns: Column[] = [
-    { field: 'tlt_no', header: '專櫃代號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'floor_desc', header: '樓層名稱', visible: true },
-    { field: 'TimeType', header: '時段類型', visible: true }, // (營業實績 / 交易筆數 / 營業實績佔比)
+  columns: ReportColumn[] = [
+    { field: 'tlt_no', header: '專櫃代號', visible: true, align: 'left' },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
+    { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
+    { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
 
-    { field: 'H08', header: '08時段', visible: true },
-    { field: 'H09', header: '09時段', visible: true },
-    { field: 'H10', header: '10時段', visible: true },
-    { field: 'H11', header: '11時段', visible: true },
-    { field: 'H12', header: '12時段', visible: true },
-    { field: 'H13', header: '13時段', visible: true },
-    { field: 'H14', header: '14時段', visible: true },
-    { field: 'H15', header: '15時段', visible: true },
-    { field: 'H16', header: '16時段', visible: true },
-    { field: 'H17', header: '17時段', visible: true },
-    { field: 'H18', header: '18時段', visible: true },
-    { field: 'H19', header: '19時段', visible: true },
-    { field: 'H20', header: '20時段', visible: true },
-    { field: 'H21', header: '21時段', visible: true },
-    { field: 'H22', header: '22時段', visible: true },
-    { field: 'H23', header: '23時段', visible: true },
+    { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H11', header: '11時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H12', header: '12時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H13', header: '13時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H14', header: '14時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H15', header: '15時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H16', header: '16時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H17', header: '17時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H18', header: '18時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H19', header: '19時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H20', header: '20時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H21', header: '21時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
 
     { field: 'ReentryAmt', header: '補登', visible: true },
     { field: 'PresaleCheckoutAmt', header: '預售結帳', visible: true },
@@ -195,10 +196,10 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
       CatLNos: CatLNosValue
     };
     //用Json顯示request
-    console.log('時段之業種營業報表request', request);
+    console.log('各時段之大分類營業報表request', request);
 
     this.tls31090Service.queryTLS31090Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-      console.log('時段之業種營業報表response', res.Data);
+      console.log('各時段之大分類營業報表response', res.Data);
       this.data = res.Data ?? [];               // 查詢資料
       this.totalRecords = res.Data.length;      // 長度計算筆數
       this.historyRequestBody = request;        // 查詢條件

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, EventEmitter, inject, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
-import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -17,7 +17,7 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 import { Tls12010Service } from '@service/api/tls/tls12010.service';
-import { RenewalBasicInfo, RenewalLocationInfo, RenewalQueryResponse, TLS12040Service } from '@service/api/tls/tls12040.service';
+import { RenewalBasicInfo, RenewalLocationInfo, RenewalQueryResponse } from '@service/api/tls/tls12040.service';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
@@ -26,8 +26,8 @@ import { SharedDropdownService } from '@shared/services/shared-dropdown.service'
 
 
 import { BusinessClassificationService } from '@pages/tls/shared/services/business-classification.service';
-import { TLS12040ValidationService } from '@pages/tls/shared/services/tls12040-validation.service';
 import { DateValidationService } from '@pages/tls/shared/services/date-validation.service';
+import { TLS12040ValidationService } from '@pages/tls/shared/services/tls12040-validation.service';
 import { TlsContractBaseService } from '@shared/services/tls/tls-contract-base.service';
 import { debounceTime, distinctUntilChanged, forkJoin, Observable, Subscription } from 'rxjs';
 import { LocationItem } from '../../../../core/models/contract/location-item.interface';
@@ -73,12 +73,15 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     locationData: LocationItem[];
   }>();
   @Output() renewalDataLoaded = new EventEmitter<RenewalQueryResponse>();
+  @Output() openSearchDialog = new EventEmitter<void>();
+
+  /** Create 模式下顯示廠商完整資訊的唯讀控制項（格式同 vendorOptions label） */
+  vendorDisplayControl = new FormControl('');
 
   private subscriptions: Subscription[] = [];
 
   // 注入服務
   private readonly messageService = inject(NotificationService);
-  private readonly tls12040Service = inject(TLS12040Service);
   private readonly tls12010Service = inject(Tls12010Service);
   private readonly tls13010Service = inject(TLS13010Service);
   private readonly businessClassificationService = inject(BusinessClassificationService);
@@ -171,6 +174,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   overallStatusOptions: DropdownOption[];
   applyTypeOptions: DropdownOption[];
   contractTypeOptions: DropdownOption[];
+  openflagOptions: DropdownOption[];
   applyStatusOptions: DropdownOption[];
 
   // API 選項
@@ -213,6 +217,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     this.overallStatusOptions = this.sharedDropdownService.overallStatusOptions;
     this.applyTypeOptions = this.sharedDropdownService.applyTypeOptions;
     this.contractTypeOptions = this.sharedDropdownService.contractTypeOptions;
+    this.openflagOptions = this.sharedDropdownService.openflagOptions;
     this.applyStatusOptions = this.sharedDropdownService.applyStatusOptions;
   }
 
@@ -224,6 +229,12 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     // 父元件 API 載入完成，載入依賴下拉（中分類、小分類）
     if (changes['dataReady'] && this.dataReady && this.form?.get('bus_type')?.value) {
       this.loadDependentDropdowns();
+    }
+    // 父元件 API 載入完成，表單已 patch → 強制所有 OnPush 子 dropdown 重新渲染
+    // app-dropdown 使用 OnPush，patchValue({ emitEvent: false }) 不會觸發 markForCheck，
+    // 需呼叫 detectChanges 讓所有靜態選項的 dropdown 也能讀到最新的 control.value
+    if (changes['dataReady'] && this.dataReady) {
+      this.cdr.detectChanges();
     }
   }
 
@@ -269,6 +280,11 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
         this.regionOptions = results.regions || [];
 
         this.updateSelectorPanelOptions();
+
+        // 若表單已 patch（dataReady 已觸發），強制所有 OnPush 子 dropdown 重新渲染
+        if (this.dataReady) {
+          this.cdr.detectChanges();
+        }
       },
       error: (err: unknown) => {
         console.error('初始化下拉選項失敗:', err);
@@ -381,10 +397,24 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
       });
     if (busClassSub) this.subscriptions.push(busClassSub);
 
-    // 監聽契約日期變更，同步營運日期
+    // 監聽契約日期變更，同步營運日期 & 自動帶入空白的地點起訖日
     const tltBdateSub = this.form.get('tlt_bdate')?.valueChanges.subscribe(value => {
       if (value && !this.form.get('tlt_contract_bdate')?.value) {
         this.form.patchValue({ tlt_contract_bdate: value }, { emitEvent: false });
+      }
+      // 自動帶入：地點起始日為空者，填入契約起始日
+      if (value) {
+        let changed = false;
+        this.locationData.forEach(loc => {
+          if (loc._status !== 'deleted' && !loc.tlt_bdate) {
+            loc.tlt_bdate = value;
+            changed = true;
+          }
+        });
+        if (changed) {
+          this.updateDisplayLocationData();
+          this.emitDataChange();
+        }
       }
     });
     if (tltBdateSub) this.subscriptions.push(tltBdateSub);
@@ -392,6 +422,20 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     const tltEdateSub = this.form.get('tlt_edate')?.valueChanges.subscribe(value => {
       if (value && !this.form.get('tlt_contract_edate')?.value) {
         this.form.patchValue({ tlt_contract_edate: value }, { emitEvent: false });
+      }
+      // 自動帶入：地點截止日為空者，填入契約截止日
+      if (value) {
+        let changed = false;
+        this.locationData.forEach(loc => {
+          if (loc._status !== 'deleted' && !loc.tlt_edate) {
+            loc.tlt_edate = value;
+            changed = true;
+          }
+        });
+        if (changed) {
+          this.updateDisplayLocationData();
+          this.emitDataChange();
+        }
       }
     });
     if (tltEdateSub) this.subscriptions.push(tltEdateSub);
@@ -419,7 +463,8 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     // });
 
     // 設定日期驗證器
-    this.dateValidationService.setupDateValidators(this.form, this.messageService);
+    const dateSubs = this.dateValidationService.setupDateValidators(this.form, this.messageService);
+    this.subscriptions.push(...dateSubs);
 
     // 設定預收租金相關監聽
     this.setupRentAheadCalculation();
@@ -717,9 +762,21 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
   // ========== 續約功能 ==========
 
   /**
+   * 從合約查詢對話框選取後觸發續約（供 wizard 透過 @ViewChild 呼叫）
+   */
+  triggerRenewalFromSearch(venNo: string, tltNo?: string): void {
+    this.lastRenewalVenNo = null; // 重置，確保不被去重邏輯擋住
+    this.loadRenewalData(venNo, tltNo);
+    if (!this.isViewMode) {
+      this.loadVendorContactInfo(venNo);
+    }
+  }
+
+
+  /**
    * 載入續約資料
    */
-  private loadRenewalData(venNo: string): void {
+  private loadRenewalData(venNo: string, tltNo?: string): void {
     // 防止重複呼叫
     if (this.isLoadingRenewalData) {
       return;
@@ -733,7 +790,7 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     this.lastRenewalVenNo = venNo;
     this.loading = true;
 
-    this.tls12040Service.queryContractForRenewal(venNo).subscribe({
+    this.tls13010Service.queryContractForRenewal(venNo, tltNo).subscribe({
       next: (renewalData) => {
         // 回填基本資料到表單
         this.patchFormForRenewal(renewalData.BasicInfo, renewalData.next_contract_subno);
@@ -771,6 +828,13 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     const renewalFields: Record<string, any> = {
       // 續約必須強制設為 '2'（防止被其他流程重置）
       apply_type: '2',
+
+      // 廠商資訊（從合約查詢帶入，避免依賴廠商下拉選擇）
+      ven_no: basicInfo.ven_no,
+      vendor_ven_no: basicInfo.ven_no,
+      ven_uniform: basicInfo.ven_uniform,
+      VEN_Name: basicInfo.VEN_Name,
+      VEN_Address: basicInfo.VEN_Address,
 
       // 專櫃基本資訊
       tlt_no: basicInfo.tlt_no,
@@ -865,6 +929,11 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
 
     // 回填表單
     this.form.patchValue(renewalFields, { emitEvent: false });
+
+    // 更新 Create 模式的廠商顯示欄位（格式同 vendorOptions label）
+    this.vendorDisplayControl.setValue(
+      `${basicInfo.ven_uniform} - ${basicInfo.VEN_Name} - ${basicInfo.ven_no}`
+    );
 
     // 載入分類選項
     if (basicInfo.bus_type) {

@@ -43,7 +43,7 @@
               <app-button label="組織範本下載" [loading]="loading" [disabled]="!hasPermission(Actions.ExportTemplate)"
                 (click)="onDownloadTemplate(queryForm)" />
               <app-button label="空白範本下載" [loading]="loading" [disabled]="!hasPermission(Actions.ExportTemplate)"
-                (click)="onDownloadBlankTemplate()" />
+                (click)="onDownloadBlankTemplate(queryForm)" />
               <app-button label="產生匯出檔" [loading]="loading" [disabled]="!hasPermission(Actions.ExportExcel)"
                 (click)="onSubmit(queryForm)" />
             </div>

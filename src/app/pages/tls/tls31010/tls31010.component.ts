@@ -12,9 +12,8 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -49,7 +48,8 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 
 export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    TXN_Date: [yesterday],//交易日期
+    TXN_Date: [null],//交易日期
+    TLT_NO: [[]], // 專櫃編號
     tlt_building: [[]],// 館別
     tlt_floor: [[]],// 樓層
     area_no: [[]],// 區域
@@ -68,38 +68,41 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
   footerData: TLS31010TotalData | null = null;
   lastQueryBody: TLS31010Request | null = null;
   columns: ReportColumn[] = [
-    { field: 'building_desc', header: '館別' },
-    { field: 'org_name', header: '組織名稱' },
-    { field: 'tlt_kind', header: '櫃別' },
-    { field: 'tlt_no', header: '專櫃編號' },
-    { field: 'location_no', header: '位置編號' },
-    { field: 'tlt_name', header: '專櫃名稱' },
-    { field: 'budget', header: '營業目標', groupField: 'budgetAmt', format: formatAmount, isTotal: true },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', groupField: 'budgetAmt', format: formatAmount, isTotal: true },
-    { field: 'AchievementRate', header: '達成率', groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2), isTotal: true },
-    { field: 'BudgetRate', header: '營業目標佔比', groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    { field: 'PerformanceRate', header: '營業實績佔比', groupField: 'sum', format: (value) => formatPercentage(value, 2) },
-    { field: 'TxnCount', header: '交易筆數', groupField: 'custCnt', format: formatAmount, isTotal: true },
-    { field: 'AvgTicket', header: '客單價', groupField: 'custCnt', format: formatAmount, isTotal: true },
-    { field: 'tlt_space', header: '坪數', groupField: 'space', isTotal: true },
-    { field: 'MonthlyPSM', header: '坪效', groupField: 'space', isTotal: true },
-    { field: 'MonthlyBudgetTotal', header: '月營業目標', groupField: 'month', format: formatAmount, isTotal: true },
-    { field: 'MonthlySalesTotal', header: '營業實績', groupField: 'month', format: formatAmount, isTotal: true },
-    { field: 'CompletionRate', header: '完成率', groupField: 'month', format: (value) => formatPercentage(value, 2), isTotal: true },
+    { field: 'building_desc', header: '館別', align: 'left' },
+    { field: 'org_name', header: '組織名稱', align: 'left' },
+    { field: 'tlt_kind', header: '櫃別', align: 'left' },
+    { field: 'tlt_no', header: '專櫃編號', align: 'left' },
+    { field: 'location_no', header: '位置編號', align: 'left' },
+    { field: 'tlt_name', header: '專櫃名稱', align: 'left' },
+    { field: 'budget', header: '營業目標', align: 'right', groupField: '營業額', format: formatAmount, isTotal: true },
+    { field: 'AVN_TotSaleAmt', header: '營業實績', align: 'right', groupField: '營業額', format: formatAmount, isTotal: true },
+    { field: 'AchievementRate', header: '達成率', align: 'right', groupField: '營業額', format: (value) => formatPercentage(value, 2), isTotal: true },
+    { field: 'BudgetRate', header: '營業目標佔比', align: 'right', groupField: '營業佔比', format: (value) => formatPercentage(value, 2) },
+    { field: 'PerformanceRate', header: '營業實績佔比', align: 'right', groupField: '營業佔比', format: (value) => formatPercentage(value, 2) },
+    { field: 'TxnCount', header: '交易筆數', align: 'right', groupField: '客單價', format: formatAmount, isTotal: true },
+    { field: 'AvgTicket', header: '客單價', align: 'right', groupField: '客單價', format: formatAmount, isTotal: true },
+    { field: 'tlt_space', header: '坪數', align: 'right', groupField: '營業坪效', isTotal: true, format: (value) => formatAmountWithDecimals(value, 2) },
+    { field: 'MonthlyPSM', header: '坪效', align: 'right', groupField: '營業坪效', isTotal: true },
+    { field: 'MonthlyBudgetTotal', header: '月營業目標', align: 'right', groupField: '月累計', format: formatAmount, isTotal: true },
+    { field: 'MonthlySalesTotal', header: '營業實績', align: 'right', groupField: '月累計', format: formatAmount, isTotal: true },
+    { field: 'CompletionRate', header: '完成率', align: 'right', groupField: '月累計', format: (value) => formatPercentage(value, 2), isTotal: true },
+    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right', isTotal: true },
   ];
   columnGroup: ColumnGroup[] = [
-    { field: 'budgetAmt', header: '營業額' },
-    { field: 'sum', header: '營業佔比' },
-    { field: 'custCnt', header: '客單價' },
-    { field: 'space', header: '營業坪效' },
-    { field: 'month', header: '月累計' },
+    { field: '營業額', header: '營業額' },
+    { field: '營業佔比', header: '營業佔比' },
+    { field: '客單價', header: '客單價' },
+    { field: '營業坪效', header: '營業坪效' },
+    { field: '月累計', header: '月累計' },
   ]
   tlt_kind_Option = getSYS1000Options('TLT_Kind');
   tlt_term_type = getSYS1000Options('tlt_term_type');
+  tlt_noListOption = this.dropdown.queryTltTalent(); // 專櫃編號選項
   tlt_building_Option = this.dropdown.querySys3800(); // 館別
   tlt_floor_Option = this.dropdown.querySys3900(); // 樓層
   area_no_Option = this.dropdown.querySys3A00(); // 區域
   org_id_Option = this.dropdown.querySys3100(); // 組織
+
   constructor(
     public readonly tls31010Service: Tls31010Service,
     private readonly dropdown: DropdownApiService
@@ -115,6 +118,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
       const formValue: TLS31010Request = {
         ...rawValue,
         TXN_Date: formatDate(rawValue.TXN_Date, 'yyyy-MM-dd', 'en-US'),
+        TLT_NO: rawValue.TLT_NO || null,
         tlt_floor: rawValue.tlt_floor || null,
         area_no: rawValue.area_no || null,
         org_id: rawValue.org_id || null,

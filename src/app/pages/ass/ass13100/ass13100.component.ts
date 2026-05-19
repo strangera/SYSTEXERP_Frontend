@@ -4,9 +4,9 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS13100Service } from '@service/api/ass/ass13100.service';
-import { IDropdownItem } from '@service/utility/dropdown-api.model';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { Pos2002LocationItem } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -159,10 +159,10 @@ export class ASS13100Component extends BasicQueryPageComponent<ASS13100QueryRow>
     });
 
     // 位置代碼：queryPOS2002_Location_DropDownList
-    this.dropdownApi.queryPos2002Location()?.subscribe((options: IDropdownItem[] | null) => {
+    this.dropdownApi.queryPos2002Location()?.subscribe((options: Pos2002LocationItem[] | null) => {
       this.locationOptions = (options ?? []).map(x => ({
-        label: `${x.Name}`,
-        value: x.No,
+        label: x.location_no + '-' + x.tlt_floor,
+        value: x.location_no ?? '',
       }));
     });
 

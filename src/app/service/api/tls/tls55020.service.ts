@@ -74,6 +74,7 @@ export interface Tls55020MasterData {
   ORG_ECR_No: string;
   TXN_Ret_No: string;
   tlt_term_type: string;
+  CanEdit: boolean;
 }
 
 /** 商品明細資料 */

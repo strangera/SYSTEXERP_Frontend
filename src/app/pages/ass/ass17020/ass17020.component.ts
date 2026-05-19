@@ -76,6 +76,9 @@ export class ASS17020Component
   readonly totalRecords = signal<number>(0);
   readonly tableLoading = signal<boolean>(false);
 
+  exportPdfLoading = false;
+  exportExcelLoading = false;
+
   lastQueryBody?: QueryASS17020Request;
   private readonly defaultPageSize = 30;
 
@@ -168,7 +171,7 @@ export class ASS17020Component
           return;
         }
         this.dropdownApi
-          .queryFaClass1({ B_CLASS_ID: b })
+          .queryFaClass1({ CLASS_ID: b })
           .pipe(untilDestroyed(this))
           .subscribe((opts) => {
             this.midClassOptions = opts ?? [];
@@ -184,7 +187,10 @@ export class ASS17020Component
           return;
         }
         this.dropdownApi
-          .queryFaClass2({ M_CLASS_ID: m })
+          .queryFaClass2({
+            B_CLASS_ID: this.queryForm.controls.bClassId.value ?? undefined,
+            CLASS_ID: m,
+          })
           .pipe(untilDestroyed(this))
           .subscribe((opts) => {
             this.smallClassOptions = opts ?? [];
@@ -403,5 +409,76 @@ export class ASS17020Component
     });
     this.midClassOptions = [];
     this.smallClassOptions = [];
+  }
+
+  onExportPdf(): void {
+    const payload = this.lastQueryBody;
+    if (!payload) {
+      this.messageService.warnBubble('請先執行查詢');
+      return;
+    }
+    this.exportPdfLoading = true;
+    this.ass17020Service
+      .exportPDFASS17020(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.exportPdfLoading = false)),
+      )
+      .subscribe({
+        next: blob => {
+          if (blob) {
+            this.downloadBlob(blob, `領用統計表_${this.getTimestamp()}.pdf`);
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('PDF 匯出失敗，請重試。');
+        },
+      });
+  }
+
+  onExportExcel(): void {
+    const payload = this.lastQueryBody;
+    if (!payload) {
+      this.messageService.warnBubble('請先執行查詢');
+      return;
+    }
+    this.exportExcelLoading = true;
+    this.ass17020Service
+      .exportExcelASS17020(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.exportExcelLoading = false)),
+      )
+      .subscribe({
+        next: blob => {
+          if (blob) {
+            this.downloadBlob(blob, `領用統計表_${this.getTimestamp()}.xlsx`);
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('Excel 匯出失敗，請重試。');
+        },
+      });
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(blobUrl);
+  }
+
+  private getTimestamp(): string {
+    const now = new Date();
+    return (
+      now.getFullYear().toString() +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') +
+      '_' +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0')
+    );
   }
 }

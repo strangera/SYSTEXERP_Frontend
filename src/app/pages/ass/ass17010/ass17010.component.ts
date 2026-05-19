@@ -19,7 +19,7 @@ import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/tab
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, Observable } from 'rxjs';
+import { distinctUntilChanged, finalize, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { SortOption } from '@shared/models/api/base-api.interface';
@@ -112,8 +112,8 @@ export class ASS17010Component extends BasicQueryPageComponent<QueryASS17010Deta
     this.initializePage('ASS17010', '', this.queryForm, (form) => this.onSubmit(form));
     this.loadOrgOptions();
     this.loadBigCategoryOptions();
-    this.loadMidCategoryOptions('');
-    this.loadSmallCategoryOptions('');
+    this.midCategoryOptions = [];
+    this.smallCategoryOptions = [];
     this.loadGoodsOptions();
     this.setupCategoryListeners();
   }
@@ -145,8 +145,12 @@ export class ASS17010Component extends BasicQueryPageComponent<QueryASS17010Deta
   }
 
   private loadMidCategoryOptions(bClassId: string): void {
+    if (!bClassId) {
+      this.midCategoryOptions = [];
+      return;
+    }
     this.dropdownApi
-      .queryFaClass1({ B_CLASS_ID: bClassId || undefined })
+      .queryFaClass1({ CLASS_ID: bClassId || undefined })
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         const list = opts ?? [];
@@ -157,9 +161,13 @@ export class ASS17010Component extends BasicQueryPageComponent<QueryASS17010Deta
       });
   }
 
-  private loadSmallCategoryOptions(mClassId: string): void {
+  private loadSmallCategoryOptions(bClassId: string, mClassId: string): void {
+    if (!mClassId) {
+      this.smallCategoryOptions = [];
+      return;
+    }
     this.dropdownApi
-      .queryFaClass2({ M_CLASS_ID: mClassId || undefined })
+      .queryFaClass2({ B_CLASS_ID: bClassId || undefined, CLASS_ID: mClassId })
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         const list = opts ?? [];
@@ -184,14 +192,27 @@ export class ASS17010Component extends BasicQueryPageComponent<QueryASS17010Deta
   }
 
   private setupCategoryListeners(): void {
-    this.queryForm.controls.bClassId.valueChanges.pipe(untilDestroyed(this)).subscribe((big) => {
-      this.queryForm.patchValue({ mClassId: null, sClassId: null }, { emitEvent: false });
-      this.loadMidCategoryOptions(big ?? '');
-    });
-    this.queryForm.controls.mClassId.valueChanges.pipe(untilDestroyed(this)).subscribe((mid) => {
-      this.queryForm.patchValue({ sClassId: null }, { emitEvent: false });
-      this.loadSmallCategoryOptions(mid ?? '');
-    });
+    this.queryForm.controls.bClassId.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe((big) => {
+        this.queryForm.patchValue({ mClassId: null, sClassId: null }, { emitEvent: false });
+        this.midCategoryOptions = [];
+        this.smallCategoryOptions = [];
+        this.loadMidCategoryOptions(big ?? '');
+      });
+    this.queryForm.controls.mClassId.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe((mid) => {
+        this.queryForm.patchValue({ sClassId: null }, { emitEvent: false });
+        this.smallCategoryOptions = [];
+        const b = this.queryForm.controls.bClassId.value ?? '';
+        this.loadSmallCategoryOptions(b, mid ?? '');
+      });
+
+    const initialB = this.queryForm.controls.bClassId.value;
+    const initialM = this.queryForm.controls.mClassId.value;
+    if (initialB) this.loadMidCategoryOptions(initialB);
+    if (initialM) this.loadSmallCategoryOptions(initialB ?? '', initialM);
   }
 
   private toApiDateValue(value: unknown): string | undefined {
@@ -307,7 +328,7 @@ export class ASS17010Component extends BasicQueryPageComponent<QueryASS17010Deta
       sClassId: null,
       goodsId: null,
     });
-    this.loadMidCategoryOptions('');
-    this.loadSmallCategoryOptions('');
+    this.midCategoryOptions = [];
+    this.smallCategoryOptions = [];
   }
 }

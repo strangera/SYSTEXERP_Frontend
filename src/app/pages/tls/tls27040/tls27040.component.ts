@@ -74,6 +74,8 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
     ApprovalCode: [null, [Validators.maxLength(6)]],        // 核准碼
     TermNoList: [null],                                     // 分期期數
     radioBtn: [null],                                       // 查詢篩選
+    AccTxnDate_Start: [null],                               // 帳務日期起
+    AccTxnDate_End: [null],                                 // 帳務日期迄
     pageSize: [30],
     pageIndex: [1],
     SortBy: [[{ field: 'ID', order: 1 }]],
@@ -118,6 +120,8 @@ export class TLS27040Component extends BasicQueryPageComponent<TLS27040Data> imp
         CrdTxnFgList: processSelectedCodes(frm.value.CrdTxnFgList),
         BatCloseDate_Start: this.datePipe.transform(frm.value.BatCloseDate_Start, 'yyyy-MM-dd'),
         BatCloseDate_End: this.datePipe.transform(frm.value.BatCloseDate_End, 'yyyy-MM-dd'),
+        AccTxnDate_Start: this.datePipe.transform(frm.value.AccTxnDate_Start, 'yyyy-MM-dd'),
+        AccTxnDate_End: this.datePipe.transform(frm.value.AccTxnDate_End, 'yyyy-MM-dd'),
       }
       this.tls27040Service.queryTLS27040(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;

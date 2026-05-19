@@ -8,6 +8,8 @@ import {
   QueryASS11040Request,
   QueryASS11040Response,
 } from '@pages/ass/ass11040/ass11040.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
@@ -16,8 +18,8 @@ import { ReportColumn } from '@shared/componentkit/table-report/table-report.mod
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { finalize, of } from 'rxjs';
+import { distinctUntilChanged, map, switchMap, tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -49,9 +51,9 @@ export class ASS11040Component extends BasicQueryPageComponent<QueryASS11040Resp
   itemCategoryOptions = getSYS1000Options('PROD_TYPE');
   itemUnitOptions = getSYS1000Options('UNIT');
   packageUnitOptions = getSYS1000Options('PACK_UNIT');
-  bigCategoryCodeOptions: { value: string; label: string }[] = [];
-  midCategoryCodeOptions: { value: string; label: string }[] = [];
-  smlCategoryCodeOptions: { value: string; label: string }[] = [];
+  bigCategoryCodeOptions: Option[] = [];
+  midCategoryCodeOptions: Option[] = [];
+  smlCategoryCodeOptions: Option[] = [];
 
   warrantyMethodOptions: { value: string; label: string }[] = [
     { value: '0', label: '廠商' },
@@ -83,79 +85,109 @@ export class ASS11040Component extends BasicQueryPageComponent<QueryASS11040Resp
   ];
   // ----------------------------------------------------------------
 
-  constructor(public readonly ass11040Service: ASS11040Service) {
+  constructor(
+    public readonly ass11040Service: ASS11040Service,
+    private readonly dropdownApi: DropdownApiService,
+  ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.initializePage('ASS11040', 'ass/ass11040cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadBigCategoryOptions();
-    this.loadMidCategoryOptions('');
-    this.loadSmlCategoryOptions('');
-    // this.setupCategoryListeners(); 大中小分類欄位連動監聽
+    this.setupCategoryCascades();
   }
 
   /** 載入大分類選項 */
   loadBigCategoryOptions(): void {
-    this.ass11040Service.queryFACLASSM_DropDownList({}).pipe(untilDestroyed(this)).subscribe(res => {
-      if (res.Status !== '0000') return;
-      const data = res.Data?.Data ?? [];
-      this.bigCategoryCodeOptions = data.map(item => ({
-        value: item.CLASS_ID ?? '',
-        label: `${item.CLASS_ID}-${item.CLASS_NAME}`
-      }));
-    });
+    this.dropdownApi
+      .queryFaClassM()
+      .pipe(untilDestroyed(this))
+      .subscribe(opts => {
+        this.bigCategoryCodeOptions = opts ?? [];
+      });
   }
 
-  /** 設定分類連動監聽 */
-  // setupCategoryListeners(): void {
-  //   // 監聽大分類變更 -> 載入中分類
-  //   this.queryForm.controls.bigCategoryCode.valueChanges.pipe(untilDestroyed(this)).subscribe(bigCode => {
-  //     // 清空中分類和小分類
-  //     this.queryForm.controls.midCategoryCode.setValue(null);
-  //     this.queryForm.controls.smlCategoryCode.setValue(null);
-  //     this.midCategoryCodeOptions = [];
-  //     this.smlCategoryCodeOptions = [];
+  /** 設定大→中→小分類 cascade 連動 */
+  private setupCategoryCascades(): void {
+    const bCtrl = this.queryForm.controls.bigCategoryCode;
+    const mCtrl = this.queryForm.controls.midCategoryCode;
+    const sCtrl = this.queryForm.controls.smlCategoryCode;
 
-  //     if (bigCode) {
-  //       this.loadMidCategoryOptions(bigCode);
-  //     }
-  //   });
+    const inOpts = (opts: Option[], v: unknown): boolean =>
+      v != null && opts.some(o => String(o.value) === String(v));
 
-  //   // 監聽中分類變更 -> 載入小分類
-  //   this.queryForm.controls.midCategoryCode.valueChanges.pipe(untilDestroyed(this)).subscribe(midCode => {
-  //     // 清空小分類
-  //     this.queryForm.controls.smlCategoryCode.setValue(null);
-  //     this.smlCategoryCodeOptions = [];
+    bCtrl.valueChanges
+      .pipe(
+        distinctUntilChanged(),
+        tap(() => {
+          mCtrl.patchValue(null, { emitEvent: false });
+          sCtrl.patchValue(null, { emitEvent: false });
+          this.midCategoryCodeOptions = [];
+          this.smlCategoryCodeOptions = [];
+        }),
+        switchMap(bId =>
+          !bId
+            ? of([] as Option[])
+            : this.dropdownApi.queryFaClass1({ CLASS_ID: bId }).pipe(map(o => o ?? [])),
+        ),
+        untilDestroyed(this),
+      )
+      .subscribe(opts => (this.midCategoryCodeOptions = opts));
 
-  //     if (midCode) {
-  //       this.loadSmlCategoryOptions(midCode);
-  //     }
-  //   });
-  // }
+    mCtrl.valueChanges
+      .pipe(
+        distinctUntilChanged(),
+        tap(() => {
+          sCtrl.patchValue(null, { emitEvent: false });
+          this.smlCategoryCodeOptions = [];
+        }),
+        switchMap(mId =>
+          !mId
+            ? of([] as Option[])
+            : this.dropdownApi
+              .queryFaClass2({
+                B_CLASS_ID: bCtrl.value ?? undefined,
+                CLASS_ID: mId,
+              })
+              .pipe(map(o => o ?? [])),
+        ),
+        untilDestroyed(this),
+      )
+      .subscribe(opts => (this.smlCategoryCodeOptions = opts));
 
-  /** 載入中分類選項 */
-  loadMidCategoryOptions(bigCategoryCode: string): void {
-    this.ass11040Service.queryFACLASS1_DropDownList({ B_CLASS_ID: bigCategoryCode }).pipe(untilDestroyed(this)).subscribe(res => {
-      if (res.Status !== '0000') return;
-      const data = res.Data?.Data ?? [];
-      this.midCategoryCodeOptions = data.map(item => ({
-        value: item.M_CLASS_ID ?? '',
-        label: `${item.M_CLASS_ID}-${item.M_CLASS_NAME}`
-      }));
-    });
-  }
+    // 還原查詢狀態時的初始化載入
+    const initB = bCtrl.value;
+    const initM = mCtrl.value;
+    if (initB) {
+      this.dropdownApi
+        .queryFaClass1({ CLASS_ID: initB })
+        .pipe(untilDestroyed(this))
+        .subscribe(opts => {
+          const mids = opts ?? [];
+          this.midCategoryCodeOptions = mids;
 
-  /** 載入小分類選項 */
-  loadSmlCategoryOptions(midCategoryCode: string): void {
-    this.ass11040Service.queryFACLASS2_DropDownList({ M_CLASS_ID: midCategoryCode }).pipe(untilDestroyed(this)).subscribe(res => {
-      if (res.Status !== '0000') return;
-      const data = res.Data?.Data ?? [];
-      this.smlCategoryCodeOptions = data.map(item => ({
-        value: item.S_CLASS_ID ?? '',
-        label: `${item.S_CLASS_ID}-${item.S_CLASS_NAME}`
-      }));
-    });
+          if (mCtrl.value != null && !inOpts(mids, mCtrl.value)) {
+            mCtrl.patchValue(null, { emitEvent: false });
+            sCtrl.patchValue(null, { emitEvent: false });
+            return;
+          }
+
+          if (initM) {
+            this.dropdownApi
+              .queryFaClass2({ B_CLASS_ID: initB, CLASS_ID: initM })
+              .pipe(untilDestroyed(this))
+              .subscribe(opts2 => {
+                const smalls = opts2 ?? [];
+                this.smlCategoryCodeOptions = smalls;
+
+                if (sCtrl.value != null && !inOpts(smalls, sCtrl.value)) {
+                  sCtrl.patchValue(null, { emitEvent: false });
+                }
+              });
+          }
+        });
+    }
   }
 
   /**

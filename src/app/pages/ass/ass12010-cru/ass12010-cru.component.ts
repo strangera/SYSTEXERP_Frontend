@@ -2,9 +2,9 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
+import { ASS11040Service } from '@service/api/ass/ass11040.service';
 import { ASS11100Service } from '@service/api/ass/ass11100.service';
 import { ASS12010Service } from '@service/api/ass/ass12010.service';
-import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -140,7 +140,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
   constructor(
     public readonly service: ASS12010Service,
     private readonly ass11100Service: ASS11100Service,
-    private readonly fin11040Service: Fin11040Service,
+    private readonly ass11040Service: ASS11040Service,
     private readonly dropDownListService: DropDownListService,
     private readonly logger: NGXLogger,
     private readonly notification: NotificationService,
@@ -231,8 +231,8 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
    * 載入下拉選單選項
    */
   private loadDropdownOptions(): void {
-    // 部門代號
-    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe({
+    // 部門代號 / 保管單位（querySYS3100_DropDownList）
+    this.dropDownListService.querySYS3100_DropDownList().subscribe({
       next: res => {
         if (res.Status !== '0000') return;
         const options = res.Data.map(item => ({
@@ -276,15 +276,15 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
     });
 
     // 品項代碼 (GOODS_ID)
-    this.fin11040Service.queryFIN11040({ PageSize: 9999, PageIndex: 1 }).subscribe({
+    this.ass11040Service.queryFASITEM_DropDownList({ PageSize: 9999, PageIndex: 1 }).subscribe({
       next: res => {
         if (res.Status !== '0000') return;
-        const data: TDS1008Data[] = res.Data ?? [];
-        const options = data
-          .filter(item => item.INV_ItemNo != null && item.INV_ItemNo !== '')
+        const list = res.Data?.Data ?? [];
+        const options = list
+          .filter(item => item.GOODS_ID != null && item.GOODS_ID !== '')
           .map(item => ({
-            label: `${item.INV_ItemNo} - ${item.INV_ItemName ?? ''}`,
-            value: item.INV_ItemNo,
+            label: `${item.GOODS_ID} - ${item.GOODS_NAME ?? ''}`,
+            value: item.GOODS_ID!,
           }));
         this.goodsIdOptions.set(options);
       },
@@ -400,13 +400,23 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
         // 將明細陣列序列化為 JSON 字串
         const detailJson = JSON.stringify(items);
 
+        const u = this.authService.currentUserValue;
+        const applyDate = raw.APPLY_DATE
+          ? (raw.APPLY_DATE instanceof Date
+            ? raw.APPLY_DATE
+            : new Date(raw.APPLY_DATE as string))
+          : new Date();
+        const applyDateIso = Number.isNaN(applyDate.getTime())
+          ? new Date().toISOString()
+          : applyDate.toISOString();
+
         const insertPayload: ASS12010InsertRequest = {
           EMP_ID: raw.EMP_ID ?? '',
           ORG_ID: raw.ORG_ID ?? '',
           WH_ID: raw.WH_ID ?? '',
-          APPLY_DATE: raw.APPLY_DATE ?? new Date(),
-          NEED_NUM: raw.NEED_NUM || undefined,
-          NOTE: raw.REMARK || undefined, // 表單欄位是 REMARK，API 需要 NOTE
+          APPLY_DATE: applyDateIso,
+          NEED_NUM: raw.NEED_NUM?.trim() ? raw.NEED_NUM.trim() : undefined,
+          NOTE: raw.REMARK?.trim() ? raw.REMARK.trim() : undefined,
           DetailJson: detailJson,
         };
         this.logger.debug(`onSubmit insert:`, [insertPayload]);
@@ -443,6 +453,7 @@ export class ASS12010CRUComponent extends BasicCruPageComponent<ASS12010Data> im
           .map((item) => ({
             GOODS_ID: item.GOODS_ID!,
             QTY: Number(item.QUANTITY) || 0,
+            UNIT: item.UNIT || '', //單位
             HOLD_ORG_ID: item.CUSTODY_UNIT || raw.ORG_ID || '', // 保管部門，如果沒有則使用申請部門
             HOLD_EMP_ID: item.CUSTODIAN || '', // 保管人員
             NOTES: item.ITEM_REMARK || undefined,

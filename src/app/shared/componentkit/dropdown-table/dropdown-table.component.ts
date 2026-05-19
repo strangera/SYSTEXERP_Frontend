@@ -2,6 +2,7 @@ import { NgFor, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AutoCompleteModule, AutoCompleteSelectEvent } from 'primeng/autocomplete';
+import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { debounceTime, Subject, takeUntil } from 'rxjs';
@@ -22,7 +23,7 @@ export interface FieldsConfig {
   templateUrl: './dropdown-table.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, InputTextModule, OverlayPanelModule, TableComponent]
+  imports: [NgFor, NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent, InputTextModule, OverlayPanelModule, TableComponent, ButtonModule]
 })
 export class DropdownTableComponent extends BasicKitComponent implements OnInit, OnDestroy {
   // 表單參數
@@ -49,8 +50,8 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   @Output() select = new EventEmitter<any>(); // 選擇事件
   @Input() lazy = true;                  // 是否啟用分頁
   private inputChangeSubject = new Subject<Record<string, string>>();
-  // 新增標記，判斷是否為第一次點擊
   private initialLoadDone = false;
+  private suppressNextFocus = false;
 
   ngOnInit(): void {
     this.updateControlState(this.control);
@@ -148,8 +149,16 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     });
   }
   // 【新增 onFocusAndInitialLoad】: 處理初次點擊時的載入邏輯
+  hideOverlay(): void {
+    this.suppressNextFocus = true;
+    this.op?.hide();
+  }
+
   onFocusAndInitialLoad(event: any) {
-    // 【修改點】只有當 showOverlay 為 true 時，才觸發 Overlay Panel
+    if (this.suppressNextFocus) {
+      this.suppressNextFocus = false;
+      return;
+    }
     if (this.showOverlay) {
       this.op?.toggle(event);
     }

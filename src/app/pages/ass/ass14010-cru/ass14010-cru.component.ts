@@ -61,6 +61,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     TX_AMT: [{ value: null as number | null, disabled: true }], // 稅額
     AMT: [{ value: null as number | null, disabled: true }], // 含稅金額
     REDU_CODE: [null], // 扣抵別
+    RECEIPT_STATUS: ['1'], //(1.可刪除 2.不可刪除)
     //------
 
     TICKET_BE: [{ value: 0, disabled: true }], // 付款天數(明細加總)
@@ -74,7 +75,8 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
     { value: "0", label: '發票' },
     { value: "1", label: '單據' },
   ];
-  TOKEN_NO_Options: { value: string; label: string }[] = []; // 驗收單號 下拉選項 (ass15070: queryFAASSCHKMASS15070_DropDownList)
+  TOKEN_NO_Options:
+    { SUBCHECK_ID: string; TAX_AMT: number; NTAX_AMT: number; AMT: number }[] = []; // 驗收單號 下拉選項 (ass15070: queryFAASSCHKMASS15070_DropDownList)
   INV_FORMAT_Options: { value: string; label: string }[] = []; // 發票格式 下拉選項 (fin15030: queryTDS1007_DropDownList)
   TAX_CODE_Options: { value: string; label: string }[] = [
     { value: "1", label: '應稅' },
@@ -153,7 +155,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
               MID: this.authService.getUserInfo()?.mid || null,
               STO_NO: this.authService.getUserInfo()?.SYS_StoreNo || null,
               SUPPLIER_ID: frm.get('SUPPLIER_ID')?.value,
-              TICKET_BE: frm.get('TICKET_BE')?.value,
+              TICKET_BE: this.supplierData[0]?.TICKET_BE || null,
               TOKEN_NO: frm.get('TOKEN_NO')?.value,
               RECEIPT_TYPE: this.supplierData[0]?.RECEIPT_TYPE || null,
               RECEIPT_NO: this.supplierData[0]?.RECEIPT_NO || null,
@@ -163,25 +165,30 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
               INV_FORMAT: this.supplierData[0]?.INV_FORMAT || null,
               TAX_CODE: this.supplierData[0]?.TAX_CODE || null,
               REDU_CODE: this.supplierData[0]?.REDU_CODE || null,
-              NTX_AMT: frm.get('NTX_AMT')?.value,
-              TX_AMT: frm.get('TX_AMT')?.value,
-              AMT: frm.get('AMT')?.value,
+              NTX_AMT: this.supplierData[0]?.TOTAL_NTX_AMT,
+              TX_AMT: this.supplierData[0]?.TOTAL_TX_AMT,
+              AMT: this.supplierData[0]?.TOTAL_AMT,
             }
             console.log('提交的payload', payload);
             this.ass14010Service.insertASS14010(payload).subscribe(() => {
               this.messageService.successBubble('新增成功');
               this.dataForm.reset();
+              // 還原子表單
+              this.supplierData = [];
+              this.itemData = [];
             });
+            this.loading = false
           }
           break;
         case CRUDStatus.Edit:
+          // AN39731047
           if (this.canEdit()) {
             this.loading = false;
             const payload = {
-              RECEIPT_INS_ID: this.supplierData[0]?.RECEIPT_NO || null, // 發票維護單號(編輯時帶入，新增時為null)
+              RECEIPT_INS_ID: frm.get('RECEIPT_INS_ID')?.value, // 發票維護單號(編輯時帶入，新增時為null)
               SUPPLIER_ID: frm.get('SUPPLIER_ID')?.value, // 供應商代碼(不可修改)
               TOKEN_NO: frm.get('TOKEN_NO')?.value, // 驗收單號(多筆)
-              TICKET_BE: frm.get('TICKET_BE')?.value,
+              TICKET_BE: this.supplierData[0]?.TICKET_BE || null, // 付款天數(編輯時帶入，新增時由使用者選擇)
               RECEIPT_TYPE: this.supplierData[0]?.RECEIPT_TYPE || null, // 單據代碼(編輯時帶入，新增時由使用者選擇)
               RECEIPT_NO: this.supplierData[0]?.RECEIPT_NO || null, // 發票/收據號碼(編輯時帶入，新增時由使用者輸入)
               RECEIPT_DATE: this.supplierData[0]?.RECEIPT_DATE || null, // 發票日期(編輯時帶入，新增時由使用者選擇)
@@ -190,9 +197,9 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
               INV_FORMAT: this.supplierData[0]?.INV_FORMAT || null, // 發票格式(編輯時帶入，新增時由使用者選擇)
               TAX_CODE: this.supplierData[0]?.TAX_CODE || null, // 稅別(編輯時帶入，新增時由使用者選擇)
               REDU_CODE: this.supplierData[0]?.REDU_CODE || null, // 扣抵別(編輯時帶入，新增時由使用者選擇)
-              NTX_AMT: frm.get('NTX_AMT')?.value,
-              TX_AMT: frm.get('TX_AMT')?.value,
-              AMT: frm.get('AMT')?.value,
+              NTX_AMT: this.supplierData[0]?.TOTAL_NTX_AMT,
+              TX_AMT: this.supplierData[0]?.TOTAL_TX_AMT,
+              AMT: this.supplierData[0]?.TOTAL_AMT,
             }
 
             console.log('提交的payload', payload);
@@ -204,6 +211,7 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
                 this.messageService.errorBubble('更新失敗: ' + res.Data.O_MESSAGE || '更新失敗');
               }
             });
+            this.loading = false
           }
           break;
       }
@@ -277,9 +285,11 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
         }));
 
         // 2. 處理驗收單號
-        this.TOKEN_NO_Options = (resTok.Data ?? []).map((res: { SUBPOENA_ID: string; }) => ({
-          label: res.SUBPOENA_ID,
-          value: res.SUBPOENA_ID,
+        this.TOKEN_NO_Options = (resTok.Data ?? []).map((res: any) => ({
+          SUBCHECK_ID: res.SUBCHECK_ID,
+          TAX_AMT: res.TAX_AMT,
+          NTAX_AMT: res.NTAX_AMT,
+          AMT: res.AMT
         }));
 
         // 3. 處理發票格式
@@ -319,7 +329,8 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
       { field: 'TOTAL_AMT', header: '含稅金額', type: 'inputNumber', disabled: () => true },
     ];
     this.itemColumn = [
-      { field: 'TOKEN_NO', header: '驗收單號', type: 'dropdown', options: this.TOKEN_NO_Options, optionLabel: 'label', optionValue: 'value' },
+      { field: 'TOKEN_NO', header: '驗收單號', type: 'dropdown', options: this.TOKEN_NO_Options, optionLabel: 'SUBCHECK_ID', optionValue: 'SUBCHECK_ID' },
+      // { field: 'TOKEN_NO', header: '驗收單號', type: 'input' },
       { field: 'NTX_AMT', header: '未稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
       { field: 'TX_AMT', header: '稅額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
       { field: 'AMT', header: '含稅金額', type: 'inputNumber', aggregate: 'sum', disabled: () => true },
@@ -329,6 +340,26 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   onSupplierDataChange(eventData: Ass14010Supplier[]) {
     // 1. 變更後的資料同步回 itemData
     this.supplierData = eventData;
+
+    // 2. 實作「發票號清空連帶清除 單據資料」
+    // 檢查是否還有任何發票號碼存在
+    const hasReceiptNo = this.supplierData.some(item =>
+      item.RECEIPT_NO && item.RECEIPT_NO.trim() !== ''
+    );
+
+    // 如果發票號碼被清空（例如使用者刪除文字或整列），則清空單據資料
+    if (!hasReceiptNo) {
+      this.itemData = []; // 清空單據明細表格
+
+      // 同步更新主表單中的驗收單號與金額欄位
+      this.dataForm.patchValue({
+        TOKEN_NO: '',
+        NTX_AMT: 0,
+        TX_AMT: 0,
+        AMT: 0,
+        TICKET_BE: 0
+      });
+    }
 
     //更新付款天數
     this.updateTokenNoSum()
@@ -368,7 +399,22 @@ export class ASS14010CRUComponent extends BasicCruPageComponent<ass14010detailDa
   //依據明細驗收單號進行主檔token_no刷新
   onItemDataChange(eventData: Ass14010Items[]) {
     // 1. 變更後的資料同步回 itemData
-    this.itemData = eventData;
+    // 遍歷 eventData，若 TOKEN_NO 有值且金額為空，則從 Options 抓取對應金額
+    this.itemData = eventData.map(item => {
+      if (item.TOKEN_NO) {
+        const matchedOption = this.TOKEN_NO_Options.find(opt => opt.SUBCHECK_ID === item.TOKEN_NO);
+        if (matchedOption) {
+          return {
+            ...item,
+            // 只有在金額欄位尚未輸入或需要連動時才自動填入
+            NTX_AMT: matchedOption.NTAX_AMT,
+            TX_AMT: matchedOption.TAX_AMT,
+            AMT: matchedOption.AMT
+          };
+        }
+      }
+      return item;
+    });
 
     // 2. 取得所有不為空的 TOKEN_NO 並用逗號結合
     const tokenNos = this.itemData

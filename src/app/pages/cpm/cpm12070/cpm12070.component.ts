@@ -89,10 +89,4 @@ export class CPM12070Component extends BasicQueryPageComponent<CPM12070Response>
     const export$ = this.cpm12070Service.exportCPM12070PDF(this.historyRequestBody);
     this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.pdf', (loading) => this.btnLoading = loading).subscribe();
   }
-
-  onExportXLSX() {
-    if (!this.historyRequestBody) return;
-    const export$ = this.cpm12070Service.exportCPM12070Excel(this.historyRequestBody);
-    this.fileExportService.executeFileExport(export$.pipe(untilDestroyed(this)), '.xlsx', (loading) => this.btnLoading = loading).subscribe();
-  }
 }

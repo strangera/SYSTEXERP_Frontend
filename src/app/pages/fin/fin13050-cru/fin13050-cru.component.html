@@ -125,12 +125,12 @@
           ></app-dropdown>
         </div>
 
-        <!-- 廠商編號 -->
+        <!-- 廠商編號 (POS2013 下拉) -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="廠商編號"
             controlName="PUR_VenNo"
-            [options]="VendorNoOptions"
+            [options]="vendorOptions"
             optionLabel="label"
             optionValue="value"
             [control]="dataForm.controls.PUR_VenNo"
@@ -138,12 +138,13 @@
           ></app-dropdown>
         </div>
 
-        <!-- 廠商名稱（唯讀） -->
+        <!-- 統一編號（使用者手動輸入） -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="廠商名稱"
-            [control]="dataForm.controls.PUR_VenName"
+            label="統一編號"
+            [control]="dataForm.controls.PUR_VenUniform"
             [submitted]="submitted"
+            placeholder="請輸入8位數統一編號"
           ></app-input-text>
         </div>
 

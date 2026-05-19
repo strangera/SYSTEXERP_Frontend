@@ -103,7 +103,7 @@
             optionValue="value"
             [control]="$any(form.controls['apply_type'])"
             [submitted]="submitted"
-            [readonly]="isViewMode || !isCreateMode"
+            [readonly]="true"
             (valueChange)="onApplyTypeChange($event)"
           ></app-dropdown>
         </div>
@@ -132,11 +132,11 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="申請案件型態"
-            controlName="contract_type"
-            [options]="contractTypeOptions"
+            controlName="tlt_openflag"
+            [options]="openflagOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="$any(form.controls['contract_type'])"
+            [control]="$any(form.controls['tlt_openflag'])"
             [submitted]="submitted"
             [readonly]="isViewMode"
             (valueChange)="onContractTypeChange($event)"
@@ -571,7 +571,7 @@
             optionValue="value"
             [control]="$any(form.controls['vip_yn'])"
             [submitted]="submitted"
-            [readonly]="isViewMode"
+            [readonly]="true"
           ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">

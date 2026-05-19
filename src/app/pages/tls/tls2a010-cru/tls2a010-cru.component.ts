@@ -13,7 +13,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
 import { TooltipModule } from 'primeng/tooltip';
-import { finalize } from 'rxjs';
+import { finalize, switchMap } from 'rxjs';
 import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 @Component({
   selector: 'app-tls2a010-cru',
@@ -55,6 +55,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
       { label: '信用卡缺單', value: '2' },
       { label: '信用卡未簽', value: '3' },
       { label: '其他異常', value: '4' },
+      { label: '作廢/退貨', value: '7' },
     ],
     VOUCHER: [
       { label: '已繳回', value: '1' },
@@ -71,14 +72,11 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
     ],
   };
 
-  /** PAY_NO 對應分類 */
+  /** PAY_Type 對應分類 */
   payNoCategory: Record<string, string> = {
-    '12': 'CREDIT', '14': 'CREDIT', '41': 'CREDIT', '42': 'CREDIT', '43': 'CREDIT', '44': 'CREDIT',
-    '20': 'VOUCHER', '24': 'VOUCHER', '25': 'VOUCHER', '26': 'VOUCHER', '27': 'VOUCHER',
-    '30': 'VOUCHER', '62': 'VOUCHER', '71': 'VOUCHER', '72': 'VOUCHER', '73': 'VOUCHER',
-    '52': 'TPAY', '54': 'TPAY', '55': 'TPAY', '57': 'TPAY',
-    '99': 'VOID',
+    '0': 'CREDIT', '6': 'VOUCHER', 'F': 'VOUCHER', 'I': 'TPAY', 'M': 'TPAY', 'V': 'TPAY'
   };
+
 
   columns: EditColumn[] = [
     {
@@ -107,7 +105,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
       optionLabel: 'label',
       optionValue: 'value',
       options: (row: any) => {
-        const category = this.payNoCategory[row.PAY_NO];
+        const category = this.payNoCategory[row.PAY_Type];
         return this.checkStatusOptions[category] || [];
       }
     },
@@ -238,13 +236,21 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<any> implements 
         dataStatus: item.dataStatus
       })),
     };
+    const deletePayload = {
+      PAY_Type: this.PAY_Type ?? '',
+      TXN_Date: payload.selectList.length > 0 ? payload.selectList[0].TXN_Date : ''
+    };
     this.handleSubmit(frm, () => {
-      this.tls2a010Service.insertTLS2A010(payload).pipe(finalize(() => this.loading = false)).subscribe({
-        next: () => {
-          this.messageService.successBubble('審核成功');
+      this.tls2a010Service.deletePOS30011Detail(deletePayload).pipe(switchMap(() => this.tls2a010Service.insertTLS2A010(payload)),
+        finalize(() => {
+          this.loading = false;
           this.messageService.unblockUi();
+        })
+      ).subscribe({
+        next: () => {
+          this.messageService.successBubble('缺單審核成功');
           this.onCancel();
-        },
+        }
       });
     })
   }

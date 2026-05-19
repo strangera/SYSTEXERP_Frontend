@@ -125,8 +125,12 @@
       [fullData]="fullData"
       [totalData]="totalData"
       [groupRowsByName]="'科目代號'"
-      [showSubTotal]="true"
+      [showSubTotal]="false"
       [showTotal]="true"
+      [subTotalGroupHeaders]="[]"
+      [showGroupFooter]="true"
+      [accdcMap]="accdcMap"
+      [groupHeaderTemplate]="accGroupHeader"
       (detailWithColValue)="onDetailWithColValue($event)"
     >
       <header>

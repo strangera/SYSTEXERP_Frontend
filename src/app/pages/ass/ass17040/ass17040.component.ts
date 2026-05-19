@@ -18,7 +18,8 @@ import { SortOption } from '@shared/models/api/base-api.interface';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { AccordionModule } from 'primeng/accordion';
-import { Observable, finalize, map, tap } from 'rxjs';
+import { ButtonModule } from 'primeng/button';
+import { Observable, distinctUntilChanged, finalize, map, tap } from 'rxjs';
 import { ASS17020TableReportComponent } from '../ass17020/ass17020-table-report.component';
 import {
   ColumnGroup,
@@ -47,14 +48,14 @@ import {
     CalendarRangeComponent,
     DropdownComponent,
     ButtonComponent,
+    ButtonModule,
     ASS17020TableReportComponent,
     TranslateModule,
   ],
 })
 export class ASS17040Component
   extends BasicQueryPageComponent<ASS17040FlatRow>
-  implements OnInit
-{
+  implements OnInit {
   readonly queryForm = this.formBuilder.nonNullable.group({
     Sdate: [null as Date | null, [Validators.required]],
     Edate: [null as Date | null, [Validators.required]],
@@ -78,6 +79,8 @@ export class ASS17040Component
   columns: ReportColumn[] = [];
   columnGroup: ColumnGroup[] = [];
   summaryFooter: Record<string, unknown> | null = null;
+  exportPdfLoading = false;
+  exportExcelLoading = false;
 
   @ViewChild(ASS17020TableReportComponent)
   tableReport!: ASS17020TableReportComponent;
@@ -92,7 +95,7 @@ export class ASS17040Component
       header: '品項單價',
       align: 'right',
       sortField: 'GoodsPrice',
-      format: (v) => formatAmountWithDecimals(v, 2),
+      format: (v) => formatAmount(v as number),
     },
   ];
 
@@ -155,20 +158,20 @@ export class ASS17040Component
       return;
     }
     this.dropdown
-      .queryFaClass1({ B_CLASS_ID: bClassId })
+      .queryFaClass1({ CLASS_ID: bClassId })
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         this.midCategoryOptions = opts ?? [];
       });
   }
 
-  private loadSmallCategoryOptions(mClassId: string): void {
+  private loadSmallCategoryOptions(bClassId: string, mClassId: string): void {
     if (!mClassId) {
       this.smallCategoryOptions = [];
       return;
     }
     this.dropdown
-      .queryFaClass2({ M_CLASS_ID: mClassId })
+      .queryFaClass2({ B_CLASS_ID: bClassId || undefined, CLASS_ID: mClassId })
       .pipe(untilDestroyed(this))
       .subscribe((opts) => {
         this.smallCategoryOptions = opts ?? [];
@@ -186,7 +189,7 @@ export class ASS17040Component
 
   private setupCategoryListeners(): void {
     this.queryForm.controls.bigCategoryCode.valueChanges
-      .pipe(untilDestroyed(this))
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
       .subscribe((big) => {
         this.queryForm.patchValue(
           { midCategoryCode: null, smallCategoryCode: null },
@@ -200,14 +203,24 @@ export class ASS17040Component
       });
 
     this.queryForm.controls.midCategoryCode.valueChanges
-      .pipe(untilDestroyed(this))
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
       .subscribe((mid) => {
         this.queryForm.patchValue({ smallCategoryCode: null }, { emitEvent: false });
         this.smallCategoryOptions = [];
         if (mid) {
-          this.loadSmallCategoryOptions(mid);
+          const big = this.queryForm.controls.bigCategoryCode.value ?? '';
+          this.loadSmallCategoryOptions(big, mid);
         }
       });
+
+    const initialBig = this.queryForm.controls.bigCategoryCode.value;
+    const initialMid = this.queryForm.controls.midCategoryCode.value;
+    if (initialBig) {
+      this.loadMidCategoryOptions(initialBig);
+    }
+    if (initialMid) {
+      this.loadSmallCategoryOptions(initialBig ?? '', initialMid);
+    }
   }
 
   private sanitizeDeptKey(key: string): string {
@@ -314,6 +327,35 @@ export class ASS17040Component
     }) as QueryASS17040Request;
   }
 
+  private buildExportPayload(): QueryASS17040Request {
+    const raw = this.queryForm.getRawValue();
+    const currentSort = this.tableReport?.multiSortMeta?.length
+      ? [...this.tableReport.multiSortMeta]
+      : this.lastQueryBody?.SortBy;
+    return this.buildPayload(raw, 0, 0, currentSort);
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(blobUrl);
+  }
+
+  private getTimestamp(): string {
+    const now = new Date();
+    return (
+      now.getFullYear().toString() +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') +
+      '_' +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0')
+    );
+  }
+
   queryFunction = (
     body: QueryASS17040Request & {
       pageSize?: number;
@@ -404,5 +446,51 @@ export class ASS17040Component
           this.queryStateService.setQueryState(this.ProgNo, raw);
         });
     });
+  }
+
+  onExportPdf(): void {
+    const payload = this.buildExportPayload();
+    this.exportPdfLoading = true;
+    this.ass17040Service
+      .exportPDFASS17040(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.exportPdfLoading = false;
+        }),
+      )
+      .subscribe({
+        next: blob => {
+          if (blob) {
+            this.downloadBlob(blob, `領用退料統計表_${this.getTimestamp()}.pdf`);
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('PDF 匯出失敗，請重試。');
+        },
+      });
+  }
+
+  onExportExcel(): void {
+    const payload = this.buildExportPayload();
+    this.exportExcelLoading = true;
+    this.ass17040Service
+      .exportExcelASS17040(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => {
+          this.exportExcelLoading = false;
+        }),
+      )
+      .subscribe({
+        next: blob => {
+          if (blob) {
+            this.downloadBlob(blob, `領用退料統計表_${this.getTimestamp()}.xlsx`);
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('Excel 匯出失敗，請重試。');
+        },
+      });
   }
 }

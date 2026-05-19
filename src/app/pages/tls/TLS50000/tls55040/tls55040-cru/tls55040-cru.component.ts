@@ -44,7 +44,6 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
     DIFF_TotAmt: [{ value: 0 as number | null, disabled: true }],// 差異金額
   });
 
-  // ========== Dropdown Table 相關屬性 (保持不變) ==========
   vendorQueryForm = this.formBuilder.group({
     VEN_No: [''], // 查詢條件
   });
@@ -61,16 +60,11 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
     { field: 'VEN_Name', header: '廠商名稱' },
     { field: 'VEN_PayConditionDay', header: '結帳後幾日付款' },
   ];
-  // ========== Dropdown Table 相關屬性 END ==========
-
-  // ========== APS30181 Table Edit 相關屬性 (保持不變) ==========
   APS30181Columns: EditColumn[] = [];
   APS30181Data: APS30181[] = []; // 主資料表格
   APS30181selectedItems: APS30181[] = [];
   APS30181Loading = false;
   PUR_VoucherTypeOptions = getSYS1000Options('PUR_VoucherType').filter(v => v.value !== '23' && v.value !== '24')
-  // ========== APS30181 Table Edit 相關屬性 END ==========
-  // ========== APS3018 Table Edit 相關屬性 (保持不變) ==========
   // 計算申報年月 YYYYMM 的函式
   private calculateRepYYYYMM(dateValue: string | Date | null): string | null {
     if (!dateValue) return null;
@@ -127,10 +121,7 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
 
     return { isValid: true, errorMessage: '' };
   };
-  // ========== APS3018 Table Edit 相關屬性 END ==========
-  // ========== 彈窗相關屬性 ==========
   ODMVisible = false;
-  // ========== 彈窗相關屬性 END ==========
   TABTYPEOptions = getSYS1000Options('TABTYPE')
 
   constructor(
@@ -229,16 +220,6 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
         }, width: '45px', showClear: false
       },
       {
-        field: 'PUR_DirectType', header: '發票用途', type: this.isFormCreateable ? 'dropdown' : undefined,
-        options: getSYS1000Options('PUR_DirectType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DirectType', v),
-        width: '60px', showClear: false
-      },
-      {
-        field: 'PUR_DiscNo', header: '扣抵代號', type: this.isFormCreateable ? 'dropdown' : undefined,
-        options: getSYS1000Options('PUR_DiscNo'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DiscNo', v),
-        width: '130px', showClear: false
-      },
-      {
         field: 'PUR_TotNet', header: '未稅金額', format: formatAmount, validate: [validateRequired], max: 9999999999, maxLength: 10, type: 'inputNumber',
         onBlur: (rowData, value) => this.onPurTotNetBlur(rowData, value), textAlign: 'right', aggregate: 'sum', min: 0,
         width: '80px'
@@ -260,7 +241,17 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
         field: 'PUR_VoucherType', header: '發票格式', validate: [validateRequired], type: 'dropdown',
         options: this.PUR_VoucherTypeOptions,
         optionLabel: 'value', optionValue: 'value',
-        width: '75px', showClear: false
+        width: '50px', showClear: false, minWidth: '50px'
+      },
+      {
+        field: 'PUR_DirectType', header: '發票用途', type: this.isFormCreateable ? 'dropdown' : undefined,
+        options: getSYS1000Options('PUR_DirectType'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DirectType', v),
+        width: '60px', showClear: false
+      },
+      {
+        field: 'PUR_DiscNo', header: '扣抵代號', type: this.isFormCreateable ? 'dropdown' : undefined,
+        options: getSYS1000Options('PUR_DiscNo'), optionLabel: 'label', optionValue: 'value', format: (v) => getSYS1000('PUR_DiscNo', v),
+        width: '130px', showClear: false
       },
     ]
   }
@@ -283,7 +274,7 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
     }
 
     // 3. 更新 rowData
-    rowData.PUR_TotTax = purTotTax;
+    rowData.PUR_TotTax = Number(purTotTax);
     rowData.PUR_TotAmt = purTotAmt;
 
     // 4. 強制更新表頭總計
@@ -299,13 +290,20 @@ export class TLS55040CRUComponent extends BasicCruPageComponent<Tls55040Data> im
    * @param newTaxValue 新的稅額值
    */
   onPurTotTaxBlur(rowData: APS3018, newTaxValue: number): void {
-    // 1. 取得當前的未稅金額 (N)
     const purTotNet = rowData.PUR_TotNet || 0;
+    const currentTax = newTaxValue || 0;
+
+    // 1. 檢核稅額異常 (SA 建議邏輯：ABS(手輸入稅額 - 未稅金額 * 0.05) > 10)
+    if (rowData.OTA_TaxType === '1') { // 只有應稅才檢查
+      const expectedTax = Math.round(purTotNet * 0.05);
+      if (Math.abs(currentTax - expectedTax) > 10) {
+        // 使用你的 messageService 彈出提示，但不阻斷流程
+        this.messageService.warnBubble(`發票號碼 ${rowData.PUR_GUINo || ''} 稅額(${currentTax})與計算值(${expectedTax})差異較大，請檢視稅額是否異常。`);
+      }
+    }
 
     // 2. 計算總金額 (A = N + T)
-    const purTotAmt = rowData.OTA_TaxType === '1'
-      ? Math.round(purTotNet + (newTaxValue || 0))
-      : purTotNet; // 非應稅時，總金額 = 未稅金額 (忽略手動輸入的稅額，因為邏輯上應為 0)
+    const purTotAmt = rowData.OTA_TaxType === '1' ? Math.round(purTotNet + currentTax) : purTotNet;
 
     // 3. 更新 rowData
     rowData.PUR_TotAmt = purTotAmt;

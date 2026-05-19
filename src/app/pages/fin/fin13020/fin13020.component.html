@@ -97,9 +97,19 @@
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear" [form]="queryForm" (onClick)="onClearForm()"></app-button>
-          <app-button btnType="query" [loading]="loading" (onClick)="onSubmit(queryForm)"></app-button>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button
+            btnType="clear"
+            [form]="queryForm"
+            (onClick)="onClearForm()"
+          ></app-button>
+          <app-button
+            btnType="query"
+            [loading]="loading"
+            (onClick)="onSubmit(queryForm)"
+          ></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -114,23 +124,21 @@
     [totalRecords]="totalRecords"
     [loading]="loading"
     [lazy]="true"
-   [dataKey]="'ID'"
+    [dataKey]="'ID'"
     [showManage]="true"
-    [showDelete]="true"
-    [showCheckBox]="true"
+    [showDelete]="false"
+    [showEdit]="false"
+    [showCheckBox]="false"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
-  [addButton]="addButtons"
-  [buttonsLoading]="buttonsLoading"
+    [addButton]="addButtons"
+    [buttonsLoading]="buttonsLoading"
     [isRowSelectable]="isRowSelectable"
     [editDisabled]="editDisabled"
     [apiUrl]="'queryFIN13020'"
-
     [lastQueryBody]="lastQueryBody"
     [queryFunction]="queryFIN13020Fn"
-
     (delete)="onDelete($event)"
-    (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     (dataChange)="data = $event"
   ></app-table-report>

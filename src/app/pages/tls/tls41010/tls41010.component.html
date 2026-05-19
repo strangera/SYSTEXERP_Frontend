@@ -10,17 +10,17 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
-            [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機名稱" controlName="ECR_Name"
-            [control]="queryForm.controls.ECR_Name" [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="專櫃編號" controlName="ECR_TLT_No" [control]="queryForm.controls.ECR_TLT_No"
               [options]="CounterOptions" optionLabel="formLabel" optionValue="value"
               [submitted]="submitted"></app-dropdown>
           </div>
+        </div>
+        <div class="grid p-fluid">
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
+            [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機名稱" controlName="ECR_Name"
+            [control]="queryForm.controls.ECR_Name" [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="grid p-fluid">

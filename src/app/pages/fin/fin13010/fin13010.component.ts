@@ -1,23 +1,23 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs/operators';
 
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 // UI
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ValidationService } from '@shared/service/validation.service';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
   selector: 'app-fin13010',
@@ -72,11 +72,9 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
-
-  /** ✅ table-report 需要：保留最後一次查詢 body */
   lastQueryBody: any = null;
+  editDisabledFn = (row: any) => !row?.CanEdit;
 
-  /** ✅ 給 table-report 使用的 query function */
   queryFIN13010Fn = (body: any) => this.fin13010Service.queryFIN13010(body);
 
   columns: any[] = [
@@ -94,21 +92,16 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
     { field: 'Voucher_No', header: '傳票編號', visible: true },
   ];
 
-  constructor(
-    private fin13010Service: FIN13010Service,
-    private validationService: ValidationService
-  ) {
+  constructor(private fin13010Service: FIN13010Service) {
     super();
   }
 
   /* ---------- 顯示用格式 ---------- */
 
   formatCreditType(value: string): string {
-    switch (value) {
-      case 'C': return '折讓';
-      case 'R': return '退出';
-      default: return value;
-    }
+    if (value === 'C') return '折讓';
+    if (value === 'R') return '退出';
+    return value;
   }
 
   formatDateFromBackend(dateStr: string): string {
@@ -127,12 +120,12 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
     return Number(v ?? 0).toLocaleString('en-US');
   }
 
-  /* ---------- Init：只從 CRU 回來才還原 ---------- */
+  /* ---------- Init ---------- */
 
   ngOnInit(): void {
     this.initializePage('FIN13010', '/FIN/FIN13010CRU');
 
-    const fromCru = !!(history.state && history.state['fromCru']);
+    const fromCru = !!(history.state?.fromCru);
     if (fromCru) {
       this.handleQueryRestore(this.queryForm, this.ProgNo, (f) => this.onSubmit(f));
     } else {
@@ -142,14 +135,10 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
 
   private setDefaultRepYYYYMMByToday(): void {
     const now = new Date();
-    const year = now.getFullYear();
     const month = now.getMonth() + 1;
-
     let evenMonth = month % 2 === 0 ? month : month + 1;
     if (evenMonth > 12) evenMonth = 12;
-
-    const repYYYYMM = `${year}${String(evenMonth).padStart(2, '0')}`;
-
+    const repYYYYMM = `${now.getFullYear()}${String(evenMonth).padStart(2, '0')}`;
     this.queryForm.patchValue({ PUR_RepYYYYMM: repYYYYMM }, { emitEvent: false });
   }
 
@@ -166,18 +155,13 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
     const raw = form.getRawValue();
     const payload: any = { ...raw };
 
-    // trim & 空白轉 null
     for (const key in payload) {
       if (typeof payload[key] === 'string') {
-        payload[key] = payload[key].trim();
-        if (payload[key] === '') payload[key] = null;
+        payload[key] = payload[key].trim() || null;
       }
     }
 
-    // 申報年月轉成六碼 YYYYMM
     payload.PUR_RepYYYYMM = this.toYYYYMM(payload.PUR_RepYYYYMM);
-
-    // ✅ table-report 之後要用它來滾動載入更多/排序重查
     payload.pageIndex = payload.pageIndex ?? 1;
     payload.pageSize = payload.pageSize ?? 30;
     payload.SortBy = payload.SortBy ?? [{ field: 'id', order: 1 }];
@@ -186,104 +170,63 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
     this.loading = true;
     this.messageService.blockUi();
 
-    this.fin13010Service.queryFIN13010(payload).subscribe({
-      next: (res: any) => {
-        this.data = res?.Data || [];
-        this.totalRecords = res?.TotalCount || this.data.length;
-
-        // ✅ 建議存 raw，還原 UI 最準
-        this.queryStateService.setQueryState(this.ProgNo, raw);
-      },
-      error: () => {
+    this.fin13010Service.queryFIN13010(payload)
+      .pipe(finalize(() => {
         this.loading = false;
         this.messageService.unblockUi();
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
-    });
+      }))
+      .subscribe({
+        next: (res: any) => {
+          this.data = res?.Data || [];
+          this.totalRecords = res?.TotalCount || this.data.length;
+          this.queryStateService.setQueryState(this.ProgNo, raw);
+        },
+      });
   }
 
   onClearForm(): void {
     this.queryForm.reset();
-
-    // 保留分頁/排序預設（避免 table-report 下次 loadMore 用到 undefined）
     this.queryForm.patchValue(
-      {
-        pageIndex: 1,
-        pageSize: 30,
-        SortBy: [{ field: 'id', order: 1 }],
-      },
+      { pageIndex: 1, pageSize: 30, SortBy: [{ field: 'id', order: 1 }] },
       { emitEvent: false }
     );
-
     this.data = [];
     this.totalRecords = 0;
     this.selectedItems = [];
     this.lastQueryBody = null;
-
     this.setDefaultRepYYYYMMByToday();
     this.queryStateService.clearQueryState(this.ProgNo);
   }
 
   private toYYYYMM(input: any): string | null {
     if (!input) return null;
-
     if (typeof input === 'string') {
       const onlyDigits = input.replace(/\D/g, '');
       if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6);
-
-      const d = new Date(input);
-      if (!isNaN(d.getTime())) {
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        return `${y}${m}`;
-      }
-      return null;
     }
-
-    if (input instanceof Date) {
-      const y = input.getFullYear();
-      const m = String(input.getMonth() + 1).padStart(2, '0');
-      return `${y}${m}`;
-    }
-
-    const d = new Date(input);
+    const d = input instanceof Date ? input : new Date(input);
     if (!isNaN(d.getTime())) {
-      const y = d.getFullYear();
-      const m = String(d.getMonth() + 1).padStart(2, '0');
-      return `${y}${m}`;
+      return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}`;
     }
     return null;
   }
 
-  /* ---------- Checkbox 禁勾：已有傳票號不可選 ---------- */
+  /* ---------- Checkbox ---------- */
 
-  isRowSelectable = (row: any): boolean => {
-    const v = row?.Voucher_No ?? row?.voucher_No ?? row?.VOUCHER_NO;
-    if (v == null) return true;
-    return String(v).trim() === '';
-  };
+  isRowSelectable = (row: any): boolean => !!row?.CanDel;
 
-  /* ---------- 刪除：已有傳票編號不可刪 ---------- */
+  /* ---------- 刪除 ---------- */
 
   Delete(selectedRows: any[]): void {
-    if (!selectedRows || !selectedRows.length) {
+    if (!selectedRows?.length) {
       this.messageService.warnBubble('請先選取要刪除的資料');
       return;
     }
 
-    const deletableRows = selectedRows.filter((r) => this.isRowSelectable(r));
-    const blockedRows = selectedRows.length - deletableRows.length;
-
+    const deletableRows = selectedRows.filter((r) => r?.CanDel);
     if (!deletableRows.length) {
-      this.messageService.warnBubble('已拋轉有傳票號碼的資料不可刪除');
+      this.messageService.warnBubble('所選資料已審核或已建立傳票，無法刪除');
       return;
-    }
-
-    if (blockedRows > 0) {
-      this.messageService.infoBubble(`已忽略 ${blockedRows} 筆有傳票號碼的資料，僅刪除其餘未拋轉資料`);
     }
 
     const idList = deletableRows
@@ -295,21 +238,30 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
       return;
     }
 
-    this.loading = true;
-    this.messageService.blockUi();
+    const retNoList = deletableRows
+      .map((r) => r.TXN_Ret_No)
+      .filter((n) => !!n)
+      .join('、');
 
-    this.fin13010Service.deleteFIN13010(idList).subscribe({
-      next: () => {
-        // 刪完重新查（用目前 form）
-        this.onSubmit(this.queryForm);
-      },
-      error: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
+    this.messageService.confirm({
+      header: '確認刪除',
+      message: `是否確認刪除折讓單號【${retNoList}】？`,
+      accept: () => {
+        this.loading = true;
+        this.messageService.blockUi();
+
+        this.fin13010Service.deleteFIN13010(idList)
+          .pipe(finalize(() => {
+            this.loading = false;
+            this.messageService.unblockUi();
+          }))
+          .subscribe({
+            next: () => {
+              this.messageService.successBubble('刪除成功');
+              this.selectedItems = [];
+              this.onSubmit(this.queryForm);
+            },
+          });
       },
     });
   }

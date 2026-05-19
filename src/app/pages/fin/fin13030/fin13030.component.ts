@@ -29,7 +29,7 @@ import { ButtonModule } from 'primeng/button';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 // 本期發票月
 const today = new Date();
@@ -100,6 +100,8 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
 
   totalRecords = 0;
   data: FIN13030Data[] = [];
+  editDisabledFn = (row: any) => !row?.CanEdit;
+  isRowSelectable = (row: any): boolean => !!row?.CanDel;
   exportExcelLoading = false;
   exportPdfLoading = false;
   selectedItems: FIN13030Data[] = [];
@@ -188,6 +190,10 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
   }
 
   deleteRow(rowData: FIN13030Data[]) {
+    if (rowData.some(r => !(r as any)?.CanDel)) {
+      this.messageService.warnBubble('已審核之申報年月資料不可刪除');
+      return;
+    }
     this.messageService.confirm({
       header: '是否確認刪除',
       accept: () => {

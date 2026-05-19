@@ -16,7 +16,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { FIN13050Service } from '@service/api/fin/fin13050.service';
@@ -66,8 +66,8 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
   /** table-report 需要：queryFunction(body) => Observable */
   queryFIN13060Fn = (body: any) => this.fin13060Service.queryFIN13060(body);
 
-  /** 先都開放（需要規則再補） */
-  editDisabled = (_row: any): boolean => false;
+  editDisabled = (row: any): boolean => !row?.CanEdit;
+  isRowSelectable = (row: any): boolean => !!row?.CanDel;
   detailDisabled = (_row: any): boolean => false;
 
   // 查詢表單：鍵名與後端一模一樣
@@ -560,6 +560,11 @@ export class FIN13060Component extends BasicQueryPageComponent<any> implements O
   }
 
   onDelete(event: any): void {
+    const rows: any[] = Array.isArray(event) ? event : (event?.data ?? [event]);
+    if (rows.some(r => !r?.CanDel)) {
+      this.messageService.warnBubble('已審核之申報年月資料不可刪除');
+      return;
+    }
     const ids = this.normalizeIds(event);
     if (!ids.length) {
       this.messageService.warnBubble('請先選擇要刪除的資料');

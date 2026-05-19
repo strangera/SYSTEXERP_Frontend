@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS13100Service } from '@service/api/ass/ass13100.service';
-import { IDropdownItem, Sys1000Query } from '@service/utility/dropdown-api.model';
+import { IDropdownItem, Pos2002LocationItem, Sys1000Query } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -24,6 +24,7 @@ import {
   ASS13100UpdateItem,
   InsertASS13100Request,
   InventoryGenerateMode,
+  InventoryGenerateModeColNotes,
 } from '../ass13100/ass13100.model';
 
 @Component({
@@ -101,7 +102,6 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
     Mode: new FormControl<InventoryGenerateMode>('KEEPER_ORG'),
     IncludeAllOrg: new FormControl<boolean>(false),
     ParentOrg_ID: new FormControl<string | null>(null),
-    COL_NOTES: new FormControl<string | null>(null),
     CHK_DATE: new FormControl<Date | null>(null),
   });
 
@@ -141,10 +141,10 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
 
     this.dropdownApi
       .queryPos2002Location()
-      ?.subscribe((list: IDropdownItem[] | null) => {
+      ?.subscribe((list: Pos2002LocationItem[] | null) => {
         this.locationOptions = (list ?? []).map(x => ({
-          label: x.Name,
-          value: x.No,
+          label: x.location_no + '-' + x.tlt_floor,
+          value: x.location_no ?? '',
         }));
       });
     this.dropdownApi
@@ -326,9 +326,46 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
 
   /** 新增模式：產生清點單（呼叫新增 API） */
   onGenerateInventory(): void {
+    const mode = this.generateForm.getRawValue().Mode;
+    if (!mode) {
+      this.messageService.warnBubble('請選擇清點單產生方式');
+      return;
+    }
+
     if (!this.generateRows.length) {
       this.messageService.warnBubble('請先新增至少一筆單位/人員清點設定');
       return;
+    }
+
+    const isOrgMode = mode === 'KEEPER_ORG' || mode === 'USER_ORG';
+    const isEmpMode = mode === 'KEEPER_EMP' || mode === 'USER_EMP';
+    const includeAllOrg = this.generateForm.getRawValue().IncludeAllOrg ?? false;
+
+    for (let i = 0; i < this.generateRows.length; i++) {
+      const row = this.generateRows[i];
+
+      const rowNo = i + 1;
+      const orgId = String(row.Org_ID ?? '').trim();
+      const empId = String(row.Emp_ID ?? '').trim();
+      const chkEmp1 = String(row.InventoryEmp_ID_1 ?? '').trim();
+      const chkEmp2 = String(row.InventoryEmp_ID_2 ?? '').trim();
+
+      if (isOrgMode && !includeAllOrg && !orgId) {
+        this.messageService.warnBubble(`第${rowNo}筆：部門代碼為必填`);
+        return;
+      }
+      if (isEmpMode && !empId) {
+        this.messageService.warnBubble(`第${rowNo}筆：員工代碼為必填`);
+        return;
+      }
+      if (!chkEmp1) {
+        this.messageService.warnBubble(`第${rowNo}筆：清點員工代碼1為必填`);
+        return;
+      }
+      if (!chkEmp2) {
+        this.messageService.warnBubble(`第${rowNo}筆：清點員工代碼2為必填`);
+        return;
+      }
     }
 
     const raw = this.generateForm.getRawValue();
@@ -339,7 +376,7 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
     }
 
     const body: InsertASS13100Request = {
-      COL_NOTES: raw.COL_NOTES ?? null,
+      COL_NOTES: this.mapGenerateModeToColNotes(raw.Mode),
       CHK_DATE: chkDate.toISOString(),
       AllOrg: raw.IncludeAllOrg ?? false,
       GenList: this.generateRows.map(r => ({
@@ -376,6 +413,10 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
           this.messageService.errorBubble(res?.Message ?? res?.Data?.ErrMsg ?? '產生清點單失敗');
         }
       });
+  }
+
+  private mapGenerateModeToColNotes(mode: InventoryGenerateMode | null | undefined): string {
+    return mode ? InventoryGenerateModeColNotes[mode] : '';
   }
 
   /** 載入清點單明細 */
@@ -422,6 +463,12 @@ export class ASS13100CRUComponent extends BasicCruPageComponent<ASS13100DetailRo
     const id = this.mainId;
     if (id == null) {
       this.messageService.errorBubble('缺少主檔 ID，無法儲存');
+      return;
+    }
+
+    const firstEmptyStatusIndex = this.detailRows.findIndex(r => !String(r.CHK_STATUS ?? '').trim());
+    if (firstEmptyStatusIndex !== -1) {
+      this.messageService.warnBubble(`資產狀態(清點後)為必填`);
       return;
     }
 

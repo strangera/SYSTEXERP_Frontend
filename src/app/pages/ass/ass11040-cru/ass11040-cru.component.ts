@@ -5,14 +5,12 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { ASS11040Service } from '@service/api/ass/ass11040.service';
+import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ImageService } from '@service/utility/image.service';
 import {
   CreateASS11040Request,
   CreateASS11040Response,
-  FACLASS1Data,
-  FACLASS2Data,
-  FACLASSMData,
   QueryASS11040Response,
   UpdateASS11040Request,
 } from '@pages/ass/ass11040/ass11040.model';
@@ -122,9 +120,9 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
   itemUnitOptions = getSYS1000Options('UNIT');
   packageUnitOptions = getSYS1000Options('PACK_UNIT');
 
-  bigCategoryCodeOptions: { value: string; label: string }[] = [];
-  midCategoryCodeOptions: { value: string; label: string }[] = [];
-  smlCategoryCodeOptions: { value: string; label: string }[] = [];
+  bigCategoryCodeOptions: Option[] = [];
+  midCategoryCodeOptions: Option[] = [];
+  smlCategoryCodeOptions: Option[] = [];
 
   resiStatusOptions: { value: string; label: string }[] = [
     { value: '0', label: '預留' },
@@ -169,7 +167,7 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
     this.loadBigCategoryOptions();
     if (this.isFormCreateable) {
       this.loadMidCategoryOptions('');
-      this.loadSmlCategoryOptions('');
+      this.loadSmlCategoryOptions('', '');
       this.setupCategoryListeners(); //大中小分類欄位連動監聽
     }
     this.dropdownApiService.querySys3100().pipe(untilDestroyed(this)).subscribe(res => {
@@ -259,20 +257,20 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
     });
     this.initializeMediaFromPhotoUrl(row.PHOTO_URL ?? null);
     if (row.B_CLASS_ID) this.loadMidCategoryOptions(row.B_CLASS_ID);
-    if (row.M_CLASS_ID) this.loadSmlCategoryOptions(row.M_CLASS_ID);
+    if (row.B_CLASS_ID && row.M_CLASS_ID) {
+      this.loadSmlCategoryOptions(row.B_CLASS_ID, row.M_CLASS_ID);
+    }
     this.patchInProgress = false;
   }
 
   /** 載入大分類選項 */
   loadBigCategoryOptions(): void {
-    this.ass11040Service.queryFACLASSM_DropDownList({}).pipe(untilDestroyed(this)).subscribe((res: ApiResponse<{ Data: FACLASSMData[] }>) => {
-      if (res.Status !== '0000') return;
-      const data = res.Data?.Data ?? [];
-      this.bigCategoryCodeOptions = data.map((item: FACLASSMData) => ({
-        value: item.CLASS_ID ?? '',
-        label: `${item.CLASS_ID}-${item.CLASS_NAME}`,
-      }));
-    });
+    this.dropdownApiService
+      .queryFaClassM()
+      .pipe(untilDestroyed(this))
+      .subscribe(opts => {
+        this.bigCategoryCodeOptions = opts ?? [];
+      });
   }
 
   /** 設定分類連動監聽 */
@@ -290,32 +288,38 @@ export class ASS11040CRUComponent extends BasicCruPageComponent<QueryASS11040Res
       if (this.patchInProgress) return;
       this.dataForm.controls.smlCategoryCode.setValue(null);
       this.smlCategoryCodeOptions = [];
-      if (midCode) this.loadSmlCategoryOptions(midCode);
+      if (midCode) {
+        const bigCode = this.dataForm.controls.bigCategoryCode.value ?? '';
+        this.loadSmlCategoryOptions(bigCode, midCode);
+      }
     });
   }
 
-  // /** 載入中分類選項 */
+  /** 載入中分類選項 */
   loadMidCategoryOptions(bigCategoryCode: string): void {
-    this.ass11040Service.queryFACLASS1_DropDownList({ B_CLASS_ID: bigCategoryCode }).pipe(untilDestroyed(this)).subscribe((res: ApiResponse<{ Data: FACLASS1Data[] }>) => {
-      if (res.Status !== '0000') return;
-      const data = res.Data?.Data ?? [];
-      this.midCategoryCodeOptions = data.map((item: FACLASS1Data) => ({
-        value: item.M_CLASS_ID ?? '',
-        label: `${item.M_CLASS_ID}-${item.M_CLASS_NAME}`,
-      }));
-    });
+    this.dropdownApiService
+      .queryFaClass1({ CLASS_ID: bigCategoryCode })
+      .pipe(untilDestroyed(this))
+      .subscribe(opts => {
+        this.midCategoryCodeOptions = opts ?? [];
+      });
   }
 
-  /** 載入小分類選項 */
-  loadSmlCategoryOptions(midCategoryCode: string): void {
-    this.ass11040Service.queryFACLASS2_DropDownList({ M_CLASS_ID: midCategoryCode }).pipe(untilDestroyed(this)).subscribe((res: ApiResponse<{ Data: FACLASS2Data[] }>) => {
-      if (res.Status !== '0000') return;
-      const data = res.Data?.Data ?? [];
-      this.smlCategoryCodeOptions = data.map((item: FACLASS2Data) => ({
-        value: item.S_CLASS_ID ?? '',
-        label: `${item.S_CLASS_ID}-${item.S_CLASS_NAME}`,
-      }));
-    });
+  /** 載入小分類選項（需大分類 + 中分類代碼） */
+  loadSmlCategoryOptions(bigCategoryCode: string, midCategoryCode: string): void {
+    if (!midCategoryCode) {
+      this.smlCategoryCodeOptions = [];
+      return;
+    }
+    this.dropdownApiService
+      .queryFaClass2({
+        B_CLASS_ID: bigCategoryCode || undefined,
+        CLASS_ID: midCategoryCode,
+      })
+      .pipe(untilDestroyed(this))
+      .subscribe(opts => {
+        this.smlCategoryCodeOptions = opts ?? [];
+      });
   }
 
   onSelectFile(event: FileSelectEvent): void {

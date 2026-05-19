@@ -1,24 +1,24 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize, Observable, of } from 'rxjs';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TranslateModule } from '@ngx-translate/core';
 import { DatePipe } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { CardModule } from 'primeng/card';
-import { ScrollPanelModule } from 'primeng/scrollpanel';
-import { TabViewModule } from 'primeng/tabview';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { TLS2C020Data, TLS2C020Service } from '@service/api/tls/tls2-c020.service';
+import { TranslateModule } from '@ngx-translate/core';
 import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
+import { TLS2C020Data, TLS2C020Service } from '@service/api/tls/tls2-c020.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { AccordionModule } from 'primeng/accordion';
+import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
+import { ScrollPanelModule } from 'primeng/scrollpanel';
+import { TabViewModule } from 'primeng/tabview';
+import { finalize } from 'rxjs';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 
 export interface CheckData {
   checkOrder: string;
@@ -113,10 +113,16 @@ export class TLS2C020Component extends BasicQueryPageComponent<any> implements O
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         this.closeDate = response.Data.CLS_DATE || '';
-        // cls_date 為 closeDate - 1 天
-        const nextDate = new Date(this.closeDate);
-        nextDate.setDate(nextDate.getDate() - 1);
-        this.queryForm.patchValue({ cls_date: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || '' });
+
+        if (this.closeDate) {
+          // [修改點] 將日期邏輯從 -1 改為 +1
+          const nextDate = new Date(this.closeDate);
+          nextDate.setDate(nextDate.getDate() + 1); // 最大的關帳日 +1 天
+
+          this.queryForm.patchValue({
+            cls_date: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || ''
+          });
+        }
       });
     // 載入下拉選單選項
     this.loadOptions();

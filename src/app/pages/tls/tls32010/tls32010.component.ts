@@ -14,7 +14,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { formatAmountWithDecimals, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { FileExportService } from '@shared/service/file-export.service';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -65,30 +65,31 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
   historyRequestBody: TLS32010QueryRequest | null = null;
   data: TLS32010Data[] = [];
   columns: ReportColumn[] = [
-    { field: '館別', header: '館別' },
-    { field: '組織名稱', header: '組織名稱' },
-    { field: '櫃別名稱', header: '櫃別' }, // 使用「櫃別名稱」
-    { field: '專櫃編號', header: '櫃位編號', groupField: 'dept' },
-    { field: '櫃位名稱', header: '櫃位名稱', groupField: 'dept' },
-    { field: '位置編號', header: '位置編號', groupField: 'dept' },
-    { field: '坪數', header: '坪數', format: formatAmount },
-    { field: '營業目標', header: '營業目標', format: formatAmount },
-    { field: '營業實績', header: '營業實績', format: formatAmount },
-    { field: '交易筆數', header: '交易筆數' },
-    { field: '客單價', header: '客單價', format: formatAmount },
-    { field: '月坪效', header: '月坪效', format: formatAmount },
-    { field: '達成率', header: '達成率', format: (value: number) => value ? `${value.toFixed(1)}%` : '0%' },
-    { field: '坪數_排名', header: '坪數', format: formatAmountCN, groupField: 'tier' },
-    { field: '營業目標_排名', header: '營業目標', format: formatAmountCN, groupField: 'tier' },
-    { field: '營業實績_排名', header: '營業實績', format: formatAmountCN, groupField: 'tier' },
-    { field: '交易筆數_排名', header: '交易筆數', groupField: 'tier' },
-    { field: '客單價_排名', header: '客單價', format: formatAmountCN, groupField: 'tier' },
-    { field: '月坪效_排名', header: '月坪效', format: formatAmountCN, groupField: 'tier' },
-    { field: '達成率_排名', header: '達成率', format: formatAmountCN, groupField: 'tier' },
+    { field: 'BuildingDesc', header: '館別', align: 'left' },
+    { field: 'OrgName', header: '組織名稱', align: 'left' },
+    { field: 'CabinetKindName', header: '櫃別', align: 'left' },
+    { field: 'TltNo', header: '櫃位編號', align: 'left', groupField: '單位' },
+    { field: 'TltName', header: '櫃位名稱', align: 'left', groupField: '單位' },
+    { field: 'LocationNoList', header: '位置編號', align: 'left', groupField: '單位' },
+    { field: 'TltSpace', header: '坪數', align: 'right', format: (value) => formatAmountWithDecimals(value, 2) },
+    { field: 'Budget', header: '營業目標', align: 'right', format: formatAmount },
+    { field: 'SaleAmt', header: '營業實績', align: 'right', format: formatAmount },
+    { field: 'CustCnt', header: '交易筆數', align: 'right', format: formatAmount },
+    { field: 'AvgTicketAmt', header: '客單價', align: 'right', format: formatAmount },
+    { field: 'MonthlySpaceEfficiency', header: '月坪效', align: 'right', format: formatAmount },
+    { field: 'AchievementRate', header: '達成率', align: 'right', format: (value: number) => value ? `${value.toFixed(1)}%` : '0.0%' },
+    { field: 'TltSpaceRank', header: '坪數', align: 'right', groupField: '排名順位' },
+    { field: 'BudgetRank', header: '營業目標', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'SaleAmtRank', header: '營業實績', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'CustCntRank', header: '交易筆數', align: 'right', groupField: '排名順位' },
+    { field: 'AvgTicketAmtRank', header: '客單價', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'MonthlySpaceEfficiencyRank', header: '月坪效', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'AchievementRateRank', header: '達成率', align: 'right', format: formatAmountCN, groupField: '排名順位' },
+    { field: 'PreOrderAmt', header: '預售業績', align: 'right', format: formatAmountCN },
   ];
   columnGroup = [
-    { field: 'dept', header: '單位' },
-    { field: 'tier', header: '排名順位' }
+    { field: '單位', header: '單位' },
+    { field: '排名順位', header: '排名順位' }
   ];
   footerData: TLS32010Data | null = null;
   reportTypeOptions = [
@@ -386,12 +387,26 @@ export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> imp
         year: undefined, week: undefined, month: undefined,
         halfYear: undefined, category: undefined
       } as TLS32010QueryRequest;
-      this.tls32010Service.queryTLS32010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+      this.tls32010Service.queryTLS32010(body).pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      ).subscribe(response => {
         this.historyRequestBody = body;
-        const rawData = response.Data || []; // 後端回傳的原始資料有包含最後一筆總計
+        const rawData = response.Data || [];
+
         if (rawData.length > 0) {
-          this.footerData = { ...rawData[rawData.length - 1], 館別: '' }; // 取最後一筆作為 Footer (總計列)
-          this.data = rawData.slice(0, rawData.length - 1); // 其餘資料作為表格內容
+          // 2. 修正總計列處理：判斷 rowNo 是否為空 (後端 SP 總計列的 RowNo 是 NULL)
+          // 或者判斷 buildingDesc 是否為 "總計"
+          const lastIndex = rawData.length - 1;
+          const lastRow = rawData[lastIndex];
+
+          if (lastRow.RowNo === null || lastRow.BuildingDesc === '總計') {
+            this.footerData = { ...lastRow, BuildingDesc: '' };
+            this.data = rawData.slice(0, lastIndex);
+          } else {
+            this.data = rawData;
+            this.footerData = null;
+          }
           this.totalRecords = response.TotalCount;
         } else {
           this.data = [];

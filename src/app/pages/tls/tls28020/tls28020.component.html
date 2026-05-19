@@ -1,76 +1,43 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div >
-      <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-    </div> -->
+  <div class="flex align-items-center gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()" label="產生領袋資料" [loading]="loading"></app-button>
   </div>
+
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="領袋/繳袋"
-              controlName="paymentTiming"
-              [options]="paymentTimingOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.paymentTiming"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-2">
-            <app-calendar
-              calendarType="dateOne"
-              label="入帳日期"
-              [control]="queryForm.controls.entryDate"
-              [submitted]="submitted"
-            ></app-calendar>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="條碼"
-              controlName="barcode"
-              [control]="queryForm.controls.barcode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+          <app-calendar class="col-12 md:col-6 lg:col-3" calendarType="dateOne" label="入帳日期" controlName="TXN_DATE"
+            [control]="queryForm.controls.TXN_DATE" [submitted]="submitted"></app-calendar>
+
+          <app-dropdown class="col-12 md:col-6 lg:col-3" label="狀態" [options]="statusOptions" optionLabel="Name"
+            optionValue="No" controlName="STATUS" [control]="queryForm.controls.STATUS"
+            [submitted]="submitted"></app-dropdown>
+
+          <app-dropdown class="col-12 md:col-6 lg:col-3" label="繳袋型態" [options]="bagTypeOptions" optionLabel="Name"
+            optionValue="No" controlName="BAG_TYPE" [control]="queryForm.controls.BAG_TYPE"
+            [submitted]="submitted"></app-dropdown>
+
+          <app-dropdown class="col-12 md:col-6 lg:col-3" label="收銀機號" controlName="ECR_NO"
+            [control]="queryForm.controls.ECR_NO" [options]="queryEcrNoOptions | async" optionLabel="label"
+            optionValue="value" controlName="BAG_TYPE" [submitted]="submitted"></app-dropdown>
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
 
-<!-- <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    >
-    </app-table>
-  </div>
-</div> -->
+<div class="card">
+  <app-table-report apiUrl="queryTLS28020" tableKey="tls28020" [data]="data" [columns]="columns" [addButton]="addButton"
+    [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false" [showEdit]="false" [showDetail]="false"
+    [lazy]="false" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="tls28020Service.queryTLS28020.bind(tls28020Service)">
+  </app-table-report>
+</div>

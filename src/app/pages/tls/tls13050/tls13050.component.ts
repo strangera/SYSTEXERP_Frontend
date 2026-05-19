@@ -14,7 +14,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { Column, formatAmount } from '../../../shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls13050',
   templateUrl: './tls13050.component.html',
@@ -47,7 +47,6 @@ export class TLS13050Component extends BasicQueryPageComponent<TLS13050QueryItem
     check_day_end: [null],
     Building_No: [[]],
     org_idList: [[]],
-    ...createPaginationConfig([{ field: 'check_day', order: 0 }]),
     pageIndex: [0],
     pageSize: [0],
     SortBy: [[{ field: 'check_day', order: 0 }]]

@@ -7,17 +7,18 @@ import { environment } from '../../../../environments/environment';
 export interface TLS31020Request {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
-  tlt_building: string[]
-  tlt_floor: string[]
-  area_no: string[]
-  bus_type: string[]
-  bus_class: string[][]
-  bus_sclass: string[][]
-  tlt_kind: string[]
-  tlt_term_type: string[]
-  org_id: string[]
-  TaxType: string
-  IsRece_Yn: string
+  TLT_NO: string[];
+  tlt_building: string[];
+  tlt_floor: string[];
+  area_no: string[];
+  bus_type: string[];
+  bus_class: string[][];
+  bus_sclass: string[][];
+  tlt_kind: string[];
+  tlt_term_type: string[];
+  org_id: string[];
+  TaxType: string;
+  IsRece_Yn: string;
 }
 
 export interface TLS31020PrintRequest extends TLS31020Request {
@@ -66,6 +67,7 @@ export interface TLS31020Item {
   MonthlyBudgetTotal: number;
   MonthlySalesTotal: number;
   CompletionRate: number;
+  PreOrderAmt: number;
 }
 
 export interface TLS31020DetailItem {
@@ -105,6 +107,7 @@ export interface TLS31020Total {
   TotalMonthlyBudget: number;
   TotalMonthlySales: number;
   AvgCompletionRate: number;
+  TotalPreOrderAmt: number;
 }
 
 export interface footerShowTotal {
@@ -125,6 +128,8 @@ export interface footerShowTotal {
   MonthlyBudgetTotal?: number;   //TotalMonthlyBudget 月累計營業目標總計
   MonthlySalesTotal?: number;    //TotalMonthlySales 月累計營業實績總計
   CompletionRate?: number;       //AvgCompletionRate 平均完成率
+
+  PreOrderAmt?: number; // 預售實績
 }
 
 export interface TLS31020Response {

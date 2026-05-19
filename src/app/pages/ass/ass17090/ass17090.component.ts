@@ -143,7 +143,7 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
         this.smallCategoryOptions = [];
         if (!bClassId) return;
         this.dropdownApi
-          .queryFaClass1({ B_CLASS_ID: bClassId })
+          .queryFaClass1({ CLASS_ID: bClassId })
           .pipe(untilDestroyed(this))
           .subscribe((opts) => {
             this.midCategoryOptions = opts ?? [];
@@ -157,7 +157,10 @@ export class ASS17090Component extends BasicQueryPageComponent<ASS17090QueryRow>
         this.smallCategoryOptions = [];
         if (!mClassId) return;
         this.dropdownApi
-          .queryFaClass2({ M_CLASS_ID: mClassId })
+          .queryFaClass2({
+            B_CLASS_ID: this.queryForm.controls.bigCategoryId.value ?? undefined,
+            CLASS_ID: mClassId,
+          })
           .pipe(untilDestroyed(this))
           .subscribe((opts) => {
             this.smallCategoryOptions = opts ?? [];

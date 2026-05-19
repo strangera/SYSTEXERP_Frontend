@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { YearMonthComponent } from '@pages/fin/fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '@pages/fin/fin11020/query-year-month.component';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
@@ -51,7 +51,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     PUR_GUIDate_Start: [null],
     PUR_GUIDate_End: [null],
     COMM_MONEY_TYPE: [null],
-    COMM_YM: [new Date()],
+    COMM_YM: [null],
     sam_termno: [null],
     DEC_YM: [null],
     ven_uniform: [null],
@@ -91,7 +91,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     { field: 'PUR_GUINO', header: '發票/收據號碼', visible: true },
     { field: 'PUR_GUIDate', header: '單據日期', visible: true, format: formatDate },
     { field: 'COMM_YM', header: '請款付款年月', visible: true, format: formatYYYYMM },
-    { field: 'sam_yyymm', header: '帳款年月', visible: true, format: formatYYYYMM },
+    { field: 'sam_yyymm', header: '帳款年月', visible: true },
     { field: 'MONEY_TYPE_DESC', header: '結帳方式', visible: true },
     { field: 'sam_termno', header: '帳次', visible: true },
     { field: 'DEC_YM', header: '申報年月', visible: true, format: formatYYYYMM },
@@ -257,11 +257,21 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
         rows = [];
         totalCount = totalCount ?? 0;
       }
-
-      return { Data: rows, TotalCount: totalCount };
+      const transformedRows = this.transformResponseData(rows);
+      return { Data: transformedRows, TotalCount: totalCount };
     }));
   }
-
+  private transformResponseData(rows: any[]): any[] {
+    return rows.map(item => {
+      if (item.sam_yyymm) {
+        const s = String(item.sam_yyymm).trim();
+        if (s.length === 6 && !isNaN(Number(s))) {
+          item.sam_yyymm = `${s.substring(0, 4)}/${s.substring(4, 6)}`;
+        }
+      }
+      return item;
+    });
+  }
 
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
@@ -293,6 +303,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       payload.PUR_GUIDate_From = this.formatDateOnly(purFrom);
       payload.PUR_GUIDate_To = this.formatDateOnly(purTo);
       payload.COMM_MONEY_TYPE = Array.isArray(raw.COMM_MONEY_TYPE) ? raw.COMM_MONEY_TYPE.join(',') : (raw.COMM_MONEY_TYPE || '');
+      payload.sam_termno = raw.sam_termno ?? null;
       payload.COMM_YM = this.formatYearMonth(raw.COMM_YM);
       // Ensure DEC_YM is normalized to YYYYMM for payload.
       payload.DEC_YM = decYm;
@@ -318,34 +329,29 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
         .pipe(finalize(() => (this.loading = false)))
         .subscribe(res => {
           const respData = res?.Data ?? [];
-
+          let rawRows: any[] = []; // 改名避免混淆
           // 支援後端回傳 Data[0].Details + Data[0].Total 的格式
           let rawTotal: any = null;
           if (Array.isArray(respData) && respData.length && respData[0] && respData[0].Details) {
-            this.data = respData[0].Details || [];
+            rawRows = respData[0].Details || [];
             rawTotal = respData[0].Total ?? null;
           } else if (Array.isArray(respData)) {
-            // 傳統平面陣列
-            this.data = respData;
-            rawTotal = res?.Total ?? null;
-          } else {
-            this.data = [];
+            rawRows = respData;
             rawTotal = res?.Total ?? null;
           }
 
-          // 將後端回傳的總計欄位轉換成 table footer 預期的欄位名稱
+          this.data = this.transformResponseData(rawRows);
+
+          // 3. 處理 Total 邏輯 (保持不變)
           if (rawTotal) {
             const mapped: any = { ...rawTotal };
-            // 若後端回傳的 key 為 Total_ACP_GUIAmt 等，轉成 ACP_GUIAmt
             if (rawTotal.Total_ACP_GUIAmt !== undefined) mapped.ACP_GUIAmt = rawTotal.Total_ACP_GUIAmt;
             if (rawTotal.Total_ACP_GUINet !== undefined) mapped.ACP_GUINet = rawTotal.Total_ACP_GUINet;
             if (rawTotal.Total_ACP_GUITax !== undefined) mapped.ACP_GUITax = rawTotal.Total_ACP_GUITax;
 
-            // 保障 fallback（若後端直接回傳 ACP_GUIAmt 等）
-            mapped.ACP_GUIAmt = mapped.ACP_GUIAmt ?? rawTotal.ACP_GUIAmt ?? rawTotal.ACP_GUIAmtSum ?? 0;
-            mapped.ACP_GUINet = mapped.ACP_GUINet ?? rawTotal.ACP_GUINet ?? rawTotal.ACP_GUINetSum ?? 0;
-            mapped.ACP_GUITax = mapped.ACP_GUITax ?? rawTotal.ACP_GUITax ?? rawTotal.ACP_GUITaxSum ?? 0;
-
+            mapped.ACP_GUIAmt = mapped.ACP_GUIAmt ?? rawTotal.ACP_GUIAmt ?? 0;
+            mapped.ACP_GUINet = mapped.ACP_GUINet ?? rawTotal.ACP_GUINet ?? 0;
+            mapped.ACP_GUITax = mapped.ACP_GUITax ?? rawTotal.ACP_GUITax ?? 0;
             this.footerData = mapped;
           } else {
             this.footerData = null;
@@ -500,6 +506,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     payload.PUR_GUIDate_From = this.formatDateOnly(purFrom);
     payload.PUR_GUIDate_To = this.formatDateOnly(purTo);
     payload.COMM_MONEY_TYPE = Array.isArray(raw.COMM_MONEY_TYPE) ? raw.COMM_MONEY_TYPE.join(',') : (raw.COMM_MONEY_TYPE || '');
+    payload.sam_termno = raw.sam_termno ?? null;
     payload.COMM_YM = this.formatYearMonth(raw.COMM_YM);
     payload.DEC_YM = this.normalizeYearMonth(raw.DEC_YM);
     payload.ven_uniform = raw.ven_uniform || '';

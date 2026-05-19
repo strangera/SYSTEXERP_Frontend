@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+import { NgClass, NgIf } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -7,6 +7,8 @@ import { Fin13040Service } from '@service/api/fin/fin13040.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { Column } from '@shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -17,7 +19,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 import { TableEditComponent } from './fin13040-table-edit/fin13040-table-edit.component';
 import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
 
@@ -38,8 +40,10 @@ import { EditColumn } from './fin13040-table-edit/fin13040-table-edit.model';
     TranslateModule,
     TableEditComponent,
     ButtonModule,
+    NgClass,
     NgIf,
-    YearMonthComponent
+    YearMonthComponent,
+    DropdownTableComponent,
   ],
 })
 export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -51,7 +55,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     GUI_Track: ['', [Validators.maxLength(2)]],
     INV_GUINumber: ['', [Validators.required, Validators.pattern(/^[A-Za-z]{2}\d{8}$/)]],
     InvoiceDate: [null as Date | null, Validators.required],
-    Buyer_Uniform: ['', Validators.required],
+    Buyer_Uniform: [''],
     PUR_TaxType: ['', Validators.required],
     Voucher_No: [null], // Added Voucher_No control
     AssetType: [''],
@@ -63,6 +67,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_Net: [{ value: 0, disabled: true }],
     Invoice_Cancel: [{ value: 'N', disabled: true }],
     INV_DeclareYM: ['', Validators.required],
+    INV_REMARK: [''],
 
   });
 
@@ -72,6 +77,16 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   taxTypeOptions = getSYS1000Options('PUR_TaxType');
   AssetNoteOptions = getSYS1000Options('AssetType');
   Buyer_Uniform_Options: any[] = [];
+  filteredBuyerOptions: any[] = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  buyerOpForm: FormGroup = this.formBuilder.group({} as any);
+  buyerFieldsConfig: FieldsConfig[] = [
+    { field: 'label', header: '買受人統一編號', mainDataField: true }
+  ];
+  buyerDialogColumns: Column[] = [
+    { field: 'value', header: '統一編號' },
+    { field: 'VEN_Name', header: '廠商名稱' },
+  ];
   Invoice_CancelOptions = [
     { label: '是', value: 'Y' },
     { label: '否', value: 'N' }
@@ -88,7 +103,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
 
   constructor(
     private dropDownListService: DropDownListService,
-    private fin13040Service: Fin13040Service
+    private fin13040Service: Fin13040Service,
   ) {
     super();
   }
@@ -109,6 +124,18 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     this.initializePage('FIN13040', this.dataForm);
     this.loadBuyerUniformOptions();
     this.loadInvoiceTypeOptions();
+
+    // 新增模式：預設申報年月（當期雙數月）及發票日期（今天）
+    if (this.crudstatus === CRUDStatus.Create) {
+      const today = new Date();
+      const month = today.getMonth() + 1; // 1-12
+      const evenMonth = month % 2 === 0 ? month : month + 1;
+      const evenMonthStr = String(evenMonth).padStart(2, '0');
+      this.dataForm.patchValue({
+        INV_DeclareYM: `${today.getFullYear()}${evenMonthStr}`,
+        InvoiceDate: today,
+      });
+    }
 
     // 若為編輯模式，僅停用發票號碼欄位（發票格式仍可變更）
     if (this.crudstatus === CRUDStatus.Edit) {
@@ -169,18 +196,20 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       if (salType) this.loadINVItemOptions();
     }, 200);
 
-    // 統編帶出廠商資訊
+    // 統編 free-text 輸入時，若剛好符合選項則帶入廠商資訊
+    // （下拉選取的情境由 onBuyerSelect 處理）
     this.dataForm.get('Buyer_Uniform')?.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe((val: any) => {
-        // 取得真正的統編值 (如果是物件就拿 .value，如果是字串就直接用)
-        const actualValue = (val && typeof val === 'object') ? val.value : val;
-
-        const selected = this.Buyer_Uniform_Options.find(o => o.value === actualValue);
+        if (val && typeof val === 'object') return; // 選取事件由 onBuyerSelect 處理
+        const selected = this.Buyer_Uniform_Options.find(o => o.value === val);
         this.dataForm.patchValue({
           Buyer_VenNo: selected?.VEN_No ?? '',
           Buyer_Name: selected?.VEN_Name ?? '',
-        }, { emitEvent: false }); // 建議加 emitEvent: false 避免無限循環
+        }, { emitEvent: false });
+        if (selected) {
+          this.dataForm.patchValue({ PUR_InvoiceTitle: selected.VEN_Name }, { emitEvent: false });
+        }
       });
   }
 
@@ -231,6 +260,7 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       PUR_Tax: header.PUR_Tax ?? this.dataForm.controls.PUR_Tax.value ?? 0,
       PUR_Amt: header.PUR_Amt ?? this.dataForm.controls.PUR_Amt.value ?? 0,
       Invoice_Cancel: header.Invoice_Cancel ?? this.dataForm.controls.Invoice_Cancel.value ?? 'N',
+      INV_REMARK: header.INV_REMARK ?? '',
     });
   }
 
@@ -310,22 +340,29 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   // ======================== 下拉選單 ========================
+  /** autocomplete 輸入時過濾建議（限50筆） */
+  onBuyerInputChange(event: Record<string, string>): void {
+    const query = (Object.values(event)[0] ?? '').toLowerCase();
+    this.filteredBuyerOptions = this.Buyer_Uniform_Options.filter(o =>
+      o.value.toLowerCase().includes(query) ||
+      (o.VEN_Name ?? '').toLowerCase().includes(query)
+    ).slice(0, 50);
+  }
+
   /** 載入買受人統一編號下拉清單 */
   loadBuyerUniformOptions(): void {
-    this.dropDownListService.queryPOS2013_DropDownList({}).pipe(untilDestroyed(this)).subscribe((res) => {
+    this.dropDownListService.queryPOS2013_DropDownList({ VEN_Flag: '1' }).pipe(untilDestroyed(this)).subscribe((res) => {
       const data = res?.Data ?? [];
-      // 使用 Map 以 No 作為 Key 來去重
       const uniqueDataMap = new Map();
-      data.forEach((item: any) => {
-        if (item.No) uniqueDataMap.set(item.No, item);
+      (data as unknown[]).forEach((item) => {
+        const r = item as Record<string, string>;
+        if (r['No']) uniqueDataMap.set(r['No'], r);
       });
-      // 轉換為 AutoComplete 需要的格式，並保留原始屬性供後續 patchValue 使用
-      this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map((item: any) => ({
-        label: `${item.No} - ${item.Name}`,
-        value: item.No,
-        VEN_No: item.VEN_No,
-        VEN_Name: item.Name,
-      }));
+      this.Buyer_Uniform_Options = Array.from(uniqueDataMap.values()).map((item) => {
+        const r = item as Record<string, string>;
+        return { label: `${r['No']} - ${r['Name']}`, value: r['No'], VEN_No: r['VEN_No'], VEN_Name: r['Name'] };
+      });
+      this.filteredBuyerOptions = this.Buyer_Uniform_Options.slice(0, 50);
     });
   }
 
@@ -491,14 +528,10 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
     this.handleSubmit(form, () => {
       console.log('Form submitted with values:', form.value);
       const v = form.getRawValue();
-      const selectedBuyer = this.Buyer_Uniform_Options.find(o => o.value === (v.Buyer_Uniform && typeof v.Buyer_Uniform === 'object')
+      const uniformValue = (v.Buyer_Uniform && typeof v.Buyer_Uniform === 'object')
         ? v.Buyer_Uniform.value
-        : v.Buyer_Uniform);
-      if (!selectedBuyer) {
-        alert('請選擇買受人統編');
-        this.loading = false;
-        return;
-      }
+        : v.Buyer_Uniform;
+      const selectedBuyer = this.Buyer_Uniform_Options.find(o => o.value === uniformValue);
       const validDetails = this.data.filter(d => !d._isAutoInsertCandidate);
       if (validDetails.length === 0) {
         alert('明細中沒有有效資料');
@@ -512,10 +545,14 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         return;
       }
 
-      const toISO = (d: any): string | null => {
+      const toDateOnly = (d: Date | string | null | undefined): string | null => {
         if (!d) return null;
         const date = new Date(d);
-        return isNaN(date.getTime()) ? null : date.toISOString();
+        if (isNaN(date.getTime())) return null;
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
       };
 
       const header = {
@@ -525,18 +562,19 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         InvoiceType: v.InvoiceType ?? '35',
         SAL_Type: v.SAL_Type,
         InvoiceNumber: v.INV_GUINumber,
-        InvoiceDate: toISO(v.InvoiceDate),
+        InvoiceDate: toDateOnly(v.InvoiceDate),
         INV_DeclareYM: this.formatDeclareYM(v.InvoiceDate),
         Buyer_Uniform: (v.Buyer_Uniform && typeof v.Buyer_Uniform === 'object')
           ? v.Buyer_Uniform.value
           : v.Buyer_Uniform,
-        Buyer_VenNo: selectedBuyer.VEN_No ?? '',
-        Buyer_Name: selectedBuyer.VEN_Name ?? '',
+        Buyer_VenNo: selectedBuyer?.VEN_No ?? '',
+        Buyer_Name: selectedBuyer?.VEN_Name ?? v.PUR_InvoiceTitle ?? '',
         Group_Mark: 'N',
         Donate_Mark: 'N',
         PUR_TaxType: v.PUR_TaxType,
         Voucher_No: v.Voucher_No, // Updated to use v.Voucher_No
         AssetType: v.AssetType ?? '',
+        INV_REMARK: v.INV_REMARK ?? '',
         InvoiceTime: new Date().toISOString(),
         Invoice_Cancel: v.Invoice_Cancel ?? this.dataForm.value.Invoice_Cancel ?? 'N',
         PUR_Net: this.dataForm.value.PUR_Net ?? 0,
@@ -567,7 +605,31 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       this.fin13040Service.updateFIN13040(payload).pipe(untilDestroyed(this), finalize(() => { this.loading = false; })).subscribe(res => {
         if (res?.Status === '0000') {
           this.messageService.successBubble('新增成功');
-          this.onCancel();
+          const savedId = res?.Data?.ID ?? res?.Data?.id ?? this.currentDetailId ?? header.ID;
+          const savedInvoiceNumber = res?.Data?.InvoiceNumber ?? header.InvoiceNumber;
+          if (savedId != null) {
+            this.fin13040Service.printFIN13040({
+              MID: 0,
+              STO_No: header.STO_No ?? '10',
+              ID: savedId
+            }).subscribe({
+              next: (printRes) => {
+                const blob = new Blob([printRes.body as Blob], { type: 'application/pdf' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${savedInvoiceNumber || savedId}.pdf`;
+                a.click();
+                window.URL.revokeObjectURL(url);
+                this.onCancel();
+              },
+              error: () => {
+                this.onCancel();
+              }
+            });
+          } else {
+            this.onCancel();
+          }
         }
       });
     })

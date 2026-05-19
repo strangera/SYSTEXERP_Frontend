@@ -8,7 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
-import { Observable } from 'rxjs';
+import { distinctUntilChanged, Observable } from 'rxjs';
 import { finalize, map } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -94,39 +94,65 @@ export class ASS17070Component extends BasicQueryPageComponent<QueryASS17070Deta
     this.dropdownApi.queryFaClassM({}).pipe(untilDestroyed(this)).subscribe((options) => {
       this.bClassOptions = options ?? [];
     });
-    this.dropdownApi.queryFaClass1({ B_CLASS_ID: '' }).pipe(untilDestroyed(this)).subscribe((options) => {
-      this.mClassOptions = options ?? [];
-    });
-    this.dropdownApi.queryFaClass2({ M_CLASS_ID: '' }).pipe(untilDestroyed(this)).subscribe((options) => {
-      this.sClassOptions = options ?? [];
-    });
+    this.mClassOptions = [];
+    this.sClassOptions = [];
     this.dropdownApi.queryFasItemDropdown({ MATERIAL_TYPE: '3' }).pipe(untilDestroyed(this)).subscribe((options: Option[] | null) => {
       this.goodsOptions = options ?? [];
     });
   }
 
   private setupCategoryListeners(): void {
-    this.queryForm.controls.BClassID.valueChanges.pipe(untilDestroyed(this)).subscribe((b) => {
-      this.queryForm.controls.MClassID.setValue(null);
-      this.queryForm.controls.SClassID.setValue(null);
-      this.mClassOptions = [];
-      this.sClassOptions = [];
-      if (b) {
-        this.dropdownApi.queryFaClass1({ B_CLASS_ID: b }).pipe(untilDestroyed(this)).subscribe((options) => {
-          this.mClassOptions = options ?? [];
-        });
-      }
-    });
+    const bCtrl = this.queryForm.controls.BClassID;
+    const mCtrl = this.queryForm.controls.MClassID;
+    const sCtrl = this.queryForm.controls.SClassID;
 
-    this.queryForm.controls.MClassID.valueChanges.pipe(untilDestroyed(this)).subscribe((m) => {
-      this.queryForm.controls.SClassID.setValue(null);
-      this.sClassOptions = [];
-      if (m) {
-        this.dropdownApi.queryFaClass2({ M_CLASS_ID: m }).pipe(untilDestroyed(this)).subscribe((options) => {
+    bCtrl.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe((b) => {
+        // 大分類變更 -> 清中/小分類
+        mCtrl.patchValue(null, { emitEvent: false });
+        sCtrl.patchValue(null, { emitEvent: false });
+        this.mClassOptions = [];
+        this.sClassOptions = [];
+        if (b) {
+          this.dropdownApi.queryFaClass1({ CLASS_ID: b }).pipe(untilDestroyed(this)).subscribe((options) => {
+            this.mClassOptions = options ?? [];
+          });
+        }
+      });
+
+    mCtrl.valueChanges
+      .pipe(distinctUntilChanged(), untilDestroyed(this))
+      .subscribe((m) => {
+        // 中分類變更 -> 清小分類
+        sCtrl.patchValue(null, { emitEvent: false });
+        this.sClassOptions = [];
+        if (m) {
+          this.dropdownApi
+            .queryFaClass2({ B_CLASS_ID: bCtrl.value ?? undefined, CLASS_ID: m })
+            .pipe(untilDestroyed(this))
+            .subscribe((options) => {
+            this.sClassOptions = options ?? [];
+          });
+        }
+      });
+
+    // 初始值/查詢狀態還原：載入對應層級選單（不清值）
+    const initialB = bCtrl.value;
+    const initialM = mCtrl.value;
+    if (initialB) {
+      this.dropdownApi.queryFaClass1({ CLASS_ID: initialB }).pipe(untilDestroyed(this)).subscribe((options) => {
+        this.mClassOptions = options ?? [];
+      });
+    }
+    if (initialM && initialB) {
+      this.dropdownApi
+        .queryFaClass2({ B_CLASS_ID: initialB, CLASS_ID: initialM })
+        .pipe(untilDestroyed(this))
+        .subscribe((options) => {
           this.sClassOptions = options ?? [];
         });
-      }
-    });
+    }
   }
 
   private toIsoString(value: Date | string | null): string | undefined {

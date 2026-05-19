@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { map, Observable } from 'rxjs';
@@ -146,8 +146,11 @@ export class TLS42020Service {
   }
 
   // 下載收銀觸控按鍵設定作業Excel規範
-  downloadRule(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/downloadRule`, {});
+  downloadRule(): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/downloadRule`, {}, {
+      observe: 'response',
+      responseType: 'blob'
+    });
   }
 
   // 下傳POS1027M資料表

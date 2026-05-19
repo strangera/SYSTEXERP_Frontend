@@ -18,7 +18,7 @@ import { TableReportComponent } from '../../../shared/componentkit/table-report/
 import { ReportColumn, formatDate } from '../../../shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { removeEmptyValues } from '../../../shared/utils/object-utils';
-import { YearMonthComponent } from '../fin11020/query-year-month/query-year-month.component';
+import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
   selector: 'app-fin12020',

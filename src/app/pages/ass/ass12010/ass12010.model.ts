@@ -157,10 +157,14 @@ export interface ASS12010DetailItem {
   GOODS_ID?: string;
   /** 品項名稱 */
   GOODS_NAME?: string;
+  /** 單位 */
+  Unit?: string;
   /** 數量 */
   QTY?: number;
   /** 採購數量 */
   PURCHASE_QTY?: number;
+  /** 品項類別屬性代碼 */
+  MATERIAL_TYPE?: string;
   /** 保管部門代號 */
   HOLD_ORG_ID?: string;
   /** 保管部門名稱 */
