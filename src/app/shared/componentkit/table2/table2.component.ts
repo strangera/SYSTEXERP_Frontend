@@ -9,7 +9,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer } from '@angular/platform-browser';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { BlockUIModule } from 'primeng/blockui';
@@ -552,7 +552,7 @@ export class Table2Component
 
   onRowEditInit(rowData: any) {
     this.dt.initRowEdit(rowData);
-    this.clonedProducts[(rowData as any)[this.dataKey]] = { ...rowData };
+    this.clonedProducts[(rowData)[this.dataKey]] = { ...rowData };
     this.rowEditing = true;
     this.rowEditInit.emit(rowData);
     this.selectedItems = [];
@@ -562,17 +562,17 @@ export class Table2Component
   onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
     if (!validateRowData(rowData, this.columns, this.data, this.messageService, this.dataKey)) return;
 
-    const rowId = (rowData as any)[this.dataKey];
+    const rowId = (rowData)[this.dataKey];
     const oldData = this.clonedProducts[rowId];
 
     if (typeof rowId === 'string' && rowId.startsWith('temp-')) {
       const savedId = `saved-${Date.now()}`;
-      (rowData as any)[this.dataKey] = savedId;
+      (rowData)[this.dataKey] = savedId;
       this.clonedProducts[savedId] = { ...oldData };
-      if (this.dataStatusField) (rowData as any)[this.dataStatusField] = this.dataStatusValue.New;
+      if (this.dataStatusField) (rowData)[this.dataStatusField] = this.dataStatusValue.New;
       delete this.clonedProducts[rowId];
     } else {
-      if (this.dataStatusField) (rowData as any)[this.dataStatusField] = this.dataStatusValue.Modified;
+      if (this.dataStatusField) (rowData)[this.dataStatusField] = this.dataStatusValue.Modified;
       delete this.clonedProducts[rowId];
     }
 
@@ -583,11 +583,11 @@ export class Table2Component
   }
 
   onRowEditCancel(rowData: any, ri: number) {
-    const rowId = (rowData as any)[this.dataKey];
+    const rowId = (rowData)[this.dataKey];
     const isNewTempRow = typeof rowId === 'string' && rowId.startsWith('temp-');
 
     if (isNewTempRow) {
-      this.data = this.data.filter((item) => (item as any)[this.dataKey] !== rowId);
+      this.data = this.data.filter((item) => (item)[this.dataKey] !== rowId);
       this.dataChange.emit(this.data);
     } else {
       const originalRowData = this.clonedProducts[rowId];
@@ -689,24 +689,6 @@ export class Table2Component
     );
   }
 
-  sanitizeHtml(html: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
-
-  /** 提供給 <p-image> 使用的簡單來源處理 */
-  getImage(src: any): string {
-    if (!src) return '';
-    if (typeof src === 'string') return src;
-    try {
-      if (src instanceof Blob) return URL.createObjectURL(src);
-      if (src?.data) {
-        const blob = new Blob([src.data], { type: src.type || 'image/png' });
-        return URL.createObjectURL(blob);
-      }
-    } catch { }
-    return String(src);
-  }
-
   /* ======================= 欄位群組 / 小計 / 總計 ======================= */
 
   getColumnSpan(columns: Column[], groupField: string): number {
@@ -766,7 +748,7 @@ export class Table2Component
       }
     }
     // 2) 退回前端加總
-    return this.data.reduce((sum, row) => sum + Number((row as any)[field] ?? 0), 0);
+    return this.data.reduce((sum, row) => sum + Number((row)[field] ?? 0), 0);
   }
 
   /** 小計要顯示的欄位（selectedColumns 中標了 isSubTotal 的、且可見的） */
@@ -837,7 +819,7 @@ export class Table2Component
 
     // fallback：同頁即時計算（多鍵完全比對）
     const rows = this.data.filter(r =>
-      this.groupRowsByArray.every(f => String((r as any)[f] ?? '') === String((rowData as any)[f] ?? ''))
+      this.groupRowsByArray.every(f => String((r as any)[f] ?? '') === String((rowData)[f] ?? ''))
     );
     return rows.reduce((s, r) => s + Number((r as any)[field] ?? 0), 0);
   }

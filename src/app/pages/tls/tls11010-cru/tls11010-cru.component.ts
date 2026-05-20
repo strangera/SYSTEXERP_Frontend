@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NgIf } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import {
   AbstractControl,
@@ -10,6 +9,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
@@ -19,11 +19,13 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { ValidationService } from '../../../shared/service/validation.service';
-// until-destroy
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+const numberOrDecimalValidator = (control: AbstractControl): ValidationErrors | null => {
+  const value = control.value;
+  if (value === null || value === undefined || value === '') return null;
 
-@UntilDestroy()
+  // 使用簡單的正規表達式，並直接測試
+  return /^\d*\.?\d*$/.test(String(value)) ? null : { pattern: true };
+};
 @Component({
   selector: 'app-tls11010-cru',
   templateUrl: './tls11010-cru.component.html',
@@ -43,7 +45,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 })
 export class TLS11010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   // 欄位中文名稱（用在錯誤泡泡）
-  private labelOf: Record<string, string> = {
+  private readonly labelOf: Record<string, string> = {
     LOCATION_No: '店位代碼',
     LOCATION_Name: '店位說明',
     org_id: '組織代碼/名稱',
@@ -59,7 +61,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> implements 
   };
 
   /** 錯誤泡泡的欄位檢查順序 */
-  private checkOrder: string[] = [
+  private readonly checkOrder: string[] = [
     'LOCATION_No',
     'LOCATION_Name',
     'org_id',
@@ -83,14 +85,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> implements 
     AREA_NO: ['', [Validators.required, Validators.maxLength(2)]], // 區域代碼
 
     // 簽約坪數
-    GROSS_SPACE: [
-      null,
-      [
-        Validators.min(0),
-        Validators.max(9999.999),
-        Validators.pattern(/^[0-9]*\.?[0-9]*$/), // 只能 0-9 和一個小數點
-      ],
-    ],
+    GROSS_SPACE: [null, [Validators.min(0), Validators.max(9999.999), numberOrDecimalValidator]],
 
     NET_SPACE: [
       null,
@@ -113,10 +108,8 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> implements 
   LOCATION_Status_Options: any[] = [];
 
   constructor(
-    private validationService: ValidationService,
-    private translate: TranslateService,
-    private http: HttpClient,
-    private tls11010Service: Tls11010Service,
+    private readonly translate: TranslateService,
+    private readonly tls11010Service: Tls11010Service,
   ) {
     super();
   }
@@ -280,9 +273,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> implements 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(null, () => {
       // 觸發 Angular 驗證
-      Object.values(this.dataForm.controls).forEach((c) =>
-        c.markAsTouched(),
-      );
+      for (const c of Object.values(this.dataForm.controls)) c.markAsTouched();
       this.submitted = true;
 
       if (this.dataForm.invalid) {
@@ -361,27 +352,27 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> implements 
     const msgs: string[] = [];
 
     // 依排序清單檢查
-    this.checkOrder.forEach((name) => {
+    for (const name of this.checkOrder) {
       const msg = this.buildFieldError(name);
       if (msg) msgs.push(msg);
-    });
+    }
 
     // 其餘欄位
-    Object.keys(this.dataForm.controls).forEach((name) => {
-      if (this.checkOrder.includes(name)) return;
+    for (const name of Object.keys(this.dataForm.controls)) {
+      if (this.checkOrder.includes(name)) continue;
       const msg = this.buildFieldError(name);
       if (msg && !msgs.includes(msg)) msgs.push(msg);
-    });
+    }
 
     if (msgs.length) {
-      msgs.forEach((m) => this.messageService.errorBubble(m));
+      for (const m of msgs) this.messageService.errorBubble(m);
     }
   }
 
   /** 單欄位錯誤轉成中文描述 */
   private buildFieldError(ctrlName: string): string | null {
     const ctrl: AbstractControl | null = this.dataForm.get(ctrlName);
-    if (!ctrl || !ctrl.errors) return null;
+    if (!ctrl?.errors) return null;
 
     const label = this.labelOf[ctrlName] ?? ctrlName;
     const e: ValidationErrors = ctrl.errors;
@@ -391,18 +382,18 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     if (e['maxlength']) {
-      const max = (e['maxlength'] as any).requiredLength;
-      const actual = (e['maxlength'] as any).actualLength;
+      const max = (e['maxlength']).requiredLength;
+      const actual = (e['maxlength']).actualLength;
       return `「${label}」長度不可超過 ${max} 碼，目前為 ${actual} 碼。`;
     }
 
     if (e['min']) {
-      const min = (e['min'] as any).min;
+      const min = (e['min']).min;
       return `「${label}」數值不可小於 ${min}。`;
     }
 
     if (e['max']) {
-      const max = (e['max'] as any).max;
+      const max = (e['max']).max;
       return `「${label}」數值不可大於 ${max}。`;
     }
 
@@ -424,7 +415,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> implements 
       return;
     }
 
-    const confirmDelete = window.confirm('是否確認刪除此筆資料？');
+    const confirmDelete = globalThis.confirm('是否確認刪除此筆資料？');
     if (!confirmDelete) return;
 
     this.tls11010Service

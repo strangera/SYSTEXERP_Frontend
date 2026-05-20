@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
@@ -288,7 +287,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() Conditions?: any;                         // table 條件 (可選)
 
   constructor(
-    private readonly sanitizer: DomSanitizer,
     private readonly tableUtilityService: TableUtilityService
   ) { super(); }
   // 當 data 發生變化時，重置分頁與頁碼
@@ -298,7 +296,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
       this.tableDataEmpty = false;
       this.hasSearched = true;
       setTimeout(() => {
-        this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+        this.dt.totalRecords = this.totalRecords === 0 ? this.data.length : this.totalRecords;
         this.selectedItems = [];
         this.expandedRows = {};
         this.selectionChange.emit(this.selectedItems);
@@ -310,8 +308,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     // 僅在 columns 首次被設定時執行初始化邏輯// 這樣就不會在每次 data 變動時都重置 filter 狀態
     if (changes['columns'] && this.columns.length > 0) {
       this.originalColumns = this.columns;
-      this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.find(c => c.isSubTotal) !== undefined;
-      this.showTotal = this.showTotal ? this.showTotal : this.columns.find(c => c.isTotal) !== undefined;
+      this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.some(c => c.isSubTotal);
+      this.showTotal = this.showTotal ? this.showTotal : this.columns.some(c => c.isTotal);
       if (changes['columns'].firstChange) {
         setTimeout(() => {// 恢復歷史紀錄，如果沒有就使用預設值
           this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows; // 取得分頁狀態
@@ -330,7 +328,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   onPageChange(event: TablePageEvent) {
     this.queryState.setQueryState(this.tableKey + 'rows', this.rows); // 保存分頁狀態
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
-    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+    this.dt.totalRecords = this.totalRecords === 0 ? this.data.length : this.totalRecords;
   }
   loadDataLazy(event: TableLazyLoadEvent) {
     if (this.totalRecords === 0 || this.rowEditing) { return; }
@@ -358,9 +356,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   }
   // 過濾欄位記錄保存
   onFilterChange(event: MultiSelectChangeEvent) {
-    this.columns.forEach(col => {
+    for (const col of this.columns) {
       col.visible = event.value.some((ev: any) => ev.field === col.field);
-    });
+    }
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
   }
   // 行編輯初始化
@@ -389,7 +387,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     // 判斷是否為新增中的資料 (ID 以 'temp-' 開頭)
     if (typeof rowId === 'string' && rowId.startsWith('temp-')) {
       // 產生一個新的已儲存的 ID，並更新資料
-      const savedId = `saved-${new Date().getTime()}`;
+      const savedId = `saved-${Date.now()}`;
       rowData[this.dataKey] = savedId;
       // 同時更新 clonedProducts 的 key，確保下次編輯時能找到正確的備份
       this.clonedProducts[savedId] = { ...oldData };
@@ -502,10 +500,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   detailRow(rowData: any) { this.detail.emit(rowData); }
   // 欄位Button 選擇 事件
   onSelectButton(rowData: any) { this.selectButton.emit(rowData); }
-  // 防止XSS
-  sanitizeHtml(html: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(html);
-  }
   // 計算分組欄位跨度
   getColumnSpan(columns: Column[], groupField: string): number {
     return this.tableUtilityService.getColumnSpan(columns, groupField);
@@ -554,14 +548,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 全表總計
   getTotal(field: string): number {
     // 優先使用外部傳入的 sumData
-    if (this.sumData && this.sumData[field] !== undefined) {
+    if (this.sumData?.[field] !== undefined) {
       return this.sumData[field];
     }
     return this.tableUtilityService.getTotal(this.data, field);
-  }
-  // 獲取後端圖片
-  getImage(url: string): string | SafeUrl | undefined {
-    return this.tableUtilityService.getImage(url);
   }
   // 欄位調整
   onColReorder(event: TableColumnReorderEvent) {
@@ -607,11 +597,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     let isValid = true;
     let firstErrorIndex = -1;
 
-    data.forEach((rowData, index) => {
+    for (const [index, rowData] of data.entries()) {
       delete rowData._rowValidationError;
 
       if (!this.rowValidate || !rowSet.has(rowData)) {
-        return;
+        continue;
       }
 
       const result = this.rowValidate(rowData, index);
@@ -625,7 +615,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
           errorMessage: this.normalizeRowErrorMessage(result.errorMessage),
         };
       }
-    });
+    }
 
     this.cdr.markForCheck();
     return { isValid, firstErrorIndex };
