@@ -154,7 +154,10 @@ export class ASS16020Component extends BasicQueryPageComponent<ASS16020Data> imp
       message: `是否確認刪除 ${selectedItems.length} 筆資料？`,
       accept: () => {
         const deleteRequest: DeleteASS16020Request = {
-          INV_ID: selectedItems[0].INV_ID,
+          INV_ID: (selectedItems ?? [])
+            .map(item => item.INV_ID)
+            .filter(invId => !!invId)
+            .join(','),
           UPD_USR_No: this.getUserInfoFromLocal().user_No,
         };
         this.ass16020Service.deleteASS16020(deleteRequest)

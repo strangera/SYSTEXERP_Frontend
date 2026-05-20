@@ -130,7 +130,7 @@ export interface UpdateASS16020Request {
 // 刪除 Request
 export interface DeleteASS16020Request {
     INV_ID: string;   // 盤點單號（必填）
-    UPD_USR_No: string;   // 操作人員代碼（必填，供Log用）
+    UPD_USR_No?: string;   // 操作人員代碼（必填，供Log用）
 }
 
 // 結案 Request
