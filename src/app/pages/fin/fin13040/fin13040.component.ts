@@ -73,7 +73,7 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     {
       label: '作廢', icon: 'pi pi-ban',
       action: (row: any) => this.onVoid(row),
-      disabled: (row: any) => row?.INV_Cancel === 'Y' || !this.hasPermission(this.Actions.Edit)
+      disabled: (row: any) => row?.INV_Cancel === 'Y' || !row?.CanEdit || !this.hasPermission(this.Actions.Edit)
     }
   ];
 
