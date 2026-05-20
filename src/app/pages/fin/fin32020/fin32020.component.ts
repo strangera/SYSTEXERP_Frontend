@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -32,8 +32,8 @@ import {
 import {
   ApiResponse,
   FIN32020Service,
-  Fin32020Row,
   Fin32020DetailRow,
+  Fin32020Row,
 } from '../../../service/api/fin/fin32020.service';
 
 interface SortItem {
@@ -62,7 +62,7 @@ interface SortItem {
     TableReportComponent,
   ],
 })
-export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
+export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> implements OnInit {
   data: Fin32020Row[] = [];
   totalRecords = 0;
   viewTotalRecords = 0;
@@ -107,23 +107,23 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> {
     { field: 'VouNo', header: '傳票單號' },
   ];
 
-readonly defaultSort: SortItem[] = [
-  { field: 'ADJ_Date', order: -1 },
-  { field: 'ADJ_No', order: 1 },
-];;
+  readonly defaultSort: SortItem[] = [
+    { field: 'ADJ_Date', order: -1 },
+    { field: 'ADJ_No', order: 1 },
+  ];;
 
   queryForm = this.formBuilder.group({
-  adjust_ID: [null as string | null, [Validators.maxLength(14)]],
-  adjust_Date_From: [null as Date | null],
-  adjust_Date_To: [null as Date | null],
-  remark: ['', [Validators.maxLength(30)]],
-  summons_ID_From: [null as string | null],
-  summons_ID_To: [null as string | null],
-  ...createPaginationConfig([
-  { field: 'ADJ_Date', order: -1 },
-  { field: 'ADJ_No', order: 1 },
-  ]),
-});
+    adjust_ID: [null as string | null, [Validators.maxLength(14)]],
+    adjust_Date_From: [null as Date | null],
+    adjust_Date_To: [null as Date | null],
+    remark: ['', [Validators.maxLength(30)]],
+    summons_ID_From: [null as string | null],
+    summons_ID_To: [null as string | null],
+    ...createPaginationConfig([
+      { field: 'ADJ_Date', order: -1 },
+      { field: 'ADJ_No', order: 1 },
+    ]),
+  });
 
   constructor(
     private readonly fin32020Service: FIN32020Service,
@@ -142,7 +142,7 @@ readonly defaultSort: SortItem[] = [
 
     this._currentSortBy = this.defaultSort;
 
-    const fromCru = !!(history.state && history.state['fromCru']);
+    const fromCru = !!(history.state?.['fromCru']);
 
     this.formStatusService
       .waitForReady(this.ProgNo)
@@ -178,11 +178,11 @@ readonly defaultSort: SortItem[] = [
 
   private toYMDOrNull(d: Date | string | null | undefined): string | null {
     if (d == null) return null;
-    const s = formatDateToYYYY_MM_DD(d as Date | string) as
+    const s = formatDateToYYYY_MM_DD(d) as
       | string
       | null
       | undefined;
-    return !s ? null : s;
+    return s || null;
   }
 
   private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
@@ -198,18 +198,17 @@ readonly defaultSort: SortItem[] = [
 
     return cleaned.length ? cleaned : fallback;
   }
-private initRows(rows: Fin32020Row[]): Fin32020Row[] {
-  const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  private initRows(rows: Fin32020Row[]): Fin32020Row[] {
+    for (const [idx, r] of rows.entries()) {
+      const adjNo = r.ADJ_No ?? `fallback_${idx}`;
 
-  rows.forEach((r, idx) => {
-    (r as any)._rowKey = `${seed}_${idx}`;
-    r._Details = [];
-    (r as any)._detailLoaded = false;
-    (r as any).expansionLoading = false;
-  });
-
-  return rows;
-}
+      (r as any)._rowKey = `fin32020_${adjNo}`;
+      r._Details = [];
+      (r as any)._detailLoaded = false;
+      (r as any).expansionLoading = false;
+    }
+    return rows;
+  }
 
   private saveQueryState(): void {
     this.queryStateService.setQueryState(
@@ -247,12 +246,12 @@ private initRows(rows: Fin32020Row[]): Fin32020Row[] {
       VouNo_To: raw.summons_ID_To ? String(raw.summons_ID_To) : null,
     };
 
-    Object.keys(req).forEach((k) => {
+    for (const k of Object.keys(req)) {
       const v = req[k];
       if (v === '' || v === null || v === undefined) {
         delete req[k];
       }
-    });
+    }
 
     return req;
   }
@@ -341,22 +340,22 @@ private initRows(rows: Fin32020Row[]): Fin32020Row[] {
         next: (res: ApiResponse<Fin32020Row[]>) => {
           const rows: Fin32020Row[] = Array.isArray(res?.Data) ? res.Data : [];
 
-this.initRows(rows);
+          this.initRows(rows);
 
-const realTotal =
-  Number((res as any)?.TotalCount ?? rows.length) || rows.length;
+          const realTotal =
+            Number((res as any)?.TotalCount ?? rows.length) || rows.length;
 
-// 先給排序狀態，再給 data
-this.lastQueryBody = { ...payload };
-this._currentSortBy = payload.SortBy ?? this.defaultSort;
-this.totalRecords = realTotal;
-this.viewTotalRecords = realTotal;
+          // 先給排序狀態，再給 data
+          this.lastQueryBody = { ...payload };
+          this._currentSortBy = payload.SortBy ?? this.defaultSort;
+          this.totalRecords = realTotal;
+          this.viewTotalRecords = realTotal;
 
-this.data = rows;
-this.cdr.detectChanges();
+          this.data = rows;
+          this.cdr.detectChanges();
 
-this.saveQueryState();
-this.loading = false;
+          this.saveQueryState();
+          this.loading = false;
         },
         error: (err: any) => {
           console.error('FIN32020 API error:', err);
@@ -370,35 +369,35 @@ this.loading = false;
   }
 
   onClear(frm: FormGroup): void {
-  frm.reset(
-    {
-      adjust_ID: null,
-      adjust_Date_From: null,
-      adjust_Date_To: null,
-      remark: '',
-      summons_ID_From: null,
-      summons_ID_To: null,
-      ...createPaginationConfig([
-        { field: 'ADJ_Date', order: -1 },
-        { field: 'ADJ_No', order: 1 },
-        
-      ]),
-    } as any,
-    { emitEvent: false }
-  );
+    frm.reset(
+      {
+        adjust_ID: null,
+        adjust_Date_From: null,
+        adjust_Date_To: null,
+        remark: '',
+        summons_ID_From: null,
+        summons_ID_To: null,
+        ...createPaginationConfig([
+          { field: 'ADJ_Date', order: -1 },
+          { field: 'ADJ_No', order: 1 },
 
-  this.submitted = false;
-  this.data = [];
-  this.selectedItems = [];
-  this.totalRecords = 0;
-  this.viewTotalRecords = 0;
-  this.footerData = undefined;
-  this.lastQueryBody = null;
-  this._currentSortBy = this.defaultSort;
+        ]),
+      } as any,
+      { emitEvent: false }
+    );
 
-  this.queryStateService.clearQueryState(this.ProgNo);
-  this.queryStateService.clearQueryState(`${this.ProgNo}_ext`);
-}
+    this.submitted = false;
+    this.data = [];
+    this.selectedItems = [];
+    this.totalRecords = 0;
+    this.viewTotalRecords = 0;
+    this.footerData = undefined;
+    this.lastQueryBody = null;
+    this._currentSortBy = this.defaultSort;
+
+    this.queryStateService.clearQueryState(this.ProgNo);
+    this.queryStateService.clearQueryState(`${this.ProgNo}_ext`);
+  }
 
   onClickCreate(): void {
     this.saveQueryState();
@@ -417,43 +416,43 @@ this.loading = false;
     );
   }
 
- override onEdit(row: Fin32020Row, queryConditions?: any): void {
-  this.saveQueryState();
+  override onEdit(row: Fin32020Row, queryConditions?: any): void {
+    this.saveQueryState();
 
-  if ((row as any)?.['CanEdit'] !== true) {
-    super.onDetail(row, this.queryForm.value);
-    return;
+    if ((row as any)?.['CanEdit'] !== true) {
+      super.onDetail(row, this.queryForm.value);
+      return;
+    }
+
+    if (!row?.ADJ_No) {
+      super.onEdit(row, this.queryForm.value);
+      return;
+    }
+
+    this.loading = true;
+
+    this.fin32020Service
+      .queryFIN32020Detail(row.ADJ_No)
+      .pipe(untilDestroyed(this), take(1))
+      .subscribe({
+        next: (res) => {
+          const details = Array.isArray(res?.Data) ? res.Data : [];
+
+          const rowWithDetails: Fin32020Row = {
+            ...row,
+            _Details: details,
+          };
+
+          this.loading = false;
+          super.onEdit(rowWithDetails, this.queryForm.value);
+        },
+        error: (err) => {
+          console.error('queryFIN32020Detail error before edit:', err);
+          this.loading = false;
+        },
+      });
   }
-
-  if (!row?.ADJ_No) {
-    super.onEdit(row, this.queryForm.value);
-    return;
-  }
-
-  this.loading = true;
-
-  this.fin32020Service
-    .queryFIN32020Detail(row.ADJ_No)
-    .pipe(untilDestroyed(this), take(1))
-    .subscribe({
-      next: (res) => {
-        const details = Array.isArray(res?.Data) ? res.Data : [];
-
-        const rowWithDetails: Fin32020Row = {
-          ...row,
-          _Details: details,
-        };
-
-        this.loading = false;
-        super.onEdit(rowWithDetails, this.queryForm.value);
-      },
-      error: (err) => {
-        console.error('queryFIN32020Detail error before edit:', err);
-        this.loading = false;
-      },
-    });
-}
   editDisabledFn = (row: any) => {
-  return !row?.CanEdit;
-};
+    return !row?.CanEdit;
+  };
 }
