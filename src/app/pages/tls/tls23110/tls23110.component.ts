@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
   AbstractControl,
   FormControl,
@@ -43,7 +43,6 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 @Component({
   selector: 'app-tls23110',
   templateUrl: './tls23110.component.html',
-  styleUrls: ['./tls23110.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
@@ -63,7 +62,7 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     TableReportComponent, // ✅ 使用 app-table-report
   ],
 })
-export class TLS23110Component extends BasicQueryPageComponent<any> {
+export class TLS23110Component extends BasicQueryPageComponent<any> implements OnInit {
   // ====== 常數與工具 ======
   /** 後端折扣桶位顯示順序（可擴充） */
   private readonly DISCOUNT_KEYS = [
@@ -128,7 +127,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
       tlt_floor: this.formBuilder.control(null),
       org_id: this.formBuilder.control(null),
 
-      ...createPaginationConfig([{ field: 'Day', order: 1 as 1 }]),
+      ...createPaginationConfig([{ field: 'Day', order: 1 as const }]),
     },
     { validators: [this.sameMonthValidator('TXN_DateStart', 'TXN_DateEnd')] }
   ) as FormGroup;
@@ -174,10 +173,10 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   columns: any[] = [];
 
   constructor(
-    private tls23110Service: TLS23110Service,
-    private counterNameService: CounterNameService,
-    private floorService: FloorService,
-    private tls11010Service: Tls11010Service
+    private readonly tls23110Service: TLS23110Service,
+    private readonly counterNameService: CounterNameService,
+    private readonly floorService: FloorService,
+    private readonly tls11010Service: Tls11010Service
   ) {
     super();
   }
@@ -193,7 +192,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     this.queryForm.controls.TXN_Month.valueChanges
       .pipe(untilDestroyed(this))
       .subscribe((d: Date | null) => {
-        if (!d || isNaN(new Date(d).getTime())) return;
+        if (!d || Number.isNaN(new Date(d).getTime())) return;
         const { start, end } = this.getMonthRange(d);
         this.queryForm.patchValue({ TXN_DateStart: start, TXN_DateEnd: end, pageIndex: 1 }, { emitEvent: false });
       });
@@ -208,7 +207,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     const clampEndToStartMonth = () => {
       const s = startCtrl?.value ? new Date(startCtrl.value) : null;
       const e = endCtrl?.value ? new Date(endCtrl.value) : null;
-      if (!s || !e || isNaN(s.getTime()) || isNaN(e.getTime())) return;
+      if (!s || !e || Number.isNaN(s.getTime()) || Number.isNaN(e.getTime())) return;
       const sameMonth = s.getFullYear() === e.getFullYear() && s.getMonth() === e.getMonth();
       if (!sameMonth) {
         const lastDay = new Date(s.getFullYear(), s.getMonth() + 1, 0);
@@ -271,7 +270,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     for (const col of this.columns) {
       if (col?.isTotal) footer[col.field] = this.grandTotal[col.field] ?? 0;
     }
-    // footer['Day'] = '總計'; // 如需顯示文字可打開
+
     return footer;
   }
 
@@ -303,7 +302,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
         pageIndex: val?.pageIndex ?? 1,
         pageSize: 30,
-     
+
         SortBy: Array.isArray(val?.SortBy) ? val.SortBy : this.sortMeta,
       };
 
@@ -334,7 +333,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
             const metrics = ['TXN_Net', 'TXN_SaleNoTax', 'TXN_Tax', 'Total'] as const;
 
-            const mapped = rawRows.map((row: any) => {
+            const mapped = rawRows.map((row: any, idx: number) => {
               const flat: any = { Day: row?.Day ?? '' };
               const d = row?.Discount_List || {};
               for (const bucket of this.DISCOUNT_KEYS) {
@@ -351,7 +350,8 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
                   if (Number.isFinite(num)) flat[key] = num;
                 }
               }
-              flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
+              const safeDay = flat.Day ? String(flat.Day).trim() : `empty_day_${idx}`;
+              flat._rowKey = `tls23110_${safeDay}`;
               return flat;
             });
 
@@ -365,18 +365,18 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
             // const footer = this.buildFooterFromGrandTotal();
             // if (footer) footer['Day'] = '總計';
-              // ✅ 調整 historyRequestBody.pageSize，避免 TableReport 的 onSort 被 data.length < pageSize 卡住
-  const rawPageSize = this.historyRequestBody?.pageSize || 30;
-  const effectivePageSize =
-    this.totalRecords <= this.data.length
-      ? (this.data.length || rawPageSize)  // 只有一頁：改成實際筆數
-      : rawPageSize;                       // 多頁：保持原本 pageSize=30，避免影響 loadMore
+            // ✅ 調整 historyRequestBody.pageSize，避免 TableReport 的 onSort 被 data.length < pageSize 卡住
+            const rawPageSize = this.historyRequestBody?.pageSize || 30;
+            const effectivePageSize =
+              this.totalRecords <= this.data.length
+                ? (this.data.length || rawPageSize)  // 只有一頁：改成實際筆數
+                : rawPageSize;                       // 多頁：保持原本 pageSize=30，避免影響 loadMore
 
-  this.historyRequestBody = {
-    ...this.historyRequestBody,
-    pageSize: effectivePageSize,
-    pageIndex: 1,
-  };
+            this.historyRequestBody = {
+              ...this.historyRequestBody,
+              pageSize: effectivePageSize,
+              pageIndex: 1,
+            };
           },
           error: () => {
             this.data = [];
@@ -390,7 +390,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   public queryTLS23110ForReport = (body: any) =>
     this.tls23110Service
       .queryTLS23110({
-        ...(body || {}),
+        ...body,
         TXN_DateStart: this.toDateOnly(body?.TXN_DateStart ?? this.queryForm.value?.TXN_DateStart),
         TXN_DateEnd: this.toDateOnly(body?.TXN_DateEnd ?? this.queryForm.value?.TXN_DateEnd),
 
@@ -413,7 +413,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
           const metrics = ['TXN_Net', 'TXN_Tax', 'Total'] as const;
 
-          const rows = rawRows.map((row: any) => {
+          const rows = rawRows.map((row: any, idx: number) => {
             const flat: any = { Day: row?.Day ?? '' };
             const d = row?.Discount_List || {};
             for (const bucket of this.DISCOUNT_KEYS) {
@@ -429,7 +429,8 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
                 if (Number.isFinite(num)) flat[key] = num;
               }
             }
-            flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
+            const safeDay = flat.Day ? String(flat.Day).trim() : `empty_day_${idx}`;
+            flat._rowKey = `tls23110_${safeDay}`;
             return flat;
           });
 
@@ -443,19 +444,19 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
           // ✅ 只在第一頁同步到 component 狀態，避免後面分頁覆蓋
           const isFirstPage = !body?.pageIndex || Number(body.pageIndex) === 1;
           if (isFirstPage) this.grandTotal = { ...grand };
-// ⭐ 這裡也更新 historyRequestBody，讓 TableReport 之後排序、loadMore 用
-const requestedPageSize = body?.pageSize || 30;
-const effectivePageSize =
-  totalCount <= rows.length
-    ? (rows.length || requestedPageSize)   // 單頁結果：pageSize 改成實際筆數
-    : requestedPageSize;                  // 多頁：維持原 pageSize（通常 30）
+          // ⭐ 這裡也更新 historyRequestBody，讓 TableReport 之後排序、loadMore 用
+          const requestedPageSize = body?.pageSize || 30;
+          const effectivePageSize =
+            totalCount <= rows.length
+              ? (rows.length || requestedPageSize)   // 單頁結果：pageSize 改成實際筆數
+              : requestedPageSize;                  // 多頁：維持原 pageSize（通常 30）
 
-this.historyRequestBody = {
-  ...(this.historyRequestBody || {}),
-  ...body,
-  pageSize: effectivePageSize,
-  pageIndex: body?.pageIndex ?? 1,
-};
+          this.historyRequestBody = {
+            ...this.historyRequestBody,
+            ...body,
+            pageSize: effectivePageSize,
+            pageIndex: body?.pageIndex ?? 1,
+          };
           return { Data: rows, TotalCount: totalCount, GrandTotal: grand };
         })
       );
@@ -490,14 +491,14 @@ this.historyRequestBody = {
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      globalThis.URL.revokeObjectURL(url);
+      a.remove();
     } else {
       this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
     }
@@ -517,7 +518,7 @@ this.historyRequestBody = {
     const filenameMatch = /filename="([^"]+)"/i.exec(contentDisposition);
     if (filenameMatch?.[1]) {
       try {
-        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+        return decodeURIComponent(filenameMatch[1].replaceAll('+', ' '));
       } catch {
         return filenameMatch[1];
       }
@@ -600,13 +601,13 @@ this.historyRequestBody = {
 
   /** 驗證兩個日期是否在同一個月份 */
   private sameMonthValidator(startKey: string, endKey: string): ValidatorFn {
-    return (group: AbstractControl): { [key: string]: any } | null => {
+    return (group: AbstractControl): Record<string, any> | null => {
       const start = group.get(startKey)?.value;
       const end = group.get(endKey)?.value;
       if (!start || !end) return null;
       const startDate = new Date(start);
       const endDate = new Date(end);
-      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) return null;
+      if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return null;
       const sameMonth = startDate.getFullYear() === endDate.getFullYear() && startDate.getMonth() === endDate.getMonth();
       return sameMonth ? null : { notSameMonth: true };
     };
@@ -617,17 +618,11 @@ this.historyRequestBody = {
   private toDateOnly(x: any): string | undefined {
     if (!x) return undefined;
     const d = typeof x === 'string' ? new Date(x) : (x as Date);
-    if (isNaN(d.getTime())) return undefined;
+    if (Number.isNaN(d.getTime())) return undefined;
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
-  }
-  // 放在 class 內
-  private normalizeTermType(v: any): string[] | undefined {
-    if (v == null || v === '') return undefined;
-    if (Array.isArray(v)) return v.map((x) => String(x));
-    return [String(v)]; // 0 -> "0"
   }
   // class 裡加上：把任何輸入轉成「字串 or undefined」；若傳陣列取第一個
   private toStringOrUndef(v: any): string | undefined {

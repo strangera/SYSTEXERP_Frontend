@@ -162,7 +162,7 @@ export class CPM11030Component extends BasicQueryPageComponent<QueryCPM11030Row>
       min: 1,
       validate: [validateNumber, validateMinNumber(1)]
     },
-    { field: 'CSS_CurrentQty', header: '今日剩餘可出借數量', format: (v, i, row) => row.CSS_PriorQty === null ? '0' : v, },
+    { field: 'CSS_CurrentQty', header: '今日剩餘可出借數量' },
   ];
   validateRow = (rowData: any): { isValid: boolean, errorMessage: string } => {
     if (rowData.Device_TotQty > rowData.MaxLimit) {

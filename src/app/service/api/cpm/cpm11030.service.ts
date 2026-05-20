@@ -2,7 +2,7 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { SortMeta } from 'primeng/api';
-import { Observable } from 'rxjs';
+import { Observable, shareReplay } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 export interface QueryCPM11030Request {
   pageSize: number | null;
@@ -86,9 +86,9 @@ export interface UpdateCPM11030Request extends InsertCPM11030Request {
 
 @Injectable({ providedIn: 'root' })
 export class Cpm11030Service {
-  private apiUrl = `${environment.ApiUrl}/CPM0000/CPM1000`;
+  private readonly apiUrl = `${environment.ApiUrl}/CPM0000/CPM1000`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) { }
 
   /** 列表查詢：/queryCPM11030 */
   queryCPM11030(body: QueryCPM11030Request): Observable<ApiResponse<QueryCPM11030Row[]>> {
@@ -102,6 +102,8 @@ export class Cpm11030Service {
     return this.http.post<ApiResponse<DailyEquipAvailabilityRow[]>>(
       `${this.apiUrl}/queryCPM11030_DailyEquipAvailability`,
       body
+    ).pipe(
+      shareReplay({ bufferSize: 1, refCount: true })
     );
   }
 

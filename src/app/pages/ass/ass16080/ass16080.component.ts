@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -21,16 +21,16 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 
+import { ASS11100Service } from '@service/api/ass/ass11100.service';
+import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   createPaginationConfig,
   formatDateToYYYY_MM_DD,
 } from '../../../shared/componentkit/table/table.model';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { ASS11100Service } from '@service/api/ass/ass11100.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { Fin11040Service, TDS1008Data } from '@service/api/fin/fin11040.service';
 
 import {
   ApiResponse,
@@ -65,7 +65,7 @@ interface SortItem {
     TableReportComponent,
   ],
 })
-export class ASS16080Component extends BasicQueryPageComponent<QueryASS16080Response> {
+export class ASS16080Component extends BasicQueryPageComponent<QueryASS16080Response> implements OnInit {
   showTable = true;
   data: QueryASS16080Response[] = [];
   totalRecords = 0;
@@ -187,7 +187,7 @@ export class ASS16080Component extends BasicQueryPageComponent<QueryASS16080Resp
 
     this._currentSortBy = this.defaultSort;
 
-    const fromCru = !!(history.state && history.state['fromCru']);
+    const fromCru = !!(history.state?.['fromCru']);
 
     this.formStatusService
       .waitForReady(this.ProgNo)
@@ -256,16 +256,14 @@ export class ASS16080Component extends BasicQueryPageComponent<QueryASS16080Resp
         },
       });
 
-0
-
-          const toOpt = (items: { No?: string; Name?: string }[]) =>
+    const toOpt = (items: { No?: string; Name?: string }[]) =>
       (items ?? []).map(item => ({
         label: `${item.No ?? ''} - ${item.Name ?? ''}`,
         value: item.No ?? '',
       }));
 
 
-          this.dropDownListService
+    this.dropDownListService
       .querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
@@ -296,11 +294,11 @@ export class ASS16080Component extends BasicQueryPageComponent<QueryASS16080Resp
 
   private toYMDOrNull(d: Date | string | null | undefined): string | null {
     if (d == null) return null;
-    const s = formatDateToYYYY_MM_DD(d as Date | string) as
+    const s = formatDateToYYYY_MM_DD(d) as
       | string
       | null
       | undefined;
-    return !s ? null : s;
+    return s || null;
   }
 
   private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
@@ -312,17 +310,16 @@ export class ASS16080Component extends BasicQueryPageComponent<QueryASS16080Resp
     return cleaned.length ? cleaned : fallback;
   }
 
-private initRows(rows: QueryASS16080Response[]): QueryASS16080Response[] {
-  const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  private initRows(rows: QueryASS16080Response[]): QueryASS16080Response[] {
+    for (const [idx, r] of rows.entries()) {
+      const moveId = r.WHMOVE_ID ?? `fallback_${idx}`;
 
-  rows.forEach((r, idx) => {
-    (r as any)._rowKey = `${seed}_${idx}`;
-    (r as any)._detailLoaded = false;
-    r.Details = [];
-  });
-
-  return rows;
-}
+      (r as any)._rowKey = `ass16080_${moveId}`;
+      (r as any)._detailLoaded = false;
+      r.Details = [];
+    }
+    return rows;
+  }
 
   private saveQueryState(): void {
     this.queryStateService.setQueryState(
@@ -366,12 +363,12 @@ private initRows(rows: QueryASS16080Response[]): QueryASS16080Response[] {
       APRV_EMP_ID: raw.APRV_EMP_ID || null,
     };
 
-    Object.keys(req).forEach((k) => {
+    for (const k of Object.keys(req)) {
       const v = req[k];
       if (v === '' || v === null || v === undefined) {
         delete req[k];
       }
-    });
+    }
 
     return req;
   }
@@ -548,7 +545,7 @@ private initRows(rows: QueryASS16080Response[]): QueryASS16080Response[] {
     this.router.navigate(['account/ass/ass16080cru'], {
       state: {
         rowdata: row,
-       crudstatus: CRUDStatus.Edit,
+        crudstatus: CRUDStatus.Edit,
         mode: 'out',
       },
     });
@@ -559,7 +556,7 @@ private initRows(rows: QueryASS16080Response[]): QueryASS16080Response[] {
     this.router.navigate(['account/ass/ass16080cru'], {
       state: {
         rowdata: row,
-       crudstatus: CRUDStatus.Edit,
+        crudstatus: CRUDStatus.Edit,
         mode: 'in',
       },
     });

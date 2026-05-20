@@ -80,7 +80,7 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
     'PUR_Net': null, // 發票未稅金額
     'PUR_Tax': null, // 發票稅額
     'PUR_DiscNo': '1', // 扣抵代號 預設值1
-    'PUR_Type': null, // 類別區分
+    'PUR_Type': '1', // 類別區分 預設值1
     'Source_Doc_No': null, // 憑證單號
     'PUR_Comb_Cnt': 0, // 彙總張數
     'PUR_Comb': '' // 彙加註記
@@ -287,11 +287,6 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       { field: 'PUR_VenName', header: '廠商名稱', type: 'input', disabled: () => true },
 
       { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
-      { field: 'PUR_DiscNo', header: '扣抵代號', type: 'dropdown', options: this.PUR_DiscNo_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
-      { field: 'PUR_Type', header: '類別區分', type: 'dropdown', options: this.PUR_Type_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
-      { field: 'Source_Doc_No', header: '憑證單號', type: 'input', maxLength: 16, disabled: locked },
-      { field: 'PUR_Comb_Cnt', header: '彙總張數', type: 'inputNumber', disabled: locked },
-      { field: 'PUR_Comb', header: '彙加註記', type: 'input', maxLength: 20, disabled: locked },
       // { field: 'ACP_Type', header: '應付帳款類別', type: 'dropdown', validate: [validateRequired], options: this.ACP_Type_Options, optionValue: 'value', optionLabel: 'label' },
       {
         field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber', validate: [validateRequired],
@@ -335,6 +330,11 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
           return { PUR_Amt: net + tax };
         }
       },
+      { field: 'PUR_DiscNo', header: '扣抵代號', type: 'dropdown', options: this.PUR_DiscNo_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      { field: 'PUR_Type', header: '類別區分', type: 'dropdown', options: this.PUR_Type_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      { field: 'Source_Doc_No', header: '憑證單號', type: 'input', maxLength: 16, disabled: locked },
+      { field: 'PUR_Comb_Cnt', header: '彙總張數', type: 'inputNumber', disabled: locked },
+      { field: 'PUR_Comb', header: '彙加註記', type: 'input', maxLength: 20, disabled: locked },
     ];
   }
 

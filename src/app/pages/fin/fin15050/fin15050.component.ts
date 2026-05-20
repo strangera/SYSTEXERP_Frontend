@@ -53,7 +53,7 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
     private readonly fin15050Service: FIN15050Service,
     private readonly validationService: ValidationService,
     private readonly datePipe: DatePipe,
-    private sanitizer: DomSanitizer
+    private readonly sanitizer: DomSanitizer
   ) {
     super();
   }
@@ -85,8 +85,6 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
               ? response.Data.Print_URL
               : `${environment.BaseUrl}${response.Data.Print_URL}`;
             rawUrl = decodeURIComponent(rawUrl);
-            console.log('rawUrl', rawUrl);
-            // ⬇️ 用 sanitizer 包裝
             this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
           }
           else {
