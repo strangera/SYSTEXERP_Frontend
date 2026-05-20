@@ -1,3 +1,4 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -22,7 +23,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { AddButton, Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
 
@@ -57,7 +57,6 @@ export interface sample72010 {
     CalendarRangeQuickComponent,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
     InputNumberRangeComponent,
     DropdownComponent,
     TranslateModule,
@@ -69,7 +68,8 @@ export interface sample72010 {
     ConfirmPopupModule,
     DialogModule,
     TableModule,
-    TableReportComponent
+    TableReportComponent,
+    NgIf,
   ],
   providers: [ConfirmationService]
 })
@@ -82,19 +82,18 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
     AmtFrom: [null, Validators.max(9999999999)], // 起始零用金金額
     AmtTo: [null, Validators.max(9999999999)], // 結束零用金金額
     PCS_UsrNo: [null], // 申請人
-    // PettycashapplicantName: [''], // 申請人名稱
+    PCS_UsrDisplay: [''], // 申請人顯示用
     Keep_UsrNo: [null], // 保管人
-    // PettycashcustodianName: [''], // 保管人名稱
+    Keep_UsrDisplay: [''], // 保管人顯示用
     PCS_Status: [null], // 狀態
     Keep_OrgID: [null], // 保管單位
-    //keepingUnitName: [''], // 保管單位名稱
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'PCS_No', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------
-  // totalRecords = 0;// 分頁和排序參數 // 排序需要
+
   public readonly totalRecords = signal<number>(0);
 
   PCS_No_Options = signal<{ label: string; value: string }[]>([]);
@@ -190,13 +189,7 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
       this.fin72010Service.queryFIN72010(form.value)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data.map(item => ({
-            ...item,
-            PCS_UsrDisplay: `${item.PCS_UsrNo ?? ''}-${item.PCS_UsrName ?? ''}`,
-            PCS_OrgDisplay: `${item.PCS_OrgID ?? ''}-${item.PCS_OrgName ?? ''}`,
-            Keep_UsrDisplay: `${item.Keep_UsrNo ?? ''}-${item.Keep_UsrName ?? ''}`,
-            Keep_OrgDisplay: `${item.Keep_OrgID ?? ''}-${item.Keep_OrgName ?? ''}`,
-          }));
+          this.data = response.Data;
           this.lastQueryBody = form.value;
           this.totalRecords.set(response.TotalCount);
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
@@ -291,15 +284,46 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
     //this.selectedUserName = `${row.user_No} - ${row.user_Name}`;
     if (!this.currentUserTarget) return;
 
+    const nameControlName = this.currentUserTarget.replace('No', 'Name');
+    const DisplayName = this.currentUserTarget.replace('No', 'Display');
+
     this.queryForm.patchValue({
-      [this.currentUserTarget]: row.user_No,
-      [`${this.currentUserTarget}Name`]: `${row.user_No} - ${row.user_Name}`
+      [this.currentUserTarget]: row.user_No ?? '',
+      [nameControlName]: row.user_Name ?? '',
+      [DisplayName]: `${row.user_No ?? ''} - ${row.user_Name ?? ''}`
     });
 
     this.userDialogVisible = false;
     this.currentUserTarget = null;
   }
 
+  // 清除使用者選擇的資料
+  clearUser(type: 'PCS' | 'Keep'): void {
+    if (type === 'PCS') {
+      this.queryForm.patchValue({
+        PCS_UsrNo: null,
+        PCS_UsrDisplay: null,
+      });
+      return;
+    }
+
+    this.queryForm.patchValue({
+      Keep_UsrNo: null,
+      Keep_UsrDisplay: null
+    });
+  }
+
+  // 根據狀態代碼回傳狀態名稱
+  getPCSStatusName(status?: string | number | null): string {
+    const statusMap: Record<string, string> = {
+      '1': '建立',
+      '2': '請款',
+      '3': '拋轉',
+      '4': '撥補'
+    };
+
+    return statusMap[String(status ?? '')] ?? '';
+  }
 
 
   /** 載入下拉選單選項 */
