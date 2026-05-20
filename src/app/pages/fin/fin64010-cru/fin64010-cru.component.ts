@@ -24,6 +24,7 @@ import {
   Fin64010Service,
   FIN64010DetailRow,
   FIN64010UpdateRequest,
+  Aps1002DropdownItem,
 } from '../../../service/api/fin/fin64010.service';
 
 import { Fin26010Service, Aps1002BankDropDownRow } from '../../../service/api/fin/fin26010.service';
@@ -209,18 +210,27 @@ this.patchFromListRowIfNeeded();
     // 5) 託收帳戶（COL_BNK_id）
     //    ⚠️ 這裡我用 APS1002 下拉：value 用 BNK_DepositAccNo
     //    如果你後端 COL_BNK_id 其實要 APS1002 的 id，請把 value 改成 x.id
-    this.fin26010Service.queryAPS1002DropDownList()
+
+
+
+       this.fin64010Service.queryAPS1002_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe({
-        next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+        next: (res: ApiResponse<Aps1002DropdownItem[]>) => {
           const list = Array.isArray(res?.Data) ? res.Data : [];
-          this.colBankAccOptions = list.map((x: any) => ({
-            value: String(x.BNK_DepositAccNo ?? ''),
-            label: `${x.BNK_DepositAccNo ?? ''} - ${x.ACCCNAME ?? ''}`,
-            raw: x,
-          })).filter((x: any) => x.value);
+
+          this.colBankAccOptions = list
+            .filter((x: any) => String(x?.BNK_AccType ?? '') !== '1')
+            .map((x: any) => ({
+              label: `${x.BNK_DepositAccNo} - ${x.ACCCNAME ?? ''}`,
+              value: x.BNK_DepositAccNo,
+              raw: x,
+            }))
+            .filter((x: any) => x.value);
         },
-        error: () => (this.colBankAccOptions = []),
+        error: () => {
+          this.colBankAccOptions = [];
+        },
       });
 
     // ✅ 最後載明細（避免 patch 時 options 未就緒）

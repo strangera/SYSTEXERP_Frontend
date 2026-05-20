@@ -76,6 +76,7 @@ export interface QueryFIN51010DetailLine {
 /** 更新 Request */
 export interface UpdateFIN51010Request {
   GLS6001_ID: number;
+  VouDate: string;
   Remark: string;
   DetailList: {
     GLS6002_ID: number;

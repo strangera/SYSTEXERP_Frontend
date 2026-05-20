@@ -1,6 +1,6 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin51010Service, QueryFIN51010DetailLine, QueryFIN51010Response, UpdateFIN51010Request } from '@service/api/fin/fin51010.service';
@@ -37,7 +37,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     VouNo: [{ value: null as string | null, disabled: true }],      // 傳票編號
     Voucher_Name: [{ value: null as string | null, disabled: true }], // 傳票名稱 (種類名稱)
     SrcSheetType: [{ value: null as string | null, disabled: true }], // 傳票型態 (代碼)
-    VouDate: [{ value: null as string | null, disabled: true }],      // 傳票日期
+    VouDate: [null, [Validators.required]],      // 傳票日期
     Remark: [null as string | null],                // 傳票摘要 (可編輯)
     SettleNo: [{ value: null as string | null, disabled: true }],     // 結帳單號
     Trans_Status: [{ value: null as string | null, disabled: true }], // 狀態
@@ -142,8 +142,8 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   ];
   PostFlagOptions = getSYS1000Options('PostFlag');
   Trans_StatusOptions = getSYS1000Options('Trans_Status');
-  private ledgerOptions$ = this.dropdown.queryGls1005_ledgerMD().pipe(shareReplay(1));
-  private sys3100Options$ = this.dropdown.querySys3100().pipe(shareReplay(1));
+  private readonly ledgerOptions$ = this.dropdown.queryGls1005_ledgerMD().pipe(shareReplay(1));
+  private readonly sys3100Options$ = this.dropdown.querySys3100().pipe(shareReplay(1));
   initTable = false;
 
   constructor(
@@ -172,7 +172,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     ).subscribe((res) => {
       if (res.Data && res.Data.length > 0) {
         const mainData = res.Data[0];
-        this.dataForm.patchValue(mainData);
+        this.dataForm.patchValue(mainData as any, { emitEvent: false });
         this.data = (mainData.LineList || []).map((line: any) => ({
           ...line,
           AccNo: line.AccNo?.trim(),
@@ -223,6 +223,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
             }));
             const body: UpdateFIN51010Request = {
               GLS6001_ID: mainId,
+              VouDate: frm.value.VouDate,
               Remark: frm.value.Remark,
               DetailList: modifiedDetails
             };
