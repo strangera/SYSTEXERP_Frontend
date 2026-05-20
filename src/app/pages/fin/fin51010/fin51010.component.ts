@@ -147,7 +147,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
 
           if (isSuccess) {
             // 換行處理
-            const formattedMsg = msg.replace(/\n/g, '<br>');
+            const formattedMsg = msg.replaceAll('\n', '<br>');
             setTimeout(() => {
               this.messageService.confirm({
                 header: '拋轉成功',
