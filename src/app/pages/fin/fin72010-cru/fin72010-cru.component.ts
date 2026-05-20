@@ -1,17 +1,13 @@
-import { CommonModule, NgFor, NgIf } from '@angular/common';
+import { CommonModule, NgIf } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN72010Service, QueryFIN72010DetailDetailResponse, QueryFIN72010DetailRequest, saveFIN72010Request } from '@service/api/fin/fin72010.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { EditorTextComponent } from '@shared/componentkit/editor-text/editor-text.component';
-import { ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
-import { ConfirmationService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmPopupModule } from 'primeng/confirmpopup';
 import { DialogModule } from 'primeng/dialog';
@@ -22,37 +18,12 @@ import { PanelModule } from 'primeng/panel';
 import { TableModule } from 'primeng/table';
 import { ToastModule } from 'primeng/toast';
 import { finalize } from 'rxjs';
-import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { option } from '../../../shared/models/sys/sysb000.model';
 import { CRUDStatus } from './../../../shared/models/system/CRUDstatus';
-
-// POS2064 收支明細檔
-export interface POS2064 {
-  id: number | null; // 明細ID，新增時為null
-  type01: string; // 會計費用科目
-  type02: string; // 項目摘要
-  type03: string; // 組織代號
-  type04: string; // 明細類別
-  type05: string; // 發票格式
-  type06: string; // 發票/收據號碼
-  type07: string; // 發票日期
-  type08: string; // 申報年月
-  type09: string; // 廠商統一編號
-  type10: string; // 發票用途
-  type11: string; // 發票總金額
-  type12: string; // 課稅別
-  type13: string; // 發票未稅金額
-  type14: string; // 發票稅額
-  type15: string; // 扣抵代號
-  type16: string; // 彙總張數
-  status: string; // 狀態 (原始: 'orginal', 新增: 'new', 編輯: 'modified', 刪除: 'deleted')
-}
 
 @Component({
   selector: 'app-fin72010-cru',
@@ -67,13 +38,7 @@ export interface POS2064 {
     CalendarComponent,
     CommonModule,
     DropdownComponent,
-    RadiobuttonComponent,
-    EditorTextComponent,
-    ExpandableEditTableComponent,
     InputTextComponent,
-    InputNumberComponent,
-    EditorTextComponent,
-    NgFor,
     NgIf,
     ButtonComponent,
     TranslateModule,
@@ -95,9 +60,11 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     PCS_No: [{ value: null, disabled: true }, [Validators.required, Validators.maxLength(20)]], // 零用金單號
     PCS_Date: [null, [Validators.required]], // 申請日期
     PCS_UsrNo: [null, [Validators.required]], // 申請人
-    PCS_UsrName: ['', [Validators.required]], // 申請人名稱
+    PCS_UsrName: [''], // 申請人名稱
+    PCS_UsrDisplay: [''], // 申請人顯示用
     Keep_UsrNo: [null, [Validators.required]], // 保管人
-    Keep_UsrName: ['', [Validators.required]], // 保管人名稱
+    Keep_UsrName: [''], // 保管人名稱
+    Keep_UsrDisplay: [''], // 保管人顯示用
     PCS_OrgID: [null, [Validators.required, Validators.maxLength(20)]], // 申請人組織代號
     Keep_OrgID: [null, [Validators.required, Validators.maxLength(20)]], // 保管人組織代號
     //keepingUnitName: ['', [Validators.maxLength(20)]], // 保管單位名稱
@@ -112,8 +79,8 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
   PUR_DirectType_Options = signal<{ label: string; value: string }[]>([]);
   PCS_TaxType_Options = signal<{ label: string; value: string }[]>([]);
   PUR_DiscNo_Options = signal<{ label: string; value: string }[]>([]);
+  AccNo_Options = signal<{ label: string; value: string }[]>([]);
 
-  vendorOptions: option[] = [];  //廠商編號: 資料讀 POS2013
   // -----------------------------------------------------------------------
   // 「零用金申請人」與「零用金保管人」使用者對話框的變數
   userDialogVisible = false;
@@ -129,35 +96,15 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
   // 目前選擇的使用者類別
   currentUserTarget: 'PCS_UsrNo' | 'Keep_UsrNo' | null = null;
 
+  // 是否顯示checkbox 
+  isShowCheckBox = true;
+  isRead = false;
 
-  // ---POS2064 -------------
-  POS2064Detail: POS2064[] = [];
   // ---------明細 (POS2064) 編輯表格 至少要一筆-------------------------------------------------------
   Detaildata: QueryFIN72010DetailDetailResponse[] = [];
-  orgDetaildata: POS2064[] = []; // POS2064(備分)
-  selectedPOS2064Items: POS2064[] = [];
-  // 預設新項目模板
-  defaultNew2064 = {
-    id: 0, //新增
-    type01: 'item.type01',
-    type02: 'item.type02',
-    type03: 'item.type03',
-    type04: 'item.type04',
-    type05: 'item.type05',
-    type06: 'item.type06',
-    type07: 'item.type07',
-    type08: 'item.type08',
-    type09: 'item.type09',
-    type10: 'item.type10',
-    type11: 'item.type11',
-    type12: 'item.type12',
-    type13: 'item.type13',
-    type14: 'item.type14',
-    type15: 'item.type15',
-    type16: 'item.type16',
+  orgDetaildata: QueryFIN72010DetailDetailResponse[] = []; // POS2064(備分)
 
-    status: 'new'
-  };
+  selectedPOS2064Items: QueryFIN72010DetailDetailResponse[] = [];
 
 
   //「保管單位」對話框的變數
@@ -167,34 +114,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
   keepDeptResultData: any[] = [];
   selectedKeepDept: any = null;
 
-  // 預設 POS2064 新項目模板 (最後進價=POS2004的標準進價PLU_OrderPrc)
-  createDefaultNew2064() {
-    this.defaultNew2064 = {
-      id: 0,
-      type01: 'item.type01',
-      type02: 'item.type02',
-      type03: 'item.type03',
-      type04: 'item.type04',
-      type05: 'item.type05',
-      type06: 'item.type06',
-      type07: 'item.type07',
-      type08: 'item.type08',
-      type09: 'item.type09',
-      type10: 'item.type10',
-      type11: 'item.type11',
-      type12: 'item.type12',
-      type13: 'item.type13',
-      type14: 'item.type14',
-      type15: 'item.type15',
-      type16: 'item.type16',
-
-      status: 'new'
-    };
-  }
-
   constructor(
-    private tls51070Service: Tls51070Service,
-    private confirmationService: ConfirmationService,
     private fb: FormBuilder,
     private fin72010Service: FIN72010Service,
   ) {
@@ -223,7 +143,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     }
 
     this.DetailColumn = [
-      { field: 'AccNo', header: '費用會計科目', type: 'dropdown', width: '12rem', options: this.PCS_No_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
+      { field: 'AccNo', header: '費用會計科目', type: 'dropdown', width: '12rem', options: this.AccNo_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
       { field: 'NOTeDesc', header: '項目摘要', type: 'input', width: '12rem', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
       { field: 'ORG_ID', header: '組織代號', type: 'dropdown', width: '12rem', options: this.keepingUnit_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
       { field: 'PCS_DtlType', header: '明細類別', type: 'dropdown', width: '12rem', options: this.PCS_DtlType_Options, optionLabel: 'label', optionValue: 'value', validate: [validateRequired], disabled: () => this.crudstatus === CRUDStatus.Read },
@@ -242,6 +162,11 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     ];
 
     this.loadDropdownOptions();
+
+    if (this.crudstatus === CRUDStatus.Read) {
+      this.isShowCheckBox = false;
+      this.isRead = true;
+    }
 
     // 零用金申請人與零用金保管人
     this.userQueryForm = this.fb.group({
@@ -262,21 +187,20 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            console.log('讀取表單', frm);
-
             const updateRequest: saveFIN72010Request = {
               ActionMode: 'I',
               PCS_Date: this.dataForm.getRawValue().PCS_Date || '',
               PCS_UsrNo: this.dataForm.getRawValue().PCS_UsrNo || '',
-              PCS_UsrName: this.dataForm.getRawValue().PCS_UsrName || '',
+              PCS_UsrName: this.getUserNameFromOptions(this.dataForm.getRawValue().PCS_UsrNo),
               PCS_OrgID: this.dataForm.getRawValue().PCS_OrgID || '',
               Keep_UsrNo: this.dataForm.getRawValue().Keep_UsrNo || '',
-              Keep_UsrName: this.dataForm.getRawValue().Keep_UsrName || '',
+              Keep_UsrName: this.getUserNameFromOptions(this.dataForm.getRawValue().Keep_UsrNo),
               Keep_OrgID: this.dataForm.getRawValue().Keep_OrgID || '',
               Details: this.Detaildata
-                .map(item => ({
+                .map((item, index) => ({
                   id: null, // 新增時ID為null
                   RowAction: 'I', // 新增
+                  PCS_SeqNo: item.PCS_SeqNo ?? index + 1, // 如果沒有值，就依照目前明細順序給 1, 2, 3...
                   AccNo: item.AccNo,
                   NOTeDesc: item.NOTeDesc,
                   ORG_ID: item.ORG_ID,
@@ -295,35 +219,40 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                   PCS_Remark: item.PCS_Remark
                 }))
             };
-            console.log('送出資料', updateRequest);
             this.fin72010Service.saveFIN72010(updateRequest)
               .pipe(untilDestroyed(this), finalize(() => this.loading = false))
               .subscribe(response => {
                 if (response.Data.Summary.IsSuccess !== 1) {
-                  this.messageService.errorBubble(response.Data.Summary.Message || '修改失敗');
+                  this.messageService.errorBubble(response.Data.ValidationErrors[0].ErrReason || '新增失敗');
                 }
                 else {
-                  this.messageService.successBubble(response.Data.Summary.Message || '修改成功');
+                  this.messageService.successBubble(response.Data.Summary.Message || '新增成功');
+                  this.onCancel();  // 返回查詢頁
                 }
-                this.onCancel();  // 返回查詢頁
               })
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            console.log('讀取表單', frm);
+            // 刪除資料先排前面，確保送出時先處理刪除，再處理新增和修改，避免衝突
+            const sortedDetails = [
+              ...this.orgDetaildata.filter(item => item.status === 'deleted'),
+              ...this.orgDetaildata.filter(item => item.status !== 'deleted')
+            ];
+
             const editRequest: saveFIN72010Request = {
               ActionMode: 'U',
+              PCS_No: this.dataForm.getRawValue().PCS_No || '',
               PCS_Date: this.dataForm.getRawValue().PCS_Date || '',
               PCS_UsrNo: this.dataForm.getRawValue().PCS_UsrNo || '',
-              PCS_UsrName: this.dataForm.getRawValue().PCS_UsrName || '',
+              PCS_UsrName: this.getUserNameFromOptions(this.dataForm.getRawValue().PCS_UsrNo),
               PCS_OrgID: this.dataForm.getRawValue().PCS_OrgID || '',
               Keep_UsrNo: this.dataForm.getRawValue().Keep_UsrNo || '',
-              Keep_UsrName: this.dataForm.getRawValue().Keep_UsrName || '',
+              Keep_UsrName: this.getUserNameFromOptions(this.dataForm.getRawValue().Keep_UsrNo),
               Keep_OrgID: this.dataForm.getRawValue().Keep_OrgID || '',
-              Details: this.Detaildata
-                .map(item => ({
-                  id: item.id,
+              Details: sortedDetails
+                .map((item, index) => ({
+                  id: item.id || null, // 如果有id就用原本的，沒有就給null（代表新增）
                   RowAction: item.status
                     ? item.status === 'new'
                       ? 'I' // 新增
@@ -333,6 +262,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                           ? 'D' // 刪除
                           : 'U' // 預設為修改
                     : 'U', // 如果沒有status屬性，預設為修改
+                  PCS_SeqNo: item.PCS_SeqNo ?? index + 1, // 如果沒有值，就依照目前明細順序給 1, 2, 3...
                   AccNo: item.AccNo,
                   NOTeDesc: item.NOTeDesc,
                   ORG_ID: item.ORG_ID,
@@ -340,7 +270,7 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                   PUR_VoucherType: item.PUR_VoucherType,
                   PCS_GUINo: item.PCS_GUINo,
                   PUR_Date: item.PUR_Date,
-                  DEC_YM: item.DEC_YM,
+                  DEC_YM: this.formatDateToYm(item.DEC_YM_Date),
                   PCS_Net: item.PCS_Net,
                   PCS_Tax: item.PCS_Tax,
                   VEN_UniformNum: item.VEN_UniformNum,
@@ -351,17 +281,16 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
                   PCS_Remark: item.PCS_Remark
                 }))
             };
-            console.log('送出資料', editRequest);
             this.fin72010Service.saveFIN72010(editRequest)
               .pipe(untilDestroyed(this), finalize(() => this.loading = false))
               .subscribe(response => {
                 if (response.Data.Summary.IsSuccess !== 1) {
-                  this.messageService.errorBubble(response.Data.Summary.Message || '修改失敗');
+                  this.messageService.errorBubble(response.Data.ValidationErrors[0].ErrReason || '修改失敗');
                 }
                 else {
                   this.messageService.successBubble(response.Data.Summary.Message || '修改成功');
+                  this.onCancel();  // 返回查詢頁
                 }
-                this.onCancel();  // 返回查詢頁
               })
           }
           break;
@@ -370,6 +299,68 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
 
     this.messageService.unblockUi();
     this.submitted = false;
+  }
+
+  deleteDetail(event: QueryFIN72010DetailDetailResponse | QueryFIN72010DetailDetailResponse[]): void {
+    // 如果 app-table-edit 傳回來的是整個陣列，先找出被標記 deleted 的那一筆
+    const rowData = Array.isArray(event)
+      ? event.find(item => item.status === 'deleted')
+      : event;
+
+    // 如果沒有找到被標記 deleted 的資料，直接返回
+    if (!rowData) {
+      return;
+    }
+
+    // 既有資料，要保留在 orgDetaildata，並標記 deleted
+    const target = this.orgDetaildata.find(item =>
+      item.id === rowData.id
+    );
+
+    if (target) {
+      target.status = 'deleted';
+    } else {
+      this.orgDetaildata.push({
+        ...rowData,
+        status: 'deleted'
+      });
+    }
+
+    // 畫面資料移除
+    this.Detaildata = this.Detaildata.filter(item =>
+      item.id !== rowData.id
+    );
+  }
+
+  // 當 app-table-edit 的資料有變動時，更新 Detaildata，並同步到 orgDetaildata，以便後續送出時能夠知道哪些資料是新增、修改、刪除
+  onDetailDataChange(data: QueryFIN72010DetailDetailResponse[]): void {
+    // 畫面目前資料
+    this.Detaildata = data;
+
+    // 保留已刪除資料
+    const deletedRows = this.orgDetaildata.filter(item => item.status === 'deleted');
+
+    // 同步目前畫面上的新增/修改資料到 orgDetaildata
+    const currentRows = data.map(item => {
+      const oldItem = this.orgDetaildata.find(org =>
+        // 已存在 DB 的資料，用 id 對應
+        (item.id && org.id === item.id) ||
+
+        // 新增資料沒有 id，用 _TABLE_KEY 對應
+        (!item.id && item._TABLE_KEY && org._TABLE_KEY === item._TABLE_KEY)
+      );
+
+      return {
+        ...oldItem,
+        ...item
+      };
+    });
+
+    // orgDetaildata = 目前畫面資料 + 已刪除資料
+    this.orgDetaildata = [
+      ...currentRows,
+      ...deletedRows
+    ];
   }
 
   onClearForm() {
@@ -403,20 +394,17 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
   // #region 明細檔 讀取
   async loadDetail(PCS_No: string): Promise<void> {
     if (PCS_No == '') {
-      console.log('讀取key', this.dataForm.value)
       if (this.crudstatus !== CRUDStatus.Create) {
         this.messageService.infoBubble('key為空，不載入明細檔'); //編輯、查看模式如果沒有明細檔就跳出提示
       }
     } else {
       const req: QueryFIN72010DetailRequest = { PCS_No: this.dataForm.get('PCS_No')?.value || '' };
       this.fin72010Service.queryFIN72010Detail(req).pipe(untilDestroyed(this)).subscribe((response) => {
-        console.log('API 回傳資料', response);
         this.Detaildata = (response.Data?.Details ?? []).map(item => ({
           ...item,
           DEC_YM_Date: this.parseYmToDate(item.DEC_YM)
         }));
-
-        console.log('明細 Detaildata', this.Detaildata);
+        this.orgDetaildata = [...this.Detaildata]; // 保留原始資料的副本
       }
       );
     }
@@ -463,40 +451,64 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     }
   }
 
+  // 判斷是否為空值
+  // 注意：0 不算空值，因為金額、稅額可能合法為 0
+  isEmptyValue(value: any): boolean {
+    return value === null || value === undefined || value === '';
+  }
+
   // #region 明細檔 驗證
-  validate2064Row = (rowData: QueryFIN72010DetailDetailResponse): { isValid: boolean; errorMessage: string } => {
-    const venNo = rowData?.VEN_UniformNum?.trim();
-    const currentId = rowData?.id;
+  validateDetailRow = (rowData: QueryFIN72010DetailDetailResponse): { isValid: boolean; errorMessage: string } => {
+    // const accNo = rowData.AccNo?.trim(); // 取得目前這一列的費用會計科目，並去除前後空白
+    const requiredFields = [
+      { value: rowData.AccNo?.trim(), name: '費用會計科目' },
+      { value: rowData.NOTeDesc?.trim(), name: '項目摘要' },
+      { value: rowData.ORG_ID?.trim(), name: '組織代號' },
+      { value: rowData.PCS_DtlType?.trim(), name: '明細類別' },
+      { value: rowData.PUR_VoucherType?.trim(), name: '發票格式' },
+      { value: rowData.PUR_Date, name: '發票日期' },
+      { value: rowData.DEC_YM_Date, name: '申報年月' },
+      { value: rowData.PUR_DirectType?.trim(), name: '發票用途' },
+      { value: rowData.PCS_Amt, name: '發票總金額' },
+      { value: rowData.PCS_TaxType?.trim(), name: '課稅別' },
+      { value: rowData.PCS_Net, name: '發票未稅金額' },
+      { value: rowData.PCS_Tax, name: '發票稅額' },
+      { value: rowData.PUR_DiscNo?.trim(), name: '扣抵代號' },
+    ];
 
-    //  檢查廠商編號是否為空
-    if (!venNo) {
-      return { isValid: false, errorMessage: '廠商編號不可為空，請輸入有效的廠商編號。' };
-    }
+    const emptyField = requiredFields.find(field =>
+      this.isEmptyValue(field.value)
+    );
 
-    // 檢查重複（包含新增中未有 id 的情況）
-    const isDuplicate = this.Detaildata.some((item, _index, array) => {
-      if (!item.AccNo) return false;
-
-      // 編輯同筆資料不用比對
-      if (item.id && currentId && item.id === currentId) return false;
-
-      // 新增中沒有 id，用索引判斷是不是自己
-      if (!item.id && !currentId) {
-        const currentIndex = array.indexOf(rowData.AccNo === item.AccNo ? rowData : item);
-        return item.AccNo === venNo && array.indexOf(item) !== currentIndex;
-      }
-
-      // 其他一般情況
-      return item.AccNo === venNo && item.id !== currentId;
-    });
-
-    if (isDuplicate) {
+    if (emptyField) {
       return {
         isValid: false,
-        errorMessage: `會計費用科目 ${venNo} 已存在，請使用其他編號。`,
+        errorMessage: `${emptyField.name}不可為空，請輸入有效的${emptyField.name}。`
       };
     }
 
+    // // 找出目前這一列在 Detaildata 陣列中的位置，避免檢查重複時，把自己也判斷成重複
+    // const currentIndex = this.Detaildata.indexOf(rowData);
+    // // 檢查是否有其他列的 AccNo 跟目前這列相同
+    // const isDuplicate = this.Detaildata.some((item, index) => {
+
+    //   if (index === currentIndex) {
+    //     return false; // 如果目前的是自己這一列，就跳過不檢查
+    //   }
+
+    //   // 比對其他列的 AccNo 是否與目前這列的 accNo 相同，有相同就代表重複
+    //   return item.AccNo?.trim() === accNo;
+    // });
+
+    // // 如果有找到重複的費用會計科目，回傳驗證失敗
+    // if (isDuplicate) {
+    //   return {
+    //     isValid: false,
+    //     errorMessage: `費用會計科目編號 ${accNo} 已存在，請使用其他編號。`
+    //   };
+    // }
+
+    // 沒有空白，也沒有重複，驗證通過
     return { isValid: true, errorMessage: '' };
   };
 
@@ -534,7 +546,6 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     });
 
     this.userResultData.set(this.allUserResultData());
-    //this.userResultData = [];
     this.selectedUser = null;
   }
 
@@ -547,21 +558,20 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
     });
 
     this.userResultData.set(this.allUserResultData());
-    //this.userResultData = [];
     this.selectedUser = null;
   }
 
   onSelectUser(row: any): void {
-    console.log('選到的使用者', row);
-
-    //this.selectedUserName = `${row.user_No} - ${row.user_Name}`;
     if (!this.currentUserTarget) return;
 
-    this.dataForm.patchValue({
-      [this.currentUserTarget]: row.user_No,
-      [`${this.currentUserTarget}Name`]: `${row.user_No} - ${row.user_Name}`
-    });
+    const nameControlName = this.currentUserTarget.replace('No', 'Name');
+    const DisplayName = this.currentUserTarget.replace('No', 'Display');
 
+    this.dataForm.patchValue({
+      [this.currentUserTarget]: row.user_No ?? '',
+      [nameControlName]: row.user_Name ?? '',
+      [DisplayName]: `${row.user_No ?? ''} - ${row.user_Name ?? ''}`
+    });
 
     if (this.currentUserTarget === 'PCS_UsrNo') {
       this.dataForm.patchValue({
@@ -600,6 +610,38 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
       errorMessage: []
     };
   };
+
+  // 清除使用者選擇的資料
+  clearUser(type: 'PCS' | 'Keep'): void {
+    if (type === 'PCS') {
+      this.dataForm.patchValue({
+        PCS_UsrNo: null,
+        PCS_UsrDisplay: null,
+      });
+      return;
+    }
+
+    this.dataForm.patchValue({
+      Keep_UsrNo: null,
+      Keep_UsrDisplay: null
+    });
+  }
+
+  // 從下拉選單選項中取得使用者名稱
+  private getUserNameFromOptions(userNo: string | null | undefined): string {
+    if (!userNo) {
+      return '';
+    }
+
+    const option = this.allUserResultData()
+      .find(item => item.user_No === userNo);
+
+    if (!option?.user_Name) {
+      return '';
+    }
+
+    return option.user_Name;
+  }
 
 
   /** 載入下拉選單選項 */
@@ -704,6 +746,19 @@ export class FIN72010CRUComponent extends BasicCruPageComponent<FIN72010Service>
         this.PUR_DiscNo_Options.set(options);
       },
     });
+
+    // 費用會計科目
+    this.fin72010Service.queryGLS1005_FASExpAccNo_DropDownList('').subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: item.AccDisplay ?? '',
+          value: item.AccNo ?? '',
+        }));
+        this.AccNo_Options.set(options);
+      },
+    });
+
   }
 
 }

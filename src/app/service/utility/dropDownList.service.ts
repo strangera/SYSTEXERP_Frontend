@@ -264,6 +264,9 @@ export interface TLTTALENTDropDownRequest {
   tlt_noList?: string[]; // 查指定專櫃編號
   isNewData?: boolean;   // 是否僅查詢合約有效期內（當日介於契約起迄日）的專櫃資料，後端預設false
 }
+export interface queryTLS2D010TLTTALENTRequest {
+  tlt_noList?: string[]; // 查指定專櫃編號
+}
 
 @Injectable({
   providedIn: 'root'
@@ -510,6 +513,13 @@ export class DropDownListService {
   queryTLTTALENTDropDownList(params: TLTTALENTDropDownRequest = {}): Observable<ApiResponse<ITalentOption[]>> {
     return this.http.post<ApiResponse<ITalentOption[]>>(
       `${this.apiUrl}/TLS0000/TLS2000/queryTLTTALENTDropDownList`, params
+    );
+  }
+
+  // 查詢專櫃下拉 (取所有契約，含對應資料，不用傳參數)
+  queryTLS2D010TLTTALENTList(params: queryTLS2D010TLTTALENTRequest = {}): Observable<ApiResponse<ITalentOption[]>> {
+    return this.http.post<ApiResponse<ITalentOption[]>>(
+      `${this.apiUrl}/TLS0000/TLS2000/queryTLS2D010TLTTALENTList`, params
     );
   }
 
