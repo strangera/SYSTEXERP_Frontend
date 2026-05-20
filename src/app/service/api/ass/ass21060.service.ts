@@ -10,11 +10,11 @@ import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
-const apiUrl: string = environment.ApiUrl + '/ASS0000/ASS2100';
+const apiUrl: string = environment.ApiUrl + '/ASS0000/ASS2000';
 
 @Injectable({ providedIn: 'root' })
 export class ASS21060Service {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   public queryASS21060(query: ASS21060Query): Observable<BaseQueryResponse<ASS21060Data>> {
     return this.http.post<BaseQueryResponse<ASS21060Data>>(`${apiUrl}/queryASS21060`, query).pipe(

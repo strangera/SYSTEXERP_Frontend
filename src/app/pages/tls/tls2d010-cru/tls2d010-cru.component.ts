@@ -193,7 +193,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     };
     this.talentLastQueryBody = body;
     this.dropDownListService
-      .queryTLTTALENTDropDownList({ ...body })
+      .queryTLS2D010TLTTALENTList({ ...body })
       .pipe(untilDestroyed(this), finalize(() => (this.talentDialogLoading = false)))
       .subscribe((res: any) => {
         const raw = res?.Data ?? [];
@@ -217,9 +217,9 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
         }
       }
       const payload = { ...body, ...(tlt_noList ? { tlt_noList } : {}) };
-      return this.dropDownListService.queryTLTTALENTDropDownList(payload);
+      return this.dropDownListService.queryTLS2D010TLTTALENTList(payload);
     } catch (e) {
-      return this.dropDownListService.queryTLTTALENTDropDownList({ ...body });
+      return this.dropDownListService.queryTLS2D010TLTTALENTList({ ...body });
     }
   };
 
@@ -234,7 +234,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       ...(tlt_noList ? { tlt_noList } : {}),
     };
     this.talentLastQueryBody = body;
-    this.dropDownListService.queryTLTTALENTDropDownList(body)
+    this.dropDownListService.queryTLS2D010TLTTALENTList(body)
       .pipe(untilDestroyed(this), finalize(() => (this.talentDialogLoading = false)))
       .subscribe((res: any) => {
         const raw = res?.Data ?? [];
@@ -283,7 +283,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       const matchedOption = this.tlt_noOptions.find(opt => opt.tlt_no === item.tlt_no || opt.No === item.tlt_no);
       const tltValue = matchedOption ?? {
         ...item,
-        label: `${item.tlt_no}-${item.tlt_name}`,
+        label: `${item.tlt_no}-${item.tlt_name}-${item.contract_subno}`,
       };
       return {
         rowId: this.rowIdCounter++,
@@ -433,7 +433,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
   // ===== 載入選單 =====
   private loadTltAndPodOptions(): void {
     forkJoin({
-      tlt: this.dropDownListService.queryTLTTALENTDropDownList(),
+      tlt: this.dropDownListService.queryTLS2D010TLTTALENTList(),
       pod: this.dropDownListService.queryTALPORDERM_DropDownList(),
       acc: this.dropDownListService.queryGLS1005_DropDownList(),
       org: this.dropDownListService.querySYS3100_DropDownList(),
@@ -443,7 +443,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       .subscribe(({ tlt, pod, acc, org, capItem }) => {
         this.tlt_noOptions = (tlt?.Data || []).map((item: any) => ({
           ...item,
-          label: `${item.tlt_no}-${item.tlt_name}`,
+          label: `${item.tlt_no}-${item.tlt_name}-${item.contract_subno}`,
           tlt_contract_bdate: item.tlt_contract_bdate
             ? (this.parseBackendDate(item.tlt_contract_bdate) ? formatDate(this.parseBackendDate(item.tlt_contract_bdate) as Date, 'yyyy/MM/dd', 'en-US') : null) : null,
           tlt_contract_edate: item.tlt_contract_edate
@@ -687,7 +687,6 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
       const formTpyDate = this.dataFormNormal.get('tpy_date')?.value ?? null;
       this.data.forEach(row => {
         // 選專櫃編號，帶入對應預設值（但不覆蓋使用者已修改的 org_id)
-        console.log('資料廖', row);
         if (row.tlt_no) {
           row.org_id = row.tlt_no.org_id ?? '';
           row.contract_no = row.tlt_no.contract_no ?? '';
