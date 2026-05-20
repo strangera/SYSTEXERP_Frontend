@@ -4,22 +4,22 @@
     <app-button
       btnType="create"
       label="{{ '登入' }}"
-      (clickEvent)="onCreate()"
+      (clickEvent)="onCreate(queryForm)"
     ></app-button>
     <app-button
       btnType="edit"
       label="{{ '盤後調整' }}"
-      (clickEvent)="onCreate()"
+      (clickEvent)="onAdjust()"
     ></app-button>
     <app-button
-      [type]="'button'"
+      btnType="query"
       label="盤後查詢"
-      (clickEvent)="onQueryDialog()"
+      (clickEvent)="onQueryDialog(queryForm)"
     ></app-button>
     <app-button
       btnType="report"
       label="{{ '盤點報表' }}"
-      (clickEvent)="goReport()"
+      (clickEvent)="goReport(queryForm)"
     ></app-button>
   </div>
   <p-accordion>
@@ -38,8 +38,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="盤點單號"
-              controlName="Inventoryordernumber"
-              [control]="queryForm.controls.Inventoryordernumber"
+              controlName="INV_ID"
+              [control]="queryForm.controls.INV_ID"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -47,11 +47,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="盤點狀態"
-              controlName="Inventorystatus"
-              [options]="Inventorystatus"
+              controlName="INV_STATUS"
+              [options]="INV_STATUS"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Inventorystatus"
+              [control]="queryForm.controls.INV_STATUS"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -59,8 +59,8 @@
             <app-calendar-range
               calendarType="dateRange"
               label="盤點日期"
-              [startControl]="queryForm.controls.SInventorydate"
-              [endControl]="queryForm.controls.EInventorydate"
+              [startControl]="queryForm.controls.INV_DATE_FROM"
+              [endControl]="queryForm.controls.INV_DATE_TO"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
@@ -68,35 +68,35 @@
             <app-calendar-range
               calendarType="dateRange"
               label="結案日期"
-              [startControl]="queryForm.controls.SClosingdate"
-              [endControl]="queryForm.controls.EClosingdate"
+              [startControl]="queryForm.controls.CLOSE_DATE_FROM"
+              [endControl]="queryForm.controls.CLOSE_DATE_TO"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="盤點人員"
-              controlName="Counter"
-              [options]="usercode"
+              controlName="EMP_ID"
+              [options]="EMP_ID()"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.Counter"
+              [control]="queryForm.controls.EMP_ID"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="說明"
-              controlName="illustrate"
-              [control]="queryForm.controls.illustrate"
+              controlName="NOTES"
+              [control]="queryForm.controls.NOTES"
               [submitted]="submitted"
             ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="報表型態"
-              [control]="queryForm.controls.Reporttype"
-              [options]="Reporttype"
+              [control]="queryForm.controls.REPORT_TYPE"
+              [options]="REPORT_TYPE"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
@@ -114,18 +114,21 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table
+    <app-table-report
       tableKey="ASS16020"
-      dataKey="inventoryNumber"
+      dataKey="INV_ID"
       [data]="data"
       [columns]="columns"
       [loading]="loading"
+      [totalRecords]="totalRecords()"
       [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event"
       [showCheckBox]="true"
+      [editDisabled]="editDisabled"
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
-    ></app-table>
+      (delete)="onDelete($event)"
+    ></app-table-report>
   </div>
 </div>
 
@@ -138,17 +141,15 @@
   [resizable]="false"
   [style]="{ width: '90vw', maxWidth: '1200px' }"
 >
-  <app-table
+  <app-table-report
     tableKey="ASS16020_Query_Dialog"
-    dataKey="inventoryNumber"
+    dataKey="INV_ID"
     [data]="QueryDialogData"
     [columns]="QueryDialogColumns"
     [loading]="loading"
+    [totalRecords]="totalDialogRecords()"
     [showManage]="false"
     [showReportMode]="false"
-    [showReportExcel]="false"
-    [showReportPDF]="false"
     [showDelete]="false"
-    [showRowEdit]="false"
-  ></app-table>
+  ></app-table-report>
 </p-dialog>
