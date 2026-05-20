@@ -24,6 +24,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
   ApiResponse,
+  Aps1002DropdownItem,
   Fin64010Service,
   QueryFIN64010Request,
   QueryFIN64010Row,
@@ -70,32 +71,60 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
   private _currentSortBy: SortItem[] = this.defaultSort;
 
   columns: Column[] = [
+    // { field: 'RowNo', header: '序號' },
+
     { field: 'CheckNo', header: '票據號碼' },
+
     { field: 'VEN_No', header: '廠客代號' },
     { field: 'VEN_Name', header: '廠客名稱' },
 
-    { field: 'BNK_No', header: '票面銀行代號' },
-    { field: 'BNK_Name', header: '票面銀行名稱' },
+    { field: 'BNK_No', header: '全省銀行代號' },
+    { field: 'BNK_Name', header: '銀行名稱' },
 
-    { field: 'CHK_ColleDate', header: '託收日', format: (v: any) => this.formatDate(v) },
+    {
+      field: 'CHK_ColleDate',
+      header: '託收日期',
+      format: (v: any) => this.formatDate(v),
+    },
 
     { field: 'AccNo', header: '科目代號' },
     { field: 'AccName', header: '科目名稱' },
 
-    { field: 'BNK_AccNo', header: '公司銀行科目代號' },
-    { field: 'BNK_AccName', header: '公司銀行科目名稱' },
+    // { field: 'BNK_AccNo', header: '公司銀行科目代號' },
+    // { field: 'BNK_AccName', header: '公司銀行科目名稱' },
 
-    { field: 'CHK_ReceDate', header: '收票日', format: (v: any) => this.formatDate(v) },
-    { field: 'Sales_Id', header: '收票業務員' },
+    {
+      field: 'CHK_ReceDate',
+      header: '收票日期',
+      format: (v: any) => this.formatDate(v),
+    },
+
+    { field: 'Sales_Id', header: '收票業務員代碼' },
 
     { field: 'RCV_No', header: '收款單號' },
 
-    { field: 'CHK_ExpireDate', header: '到期日', format: (v: any) => this.formatDate(v) },
-    { field: 'CHK_CashDate', header: '兌現日', format: (v: any) => this.formatDate(v) },
+    {
+      field: 'CHK_ExpireDate',
+      header: '到期日',
+      format: (v: any) => this.formatDate(v),
+    },
 
-    { field: 'CHK_Amt', header: '票面金額', format: (v: any) => this.moneyFormat(v) },
+    {
+      field: 'CHK_CashDate',
+      header: '兌現日',
+      format: (v: any) => this.formatDate(v),
+    },
 
+    {
+      field: 'CHK_Amt',
+      header: '票面金額',
+      format: (v: any) => this.moneyFormat(v),
+    },
+
+    // { field: 'CHK_Type', header: '票據種類' },
     { field: 'CHK_Type_Name', header: '票據種類' },
+
+    // { field: 'Ticket_YN', header: '是否客票' },
     { field: 'Ticket_YN_Name', header: '是否客票' },
 
     { field: 'CHK_Comment', header: '備註' },
@@ -103,7 +132,10 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
     { field: 'ORG_ID', header: '組織代號' },
     { field: 'Org_Name', header: '組織名稱' },
 
+    // { field: 'Tran_Status', header: '狀態' },
     { field: 'Tran_Status_Name', header: '狀態' },
+
+    // { field: 'CHK_Status', header: '票據狀態' },
     { field: 'CHK_Status_Name', header: '票據狀態' },
 
     { field: 'VouNo', header: '傳票號碼' },
@@ -172,8 +204,8 @@ export class FIN64010Component extends BasicQueryPageComponent<any> implements A
     PayDateFrom: [null as Date | null],
     PayDateTo: [null as Date | null],
 
-AmtFrom: [null as number | string | null],
-AmtTo: [null as number | string | null],
+    AmtFrom: [null as number | string | null],
+    AmtTo: [null as number | string | null],
 
     ChkType: ['' as string],
     TicketYN: ['' as string],
@@ -217,15 +249,15 @@ AmtTo: [null as number | string | null],
           raw: x,
         })).filter((x: any) => x.value);
       });
-//收票業務員代碼 下拉選單
+    //收票業務員代碼 下拉選單
     this.fin64010Service.queryARS1001_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe((res: any) => {
         const rows = Array.isArray(res?.Data) ? res.Data : [];
         this.salesOptions = rows
           .map((x: any) => ({
-      label: `${x.No} - ${x.Name}`,
-          value: x.No,
+            label: `${x.No} - ${x.Name}`,
+            value: x.No,
           }))
           .filter((x: any) => x.value);
       });
@@ -263,46 +295,51 @@ AmtTo: [null as number | string | null],
       });
 
     // 5) 公司銀行科目代號(多選) APS1002.BNK_DepositAccNo，且你之前需求：排除 BNK_AccType='1'
-    this.fin26010Service.queryAPS1002DropDownList()
+    this.fin64010Service.queryAPS1002_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe({
-        next: (res: ApiResponse<Aps1002BankDropDownRow[]>) => {
+        next: (res: ApiResponse<Aps1002DropdownItem[]>) => {
           const list = Array.isArray(res?.Data) ? res.Data : [];
-          const filtered = list.filter((x: any) => String((x as any)?.BNK_AccType ?? '') !== '1');
-          this.companyAccOptions = filtered.map((x: any) => ({
-                 label: `${x.BNK_id}-${x.BNK_AccName}`,
-            value: x.BNK_id,
-            raw: x,
-          }));
+
+          this.companyAccOptions = list
+            .filter((x: any) => String(x?.BNK_AccType ?? '') !== '1')
+            .map((x: any) => ({
+              label: `${x.BNK_DepositAccNo} - ${x.ACCCNAME ?? ''}`,
+              value: x.BNK_DepositAccNo,
+              raw: x,
+            }))
+            .filter((x: any) => x.value);
         },
-        error: () => (this.companyAccOptions = []),
+        error: () => {
+          this.companyAccOptions = [];
+        },
       });
 
-  
+
 
     // 還原查詢條件
-const fromCru = !!(history.state && history.state['fromCru']);
+    const fromCru = !!(history.state && history.state['fromCru']);
 
-if (fromCru) {
-  const saved = this.queryStateService.getQueryStateValue('FIN64010');
-  if (saved?.formValue) {
-    this.queryForm.patchValue(saved.formValue, { emitEvent: false });
-    this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
-    this.lastQueryBody = saved.lastQueryBody ?? null;
+    if (fromCru) {
+      const saved = this.queryStateService.getQueryStateValue('FIN64010');
+      if (saved?.formValue) {
+        this.queryForm.patchValue(saved.formValue, { emitEvent: false });
+        this._currentSortBy = saved.currentSortBy ?? this.defaultSort;
+        this.lastQueryBody = saved.lastQueryBody ?? null;
 
-    Promise.resolve().then(() => this.onSubmit(this.queryForm)); // 需要就保留
-  }
-} else {
-  // ✅ 從其他頁回來：回到預設條件（並清掉上次的還原狀態）
-  this.queryStateService.clearQueryState('FIN64010');
+        Promise.resolve().then(() => this.onSubmit(this.queryForm)); // 需要就保留
+      }
+    } else {
+      // ✅ 從其他頁回來：回到預設條件（並清掉上次的還原狀態）
+      this.queryStateService.clearQueryState('FIN64010');
 
-  // 你要的「預設條件」是什麼，就在這裡定義
-  // 目前你的預設就是全空 + 預設排序/分頁
-  this.onClear(this.queryForm);
+      // 你要的「預設條件」是什麼，就在這裡定義
+      // 目前你的預設就是全空 + 預設排序/分頁
+      this.onClear(this.queryForm);
 
-  // 如果你不想 onClear 觸發任何東西，且只想 reset form：
-  // this.queryForm.reset({ ...你的預設值..., ...createPaginationConfig(this.defaultSort) }, { emitEvent:false });
-}
+      // 如果你不想 onClear 觸發任何東西，且只想 reset form：
+      // this.queryForm.reset({ ...你的預設值..., ...createPaginationConfig(this.defaultSort) }, { emitEvent:false });
+    }
   }
 
   moneyFormat(value: any): string {
@@ -336,18 +373,18 @@ if (fromCru) {
     return cleaned.length ? cleaned : fallback;
   }
   private parseMoneyToNumber(v: any): number | undefined {
-  if (v == null) return undefined;
+    if (v == null) return undefined;
 
-  // 已經是 number
-  if (typeof v === 'number') return Number.isFinite(v) ? v : undefined;
+    // 已經是 number
+    if (typeof v === 'number') return Number.isFinite(v) ? v : undefined;
 
-  // 字串：去掉逗號與空白
-  const s = String(v).trim().replace(/,/g, '');
-  if (!s) return undefined;
+    // 字串：去掉逗號與空白
+    const s = String(v).trim().replace(/,/g, '');
+    if (!s) return undefined;
 
-  const n = Number(s);
-  return Number.isFinite(n) ? n : undefined;
-}
+    const n = Number(s);
+    return Number.isFinite(n) ? n : undefined;
+  }
 
   private buildQueryPayload(raw: any): QueryFIN64010Request {
     const pageIndex = Number.isFinite(raw?.pageIndex) && raw.pageIndex >= 1 ? raw.pageIndex : 1;
@@ -362,7 +399,9 @@ if (fromCru) {
       ChkNo: (raw?.ChkNo ?? '').trim() || undefined,
       VenNo: (raw?.VenNo ?? '').trim() || undefined,
 
-      BankNoList: Array.isArray(raw?.BankNoList) && raw.BankNoList.length ? raw.BankNoList.join(',') : undefined,
+      BankNoList: Array.isArray(raw?.BankNoList) && raw.BankNoList.length
+        ? raw.BankNoList.join(',')
+        : undefined,
       CustBankAccNo: (raw?.CustBankAccNo ?? '').trim() || undefined,
 
       ColleDateFrom: this.toYmd(raw?.ColleDateFrom),
@@ -387,7 +426,7 @@ if (fromCru) {
       PayDateTo: this.toYmd(raw?.PayDateTo),
 
       AmtFrom: this.parseMoneyToNumber(raw?.AmtFrom),
-AmtTo: this.parseMoneyToNumber(raw?.AmtTo),
+      AmtTo: this.parseMoneyToNumber(raw?.AmtTo),
 
 
       ChkType: (raw?.ChkType ?? '').trim() || undefined,
@@ -407,11 +446,11 @@ AmtTo: this.parseMoneyToNumber(raw?.AmtTo),
     };
 
     // 清掉空值
-  Object.keys(payload).forEach((k) => {
-  const v = (payload as any)[k];
-  if (v === '' || v == null) delete (payload as any)[k];
-  if (typeof v === 'number' && !Number.isFinite(v)) delete (payload as any)[k]; // ✅ NaN/Infinity
-});
+    Object.keys(payload).forEach((k) => {
+      const v = (payload as any)[k];
+      if (v === '' || v == null) delete (payload as any)[k];
+      if (typeof v === 'number' && !Number.isFinite(v)) delete (payload as any)[k]; // ✅ NaN/Infinity
+    });
 
     return payload;
   }
@@ -526,35 +565,35 @@ AmtTo: this.parseMoneyToNumber(raw?.AmtTo),
   }
 
   /** 點明細 */
-override onEdit(row: QueryFIN64010Row) {
-  const id = Number((row as any)?.ID ?? (row as any)?.Id ?? (row as any)?.id);
-  if (!Number.isFinite(id) || id <= 0) return;
+  override onEdit(row: QueryFIN64010Row) {
+    const id = Number((row as any)?.ID ?? (row as any)?.Id ?? (row as any)?.id);
+    if (!Number.isFinite(id) || id <= 0) return;
 
-  this.saveQueryState();
-  this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
-    queryParams: { Id: id }, // ✅ 統一用 Id
-    state: {
-      crudstatus: CRUDStatus.Edit,
-      rowdata: row, // ✅ 把整列也帶過去，CRU 可用來補欄位
-      fromRoute: this.router.url,
-    },
-  });
-}
+    this.saveQueryState();
+    this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
+      queryParams: { Id: id }, // ✅ 統一用 Id
+      state: {
+        crudstatus: CRUDStatus.Edit,
+        rowdata: row, // ✅ 把整列也帶過去，CRU 可用來補欄位
+        fromRoute: this.router.url,
+      },
+    });
+  }
 
-override onDetail(row: QueryFIN64010Row) {
-  const id = Number((row as any)?.ID ?? (row as any)?.Id ?? (row as any)?.id);
-  if (!Number.isFinite(id) || id <= 0) return;
+  override onDetail(row: QueryFIN64010Row) {
+    const id = Number((row as any)?.ID ?? (row as any)?.Id ?? (row as any)?.id);
+    if (!Number.isFinite(id) || id <= 0) return;
 
-  this.saveQueryState();
-  this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
-    queryParams: { Id: id },
-    state: {
-      crudstatus: CRUDStatus.Read,
-      rowdata: row,
-      fromRoute: this.router.url,
-    },
-  });
-}
+    this.saveQueryState();
+    this.router.navigate([`account/${this.cruPage.toLowerCase()}`], {
+      queryParams: { Id: id },
+      state: {
+        crudstatus: CRUDStatus.Read,
+        rowdata: row,
+        fromRoute: this.router.url,
+      },
+    });
+  }
 
 
   override onLazyLoadData(e: any) {
@@ -593,7 +632,7 @@ override onDetail(row: QueryFIN64010Row) {
 
   ngAfterViewInit(): void {
     setTimeout(() => {
-      try { (this.finTable as any).IsPrint = true; } catch {}
+      try { (this.finTable as any).IsPrint = true; } catch { }
       const dt: any = (this.finTable as any).dt;
       if (dt?.onLazyLoad) {
         dt.onLazyLoad.pipe(untilDestroyed(this)).subscribe((e: any) => {
@@ -644,5 +683,16 @@ override onDetail(row: QueryFIN64010Row) {
         },
       });
   }
+  isEditDisabled = (rowData: any): boolean => {
+  // 已拋傳票
+  const isPosted = String(rowData?.Tran_Status ?? '') === '2';
 
+  // 已兌現
+  const isCash = String(rowData?.CHK_Status ?? '') === '3';
+
+  // 已退票
+  const isBounce = String(rowData?.CHK_Status ?? '') === '5';
+
+  return isPosted || isCash || isBounce;
+};
 }
