@@ -52,7 +52,7 @@ export class FIN72020CRUComponent extends BasicCruPageComponent<FIN72020Service>
 
     data: ClaimFIN72020QueryResponse[] = [];
     selectedData: ClaimFIN72020QueryResponse[] = [];
-    public readonly totalRecords = signal<number>(0);
+    public readonly totalDialogRecords = signal<number>(0); // Dialog 中的資料總筆數
     columns: Column[] = [
         { field: 'PCS_No', header: '零用金單號', visible: true },
         { field: 'PCS_Date', header: '申請日期', visible: true, format: formatDate },
@@ -98,7 +98,7 @@ export class FIN72020CRUComponent extends BasicCruPageComponent<FIN72020Service>
                 .pipe(untilDestroyed(this), finalize(() => this.loading = false))
                 .subscribe(response => {
                     this.dialogData = response.Data;
-                    this.totalRecords.set(response.TotalCount);
+                    this.totalDialogRecords.set(response.TotalCount);
                     this.dialogVisible = true;
                     console.log('查詢結果', response.Data);
                 });

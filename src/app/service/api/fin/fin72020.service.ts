@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { ApiError, ApiMeta, BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 
@@ -152,7 +152,20 @@ export class FIN72020Service {
 
   // 查詢
   queryFIN72020(req: QueryFIN72020Request): Observable<BaseQueryResponse<FIN72020Data>> {
-    return this.http.post<BaseQueryResponse<FIN72020Data>>(`${this.apiUrl}/queryFIN72020`, req);
+    return this.http.post<BaseQueryResponse<FIN72020Data>>(`${this.apiUrl}/queryFIN72020`, req).pipe(
+      map((res: BaseQueryResponse<FIN72020Data>) => {
+        return {
+          ...res,
+          Data: res.Data.map((item: FIN72020Data) => ({
+            ...item,
+            PCS_UsrDisplay: `${item.PCS_UsrNo ?? ''}-${item.PCS_UsrName ?? ''}`,
+            PCS_OrgDisplay: `${item.PCS_OrgID ?? ''}-${item.PCS_OrgName ?? ''}`,
+            Keep_UsrDisplay: `${item.Keep_UsrNo ?? ''}-${item.Keep_UsrName ?? ''}`,
+            Keep_OrgDisplay: `${item.Keep_OrgID ?? ''}-${item.Keep_OrgName ?? ''}`,
+          }))
+        }
+      })
+    )
   }
 
   // 查詢明細資料
