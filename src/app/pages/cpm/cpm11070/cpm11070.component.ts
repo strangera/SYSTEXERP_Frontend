@@ -42,8 +42,8 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
     SeqId: ['', [Validators.maxLength(11)]],
-    RecDateFrom: [new (Date), [Validators.required,]],
-    RecDateTo: [null as Date | null],
+    RecDateFrom: [new Date(), [Validators.required]],
+    RecDateTo: [new Date()],
     LostDateFrom: [null as Date | null],
     LostDateTo: [null as Date | null],
     FindDateFrom: [null as Date | null],

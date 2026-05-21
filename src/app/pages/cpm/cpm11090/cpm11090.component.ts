@@ -24,7 +24,7 @@ export class Cpm11090Component extends BasicQueryPageComponent<QueryCPM11090Resp
   queryForm = this.formBuilder.nonNullable.group({
     ByMissingPeople: [null, [Validators.maxLength(20)]],  // 被尋人姓名
     CollectionSites: [null, [Validators.maxLength(50)]],  // 集合地點
-    RecDateFrom: [new Date('2025/12/18'), [Validators.required]],  // 登錄日期(起)
+    RecDateFrom: [null, [Validators.required]],  // 登錄日期(起)
     RecDateTo: [null],  // 登錄日期(訖)
     PageSize: [30],
     PageIndex: [1],

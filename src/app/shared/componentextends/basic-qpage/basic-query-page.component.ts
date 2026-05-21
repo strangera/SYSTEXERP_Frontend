@@ -122,6 +122,7 @@ export abstract class BasicQueryPageComponent<T> {
     setLoading?: (value: boolean) => void,
     setSubmitted?: (value: boolean) => void
   ) {
+    console.log(queryForm.value);
     // 1. 決定如何處理 Loading
     // 如果有傳入 setLoading，就執行它；否則就改原本的 this.loading
     const updateLoading = (val: boolean) => {
