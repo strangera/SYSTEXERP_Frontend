@@ -50,7 +50,7 @@
       title="新增請款"
       class="col-12"
       [data]="data"
-      [totalRecords]="totalRecords()"
+      [totalRecords]="data.length"
       [columns]="columns"
       [showManage]="false"
       [showCheckBox]="true"
@@ -86,19 +86,19 @@
   (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0"
 >
-  <app-table
+  <app-table-report
     tableKey="fin11200DialogTable"
     dataKey="PCS_No"
     [data]="dialogData"
     [columns]="columns"
     [selectedItems]="selectedItemsDialog"
     (selectionChange)="selectedItemsDialog = $event"
-    [showHeader]="false"
     [showManage]="false"
     [showCheckBox]="true"
     [emptyMessage]="'無可選擇的單據'"
     [isRowSelectable]="isRowSelectable.bind(this)"
     scrollHeight="350px"
     [showCaption]="false"
-  ></app-table>
+    [totalRecords]="totalDialogRecords()"
+  ></app-table-report>
 </app-dialog>
