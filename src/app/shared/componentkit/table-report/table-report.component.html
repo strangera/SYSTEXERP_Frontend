@@ -21,7 +21,7 @@
       [showExcelImport]="showExcelImport" [pageOrientation]="pageOrientation" [pageSizeSetting]="pageSizeSetting"
       [showCustomExcelImport]="showCustomExcelImport" [exportExcelLoading]="exportExcelLoading" [showPage]="false"
       (delete)="delete.emit($event)" [deleteDisabled]="deleteDisabled" (exportExcel)="exportExcel.emit()"
-      (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl"
+      (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl" [reportTitle]="reportTitle"
       [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark" [customReport]="customReport"
       (exportEvent)="exportEvent.emit($event)" [Conditions]="Conditions">
       <header>

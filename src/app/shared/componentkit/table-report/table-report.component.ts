@@ -133,6 +133,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
   // 底層匯出
   @Input() apiUrl?: string;                         // table API URL (可選)
+  @Input() reportTitle?: string;                    // 自訂報表標題
   @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
   @Input() Conditions?: any;                         // table 條件 (可選)
   @Input() PrintRemark = true;                    // 是否列印備註 (可選)

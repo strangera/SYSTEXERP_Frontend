@@ -36,7 +36,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
     // 下拉BNK_NO+BNK_BRANCHNO銀行代碼、銀行名稱BNK_BRANCHNAME
     // 不可重覆"
     BNK_AccNo: [null],        // 帳號
-    BNK_AccName: [null],      // 帳戶名稱
+    BNK_AccName1: [null],     // 帳戶名稱
     BNK_AccType: [null],      // 存款代號 (SYS1000.BNK_ACCTYPE)
 
     SYS_Name: [null],     // EDI用戶代號(統一編號)
@@ -74,7 +74,7 @@ export class FIN21010Component extends BasicQueryPageComponent<APS1002> implemen
     { field: 'BNK_No', header: '銀行代碼', visible: true },
     { field: 'Bank_Name', header: '銀行名稱', visible: true },
     { field: 'BNK_AccNo', header: '帳號', visible: true },
-    { field: 'BNK_AccName', header: '帳戶名稱', visible: true },
+    { field: 'BNK_AccName1', header: '帳戶名稱', visible: true },
     {
       field: 'BNK_AccType', header: '存款代號', visible: true,
       format: (value: string) => getSYS1000('BNK_AccType', value)

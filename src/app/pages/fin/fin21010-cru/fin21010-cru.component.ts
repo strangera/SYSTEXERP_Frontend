@@ -27,7 +27,7 @@ export class FIN21010CRUComponent extends BasicCruPageComponent<APS1002> impleme
     BNK_DepositAccNo: [null, [Validators.required, Validators.maxLength(6), this.validationService.noChineseValidator], [this.bnkIdDuplicateValidator()]], // 公司銀行科目
     BNK_No: [null, [Validators.required, Validators.maxLength(10), this.validationService.noChineseValidator]],     // 全省銀行代碼--- 下拉: BNK_NO+BNK_BRANCHNO銀行代碼、銀行名稱BNK_BRANCHNAME
     BNK_AccNo: [null, [Validators.required, Validators.maxLength(20), this.validationService.numberValidator]],  // 帳號
-    BNK_AccName: [null, [Validators.required, Validators.maxLength(80)]],      // 帳戶名稱
+    BNK_AccName1: [null, [Validators.required, Validators.maxLength(80)]],     // 帳戶名稱
     BNK_BranchNo: [null, [Validators.required, Validators.maxLength(4), this.validationService.noChineseValidator]],     // 銀行分行代號
     BNK_AccType: [null, [Validators.required, Validators.maxLength(2), this.validationService.noChineseValidator]],      // 存款代號 (SYS1000.BNK_ACCTYPE)
     BNK_AccStatus: ['0', [Validators.required, Validators.maxLength(1), this.validationService.noChineseValidator]],     // 帳戶狀態 (0=正常)
