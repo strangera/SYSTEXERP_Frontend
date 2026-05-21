@@ -25,6 +25,7 @@ export interface QueryCPM11030Row {
   ID: number;
   Loan_No: string;
   Service_Id: string;
+  Service_Name: string;
   Loan_Date: string;   // ISO datetime
   Loan_Time: string;   // string
   Loan_Status: string; // string

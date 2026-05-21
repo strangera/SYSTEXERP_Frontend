@@ -1,4 +1,4 @@
-import { AsyncPipe, CommonModule } from '@angular/common';
+import { AsyncPipe, CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -56,8 +56,8 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 export class CPM11030Component extends BasicQueryPageComponent<QueryCPM11030Row> implements OnInit {
   queryForm = this.formBuilder.group({
     Loan_No: [null, [Validators.maxLength(20)]],
-    Loan_BDate: [null],
-    Loan_EDate: [null],
+    Loan_BDate: [new Date()],
+    Loan_EDate: [new Date()],
     User_Name: [null, [Validators.maxLength(50)]],
     Loan_USR_No: [null],
     Loan_Phone: [null, [Validators.maxLength(20)]],
@@ -78,6 +78,7 @@ export class CPM11030Component extends BasicQueryPageComponent<QueryCPM11030Row>
     { field: 'Loan_Date', header: '出借日期', format: formatDate },
     { field: 'Loan_Time', header: '出借時間' },
     { field: 'Service_Id', header: '服務中心位置編號' },
+    { field: 'Service_Name', header: '服務中心名稱' },
     { field: 'Loan_Status', header: '出借狀態', format: (v) => getSYS1000('Loan_Status', v), },
     { field: 'User_Name', header: '借用人姓名' },
     { field: 'Cert_Type', header: '證件類型', format: (v) => getSYS1000('Cert_Type', v) },
@@ -94,7 +95,8 @@ export class CPM11030Component extends BasicQueryPageComponent<QueryCPM11030Row>
   constructor(
     public readonly cpm11030Service: Cpm11030Service,
     private readonly dropDown: DropdownApiService,
-    private readonly fileExportService: FileExportService
+    private readonly fileExportService: FileExportService,
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
@@ -107,8 +109,8 @@ export class CPM11030Component extends BasicQueryPageComponent<QueryCPM11030Row>
       const payload: QueryCPM11030Request = {
         ...raw,
         Loan_No: (raw?.Loan_No ?? '').trim() || undefined,
-        Loan_BDate: raw?.Loan_BDate ?? undefined,
-        Loan_EDate: raw?.Loan_EDate ?? undefined,
+        Loan_BDate: this.datePipe.transform(raw?.Loan_BDate, 'yyyy-MM-dd') ?? undefined,
+        Loan_EDate: this.datePipe.transform(raw?.Loan_EDate, 'yyyy-MM-dd') ?? undefined,
         User_Name: (raw?.User_Name ?? '').trim() || undefined,
         Loan_USR_No: raw?.Loan_USR_No ?? undefined,
         Loan_Phone: (raw?.Loan_Phone ?? '').trim() || undefined,
