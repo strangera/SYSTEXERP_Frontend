@@ -2,7 +2,7 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { SortMeta } from 'primeng/api';
-import { Observable, shareReplay } from 'rxjs';
+import { map, Observable, shareReplay } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 export interface QueryCPM11030Request {
   pageSize: number | null;
@@ -92,7 +92,30 @@ export class Cpm11030Service {
 
   /** 列表查詢：/queryCPM11030 */
   queryCPM11030(body: QueryCPM11030Request): Observable<ApiResponse<QueryCPM11030Row[]>> {
-    return this.http.post<ApiResponse<QueryCPM11030Row[]>>(`${this.apiUrl}/queryCPM11030`, body);
+    return this.http.post<ApiResponse<QueryCPM11030Row[]>>(`${this.apiUrl}/queryCPM11030`, body).pipe(
+      map(response => {
+        // 確保 Data 存在且是陣列才進行處理
+        if (response && Array.isArray(response.Data)) {
+          response.Data = response.Data.map(row => {
+            let formattedTime = (row.Loan_Time ?? '').trim();
+
+            // 補足長度硬碼卡控（如：1305 -> 13:05；如果是 905 補成 0905 -> 09:05）
+            if (formattedTime.length > 0) {
+              formattedTime = formattedTime.padStart(4, '0'); // 確保至少有 4 碼
+              if (formattedTime.length === 4) {
+                formattedTime = `${formattedTime.substring(0, 2)}:${formattedTime.substring(2, 4)}`;
+              }
+            }
+
+            return {
+              ...row,
+              Loan_Time: formattedTime
+            };
+          });
+        }
+        return response;
+      })
+    );
   }
 
   /** 每日設備可出借量：查詢 /queryCPM11030_DailyEquipAvailability */
@@ -110,18 +133,18 @@ export class Cpm11030Service {
   /** 每日設備可出借量：新增 /insertCPM11030_DailyEquipAvailability（一次一筆） */
   insertCPM11030_DailyEquipAvailability(
     body: InsertDailyEquipAvailabilityRequest
-  ): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertCPM11030_DailyEquipAvailability`, body);
+  ): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertCPM11030_DailyEquipAvailability`, body);
   }
 
   /** 新增：/insertCPM11030 */
-  insertCPM11030(body: InsertCPM11030Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertCPM11030`, body);
+  insertCPM11030(body: InsertCPM11030Request): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertCPM11030`, body);
   }
 
   /** 更新：/updateCPM11030 */
-  updateCPM11030(body: UpdateCPM11030Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateCPM11030`, body);
+  updateCPM11030(body: UpdateCPM11030Request): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updateCPM11030`, body);
   }
 
   // ================= 匯出 =================

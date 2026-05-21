@@ -107,16 +107,16 @@ export class CPM11030Component extends BasicQueryPageComponent<QueryCPM11030Row>
       const payload: QueryCPM11030Request = {
         ...raw,
         Loan_No: (raw?.Loan_No ?? '').trim() || undefined,
-        Loan_BDate: raw?.Loan_BDate || undefined,
-        Loan_EDate: raw?.Loan_EDate || undefined,
+        Loan_BDate: raw?.Loan_BDate ?? undefined,
+        Loan_EDate: raw?.Loan_EDate ?? undefined,
         User_Name: (raw?.User_Name ?? '').trim() || undefined,
-        Loan_USR_No: raw?.Loan_USR_No || undefined,
+        Loan_USR_No: raw?.Loan_USR_No ?? undefined,
         Loan_Phone: (raw?.Loan_Phone ?? '').trim() || undefined,
         Cert_No: (raw?.Cert_No ?? '').trim() || undefined,
         Device_ID: (raw?.Device_ID ?? '').trim() || undefined,
-        Cert_Type: raw?.Cert_Type || undefined,
-        Device_Name: raw?.Device_Name || undefined,
-        Service_Id: raw?.Service_Id || undefined,
+        Cert_Type: raw?.Cert_Type ?? undefined,
+        Device_Name: raw?.Device_Name ?? undefined,
+        Service_Id: raw?.Service_Id ?? undefined,
       };
       this.cpm11030Service.queryCPM11030(payload).pipe(untilDestroyed(this), finalize(() => { this.loading = false })).subscribe(response => {
         this.data = response.Data;
@@ -198,7 +198,7 @@ export class CPM11030Component extends BasicQueryPageComponent<QueryCPM11030Row>
   }
   onDailyQuery(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const Service_Id = this.dailyForm.getRawValue().Service_Id || '';
+      const Service_Id = this.dailyForm.getRawValue().Service_Id ?? '';
       this.cpm11030Service.queryCPM11030_DailyEquipAvailability({ Service_Id }).pipe(untilDestroyed(this), finalize(() => this.dailyLoading = false)).subscribe(res => {
         this.dailyRows = res.Data.map(item => ({
           ...item,
