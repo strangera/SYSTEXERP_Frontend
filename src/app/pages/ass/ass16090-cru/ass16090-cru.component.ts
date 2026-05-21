@@ -619,40 +619,50 @@ export class ASS16090CRUComponent
     });
   }
 
-  onSubmit(frm: FormGroup): void {
-    if (this.detailTableEdit) {
-      const tableValid = this.detailTableEdit.validateAndShowErrors();
-      if (!tableValid) return;
-    }
+private hasValidDetail(): boolean {
+  return this.buildDetailList().length > 0;
+}
 
-    this.handleSubmit(frm, () => {
-      if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        const payload = this.buildInsertPayload();
+onSubmit(frm: FormGroup): void {
+  this.submitted = true;
 
-        this.ass16090Service.insertASS16090(payload).subscribe({
-          next: () => this.afterSaveSuccess(),
-          error: (err) => {
-            console.error('ASS16090 insert error:', err);
-            this.loading = false;
-          },
-        });
-        return;
-      }
-
-      if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        const payload = this.buildUpdatePayload();
-
-        this.ass16090Service.updateASS16090(payload).subscribe({
-          next: () => this.afterSaveSuccess(),
-          error: (err) => {
-            console.error('ASS16090 update error:', err);
-            this.loading = false;
-          },
-        });
-      }
-    });
+  if (!this.hasValidDetail()) {
+    this.messageService?.warnBubble?.('請至少輸入一筆報廢明細');
+    return;
   }
 
+  if (this.detailTableEdit) {
+    const tableValid = this.detailTableEdit.validateAndShowErrors();
+    if (!tableValid) return;
+  }
+
+  this.handleSubmit(frm, () => {
+    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+      const payload = this.buildInsertPayload();
+
+      this.ass16090Service.insertASS16090(payload).subscribe({
+        next: () => this.afterSaveSuccess(),
+        error: (err) => {
+          console.error('ASS16090 insert error:', err);
+          this.loading = false;
+        },
+      });
+      return;
+    }
+
+    if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+      const payload = this.buildUpdatePayload();
+
+      this.ass16090Service.updateASS16090(payload).subscribe({
+        next: () => this.afterSaveSuccess(),
+        error: (err) => {
+          console.error('ASS16090 update error:', err);
+          this.loading = false;
+        },
+      });
+    }
+  });
+}
   override onCancel(): void {
     if (this.crudstatus === CRUDStatus.Create) {
       this.dataForm.reset();
