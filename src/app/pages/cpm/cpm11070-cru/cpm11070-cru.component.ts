@@ -277,12 +277,14 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           MSG_DATE: d.MSG_DATE ? new Date(d.MSG_DATE) : null,
           DocType: d.DocType,
           Identity_KIND: d.Identity_KIND,
-          LOCATION: d.LOCATION,
+          LOCATION: this.SPACE1Options.find(opt => opt.value === d.LOCATION)?.value
+            ?? this.SPACE1Options.find(opt => opt.label === d.LOCATION)?.value
+            ?? d.LOCATION,
           SEQ_TYPE: d.SEQ_TYPE,
           SEX: d.SEX,
           GOODS: d.GOODS,
           BROADCAST_DATE: d.NOTES,
-          BROADCAST_YN: d.BROADCAST_YN ?? 'N',
+          BROADCAST_YN: d.BROADCAST_YN,
 
           OTHER_GOODS: d.OTHER_GOODS || d.SERVICE_USER,
           REGISTRANT: d.REGISTRANT,
@@ -563,7 +565,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
       if (this.isFormCreateable) {
         const payload = {
           REC_DATE: raw.REC_DATE,
-          LOCATION: raw.LOCATION,
+          LOCATION: this.SPACE1Options.find(opt => opt.value === raw.LOCATION)?.label ?? raw.LOCATION,
           DocType: raw.DocType,
           LOST_OR_FIND_DATE: raw.LOST_DATE,
           GOODS: raw.GOODS,
@@ -628,8 +630,6 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           return;
         }
 
-        const locationLabel = this.SPACE1Options.find(opt => opt.value === raw.LOCATION)?.label ?? raw.LOCATION;
-
         let notes: string = raw.BROADCAST_DATE || '';
         if (seqType === '6' && raw.OFF_DATE) {
           const off = raw.OFF_DATE as Date;
@@ -644,7 +644,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
 
         const updatePayload = {
           SEQ_ID: raw.SEQ_ID,
-          LOCATION: locationLabel,
+          LOCATION: this.SPACE1Options.find(opt => opt.value === raw.LOCATION)?.label ?? raw.LOCATION,
           SEQ_TYPE: raw.SEQ_TYPE,
           OFF_DATE: raw.OFF_DATE,
           SERVICE_USER: raw.OTHER_GOODS,
