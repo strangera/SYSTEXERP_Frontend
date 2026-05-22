@@ -65,7 +65,6 @@ export class CPM11030Component extends BasicQueryPageComponent<QueryCPM11030Row>
     Device_Name: [null],
     Service_Id: [null],
     Cert_No: [null, [Validators.maxLength(30)]],
-    Device_ID: [null],
     ...createPaginationConfig([{ field: 'Loan_Date', order: -1 }, { field: 'Loan_Time', order: -1 }]),
   });
   data: QueryCPM11030Row[] = [];
@@ -84,8 +83,7 @@ export class CPM11030Component extends BasicQueryPageComponent<QueryCPM11030Row>
     { field: 'Cert_Type', header: '證件類型', format: (v) => getSYS1000('Cert_Type', v) },
     { field: 'Cert_No', header: '證件編號' },
     { field: 'Loan_Phone', header: '連絡電話' },
-    { field: 'Device_ID', header: '設備代碼' },
-    { field: 'Device_Name', header: '設備名稱' },
+    { field: 'Device_Names', header: '出借設備' },
   ];
   counterCodeOptions = this.dropDown.queryCSS1001()
   certTypeOptions = getSYS1000Options('Cert_Type');
@@ -115,7 +113,6 @@ export class CPM11030Component extends BasicQueryPageComponent<QueryCPM11030Row>
         Loan_USR_No: raw?.Loan_USR_No ?? undefined,
         Loan_Phone: (raw?.Loan_Phone ?? '').trim() || undefined,
         Cert_No: (raw?.Cert_No ?? '').trim() || undefined,
-        Device_ID: (raw?.Device_ID ?? '').trim() || undefined,
         Cert_Type: raw?.Cert_Type ?? undefined,
         Device_Name: raw?.Device_Name ?? undefined,
         Service_Id: raw?.Service_Id ?? undefined,

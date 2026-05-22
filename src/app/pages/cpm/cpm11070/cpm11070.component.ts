@@ -84,7 +84,7 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
   ];
   addButton: AddButton[] = [];
   Type3Options = [
-    { Name: '登錄', No: '1' },
+    { Name: '未通知', No: '1' },
     { Name: '已通知', No: '3' },
     { Name: '領回', No: '4' },
     { Name: '轉出', No: '6' },
@@ -97,7 +97,7 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
   ];
   SPACE1Options = getSYS1000Options('LOCATION').map((item: any) => ({ value: item.value ?? item.No ?? '', label: `${item.value ?? item.No ?? ''} - ${item.label ?? item.Name ?? ''}` }));
   USER5Options = [
-    { Name: '遊客', No: '1' },
+    { Name: '顧客', No: '1' },
     { Name: '員工', No: '2' },
   ];
   ProcessingUserOptions: { label: string; value: string }[] = [];

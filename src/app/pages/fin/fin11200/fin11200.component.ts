@@ -172,6 +172,14 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       this.onSubmit(this.queryForm);
     });
   }
+  get summaryFooter() {
+    return {
+      TOT_NOS: this.summaryData.reduce((sum, r) => sum + (r.TOT_NOS ?? 0), 0),
+      USED_NOS: this.summaryData.reduce((sum, r) => sum + (r.USED_NOS ?? 0), 0),
+      FREE_NOS: this.summaryData.reduce((sum, r) => sum + (r.FREE_NOS ?? 0), 0),
+    };
+  }
+
   get summaryExportConditions() {
     if (!this.lastQueryBody) return null;
     const { GUI_YYMM, ECR_NoList, GUI_StatusList, DisplayMode } = this.lastQueryBody;

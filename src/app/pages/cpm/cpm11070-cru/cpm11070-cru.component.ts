@@ -7,6 +7,7 @@ import { CPM11070DetailData, CPM11070Service } from '@service/api/cpm/cpm11070.s
 import { getSYS1000Options, SystemOptionsService } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -59,8 +60,8 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     BROADCAST_YN: ['N'],
     OTHER_GOODS: [this.user?.user_No, [Validators.required, Validators.maxLength(20)]],
     REGISTRANT: ['', [Validators.required, Validators.maxLength(10)]],
-    TEL: ['', [Validators.maxLength(10)]],
-    MOBILE_PHONE: ['', [Validators.maxLength(10)]],
+    TEL: ['', [Validators.maxLength(20)]],
+    MOBILE_PHONE: ['', [Validators.required, Validators.maxLength(10)]],
     ADDRESS: ['', [Validators.maxLength(100)]],
     RECAPTION_NAME: ['', [Validators.maxLength(10)]],
     RECAPTION_PHONE: ['', [Validators.maxLength(10)]],
@@ -75,7 +76,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     { No: 'F', Name: '拾獲' },
   ];
   Type3Options: any[] = [
-    { Name: '登錄', No: '1' },
+    { Name: '未通知', No: '1' },
     { Name: '已通知', No: '3' },
     { Name: '領回', No: '4' },
     { Name: '轉出', No: '6' },
@@ -91,14 +92,14 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
   // 為顯示 'No - Name' 格式，產生一份帶有格式化 label 的選項清單
   SPACE1OptionsLabelled: any[] = [];
   USER5Options: any[] = [
-    { Name: '遊客', No: '1' },
+    { Name: '顧客', No: '1' },
     { Name: '員工', No: '2' },
   ];
   USER6Options: any[] = [
     { Name: '男性', No: '1' },
     { Name: '女性', No: '2' },
   ];
-  ProcessingUserOptions: any[] = [];
+  ProcessingUserOptions: { label: string; value: string }[] = [];
   RebroadcastLoading = false;
   showReceiveInfo = true;
   onlyReceiveEditable = false;
@@ -138,12 +139,12 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
       try { this.dataForm.controls.OFF_DATE.disable(); } catch { }
 
       try { this.dataForm.controls.MSG_DATE.setValue(null); } catch { }
-      try { this.dataForm.controls.MSG_DATE.disable(); } catch { }
 
       try { this.dataForm.controls.BROADCAST_YN.setValue('N'); } catch { }
       try { this.dataForm.controls.BROADCAST_YN.enable(); } catch { }
 
       try { this.dataForm.controls.OTHER_GOODS.setValue(me); } catch { }
+      try { this.dataForm.controls.OTHER_GOODS.disable(); } catch { /* noop */ }
       try { this.dataForm.controls.PROCESSING_USER.setValue(me); } catch { }
       try { this.dataForm.controls.PROCESSING_USER.disable(); } catch { }
 
@@ -223,15 +224,13 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
 
     // 載入物品類別下拉（頁面層容錯：若 filter API 失敗則抓全部再過濾）
     this.loadLostGoodsTypeOptions();
-    // 載入協助顧客領回處理人員下拉（共用人員清單）
-    try {
-      this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-        this.ProcessingUserOptions = (options?.Data || []).map((item: any) => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
+    // 載入人員下拉（服務人員 / 協助顧客領回處理人員共用）
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe({
+      next: (options) => {
+        this.ProcessingUserOptions = (options?.Data || []).map((item: { No: string; Name: string }) => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
         this.cdr.detectChanges();
-      });
-    } catch (e) {
-      this.ProcessingUserOptions = [];
-    }
+      },
+    });
     // 讀取從查詢頁傳入的 mode
     this.mode = (this.rowdata as any)?.mode as any;
     const seqId = (this.rowdata as any)?.SeqId ?? (this.rowdata as any)?.SEQ_ID;
@@ -251,7 +250,6 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
       try { this.dataForm.controls.OFF_DATE.disable(); } catch { }
       // MSG_DATE 在建立時設為 null 並不可編輯
       try { this.dataForm.patchValue({ MSG_DATE: null }); } catch { }
-      try { this.dataForm.controls.MSG_DATE.disable(); } catch { }
       // 確保 OTHER_GOODS、PROCESSING_USER 在建立時預設為目前使用者
       try {
         const me = this.user?.user_No ?? '';
@@ -259,6 +257,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
         const otherCtrl = this.dataForm.controls.OTHER_GOODS as FormControl;
         if (procCtrl?.value !== me) procCtrl?.setValue(me, { emitEvent: true });
         if (otherCtrl?.value !== me) otherCtrl?.setValue(me, { emitEvent: true });
+        otherCtrl?.disable();
         this.cdr.detectChanges();
       } catch { }
     }
@@ -341,7 +340,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
           this.dataForm.controls.SEQ_TYPE.disable();
         } catch { }
         try { this.dataForm.controls.OFF_DATE.disable(); } catch { }
-        try { this.dataForm.controls.MSG_DATE.disable(); } catch { }
+        try { this.dataForm.controls.OTHER_GOODS.disable(); } catch { /* noop */ }
         try {
           const b = d.BROADCAST_YN;
           if (b === '') {
@@ -353,23 +352,23 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
         // 如果是從列表「領回」按鈕開啟，將表單除領回區塊外設為唯讀
         if (openMode === 'receive') {
           this.onlyReceiveEditable = true;
-          // 若後端未帶 PROCESSING_USER，預設為目前登入者
+          // 協助顧客領回處理人員：永遠預設為目前登入者並鎖定
           try {
             const me = this.user?.user_No ?? '';
             const procCtrl = this.dataForm.get('PROCESSING_USER');
-            if (procCtrl && (procCtrl.value === null || procCtrl.value === undefined || procCtrl.value === '')) {
+            if (procCtrl) {
               procCtrl.setValue(me, { emitEvent: true });
+              procCtrl.disable();
             }
-          } catch { }
+          } catch { /* ignore */ }
           // 若後端未帶 RECEIVE_DATE，預設為現在時間
           try {
-            const me = this.user?.user_No ?? '';
             const rCtrl = this.dataForm.get('RECEIVE_DATE');
             if (rCtrl && (rCtrl.value === null || rCtrl.value === undefined)) {
               rCtrl.setValue(new Date(), { emitEvent: true });
             }
           } catch { }
-          const editableKeys = ['RECEIVE_DATE', 'RECAPTION_NAME', 'RECAPTION_PHONE', 'PROCESSING_USER'];
+          const editableKeys = ['RECEIVE_DATE', 'RECAPTION_NAME', 'RECAPTION_PHONE'];
           const controlKeys = Object.keys(this.dataForm.controls);
           controlKeys.forEach(k => {
             try {
@@ -562,6 +561,13 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
     this.handleSubmit(frm, () => {
       const raw = frm.getRawValue();
 
+      // 電話 / 手機 二擇一必填
+      if (!raw.TEL && !raw.MOBILE_PHONE) {
+        this.messageService.errorBubble('電話或手機至少填寫一項');
+        this.loading = false;
+        return;
+      }
+
       if (this.isFormCreateable) {
         const payload = {
           REC_DATE: raw.REC_DATE,
@@ -645,7 +651,7 @@ export class CPM11070CRUComponent extends BasicCruPageComponent<CPM11070DetailDa
         const updatePayload = {
           SEQ_ID: raw.SEQ_ID,
           LOCATION: this.SPACE1Options.find(opt => opt.value === raw.LOCATION)?.label ?? raw.LOCATION,
-          SEQ_TYPE: raw.SEQ_TYPE,
+          SEQ_TYPE: (raw.SEQ_TYPE === '1' && raw.MSG_DATE) ? '3' : raw.SEQ_TYPE,
           OFF_DATE: raw.OFF_DATE,
           SERVICE_USER: raw.OTHER_GOODS,
           MSG_DATE: raw.MSG_DATE,
