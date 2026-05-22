@@ -145,6 +145,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly stepPurchaseRows = signal<FIN53010StepPurchaseInvoiceRow[]>([]);
   public readonly stepBankRows = signal<FIN53010StepBankDeposit[]>([]);
 
+  public readonly stepAPTotal = signal<number>(0);
+  public readonly stepARTotal = signal<number>(0);
+  public readonly stepPurchaseTotal = signal<{ invoice_amount: number; net_amount: number; tax_amount: number }>({ invoice_amount: 0, net_amount: 0, tax_amount: 0 });
+  public readonly stepSalesTotal = signal<{ total_amount: number; net_amount: number; tax_amount: number }>({ total_amount: 0, net_amount: 0, tax_amount: 0 });
+  public readonly stepBankTotal = signal<{ deposit_amt: number; withdraw_amt: number }>({ deposit_amt: 0, withdraw_amt: 0 });
+
+  public readonly stepAPFooter = computed(() => ({ acp_amt: this.stepAPTotal() }));
+  public readonly stepARFooter = computed(() => ({ ars_amt: this.stepARTotal() }));
+  public readonly stepPurchaseFooter = computed(() => this.stepPurchaseTotal());
+  public readonly stepSalesFooter = computed(() => this.stepSalesTotal());
+  public readonly stepBankFooter = computed(() => this.stepBankTotal());
+
   /** APS1001 銀行下拉 + 步驟列上 POS2013 銀行代號（清單無該代碼時補佔位） */
   public readonly bankNoOptionsForStep = computed(() => {
     const base = this.service.bankNoOptions();
@@ -187,6 +199,21 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly aps2002RelatedRows = signal<FIN53010Aps2002Row[]>([]);
   public readonly aps4023_CRelatedRows = signal<FIN53010Aps4023_CRow[]>([]);
   public readonly aps4023RelatedRows = signal<FIN53010Aps4023Row[]>([]);
+
+  /** 傳票關聯六表總計（唯讀模式） */
+  public readonly readonlyAps3001Total = signal<number>(0);
+  public readonly readonlyArs3001Total = signal<number>(0);
+  public readonly readonlyAps2002Total = signal<{ InvoiceAmount: number; NetAmount: number; TaxAmount: number }>({ InvoiceAmount: 0, NetAmount: 0, TaxAmount: 0 });
+  public readonly readonlyAps2002_CTotal = signal<{ CreditAmount: number; CreditNetAmount: number; CreditTaxAmount: number }>({ CreditAmount: 0, CreditNetAmount: 0, CreditTaxAmount: 0 });
+  public readonly readonlyAps4023Total = signal<{ TotalAmount: number; NetAmount: number; TaxAmount: number }>({ TotalAmount: 0, NetAmount: 0, TaxAmount: 0 });
+  public readonly readonlyAps4023_CTotal = signal<{ Returned_Amount: number; pur_net: number; pur_tax: number }>({ Returned_Amount: 0, pur_net: 0, pur_tax: 0 });
+
+  public readonly readonlyAps3001Footer = computed(() => ({ ACP_Amt: this.readonlyAps3001Total() }));
+  public readonly readonlyArs3001Footer = computed(() => ({ ars_amt: this.readonlyArs3001Total() }));
+  public readonly readonlyAps2002Footer = computed(() => this.readonlyAps2002Total());
+  public readonly readonlyAps2002_CFooter = computed(() => this.readonlyAps2002_CTotal());
+  public readonly readonlyAps4023Footer = computed(() => this.readonlyAps4023Total());
+  public readonly readonlyAps4023_CFooter = computed(() => this.readonlyAps4023_CTotal());
 
   public readonly ars3001RelatedColumns: ReportColumn[] = [
     { field: 'org_id', header: '組織代號', visible: true, align: 'left' },
@@ -1015,15 +1042,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     this.service.queryAps4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
       next: res => {
-        if (res.Status !== '0000') {
-          this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '查詢發票失敗');
-          return;
-        }
+        // 查無資料（9102）屬正常情境（新發票），靜默跳過不報錯
+        if (res.Status !== '0000') return;
         const d = res.Data;
-        if (!d) {
-          this.messageService.errorBubble('查無資料');
-          return;
-        }
+        if (!d) return;
         this.lastSalesInvoiceLookupKey.set(index, full);
         const patch = this.mapAps4023ToSalesRow(d, prefix, no);
         this.stepSalesRows.update(rows => {
@@ -1045,15 +1067,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     this.service.queryAps4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
       next: res => {
-        if (res.Status !== '0000') {
-          this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '查詢發票失敗');
-          return;
-        }
+        // 查無資料（9102）屬正常情境（新發票），靜默跳過不報錯
+        if (res.Status !== '0000') return;
         const d = res.Data;
-        if (!d) {
-          this.messageService.errorBubble('查無資料');
-          return;
-        }
+        if (!d) return;
         this.lastPurchaseInvoiceLookupKey.set(index, full);
         const patch = this.mapAps4023ToPurchaseRow(d, prefix, no);
         this.stepPurchaseRows.update(rows => {
@@ -1239,6 +1256,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.aps2002RelatedRows.set([]);
     this.aps4023_CRelatedRows.set([]);
     this.aps4023RelatedRows.set([]);
+    this.readonlyAps3001Total.set(0);
+    this.readonlyArs3001Total.set(0);
+    this.readonlyAps2002Total.set({ InvoiceAmount: 0, NetAmount: 0, TaxAmount: 0 });
+    this.readonlyAps2002_CTotal.set({ CreditAmount: 0, CreditNetAmount: 0, CreditTaxAmount: 0 });
+    this.readonlyAps4023Total.set({ TotalAmount: 0, NetAmount: 0, TaxAmount: 0 });
+    this.readonlyAps4023_CTotal.set({ Returned_Amount: 0, pur_net: 0, pur_tax: 0 });
   }
 
   private clearEditStepDetailRows(): void {
@@ -1247,6 +1270,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.stepSalesRows.set([]);
     this.stepPurchaseRows.set([]);
     this.stepBankRows.set([]);
+    this.stepAPTotal.set(0);
+    this.stepARTotal.set(0);
+    this.stepPurchaseTotal.set({ invoice_amount: 0, net_amount: 0, tax_amount: 0 });
+    this.stepSalesTotal.set({ total_amount: 0, net_amount: 0, tax_amount: 0 });
+    this.stepBankTotal.set({ deposit_amt: 0, withdraw_amt: 0 });
   }
 
   /**
@@ -1274,6 +1302,22 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           this.stepSalesRows.set(mapped.stepSalesRows);
           this.stepPurchaseRows.set(mapped.stepPurchaseRows);
           this.stepBankRows.set(mapped.stepBankRows);
+          this.stepAPTotal.set(res.Data.Total_ACP_Amt ?? 0);
+          this.stepARTotal.set(res.Data.Total_ARS_Amt ?? 0);
+          this.stepPurchaseTotal.set({
+            invoice_amount: res.Data.Total_PUR_Amt_APS2002 ?? 0,
+            net_amount: res.Data.Total_PUR_Net_APS2002 ?? 0,
+            tax_amount: res.Data.Total_PUR_Tax_APS2002 ?? 0,
+          });
+          this.stepSalesTotal.set({
+            total_amount: res.Data.Total_PUR_Amt_APS4023 ?? 0,
+            net_amount: res.Data.Total_PUR_Net_APS4023 ?? 0,
+            tax_amount: res.Data.Total_PUR_Tax_APS4023 ?? 0,
+          });
+          this.stepBankTotal.set({
+            deposit_amt: res.Data.Total_DAmt ?? 0,
+            withdraw_amt: res.Data.Total_CAmt ?? 0,
+          });
           this.clearRelatedDetailTables();
         },
         error: () => {
@@ -1304,6 +1348,28 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.aps2002RelatedRows.set(pick(d._APS2002));
         this.aps4023_CRelatedRows.set(pick(d._APS4023_C));
         this.aps4023RelatedRows.set(pick(d._APS4023));
+        this.readonlyAps3001Total.set(d._APS3001?.Total_ACP_Amt ?? 0);
+        this.readonlyArs3001Total.set(d._ARS3001?.Total_ars_amt ?? 0);
+        this.readonlyAps2002Total.set({
+          InvoiceAmount: d._APS2002?.Total_InvoiceAmount ?? 0,
+          NetAmount: d._APS2002?.Total_NetAmount ?? 0,
+          TaxAmount: d._APS2002?.Total_TaxAmount ?? 0,
+        });
+        this.readonlyAps2002_CTotal.set({
+          CreditAmount: d._APS2002_C?.Total_CreditAmount ?? 0,
+          CreditNetAmount: d._APS2002_C?.Total_CreditNetAmount ?? 0,
+          CreditTaxAmount: d._APS2002_C?.Total_CreditTaxAmount ?? 0,
+        });
+        this.readonlyAps4023Total.set({
+          TotalAmount: d._APS4023?.Total_TotalAmount ?? 0,
+          NetAmount: d._APS4023?.Total_NetAmount ?? 0,
+          TaxAmount: d._APS4023?.Total_TaxAmount ?? 0,
+        });
+        this.readonlyAps4023_CTotal.set({
+          Returned_Amount: d._APS4023_C?.Total_Returned_Amount ?? 0,
+          pur_net: d._APS4023_C?.Total_pur_net ?? 0,
+          pur_tax: d._APS4023_C?.Total_pur_tax ?? 0,
+        });
       },
       error: () => this.clearRelatedDetailTables(),
     });
