@@ -460,6 +460,7 @@ export class ASS13080CRUComponent extends BasicCruPageComponent<ASS13080Detail> 
       amortAmt: choose.SUM_DEPRE_AMOUNT ?? null,
       amortMonths: choose.SUM_DEPRE_MONTH ?? null,
       chgAmt: choose.ChangeAmt ?? null,
+      deprDue: Number(choose.DEPRE_YM_E ?? '') || null,
       keepUserNo: choose.HOLD_EMP_ID ?? null,
       keepOrgId: choose.HOLD_ORG_ID ?? null,
       useUserNo: choose.USE_EMP_ID ?? null,

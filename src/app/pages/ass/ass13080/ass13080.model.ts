@@ -191,6 +191,8 @@ export interface QueryFAASSETChooseListASS13060Response {
   SUM_DEPRE_MONTH?: number | null;
   /** 累計已攤提金額 */
   SUM_DEPRE_AMOUNT?: number | null;
+  /** 折舊結束年月 (yyyyMM) */
+  DEPRE_YM_E?: string | null;
   /** 折舊會計科目 */
   STYPE_ID?: string | null;
   /** 累計折舊會計科目 */
