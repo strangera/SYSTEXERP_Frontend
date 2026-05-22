@@ -157,8 +157,8 @@ export class FIN54020Component extends BasicQueryPageComponent<any> implements O
 
     // 準備共用欄位
     const commonPart = {
-      VouDateFrom: v.VouDateFrom ? formatDateToYYYY_MM_DD(v.VouDateFrom) : '',
-      VouDateTo: v.VouDateTo ? formatDateToYYYY_MM_DD(v.VouDateTo) : '',
+      VouDateFrom: v.VouDateFrom ? formatDateToYYYY_MM_DD(v.VouDateFrom) : null,
+      VouDateTo: v.VouDateTo ? formatDateToYYYY_MM_DD(v.VouDateTo) : null,
       VouNoFrom: (v.VouNoFrom ?? '').toString().trim(),
       VouNoTo: (v.VouNoTo ?? '').toString().trim(),
       VoucherType: (v.VoucherType ?? '').toString().trim(),

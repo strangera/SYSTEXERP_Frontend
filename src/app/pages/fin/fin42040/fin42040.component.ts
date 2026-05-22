@@ -116,7 +116,7 @@ export class FIN42040Component
     },
     {
       field: 'CompareAmount',
-      header: '比較年月金額',
+      header: '去年同期金額',
       visible: true,
       style: 'text-right',
       format: this.moneyFormat.bind(this),
@@ -124,7 +124,7 @@ export class FIN42040Component
     },
     {
       field: 'CompareRatio',
-      header: '比較年月佔比',
+      header: '去年同期佔比',
       visible: true,
       style: 'text-right',
       format: this.ratioFormat.bind(this),
@@ -153,7 +153,7 @@ export class FIN42040Component
     },
     {
       field: 'CompareAccumAmount',
-      header: '比較累計金額',
+      header: '去年同期累計金額',
       visible: true,
       style: 'text-right',
       format: this.moneyFormat.bind(this),
@@ -161,7 +161,7 @@ export class FIN42040Component
     },
     {
       field: 'CompareAccumRatio',
-      header: '比較累計佔比',
+      header: '去年同期累計佔比',
       visible: true,
       style: 'text-right',
       format: this.ratioFormat.bind(this),
@@ -190,23 +190,22 @@ export class FIN42040Component
       (form) => this.onSubmit(form)
     );
 
-   const now = new Date();
-const lastYear = new Date();
+    const now = new Date();
+    const lastYear = new Date();
+    lastYear.setFullYear(now.getFullYear() - 1);
 
-lastYear.setFullYear(now.getFullYear() - 1);
+    this.queryForm.patchValue(
+      {
+        YM: now,
+        CompareYM: lastYear,
+        SortBy: this.defaultSort,
+        pageSize: 30,
+      },
+      { emitEvent: false }
+    );
 
-this.queryForm.patchValue(
-  {
-    YM: now,           // ⭐ 今年本月
-    CompareYM: lastYear, // ⭐ 去年同月
-    SortBy: this.defaultSort,
-    pageSize: 30,
-  },
-  { emitEvent: false }
-);
-
+    this.updateAmountColumnHeaders(1);
     this.loadDropdowns();
-
   }
 
   private loadDropdowns(): void {
@@ -229,14 +228,15 @@ this.queryForm.patchValue(
     this.handleSubmit(frm, () => {
       const raw = this.queryForm.getRawValue() as any;
 
+      const orgId = raw.Org_ID;
+      const orgName = this.getSelectedOrgName(orgId);
+
       const payload: FIN42040QueryRequest = {
         ...raw,
         YM: this.normalizeYM(raw.YM),
         CompareYM: this.normalizeYM(raw.CompareYM),
-        Org_ID:
-          !raw.Org_ID || raw.Org_ID === '100000'
-            ? undefined
-            : raw.Org_ID,
+        Org_ID: !orgId || orgId === '100000' ? undefined : orgId,
+        Org_Name: !orgId || orgId === '100000' ? undefined : orgName,
         ReportType: Number(raw.ReportType ?? 1),
         AmtUnit: Number(raw.AmtUnit ?? 1),
         pageIndex: Number(raw.pageIndex ?? 1),
@@ -249,6 +249,7 @@ this.queryForm.patchValue(
 
       Object.keys(payload).forEach((k) => {
         const v = (payload as any)[k];
+
         if (v === null || v === undefined) delete (payload as any)[k];
         if (Array.isArray(v) && v.length === 0) delete (payload as any)[k];
         if (typeof v === 'string' && v.trim() === '') delete (payload as any)[k];
@@ -258,31 +259,32 @@ this.queryForm.patchValue(
       this.data = [];
       this.totalRecords = 0;
       this.historyRequestBody = { ...payload };
-      this.updateAmountColumnHeaders();
+      this.updateAmountColumnHeaders(payload.AmtUnit);
 
       this.fin42040Service
         .queryFIN42040(payload)
         .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
         .subscribe({
-         next: (resp: any) => {
-  const rows = Array.isArray(resp?.Data)
-    ? resp.Data
-    : Array.isArray(resp?.Data?.QueryData)
-      ? resp.Data.QueryData
-      : [];
+          next: (resp: any) => {
+            const rows = Array.isArray(resp?.Data)
+              ? resp.Data
+              : Array.isArray(resp?.Data?.QueryData)
+                ? resp.Data.QueryData
+                : [];
 
-  this.data = rows;
-  this.totalRecords = Number(resp?.TotalCount ?? rows.length ?? 0);
-  this.historyRequestBody = { ...payload };
+            this.data = rows;
+            this.totalRecords = Number(
+              resp?.TotalCount ?? resp?.Data?.TotalCount ?? rows.length ?? 0
+            );
 
-  // 查詢成功後才依照本次查詢條件改表頭
-  this.updateAmountColumnHeaders(payload.AmtUnit);
+            this.historyRequestBody = { ...payload };
+            this.updateAmountColumnHeaders(payload.AmtUnit);
 
-  this.queryStateService?.setQueryState?.(
-    this.ProgNo,
-    this.queryForm.value
-  );
-},
+            this.queryStateService?.setQueryState?.(
+              this.ProgNo,
+              this.queryForm.value
+            );
+          },
           error: () => {
             this.data = [];
             this.totalRecords = 0;
@@ -307,7 +309,7 @@ this.queryForm.patchValue(
             : Array.isArray(resp?.Data?.QueryData)
               ? resp.Data.QueryData
               : [],
-          TotalCount: Number(resp?.TotalCount ?? 0),
+          TotalCount: Number(resp?.TotalCount ?? resp?.Data?.TotalCount ?? 0),
           GrandTotal: null,
         }))
       );
@@ -407,6 +409,16 @@ this.queryForm.patchValue(
     return s.length >= 6 ? s.substring(0, 6) : s;
   }
 
+  private getSelectedOrgName(orgId: any): string | undefined {
+    if (!orgId || orgId === '100000') return undefined;
+
+    const selected = this.orgOptions.find(
+      (x) => String(x.value) === String(orgId)
+    );
+
+    return selected?.formLabel || selected?.label || undefined;
+  }
+
   moneyFormat(value: any): string {
     return value == null ? '' : Number(value).toLocaleString('en-US');
   }
@@ -416,33 +428,34 @@ this.queryForm.patchValue(
     const n = Number(value);
     return Number.isFinite(n) ? n.toLocaleString('en-US') : '';
   }
+
   private getAmtUnitText(unit?: any): string {
-  const value = Number(unit ?? this.queryForm?.get('AmtUnit')?.value ?? 1);
+    const value = Number(unit ?? this.queryForm?.get('AmtUnit')?.value ?? 1);
 
-  switch (value) {
-    case 2:
-      return '千元';
-    case 3:
-      return '萬元';
-    case 1:
-    default:
-      return '元';
+    switch (value) {
+      case 2:
+        return '千元';
+      case 3:
+        return '萬元';
+      case 1:
+      default:
+        return '元';
+    }
   }
-}
 
-private updateAmountColumnHeaders(unit?: any): void {
-  const unitText = this.getAmtUnitText(unit);
+  private updateAmountColumnHeaders(unit?: any): void {
+    const unitText = this.getAmtUnitText(unit);
 
-  const amountHeaderMap: Record<string, string> = {
-    CurrentAmount: `本期金額(${unitText})`,
-    CompareAmount: `比較年月金額(${unitText})`,
-    CurrentAccumAmount: `本期累計金額(${unitText})`,
-    CompareAccumAmount: `比較累計金額(${unitText})`,
-  };
+    const amountHeaderMap: Record<string, string> = {
+      CurrentAmount: `本期金額(${unitText})`,
+      CompareAmount: `去年同期金額(${unitText})`,
+      CurrentAccumAmount: `本期累計金額(${unitText})`,
+      CompareAccumAmount: `去年同期累計金額(${unitText})`,
+    };
 
-  this.columns = this.columns.map((col) => ({
-    ...col,
-    header: amountHeaderMap[col.field] ?? col.header,
-  }));
-}
+    this.columns = this.columns.map((col) => ({
+      ...col,
+      header: amountHeaderMap[col.field] ?? col.header,
+    }));
+  }
 }

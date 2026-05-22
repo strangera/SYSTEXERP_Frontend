@@ -1,38 +1,29 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { NgIf } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { FIN72020Data, FIN72020Service, QueryFIN72020Request, voidFIN72020Request } from '@service/api/fin/fin72020.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { ConfirmPopupModule } from 'primeng/confirmpopup';
+import { DialogModule } from 'primeng/dialog';
+import { InputGroupModule } from 'primeng/inputgroup';
+import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
+import { InputTextModule } from 'primeng/inputtext';
+import { TableModule } from 'primeng/table';
+import { ToastModule } from 'primeng/toast';
+import { finalize, Observable } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { apiOption } from '../../../shared/models/sys/sysb000.model';
-
-export interface sample72020 {
-  'id': string;
-  'STO_No': string; // 公司編號/店號
-  'HOS_No': string; // 倉庫代碼 STO_NO+HOS_NO唯一值 STO_NO+HOS_NO唯一值
-  'HOS_NAME': string; // 倉庫名稱
-  'org_id': string; // 組織代碼/組織名稱
-  'org_name': string; // 部門名稱
-  'building_no': string; // 館別代碼
-  'HOS_Remark'?: string; // 備註說明
-
-  'CRT_Date': Date;
-  'CRT_USR_No': string;
-  'CRT_USR_Name': string;
-  'UPD_Date': Date;
-  'UPD_USR_No': string;
-  'UPD_USR_Name': string;
-
-  'CanDel': boolean; //能否刪除(僅顯示)
-}
 
 @Component({
   selector: 'app-fin72020',
@@ -43,170 +34,310 @@ export interface sample72020 {
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
-    CalendarRangeQuickComponent,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
-    InputNumberRangeComponent,
     DropdownComponent,
-    TableComponent,
-    TranslateModule]
+    TranslateModule,
+    CalendarComponent,
+    InputGroupModule,
+    InputGroupAddonModule,
+    InputTextModule,
+    ButtonModule,
+    ToastModule,
+    ConfirmPopupModule,
+    DialogModule,
+    TableModule,
+    TableReportComponent,
+    NgIf,
+  ]
 })
-export class FIN72020Component extends BasicQueryPageComponent<sample72020> implements OnInit {
+export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> implements OnInit {
   // 查詢
   queryForm = this.formBuilder.group({
     // 檔案說明:
     // POS2064M 收支主檔(I/O)
     // 收支請款檔(I/O) 
 
-    KeepQuota_No: [null, [Validators.maxLength(20)]], // 支出請款單號
-    applyDateFrom: [null], // 產生日期起
-    applyDateTo: [null], // 產生日期迄
-    Pettycashapplicant: [null], // 申請人
-    Pettycashcustodian: [null], // 保管人
-    status: [null], // 狀態
-    keepingUnit: [null], // 保管單位
+    PCS_No: [null, [Validators.maxLength(20)]], // 支出請款單號
+    PCS_RqstDate: [null], // 產生日期
+    PCS_UsrNo: [null], // 申請人
+    PCS_UsrName: [''], // 申請人名稱
+    PCS_UsrDisplay: [''], // 申請人顯示用
+    Keep_UsrNo: [null], // 保管人
+    Keep_UsrName: [''], // 保管人名稱
+    Keep_UsrDisplay: [''], // 保管人顯示用
+    PCS_Status: [null], // 狀態
+    Keep_OrgID: [null], // 保管單位
 
     //分頁查詢
-    ...createPaginationConfig([{ field: 'KeepQuota_No', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'PCS_No', order: 1 }]), // 分頁和排序參數
   });
-  // 表格
-  // ----------------------------------------------------------------
-  totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  KeepQuota_Options: apiOption[] = [
-    { No: 'KQ001', Name: '零用金單1', Label: 'KQ001 - 零用金單1' },
-    { No: 'KQ002', Name: '零用金單2', Label: 'KQ002 - 零用金單2' },
-    { No: 'KQ003', Name: '零用金單3', Label: 'KQ003 - 零用金單3' },
-  ];
-  Pettycashapplicant_Options: apiOption[] = [
-    { No: 'PA001', Name: '申請人1', Label: 'PA001 - 申請人1' },
-    { No: 'PA002', Name: '申請人2', Label: 'PA002 - 申請人2' },
-    { No: 'PA003', Name: '申請人3', Label: 'PA003 - 申請人3' },
-  ];
-  Pettycashcustodian_Options: apiOption[] = [
-    { No: 'PC001', Name: '保管人1', Label: 'PC001 - 保管人1' },
-    { No: 'PC002', Name: '保管人2', Label: 'PC002 - 保管人2' },
-    { No: 'PC003', Name: '保管人3', Label: 'PC003 - 保管人3' },
-  ];
+  public readonly totalRecords = signal<number>(0);
+
   status_Options: apiOption[] = [
-    { No: 'S001', Name: '狀態1', Label: 'S001 - 狀態1' },
-    { No: 'S002', Name: '狀態2', Label: 'S002 - 狀態2' },
-    { No: 'S003', Name: '狀態3', Label: 'S003 - 狀態3' },
-  ];
-  keepingUnit_Options: apiOption[] = [
-    { No: 'KU001', Name: '保管單位1', Label: 'KU001 - 保管單位1' },
-    { No: 'KU002', Name: '保管單位2', Label: 'KU002 - 保管單位2' },
-    { No: 'KU003', Name: '保管單位3', Label: 'KU003 - 保管單位3' },
+    { No: '1', Name: '建立 ', Label: '1 - 建立 ' },
+    { No: '2', Name: '請款', Label: '2 - 請款' },
+    { No: '3', Name: '拋轉', Label: '3 - 拋轉' },
+    { No: '4', Name: '撥補', Label: '4 - 撥補' },
   ];
 
-  data: sample72020[] = [];
+  editDisabled = (_row: any): boolean => true;
+  detailDisabled = (_row: any): boolean => true;
+
+  PCS_RqstNo_Options = signal<{ label: string; value: string }[]>([]);
+  // 原始完整資料
+  allUserResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
+  // 畫面目前顯示資料
+  userResultData = signal<{ user_No: string; user_Name: string; Org_ID: string; Org_Name: string }[]>([]);
+  keepingUnit_Options = signal<{ label: string; value: string }[]>([]);
+
+  data: any[] = [];
+  lastQueryBody: QueryFIN72020Request | null = null;
   columns: Column[] = [
-    { field: 'type01', header: '支出請款單號', visible: false },
-    { field: 'type02', header: '零用金申請人', visible: true },
-    { field: 'type03', header: '申請人組織', visible: true },
-    { field: 'type04', header: '零用金保管人', visible: true },
-    { field: 'type05', header: '保管人組織', visible: true },
-    { field: 'type06', header: '保管單位', visible: true },
-    { field: 'type07', header: '零用金單號', visible: true },
-    { field: 'type08', header: '狀態', visible: true },
+    { field: 'PCS_RqstNo', header: '支出請款單號', visible: true },
+    { field: 'PCS_UsrDisplay', header: '零用金申請人', visible: true },
+    { field: 'PCS_OrgDisplay', header: '申請人組織', visible: true },
+    { field: 'Keep_UsrDisplay', header: '零用金保管人', visible: true },
+    { field: 'Keep_OrgDisplay', header: '保管人組織', visible: true },
+    { field: 'Keep_OrgDisplay', header: '保管單位', visible: true },
+    { field: 'PCS_No', header: '零用金單號', visible: true },
+    { field: 'PCS_StatusName', header: '狀態', visible: true },
   ];
 
-  selectedItems: sample72020[] = [];// 多選項目
+  addButton: AddButton[] = [
+    {
+      label: '刪除',
+      icon: 'pi pi-trash',
+      action: (rowData: FIN72020Data) => this.onDelete(rowData),
+      disabled: () => !this.hasPermission(this.Actions.Delete),
+    }
+  ];
+
+  selectedItems: FIN72020Data[] = [];// 多選項目
+
+
+  // 「零用金申請人」與「零用金保管人」使用者對話框的變數
+  userDialogVisible = false;
+  userQueryForm!: FormGroup;
+
+  selectedUser: any = null;
+  selectedUserName = '';
+  // 目前選擇的使用者類別
+  currentUserTarget: 'PCS_UsrNo' | 'Keep_UsrNo' | null = null;
+
 
   // ----------------------------------------------------------------
   constructor(
-    private readonly dropDownListService: DropDownListService,
+    private fb: FormBuilder,
+    public fin72020Service: FIN72020Service,
+
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN72020', 'FIN/FIN72020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadDropdownOptions();
+
+    // 零用金申請人與零用金保管人
+    this.userQueryForm = this.fb.group({
+      user_No: [''],
+      user_Name: [''],
+      Org_ID: [''],
+      Org_Name: ['']
+    });
+
   }
 
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      console.log('零用金維護request:', JSON.stringify(frm.value, null, 2));
-      this.loading = false;
-      // this.tls51080Service.queryTLS51080(frm.value).subscribe({
-      //   next: (response) => {
-      //     if (response.Status === '0000') {
-      //       this.data = response.Data || [];
-      //       console.log('Result', this.data);
-      //       this.totalRecords = response.TotalCount || response.Data.length;
-      //       this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      //     } else {
-      //       console.error('API error:', response.Status, response.Message);
-      //     }
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      //   error: (err: string) => {
-      //     console.error('API error:', err);
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      // });
+  onSubmit(form: FormGroup) {
+    console.log('查詢條件', form.value);
+    const req = {
+      PCS_No: form.value.PCS_No,
+      PCS_RqstDate: form.value.PCS_RqstDate,
+      PCS_UsrNo: form.value.PCS_UsrNo,
+      Keep_UsrNo: form.value.Keep_UsrNo,
+      PCS_Status: form.value.PCS_Status,
+      Keep_OrgID: form.value.Keep_OrgID,
+      SortColumn: 'PCS_No',
+      SortDirection: '1',
+      PageSize: 30,
+      PageIndex: 1,
+    };
+    this.handleSubmit(form, () => {
+      this.fin72020Service.queryFIN72020(req)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.lastQueryBody = req;
+          this.totalRecords.set(response.TotalCount);
+          this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
+        });
+    });
+
+  }
+
+  // 表格查詢函式，會在分頁、排序、初始查詢時被呼叫
+  public queryFunction = (
+    body: QueryFIN72020Request & { pageSize?: number; pageIndex?: number }
+  ): Observable<BaseQueryResponse<FIN72020Data>> => {
+
+    const cleanPayload = removeEmptyValues(body) as QueryFIN72020Request;
+    return this.fin72020Service.queryFIN72020(cleanPayload);
+  };
+
+
+  //---刪除檢查---
+  onDelete(data: FIN72020Data): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
+
+    this.messageService.confirm({
+      header: '刪除作廢',
+      message: `是否確認作廢 零用金單號: ${data.PCS_No} 的資料？`,
+      accept: () => {
+        const deleteRequest: voidFIN72020Request = {
+          PCS_No: data.PCS_No
+        }
+        this.fin72020Service.voidFIN72020(deleteRequest)
+          .pipe(untilDestroyed(this))
+          .subscribe(response => {
+            if (response.Status !== "0000") {
+              this.messageService.errorBubble(response.Data.Message || '作廢失敗');
+            }
+            else {
+              this.messageService.successBubble(response.Data.Message || '作廢成功');
+            }
+            this.onSubmit(this.queryForm);
+          })
+      }
     });
   }
 
-  //---刪除檢查---
-  onDelete(data: sample72020 | sample72020[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
+  openUserDialog(target: 'PCS_UsrNo' | 'Keep_UsrNo'): void {
+    this.currentUserTarget = target;
 
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
+    this.userDialogVisible = true;
+    this.userQueryForm.reset({
+      user_No: '',
+      user_Name: '',
+      Org_ID: '',
+      Org_Name: ''
+    });
 
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    if (idList.length === 0) {
-      console.error('No valid IDs to delete');
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      return;
-    }
-
-    //確認是否全部都可以刪除
-    const canDelete = items.every((item) => item.CanDel);
-
-    if (!canDelete) {
-      console.error('Some items cannot be deleted');
-      this.messageService.errorBubble('無法刪除：組織階層互相關連');
-      return;
-    }
-
-    // const deleteBody = {
-    //   idList: idList, // 符合 API 的 idList 格式
-    // };
-    // this.tls51080Service.deleteTLS51080(deleteBody).subscribe({
-    //   next: (response) => {
-    //     if (response.Status === '0000') {
-    //       this.messageService.successBubble('選中項目刪除成功');
-    //     } else {
-    //       console.error('API error:', response.Status, response.Message);
-    //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-    //     }
-    //   },
-    //   error: (err: string) => {
-    //     console.error('API error:', err);
-    //     this.messageService.errorBubble('刪除失敗');
-    //   },
-    //   complete: () => {
-    //     this.onSubmit(this.queryForm);
-    //   },
-    // });
-
-    this.selectedItems = [];
+    this.userResultData.set(this.allUserResultData());
+    // this.userResultData = [];
+    this.selectedUser = null;
   }
 
-  isRowSelectable(rowData: sample72020): boolean {
-    return rowData.CanDel
+  queryUserData(): void {
+    const raw = this.userQueryForm.getRawValue();
+
+    const userNo = (raw.user_No ?? '').trim().toLowerCase();
+    const userName = (raw.user_Name ?? '').trim().toLowerCase();
+    const orgId = (raw.Org_ID ?? '').trim().toLowerCase();
+    const orgName = (raw.Org_Name ?? '').trim().toLowerCase();
+
+    const filteredData = this.allUserResultData().filter(item => {
+      return (
+        (!userNo || item.user_No.toLowerCase().includes(userNo)) &&
+        (!userName || item.user_Name.toLowerCase().includes(userName)) &&
+        (!orgId || item.Org_ID.toLowerCase().includes(orgId)) &&
+        (!orgName || item.Org_Name.toLowerCase().includes(orgName))
+      );
+    });
+
+    this.userResultData.set(filteredData);
   }
+
+  clearUserQuery(): void {
+    this.userQueryForm.reset({
+      user_No: '',
+      user_Name: '',
+      Org_ID: '',
+      Org_Name: ''
+    });
+
+    // this.userResultData = [];
+    this.userResultData.set(this.allUserResultData());
+    this.selectedUser = null;
+  }
+
+  onSelectUser(row: any): void {
+    console.log('選到的使用者', row);
+
+    //this.selectedUserName = `${row.user_No} - ${row.user_Name}`;
+    if (!this.currentUserTarget) return;
+
+    const nameControlName = this.currentUserTarget.replace('No', 'Name');
+    const DisplayName = this.currentUserTarget.replace('No', 'Display');
+
+    this.queryForm.patchValue({
+      [this.currentUserTarget]: row.user_No ?? '',
+      [nameControlName]: row.user_Name ?? '',
+      [DisplayName]: `${row.user_No ?? ''} - ${row.user_Name ?? ''}`
+    });
+
+    this.userDialogVisible = false;
+    this.currentUserTarget = null;
+  }
+
+  // 清除使用者選擇的資料
+  clearUser(type: 'PCS' | 'Keep'): void {
+    if (type === 'PCS') {
+      this.queryForm.patchValue({
+        PCS_UsrNo: null,
+        PCS_UsrDisplay: null,
+      });
+      return;
+    }
+
+    this.queryForm.patchValue({
+      Keep_UsrNo: null,
+      Keep_UsrDisplay: null
+    });
+  }
+
+  /** 載入下拉選單選項 */
+  private loadDropdownOptions(): void {
+    // 支出請款單號
+    this.fin72020Service.POS2064MPCS_RqstNoDropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: item.PCS_RqstNo ?? '',
+          value: item.PCS_RqstNo ?? '',
+        }));
+        this.PCS_RqstNo_Options.set(options);
+      },
+    });
+
+    // 零用金申請人、零用金保管人
+    this.fin72020Service.queryTBLUSER_Orgid_DropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          user_No: item.user_No ?? '',
+          user_Name: item.user_Name ?? '',
+          Org_ID: item.Org_ID ?? '',
+          Org_Name: item.Org_Name ?? '',
+        }));
+
+        this.allUserResultData.set(options); // 原始完整資料
+        this.userResultData.set(options);   // 畫面顯示資料
+      },
+    });
+
+    // 保管單位
+    this.fin72020Service.querySYS3100_DropDownList().subscribe({
+      next: res => {
+        if (res.Status !== '0000') return;
+        const options = res.Data.map(item => ({
+          label: `${item.No} - ${item.Name}`,
+          value: item.No,
+        }));
+        this.keepingUnit_Options.set(options);
+      },
+    });
+  }
+
 }

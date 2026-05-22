@@ -27,7 +27,12 @@ export interface fin13090Detail {
 
   PUR_TaxType: string, // 課稅別 (0=免稅 1=應稅 2=零稅)
   PUR_Net: number, // 發票未稅金額
-  PUR_Tax: number  // 發票稅額
+  PUR_Tax: number, // 發票稅額
+  PUR_DiscNo: string | null, // 扣抵代號
+  PUR_Type: string | null, // 類別區分
+  Source_Doc_No: string | null, // 憑證單號
+  PUR_Comb_Cnt: number, // 彙總張數
+  PUR_Comb: string | null  // 彙加註記
 }
 
 export interface fin13090response {

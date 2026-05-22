@@ -49,6 +49,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     TXN_Date: [null],//交易日期
+    TLT_NO: [[]], // 專櫃編號
     tlt_building: [[]],// 館別
     tlt_floor: [[]],// 樓層
     area_no: [[]],// 區域
@@ -85,6 +86,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
     { field: 'MonthlyBudgetTotal', header: '月營業目標', align: 'right', groupField: '月累計', format: formatAmount, isTotal: true },
     { field: 'MonthlySalesTotal', header: '營業實績', align: 'right', groupField: '月累計', format: formatAmount, isTotal: true },
     { field: 'CompletionRate', header: '完成率', align: 'right', groupField: '月累計', format: (value) => formatPercentage(value, 2), isTotal: true },
+    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right', isTotal: true },
   ];
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
@@ -95,10 +97,12 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
   ]
   tlt_kind_Option = getSYS1000Options('TLT_Kind');
   tlt_term_type = getSYS1000Options('tlt_term_type');
+  tlt_noListOption = this.dropdown.queryTltTalent(); // 專櫃編號選項
   tlt_building_Option = this.dropdown.querySys3800(); // 館別
   tlt_floor_Option = this.dropdown.querySys3900(); // 樓層
   area_no_Option = this.dropdown.querySys3A00(); // 區域
   org_id_Option = this.dropdown.querySys3100(); // 組織
+
   constructor(
     public readonly tls31010Service: Tls31010Service,
     private readonly dropdown: DropdownApiService
@@ -114,6 +118,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010QueryData
       const formValue: TLS31010Request = {
         ...rawValue,
         TXN_Date: formatDate(rawValue.TXN_Date, 'yyyy-MM-dd', 'en-US'),
+        TLT_NO: rawValue.TLT_NO || null,
         tlt_floor: rawValue.tlt_floor || null,
         area_no: rawValue.area_no || null,
         org_id: rawValue.org_id || null,

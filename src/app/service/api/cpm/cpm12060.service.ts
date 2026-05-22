@@ -10,7 +10,7 @@ export interface QueryCPM12060Request {
   COMPLAIN_DATE_E?: string; // 接件日期(迄)
   ALERT_DATE_S?: string;    // 派單日期(起)
   ALERT_DATE_E?: string;    // 派單日期(迄)
-  STATUS?: string;          // 處理狀態(S:已建立,W:已派單,Y:處理中,Z:結案)
+  STATUS?: string;          // 處理狀態(1:已建立,2:已派單,3:處理中,4:結案)
 }
 
 export interface CPM12060Data {
@@ -21,7 +21,7 @@ export interface CPM12060Data {
   COMPLAIN_DATE: Date; // 提供日期
   CRT_USR_Name: string; // 建立者姓名
   ORG_ID: string; // 處理單位
-  STATUS: string; // 處理狀態(S:已建立,W:已派單,Y:處理中,Z:結案)
+  STATUS: string; // 處理狀態(1:已建立,2:已派單,3:處理中,4:結案)
   ANSWER_DATE_MM: string; // 處理-時
 }
 

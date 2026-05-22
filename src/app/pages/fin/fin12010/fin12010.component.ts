@@ -17,7 +17,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { formatAmount, formatDateTime, formatYN, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { formatAmount, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
 @Component({
@@ -61,8 +61,16 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     { field: 'SAL_GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'SAL_GUIEndNo', header: '發票結束號碼', visible: true },
     { field: 'SAL_LastUsedGUINo', header: '已使用的發票號', visible: true },
+    {
+      field: 'usageStatus', header: '使用狀態', visible: true,
+      format: (_value: unknown, _index?: number, rowData?: IFin12010Data) => {
+        if (!rowData) return '';
+        if (!rowData.SAL_LastUsedGUINo) return '尚未使用';
+        if (rowData.SAL_LastUsedGUINo === rowData.SAL_GUIEndNo) return '已用完';
+        return '使用中';
+      }
+    },
     { field: 'SAL_Type', header: '使用別', visible: true, format: value => getSYS1000('T205', value), exportFormat: transformOptionsForExport(getSYS1000Options('T205')) }, // 修正為 '發票用途'
-    { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: formatYN },
     { field: 'SAL_GUIBegMM', header: '起始月份', visible: false },
     { field: 'SAL_GUIEndMM', header: '終止月份', visible: false },
     { field: 'SAL_GUIPaper', header: '發票類別', visible: false, format: value => getSYS1000('SAL_GUIPaper', value), exportFormat: transformOptionsForExport(getSYS1000Options('SAL_GUIPaper')) }, // 修正為 '發票類別'

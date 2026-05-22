@@ -52,6 +52,16 @@
 <!-- 匯入視窗 -->
 <app-dialog [visible]="dialogVisible" header="匯入盤點資料" (visibleChange)="dialogVisible = $event" [showFooter]="false"
   [disable]="false" [height]="'auto'" [width]="'auto'">
+  <div class="mb-3 p-3 border-round bg-yellow-50 border-left-3 border-yellow-500">
+    <div class="flex align-items-center mb-1">
+      <i class="pi pi-exclamation-triangle text-yellow-700 mr-2"></i>
+      <span class="font-bold text-yellow-800">上傳提醒</span>
+    </div>
+    <p class="m-0 text-sm text-yellow-700">
+      請上傳副檔名為 <b>.txt</b> 的檔案，且檔名必須符合格式：<br>
+      <code>[8位日期]-[品牌代碼].txt</code> (例如：20260515-0001.txt)
+    </p>
+  </div>
   <form [formGroup]="queryForm2">
     <div class="grid p-fluid">
       <div class="col-12">
@@ -65,5 +75,6 @@
     </div>
   </form>
   <app-file-upload #fileUpload [accept]="'.txt'" [customUpload]="true" (uploadHandler)="onFileUpload($event)"
-    [loading]="fileUploadLoading"></app-file-upload>
+    [loading]="fileUploadLoading"
+    emptyMessage="請將檔案拖曳至此或點擊選擇。檔名格式限制：[8位日期]-[品牌代碼].txt (例如：20260515-0001.txt)"></app-file-upload>
 </app-dialog>

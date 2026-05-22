@@ -38,7 +38,7 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
     COMPLAIN_DATE_E: [null], // 接件日期(迄)
     ALERT_DATE_S: [null],    // 派單日期(起)
     ALERT_DATE_E: [null],    // 派單日期(迄)
-    STATUS: ['', [Validators.maxLength(1)]],          // 處理狀態(S:已建立,W:已派單,Y:處理中,Z:結案)
+    STATUS: ['', [Validators.maxLength(1)]],          // 處理狀態(1:已建立,2:已派單,3:處理中,4:結案)
     ...createPaginationConfig([{ field: 'SEQ_ID', order: 1 }]), // 分頁和排序參數
   });
 
@@ -48,38 +48,20 @@ export class CPM12060Component extends BasicQueryPageComponent<CPM12060Data> imp
 
   // 處理狀態 下拉選單
   statusOptions: option[] = [
-    { label: '已建立', value: 'S' },
-    { label: '已派單', value: 'W' },
-    { label: '處理中', value: 'Y' },
-    { label: '結案', value: 'Z' },
-  ]
-
-  ANSWER_YNOptions: option[] = [
-    { label: '已回', value: 'Y' },
-    { label: '未回', value: 'N' },
-    { label: '已通知未回覆', value: 'S' },
-  ]
-
-  SEXOptions: option[] = [
-    { label: '男', value: 'M' },
-    { label: '女', value: 'F' },
+    { label: '已建立', value: '1' },
+    { label: '已派單', value: '2' },
+    { label: '處理中', value: '3' },
+    { label: '結案', value: '4' },
   ]
 
   columns: Column[] = [
     { field: 'SEQ_ID', header: '顧客意見編號', visible: true },
     { field: 'CUST_NAME', header: '客戶名稱', visible: true },
-    {
-      field: 'SEX', header: '性別', visible: true, format: (value: string) =>
-        this.SEXOptions.find((option) => option.value === value)?.label ||
-        value
-    },
+    { field: 'SEX', header: '性別', visible: true },
     { field: 'COMPLAIN_DATE', header: '提供日期', visible: true, format: formatDate },
     { field: 'ALERT_DATE', header: '通知日期', visible: true, format: formatDate },
     { field: 'ANSWER_NAME', header: '處理者', visible: true },
-    {
-      field: 'ANSWER_YN', header: '處理狀況', visible: true,
-      format: (value: string) => this.ANSWER_YNOptions.find(option => option.value === value)?.label || value
-    }, // Y-已回 N-未回 S-已通知未回覆
+    { field: 'ANSWER_YN', header: '處理狀況', visible: true },
     { field: 'STATUS', header: '是否結案', visible: true },
     { field: 'CLASS_ID', header: '處理單位代碼', visible: true },
     { field: 'CLASS_NAME', header: '處理單位', visible: true },

@@ -1,4 +1,4 @@
-import { NgFor, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -6,7 +6,6 @@ import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
@@ -55,9 +54,8 @@ export interface POS1002 {
 @Component({
   selector: 'app-tls41050-cru',
   templateUrl: './tls41050-cru.component.html',
-  styleUrl: './tls41050-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarComponent, DropdownComponent, EditorTextComponent, NgFor, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarComponent, DropdownComponent, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
   implements OnInit {

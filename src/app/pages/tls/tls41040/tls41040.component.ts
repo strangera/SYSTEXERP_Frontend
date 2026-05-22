@@ -152,8 +152,9 @@ export class TLS41040Component extends BasicQueryPageComponent<TLS41040Data> imp
       header: '刪除確認',
       message: '是否刪除所選項目?',
       accept: () => {
+        this.loading = true;
         const deletePayload = { idList };
-        this.tls41040Service.deleteTLS41040(deletePayload).pipe(untilDestroyed(this)).subscribe(() => {
+        this.tls41040Service.deleteTLS41040(deletePayload).pipe(untilDestroyed(this), finalize(() => (this.loading = false))).subscribe(() => {
           this.onSubmit(this.queryForm);
           this.selectedItems = [];
         });

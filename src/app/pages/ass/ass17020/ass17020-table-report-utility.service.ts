@@ -1,10 +1,8 @@
 // ASS17020 fork of shared table-report-utility — sync with @shared/componentkit/table-report/table-report-utility.service.ts when needed
 import { Injectable } from '@angular/core';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { finalize, Observable, tap } from 'rxjs';
-import { environment } from 'src/environments/environment';
 import { ReportColumn, TripleHeaderSegments } from './ass17020-table-report.model';
 
 @Injectable({
@@ -13,7 +11,6 @@ import { ReportColumn, TripleHeaderSegments } from './ass17020-table-report.mode
 export class ASS17020TableReportUtilityService {
 
   constructor(
-    private readonly sanitizer: DomSanitizer,
     private readonly messageService: NotificationService,
   ) { }
 
@@ -33,44 +30,20 @@ export class ASS17020TableReportUtilityService {
    */
   splitTripleHeaderSegments(columns: ReportColumn[]): TripleHeaderSegments {
     const empty: TripleHeaderSegments = { prefix: [], grouped: [], suffix: [], isValid: false };
-    if (!columns?.length) {
-      return { ...empty, prefix: [...(columns ?? [])] };
-    }
+    if (!columns?.length) return { ...empty, prefix: [...(columns ?? [])] };
 
-    let first = -1;
-    for (let i = 0; i < columns.length; i++) {
-      if (this.isColumnVisible(columns[i]) && columns[i].groupField) {
-        first = i;
-        break;
-      }
-    }
-    if (first === -1) {
+    const visibleCols = columns.map((col, index) => ({ col, index }))
+      .filter(item => this.isColumnVisible(item.col));
+    const groupIndices = visibleCols.filter(item => item.col.groupField).map(item => item.index);
+    // 1. 如果沒有群組欄位，直接回傳
+    if (groupIndices.length === 0) {
       return { prefix: [...columns], grouped: [], suffix: [], isValid: false };
     }
 
-    let last = first;
-    for (let i = columns.length - 1; i >= 0; i--) {
-      if (this.isColumnVisible(columns[i]) && columns[i].groupField) {
-        last = i;
-        break;
-      }
-    }
-
-    for (let i = 0; i < first; i++) {
-      if (this.isColumnVisible(columns[i]) && columns[i].groupField) {
-        return empty;
-      }
-    }
-    for (let i = first; i <= last; i++) {
-      if (this.isColumnVisible(columns[i]) && !columns[i].groupField) {
-        return empty;
-      }
-    }
-    for (let i = last + 1; i < columns.length; i++) {
-      if (this.isColumnVisible(columns[i]) && columns[i].groupField) {
-        return empty;
-      }
-    }
+    const first = groupIndices[0];
+    const last = groupIndices.at(-1)!;
+    // 2. 檢查結構是否連續 (使用輔助函式)
+    if (!this.isStructureValid(columns, first, last)) return empty;
 
     return {
       prefix: columns.slice(0, first),
@@ -78,6 +51,18 @@ export class ASS17020TableReportUtilityService {
       suffix: columns.slice(last + 1),
       isValid: true,
     };
+  }
+  /** 輔助函式：檢查分佈是否連續 (將複雜邏輯抽離) */
+  private isStructureValid(columns: ReportColumn[], first: number, last: number): boolean {
+    for (let i = 0; i < columns.length; i++) {
+      const isVisible = this.isColumnVisible(columns[i]);
+      const hasGroup = !!columns[i].groupField;
+
+      if (i < first && isVisible && hasGroup) return false;      // 前綴不該有群組
+      if (i >= first && i <= last && isVisible && !hasGroup) return false; // 群組區不該缺群組
+      if (i > last && isVisible && hasGroup) return false;       // 後綴不該有群組
+    }
+    return true;
   }
 
   /** 群組區內依第一次出現順序列出不重複的 groupField */
@@ -114,41 +99,6 @@ export class ASS17020TableReportUtilityService {
       }
     }
     return true;
-  }
-
-  private safeUrlCache = new Map<string, SafeUrl>();
-
-  getImage(url: any): SafeUrl | string {
-    // 1. 基本防呆：如果是空值，直接回傳一個透明或佔位圖的 base64，或是一個空字串
-    if (!url || typeof url !== 'string' || url.trim() === '') {
-      return '';
-    }
-
-    if (this.safeUrlCache.has(url)) {
-      return this.safeUrlCache.get(url)!;
-    }
-
-    try {
-      const baseUrl = environment.ApiUrl.endsWith('/')
-        ? environment.ApiUrl.slice(0, -1)
-        : environment.ApiUrl;
-
-      // 2. 處理路徑：統一移除 ~ 並確保開頭沒有 /
-      let cleanPath = url.replace(/~/g, '');
-      if (cleanPath.startsWith('/')) {
-        cleanPath = cleanPath.slice(1);
-      }
-
-      // 3. 拼接並處理可能的重複斜線
-      const finalUrl = `${baseUrl}/${cleanPath}`;
-
-      const safeUrl = this.sanitizer.bypassSecurityTrustUrl(finalUrl);
-      this.safeUrlCache.set(url, safeUrl);
-      return safeUrl;
-    } catch (e) {
-      console.error('URL轉換出錯:', e);
-      return '';
-    }
   }
   /**
    * 判斷當前行是否為該分組的最後一筆。
@@ -248,7 +198,7 @@ export class ASS17020TableReportUtilityService {
     const groupColumn = columns.find(c => c.field === groupRowsBy);
 
     // 如果該分組欄位有定義 format，就用 format 過的值，否則直接轉字串
-    if (groupColumn && groupColumn.format) {
+    if (groupColumn?.format) {
       return String(groupColumn.format(rawValue, 0, rowData) ?? '');
     }
     return String(rawValue ?? '');

@@ -338,7 +338,7 @@ export class ASS13040CRUComponent extends BasicCruPageComponent<ASS13040Header> 
           this.assetsTypeOptions = this.mapAndFilterAssetType(assetTypeRaw ?? []);
           this.unitOptions = (units ?? []).map(item => ({
             value: item.No,
-            label: `${item.No} - ${item.Name}`,
+            label: item.Name ?? '',
           }));
 
           // 若明細已先載入（loadDetail 比 loadDropdowns 更早完成），

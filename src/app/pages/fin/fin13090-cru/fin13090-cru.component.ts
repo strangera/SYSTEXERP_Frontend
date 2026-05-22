@@ -55,6 +55,9 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
   PUR_DirectType_Options: { value: string; label: string }[] = []; // 發票用途
   PUR_TaxType_Options: { value: string; label: string }[] = []; // 課稅別
   ACP_Type_Options: { value: string; label: string }[] = []; // 應付帳款類別（1=進退貨帳款2=專櫃帳款3=事務性帳款4=預付貨款5=電子商務6=發票媒申7=總帳管理9=固定資產）
+  PUR_DiscNo_Options: { value: string; label: string }[] = []; // 扣抵代號
+  PUR_Type_Options: { value: string; label: string }[] = []; // 類別區分
+  readonly rowSelectableFn = (row: any) => !row?.IsLocked;
   // ---------明細 表格-------------------------------------------------------
   detailloading = false;
   orgDetailData: fin13090Detail[] = []; // 原始供應商備份
@@ -70,12 +73,17 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
     'PUR_VenNo': null, // 廠商編號
     'PUR_VenName': null, // 廠商名稱
     'PUR_VenUniform': null, // 廠商統一編號
-    'PUR_DirectType': null, // 發票用途 (1=營業用 2=共同使用)
+    'PUR_DirectType': '2', // 發票用途 (1=營業用 2=共同使用) 預設值2共同使用
     'PUR_Amt': null, // 發票總金額（含稅）
 
     'PUR_TaxType': "1", // 課稅別 (0=免稅 1=應稅 2=零稅) 預設值1應稅
     'PUR_Net': null, // 發票未稅金額
-    'PUR_Tax': null  // 發票稅額
+    'PUR_Tax': null, // 發票稅額
+    'PUR_DiscNo': '1', // 扣抵代號 預設值1
+    'PUR_Type': '1', // 類別區分 預設值1
+    'Source_Doc_No': null, // 憑證單號
+    'PUR_Comb_Cnt': 0, // 彙總張數
+    'PUR_Comb': '' // 彙加註記
   };
   constructor(
     private fin13090Service: Fin13090Service,
@@ -86,7 +94,6 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
   ngOnInit(): void {
     this.initializePage('FIN13090', this.dataForm);
-    this.get13090Detail(this.dataForm.get('VouNo')?.value || null);
     this.loadOptions();
   }
 
@@ -114,7 +121,12 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
             PUR_TaxType: item.PUR_TaxType,
             PUR_Net: item.PUR_Net,
             PUR_Tax: item.PUR_Tax,
-            PUR_Amt: item.PUR_Amt
+            PUR_Amt: item.PUR_Amt,
+            PUR_DiscNo: item.PUR_DiscNo,
+            PUR_Type: item.PUR_Type,
+            Source_Doc_No: item.Source_Doc_No,
+            PUR_Comb_Cnt: item.PUR_Comb_Cnt ?? 0,
+            PUR_Comb: item.PUR_Comb ?? ''
           }))
         }
         console.log('送出請求', payload);
@@ -169,6 +181,9 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
             // 深拷備份(切斷與原始資料物件的參考連結)
             this.orgDetailData = JSON.parse(JSON.stringify(this.detailData));
+
+            // 進項稅額貸方固定從 API 回傳（GLS3002 AccAmt 合計），不自行計算
+            this.dataForm.patchValue({ TaxTotal: res.Data.TaxTotal ?? 0 });
             console.log('明細資料', this.detailData);
           } else {
             // 如果整個 res.Data 都是空的，也要清空表格防止舊資料殘留
@@ -180,22 +195,18 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
 
   loadOptions() {
     const GUIType$ = this.fin13090Service.getGUITypeDropdown({});
-    const PUR_DirectType$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_DirectType' })
-    const PUR_TaxType$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_TaxType' })
-    const VEN_Uniform$ = this.dropdownApiService.queryPos2013({ VEN_Flag: '' })
+    const PUR_DirectType$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_DirectType' });
+    const PUR_TaxType$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_TaxType' });
+    const PUR_DiscNo$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_DiscNo' });
+    const PUR_Type$ = this.dropdownApiService.querySys1000({ SYS_Type: 'PUR_Type' });
 
-    forkJoin([GUIType$, VEN_Uniform$, PUR_DirectType$, PUR_TaxType$])
+    // 快速 API 先完成 → 初始化欄位 + 載入明細
+    forkJoin([GUIType$, PUR_DirectType$, PUR_TaxType$, PUR_DiscNo$, PUR_Type$])
       .pipe(untilDestroyed(this))
-      .subscribe(([guiType, venUniform, directType, taxType]) => {
-        this.GUIType_Options = (guiType.Data ?? []).map((item: any) => ({ //發票格式
+      .subscribe(([guiType, directType, taxType, discNo, purType]) => {
+        this.GUIType_Options = (guiType.Data ?? []).map((item: any) => ({ // 發票格式
           value: item.INV_GUIType,
           label: `${item.INV_GUIType} - ${item.INV_GUIName}`,
-        }));
-        this.VEN_Uniform_Option = (venUniform ?? []).map((item: any) => ({ // 廠商統一編號 (有-)
-          No: item.No,
-          VEN_No: item.VEN_No,
-          Name: item.Name,
-          Label: `${item.VEN_No} - ${item.Name}`,
         }));
         this.PUR_DirectType_Options = (directType ?? []).map((item: any) => ({ // 發票用途
           value: item.No,
@@ -204,6 +215,14 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
         this.PUR_TaxType_Options = (taxType ?? []).map((item: any) => ({ // 課稅別
           value: item.No,
           label: item.Name,
+        }));
+        this.PUR_DiscNo_Options = (discNo ?? []).map((item: any) => ({ // 扣抵代號
+          value: item.No,
+          label: `${item.No}-${item.Name}`,
+        }));
+        this.PUR_Type_Options = (purType ?? []).map((item: any) => ({ // 類別區分
+          value: item.No,
+          label: `${item.No}-${item.Name}`,
         }));
         this.ACP_Type_Options = [
           { value: "1", label: "1-進退貨帳款" },
@@ -214,47 +233,108 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
           { value: "6", label: "6-發票媒申" },
           { value: "7", label: "7-總帳管理" },
           { value: "9", label: "9-固定資產" },
-        ]
+        ];
         this.initSupplierColumns();
+        // 欄位定義好後立刻載入明細，不等 POS2013
+        this.get13090Detail(this.dataForm.get('VouNo')?.value || null);
+      });
+
+    // POS2013 速度較慢，獨立載入；完成後更新廠商下拉選單
+    this.dropdownApiService.queryPos2013({ VEN_Flag: '1' })
+      .pipe(untilDestroyed(this))
+      .subscribe(venUniform => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.VEN_Uniform_Option = (venUniform ?? []).map((item: any) => ({ // 廠商統一編號
+          No: item.No,
+          VEN_No: item.VEN_No,
+          Name: item.Name,
+          Label: `${item.VEN_No} - ${item.Name}`,
+        }));
+        // 更新已初始化欄位的 options reference
+        const venCol = this.detailColumn.find(c => c.field === 'PUR_VenNo');
+        if (venCol) venCol.options = this.VEN_Uniform_Option;
       });
   }
 
   //---明細---
   private initSupplierColumns() {
+    const locked = (_v: any, _i: any, row: any) => !!row?.IsLocked;
     this.detailColumn = [
-      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label' },  // 發票格式 (憑證類別 21~29)
-      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', validate: [validateRequired, this.validateGUINo] }, // 發票號碼
+      { field: 'PUR_VoucherType', header: '發票格式', type: 'dropdown', validate: [validateRequired], options: this.GUIType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      { field: 'PUR_GUINo', header: '發票號碼', type: 'input', maxLength: 10, validate: [validateRequired, this.validateGUINo], disabled: locked },
       {
-        field: 'PUR_GUIDate', header: '發票日期', type: 'date', validate: [validateRequired]
-      }, // 發票日期
+        field: 'PUR_GUIDate', header: '發票日期', type: 'date', validate: [validateRequired], disabled: locked
+      },
       {
         field: 'PUR_RepYYYYMM', header: '申報年月', type: 'input',
-        validate: [this.validateEvenMonth], disabled: () => true //雙數月檢查
-      }, // 申報年月 (固定為雙數月)
+        validate: [this.validateEvenMonth], disabled: () => true
+      },
       {
         field: 'PUR_VenNo', header: '廠商編號', type: 'dropdown', validate: [validateRequired]
         , options: this.VEN_Uniform_Option, optionValue: 'VEN_No', optionLabel: 'Label',
+        disabled: locked,
         onChange: (event: string, row: fin13090Detail) => {
           const selectedValue = event;
           console.log('PUR_VenNo', selectedValue);
           const vendor = this.VEN_Uniform_Option.find(v => v.VEN_No === selectedValue);
           if (vendor) {
-            // 自動帶入對應欄位 (PUR_VenName、PUR_VenUniform)
-            row.PUR_VenName = vendor.Name;      // 廠商名稱
-            row.PUR_VenUniform = vendor.No;     // 廠商統一編號
+            row.PUR_VenName = vendor.Name;
+            row.PUR_VenUniform = vendor.No;
           }
         }
-      },  // 廠商統一編號
-      { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'input', disabled: () => true }, //檢查帶入項目
-      { field: 'PUR_VenName', header: '廠商名稱', type: 'input', disabled: () => true }, //檢查帶入項目
+      },
+      { field: 'PUR_VenUniform', header: '廠商統一編號', type: 'input', disabled: () => true },
+      { field: 'PUR_VenName', header: '廠商名稱', type: 'input', disabled: () => true },
 
-      { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label' }, // 發票用途 (1=營業用 2=共同使用)
-      // { field: 'ACP_Type', header: '應付帳款類別', type: 'dropdown', validate: [validateRequired], options: this.ACP_Type_Options, optionValue: 'value', optionLabel: 'label' }, // 應付帳款類別(前端都帶入7)
-      { field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber', validate: [validateRequired] }, // 發票總金額（含稅）
-
-      { field: 'PUR_TaxType', header: '課稅別', type: 'dropdown', validate: [validateRequired], options: this.PUR_TaxType_Options, optionValue: 'value', optionLabel: 'label' },  // 課稅別 (0=免稅 1=應稅 2=零稅)
-      { field: 'PUR_Net', header: '發票未稅金額', type: 'inputNumber', validate: [validateRequired], disabled: () => true },  // 發票未稅金額(稅額自動計算)
-      { field: 'PUR_Tax', header: '發票稅額', type: 'inputNumber', validate: [validateRequired], disabled: () => true }, // 發票稅額(稅額自動計算)
+      { field: 'PUR_DirectType', header: '發票用途', type: 'dropdown', options: this.PUR_DirectType_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      // { field: 'ACP_Type', header: '應付帳款類別', type: 'dropdown', validate: [validateRequired], options: this.ACP_Type_Options, optionValue: 'value', optionLabel: 'label' },
+      {
+        field: 'PUR_Amt', header: '發票總金額（含稅）', type: 'inputNumber', validate: [validateRequired],
+        disabled: locked,
+        calculate: (rowData: fin13090Detail, value: any) => {
+          const amt = Number(value) || 0;
+          if (String(rowData.PUR_TaxType) === '1') {
+            const net = Math.round(amt / 1.05);
+            return { PUR_Net: net, PUR_Tax: amt - net };
+          }
+          return { PUR_Net: amt, PUR_Tax: 0 };
+        }
+      },
+      {
+        field: 'PUR_TaxType', header: '課稅別', type: 'dropdown', validate: [validateRequired], options: this.PUR_TaxType_Options, optionValue: 'value', optionLabel: 'label',
+        disabled: locked,
+        calculate: (rowData: fin13090Detail, value: any) => {
+          const amt = Number(rowData.PUR_Amt) || 0;
+          if (String(value) === '1') {
+            const net = Math.round(amt / 1.05);
+            return { PUR_Net: net, PUR_Tax: amt - net };
+          }
+          return { PUR_Net: amt, PUR_Tax: 0 };
+        }
+      },
+      {
+        field: 'PUR_Net', header: '發票未稅金額', type: 'inputNumber', validate: [validateRequired],
+        disabled: locked,
+        calculate: (_rowData: fin13090Detail, value: any) => {
+          const net = Number(value) || 0;
+          const tax = Math.round(net * 0.05);
+          return { PUR_Tax: tax, PUR_Amt: net + tax };
+        }
+      },
+      {
+        field: 'PUR_Tax', header: '發票稅額', type: 'inputNumber', validate: [validateRequired],
+        disabled: locked,
+        calculate: (rowData: fin13090Detail, value: any) => {
+          const tax = Number(value) || 0;
+          const net = Number(rowData.PUR_Net) || 0;
+          return { PUR_Amt: net + tax };
+        }
+      },
+      { field: 'PUR_DiscNo', header: '扣抵代號', type: 'dropdown', options: this.PUR_DiscNo_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      { field: 'PUR_Type', header: '類別區分', type: 'dropdown', options: this.PUR_Type_Options, optionValue: 'value', optionLabel: 'label', disabled: locked },
+      { field: 'Source_Doc_No', header: '憑證單號', type: 'input', maxLength: 16, disabled: locked },
+      { field: 'PUR_Comb_Cnt', header: '彙總張數', type: 'inputNumber', disabled: locked },
+      { field: 'PUR_Comb', header: '彙加註記', type: 'input', maxLength: 20, disabled: locked },
     ];
   }
 
@@ -337,6 +417,14 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
       }
     }
 
+    // 發票稅額加總必須等於進項稅額貸方（GLS3002 AccAmt 合計）
+    const taxTotal = Number(this.dataForm.get('TaxTotal')?.value) || 0;
+    const inputTaxSum = this.detailData.reduce((sum, item) => sum + (Number(item.PUR_Tax) || 0), 0);
+    if (inputTaxSum !== taxTotal) {
+      this.messageService.errorBubble(`發票稅額合計 (${inputTaxSum}) 必須等於進項稅額貸方 (${taxTotal})`);
+      return false;
+    }
+
     return true;
   }
 
@@ -362,43 +450,10 @@ export class FIN13090CRUComponent extends BasicCruPageComponent<fin13090Detail> 
           }
         }
       }
-      // --- 明細稅額計算 (課稅別 變更)---
-      const amt = Number(row.PUR_Amt) || 0;
-      const taxType = String(row.PUR_TaxType); // 確保是字串比較
-
-      if (taxType === '1') {
-        // 應稅：稅額 = round(總額 / 21), 未稅 = 總額 - 稅額
-        const tax = Math.round(amt / 21);
-        row.PUR_Tax = tax;
-        row.PUR_Net = amt - tax;
-      } else if (taxType === '0' || taxType === '2') {
-        // 免稅 或 零稅：稅額 = 0, 未稅 = 總額
-        row.PUR_Tax = 0;
-        row.PUR_Net = amt;
-      } else {
-        // 預防萬一其他稅別
-        row.PUR_Tax = 0;
-        row.PUR_Net = amt;
-      }
     });
 
-    // 更新資料源並重新計算總計
+    // 更新資料源
     this.detailData = [...newData];
-    this.calculateTaxTotal();
-  }
-
-  // 2. 實作加總邏輯
-  calculateTaxTotal() {
-    // 使用 reduce 累加所有明細的 PUR_Tax
-    const total = this.detailData.reduce((sum, item) => {
-      const tax = Number(item.PUR_Tax) || 0; // 確保是數字，避免 null 或 undefined
-      return sum + tax;
-    }, 0);
-
-    // 3. 更新到 dataForm 的 TaxTotal 欄位
-    this.dataForm.patchValue({
-      TaxTotal: total
-    });
   }
 
   //清除明細內容

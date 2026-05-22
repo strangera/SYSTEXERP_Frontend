@@ -16,7 +16,7 @@ export class ValidationService {
       email: '「電子郵件」格式錯誤，請重新輸入。',
       invalidCreditCard: 'Is invalid credit card number',
       invalidEmailAddress: '「電子郵件」格式錯誤，請重新輸入。',
-      invalidPassword: `密碼無效。密碼長度至少為 6 個字元，且必須包含一個數字。`,
+      invalidPassword: `輸入無效。長度至少為 6 個字元，且必須包含一個數字。`,
       minlength: `最短長度為 ${validatorValue.requiredLength}`,
       maxlength: `最長長度為 ${validatorValue.requiredLength}`,
       exactLength: `長度只能為 ${validatorValue.requiredLength}`,
@@ -29,8 +29,8 @@ export class ValidationService {
       invalidElectronicnum: '請補上錯誤訊息',
       invalidDateRange: '日期起不可大於日期迄',
       invalidNumberRange: '起始數字不可大於結束數字',
-      passwordsMismatch: '兩次輸入的密碼不一致，請重新輸入。',
-      invalidPasswordStrength: '密碼強度不足，至少包含一個英文小寫字母與一個數字。',
+      passwordsMismatch: '兩次輸入不一致，請重新輸入。',
+      invalidPasswordStrength: '強度不足，至少包含一個英文小寫字母與一個數字。',
       invalidGuiTrack: '僅能輸入大寫英文字母',
       invalidGuiBegNo: '起號結尾只能為 00 或 50',
       invalidGuiEndNo: '迄號結尾只能為 49 或 99',
@@ -69,7 +69,7 @@ export class ValidationService {
     // ＝＝＝
     // 第一碼必須為英文，第二碼若為數字１或２請以國民身分證驗證方式進行，若第二碼為英文Ａ、Ｂ、Ｃ、Ｄ請以統一居留證號驗證方式進行，第二碼非上述數字或代碼者，為異常資料。
     // ====
-    // 0414 農保加保增加檢核說明 :　邏輯檢核，若有錯誤顯示＂身分證號邏輯檢核錯誤，確定要繼續申報嗎?”，若回應確定，則繼續進行作業。
+    // 0414 農保加保增加檢核說明 : 邏輯檢核，若有錯誤顯示＂身分證號邏輯檢核錯誤，確定要繼續申報嗎?”，若回應確定，則繼續進行作業。
     // }
 
     // ====NA=====
@@ -80,7 +80,7 @@ export class ValidationService {
     }
 
     if (control.value !== null) {
-      if (!control.value.match(/^[A-Za-z][12]\d{8}$/)) {
+      if (!RegExp(/^[A-Za-z][12]\d{8}$/).exec(control.value)) {
         return { invalidIdn: true };
       }
     }
@@ -130,7 +130,7 @@ export class ValidationService {
     };
   }
 
-  // 密碼強度驗證器
+  // 強度驗證器
   passwordStrengthValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const value = control.value;
@@ -146,7 +146,7 @@ export class ValidationService {
       return isValid ? null : { invalidPasswordStrength: true };
     };
   }
-  // 密碼匹配驗證
+  // 匹配驗證
   passwordsMatchValidator(password: string, rePassword: string): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const passwordControl = control.get(password);
@@ -224,7 +224,7 @@ export class ValidationService {
         const beg = Number(begNo);
         const end = Number(endNo);
 
-        if (!isNaN(beg) && !isNaN(end)) {
+        if (!Number.isNaN(beg) && !Number.isNaN(end)) {
           if (beg > end) {
             // 如果起始號大於迄號，將錯誤設置在『結束號』的控制項上
             // 這樣錯誤訊息會顯示在 GUI_EndNo 的欄位上
@@ -244,7 +244,7 @@ export class ValidationService {
   oddMonthValidator(control: { value: Date | null }) {
     const value = control.value;
 
-    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+    if (value !== null && value instanceof Date && !Number.isNaN(value.getTime())) {
       const month = value.getMonth() + 1; // JS 月份是 0-based，要+1
       // 檢查是否為單數月
       if (month % 2 === 0) {
@@ -282,7 +282,7 @@ export class ValidationService {
   minMonthValidator(control: { value: Date | null }): ValidationErrors | null {
     const value = control.value;
 
-    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+    if (value !== null && value instanceof Date && !Number.isNaN(value.getTime())) {
       const now = new Date();
       const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); // 當前月的前一個月 1 號
       const inputDate = new Date(value.getFullYear(), value.getMonth(), 1);
@@ -303,10 +303,10 @@ export class ValidationService {
     const value = control.value;
     const now = new Date();
     const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); // 當前月的前一個月 1 號
-    if (value && value.length === 6) {
-      const year = parseInt(value.substring(0, 4), 10);
-      const month = parseInt(value.substring(4, 6), 10) - 1; // JS 月份從 0 開始
-      if (!isNaN(year) && !isNaN(month)) {
+    if (value?.length === 6) {
+      const year = Number.parseInt(value.substring(0, 4), 10);
+      const month = Number.parseInt(value.substring(4, 6), 10) - 1; // JS 月份從 0 開始
+      if (!Number.isNaN(year) && !Number.isNaN(month)) {
         const inputDate = new Date(year, month, 1);
         if (inputDate < prevMonth) {
           return { invalidMinMonthDate: true };
@@ -320,7 +320,7 @@ export class ValidationService {
   maxMonthValidator(control: { value: Date | null }): ValidationErrors | null {
     const value = control.value;
 
-    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+    if (value !== null && value instanceof Date && !Number.isNaN(value.getTime())) {
       const now = new Date();
       const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1); // 當前月 1 號
       const inputDate = new Date(value.getFullYear(), value.getMonth(), 1);
@@ -485,7 +485,7 @@ export class ValidationService {
     const requiredDateOnly = new Date(requiredDate.getFullYear(), requiredDate.getMonth(), requiredDate.getDate());
     return (control: AbstractControl): ValidationErrors | null => {
       const inputTime = control.value;
-      if (!inputTime || !(inputTime instanceof Date) || isNaN(inputTime.getTime())) {
+      if (!inputTime || !(inputTime instanceof Date) || Number.isNaN(inputTime.getTime())) {
         return null;
       }
       const inputDateOnly = new Date(inputTime.getFullYear(), inputTime.getMonth(), inputTime.getDate());
@@ -602,7 +602,7 @@ export class ValidationService {
     let altDigit = -1;
 
     for (let i = 0; i < 8; i++) {
-      let product = parseInt(value[i]) * weights[i];
+      let product = Number.parseInt(value[i]) * weights[i];
       if (product >= 10) product = Math.floor(product / 10) + (product % 10);
       // 僅第 7 碼(index 6)數字為 7 時會再次 >= 10（7×4=28 → 2+8=10）
       if (product >= 10) { altDigit = product % 10; product = Math.floor(product / 10); }
@@ -610,9 +610,9 @@ export class ValidationService {
     }
 
     const sum = digitSums.reduce((a, b) => a + b, 0);
-    const valid = altDigit !== -1
-      ? (sum % 5 === 0) || ((sum - digitSums[6] + altDigit) % 5 === 0)
-      : sum % 5 === 0;
+    const valid = altDigit === -1
+      ? sum % 5 === 0
+      : (sum % 5 === 0) || ((sum - digitSums[6] + altDigit) % 5 === 0);
 
     return valid ? null : { invalidCompanyId: true };
   }
@@ -622,8 +622,8 @@ export class ValidationService {
       const value = control.value;
       if (!value || value.length < 6) return null;
 
-      const year = parseInt(value.substring(0, 4), 10);
-      const month = parseInt(value.substring(4, 6), 10);
+      const year = Number.parseInt(value.substring(0, 4), 10);
+      const month = Number.parseInt(value.substring(4, 6), 10);
 
       // 邏輯：今天 2026/05/01，當期起點是 202605
       // 鎖死不可小於 202605

@@ -1,6 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
 import {
   QueryASS17030DeptInfo,
   QueryASS17030Detail,
@@ -8,18 +9,18 @@ import {
   QueryASS17030Summary,
 } from '@pages/ass/ass17030/ass17030.model';
 import { ASS17030Service } from '@service/api/ass/ass17030.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { Option } from '@service/utility/dropdown-api.model';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { finalize, map, Observable } from 'rxjs';
+import { ButtonModule } from 'primeng/button';
+import { Observable, finalize, map } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ASS17020TableReportComponent } from '../ass17020/ass17020-table-report.component';
 import { ColumnGroup, ReportColumn } from '../ass17020/ass17020-table-report.model';
@@ -40,6 +41,7 @@ import { ColumnGroup, ReportColumn } from '../ass17020/ass17020-table-report.mod
     ButtonComponent,
     ASS17020TableReportComponent,
     TranslateModule,
+    ButtonModule,
   ],
 })
 export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Detail> implements OnInit {
@@ -63,6 +65,10 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
   public readonly totalRecords = signal<number>(0);
   public readonly tableLoading = signal<boolean>(false);
   public readonly footerData = signal<Record<string, unknown> | undefined>(undefined);
+
+  exportPdfLoading = false;
+  exportExcelLoading = false;
+
   lastQueryBody?: QueryASS17030Request & { pageSize?: number; pageIndex?: number };
   private currentDeptData: QueryASS17030DeptInfo[] = [];
   columnGroup: ColumnGroup[] = [];
@@ -356,5 +362,76 @@ export class ASS17030Component extends BasicQueryPageComponent<QueryASS17030Deta
     const num = Number(value);
     if (Number.isNaN(num)) return String(value);
     return num.toLocaleString();
+  }
+
+  onExportPdf(): void {
+    const payload = this.lastQueryBody;;
+    if (!payload) {
+      this.messageService.warnBubble('請先執行查詢');
+      return;
+    }
+    this.exportPdfLoading = true;
+    this.ass17030Service
+      .exportPDFASS17030(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.exportPdfLoading = false)),
+      )
+      .subscribe({
+        next: blob => {
+          if (blob) {
+            this.downloadBlob(blob, `領用發料統計表_${this.getTimestamp()}.pdf`);
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('PDF 匯出失敗，請重試。');
+        },
+      });
+  }
+
+  onExportExcel(): void {
+    const payload = this.lastQueryBody;
+    if (!payload) {
+      this.messageService.warnBubble('請先執行查詢');
+      return;
+    }
+    this.exportExcelLoading = true;
+    this.ass17030Service
+      .exportExcelASS17030(payload)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.exportExcelLoading = false)),
+      )
+      .subscribe({
+        next: blob => {
+          if (blob) {
+            this.downloadBlob(blob, `領用發料統計表_${this.getTimestamp()}.xlsx`);
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('Excel 匯出失敗，請重試。');
+        },
+      });
+  }
+
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(blobUrl);
+  }
+
+  private getTimestamp(): string {
+    const now = new Date();
+    return (
+      now.getFullYear().toString() +
+      (now.getMonth() + 1).toString().padStart(2, '0') +
+      now.getDate().toString().padStart(2, '0') +
+      '_' +
+      now.getHours().toString().padStart(2, '0') +
+      now.getMinutes().toString().padStart(2, '0')
+    );
   }
 }

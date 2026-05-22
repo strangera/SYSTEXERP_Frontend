@@ -126,6 +126,7 @@
     [lastQueryBody]="lastQueryBody"
     [queryFunction]="queryFIN13010Fn"
     (delete)="Delete($event)"
+    [editDisabled]="editDisabledFn"
     (edit)="onEdit($event)"
     (detail)="onDetail($event)"
     (dataChange)="data = $event"

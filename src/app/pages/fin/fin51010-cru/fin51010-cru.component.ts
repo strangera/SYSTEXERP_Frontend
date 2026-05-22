@@ -1,11 +1,11 @@
 import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin51010Service, QueryFIN51010DetailLine, QueryFIN51010Response, UpdateFIN51010Request } from '@service/api/fin/fin51010.service';
 import { TLS2C040Service } from '@service/api/tls/tls2c040.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
+import { getSYS1000, getSYS1000Options } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -37,7 +37,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     VouNo: [{ value: null as string | null, disabled: true }],      // 傳票編號
     Voucher_Name: [{ value: null as string | null, disabled: true }], // 傳票名稱 (種類名稱)
     SrcSheetType: [{ value: null as string | null, disabled: true }], // 傳票型態 (代碼)
-    VouDate: [{ value: null as string | null, disabled: true }],      // 傳票日期
+    VouDate: [null, [Validators.required]],      // 傳票日期
     Remark: [null as string | null],                // 傳票摘要 (可編輯)
     SettleNo: [{ value: null as string | null, disabled: true }],     // 結帳單號
     Trans_Status: [{ value: null as string | null, disabled: true }], // 狀態
@@ -142,13 +142,14 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   ];
   PostFlagOptions = getSYS1000Options('PostFlag');
   Trans_StatusOptions = getSYS1000Options('Trans_Status');
-  private ledgerOptions$ = this.dropdown.queryGls1005_ledgerMD().pipe(shareReplay(1));
-  private sys3100Options$ = this.dropdown.querySys3100().pipe(shareReplay(1));
+  private readonly ledgerOptions$ = this.dropdown.queryGls1005_ledgerMD().pipe(shareReplay(1));
+  private readonly sys3100Options$ = this.dropdown.querySys3100().pipe(shareReplay(1));
   initTable = false;
+
   constructor(
     private readonly fin51010Service: Fin51010Service,
     private readonly dropdown: DropdownApiService,
-    private readonly tLS2C040Service: TLS2C040Service
+    public readonly tLS2C040Service: TLS2C040Service,
   ) {
     super();
   }
@@ -162,17 +163,28 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
     const mainId = this.rowdata?.id;
     if (!mainId) return;
     this.formTitle = '傳票資料'
+    // 清空上一次的發票資料
+    this.invoiceData = [];
     // 1. 主資料 (Detail)
-    this.fin51010Service.queryFIN51010Detail({ GLS6001_ID: mainId }).pipe(finalize(() => (this.loading = false)), untilDestroyed(this)).subscribe((res) => {
+    this.fin51010Service.queryFIN51010Detail({ GLS6001_ID: mainId }).pipe(
+      finalize(() => (this.loading = false)),
+      untilDestroyed(this)
+    ).subscribe((res) => {
       if (res.Data && res.Data.length > 0) {
         const mainData = res.Data[0];
-        this.dataForm.patchValue(mainData);
+        this.dataForm.patchValue(mainData as any, { emitEvent: false });
         this.data = (mainData.LineList || []).map((line: any) => ({
           ...line,
           AccNo: line.AccNo?.trim(),
           ORG_ID: line.ORG_ID?.trim(),
         }));
         this.initTable = true;
+
+        // 【核心改動】：拿到主表資料後，根據它的 SrcSheetType 決定載入哪種發票
+        const sheetType = mainData.SrcSheetType?.trim();
+        if (sheetType === 'PT' || sheetType === 'WT') {
+          this.loadInvoiceData(sheetType, sheetType === 'PT' ? mainId : mainData.VouNo);
+        }
       }
     });
 
@@ -182,7 +194,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
       if (res.Data) {
         this.arData = res.Data._GLS6004List || [];
         this.arFooterData = { ar_amt: res.Data?.Total_ar_amt };
-        this.arTotalRecords = this.arData.length; // 修正：應為 arData 的長度
+        this.arTotalRecords = res.TotalCount;
       }
     });
 
@@ -192,7 +204,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
       if (res.Data) {
         this.apData = res.Data._GLS6005List || [];
         this.apFooterData = { ap_amt: res.Data?.Total_AP_Amt };
-        this.apTotalRecords = this.apData.length; // 修正：應為 apData 的長度
+        this.apTotalRecords = res.TotalCount;
       }
     });
   }
@@ -211,6 +223,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
             }));
             const body: UpdateFIN51010Request = {
               GLS6001_ID: mainId,
+              VouDate: frm.value.VouDate,
               Remark: frm.value.Remark,
               DetailList: modifiedDetails
             };
@@ -226,5 +239,48 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
 
   onClear() {
     this.initData();
+  }
+
+
+  // 1. 在類別屬性區宣告發票相關變數
+  invoiceData: any[] = [];
+  invoiceTotalRecords = 0;
+  invoiceLoading = false;
+  // 2. 定義進項發票的 Columns (結構與你的傳票明細 columns 一致，但改為 ReportColumn 格式)
+  invoiceColumns: ReportColumn[] = [
+    { field: 'VoucherType', header: '發票格式', format: v => getSYS1000('VoucherType', v), align: 'left' },
+    { field: 'TrackNo', header: '字軌／發票號碼', align: 'left' },
+    { field: 'InvoiceNo', header: '發票號碼', align: 'left' },
+    { field: 'InvoiceDate', header: '發票日期', align: 'left', format: formatDate },
+    { field: 'DeclareYM', header: '申報年月', align: 'left' },
+    { field: 'VendorTaxID', header: '廠商統一編號', align: 'left' },
+    { field: 'InvoiceUsage', header: '發票用途', align: 'left', format: v => getSYS1000('PUR_DirectType', v) },
+    { field: 'InvoiceAmount', header: '發票總金額', align: 'right', format: formatAmount },
+    { field: 'TaxType', header: '課稅別', format: v => getSYS1000('PUR_TaxType', v), align: 'left' },
+    { field: 'NetAmount', header: '發票未稅金額', align: 'right', format: formatAmount },
+    { field: 'TaxAmount', header: '發票稅額', align: 'right', format: formatAmount },
+    { field: 'DeductionCodeDesc', header: '扣抵代號', format: v => getSYS1000('PUR_DiscNo', v), align: 'left' },
+    { field: 'CategoryType', header: '類別區分', format: v => getSYS1000('PUR_Type', v), align: 'left' },
+    { field: 'SourceDocNo', header: '憑證單號', align: 'left' },
+    { field: 'TotalCount', header: '彙整張數', align: 'right', format: formatAmount },
+  ];
+  /** 新增：依據 PT 或 WT 調用不同 API 載入進項發票 */
+  loadInvoiceData(type: 'PT' | 'WT', mainId: number | string) {
+    this.invoiceLoading = true;
+
+    // 根據類別分流 API
+    const apiCall$ = type === 'PT'
+      ? this.fin51010Service.queryPTInvoice({ GLS6001_ID: mainId as number })
+      : this.fin51010Service.queryWTInvoice({ VouNo: mainId as string });
+
+    apiCall$.pipe(
+      finalize(() => this.invoiceLoading = false),
+      untilDestroyed(this)
+    ).subscribe(res => {
+      if (res.Data) {
+        this.invoiceData = res.Data || [];
+        this.invoiceTotalRecords = res.TotalCount || res.Data.length;
+      }
+    });
   }
 }

@@ -147,7 +147,7 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
 
           if (isSuccess) {
             // 換行處理
-            const formattedMsg = msg.replace(/\n/g, '<br>');
+            const formattedMsg = msg.replaceAll('\n', '<br>');
             setTimeout(() => {
               this.messageService.confirm({
                 header: '拋轉成功',
@@ -227,6 +227,12 @@ export class FIN51010Component extends BasicQueryPageComponent<QueryFIN51010Resp
     // 2. 選中的項目中，若包含「未過帳」(PostFlag === '0') 則禁用 (依據您的邏輯)
     return this.selectedItems.some(item => item.PostFlag === '0');
   }
+
+  /** 判斷單筆資料是否禁用編輯（用於表格內的操作列） */
+  isEditDisabled = (rowData: QueryFIN51010Response): boolean => {
+    // 當傳票拋轉狀態為 '1' (已拋轉) 時，回傳 true 禁用編輯
+    return rowData?.Trans_Status === '1';
+  };
 
   /** 讀取HR傳票資料 */
   hrLoading = false;

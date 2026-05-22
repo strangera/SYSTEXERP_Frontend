@@ -30,7 +30,7 @@ import { CellInput } from './table-edit-cell.model';
                      [maxlength]="cellInput.col.maxLength || null"
                      [minFractionDigits]="cellInput.col.minFractionDigits"
                      [maxFractionDigits]="cellInput.col.maxFractionDigits"
-                     (onFocus)="cellInput.col.onFocus?.(cellInput.rowData, cellInput.rowData[cellInput.col.field], cellInput.col, cellInput.index)"
+                     (onFocus)="handleFocus($event)"
                      (onBlur)="handleBlur()"(keydown.enter)="handleEnter($event)"
                      [style]="{'text-align': cellInput.col.textAlign,'width': cellInput.col.width}"
                      [inputStyle]="{'width': '100%', 'text-align': cellInput.col.textAlign || 'right'}"
@@ -82,6 +82,25 @@ export class NumberCellComponent {
     this.cellInput.onValueChange(
       this.cellInput.rowData,
       currentValue, // 傳遞修正後的值
+      this.cellInput.col,
+      this.cellInput.index
+    );
+  }
+  handleFocus(event: Event) {
+    // 1. PrimeNG 的 onFocus 有時會把原生事件封裝在 originalEvent 裡，如果沒有就取 event.target
+    const inputElement = event?.target;
+    // 2. 判斷這個 target 是不是一個 HTML 的 input 元素
+    if (inputElement instanceof HTMLInputElement) {
+      // 💡 加上微小延遲，避免被 PrimeNG 後續的游標定位邏輯覆蓋
+      setTimeout(() => {
+        inputElement.select(); // ✨ 此時 target 被推導為 HTMLInputElement，可以安全呼叫 select()
+      }, 10);
+    }
+
+    // 執行原先外層 editColumns 配置的 onFocus 回調
+    this.cellInput.col.onFocus?.(
+      this.cellInput.rowData,
+      this.cellInput.rowData[this.cellInput.col.field],
       this.cellInput.col,
       this.cellInput.index
     );

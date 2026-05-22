@@ -211,10 +211,11 @@ ngOnInit(): void {
       )
       .subscribe((res: any[]) => {
         this.orgOptions = (res || []).map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        }));
+  label: x.label,
+  formLabel: `${x.value} - ${x.label}`,
+  value: x.value,
+  name: x.label,
+}));
       });
   }
 
@@ -222,22 +223,28 @@ ngOnInit(): void {
     this.handleSubmit(frm, () => {
       const raw = this.queryForm.getRawValue() as any;
 
-      const payload: FIN42030QueryRequest = {
-        ...raw,
-        YM: this.normalizeYM(raw.YM),
-        Org_ID:
-          !raw.Org_ID || raw.Org_ID === '100000'
-            ? undefined
-            : raw.Org_ID,
-        ReportType: Number(raw.ReportType ?? 1),
-        AmtUnit: Number(raw.AmtUnit ?? 1),
-        pageIndex: Number(raw.pageIndex ?? 1),
-        pageSize: Number(raw.pageSize ?? 30),
-        SortBy:
-          Array.isArray(raw.SortBy) && raw.SortBy.length
-            ? raw.SortBy
-            : this.defaultSort,
-      };
+      const selectedOrg = this.orgOptions.find(x => x.value === raw.Org_ID);
+
+const payload: FIN42030QueryRequest = {
+  ...raw,
+  YM: this.normalizeYM(raw.YM),
+  Org_ID:
+    !raw.Org_ID || raw.Org_ID === '100000'
+      ? undefined
+      : raw.Org_ID,
+  Org_Name:
+    !raw.Org_ID || raw.Org_ID === '100000'
+      ? '全公司'
+      : selectedOrg?.name ?? selectedOrg?.label ?? '',
+  ReportType: Number(raw.ReportType ?? 1),
+  AmtUnit: Number(raw.AmtUnit ?? 1),
+  pageIndex: Number(raw.pageIndex ?? 1),
+  pageSize: Number(raw.pageSize ?? 30),
+  SortBy:
+    Array.isArray(raw.SortBy) && raw.SortBy.length
+      ? raw.SortBy
+      : this.defaultSort,
+};
 
       Object.keys(payload).forEach((k) => {
         const v = (payload as any)[k];

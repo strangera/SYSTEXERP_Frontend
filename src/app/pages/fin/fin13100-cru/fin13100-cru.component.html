@@ -16,24 +16,6 @@
           ></app-input-text>
         </div>
 
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            label="傳票日期"
-            controlName="VouDate"
-            [control]="dataForm.controls.VouDate"
-            [submitted]="submitted">
-          </app-calendar>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="傳票狀態"
-            controlName="PostFlag"
-            [control]="dataForm.controls.PostFlag"
-            [submitted]="submitted">
-          </app-input-text>
-        </div> -->
-
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-number
             label="銷項稅額-貸方"
@@ -44,28 +26,19 @@
         </div>
       </div>
 
-      <app-fin32020table-edit
+      <app-table-edit
         title="列表明細"
         tableKey="FIN13100CRU_DETAIL"
-        dataKey="RowId"
         [data]="detailRows"
         [columns]="detailColumns"
         [loading]="detailLoading"
         [disabled]="isRead"
-        [showReorder]="!isRead"
-        [showCheckBox]="!isRead"
         [showDelete]="!isRead"
-        [showInsert]="false"
         [canInsert]="!isRead"
-        [keepDeletedData]="false"
         [defaultInsertData]="defaultDetailRow"
-        [showCaption]="!isRead"
-        [showPaginator]="false"
-        [scrollable]="false"
-        (dataChange)="onDetailRowsChange($event)"
-        (fieldChange)="onDetailFieldChange($event)"
-        (delete)="onDetailDelete($event)"
-      ></app-fin32020table-edit>
+        [isRowSelectable]="rowSelectableFn"
+        (dataChange)="onDetailChange($event)"
+      ></app-table-edit>
 
       <div
         class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"

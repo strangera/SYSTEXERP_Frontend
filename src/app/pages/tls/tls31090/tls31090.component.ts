@@ -343,7 +343,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       Buildings: (raw.Buildings || []).join(','),
     } as TLS31090Request;
 
-    console.log('時段之大分類之營業報表print請求(Excel)', JSON.stringify(formValue));
+    console.log('各時段之大分類之營業報表print請求(Excel)', JSON.stringify(formValue));
 
     if (isExcel) {
       console.log('匯出Excel');
@@ -352,7 +352,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = '時段之大分類之營業報表.xlsx';
+        a.download = '各時段之大分類之營業報表.xlsx';
         a.click();
         window.URL.revokeObjectURL(url);
         this.btnExcelLoading = false;
@@ -364,7 +364,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = '時段之大分類之營業報表.pdf';
+        a.download = '各時段之大分類之營業報表.pdf';
         a.click();
         window.URL.revokeObjectURL(url);
         this.btnPDFLoading = false;

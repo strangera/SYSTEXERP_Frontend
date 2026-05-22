@@ -274,6 +274,13 @@ export interface FIN64010UpdateRequest {
 
   [key: string]: any;
 }
+export interface Aps1002DropdownItem {
+  BNK_DepositAccNo: string;
+  ACCCNAME: string | null;
+  BNK_No: string;
+  BNK_BRANCHNAME: string;
+  BNK_AccType: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class Fin64010Service {
@@ -295,6 +302,13 @@ export class Fin64010Service {
       body
     );
   }
+  /** 查詢銀行代碼及名稱 queryAPS1002_DropDownList */
+queryAPS1002_DropDownList(): Observable<ApiResponse<Aps1002DropdownItem[]>> {
+  return this.http.post<ApiResponse<Aps1002DropdownItem[]>>(
+    `${this.DLapiUrl}/queryAPS1002_DropDownList`,
+    {}
+  );
+}
 
   updateFIN64010(body: FIN64010UpdateRequest): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateFIN64010`, body);

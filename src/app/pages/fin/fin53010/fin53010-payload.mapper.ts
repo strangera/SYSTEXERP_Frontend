@@ -60,15 +60,22 @@ function vendorDisplayName(ven: Option | undefined): string | undefined {
   return label.slice(idx + 3).trim() || undefined;
 }
 
-function splitVenBankAccount(venBankAccount: string | undefined): {
-  VEN_BankAccountNo?: string;
-  VEN_AccountName?: string;
-} {
+function splitVenBankAccount(venBankAccount: string | undefined): { VEN_BankAccountNo?: string; VEN_AccountName?: string; } {
   const s = typeof venBankAccount === 'string' ? venBankAccount.trim() : '';
   if (!s) return {};
-  const parts = s.split(/\s*\/\s*/);
+
+  // 1. 使用正規表達式做取代，將 '/' 前後的空格統一處理掉
+  // \s*/\s* 的邏輯等於：先取代所有包含空格的斜線為純斜線
+  const sanitized = s.replace(/\s*\/\s*/g, '/');
+
+  // 2. 直接用字串分割，這是最快且完全沒有回溯風險的作法
+  const parts = sanitized.split('/');
+
   if (parts.length >= 2) {
-    return { VEN_BankAccountNo: parts[0]?.trim(), VEN_AccountName: parts.slice(1).join(' / ').trim() };
+    return {
+      VEN_BankAccountNo: parts[0]?.trim(),
+      VEN_AccountName: parts.slice(1).join('/').trim() // join 回去時保持單一斜線
+    };
   }
   return { VEN_BankAccountNo: s };
 }
@@ -85,7 +92,7 @@ function mapStepApToInsert(
     ACP_Date: toYmd(row.acp_date ?? undefined, deps.datePipe),
     VEN_No: row.ven_no,
     VEN_Name: vendorDisplayName(ven),
-    VEN_Uniform: ven?.['VEN_Uniform'] != null ? String(ven['VEN_Uniform']) : undefined,
+    VEN_Uniform: ven?.['VEN_Uniform'] == null ? undefined : String(ven['VEN_Uniform']),
     AccNo: row.acc_no,
     ACP_Amt: row.acp_amt,
     VEN_BNK_No: row.ven_bnk_no,
@@ -106,7 +113,7 @@ function mapStepArToInsert(row: FIN53010StepAR, deps: Fin53010PayloadDepsWithVou
     ARS_Date: toYmd(row.ars_date ?? undefined, deps.datePipe),
     VEN_No: row.ven_no,
     VEN_Name: vendorDisplayName(ven),
-    VEN_Uniform: ven?.['VEN_Uniform'] != null ? String(ven['VEN_Uniform']) : undefined,
+    VEN_Uniform: ven?.['VEN_Uniform'] == null ? undefined : String(ven['VEN_Uniform']),
     AccNo: row.acc_no,
     NoteDesc: row.note_desc,
   };
@@ -208,7 +215,7 @@ function buildInsertDetails(
     const accAmt = (AccAmtD ?? 0) + (AccAmtC ?? 0);
     const accDc = AccAmtD ? 'D' : AccAmtC ? 'C' : '';
     const ser = typeof rest.SerNo === 'number' ? rest.SerNo : index + 1;
-    const pta = rest.recKey != null ? String(rest.recKey) : undefined;
+    const pta = rest.recKey == null ? undefined : String(rest.recKey);
     const body: InsertFIN53010DetailBody = {
       index,
       SerNo: ser,
@@ -343,7 +350,7 @@ function buildUpdateDetails(
     const accAmt = (AccAmtD ?? 0) + (AccAmtC ?? 0);
     const accDc = AccAmtD ? 'D' : AccAmtC ? 'C' : '';
     const ser = typeof rest.SerNo === 'number' ? rest.SerNo : index + 1;
-    const pta = rest.PTA != null ? String(rest.PTA) : undefined;
+    const pta = rest.PTA == null ? undefined : String(rest.PTA);
     const id = typeof rest.id === 'number' ? rest.id : undefined;
     const body: UpdateFIN53010DetailBody = {
       id,

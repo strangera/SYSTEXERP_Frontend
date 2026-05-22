@@ -48,10 +48,10 @@
   <ng-template pTemplate="content" let-removeFileCallback="removeFileCallback">
     <div *ngIf="files.length > 0" class="h-full">
       <div class="file-upload-files flex flex-wrap p-2">
-        <div *ngFor="let file of files; let i = index"
+        <div *ngFor="let file of files; let i = index; trackBy: trackByUploadFile"
           class="col-12 sm:col-6 md:col-4 lg:col-3 xl:col-2 m-0 flex flex-column align-items-center justify-content-between p-1 relative shadow-3 border-round-sm gap-1">
-          <p-image role="presentation" [alt]="file.name" [src]="file.objectURL.changingThisBreaksApplicationSecurity"
-            imageClass="object-cover w-full h-full" [imageStyle]="{'object-fit': 'cover'}" />
+          <p-image role="presentation" [alt]="file.name" [src]="file.objectURL" imageClass="object-cover w-full h-full"
+            [imageStyle]="{'object-fit': 'cover'}" />
           <div *ngIf="showDelete" @slideInOut class="overflow-hidden w-full">
             <p-button styleClass="w-full" icon="pi pi-times" [label]="labelsRemoveFile"
               (onClick)="onRemoveFile($event, file, removeFileCallback, i)" severity="danger" />

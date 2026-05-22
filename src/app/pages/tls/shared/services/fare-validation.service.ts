@@ -139,8 +139,10 @@ export class FareValidationService {
         // 特別檢查數值欄位
         if (['tpy_unitamt', 'tpy_qty', 'tpy_amount', 'tpy_totalamt', 'tpy_rate'].includes(field)) {
           const numValue = parseFloat(value);
-          if (isNaN(numValue) || numValue <= 0) {
-            itemErrors.push(`${label}必須大於0`);
+          // D 類型的比率允許 0（例如信用卡手續費比率為 0 是合法值）
+          const allowZero = field === 'tpy_rate' && capType === 'D';
+          if (isNaN(numValue) || (allowZero ? numValue < 0 : numValue <= 0)) {
+            itemErrors.push(`${label}必須${allowZero ? '大於等於' : '大於'}0`);
           }
         }
       });
