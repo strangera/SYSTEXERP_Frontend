@@ -92,9 +92,9 @@ export class FIN32010Component extends BasicQueryPageComponent<any> implements O
     super();
   }
 
-  // 禁止編輯的判斷：當應收帳款餘額 (ARS_BalAmt) 為 0 時，禁止編輯
+  // 禁止編輯的判斷：當應收帳款餘額 (ARS_BalAmt) 為 0 或已過帳 (PostFlagCode === '3') 時，禁止編輯
   editDisabledByVouNo = (rowData: any): boolean => {
-    return rowData?.ARS_BalAmt === 0;
+    return rowData?.ARS_BalAmt === 0 || rowData?.PostFlagCode === '3';
   }
 
   ngOnInit(): void {
