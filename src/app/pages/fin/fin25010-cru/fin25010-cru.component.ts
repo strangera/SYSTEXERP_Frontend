@@ -207,7 +207,6 @@ export class FIN25010CRUComponent extends BasicCruPageComponent<FIN25010Data> im
     }
     this.messageService.confirm({
       header: `確定要產生電匯資料嗎?`,
-      message: `確定要產生 ${this.selectedItems.length} 筆電匯資料嗎?`,
       accept: () => {
         const aps3009Items: APS3009Item[] = this.selectedItems.map(item => ({
           ID: item.ID,
