@@ -117,7 +117,7 @@
     <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [canInsert]="false"
       [showInsert]="!isFormReadable && stepAPTableCanInsert()" [data]="stepAPRows()" [columns]="stepAPColumns"
       [tableKey]="'FIN53010_step_ap'" (insert)="onInsertStepApRow()"
-      (dataChange)="onStepAPDataChange($event)"></app-table-edit>
+      (dataChange)="onStepAPDataChange($event)" [footerData]="stepAPFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
         (click)="goPrevStep()"></app-button>
@@ -137,7 +137,7 @@
   <p-panel header="應收帳款" class="line-height-3 m-0">
     <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepARRows()"
       [columns]="stepARColumns" [tableKey]="'FIN53010_step_ar'"
-      (dataChange)="onStepARDataChange($event)"></app-table-edit>
+      (dataChange)="onStepARDataChange($event)" [footerData]="stepARFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
         (click)="goPrevStep()"></app-button>
@@ -158,7 +158,7 @@
     <app-table-edit #purchaseTableEdit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
       [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'"
       (dataChange)="onStepPurchaseDataChange($event)"
-      (fieldChange)="onStepPurchaseInvoiceFieldChange($event)"></app-table-edit>
+      (fieldChange)="onStepPurchaseInvoiceFieldChange($event)" [footerData]="stepPurchaseFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
         (click)="goPrevStep()"></app-button>
@@ -178,7 +178,7 @@
   <p-panel header="銷項發票" class="line-height-3 m-0">
     <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepSalesRows()"
       [columns]="stepSalesColumns" [tableKey]="'FIN53010_step_sales'" (dataChange)="onStepSalesDataChange($event)"
-      (fieldChange)="onStepSalesInvoiceFieldChange($event)"></app-table-edit>
+      (fieldChange)="onStepSalesInvoiceFieldChange($event)" [footerData]="stepSalesFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
         (click)="goPrevStep()"></app-button>
@@ -198,7 +198,7 @@
   <p-panel header="銀行存款" class="line-height-3 m-0">
     <app-table-edit #bankTableEdit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepBankRows()"
       [columns]="stepBankColumns" [tableKey]="'FIN53010_step_bank'"
-      (dataChange)="onStepBankDataChange($event)"></app-table-edit>
+      (dataChange)="onStepBankDataChange($event)" [footerData]="stepBankFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
       <app-button btnType="back" label="上一步" [loading]="nextStepBusy()" [disabled]="nextStepBusy()"
         (click)="goPrevStep()"></app-button>
@@ -220,7 +220,7 @@
     <app-table-report tableKey="FIN53010_ARS3001_related" [columns]="ars3001RelatedColumns"
       [data]="ars3001RelatedRows()" [totalRecords]="ars3001RelatedRows().length"
       [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
-      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyArs3001Footer()"></app-table-report>
   </p-panel>
 </div>
 }
@@ -231,7 +231,7 @@
     <app-table-report tableKey="FIN53010_APS3001_related" [columns]="aps3001RelatedColumns"
       [data]="aps3001RelatedRows()" [totalRecords]="aps3001RelatedRows().length"
       [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
-      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyAps3001Footer()"></app-table-report>
   </p-panel>
 </div>
 }
@@ -242,7 +242,7 @@
     <app-table-report tableKey="FIN53010_APS2002_C_related" [columns]="aps2002_CRelatedColumns"
       [data]="aps2002_CRelatedRows()" [totalRecords]="aps2002_CRelatedRows().length"
       [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
-      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyAps2002_CFooter()"></app-table-report>
   </p-panel>
 </div>
 }
@@ -253,7 +253,7 @@
     <app-table-report tableKey="FIN53010_APS2002_related" [columns]="aps2002RelatedColumns"
       [data]="aps2002RelatedRows()" [totalRecords]="aps2002RelatedRows().length"
       [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
-      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyAps2002Footer()"></app-table-report>
   </p-panel>
 </div>
 }
@@ -264,7 +264,7 @@
     <app-table-report tableKey="FIN53010_APS4023_C_related" [columns]="aps4023_CRelatedColumns"
       [data]="aps4023_CRelatedRows()" [totalRecords]="aps4023_CRelatedRows().length"
       [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
-      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyAps4023_CFooter()"></app-table-report>
   </p-panel>
 </div>
 }
@@ -275,7 +275,7 @@
     <app-table-report tableKey="FIN53010_APS4023_related" [columns]="aps4023RelatedColumns"
       [data]="aps4023RelatedRows()" [totalRecords]="aps4023RelatedRows().length"
       [loading]="service.detailByVouNoLoading()" [lazy]="false" [showCaption]="false" [showManage]="false"
-      [showReportMode]="false" [showCheckBox]="false"></app-table-report>
+      [showReportMode]="false" [showCheckBox]="false" [footerData]="readonlyAps4023Footer()"></app-table-report>
   </p-panel>
 </div>
 }

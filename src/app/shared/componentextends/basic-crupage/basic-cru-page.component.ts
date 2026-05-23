@@ -122,6 +122,8 @@ export abstract class BasicCruPageComponent<T> {
 
     if (this.isFormCreateable || this.isFormEditable) {
       callback();
+    } else {
+      this.loading = false;
     }
     this.messageService.unblockUi();
     this.submitted = false;
