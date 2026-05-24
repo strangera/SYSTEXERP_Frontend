@@ -64,8 +64,8 @@
 </div>
 
 <div class="card">
-  <app-table-report tableKey="FIN25010" dataKey="ID" [data]="data" [columns]="columns" [showCheckBox]="false"
-    [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+  <app-table-report tableKey="FIN25010" dataKey="PAM_No" [data]="data" [columns]="columns" [showCheckBox]="true"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
     [totalRecords]="totalRecords" [lastQueryBody]="lastQueryBody" [showEdit]="false" (detail)="onDetail($event)"
     [queryFunction]="fin25010Service.queryFIN25010.bind(fin25010Service)" [loading]="loading"></app-table-report>
 </div>
