@@ -15,7 +15,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
-import { CPM12050Data, CPM12050Service } from '../../../service/api/cpm/cpm12050.service';
+import { CPM12050Data, CPM12050Service, QueryCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -57,8 +57,8 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     ORG_ID: [null],                                     // 責任單位
     ORG_ID_QUERY: [null],                               // 組織(查詢責任單位用)
     CRT_USR_Name: [null, Validators.maxLength(50)],     // 建檔人員
-    COMPLAIN_DATE_F: [null as Date | null],             // 接件日期(起)
-    COMPLAIN_DATE_T: [null as Date | null],             // 接件日期(迄)
+    COMPLAIN_DATE_F: [(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })() as Date | null],   // 接件日期(起) 預設今天 00:00:00
+    COMPLAIN_DATE_T: [(() => { const d = new Date(); d.setHours(23, 59, 59, 999); return d; })() as Date | null], // 接件日期(迄) 預設今天 23:59:59
     ...createPaginationConfig([])
   });
 
@@ -107,13 +107,9 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
 
   expansionColumns: Column[] = [
     { field: 'ID', header: '序號', hidden: true },
-    { field: 'ANSWER', header: '回覆內容', visible: true },
-    { field: 'ANSWER_ID', header: '回覆人員代碼', visible: true },
-    { field: 'ANSWER_DATE', header: '回覆日期', visible: true, format: formatDate },
-    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: true },
-    { field: 'CRT_Date', header: '建立時間', visible: true, format: formatDate },
-    { field: 'UPD_USR_Name', header: '異動人員名稱', visible: true },
-    { field: 'UPD_Date', header: '異動時間', visible: true, format: formatDate }
+    { field: 'ANSWER', header: '處理紀錄', visible: true },
+    { field: 'ANSWER_DATE', header: '處理日期時間', visible: true, format: (v: unknown) => { if (!v) return ''; const d = new Date(v as string); if (isNaN(d.getTime())) return String(v); return d.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); } },
+    { field: 'ANSWER_ID', header: '處理者', visible: true },
   ]
 
   addButton: AddButton[] = [
@@ -160,6 +156,48 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     CLOSE_MEMO: ['', [Validators.required, Validators.maxLength(1000)]],  // 結案備註
     ALERT_DATE: [null, Validators.required] // 通知相關單位處理日期 (必填)
   });
+
+  exportLoading = false;
+
+  /** 呼叫後端 API 並觸發瀏覽器下載 */
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  exportCustomPdf(): void {
+    if (!this.data.length) { this.messageService.warnBubble('無資料可匯出'); return; }
+    this.exportLoading = true;
+    const req = this.queryForm.getRawValue() as unknown as QueryCPM12050Request;
+    this.cpm12050Service.exportCPM12050Pdf(req)
+      .pipe(untilDestroyed(this), finalize(() => this.exportLoading = false))
+      .subscribe({
+        next: (blob) => {
+          const today = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '');
+          this.downloadBlob(blob, `顧客意見管理作業_${today}.pdf`);
+        },
+        error: () => this.messageService.errorBubble('PDF 匯出失敗')
+      });
+  }
+
+  exportCustomExcel(): void {
+    if (!this.data.length) { this.messageService.warnBubble('無資料可匯出'); return; }
+    this.exportLoading = true;
+    const req = this.queryForm.getRawValue() as unknown as QueryCPM12050Request;
+    this.cpm12050Service.exportCPM12050Excel(req)
+      .pipe(untilDestroyed(this), finalize(() => this.exportLoading = false))
+      .subscribe({
+        next: (blob) => {
+          const today = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '');
+          this.downloadBlob(blob, `顧客意見管理作業_${today}.xlsx`);
+        },
+        error: () => this.messageService.errorBubble('Excel 匯出失敗')
+      });
+  }
 
   constructor(
     private cpm12050Service: CPM12050Service,

@@ -94,6 +94,10 @@
   </p-accordion>
 </div>
 <div class="card">
+  <div class="flex justify-content-end gap-2 mb-2">
+    <app-button label="匯出 Excel" icon="pi pi-file-excel" (click)="exportCustomExcel()" [loading]="exportLoading"></app-button>
+    <app-button label="匯出 PDF" icon="pi pi-file-pdf" (click)="exportCustomPdf()" [loading]="exportLoading"></app-button>
+  </div>
   <app-table tableKey="CPM12050" dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)"
     [editDisabled]="editDisabled" (detail)="onDetail($event)" [showCheckBox]="false" [showDelete]="false"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [multiSortMeta]="[]"
@@ -116,9 +120,9 @@
         <app-input-text label="使用者名稱" controlName="USR_NAME" [control]="closeForm.controls.USR_NAME"
           [submitted]="submitted"></app-input-text>
       </div>
-      <!-- 通知相關單位處理日期 -->
+      <!-- 通知/派單日期 -->
       <div class="col-12 md:col-6">
-        <app-calendar label="通知相關單位處理日期" calendarType="dateOne" controlName="ALERT_DATE"
+        <app-calendar label="通知/派單日期" calendarType="dateOne" controlName="ALERT_DATE"
           [control]="closeForm.controls.ALERT_DATE" [submitted]="submitted"></app-calendar>
       </div>
       <!-- 結案備註 -->
