@@ -189,7 +189,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
   loadOptions() {
     this.dropDownListService.queryPOS2013_DropDownList({}).subscribe(res => {
       this.venderOptions = (res.Data ?? []).map((item: any) => ({
-        label: `${item.No} - ${item.Name}`,
+        label: `${item.VEN_No} - ${item.ShortName}`,
         value: item.VEN_No,
       }));
     });
