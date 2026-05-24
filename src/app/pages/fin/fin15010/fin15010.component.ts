@@ -158,6 +158,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
     this.queryForm.get('PUR_RepYYYYMM')?.setValue(this.datePipe.transform((currentDate), 'yyyyMM'));
+    this.loadGuiTrackOptions(this.queryForm.get('PUR_RepYYYYMM')?.value);
   }
 
   private buildRequest(body?: { pageSize?: number; PageSize?: number; pageIndex?: number; PageIndex?: number; SortBy?: unknown }): FIN15010QueryRequest {
@@ -289,10 +290,26 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     });
   }
 
-  loadGuiTrackOptions(event: any): void {
+  loadGuiTrackOptions(yyyymm: string | null | undefined): void {
+    if (!yyyymm) {
+      this.guiTrackOptions = [];
+      return;
+    }
+    // 1. 解析傳入的字串 (假設格式為 yyyyMM)
+    const year = parseInt(yyyymm.substring(0, 4), 10);
+    const month = parseInt(yyyymm.substring(4, 6), 10);
+
+    // 2. 判斷是否為雙數月，若是則減 1
+    let targetMonth = month;
+    if (targetMonth % 2 === 0) {
+      targetMonth -= 1;
+    }
+
+    // 3. 重新組合成 yyyyMM 格式 (補 0)
+    const formattedYyyymm = `${year}${targetMonth.toString().padStart(2, '0')}`;
     // 選完申報年月 載入字軌下拉
     this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
-      GUI_YYMM: event,
+      GUI_YYMM: formattedYyyymm,
       MID: 0,
       STO_No: '10',
       GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? []
