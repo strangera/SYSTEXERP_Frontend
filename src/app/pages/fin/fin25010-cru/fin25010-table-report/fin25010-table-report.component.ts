@@ -90,7 +90,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
           this.dt.virtualScroll = false;
         }
         this.cdr.detectChanges();
-        this.dt.virtualScroll = true;
+        this.dt.virtualScroll = this.data.length > 30; // 超過 300 筆資料才啟用虛擬滾動
         this.virtualData = Array.from({ length: this.data.length });
         this.cdr.detectChanges();
         this.virtualData = this.data;

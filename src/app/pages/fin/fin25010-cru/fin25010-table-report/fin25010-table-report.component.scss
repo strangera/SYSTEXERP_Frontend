@@ -1,24 +1,4 @@
 ::ng-deep {
-  &::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-    border: 5px solid transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #9f9f9f;
-    border-radius: 12px;
-    border: 2px solid var(--surface-d);
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: #949494;
-  }
-
   .p-datatable {
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
