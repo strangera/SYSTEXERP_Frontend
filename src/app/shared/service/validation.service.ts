@@ -58,6 +58,7 @@ export class ValidationService {
       requireOneGroup: '請輸入「退出/折讓單號」或「發票號碼」擇一輸入',
       bnkIdDuplicate: '此【公司銀行科目】已有【帳戶編號】使用，請重新輸入。',
       invalidCompanyId: '統一編號格式錯誤',
+      reserveAmtTooLarge: '保留款金額不可大於應付金額',
     };
     return config[validatorName];
   }
