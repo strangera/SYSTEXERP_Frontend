@@ -50,6 +50,11 @@
               optionLabel="formLabel" optionValue="value" [control]="queryForm.controls.org_idList"
               [submitted]="submitted"></app-multi-select>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateOne" label="業績統計截止日"
+              [control]="queryForm.controls.perf_edate"
+              [submitted]="submitted"></app-calendar>
+          </div>
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

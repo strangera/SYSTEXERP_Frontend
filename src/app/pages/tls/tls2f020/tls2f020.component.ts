@@ -48,8 +48,8 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
 
   columns: ReportColumn[] = [
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
-    { field: 'VouNo', header: '傳票編號', visible: true },
-    { field: 'VoucherType', header: '傳票型態代碼', visible: true },
+    { field: 'VouNo', header: '暫存編號', visible: true },
+    { field: 'SrcSheetType', header: '傳票型態代碼', visible: true },
     { field: 'Voucher_Name', header: '傳票型態名稱', visible: true },
     { field: 'PostFlag_Desc', header: '傳票狀態', visible: true },
     { field: 'Remark', header: '備註', visible: true },
@@ -106,6 +106,8 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
         Offset: Math.max(0, (pageIndex - 1) * pageSize),
         SortBy: formValue.SortBy ?? [],
         sam_yyymm: sam_yyymm_string,
+        money_type: formValue.COMM_MONEY_TYPE ?? null,
+        sam_termno: formValue.sam_termno ?? null,
       };
 
       this.tlsService.queryTLS2F020(params)

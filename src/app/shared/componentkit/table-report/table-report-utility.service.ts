@@ -42,7 +42,7 @@ export class TableReportUtilityService {
     return true;
   }
 
-  private safeUrlCache = new Map<string, SafeUrl>();
+  private readonly safeUrlCache = new Map<string, SafeUrl>();
 
   getImage(url: any): SafeUrl | string {
     // 1. 基本防呆：如果是空值，直接回傳一個透明或佔位圖的 base64，或是一個空字串
@@ -60,7 +60,7 @@ export class TableReportUtilityService {
         : environment.ApiUrl;
 
       // 2. 處理路徑：統一移除 ~ 並確保開頭沒有 /
-      let cleanPath = url.replace(/~/g, '');
+      let cleanPath = url.replaceAll('~', '');
       if (cleanPath.startsWith('/')) {
         cleanPath = cleanPath.slice(1);
       }
@@ -174,7 +174,7 @@ export class TableReportUtilityService {
     const groupColumn = columns.find(c => c.field === groupRowsBy);
 
     // 如果該分組欄位有定義 format，就用 format 過的值，否則直接轉字串
-    if (groupColumn && groupColumn.format) {
+    if (groupColumn?.format) {
       return String(groupColumn.format(rawValue, 0, rowData) ?? '');
     }
     return String(rawValue ?? '');

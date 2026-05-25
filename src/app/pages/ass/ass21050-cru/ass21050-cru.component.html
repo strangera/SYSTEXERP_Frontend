@@ -9,6 +9,7 @@
       <!-- 隱藏的 ID 欄位，編輯時需要 -->
       <input type="hidden" formControlName="id">
       <div class="grid p-fluid">
+        <!-- 第一列：設備位置編號、設備位置名稱、設備位置說明 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="設備位置編號" controlName="LOCATION_No" [control]="dataForm.controls.LOCATION_No"
             [submitted]="submitted"></app-input-text>
@@ -17,7 +18,16 @@
           <app-input-text label="設備位置名稱" controlName="LOCATION_Name" [control]="dataForm.controls.LOCATION_Name"
             [submitted]="submitted"></app-input-text>
         </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="設備位置說明" controlName="LOCATION_Remark" [control]="dataForm.controls.LOCATION_Remark"
+            [submitted]="submitted"></app-input-text>
+        </div>
 
+        <!-- 第二列：館別、樓層、區域 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="館別" controlName="building_no" [options]="buildingNoOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.building_no" [submitted]="submitted"></app-dropdown>
+        </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="樓層" controlName="FLOOR_NO" [options]="floorNoOptions" optionLabel="Name" optionValue="No"
             [control]="dataForm.controls.FLOOR_NO" [submitted]="submitted">
@@ -28,15 +38,8 @@
             [control]="dataForm.controls.AREA_NO" [submitted]="submitted">
           </app-dropdown>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="館別" controlName="building_no" [options]="buildingNoOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.building_no" [submitted]="submitted"></app-dropdown>
-        </div>
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="流水號" controlName="mark" [control]="dataForm.controls.mark"
-            [submitted]="submitted"></app-input-text>
-        </div> -->
 
+        <!-- 第三列：X軸、Y軸 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="X 軸" controlName="Draw_X" [control]="dataForm.controls.Draw_X"
             [submitted]="submitted"></app-input-text>
@@ -49,10 +52,6 @@
         <app-input-text label="營業坪數" controlName="NET_SPACE" [control]="dataForm.controls.NET_SPACE"
           [submitted]="submitted"></app-input-text>
       </div> -->
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="設備位置說明" controlName="LOCATION_Remark" [control]="dataForm.controls.LOCATION_Remark"
-            [submitted]="submitted"></app-input-text>
-        </div>
       </div>
 
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

@@ -6,9 +6,9 @@
           <span *ngIf="isRequired" class="text-red-500">*</span>
         </label>
         <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"
-          (click)="onFocusAndInitialLoad($event)" (input)="onInputChange()" (onFocus)="onFocusAndInitialLoad($event)"
-          (onSelect)="onValueChange($event)" [suggestions]="suggestions" [optionValue]="optionValue"
+          (click)="onFocusAndInitialLoad($event)" [suggestions]="suggestions" [optionValue]="optionValue"
           [placeholder]="control.disabled ? '' : placeholder">
+
           <ng-template let-options pTemplate="item">
             <div class="flex align-items-center gap-2">
               <div>{{ templateLabel !== '' ? options[templateLabel] : options[optionLabel] }}</div>
@@ -30,7 +30,8 @@
 <p-overlayPanel #op [style]="{'min-width': '700px', 'max-width': '90vw'}" [appendTo]="'body'">
   <ng-container *ngIf="showOverlay && formGroup">
     <div class="flex justify-content-end mb-1">
-      <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-sm p-button-secondary" (click)="hideOverlay()"></button>
+      <button type="button" pButton icon="pi pi-times" class="p-button-text p-button-sm p-button-secondary"
+        (click)="hideOverlay()"></button>
     </div>
     <form [formGroup]="formGroup" class="grid p-fluid">
       <ng-content />

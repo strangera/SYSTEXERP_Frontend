@@ -1,0 +1,21 @@
+:host ::ng-deep .clear-user-button {
+  background: transparent !important;
+  color: #6b7280 !important;
+  border-top: 1px solid #d1d5db !important;
+  border-bottom: 1px solid #d1d5db !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+:host ::ng-deep .clear-user-button:hover {
+  background: transparent !important;
+  color: #2563eb !important;
+}
+:host ::ng-deep .clear-user-button:focus {
+  box-shadow: none !important;
+}
+
+:host ::ng-deep .user-display-input {
+  border-right: none !important;
+}

@@ -55,6 +55,25 @@ export const columns: Column[] = [
   { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
 ];
 
+export const ecrSummaryColumns: Column[] = [
+  { field: 'GUI_YYMM', header: '發票年月', visible: true, format: formatYYYYMM },
+  { field: 'ECR_No', header: '收銀機台', visible: true },
+  { field: 'TOT_NOS', header: '發票張數', visible: true },
+  { field: 'USED_NOS', header: '使用張數', visible: true },
+  { field: 'FREE_NOS', header: '未用張數', visible: true },
+];
+
+export const ecrTrackSummaryColumns: Column[] = [
+  { field: 'GUI_YYMM', header: '發票年月', visible: true, format: formatYYYYMM },
+  { field: 'ECR_No', header: '收銀機台', visible: true },
+  { field: 'GUI_BegNo', header: '發票起號', visible: true },
+  { field: 'GUI_EndNo', header: '發票迄號', visible: true },
+  // { field: 'GUI_Status', header: '發票狀態', visible: true, format: (value: string) => getSYS1000('GUI_Status', value) },
+  { field: 'TOT_NOS', header: '發票張數', visible: true },
+  { field: 'USED_NOS', header: '使用張數', visible: true },
+  { field: 'FREE_NOS', header: '未用張數', visible: true },
+];
+
 export const monthOptions = [
   { value: '01', label: '一月' },
   { value: '03', label: '三月' },

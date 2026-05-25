@@ -95,6 +95,8 @@ export class ASS21010Component extends BasicQueryPageComponent<ASS21010Data> imp
     { field: 'ENG_Remark', header: '備註' },
   ];
 
+  public readonly isRowSelectable = (rowData: ASS21010Data): boolean => rowData.CanDelete !== false;
+
   constructor(
     public readonly service: ASS21010Service,
     private readonly logger: NGXLogger,

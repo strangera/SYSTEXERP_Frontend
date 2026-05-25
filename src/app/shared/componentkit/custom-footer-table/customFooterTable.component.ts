@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
+import { Component, EventEmitter, Input, OnChanges, Output, SecurityContext, SimpleChanges, ViewChild } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
@@ -155,24 +155,20 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
     if (changes['data']) {
       this.hasSearched = true;
       setTimeout(() => {
-        this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+        this.dt.totalRecords = this.totalRecords === 0 ? this.data.length : this.totalRecords;
         this.selectedItems = []
         this.selectionChange.emit(this.selectedItems);
         // 當資料改變（例如換頁或後端回傳新頁）時，更新 table 的起始索引以正確顯示該頁
-        try {
-          const calculatedFirst = (this.selectedPage && this.rows) ? ((this.selectedPage - 1) * this.rows) : 0;
-          this.first = calculatedFirst;
-          if (this.dt) this.dt.first = calculatedFirst;
-        } catch (e) {
-          // ignore
-        }
+        const calculatedFirst = (this.selectedPage && this.rows) ? ((this.selectedPage - 1) * this.rows) : 0;
+        this.first = calculatedFirst;
+        if (this.dt) this.dt.first = calculatedFirst;
       });
     }
     // 僅在 columns 首次被設定時執行初始化邏輯// 這樣就不會在每次 data 變動時都重置 filter 狀態
     if (changes['columns'] && this.columns.length > 0) {
       this.originalColumns = this.columns;
-      this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.find(c => c.isSubTotal) !== undefined;
-      this.showTotal = this.showTotal ? this.showTotal : this.columns.find(c => c.isTotal) !== undefined;
+      this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.some(c => c.isSubTotal);
+      this.showTotal = this.showTotal ? this.showTotal : this.columns.some(c => c.isTotal);
       if (changes['columns'].firstChange) {
         setTimeout(() => {// 恢復歷史紀錄，如果沒有就使用預設值
           this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows; // 取得分頁狀態
@@ -191,7 +187,7 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   onPageChange(event: TablePageEvent) {
     this.queryState.setQueryState(this.tableKey + 'rows', this.rows); // 保存分頁狀態
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
-    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+    this.dt.totalRecords = this.totalRecords === 0 ? this.data.length : this.totalRecords;
   }
   loadDataLazy(event: TableLazyLoadEvent) {
     if (this.totalRecords === 0 || !this.IsPrint || this.rowEditing) { return; }
@@ -225,9 +221,9 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   }
   // 過濾欄位記錄保存
   onFilterChange(event: MultiSelectChangeEvent) {
-    this.columns.forEach(col => {
+    for (const col of this.columns) {
       col.visible = event.value.some((ev: any) => ev.field === col.field);
-    });
+    }
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
   }
   // 行編輯初始化
@@ -254,7 +250,7 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
     // 判斷是否為新增中的資料 (ID 以 'temp-' 開頭)
     if (typeof rowId === 'string' && rowId.startsWith('temp-')) {
       // 產生一個新的已儲存的 ID，並更新資料
-      const savedId = `saved-${new Date().getTime()}`;
+      const savedId = `saved-${Date.now()}`;
       rowData[this.dataKey] = savedId;
       // 同時更新 clonedProducts 的 key，確保下次編輯時能找到正確的備份
       this.clonedProducts[savedId] = { ...oldData };
@@ -361,7 +357,14 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   onSelectButton(rowData: any) { this.selectButton.emit(rowData); }
   // 防止XSS
   sanitizeHtml(html: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(html);
+    // 1. 先讓 Angular 移除所有危險的標籤和屬性 (如: <script>, onerror, onclick)
+    const sanitizedValue = this.sanitizer.sanitize(SecurityContext.HTML, html);
+
+    // 2. 如果結果為 null (例如內容完全不合法)，給一個空字串作為預設值
+    const cleanHtml = sanitizedValue ?? '';
+
+    // 3. 此時再進行 bypass，因為內容已經被 Angular 清洗過了，這才算是「安全」的 bypass
+    return this.sanitizer.bypassSecurityTrustHtml(cleanHtml);
   }
   // 計算分組欄位跨度
   getColumnSpan(columns: Column[], groupField: string): number {
@@ -392,10 +395,6 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
   getTotal(field: string): number {
     return this.tableUtilityService.getTotal(this.data, field);
   }
-  // 獲取後端圖片
-  getImage(url: string): string | SafeUrl | undefined {
-    return this.tableUtilityService.getImage(url);
-  }
   // 欄位調整
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as Column[];
@@ -406,7 +405,7 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
    * 判斷是否為該群組在當前頁的最後一筆資料
    */
   isLastRowOfGroupOnPage(rowData: any, rowIndex: number): boolean {
-    if (!this.groupRowsBy || !this.dt || !this.dt.value) return false;
+    if (!this.groupRowsBy || !this.dt?.value) return false;
 
     const groupKey = rowData[this.groupRowsBy];
     const pageData = this.dt.value; // 這一頁的資料
@@ -415,7 +414,7 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
     const groupRows = pageData.filter(r => r[this.groupRowsBy] === groupKey);
 
     // 判斷 rowIndex 是否為這一頁該群組的最後一筆
-    const lastRow = groupRows[groupRows.length - 1];
+    const lastRow = groupRows.at(-1);
     return rowData === lastRow;
   }
 
@@ -423,7 +422,7 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
    * 計算當前頁、某群組的小計
    */
   getGroupSubtotalOnPage(groupKey: any, field: string): number {
-    if (!this.dt || !this.dt.value) return 0;
+    if (!this.dt?.value) return 0;
 
     return this.dt.value
       .filter(r => r[this.groupRowsBy] === groupKey)

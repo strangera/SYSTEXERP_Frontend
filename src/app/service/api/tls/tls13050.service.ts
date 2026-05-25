@@ -16,6 +16,9 @@ export interface QueryTLS13050Request extends BaseQueryRequest {
   cag_edate_end?: string;
   check_day_start?: number | null;
   check_day_end?: number | null;
+  org_idList?: string[];
+  Building_No?: string[];
+  perf_edate?: string;
 }
 
 export interface TLS13050QueryItem {

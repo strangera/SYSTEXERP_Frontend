@@ -1,3 +1,38 @@
 .required-star {
   color: red;
 }
+
+:host ::ng-deep .clear-user-button {
+  background: transparent !important;
+  color: #6b7280 !important;
+  border-top: 1px solid #d1d5db !important;
+  border-bottom: 1px solid #d1d5db !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* hover 只在 enabled 時生效 */
+:host ::ng-deep .clear-user-button:not(:disabled):hover {
+  background: transparent !important;
+  color: #2563eb !important;
+}
+
+:host ::ng-deep .clear-user-button:focus {
+  box-shadow: none !important;
+}
+
+/* disabled 狀態：跟預設 input disabled 顏色接近 */
+:host ::ng-deep .clear-user-button:disabled,
+:host ::ng-deep .clear-user-button.p-disabled {
+  background: #d1d5db !important;
+  color: #9ca3af !important;
+  border-top: 1px solid #e9ecef !important;
+  border-bottom: 1px solid #e9ecef !important;
+  border-left: none !important;
+  border-right: none !important;
+  opacity: 0.65 !important;
+  cursor: auto !important;
+  box-shadow: none !important;
+}

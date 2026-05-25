@@ -157,14 +157,14 @@ export class Fin51010Service {
   }
 
   /** 查詢 PT 進項發票資料 */
-  queryPTInvoice(body: { id: number }): Observable<ApiResponse<QueryFIN51010InvoiceLine[]>> {
+  queryPTInvoice(body: { GLS6001_ID: number }): Observable<ApiResponse<QueryFIN51010InvoiceLine[]>> {
     return this.http.post<ApiResponse<QueryFIN51010InvoiceLine[]>>(
       `${this.apiUrl}/FIN0000/GLS1000/queryPTInvoice`, body
     );
   }
 
   /** 查詢 WT 進項發票資料 */
-  queryWTInvoice(body: { id: number }): Observable<ApiResponse<QueryFIN51010InvoiceLine[]>> {
+  queryWTInvoice(body: { VouNo: string }): Observable<ApiResponse<QueryFIN51010InvoiceLine[]>> {
     return this.http.post<ApiResponse<QueryFIN51010InvoiceLine[]>>(
       `${this.apiUrl}/FIN0000/GLS1000/queryWTInvoice`, body
     );
@@ -172,17 +172,19 @@ export class Fin51010Service {
 }
 /** 假設進項發票的欄位結構與傳票明細類似，或是你有特定的發票 Interface */
 export interface QueryFIN51010InvoiceLine {
-  SerNo: number;
-  AccNo: string;
-  AccCName: string;
-  NoteDesc: string;
-  Debit_Amt: number;
-  Credit_Amt: number;
-  ORG_ID: string;
-  Org_Name: string;
-  ProjectNo: string;
-  PTA: string;
-  DetailNo: string;
-  SubDetailNo: string;
-  // 這裡可自行增減後端發票特有的欄位（例如發票號碼等）
+  VoucherType: string,
+  TrackNo: string,
+  InvoiceNo: string,
+  InvoiceDate: string,
+  DeclareYM: string,
+  VendorTaxID: string,
+  InvoiceUsage: string,
+  InvoiceAmount: number,
+  TaxType: string,
+  NetAmount: number,
+  TaxAmount: number,
+  DeductionCodeDesc: string,
+  CategoryType: string,
+  SourceDocNo: string,
+  TotalCount: number,
 }

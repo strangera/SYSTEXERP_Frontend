@@ -1,5 +1,5 @@
 import { NgClass, NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, Input, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, EventEmitter, Input, OnInit, Output, TemplateRef, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MultiSelect, MultiSelectModule } from 'primeng/multiselect';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
@@ -52,8 +52,9 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
   @Input() filter = true;
   @Input() dataKey = this.optionValue;
   @Input() showClear = true;
-  @Input() display: string | 'comma' | 'chip' = 'comma';
+  @Input() display: 'comma' | 'chip' = 'comma';
   @Input() styleClass = '';
+  @Output() selectAllChange = new EventEmitter<boolean>();
 
   private _options: any[] = [];
 
@@ -86,7 +87,7 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
 
     // 處理分組選項
     if (this.group) {
-      this.options.forEach(group => {
+      for (const group of this.options) {
         const groupItems = group[this.optionGroupChildren] || [];
         groupItems.forEach((item: any) => {
           const itemValue = this.optionValue ? item[this.optionValue] : item;
@@ -95,10 +96,10 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
             selectedLabels.push(itemLabel);
           }
         });
-      });
+      }
     } else {
       // 處理一般選項
-      selectedValues.forEach(value => {
+      for (const value of selectedValues) {
         const selectedOption = this.options.find(option => {
           const optionValue = this.optionValue ? option[this.optionValue] : option;
           return optionValue === value;
@@ -111,7 +112,7 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
           // 如果找不到對應的選項，直接使用值
           selectedLabels.push(value?.toString() || '');
         }
-      });
+      }
     }
 
     return selectedLabels.join(', ');
@@ -130,5 +131,31 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
     }
 
     return classes.join(' ');
+  }
+  // 新增：處理數值改變時的判斷邏輯
+  onValueChange(event: any): void {
+    if (!this.options || this.options.length === 0) {
+      this.selectAllChange.emit(false);
+      return;
+    }
+
+    let totalCount = 0;
+    const currentSelectedCount = Array.isArray(event.value) ? event.value.length : 0;
+
+    // 思考到你有支援分組 (group) 模式，這邊需要做分組數量的個別加總
+    if (this.group) {
+      for (const group of this.options) {
+        const groupItems = group[this.optionGroupChildren] || [];
+        totalCount += groupItems.length;
+      }
+    } else {
+      totalCount = this.options.length;
+    }
+
+    // 當選取的數量大於 0 且等於總數時，代表是「全選狀態」
+    const isAllSelected = totalCount > 0 && currentSelectedCount === totalCount;
+
+    // 向上傳遞 true / false
+    this.selectAllChange.emit(isAllSelected);
   }
 }

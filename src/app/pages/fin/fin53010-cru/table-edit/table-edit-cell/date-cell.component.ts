@@ -21,6 +21,7 @@ import { CellInput } from './table-edit-cell.model';
                   [showIcon]="!isDisabled()"
                   [disabled]="isDisabled()"
                   (onInput)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
+                  (onSelect)="handleSelect()"
                   (onFocus)="cellInput.col.onFocus?.(cellInput.rowData, cellInput.rowData[cellInput.col.field], cellInput.col, cellInput.index)"
                   (onBlur)="handleBlur()"(keydown.enter)="handleEnter($event)"
                   [style]="{'text-align': cellInput.col.textAlign,'min-width':'-webkit-fill-available'}"
@@ -55,6 +56,15 @@ export class DateCellComponent {
   isDisabled(): boolean {
     const col = this.cellInput.col;
     return (col.disabled && col.disabled(this.cellInput.rowData[col.field], this.cellInput.index, this.cellInput.rowData)) || this.cellInput.disabled;
+  }
+
+  handleSelect() {
+    this.cellInput.onValueChange(
+      this.cellInput.rowData,
+      this.cellInput.rowData[this.cellInput.col.field],
+      this.cellInput.col,
+      this.cellInput.index
+    );
   }
 
   handleBlur() {

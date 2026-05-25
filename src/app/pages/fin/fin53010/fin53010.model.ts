@@ -31,6 +31,9 @@ export interface FIN53010Data extends Pick<FIN53010Basic, 'VouType' | 'VouNo' | 
   Remark: string;
   AccAmt: number;
   DetailCount: number;
+  /** 是否可刪除（僅當日最後一張且狀態為建立） */
+  CanDelete: boolean;
+  VouDate: string;
 }
 
 export interface QueryFIN53010Detail extends FIN53010Basic, CRT, UPD {
@@ -773,13 +776,44 @@ export interface FIN53010DetailBucket<T> {
   Details?: T[] | null;
 }
 
+export interface Fin53010Aps3001ByVouNoBucket {
+  Details?: FIN53010Aps3001Row[] | null;
+  Total_ACP_Amt?: number | null;
+}
+
+export interface Fin53010Ars3001ByVouNoBucket {
+  Details?: FIN53010Ars3001Row[] | null;
+  Total_ars_amt?: number | null;
+}
+
+export interface Fin53010Aps2002_CByVouNoBucket {
+  Details?: FIN53010Aps2002_CRow[] | null;
+  Total_CreditAmount?: number | null;
+  Total_CreditNetAmount?: number | null;
+  Total_CreditTaxAmount?: number | null;
+}
+
+export interface Fin53010Aps4023ByVouNoBucket {
+  Details?: FIN53010Aps4023Row[] | null;
+  Total_TotalAmount?: number | null;
+  Total_NetAmount?: number | null;
+  Total_TaxAmount?: number | null;
+}
+
+export interface Fin53010Aps4023_CByVouNoBucket {
+  Details?: FIN53010Aps4023_CRow[] | null;
+  Total_Returned_Amount?: number | null;
+  Total_pur_net?: number | null;
+  Total_pur_tax?: number | null;
+}
+
 export interface QueryFIN53010DetailDataByVouNoResponse {
-  _APS3001?: FIN53010DetailBucket<FIN53010Aps3001Row> | null;
+  _APS3001?: Fin53010Aps3001ByVouNoBucket | null;
   _APS2002?: Fin53010Aps2002ByVouNoBucket | null;
-  _APS2002_C?: FIN53010DetailBucket<FIN53010Aps2002_CRow> | null;
-  _ARS3001?: FIN53010DetailBucket<FIN53010Ars3001Row> | null;
-  _APS4023?: FIN53010DetailBucket<FIN53010Aps4023Row> | null;
-  _APS4023_C?: FIN53010DetailBucket<FIN53010Aps4023_CRow> | null;
+  _APS2002_C?: Fin53010Aps2002_CByVouNoBucket | null;
+  _ARS3001?: Fin53010Ars3001ByVouNoBucket | null;
+  _APS4023?: Fin53010Aps4023ByVouNoBucket | null;
+  _APS4023_C?: Fin53010Aps4023_CByVouNoBucket | null;
 }
 
 export type FIN53010DetailDataByVouNoResult = Omit<BaseQueryResponse<QueryFIN53010DetailDataByVouNoResponse>, 'Data'> & {
@@ -795,6 +829,16 @@ export interface QueryFIN53010DetailDataByVouNoForUpdateResponse {
   _ARS3001s?: ARS3001[] | null;
   _APS4023s?: APS4023[] | null;
   _APS4002s?: APS4002[] | null;
+  Total_ACP_Amt?: number;
+  Total_ARS_Amt?: number;
+  Total_PUR_Amt_APS2002?: number;
+  Total_PUR_Net_APS2002?: number;
+  Total_PUR_Tax_APS2002?: number;
+  Total_PUR_Amt_APS4023?: number;
+  Total_PUR_Net_APS4023?: number;
+  Total_PUR_Tax_APS4023?: number;
+  Total_DAmt?: number;
+  Total_CAmt?: number;
 }
 
 export type FIN53010DetailDataByVouNoForUpdateResult = Omit<BaseQueryResponse<QueryFIN53010DetailDataByVouNoForUpdateResponse>, 'Data'> & {

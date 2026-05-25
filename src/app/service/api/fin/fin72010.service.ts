@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { ApiError, ApiMeta, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 
@@ -132,6 +132,7 @@ export interface QueryFIN72010DetailDetailResponse {
 
   status?: string;   // 前端專用欄位，紀錄該筆明細的狀態（新增、修改、刪除），用於送出時決定 RowAction
   DEC_YM_Date: Date | null;  // 前端專用欄位，將 DEC_YM 轉換成 Date 物件以便於 PrimeNG 的 Calendar 元件使用
+  _TABLE_KEY?: string; // table-edit 產生的暫時 key，用來識別新增資料
 }
 
 // 新增/修改 Request
@@ -161,12 +162,12 @@ export interface FIN72010SaveResponse {
     PCS_No: string;     // 成功後回傳的零用金單號 (特別是新增模式下取得的單號)
     PCS_TotAmt: number;   // 最終計算的申請總金額
   },
-  ValidationErrors: {
+  ValidationErrors: [{
     PCS_SeqNo: number;   // 發生錯誤的明細項次
     RuleNo: string;   // 違規的規則編號
     ErrField: string;   // 違規的欄位名稱
     ErrReason: string;   // 錯誤原因說明
-  }
+  }];
 }
 
 // 作廢 Request
@@ -226,6 +227,13 @@ export interface queryTBLUSER_Orgid_DropDownListResponse {
   Org_Name?: string;   // 組織名稱
 }
 
+export interface queryGLS1005_FASExpAccNo_DropDownListResponse {
+  ROWNO?: number;   // 行號
+  AccNo?: string;   // 會計科目代號
+  AccName?: string;   // 會計科目名稱
+  AccDisplay?: string;   // 下拉顯示文字
+}
+
 export interface BaseNoArrayQueryResponse<T> {
   Status: string;
   Data: T;
@@ -244,7 +252,22 @@ export class FIN72010Service {
 
   // 查詢
   queryFIN72010(req: QueryFIN72010Request): Observable<BaseQueryResponse<FIN72010Data>> {
-    return this.http.post<BaseQueryResponse<FIN72010Data>>(`${this.apiUrl}/queryFIN72010`, req);
+    return this.http.post<BaseQueryResponse<FIN72010Data>>(`${this.apiUrl}/queryFIN72010`, req).pipe(
+      map((res: BaseQueryResponse<FIN72010Data>) => {
+        return {
+          ...res,
+          Data: res.Data.map((item: FIN72010Data) => ({
+            ...item,
+            PCS_UsrDisplay: `${item.PCS_UsrNo ?? ''}-${item.PCS_UsrName ?? ''}`,
+            PCS_OrgDisplay: `${item.PCS_OrgID ?? ''}-${item.PCS_OrgName ?? ''}`,
+            Keep_UsrDisplay: `${item.Keep_UsrNo ?? ''}-${item.Keep_UsrName ?? ''}`,
+            Keep_OrgDisplay: `${item.Keep_OrgID ?? ''}-${item.Keep_OrgName ?? ''}`,
+            // 狀態中文顯示
+            PCS_Status: this.getPCSStatusName(item.PCS_Status),
+          }))
+        }
+      })
+    )
   }
 
   // 查詢編輯頁面資料
@@ -284,5 +307,20 @@ export class FIN72010Service {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${environment.ApiUrl}/querySYS1000_DropDownList`, { SYS_Type });
   }
 
+  // 查詢費用會計科目下拉選單
+  queryGLS1005_FASExpAccNo_DropDownList(Keyword: string): Observable<ApiResponse<queryGLS1005_FASExpAccNo_DropDownListResponse[]>> {
+    return this.http.post<ApiResponse<queryGLS1005_FASExpAccNo_DropDownListResponse[]>>(`${environment.ApiUrl}/queryGLS1005_FASExpAccNo_DropDownList`, { Keyword });
+  }
 
+  // 根據狀態代碼回傳狀態名稱
+  getPCSStatusName(status?: string | number | null): string {
+    const statusMap: Record<string, string> = {
+      '1': '建立',
+      '2': '請款',
+      '3': '拋轉',
+      '4': '撥補'
+    };
+
+    return statusMap[String(status ?? '')] ?? '';
+  }
 }
