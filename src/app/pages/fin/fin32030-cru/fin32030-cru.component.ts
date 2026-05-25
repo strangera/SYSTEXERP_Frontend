@@ -4,6 +4,8 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from "@shared/componentkit/calendar-range/calendar-range.component";
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
@@ -25,8 +27,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatAmountWithFraction, formatDate } from '../../../shared/componentkit/table/table.model';
-import { TableEditComponent } from './table-edit/table-edit.component';
-import { EditColumn } from './table-edit/table-edit.model';
+
 
 // 擴展應收帳款類型,添加收款金額欄位
 interface ARWithRCVAmt extends QueryFIN32030ARResponse {
@@ -261,7 +262,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       optionValue: 'value',
       showClear: true,
       width: '250px',
-      panelStyle: { 'min-width': '420px' },
+      // panelStyle: { 'min-width': '420px' },
       calculate: (_rowData, newValue: string) => {
         // 選擇銀行後自動帶入分行代號和帳號長度
         const selectedBank = this.bankBranchOptions.find(b => b.value === newValue);
