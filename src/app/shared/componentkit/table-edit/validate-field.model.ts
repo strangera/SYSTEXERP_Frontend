@@ -103,3 +103,27 @@ export function validateDuplicate(value: string, rowData: any, data: any[], fiel
   const duplicate = data.some(item => item[field] === val && item !== rowData);
   return { isValid: !duplicate, errorMessage: [`「${header}」已重複`] };
 }
+// 日期重複檢查：專門處理 Date 物件與字串的比較
+export function validateDateDuplicate(value: any, rowData: any, data: any[], field: string, header: string) {
+  if (!data || !Array.isArray(data)) return { isValid: true, errorMessage: [] };
+
+  // 1. 將輸入值統一轉為 YYYY-MM-DD 字串
+  const getFormattedDate = (val: any) => {
+    if (!val) return null;
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return val.toString(); // 不是日期就回傳原字串
+    return d.toISOString().split('T')[0]; // 統一格式為 YYYY-MM-DD
+  };
+
+  const valStr = getFormattedDate(value);
+  if (!valStr) return { isValid: true, errorMessage: [] };
+
+  // 2. 檢查陣列中是否有重複的日期
+  const duplicate = data.some(item => {
+    if (item === rowData) return false; // 跳過自己
+    const itemDateStr = getFormattedDate(item[field]);
+    return itemDateStr === valStr;
+  });
+
+  return { isValid: !duplicate, errorMessage: [`已重複`] };
+}
