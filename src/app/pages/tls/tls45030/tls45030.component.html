@@ -8,10 +8,10 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick startLabel="交易日期(起)" endLabel="交易日期(迄)" startControlName="Txn_Date_Start"
+            <app-calendar-range startLabel="交易日期(起)" endLabel="交易日期(迄)" startControlName="Txn_Date_Start"
               endControlName="Txn_Date_End" [startControl]="queryForm.controls.Txn_Date_Start"
               [endControl]="queryForm.controls.Txn_Date_End" [submitted]="submitted">
-            </app-calendar-range-quick>
+            </app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="收銀機號/名稱" controlName="ECR_No_List" [control]="queryForm.controls.ECR_No_List"

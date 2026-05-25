@@ -2,22 +2,22 @@ import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { SortMeta } from 'primeng/api';
-import { Observable, shareReplay } from 'rxjs';
+import { map, Observable, shareReplay } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+
 export interface QueryCPM11030Request {
   pageSize: number | null;
   pageIndex: number | null;
   SortBy: SortMeta[] | null;
   Loan_No?: string;
-  Loan_BDate?: string; // ISO string
-  Loan_EDate?: string; // ISO string
+  Loan_BDate?: string;
+  Loan_EDate?: string;
   User_Name?: string;
   Loan_USR_No?: string;
   Loan_Phone?: string;
   Cert_Type?: string;
   Cert_No?: string;
   Device_Name?: string;
-  Device_ID?: string;
   Service_Id?: string;
 }
 
@@ -25,16 +25,28 @@ export interface QueryCPM11030Row {
   ID: number;
   Loan_No: string;
   Service_Id: string;
-  Loan_Date: string;   // ISO datetime
-  Loan_Time: string;   // string
-  Loan_Status: string; // string
+  Service_Name: string;
+  Loan_Date: string;
+  Loan_Time: string;
+  Loan_Status: string;
   User_Name: string;
-  Cert_Type: string;
-  Cert_No: string;
+  Cert_Type?: string;
+  Cert_No?: string;
   Loan_Phone: string;
+  /** 設備名稱聚合字串，例: "設備A x1, 設備B x2" */
+  Device_Names: string;
+  Loan_USR_No?: string;
+}
+
+/** 出借明細 (CSS30011) */
+export interface QueryCPM11030DetailRow {
+  ID: number;
+  Seq_No: number;
   Device_ID: string;
   Device_Name: string;
-  Loan_USR_No?: string;
+  Qty: number;
+  Dtl_Status: string;
+  Return_Date?: string;
 }
 
 /** =========================
@@ -54,7 +66,7 @@ export interface DailyEquipAvailabilityRow {
 }
 
 export interface InsertDailyEquipAvailabilityRequest {
-  CSS_Date: Date | null; // ISO string
+  CSS_Date: Date | null;
   Service_Id: string;
   Device_ID: string;
   CSS_PriorQty: number;
@@ -63,20 +75,26 @@ export interface InsertDailyEquipAvailabilityRequest {
   CSS_CurrentQty: number;
 }
 
+/** 出借明細 DTO (新增 / 更新共用) */
+export interface CPM11030DetailItem {
+  Device_ID: string;
+  Device_Name: string;
+  Qty: number;
+}
+
 /** =========================
  *  CRU: insert/update CPM11030
  *  ========================= */
 export interface InsertCPM11030Request {
   Service_Id: string;
-  Loan_Date: string;   // ISO datetime
-  Loan_Time: string;   // string
-  Loan_Status: string; // string
+  Loan_Date: string;
+  Loan_Time: string;
+  Loan_Status: string;
   User_Name: string;
-  Cert_Type: string;
-  Cert_No: string;
-  Loan_Phone: string;
-  Device_ID: string;
-  Device_Name: string;
+  Cert_Type?: string | null;
+  Cert_No?: string | null;
+  Loan_Phone?: string | null;
+  Details: CPM11030DetailItem[];
 }
 
 export interface UpdateCPM11030Request extends InsertCPM11030Request {
@@ -90,58 +108,64 @@ export class Cpm11030Service {
 
   constructor(private readonly http: HttpClient) { }
 
-  /** 列表查詢：/queryCPM11030 */
   queryCPM11030(body: QueryCPM11030Request): Observable<ApiResponse<QueryCPM11030Row[]>> {
-    return this.http.post<ApiResponse<QueryCPM11030Row[]>>(`${this.apiUrl}/queryCPM11030`, body);
+    return this.http.post<ApiResponse<QueryCPM11030Row[]>>(`${this.apiUrl}/queryCPM11030`, body).pipe(
+      map(response => {
+        if (response && Array.isArray(response.Data)) {
+          response.Data = response.Data.map(row => {
+            let formattedTime = (row.Loan_Time ?? '').trim();
+            if (formattedTime.length > 0) {
+              formattedTime = formattedTime.padStart(4, '0');
+              if (formattedTime.length === 4) {
+                formattedTime = `${formattedTime.substring(0, 2)}:${formattedTime.substring(2, 4)}`;
+              }
+            }
+            return { ...row, Loan_Time: formattedTime };
+          });
+        }
+        return response;
+      })
+    );
   }
 
-  /** 每日設備可出借量：查詢 /queryCPM11030_DailyEquipAvailability */
+  /** 查詢出借明細 (CSS30011) */
+  queryCPM11030Detail(Loan_No: string): Observable<ApiResponse<QueryCPM11030DetailRow[]>> {
+    return this.http.post<ApiResponse<QueryCPM11030DetailRow[]>>(
+      `${this.apiUrl}/queryCPM11030Detail`, { Loan_No }
+    );
+  }
+
   queryCPM11030_DailyEquipAvailability(
     body: QueryDailyEquipAvailabilityRequest
   ): Observable<ApiResponse<DailyEquipAvailabilityRow[]>> {
     return this.http.post<ApiResponse<DailyEquipAvailabilityRow[]>>(
-      `${this.apiUrl}/queryCPM11030_DailyEquipAvailability`,
-      body
-    ).pipe(
-      shareReplay({ bufferSize: 1, refCount: true })
-    );
+      `${this.apiUrl}/queryCPM11030_DailyEquipAvailability`, body
+    ).pipe(shareReplay({ bufferSize: 1, refCount: true }));
   }
 
-  /** 每日設備可出借量：新增 /insertCPM11030_DailyEquipAvailability（一次一筆） */
   insertCPM11030_DailyEquipAvailability(
     body: InsertDailyEquipAvailabilityRequest
-  ): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertCPM11030_DailyEquipAvailability`, body);
+  ): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertCPM11030_DailyEquipAvailability`, body);
   }
 
-  /** 新增：/insertCPM11030 */
-  insertCPM11030(body: InsertCPM11030Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertCPM11030`, body);
+  insertCPM11030(body: InsertCPM11030Request): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertCPM11030`, body);
   }
 
-  /** 更新：/updateCPM11030 */
-  updateCPM11030(body: UpdateCPM11030Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateCPM11030`, body);
+  updateCPM11030(body: UpdateCPM11030Request): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updateCPM11030`, body);
   }
 
-  // ================= 匯出 =================
-
-  /** 匯出 PDF（不分頁） */
   exportCPM11030PDF(body: QueryCPM11030Request): Observable<HttpResponse<Blob>> {
-    const url = `${this.apiUrl}/exportCPM11030_PDF`;
-    return this.http.post(url, body, {
-      observe: 'response',
-      responseType: 'blob' as 'json',
+    return this.http.post(`${this.apiUrl}/exportCPM11030_PDF`, body, {
+      observe: 'response', responseType: 'blob' as 'json',
     }) as Observable<HttpResponse<Blob>>;
   }
 
-  /** 匯出 Excel（不分頁） */
   exportCPM11030Excel(body: QueryCPM11030Request): Observable<HttpResponse<Blob>> {
-    const url = `${this.apiUrl}/exportCPM11030_Excel`;
-    return this.http.post(url, body, {
-      observe: 'response',
-      responseType: 'blob' as 'json',
+    return this.http.post(`${this.apiUrl}/exportCPM11030_Excel`, body, {
+      observe: 'response', responseType: 'blob' as 'json',
     }) as Observable<HttpResponse<Blob>>;
   }
 }
-

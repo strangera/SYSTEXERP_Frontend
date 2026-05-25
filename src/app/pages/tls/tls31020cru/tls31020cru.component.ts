@@ -57,7 +57,7 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
     TempCounterAmtRate: [''],//臨時櫃業績佔比
 
     MonthlyBudgetTotal: [''],//月營業目標
-    MonthlySalesTotal: [''],//營業實績
+    MonthlySalesTotal: [''],//月營業實績
     CompletionRate: [''],//完成率
 
   });
@@ -75,9 +75,6 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
     { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
     { field: 'location_no', header: '位置編號', visible: true, align: 'left' },
     { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
-    // { field: 'bus_type', header: '大分類', visible: true }, // queryTLS31030
-    // { field: 'bus_type_name', header: '大分類名稱', visible: true }, // queryTLS31030
-
     { field: 'budget', header: '營業目標', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AchievementRate', header: '達成率', visible: true, groupField: '營業額', format: (value) => formatPercentage(value, 2), align: 'right' },
@@ -86,22 +83,17 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
     { field: 'TxnCount', header: '交易筆數', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: '營業坪效', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
-    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
-
-    // { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' }, // queryTLS31030
-    // { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
-    // { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
-
+    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
     { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
-    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
+    { field: 'MonthlySalesTotal', header: '月營業實績', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', visible: true, groupField: '月累計', format: (value) => formatPercentage(value, 2) },
+    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
     { field: '營業佔比', header: '營業佔比' },
     { field: '客單價', header: '客單價' },
     { field: '營業坪效', header: '營業坪效' },
-    // { field: 'temp', header: '臨時櫃' }, // queryTLS31030
     { field: '月累計', header: '月累計' },
   ]
   tlt_kind_Option = [
@@ -137,7 +129,7 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS31030', this.dataForm);
+    this.initializePage('TLS31020', this.dataForm);
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     this.queryConditions = state?.['queryConditions'];
     console.log('這是前面的查詢條件', this.queryConditions);
@@ -229,6 +221,7 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
 
         AchievementRate: this.footerTotal.AvgAchievementRate,
         CompletionRate: this.footerTotal.AvgCompletionRate,
+        PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
       } : null;
       // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
 

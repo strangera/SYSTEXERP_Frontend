@@ -52,6 +52,18 @@ import {
 import { TableEditComponent } from './table-edit/table-edit.component';
 import { EditColumn, EditColumnExtend, FieldChangeEvent as StepFieldChangeEvent } from './table-edit/table-edit.model';
 
+/** API 回傳的日期字串（"YYYY-MM-DDTHH:mm:ss"）解析為 local time Date，避免 UTC midnight 時區問題 */
+function parseApiDateToLocal(s: string | null | undefined): Date | null {
+  if (s == null || String(s).trim() === '') return null;
+  const parts = String(s).slice(0, 10).split('-');
+  if (parts.length !== 3) return null;
+  const y = Number(parts[0]);
+  const m = Number(parts[1]);
+  const d = Number(parts[2]);
+  if (!y || !m || !d || m < 1 || m > 12 || d < 1 || d > 31) return null;
+  return new Date(y, m - 1, d);
+}
+
 @Component({
   selector: 'app-fin53010-cru',
   templateUrl: './fin53010-cru.component.html',
@@ -145,6 +157,22 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly stepPurchaseRows = signal<FIN53010StepPurchaseInvoiceRow[]>([]);
   public readonly stepBankRows = signal<FIN53010StepBankDeposit[]>([]);
 
+  public readonly stepAPTotal = signal<number>(0);
+  public readonly stepARTotal = signal<number>(0);
+  public readonly stepPurchaseTotal = signal<{ invoice_amount: number; net_amount: number; tax_amount: number }>({ invoice_amount: 0, net_amount: 0, tax_amount: 0 });
+  public readonly stepSalesTotal = signal<{ total_amount: number; net_amount: number; tax_amount: number }>({ total_amount: 0, net_amount: 0, tax_amount: 0 });
+  public readonly stepBankTotal = signal<{ deposit_amt: number; withdraw_amt: number }>({ deposit_amt: 0, withdraw_amt: 0 });
+
+  public readonly stepAPFooter = computed(() => ({ acp_amt: this.stepAPTotal() }));
+  public readonly stepARFooter = computed(() => ({ ars_amt: this.stepARTotal() }));
+  public readonly stepPurchaseFooter = computed(() => ({
+    invoice_amount: this.stepPurchaseRows().reduce((sum, r) => sum + (r.invoice_amount ?? 0), 0),
+    net_amount: this.stepPurchaseRows().reduce((sum, r) => sum + (r.net_amount ?? 0), 0),
+    tax_amount: this.stepPurchaseRows().reduce((sum, r) => sum + (r.tax_amount ?? 0), 0),
+  }));
+  public readonly stepSalesFooter = computed(() => this.stepSalesTotal());
+  public readonly stepBankFooter = computed(() => this.stepBankTotal());
+
   /** APS1001 銀行下拉 + 步驟列上 POS2013 銀行代號（清單無該代碼時補佔位） */
   public readonly bankNoOptionsForStep = computed(() => {
     const base = this.service.bankNoOptions();
@@ -187,6 +215,21 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly aps2002RelatedRows = signal<FIN53010Aps2002Row[]>([]);
   public readonly aps4023_CRelatedRows = signal<FIN53010Aps4023_CRow[]>([]);
   public readonly aps4023RelatedRows = signal<FIN53010Aps4023Row[]>([]);
+
+  /** 傳票關聯六表總計（唯讀模式） */
+  public readonly readonlyAps3001Total = signal<number>(0);
+  public readonly readonlyArs3001Total = signal<number>(0);
+  public readonly readonlyAps2002Total = signal<{ InvoiceAmount: number; NetAmount: number; TaxAmount: number }>({ InvoiceAmount: 0, NetAmount: 0, TaxAmount: 0 });
+  public readonly readonlyAps2002_CTotal = signal<{ CreditAmount: number; CreditNetAmount: number; CreditTaxAmount: number }>({ CreditAmount: 0, CreditNetAmount: 0, CreditTaxAmount: 0 });
+  public readonly readonlyAps4023Total = signal<{ TotalAmount: number; NetAmount: number; TaxAmount: number }>({ TotalAmount: 0, NetAmount: 0, TaxAmount: 0 });
+  public readonly readonlyAps4023_CTotal = signal<{ Returned_Amount: number; pur_net: number; pur_tax: number }>({ Returned_Amount: 0, pur_net: 0, pur_tax: 0 });
+
+  public readonly readonlyAps3001Footer = computed(() => ({ ACP_Amt: this.readonlyAps3001Total() }));
+  public readonly readonlyArs3001Footer = computed(() => ({ ars_amt: this.readonlyArs3001Total() }));
+  public readonly readonlyAps2002Footer = computed(() => this.readonlyAps2002Total());
+  public readonly readonlyAps2002_CFooter = computed(() => this.readonlyAps2002_CTotal());
+  public readonly readonlyAps4023Footer = computed(() => this.readonlyAps4023Total());
+  public readonly readonlyAps4023_CFooter = computed(() => this.readonlyAps4023_CTotal());
 
   public readonly ars3001RelatedColumns: ReportColumn[] = [
     { field: 'org_id', header: '組織代號', visible: true, align: 'left' },
@@ -577,7 +620,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'invoice_prefix', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left' },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left' },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date' },
-    { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month' },
+    { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month', dateFormat: 'yy/mm' },
     { field: 'buyer_uniform', header: '買受人統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'total_amount', header: '發票總金額', type: 'inputNumber', textAlign: 'right' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
@@ -593,8 +636,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'track_no', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left' },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left' },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date' },
-    { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month' },
-    { field: 'vendor_tax_id', header: '廠商統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month', dateFormat: 'yy/mm' },
+    { field: 'vendor_tax_id', header: '廠商統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorUniformOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'invoice_usage', header: '發票用途', type: 'dropdown', options: () => this.service.purDirectTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'invoice_amount', header: '發票總金額', type: 'inputNumber', textAlign: 'right' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
@@ -676,6 +719,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     this.service.getAccNoOptions();
     this.service.getVendorOptions();
+    this.service.getVendorUniformOptions();
     this.service.getUsrOptions();
     this.service.getOrgNoOptions();
     this.service.getRefNameOptions();
@@ -767,6 +811,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return this.tableData().filter(row => String(map.get(String(row.AccNo ?? ''))) === '3');
   });
 
+  /** 補發票 (INV_YN='Y') 僅自動跳至進項發票步驟一次 */
+  private _hasAutoJumpedToStep5 = false;
+
   /** 應付步驟表是否允許插入列（不含唯讀；模板須再與 !isFormReadable 一併綁定） */
   public readonly stepAPTableCanInsert = computed(() => {
     const max = this.payableDetailRowCount();
@@ -789,6 +836,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.activeVoucherSteps.set(ordered);
     const flow = [1, ...ordered];
     if (!flow.includes(this.currentStep())) this.currentStep.set(1);
+    // 補發票模式（INV_YN='Y'）且進項發票步驟啟用時，初次自動跳至 step5
+    if (
+      !this._hasAutoJumpedToStep5
+      && this.dataForm.controls.INV_YN.value === 'Y'
+      && ordered.includes(5)
+      && this.currentStep() === 1
+    ) {
+      this._hasAutoJumpedToStep5 = true;
+      this.currentStep.set(5);
+    }
   }, { allowSignalWrites: true });
 
   /** 依傳票明細與 queryPOS2013（廠商主檔）同步應付／應收／銀行存款步驟表（僅新增模式） */
@@ -906,7 +963,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       acp_date: vouDate,
       ven_bnk_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
       ven_bank_account: this.formatVenBankAccount(venOpt),
-      ven_ctrlyn: venOpt?.['VEN_CTRLYN'] ?? undefined,
+      ven_ctrlyn: venOpt?.['VEN_CTRLYN'] ?? 'Y',
       ven_check_title: venCheckTitle,
       acc_no: row.AccNo,
       note_desc: this.resolveNoteDescForStep(row),
@@ -1015,15 +1072,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     this.service.queryAps4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
       next: res => {
-        if (res.Status !== '0000') {
-          this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '查詢發票失敗');
-          return;
-        }
+        // 查無資料（9102）屬正常情境（新發票），靜默跳過不報錯
+        if (res.Status !== '0000') return;
         const d = res.Data;
-        if (!d) {
-          this.messageService.errorBubble('查無資料');
-          return;
-        }
+        if (!d) return;
         this.lastSalesInvoiceLookupKey.set(index, full);
         const patch = this.mapAps4023ToSalesRow(d, prefix, no);
         this.stepSalesRows.update(rows => {
@@ -1045,15 +1097,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     this.service.queryAps4023DetailDataByInvoiceNumber({ InvoiceNumber: full }).pipe(take(1)).subscribe({
       next: res => {
-        if (res.Status !== '0000') {
-          this.messageService.errorBubble(res.Message ? `操作失敗：${res.Message}` : '查詢發票失敗');
-          return;
-        }
+        // 查無資料（9102）屬正常情境（新發票），靜默跳過不報錯
+        if (res.Status !== '0000') return;
         const d = res.Data;
-        if (!d) {
-          this.messageService.errorBubble('查無資料');
-          return;
-        }
+        if (!d) return;
         this.lastPurchaseInvoiceLookupKey.set(index, full);
         const patch = this.mapAps4023ToPurchaseRow(d, prefix, no);
         this.stepPurchaseRows.update(rows => {
@@ -1239,6 +1286,12 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.aps2002RelatedRows.set([]);
     this.aps4023_CRelatedRows.set([]);
     this.aps4023RelatedRows.set([]);
+    this.readonlyAps3001Total.set(0);
+    this.readonlyArs3001Total.set(0);
+    this.readonlyAps2002Total.set({ InvoiceAmount: 0, NetAmount: 0, TaxAmount: 0 });
+    this.readonlyAps2002_CTotal.set({ CreditAmount: 0, CreditNetAmount: 0, CreditTaxAmount: 0 });
+    this.readonlyAps4023Total.set({ TotalAmount: 0, NetAmount: 0, TaxAmount: 0 });
+    this.readonlyAps4023_CTotal.set({ Returned_Amount: 0, pur_net: 0, pur_tax: 0 });
   }
 
   private clearEditStepDetailRows(): void {
@@ -1247,6 +1300,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.stepSalesRows.set([]);
     this.stepPurchaseRows.set([]);
     this.stepBankRows.set([]);
+    this.stepAPTotal.set(0);
+    this.stepARTotal.set(0);
+    this.stepPurchaseTotal.set({ invoice_amount: 0, net_amount: 0, tax_amount: 0 });
+    this.stepSalesTotal.set({ total_amount: 0, net_amount: 0, tax_amount: 0 });
+    this.stepBankTotal.set({ deposit_amt: 0, withdraw_amt: 0 });
   }
 
   /**
@@ -1274,6 +1332,35 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           this.stepSalesRows.set(mapped.stepSalesRows);
           this.stepPurchaseRows.set(mapped.stepPurchaseRows);
           this.stepBankRows.set(mapped.stepBankRows);
+          // 預填 lookup key，避免 edit 模式下 blur invoice_no 時觸發 APS4023 查詢覆蓋 DB 資料
+          this.lastPurchaseInvoiceLookupKey.clear();
+          mapped.stepPurchaseRows.forEach((r, i) => {
+            const t = String(r.track_no ?? '').trim();
+            const n = String(r.invoice_no ?? '').trim();
+            if (t.length === 2 && n.length === 8) this.lastPurchaseInvoiceLookupKey.set(i, `${t}${n}`);
+          });
+          this.lastSalesInvoiceLookupKey.clear();
+          mapped.stepSalesRows.forEach((r, i) => {
+            const t = String(r.invoice_prefix ?? '').trim();
+            const n = String(r.invoice_no ?? '').trim();
+            if (t.length === 2 && n.length === 8) this.lastSalesInvoiceLookupKey.set(i, `${t}${n}`);
+          });
+          this.stepAPTotal.set(res.Data.Total_ACP_Amt ?? 0);
+          this.stepARTotal.set(res.Data.Total_ARS_Amt ?? 0);
+          this.stepPurchaseTotal.set({
+            invoice_amount: res.Data.Total_PUR_Amt_APS2002 ?? 0,
+            net_amount: res.Data.Total_PUR_Net_APS2002 ?? 0,
+            tax_amount: res.Data.Total_PUR_Tax_APS2002 ?? 0,
+          });
+          this.stepSalesTotal.set({
+            total_amount: res.Data.Total_PUR_Amt_APS4023 ?? 0,
+            net_amount: res.Data.Total_PUR_Net_APS4023 ?? 0,
+            tax_amount: res.Data.Total_PUR_Tax_APS4023 ?? 0,
+          });
+          this.stepBankTotal.set({
+            deposit_amt: res.Data.Total_DAmt ?? 0,
+            withdraw_amt: res.Data.Total_CAmt ?? 0,
+          });
           this.clearRelatedDetailTables();
         },
         error: () => {
@@ -1304,6 +1391,28 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         this.aps2002RelatedRows.set(pick(d._APS2002));
         this.aps4023_CRelatedRows.set(pick(d._APS4023_C));
         this.aps4023RelatedRows.set(pick(d._APS4023));
+        this.readonlyAps3001Total.set(d._APS3001?.Total_ACP_Amt ?? 0);
+        this.readonlyArs3001Total.set(d._ARS3001?.Total_ars_amt ?? 0);
+        this.readonlyAps2002Total.set({
+          InvoiceAmount: d._APS2002?.Total_InvoiceAmount ?? 0,
+          NetAmount: d._APS2002?.Total_NetAmount ?? 0,
+          TaxAmount: d._APS2002?.Total_TaxAmount ?? 0,
+        });
+        this.readonlyAps2002_CTotal.set({
+          CreditAmount: d._APS2002_C?.Total_CreditAmount ?? 0,
+          CreditNetAmount: d._APS2002_C?.Total_CreditNetAmount ?? 0,
+          CreditTaxAmount: d._APS2002_C?.Total_CreditTaxAmount ?? 0,
+        });
+        this.readonlyAps4023Total.set({
+          TotalAmount: d._APS4023?.Total_TotalAmount ?? 0,
+          NetAmount: d._APS4023?.Total_NetAmount ?? 0,
+          TaxAmount: d._APS4023?.Total_TaxAmount ?? 0,
+        });
+        this.readonlyAps4023_CTotal.set({
+          Returned_Amount: d._APS4023_C?.Total_Returned_Amount ?? 0,
+          pur_net: d._APS4023_C?.Total_pur_net ?? 0,
+          pur_tax: d._APS4023_C?.Total_pur_tax ?? 0,
+        });
       },
       error: () => this.clearRelatedDetailTables(),
     });
@@ -1512,14 +1621,64 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return validData
   }
 
-  /** 進項步驟表：字軌 2 碼 + 發票號碼 8 碼齊備時查 APS4023 並帶入該列 */
+  /** 進項步驟表：字軌 2 碼 + 發票號碼 8 碼齊備時查 APS4023 並帶入該列；
+   *  發票日期選定後自動帶入申報年月（下一個雙數月）；
+   *  申報年月手動選到奇數月時自動修正為下一個雙數月；
+   *  廠商統一編號變更時自動帶入廠商代號（ven_no）；
+   *  發票總金額或課稅別變更時自動計算未稅金額與稅額 */
   public onStepPurchaseInvoiceFieldChange(event: StepFieldChangeEvent): void {
     if (this.isFormReadable) return;
     const f = event.field;
-    if (f !== 'track_no' && f !== 'invoice_no') return;
     const idx = event.index;
+    console.log('[PurchaseFieldChange]', f, idx, 'value=', event.value, 'invoice_date=', event.rowData['invoice_date']);
     if (typeof idx !== 'number' || idx < 0) return;
     const row = event.rowData as FIN53010StepPurchaseInvoiceRow;
+
+    if (f === 'invoice_date' || f === 'declare_ym') {
+      const srcDate = f === 'invoice_date'
+        ? (row.invoice_date instanceof Date ? row.invoice_date : null)
+        : (row.declare_ym instanceof Date ? row.declare_ym : null);
+      if (!srcDate) return;
+      // getMonth() 是 0-based：0=1月(奇), 1=2月(偶)...
+      // 奇數月 → getMonth() % 2 === 0；偶數月 → getMonth() % 2 === 1
+      const month = srcDate.getMonth();
+      const nextEvenMonth = month % 2 === 0
+        ? new Date(srcDate.getFullYear(), month + 1, 1) // 奇數月 → 下個月（偶數月）
+        : new Date(srcDate.getFullYear(), month, 1);    // 偶數月 → 同月 1 日
+      // 直接 mutate rowData（與 table-edit 內部 _tableData 同一引用），
+      // 這樣後續 dataChange 帶出的 cleanData 就已包含更新後的 declare_ym
+      event.rowData.declare_ym = nextEvenMonth;
+      return;
+    }
+
+    // 廠商統一編號變更 → 自動帶入廠商代號
+    if (f === 'vendor_tax_id') {
+      const uniform = String(row.vendor_tax_id ?? '').trim();
+      const venNo = uniform ? this.service.vendorUniformToVenNoMap().get(uniform) : undefined;
+      event.rowData.ven_no = venNo;
+      return;
+    }
+
+    // 發票總金額或課稅別變更 → 自動計算未稅金額與稅額
+    if (f === 'invoice_amount' || f === 'tax_type') {
+      const amount = row.invoice_amount;
+      if (amount != null && amount > 0) {
+        const taxType = String(row.tax_type ?? '').trim();
+        if (taxType === '1') {
+          // 應稅 5%：發票總金額為含稅價格
+          const tax = Math.round(amount * 5 / 105);
+          event.rowData.tax_amount = tax;
+          event.rowData.net_amount = amount - tax;
+        } else {
+          // 零稅率、免稅、其他：稅額為 0，未稅 = 總金額
+          event.rowData.tax_amount = 0;
+          event.rowData.net_amount = amount;
+        }
+      }
+      return;
+    }
+
+    if (f !== 'track_no' && f !== 'invoice_no') return;
     const prefix = String(row.track_no ?? '').trim();
     const no = String(row.invoice_no ?? '').trim();
     if (prefix.length !== 2 || no.length !== 8) return;
@@ -1533,14 +1692,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ): Partial<FIN53010StepSalesInvoiceRow> {
     const invYm = d.INV_DeclareYM;
     const declareYm = invYm
-      ? new Date(`${String(invYm).slice(0, 4)}-${String(invYm).slice(4, 6)}-01`)
+      ? new Date(Number(String(invYm).slice(0, 4)), Number(String(invYm).slice(4, 6)) - 1, 1)
       : null;
     return {
       id: d.ID,
       invoice_type: d.InvoiceType ?? undefined,
       invoice_prefix: prefix,
       invoice_no: no,
-      invoice_date: d.InvoiceDate ? new Date(d.InvoiceDate) : null,
+      invoice_date: d.InvoiceDate ? parseApiDateToLocal(d.InvoiceDate) : null,
       declare_ym: declareYm,
       buyer_uniform: d.Buyer_Uniform ?? undefined,
       total_amount: d.PUR_Amt,
@@ -1559,15 +1718,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ): Partial<FIN53010StepPurchaseInvoiceRow> {
     const invYm = d.INV_DeclareYM;
     const declareYm = invYm
-      ? new Date(`${String(invYm).slice(0, 4)}-${String(invYm).slice(4, 6)}-01`)
+      ? new Date(Number(String(invYm).slice(0, 4)), Number(String(invYm).slice(4, 6)) - 1, 1)
       : null;
+    const vendorTaxId = d.Seller_Uniform ?? undefined;
+    const venNo = vendorTaxId ? this.service.vendorUniformToVenNoMap().get(vendorTaxId) : undefined;
     return {
       voucher_type: d.InvoiceType ?? undefined,
       track_no: prefix,
       invoice_no: no,
-      invoice_date: d.InvoiceDate ? new Date(d.InvoiceDate) : null,
+      invoice_date: d.InvoiceDate ? parseApiDateToLocal(d.InvoiceDate) : null,
       declare_ym: declareYm,
-      vendor_tax_id: d.Seller_Uniform ?? undefined,
+      vendor_tax_id: vendorTaxId,
+      ven_no: venNo,
       invoice_amount: d.PUR_Amt,
       tax_type: d.PUR_TaxType ?? undefined,
       net_amount: d.PUR_Net,
@@ -1651,7 +1813,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     if (!ids.length) return;
     this.tableLoading.set(!0);
-    this.service.deleteFIN53010Data(ids).pipe(
+    this.service.deleteFIN53010Data(ids[0]).pipe(
       tap(res => this.logger.debug(`onDelete:`, [ids, res])),
       concatMap(() => this.service.loadFIN53010Detail(this.rowdata!.id)),
       tap(res => {

@@ -4,24 +4,45 @@
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="組織代碼/名稱" controlName="ORG_ID" [options]="ORG_IDOptions$ | async" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ORG_ID" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="組織代碼/名稱"
+              controlName="ORG_ID"
+              [options]="ORG_IDOptions$ | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ORG_ID"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="類別代碼/名稱" controlName="CLASS_CODE" [options]="CLASS_CODEOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.CLASS_CODE" [submitted]="submitted"></app-dropdown>
-          </div>
+          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="責任單位名稱" controlName="CLASS_NAME" [control]="queryForm.controls.CLASS_NAME"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="責任單位名稱"
+              controlName="CLASS_NAME"
+              [control]="queryForm.controls.CLASS_NAME"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -30,9 +51,21 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    (delete)="onDelete($event)" [totalRecords]="totalRecords" [loading]="loading" [showDelete]="true"
-    [showCheckBox]="true" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
-    [lastQueryBody]="lastQuery" [showDelete]="true"
-    [queryFunction]="cpm12020Service.queryCPM12020.bind(cpm12020Service)"></app-table-report>
+  <app-table-report
+    dataKey="ID"
+    [data]="data"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    (delete)="onDelete($event)"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [showDelete]="true"
+    [showCheckBox]="true"
+    (selectionChange)="selectedRows = $event"
+    [selectedItems]="selectedRows"
+    [lastQueryBody]="lastQuery"
+    [showDelete]="true"
+    [queryFunction]="cpm12020Service.queryCPM12020.bind(cpm12020Service)"
+  ></app-table-report>
 </div>

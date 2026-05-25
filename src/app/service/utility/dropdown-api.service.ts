@@ -451,8 +451,8 @@ export class DropdownApiService {
   }
 
   /** 查詢表格定義檔(DEFTBL) */
-  queryDefTbl(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryDEFTBL_DropDownList').pipe(
+  queryDefTbl(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryDEFTBL_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

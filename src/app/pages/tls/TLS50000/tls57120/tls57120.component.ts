@@ -100,6 +100,14 @@ export class TLS57120Component extends BasicQueryPageComponent<QueryTLS57120Data
 
   ngOnInit(): void {
     this.initializePage('TLS57120');
+    // 有變更 基準月份 就自動將 DateFrom、DateTo 更新為當月
+    this.queryForm.controls.BaseYM.valueChanges.pipe(untilDestroyed(this)).subscribe(baseYM => {
+      if (baseYM) {
+        const firstDay = new Date(baseYM.getFullYear(), baseYM.getMonth(), 1);
+        const lastDay = new Date(baseYM.getFullYear(), baseYM.getMonth() + 1, 0);
+        this.queryForm.patchValue({ DateFrom: firstDay, DateTo: lastDay });
+      }
+    });
 
     // 監聽「顯示方式」變更，切換表格欄位
     this.queryForm.controls.ShowType.valueChanges.pipe(untilDestroyed(this)).subscribe(mode => {

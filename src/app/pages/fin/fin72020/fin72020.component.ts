@@ -1,3 +1,4 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -46,7 +47,8 @@ import { apiOption } from '../../../shared/models/sys/sysb000.model';
     ConfirmPopupModule,
     DialogModule,
     TableModule,
-    TableReportComponent
+    TableReportComponent,
+    NgIf,
   ]
 })
 export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> implements OnInit {
@@ -166,37 +168,10 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
       this.fin72020Service.queryFIN72020(req)
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data.map(item => ({
-            ...item,
-            PCS_UsrDisplay: `${item.PCS_UsrNo ?? ''}-${item.PCS_UsrName ?? ''}`,
-            PCS_OrgDisplay: `${item.PCS_OrgID ?? ''}-${item.PCS_OrgName ?? ''}`,
-            Keep_UsrDisplay: `${item.Keep_UsrNo ?? ''}-${item.Keep_UsrName ?? ''}`,
-            Keep_OrgDisplay: `${item.Keep_OrgID ?? ''}-${item.Keep_OrgName ?? ''}`,
-          }));
+          this.data = response.Data;
           this.lastQueryBody = req;
           this.totalRecords.set(response.TotalCount);
-
           this.queryStateService.setQueryState(this.ProgNo, form.getRawValue());
-
-          // this.queryFunction(this.lastQueryBody)
-          //   .pipe(
-          //     finalize(() => {
-          //       this.loading = false;
-          //     })
-          //   )
-          //   .subscribe({
-          //     next: (res: { Status: string; Data?: FIN72020Data[]; TotalCount?: number }) => {
-          //       if (res.Status !== '0000') return;
-          //       this.data = res.Data?.map(item => ({
-          //         ...item,
-          //         PCS_UsrDisplay: `${item.PCS_UsrNo ?? ''}-${item.PCS_UsrName ?? ''}`,
-          //         PCS_OrgDisplay: `${item.PCS_OrgID ?? ''}-${item.PCS_OrgName ?? ''}`,
-          //         Keep_UsrDisplay: `${item.Keep_UsrNo ?? ''}-${item.Keep_UsrName ?? ''}`,
-          //         Keep_OrgDisplay: `${item.Keep_OrgID ?? ''}-${item.Keep_OrgName ?? ''}`,
-          //       })) || [];
-          //       this.totalRecords.set(res.TotalCount ?? 0);
-          //     },
-          //   });
         });
     });
 
@@ -304,6 +279,22 @@ export class FIN72020Component extends BasicQueryPageComponent<FIN72020Service> 
 
     this.userDialogVisible = false;
     this.currentUserTarget = null;
+  }
+
+  // 清除使用者選擇的資料
+  clearUser(type: 'PCS' | 'Keep'): void {
+    if (type === 'PCS') {
+      this.queryForm.patchValue({
+        PCS_UsrNo: null,
+        PCS_UsrDisplay: null,
+      });
+      return;
+    }
+
+    this.queryForm.patchValue({
+      Keep_UsrNo: null,
+      Keep_UsrDisplay: null
+    });
   }
 
   /** 載入下拉選單選項 */
