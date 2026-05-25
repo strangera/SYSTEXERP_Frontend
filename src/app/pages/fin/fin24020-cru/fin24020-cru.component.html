@@ -3,7 +3,7 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
-  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+  <p-panel *ngIf="initialized" [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
@@ -54,7 +54,7 @@
           (dataChange)="onTableDataChange($event)" [defaultInsertData]="tableDefaults"></app-table-edit>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="onLocalCancel()" />
+        <app-button btnType="cancel" [form]="dataForm" (clickEvent)="initializeFormFromRowData()" />
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>

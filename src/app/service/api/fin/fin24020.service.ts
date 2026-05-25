@@ -26,26 +26,14 @@ export interface IQueryFIN24020Request {
 
 /** 2. 查詢回傳：明細資料列 (對齊後端 queryFIN24020ResponseDetail) */
 export interface IQueryFIN24020ResponseDetail {
-  SeqNo: number;
   ACP_No: string;
   ACP_YYYYMM: string;
   acp_termno: number;
-  VEN_No: string;
-  VEN_Name: string;
-  ACP_Amt: number;
-  ACP_BalanceAmt: number;
-  ACP_ReserveAmt: number;
+  RET_Date: Date | null; // 格式通常為 yyyy-MM-dd
   RET_Amt: number;
-  RET_Date: string | null; // 格式通常為 yyyy-MM-dd
   STATUS: string;          // Y / N
   Remark: string;
-  CRT_Date: string;
-  CRT_USR_No: string;
-  CRT_USR_Name: string;
-  RET_CRT_Date: string;
-  RET_CRT_USR_No: string;
-  RET_CRT_USR_Name: string;
-  TotalCount: number;
+  TotalCount?: number;
 }
 
 /** 3. 查詢回傳：主檔打平與 Details 併行結構 (對齊後端 queryFIN24020Response) */
@@ -54,12 +42,11 @@ export interface IQueryFIN24020Response {
   VEN_No: string;
   VEN_Name: string;
   ACP_YYYYMM: string;
-  ACP_ReserveAmt: number;
-  acp_termno: number;
   ACP_Amt: number;
-  ACP_Date: string | null; // 格式通常為 yyyy-MM-dd
   ACP_BalanceAmt: number;
-  RET_Date: string | null; // 格式通常為 yyyy-MM-dd
+  ACP_ReserveAmt: number;
+  ACP_Date: string | null; // 格式通常為 yyyy-MM-dd
+  RET_Amt: number;
   Details: IQueryFIN24020ResponseDetail[];
 }
 
