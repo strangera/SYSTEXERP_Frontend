@@ -164,10 +164,97 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       header: '收款代號',
       type: 'input',
       maxLength: 50,
-      placeholder: '點擊選擇...',
+      placeholder: '直接輸入，或雙擊欄位查詢...',
+      // onFocus: (_rowData: any, _value: string | null, _col: EditColumn, index: number) => {
+      //   if (!this.isFormReadable) {
+      //     this.openCapItemDialogForRow(index);
+      //   }
+      // },
+      // 1. 利用內建的 calculate 處理手動輸入：只要代號一變更，立刻自動匹配並帶出名稱！
+      calculate: (rowData: any, newValue: string) => {
+        if (!newValue) {
+          return {
+            CAP_Name: '',
+            AccNo: '',
+            ABAT_YN: '',
+            AbatAcct: ''
+          };
+        }
+
+        // 從前端預載的快取中匹配資料
+        const matchedItem = this.capItemAllData.find(item => item.CAP_Item === newValue);
+
+        if (matchedItem) {
+          // 核心：回傳新物件，底層 table-edit 會立刻將這些欄位同步更新到畫面上！
+          return {
+            CAP_Item: matchedItem.CAP_Item || '',
+            CAP_Name: matchedItem.CAP_Name || '',
+            AccNo: matchedItem.AccNo || '',
+            ABAT_YN: matchedItem.ABAT_YN || '',
+            AbatAcct: '' // 收款項目變更，清空舊的沖帳代號
+          };
+        } else {
+          // 找不到代號時，不清除原本打的字，但回傳清空隔壁名稱，方便使用者知道打錯了
+          return {
+            CAP_Name: '⚠️ 找不到此代號',
+            AccNo: '',
+            ABAT_YN: '',
+            AbatAcct: ''
+          };
+        }
+      },
+      // 利用 onFocus 監聽原生 HTML 的 dblclick (雙擊) 事件來決定要不要開 Dialog
       onFocus: (_rowData: any, _value: string | null, _col: EditColumn, index: number) => {
-        if (!this.isFormReadable) {
-          this.openCapItemDialogForRow(index);
+        if (this.isFormReadable) return;
+
+        // 取得當前聚焦的 input 元素
+        const activeElement = document.activeElement as HTMLInputElement;
+        if (activeElement && activeElement.tagName === 'INPUT') {
+
+          // 檢查是否已經綁定過雙擊事件，避免重複綁定
+          if (!(activeElement as any)._hasDblClickBound) {
+            (activeElement as any)._hasDblClickBound = true;
+
+            // 監聽雙擊事件：只有在使用者 double click 時才觸發彈窗
+            activeElement.addEventListener('dblclick', () => {
+              this.openCapItemDialogForRow(index);
+            });
+          }
+        }
+      },
+      // 支援直接手動輸入，當滑鼠離開或 Tab 離開時觸發
+      onBlur: (rowData: any, value: string | null, _col: EditColumn, index: number) => {
+        if (!value) return;
+
+        // 從前端已經載入的完整選單中，尋找完全符合輸入代號的資料
+        const matchedItem = this.capItemAllData.find(item => item.CAP_Item === value);
+
+        if (matchedItem) {
+          // 找到了，比照 Dialog 選擇的邏輯，把名稱、科目與沖帳屬性帶進來
+          this.step2TableData[index] = {
+            ...this.step2TableData[index],
+            CAP_Item: matchedItem.CAP_Item || '',
+            CAP_Name: matchedItem.CAP_Name || '',
+            AccNo: matchedItem.AccNo || '',
+            ABAT_YN: matchedItem.ABAT_YN || '',
+            AbatAcct: '', // 收款項目變更，清空舊的沖帳代號
+          };
+          this.step2TableData = [...this.step2TableData]; // 觸發變更檢測
+          this.calculateBillTotalAmount(); // 重新計算票據總金額
+        } else {
+          // 輸入錯誤的代號時給予警示，並清空錯誤的值
+          this.messageService.warnBubble(`找不到收款代號: "${value}"，請重新輸入或雙擊欄位進行查詢`);
+
+          this.step2TableData[index] = {
+            ...this.step2TableData[index],
+            CAP_Item: '',
+            CAP_Name: '',
+            AccNo: '',
+            ABAT_YN: '',
+            AbatAcct: ''
+          };
+          this.step2TableData = [...this.step2TableData];
+          this.calculateBillTotalAmount();
         }
       },
       disabled: () => this.isFormReadable,
