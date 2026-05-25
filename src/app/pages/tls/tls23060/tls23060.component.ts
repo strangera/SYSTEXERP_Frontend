@@ -409,7 +409,40 @@ public queryTLS23060ForReport = (body: any) => {
       this.dialogHistoryRequestBody = null;
     }
   }
+onExportExcel(): void {
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
+  }
 
+  this.btnLoading = true;
+  const body = this.buildExportBody();
+
+  this.tls23060Service
+    .exporttls23060Excel(body)
+    .pipe(finalize(() => (this.btnLoading = false)))
+    .subscribe({
+      next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.xlsx'),
+    });
+}
+onExportDetailExcel(): void {
+  if (!this.dialogHistoryRequestBody) {
+    this.messageService?.warnBubble?.('請先點選主表資料開啟明細。');
+    return;
+  }
+
+  this.btnLoading = true;
+
+  const { pageSize, pageIndex, PageSize, PageIndex, ...rest } = this.dialogHistoryRequestBody;
+  const body = rest;
+
+  this.tls23060Service
+    .exportTLS23060DetailExcel(body)
+    .pipe(finalize(() => (this.btnLoading = false)))
+    .subscribe({
+      next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.xlsx'),
+    });
+}
   // ===== 匯出：主表 PDF =====
   private buildExportBody() {
     if (!this.historyRequestBody) return null;
