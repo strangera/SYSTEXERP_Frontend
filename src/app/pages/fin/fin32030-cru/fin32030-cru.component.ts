@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from "@shared/componentkit/calendar-range/calendar-range.component";
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
@@ -88,13 +89,64 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       header: '應收ID',
       type: 'input',
       maxLength: 50,
-      placeholder: '點擊選擇...',
-      onFocus: (_rowData: ARWithRCVAmt, _value: string | null, _col: EditColumn, index: number) => {
-        // 點擊時開啟彈跳視窗
-        if (!this.isFormReadable) {
-          this.openARDialogForRow(index);
+      placeholder: '直接輸入，或雙擊欄位查詢...',
+      // onFocus: (_rowData: ARWithRCVAmt, _value: string | null, _col: EditColumn, index: number) => {
+      //   // 點擊時開啟彈跳視窗
+      //   if (!this.isFormReadable) {
+      //     this.openARDialogForRow(index);
+      //   }
+      // },
+      // 1. 處理手動輸入：當應收ID變更時，自動匹配並帶出廠客、摘要與收款金額
+      calculate: (rowData: ARWithRCVAmt, newValue: string) => {
+        if (!newValue) {
+          return {
+            ARS_ID: null,
+            VEN_No: null,
+            NoteDesc: null,
+            RCV_Amt: null
+          };
+        }
+
+        // 從彈窗所使用的資料集（或當前已被載入的應收明細快取）中尋找完全吻合的 ID
+        // 註：若此處的 arDialogData 在手動輸入時尚未透過 API 載入，
+        // 建議確保對話框資料或後端有預載機制，才能順利在前端 find 匹配。
+        const matchedItem = this.arDialogData.find(item => item.ARS_ID === newValue);
+
+        if (matchedItem) {
+          return {
+            ARS_ID: matchedItem.ARS_ID || '',
+            VEN_No: matchedItem.VEN_No || null,
+            NoteDesc: matchedItem.NoteDesc || null,
+            RCV_Amt: matchedItem.UnpaidAmt || 0 // 預設收款金額為未收款金額
+          };
+        } else {
+          // 找不到代號時，不清除使用者打的字，但清除或提示其他欄位
+          return {
+            VEN_No: null,
+            NoteDesc: '⚠️ 找不到此應收ID',
+            RCV_Amt: null
+          };
         }
       },
+      onFocus: (_rowData: ARWithRCVAmt, _value: string | null, _col: EditColumn, index: number) => {
+        if (this.isFormReadable) return;
+
+        // 取得當前聚焦的 input 元素
+        const activeElement = document.activeElement as HTMLInputElement;
+        if (activeElement && activeElement.tagName === 'INPUT') {
+
+          // 檢查是否已經綁定過雙擊事件，避免重複綁定
+          if (!(activeElement as any)._hasDblClickBound) {
+            (activeElement as any)._hasDblClickBound = true;
+
+            // 監聽雙擊事件：只有在使用者 double click 時才觸發彈窗
+            activeElement.addEventListener('dblclick', () => {
+              this.openARDialogForRow(index);
+            });
+          }
+        }
+      },
+
       disabled: () => this.isFormReadable // 檢視模式不可點擊
     },
     {
@@ -209,6 +261,18 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
 
         // 取得當前聚焦的 input 元素
         const activeElement = document.activeElement as HTMLInputElement;
+        // if (activeElement && activeElement.tagName === 'INPUT') {
+
+        //   // 檢查是否已經綁定過雙擊事件，避免重複綁定
+        //   if (!(activeElement as any)._hasDblClickBound) {
+        //     (activeElement as any)._hasDblClickBound = true;
+
+        //     // 監聽雙擊事件：只有在使用者 double click 時才觸發彈窗
+        //     activeElement.addEventListener('dblclick', () => {
+        //       this.openCapItemDialogForRow(index);
+        //     });
+        //   }
+        // }
         if (activeElement && activeElement.tagName === 'INPUT') {
 
           // 檢查是否已經綁定過雙擊事件，避免重複綁定
@@ -217,6 +281,20 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
 
             // 監聽雙擊事件：只有在使用者 double click 時才觸發彈窗
             activeElement.addEventListener('dblclick', () => {
+
+              // 💡 解決同步斷層的奇招：
+              // 開窗的瞬間，如果發現目前這欄是空的，先塞個暫時的字（例如 '...' 或 '未選擇內容!'）
+              // 這樣當視窗跳出來、輸入框強制失焦時，內部的驗證邏輯會看到「有字」，就不會跳出必填錯誤！
+              if (!this.step2TableData[index]?.CAP_Item) {
+                this.step2TableData[index] = {
+                  ...this.step2TableData[index],
+                  CAP_Item: null
+                };
+                // 刷回陣列，讓 table-edit 內部感知到這個暫時的值
+                this.step2TableData = [...this.step2TableData];
+                this.cdr.detectChanges();
+              }
+
               this.openCapItemDialogForRow(index);
             });
           }
@@ -243,7 +321,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
           this.calculateBillTotalAmount(); // 重新計算票據總金額
         } else {
           // 輸入錯誤的代號時給予警示，並清空錯誤的值
-          this.messageService.warnBubble(`找不到收款代號: "${value}"，請重新輸入或雙擊欄位進行查詢`);
+          // this.messageService.warnBubble(`找不到收款代號: "${value}"，請重新輸入或雙擊欄位進行查詢`);
 
           this.step2TableData[index] = {
             ...this.step2TableData[index],
@@ -258,12 +336,13 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         }
       },
       disabled: () => this.isFormReadable,
-      validate: [
-        (value: string) => ({
-          isValid: !!value,
-          errorMessage: ['收款項目為必填']
-        })
-      ]
+      // validate: [
+      //   (value: string) => ({
+      //     isValid: !!value,
+      //     errorMessage: ['收款項目為必填']
+      //   })
+      // ],
+      validate: [validateRequired]
     },
     {
       field: 'CAP_Name',
