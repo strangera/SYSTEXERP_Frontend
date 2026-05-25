@@ -27,6 +27,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatAmountWithFraction, formatDate } from '../../../shared/componentkit/table/table.model';
+import { validateRequired } from './table-edit/validate-field.model';
 
 
 // 擴展應收帳款類型,添加收款金額欄位
@@ -170,12 +171,13 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
         }
       },
       disabled: () => this.isFormReadable,
-      validate: [
-        (value: string) => ({
-          isValid: !!value,
-          errorMessage: ['收款項目為必填']
-        })
-      ]
+      // validate: [
+      //   (value: string) => ({
+      //     isValid: !!value,
+      //     errorMessage: ['收款項目為必填']
+      //   })
+      // ],
+      validate: [validateRequired]
     },
     {
       field: 'CAP_Name',
@@ -478,14 +480,15 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
 
     // 初始化一筆空白收款項目資料(避免表格錯位)
     if (this.isFormCreateable) {
-      this.step2TableData = [{
-        CAP_Item: null,
-        CAP_Name: '',
-        AccNo: '',
-        ARS_Amt: null,
-        NoteDesc: '',
-        AbatAcct: ''
-      }];
+      // this.step2TableData = [{
+      //   CAP_Item: '',
+      //   CAP_Name: '',
+      //   AccNo: '',
+      //   ARS_Amt: null,
+      //   NoteDesc: '',
+      //   AbatAcct: ''
+      // }];
+      this.step2TableData = [];
     }
 
     // 載入下拉選單資料，完成後再載入收款資料
