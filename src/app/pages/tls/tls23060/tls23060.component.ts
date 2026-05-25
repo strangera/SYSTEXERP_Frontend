@@ -657,6 +657,8 @@ public queryTLS23060ForReport = (body: any) => {
     { field: 'TXN_PayAmt21', header: 'APP禮券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
 
     { field: 'TXN_PayAmt53', header: '悠遊卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt54', header: '一卡通非開', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt84', header: '電子支付非開', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_PayAmt56', header: '一卡通錢包 iPASS MONEY', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_PayAmt57', header: '台灣Pay', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_PayAmt58', header: '南紡錢包', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
