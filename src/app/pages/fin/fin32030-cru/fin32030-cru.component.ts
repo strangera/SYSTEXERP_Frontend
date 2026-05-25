@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from "@shared/componentkit/calendar-range/calendar-range.component";
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
@@ -27,7 +28,6 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatAmountWithFraction, formatDate } from '../../../shared/componentkit/table/table.model';
-import { validateRequired } from './table-edit/validate-field.model';
 
 
 // 擴展應收帳款類型,添加收款金額欄位
@@ -172,12 +172,17 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       // },
       // 1. 利用內建的 calculate 處理手動輸入：只要代號一變更，立刻自動匹配並帶出名稱！
       calculate: (rowData: any, newValue: string) => {
+        // 💡 及時查看：手動打字時，當前 Row 的內容長怎樣
+        console.log('--- [calculate] 當前 Row 內容 ---', JSON.parse(JSON.stringify(rowData)));
+        console.log('輸入的新值為:', newValue);
+
         if (!newValue) {
           return {
-            CAP_Name: '',
-            AccNo: '',
-            ABAT_YN: '',
-            AbatAcct: ''
+            CAP_Item: null,
+            CAP_Name: null,
+            AccNo: null,
+            ABAT_YN: null,
+            AbatAcct: null
           };
         }
 
@@ -197,9 +202,9 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
           // 找不到代號時，不清除原本打的字，但回傳清空隔壁名稱，方便使用者知道打錯了
           return {
             CAP_Name: '⚠️ 找不到此代號',
-            AccNo: '',
-            ABAT_YN: '',
-            AbatAcct: ''
+            AccNo: null,
+            ABAT_YN: null,
+            AbatAcct: null
           };
         }
       },
@@ -247,11 +252,11 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
 
           this.step2TableData[index] = {
             ...this.step2TableData[index],
-            CAP_Item: '',
-            CAP_Name: '',
-            AccNo: '',
-            ABAT_YN: '',
-            AbatAcct: ''
+            CAP_Item: null,
+            CAP_Name: null,
+            AccNo: null,
+            ABAT_YN: null,
+            AbatAcct: null
           };
           this.step2TableData = [...this.step2TableData];
           this.calculateBillTotalAmount();
