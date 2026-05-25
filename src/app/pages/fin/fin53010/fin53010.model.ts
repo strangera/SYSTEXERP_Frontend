@@ -31,6 +31,9 @@ export interface FIN53010Data extends Pick<FIN53010Basic, 'VouType' | 'VouNo' | 
   Remark: string;
   AccAmt: number;
   DetailCount: number;
+  /** 是否可刪除（僅當日最後一張且狀態為建立） */
+  CanDelete: boolean;
+  VouDate: string;
 }
 
 export interface QueryFIN53010Detail extends FIN53010Basic, CRT, UPD {

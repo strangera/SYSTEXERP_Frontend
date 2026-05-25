@@ -153,7 +153,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   public readonly stepAPFooter = computed(() => ({ acp_amt: this.stepAPTotal() }));
   public readonly stepARFooter = computed(() => ({ ars_amt: this.stepARTotal() }));
-  public readonly stepPurchaseFooter = computed(() => this.stepPurchaseTotal());
+  public readonly stepPurchaseFooter = computed(() => ({
+    invoice_amount: this.stepPurchaseRows().reduce((sum, r) => sum + (r.invoice_amount ?? 0), 0),
+    net_amount: this.stepPurchaseRows().reduce((sum, r) => sum + (r.net_amount ?? 0), 0),
+    tax_amount: this.stepPurchaseRows().reduce((sum, r) => sum + (r.tax_amount ?? 0), 0),
+  }));
   public readonly stepSalesFooter = computed(() => this.stepSalesTotal());
   public readonly stepBankFooter = computed(() => this.stepBankTotal());
 
@@ -604,7 +608,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'invoice_prefix', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left' },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left' },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date' },
-    { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month' },
+    { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month', dateFormat: 'yy/mm' },
     { field: 'buyer_uniform', header: '買受人統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'total_amount', header: '發票總金額', type: 'inputNumber', textAlign: 'right' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
@@ -620,8 +624,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'track_no', header: '字軌', type: 'input', maxLength: 2, textAlign: 'left' },
     { field: 'invoice_no', header: '發票號碼', type: 'input', maxLength: 8, textAlign: 'left' },
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date' },
-    { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month' },
-    { field: 'vendor_tax_id', header: '廠商統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
+    { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month', dateFormat: 'yy/mm' },
+    { field: 'vendor_tax_id', header: '廠商統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorUniformOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'invoice_usage', header: '發票用途', type: 'dropdown', options: () => this.service.purDirectTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'invoice_amount', header: '發票總金額', type: 'inputNumber', textAlign: 'right' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
@@ -703,6 +707,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     this.service.getAccNoOptions();
     this.service.getVendorOptions();
+    this.service.getVendorUniformOptions();
     this.service.getUsrOptions();
     this.service.getOrgNoOptions();
     this.service.getRefNameOptions();
@@ -1578,14 +1583,34 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return validData
   }
 
-  /** 進項步驟表：字軌 2 碼 + 發票號碼 8 碼齊備時查 APS4023 並帶入該列 */
+  /** 進項步驟表：字軌 2 碼 + 發票號碼 8 碼齊備時查 APS4023 並帶入該列；
+   *  發票日期選定後自動帶入申報年月（下一個雙數月）；
+   *  申報年月手動選到奇數月時自動修正為下一個雙數月 */
   public onStepPurchaseInvoiceFieldChange(event: StepFieldChangeEvent): void {
     if (this.isFormReadable) return;
     const f = event.field;
-    if (f !== 'track_no' && f !== 'invoice_no') return;
     const idx = event.index;
     if (typeof idx !== 'number' || idx < 0) return;
     const row = event.rowData as FIN53010StepPurchaseInvoiceRow;
+
+    if (f === 'invoice_date' || f === 'declare_ym') {
+      const srcDate = f === 'invoice_date'
+        ? (row.invoice_date instanceof Date ? row.invoice_date : null)
+        : (row.declare_ym instanceof Date ? row.declare_ym : null);
+      if (!srcDate) return;
+      // getMonth() 是 0-based：0=1月(奇), 1=2月(偶)...
+      // 奇數月 → getMonth() % 2 === 0；偶數月 → getMonth() % 2 === 1
+      const month = srcDate.getMonth();
+      const nextEvenMonth = month % 2 === 0
+        ? new Date(srcDate.getFullYear(), month + 1, 1) // 奇數月 → 下個月（偶數月）
+        : new Date(srcDate.getFullYear(), month, 1);    // 偶數月 → 同月 1 日
+      // 直接 mutate rowData（與 table-edit 內部 _tableData 同一引用），
+      // 這樣後續 dataChange 帶出的 cleanData 就已包含更新後的 declare_ym
+      event.rowData.declare_ym = nextEvenMonth;
+      return;
+    }
+
+    if (f !== 'track_no' && f !== 'invoice_no') return;
     const prefix = String(row.track_no ?? '').trim();
     const no = String(row.invoice_no ?? '').trim();
     if (prefix.length !== 2 || no.length !== 8) return;
@@ -1717,7 +1742,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
     if (!ids.length) return;
     this.tableLoading.set(!0);
-    this.service.deleteFIN53010Data(ids).pipe(
+    this.service.deleteFIN53010Data(ids[0]).pipe(
       tap(res => this.logger.debug(`onDelete:`, [ids, res])),
       concatMap(() => this.service.loadFIN53010Detail(this.rowdata!.id)),
       tap(res => {

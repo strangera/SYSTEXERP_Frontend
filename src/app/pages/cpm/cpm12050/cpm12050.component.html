@@ -63,13 +63,13 @@
           </div>
           <!-- 組織 -->
           <div class="col-12 md:col-6 lg:col-2">
-            <app-dropdown label="組織" controlName="ORG_ID_QUERY" [control]="queryForm.controls.ORG_ID_QUERY"
+            <app-dropdown label="組織" controlName="ORG_ID" [control]="queryForm.controls.ORG_ID"
               [options]="orgIdQueryOptions" [submitted]="submitted" [editable]="false" optionLabel="label"
               optionValue="value" (valueChange)="onOrgQueryChange($event)"></app-dropdown>
           </div>
           <!-- 責任單位 -->
           <div class="col-12 md:col-6 lg:col-2">
-            <app-dropdown label="責任單位" controlName="ORG_ID" [control]="queryForm.controls.ORG_ID"
+            <app-dropdown label="責任單位" controlName="CLASS_ID" [control]="queryForm.controls.CLASS_ID"
               [options]="orgIdOptions" [submitted]="submitted" [editable]="false" optionLabel="label"
               optionValue="value"></app-dropdown>
           </div>

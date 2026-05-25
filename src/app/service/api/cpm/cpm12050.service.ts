@@ -43,7 +43,8 @@ export interface CPM12050Data {
   ANSWER_NAME?: string;      // 回覆人員名稱
   ANSWER?: string;           // 回覆內容
   CLASS_ID?: string;         // 分類編號
-  ORG_ID?: string;           // 責任單位
+  CLASS_NAME?: string;       // 責任單位名稱
+  ORG_ID?: string;           // 組織
   MEMBER_ID?: string;        // 會員編號
   STATUS?: string;           // 處理狀況
   CPRIORITY?: number;        // 優先順序

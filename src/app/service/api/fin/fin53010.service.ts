@@ -44,6 +44,8 @@ export class FIN53010Service {
   public readonly accNoOptions = signal<Option[]>([]);
   /** 廠商 */
   public readonly vendorOptions = signal<Option[]>([]);
+  /** 廠商統一編號（VEN_UNIFORM 去重） */
+  public readonly vendorUniformOptions = signal<Option[]>([]);
   /** 員工 */
   public readonly usrOptions = signal<Option[]>([]);
   /** 組織代號 */
@@ -346,8 +348,8 @@ export class FIN53010Service {
     );
   }
 
-  public deleteFIN53010Data(payload: number[]): Observable<FIN53010DeleteResult> {
-    return this.http.post<FIN53010DeleteResult>(`${apiUrl}/deleteFIN53010`, { ids: payload }).pipe(
+  public deleteFIN53010Data(id: number): Observable<FIN53010DeleteResult> {
+    return this.http.post<FIN53010DeleteResult>(`${apiUrl}/deleteFIN53010`, { id }).pipe(
       take(1),
       tap(res => this.logger.debug('刪除FIN53010結果:', [res])),
     );
@@ -523,6 +525,17 @@ export class FIN53010Service {
         this.logger.debug('查詢VendorOptions結果:', [res]);
       }),
       finalize(() => this.venLoading.set(!1)),
+    ).subscribe();
+  }
+
+  public getVendorUniformOptions(): void {
+    this.dropdownApi.queryVendorNoGroup({ VEN_Flag: '' }).pipe(
+      take(1),
+      map(res => (res ?? []).map((item: any) => ({
+        value: item.No,
+        label: `${item.No} - ${item.Name}`,
+      }))),
+      tap(list => this.vendorUniformOptions.set(list)),
     ).subscribe();
   }
 

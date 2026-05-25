@@ -54,8 +54,8 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     CELL_PHONE: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(30)]],  // 手機號碼
     E_MAIL: [null, [this.validationService.emailValidator, Validators.maxLength(100)]],           // Email
     COMPLAIN_NOTES: [null, Validators.maxLength(1000)], // 顧客意見內容
-    ORG_ID: [null],                                     // 責任單位
-    ORG_ID_QUERY: [null],                               // 組織(查詢責任單位用)
+    ORG_ID: [null],                                     // 組織
+    CLASS_ID: [null],                                   // 責任單位
     CRT_USR_Name: [null, Validators.maxLength(50)],     // 建檔人員
     COMPLAIN_DATE_F: [(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })() as Date | null],   // 接件日期(起) 預設今天 00:00:00
     COMPLAIN_DATE_T: [(() => { const d = new Date(); d.setHours(23, 59, 59, 999); return d; })() as Date | null], // 接件日期(迄) 預設今天 23:59:59
@@ -101,7 +101,8 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     { field: 'COMPLAIN_NOTES', header: '顧客意見內容', visible: true, align: 'left' },
     { field: 'COMPLAIN_DATE', header: '接件日期', visible: true, format: formatDate },
     { field: 'CRT_USR_Name', header: '建檔人員', visible: true },
-    { field: 'ORG_ID', header: '責任單位', visible: true },
+    { field: 'CLASS_ID', header: '責任單位', visible: true },
+    { field: 'CLASS_NAME', header: '責任單位名稱', visible: true },
     { field: 'STATUS', header: '處理狀況', visible: true, format: (value: any) => this.statusOptions.find(option => option.value === value)?.label || value },
   ];
 
@@ -257,9 +258,14 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
   }
 
   onOrgQueryChange(orgId: string) {
-    // 不影響 ORG_ID 下拉選單：保持 ORG_ID 與 ORG_ID_QUERY 完全獨立
-    // 此處保留為空以供未來擴充（例如僅做查詢條件相關動作），但不會修改 orgIdOptions 或 ORG_ID 控件
-    return;
+    // 清除已選的責任單位
+    this.queryForm.patchValue({ CLASS_ID: null });
+    // 依組織過濾責任單位下拉選單
+    this.dropdownApiService.queryCss1005({ ORG_ID: orgId || '' })
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.orgIdOptions = res || [];
+      });
   }
 
   // 判斷是否禁用編輯按鈕: 只有結案（value '2'）為不可編輯
