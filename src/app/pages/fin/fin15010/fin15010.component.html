@@ -4,195 +4,93 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 發票日期起迄 -->
-          <app-calendar-range
-            class="col-12 md:col-6 lg:col-4"
-            label="發票日期"
-            [startControl]="queryForm.controls.PUR_GUIDate_S"
-            [endControl]="queryForm.controls.PUR_GUIDate_E"
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="發票日期"
+            [startControl]="queryForm.controls.PUR_GUIDate_S" [endControl]="queryForm.controls.PUR_GUIDate_E"
             [submitted]="submitted"
-            (startDateChange)="onStartControlChange($event, 'PUR_GUIDate_S')"
-          ></app-calendar-range>
+            (startDateChange)="onStartControlChange($event, 'PUR_GUIDate_S')"></app-calendar-range>
 
           <!-- 發票格式 -->
-          <app-multi-select
-            class="col-12 md:col-6 lg:col-4"
-            label="發票格式"
-            controlName="PUR_VoucherType"
-            [options]="invoiceFormatOptions"
-            [optionLabel]="'label'"
-            [optionValue]="'value'"
-            [control]="queryForm.controls.PUR_VoucherType"
-            [submitted]="submitted"
-          ></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票格式" controlName="PUR_VoucherType"
+            [options]="invoiceFormatOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.PUR_VoucherType" [submitted]="submitted"></app-multi-select>
 
           <!-- 申報年月 -->
-          <app-year-month
-            class="col-12 md:col-6 lg:col-4"
-            label="申報年月"
-            [control]="queryForm.controls.PUR_RepYYYYMM"
-            [submitted]="submitted"
-            [evenMonth]="true"
-            (valueChanges)="loadGuiTrackOptions($event)"
-          ></app-year-month>
+          <app-year-month class="col-12 md:col-6 lg:col-4" label="申報年月" [control]="queryForm.controls.PUR_RepYYYYMM"
+            [submitted]="submitted" [evenMonth]="true"></app-year-month>
+          <!--  (valueChanges)="loadGuiTrackOptions($event)" 字軌下拉改成手key輸入，不依賴申報年月，故註解掉此方法-->
 
           <!-- 字軌 -->
-          <app-dropdown
-            class="col-12 md:col-6 lg:col-4"
-            label="字軌"
-            controlName="GUI_Track"
-            [options]="guiTrackOptions"
-            [optionLabel]="'label'"
-            [optionValue]="'value'"
-            [control]="queryForm.controls.GUI_Track"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="GUI_Track"
+            [control]="queryForm.controls.GUI_Track" [submitted]="submitted"></app-input-text>
 
           <!-- 發票號碼起迄 -->
-          <app-input-text-range
-            class="col-12 md:col-6 lg:col-4"
-            label="發票號碼"
-            [startControl]="queryForm.controls.InvoiceNo_S"
-            [endControl]="queryForm.controls.InvoiceNo_E"
-            [submitted]="submitted"
-            (startChange)="onStartControlChange($event, 'InvoiceNo_S')"
-          ></app-input-text-range>
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="發票號碼"
+            [startControl]="queryForm.controls.InvoiceNo_S" [endControl]="queryForm.controls.InvoiceNo_E"
+            [submitted]="submitted" (startChange)="onStartControlChange($event, 'InvoiceNo_S')"></app-input-text-range>
 
           <!-- 資料所屬年月起迄 -->
-          <app-calendar-range
-            class="col-12 md:col-6 lg:col-4"
-            label="資料所屬年月"
-            calendarType="dateMonthRange"
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthRange"
             [startControl]="queryForm.controls.PUR_GUIDateYYYYMM_S"
-            [endControl]="queryForm.controls.PUR_GUIDateYYYYMM_E"
-            [submitted]="submitted"
-          ></app-calendar-range>
+            [endControl]="queryForm.controls.PUR_GUIDateYYYYMM_E" [submitted]="submitted"></app-calendar-range>
 
           <!-- 廠商統一編號起迄 -->
-          <app-input-text-range
-            class="col-12 md:col-6 lg:col-4"
-            label="廠商統一編號"
-            [startControl]="queryForm.controls.PUR_Uniform_S"
-            [endControl]="queryForm.controls.PUR_Uniform_E"
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="廠商統一編號"
+            [startControl]="queryForm.controls.PUR_Uniform_S" [endControl]="queryForm.controls.PUR_Uniform_E"
             [submitted]="submitted"
-            (startChange)="onStartControlChange($event, 'PUR_Uniform_S')"
-          ></app-input-text-range>
+            (startChange)="onStartControlChange($event, 'PUR_Uniform_S')"></app-input-text-range>
 
           <!-- 扣抵代號 -->
-          <app-multi-select
-            class="col-12 md:col-6 lg:col-4"
-            label="扣抵代號"
-            controlName="PUR_DiscNo"
-            [options]="discountOptions"
-            [optionLabel]="'label'"
-            [optionValue]="'value'"
-            [control]="queryForm.controls.PUR_DiscNo"
-            [submitted]="submitted"
-          ></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="扣抵代號" controlName="PUR_DiscNo"
+            [options]="discountOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.PUR_DiscNo" [submitted]="submitted"></app-multi-select>
 
           <!-- 類別區分 -->
-          <app-multi-select
-            class="col-12 md:col-6 lg:col-4"
-            label="類別區分"
-            controlName="PUR_Type"
-            [options]="invoiceTypeOptions"
-            [optionLabel]="'label'"
-            [optionValue]="'value'"
-            [control]="queryForm.controls.PUR_Type"
-            [submitted]="submitted"
-          ></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="類別區分" controlName="PUR_Type"
+            [options]="invoiceTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.PUR_Type" [submitted]="submitted"></app-multi-select>
 
           <!-- 課稅別 -->
-          <app-multi-select
-            class="col-12 md:col-6 lg:col-4"
-            label="課稅別"
-            controlName="PUR_TaxType"
-            [options]="taxTypeOptions"
-            [optionLabel]="'label'"
-            [optionValue]="'value'"
-            [control]="queryForm.controls.PUR_TaxType"
-            [submitted]="submitted"
-          ></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="課稅別" controlName="PUR_TaxType"
+            [options]="taxTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.PUR_TaxType" [submitted]="submitted"></app-multi-select>
 
           <!-- 憑證單號起迄 -->
-          <app-input-text-range
-            class="col-12 md:col-6 lg:col-4"
-            label="憑證單號"
-            [startControl]="queryForm.controls.Source_Doc_No_S"
-            [endControl]="queryForm.controls.Source_Doc_No_E"
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="憑證單號"
+            [startControl]="queryForm.controls.Source_Doc_No_S" [endControl]="queryForm.controls.Source_Doc_No_E"
             [submitted]="submitted"
-            (startChange)="onStartControlChange($event, 'Source_Doc_No_S')"
-          ></app-input-text-range>
+            (startChange)="onStartControlChange($event, 'Source_Doc_No_S')"></app-input-text-range>
 
           <!-- 傳票號碼起迄 -->
-          <app-input-text-range
-            class="col-12 md:col-6 lg:col-4"
-            label="傳票號碼"
-            [startControl]="queryForm.controls.Voucher_No_S"
-            [endControl]="queryForm.controls.Voucher_No_E"
-            [submitted]="submitted"
-            (startChange)="onStartControlChange($event, 'Voucher_No_S')"
-          ></app-input-text-range>
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="傳票號碼"
+            [startControl]="queryForm.controls.Voucher_No_S" [endControl]="queryForm.controls.Voucher_No_E"
+            [submitted]="submitted" (startChange)="onStartControlChange($event, 'Voucher_No_S')"></app-input-text-range>
 
           <!-- 傳票建立者 -->
-          <app-input-text
-            class="col-12 md:col-6 lg:col-4"
-            label="傳票建立者"
-            controlName="CRT_USR_Name"
-            [control]="queryForm.controls.CRT_USR_Name"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="傳票建立者" controlName="CRT_USR_Name"
+            [control]="queryForm.controls.CRT_USR_Name" [submitted]="submitted"></app-input-text>
 
           <!-- 系統別 -->
-          <app-multi-select
-            class="col-12 md:col-6 lg:col-4"
-            label="系統別"
-            controlName="SYS_ORIGIN"
-            [options]="systemTypeOptions"
-            [optionLabel]="'label'"
-            [optionValue]="'value'"
-            [control]="queryForm.controls.SYS_ORIGIN"
-            [submitted]="submitted"
-          ></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SYS_ORIGIN"
+            [options]="systemTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.SYS_ORIGIN" [submitted]="submitted"></app-multi-select>
 
           <!-- 直接扣抵法稅額分攤種類 -->
-          <app-multi-select
-            class="col-12 md:col-6 lg:col-4"
-            label="直接扣抵法稅額分攤種類"
-            controlName="PUR_DirectType"
-            [options]="salTypeOptions"
-            [optionLabel]="'label'"
-            [optionValue]="'value'"
-            [control]="queryForm.controls.PUR_DirectType"
-            [submitted]="submitted"
-          ></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="直接扣抵法稅額分攤種類" controlName="PUR_DirectType"
+            [options]="salTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.PUR_DirectType" [submitted]="submitted"></app-multi-select>
 
           <!-- 建立日期起迄 -->
-          <app-calendar-range
-            class="col-12 md:col-6 lg:col-4"
-            label="建立日期"
-            [startControl]="queryForm.controls.CRT_Date_S"
-            [endControl]="queryForm.controls.CRT_Date_D"
-            [submitted]="submitted"
-            (startDateChange)="onStartControlChange($event, 'CRT_Date_S')"
-          ></app-calendar-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="建立日期"
+            [startControl]="queryForm.controls.CRT_Date_S" [endControl]="queryForm.controls.CRT_Date_D"
+            [submitted]="submitted" (startDateChange)="onStartControlChange($event, 'CRT_Date_S')"></app-calendar-range>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -202,56 +100,22 @@
 </div>
 
 <div class="card">
-  <form
-    [formGroup]="queryForm2"
-    *ngIf="hasPermission('60') && hasPermission('70')"
-  >
+  <form [formGroup]="queryForm2" *ngIf="hasPermission('60') && hasPermission('70')">
     <div class="grid justify-content-start gap-2 mb-2 p-2">
-      <app-dropdown
-        label="列印方式"
-        controlName="IsMerge"
-        [options]="mergeOptions"
-        [optionLabel]="'label'"
-        [optionValue]="'value'"
-        [control]="queryForm2.controls.IsMerge"
-      ></app-dropdown>
+      <app-dropdown label="列印方式" controlName="IsMerge" [options]="mergeOptions" [optionLabel]="'label'"
+        [optionValue]="'value'" [control]="queryForm2.controls.IsMerge"></app-dropdown>
 
-      <app-dropdown
-        label="匯出格式"
-        controlName="IsExcel"
-        [options]="exportOptions"
-        [optionLabel]="'label'"
-        [optionValue]="'value'"
-        [control]="queryForm2.controls.IsExcel"
-      ></app-dropdown>
+      <app-dropdown label="匯出格式" controlName="IsExcel" [options]="exportOptions" [optionLabel]="'label'"
+        [optionValue]="'value'" [control]="queryForm2.controls.IsExcel"></app-dropdown>
 
-      <app-button
-        style="margin-top: 13px"
-        label="匯出報表"
-        btnType="report"
-        [loading]="btnLoading"
-        (click)="onExportReport(queryForm, queryForm2)"
-      ></app-button>
+      <app-button style="margin-top: 13px" label="匯出報表" btnType="report" [loading]="btnLoading"
+        (click)="onExportReport(queryForm, queryForm2)"></app-button>
     </div>
   </form>
 
-  <app-table-report
-    [data]="tableData()"
-    dataKey="No"
-    tableKey="FIN15010"
-    [columns]="columns"
-    [totalRecords]="totalRecords()"
-    [loading]="tableLoading()"
-    [lastQueryBody]="lastQueryBody"
-    [queryFunction]="queryFunction"
-    [showCheckBox]="true"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [showManage]="false"
-    [showDelete]="false"
-    [showCaption]="false"
-    [footerData]="footerRow"
-    [footerLabel]="'合計'"
-    [isRowSelectable]="isRowSelectable"
-  ></app-table-report>
+  <app-table-report [data]="tableData()" dataKey="No" tableKey="FIN15010" [columns]="columns"
+    [totalRecords]="totalRecords()" [loading]="tableLoading()" [lastQueryBody]="lastQueryBody"
+    [queryFunction]="queryFunction" [showCheckBox]="true" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [showManage]="false" [showDelete]="false" [showCaption]="false"
+    [footerData]="footerRow" [footerLabel]="'合計'" [isRowSelectable]="isRowSelectable"></app-table-report>
 </div>

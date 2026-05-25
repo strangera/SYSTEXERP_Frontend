@@ -48,7 +48,7 @@ export class TLS2F020Component extends BasicQueryPageComponent<any> implements O
 
   columns: ReportColumn[] = [
     { field: 'VouDate', header: '傳票日期', visible: true, format: formatDate },
-    { field: 'VouNo', header: '傳票編號', visible: true },
+    { field: 'VouNo', header: '暫存編號', visible: true },
     { field: 'SrcSheetType', header: '傳票型態代碼', visible: true },
     { field: 'Voucher_Name', header: '傳票型態名稱', visible: true },
     { field: 'PostFlag_Desc', header: '傳票狀態', visible: true },

@@ -40,6 +40,7 @@ export interface IAPS3001Item {
   VEN_Name: string;
   ACP_Amt: number;
   ACP_Date: string; // yyyy-MM-dd
+  acp_reserveamt: number;
 }
 
 export interface TLTTALENT_TLT_SPACE extends IDropdownItem {

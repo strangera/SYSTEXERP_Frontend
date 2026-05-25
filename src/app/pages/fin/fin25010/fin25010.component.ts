@@ -140,4 +140,29 @@ export class FIN25010Component extends BasicQueryPageComponent<FIN25010Data> imp
         });
     });
   }
+
+  onDelete(selectedItems: FIN25010Data[]) {
+    const body = {
+      selectList: selectedItems.map(item => ({
+        PAM_No: item.PAM_No,
+      })),
+    }
+    const PAM_NoList = selectedItems.map((item: FIN25010Data) => item.PAM_No);
+
+    this.messageService.confirm({
+      message: `確定要刪除 ${PAM_NoList.length} 筆資料嗎？`,
+      header: '刪除確認',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        this.loading = true;
+        this.fin25010Service.deleteFIN25010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.onSubmit(this.queryForm);
+        });
+      },
+      reject: () => {
+        // 使用者取消刪除，不做任何事
+      }
+    });
+  }
 }

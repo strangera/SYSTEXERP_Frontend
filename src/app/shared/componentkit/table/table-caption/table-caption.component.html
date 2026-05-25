@@ -22,10 +22,10 @@
       [disabled]="selectedItems?.length <= 0 || !hasPermission('40') || checkBatchDeleteDisabled()">
     </p-button>
   </div>
-  <div *ngIf="IsPrint" class="flex-grow-1 p-2">
+  <div class="flex-grow-1 p-2">
     <ng-content select="header"></ng-content>
   </div>
-  <div *ngIf="IsPrint" class="flex gap-2 py-2">
+  <div class="flex gap-2 py-2">
     <div *ngIf="expansionColumns.length > 0 && IsPrint" class="flex align-items-center">
       <p-button styleClass="p-2" label="全部收合" icon="pi pi-angle-up" text (click)="toggleExpandCollapse()"></p-button>
     </div>
