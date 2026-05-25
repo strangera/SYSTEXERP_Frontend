@@ -594,28 +594,30 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       // 切換到步驟3(應收帳款確認)時，需要驗證票據資訊
       if (buttonID === 3) {
         // 檢查是否有應收票據項目 (Voucher_Type=2)
-        if (this.hasVoucherType2Item()) {
-          // 有應收票據項目，必須檢查票據資訊
-          if (!this.hasValidCheckData()) {
-            this.messageService.errorBubble('收款項目包含應收票據，請先填寫至少一筆票據資訊');
-            // 自動導向到票據資訊步驟
-            this.buttonID = 2;
-            this.cdr.detectChanges();
-            return;
-          }
+        /** ↓↓↓選擇應收帳款要卡控票據資訊，0524整測：卡控先mark起來↓↓↓ */
+        // if (this.hasVoucherType2Item()) {
+        //   // 有應收票據項目，必須檢查票據資訊
+        //   if (!this.hasValidCheckData()) {
+        //     this.messageService.errorBubble('收款項目包含應收票據，請先填寫至少一筆票據資訊');
+        //     // 自動導向到票據資訊步驟
+        //     this.buttonID = 2;
+        //     this.cdr.detectChanges();
+        //     return;
+        //   }
 
-          // 檢查票據總金額是否等於票據明細總計
-          const billTotal = this.billTotalAmountControl.value || 0;
-          const checkTotal = this.totalCheckAmount;
-          if (billTotal !== checkTotal) {
-            const billTotalStr = billTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const checkTotalStr = checkTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            this.messageService.errorBubble(`票據總金額(${billTotalStr})與票據明細總計(${checkTotalStr})不符`);
-            this.buttonID = 2;
-            this.cdr.detectChanges();
-            return;
-          }
-        }
+        //   // 檢查票據總金額是否等於票據明細總計
+        //   const billTotal = this.billTotalAmountControl.value || 0;
+        //   const checkTotal = this.totalCheckAmount;
+        //   if (billTotal !== checkTotal) {
+        //     const billTotalStr = billTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        //     const checkTotalStr = checkTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        //     this.messageService.errorBubble(`票據總金額(${billTotalStr})與票據明細總計(${checkTotalStr})不符`);
+        //     this.buttonID = 2;
+        //     this.cdr.detectChanges();
+        //     return;
+        //   }
+        // }
+        /** ↑↑↑選擇應收帳款要卡控票據資訊，0524整測：卡控先mark起來↑↑↑ */
       }
     }
 
@@ -1398,25 +1400,27 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       return;
     }
 
+    /** ↓↓↓選擇應收帳款要卡控票據資訊，0524整測：卡控先mark起來↓↓↓ */
     // 檢查是否有應收票據項目，若有則必須填寫票據資訊
-    if (this.hasVoucherType2Item()) {
-      if (!this.hasValidCheckData()) {
-        this.messageService.errorBubble('收款項目包含應收票據，請先填寫至少一筆票據資訊');
-        this.buttonID = 2; // 導向到票據資訊步驟
-        return;
-      }
+    // if (this.hasVoucherType2Item()) {
+    //   if (!this.hasValidCheckData()) {
+    //     this.messageService.errorBubble('收款項目包含應收票據，請先填寫至少一筆票據資訊');
+    //     this.buttonID = 2; // 導向到票據資訊步驟
+    //     return;
+    //   }
 
-      // 檢查票據總金額是否等於票據明細總計
-      const billTotal = this.billTotalAmountControl.value || 0;
-      const checkTotal = this.totalCheckAmount;
-      if (billTotal !== checkTotal) {
-        const billTotalStr = billTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const checkTotalStr = checkTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        this.messageService.errorBubble(`票據總金額(${billTotalStr})與票據明細總計(${checkTotalStr})不符`);
-        this.buttonID = 2; // 導向到票據資訊步驟
-        return;
-      }
-    }
+    //   // 檢查票據總金額是否等於票據明細總計
+    //   const billTotal = this.billTotalAmountControl.value || 0;
+    //   const checkTotal = this.totalCheckAmount;
+    //   if (billTotal !== checkTotal) {
+    //     const billTotalStr = billTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    //     const checkTotalStr = checkTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    //     this.messageService.errorBubble(`票據總金額(${billTotalStr})與票據明細總計(${checkTotalStr})不符`);
+    //     this.buttonID = 2; // 導向到票據資訊步驟
+    //     return;
+    //   }
+    // }
+    /** ↑↑↑選擇應收帳款要卡控票據資訊，0524整測：卡控先mark起來↑↑↑ */
 
     if (this.step4TableData.length === 0) {
       this.messageService.errorBubble('請至少新增一筆應收帳款');
