@@ -4,15 +4,12 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule } from '@ngx-translate/core';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
-import { NgFor, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { PanelModule } from 'primeng/panel';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 
 
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -77,16 +74,10 @@ export interface ActNoOption {
     PanelModule,
     FormsModule,
     ReactiveFormsModule,
-    ExpandableEditTableComponent,
     CalendarComponent,
     CalendarRangeComponent,
     DropdownComponent,
-    RadiobuttonComponent,
-    EditorTextComponent,
     InputTextComponent,
-    InputNumberComponent,
-    EditorTextComponent,
-    NgFor,
     ButtonComponent,
     NgIf,
     TranslateModule,
@@ -211,8 +202,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   ];
   // ----------------------------------------------------------------
   constructor(
-    private tls29010Service: Tls29010Service,
-    private dropDownListService: DropDownListService,
+    private readonly tls29010Service: Tls29010Service,
+    private readonly dropDownListService: DropDownListService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -321,7 +312,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         value: item.No,
         label: `${item.No} - ${item.Name}`
       }));
-      // console.log('專櫃編號 下拉:', this.tlt_No_Option);
+
 
       // 更新專櫃編號欄位 (tlt_no)
       this.updateColumnOptions('tlt_no', this.tlt_No_Option);
@@ -347,7 +338,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           const mappedData = res.Data.map((item: any) => ({
             ...item,
             status: 'original',
-            _tempId: `id_${Math.random().toString(36).substr(2, 9)}`
+            _tempId: `id_${crypto.randomUUID()}`
           }));
 
           // ★ 關鍵：載入後立即為每一列初始化下拉選單資料
@@ -358,8 +349,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           }
 
           this.opendisc_Detail = mappedData;
-          this.originalData = JSON.parse(JSON.stringify(this.opendisc_Detail));
-          this.lastDetailSnapshot = JSON.parse(JSON.stringify(this.opendisc_Detail));
+          this.originalData = structuredClone(this.opendisc_Detail);
+          this.lastDetailSnapshot = structuredClone(this.opendisc_Detail);
         }
       });
   }
@@ -374,12 +365,12 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
       // 確保新增加的行也有唯一識別碼
       if (!(currentRow as any)._tempId) {
-        (currentRow as any)._tempId = `new_${Math.random().toString(36).substr(2, 9)}`;
+        (currentRow as any)._tempId = `new_${crypto.randomUUID()}`;
       }
 
       // 比對專櫃編號是否真的改變了
       // 如果是新的一行 (oldRow undefined) 或者 號碼不一致
-      const isTltNoChanged = !oldRow || currentRow.tlt_no !== oldRow.tlt_no;
+      const isTltNoChanged = currentRow.tlt_no !== oldRow?.tlt_no;
 
       if (isTltNoChanged) {
         console.log(`第 ${i} 列專櫃變更 detected! 從 [${oldRow?.tlt_no}] 變為 [${currentRow.tlt_no}]`);
@@ -401,7 +392,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     this.opendisc_Detail = [...newData];
 
     // ★★★ 關鍵：處理完所有邏輯後，更新快照，等待下一次變更 ★★★
-    this.lastDetailSnapshot = JSON.parse(JSON.stringify(newData));
+    this.lastDetailSnapshot = structuredClone(newData);
   }
   // 封裝 API 抓取邏輯 (可用000033測試)
   private async fetchTltDetails(row: any) {
@@ -435,26 +426,26 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
                   });
                 }
               });
-              (row as any)._tltIdOptions = Array.from(tltMap.values());
+              (row)._tltIdOptions = Array.from(tltMap.values());
 
               // 更新該列專屬的「折扣別」選單 (執行排除邏輯)
               const excludedBarcodes = existingData.map((e: any) => e.cag_barcode);
-              (row as any)._barcodeOptions = this.allBarcodeOptions.filter(opt =>
+              (row)._barcodeOptions = this.allBarcodeOptions.filter(opt =>
                 !excludedBarcodes.includes(opt.value)
               );
 
               console.log('排除項目', excludedBarcodes)
 
               // 只有一筆時自動帶入新值
-              if ((row as any)._tltIdOptions.length === 1) {
-                row.tlt_id = (row as any)._tltIdOptions[0].value;
+              if ((row)._tltIdOptions.length === 1) {
+                row.tlt_id = (row)._tltIdOptions[0].value;
               }
 
               // 因為這是非同步操作，等到這裡執行完，onDataChange 才會刷新畫面，所以使用者看得到，帶入預設的 使用別 => 'Y'
               row.use_flag = 'Y';
 
-              console.log('抽成別選單:', (row as any)._tltIdOptions);
-              console.log('折扣別選單:', (row as any)._barcodeOptions);
+              console.log('抽成別選單:', (row)._tltIdOptions);
+              console.log('折扣別選單:', (row)._barcodeOptions);
             }
           }
         } else {
@@ -479,17 +470,17 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       row.tlt_id = originalRow.tlt_id;
       row.cag_barcode = originalRow.cag_barcode;
       row.tlt_no = originalRow.tlt_no;
-      row.use_flag = originalRow.use_flag || 'Y'; // 規格書提及預設為 Y 
+      row.use_flag = originalRow.use_flag || 'Y'; // 規格書提及預設為 Y
 
       // 重製後狀態應回到原始狀態 (或交由 TableEditComponent 自動處理)
       row.status = 'original';
     } else {
-      // 2. 其他狀態 (如 added) 則設為空值或預設值 
+      // 2. 其他狀態 (如 added) 則設為空值或預設值
       row.talent_id = 0;
       row.tlt_no = '';
       row.tlt_id = '';
       row.cag_barcode = '';
-      row.use_flag = 'Y'; // 依規格書，新增列預設使用為 Y 
+      row.use_flag = 'Y'; // 依規格書，新增列預設使用為 Y
     }
   }
 
@@ -524,51 +515,9 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     };
   }
 
-  // 手動檢核明細檔資料
-  private isDetailValid(): boolean {
-    let isValid = true;
-
-    // 使用 entries() 同時取得 index 和 row
-    for (const [rowIndex, row] of this.opendisc_Detail.entries()) {
-
-      // 忽略已刪除的資料
-      if (row.status === 'deleted') {
-        continue;
-      }
-
-      for (const col of this.TALPORDERD_OPENDisc_Detail_Columns) {
-        // 如果該欄位有設定驗證器
-        if (col.validate && col.validate.length > 0) {
-          // 取得該欄位的值，並強制轉型避免 TS 報錯
-          const value = row[col.field as keyof TALPORDERD_OPENDisc];
-
-          for (const validator of col.validate) {
-
-            // --- 修改處：補齊 5 個參數 ---
-            const result = validator(
-              value,                 // 1. 值
-              row,                   // 2. 該列資料物件
-              this.opendisc_Detail,  // 3. 完整資料陣列
-              rowIndex.toString(),   // 4. 該列索引
-              col.field              // 5. 欄位名稱 string
-            );
-
-            if (!result.isValid) {
-              isValid = false;
-              // 顯示錯誤訊息
-              this.messageService.errorBubble(`第 ${rowIndex + 1} 筆資料的 [${col.header}] 檢核失敗：${result.errorMessage.join(', ')}`);
-              return false; // 遇到錯誤直接中斷
-            }
-          }
-        }
-      }
-    }
-
-    return isValid;
-  }
 
   // 明細disabled判斷(專櫃編號沒選就disabled)
   is_tltNo_GroupSelected(rowData: TALPORDERD_OPENDisc): boolean {
-    return !rowData || !rowData.tlt_no;
+    return !rowData?.tlt_no;
   }
 }

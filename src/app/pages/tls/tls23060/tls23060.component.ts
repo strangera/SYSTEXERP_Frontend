@@ -409,7 +409,40 @@ public queryTLS23060ForReport = (body: any) => {
       this.dialogHistoryRequestBody = null;
     }
   }
+onExportExcel(): void {
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
+  }
 
+  this.btnLoading = true;
+  const body = this.buildExportBody();
+
+  this.tls23060Service
+    .exporttls23060Excel(body)
+    .pipe(finalize(() => (this.btnLoading = false)))
+    .subscribe({
+      next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.xlsx'),
+    });
+}
+onExportDetailExcel(): void {
+  if (!this.dialogHistoryRequestBody) {
+    this.messageService?.warnBubble?.('請先點選主表資料開啟明細。');
+    return;
+  }
+
+  this.btnLoading = true;
+
+  const { pageSize, pageIndex, PageSize, PageIndex, ...rest } = this.dialogHistoryRequestBody;
+  const body = rest;
+
+  this.tls23060Service
+    .exportTLS23060DetailExcel(body)
+    .pipe(finalize(() => (this.btnLoading = false)))
+    .subscribe({
+      next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.xlsx'),
+    });
+}
   // ===== 匯出：主表 PDF =====
   private buildExportBody() {
     if (!this.historyRequestBody) return null;
@@ -657,6 +690,8 @@ public queryTLS23060ForReport = (body: any) => {
     { field: 'TXN_PayAmt21', header: 'APP禮券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
 
     { field: 'TXN_PayAmt53', header: '悠遊卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt54', header: '一卡通非開', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+    { field: 'TXN_PayAmt84', header: '電子支付非開', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_PayAmt56', header: '一卡通錢包 iPASS MONEY', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_PayAmt57', header: '台灣Pay', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
     { field: 'TXN_PayAmt58', header: '南紡錢包', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },

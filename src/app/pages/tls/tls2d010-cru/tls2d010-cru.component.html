@@ -4,51 +4,7 @@
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form *ngIf="currentCreateType === 'counter'" [formGroup]="dataFormCounter" id="dataForm" (ngSubmit)="onSubmit()">
-      <div class="grid p-fluid">
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號/名稱" controlName="tlt_no" [options]="tlt_noOptions"
-          optionLabel="label" [control]="dataFormCounter.controls.tlt_no" [submitted]="submitted"></app-dropdown>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="總金額" controlName="totalCash" [control]="dataFormCounter.controls.totalCash"
-            [submitted]="submitted"></app-input-number>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="活動代碼/名稱" controlName="pod_no" [options]="pod_noOptions" optionLabel="label"
-            optionValue="value" [control]="dataFormCounter.controls.pod_no" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="契約編號" controlName="contract_no" [control]="dataFormCounter.controls.contract_no"
-            [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="版次" controlName="contract_subno" [control]="dataFormCounter.controls.contract_subno"
-            [submitted]="submitted"></app-input-text>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="組織代號/名稱" controlName="org_id" [options]="org_idOptions" optionLabel="label"
-            optionValue="value" [control]="dataFormCounter.controls.org_id" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="營運起始日" controlName="tlt_contract_bdate"
-            [control]="dataFormCounter.controls.tlt_contract_bdate" [submitted]="submitted"></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="營運截止日" controlName="tlt_contract_edate"
-            [control]="dataFormCounter.controls.tlt_contract_edate" [submitted]="submitted"></app-input-text>
-        </div>
-      </div>
-      <app-table-edit #counterTable title="新增專櫃扣款" tableKey="TLSD010Detail" [data]="data" class="col-12" dataKey="rowId"
-        [columns]="columnsCounter" (selectionChange)="counterSelectedItems = $event"
-        [selectedItems]="counterSelectedItems" (dataChange)="onCounterDataChange($event)" dataStatusField="status"
-        [loading]="loading" [tableRequired]="true" [disabled]="isDetailMode" [showCheckBox]="!isDetailMode"
-        [showDelete]="!isDetailMode" [canInsert]="!isDetailMode" [showInsert]="false"></app-table-edit>
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataFormCounter" (clickEvent)="onLocalCancel('counter')" />
-        <app-button btnType="submit" [loading]="loading" />
-      </div>
-    </form>
+    <!-- 新增扣款 -->
     <form *ngIf="currentCreateType === 'normal'" [formGroup]="dataFormNormal" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
         <!-- 扣款項目 -->
@@ -116,6 +72,52 @@
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
+    <!-- 新增專櫃扣款 -->
+    <form *ngIf="currentCreateType === 'counter'" [formGroup]="dataFormCounter" id="dataForm" (ngSubmit)="onSubmit()">
+      <div class="grid p-fluid">
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號/名稱" controlName="tlt_no" [options]="tlt_noOptions"
+          optionLabel="label" [control]="dataFormCounter.controls.tlt_no" [submitted]="submitted"></app-dropdown>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number label="總金額" controlName="totalCash" [control]="dataFormCounter.controls.totalCash"
+            [submitted]="submitted"></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="活動代碼/名稱" controlName="pod_no" [options]="pod_noOptions" optionLabel="label"
+            optionValue="value" [control]="dataFormCounter.controls.pod_no" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="契約編號" controlName="contract_no" [control]="dataFormCounter.controls.contract_no"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="版次" controlName="contract_subno" [control]="dataFormCounter.controls.contract_subno"
+            [submitted]="submitted"></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="組織代號/名稱" controlName="org_id" [options]="org_idOptions" optionLabel="label"
+            optionValue="value" [control]="dataFormCounter.controls.org_id" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="營運起始日" controlName="tlt_contract_bdate"
+            [control]="dataFormCounter.controls.tlt_contract_bdate" [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="營運截止日" controlName="tlt_contract_edate"
+            [control]="dataFormCounter.controls.tlt_contract_edate" [submitted]="submitted"></app-input-text>
+        </div>
+      </div>
+      <app-table-edit #counterTable title="新增專櫃扣款" tableKey="TLSD010Detail" [data]="data" class="col-12" dataKey="rowId"
+        [columns]="columnsCounter" (selectionChange)="counterSelectedItems = $event"
+        [selectedItems]="counterSelectedItems" (dataChange)="onCounterDataChange($event)" dataStatusField="status"
+        [loading]="loading" [tableRequired]="true" [disabled]="isDetailMode" [showCheckBox]="!isDetailMode"
+        [showDelete]="!isDetailMode" [canInsert]="!isDetailMode" [showInsert]="false"></app-table-edit>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataFormCounter" (clickEvent)="onLocalCancel('counter')" />
+        <app-button btnType="submit" [loading]="loading" />
+      </div>
+    </form>
   </p-panel>
 </div>
 
@@ -124,6 +126,8 @@
 
   <form [formGroup]="talentDialogQueryForm" (ngSubmit)="onTalentDialogQuery(talentDialogQueryForm)">
     <div class="grid p-fluid">
+      <app-calendar class="col-12 md:col-6 lg:col-4" label="扣款日期" controlName="tpy_date" calendarType="dateOne"
+        [control]="talentDialogQueryForm.controls.tpy_date"></app-calendar>
       <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="tlt_no"
         [control]="talentDialogQueryForm.controls.tlt_no"></app-input-text>
     </div>

@@ -26,7 +26,7 @@ export class CPM12020CRUComponent extends BasicCruPageComponent<CPM12020Response
     ID: [null],
     ORG_ID: [null as string | null, [Validators.required]],
     ORG_NAME: [{ value: null, disabled: true }],
-    CLASS_CODE: [null, [Validators.required]],
+    CLASS_CODE: ['00'],
     CLASS_NAME: [null as string | null, [Validators.required, Validators.maxLength(40)]],
   });
   CLASS_CODEOptions = getSYS1000Options('T211')

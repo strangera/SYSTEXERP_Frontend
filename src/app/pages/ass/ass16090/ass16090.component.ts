@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, signal } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -48,7 +48,6 @@ interface SortItem {
 @Component({
   selector: 'app-ass16090',
   templateUrl: './ass16090.component.html',
-  styleUrl: './ass16090.component.scss',
   standalone: true,
   imports: [
     CommonModule,
@@ -65,7 +64,7 @@ interface SortItem {
     TableReportComponent,
   ],
 })
-export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
+export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> implements OnInit {
   showTable = true;
   data: Ass16090Row[] = [];
   totalRecords = 0;
@@ -189,7 +188,7 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
 
     this._currentSortBy = this.defaultSort;
 
-    const fromCru = !!(history.state && history.state['fromCru']);
+    const fromCru = !!(history.state?.['fromCru']);
 
     this.formStatusService
       .waitForReady(this.ProgNo)
@@ -324,11 +323,11 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
 
   private toYMDOrNull(d: Date | string | null | undefined): string | null {
     if (d == null) return null;
-    const s = formatDateToYYYY_MM_DD(d as Date | string) as
+    const s = formatDateToYYYY_MM_DD(d) as
       | string
       | null
       | undefined;
-    return !s ? null : s;
+    return s || null;
   }
 
   private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
@@ -341,14 +340,15 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
   }
 
   private initRows(rows: Ass16090Row[]): Ass16090Row[] {
-    const seed = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-
-    rows.forEach((r, idx) => {
-      (r as any)._rowKey = `${seed}_${idx}`;
+    for (const [idx, r] of rows.entries()) {
+      // 優先使用報廢單號與 ID 組合，萬一為空則拿 index 當作保險
+      const scrapId = r.DAMAGEM_ID ?? 'NOSCRAP';
+      const rowId = r.ID ?? `fallback_${idx}`;
+      // 組裝成絕對唯一的業務 data key
+      (r as any)._rowKey = `ass16090_${scrapId}_${rowId}`;
       r.Details = [];
       (r as any)._detailLoaded = false;
-    });
-
+    }
     return rows;
   }
 
@@ -393,12 +393,12 @@ export class ASS16090Component extends BasicQueryPageComponent<Ass16090Row> {
       APRV_DATE_E: this.toYMDOrNull(raw.APRV_DATE_E),
     };
 
-    Object.keys(req).forEach((k) => {
+    for (const k of Object.keys(req)) {
       const v = req[k];
       if (v === '' || v === null || v === undefined) {
         delete req[k];
       }
-    });
+    }
 
     return req;
   }

@@ -8,17 +8,21 @@
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick
               label="銷售日期"
               [startControl]="queryForm.controls.TXN_DateStart"
               [endControl]="queryForm.controls.TXN_DateEnd"
-              [submitted]="submitted">
-            </app-calendar-range-quick>
+              [submitted]="submitted"
+            ></app-calendar-range-quick>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -28,8 +32,8 @@
               groupname="rece_yn"
               [control]="queryForm.controls.rece_yn"
               [options]="WhetherOptions"
-              [submitted]="submitted">
-            </app-radiobutton>
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -40,8 +44,8 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.ECR_No"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -52,8 +56,8 @@
               optionLabel="formLabel"
               optionValue="value"
               [control]="queryForm.controls.tlt_no"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -64,8 +68,8 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.tlt_building"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -75,8 +79,8 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.tlt_floor"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -86,12 +90,14 @@
               optionLabel="formLabel"
               optionValue="value"
               [control]="queryForm.controls.org_id"
-              [submitted]="submitted">
-            </app-multi-select>
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -116,19 +122,27 @@
     [showReportMode]="false"
     [showDetail]="true"
     (detail)="onDetail($event)"
-    [footerData]="footerData">
-
+    [footerData]="footerData"
+  >
     <header>
       <div class="flex justify-content-end gap-2">
-        <!-- 只保留主表 PDF 匯出 -->
+        <p-button
+          styleClass="p-2"
+          label="收銀機區間報表.xlsx"
+          icon="pi pi-file-excel"
+          [loading]="btnLoading"
+          [disabled]="data.length === 0"
+          (click)="onExportExcel()"
+        ></p-button>
+
         <p-button
           styleClass="p-2"
           label="收銀機區間報表.PDF"
           icon="pi pi-file"
           [loading]="btnLoading"
           [disabled]="data.length === 0"
-          (click)="onExportPDF()">
-        </p-button>
+          (click)="onExportPDF()"
+        ></p-button>
       </div>
     </header>
   </app-table-report>
@@ -140,8 +154,8 @@
   header="專櫃/機台日期明細"
   (visibleChange)="onDialogClose($event)"
   [showFooter]="false"
-  width="95vw">
-
+  width="95vw"
+>
   <app-table-report
     tableKey="TLS23060_DETAIL"
     [columns]="detailColumns"
@@ -155,19 +169,27 @@
     [showDelete]="false"
     [showDetail]="false"
     [footerData]="dialogFooterData"
-    [showReportMode]="false">
-
+    [showReportMode]="false"
+  >
     <header>
       <div class="flex justify-content-end gap-2">
-        <!-- 新增：明細表 PDF 匯出 -->
+        <p-button
+          styleClass="p-2"
+          label="匯出明細表.xlsx"
+          icon="pi pi-file-excel"
+          [loading]="btnLoading"
+          [disabled]="dialogData.length === 0"
+          (click)="onExportDetailExcel()"
+        ></p-button>
+
         <p-button
           styleClass="p-2"
           label="匯出明細表.PDF"
           icon="pi pi-file"
           [loading]="btnLoading"
           [disabled]="dialogData.length === 0"
-          (click)="onExportDetailPDF()">
-        </p-button>
+          (click)="onExportDetailPDF()"
+        ></p-button>
       </div>
     </header>
   </app-table-report>

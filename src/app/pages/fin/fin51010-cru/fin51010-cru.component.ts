@@ -35,6 +35,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Response> implements OnInit {
   dataForm = this.formBuilder.group({
     VouNo: [{ value: null as string | null, disabled: true }],      // 傳票編號
+    TransVouNo: [{ value: null as string | null, disabled: true }],      // 傳票編號
     Voucher_Name: [{ value: null as string | null, disabled: true }], // 傳票名稱 (種類名稱)
     SrcSheetType: [{ value: null as string | null, disabled: true }], // 傳票型態 (代碼)
     VouDate: [null, [Validators.required]],      // 傳票日期
@@ -183,7 +184,7 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
         // 【核心改動】：拿到主表資料後，根據它的 SrcSheetType 決定載入哪種發票
         const sheetType = mainData.SrcSheetType?.trim();
         if (sheetType === 'PT' || sheetType === 'WT') {
-          this.loadInvoiceData(sheetType, mainId);
+          this.loadInvoiceData(sheetType, sheetType === 'PT' ? mainId : mainData.VouNo);
         }
       }
     });
@@ -248,31 +249,30 @@ export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Res
   invoiceLoading = false;
   // 2. 定義進項發票的 Columns (結構與你的傳票明細 columns 一致，但改為 ReportColumn 格式)
   invoiceColumns: ReportColumn[] = [
-    { field: 'voucher_type', header: '發票格式', format: v => getSYS1000('VoucherType', v), align: 'left' },
-    { field: 'track_no', header: '字軌', align: 'left' },
-    { field: 'invoice_no', header: '發票號碼', align: 'left' },
-    { field: 'invoice_date', header: '發票日期', align: 'left', format: formatDate },
-    { field: 'declare_ym', header: '申報年月', align: 'left' },
-    { field: 'vendor_tax_id', header: '廠商統一編號', align: 'left' },
-    { field: 'invoice_usage', header: '發票用途', align: 'left', format: v => getSYS1000('PUR_DirectType', v) },
-    { field: 'invoice_amount', header: '發票總金額', align: 'right' },
-    { field: 'tax_type', header: '課稅別', format: v => getSYS1000('PUR_TaxType', v), align: 'left' },
-    { field: 'net_amount', header: '發票未稅金額', align: 'right' },
-    { field: 'tax_amount', header: '發票稅額', align: 'right' },
-    { field: 'deduction_code', header: '扣抵代號', format: v => getSYS1000('PUR_DiscNo', v), align: 'left' },
-    { field: 'category_type', header: '類別區分', format: v => getSYS1000('PUR_Type', v), align: 'left' },
-    { field: 'source_doc_no', header: '憑證單號', align: 'left' },
-    { field: 'total_count', header: '彙整張數', align: 'right' },
+    { field: 'VoucherType', header: '發票格式', format: v => getSYS1000('VoucherType', v), align: 'left' },
+    { field: 'TrackNo', header: '字軌／發票號碼', align: 'left' },
+    { field: 'InvoiceNo', header: '發票號碼', align: 'left' },
+    { field: 'InvoiceDate', header: '發票日期', align: 'left', format: formatDate },
+    { field: 'DeclareYM', header: '申報年月', align: 'left' },
+    { field: 'VendorTaxID', header: '廠商統一編號', align: 'left' },
+    { field: 'InvoiceUsage', header: '發票用途', align: 'left', format: v => getSYS1000('PUR_DirectType', v) },
+    { field: 'InvoiceAmount', header: '發票總金額', align: 'right', format: formatAmount },
+    { field: 'TaxType', header: '課稅別', format: v => getSYS1000('PUR_TaxType', v), align: 'left' },
+    { field: 'NetAmount', header: '發票未稅金額', align: 'right', format: formatAmount },
+    { field: 'TaxAmount', header: '發票稅額', align: 'right', format: formatAmount },
+    { field: 'DeductionCodeDesc', header: '扣抵代號', format: v => getSYS1000('PUR_DiscNo', v), align: 'left' },
+    { field: 'CategoryType', header: '類別區分', format: v => getSYS1000('PUR_Type', v), align: 'left' },
+    { field: 'SourceDocNo', header: '憑證單號', align: 'left' },
+    { field: 'TotalCount', header: '彙整張數', align: 'right', format: formatAmount },
   ];
   /** 新增：依據 PT 或 WT 調用不同 API 載入進項發票 */
-  loadInvoiceData(type: 'PT' | 'WT', mainId: number) {
-    return; // !!等候端API開發好
+  loadInvoiceData(type: 'PT' | 'WT', mainId: number | string) {
     this.invoiceLoading = true;
 
     // 根據類別分流 API
     const apiCall$ = type === 'PT'
-      ? this.fin51010Service.queryPTInvoice({ id: mainId })
-      : this.fin51010Service.queryWTInvoice({ id: mainId });
+      ? this.fin51010Service.queryPTInvoice({ GLS6001_ID: mainId as number })
+      : this.fin51010Service.queryWTInvoice({ VouNo: mainId as string });
 
     apiCall$.pipe(
       finalize(() => this.invoiceLoading = false),

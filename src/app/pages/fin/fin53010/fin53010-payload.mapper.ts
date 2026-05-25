@@ -132,16 +132,16 @@ function mapStepPurchaseToInsert2002(
   const prefix = String(row.track_no ?? '').trim();
   const no = String(row.invoice_no ?? '').trim();
   const purGuino = prefix && no ? `${prefix}${no}` : undefined;
-  const ven = deps.getVendorOption(row.vendor_tax_id);
+  const ven = deps.getVendorOption(row.ven_no);
   const voucherType = String(row.voucher_type ?? '').trim();
   const purComb = (voucherType === '26' || voucherType === '27') ? 'A' : undefined;
-  const purVenUniform = row.vendor_tax_id?.slice(0, 8);
+  const purVenUniform = row.vendor_tax_id ? String(row.vendor_tax_id).slice(0, 8) : undefined;
   return {
     PUR_GUINo: purGuino,
     PUR_VoucherType: row.voucher_type,
     ACP_Type: '7',
     PUR_GUIDate: toYmd(row.invoice_date ?? undefined, deps.datePipe),
-    PUR_VenNo: row.vendor_tax_id,
+    PUR_VenNo: row.ven_no,
     PUR_VenName: vendorDisplayName(ven),
     PUR_VenUniform: purVenUniform,
     PUR_Net: row.net_amount,

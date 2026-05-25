@@ -12,7 +12,7 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
-import { formatDate, formatYN } from '@shared/componentkit/table/table.model';
+import { formatYN } from '@shared/componentkit/table/table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -54,11 +54,14 @@ export class FIN24020Component extends BasicQueryPageComponent<any> implements O
     { field: 'VEN_Name', header: '廠商名稱', align: 'left' },
     { field: 'ACP_YYYYMM', header: '年月', format: formatYYYYMM, align: 'center' },
     { field: 'acp_termno', header: '帳次', align: 'center' },
-    { field: 'RET_Date', header: '退保留款日期', format: formatDate, align: 'center' },
+  ];
+  expansionColumns: ReportColumn[] = [
+    { field: 'acp_termno', header: '帳次', align: 'center' },
+    { field: 'RET_Date', header: '退保留款日期', align: 'left' },
     { field: 'RET_Amt', header: '退保留款金額', format: formatAmount, align: 'right' },
     { field: 'STATUS', header: '是否已付款', format: formatYN, exportFormat: [{ 'Y': '是' }, { 'N': '否' }], align: 'center' },
     { field: 'Remark', header: '備註', align: 'left' },
-  ];
+  ]
   VEN_No_ParamOptions = this.dropDown.queryPos2013({ VEN_Flag: '' }); // 廠商編號
   PTA_KeyOptions = [
     { label: '是', value: 'Y' },

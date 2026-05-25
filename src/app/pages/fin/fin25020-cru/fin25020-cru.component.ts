@@ -43,12 +43,12 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     CreateDate: [{ value: new Date(), disabled: true }, [Validators.required]], // 建立日期（系統日期，不可修改）
     TransferDate: [new Date(), [Validators.required]], // 匯款日期（預設系統日期，可修改）
     BNK_id: [null as number | null, [Validators.required]],
-    TransferSourceNo: ['', [Validators.required, Validators.maxLength(20)]], // 匯款來源單號
     // 檢視模式專用欄位（永遠 disabled）
     BankInfo: [{ value: '', disabled: true }],   // 付款銀行代號 (含銀行名稱)
     BNK_FULLNAME: [{ value: '', disabled: true }],   // 銀行帳戶全稱
     VouStatus: [{ value: '', disabled: true }],  // 轉傳票狀態
     VouNo: [{ value: '', disabled: true }],      // 傳票號碼
+    TransferSourceNo: [{ value: '', disabled: true }], // 檢視模式顯示用
   });
 
   // 銀行下拉選項 (從 API 載入)
@@ -62,21 +62,31 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     D_Date_End: [null],
   });
   transferSourceData: QueryUnremittedPAMResponse[] = [];
-  selectedTransferSource: QueryUnremittedPAMResponse | null = null;
+  // 對話框中暫存的多選結果
+  selectedTransferSources: QueryUnremittedPAMResponse[] = [];
+  // 主表單中已確認的選擇列表
+  confirmedTransferSources: QueryUnremittedPAMResponse[] = [];
+
+  private readonly formatDate = (value: string) => {
+    if (!value) return '';
+    const date = new Date(value);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  };
+
   transferSourceColumns: Column[] = [
     { field: 'PAM_No', header: '匯款來源單號', visible: true },
-    {
-      field: 'D_Date', header: '建立日期', visible: true, format: (value: string) => {
-        if (!value) return '';
-        const date = new Date(value);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${year}/${month}/${day}`;
-      }
-    },
+    { field: 'D_Date', header: '建立日期', visible: true, format: this.formatDate },
     { field: 'Remit_Status', header: '是否形成電匯', visible: true, format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value },
-    // { field: 'ItemCount', header: '筆數', visible: true },
+  ];
+
+  // 主表單中顯示已選單號的欄位
+  confirmedSourceColumns: Column[] = [
+    { field: 'PAM_No', header: '匯款來源單號', visible: true },
+    { field: 'D_Date', header: '建立日期', visible: true, format: this.formatDate },
+    { field: 'Remit_Status', header: '是否形成電匯', visible: true, format: (value: string) => value === 'Y' ? '是' : value === 'N' ? '否' : value },
   ];
 
   // 檢視模式：電匯明細資料
@@ -157,7 +167,8 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
 
   // 開啟匯款來源單號查詢對話框
   openTransferSourceDialog(): void {
-    this.selectedTransferSource = null;
+    // 帶入已確認的選擇，讓使用者可以修改
+    this.selectedTransferSources = [...this.confirmedTransferSources];
     this.showTransferSourceDialog = true;
     this.loadTransferSourceData();
   }
@@ -182,22 +193,13 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
     this.loadTransferSourceData();
   }
 
-  // 選擇匯款來源單號（單選 radio）
-  onSelectTransferSource(event: { data?: QueryUnremittedPAMResponse }): void {
-    if (event.data) {
-      this.selectedTransferSource = event.data;
-    }
-  }
-
-  // 確認選擇匯款來源單號
+  // 確認選擇匯款來源單號（多選）
   confirmTransferSourceSelection(): void {
-    if (!this.selectedTransferSource) {
-      this.messageService.errorBubble('請選擇一筆匯款來源單號');
+    if (!this.selectedTransferSources || this.selectedTransferSources.length === 0) {
+      this.messageService.errorBubble('請至少選擇一筆匯款來源單號');
       return;
     }
-    this.dataForm.patchValue({
-      TransferSourceNo: this.selectedTransferSource.PAM_No,
-    });
+    this.confirmedTransferSources = [...this.selectedTransferSources];
     this.showTransferSourceDialog = false;
   }
 
@@ -221,14 +223,19 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
   }
 
   onSubmit(frm: FormGroup): void {
+    if (this.confirmedTransferSources.length === 0) {
+      this.messageService.errorBubble('請選擇至少一筆匯款來源單號');
+      return;
+    }
+
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue();
 
-      // 準備 API 請求參數
+      // 準備 API 請求參數（多筆 PAM_NoList）
       const confirmRequest = {
-        RMT_Date: formValue.TransferDate, // 匯款日期
-        BNK_id: formValue.BNK_id, // 銀行ID
-        PAM_NoList: [formValue.TransferSourceNo] // 匯款來源單號列表
+        RMT_Date: formValue.TransferDate,
+        BNK_id: formValue.BNK_id,
+        PAM_NoList: this.confirmedTransferSources.map(x => x.PAM_No)
       };
 
       this.fin25020Service.confirmRemit(confirmRequest)
@@ -239,13 +246,11 @@ export class FIN25020CRUComponent extends BasicCruPageComponent<FIN25020Data> im
         .subscribe({
           next: () => {
             this.messageService.successBubble('形成電匯明細成功');
-            // 成功後回到列表頁
             setTimeout(() => {
               this.onCancel();
             }, 500);
           },
           error: () => {
-            // 錯誤處理已由 interceptor 處理
             this.loading = false;
           }
         });

@@ -1,10 +1,8 @@
 // ASS17020 fork of shared table-report-utility — sync with @shared/componentkit/table-report/table-report-utility.service.ts when needed
 import { Injectable } from '@angular/core';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { finalize, Observable, tap } from 'rxjs';
-import { environment } from 'src/environments/environment';
 import { ReportColumn, TripleHeaderSegments } from './ass17020-table-report.model';
 
 @Injectable({
@@ -13,7 +11,6 @@ import { ReportColumn, TripleHeaderSegments } from './ass17020-table-report.mode
 export class ASS17020TableReportUtilityService {
 
   constructor(
-    private readonly sanitizer: DomSanitizer,
     private readonly messageService: NotificationService,
   ) { }
 
@@ -102,50 +99,6 @@ export class ASS17020TableReportUtilityService {
       }
     }
     return true;
-  }
-
-  private readonly safeUrlCache = new Map<string, SafeUrl>();
-
-  getImage(url: any): SafeUrl | string {
-    if (!url || typeof url !== 'string' || url.trim() === '') {
-      return '';
-    }
-
-    // 1. 確保該 URL 只包含預期的字元 (例如：只允許字母、數字、/、.、_、-)
-    // 並且絕對不能包含 'javascript:' 或 'data:' 這些危險協議
-    const dangerousPattern = /javascript:|data:|vbscript:/i;
-    if (dangerousPattern.test(url)) {
-      console.error('偵測到惡意 URL 協議:', url);
-      return '';
-    }
-
-    if (this.safeUrlCache.has(url)) {
-      return this.safeUrlCache.get(url)!;
-    }
-
-    try {
-      const baseUrl = environment.ApiUrl.endsWith('/') ? environment.ApiUrl.slice(0, -1) : environment.ApiUrl;
-
-      let cleanPath = url.replaceAll('~', '');
-      if (cleanPath.startsWith('/')) {
-        cleanPath = cleanPath.slice(1);
-      }
-
-      const finalUrl = `${baseUrl}/${cleanPath}`;
-
-      // 2. 二次確認拼接後的 URL 是合法的
-      // 這裡我們強制要求 URL 必須以我們的 API 域名開頭
-      if (!finalUrl.startsWith(environment.ApiUrl)) {
-        return '';
-      }
-
-      const safeUrl = this.sanitizer.bypassSecurityTrustUrl(finalUrl);
-      this.safeUrlCache.set(url, safeUrl);
-      return safeUrl;
-    } catch (e) {
-      console.error(`Exception while doing something: ${e}`);
-      return '';
-    }
   }
   /**
    * 判斷當前行是否為該分組的最後一筆。

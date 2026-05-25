@@ -1,9 +1,10 @@
-import { NgStyle } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { AsyncPipe, NgStyle } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { formatAmount } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -70,10 +71,12 @@ export interface POS1002 {
     TranslateModule,
     ButtonModule,
     NgStyle,
+    AsyncPipe,
     TooltipModule
   ]
 })
 export class TLS41050Component extends BasicQueryPageComponent<POS1002> implements OnInit {
+  private readonly dropDown = inject(DropdownApiService);
   queryForm = this.formBuilder.group({
     // POS1002 收銀機設定檔
     ECR_NoList: [[]],              // 收銀機號
@@ -96,7 +99,7 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
 
   POS1002_Option: apiOption[] = []; //收銀機號
   TLTTALENT_Option: apiOption[] = []; //專櫃編號
-
+  ECR_NoListOptions = this.dropDown.queryPos1002Filtered();
   data: POS1002[] = [];
   columns: Column[] = [
     { field: 'ECR_No', header: '收銀機號' },
@@ -182,14 +185,10 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
       }),
       finalize(() => this.btnLoading = false),
       untilDestroyed(this)
-    ).subscribe({
-      next: (response) => {
-        this.messageService.successBubble('異動檔下傳成功');
-      },
-      complete: () => {
-        this.selectedItems = [];
-        this.onSubmit(this.queryForm);
-      }
+    ).subscribe(() => {
+      this.messageService.successBubble('異動檔下傳成功');
+      this.selectedItems = [];
+      this.onSubmit(this.queryForm);
     });
   }
 }

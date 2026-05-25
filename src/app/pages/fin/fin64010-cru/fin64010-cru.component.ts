@@ -120,7 +120,7 @@ export class FIN64010CRUComponent extends BasicCruPageComponent<any> implements 
     ProjectNo: ['' as string],
 
     CHK_Status: ['' as string, Validators.required],
-
+ TranStatus: ['' as string],
     // 顯示用
     Tran_Status: ['' as string],
     AccName: ['' as string],
@@ -220,7 +220,7 @@ this.patchFromListRowIfNeeded();
           const list = Array.isArray(res?.Data) ? res.Data : [];
 
           this.colBankAccOptions = list
-            .filter((x: any) => String(x?.BNK_AccType ?? '') !== '1')
+            .filter((x: any) => String(x?.BNK_AccType ?? '') === '1')
             .map((x: any) => ({
               label: `${x.BNK_DepositAccNo} - ${x.ACCCNAME ?? ''}`,
               value: x.BNK_DepositAccNo,
@@ -278,6 +278,8 @@ private loadDetailByRoute(): void {
         // ✅ 保證 Id 一定有值
         this.dataForm.patchValue({
           Id: Number((row as any)?.ID ?? (row as any)?.Id ?? (row as any)?.id ?? id),
+          
+  CHK_Status: String((row as any)?.CHK_Status ?? ''),
           // ...其他欄位照你原本 patch
         }, { emitEvent: false });
 
@@ -292,17 +294,21 @@ private loadDetailByRoute(): void {
       }
     });
 }
-
+  tranStatusOptions = [
+    { value: '0', label: '建立' },
+    { value: '1', label: '確認' },
+    { value: '2', label: '拋轉' },
+  ];
 
   private applyReadonlyRules(): void {
-    const tran = String(this.dataForm.controls.Tran_Status.value ?? '');
+    const tran = String(this.dataForm.controls.TranStatus.value ?? '');
     const chk = String(this.dataForm.controls.CHK_Status.value ?? '');
 
     // 依規格：拋轉(2) / 兌現(3) / 退票(5) 不可改
     this.isEditable = !(tran === '2' || chk === '3' || chk === '5');
 
     // 顯示用欄位 disable
-    ['Tran_Status_Name', 'AccName', 'VouNo', 'ObjectType', 'ObjectKey']
+    ['TranStatus', 'AccName', 'VouNo', 'ObjectType', 'ObjectKey']
       .forEach(k => this.dataForm.get(k)?.disable({ emitEvent: false }));
 
     if (this.crudstatus === CRUDStatus.Read) {
@@ -422,7 +428,11 @@ private loadDetailByRoute(): void {
     const ven = String(listRow.VEN_No ?? '').trim();
     if (ven) this.dataForm.controls.VEN_No.patchValue(ven, { emitEvent: false });
   }
-
+const curTran = String(this.dataForm.controls.TranStatus.value ?? '').trim();
+if (!curTran) {
+  const tran = String(listRow.Tran_Status ?? listRow.TranStatus ?? '').trim();
+  if (tran) this.dataForm.controls.TranStatus.patchValue(tran, { emitEvent: false });
+}
   const curChk = String(this.dataForm.controls.CHK_No.value ?? '').trim();
   if (!curChk) {
     const chk = String(listRow.CheckNo ?? listRow.CHK_No ?? '').trim();
