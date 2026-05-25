@@ -172,10 +172,6 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       // },
       // 1. 利用內建的 calculate 處理手動輸入：只要代號一變更，立刻自動匹配並帶出名稱！
       calculate: (rowData: any, newValue: string) => {
-        // 💡 及時查看：手動打字時，當前 Row 的內容長怎樣
-        console.log('--- [calculate] 當前 Row 內容 ---', JSON.parse(JSON.stringify(rowData)));
-        console.log('輸入的新值為:', newValue);
-
         if (!newValue) {
           return {
             CAP_Item: null,
