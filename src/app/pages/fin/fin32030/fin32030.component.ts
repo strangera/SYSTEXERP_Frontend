@@ -72,6 +72,8 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
     VEN_No: [null as string | null], // 廠客代號
     DateFrom: [null], // 立帳日期起
     DateTo: [null], // 立帳日期迄
+    AmtFrom: [null], // 應收金額起
+    AmtTo: [null], // 應收金額迄
     pageSize: [30],
     pageIndex: [1],
     SortBy: [[{ field: 'VEN_No', order: 1 }]],
@@ -236,6 +238,8 @@ export class FIN32030Component extends BasicQueryPageComponent<QueryFIN32030Resp
       VEN_No: formValue.VEN_No || undefined,
       DateFrom: formValue.DateFrom || undefined,
       DateTo: formValue.DateTo || undefined,
+      AmtFrom: formValue.AmtFrom || undefined,
+      AmtTo: formValue.AmtTo || undefined,
       PageIndex: formValue.pageIndex ?? 1,
       PageSize: formValue.pageSize ?? 30,
       SortBy: formValue.SortBy || undefined,
