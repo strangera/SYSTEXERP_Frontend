@@ -912,7 +912,10 @@ export interface FIN53010StepPurchaseInvoiceRow {
   invoice_no?: string;
   invoice_date?: Date | null;
   declare_ym?: Date | null;
+  /** 廠商統一編號（顯示用，送 API 作 PUR_VenUniform） */
   vendor_tax_id?: string;
+  /** 廠商代號（POS2013.VEN_No，送 API 作 PUR_VenNo） */
+  ven_no?: string;
   invoice_usage?: string;
   invoice_amount?: number;
   tax_type?: string;

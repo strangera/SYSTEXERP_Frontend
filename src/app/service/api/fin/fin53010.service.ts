@@ -46,6 +46,8 @@ export class FIN53010Service {
   public readonly vendorOptions = signal<Option[]>([]);
   /** 廠商統一編號（VEN_UNIFORM 去重） */
   public readonly vendorUniformOptions = signal<Option[]>([]);
+  /** 廠商統一編號 → 廠商代號（VEN_No）對照 Map */
+  public readonly vendorUniformToVenNoMap = signal<Map<string, string>>(new Map());
   /** 員工 */
   public readonly usrOptions = signal<Option[]>([]);
   /** 組織代號 */
@@ -534,8 +536,16 @@ export class FIN53010Service {
       map(res => (res ?? []).map((item: any) => ({
         value: item.No,
         label: `${item.No} - ${item.Name}`,
+        VEN_No: item.subItems?.[0]?.VEN_No as string | undefined,
       }))),
-      tap(list => this.vendorUniformOptions.set(list)),
+      tap(list => {
+        this.vendorUniformOptions.set(list);
+        const m = new Map<string, string>();
+        for (const opt of list) {
+          if (opt.VEN_No) m.set(String(opt.value), String(opt.VEN_No));
+        }
+        this.vendorUniformToVenNoMap.set(m);
+      }),
     ).subscribe();
   }
 
