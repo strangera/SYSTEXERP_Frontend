@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { PrimeNGConfig } from 'primeng/api';
@@ -10,16 +10,17 @@ import { NotificationMessageComponent } from './shared/component/notification-me
 
 @Component({
   selector: 'app-root',
-  templateUrl: './app.component.html',
+  template: `<router-outlet></router-outlet>
+    <app-notification-message></app-notification-message>
+    <app-debug-sql-display></app-debug-sql-display>`,
   standalone: true,
   imports: [RouterOutlet, NotificationMessageComponent, ConfirmDialogModule, DebugSqlDisplayComponent],
 })
 export class AppComponent implements OnInit {
-  constructor(
-    private readonly primengConfig: PrimeNGConfig,
-    private readonly translate: TranslateService,
-    private readonly appInitService: AppInitializationService
-  ) {
+  private readonly primengConfig = inject(PrimeNGConfig);
+  private readonly translate = inject(TranslateService);
+  private readonly appInitService = inject(AppInitializationService);
+  constructor() {
     this.translate.setDefaultLang('zh-tw');
     this.translate.use('zh-tw');
     this.appInitService.initialize();

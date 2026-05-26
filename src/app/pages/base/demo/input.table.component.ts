@@ -3,7 +3,6 @@ import { AfterViewInit, Component, QueryList, ViewChildren, ViewContainerRef } f
 import { CardModule } from 'primeng/card';
 import { TabViewModule } from 'primeng/tabview';
 import { COMMON_IMPORTS } from './demo-imports';
-import { ExampleAutocompleteComponent } from './example-autocomplete/example-autocomplete.component';
 import { ExampleCalendarComponent } from './example-calendar/example-calendar.component';
 import { ExampleDropdownComponent } from './example-dropdown/example-dropdown.component';
 import { ExampleInputComponent } from './example-input/example-input.component';
@@ -28,7 +27,6 @@ export class InputTableComponent implements AfterViewInit {
     { title: '多選', component: ExampleMultiComponent, class: 'text-900' },
     { title: '日曆', component: ExampleCalendarComponent, class: 'text-900' },
     { title: '上傳相關', component: ExampleUploadComponent, class: 'text-900' },
-    { title: '自動填入', component: ExampleAutocompleteComponent, class: 'text-900' },
   ];
   ngAfterViewInit() {
     this.loadTabs();
