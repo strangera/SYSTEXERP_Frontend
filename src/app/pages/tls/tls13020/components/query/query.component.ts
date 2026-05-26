@@ -25,6 +25,7 @@ import { SharedDropdownService } from '@shared/services/shared-dropdown.service'
 
 // API Service
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 // Models
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
@@ -198,6 +199,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     approve_statusList: [[] as string[]],
     area_no: [null as string | null],
     tlt_floor: [null as string | null],
+    tlt_buildingList: [[] as string[]],
     contact_USR_No: [[] as string[]],
     org_id: [null as string | null],
     comm_comp_type: [[] as string[]],
@@ -222,6 +224,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
     money_typeList: [[] as string[]],
     paytypeList: [[] as string[]],
     store_wayList: [[] as string[]],
+    tlt_openflagList: [[] as string[]],
     rece_yn: [false],
     pos_yn: [false],
     cash_yn: [false],
@@ -252,6 +255,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   locationNumberOptions: any[] = [];
   regionOptions: any[] = [];
   floorOptions: any[] = [];
+  buildingOptions: any[] = [];
   negotiatorOptions: any[] = [];
   organizationCodeOptions: any[] = [];
   businessTypeOptions: any[] = [];
@@ -261,6 +265,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   get checkoutOptions() { return this.sharedDropdownService.moneyTypeOptions; }
   get paymentOptions() { return this.sharedDropdownService.paytypeOptions; }
   get cooperationTypeOptions() { return this.sharedDropdownService.storeWayOptions; }
+  readonly openFlagOptions = getSYS1000Options('tlt_openflag');
   get counterTypeOptions() { return this.sharedDropdownService.tltKindOptions; }
   get chargeTypeOptions() { return this.sharedDropdownService.tltTermTypeOptions; }
   get calculationMethodOptions() { return this.sharedDropdownService.commCompTypeOptions; }
@@ -313,6 +318,12 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       error: () => this.floorOptions = []
     });
 
+    // 載入館別
+    this.sharedDropdownService.getBuildingOptions().subscribe({
+      next: (options) => this.buildingOptions = options,
+      error: () => this.buildingOptions = []
+    });
+
     // 載入洽談者
     this.sharedDropdownService.getNegotiatorOptions().subscribe({
       next: (options) => this.negotiatorOptions = options,
@@ -343,7 +354,6 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
         rece_yn: formValue.rece_yn ? 'Y' : undefined,
         pos_yn: formValue.pos_yn ? 'Y' : undefined,
         cash_yn: formValue.cash_yn ? 'Y' : undefined,
-        tlt_openflagList: ['']  // 固定只查營業中
       };
 
       this.apiService.queryTLS13020(queryRequest).subscribe({
