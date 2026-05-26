@@ -42,8 +42,11 @@ export interface TLS31080Response {
   H22: number;
   H23: number;
   Reentry: number;
+  PreOrderAmt: number;
   PresaleCheckout: number,
   Subtotal: number;
+  TotalCount: number;
+  TotalPage: number;
 }
 
 export interface TLS31080DetailResponse {

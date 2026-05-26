@@ -17,7 +17,6 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -57,7 +56,8 @@ import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 // 各時段之樓層營業報表
 export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    TxnDate: [yesterday, [Validators.required]],//交易日期_起
+    // TxnDate: [yesterday, [Validators.required]],//交易日期_起
+    TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起
     TimeMode: ['A'],// 時段模式：'A'=全時段(預設)，'T'=依範圍 (全時段不用帶TimeFromHH、TimeToHH)
     TimeFromHH: [null, [Validators.min(0), Validators.max(23)]],// 起始小時 (0~23)，當 TimeMode='T' 時生效
     TimeToHH: [null, [Validators.min(0), Validators.max(23)]],// 結束小時 (0~23)，當 TimeMode='T' 時生效
@@ -85,6 +85,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
 
   totalRecords = 0;
   data: TLS31080Response[] = [];
+  footerData: TLS31080Response | null = null;
   historyRequestBody: TLS31080Request | null = null; //歷史查詢條件
 
   btnPDFLoading = false;
@@ -111,6 +112,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'Reentry', header: '補登金額或筆數', visible: true, format: formatAmount, align: 'right' },
+    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
     { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
     { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
   ];
@@ -311,7 +313,35 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
 
       console.log('送出request請求', formValue);
       this.tls31080Service.queryTLS31080(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data ?? [];               // 查詢資料
+        this.data = res.Data.Data ?? [];               // 查詢資料
+        this.footerData = {
+          floor_desc: '',
+          TimeType: '',
+
+          TotalCount: res.Data.TotalData.TotalTxnCount ?? 0,
+          TotalPage: 0,
+          Subtotal: res.Data.TotalData.TotalSales ?? 0,
+          Reentry: res.Data.TotalData.TotalReentry ?? 0,
+          PreOrderAmt: res.Data.TotalData.TotalPreOrderAmt ?? 0,
+          PresaleCheckout: res.Data.TotalData.TotalPresaleCheckout ?? 0,
+
+          H08: res.Data.TotalData.TotalH08 ?? 0,
+          H09: res.Data.TotalData.TotalH09 ?? 0,
+          H10: res.Data.TotalData.TotalH10 ?? 0,
+          H11: res.Data.TotalData.TotalH11 ?? 0,
+          H12: res.Data.TotalData.TotalH12 ?? 0,
+          H13: res.Data.TotalData.TotalH13 ?? 0,
+          H14: res.Data.TotalData.TotalH14 ?? 0,
+          H15: res.Data.TotalData.TotalH15 ?? 0,
+          H16: res.Data.TotalData.TotalH16 ?? 0,
+          H17: res.Data.TotalData.TotalH17 ?? 0,
+          H18: res.Data.TotalData.TotalH18 ?? 0,
+          H19: res.Data.TotalData.TotalH19 ?? 0,
+          H20: res.Data.TotalData.TotalH20 ?? 0,
+          H21: res.Data.TotalData.TotalH21 ?? 0,
+          H22: res.Data.TotalData.TotalH22 ?? 0,
+          H23: res.Data.TotalData.TotalH23 ?? 0,
+        }
         this.totalRecords = res.Data.length;      // 長度計算筆數
         console.log('查詢結果', res.Data ?? []);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
