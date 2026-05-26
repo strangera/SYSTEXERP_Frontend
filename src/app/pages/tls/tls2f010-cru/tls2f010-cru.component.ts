@@ -573,7 +573,14 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
             const deductVal = (this.discountOptions ?? []).find((o: any) => String(o.label ?? '').includes('代表進項可扣抵'))?.value ?? '';
             // 優先取出 Details 中第一個有 ven_uniform 的值，若無則看 firstDetail，再 fallback 到 firstMain
             const defaultVenUniform = (details.find((d: any) => d?.ven_uniform) ?? firstDetail)?.ven_uniform ?? firstMain?.ven_uniform ?? '';
-
+            const commYm = this.dataForm.controls.COMM_YM.value;
+            let targetDate = null;
+            if (commYm) {
+              const year = commYm.getFullYear();
+              const month = commYm.getMonth() + 1;
+              const targetMonth = month % 2 === 0 ? month : month + 1;
+              targetDate = new Date(year, targetMonth, 0);
+            }
             this.detailDefaultInsert = {
               // 從 Mains 帶入 VEN_No
               VEN_No: firstMain?.ven_no != null ? String(firstMain?.ven_no) : (this.detailDefaultInsert?.VEN_No ?? ''),
@@ -583,7 +590,7 @@ export class TLS2F010CRUComponent extends BasicCruPageComponent<any> implements 
               PUR_GUINO: '',
               // 預設發票日期為當月最後一天
               PUR_GUIDate: defaultInvoiceDate,
-              DEC_YM: this.dataForm.controls.COMM_YM.value || null,
+              DEC_YM: targetDate || null, // 預設申報年月改雙數月
               // 預設單據別：若主表 (firstMain) 有 tlttalent.invoice_type 或 invoice_type，帶入該值
               GUIType: String(firstMain?.tlttalent?.invoice_type ?? firstMain?.invoice_type ?? ''),
               // 預設課稅別為「應稅」
