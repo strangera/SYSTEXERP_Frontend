@@ -17,7 +17,6 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -57,8 +56,8 @@ import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 // 各時段之樓層營業報表
 export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    TxnDate: [yesterday, [Validators.required]],//交易日期_起
-    // TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
+    // TxnDate: [yesterday, [Validators.required]],//交易日期_起
+    TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
     TimeMode: ['A'],// 時段模式：'A'=全時段(預設)，'T'=依範圍 (全時段不用帶TimeFromHH、TimeToHH)
     TimeFromHH: [null, [Validators.min(0), Validators.max(23)]],// 起始小時 (0~23)，當 TimeMode='T' 時生效
     TimeToHH: [null, [Validators.min(0), Validators.max(23)]],// 結束小時 (0~23)，當 TimeMode='T' 時生效
@@ -320,7 +319,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
           TimeType: '',
 
           TotalCount: res.Data.TotalData.TotalTxnCount ?? 0,
-          Subtotal: res.Data.TotalData.Subtotal ?? 0,
+          Subtotal: res.Data.TotalData.TotalSales ?? 0,
           Reentry: res.Data.TotalData.TotalReentry ?? 0,
           PreOrderAmt: res.Data.TotalData.TotalPreOrderAmt ?? 0,
           PresaleCheckout: res.Data.TotalData.TotalPresaleCheckout ?? 0,
