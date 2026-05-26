@@ -88,6 +88,9 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
   /** 原始的「剩餘總金額」（APS 對應資料） */
   private originalRemainingAmt: number | null = null;
 
+  /** 已退出/折讓歷史總金額（Total_hitory_PUR_Amt），用於判斷是否已有先前紀錄 */
+  private originalHistoryAmt: number | null = null;
+
   dataForm = this.formBuilder.nonNullable.group({
     id: [null as number | null],
 
@@ -163,6 +166,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
       if (!d) return;
 
       this.originalRemainingAmt = d.Total_Amt != null ? Math.round(Number(d.Total_Amt)) : null;
+      this.originalHistoryAmt = d.Total_hitory_PUR_Amt != null ? Math.round(Number(d.Total_hitory_PUR_Amt)) : 0;
 
       this.dataForm.patchValue({
         id: d.id,
@@ -211,6 +215,9 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
         if (detail) {
           const apiAmt = (detail as any).Total_Amt ?? null;
           this.originalRemainingAmt = apiAmt != null ? Math.round(Number(apiAmt)) : null;
+          this.originalHistoryAmt = (detail as any).Total_hitory_PUR_Amt != null
+            ? Math.round(Number((detail as any).Total_hitory_PUR_Amt))
+            : 0;
 
           const currentAmtRaw = this.dataForm.get('PUR_Amt')?.value;
           const currentTotal = currentAmtRaw == null || currentAmtRaw === ''
@@ -276,7 +283,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
   private updateDisabledState(): void {
     if (this.crudstatus === CRUDStatus.Edit) {
-      const editableFields = ['PUR_GUIDate', 'PUR_RepYYYYMM', 'Source_Doc_No', 'PUR_Net', 'PUR_Amt'];
+      const editableFields = ['PUR_GUIDate', 'PUR_RepYYYYMM', 'Source_Doc_No', 'PUR_Net', 'PUR_Tax', 'PUR_Amt'];
       Object.keys(this.dataForm.controls).forEach((key) => {
         const control = this.dataForm.get(key);
         if (editableFields.includes(key)) control?.enable();
@@ -290,7 +297,6 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
     // 唯讀欄位（系統自動計算或帶入，不開放編輯）
     this.dataForm.get('TXN_Ret_No')?.disable();
-    this.dataForm.get('PUR_Tax')?.disable();
     this.dataForm.get('PUR_TaxType')?.disable();
     this.dataForm.get('Inv_Tax')?.disable();
     this.dataForm.get('Inv_Net')?.disable();
@@ -313,11 +319,12 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
     if (!netControl || !taxControl || !amtControl || !remainingControl) return;
 
     let updatingFromNet = false;
+    let updatingFromTax = false;
     let updatingFromAmt = false;
 
-    // 由「退出/折讓金額」反推稅額與總金額
+    // 由「退出/折讓金額」自動算稅額與總金額
     netControl.valueChanges.subscribe((value) => {
-      if (updatingFromAmt) return;
+      if (updatingFromAmt || updatingFromTax) return;
       updatingFromNet = true;
 
       const netVal = this.parseAmount(value);
@@ -332,7 +339,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
       const netInt = Math.round(netVal);
       const taxInt = Math.round(netInt * 0.05);
-      const totalInt = Math.round(netInt + taxInt);
+      const totalInt = netInt + taxInt;
 
       netControl.setValue(netInt, { emitEvent: false });
       taxControl.setValue(taxInt, { emitEvent: false });
@@ -348,9 +355,33 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
       updatingFromNet = false;
     });
 
+    // 由「退出/折讓稅額」調整淨額（總金額固定不動，Net = Amt - Tax）
+    taxControl.valueChanges.subscribe((value) => {
+      if (updatingFromNet || updatingFromAmt) return;
+      updatingFromTax = true;
+
+      const taxVal = this.parseAmount(value);
+      const amtVal = this.parseAmount(amtControl.value);
+
+      if (taxVal === null || amtVal === null) {
+        updatingFromTax = false;
+        return;
+      }
+
+      const taxInt = Math.round(taxVal);
+      const totalInt = Math.round(amtVal);
+      const netInt = totalInt - taxInt;
+
+      taxControl.setValue(taxInt, { emitEvent: false });
+      netControl.setValue(netInt, { emitEvent: false });
+      // Amt 與 Remaining 不變，維持原值
+
+      updatingFromTax = false;
+    });
+
     // 由「退回/折讓總金額」反推淨額與稅額
     amtControl.valueChanges.subscribe((value) => {
-      if (updatingFromNet) return;
+      if (updatingFromNet || updatingFromTax) return;
       updatingFromAmt = true;
 
       const totalVal = this.parseAmount(value);
@@ -400,10 +431,18 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
 
     const t = Math.round(totalAmt);
     const origin = Math.round(this.originalRemainingAmt);
+    const historyAmt = this.originalHistoryAmt ?? 0;
 
-    if (t === origin) creditControl.setValue('R', { emitEvent: false });      // 退出
-    else if (t < origin) creditControl.setValue('C', { emitEvent: false });   // 折讓
-    else creditControl.setValue('', { emitEvent: false });
+    // 若已有歷史紀錄（先前已開過退出/折讓），一律為折讓
+    if (historyAmt > 0) {
+      creditControl.setValue('C', { emitEvent: false });
+    } else if (t === origin) {
+      creditControl.setValue('R', { emitEvent: false });   // 第一次且全額用完 → 退出
+    } else if (t < origin) {
+      creditControl.setValue('C', { emitEvent: false });   // 第一次但部分金額 → 折讓
+    } else {
+      creditControl.setValue('', { emitEvent: false });
+    }
   }
 
   /* ==================== 商業規則驗證 ==================== */
@@ -554,6 +593,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
     this.dataForm.reset();
     this.dataForm.markAsPristine();
     this.originalRemainingAmt = null;
+    this.originalHistoryAmt = null;
     this.updateDisabledState();
     this.refreshAmountValidFlag();
   }

@@ -7,7 +7,7 @@
         </label>
         <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"
           (click)="onFocusAndInitialLoad($event)" [suggestions]="suggestions" [optionValue]="optionValue"
-          [placeholder]="control.disabled ? '' : placeholder">
+          [placeholder]="control.disabled ? '' : placeholder" (keydown.enter)="handleEnterKey($event)">
 
           <ng-template let-options pTemplate="item">
             <div class="flex align-items-center gap-2">

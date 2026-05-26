@@ -108,7 +108,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     VoucherType: new FormControl<string>('GL', [Validators.required]),
     VouDate: new FormControl<Date>(new Date, [Validators.required]),
     Remark: new FormControl<string | void>(void 0, [Validators.maxLength(100)]),
-    INV_YN: new FormControl<'N' | 'Y'>('N', [Validators.required]),
+    INV_YN: new FormControl<'N' | 'Y'>('Y', [Validators.required]),
     /** ROC/IFRS 0:ROC 1:IFRS null:全部 */
     VouAccType: new FormControl<'0' | '1' | void>('0', [Validators.required]),
     CRT_USR_No: new FormControl<string | void>(this.isFormCreateable ? this.user.user_No : void 0),
