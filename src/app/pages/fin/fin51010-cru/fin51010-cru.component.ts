@@ -35,6 +35,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 export class FIN51010CRUComponent extends BasicCruPageComponent<QueryFIN51010Response> implements OnInit {
   dataForm = this.formBuilder.group({
     VouNo: [{ value: null as string | null, disabled: true }],      // 傳票編號
+    TransVouNo: [{ value: null as string | null, disabled: true }],      // 傳票編號
     Voucher_Name: [{ value: null as string | null, disabled: true }], // 傳票名稱 (種類名稱)
     SrcSheetType: [{ value: null as string | null, disabled: true }], // 傳票型態 (代碼)
     VouDate: [null, [Validators.required]],      // 傳票日期

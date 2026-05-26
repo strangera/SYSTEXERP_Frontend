@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { getSYS1000 } from '@service/system/sys1000.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { finalize, Observable, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -178,5 +179,26 @@ export class TableReportUtilityService {
       return String(groupColumn.format(rawValue, 0, rowData) ?? '');
     }
     return String(rawValue ?? '');
+  }
+
+  /**
+  * 格式化數據(目前可自動抓sys1000的值，未來可擴充其他類型的格式化)
+  */
+  getFormattedValue(col: ReportColumn, val: any, rowIndex: number, rowData: any): any {
+    // 1. 優先使用明確定義的 format
+    if (col.format) {
+      return col.format(val, rowIndex, rowData);
+    }
+
+    // 2. 檢查是否有對應的系統代碼表 (這裡假設有一個方法檢查)
+    // 建議將 getSYS1000 整合進 tableUtility 或 component 中
+    const sysValue = getSYS1000(col.field, val);
+
+    if (sysValue !== undefined && sysValue !== null) {
+      return sysValue;
+    }
+
+    // 3. 預設回傳原始值
+    return val;
   }
 }

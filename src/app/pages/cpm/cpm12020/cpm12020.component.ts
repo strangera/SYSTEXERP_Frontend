@@ -37,8 +37,8 @@ export class CPM12020Component extends BasicQueryPageComponent<CPM12020Response>
   columns: ReportColumn[] = [
     { field: 'ORG_ID', header: '組織代號' },
     { field: 'Org_Name', header: '組織名稱' },
-    { field: 'CLASS_CODE', header: '類別代號' },
-    { field: 'CodeName', header: '類別名稱' },
+    // { field: 'CLASS_CODE', header: '類別代號' }, //暫時移除 user說用不到
+    // { field: 'CodeName', header: '類別名稱' },
     { field: 'CLASS_NAME', header: '責任單位名稱' },
     { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
     { field: 'CRT_USR_No', header: '建立人員編號', visible: false },

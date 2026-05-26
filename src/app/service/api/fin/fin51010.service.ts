@@ -40,11 +40,13 @@ export interface QueryFIN51010Response {
   Remark: string;
   Debit_Amt: number;
   Credit_Amt: number;
+  TransVouNo?: string;
 }
 
 /** 查詢明細 Response */
 export interface QueryFIN51010DetailResponse {
   VouNo: string;
+  TransVouNo: string;
   Voucher_Name: string;
   SrcSheetType: string;
   VouDate: string;

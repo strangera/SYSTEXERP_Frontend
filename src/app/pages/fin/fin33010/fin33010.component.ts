@@ -68,6 +68,11 @@ export class FIN33010Component extends BasicQueryPageComponent<any> implements O
 
   }
 
+  openRcvDialog(): void {
+    this.rcvDialogVisible = true;
+    this.onQueryRcvNo();
+  }
+
   onQueryRcvNo(): void {
     // 1. 取得表單原始值
     const formValue = this.dialogQueryForm.getRawValue();

@@ -1,11 +1,11 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
-import { FormBuilder, FormControl, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
-import { DialogModule } from 'primeng/dialog';
-import { InputSwitchModule } from 'primeng/inputswitch';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { NgIf } from '@angular/common';
+import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { FormBuilder, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Button } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { Subject, takeUntil } from 'rxjs';
 
 export interface TableExport2 {
   print_reportTitle?: string;
@@ -21,11 +21,11 @@ export interface TableExport2 {
 }
 
 @Component({
-    selector: 'app-table-export2',
-    templateUrl: './table-export2.component.html',
-    styleUrl: './table-export2.component.scss',
-    standalone: true,
-    imports: [DialogModule, FormsModule, ReactiveFormsModule, InputSwitchModule, InputNumberModule, NgIf, Button]
+  selector: 'app-table-export2',
+  templateUrl: './table-export2.component.html',
+  styleUrl: './table-export2.component.scss',
+  standalone: true,
+  imports: [DialogModule, FormsModule, ReactiveFormsModule, InputSwitchModule, InputNumberModule, NgIf, Button]
 })
 export class TableExport2Component implements OnInit, OnDestroy {
   @Input() visible = true;

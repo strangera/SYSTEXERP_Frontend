@@ -52,6 +52,18 @@ import {
 import { TableEditComponent } from './table-edit/table-edit.component';
 import { EditColumn, EditColumnExtend, FieldChangeEvent as StepFieldChangeEvent } from './table-edit/table-edit.model';
 
+/** API 回傳的日期字串（"YYYY-MM-DDTHH:mm:ss"）解析為 local time Date，避免 UTC midnight 時區問題 */
+function parseApiDateToLocal(s: string | null | undefined): Date | null {
+  if (s == null || String(s).trim() === '') return null;
+  const parts = String(s).slice(0, 10).split('-');
+  if (parts.length !== 3) return null;
+  const y = Number(parts[0]);
+  const m = Number(parts[1]);
+  const d = Number(parts[2]);
+  if (!y || !m || !d || m < 1 || m > 12 || d < 1 || d > 31) return null;
+  return new Date(y, m - 1, d);
+}
+
 @Component({
   selector: 'app-fin53010-cru',
   templateUrl: './fin53010-cru.component.html',
@@ -799,6 +811,9 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return this.tableData().filter(row => String(map.get(String(row.AccNo ?? ''))) === '3');
   });
 
+  /** 補發票 (INV_YN='Y') 僅自動跳至進項發票步驟一次 */
+  private _hasAutoJumpedToStep5 = false;
+
   /** 應付步驟表是否允許插入列（不含唯讀；模板須再與 !isFormReadable 一併綁定） */
   public readonly stepAPTableCanInsert = computed(() => {
     const max = this.payableDetailRowCount();
@@ -821,6 +836,16 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.activeVoucherSteps.set(ordered);
     const flow = [1, ...ordered];
     if (!flow.includes(this.currentStep())) this.currentStep.set(1);
+    // 補發票模式（INV_YN='Y'）且進項發票步驟啟用時，初次自動跳至 step5
+    if (
+      !this._hasAutoJumpedToStep5
+      && this.dataForm.controls.INV_YN.value === 'Y'
+      && ordered.includes(5)
+      && this.currentStep() === 1
+    ) {
+      this._hasAutoJumpedToStep5 = true;
+      this.currentStep.set(5);
+    }
   }, { allowSignalWrites: true });
 
   /** 依傳票明細與 queryPOS2013（廠商主檔）同步應付／應收／銀行存款步驟表（僅新增模式） */
@@ -938,7 +963,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       acp_date: vouDate,
       ven_bnk_no: venOpt?.['VEN_BNK_No'] != null ? String(venOpt['VEN_BNK_No']) : undefined,
       ven_bank_account: this.formatVenBankAccount(venOpt),
-      ven_ctrlyn: venOpt?.['VEN_CTRLYN'] ?? undefined,
+      ven_ctrlyn: venOpt?.['VEN_CTRLYN'] ?? 'Y',
       ven_check_title: venCheckTitle,
       acc_no: row.AccNo,
       note_desc: this.resolveNoteDescForStep(row),
@@ -1307,6 +1332,19 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           this.stepSalesRows.set(mapped.stepSalesRows);
           this.stepPurchaseRows.set(mapped.stepPurchaseRows);
           this.stepBankRows.set(mapped.stepBankRows);
+          // 預填 lookup key，避免 edit 模式下 blur invoice_no 時觸發 APS4023 查詢覆蓋 DB 資料
+          this.lastPurchaseInvoiceLookupKey.clear();
+          mapped.stepPurchaseRows.forEach((r, i) => {
+            const t = String(r.track_no ?? '').trim();
+            const n = String(r.invoice_no ?? '').trim();
+            if (t.length === 2 && n.length === 8) this.lastPurchaseInvoiceLookupKey.set(i, `${t}${n}`);
+          });
+          this.lastSalesInvoiceLookupKey.clear();
+          mapped.stepSalesRows.forEach((r, i) => {
+            const t = String(r.invoice_prefix ?? '').trim();
+            const n = String(r.invoice_no ?? '').trim();
+            if (t.length === 2 && n.length === 8) this.lastSalesInvoiceLookupKey.set(i, `${t}${n}`);
+          });
           this.stepAPTotal.set(res.Data.Total_ACP_Amt ?? 0);
           this.stepARTotal.set(res.Data.Total_ARS_Amt ?? 0);
           this.stepPurchaseTotal.set({
@@ -1585,11 +1623,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
 
   /** 進項步驟表：字軌 2 碼 + 發票號碼 8 碼齊備時查 APS4023 並帶入該列；
    *  發票日期選定後自動帶入申報年月（下一個雙數月）；
-   *  申報年月手動選到奇數月時自動修正為下一個雙數月 */
+   *  申報年月手動選到奇數月時自動修正為下一個雙數月；
+   *  廠商統一編號變更時自動帶入廠商代號（ven_no）；
+   *  發票總金額或課稅別變更時自動計算未稅金額與稅額 */
   public onStepPurchaseInvoiceFieldChange(event: StepFieldChangeEvent): void {
     if (this.isFormReadable) return;
     const f = event.field;
     const idx = event.index;
+    console.log('[PurchaseFieldChange]', f, idx, 'value=', event.value, 'invoice_date=', event.rowData['invoice_date']);
     if (typeof idx !== 'number' || idx < 0) return;
     const row = event.rowData as FIN53010StepPurchaseInvoiceRow;
 
@@ -1610,6 +1651,33 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       return;
     }
 
+    // 廠商統一編號變更 → 自動帶入廠商代號
+    if (f === 'vendor_tax_id') {
+      const uniform = String(row.vendor_tax_id ?? '').trim();
+      const venNo = uniform ? this.service.vendorUniformToVenNoMap().get(uniform) : undefined;
+      event.rowData.ven_no = venNo;
+      return;
+    }
+
+    // 發票總金額或課稅別變更 → 自動計算未稅金額與稅額
+    if (f === 'invoice_amount' || f === 'tax_type') {
+      const amount = row.invoice_amount;
+      if (amount != null && amount > 0) {
+        const taxType = String(row.tax_type ?? '').trim();
+        if (taxType === '1') {
+          // 應稅 5%：發票總金額為含稅價格
+          const tax = Math.round(amount * 5 / 105);
+          event.rowData.tax_amount = tax;
+          event.rowData.net_amount = amount - tax;
+        } else {
+          // 零稅率、免稅、其他：稅額為 0，未稅 = 總金額
+          event.rowData.tax_amount = 0;
+          event.rowData.net_amount = amount;
+        }
+      }
+      return;
+    }
+
     if (f !== 'track_no' && f !== 'invoice_no') return;
     const prefix = String(row.track_no ?? '').trim();
     const no = String(row.invoice_no ?? '').trim();
@@ -1624,14 +1692,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ): Partial<FIN53010StepSalesInvoiceRow> {
     const invYm = d.INV_DeclareYM;
     const declareYm = invYm
-      ? new Date(`${String(invYm).slice(0, 4)}-${String(invYm).slice(4, 6)}-01`)
+      ? new Date(Number(String(invYm).slice(0, 4)), Number(String(invYm).slice(4, 6)) - 1, 1)
       : null;
     return {
       id: d.ID,
       invoice_type: d.InvoiceType ?? undefined,
       invoice_prefix: prefix,
       invoice_no: no,
-      invoice_date: d.InvoiceDate ? new Date(d.InvoiceDate) : null,
+      invoice_date: d.InvoiceDate ? parseApiDateToLocal(d.InvoiceDate) : null,
       declare_ym: declareYm,
       buyer_uniform: d.Buyer_Uniform ?? undefined,
       total_amount: d.PUR_Amt,
@@ -1650,15 +1718,18 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   ): Partial<FIN53010StepPurchaseInvoiceRow> {
     const invYm = d.INV_DeclareYM;
     const declareYm = invYm
-      ? new Date(`${String(invYm).slice(0, 4)}-${String(invYm).slice(4, 6)}-01`)
+      ? new Date(Number(String(invYm).slice(0, 4)), Number(String(invYm).slice(4, 6)) - 1, 1)
       : null;
+    const vendorTaxId = d.Seller_Uniform ?? undefined;
+    const venNo = vendorTaxId ? this.service.vendorUniformToVenNoMap().get(vendorTaxId) : undefined;
     return {
       voucher_type: d.InvoiceType ?? undefined,
       track_no: prefix,
       invoice_no: no,
-      invoice_date: d.InvoiceDate ? new Date(d.InvoiceDate) : null,
+      invoice_date: d.InvoiceDate ? parseApiDateToLocal(d.InvoiceDate) : null,
       declare_ym: declareYm,
-      vendor_tax_id: d.Seller_Uniform ?? undefined,
+      vendor_tax_id: vendorTaxId,
+      ven_no: venNo,
       invoice_amount: d.PUR_Amt,
       tax_type: d.PUR_TaxType ?? undefined,
       net_amount: d.PUR_Net,

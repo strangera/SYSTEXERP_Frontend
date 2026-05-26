@@ -58,16 +58,6 @@
         <!-- 第 3 組：中信分期刷卡機 -->
         <!-- ========================================== -->
         <div class="col-12 md:col-4">
-          <app-dropdown label="中信分期刷卡機狀態" controlName="EDC_Status3" [options]="EDC_Status_Option" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.EDC_Status3" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-4">
-          <app-input-text label="中信分期刷卡機IP" controlName="EDC_IP3" [control]="dataForm.controls.EDC_IP3"
-            [submitted]="submitted"></app-input-text>
-          <small *ngIf="dataForm.get('EDC_IP3')?.errors?.['pattern'] && dataForm.get('EDC_IP3')?.touched"
-            class="p-error"> 請輸入有效的 IP 格式 </small>
-        </div>
-        <div class="col-12 md:col-4">
           <app-input-text label="中信分期刷卡機端末機代碼" controlName="EDC_TmID3" [control]="dataForm.controls.EDC_TmID3"
             [submitted]="submitted"></app-input-text>
         </div>
@@ -76,16 +66,6 @@
         <!-- 第 4 組：中信紅利刷卡機 -->
         <!-- ========================================== -->
         <div class="col-12 md:col-4">
-          <app-dropdown label="中信紅利刷卡機狀態" controlName="EDC_Status4" [options]="EDC_Status_Option" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.EDC_Status4" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-4">
-          <app-input-text label="中信紅利刷卡機IP" controlName="EDC_IP4" [control]="dataForm.controls.EDC_IP4"
-            [submitted]="submitted"></app-input-text>
-          <small *ngIf="dataForm.get('EDC_IP4')?.errors?.['pattern'] && dataForm.get('EDC_IP4')?.touched"
-            class="p-error"> 請輸入有效的 IP 格式 </small>
-        </div>
-        <div class="col-12 md:col-4">
           <app-input-text label="中信紅利刷卡機端末機代碼" controlName="EDC_TmID4" [control]="dataForm.controls.EDC_TmID4"
             [submitted]="submitted"></app-input-text>
         </div>
@@ -93,16 +73,6 @@
         <!-- ========================================== -->
         <!-- 第 5 組：中信銀聯刷卡機 -->
         <!-- ========================================== -->
-        <div class="col-12 md:col-4">
-          <app-dropdown label="中信銀聯刷卡機狀態" controlName="EDC_Status5" [options]="EDC_Status_Option" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.EDC_Status5" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-4">
-          <app-input-text label="中信銀聯刷卡機IP" controlName="EDC_IP5" [control]="dataForm.controls.EDC_IP5"
-            [submitted]="submitted"></app-input-text>
-          <small *ngIf="dataForm.get('EDC_IP5')?.errors?.['pattern'] && dataForm.get('EDC_IP5')?.touched"
-            class="p-error"> 請輸入有效的 IP 格式 </small>
-        </div>
         <div class="col-12 md:col-4">
           <app-input-text label="中信銀聯刷卡機端末機代碼" controlName="EDC_TmID5" [control]="dataForm.controls.EDC_TmID5"
             [submitted]="submitted"></app-input-text>

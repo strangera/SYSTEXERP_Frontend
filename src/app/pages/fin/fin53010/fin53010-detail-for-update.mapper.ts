@@ -14,9 +14,8 @@ import type {
 
 function parseYmdToDate(s: string | null | undefined): Date | null {
   if (s == null || String(s).trim() === '') return null;
-  const t = Date.parse(String(s).slice(0, 10));
-  if (Number.isNaN(t)) return null;
-  return new Date(t);
+  const d = new Date(String(s));
+  return isNaN(d.getTime()) ? null : d;
 }
 
 /** DeclareYM / RepYYYYMM 等 yyyyMM */
@@ -135,7 +134,8 @@ export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseI
     invoice_no: invoiceNo || undefined,
     invoice_date: parseYmdToDate(row.PUR_GUIDate ?? undefined),
     declare_ym: parseYyyyMmToMonthDate(row.PUR_RepYYYYMM ?? undefined),
-    vendor_tax_id: row.PUR_VenNo ?? undefined,
+    vendor_tax_id: row.PUR_VenUniform ?? undefined,
+    ven_no: row.PUR_VenNo ?? undefined,
     invoice_usage: row.PUR_DirectType ?? undefined,
     invoice_amount: row.PUR_Amt ?? undefined,
     tax_type: row.PUR_TaxType ?? undefined,

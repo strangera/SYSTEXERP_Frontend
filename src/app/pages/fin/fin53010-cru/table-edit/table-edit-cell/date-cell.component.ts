@@ -68,15 +68,17 @@ export class DateCellComponent {
   }
 
   handleBlur() {
+    const val = this.cellInput.rowData[this.cellInput.col.field];
+    console.log('[DateCell handleBlur]', this.cellInput.col.field, val);
     this.cellInput.col.onBlur?.(
       this.cellInput.rowData,
-      this.cellInput.rowData[this.cellInput.col.field],
+      val,
       this.cellInput.col,
       this.cellInput.index
     );
     this.cellInput.onValueChange(
       this.cellInput.rowData,
-      this.cellInput.rowData[this.cellInput.col.field],
+      val,
       this.cellInput.col,
       this.cellInput.index
     );

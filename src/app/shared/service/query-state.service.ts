@@ -1,9 +1,8 @@
-// 將狀態記錄在此服務
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class QueryStateService {
-  private queryStates = new Map<string, BehaviorSubject<any>>();
+  private readonly queryStates = new Map<string, BehaviorSubject<any>>();
   // 設置查詢條件
   setQueryState(key: string, value: any) {
     if (!this.queryStates.has(key)) {
@@ -32,5 +31,9 @@ export class QueryStateService {
   // 清除特定查詢條件
   clearQueryState(key: string) { this.queryStates.get(key)?.next(null); }
   // 清除所有查詢條件
-  clearAllQueryStates() { this.queryStates.forEach(subject => subject.next(null)) }
+  clearAllQueryStates() {
+    for (const [, subject] of this.queryStates) {
+      subject.next(null);
+    }
+  }
 }
