@@ -168,6 +168,11 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
       this.originalRemainingAmt = d.Total_Amt != null ? Math.round(Number(d.Total_Amt)) : null;
       this.originalHistoryAmt = d.Total_hitory_PUR_Amt != null ? Math.round(Number(d.Total_hitory_PUR_Amt)) : 0;
 
+      // Read / Edit 模式：顯示扣除當前筆後的實際剩餘；Edit 模式修改金額時再由 setupAmountRelations 基於 originalRemainingAmt 重算
+      const displayTotalAmt = d.Total_Amt != null && d.PUR_Amt != null
+        ? Math.round(Number(d.Total_Amt) - Number(d.PUR_Amt))
+        : (d.Total_Amt ?? null);
+
       this.dataForm.patchValue({
         id: d.id,
         TXN_Ret_No: d.TXN_Ret_No ?? '系統自動帶入',
@@ -186,7 +191,7 @@ export class FIN13010CRUComponent extends BasicCruPageComponent<any> {
         PUR_Tax: d.PUR_Tax ?? null,
         PUR_Amt: d.PUR_Amt ?? null,
         Total_hitory_PUR_Amt: d.Total_hitory_PUR_Amt ?? null,
-        Total_Amt: d.Total_Amt ?? null,
+        Total_Amt: displayTotalAmt,
         Source_Doc_No: d.Source_Doc_No ?? null,
         Voucher_No: d.Voucher_No ?? null,
       }, { emitEvent: false });
