@@ -185,5 +185,8 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
     }
   }
 
-
+  onAccNoFromChange(value: any) {
+    // 將 科目代號迄 的值設定跟 科目代號起 一樣
+    this.queryForm.patchValue({ AccNoTo: value });
+  }
 }
