@@ -24,10 +24,15 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 export class CPM12020CRUComponent extends BasicCruPageComponent<CPM12020Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     ID: [null],
+    CLASS_ID: [{ value: null as string | null, disabled: true }],
     ORG_ID: [null as string | null, [Validators.required]],
     ORG_NAME: [{ value: null, disabled: true }],
     CLASS_CODE: ['00'],
     CLASS_NAME: [null as string | null, [Validators.required, Validators.maxLength(40)]],
+    CRT_Date: [{ value: null as string | null, disabled: true }],
+    CRT_USR_Name: [{ value: null as string | null, disabled: true }],
+    UPD_Date: [{ value: null as string | null, disabled: true }],
+    UPD_USR_Name: [{ value: null as string | null, disabled: true }],
   });
   CLASS_CODEOptions = getSYS1000Options('T211')
   ORG_IDOptions$ = this.dropdown.querySys3100();
@@ -41,6 +46,18 @@ export class CPM12020CRUComponent extends BasicCruPageComponent<CPM12020Response
   ngOnInit(): void {
     this.initializePage('CPM12020', this.dataForm);
     this.handleValueChanges();
+
+    // 新增模式：預設建立日期 = 今天、建立人員 = 目前使用者
+    if (this.isFormCreateable) {
+      const today = this.now;
+      const formatted = `${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
+      this.dataForm.controls.CRT_Date.patchValue(formatted, { emitEvent: false });
+      this.dataForm.controls.CRT_USR_Name.patchValue(this.user.user_Name, { emitEvent: false });
+    }
+
+    // 格式化日期欄位
+    this.formatDateControl(this.dataForm.controls.CRT_Date);
+    this.formatDateControl(this.dataForm.controls.UPD_Date);
 
     // 針對「編輯模式」的補強：如果 ID 有值，代表是編輯，手動帶入一次名稱
     const currentOrgId = this.dataForm.controls.ORG_ID.value;
@@ -69,6 +86,16 @@ export class CPM12020CRUComponent extends BasicCruPageComponent<CPM12020Response
             this.dataForm.controls.ORG_NAME.patchValue(selectedOrg['Name'], { emitEvent: false });
           }
         });
+
+        // 新增模式：ORG_ID 改變時呼叫 queryCPM12020 帶入 CLASS_ID
+        if (this.isFormCreateable) {
+          this.cpm12020Service.queryCPM12020({ ORG_ID: val })
+            .pipe(take(1))
+            .subscribe(res => {
+              const classId = res?.Data?.[0]?.CLASS_ID ?? null;
+              this.dataForm.controls.CLASS_ID.patchValue(classId, { emitEvent: false });
+            });
+        }
       });
 
     // 2. 監聽 ORG_ID 與 CLASS_CODE：自動組合成 CLASS_NAME
@@ -100,6 +127,14 @@ export class CPM12020CRUComponent extends BasicCruPageComponent<CPM12020Response
         });
       });
   }
+  private formatDateControl(control: { value: string | null; patchValue: (v: string | null, opts?: { emitEvent?: boolean }) => void }) {
+    if (!control.value) return;
+    const d = new Date(control.value);
+    if (isNaN(d.getTime())) return;
+    const formatted = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`;
+    control.patchValue(formatted, { emitEvent: false });
+  }
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const params = {
