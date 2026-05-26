@@ -17,6 +17,7 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
+import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -56,8 +57,8 @@ import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 // 各時段之樓層營業報表
 export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    // TxnDate: [yesterday, [Validators.required]],//交易日期_起
-    TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
+    TxnDate: [yesterday, [Validators.required]],//交易日期_起
+    // TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
     TimeMode: ['A'],// 時段模式：'A'=全時段(預設)，'T'=依範圍 (全時段不用帶TimeFromHH、TimeToHH)
     TimeFromHH: [null, [Validators.min(0), Validators.max(23)]],// 起始小時 (0~23)，當 TimeMode='T' 時生效
     TimeToHH: [null, [Validators.min(0), Validators.max(23)]],// 結束小時 (0~23)，當 TimeMode='T' 時生效
@@ -115,6 +116,10 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
     { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
     { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
+
+    // 營業實績總計
+    { field: 'TotalCount', header: '交易筆數', visible: true, format: formatAmount, align: 'right' },
+    // { field: 'TotalPage', header: '總頁數', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
@@ -315,11 +320,11 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
       this.tls31080Service.queryTLS31080(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data.Data ?? [];               // 查詢資料
         this.footerData = {
-          floor_desc: '',
+          floor_desc: '營業實績',
           TimeType: '',
 
-          TotalCount: res.Data.TotalData.TotalTxnCount ?? 0,
-          Subtotal: res.Data.TotalData.TotalSales ?? 0,
+          TotalCount: res.Data.TotalData.TotalTxnCount ?? 0, // 交易筆數總計
+          Subtotal: res.Data.TotalData.TotalSales ?? 0, // 營業實績總計
           Reentry: res.Data.TotalData.TotalReentry ?? 0,
           PreOrderAmt: res.Data.TotalData.TotalPreOrderAmt ?? 0,
           PresaleCheckout: res.Data.TotalData.TotalPresaleCheckout ?? 0,
