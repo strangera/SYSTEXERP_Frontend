@@ -56,11 +56,14 @@ export class TLS46050Component extends BasicQueryPageComponent<Tls46050Response>
   // 依據有星號的欄位順序排列，並加入日期、金額格式化與顏色切換樣式
   columns: ReportColumn[] = [
     { field: 'ECR_No', header: '收銀機號' },
+    { field: 'ECR_Name', header: '收銀機名稱' },
+    { field: 'ECR_TLT_No', header: '專櫃編號' },
+    { field: 'ECR_TLT_Name', header: '櫃位名稱' },
     { field: 'EOS_IP', header: '收銀機IP' },
     { field: 'EOS_Class', header: '班別' },
     { field: 'EOS_Status', header: '收銀機即時狀態' }, // 0=暫停交易、1=登出、3=交易中、5=關機
-    { field: 'TLT_No', header: '機台所屬專櫃編號' },
-    { field: 'TLT_Name', header: '機台所屬專櫃名稱' },
+    { field: 'TLT_No', header: '機台所屬專櫃編號', visible: false },
+    { field: 'TLT_Name', header: '機台所屬專櫃名稱', visible: false },
     { field: 'USR_No', header: '作業中的收銀員代碼' },
     { field: 'EOS_FreeGUIQty', header: '機台剩餘可開立發票張數', format: (val) => formatAmount2(val) },
     { field: 'EOS_Type', header: '機台類型' }, // 1=統收、2=自收、5=離線、7=虛擬、OT=它社
@@ -218,10 +221,6 @@ export class TLS46050Component extends BasicQueryPageComponent<Tls46050Response>
       format: (val) => formatAmount2(val),
       cellClass: (row) => this.getComCheckClass(row.EOS_ElecPayCheck)
     },
-
-    // 依需求最後加在最末尾的兩個原始設定關聯欄位
-    { field: 'ECR_GrpNo', header: '機台群組編號' },
-    { field: 'ECR_GrpName', header: '機台群組名稱' }
   ];
 
   constructor(

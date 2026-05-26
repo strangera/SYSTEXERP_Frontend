@@ -108,7 +108,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     VoucherType: new FormControl<string>('GL', [Validators.required]),
     VouDate: new FormControl<Date>(new Date, [Validators.required]),
     Remark: new FormControl<string | void>(void 0, [Validators.maxLength(100)]),
-    INV_YN: new FormControl<'N' | 'Y'>('N', [Validators.required]),
+    INV_YN: new FormControl<'N' | 'Y'>('Y', [Validators.required]),
     /** ROC/IFRS 0:ROC 1:IFRS null:全部 */
     VouAccType: new FormControl<'0' | '1' | void>('0', [Validators.required]),
     CRT_USR_No: new FormControl<string | void>(this.isFormCreateable ? this.user.user_No : void 0),
@@ -622,10 +622,10 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'invoice_date', header: '發票日期', textAlign: 'left', width: '10rem', type: 'date' },
     { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month', dateFormat: 'yy/mm' },
     { field: 'buyer_uniform', header: '買受人統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value' },
-    { field: 'total_amount', header: '發票總金額', type: 'inputNumber', textAlign: 'right' },
+    { field: 'total_amount', header: '發票總金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
-    { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber', textAlign: 'right' },
-    { field: 'tax_amount', header: '發票稅額', type: 'inputNumber', textAlign: 'right' },
+    { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
+    { field: 'tax_amount', header: '發票稅額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'source_doc_no', header: '憑證單號', type: 'input', textAlign: 'left' },
     { field: 'summary_count', header: '彙整單號', type: 'inputNumber', textAlign: 'left' },
     { field: 'asset_flag', header: '資產註記', type: 'dropdown', options: () => this.service.assetTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
@@ -639,13 +639,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'declare_ym', header: '申報年月', textAlign: 'left', width: '10rem', type: 'date', view: 'month', dateFormat: 'yy/mm' },
     { field: 'vendor_tax_id', header: '廠商統一編號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorUniformOptions(), optionLabel: 'label', optionValue: 'value' },
     { field: 'invoice_usage', header: '發票用途', type: 'dropdown', options: () => this.service.purDirectTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
-    { field: 'invoice_amount', header: '發票總金額', type: 'inputNumber', textAlign: 'right' },
+    { field: 'invoice_amount', header: '發票總金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'tax_type', header: '課稅別', type: 'dropdown', options: () => this.service.taxTypeOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
-    { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber', textAlign: 'right' },
-    { field: 'tax_amount', header: '發票稅額', type: 'inputNumber', textAlign: 'right' },
+    { field: 'net_amount', header: '發票未稅金額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
+    { field: 'tax_amount', header: '發票稅額', type: 'inputNumber', textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'deduction_code', header: '扣抵代號', type: 'dropdown', options: () => this.service.purDiscNoOptions(), optionLabel: 'label', optionValue: 'value', textAlign: 'left' },
     { field: 'category_type', header: '類別區分', type: 'dropdown', options: () => this.service.purTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true, textAlign: 'left' },
     { field: 'source_doc_no', header: '憑證單號', type: 'input', textAlign: 'left' },
+    { field: 'comb', header: '彙加註記', type: 'input', textAlign: 'left' },
     { field: 'total_count', header: '彙整張數', type: 'inputNumber', validate: [this.validatePURCombCnt], textAlign: 'right' },
   ];
 
@@ -1612,10 +1613,17 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       errorMessage: ['彙總張數不可為空']
     }
 
-    if (rowData['voucher_type'] === '26' || rowData['voucher_type'] === '27') {
-      if (value === '' || value === null || value === undefined) {
-        return invalidData
-      }
+    const vt = String(rowData['voucher_type'] ?? '').trim();
+    const invoiceNo = String(rowData['invoice_no'] ?? '').trim();
+    const isEmpty = value === '' || value === null || value === undefined;
+
+    // 格式為 26 或 27 時，彙總張數必填
+    if ((vt === '26' || vt === '27') && isEmpty) {
+      return invalidData;
+    }
+    // 格式為 22 或 25 且發票號碼為空白或 0000000000 時，彙總張數必填
+    if ((vt === '22' || vt === '25') && (invoiceNo === '' || invoiceNo === '0000000000') && isEmpty) {
+      return invalidData;
     }
 
     return validData
@@ -1678,6 +1686,14 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       return;
     }
 
+    // voucher_type 或 invoice_no 變更時重新計算彙加註記
+    if (f === 'voucher_type' || f === 'invoice_no') {
+      const vt = String(row.voucher_type ?? '').trim();
+      const no = String(row.invoice_no ?? '').trim();
+      const isSummary = (vt === '22' || vt === '25') && (no === '' || no === '0000000000');
+      event.rowData.comb = isSummary ? 'A' : '';
+    }
+
     if (f !== 'track_no' && f !== 'invoice_no') return;
     const prefix = String(row.track_no ?? '').trim();
     const no = String(row.invoice_no ?? '').trim();
@@ -1735,6 +1751,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       net_amount: d.PUR_Net,
       tax_amount: d.PUR_Tax,
       source_doc_no: d.Source_Doc_No ?? undefined,
+      comb: (() => {
+        const vt = String(d.InvoiceType ?? '').trim();
+        const invoiceNo = String(no ?? '').trim();
+        return (vt === '22' || vt === '25') && (invoiceNo === '' || invoiceNo === '0000000000') ? 'A' : '';
+      })(),
     };
   }
 

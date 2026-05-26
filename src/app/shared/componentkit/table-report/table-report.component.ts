@@ -355,11 +355,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         }
       }
     }
-    else {
-      if (this.selectedItems && this.selectedItems.length > 0) {
-        this.selectedItems = [...this.selectedItems];
-        this.cdr.detectChanges();
-      }
+    else if (this.selectedItems && this.selectedItems.length > 0) {
+      this.selectedItems = [...this.selectedItems];
+      this.cdr.detectChanges();
     }
     this.cdr.markForCheck();
   }
@@ -488,12 +486,12 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     const useFormatterForGroupKey = groupColumn?.format;
 
     for (const row of newData) {
-      const rawValue = row[this.groupRowsBy!];
+      const rawValue = row[this.groupRowsBy];
       let groupKey: string;
 
       if (useFormatterForGroupKey) {
         // 【已修正】使用欄位定義中的 format 函式來產生分組鍵
-        groupKey = String(groupColumn!.format!(rawValue) ?? '').trim() || 'UNKNOWN_GROUP';
+        groupKey = String(groupColumn.format!(rawValue) ?? '').trim() || 'UNKNOWN_GROUP';
       } else {
         // 【已修正】如果沒有 format 函式或找不到欄位定義，退回到安全轉換
         groupKey = String(rawValue ?? '').trim() || 'UNKNOWN_GROUP';
@@ -547,7 +545,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
 
     // 移除可能干擾的小寫/大寫重複項，並統一回傳小寫
     const { PageSize, PageIndex, ...rest } = body;
-    return { ...rest, pageSize, pageIndex };
+    return { ...rest, pageSize, pageIndex, PageSize, PageIndex };
   }
 
   getBtnLabel(btn: any, rowData: any): string {

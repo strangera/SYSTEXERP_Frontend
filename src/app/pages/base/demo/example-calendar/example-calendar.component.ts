@@ -1,18 +1,16 @@
 import { Component, OnInit } from '@angular/core';
-import { COMMON_IMPORTS } from '../demo-imports';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { FormGroup, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { FormGroup, Validators } from '@angular/forms';
 import { QueryYearMonthComponent } from '@shared/componentkit/query-year-month/query-year-month.component';
+import { COMMON_IMPORTS } from '../demo-imports';
 
 @Component({
   selector: 'app-example-calendar',
   standalone: true,
   imports: [
     COMMON_IMPORTS,
-    CalendarRangeQuickComponent,
     CalendarRangeComponent,
     CalendarComponent,
     QueryYearMonthComponent

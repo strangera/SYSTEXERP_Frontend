@@ -1,12 +1,9 @@
 import { Injectable } from '@angular/core';
 import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { formatDate } from '@shared/componentkit/table/table.model';
-// taiwan-id-validator
-// https://github.com/enylin/taiwan-id-validator
 @Injectable({
   providedIn: 'root',
 })
-//
 export class ValidationService {
   getValidatorErrorMessage(validatorName: string, validatorValue?: any) {
     const config: any = {
@@ -264,7 +261,7 @@ export class ValidationService {
   evenMonthValidator(control: { value: Date | null }): ValidationErrors | null {
     const value = control.value;
 
-    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+    if (value !== null && value instanceof Date && !Number.isNaN(value.getTime())) {
       const month = value.getMonth() + 1; // JS 月份是 0-based，要+1
       // 檢查是否為雙數月
       if (month % 2 !== 0) {

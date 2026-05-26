@@ -95,6 +95,7 @@ function mapStepApToInsert(
     VEN_Uniform: ven?.['VEN_Uniform'] == null ? undefined : String(ven['VEN_Uniform']),
     AccNo: row.acc_no,
     ACP_Amt: row.acp_amt,
+    VEN_PayType: row.ven_pay_type,
     VEN_BNK_No: row.ven_bnk_no,
     VEN_BankAccountNo: bank.VEN_BankAccountNo,
     VEN_AccountName: bank.VEN_AccountName,
@@ -134,7 +135,10 @@ function mapStepPurchaseToInsert2002(
   const purGuino = prefix && no ? `${prefix}${no}` : undefined;
   const ven = deps.getVendorOption(row.ven_no);
   const voucherType = String(row.voucher_type ?? '').trim();
-  const purComb = (voucherType === '26' || voucherType === '27') ? 'A' : undefined;
+  const invoiceNoStr = String(row.invoice_no ?? '').trim();
+  const isSummaryInvoice = (voucherType === '22' || voucherType === '25')
+    && (invoiceNoStr === '' || invoiceNoStr === '0000000000');
+  const purComb = isSummaryInvoice ? 'A' : undefined;
   const purVenUniform = row.vendor_tax_id ? String(row.vendor_tax_id).slice(0, 8) : undefined;
   return {
     PUR_GUINo: purGuino,

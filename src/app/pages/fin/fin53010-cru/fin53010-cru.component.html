@@ -156,7 +156,7 @@
 <div class="card">
   <p-panel header="進項發票" class="line-height-3 m-0">
     <app-table-edit #purchaseTableEdit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
-      [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'"
+      [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'" [defaultInsertData]="{ tax_type: '1' }"
       (dataChange)="onStepPurchaseDataChange($event)"
       (fieldChange)="onStepPurchaseInvoiceFieldChange($event)" [footerData]="stepPurchaseFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">

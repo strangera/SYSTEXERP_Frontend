@@ -7,7 +7,7 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 lg:col-8">
             <app-multi-select label="收銀機號/收銀機名稱/專櫃名稱" controlName="POS1002_List" [options]="ECRNoOptions | async"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.POS1002_List"
               [submitted]="submitted" (selectAllChange)="onEcrNoAllSelected($event)"> <!-- 新增監聽 -->
