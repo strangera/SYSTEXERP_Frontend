@@ -23,7 +23,7 @@ export class MultiLocationFilterComponent implements OnInit {
   floorControl!: FormControl;
   regionControl!: FormControl;
 
-  constructor(private multiLocationService: MultiLocationFilterService) { }
+  constructor(private readonly multiLocationService: MultiLocationFilterService) { }
 
   ngOnInit(): void {
     this.buildingControl = this.form.get('tlt_building') as FormControl;

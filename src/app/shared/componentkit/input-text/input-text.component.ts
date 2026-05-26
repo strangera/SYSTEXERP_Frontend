@@ -66,7 +66,7 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   private isComposing = false;
   atMaxLength = false;
 
-  constructor(private inputTextService: InputTextService) {
+  constructor(private readonly inputTextService: InputTextService) {
     super();
   }
 
@@ -152,17 +152,6 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
     }
 
     this.blurEvent.emit(value);
-  }
-
-  // 新增：處理即時補零（如果不想在失焦時補零）
-  private padZeroIfNeeded(value: string): string {
-    if (!this.autoPadZero || this.padOnBlur) return value;
-
-    // 如果值不為空且長度小於指定長度，補零
-    if (value && value.length > 0 && value.length < this.padLength) {
-      return value.padStart(this.padLength, '0');
-    }
-    return value;
   }
 
   // 新增：取得 input 的 CSS 類別

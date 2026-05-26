@@ -27,12 +27,12 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
   @Input() override label = '';
   @Input() override controlName = '';
   @Input() set options(value: any[] | null) {
-    if (value !== null) {
-      this.loading = false;
-      this._options = value;
-    } else {
+    if (value === null) {
       this.loading = true;
       this._options = [];
+    } else {
+      this.loading = false;
+      this._options = value;
     }
   };
   get options(): any[] { return this._options; }
