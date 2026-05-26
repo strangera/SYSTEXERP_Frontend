@@ -144,6 +144,7 @@ export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseI
     deduction_code: row.PUR_DiscNo ?? undefined,
     category_type: row.PUR_Type ?? undefined,
     source_doc_no: row.Source_Doc_No ?? undefined,
+    comb: row.PUR_Comb ?? undefined,
     total_count: row.PUR_Comb_Cnt ?? undefined,
   };
 }

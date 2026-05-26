@@ -141,6 +141,7 @@ export interface InsertAPS3001DataBody {
   VEN_Uniform?: string | null;
   AccNo?: string | null;
   ACP_Amt?: number | null;
+  VEN_PayType?: string | null;
   VEN_BNK_No?: string | null;
   VEN_BNK_BranchNo?: string | null;
   VEN_BankAccountNo?: string | null;
@@ -924,6 +925,8 @@ export interface FIN53010StepPurchaseInvoiceRow {
   deduction_code?: string;
   category_type?: string;
   source_doc_no?: string;
+  /** 彙加註記（自動計算：格式22/25且發票號空白或0000000000時為'A'） */
+  comb?: string;
   total_count?: number;
 }
 
