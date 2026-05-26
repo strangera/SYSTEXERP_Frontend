@@ -1,7 +1,6 @@
 import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
-import { UntilDestroy } from '@ngneat/until-destroy';
 import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
 import { InputGroupModule } from 'primeng/inputgroup';
@@ -9,7 +8,6 @@ import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { InputNumberInputEvent, InputNumberModule } from 'primeng/inputnumber';
 import { KeyFilterModule, KeyFilterPattern } from 'primeng/keyfilter';
 import { TooltipModule } from 'primeng/tooltip';
-@UntilDestroy()
 @Component({
   selector: 'app-input-number',
   templateUrl: './input-number.component.html',
