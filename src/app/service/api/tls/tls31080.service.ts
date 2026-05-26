@@ -71,6 +71,8 @@ export interface TLS31080DetailResponse {
   H22: number;
   H23: number;
   ReentryAmt: number;
+  PreOrderAmt: number;
+  PresaleCheckoutAmt: number,
   SubTotal: number;
 }
 

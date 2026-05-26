@@ -69,6 +69,7 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
   });
   totalRecords = 0;
   data: TLS31080DetailResponse[] = [];
+  footerData: any = null;
   historyRequestBody: any = null; //歷史查詢條件
   columns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃代號', visible: true, align: 'left' },
@@ -94,6 +95,7 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
     { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
 
     { field: 'ReentryAmt', header: '補登金額或筆數', visible: true, format: formatAmount, align: 'right' },
+    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
     { field: 'PresaleCheckoutAmt', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
     { field: 'SubTotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
   ];
@@ -199,7 +201,30 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
 
     this.tls31080Service.queryTLS31080Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       console.log('單時段之營業報表response', res.Data);
-      this.data = res.Data ?? [];               // 查詢資料
+      this.data = res.Data.QueryData ?? [];               // 查詢資料
+      this.footerData = {
+        H08: res.Data.TotalData.H08 ?? 0,
+        H09: res.Data.TotalData.H09 ?? 0,
+        H10: res.Data.TotalData.H10 ?? 0,
+        H11: res.Data.TotalData.H11 ?? 0,
+        H12: res.Data.TotalData.H12 ?? 0,
+        H13: res.Data.TotalData.H13 ?? 0,
+        H14: res.Data.TotalData.H14 ?? 0,
+        H15: res.Data.TotalData.H15 ?? 0,
+        H16: res.Data.TotalData.H16 ?? 0,
+        H17: res.Data.TotalData.H17 ?? 0,
+        H18: res.Data.TotalData.H18 ?? 0,
+        H19: res.Data.TotalData.H19 ?? 0,
+        H20: res.Data.TotalData.H20 ?? 0,
+        H21: res.Data.TotalData.H21 ?? 0,
+        H22: res.Data.TotalData.H22 ?? 0,
+        H23: res.Data.TotalData.H23 ?? 0,
+
+        ReentryAmt: res.Data.TotalData.ReentryAmt ?? 0,
+        PreOrderAmt: res.Data.TotalData.PreOrderAmt ?? 0,
+        PresaleCheckoutAmt: res.Data.TotalData.PresaleCheckoutAmt ?? 0,
+        SubTotal: res.Data.TotalData.SubTotal ?? 0,
+      }
       this.totalRecords = res.Data.length;      // 長度計算筆數
       this.historyRequestBody = request;        // 查詢條件
       this.loading = false;
