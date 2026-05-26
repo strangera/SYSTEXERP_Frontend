@@ -46,7 +46,7 @@ export interface TLS31080Response {
   PresaleCheckout: number,
   Subtotal: number;
   TotalCount: number;
-  TotalPage: number;
+  TotalPage?: number;
 }
 
 export interface TLS31080DetailResponse {
