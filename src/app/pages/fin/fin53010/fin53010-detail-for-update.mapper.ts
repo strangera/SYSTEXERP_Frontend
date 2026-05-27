@@ -157,6 +157,7 @@ export function mapAps4002RowToStepBank(row: APS4002): FIN53010StepBankDeposit {
     bank_no: row.BNK_id ?? undefined,
     deposit_amt: row.DAmt ?? undefined,
     withdraw_amt: row.CAmt ?? undefined,
+    status: row.Status ?? undefined,
     note_desc: row.Remark ?? undefined,
     txn_date: parseYmdToDate(row.Source_Date ?? undefined),
   };
