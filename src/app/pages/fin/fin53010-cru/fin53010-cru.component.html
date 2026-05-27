@@ -101,7 +101,7 @@
   <div class="grid p-fluid">
     <div class="col-12">
       <p-panel header="資料" [toggleable]="true" class="line-height-3 m-0 mb-3">
-        <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="!isFormReadable" [disabled]="isFormReadable"
+        <app-table-edit [showCheckBox]="!isFormReadable && !isPostedEdit" [showReorder]="!isFormReadable && !isPostedEdit" [disabled]="isFormReadable || isPostedEdit"
           (fieldChange)="onFieldChange($event)" (dataChange)="onDataChange($event)"
           (rowReorderData)="onRowReorder($event)" [data]="tableData()" [defaultInsertData]="defaultInsertData()"
           [footerData]="footerData()" [loading]="tableLoading()" [tableKey]="'FIN52030_detail'" [tableRequired]="true"
@@ -114,8 +114,8 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 3) {
 <div class="card">
   <p-panel header="應付帳款" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [canInsert]="false"
-      [showInsert]="!isFormReadable && stepAPTableCanInsert()" [data]="stepAPRows()" [columns]="stepAPColumns"
+    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable || isPostedEdit" [canInsert]="false"
+      [showInsert]="!isFormReadable && !isPostedEdit && stepAPTableCanInsert()" [data]="stepAPRows()" [columns]="stepAPColumns"
       [tableKey]="'FIN53010_step_ap'" (insert)="onInsertStepApRow()"
       (dataChange)="onStepAPDataChange($event)" [footerData]="stepAPFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
@@ -135,7 +135,7 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 4) {
 <div class="card">
   <p-panel header="應收帳款" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepARRows()"
+    <app-table-edit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable || isPostedEdit" [data]="stepARRows()"
       [columns]="stepARColumns" [tableKey]="'FIN53010_step_ar'"
       (dataChange)="onStepARDataChange($event)" [footerData]="stepARFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
@@ -155,8 +155,8 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 5) {
 <div class="card">
   <p-panel header="進項發票" class="line-height-3 m-0">
-    <app-table-edit #purchaseTableEdit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepPurchaseRows()"
-      [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'" [defaultInsertData]="{ tax_type: '1' }"
+    <app-table-edit #purchaseTableEdit [showCheckBox]="!isFormReadable && !isPostedEdit" [showReorder]="false" [disabled]="isFormReadable || isPostedEdit" [data]="stepPurchaseRows()"
+      [columns]="stepPurchaseColumns" [tableKey]="'FIN53010_step_purchase'" [defaultInsertData]="{ tax_type: '1', invoice_usage: '1', deduction_code: '1' }"
       (dataChange)="onStepPurchaseDataChange($event)"
       (fieldChange)="onStepPurchaseInvoiceFieldChange($event)" [footerData]="stepPurchaseFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
@@ -176,7 +176,7 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 6) {
 <div class="card">
   <p-panel header="銷項發票" class="line-height-3 m-0">
-    <app-table-edit [showCheckBox]="!isFormReadable" [showReorder]="false" [disabled]="isFormReadable" [data]="stepSalesRows()"
+    <app-table-edit [showCheckBox]="!isFormReadable && !isPostedEdit" [showReorder]="false" [disabled]="isFormReadable || isPostedEdit" [data]="stepSalesRows()"
       [columns]="stepSalesColumns" [tableKey]="'FIN53010_step_sales'" (dataChange)="onStepSalesDataChange($event)"
       (fieldChange)="onStepSalesInvoiceFieldChange($event)" [footerData]="stepSalesFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">
@@ -196,7 +196,7 @@
 @if ((isFormCreateable || isFormEditable) && currentStep() === 7) {
 <div class="card">
   <p-panel header="銀行存款" class="line-height-3 m-0">
-    <app-table-edit #bankTableEdit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable" [data]="stepBankRows()"
+    <app-table-edit #bankTableEdit [showCheckBox]="false" [showReorder]="false" [disabled]="isFormReadable || isPostedEdit" [data]="stepBankRows()"
       [columns]="stepBankColumns" [tableKey]="'FIN53010_step_bank'"
       (dataChange)="onStepBankDataChange($event)" [footerData]="stepBankFooter()"></app-table-edit>
     <div class="flex justify-content-between mt-3">

@@ -252,7 +252,7 @@ export function buildInsertFin53010Request(params: {
 }): InsertFIN53010Request {
   const { form, voucherTypePadded, tableData, activeVoucherSteps, deps } = params;
   const vouDate = form['VouDate'] instanceof Date ? form['VouDate'] : new Date();
-  const vouDateIso = vouDate.toISOString();
+  const vouDateIso = toYmd(vouDate, deps.datePipe) ?? vouDate.toISOString();
   const mergedDeps: Fin53010PayloadDepsWithVou = { ...deps, vouDate };
   const details = buildInsertDetails(tableData, { resolveNoteDesc: params.deps.resolveNoteDesc });
   const insertNext = buildInsertNext(
@@ -390,7 +390,7 @@ export function buildUpdateFin53010Request(params: {
 }): UpdateFIN53010Request {
   const { form, voucherTypePadded, tableData, activeVoucherSteps, masterId, deps } = params;
   const vouDate = form['VouDate'] instanceof Date ? form['VouDate'] : new Date();
-  const vouDateIso = vouDate.toISOString();
+  const vouDateIso = toYmd(vouDate, deps.datePipe) ?? vouDate.toISOString();
   const mergedDeps: Fin53010PayloadDepsWithVou = { ...deps, vouDate };
   const details = buildUpdateDetails(tableData, { resolveNoteDesc: params.deps.resolveNoteDesc });
   const updateNext = buildUpdateNext(
