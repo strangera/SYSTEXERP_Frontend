@@ -1,0 +1,63 @@
+name: "CodeQL Security Scan"
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "30 2 * * *" # 每天凌晨 02:30
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 1. 設置 Node.js 環境 (為了 npm install)
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # 2. 設定 NPM 快取
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # 3. 安裝依賴
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+
+      # 4. 初始化 CodeQL
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+
+      # 5. 執行分析
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+      # 6. Discord 通知
+      - name: Notify Discord
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            MESSAGE="🛡️ [Security] 弱掃報告：安全檢查通過！\nRepo: ${{ github.repository }}"
+          else
+            MESSAGE="🚨 [Security] 弱掃報告：發現潛在漏洞！\nRepo: ${{ github.repository }}\n請檢查 GitHub Security 標籤頁。"
+          fi
+
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"$MESSAGE\"}" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
