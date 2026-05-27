@@ -72,7 +72,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   });
 
   columns = [
-    { field: 'PUR_VoucherType', header: '發票格式' },
+    { field: 'PUR_VoucherType', header: '發票格式', format: (v: string | number) => v },
     { field: 'PUR_GUINo', header: '發票號碼' },
     { field: 'PUR_GUIDate', header: '發票日期', format: formatYYYYMMDD },
     { field: 'PUR_GUIDate_YYYYMM', header: '資料所屬年月' },

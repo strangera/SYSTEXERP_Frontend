@@ -68,6 +68,7 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
   });
   totalRecords = 0;
   data: TLS31090DetailResponse[] = [];
+  footerData: any = null;
   historyRequestBody: any = null; //歷史查詢條件
   columns: ReportColumn[] = [
     { field: 'tlt_no', header: '專櫃代號', visible: true, align: 'left' },
@@ -75,6 +76,14 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
     { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
     { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
 
+    { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
@@ -92,9 +101,10 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
     { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
 
-    { field: 'ReentryAmt', header: '補登', visible: true },
-    { field: 'PresaleCheckoutAmt', header: '預售結帳', visible: true },
-    { field: 'SubTotal', header: '小計', visible: true },
+    { field: 'ReentryAmt', header: '補登', visible: true, format: formatAmount, align: 'right' },
+    { field: 'PresaleCheckoutAmt', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
+    { field: 'AVN_PreOrderAmt', header: '預售業績', visible: true, format: formatAmount, align: 'right' },
+    { field: 'SubTotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
@@ -200,8 +210,41 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
 
     this.tls31090Service.queryTLS31090Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       console.log('各時段之大分類營業報表response', res.Data);
-      this.data = res.Data ?? [];               // 查詢資料
-      this.totalRecords = res.Data.length;      // 長度計算筆數
+      this.data = res.Data.Data ?? [];               // 查詢資料
+      this.footerData = {
+        BusTypeName: '',
+        TimeType: '',
+        H00: res.Data.TotalData?.H00 ?? 0,
+        H01: res.Data.TotalData?.H01 ?? 0,
+        H02: res.Data.TotalData?.H02 ?? 0,
+        H03: res.Data.TotalData?.H03 ?? 0,
+        H04: res.Data.TotalData?.H04 ?? 0,
+        H05: res.Data.TotalData?.H05 ?? 0,
+        H06: res.Data.TotalData?.H06 ?? 0,
+        H07: res.Data.TotalData?.H07 ?? 0,
+        H08: res.Data.TotalData?.H08 ?? 0,
+        H09: res.Data.TotalData?.H09 ?? 0,
+        H10: res.Data.TotalData?.H10 ?? 0,
+        H11: res.Data.TotalData?.H11 ?? 0,
+        H12: res.Data.TotalData?.H12 ?? 0,
+        H13: res.Data.TotalData?.H13 ?? 0,
+        H14: res.Data.TotalData?.H14 ?? 0,
+        H15: res.Data.TotalData?.H15 ?? 0,
+        H16: res.Data.TotalData?.H16 ?? 0,
+        H17: res.Data.TotalData?.H17 ?? 0,
+        H18: res.Data.TotalData?.H18 ?? 0,
+        H19: res.Data.TotalData?.H19 ?? 0,
+        H20: res.Data.TotalData?.H20 ?? 0,
+        H21: res.Data.TotalData?.H21 ?? 0,
+        H22: res.Data.TotalData?.H22 ?? 0,
+        H23: res.Data.TotalData?.H23 ?? 0,
+
+        ReentryAmt: res.Data.TotalData?.Reentry ?? 0, // 補登總計
+        PresaleCheckoutAmt: res.Data.TotalData?.PresaleCheckout ?? 0, // 預售結帳總計
+        SubTotal: res.Data.TotalData?.Sales ?? 0, // 營業實績總計
+        AVN_PreOrderAmt: res.Data.TotalData?.AVN_PreOrderAmt ?? 0, // 預售實績總計
+      };
+      this.totalRecords = res.Data.Data?.length ?? 0;      // 長度計算筆數
       this.historyRequestBody = request;        // 查詢條件
       this.loading = false;
     })

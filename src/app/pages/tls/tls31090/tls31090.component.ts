@@ -58,6 +58,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
   queryForm = this.formBuilder.nonNullable.group({
     TxnDate: [yesterday, [Validators.required]],//交易日期_起
+    // TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
     TimeMode: ['A'],// 時段模式：'A'=全時段(預設)，'T'=依範圍 (全時段不用帶TimeFromHH、TimeToHH)
     TimeFromHH: [null, [Validators.min(0), Validators.max(23)]],// 起始小時 (0~23)，當 TimeMode='T' 時生效
     TimeToHH: [null, [Validators.min(0), Validators.max(23)]],// 結束小時 (0~23)，當 TimeMode='T' 時生效
@@ -85,6 +86,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
   totalRecords = 0;
   data: TLS31090Response[] = [];
+  footerData: TLS31090Response | null = null;
   historyRequestBody: TLS31090Request | null = null; //歷史查詢條件
 
   btnPDFLoading = false;
@@ -94,6 +96,14 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     { field: 'BusTypeName', header: '大分類名稱', visible: true, align: 'left' },
     { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
 
+    { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
@@ -111,9 +121,9 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'Reentry', header: '補登', visible: true, format: formatAmount, align: 'right' },
+    { field: 'AVN_PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
     { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
     { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
-    { field: 'AVN_PreOrderAmt', header: '預售業績', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
@@ -314,8 +324,41 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
       console.log('送出request請求', formValue);
       this.tls31090Service.queryTLS31090(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data ?? [];               // 查詢資料
-        this.totalRecords = res.Data.length;      // 長度計算筆數
+        this.data = res.Data.Data ?? [];               // 查詢資料
+        this.footerData = {
+          BusTypeName: '營業實績',
+          TimeType: '',
+          H00: res.Data.TotalData?.TotalH00 ?? 0,
+          H01: res.Data.TotalData?.TotalH01 ?? 0,
+          H02: res.Data.TotalData?.TotalH02 ?? 0,
+          H03: res.Data.TotalData?.TotalH03 ?? 0,
+          H04: res.Data.TotalData?.TotalH04 ?? 0,
+          H05: res.Data.TotalData?.TotalH05 ?? 0,
+          H06: res.Data.TotalData?.TotalH06 ?? 0,
+          H07: res.Data.TotalData?.TotalH07 ?? 0,
+          H08: res.Data.TotalData?.TotalH08 ?? 0,
+          H09: res.Data.TotalData?.TotalH09 ?? 0,
+          H10: res.Data.TotalData?.TotalH10 ?? 0,
+          H11: res.Data.TotalData?.TotalH11 ?? 0,
+          H12: res.Data.TotalData?.TotalH12 ?? 0,
+          H13: res.Data.TotalData?.TotalH13 ?? 0,
+          H14: res.Data.TotalData?.TotalH14 ?? 0,
+          H15: res.Data.TotalData?.TotalH15 ?? 0,
+          H16: res.Data.TotalData?.TotalH16 ?? 0,
+          H17: res.Data.TotalData?.TotalH17 ?? 0,
+          H18: res.Data.TotalData?.TotalH18 ?? 0,
+          H19: res.Data.TotalData?.TotalH19 ?? 0,
+          H20: res.Data.TotalData?.TotalH20 ?? 0,
+          H21: res.Data.TotalData?.TotalH21 ?? 0,
+          H22: res.Data.TotalData?.TotalH22 ?? 0,
+          H23: res.Data.TotalData?.TotalH23 ?? 0,
+
+          Reentry: res.Data.TotalData?.TotalReentry ?? 0, // 補登總計
+          PresaleCheckout: res.Data.TotalData?.TotalPresaleCheckout ?? 0, // 預售結帳總計
+          Subtotal: res.Data.TotalData?.TotalSales ?? 0, // 營業實績總計
+          AVN_PreOrderAmt: res.Data.TotalData?.TotalPreOrderAmt ?? 0, // 預售實績總計
+        };
+        this.totalRecords = res.Data.Data.length;      // 長度計算筆數
         console.log('查詢結果', res.Data ?? []);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })

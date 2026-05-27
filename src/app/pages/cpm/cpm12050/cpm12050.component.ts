@@ -50,8 +50,8 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     STATUS: [null],                                     // 處理狀況
     KIND_ID: [null],                                    // 意見類型
     SUGG_SOURCE: [null],                                // 建議來源
-    CONTACT_TEL: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(30)]], // 聯絡電話
-    CELL_PHONE: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(30)]],  // 手機號碼
+    CONTACT_TEL: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(20)]], // 聯絡電話
+    CELL_PHONE: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(10)]],  // 手機號碼
     E_MAIL: [null, [this.validationService.emailValidator, Validators.maxLength(100)]],           // Email
     COMPLAIN_NOTES: [null, Validators.maxLength(1000)], // 顧客意見內容
     ORG_ID: [null],                                     // 組織

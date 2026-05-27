@@ -203,6 +203,14 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
       console.log('單時段之營業報表response', res.Data);
       this.data = res.Data.QueryData ?? [];               // 查詢資料
       this.footerData = {
+        H00: res.Data.TotalData.H00 ?? 0,
+        H01: res.Data.TotalData.H01 ?? 0,
+        H02: res.Data.TotalData.H02 ?? 0,
+        H03: res.Data.TotalData.H03 ?? 0,
+        H04: res.Data.TotalData.H04 ?? 0,
+        H05: res.Data.TotalData.H05 ?? 0,
+        H06: res.Data.TotalData.H06 ?? 0,
+        H07: res.Data.TotalData.H07 ?? 0,
         H08: res.Data.TotalData.H08 ?? 0,
         H09: res.Data.TotalData.H09 ?? 0,
         H10: res.Data.TotalData.H10 ?? 0,
@@ -225,7 +233,7 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
         PresaleCheckoutAmt: res.Data.TotalData.PresaleCheckoutAmt ?? 0,
         SubTotal: res.Data.TotalData.SubTotal ?? 0,
       }
-      this.totalRecords = res.Data.length;      // 長度計算筆數
+      this.totalRecords = res.Data.QueryData.length;      // 長度計算筆數
       this.historyRequestBody = request;        // 查詢條件
       this.loading = false;
     })
