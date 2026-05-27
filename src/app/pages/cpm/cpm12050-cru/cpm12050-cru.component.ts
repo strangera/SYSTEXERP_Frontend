@@ -78,8 +78,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     CUST_NAME: [null, Validators.maxLength(20)],                                  // 客戶姓名
     SEX: [null],                                                                  // 性別
     CONTACT_ADDR: [null],                                                         // 聯絡地址
-    CONTACT_TEL: [null, Validators.maxLength(30)],                                // 聯絡電話
-    CELL_PHONE: [null, [Validators.maxLength(30), this.cellPhoneValidator]],       // 手機號碼
+    CONTACT_TEL: [null, Validators.maxLength(20)],                                // 聯絡電話
+    CELL_PHONE: [null, [Validators.maxLength(10), this.cellPhoneValidator]],       // 手機號碼
     E_MAIL: [null, [Validators.email, Validators.maxLength(100)]],                // Email
     // SUGG_SOURCE_OTHER: [null, Validators.required],                               // 其他建議來源
     MEMBER_ID: [null],                                                            // 會員編號
