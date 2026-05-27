@@ -44,7 +44,11 @@ export class TLS46050Component extends BasicQueryPageComponent<Tls46050Response>
     ECR_GrpNos: [null],   // DropDown
     PageSize: [30],
     PageIndex: [1],
-    SortBy: [[{ field: 'ECR_No', order: 1 }]],
+    SortBy: [[{ field: 'ECR_Group', order: 1 },
+    { field: 'FloorDesc', order: 1 },
+    { field: 'ECR_AreaNo', order: 1 },
+    { field: 'ECR_LocNo', order: 1 },
+    { field: 'ECR_No', order: 1 }]],
   }, { validators: this.validation.textRangeValidator('ECR_No_Start', 'ECR_No_End') });
 
   totalRecords = 0;
@@ -57,9 +61,16 @@ export class TLS46050Component extends BasicQueryPageComponent<Tls46050Response>
   columns: ReportColumn[] = [
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'ECR_Name', header: '收銀機名稱' },
+    { field: 'ECR_TypeName', header: '機台類型' },
+    { field: 'ECR_Group', header: '館別' },
+    { field: 'FloorDesc', header: '樓層' },
+    { field: 'ECR_AreaNo', header: '區域' },
+    { field: 'ECR_LocNo', header: '位置' },
     { field: 'ECR_TLT_No', header: '專櫃編號' },
     { field: 'ECR_TLT_Name', header: '櫃位名稱' },
-    { field: 'EOS_IP', header: '收銀機IP' },
+    { field: 'ECR_IP', header: '收銀機IP' },
+    { field: 'ECR_SrvIP', header: '後台主機IP' },
+    { field: 'EOS_IP', header: '回傳IP' },
     { field: 'EOS_Class', header: '班別' },
     { field: 'EOS_Status', header: '收銀機即時狀態' }, // 0=暫停交易、1=登出、3=交易中、5=關機
     { field: 'TLT_No', header: '機台所屬專櫃編號', visible: false },
