@@ -50,22 +50,22 @@
             <div class="col-12 md:col-6">
               <app-dropdown
                 [showLabel]="false"
-                controlName="EMP_ID"
-                [options]="EMP_ID()"
+                controlName="EMP_ORG_ID"
+                [options]="EMP_ORG_ID()"
                 optionLabel="label"
                 optionValue="value"
-                [control]="dataForm.controls.EMP_ID"
+                [control]="dataForm.controls.EMP_ORG_ID"
                 [submitted]="submitted"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6">
               <app-dropdown
                 [showLabel]="false"
-                controlName="EMP_NAME"
-                [options]="EMP_NAME()"
+                controlName="EMP_ID"
+                [options]="EMP_ID()"
                 optionLabel="label"
                 optionValue="value"
-                [control]="dataForm.controls.EMP_NAME"
+                [control]="dataForm.controls.EMP_ID"
                 [submitted]="submitted"
               ></app-dropdown>
             </div>
@@ -80,22 +80,22 @@
             <div class="col-12 md:col-6">
               <app-dropdown
                 [showLabel]="false"
-                controlName="EMP_ID2"
-                [options]="EMP_ID2()"
+                controlName="EMP_ORG_ID2"
+                [options]="EMP_ORG_ID2()"
                 optionLabel="label"
                 optionValue="value"
-                [control]="dataForm.controls.EMP_ID2"
+                [control]="dataForm.controls.EMP_ORG_ID2"
                 [submitted]="submitted"
               ></app-dropdown>
             </div>
             <div class="col-12 md:col-6">
               <app-dropdown
                 [showLabel]="false"
-                controlName="EMP_NAME2"
-                [options]="EMP_NAME2()"
+                controlName="EMP_ID2"
+                [options]="EMP_ID2()"
                 optionLabel="label"
                 optionValue="value"
-                [control]="dataForm.controls.EMP_NAME2"
+                [control]="dataForm.controls.EMP_ID2"
                 [submitted]="submitted"
               ></app-dropdown>
             </div>
@@ -150,8 +150,7 @@
         <div class="col-12">
           <app-table-report
             [data]="reportData"
-            dataKey="M_CLASS_ID"
-            tableKey="ASS16020_Data"
+            tableKey="ASS16020"
             [totalRecords]="totalRecords"
             [columns]="reportColumns"
             [footerData]="footerData"
@@ -160,6 +159,8 @@
             [showSort]="false"
             [showManage]="false"
             [footerLabelField]="'group_name'"
+            [subTotalData]="subTotalData"
+            [groupRowsBy]="groupRowsBy"
           >
             <header>
               <div class="flex justify-content-end align-items-center gap-2">

@@ -49,8 +49,12 @@ export interface QueryDetailASS16020Response {
     INV_STATUS_NAME: string;   // 盤點狀態名稱 (盤點中/登錄完成/已結案)
     EMP_ID: string;   // 初盤人員代碼
     EMP_NAME: string;     // 初盤人員名稱
+    EMP_ORG_ID: string;     // 初盤人員組織代碼
+    EMP_ORG_NAME: string;     // 初盤人員組織名稱
     EMP_ID2: string;   // 複盤人員代碼
     EMP_NAME2: string;     // 複盤人員名稱
+    EMP_ORG_ID2: string;     // 複盤人員組織代碼
+    EMP_ORG_NAME2: string;     // 複盤人員組織名稱
     NOTES: string;   // 說明
     Details: QueryDetailASS16020Detail[];   // 明細資料
 }
@@ -165,6 +169,7 @@ export interface PrintASS16020Response {
     SurplusCount: number; // 盤盈項數
     LossCount: number; // 盤損項數
     TotalDiffAmt: number; // 總差異金額
+    NOTES: string; // 說明
     Details: ASS16020ReportData[]; // 明細
 }
 
@@ -185,6 +190,8 @@ export interface ASS16020ReportData {
     InvAmt: number;     // 盤點金額 (差異報表用)
     DIFF_QTY: number;     // 差異數量
     DIFF_AMT: number;     // 差異金額
+    RowType: number;     // 0=明細 1=小計
+    RowTypeDesc: string;     // 列類型說明 明細/小計
 }
 
 export interface ASS16020Request {

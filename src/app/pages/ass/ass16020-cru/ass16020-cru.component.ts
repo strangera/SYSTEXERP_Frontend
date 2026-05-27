@@ -49,10 +49,10 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
         INV_ID: [{ value: '', disabled: true }],    // 盤點單號
         SInventoryDate: [{ value: '', disabled: true }],   // 盤點日期(起)
         EInventoryDate: [{ value: '', disabled: true }],   // 盤點日期(迄)
-        EMP_ID: ['', [Validators.required, Validators.maxLength(60)]],    // 初盤組織
-        EMP_NAME: ['', [Validators.required, Validators.maxLength(60)]],    // 初盤人員
-        EMP_ID2: ['', [Validators.required, Validators.maxLength(60)]],   // 複盤組織
-        EMP_NAME2: ['', [Validators.required, Validators.maxLength(60)]],   // 複盤人員
+        EMP_ORG_ID: ['', [Validators.required, Validators.maxLength(60)]],    // 初盤組織
+        EMP_ID: ['', [Validators.required, Validators.maxLength(60)]],    // 初盤人員
+        EMP_ORG_ID2: ['', [Validators.required, Validators.maxLength(60)]],   // 複盤組織
+        EMP_ID2: ['', [Validators.required, Validators.maxLength(60)]],   // 複盤人員
         NOTES: [''],    // 說明
     });
 
@@ -78,6 +78,9 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
     reportData: ASS16020ReportData[] = [];
     reportRequest: ASS16020ReportRequest = { INV_ID: '' };
     lastPrintQueryBody: PrintASS16020Request | null = null;
+
+    subTotalData: any[] = [];
+    groupRowsBy = 'ASSGroupKey'; // 分組欄位
 
     footerData: any[] = [];
     group_name = [{ group_name: '' }];
@@ -133,15 +136,15 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
         const mode = history.state.mode;
 
         // 監聽 組織 的變化，更新對應的 人員 選項
-        this.dataForm.get('EMP_ID')?.valueChanges.subscribe(orgId => {
-            this.dataForm.get('EMP_NAME')?.setValue("");
+        this.dataForm.get('EMP_ORG_ID')?.valueChanges.subscribe(orgId => {
+            this.dataForm.get('EMP_ID')?.setValue("");
             const filteredEmployees = this.filterEmployeesByOrg(orgId);
-            this.EMP_NAME.set(filteredEmployees);
+            this.EMP_ID.set(filteredEmployees);
         });
-        this.dataForm.get('EMP_ID2')?.valueChanges.subscribe(orgId => {
-            this.dataForm.get('EMP_NAME2')?.setValue("");
+        this.dataForm.get('EMP_ORG_ID2')?.valueChanges.subscribe(orgId => {
+            this.dataForm.get('EMP_ID2')?.setValue("");
             const filteredEmployees = this.filterEmployeesByOrg(orgId);
-            this.EMP_NAME2.set(filteredEmployees);
+            this.EMP_ID2.set(filteredEmployees);
         });
 
 
@@ -158,10 +161,12 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
                         INV_ID: response.Data.INV_ID,
                         SInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
                         EInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
+                        EMP_ORG_ID: response.Data.EMP_ORG_ID,
                         EMP_ID: response.Data.EMP_ID,
-                        EMP_NAME: response.Data.EMP_NAME,
+                        // EMP_NAME: response.Data.EMP_NAME,
+                        EMP_ORG_ID2: response.Data.EMP_ORG_ID2,
                         EMP_ID2: response.Data.EMP_ID2,
-                        EMP_NAME2: response.Data.EMP_NAME2,
+                        // EMP_NAME2: response.Data.EMP_NAME2,
                         NOTES: response.Data.NOTES
                     });
                     this.data = response.Data.Details;
@@ -180,10 +185,12 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
                         INV_ID: response.Data.INV_ID,
                         SInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
                         EInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
+                        EMP_ORG_ID: response.Data.EMP_ORG_ID,
                         EMP_ID: response.Data.EMP_ID,
-                        EMP_NAME: response.Data.EMP_ID,
+                        // EMP_NAME: response.Data.EMP_NAME,
+                        EMP_ORG_ID2: response.Data.EMP_ORG_ID2,
                         EMP_ID2: response.Data.EMP_ID2,
-                        EMP_NAME2: response.Data.EMP_ID2,
+                        // EMP_NAME2: response.Data.EMP_NAME2,
                         NOTES: response.Data.NOTES
                     });
                     this.data = response.Data.Details;
@@ -209,28 +216,46 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
                             this.messageService.errorBubble(response.Data.ErrMsg || '查詢報表失敗');
                         }
                         else {
-                            this.reportData = response.Data.Details;
+                            const mappedDetails = response.Data.Details.map(item => ({
+                                ...item,
+                                ASSGroupKey: [
+                                    item.B_CLASS_ID?.trim(),
+                                    item.M_CLASS_ID?.trim(),
+                                    item.S_CLASS_ID?.trim(),
+                                ].join('_')
+                            }));
+
+                            console.log('mappedDetails', mappedDetails);
+
+                            this.subTotalData = mappedDetails.filter(item => item.RowType === 1);
+                            this.reportData = mappedDetails.filter(item => item.RowType === 0);
+
+                            // this.subTotalData = response.Data.Details.filter(item => item.RowType === 1); // 取出小計資料
+                            console.log('subTotalData', this.subTotalData);
+                            // this.reportData = response.Data.Details.filter(item => item.RowType === 0);
+                            console.log('reportData', this.reportData);
+
                             this.group_name = [
-                                { group_name: '小計' },
+                                // { group_name: '小計' },
                                 { group_name: '盤盈項數' },
                                 { group_name: '盤損項數' },
                                 { group_name: '總差異金額' },
-                                // { group_name: '說明' },
+                                { group_name: '說明' },
                             ]
 
                             // 計算小計
-                            const TotalQTY = response.Data.Details.reduce((total, item) => total + (item.QTY ?? 0), 0);
-                            const TotalFINE_QTY = response.Data.Details.reduce((total, item) => total + (item.FINE_QTY ?? 0), 0);
-                            const TotalDIFF_QTY = response.Data.Details.reduce((total, item) => total + (item.DIFF_QTY ?? 0), 0);
-                            const TotalAVER_AMT = response.Data.Details.reduce((total, item) => total + (item.AVER_AMT ?? 0), 0);
-                            const TotalDIFF_AMT = response.Data.Details.reduce((total, item) => total + (item.DIFF_AMT ?? 0), 0);
+                            // const TotalQTY = response.Data.Details.reduce((total, item) => total + (item.QTY ?? 0), 0);
+                            // const TotalFINE_QTY = response.Data.Details.reduce((total, item) => total + (item.FINE_QTY ?? 0), 0);
+                            // const TotalDIFF_QTY = response.Data.Details.reduce((total, item) => total + (item.DIFF_QTY ?? 0), 0);
+                            // const TotalAVER_AMT = response.Data.Details.reduce((total, item) => total + (item.AVER_AMT ?? 0), 0);
+                            // const TotalDIFF_AMT = response.Data.Details.reduce((total, item) => total + (item.DIFF_AMT ?? 0), 0);
 
                             this.footerData = [
-                                { group_name: '小計', QTY: TotalQTY, FINE_QTY: TotalFINE_QTY, DIFF_QTY: TotalDIFF_QTY, AVER_AMT: TotalAVER_AMT, DIFF_AMT: TotalDIFF_AMT },
+                                // { group_name: '小計', QTY: TotalQTY, FINE_QTY: TotalFINE_QTY, DIFF_QTY: TotalDIFF_QTY, AVER_AMT: TotalAVER_AMT, DIFF_AMT: TotalDIFF_AMT },
                                 { group_name: '盤盈項數', DIFF_AMT: response.Data.SurplusCount },
                                 { group_name: '盤損項數', DIFF_AMT: response.Data.LossCount },
                                 { group_name: '總差異金額', DIFF_AMT: response.Data.TotalDiffAmt },
-                                // { group_name: '說明', DIFF_AMT: '' },
+                                { group_name: '說明', DIFF_AMT: response.Data.NOTES ?? '' },
                             ];
                             // 總筆數
                             this.totalRecords = this.reportData.length;
@@ -246,10 +271,12 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
                             INV_ID: response.Data.INV_ID,
                             SInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
                             EInventoryDate: formatDate(response.Data.INV_DATE, 'yyyy/MM/dd', 'en'),
+                            EMP_ORG_ID: response.Data.EMP_ORG_ID,
                             EMP_ID: response.Data.EMP_ID,
-                            EMP_NAME: response.Data.EMP_NAME,
+                            // EMP_NAME: response.Data.EMP_NAME,
+                            EMP_ORG_ID2: response.Data.EMP_ORG_ID2,
                             EMP_ID2: response.Data.EMP_ID2,
-                            EMP_NAME2: response.Data.EMP_NAME2,
+                            // EMP_NAME2: response.Data.EMP_NAME2,
                             NOTES: response.Data.NOTES
                         });
                         this.data = response.Data.Details;
@@ -265,10 +292,10 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
 
     }
 
-    EMP_NAME = signal<{ label: string; value: string }[]>([]);
-    EMP_NAME2 = signal<{ label: string; value: string }[]>([]);
     EMP_ID = signal<{ label: string; value: string }[]>([]);
     EMP_ID2 = signal<{ label: string; value: string }[]>([]);
+    EMP_ORG_ID = signal<{ label: string; value: string }[]>([]);
+    EMP_ORG_ID2 = signal<{ label: string; value: string }[]>([]);
 
     allUsers: any[] = [];
     empOptions: { label: string; value: string }[] = [];
@@ -281,8 +308,8 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
             // 新增頁
             const insertRequest: InsertASS16020Request = {
                 INV_ID: formValue.INV_ID || '',
-                EMP_ID: formValue.EMP_NAME || '',
-                EMP_ID2: formValue.EMP_NAME2 || '',
+                EMP_ID: formValue.EMP_ID || '',
+                EMP_ID2: formValue.EMP_ID2 || '',
                 NOTES: formValue.NOTES || '',
                 Details: this.data.map(item => ({
                     KEYIN_NO: item.KEYIN_NO,
@@ -313,8 +340,8 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
             // 修改頁
             const updateRequest: UpdateASS16020Request = {
                 INV_ID: formValue.INV_ID || '',
-                EMP_ID: formValue.EMP_NAME || '',
-                EMP_ID2: formValue.EMP_NAME2 || '',
+                EMP_ID: formValue.EMP_ID || '',
+                EMP_ID2: formValue.EMP_ID2 || '',
                 NOTES: formValue.NOTES || '',
                 Details: this.data.map(item => ({
                     KEYIN_NO: item.KEYIN_NO,
@@ -442,8 +469,8 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
                     label: `${item.No} - ${item.Name}`,
                     value: item.No,
                 }));
-                this.EMP_ID.set(options);
-                this.EMP_ID2.set(options);
+                this.EMP_ORG_ID.set(options);
+                this.EMP_ORG_ID2.set(options);
             },
         });
 
