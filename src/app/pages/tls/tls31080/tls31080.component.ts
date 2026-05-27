@@ -96,6 +96,14 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
     { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
 
+    { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
@@ -118,7 +126,7 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
 
     // 營業實績總計
-    { field: 'TotalCount', header: '交易筆數', visible: true, format: formatAmount, align: 'right' },
+    // { field: 'TotalCount', header: '交易筆數', visible: true, format: formatAmount, align: 'right' },
     // { field: 'TotalPage', header: '總頁數', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
@@ -329,6 +337,14 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
           PreOrderAmt: res.Data.TotalData.TotalPreOrderAmt ?? 0,
           PresaleCheckout: res.Data.TotalData.TotalPresaleCheckout ?? 0,
 
+          H00: res.Data.TotalData.TotalH00 ?? 0,
+          H01: res.Data.TotalData.TotalH01 ?? 0,
+          H02: res.Data.TotalData.TotalH02 ?? 0,
+          H03: res.Data.TotalData.TotalH03 ?? 0,
+          H04: res.Data.TotalData.TotalH04 ?? 0,
+          H05: res.Data.TotalData.TotalH05 ?? 0,
+          H06: res.Data.TotalData.TotalH06 ?? 0,
+          H07: res.Data.TotalData.TotalH07 ?? 0,
           H08: res.Data.TotalData.TotalH08 ?? 0,
           H09: res.Data.TotalData.TotalH09 ?? 0,
           H10: res.Data.TotalData.TotalH10 ?? 0,

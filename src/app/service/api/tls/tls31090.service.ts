@@ -26,6 +26,14 @@ export interface TLS31090Request {
 export interface TLS31090Response {
   BusTypeName: string; // 業種名稱
   TimeType: string;
+  H00: number;
+  H01: number;
+  H02: number;
+  H03: number;
+  H04: number;
+  H05: number;
+  H06: number;
+  H07: number;
   H08: number;
   H09: number;
   H10: number;
@@ -46,6 +54,8 @@ export interface TLS31090Response {
   PresaleCheckout: number; // 預售結帳
   Subtotal: number;
   AVN_PreOrderAmt: number; // 預售業績
+  TotalCount?: number;
+  TotalPage?: number;
 }
 
 export interface TLS31090DetailResponse {
