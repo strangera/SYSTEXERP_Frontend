@@ -846,6 +846,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     return max > 0 && this.stepAPRows().length < max;
   });
 
+  private _previousActiveSteps: number[] = [];
+
   private readonly stepFlowEffect = effect(() => {
     if (this.isFormReadable) return;
     if (!this.isFormCreateable && !this.isFormEditable) return;
@@ -865,6 +867,11 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.activeVoucherSteps.set(ordered);
     const flow = [1, ...ordered];
     if (!flow.includes(this.currentStep())) this.currentStep.set(1);
+
+    // 新加入的進項(5)/銷項(6)步驟 → 自動跳過去
+    const newlyAdded = ordered.find(s => (s === 5 || s === 6) && !this._previousActiveSteps.includes(s));
+    if (newlyAdded) this.currentStep.set(newlyAdded);
+    this._previousActiveSteps = [...ordered];
   }, { allowSignalWrites: true });
 
   /** 依傳票明細與 queryPOS2013（廠商主檔）同步應付／應收／銀行存款步驟表（僅新增模式） */
