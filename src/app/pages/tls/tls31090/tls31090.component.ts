@@ -17,6 +17,7 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
+import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -56,8 +57,8 @@ import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response> implements OnInit {
 
   queryForm = this.formBuilder.nonNullable.group({
-    // TxnDate: [yesterday, [Validators.required]],//交易日期_起
-    TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
+    TxnDate: [yesterday, [Validators.required]],//交易日期_起
+    // TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
     TimeMode: ['A'],// 時段模式：'A'=全時段(預設)，'T'=依範圍 (全時段不用帶TimeFromHH、TimeToHH)
     TimeFromHH: [null, [Validators.min(0), Validators.max(23)]],// 起始小時 (0~23)，當 TimeMode='T' 時生效
     TimeToHH: [null, [Validators.min(0), Validators.max(23)]],// 結束小時 (0~23)，當 TimeMode='T' 時生效
@@ -120,9 +121,9 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'Reentry', header: '補登', visible: true, format: formatAmount, align: 'right' },
+    { field: 'AVN_PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
     { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
     { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
-    { field: 'AVN_PreOrderAmt', header: '預售業績', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
@@ -325,7 +326,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       this.tls31090Service.queryTLS31090(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data.Data ?? [];               // 查詢資料
         this.footerData = {
-          BusTypeName: '',
+          BusTypeName: '營業實績',
           TimeType: '',
           H00: res.Data.TotalData?.TotalH00 ?? 0,
           H01: res.Data.TotalData?.TotalH01 ?? 0,

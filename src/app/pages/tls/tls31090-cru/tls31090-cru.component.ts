@@ -101,10 +101,10 @@ export class Tls31090CRUComponent extends BasicCruPageComponent<TLS31090Response
     { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
 
-    { field: 'ReentryAmt', header: '補登', visible: true },
-    { field: 'PresaleCheckoutAmt', header: '預售結帳', visible: true },
-    { field: 'AVN_PreOrderAmt', header: '預售業績', visible: true },
-    { field: 'SubTotal', header: '小計', visible: true },
+    { field: 'ReentryAmt', header: '補登', visible: true, format: formatAmount, align: 'right' },
+    { field: 'PresaleCheckoutAmt', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
+    { field: 'AVN_PreOrderAmt', header: '預售業績', visible: true, format: formatAmount, align: 'right' },
+    { field: 'SubTotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
