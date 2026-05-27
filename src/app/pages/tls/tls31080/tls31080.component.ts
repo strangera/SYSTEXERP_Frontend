@@ -17,7 +17,6 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnGroup, formatAmount } from '@shared/componentkit/table/table.model';
-import { yesterday } from '@shared/models/system/query-form.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
@@ -57,8 +56,8 @@ import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 // 各時段之樓層營業報表
 export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    TxnDate: [yesterday, [Validators.required]],//交易日期_起
-    // TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
+    // TxnDate: [yesterday, [Validators.required]],//交易日期_起
+    TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
     TimeMode: ['A'],// 時段模式：'A'=全時段(預設)，'T'=依範圍 (全時段不用帶TimeFromHH、TimeToHH)
     TimeFromHH: [null, [Validators.min(0), Validators.max(23)]],// 起始小時 (0~23)，當 TimeMode='T' 時生效
     TimeToHH: [null, [Validators.min(0), Validators.max(23)]],// 結束小時 (0~23)，當 TimeMode='T' 時生效
@@ -96,6 +95,14 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
     { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
 
+    { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
@@ -329,6 +336,14 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
           PreOrderAmt: res.Data.TotalData.TotalPreOrderAmt ?? 0,
           PresaleCheckout: res.Data.TotalData.TotalPresaleCheckout ?? 0,
 
+          H00: res.Data.TotalData.TotalH00 ?? 0,
+          H01: res.Data.TotalData.TotalH01 ?? 0,
+          H02: res.Data.TotalData.TotalH02 ?? 0,
+          H03: res.Data.TotalData.TotalH03 ?? 0,
+          H04: res.Data.TotalData.TotalH04 ?? 0,
+          H05: res.Data.TotalData.TotalH05 ?? 0,
+          H06: res.Data.TotalData.TotalH06 ?? 0,
+          H07: res.Data.TotalData.TotalH07 ?? 0,
           H08: res.Data.TotalData.TotalH08 ?? 0,
           H09: res.Data.TotalData.TotalH09 ?? 0,
           H10: res.Data.TotalData.TotalH10 ?? 0,
