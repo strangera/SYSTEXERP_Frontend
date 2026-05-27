@@ -18,7 +18,8 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TableEditComponent } from '../../../shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '../../../shared/componentkit/table-edit/table-edit.model';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
@@ -38,7 +39,7 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
     CalendarComponent,
     InputNumberComponent,
     NgIf,
-    TableComponent,
+    TableEditComponent,
     TranslateModule,
     YearMonthComponent,
   ],
@@ -69,10 +70,16 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
    */
   private originalRemainingAmt: number | null = null;
 
+  /** 已退出/折讓歷史總金額（用於判斷區別：有歷史→折讓，無歷史且全額→退出） */
+  private originalHistoryAmt: number | null = null;
+
   /**
    * 避免同一組字軌+發票號碼重複打 API
    */
   private lastLoadedInvoiceKey = '';
+
+  /** Edit/Read 模式下保存從 row 帶入的 Credit_Type，防止被各種計算邏輯清空 */
+  private storedCreditType = '';
 
   dataForm = this.formBuilder.nonNullable.group({
     id: [null as number | null],
@@ -135,7 +142,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
           PUR_VoucherType: row.PUR_VoucherType ?? row.InvoiceType ?? this.dataForm.get('PUR_VoucherType')?.value,
 
           PUR_RepYYYYMM: this.normalizeYYYYMMForControl(repRaw),
-          // Credit_Type: row.Credit_Type ?? this.dataForm.get('Credit_Type')?.value,
+          Credit_Type: row.Credit_Type ?? this.dataForm.get('Credit_Type')?.value,
           PUR_TaxType: row.PUR_TaxType ?? this.dataForm.get('PUR_TaxType')?.value,
 
           PUR_Net: row.PUR_Net ?? this.dataForm.get('PUR_Net')?.value,
@@ -157,7 +164,15 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         TXN_SaleAmt: d.TXN_SaleAmt,
       }));
 
+      // 先存好 row 的 Credit_Type，syncPurAmtFromDetails 會把它清掉
+      this.storedCreditType = row.Credit_Type ?? '';
+
       this.syncPurAmtFromDetails();
+
+      // syncPurAmtFromDetails 可能清掉 Credit_Type，Edit/Read 模式補回來
+      if (this.crudstatus !== CRUDStatus.Create && this.storedCreditType) {
+        this.dataForm.patchValue({ Credit_Type: this.storedCreditType }, { emitEvent: false });
+      }
     }
 
     this.updateDisabledState();
@@ -172,7 +187,6 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.get('Inv_Date')?.disable();
     this.dataForm.get('Total_hitory_PUR_Amt')?.disable();
     this.dataForm.get('Total_Amt')?.disable();
-    this.dataForm.get('PUR_Tax')?.disable();
     this.dataForm.get('Credit_Type')?.disable();
     this.dataForm.get('PUR_VoucherType')?.disable();
     this.dataForm.get('Voucher_No')?.disable();
@@ -195,8 +209,10 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
       );
     }
 
-    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
+    if (this.crudstatus === CRUDStatus.Edit) {
       this.loadInvoiceInfoByCurrentGUINo();
+    } else if (this.crudstatus === CRUDStatus.Read) {
+      this.loadTotalAmtForRead();
     }
   }
 
@@ -213,20 +229,55 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     if (this.lastLoadedInvoiceKey === key) return;
     this.lastLoadedInvoiceKey = key;
 
+    const full = `${track}${no}`;
     this.dataForm.patchValue(
-      { InvoiceNumber_Correspond: `${track}${no}` },
+      { InvoiceNumber_Correspond: full },
       { emitEvent: false }
     );
 
+    // clearLoadedInvoiceFields 會清掉 Credit_Type，先保存
+    const savedCreditType = this.storedCreditType || this.dataForm.getRawValue().Credit_Type;
     this.clearLoadedInvoiceFields(false);
+    // 還原 Credit_Type
+    if (savedCreditType) {
+      this.dataForm.patchValue({ Credit_Type: savedCreditType }, { emitEvent: false });
+    }
 
+    // 呼叫 correspond API 才能取得原始發票的正確剩餘金額
     this.fin13020Service
-      .queryFIN13020ByTrackNo({ InvoiceTrack: track, InvoiceNumber: no })
+      .queryCorrespondByGUINoCorrespond({
+        InvoiceNumber_Correspond: full,
+        Source: 'APS',
+      })
       .subscribe((res: any) => {
         const dto = res?.Data?.[0];
         if (!dto) return;
-
         this.applyInvoiceDto(dto, track, no);
+      });
+  }
+
+  /* ----------------- 檢視：只撈剩餘總金額 ----------------- */
+
+  private loadTotalAmtForRead(): void {
+    const track = (this.dataForm.get('GUI_Track')?.value as string | null)?.trim();
+    const noRaw = (this.dataForm.get('PUR_GUINo')?.value as string | null)?.trim();
+    const no = this.normalizeInvoiceNumber(noRaw, track);
+    if (!track || !no) return;
+
+    this.fin13020Service
+      .queryCorrespondByGUINoCorrespond({
+        InvoiceNumber_Correspond: `${track}${no}`,
+        Source: 'APS',
+      })
+      .subscribe((res: any) => {
+        const dto = res?.Data?.[0];
+        if (!dto) return;
+        this.dataForm.patchValue({
+          Inv_Net: dto.PUR_Net ?? null,
+          Inv_Tax: dto.PUR_Tax ?? null,
+          Total_hitory_PUR_Amt: dto.Total_hitory_PUR_Amt ?? null,
+          Total_Amt: dto.Total_Amt ?? null,
+        }, { emitEvent: false });
       });
   }
 
@@ -277,9 +328,12 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     else if (invoiceType === '32') voucherType = '34';
 
     this.originalRemainingAmt = this.buildOriginalRemainingAmt(dto);
+    this.originalHistoryAmt = dto.Total_hitory_PUR_Amt != null ? Math.round(Number(dto.Total_hitory_PUR_Amt)) : 0;
 
     const dtoPurAmt = this.toIntOrNull(dto.PUR_Amt);
     const dtoCreditType = this.calcCreditTypeByRemainingAmt(dtoPurAmt, this.originalRemainingAmt);
+
+    const isCreateMode = this.crudstatus === CRUDStatus.Create;
 
     this.dataForm.patchValue(
       {
@@ -292,14 +346,21 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         Inv_Tax: dto.PUR_Tax ?? null,
         Total_hitory_PUR_Amt: dto.Total_hitory_PUR_Amt ?? null,
         Total_Amt: this.originalRemainingAmt,
-        Credit_Type: dtoCreditType,
+        ...(isCreateMode ? { Credit_Type: dtoCreditType } : {}),
         Source_Doc_No: dto.Source_Doc_No ?? '',
         Voucher_No: dto.Voucher_No ?? '',
       },
       { emitEvent: false }
     );
 
-    const details = Array.isArray(dto.Details) ? dto.Details : [];
+    const rawDetails = Array.isArray(dto.Details) ? dto.Details : [];
+    const seenIds = new Set<number>();
+    const details = rawDetails.filter((d: any) => {
+      if (d.ID == null) return true;
+      if (seenIds.has(d.ID)) return false;
+      seenIds.add(d.ID);
+      return true;
+    });
     this.detailRows = details.map((d: any) => ({
       ID: d.ID ?? null,
       PLU_Name: d.PLU_Name ?? '',
@@ -442,6 +503,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     }
 
     this.originalRemainingAmt = null;
+    this.originalHistoryAmt = null;
 
     this.dataForm.patchValue(
       {
@@ -470,7 +532,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
   private updateDisabledState(): void {
     if (this.crudstatus === CRUDStatus.Edit) {
-      const editableFields = ['PUR_GUIDate', 'PUR_RepYYYYMM', 'Source_Doc_No'];
+      const editableFields = ['PUR_GUIDate', 'PUR_RepYYYYMM', 'Source_Doc_No', 'PUR_Net', 'PUR_Tax', 'PUR_Amt'];
       Object.keys(this.dataForm.controls).forEach((key) => {
         const control = this.dataForm.get(key);
         if (editableFields.includes(key)) control?.enable();
@@ -480,11 +542,9 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
       this.dataForm.disable();
     } else {
       this.dataForm.enable();
+      this.updateAmountFieldsByDetailRows();
     }
 
-    this.dataForm.get('PUR_Net')?.disable();
-    this.dataForm.get('PUR_Amt')?.disable();
-    this.dataForm.get('PUR_Tax')?.disable();
     this.dataForm.get('TXN_Ret_No')?.disable();
     this.dataForm.get('PUR_TaxType')?.disable();
     this.dataForm.get('Inv_Tax')?.disable();
@@ -495,6 +555,20 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     this.dataForm.get('Credit_Type')?.disable();
     this.dataForm.get('PUR_VoucherType')?.disable();
     this.dataForm.get('Voucher_No')?.disable();
+  }
+
+  private updateAmountFieldsByDetailRows(): void {
+    if (this.crudstatus !== CRUDStatus.Create) return;
+    const hasDetails = (this.detailRows ?? []).length > 0;
+    if (hasDetails) {
+      this.dataForm.get('PUR_Net')?.disable();
+      this.dataForm.get('PUR_Tax')?.disable();
+      this.dataForm.get('PUR_Amt')?.disable();
+    } else {
+      this.dataForm.get('PUR_Net')?.enable();
+      this.dataForm.get('PUR_Tax')?.enable();
+      this.dataForm.get('PUR_Amt')?.enable();
+    }
   }
 
   onSubmit(form: FormGroup): void {
@@ -804,10 +878,11 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     if (!netControl || !taxControl || !amtControl || !remainingControl) return;
 
     let updatingFromNet = false;
+    let updatingFromTax = false;
     let updatingFromAmt = false;
 
     netControl.valueChanges.subscribe((value) => {
-      if (updatingFromAmt) return;
+      if (updatingFromAmt || updatingFromTax) return;
       updatingFromNet = true;
 
       if (value === null || value === undefined || value === '') {
@@ -855,8 +930,33 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
       updatingFromNet = false;
     });
 
+    taxControl.valueChanges.subscribe((value) => {
+      if (updatingFromNet || updatingFromAmt) return;
+      updatingFromTax = true;
+
+      const taxInt = this.toIntOrNull(value);
+      const netInt = this.toIntOrNull(netControl.value);
+
+      if (taxInt === null || netInt === null) {
+        updatingFromTax = false;
+        return;
+      }
+
+      const totalInt = netInt + taxInt;
+      amtControl.setValue(totalInt, { emitEvent: false });
+
+      const remaining =
+        this.originalRemainingAmt !== null && !isNaN(this.originalRemainingAmt)
+          ? this.roundToInt(this.originalRemainingAmt)
+          : null;
+      remainingControl.setValue(remaining, { emitEvent: false });
+
+      this.updateCreditTypeByRemainingAmt(totalInt);
+      updatingFromTax = false;
+    });
+
     amtControl.valueChanges.subscribe((value) => {
-      if (updatingFromNet) return;
+      if (updatingFromNet || updatingFromTax) return;
       updatingFromAmt = true;
 
       if (value === null || value === undefined || value === '') {
@@ -930,10 +1030,18 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
     const p = this.roundToInt(Number(purAmt));
     const r = this.roundToInt(remaining);
+    const historyAmt = this.originalHistoryAmt ?? 0;
 
-    if (p === r) creditControl.setValue('R', { emitEvent: false });
-    else if (p < r) creditControl.setValue('C', { emitEvent: false });
-    else creditControl.setValue('', { emitEvent: false });
+    // 已有歷史退出/折讓紀錄 → 一律折讓
+    if (historyAmt > 0) {
+      creditControl.setValue('C', { emitEvent: false });
+    } else if (p === r) {
+      creditControl.setValue('R', { emitEvent: false }); // 第一次且全額用完 → 退出
+    } else if (p < r) {
+      creditControl.setValue('C', { emitEvent: false }); // 第一次但部分金額 → 折讓
+    } else {
+      creditControl.setValue('', { emitEvent: false });
+    }
   }
 
   private calcCreditTypeByRemainingAmt(purAmt: any, remainingAmt: any): 'R' | 'C' | '' {
@@ -942,8 +1050,11 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
     if (p === null || r === null || p <= 0 || r <= 0) return '';
 
-    if (p === r) return 'R';   // 全退 = 退出
-    if (p < r) return 'C';     // 部分退 = 折讓
+    const historyAmt = this.originalHistoryAmt ?? 0;
+
+    if (historyAmt > 0) return 'C';  // 已有歷史 → 折讓
+    if (p === r) return 'R';         // 第一次且全額 → 退出
+    if (p < r) return 'C';           // 第一次但部分 → 折讓
 
     return '';
   }
@@ -986,23 +1097,11 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
 
   @Output() fieldChange = new EventEmitter<any>();
 
-  columns: any[] = [
-    { field: 'PLU_Name', header: '品名', type: 'input', editable: true },
-    { field: 'TXN_Qty', header: '數量', type: 'inputNumber', editable: true },
-    {
-      field: 'PLU_SalePrc',
-      header: '單價',
-      type: 'inputNumber',
-      editable: true,
-      format: (value: any) => this.moneyFormat(value),
-      style: 'text-right',
-    },
-    {
-      field: 'TXN_SaleAmt',
-      header: '金額',
-      format: (value: any) => this.moneyFormat(value),
-      style: 'text-right',
-    },
+  editColumns: EditColumn[] = [
+    { field: 'PLU_Name', header: '品名', type: 'input' },
+    { field: 'TXN_Qty', header: '數量', type: 'inputNumber' },
+    { field: 'PLU_SalePrc', header: '單價', type: 'inputNumber', textAlign: 'right' },
+    { field: 'TXN_SaleAmt', header: '金額', type: 'inputNumber', textAlign: 'right', disabled: () => true },
   ];
 
   onFieldChange(event: { rowData: any; field: string; value: any }) {
@@ -1095,26 +1194,6 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
     return String(v);
   }
 
-  readonly columnsRead = [
-    { field: 'PLU_Name', header: '品名' },
-    { field: 'TXN_Qty', header: '數量', format: (v: any) => v },
-    {
-      field: 'PLU_SalePrc',
-      header: '單價',
-      format: (v: any) => this.moneyFormat(v),
-      style: 'text-right',
-    },
-    {
-      field: 'TXN_SaleAmt',
-      header: '金額',
-      format: (v: any) => this.moneyFormat(v),
-      style: 'text-right',
-    },
-  ];
-
-  get columnsForView() {
-    return this.isRead ? this.columnsRead : this.columns;
-  }
 
   private syncPurAmtFromDetails(): void {
     const sumRaw = (this.detailRows ?? []).reduce((sum, r) => {
@@ -1135,7 +1214,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
       sum = this.roundToInt(this.originalRemainingAmt);
     }
 
-    this.dataForm.get('PUR_Amt')?.setValue(hasDetails ? sum : null, { emitEvent: true });
+    this.dataForm.get('PUR_Amt')?.setValue(hasDetails ? sum : null, { emitEvent: false });
 
     if (hasDetails) {
       const approxNet = this.roundToInt(sum / 1.05);
