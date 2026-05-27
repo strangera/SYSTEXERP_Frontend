@@ -48,6 +48,8 @@ jobs:
       # 5. 執行分析
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
+        with:
+          upload: false
 
       # 6. Discord 通知
       - name: Notify Discord
