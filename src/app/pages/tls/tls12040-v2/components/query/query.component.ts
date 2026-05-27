@@ -46,6 +46,7 @@ export interface ContractItem {
   tlt_term_type: string;
   CanEdit: boolean;
   CanVoid: boolean;
+  CanUnapprove: boolean;
 }
 
 /**
@@ -87,7 +88,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       label: '反審核',
       icon: 'pi pi-undo text-orange-500',
       action: (rowData: ContractItem) => this.onUnapprove(rowData),
-      disabled: (rowData: ContractItem) => rowData.approve_status !== '2' || !this.hasPermission(Actions.AntiAudit)
+      disabled: (rowData: ContractItem) => !rowData.CanUnapprove || !this.hasPermission(Actions.AntiAudit)
     },
     {
       label: '作廢',
@@ -361,8 +362,12 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   }
 
   onUnapprove(rowData: ContractItem): void {
-    if (rowData.approve_status !== '2') {
-      this.messageService.warnBubble('只有已審核狀態的合約才能反審核');
+    if (!rowData.CanUnapprove) {
+      if (rowData.approve_status !== '2') {
+        this.messageService.warnBubble('只有已審核狀態的合約才能反審核');
+      } else {
+        this.messageService.warnBubble('已轉合約且合約已審核，請先對合約進行反審核');
+      }
       return;
     }
 
