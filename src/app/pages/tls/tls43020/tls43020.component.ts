@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { NgStyle } from '@angular/common'; // <-- 確保引入，HTML 的按鈕有用到
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
@@ -14,6 +15,8 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AddButton, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { Button } from 'primeng/button'; // <-- 確保引入 p-button
+import { TooltipModule } from 'primeng/tooltip'; // <-- 確保引入 pTooltip
 import { finalize, Observable } from 'rxjs';
 
 @Component({
@@ -31,27 +34,36 @@ import { finalize, Observable } from 'rxjs';
     DropdownComponent,
     TableReportComponent,
     TranslateModule,
-    CalendarRangeComponent
+    CalendarRangeComponent,
+    Button,        // <-- 新增
+    TooltipModule, // <-- 新增
+    NgStyle        // <-- 新增
   ]
 })
 export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Response> implements OnInit {
+  @ViewChild(TableReportComponent) tableReport!: TableReportComponent;
   queryForm = this.formBuilder.nonNullable.group({
-    // POS50011 廣告資訊設定檔
-    NOT_No: ['', [Validators.maxLength(20)]], // 通告編號
-    NOT_Date: [null as null | Date], // 建立日期
-    NOT_BegDate_Start: [null as null | Date], // 有效開始日期
-    NOT_BegDate_End: [null as null | Date], // 有效開始日期
-    NOT_EndDate_Start: [null as null | Date], // 有效結束日期
-    NOT_EndDate_End: [null as null | Date], // 有效結束日期
-    NOT_File: ['', [Validators.maxLength(200)]], // 媒體檔案名稱
-    NOT_Status: [null], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
+    NOT_No: ['', [Validators.maxLength(20)]],
+    NOT_Date: [null as null | Date],
+    NOT_BegDate_Start: [null as null | Date],
+    NOT_BegDate_End: [null as null | Date],
+    NOT_EndDate_Start: [null as null | Date],
+    NOT_EndDate_End: [null as null | Date],
+    NOT_File: ['', [Validators.maxLength(200)]],
+    NOT_Status: [null],
     pageSize: [30],
-    pageIndex: [1], // 你將初始頁碼改為 1
+    pageIndex: [1],
     SortBy: [[{ field: 'NOT_No', order: 1 }]],
   });
+
   totalRecords = 0;
   data: QueryTls43020Response[] = [];
   lastQueryBody: QueryTls43020Request | null = null;
+
+  // 新增：用來記錄勾選的資料與按鈕 Loading 狀態
+  selectedRows: QueryTls43020Response[] = [];
+  downloadLoading = false;
+
   columns: ReportColumn[] = [
     { field: 'NOT_No', header: '通告編號', visible: true },
     { field: 'NOT_Date', header: '建立日期', visible: true, format: formatDate },
@@ -61,12 +73,13 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
     { field: 'NOT_Status', header: '狀態', visible: true, format: (v: string) => this.NOT_Status_Options.find(o => o.value == v)?.label || v },
     { field: 'NOT_Priority', header: '優先順序', visible: true },
   ];
-  NOT_Status_Options: { value: string, label: string }[] = [ // 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
+
+  NOT_Status_Options: { value: string, label: string }[] = [
     { value: '0', label: '未審核' },
     { value: '1', label: '已審核' },
     { value: '2', label: '已刪除' },
   ];
-  // 加入審核 反審核按鈕
+
   addButton: AddButton[] = [
     {
       label: '審核',
@@ -102,11 +115,11 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
         NOT_EndDate_Start: frm.value.NOT_EndDate_Start ? frm.value.NOT_EndDate_Start.toISOString() : null,
         NOT_EndDate_End: frm.value.NOT_EndDate_End ? frm.value.NOT_EndDate_End.toISOString() : null
       };
-
       this.tls43020Service.queryTls43020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data;
         this.lastQueryBody = body;
         this.totalRecords = res.TotalCount || 0;
+        this.selectedRows = []; // 重新查詢時清空已選取欄位
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
@@ -115,22 +128,51 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
   btnLoading = false;
   statusChange(rowData: QueryTls43020Response, status: string) {
     this.btnLoading = true;
-    const requestBody = {
-      ID: rowData.ID,
-      NOT_No: rowData.NOT_No,
-      NOT_Status: status
-    };
-
+    const requestBody = { ID: rowData.ID, NOT_No: rowData.NOT_No, NOT_Status: status };
     let serviceCall: Observable<any>;
     if (status === "1") {
       serviceCall = this.tls43020Service.verifyTls43020(requestBody);
     } else {
       serviceCall = this.tls43020Service.unverifyTls43020(requestBody);
     }
-
     serviceCall.pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe(response => {
       this.messageService.successBubble(response.Message || '更新成功');
-      this.onSubmit(this.queryForm); // 更新成功後重新查詢
+      this.onSubmit(this.queryForm);
     });
+  }
+
+  // 新增：下傳功能處理函式
+  onDownload() {
+    let params: any = {};
+
+    // 判斷使用者是否勾選了「全選」
+    if (this.tableReport && this.tableReport.isAllSelected) {
+      params = {
+        IsAllSelected: true,
+        // 將上一次成功的查詢條件解構進來 (包含通告編號、日期、起迄時間等)
+        QueryConditions: this.lastQueryBody
+      };
+    } else {
+      params = {
+        IsAllSelected: false,
+        ExportDetails: this.selectedRows.map((item) => ({
+          ID: item.ID,
+          STO_No: item.STO_No,
+          NOT_No: item.NOT_No
+        }))
+      };
+    }
+
+    this.downloadLoading = true;
+    this.tls43020Service.downloadTls43020(params)
+      .pipe(
+        finalize(() => this.downloadLoading = false),
+        untilDestroyed(this)
+      )
+      .subscribe((response) => {
+        this.messageService.successBubble(response.Message || '下傳成功');
+        this.selectedRows = []; // 清空選取
+        this.onSubmit(this.queryForm); // 重新整理查詢畫面
+      });
   }
 }

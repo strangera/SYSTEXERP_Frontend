@@ -8,7 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
-import { validateMinNumber } from '@shared/componentkit/table-edit/validate-field.model';
+import { validateMinNumber, validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { PanelModule } from 'primeng/panel';
 import {
   catchError, distinctUntilChanged, finalize, map, of, startWith, switchMap, tap
@@ -83,6 +83,7 @@ export class CPM11030CRUComponent extends BasicCruPageComponent<QueryCPM11030Row
       optionLabel: 'label',
       optionValue: 'value',
       showClear: false,
+      validate: [validateRequired],
       /** 過濾已選過的設備（允許當列自己的值）；編輯模式下若設備已借完不在選項中，補入 */
       options: (rowData: CPM11030DetailItem) => {
         const available = this.currentDeviceOptions.filter(opt =>

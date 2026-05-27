@@ -107,10 +107,9 @@ queryForm = this.formBuilder.group({
 
   // ===== 下拉選項 =====
   operationStatusOptions = [
-    { value: 0, label: '0-閉店/撤櫃' },
-    { value: 1, label: '1-營業中' },
-    { value: 2, label: '2-合約結束' },
-    { value: 9, label: '9-核准時合約尚未開始' },
+    { value: '0', label: '已撤櫃' },
+    { value: '1', label: '營業中' },
+    { value: '9', label: '合約未生效' },
   ];
 
   bus_typeOptions: any[] = [];

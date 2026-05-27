@@ -36,6 +36,7 @@ import {
   FaSitemItem,
   FaSitemQuery,
   GLS1005AccSubCodeItem,
+  Gls3002AcctKeyItem,
   IDropdownItem,
   IGLS1005LedgerMDItem,
   LogoAccorHosItem,
@@ -1063,6 +1064,21 @@ export class DropdownApiService {
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
     );
   }
+
+  /** * 查詢對帳 Key 值(GLS3002.ACCT_KEY) 下拉選單
+   * Value: ACCT_KEY, Label: ACCT_KEY - ACCT_KEY
+   */
+  queryGls3002AcctKey(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Gls3002AcctKeyItem>(
+      '/queryGLS3002_DropDownList', // 對應後端 Controller 的路由
+      'ACCT_KEY',
+      'ACCT_KEY'
+    ).pipe(
+      map(options => options?.map(opt => ({ ...opt, label: opt.value })) ?? null),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
   /** 查詢銀行+分行資料表(APS1001 JOIN APS1004)下拉選單 */
   queryAps1001_DropDownList(body: Aps1001ComboQuery = { SearchKeyword: '' }): Observable<Option[] | null> {
     return this.queryAndMapDropdown<Aps1001ComboItem, Aps1001ComboQuery>(

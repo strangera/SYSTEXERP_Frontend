@@ -115,7 +115,8 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
 
   TLT_OPENFLAG_OPTIONS: { value: string; label: string }[] = [
     { value: '0', label: '已撤櫃' },
-    { value: '1', label: '營運中' },
+    { value: '1', label: '營業中' },
+    { value: '9', label: '合約未生效' },
   ];
 
   // --- 平面圖相關變數 ---

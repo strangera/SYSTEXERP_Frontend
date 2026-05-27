@@ -72,13 +72,9 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   tlt_openOptions: option[] = [ //營運狀況選單
-    { 'value': "閉店/撤櫃", 'label': '閉店/撤櫃' },
-    { 'value': "營業中", 'label': '營業中' },
-    { 'value': "合約結束", 'label': '合約結束' },
-    { 'value': "核准時合約尚未開始", 'label': '核准時合約尚未開始' },
-    { 'value': "洽談中", 'label': '洽談中' },
-    { 'value': "簽約中", 'label': '簽約中' },
-    { 'value': "已作廢", 'label': '已作廢' }
+    { value: '0', label: '已撤櫃' },
+    { value: '1', label: '營業中' },
+    { value: '9', label: '合約未生效' },
   ];
   statusOptions: option[] = [ // 合約狀態的下拉選單
     { 'value': "1", 'label': '未審核' },

@@ -107,6 +107,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       disabled: (rowData: ContractItem) =>
         rowData.source_type === '要約書' ||
         rowData.approve_status !== '2' ||
+        rowData.tlt_openflag !== '9' ||
         !this.hasPermission(Actions.AntiAudit)
     },
 
@@ -407,6 +408,15 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   }
 
   onUnapprove(rowData: ContractItem): void {
+    if (rowData.approve_status !== '2') {
+      this.messageService.warnBubble('只有已審核狀態的合約才能反審核');
+      return;
+    }
+    if (rowData.tlt_openflag !== '9') {
+      this.messageService.warnBubble('合約已開始營運，無法反審核');
+      return;
+    }
+
     this.messageService.confirm({
       message: `確定要反審核合約 ${rowData.apply_no} 嗎？`,
       accept: () => {
@@ -419,7 +429,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
               this.messageService.errorBubble(`反審核失敗: ${res.Message}`);
             }
           },
-          error: () => this.messageService.errorBubble('反審核失敗')
+          error: (err: any) => this.messageService.errorBubble(err?.error?.Message || '反審核失敗')
         });
       }
     });

@@ -53,6 +53,20 @@ export interface Tls43010Detail {
   status: string
   [key: string]: any
 }
+
+// 新增：下傳 Request 介面定義
+export interface DownloadTls43020Request {
+  IsAllSelected: boolean;
+  // 全選時必傳：複用查詢 DTO 結構
+  QueryConditions?: QueryTls43020Request | null;
+  // 手動勾選時必傳
+  ExportDetails?: {
+    ID: number;
+    STO_No: string;
+    NOT_No: string;
+  }[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -63,17 +77,13 @@ export class Tls43020Service {
 
   /**
    * 查詢POS50011 廣告資訊設定檔 的 API 呼叫
-   * @param body 統一的查詢請求物件 (QueryTls43020Request)
-   * @returns 包含 QueryTls43020Response 結構的 API 回傳結果
    */
   queryTls43020(body: QueryTls43020Request): Observable<ApiResponse<QueryTls43020Response[]>> {
     return this.http.post<ApiResponse<QueryTls43020Response[]>>(`${this.apiUrl}/queryTLS43020`, body);
   }
 
   /**
-   * 審核TLS43020資料表 的 API 呼叫
-   * @param body 審核請求物件 (VerifyTls43020Request)
-   * @returns 包含 ApiResponse 的 API 回傳結果
+   * 審核TLS43020資料表 的 API 呼交
    */
   verifyTls43020(body: VerifyTls43020Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/verifyTLS43020`, body);
@@ -81,10 +91,17 @@ export class Tls43020Service {
 
   /**
    * 反審核TLS43020資料表 的 API 呼叫
-   * @param body 反審核請求物件 (VerifyTls43020Request)
-   * @returns 包含 ApiResponse 的 API 回傳結果
    */
   unverifyTls43020(body: VerifyTls43020Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/unverifyTLS43020`, body);
+  }
+
+  /**
+   * 新增：下傳TLS43020廣告資訊 的 API 呼叫
+   * @param body 下傳請求物件 (DownloadTls43020Request)
+   * @returns 包含 ApiResponse 的 API 回傳結果
+   */
+  downloadTls43020(body: DownloadTls43020Request): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/downloadTLS43020`, body);
   }
 }
