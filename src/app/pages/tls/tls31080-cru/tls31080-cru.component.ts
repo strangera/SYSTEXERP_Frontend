@@ -71,12 +71,18 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
   data: TLS31080DetailResponse[] = [];
   footerData: any = null;
   historyRequestBody: any = null; //歷史查詢條件
-  columns: ReportColumn[] = [
-    { field: 'tlt_no', header: '專櫃代號', visible: true, align: 'left' },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
-    { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
-    { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
 
+  columns: ReportColumn[] = [];
+  // 時段column
+  private readonly ALL_HOUR_COLUMNS: ReportColumn[] = [
+    { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
@@ -93,11 +99,6 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
     { field: 'H21', header: '21時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
-
-    { field: 'ReentryAmt', header: '補登金額或筆數', visible: true, format: formatAmount, align: 'right' },
-    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
-    { field: 'PresaleCheckoutAmt', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
-    { field: 'SubTotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
@@ -145,6 +146,42 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     this.queryConditions = state?.['queryConditions'];
 
+    const { TimeMode, TimeFromHH, TimeToHH } = this.queryConditions;
+
+    // 先過濾出符合條件的小時欄位
+    const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
+      // 如果不是範圍模式('T')，或者起訖點沒填，就預設全部顯示
+      if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) {
+        return true;
+      }
+
+      // 從欄位名稱 (例如 'H08') 轉化成數字 8
+      const hourNum = parseInt(col.field.substring(1), 10);
+
+      // 判斷是否在範圍內 (支援跨午夜或正常範圍)
+      if (TimeFromHH <= TimeToHH) {
+        return hourNum >= TimeFromHH && hourNum <= TimeToHH;
+      } else {
+        // 如果填寫 22 到 02 點 (跨日狀況)
+        return hourNum >= TimeFromHH || hourNum <= TimeToHH;
+      }
+    });
+
+    // 重新組合回原本的欄位順序：前置欄位 + 過濾後的小時 + 後置總計欄位
+    this.columns = [
+      { field: 'tlt_no', header: '專櫃代號', visible: true, align: 'left' },
+      { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
+      { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
+      { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
+
+      ...filteredHours, // 放入動態過濾後的小時時段
+
+      { field: 'ReentryAmt', header: '補登金額或筆數', visible: true, format: formatAmount, align: 'right' },
+      { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
+      { field: 'PresaleCheckoutAmt', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
+      { field: 'SubTotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
+    ];
+
     console.log('查詢頁request條件', this.queryConditions);
     console.log('查詢頁response點選項目', this.dataForm.value);
 
@@ -153,7 +190,7 @@ export class Tls31080CRUComponent extends BasicCruPageComponent<TLS31080Response
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         this.tlt_floor_Option = res.Data;
-        console.log('樓層選單 GOGO', this.tlt_floor_Option);
+        console.log('樓層選單', this.tlt_floor_Option);
 
         // 在這裡才呼叫查詢 (因為樓層選單已經準備好了)
         if (this.queryConditions) {
