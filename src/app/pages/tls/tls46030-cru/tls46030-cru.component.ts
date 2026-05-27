@@ -1,25 +1,19 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { AsyncPipe, CommonModule } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { Tls46030Service } from '@service/api/tls/tls46030.service';
-import { ECRNoService } from '@service/basic/queryPOS1002.service';
+import { QueryTLS46030Response, Tls46030Service } from '@service/api/tls/tls46030.service';
 import { getSYS1000Options } from '@service/system/sys1000.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
-import { DateUtils } from 'src/app/core/utils/date-utils';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
 import { DropDownListService } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { apiOption } from '../../../shared/models/sys/sysb000.model';
-
-
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 @Component({
   selector: 'app-tls46030-cru',
   templateUrl: './tls46030-cru.component.html',
@@ -34,79 +28,44 @@ import { apiOption } from '../../../shared/models/sys/sysb000.model';
     ReactiveFormsModule,
     ButtonComponent,
     TranslateModule,
-    InputTextComponent
+    InputTextComponent,
+    AsyncPipe
   ]
 })
-export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements OnInit {
-
-  selectedType: 'calendar' | 'dropdown' | 'input' = 'dropdown';
-  NewValDropdownOptions: { label: string; value: string }[] = [];
-  ECR_FLD_IDOptions = getSYS1000Options('ECR_FLD_ID');
-
-  // 預載下拉快取
-  private dropdownCache: Record<string, { label: string; value: string }[]> = {};
-
+export class TLS46030CRUComponent extends BasicCruPageComponent<QueryTLS46030Response> implements OnInit {
+  private readonly dropDown = inject(DropdownApiService);
+  private readonly dropDownListService = inject(DropDownListService);
+  private readonly tls46030Service = inject(Tls46030Service);
   dataForm = this.formBuilder.nonNullable.group({
     ECR_SchNo: [{ value: '自動編號', disabled: true }],
     ECR_SchDate: [null, Validators.required],
     ECR_SchStatus: ['' as 'A' | 'C' | 'F', Validators.required],
-    ECR_No: ['', Validators.required],
+    ECR_No: [null, Validators.required],
     ECR_SchFinTime: [{ value: null, disabled: true }],
-    ECR_FLD_ID: ['', Validators.required],
+    ECR_FLD_ID: [null as string | null, Validators.required],
     ECR_FLD_OrgVal: [{ value: null, disabled: true }],
-    ECR_FLD_NewVal: [{ value: '', disabled: true }]
+    ECR_FLD_NewVal: [{ value: null as string | null, disabled: true }]
   });
-
-  ECRNoOptions: any[] = [];
-  ECR_SchStatus_Options: any[] = [
-    { value: 'A', label: '啟用' },
-    { value: 'C', label: '取消' },
-    { value: 'F', label: '執行完畢' }
-  ];
-  // 實際提供給下拉選單使用的選項（依情境過濾）
-  ECR_SchStatus_SelectOptions: any[] = this.ECR_SchStatus_Options;
-  TLTTALENT_Option: apiOption[] = []; //專櫃編號
-  constructor(
-    private ECRNoService: ECRNoService,
-    private dropDownListService: DropDownListService,
-    private counterNameService: CounterNameService,
-    private tls11010Service: Tls11010Service,
-    private tls46030Service: Tls46030Service
-  ) {
-    super();
-  }
+  selectedType: 'calendar' | 'dropdown' | 'input' = 'dropdown';
+  NewValDropdownOptions: { label: string; value: string }[] = [];
+  private dropdownCache: Record<string, { label: string; value: string }[]> = {};
+  ECRNoOptions = this.dropDown.queryPos1002();
+  ECR_FLD_IDOptions = getSYS1000Options('ECR_FLD_ID');
+  ECR_SchStatus_Options = getSYS1000Options('ECR_SchStatus');
+  ECR_SchStatus_SelectOptions = this.ECR_SchStatus_Options;
+  constructor() { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS46030', this.dataForm);
-
-    // 收銀機號
-    this.ECRNoService.getECRNo().subscribe((data) => {
-      // normalize to { value: string, label }
-      this.ECRNoOptions = (data || []).map((d: any) => ({ label: d.label, value: String(d.value) }));
-      // if editing and a value exists in rowdata, ensure control holds the same string so dropdown shows label
-      if (this.rowdata && this.rowdata.ECR_No !== undefined && this.rowdata.ECR_No !== null) {
-        this.dataForm.controls.ECR_No.setValue(String(this.rowdata.ECR_No));
-      }
-    });
-
-    // 預先打所有下拉 API
     this.preloadDropdowns();
-    // 判斷是新增 or 編輯
-    const isUpdate = !!this.rowdata?.ECR_SchNo;
-
     // 後端回傳的異動作業完成時間，格式化為 yyyy/MM/dd HH:mm:ss 顯示
     if (this.rowdata?.ECR_SchFinTime) {
-      (this.dataForm.get('ECR_SchFinTime') as any)?.setValue(
-        DateUtils.formatDateTimeForDisplay(this.rowdata.ECR_SchFinTime)
-      );
+      this.dataForm.get('ECR_SchFinTime')?.setValue(this.rowdata.ECR_SchFinTime as any);
     }
-
-    if (isUpdate) {
-      // 編輯畫面：
+    if (!this.isFormCreateable) {
       // - 若後端狀態為 F，保留全部選項以顯示中文，但鎖住欄位
       // - 其他狀態只允許選 A、C
       const currentStatus = this.rowdata?.ECR_SchStatus as 'A' | 'C' | 'F' | undefined;
-
       if (currentStatus === 'F') {
         this.ECR_SchStatus_SelectOptions = this.ECR_SchStatus_Options;
         this.dataForm.controls.ECR_SchStatus.disable();
@@ -145,136 +104,65 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
       }
     });
     this.dataForm.controls.ECR_FLD_ID.updateValueAndValidity();
-    // if editing, ensure control value is string so dropdown shows label
     if (this.rowdata && this.rowdata.ECR_FLD_ID !== undefined && this.rowdata.ECR_FLD_ID !== null) {
       this.dataForm.controls.ECR_FLD_ID.setValue(String(this.rowdata.ECR_FLD_ID));
     }
-    this.dataForm.controls.ECR_FLD_NewVal.setValue(this.rowdata?.ECR_FLD_NewVal || '');
+    this.dataForm.controls.ECR_FLD_NewVal.setValue(this.rowdata?.ECR_FLD_NewVal || null);
   }
 
-  /** 預先載入下拉 */
   private preloadDropdowns() {
-    // ECR_Type
     this.dropdownCache['ECR_Type'] = getSYS1000Options('ECR_Type');
-    // ECR_SAL_Type
     this.dropdownCache['ECR_SAL_Type'] = getSYS1000Options('ECR_SAL_Type');
-
-    // ECR_TLT_No 改串 queryPOS2001_DropDownList
+    this.dropdownCache['ECR_LocNo'] = getSYS1000Options('ECR_LocNo');
+    this.dropDownListService.queryPOS10015_DropDownList().subscribe(res => {
+      this.dropdownCache['SYS_SrvNo'] = res.Data.map(item => ({ label: `${item.No}-${item.Name}`, value: item.No })) || [];
+    });
     this.dropDownListService.queryPOS2001_DropDownList().subscribe(res => {
-      this.dropdownCache['ECR_TLT_No'] =
-        res?.Data?.map((item: any) => ({
-          label: item.No + '-' + item.Name,
-          value: item.No
-        })) || [];
+      this.dropdownCache['ECR_TLT_No'] = res.Data.map(item => ({ label: item.No + '-' + item.Name, value: item.No })) || [];
       // 如果目前已選擇該異動類型，更新可用下拉選項（處理 preload 完成晚於 valueChanges 的情況）
-      try {
-        const currentFld = this.dataForm?.controls?.ECR_FLD_ID?.value;
-        if (currentFld === 'ECR_TLT_No') {
-          this.NewValDropdownOptions = this.dropdownCache['ECR_TLT_No'] || [];
-          this.selectedType = 'dropdown';
-          const newValCtrl = this.dataForm.controls.ECR_FLD_NewVal;
-          try {
-            newValCtrl.enable();
-            const rawVal = this.rowdata?.ECR_FLD_NewVal ?? '';
-            newValCtrl.setValue(rawVal);
-          } catch (e) {
-            // ignore
-          }
-        }
-      } catch (err) {
-        // ignore
+      if (this.dataForm?.controls?.ECR_FLD_ID?.value === 'ECR_TLT_No') {
+        this.NewValDropdownOptions = this.dropdownCache['ECR_TLT_No'] || [];
+        this.selectedType = 'dropdown';
+        const newValCtrl = this.dataForm.controls.ECR_FLD_NewVal;
+        newValCtrl.enable();
+        const rawVal = this.rowdata?.ECR_FLD_NewVal ?? '';
+        newValCtrl.setValue(rawVal);
       }
     });
-    // ECR_LocNo
-    this.dropdownCache['ECR_LocNo'] = getSYS1000Options('ECR_LocNo');
-
-    // SYS_SrvNo 串接 POS10015 下拉
-    this.dropDownListService.queryPOS10015_DropDownList().subscribe(res => {
-      this.dropdownCache['SYS_SrvNo'] =
-        res?.Data?.map((item: any) => ({
-          label: `${item.No}-${item.Name}`,
-          value: item.No
-        })) || [];
-    });
-
-    // ECR_TmplNo
     this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
-      this.dropdownCache['ECR_TmplNo'] =
-        res?.Data?.map((item: any) => ({
-          label: `${item.No} - ${item.Name}`,
-          value: item.No
-        })) || [];
+      this.dropdownCache['ECR_TmplNo'] = res.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No })) || [];
     });
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const raw = frm.getRawValue();
-
       // 判斷日期型別欄位
       let newVal = raw.ECR_FLD_NewVal || '';
       if (raw.ECR_FLD_ID === 'ECR_CloseDate' && newVal) {
         newVal = new Date(newVal).toISOString();
       }
-
-      // 共用欄位
-      const basePayload = {
+      const payload = {
+        ID: this.isFormCreateable ? undefined : this.rowdata?.ID,
         ECR_No: raw.ECR_No || '',
+        ECR_SchNo: raw.ECR_SchNo || '',
         ECR_SchStatus: raw.ECR_SchStatus || '',
-        ECR_SchDate: raw.ECR_SchDate
-          ? new Date(raw.ECR_SchDate).toISOString()
-          : new Date().toISOString(),
+        ECR_SchDate: raw.ECR_SchDate ? new Date(raw.ECR_SchDate).toISOString() : new Date().toISOString(),
         ECR_FLD_ID: raw.ECR_FLD_ID || '',
+        ECR_SchFinTime: raw.ECR_SchFinTime,
+        ECR_FLD_OrgVal: raw.ECR_FLD_OrgVal || '',
         ECR_FLD_NewVal: newVal
       };
-
-      const isUpdate = raw.ECR_SchNo && raw.ECR_SchNo !== '自動編號';
-
-      if (isUpdate) {
-        const updatePayload = {
-          ...basePayload,
-          ID: this.rowdata?.ID,
-          ECR_SchNo: raw.ECR_SchNo
-        };
-
-        this.tls46030Service.updateTLS46030(updatePayload)
-          .pipe(finalize(() => (this.loading = false)))
-          .subscribe({
-            next: (res) => {
-              if (res.Status === '0000') {
-                this.messageService.successBubble('更新成功');
-              }
-              console.log('更新結果:', res);
-              this.onCancel();
-
-            }
-          });
+      if (this.isFormEditable && this.rowdata) {
+        this.tls46030Service.updateTLS46030(payload).pipe(finalize(() => (this.loading = false))).subscribe((res) => {
+          this.messageService.successBubble(res?.Message || '更新成功');
+          this.onCancel();
+        });
       } else {
-        const insertPayload = {
-          ECR_No: raw.ECR_No || '',
-          ECR_SchStatus: raw.ECR_SchStatus || '',
-          ECR_SchDate: raw.ECR_SchDate
-            ? new Date(raw.ECR_SchDate).toISOString()
-            : new Date().toISOString(),
-          ECR_SchFinTime: null,
-          ECR_FLD_ID: raw.ECR_FLD_ID || '',
-          ECR_FLD_OrgVal: raw.ECR_FLD_OrgVal || '',
-          ECR_FLD_NewVal: newVal
-        };
-
-        this.tls46030Service.insertTLS46030(insertPayload)
-          .pipe(finalize(() => (this.loading = false)))
-          .subscribe({
-            next: (res) => {
-              if (res.Status === '0000') {
-                this.messageService.successBubble('新增成功');
-              }
-              console.log('新增結果:', res);
-              this.onCancel();
-
-            },
-          });
-
+        this.tls46030Service.insertTLS46030(payload).pipe(finalize(() => (this.loading = false))).subscribe((res) => {
+          this.messageService.successBubble(res?.Message || '新增成功');
+          this.onCancel();
+        });
       }
     });
   }

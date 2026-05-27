@@ -4,39 +4,83 @@
     <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="排程編號" controlName="ECR_SchNo" [control]="queryForm.controls.ECR_SchNo"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="排程編號"
+              controlName="ECR_SchNo"
+              [control]="queryForm.controls.ECR_SchNo"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
 
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="設定啟用日期"
-            [startControl]="queryForm.controls.ECR_SchDate_Start" [endControl]="queryForm.controls.ECR_SchDate_End"
-            calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            label="設定啟用日期"
+            [startControl]="queryForm.controls.ECR_SchDate_Start"
+            [endControl]="queryForm.controls.ECR_SchDate_End"
+            calendarType="dateRange"
+            [submitted]="submitted"
+          ></app-calendar-range>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="排程狀態" controlName="ECR_SchStatus" [options]="ECR_SchStatus_Options" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ECR_SchStatus" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="排程狀態"
+              controlName="ECR_SchStatus"
+              [options]="ECR_SchStatus_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_SchStatus"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="收銀機號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions | async"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="排程作業完成時間"
+          <app-calendar-range
+            class="col-12 md:col-6 lg:col-4"
+            label="排程作業完成時間"
             [startControl]="queryForm.controls.ECR_SchFinTime_Start"
-            [endControl]="queryForm.controls.ECR_SchFinTime_End" calendarType="dateRange"
-            [submitted]="submitted"></app-calendar-range>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="異動類型" controlName="ECR_FLD_ID"
-            [options]="ECR_FLD_IDOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.ECR_FLD_ID" [submitted]="submitted"></app-dropdown>
+            [endControl]="queryForm.controls.ECR_SchFinTime_End"
+            calendarType="dateRange"
+            [submitted]="submitted"
+          ></app-calendar-range>
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-4"
+            label="異動類型"
+            controlName="ECR_FLD_ID"
+            [options]="ECR_FLD_IDOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.ECR_FLD_ID"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -45,11 +89,18 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="ECR_SchNo" [data]="data" [columns]="columns" [showCheckBox]="false"
-    [multiSortMeta]="[{ field: 'ECR_SchNo', order: 1 }]"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [totalRecords]="totalRecords" [lazy]="true"
-    [loading]="loading" [showPaginator]="true" [selectedItems]="selectedItems" [showReportMode]="false"
-    [rowsPerPageOptions]="[30, 60, 90, 120, 150]" [expansionRowsPerPageOptions]="expansionRowsPerPageOptions"
-    [rows]="30" [showDelete]="false" [showDetail]="false" [showEdit]="true" [showManage]="true"
-    (edit)="onEdit($event)"></app-table>
+  <app-table-report
+    dataKey="ECR_SchNo"
+    [data]="data"
+    [columns]="columns"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [selectedItems]="selectedItems"
+    [showDelete]="false"
+    [showDetail]="false"
+    [showEdit]="true"
+    (edit)="onEdit($event)"
+    [lastQueryBody]="lastQueryParams"
+    [queryFunction]="tls46030Service.queryTLS46030.bind(tls46030Service)"
+  ></app-table-report>
 </div>
