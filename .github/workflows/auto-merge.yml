@@ -24,23 +24,23 @@ jobs:
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
       - name: Merge dev to main
-        id: merge
         run: |
           git checkout main
           git merge origin/dev
           git push origin main
 
       - name: Notify Discord
-        if: always() # 無論合併成功還是失敗，都執行通知
+        if: always()
         run: |
-          # 設定狀態訊息
+          # 標註專案類型 (你可以根據不同 Repo 修改這行)
+          PROJECT_TYPE="Frontend"  # <--- 後端專案請改為 "Backend"
+
           if [ "${{ job.status }}" == "success" ]; then
-            MESSAGE="🚀 自動合併成功！Dev 已同步至 Main。"
+            MESSAGE="🚀 [$PROJECT_TYPE] 自動合併成功！\nRepo: ${{ github.repository }}\n分支: dev → main"
           else
-            MESSAGE="❌ 合併失敗！請檢查 GitHub Actions 衝突紀錄。"
+            MESSAGE="❌ [$PROJECT_TYPE] 合併失敗！\nRepo: ${{ github.repository }}\n請檢查 GitHub Actions 衝突紀錄。"
           fi
 
-          # 發送通知到 Discord
           curl -H "Content-Type: application/json" \
                -d "{\"content\": \"$MESSAGE\"}" \
                ${{ secrets.DISCORD_WEBHOOK_URL }}
