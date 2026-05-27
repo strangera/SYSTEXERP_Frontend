@@ -30,16 +30,17 @@ jobs:
           git merge origin/dev
           git push origin main
 
-      - name: Notify Discord (Success)
-        if: success()
-        uses: appleboy/discord-action@master
-        with:
-          webhook_id: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          message: "🚀 自動合併成功！Dev 已同步至 Main。"
+      - name: Notify Discord
+        if: always() # 無論合併成功還是失敗，都執行通知
+        run: |
+          # 設定狀態訊息
+          if [ "${{ job.status }}" == "success" ]; then
+            MESSAGE="🚀 自動合併成功！Dev 已同步至 Main。"
+          else
+            MESSAGE="❌ 合併失敗！請檢查 GitHub Actions 衝突紀錄。"
+          fi
 
-      - name: Notify Discord (Failure)
-        if: failure()
-        uses: appleboy/discord-action@master
-        with:
-          webhook_id: ${{ secrets.DISCORD_WEBHOOK_URL }}
-          message: "❌ 合併失敗！請檢查 GitHub Actions 衝突紀錄。"
+          # 發送通知到 Discord
+          curl -H "Content-Type: application/json" \
+               -d "{\"content\": \"$MESSAGE\"}" \
+               ${{ secrets.DISCORD_WEBHOOK_URL }}
