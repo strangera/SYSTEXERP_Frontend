@@ -67,11 +67,11 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> impl
   totalRecords = 0;
   viewTotalRecords = 0;
   selectedItems: Fin32020Row[] = [];
-
+  tableVisible = true;
   lastQueryBody: any = null;
   private _currentSortBy: SortItem[] = [];
   footerData: any = undefined;
-  tableVer = 0;
+
   moneyFormat = (value: any): string => {
     const num = Number(value ?? 0);
     if (!Number.isFinite(num)) return '0';
@@ -160,13 +160,23 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> impl
           this.viewTotalRecords = 0;
           this.footerData = undefined;
           this.lastQueryBody = null;
-          this.tableVer++;
+    
         }
       });
   }
 
+private resetTableBeforeQuery(): void {
+  this.tableVisible = false;
 
+  this.data = [];
+  this.selectedItems = [];
+  this.footerData = undefined;
+  this.totalRecords = 0;
+  this.viewTotalRecords = 0;
+  this.lastQueryBody = null;
 
+  this.cdr.detectChanges();
+}
   private formatDate(val: string | null | undefined): string {
     if (!val) return '';
     const d = new Date(val);
@@ -325,47 +335,47 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> impl
       SortBy: raw.SortBy || this._currentSortBy || this.defaultSort,
     });
 
-    this.loading = true;
-    this.data = [];
-    this.selectedItems = [];
-    this.footerData = undefined;
-    this.totalRecords = 0;
-    this.viewTotalRecords = 0;
-    this.tableVer++;
+    
+    this.resetTableBeforeQuery();
 
-    this.fin32020Service
-      .queryFIN32020(payload)
-      .pipe(untilDestroyed(this))
-      .subscribe({
-        next: (res: ApiResponse<Fin32020Row[]>) => {
-          const rows: Fin32020Row[] = Array.isArray(res?.Data) ? res.Data : [];
+    setTimeout(() => {
+      this.tableVisible = true;
+      this.loading = true;
+      this.cdr.detectChanges();
 
-          this.initRows(rows);
+      this.fin32020Service
+        .queryFIN32020(payload)
+        .pipe(untilDestroyed(this))
+        .subscribe({
+          next: (res: ApiResponse<Fin32020Row[]>) => {
+            const rows: Fin32020Row[] = Array.isArray(res?.Data) ? res.Data : [];
 
-          const realTotal =
-            Number((res as any)?.TotalCount ?? rows.length) || rows.length;
+            this.initRows(rows);
 
-          // 先給排序狀態，再給 data
-          this.lastQueryBody = { ...payload };
-          this._currentSortBy = payload.SortBy ?? this.defaultSort;
-          this.totalRecords = realTotal;
-          this.viewTotalRecords = realTotal;
+            const realTotal =
+              Number((res as any)?.TotalCount ?? rows.length) || rows.length;
 
-          this.data = rows;
-          this.cdr.detectChanges();
+            this.lastQueryBody = { ...payload };
+            this._currentSortBy = payload.SortBy ?? this.defaultSort;
+            this.totalRecords = realTotal;
+            this.viewTotalRecords = realTotal;
+            this.data = rows;
 
-          this.saveQueryState();
-          this.loading = false;
-        },
-        error: (err: any) => {
-          console.error('FIN32020 API error:', err);
-          this.data = [];
-          this.totalRecords = 0;
-          this.viewTotalRecords = 0;
-          this.footerData = undefined;
-          this.loading = false;
-        },
-      });
+            this.saveQueryState();
+            this.loading = false;
+            this.cdr.detectChanges();
+          },
+          error: (err: any) => {
+            console.error('FIN32020 API error:', err);
+            this.data = [];
+            this.totalRecords = 0;
+            this.viewTotalRecords = 0;
+            this.footerData = undefined;
+            this.loading = false;
+            this.cdr.detectChanges();
+          },
+        });
+    });
   }
 
   onClear(frm: FormGroup): void {
@@ -397,6 +407,8 @@ export class FIN32020Component extends BasicQueryPageComponent<Fin32020Row> impl
 
     this.queryStateService.clearQueryState(this.ProgNo);
     this.queryStateService.clearQueryState(`${this.ProgNo}_ext`);
+   
+    this.cdr.detectChanges();
   }
 
   onClickCreate(): void {
