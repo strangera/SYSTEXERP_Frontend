@@ -91,8 +91,9 @@ export class Fin55120cruComponent extends BasicCruPageComponent<unknown> impleme
       AccNoTo: toAcc,
       DateFrom: this.dateFrom || '',
       DateTo: this.dateTo || '',
+      VouStatusList: ['3'], // 資產負債表只顯示已過帳的資料
       PageSize: 999,
-      PageIndex: 1
+      PageIndex: 1,
     };
 
     this.fin55120Service.queryFIN55050(body).pipe(
