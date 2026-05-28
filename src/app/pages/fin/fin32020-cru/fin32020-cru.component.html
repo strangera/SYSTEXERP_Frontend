@@ -90,9 +90,10 @@
         <form
           [formGroup]="arsSearchForm"
           (ngSubmit)="onSearchARS()"
-          class="grid p-fluid mb-3"
+          class="grid p-fluid mb-2"
         >
-          <div class="col-12 md:col-4">
+          <!-- 應收帳款單號 -->
+          <div class="col-12 md:col-3">
             <app-input-text
               label="應收帳款單號"
               controlName="ARS_No"
@@ -101,7 +102,8 @@
             ></app-input-text>
           </div>
 
-          <div class="col-12 md:col-4">
+          <!-- 廠客代號 -->
+          <div class="col-12 md:col-3">
             <app-dropdown
               label="廠客代號"
               controlName="VEN_No"
@@ -113,6 +115,7 @@
             ></app-dropdown>
           </div>
 
+          <!-- 立帳日 -->
           <div class="col-12 md:col-4">
             <app-calendar-range
               calendarType="dateRange"
@@ -123,42 +126,48 @@
             ></app-calendar-range>
           </div>
 
-          <div class="col-12 flex justify-content-end mt-2">
+          <!-- 查詢按鈕 -->
+          <div class="col-12 md:col-2 flex align-items-end">
             <app-button btnType="query" [type]="'submit'"></app-button>
           </div>
         </form>
-<div class="dialog-table-wrapper">
-<app-fin32020table-edit
-  [tableKey]="'fin32020ArsDialog'"
-  dataKey="ARS_No"
-  [data]="arsList"
-  [columns]="arsDialogColumns"
-  [loading]="arsLoading"
-  [disabled]="false"
-  [showReorder]="false"
-  [showCheckBox]="false"
-  [showSingleSelect]="true"
-  [selectedItem]="arsSelectedRow"
-  (selectedItemChange)="arsSelectedRow = $event"
-  (rowDoubleClick)="onARSDoubleClick($event)"
-  [isRowMarked]="arsRowMarkedFn"
-  [canInsert]="false"
-  [showDelete]="false"
-  [showCaption]="false"
-  [showPaginator]="false"
-  [scrollable]="true"
-  [scrollHeight]="'420px'"
-  (tableScrollBottom)="loadMoreARS($event)"
-></app-fin32020table-edit>
-</div>
 
-        <div class="flex justify-content-end gap-2 mt-5">
+        <!-- TABLE -->
+        <div class="dialog-table-wrapper">
+          <app-fin32020table-edit
+            [tableKey]="'fin32020ArsDialog'"
+            dataKey="ARS_No"
+            [data]="arsList"
+            [columns]="arsDialogColumns"
+            [loading]="arsLoading"
+            [disabled]="false"
+            [showSummary]="false"
+            [showReorder]="false"
+            [showCheckBox]="false"
+            [showSingleSelect]="true"
+            [selectedItem]="arsSelectedRow"
+            (selectedItemChange)="arsSelectedRow = $event"
+            (rowDoubleClick)="onARSDoubleClick($event)"
+            [isRowMarked]="arsRowMarkedFn"
+            [canInsert]="false"
+            [showDelete]="false"
+            [showCaption]="false"
+            [showPaginator]="false"
+            [scrollable]="true"
+            [scrollHeight]="'400px'"
+            (tableScrollBottom)="loadMoreARS($event)"
+          ></app-fin32020table-edit>
+        </div>
+
+        <!-- 按鈕 -->
+        <div class="flex justify-content-end gap-2 mt-2">
           <app-button
             btnType="cancel"
             [type]="'button'"
             label="清除"
             (click)="onARSCancel()"
           ></app-button>
+
           <app-button
             btnType="submit"
             [type]="'button'"
@@ -207,32 +216,32 @@
           </div>
         </form>
 
-<div class="dialog-table-wrapper">
-<app-fin32020table-edit
-  [tableKey]="'fin32020AdjAccDialog'"
-  dataKey="CAR_AccNo"
-  [data]="adjAccList"
-  [columns]="adjAccDialogColumns"
-  [loading]="adjAccLoading"
-  [disabled]="false"
-  [showReorder]="false"
-  [showCheckBox]="false"
-  [showSingleSelect]="true"
-  [selectedItem]="adjAccSelectedRow"
-  (selectedItemChange)="adjAccSelectedRow = $event"
-  (rowDoubleClick)="onAdjAccDoubleClick($event)"
-  [isRowMarked]="adjAccRowMarkedFn"
-  [canInsert]="false"
-  [showDelete]="false"
-  [showCaption]="false"
-  [showPaginator]="false"
-  [scrollable]="true"
-  [scrollHeight]="'420px'"
-  [showSort]="true"
-  [multiSortMeta]="[{ field: 'CAR_AccNo', order: 1 }]"
-  (tableScrollBottom)="loadMoreAdjAcc($event)"
-></app-fin32020table-edit>
-</div>
+        <div class="dialog-table-wrapper">
+          <app-fin32020table-edit
+            [tableKey]="'fin32020AdjAccDialog'"
+            dataKey="CAR_AccNo"
+            [data]="adjAccList"
+            [columns]="adjAccDialogColumns"
+            [loading]="adjAccLoading"
+            [disabled]="false"
+            [showReorder]="false"
+            [showCheckBox]="false"
+            [showSingleSelect]="true"
+            [selectedItem]="adjAccSelectedRow"
+            (selectedItemChange)="adjAccSelectedRow = $event"
+            (rowDoubleClick)="onAdjAccDoubleClick($event)"
+            [isRowMarked]="adjAccRowMarkedFn"
+            [canInsert]="false"
+            [showDelete]="false"
+            [showCaption]="false"
+            [showPaginator]="false"
+            [scrollable]="true"
+            [scrollHeight]="'400px'"
+            [showSort]="true"
+            [multiSortMeta]="[{ field: 'CAR_AccNo', order: 1 }]"
+            (tableScrollBottom)="loadMoreAdjAcc($event)"
+          ></app-fin32020table-edit>
+        </div>
         <div class="flex justify-content-end gap-2 mt-5">
           <app-button
             btnType="cancel"
