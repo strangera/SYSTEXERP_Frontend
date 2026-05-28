@@ -56,6 +56,7 @@ export class ValidationService {
       bnkIdDuplicate: '此【公司銀行科目】已有【帳戶編號】使用，請重新輸入。',
       invalidCompanyId: '統一編號格式錯誤',
       reserveAmtTooLarge: '保留款金額不可大於應付金額',
+      invalidIp: 'IP 位址格式錯誤 (範例: 192.168.1.1)',
     };
     return config[validatorName];
   }
@@ -630,5 +631,20 @@ export class ValidationService {
       }
       return null;
     };
+  }
+
+  // 只能輸入正確的 IPv4 格式
+  ipValidator(control: { value: string | null }): ValidationErrors | null {
+    const value = control.value;
+    if (value === null || value === '') {
+      return null;
+    }
+    // IP 位址正規表達式
+    const ipPattern = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+
+    if (!ipPattern.test(value)) {
+      return { invalidIp: true }; // 定義錯誤 key 為 invalidIp
+    }
+    return null;
   }
 }
