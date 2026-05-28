@@ -250,11 +250,17 @@ export class FIN15080Component extends BasicQueryPageComponent<any> implements O
   }
 
   private joinUrlNoEncode(base: string, path: string): string {
-    // 安全地移除結尾的斜線
-    const cleanBase = base.endsWith('/') ? base.replace(/\/+$/, '') : base;
+    // 使用 while 或 if 檢查字尾是否為斜線，是的話就切除
+    let cleanBase = base.trim();
+    if (cleanBase.endsWith('/')) {
+      cleanBase = cleanBase.slice(0, -1);
+    }
 
-    // 安全地移除開頭的斜線
-    const cleanPath = path.startsWith('/') ? path.replace(/^\/+/, '') : path;
+    // 字首斜線同樣可以用原生方法處理
+    let cleanPath = path.trim();
+    if (cleanPath.startsWith('/')) {
+      cleanPath = cleanPath.slice(1);
+    }
 
     return `${cleanBase}/${cleanPath}`;
   }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { SafeUrl } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { finalize, Observable, tap } from 'rxjs';
@@ -12,7 +12,6 @@ import { ReportColumn } from './table-report.model';
 export class TableReportUtilityService {
 
   constructor(
-    private readonly sanitizer: DomSanitizer,
     private readonly messageService: NotificationService,
   ) { }
 
@@ -67,7 +66,7 @@ export class TableReportUtilityService {
       // 3. 拼接並處理可能的重複斜線
       const finalUrl = `${baseUrl}/${cleanPath}`;
 
-      const safeUrl = this.sanitizer.bypassSecurityTrustUrl(finalUrl);
+      const safeUrl = finalUrl;
       this.safeUrlCache.set(url, safeUrl);
       return safeUrl;
     } catch (e) {

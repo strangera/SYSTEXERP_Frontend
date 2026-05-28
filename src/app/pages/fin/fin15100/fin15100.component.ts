@@ -20,10 +20,6 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
-
-
-
-
 @Component({
   selector: 'app-fin15100',
   templateUrl: './fin15100.component.html',
@@ -59,8 +55,8 @@ export class FIN15100Component extends BasicQueryPageComponent<unknown> implemen
     validators: [this.atLeastOneSelectionValidator()]
   });
   constructor(
-    private fin15100Service: FIN15100Service,
-    private datePipe: DatePipe
+    private readonly fin15100Service: FIN15100Service,
+    private readonly datePipe: DatePipe
   ) {
     super();
   }
@@ -90,8 +86,16 @@ export class FIN15100Component extends BasicQueryPageComponent<unknown> implemen
     });
   }
   private joinUrlNoEncode(base: string, path: string): string {
-    const cleanBase = base.replace(/\/+$/, '');
-    const cleanPath = String(path).replace(/^\/+/, '');
+    let cleanBase = base.trim();
+    if (cleanBase.endsWith('/')) {
+      cleanBase = cleanBase.slice(0, -1);
+    }
+
+    let cleanPath = String(path).trim();
+    if (cleanPath.startsWith('/')) {
+      cleanPath = cleanPath.slice(1);
+    }
+
     return `${cleanBase}/${cleanPath}`;
   }
 

@@ -60,23 +60,29 @@ function vendorDisplayName(ven: Option | undefined): string | undefined {
   return label.slice(idx + 3).trim() || undefined;
 }
 
-function splitVenBankAccount(venBankAccount: string | undefined): { VEN_BankAccountNo?: string; VEN_AccountName?: string; } {
+function splitVenBankAccount(venBankAccount: string | undefined): {
+  VEN_BankAccountNo?: string;
+  VEN_AccountName?: string;
+} {
   const s = typeof venBankAccount === 'string' ? venBankAccount.trim() : '';
   if (!s) return {};
 
-  // 1. 使用正規表達式做取代，將 '/' 前後的空格統一處理掉
-  // \s*/\s* 的邏輯等於：先取代所有包含空格的斜線為純斜線
-  const sanitized = s.replace(/\s*\/\s*/g, '/');
-
-  // 2. 直接用字串分割，這是最快且完全沒有回溯風險的作法
-  const parts = sanitized.split('/');
+  // 1. 直接用字串的 '/' 進行分割，無任何回溯風險
+  const parts = s.split('/');
 
   if (parts.length >= 2) {
+    // 2. 第一部分就是帳號，順便清除空格
+    const bankAccountNo = parts[0].trim();
+
+    // 3. 剩餘的部分重新用 '/' 組合回去（保留內含的單一斜線），並清除空格
+    const accountName = parts.slice(1).join('/').trim();
+
     return {
-      VEN_BankAccountNo: parts[0]?.trim(),
-      VEN_AccountName: parts.slice(1).join('/').trim() // join 回去時保持單一斜線
+      VEN_BankAccountNo: bankAccountNo || undefined,
+      VEN_AccountName: accountName || undefined
     };
   }
+
   return { VEN_BankAccountNo: s };
 }
 

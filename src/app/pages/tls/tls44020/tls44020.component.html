@@ -9,21 +9,21 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
+            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions | async" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="專櫃編號" controlName="TLT_No" [control]="queryForm.controls.TLT_No"
-              [options]="CounterOptions" optionLabel="formLabel" optionValue="value"
+              [options]="CounterOptions | async" optionLabel="label" optionValue="value"
               [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別" controlName="tlt_building" [options]="buildingNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="館別" controlName="tlt_building" [options]="buildingNoOptions | async" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="樓層" controlName="tlt_floor" [options]="floorOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="樓層" controlName="tlt_floor" [options]="floorOptions | async" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="收銀機IP" controlName="EDC_IP" [control]="queryForm.controls.EDC_IP"
@@ -70,42 +70,57 @@
             </div>
 
             <!-- 切換 layout -->
-            <p-dataViewLayoutOptions (layoutChange)="onLayoutChange($event)"></p-dataViewLayoutOptions>
+            <p-dataViewLayoutOptions></p-dataViewLayoutOptions>
           </div>
         </div>
       </ng-template>
 
       <!-- List 模式 -->
-      <ng-template pTemplate="list" let-data>
+      <ng-template pTemplate="list" let-items>
         <div class="grid grid-nogutter">
-          <div class="col-12" *ngFor="let row of filteredData; let i = index">
-            <div class="flex flex-row justify-content-between align-items-center p-3 border-bottom-1 surface-border">
-              <div class="flex-1">
-                <div>
-                  <b>位置編號：</b>
-                  {{ row.ECR_LocNo }}
+          <div class="col-12 row-hover-effect" *ngFor="let row of filteredData; let first = first">
+            <div class="flex flex-column md:flex-row justify-content-between align-items-stretch p-3 gap-3"
+              [ngClass]="{ 'border-top-1 surface-border': !first }">
+
+              <!-- 左側：位置與機台核心資訊 -->
+              <div class="flex align-items-center gap-4 flex-1">
+                <div class="flex flex-column justify-content-center">
+                  <span class="text-sm font-semibold text-primary mb-1">位置 {{ row.ECR_LocNo }}</span>
+                  <div class="text-base font-bold text-900">機號：{{ row.ECR_No }}</div>
                 </div>
-                <div>
-                  <b>收銀機號：</b>
-                  {{ row.ECR_No }}
-                </div>
-                <div>
-                  <b>專櫃編號：</b>
-                  {{ row.TLT_No }}
-                </div>
-                <div>
-                  <b>櫃位名稱：</b>
-                  {{ row.TLT_Name }}
-                </div>
-                <div>
-                  <b>中信：</b>
-                  {{ getBankStatus(row, '中信') }}
-                </div>
-                <div>
-                  <b>聯信：</b>
-                  {{ getBankStatus(row, '聯信') }}
+
+                <div class="hidden md:block vertical-divider"></div>
+
+                <!-- 中間：櫃位編號與名稱 -->
+                <div class="flex flex-column justify-content-center">
+                  <span class="text-xs text-secondary mb-1">專櫃資訊</span>
+                  <div class="text-sm font-medium text-800">
+                    <span class="font-bold text-700 mr-2">[{{ row.TLT_No }}]</span>{{ row.TLT_Name }}
+                  </div>
                 </div>
               </div>
+
+              <!-- 右側：刷卡機狀態晶片區域 -->
+              <div class="flex align-items-center justify-content-start md:justify-content-end gap-2 min-w-12rem">
+                <ng-container *ngIf="isShutdown(row); else listEdcChips">
+                  <div class="status-chip shutdown p-2 border-round flex align-items-center gap-2">
+                    <i class="pi pi-desktop"></i>
+                    <span class="text-xs font-medium">機台已關機</span>
+                  </div>
+                </ng-container>
+
+                <ng-template #listEdcChips>
+                  <span [ngClass]="getEdcStatusClass(getBankStatus(row, '中信'))"
+                    pTooltip="刷卡機編號-{{ row.EDC_TmID1 }} / IP-{{ row.EDC_IP1 }}" tooltipPosition="top">
+                    中信：{{ getBankStatus(row, '中信') }}
+                  </span>
+                  <span [ngClass]="getEdcStatusClass(getBankStatus(row, '聯信'))"
+                    pTooltip="刷卡機編號-{{ row.EDC_TmID2 }} / IP-{{ row.EDC_IP2 }}" tooltipPosition="top">
+                    聯信：{{ getBankStatus(row, '聯信') }}
+                  </span>
+                </ng-template>
+              </div>
+
             </div>
           </div>
         </div>

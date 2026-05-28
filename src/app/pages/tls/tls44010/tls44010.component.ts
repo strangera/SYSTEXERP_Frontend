@@ -1,10 +1,9 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { AsyncPipe, CommonModule } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ECRNoService } from '@service/basic/queryPOS1002.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MenuItem } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -12,14 +11,24 @@ import { DataViewModule } from 'primeng/dataview';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { TabMenuModule } from 'primeng/tabmenu';
-import { TLS44010Service } from '../../../service/api/tls/tls44010.service';
-import { CounterNameService } from '../../../service/basic/queryTLTTALENT.service';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { TooltipModule } from 'primeng/tooltip';
+import { finalize } from 'rxjs';
+import { EOSStatus, QueryTLS44010Response, TLS44010Service } from '../../../service/api/tls/tls44010.service';
+import { DropdownApiService } from '../../../service/utility/dropdown-api.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+
+// 💡 狀態映射字典配置：將 0~5 的狀態配置化管理
+const STATUS_CONFIG: Record<EOSStatus, { class: string; icon: string; color: string; label: string }> = {
+  '0': { class: 'status-chip warning', icon: 'pi pi-pause', color: '#fd7e14', label: '暫停交易' },
+  '1': { class: 'status-chip logout', icon: 'pi pi-sign-out', color: '#dc3545', label: '登出' },
+  '2': { class: 'status-chip purple', icon: 'pi pi-wallet', color: '#6f42c1', label: '完成清帳' },
+  '3': { class: 'status-chip success', icon: 'pi pi-sync', color: '#28a745', label: '交易中' },
+  '4': { class: 'status-chip primary', icon: 'pi pi-users', color: '#0d6efd', label: '完成交班' },
+  '5': { class: 'status-chip shutdown', icon: 'pi pi-power-off', color: '#6c757d', label: '關機' }
+};
 
 @Component({
   selector: 'app-tls44010',
@@ -27,217 +36,123 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
   styleUrls: ['./tls44010.component.scss'],
   standalone: true,
   imports: [
-    ButtonComponent,
-    FormsModule,
-    ReactiveFormsModule,
-    TabMenuModule,
-    TranslateModule,
-    ButtonModule,
-    TableModule,
-    AccordionModule,
-    CommonModule,
-    MenubarComponent,
-    InputTextModule,
-    DataViewModule,
-    DropdownComponent,
-    MultiSelectComponent,
-    InputTextComponent
+    ButtonComponent, FormsModule, ReactiveFormsModule, TabMenuModule,
+    TranslateModule, ButtonModule, TableModule, AccordionModule,
+    CommonModule, MenubarComponent, InputTextModule, DataViewModule,
+    DropdownComponent, MultiSelectComponent, TooltipModule, AsyncPipe,
+    InputTextComponent,
   ]
 })
-export class TLS44010Component extends BasicQueryPageComponent<any> implements OnInit {
-  queryForm = this.formBuilder.group({
-    ECR_No: this.formBuilder.control<string[]>([]),
-    TLT_No: this.formBuilder.control<string[]>([]),
-    tlt_building: this.formBuilder.control<string[]>([]),
-    tlt_floor: this.formBuilder.control<string[]>([]),
-    area_no: this.formBuilder.control<string[]>([]),
-    EOS_IP: this.formBuilder.control<string>(''),
-    EOS_Online: this.formBuilder.control<string>(''),
-    Day: this.formBuilder.control<number>(0),
+export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Response> implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly dropdownApiService = inject(DropdownApiService);
+  private readonly tls44010Service = inject(TLS44010Service);
+
+  queryForm = this.fb.nonNullable.group({
+    ECR_No: [null],
+    TLT_No: [null],
+    tlt_building: [null],
+    tlt_floor: [null],
+    area_no: [null],
+    EOS_IP: [''],
+    EOS_Online: [''],
+    Day: [0],
   });
 
-  items: MenuItem[] = [];
-  activeItem: MenuItem | undefined;
+  items: MenuItem[] = [{ label: '全部' }, { label: '連線機台' }, { label: '離線機台' }];
+  activeItem: MenuItem | undefined = this.items[0];
 
-  data: any[] = [];
-  filteredData: any[] = [];
+  // 完美宣告：直接綁定新版快取選單機制
+  ECRNoOptions$ = this.dropdownApiService.queryPos1002();
+  CounterOptions$ = this.dropdownApiService.queryPos2001();
+  buildingNoOptions$ = this.dropdownApiService.querySys3800();
+  floorOptions$ = this.dropdownApiService.querySys3900();
 
   globalFilter = '';
+  data: QueryTLS44010Response[] = [];
+  filteredData: QueryTLS44010Response[] = [];
   layout: 'list' | 'grid' = 'grid';
-  ECRNoOptions: any[] = [];
-  CounterOptions: any[] = [];
-  buildingNoOptions: IDropdownItem[] = [];
-  floorOptions: IDropdownItem[] = [];
-  constructor(
-    private fb: FormBuilder,
-    private ECRNoService: ECRNoService,
-    private dropDownListService: DropDownListService,
-    private counterNameService: CounterNameService,
-    private tls44010Service: TLS44010Service
-  ) {
-    super();
-  }
 
   ngOnInit() {
     this.initializePage('TLS44010', '/TLS/TLS44010cru', this.queryForm, (form) => this.onSubmit(form));
-    this.loadDropdownOptions();
-    this.ECRNoService.getECRNo().subscribe((data) => {
-      this.ECRNoOptions = data;
-    });
-    this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions =
-        res?.map((x: any) => ({
-          No: x.value,              // 編號
-          Name: x.label,            // 名稱
-          formLabel: `${x.value} - ${x.label}`, // 下拉顯示
-          value: x.value            // 存值
-        })) || [];
-    });
-    //館別
-    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
-    });
-
-
-    this.items = [
-      { label: '全部' },
-      { label: '連線機台' },
-      { label: '離線機台' }
-    ];
-    this.activeItem = this.items[0];
-
     this.onSubmit(this.queryForm);
   }
-  loadDropdownOptions() {
 
-    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.floorOptions = res.Data.map(item => ({
-        ...item,
-        label: item.Name,
-        value: item.No
-      }));
-    });
+  /** 計算機台實際顯示狀態碼 */
+  getDisplayStatus(row: QueryTLS44010Response): EOSStatus {
+    if (row?.EOS_CloseTime) {
+      return '2'; // 若有清帳時間，直接定義為「完成清帳」狀態
+    }
+    return (row?.EOS_Status ? String(row.EOS_Status).trim() : '5') as EOSStatus;
+  }
+
+  // 💡 利用 STATUS_CONFIG 物件，消滅髒亂的大範圍 switch-case
+  getStatusLabel(status: EOSStatus): string {
+    return STATUS_CONFIG[status]?.label ?? '未知狀態';
+  }
+
+  getStatusIcon(status: EOSStatus): string {
+    return STATUS_CONFIG[status]?.icon ?? 'pi pi-question-circle';
+  }
+
+  getStatusColor(status: EOSStatus): string {
+    return STATUS_CONFIG[status]?.color ?? '#6c757d';
+  }
+
+  getStatusClass(status: EOSStatus): string {
+    return STATUS_CONFIG[status]?.class ?? 'status-chip';
   }
 
   onSubmit(form: FormGroup) {
     this.loading = true;
-
-    // 取出表單值
-    const rawValue = form.value;
-
-    // 轉換需要陣列的欄位
+    const rawValue = form.getRawValue();
     const payload = {
       ...rawValue,
-      PageSize: 9999,  // 設定一個很大的數字來取得所有資料
+      PageSize: 9999,
       PageIndex: 1,
-
-      // 確保是陣列
-      ECR_No: Array.isArray(rawValue.ECR_No)
-        ? rawValue.ECR_No
-        : rawValue.ECR_No
-          ? [rawValue.ECR_No]
-          : [],
-      TLT_No: Array.isArray(rawValue.TLT_No)
-        ? rawValue.TLT_No
-        : rawValue.TLT_No
-          ? [rawValue.TLT_No]
-          : [],
-      tlt_building: Array.isArray(rawValue.tlt_building)
-        ? rawValue.tlt_building
-        : rawValue.tlt_building
-          ? [rawValue.tlt_building]
-          : [],
-      tlt_floor: Array.isArray(rawValue.tlt_floor)
-        ? rawValue.tlt_floor
-        : rawValue.tlt_floor
-          ? [rawValue.tlt_floor]
-          : [],
-      area_no: Array.isArray(rawValue.area_no)
-        ? rawValue.area_no
-        : rawValue.area_no
-          ? [rawValue.area_no]
-          : []
+      ECR_No: rawValue.ECR_No,
+      TLT_No: [rawValue.TLT_No],
+      tlt_building: [rawValue.tlt_building],
+      tlt_floor: [rawValue.tlt_floor],
+      area_no: [rawValue.area_no]
     };
 
-    this.tls44010Service.queryTLS44010(payload).subscribe({
-      next: (res) => {
+    this.tls44010Service.queryTLS44010(payload)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe((res) => {
         this.data = res?.Data || [];
-        this.filteredData = [...this.data];
-      },
-      error: (err) => {
-        console.error('查詢失敗', err);
-      },
-      complete: () => {
-        this.loading = false;
-      }
-    });
+        this.filterDataByTab();
+      });
   }
-
 
   onTabChange(item: MenuItem) {
     this.activeItem = item;
-    if (item.label?.includes('全部')) {
+    this.filterDataByTab();
+  }
+
+  private filterDataByTab() {
+    const label = this.activeItem?.label || '全部';
+
+    if (label.includes('全部')) {
       this.filteredData = [...this.data];
-    } else if (item.label?.includes('連線')) {
-      this.filteredData = this.data.filter(d => d.EOS_Online === 'Y'); // 線上
-    } else if (item.label?.includes('離線')) {
-      // 離線：後端回傳 EOS_Online = 'N' 或為空/null 都視為離線
-      this.filteredData = this.data.filter(d => d.EOS_Online === 'N' || d.EOS_Online === null || d.EOS_Online === '');
+    } else if (label.includes('連線')) {
+      this.filteredData = this.data.filter(d => d.EOS_Online === 'Y');
+    } else if (label.includes('離線')) {
+      this.filteredData = this.data.filter(d => d.EOS_Online === 'N' || !d.EOS_Online);
     }
+    this.applyFilter();
   }
 
   applyFilter() {
     const keyword = this.globalFilter?.toLowerCase().trim();
-    if (!keyword) {
-      this.filteredData = [...this.data];
-    } else {
-      this.filteredData = this.data.filter(row =>
-        (row.ECR_LocNo?.toLowerCase().includes(keyword)) ||
-        (row.ECR_No?.toLowerCase().includes(keyword)) ||
-        (row.TLT_No?.toLowerCase().includes(keyword)) ||
-        (row.TLT_Name?.toLowerCase().includes(keyword)) ||
-        (row.ECR_Status?.toLowerCase().includes(keyword)) ||
-        (row.EOS_Online?.toLowerCase().includes(keyword))
-      );
-    }
-  }
+    if (!keyword) return;
 
-  onLayoutChange(event: any) {
-    this.layout = event as 'list' | 'grid';
-  }
-
-  // 依據後端資料計算實際顯示的狀態：
-  // 若 EOS_CloseTime 有值，無論原本狀態為何，一律視為「完成清帳」(狀態碼 '2')
-  getDisplayStatus(row: any): string | null {
-    if (row?.EOS_CloseTime) {
-      return '2';
-    }
-    return row?.EOS_Status ?? null;
-  }
-
-  // 根據 ECR_Status (0~5) 顯示 icon
-  getStatusIcon(status: string | null): string {
-    switch (status) {
-      case '0': return 'pi pi-pause';        // 暫停交易
-      case '1': return 'pi pi-sign-out';     // 登出
-      case '2': return 'pi pi-wallet';       // 完成清帳
-      case '3': return 'pi pi-sync';         // 交易中
-      case '4': return 'pi pi-users';        // 完成交班
-      case '5': return 'pi pi-power-off';    // 關機
-      default: return 'pi pi-question-circle';
-    }
-  }
-
-  // 根據 ECR_Status (0~5) 顯示顏色
-  getStatusColor(status: string | null): string {
-    switch (status) {
-      case '0': return '#fd7e14'; // 暫停交易 = 橘
-      case '1': return '#dc3545'; // 登出 = 紅
-      case '2': return '#6f42c1'; // 完成清帳 = 紫
-      case '3': return '#28a745'; // 交易中 = 綠
-      case '4': return '#0d6efd'; // 完成交班 = 藍
-      case '5': return '#6c757d'; // 關機 = 灰
-      default: return '#6c757d';
-    }
+    this.filteredData = this.filteredData.filter(row =>
+      row.ECR_LocNo?.toLowerCase().includes(keyword) ||
+      row.ECR_No?.toLowerCase().includes(keyword) ||
+      row.TLT_No?.toLowerCase().includes(keyword) ||
+      row.TLT_Name?.toLowerCase().includes(keyword) ||
+      this.getStatusLabel(this.getDisplayStatus(row)).includes(keyword)
+    );
   }
 }

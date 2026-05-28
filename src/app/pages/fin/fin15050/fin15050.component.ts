@@ -1,7 +1,6 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DomSanitizer } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { FIN15050PrintRequest, FIN15050Service } from '@service/api/fin/fin15050.service';
@@ -37,7 +36,7 @@ import { YearMonthComponent } from '../fin11020/query-year-month.component';
     YearMonthComponent
   ]
 })
-export class FIN15050Component extends BasicQueryPageComponent<any> implements OnInit {
+export class FIN15050Component extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
     REP_GUIYM: ['', Validators.required],                                                          // 申報年月
     GUI_Track: ['', [Validators.maxLength(2)]],                                                   // 字軌
@@ -53,7 +52,6 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
     private readonly fin15050Service: FIN15050Service,
     private readonly validationService: ValidationService,
     private readonly datePipe: DatePipe,
-    private readonly sanitizer: DomSanitizer
   ) {
     super();
   }
@@ -85,7 +83,7 @@ export class FIN15050Component extends BasicQueryPageComponent<any> implements O
               ? response.Data.Print_URL
               : `${environment.BaseUrl}${response.Data.Print_URL}`;
             rawUrl = decodeURIComponent(rawUrl);
-            this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
+            this.pdfUrl = rawUrl;
           }
           else {
             this.messageService.errorBubble(response.Message);
