@@ -1,3 +1,4 @@
+import { AsyncPipe, CommonModule } from '@angular/common';
 import { Component, OnInit, computed, effect, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -26,6 +27,8 @@ import { TLS21020Data, TLS21020UpdateQuery } from '../tls21020/tls21020.model';
     DropdownComponent,
     MenubarComponent,
     TableEditComponent,
+    AsyncPipe,
+    CommonModule
   ],
 })
 export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> implements OnInit {

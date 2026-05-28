@@ -130,7 +130,7 @@ export class TLS21020Service {
       take(1),
       map(res => (res ?? []) as POS2013[]),
       tap(res => {
-        this.POS2013Options.set(res.map(item => ({ value: item.VEN_No, label: `${item.VEN_No} - ${item.Name}` })));
+        this.POS2013Options.set(res.map(item => ({ value: item.VEN_No!, label: `${item.VEN_No} - ${item.Name}` } as Option)));
         this.logger.debug(`POS2013s:`, [res]);
       }),
       finalize(() => this.pos2013Loading.set(!1)),
