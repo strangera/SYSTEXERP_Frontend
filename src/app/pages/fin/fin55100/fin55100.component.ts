@@ -53,7 +53,7 @@ export class FIN55100Component extends BasicQueryPageComponent<QueryFIN55100Resp
     { label: '明細', value: '1' },
   ];
   OrgIdOptions = this.dropdownApi.querySys3100();
-  ProjectNoOptions = this.dropdownApi.queryTALPORDERM_DropDownList();
+  ProjectNoOptions = this.dropdownApi.queryGls3002AcctKey();
 
   // 變更資料型別
   data: QueryFIN55100Response[] = [];
