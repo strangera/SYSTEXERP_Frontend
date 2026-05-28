@@ -97,10 +97,10 @@
     [loading]="loading"
     [selectedItems]="selectedItems"
     [showDelete]="false"
-    [showDetail]="false"
-    [showEdit]="true"
     (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
     [lastQueryBody]="lastQueryParams"
     [queryFunction]="tls46030Service.queryTLS46030.bind(tls46030Service)"
+    [editDisabled]="editDisabled"
   ></app-table-report>
 </div>

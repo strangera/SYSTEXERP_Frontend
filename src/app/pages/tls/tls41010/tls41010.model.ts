@@ -39,6 +39,7 @@ export interface TLS41010Data {
   ECR_Name: string;
   ECR_Type: string;
   ECR_TLT_No: string;
+  SYS_SrvNo: string;
   ECR_TLT_Name: string;
   ECR_USR_No: string;
   ECR_USR_Name: string;

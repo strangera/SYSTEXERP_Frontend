@@ -33,7 +33,7 @@
           <app-dropdown
             label="排程狀態"
             controlName="ECR_SchStatus"
-            [options]="ECR_SchStatus_SelectOptions"
+            [options]="ECR_SchStatus_Options"
             optionLabel="label"
             optionValue="value"
             [control]="dataForm.controls.ECR_SchStatus"
@@ -44,19 +44,22 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar
             label="設定啟用日期"
-            calendarType="dateOne"
+            controlName="ECR_SchDate"
             [control]="dataForm.controls.ECR_SchDate"
             [submitted]="submitted"
+            [minDate]="now"
           ></app-calendar>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-calendar
+            calendarType="dateTimeOne"
+            [showSeconds]="true"
             label="異動作業完成時間"
             controlName="ECR_SchFinTime"
             [control]="dataForm.controls.ECR_SchFinTime"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-calendar>
         </div>
       </div>
       <div class="grid p-fluid">
@@ -71,19 +74,41 @@
           [submitted]="submitted"
         ></app-dropdown>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="原設定值"
-            controlName="ECR_FLD_OrgVal"
-            [control]="dataForm.controls.ECR_FLD_OrgVal"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <ng-container [ngSwitch]="selectedType">
+          <ng-container [ngSwitch]="currentFieldType">
             <app-calendar
               *ngSwitchCase="'calendar'"
+              label="原設定值"
+              controlName="ECR_FLD_OrgVal"
+              [control]="dataForm.controls.ECR_FLD_OrgVal"
+              [submitted]="submitted"
+            ></app-calendar>
+
+            <app-dropdown
+              *ngSwitchCase="'dropdown'"
+              label="原設定值"
+              controlName="ECR_FLD_OrgVal"
+              [options]="currentDropdownOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.ECR_FLD_OrgVal"
+              [submitted]="submitted"
+            ></app-dropdown>
+
+            <app-input-text
+              *ngSwitchCase="'input'"
+              label="原設定值"
+              controlName="ECR_FLD_OrgVal"
+              [control]="dataForm.controls.ECR_FLD_OrgVal"
+              [submitted]="submitted"
+            ></app-input-text>
+          </ng-container>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <ng-container [ngSwitch]="currentFieldType">
+            <app-calendar
+              *ngSwitchCase="'calendar'"
+              controlName="ECR_FLD_NewVal"
               label="新設定值"
-              calendarType="dateMonthOne"
               [control]="dataForm.controls.ECR_FLD_NewVal"
               [submitted]="submitted"
             ></app-calendar>
@@ -91,7 +116,7 @@
               *ngSwitchCase="'dropdown'"
               label="新設定值"
               controlName="ECR_FLD_NewVal"
-              [options]="NewValDropdownOptions"
+              [options]="currentDropdownOptions"
               optionLabel="label"
               optionValue="value"
               [control]="dataForm.controls.ECR_FLD_NewVal"

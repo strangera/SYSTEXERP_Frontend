@@ -1,5 +1,5 @@
-import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from './tls25030.service';
@@ -46,7 +46,7 @@ export interface QueryTLS46030Response {
   ECR_FLD_ID: string;
   ECR_FLD_OrgVal: string;
   ECR_FLD_NewVal: string;
-  ECR_SchFinTime?: string;
+  ECR_SchFinTime: Date;
 }
 
 @Injectable({ providedIn: 'root' })

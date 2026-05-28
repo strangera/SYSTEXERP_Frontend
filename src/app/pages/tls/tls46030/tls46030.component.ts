@@ -1,21 +1,21 @@
+import { AsyncPipe } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { QueryTLS46030Request, QueryTLS46030Response, Tls46030Service } from '@service/api/tls/tls46030.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { formatDate, formatDateTime, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { finalize } from 'rxjs';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { AsyncPipe } from '@angular/common';
-import { ReportColumn, formatDate } from '@shared/componentkit/table-report/table-report.model';
 // 2.4.6.4  收銀機異動排程維護
 @Component({
   selector: 'app-tls46030',
@@ -50,11 +50,11 @@ export class TLS46030Component extends BasicQueryPageComponent<QueryTLS46030Resp
     { field: 'ECR_SchStatus', header: '排程狀態' },
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'ECR_FLD_ID', header: '異動類型' },
-    { field: 'ECR_FLD_OrgVal', header: '原設定值' },
-    { field: 'ECR_FLD_NewVal', header: '新設定值' },
-    { field: 'ECR_SchFinTime', header: '異動作業完成時間', format: formatDate },
+    { field: 'ECR_FLD_OrgVal_Display', header: '原設定值' },
+    { field: 'ECR_FLD_NewVal_Display', header: '新設定值' },
+    { field: 'ECR_SchFinTime', header: '異動作業完成時間', format: formatDateTime },
   ];
-
+  public editDisabled = (rowData: QueryTLS46030Response): boolean => rowData.ECR_SchStatus === 'F';
   constructor() { super(); }
 
   ngOnInit(): void {

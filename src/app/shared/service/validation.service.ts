@@ -336,17 +336,31 @@ export class ValidationService {
     return null;
   }
 
-  //起始日期必須大於等於今日
   dateAfterTodayValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const value = control.value;
-      if (!value) return null; // 空值交給 required 判斷
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // 只比日期，不比時間
-      const controlDate = new Date(value);
-      controlDate.setHours(0, 0, 0, 0);
 
-      return controlDate >= today ? null : { dateNotAfterToday: true };
+      // 1. 處理空值 (由 required 處理，這裡跳過)
+      if (value === null || value === undefined || value === '') {
+        return null;
+      }
+
+      // 2. 嚴格檢查：只接受 Date 物件
+      // 這是最關鍵的一步，直接擋掉 `{length: Infinity}`, 'a', 'b' 等垃圾資料
+      if (!(value instanceof Date)) {
+        return null;
+      }
+
+      // 3. 檢查是否為有效的日期 (防止 Invalid Date)
+      if (Number.isNaN(value.getTime())) {
+        return null;
+      }
+
+      // 4. 邏輯比較 (使用 YYYYMMDD 格式比較，不受時區影響)
+      const formatDate = (d: Date) => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+      const today = new Date();
+
+      return formatDate(value) >= formatDate(today) ? null : { dateNotAfterToday: true };
     };
   }
 

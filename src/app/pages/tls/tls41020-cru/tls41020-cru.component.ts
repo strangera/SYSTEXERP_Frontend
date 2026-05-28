@@ -2,7 +2,12 @@ import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS41010Service } from '@service/api/tls/tls41010.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import { TLS41020Data, TLS41020Service } from '../../../service/api/tls/tls41020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -10,11 +15,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
-import { getSYS1000Options } from '@service/system/sys1000.service';
-import { finalize } from 'rxjs';
-import { ValidationService } from '@shared/service/validation.service';
-import { TLS41010Service } from '@service/api/tls/tls41010.service';
 
 @Component({
   selector: 'app-tls41020-cru',
@@ -80,7 +80,7 @@ export class TLS41020CRUComponent extends BasicCruPageComponent<TLS41020Data> im
     // 使用 TLS41010Service 查詢單筆收銀機資料
     // 假設 API 的參數名稱為 ECR_No，如果 API 是用 QueryTLS41010Request，請確保篩選條件正確
     this.tls41010Service.queryTLS41010({ ECR_No: ecrNo }).subscribe(res => {
-      if (res && res.Data && res.Data.length > 0) {
+      if (res?.Data && res.Data.length > 0) {
         const ecrData = res.Data[0];
         this.dataForm.patchValue({
           EDC_BegDate: ecrData.ECR_ActiveDate || '',
