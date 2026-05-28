@@ -100,7 +100,7 @@ export class TLS46050Component extends BasicQueryPageComponent<Tls46050Response>
 
     // 收銀客顯螢幕周邊
     { field: 'EOS_ExtScr', header: '收銀客顯螢幕型態', visible: false },
-    { field: 'EOS_ExtScrSysVer', header: '發票印表機程式版本', cellClass: (row) => row.EOS_ExtScrSysNew === 'N' ? 'text-red-500 font-bold' : 'text-color', visible: false },
+    { field: 'EOS_ExtScrSysVer', header: '收銀客顯螢幕版本', cellClass: (row) => row.EOS_ExtScrSysNew === 'N' ? 'text-red-500 font-bold' : 'text-color', visible: false },
     { field: 'EOS_ExtScrCom', header: '收銀客顯螢幕連接埠', format: (val) => formatAmount2(val), cellClass: (row) => this.getComCheckClass(row.EOS_ExtScrCheck) }, // 預設顯示
 
     // 發票印表機周邊
