@@ -14,8 +14,7 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TableReportComponent } from './table-report/table-report.component';
 // 2.4.6.4  收銀機異動排程維護
 @Component({
   selector: 'app-tls46030',
@@ -35,13 +34,14 @@ export class TLS46030Component extends BasicQueryPageComponent<QueryTLS46030Resp
     ECR_SchFinTime_Start: [null], // 排程作業完成時間(起)
     ECR_SchFinTime_End: [null], // 排程作業完成時間(訖)
     ECR_FLD_ID: [null], // 異動類型
-    ...createPaginationConfig([{ field: 'ECR_SchNo', order: 1 }]),
+    pageSize: [30],
+    pageIndex: [1], // 你將初始頁碼改為 1
+    SortBy: [[{ field: 'ECR_SchNo', order: 1 }]],
   });
   ECR_FLD_IDOptions = getSYS1000Options('ECR_FLD_ID');
   ECR_SchStatus_Options = getSYS1000Options('ECR_SchStatus');
   ECRNoOptions = this.dropDown.queryPos1002();
   data: QueryTLS46030Response[] = [];
-  selectedItems: QueryTLS46030Response[] = [];
   lastQueryParams: QueryTLS46030Request | null = null;
   totalRecords = 0;
   columns: ReportColumn[] = [
@@ -49,6 +49,7 @@ export class TLS46030Component extends BasicQueryPageComponent<QueryTLS46030Resp
     { field: 'ECR_SchDate', header: '設定啟用日期', format: formatDate },
     { field: 'ECR_SchStatus', header: '排程狀態' },
     { field: 'ECR_No', header: '收銀機號' },
+    { field: 'ECR_Name', header: '收銀機名稱' }, // 新增這行
     { field: 'ECR_FLD_ID', header: '異動類型' },
     { field: 'ECR_FLD_OrgVal_Display', header: '原設定值' },
     { field: 'ECR_FLD_NewVal_Display', header: '新設定值' },

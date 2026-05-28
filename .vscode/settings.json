@@ -59,5 +59,8 @@
   "javascript.suggest.paths": true,
   "typescript.suggest.paths": true,
   "html.suggest.paths": true,
-  "typescript.referencesCodeLens.enabled": false
+  "typescript.referencesCodeLens.enabled": false,
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  }
 }
