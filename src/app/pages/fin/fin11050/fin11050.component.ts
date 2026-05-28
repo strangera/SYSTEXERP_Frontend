@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
@@ -46,7 +46,7 @@ export class FIN11050Component extends BasicQueryPageComponent<FIN11050Data> imp
 
   readonly columns: ReportColumn[] = [
     { field: 'id', header: '序號', visible: false },
-    { field: 'INV_GUIType', header: '發票格式代號', visible: true },
+    { field: 'INV_GUIType', header: '發票格式代號', visible: true, format: (value) => value },
     { field: 'INV_GUIName', header: '發票格式名稱', visible: true },
     { field: 'CRT_Date', header: '建立日期', visible: false },
     { field: 'CRT_USR_No', header: '建立人員編號', visible: false },
@@ -58,7 +58,7 @@ export class FIN11050Component extends BasicQueryPageComponent<FIN11050Data> imp
   ];
 
   constructor(
-    private fin11050Service: Fin11050Service,
+    private readonly fin11050Service: Fin11050Service,
   ) {
     super();
   }
