@@ -16,7 +16,6 @@ import { TLS21020Data, TLS21020UpdateQuery } from '../tls21020/tls21020.model';
 @Component({
   selector: 'app-tls21020-cru',
   templateUrl: './tls21020-cru.component.html',
-  styleUrls: ['./tls21020-cru.component.scss'],
   standalone: true,
   imports: [
     FormsModule,
@@ -232,7 +231,7 @@ export class TLS21020CRUComponent extends BasicCruPageComponent<TLS21020Data> im
     }
 
     // 檢查是否有重複的組合 (AccDC, ItemDesc, AccNo)
-    const rowIndex = this.tableData().findIndex(item => item === rowData);
+    const rowIndex = this.tableData().indexOf(rowData);
     if (rowIndex === -1) return { isValid: !1, errorMessage: '找不到該列資料' };
     const isOverlapping = this.tableData().some((item, idx) => {
       if (idx === rowIndex) return !1;

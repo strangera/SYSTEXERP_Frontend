@@ -4,6 +4,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls46050Request, Tls46050Response, Tls46050Service } from '@service/api/tls/tls46050.service';
+import { getSYS1000 } from '@service/system/sys1000.service';
 import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
@@ -73,13 +74,13 @@ export class TLS46050Component extends BasicQueryPageComponent<Tls46050Response>
     { field: 'ECR_SrvIP', header: '後台主機IP', visible: false },
     { field: 'EOS_IP', header: '回傳IP', visible: false },
     { field: 'EOS_Class', header: '班別', visible: false },
-    { field: 'EOS_Status', header: '收銀機即時狀態' }, // 預設顯示 (0=暫停交易、1=登出、3=交易中、5=關機)
+    { field: 'EOS_Status', header: '收銀機即時狀態', format: v => getSYS1000('EOS_Status', v) }, // 預設顯示 (0=暫停交易、1=登出、3=交易中、5=關機)
     { field: 'TLT_No', header: '機台所屬專櫃編號', visible: false },
     { field: 'TLT_Name', header: '機台所屬專櫃名稱', visible: false },
     { field: 'USR_No', header: '作業中的收銀員代碼', visible: false },
     { field: 'EOS_FreeGUIQty', header: '機台剩餘可開立發票張數', format: (val) => formatAmount2(val) }, // 預設顯示
-    { field: 'EOS_Type', header: '機台類型' }, // 預設顯示 (1=統收、2=自收、5=離線、7=虛擬、OT=它社)
-    { field: 'EOS_Online', header: '收銀機連線狀態' }, // 預設顯示 (Y=連線、N=離線)
+    { field: 'EOS_Type', header: '機台類型', format: v => getSYS1000('EOS_Type', v) }, // 預設顯示 (1=統收、2=自收、5=離線、7=虛擬、OT=它社)
+    { field: 'EOS_Online', header: '收銀機連線狀態', format: v => getSYS1000('EOS_Online', v) }, // 預設顯示 (Y=連線、N=離線)
     { field: 'EOS_CloseTime', header: '完成清帳時間', format: (val) => formatDateTime(val), visible: false },
     { field: 'EOS_StartUpTime', header: '收銀機開機時間', format: (val) => formatDateTime(val), visible: false },
     { field: 'EOS_ShutDownTime', header: '收銀機關機時間', format: (val) => formatDateTime(val), visible: false },
