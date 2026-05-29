@@ -22,9 +22,9 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 
 // 配置化管理：統一收納状态對應關係，避免 switch case 膨脹
 const STATUS_CONFIG: Record<EDCStatus, { class: string; icon: string; color: string }> = {
-  '交易中': { class: 'edc-chip success', icon: 'pi pi-sync', color: '#28a745' },
-  '離線': { class: 'edc-chip logout', icon: 'pi pi-sign-out', color: '#dc3545' },
-  '關機': { class: 'edc-chip shutdown', icon: 'pi pi-desktop', color: '#6c757d' }
+  '交易中': { class: 'success', icon: 'pi pi-sync', color: '#28a745' },
+  '離線': { class: 'logout', icon: 'pi pi-sign-out', color: '#dc3545' },
+  '關機': { class: 'shutdown', icon: 'pi pi-desktop', color: '#6c757d' }
 };
 
 @Component({
@@ -105,7 +105,16 @@ export class TLS44020Component extends BasicQueryPageComponent<QueryTLS44020Resp
   getStatusColor(status: string): string {
     return STATUS_CONFIG[status as EDCStatus]?.color ?? '#6c757d';
   }
-
+  /** 計算全機關機台數 */
+  getGlobalStatusCount(status: '關機'): number {
+    if (!this.filteredData) return 0;
+    return this.filteredData.filter(row => this.isShutdown(row)).length;
+  }
+  /** 分別計算中信、聯信在特定狀態下的機台總數 */
+  getBankStatusCount(bank: '中信' | '聯信', status: EDCStatus): number {
+    if (!this.filteredData) return 0;
+    return this.filteredData.filter(row => !this.isShutdown(row) && this.getBankStatus(row, bank) === status).length;
+  }
   onSubmit(form: FormGroup) {
     this.loading = true;
     const rawValue = form.getRawValue(); // 改用 getRawValue 確保取值完整性
