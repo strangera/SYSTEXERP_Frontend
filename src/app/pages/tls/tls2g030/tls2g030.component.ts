@@ -8,7 +8,7 @@ import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
-import { ColumnGroup, formatAmount, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
+import { ColumnGroup, formatAmount, formatPercentage, ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
@@ -45,62 +45,62 @@ export class TLS2G030Component extends BasicQueryPageComponent<TLS2G030DataRespo
 
     // 一月欄位
     { field: 'SalesAmount01', header: '月預算', groupField: 'january', format: formatAmount },
-    { field: 'AvgCommRate01', header: '平均抽成率', groupField: 'january' },
+    { field: 'AvgCommRate01', header: '平均抽成率', format: formatPercentage, groupField: 'january', reportType: 'percentage' },
     { field: 'CommAmount01', header: '抽成額', groupField: 'january', format: formatAmount },
 
     // 二月欄位
     { field: 'SalesAmount02', header: '月預算', groupField: 'february', format: formatAmount },
-    { field: 'AvgCommRate02', header: '平均抽成率', groupField: 'february' },
+    { field: 'AvgCommRate02', header: '平均抽成率', format: formatPercentage, groupField: 'february', reportType: 'percentage' },
     { field: 'CommAmount02', header: '抽成額', groupField: 'february', format: formatAmount },
 
     // 三月欄位
     { field: 'SalesAmount03', header: '月預算', groupField: 'march', format: formatAmount },
-    { field: 'AvgCommRate03', header: '平均抽成率', groupField: 'march' },
+    { field: 'AvgCommRate03', header: '平均抽成率', format: formatPercentage, groupField: 'march', reportType: 'percentage' },
     { field: 'CommAmount03', header: '抽成額', groupField: 'march', format: formatAmount },
 
     // 四月欄位
     { field: 'SalesAmount04', header: '月預算', groupField: 'april', format: formatAmount },
-    { field: 'AvgCommRate04', header: '平均抽成率', groupField: 'april' },
+    { field: 'AvgCommRate04', header: '平均抽成率', format: formatPercentage, groupField: 'april', reportType: 'percentage' },
     { field: 'CommAmount04', header: '抽成額', groupField: 'april', format: formatAmount },
 
     // 五月欄位
     { field: 'SalesAmount05', header: '月預算', groupField: 'may', format: formatAmount },
-    { field: 'AvgCommRate05', header: '平均抽成率', groupField: 'may' },
+    { field: 'AvgCommRate05', header: '平均抽成率', format: formatPercentage, groupField: 'may', reportType: 'percentage' },
     { field: 'CommAmount05', header: '抽成額', groupField: 'may', format: formatAmount },
 
     // 六月欄位
     { field: 'SalesAmount06', header: '月預算', groupField: 'june', format: formatAmount },
-    { field: 'AvgCommRate06', header: '平均抽成率', groupField: 'june' },
+    { field: 'AvgCommRate06', header: '平均抽成率', format: formatPercentage, groupField: 'june', reportType: 'percentage' },
     { field: 'CommAmount06', header: '抽成額', groupField: 'june', format: formatAmount },
 
     // 七月欄位
     { field: 'SalesAmount07', header: '月預算', groupField: 'july', format: formatAmount },
-    { field: 'AvgCommRate07', header: '平均抽成率', groupField: 'july' },
+    { field: 'AvgCommRate07', header: '平均抽成率', format: formatPercentage, groupField: 'july', reportType: 'percentage' },
     { field: 'CommAmount07', header: '抽成額', groupField: 'july', format: formatAmount },
 
     // 八月欄位
     { field: 'SalesAmount08', header: '月預算', groupField: 'august', format: formatAmount },
-    { field: 'AvgCommRate08', header: '平均抽成率', groupField: 'august' },
+    { field: 'AvgCommRate08', header: '平均抽成率', format: formatPercentage, groupField: 'august', reportType: 'percentage' },
     { field: 'CommAmount08', header: '抽成額', groupField: 'august', format: formatAmount },
 
     // 九月欄位
     { field: 'SalesAmount09', header: '月預算', groupField: 'september', format: formatAmount },
-    { field: 'AvgCommRate09', header: '平均抽成率', groupField: 'september' },
+    { field: 'AvgCommRate09', header: '平均抽成率', format: formatPercentage, groupField: 'september', reportType: 'percentage' },
     { field: 'CommAmount09', header: '抽成額', groupField: 'september', format: formatAmount },
 
     // 十月欄位
     { field: 'SalesAmount10', header: '月預算', groupField: 'october', format: formatAmount },
-    { field: 'AvgCommRate10', header: '平均抽成率', groupField: 'october' },
+    { field: 'AvgCommRate10', header: '平均抽成率', format: formatPercentage, groupField: 'october', reportType: 'percentage' },
     { field: 'CommAmount10', header: '抽成額', groupField: 'october', format: formatAmount },
 
     // 十一月欄位
     { field: 'SalesAmount11', header: '月預算', groupField: 'november', format: formatAmount },
-    { field: 'AvgCommRate11', header: '平均抽成率', groupField: 'november' },
+    { field: 'AvgCommRate11', header: '平均抽成率', format: formatPercentage, groupField: 'november', reportType: 'percentage' },
     { field: 'CommAmount11', header: '抽成額', groupField: 'november', format: formatAmount },
 
     // 十二月欄位
     { field: 'SalesAmount12', header: '月預算', groupField: 'december', format: formatAmount },
-    { field: 'AvgCommRate12', header: '平均抽成率', groupField: 'december' },
+    { field: 'AvgCommRate12', header: '平均抽成率', format: formatPercentage, groupField: 'december', reportType: 'percentage' },
     { field: 'CommAmount12', header: '抽成額', groupField: 'december', format: formatAmount },
   ];
   columnGroup: ColumnGroup[] = [
