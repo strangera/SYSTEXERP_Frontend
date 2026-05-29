@@ -425,24 +425,24 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
       console.log('匯出Excel');
       this.btnExcelLoading = true;
       this.tls31080Service.exportTLS31080(formValue).subscribe(blob => {
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = '各時段之營業報表.xlsx';
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.btnExcelLoading = false;
       });
     } else {
       console.log('匯出PDF');
       this.btnPDFLoading = true;
       this.tls31080Service.exportTLS31080PDF(formValue).subscribe(blob => {
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = '各時段之營業報表.pdf';
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.btnPDFLoading = false;
       });
     }

@@ -112,12 +112,12 @@ export class ASS12050MasterComponent implements OnInit {
             this.messageService.errorBubble('報表下載失敗');
             return;
           }
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = `ASS12050_${this.subpoenaId}.xlsx`;
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
           this.messageService.successBubble('報表下載成功');
         },
         error: () => {

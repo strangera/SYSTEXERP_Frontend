@@ -378,13 +378,13 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
 
   // 輔助方法：處理 Blob 下載
   private downloadFile(data: Blob, fileName: string) {
-    const url = window.URL.createObjectURL(data);
+    const url = globalThis.URL.createObjectURL(data);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url); // 釋放記憶體
+    globalThis.URL.revokeObjectURL(url); // 釋放記憶體
     document.body.removeChild(a);
   }
 }

@@ -281,19 +281,19 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
           finalize(() => this.loading = false)
         ).subscribe({
           next: (res: OuterTokenResponse) => {
-            // 安全做法：處理 window.open 的路徑
+            // 安全做法：處理 globalThis.open 的路徑
             let targetUrl = item.System_Url;
 
             // 如果路徑不是 http 開頭，代表它是相對路徑，需要手動補上 Base Href
             if (!targetUrl.startsWith('http')) {
               const base = this.locationStrategy.getBaseHref(); // 取得 /tsrdwebdev/
-              // 使用 URL 物件自動處理斜線，基準點用當前 window.location.origin
-              const absoluteBase = window.location.origin + base;
+              // 使用 URL 物件自動處理斜線，基準點用當前 globalThis.location.origin
+              const absoluteBase = globalThis.location.origin + base;
               targetUrl = new URL(item.System_Url, absoluteBase).href;
             }
 
             const finalUrl = this.appendOrReplaceParam(targetUrl, 'token', res.token);
-            window.open(finalUrl, '_blank');
+            globalThis.open(finalUrl, '_blank');
           },
           error: () => this.messageService.errorBubble('無法前往外部系統')
         })

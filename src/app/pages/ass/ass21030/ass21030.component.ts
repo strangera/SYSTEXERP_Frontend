@@ -332,7 +332,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
   }
 
   downloadErrorFile(filePath: string) {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+    globalThis.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 
   // 匯出 PDF

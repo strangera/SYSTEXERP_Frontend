@@ -485,7 +485,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Response>
         .subscribe(blob => {
           if (blob) {
             const blobUrl = URL.createObjectURL(blob);
-            window.open(blobUrl, '_blank');
+            globalThis.open(blobUrl, '_blank');
           }
         });
     } else {

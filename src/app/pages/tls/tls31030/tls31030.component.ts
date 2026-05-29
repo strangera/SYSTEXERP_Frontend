@@ -425,7 +425,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
           this.messageService.successBubble(res.Message);
           if (res.Data && res.Data.Print_URL) {
             const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-            window.open(downloadUrl, '_blank');
+            globalThis.open(downloadUrl, '_blank');
           }
         });
     }
@@ -436,7 +436,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Item> imp
           this.messageService.successBubble(res.Message);
           if (res.Data && res.Data.Print_URL) {
             const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-            window.open(downloadUrl, '_blank');
+            globalThis.open(downloadUrl, '_blank');
           }
         });
     }

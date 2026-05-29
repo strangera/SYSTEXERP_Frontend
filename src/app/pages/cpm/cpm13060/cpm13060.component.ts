@@ -151,13 +151,13 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
             return;
           }
 
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = `APS停車抵扣報表_${new Date().toISOString().slice(0, 10)}.pdf`;
           document.body.appendChild(a);
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
           document.body.removeChild(a);
         },
       });
@@ -182,13 +182,13 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
             return;
           }
 
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = `APS停車抵扣報表_${new Date().toISOString().slice(0, 10)}.xlsx`;
           document.body.appendChild(a);
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
           document.body.removeChild(a);
         },
       });
@@ -202,13 +202,13 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
       this.messageService.warnBubble('無可匯出的資料。');
       return;
     }
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
     document.body.removeChild(a);
   }
 }

@@ -198,7 +198,7 @@ export class FIN15080Component extends BasicQueryPageComponent<any> implements O
           ? urlFromData
           : this.joinUrlNoEncode(environment.ApiUrl, urlFromData);
 
-        window.open(finalUrl, '_blank', 'noopener');
+        globalThis.open(finalUrl, '_blank', 'noopener');
       },
       error: (err) => {
         this.loading = false;

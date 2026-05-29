@@ -911,7 +911,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     }
 
     this.stepRowsSyncBusy.set(!0);
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       try {
         const ap: FIN53010StepAP[] = [];
         const ar: FIN53010StepAR[] = [];
@@ -961,7 +961,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
       }
     }, 0);
     onCleanup(() => {
-      window.clearTimeout(timer);
+      globalThis.clearTimeout(timer);
       this.stepRowsSyncBusy.set(!1);
     });
   }, { allowSignalWrites: true });
@@ -1214,7 +1214,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (idx >= flow.length - 1) return;
     const nextStep = flow[idx + 1];
     this.stepNavigateBusy.set(!0);
-    window.setTimeout(() => {
+    globalThis.setTimeout(() => {
       this.currentStep.set(nextStep);
       this.appendStepInvoiceRowsFromSummaryForStep(nextStep);
       this.clearStepNavigateBusyAfterRender();
@@ -1229,7 +1229,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (idx <= 0) return;
     const prevStep = flow[idx - 1];
     this.stepNavigateBusy.set(!0);
-    window.setTimeout(() => {
+    globalThis.setTimeout(() => {
       this.currentStep.set(prevStep);
       this.appendStepInvoiceRowsFromSummaryForStep(prevStep);
       this.clearStepNavigateBusyAfterRender();
@@ -1243,7 +1243,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     if (!flow.includes(step)) return;
     if (this.currentStep() === step) return;
     this.stepNavigateBusy.set(!0);
-    window.setTimeout(() => {
+    globalThis.setTimeout(() => {
       this.currentStep.set(step);
       this.appendStepInvoiceRowsFromSummaryForStep(step);
       this.clearStepNavigateBusyAfterRender();

@@ -823,7 +823,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
       if (ct.includes('application/pdf')) {
         try {
           const url = URL.createObjectURL(resp.body!);
-          window.open(url, '_blank');
+          globalThis.open(url, '_blank');
           resolve();
         } catch (e) {
           reject(e);
@@ -838,7 +838,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         } catch {
           try {
             const url = URL.createObjectURL(resp.body!);
-            window.open(url, '_blank');
+            globalThis.open(url, '_blank');
             resolve();
           } catch (e) {
             reject(e);
@@ -855,7 +855,7 @@ export class FIN13020CRUComponent extends BasicCruPageComponent<any> implements 
         const base = environment.ApiUrl;
         const fullUrl = `${base}${printUrl}`;
 
-        window.open(fullUrl, '_blank');
+        globalThis.open(fullUrl, '_blank');
         resolve();
       }).catch((err) => reject(err));
     }).then(() => void 0);

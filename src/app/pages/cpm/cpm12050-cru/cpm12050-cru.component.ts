@@ -233,10 +233,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (blob: Blob) => {
-          const objectUrl = window.URL.createObjectURL(blob);
-          window.open(objectUrl, '_blank');
+          const objectUrl = globalThis.URL.createObjectURL(blob);
+          globalThis.open(objectUrl, '_blank');
           // release after a while
-          setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+          setTimeout(() => { try { globalThis.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
         },
 
       });
@@ -248,10 +248,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       if (apiBase && url.startsWith(apiBase)) {
         this.openProtectedUrl(url);
       } else {
-        window.open(url, '_blank');
+        globalThis.open(url, '_blank');
       }
     } catch (e) {
-      window.open(url, '_blank');
+      globalThis.open(url, '_blank');
     }
   }
 
@@ -284,10 +284,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
         .pipe(untilDestroyed(this))
         .subscribe({
           next: (blob: Blob) => {
-            const objectUrl = window.URL.createObjectURL(blob);
+            const objectUrl = globalThis.URL.createObjectURL(blob);
             this.galleriaItems = [{ url: objectUrl, type: 'image', name: full.split('/').pop() || '' }];
             this.visible = true;
-            setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+            setTimeout(() => { try { globalThis.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
           },
           error: (err: any) => {
             const msg = err?.status === 404 ? '找不到檔案' : (err?.status === 401 ? '需要授權存取檔案' : '無法載入檔案');
@@ -323,9 +323,9 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
         const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
         this.http.get(makeFull(u), { responseType: 'blob', headers: headers as any }).pipe(untilDestroyed(this)).subscribe({
           next: (blob: Blob) => {
-            const objectUrl = window.URL.createObjectURL(blob);
+            const objectUrl = globalThis.URL.createObjectURL(blob);
             // autoset revoke after 60s
-            setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+            setTimeout(() => { try { globalThis.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
             resolve(objectUrl);
           },
           error: (err: any) => reject(err)

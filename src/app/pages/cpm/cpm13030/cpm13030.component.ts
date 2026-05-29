@@ -234,7 +234,7 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
           const blob = res.body;
           if (blob) {
             const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
+            link.href = globalThis.URL.createObjectURL(blob);
             const filename = this.getFilenameFromResponse(res, 'CPM13030_POS停車抵扣報表.xlsx');
             link.download = filename;
             link.click();
@@ -276,7 +276,7 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
           const blob = res.body;
           if (blob) {
             const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
+            link.href = globalThis.URL.createObjectURL(blob);
             const filename = this.getFilenameFromResponse(res, 'CPM13030_POS停車抵扣報表.pdf');
             link.download = filename;
             link.click();
@@ -312,13 +312,13 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
       this.messageService.warnBubble('無可匯出的資料。');
       return;
     }
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
     document.body.removeChild(a);
   }
   /** 動態設定欄位與群組 */

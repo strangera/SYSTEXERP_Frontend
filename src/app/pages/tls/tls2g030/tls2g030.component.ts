@@ -171,14 +171,14 @@ export class TLS2G030Component extends BasicQueryPageComponent<TLS2G030DataRespo
               }
             }
 
-            const url = window.URL.createObjectURL(response.body);
+            const url = globalThis.URL.createObjectURL(response.body);
             const a = document.createElement('a');
             document.body.appendChild(a);
             a.style.display = 'none';
             a.href = url;
             a.download = filename;
             a.click();
-            window.URL.revokeObjectURL(url);
+            globalThis.URL.revokeObjectURL(url);
           }
         },
         error: (err) => {
@@ -216,14 +216,14 @@ export class TLS2G030Component extends BasicQueryPageComponent<TLS2G030DataRespo
               }
             }
 
-            const url = window.URL.createObjectURL(response.body);
+            const url = globalThis.URL.createObjectURL(response.body);
             const a = document.createElement('a');
             document.body.appendChild(a);
             a.style.display = 'none';
             a.href = url;
             a.download = filename;
             a.click();
-            window.URL.revokeObjectURL(url);
+            globalThis.URL.revokeObjectURL(url);
           }
         },
         error: (err) => {

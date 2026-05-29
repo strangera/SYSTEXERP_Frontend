@@ -172,13 +172,13 @@ export class FIN55070Component extends BasicQueryPageComponent<FIN55070Data> imp
     const blob = resp?.body instanceof Blob ? resp.body : resp;
     const fileName = `${baseName}_${new Date().getTime()}${ext}`;
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = fileName;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');

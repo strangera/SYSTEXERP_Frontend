@@ -260,12 +260,12 @@ export class TLS57110Component extends BasicQueryPageComponent<TLS57110Response>
     this.excelBtnLoading = true;
     this.tls57110Service.exportTLS57110(this.lastQueryBody).pipe(untilDestroyed(this)).subscribe({
       next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `庫存月結存貨表_${this.lastQueryBody!.STK_YM}.xlsx`;
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
       },
       complete: () => (this.excelBtnLoading = false),
     });
@@ -277,12 +277,12 @@ export class TLS57110Component extends BasicQueryPageComponent<TLS57110Response>
     this.pdfBtnLoading = true;
     this.tls57110Service.exportTLS57110PDF(this.lastQueryBody).pipe(untilDestroyed(this)).subscribe({
       next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = `庫存月結存貨表_${this.lastQueryBody!.STK_YM}.pdf`;
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
       },
       complete: () => (this.pdfBtnLoading = false),
     });

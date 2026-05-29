@@ -67,7 +67,7 @@ export class ColorUtil {
         const tail6 = up.slice(-6);
         const sysMap: Record<string, string> = {
           'F0F0F0': 'RGB:240,240,240', // btnface-like
-          '000000': 'RGB:0,0,0', // black/window text
+          '000000': 'RGB:0,0,0', // black/globalThis text
         };
         if (sysMap[tail6]) return sysMap[tail6];
         return '';

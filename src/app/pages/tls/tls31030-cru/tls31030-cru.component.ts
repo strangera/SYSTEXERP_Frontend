@@ -177,7 +177,7 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030DetailIt
           this.messageService.successBubble(res.Message);
           if (res.Data && res.Data.Print_URL) {
             const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-            window.open(downloadUrl, '_blank');
+            globalThis.open(downloadUrl, '_blank');
           }
         });
     } else {
@@ -187,7 +187,7 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030DetailIt
           this.messageService.successBubble(res.Message);
           if (res.Data && res.Data.Print_URL) {
             const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-            window.open(downloadUrl, '_blank');
+            globalThis.open(downloadUrl, '_blank');
           }
         });
     }

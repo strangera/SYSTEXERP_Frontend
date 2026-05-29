@@ -52,18 +52,18 @@ export class LoginComponent implements OnInit {
 
     // ---- 逃離 iframe ----
     try {
-      if (typeof window !== 'undefined') {
-        const topWin = window.top as (Window & typeof globalThis) | null;
-        const selfWin = window.self as Window & typeof globalThis;
+      if (typeof globalThis !== 'undefined') {
+        const topWin = globalThis.top as (Window & typeof globalThis) | null;
+        const selfWin = globalThis.self as Window & typeof globalThis;
         if (topWin && topWin !== selfWin) {
           console.log('[LoginComponent] 逃離 iframe');
-          topWin.location.replace(window.location.href);
+          topWin.location.replace(globalThis.location.href);
           return;
         }
       }
     } catch {
       console.log('[LoginComponent] iframe try-catch fallback');
-      window.location.replace(window.location.href);
+      globalThis.location.replace(globalThis.location.href);
       return;
     }
 
@@ -71,7 +71,7 @@ export class LoginComponent implements OnInit {
     const ssoLogout = this.getQueryParamFromLocation('ssoLogout');
 
     console.log('[LoginComponent] ssoLogout(from location):', ssoLogout);
-    console.log('[LoginComponent] current href:', window.location.href);
+    console.log('[LoginComponent] current href:', globalThis.location.href);
 
     if (ssoLogout === '1') {
       console.log('[LoginComponent] 偵測到 ssoLogout=1，執行 ERP 前後端同步登出');
@@ -104,7 +104,7 @@ export class LoginComponent implements OnInit {
               console.log('[LoginComponent] getOuterToken success:', res);
               const target = this.appendOrReplaceParam(redirect, 'token', res.token);
               console.log('[LoginComponent] redirect to:', target);
-              window.location.href = target;
+              globalThis.location.href = target;
             },
             error: (err) => {
               console.error('[LoginComponent] getOuterToken error:', err);
@@ -127,7 +127,7 @@ export class LoginComponent implements OnInit {
    */
   private getRedirectFromPreLoginOrLocation(): string {
     try {
-      const href = window.location.href;
+      const href = globalThis.location.href;
       console.log('[getRedirectFromPreLoginOrLocation] href:', href);
 
       const u = new URL(href);
@@ -210,7 +210,7 @@ export class LoginComponent implements OnInit {
               .subscribe({
                 next: (res) => {
                   const target = this.appendOrReplaceParam(redirect, 'token', res.token);
-                  window.location.href = target;
+                  globalThis.location.href = target;
                 },
                 error: () => {
                   this.notemessage.errorBubble('取得外部登入票證失敗，改為進入系統首頁');
@@ -233,7 +233,7 @@ export class LoginComponent implements OnInit {
   }
   private getQueryParamFromLocation(key: string): string {
     try {
-      const u = new URL(window.location.href);
+      const u = new URL(globalThis.location.href);
 
       for (const [k, v] of u.searchParams.entries()) {
         if (k.toLowerCase() === key.toLowerCase()) {

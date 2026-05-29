@@ -176,7 +176,7 @@ export class Cpm11100Component extends BasicQueryPageComponent<cpm11100> impleme
 
           // 在新視窗開啟圖片
           // 如果你想要更精緻的顯示，建議開一個專門的 Angular Route 頁面
-          const win = window.open('', '_blank');
+          const win = globalThis.open('', '_blank');
           if (win) {
             // 寫入簡單的 HTML 讓圖片在新分頁置中且美觀
             win.document.write(`

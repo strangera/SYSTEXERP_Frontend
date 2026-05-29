@@ -28,6 +28,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 
 import { getSYS1000Options } from '@service/system/sys1000.service';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -35,7 +36,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 
 // === 總計欄位鍵（給 footerData 用）===
 const TOTAL_FIELD_MAP = {
@@ -157,17 +157,17 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_Time', header: '交易時間', visible: true, format: (v: string) => this.formatDateTime(v) },
     { field: 'CRD_Name', header: '信用卡別', visible: true },
     { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, style: 'text-right' },
-{
-  field: 'TERM_No',
-  header: '是否分期',
-  visible: true,
-  format: (v: any) => {
-    // footer 或沒有值 → 空白
-    if (v == null) return '';
-    return Number(v ?? 0) > 1 ? '是' : '否';
-  },
-},
-{ field: 'TERM_Name', header: '分期期數', visible: true },
+    {
+      field: 'TERM_No',
+      header: '是否分期',
+      visible: true,
+      format: (v: any) => {
+        // footer 或沒有值 → 空白
+        if (v == null) return '';
+        return Number(v ?? 0) > 1 ? '是' : '否';
+      },
+    },
+    { field: 'TERM_Name', header: '分期期數', visible: true },
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     { field: 'org_id', header: '組織編號', visible: true },
     { field: 'Org_Name', header: '組織名稱', visible: true },
@@ -625,11 +625,11 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     const name = this.getFilenameFromHeader(cd, ext);
     const blob = response.body;
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = name;
       document.body.appendChild(a); a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');

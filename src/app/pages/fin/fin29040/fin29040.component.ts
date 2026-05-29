@@ -137,11 +137,11 @@ export class FIN29040Component extends BasicQueryPageComponent<any> implements O
   private handleFileExport(resp: any, ext: '.pdf' | '.xlsx', baseName: string) {
     const blob = resp?.body instanceof Blob ? resp.body : resp;
     const fileName = `${baseName}_${new Date().getTime()}${ext}`;
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 }

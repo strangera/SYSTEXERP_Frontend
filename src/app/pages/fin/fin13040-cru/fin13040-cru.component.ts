@@ -736,12 +736,12 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
             }).subscribe({
               next: (printRes) => {
                 const blob = new Blob([printRes.body as Blob], { type: 'application/pdf' });
-                const url = window.URL.createObjectURL(blob);
+                const url = globalThis.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = `${savedInvoiceNumber || savedId}.pdf`;
                 a.click();
-                window.URL.revokeObjectURL(url);
+                globalThis.URL.revokeObjectURL(url);
                 this.onCancel();
               },
               error: () => {

@@ -524,7 +524,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   }
 
   downloadErrorFile(filePath: string) {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+    globalThis.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 
   //!!! 國際條碼/商品管理編號/廠商貨號
