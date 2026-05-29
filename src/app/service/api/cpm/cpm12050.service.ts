@@ -94,6 +94,7 @@ export interface InsertCPM12050Request {
   SUGG_TYPE?: string;        // 建議類型 (客訴/表揚)
   CLASS_EMAIL?: string;      // 分類 Email
   MEMBER_ID?: string;        // 會員編號
+  COMPLAIN_DATE?: string;    // 接件日期 (ISO string)
   ALERT_DATE?: string;       // 提醒日期 (yyyy-MM-dd)
   USR_NO?: string;           // 使用者編號
   USR_NAME?: string;         // 使用者名稱

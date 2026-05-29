@@ -15,7 +15,6 @@ export class FormLabelService {
   registerLabel(controlName: string, label: string): void {
     if (controlName && label) {
       this.controlLabels[controlName] = label;
-      // console.log(`註冊標籤: ${controlName} -> ${label}`); // 調試用
     }
   }
 

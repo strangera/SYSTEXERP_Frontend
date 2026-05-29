@@ -157,13 +157,14 @@
         <div class="col-12">
           <app-table-edit
             #tableEdit
-            [tableKey]="'InvoiceSeqNo'"
+            [tableKey]="'PLU_No'"
             [columns]="columns"
             [data]="data"
             [showInsert]="false"
             [disabled]="isFormReadable"
             (dataChange)="data = $event"
             [autoInsertDefaultRow]="true"
+            [rowValidate]="validateDetailRow"
             (fieldChange)="updateMasterAmounts()"
           ></app-table-edit>
         </div>

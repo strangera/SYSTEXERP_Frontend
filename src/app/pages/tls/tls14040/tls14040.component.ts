@@ -97,10 +97,9 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
   orgOption: apiOption[] = []; //組織
 
   tlt_openflagOption: option[] = [ //營業狀態
-    { value: '0', label: '閉店/撤櫃' },
+    { value: '0', label: '已撤櫃' },
     { value: '1', label: '營業中' },
-    { value: '2', label: '合約結束' },
-    { value: '9', label: '核准時合約尚未開始' },
+    { value: '9', label: '合約未生效' },
   ];
 
   apply_statusOption: option[] = [ //申請案件狀態

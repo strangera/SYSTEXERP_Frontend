@@ -26,7 +26,8 @@
             <div class="grid p-fluid">
               <div class="col pb-0">
                 <app-dropdown label="科目代號" controlName="AccNoFrom" [options]="AccNo_Options | async" optionLabel="label"
-                  optionValue="value" [control]="queryForm.controls.AccNoFrom" [submitted]="submitted"></app-dropdown>
+                  optionValue="value" [control]="queryForm.controls.AccNoFrom" [submitted]="submitted"
+                  (valueChange)="onAccNoFromChange($event)"></app-dropdown>
               </div>
               <div class="flex flex-column justify-content-center align-items-center pt-3">
                 <span class="text-center">~</span>

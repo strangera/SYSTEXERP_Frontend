@@ -47,6 +47,7 @@ import { CellInput } from './table-edit-cell.model';
               [editable]="false"
               [loading]="internalLoading"
               (onChange)="cellInput.onValueChange(cellInput.rowData, $event.value, cellInput.col, cellInput.index)"
+              (onFilter)="handleFilter($event, cellInput)"
               (onHide)="handleHide()"
               (keydown.enter)="handleEnter($event)"
               [virtualScroll]="(getOptions(cellInput.rowData, cellInput.col)?.length ?? 0) > 10"
@@ -135,7 +136,11 @@ export class DropdownCellComponent implements OnChanges, DoCheck {
 
   handleHide() {
     const rowData = this.cellInput.rowData;
-    const col = this.cellInput.col as EditColumn; // 確保類型為 EditColumn
+    const col = this.cellInput.col as EditColumn;
+    // 關閉時重置自訂 filter，避免影響其他列
+    if (col.onFilter) {
+      col.onFilter('', rowData, col, this.cellInput.index);
+    }
     const currentValue = rowData[col.field];
 
     // 如果允許自訂值，跳過驗證邏輯
@@ -232,6 +237,14 @@ export class DropdownCellComponent implements OnChanges, DoCheck {
     }
 
     return this._resolvedOptions;
+  }
+
+  handleFilter(event: { filter: string }, cellInput: CellInput): void {
+    const col = cellInput.col as EditColumn;
+    if (col.onFilter) {
+      col.onFilter(event.filter ?? '', cellInput.rowData, col, cellInput.index);
+      this.cdr.markForCheck();
+    }
   }
 
   handleEnter(event: Event) {

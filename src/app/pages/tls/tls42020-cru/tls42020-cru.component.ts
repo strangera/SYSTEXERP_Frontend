@@ -94,7 +94,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
         }
       }
     },
-    { field: 'PLU_PrnName', header: '商品列印名稱', type: 'input' },
+    { field: 'PLU_PrnName', header: '商品按鍵名稱', type: 'input' },
     { field: 'PLU_FixPrc', header: '商品定價', type: 'inputNumber' },
     {
       field: 'PLU_SalePrc', header: '商品售價', type: 'inputNumber', validate: [validateRequired],

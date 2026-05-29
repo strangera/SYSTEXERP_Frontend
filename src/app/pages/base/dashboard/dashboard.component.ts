@@ -40,7 +40,6 @@ import { DividerModule } from 'primeng/divider';
   ],
 })
 export class DashboardComponent implements OnInit {
-
   systemNoticeData: {
     Pub_StartDate: string,
     Pub_EndDate: string,
@@ -50,23 +49,47 @@ export class DashboardComponent implements OnInit {
   }[] = [];
 
   constructor(
-    private currentPageService: CurrentPageService,
+    private readonly currentPageService: CurrentPageService,
     private readonly systemDataService: SystemDataService,
-    private sanitizer: DomSanitizer
+    private readonly sanitizer: DomSanitizer
   ) { }
+  private sanitizeHtmlString(rawHtml: string): string {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(rawHtml, 'text/html');
 
+    // 1. 移除所有的 <script> 標籤
+    const scripts = doc.querySelectorAll('script');
+    scripts.forEach(script => script.remove());
+
+    // 2. 移除所有元素的內聯惡意事件 (例如 <img src="x" onerror="...">)
+    const allElements = doc.querySelectorAll('*');
+    allElements.forEach(el => {
+      const attributes = Array.from(el.attributes);
+      attributes.forEach(attr => {
+        if (attr.name.startsWith('on')) {
+          el.removeAttribute(attr.name); // 移除 onerror, onload, onclick 等
+        }
+      });
+    });
+
+    return doc.body.innerHTML;
+  }
   ngOnInit(): void {
     this.currentPageService.setCurrentProgNo('dashboard');
     this.systemDataService.querySystemNotice().subscribe(res => {
-      const sortedData = res.Data.sort((a, b) => {
+      const sortedData = res.Data.toSorted((a, b) => {
         return new Date(b.Pub_StartDate).getTime() - new Date(a.Pub_StartDate).getTime();
       });
 
       this.systemNoticeData = sortedData.map(item => {
         const decodedDescription = Base64.decode(item.Pub_Description);
+
+        // 使用瀏覽器原生 API 洗滌 HTML
+        const cleanHtml = this.sanitizeHtmlString(decodedDescription);
+
         return {
           ...item,
-          Pub_Description: this.sanitizer.bypassSecurityTrustHtml(decodedDescription)
+          Pub_Description: cleanHtml
         };
       });
     });

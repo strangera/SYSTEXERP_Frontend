@@ -59,7 +59,7 @@ export interface TLS42020DetailData {
   PLU_MagNo: string;              // 商品貨號
   PLU_No: string;                 // 國際條碼
   PLU_Name: string;               // 商品名稱
-  PLU_PrnName: string;            // 商品列印名稱
+  PLU_PrnName: string;            // 商品按鍵名稱
   PLU_FixPrc: number;    // 商品定價
   PLU_SalePrc: number;   // 商品售價
   SBM_BtnNo: number;              // 菜單按鍵序號
@@ -83,7 +83,7 @@ export interface TLS42020InsertUpdateDetailData {
   PLU_MagNo?: string;              // 商品貨號
   PLU_No?: string;                 // 國際條碼
   PLU_Name: string;               // 商品名稱
-  PLU_PrnName?: string;            // 商品列印名稱
+  PLU_PrnName?: string;            // 商品按鍵名稱
   PLU_FixPrc?: number;             // 商品定價
   PLU_SalePrc: number;            // 商品售價
   SBM_BtnNo: number;              // 菜單按鍵序號

@@ -24,7 +24,7 @@ const numberOrDecimalValidator = (control: AbstractControl): ValidationErrors | 
   if (value === null || value === undefined || value === '') return null;
 
   // 使用簡單的正規表達式，並直接測試
-  return /^\d*\.?\d*$/.test(String(value)) ? null : { pattern: true };
+  return /^\d+(\.\d+)?$/.test(String(value).trim()) ? null : { pattern: true };
 };
 @Component({
   selector: 'app-tls11010-cru',

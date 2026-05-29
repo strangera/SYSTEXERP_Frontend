@@ -78,8 +78,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     CUST_NAME: [null, Validators.maxLength(20)],                                  // 客戶姓名
     SEX: [null],                                                                  // 性別
     CONTACT_ADDR: [null],                                                         // 聯絡地址
-    CONTACT_TEL: [null, Validators.maxLength(30)],                                // 聯絡電話
-    CELL_PHONE: [null, [Validators.maxLength(30), this.cellPhoneValidator]],       // 手機號碼
+    CONTACT_TEL: [null, Validators.maxLength(20)],                                // 聯絡電話
+    CELL_PHONE: [null, [Validators.maxLength(10), this.cellPhoneValidator]],       // 手機號碼
     E_MAIL: [null, [Validators.email, Validators.maxLength(100)]],                // Email
     // SUGG_SOURCE_OTHER: [null, Validators.required],                               // 其他建議來源
     MEMBER_ID: [null],                                                            // 會員編號
@@ -212,6 +212,12 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
     private http: HttpClient
   ) {
     super();
+  }
+
+  /** 把 Date 物件格式化為本地時間的 ISO 字串（避免 toISOString() 轉 UTC 造成日期跑掉） */
+  private toLocalISOString(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T00:00:00`;
   }
 
   getImageUrl(): string | null {
@@ -654,7 +660,8 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             STATUS: formValue.STATUS ?? formValue.ANSWER_YN ?? '3',
             SUGG_TYPE: formValue.SUGG_TYPE,
             CLASS_EMAIL: formValue.CLASS_EMAIL,
-            ALERT_DATE: formValue.ALERT_DATE ? (new Date(formValue.ALERT_DATE)).toISOString() : undefined,
+            COMPLAIN_DATE: formValue.COMPLAIN_DATE ? this.toLocalISOString(new Date(formValue.COMPLAIN_DATE)) : undefined,
+            ALERT_DATE: formValue.ALERT_DATE ? this.toLocalISOString(new Date(formValue.ALERT_DATE)) : undefined,
             USR_NO: formValue.CRT_USR_No,
             USR_NAME: formValue.CRT_USR_Name
           };
@@ -711,7 +718,7 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
             ANSWER_YN: formValue.ANSWER_YN ? String(formValue.ANSWER_YN).toUpperCase() : this.rowdata?.ANSWER_YN ?? undefined,
             CLASS_EMAIL: formValue.CLASS_EMAIL ?? (this.rowdata as any)?.CLASS_EMAIL,
             STATUS: this.forceEditAll ? (formValue.STATUS ?? this.rowdata?.STATUS) : '1',
-            ALERT_DATE: formValue.ALERT_DATE ? (new Date(formValue.ALERT_DATE)).toISOString() : (this.rowdata?.ALERT_DATE ? (new Date(this.rowdata.ALERT_DATE)).toISOString() : undefined),
+            ALERT_DATE: formValue.ALERT_DATE ? this.toLocalISOString(new Date(formValue.ALERT_DATE)) : (this.rowdata?.ALERT_DATE ? this.toLocalISOString(new Date(this.rowdata.ALERT_DATE)) : undefined),
             USR_NO: formValue.CRT_USR_No ?? this.rowdata?.CRT_USR_No,
             USR_NAME: formValue.CRT_USR_Name ?? this.rowdata?.CRT_USR_Name
           };

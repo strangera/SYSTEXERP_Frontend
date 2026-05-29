@@ -58,6 +58,7 @@ import { ReportColumn } from '../tls2f010-cru/tls2f010-table-report.model';
 export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     TxnDate: [yesterday, [Validators.required]],//交易日期_起
+    // TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
     TimeMode: ['A'],// 時段模式：'A'=全時段(預設)，'T'=依範圍 (全時段不用帶TimeFromHH、TimeToHH)
     TimeFromHH: [null, [Validators.min(0), Validators.max(23)]],// 起始小時 (0~23)，當 TimeMode='T' 時生效
     TimeToHH: [null, [Validators.min(0), Validators.max(23)]],// 結束小時 (0~23)，當 TimeMode='T' 時生效
@@ -85,15 +86,22 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
 
   totalRecords = 0;
   data: TLS31080Response[] = [];
+  footerData: TLS31080Response | null = null;
   historyRequestBody: TLS31080Request | null = null; //歷史查詢條件
 
   btnPDFLoading = false;
   btnExcelLoading = false;
 
-  columns: ReportColumn[] = [
-    { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
-    { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
-
+  // 時段column
+  private readonly ALL_HOUR_COLUMNS: ReportColumn[] = [
+    { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
@@ -110,10 +118,45 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
     { field: 'H21', header: '21時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Reentry', header: '補登金額或筆數', visible: true, format: formatAmount, align: 'right' },
-    { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
   ];
+
+  //時段控制
+  get columns(): ReportColumn[] {
+    const { TimeMode, TimeFromHH, TimeToHH } = this.queryForm.getRawValue();
+
+    // 先過濾出符合條件的小時欄位
+    const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
+      // 如果不是範圍模式('T')，或者起訖點沒填，就預設全部顯示
+      if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) {
+        return true;
+      }
+
+      // 從欄位名稱 (例如 'H08') 轉化成數字 8
+      const hourNum = parseInt(col.field.substring(1), 10);
+
+      // 判斷是否在範圍內 (支援跨午夜或正常範圍)
+      if (TimeFromHH <= TimeToHH) {
+        return hourNum >= TimeFromHH && hourNum <= TimeToHH;
+      } else {
+        // 如果填寫 22 到 02 點 (跨日狀況)
+        return hourNum >= TimeFromHH || hourNum <= TimeToHH;
+      }
+    });
+
+    // 3. 重新組合回原本的欄位順序：前置欄位 + 過濾後的小時 + 後置總計欄位
+    return [
+      { field: 'floor_desc', header: '樓層名稱', visible: true, align: 'left' },
+      { field: 'TimeType', header: '時段類型', visible: true, align: 'left' },
+
+      ...filteredHours, // 放入動態過濾後的小時時段
+
+      { field: 'Reentry', header: '補登金額或筆數', visible: true, format: formatAmount, align: 'right' },
+      { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
+      { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
+      { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
+    ];
+  }
+
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
     { field: 'sum', header: '營業佔比' },
@@ -311,8 +354,43 @@ export class TLS31080Component extends BasicQueryPageComponent<TLS31080Response>
 
       console.log('送出request請求', formValue);
       this.tls31080Service.queryTLS31080(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data ?? [];               // 查詢資料
-        this.totalRecords = res.Data.length;      // 長度計算筆數
+        this.data = res.Data.Data ?? [];               // 查詢資料
+        this.footerData = {
+          floor_desc: '營業實績',
+          TimeType: '',
+
+          TotalCount: res.Data.TotalData.TotalTxnCount ?? 0, // 交易筆數總計
+          Subtotal: res.Data.TotalData.TotalSales ?? 0, // 營業實績總計
+          Reentry: res.Data.TotalData.TotalReentry ?? 0,
+          PreOrderAmt: res.Data.TotalData.TotalPreOrderAmt ?? 0,
+          PresaleCheckout: res.Data.TotalData.TotalPresaleCheckout ?? 0,
+
+          H00: res.Data.TotalData.TotalH00 ?? 0,
+          H01: res.Data.TotalData.TotalH01 ?? 0,
+          H02: res.Data.TotalData.TotalH02 ?? 0,
+          H03: res.Data.TotalData.TotalH03 ?? 0,
+          H04: res.Data.TotalData.TotalH04 ?? 0,
+          H05: res.Data.TotalData.TotalH05 ?? 0,
+          H06: res.Data.TotalData.TotalH06 ?? 0,
+          H07: res.Data.TotalData.TotalH07 ?? 0,
+          H08: res.Data.TotalData.TotalH08 ?? 0,
+          H09: res.Data.TotalData.TotalH09 ?? 0,
+          H10: res.Data.TotalData.TotalH10 ?? 0,
+          H11: res.Data.TotalData.TotalH11 ?? 0,
+          H12: res.Data.TotalData.TotalH12 ?? 0,
+          H13: res.Data.TotalData.TotalH13 ?? 0,
+          H14: res.Data.TotalData.TotalH14 ?? 0,
+          H15: res.Data.TotalData.TotalH15 ?? 0,
+          H16: res.Data.TotalData.TotalH16 ?? 0,
+          H17: res.Data.TotalData.TotalH17 ?? 0,
+          H18: res.Data.TotalData.TotalH18 ?? 0,
+          H19: res.Data.TotalData.TotalH19 ?? 0,
+          H20: res.Data.TotalData.TotalH20 ?? 0,
+          H21: res.Data.TotalData.TotalH21 ?? 0,
+          H22: res.Data.TotalData.TotalH22 ?? 0,
+          H23: res.Data.TotalData.TotalH23 ?? 0,
+        }
+        this.totalRecords = res.Data.Data.length;      // 長度計算筆數
         console.log('查詢結果', res.Data ?? []);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })

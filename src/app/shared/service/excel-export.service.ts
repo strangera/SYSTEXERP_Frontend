@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import * as XLSX from 'xlsx-js-style';
 import { WorkBook, WorkSheet } from 'xlsx-js-style';
 
-// 更新 ExcelColumn 介面以符合你的需求
 export interface ExcelColumn {
   field: string;
   header: string;
@@ -49,8 +48,8 @@ export class ExcelExportService {
         const dataForTemplate = [titles, ...dataRows];
         const ws: WorkSheet = XLSX.utils.aoa_to_sheet(dataForTemplate);
 
-        // --- 應用格式到所有預設的空資料單元格 (從 r=1 到 r=100) ---
-        visibleColumns.forEach((col, colIndex) => {
+        // 應用格式到所有預設的空資料單元格 (從 r=1 到 r=100)
+        for (const [colIndex, col] of visibleColumns.entries()) {
           // 【修改 2/3】如果 excelFormat 未指定，則 format 為 null，不設定 cell.z
           const format = col.excelFormat || this.DEFAULT_EXCEL_FORMAT;
 
@@ -63,7 +62,7 @@ export class ExcelExportService {
               // 確保單元格有值 (例如一個空字串) 才能設定格式
               if (cell.v === undefined) {
                 cell.t = 's'; // 設為字串類型
-                cell.v = '';  // 設為空字串值
+                cell.v = ''; // 設為空字串值
               }
 
               // 設定 Excel 數字格式 ('z' 屬性)
@@ -71,16 +70,15 @@ export class ExcelExportService {
               ws[cellAddress] = cell;
             }
           }
-        });
+        }
 
-        // --- 處理欄位寬度 (不變) ---
         const wscols: any[] = [];
         const charWidthMultiplier = 1.5;
 
-        visibleColumns.forEach(col => {
+        for (const col of visibleColumns) {
           if (col.width) {
             wscols.push({ wch: col.width });
-            return;
+            continue;
           }
 
           // 計算標題寬度
@@ -89,7 +87,7 @@ export class ExcelExportService {
           if (text) {
             let len = 0;
             for (let i = 0; i < text.length; i++) {
-              const charCode = text.charCodeAt(i);
+              const charCode = text.codePointAt(i) || 0;
               if (charCode >= 0x4E00 && charCode <= 0x9FFF) {
                 len += charWidthMultiplier;
               } else {
@@ -99,7 +97,7 @@ export class ExcelExportService {
             maxLen = len;
           }
           wscols.push({ wch: Math.ceil(maxLen) + 5 });
-        });
+        }
 
         ws['!cols'] = wscols;
         // 篩選範圍擴大到包含所有預設空行
@@ -139,14 +137,14 @@ export class ExcelExportService {
           finalColumns = columns.filter(col => col.visible !== false);
           exportData = data.map(item => {
             const transformedItem: any = {};
-            finalColumns.forEach(col => {
+            for (const col of finalColumns) {
               let value = item[col.field];
               if (col.format) {
                 value = col.format(value, item);
               }
               // 使用 header 作為 key 以便 json_to_sheet 正確生成工作表
               transformedItem[col.header] = value;
-            });
+            }
             return transformedItem;
           });
           ws = XLSX.utils.json_to_sheet(exportData);
@@ -156,12 +154,11 @@ export class ExcelExportService {
           ws = XLSX.utils.json_to_sheet(data);
         }
 
-        // --- 應用整欄格式 (excelFormat) ---
         const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
         const headerRowCount = 1; // 假設第一行是標題
 
-        finalColumns.forEach((col, colIndex) => {
-          // 【✅ 修改 3/3-A】如果 excelFormat 未指定，則 format 為 null，不設定 cell.z
+        for (const [colIndex, col] of finalColumns.entries()) {
+          // 【修改 3/3-A】如果 excelFormat 未指定，則 format 為 null，不設定 cell.z
           const format = col.excelFormat || this.DEFAULT_EXCEL_FORMAT;
 
           if (format) { // 僅當 format 存在時才進行格式設定
@@ -173,24 +170,17 @@ export class ExcelExportService {
               if (cell) {
                 // 設定 Excel 數字格式 ('z' 屬性)
                 cell.z = format;
-
-                // 【移除】移除強制改為字串的邏輯，讓 XLSX.utils.json_to_sheet 自動處理類型
-                // if (format === '@' && cell.t !== 's') { ... }
               }
             }
           }
-        });
-        // --- 應用整欄格式結束 ---
-
-
-        // --- 處理欄位寬度 (不變) ---
+        }
         const wscols: any[] = [];
         const charWidthMultiplier = 1.5;
 
-        finalColumns.forEach((col) => {
+        for (const col of finalColumns) {
           if (col.width) {
             wscols.push({ wch: col.width });
-            return;
+            continue;
           }
 
           const lengths = [col.header].concat(
@@ -206,11 +196,11 @@ export class ExcelExportService {
           );
 
           let maxLen = 0;
-          lengths.forEach(text => {
-            if (!text) return;
+          for (const text of lengths) {
+            if (!text) continue;
             let len = 0;
             for (let i = 0; i < text.length; i++) {
-              const charCode = text.charCodeAt(i);
+              const charCode = text.codePointAt(i) || 0;
               if (charCode >= 0x4E00 && charCode <= 0x9FFF) {
                 len += charWidthMultiplier;
               } else {
@@ -220,9 +210,9 @@ export class ExcelExportService {
             if (len > maxLen) {
               maxLen = len;
             }
-          });
+          }
           wscols.push({ wch: Math.ceil(maxLen) + 5 });
-        });
+        }
 
         ws['!cols'] = wscols;
         ws['!autofilter'] = { ref: `A1:${XLSX.utils.encode_col(finalColumns.length - 1)}${data.length + 1}` }; // 增加自動篩選

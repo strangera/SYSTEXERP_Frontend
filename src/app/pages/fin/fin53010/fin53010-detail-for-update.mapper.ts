@@ -144,6 +144,7 @@ export function mapAps2002RowToStepPurchase(row: APS2002): FIN53010StepPurchaseI
     deduction_code: row.PUR_DiscNo ?? undefined,
     category_type: row.PUR_Type ?? undefined,
     source_doc_no: row.Source_Doc_No ?? undefined,
+    comb: row.PUR_Comb ?? undefined,
     total_count: row.PUR_Comb_Cnt ?? undefined,
   };
 }
@@ -156,6 +157,7 @@ export function mapAps4002RowToStepBank(row: APS4002): FIN53010StepBankDeposit {
     bank_no: row.BNK_id ?? undefined,
     deposit_amt: row.DAmt ?? undefined,
     withdraw_amt: row.CAmt ?? undefined,
+    status: row.Status ?? undefined,
     note_desc: row.Remark ?? undefined,
     txn_date: parseYmdToDate(row.Source_Date ?? undefined),
   };

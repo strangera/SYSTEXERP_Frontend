@@ -25,103 +25,120 @@ export class ExcelImportService {
     columns: ImportExcelColumn[],
     customValidator?: (rowData: any) => string
   ): Promise<{ data: any[], hasErrors: boolean, errorBlob?: Blob }> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        try {
-          const data = new Uint8Array(e.target.result);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const jsonData: any[][] = XLSX.utils.sheet_to_json<any[][]>(worksheet, { header: 1 });
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData: any[][] = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-          if (jsonData.length <= 1) {
-            this.messageService.warnBubble('Excel 檔案中沒有可讀取的數據行。');
-            resolve({ data: [], hasErrors: false });
-            return;
-          }
+      if (jsonData.length <= 1) {
+        this.messageService.warnBubble('Excel 檔案中沒有可讀取的數據行。');
+        return { data: [], hasErrors: false };
+      }
 
-          const dataRows = jsonData.slice(1);
-          let totalHasErrors = false;
-          const fullReportData: any[] = []; // 用於產生 Excel 報告的完整資料
-          const validDataOnly: any[] = [];  // 回傳給前端畫面的正確資料
+      return this.processData(jsonData.slice(1), columns, customValidator);
+    } catch (error) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      throw err;
+    }
+  }
 
-          dataRows.forEach((row) => {
-            const isRowEmpty = columns.every((_, index) => {
-              const val = row[index];
-              return val === undefined || val === null || String(val).trim() === '';
-            });
-            if (isRowEmpty) return;
+  private processData(dataRows: any[][], columns: ImportExcelColumn[], customValidator?: any) {
+    const fullReportData: any[] = [];
+    const validDataOnly: any[] = [];
+    let totalHasErrors = false;
 
-            const obj: any = {};
-            let rowError = '';
+    for (const row of dataRows) {
+      if (this.isRowEmpty(row, columns)) continue;
 
-            // 1. 基礎類型檢查
-            columns.forEach((col, index) => {
-              let value = row[index];
-              switch (col.type) {
-                case 'number':
-                  if (typeof value === 'string') value = value.replace(/,/g, '');
-                  const num = (value === null || value === undefined || String(value).trim() === '') ? null : Number(value);
-                  if (num !== null && isNaN(num)) rowError += `[${col.header}] 格式錯誤 `;
-                  obj[col.field] = num;
-                  break;
-                case 'date':
-                  if (typeof value === 'number') {
-                    const dateCode = XLSX.SSF.parse_date_code(value);
-                    value = new Date(dateCode.y, dateCode.m - 1, dateCode.d);
-                  } else {
-                    value = value ? new Date(value) : null;
-                  }
-                  if (value instanceof Date && isNaN(value.getTime())) {
-                    rowError += `[${col.header}] 日期格式錯誤 `;
-                  }
-                  obj[col.field] = value;
-                  break;
-                default:
-                  obj[col.field] = (value === undefined || value === null) ? null : String(value).trim();
-                  break;
-              }
-            });
+      const { obj, rowError } = this.validateAndParseRow(row, columns, customValidator);
 
-            // 2. 外部自定義檢查 (例如：檢查代號是否存在)
-            if (customValidator) {
-              const customErr = customValidator(obj);
-              if (customErr) rowError += customErr;
-            }
+      // 建立報告行
+      fullReportData.push(this.createReportRow(row, columns, rowError));
 
-            // 3. 建立報告行 (保留使用者原始輸入內容供對照)
-            const reportRow: any = {};
-            columns.forEach((col, idx) => {
-              reportRow[col.header] = row[idx];
-            });
-            reportRow['檢核結果'] = rowError ? '失敗' : '成功';
-            reportRow['錯誤原因'] = rowError || '';
-            reportRow['_isError'] = !!rowError; // 隱藏標記，用於後續染色
-            fullReportData.push(reportRow);
+      if (rowError) {
+        totalHasErrors = true;
+      } else {
+        validDataOnly.push(obj);
+      }
+    }
 
-            if (rowError) {
-              totalHasErrors = true;
-            } else {
-              validDataOnly.push(obj);
-            }
-          });
+    return {
+      data: validDataOnly,
+      hasErrors: totalHasErrors,
+      errorBlob: this.generateFullReportBlob(XLSX, fullReportData, columns)
+    };
+  }
 
-          // 產生包含所有行與樣式的 Blob
-          const errorBlob = this.generateFullReportBlob(XLSX, fullReportData, columns);
-
-          resolve({
-            data: validDataOnly,
-            hasErrors: totalHasErrors,
-            errorBlob: errorBlob
-          });
-        } catch (error) {
-          console.error('Excel 解析失敗:', error);
-          reject(error);
-        }
-      };
-      reader.onerror = (err) => reject(err);
-      reader.readAsArrayBuffer(file);
+  private isRowEmpty(row: any[], columns: ImportExcelColumn[]): boolean {
+    return columns.every((_, index) => {
+      const val = row[index];
+      return val === undefined || val === null || String(val).trim() === '';
     });
+  }
+
+  private validateAndParseRow(row: any[], columns: ImportExcelColumn[], customValidator?: any) {
+    const obj: any = {};
+    let rowError = '';
+
+    for (const [index, col] of columns.entries()) {
+      const { value, error } = this.parseValue(row[index], col);
+      obj[col.field] = value;
+      if (error) rowError += error;
+    }
+
+    if (customValidator) {
+      const customErr = customValidator(obj);
+      if (customErr) rowError += customErr;
+    }
+
+    return { obj, rowError };
+  }
+
+  private parseValue(value: any, col: ImportExcelColumn): { value: any, error: string } {
+    // 將邏輯拆分給各個處理函數，消除冗餘初始化
+    switch (col.type) {
+      case 'number':
+        return this.parseNumber(value, col);
+      case 'date':
+        return this.parseDate(value, col);
+      default:
+        return {
+          value: (value === undefined || value === null) ? null : String(value).trim(),
+          error: ''
+        };
+    }
+  }
+
+  private parseNumber(value: any, col: ImportExcelColumn): { value: any, error: string } {
+    const val = typeof value === 'string' ? value.replaceAll(',', '') : value;
+    const num = (val === null || val === undefined || String(val).trim() === '') ? null : Number(val);
+    const error = (num !== null && Number.isNaN(num)) ? `[${col.header}] 格式錯誤 ` : '';
+    return { value: num, error };
+  }
+
+  private parseDate(value: any, col: ImportExcelColumn): { value: any, error: string } {
+    let dateValue: Date | null;
+    if (typeof value === 'number') {
+      const dateCode = XLSX.SSF.parse_date_code(value);
+      dateValue = new Date(dateCode.y, dateCode.m - 1, dateCode.d);
+    } else {
+      dateValue = value ? new Date(value) : null;
+    }
+
+    const error = (dateValue instanceof Date && Number.isNaN(dateValue.getTime()))
+      ? `[${col.header}] 日期格式錯誤 `
+      : '';
+    return { value: dateValue, error };
+  }
+
+  private createReportRow(row: any[], columns: ImportExcelColumn[], rowError: string) {
+    const reportRow: any = {};
+    for (const [idx, col] of columns.entries()) reportRow[col.header] = row[idx];
+    reportRow['檢核結果'] = rowError ? '失敗' : '成功';
+    reportRow['錯誤原因'] = rowError || '';
+    reportRow['_isError'] = !!rowError;
+    return reportRow;
   }
 
   /**
@@ -129,67 +146,63 @@ export class ExcelImportService {
    */
   private generateFullReportBlob(XLSX: any, allData: any[], originalCols: ImportExcelColumn[]): Blob {
     const ws = XLSX.utils.json_to_sheet(allData);
-    const charWidthMultiplier = 1.5;
     const reportHeaders = originalCols.map(c => c.header).concat(['檢核結果', '錯誤原因']);
 
-    // 1. 自動計算欄位寬度
-    const wscols: any[] = [];
-    reportHeaders.forEach(header => {
-      let maxLen = 0;
-      const lengths = [header].concat(allData.map(row => row[header] ? String(row[header]) : ''));
-      lengths.forEach(text => {
-        let len = 0;
-        for (let i = 0; i < text.length; i++) {
-          const charCode = text.charCodeAt(i);
-          len += (charCode >= 0x4E00 && charCode <= 0x9FFF) ? charWidthMultiplier : 1;
-        }
-        if (len > maxLen) maxLen = len;
-      });
-      wscols.push({ wch: Math.ceil(maxLen) + 5 });
-    });
-    ws['!cols'] = wscols;
+    // 1. 設定欄寬
+    ws['!cols'] = this.calculateColumnWidths(allData, reportHeaders);
 
-    // 2. 遍歷儲存格套用美化樣式
-    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
-    for (let r = range.s.r; r <= range.e.r; r++) {
-      const isHeader = r === 0;
-      const rowData = isHeader ? null : allData[r - 1];
-      const isError = rowData?._isError;
+    // 2. 套用樣式
+    this.applyStyles(XLSX, ws, allData);
 
-      for (let c = range.s.c; c <= range.e.c; c++) {
-        const cellRef = XLSX.utils.encode_cell({ r, c });
-        if (!ws[cellRef]) continue;
-
-        // 通用樣式設定
-        ws[cellRef].s = {
-          font: { name: 'Microsoft JhengHei', sz: 10 },
-          alignment: { vertical: 'center', horizontal: 'left' },
-          border: {
-            top: { style: 'thin', color: { rgb: "CCCCCC" } },
-            bottom: { style: 'thin', color: { rgb: "CCCCCC" } },
-            left: { style: 'thin', color: { rgb: "CCCCCC" } },
-            right: { style: 'thin', color: { rgb: "CCCCCC" } }
-          }
-        };
-
-        if (isHeader) {
-          // 標題列：深藍底白字
-          ws[cellRef].s.fill = { fgColor: { rgb: "4472C4" } };
-          ws[cellRef].s.font = { color: { rgb: "FFFFFF" }, bold: true, name: 'Microsoft JhengHei' };
-          ws[cellRef].s.alignment.horizontal = 'center';
-        } else if (isError) {
-          // 錯誤行：紅色字體
-          ws[cellRef].s.font.color = { rgb: "FF0000" };
-        } else {
-          // 正確行：綠色字體
-          ws[cellRef].s.font.color = { rgb: "008000" };
-        }
-      }
-    }
-    // 3. 封裝並回傳 Blob
+    // 3. 封裝檔案
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, '匯入檢核報告');
     const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
     return new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  }
+
+  private calculateColumnWidths(allData: any[], headers: string[]): any[] {
+    const charWidthMultiplier = 1.5;
+    return headers.map(header => {
+      const lengths = [header, ...allData.map(row => row[header] ? String(row[header]) : '')];
+      let maxLen = 0;
+      for (const text of lengths) {
+        const len = [...text].reduce((acc, char) => {
+          const code = char.codePointAt(0) || 0;
+          return acc + (code >= 0x4E00 && code <= 0x9FFF ? charWidthMultiplier : 1);
+        }, 0);
+        if (len > maxLen) maxLen = len;
+      }
+      return { wch: Math.ceil(maxLen) + 5 };
+    });
+  }
+
+  private applyStyles(XLSX: any, ws: any, allData: any[]): void {
+    const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+
+    for (let r = range.s.r; r <= range.e.r; r++) {
+      const isHeader = r === 0;
+      const rowData = isHeader ? null : allData[r - 1];
+
+      for (let c = range.s.c; c <= range.e.c; c++) {
+        const cell = ws[XLSX.utils.encode_cell({ r, c })];
+        if (!cell) continue;
+        cell.s = this.getCellStyle(isHeader, rowData?._isError);
+      }
+    }
+  }
+
+  private getCellStyle(isHeader: boolean, isError?: boolean): any {
+    const baseStyle = {
+      font: { name: 'Microsoft JhengHei', sz: 10 },
+      alignment: { vertical: 'center', horizontal: 'left' },
+      border: { top: { style: 'thin', color: { rgb: "CCCCCC" } }, bottom: { style: 'thin', color: { rgb: "CCCCCC" } }, left: { style: 'thin', color: { rgb: "CCCCCC" } }, right: { style: 'thin', color: { rgb: "CCCCCC" } } }
+    };
+
+    if (isHeader) {
+      return { ...baseStyle, fill: { fgColor: { rgb: "4472C4" } }, font: { color: { rgb: "FFFFFF" }, bold: true, name: 'Microsoft JhengHei' }, alignment: { ...baseStyle.alignment, horizontal: 'center' } };
+    }
+
+    return { ...baseStyle, font: { ...baseStyle.font, color: { rgb: isError ? "FF0000" : "008000" } } };
   }
 }

@@ -71,6 +71,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     INV_Type: [null],
     ACP_GUITax_From: [null],
     ACP_GUITax_To: [null],
+    Status: [[]],
     CRT_Date_To: [null],
     CRT_Date_From: [null],
     COMM_NUM_Start: [null],
@@ -112,9 +113,8 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   ];
 
   statusOptions = [
-    { label: '未拋轉', value: '2' },
-    { label: '已拋轉', value: '3' },
-    { label: '已退回', value: '4' },
+    { label: '未結帳', value: 'N' },
+    { label: '已結帳', value: 'Y' },
   ];
   taxTypeOptions = getSYS1000Options('PLU_TaxType');
   money_typeOptions = getSYS1000Options('money_type');
@@ -308,7 +308,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       // Ensure DEC_YM is normalized to YYYYMM for payload.
       payload.DEC_YM = decYm;
       payload.ven_uniform = raw.ven_uniform || '';
-      payload.PUR_TaxType = Array.isArray(raw.PUR_TaxType) ? raw.PUR_TaxType.join(',') : (raw.PUR_TaxType || '');
+      payload.PUR_TaxType = raw.PUR_TaxType || [];
       payload.ACP_GUIAmt_From = raw.ACP_GUIAmt_From ?? null;
       payload.ACP_GUIAmt_To = raw.ACP_GUIAmt_To ?? null;
       payload.ACP_GUINet_From = raw.ACP_GUINet_From ?? null;
@@ -322,6 +322,8 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       payload.floor_no = Array.isArray(raw.floor_no)
         ? raw.floor_no
         : (raw.floor_no ? [raw.floor_no] : []);
+      payload.Status = raw.Status || [];
+
 
       this.loading = true;
       const body = this.normalizePayload(payload);
@@ -510,7 +512,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     payload.COMM_YM = this.formatYearMonth(raw.COMM_YM);
     payload.DEC_YM = this.normalizeYearMonth(raw.DEC_YM);
     payload.ven_uniform = raw.ven_uniform || '';
-    payload.PUR_TaxType = Array.isArray(raw.PUR_TaxType) ? raw.PUR_TaxType.join(',') : (raw.PUR_TaxType || '');
+    payload.PUR_TaxType = raw.PUR_TaxType || [];
     payload.ACP_GUIAmt_From = raw.ACP_GUIAmt_From ?? null;
     payload.ACP_GUIAmt_To = raw.ACP_GUIAmt_To ?? null;
     payload.ACP_GUINet_From = raw.ACP_GUINet_From ?? null;
@@ -524,6 +526,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
     payload.floor_no = Array.isArray(raw.floor_no)
       ? raw.floor_no
       : (raw.floor_no ? [raw.floor_no] : []);
+    payload.Status = raw.Status || [];
 
     return payload;
   }

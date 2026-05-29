@@ -97,14 +97,15 @@ export class Fin26010Service {
    * 注意：這個 API 開頭沒有 /FIN0000/APS1000
    */
   exportFIN26010TXT(
-    body: ExportFin26010TxtRequest
-  ): Observable<HttpResponse<Blob>> {
-    const url = `${environment.ApiUrl}/ExportLabel/ExportFIN26010TXT`;
-    return this.http.post(url, body, {
-      responseType: 'blob',
-      observe: 'response',
-    });
-  }
+  body: ExportFin26010TxtRequest
+): Observable<any> {
+  const url = `${environment.ApiUrl}/ExportLabel/ExportFIN26010TXT`;
+
+  return this.http.post(url, body, {
+    responseType: 'blob',
+    observe: 'response',
+  });
+}
 
   /** 銀行代號下拉：/queryAPS1002_DropDownList，POST {} */
   queryAPS1002DropDownList(): Observable<ApiResponse<Aps1002BankDropDownRow[]>> {

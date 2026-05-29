@@ -104,10 +104,9 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
   regionOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
   operationStatusOptions = [
-    { value: 0, label: '閉店/撤櫃' },
-    { value: 1, label: '營業中' },
-    { value: 2, label: '合約結束' },
-    { value: 9, label: '核准時合約尚未開始' },
+    { value: '0', label: '已撤櫃' },
+    { value: '1', label: '營業中' },
+    { value: '9', label: '合約未生效' },
   ];
   commissionTypeOptions = getSYS1000Options('tlt_term_type');
 

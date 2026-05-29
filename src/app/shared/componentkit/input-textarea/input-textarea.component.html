@@ -5,7 +5,7 @@
 <textarea [id]="controlName" [formControl]="control" [readonly]="readonly"
   [placeholder]="control.disabled || readonly ? '' : placeholder" [minlength]="minLength" [maxlength]="maxLength"
   [rows]="rows" cols="30" [autoResize]="true" [ngClass]="{ 'ng-invalid ng-dirty': submitted && control.errors }"
-  pInputTextarea [attr.aria-label]="label || placeholder" title="{{ label || placeholder }}"
-  [class]="textareaClasses"></textarea>
+  pInputTextarea [attr.aria-label]="label || placeholder" title="{{ label || placeholder }}" [class]="textareaClasses"
+  (keydown.enter)="handleEnterKey($event)"></textarea>
 <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
   [control]="control"></app-control-messages>

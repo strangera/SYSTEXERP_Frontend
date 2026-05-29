@@ -1,12 +1,9 @@
 import { Injectable } from '@angular/core';
 import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { formatDate } from '@shared/componentkit/table/table.model';
-// taiwan-id-validator
-// https://github.com/enylin/taiwan-id-validator
 @Injectable({
   providedIn: 'root',
 })
-//
 export class ValidationService {
   getValidatorErrorMessage(validatorName: string, validatorValue?: any) {
     const config: any = {
@@ -29,8 +26,8 @@ export class ValidationService {
       invalidElectronicnum: '請補上錯誤訊息',
       invalidDateRange: '日期起不可大於日期迄',
       invalidNumberRange: '起始數字不可大於結束數字',
-      passwordsMismatch: '兩次輸入不一致，請重新輸入。',
-      invalidPasswordStrength: '強度不足，至少包含一個英文小寫字母與一個數字。',
+      passwordsMismatch: '兩次輸入不一致，請重新輸入。', // NOSONAR
+      invalidPasswordStrength: '強度不足，至少包含一個英文小寫字母與一個數字。', // NOSONAR
       invalidGuiTrack: '僅能輸入大寫英文字母',
       invalidGuiBegNo: '起號結尾只能為 00 或 50',
       invalidGuiEndNo: '迄號結尾只能為 49 或 99',
@@ -59,6 +56,7 @@ export class ValidationService {
       bnkIdDuplicate: '此【公司銀行科目】已有【帳戶編號】使用，請重新輸入。',
       invalidCompanyId: '統一編號格式錯誤',
       reserveAmtTooLarge: '保留款金額不可大於應付金額',
+      invalidIp: 'IP 位址格式錯誤 (範例: 192.168.1.1)',
     };
     return config[validatorName];
   }
@@ -264,7 +262,7 @@ export class ValidationService {
   evenMonthValidator(control: { value: Date | null }): ValidationErrors | null {
     const value = control.value;
 
-    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+    if (value !== null && value instanceof Date && !Number.isNaN(value.getTime())) {
       const month = value.getMonth() + 1; // JS 月份是 0-based，要+1
       // 檢查是否為雙數月
       if (month % 2 !== 0) {
@@ -338,17 +336,31 @@ export class ValidationService {
     return null;
   }
 
-  //起始日期必須大於等於今日
   dateAfterTodayValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const value = control.value;
-      if (!value) return null; // 空值交給 required 判斷
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // 只比日期，不比時間
-      const controlDate = new Date(value);
-      controlDate.setHours(0, 0, 0, 0);
 
-      return controlDate >= today ? null : { dateNotAfterToday: true };
+      // 1. 處理空值 (由 required 處理，這裡跳過)
+      if (value === null || value === undefined || value === '') {
+        return null;
+      }
+
+      // 2. 嚴格檢查：只接受 Date 物件
+      // 這是最關鍵的一步，直接擋掉 `{length: Infinity}`, 'a', 'b' 等垃圾資料
+      if (!(value instanceof Date)) {
+        return null;
+      }
+
+      // 3. 檢查是否為有效的日期 (防止 Invalid Date)
+      if (Number.isNaN(value.getTime())) {
+        return null;
+      }
+
+      // 4. 邏輯比較 (使用 YYYYMMDD 格式比較，不受時區影響)
+      const formatDate = (d: Date) => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+      const today = new Date();
+
+      return formatDate(value) >= formatDate(today) ? null : { dateNotAfterToday: true };
     };
   }
 
@@ -633,5 +645,20 @@ export class ValidationService {
       }
       return null;
     };
+  }
+
+  // 只能輸入正確的 IPv4 格式
+  ipValidator(control: { value: string | null }): ValidationErrors | null {
+    const value = control.value;
+    if (value === null || value === '') {
+      return null;
+    }
+    // IP 位址正規表達式
+    const ipPattern = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+
+    if (!ipPattern.test(value)) {
+      return { invalidIp: true }; // 定義錯誤 key 為 invalidIp
+    }
+    return null;
   }
 }

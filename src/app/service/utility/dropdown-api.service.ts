@@ -36,6 +36,7 @@ import {
   FaSitemItem,
   FaSitemQuery,
   GLS1005AccSubCodeItem,
+  Gls3002AcctKeyItem,
   IDropdownItem,
   IGLS1005LedgerMDItem,
   LogoAccorHosItem,
@@ -113,16 +114,17 @@ export class DropdownApiService {
   private queryAndMapDropdown<T, U = object>(
     endpoint: string,
     noKey: keyof T,
-    nameKey: keyof T,
+    nameKey?: keyof T,
     body: U = {} as U // 給予預設值
   ): Observable<Option[] | null> {
     return this.http.post<ApiResponse<T[]>>(`${this.apiUrl}${endpoint}`, body).pipe(
       map(response => {
         const data = response?.Data;
+        const label = nameKey ? (item: T) => `${item[noKey]} - ${item[nameKey]}` : (item: T) => `${item[noKey]}`;
         return data ? data.map(item => ({
           ...item,
           value: item[noKey] as string | number,
-          label: `${item[noKey]} - ${item[nameKey]}`,
+          label: label(item), // 如果 nameKey 為空字串,不顯示
         })) : null;
       }),
       catchError(err => {
@@ -430,15 +432,15 @@ export class DropdownApiService {
   // --- POS 相關 ---
 
   /** 查詢後台主機IP(POS10015) */
-  queryPos10015(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS10015_DropDownList').pipe(
+  queryPos10015(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS10015_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
 
   /** 查詢環境變數編號(POS1002TML) */
-  queryPos1002Tml(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryPOS1002TML_DropDownList').pipe(
+  queryPos1002Tml(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryPOS1002TML_DropDownList', 'No', 'Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }
@@ -757,6 +759,13 @@ export class DropdownApiService {
     );
   }
 
+  queryPos2002LocationMap(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Pos2002LocationItem>('/queryPOS2002_Location_DropDownList', 'location_no').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }),
+
+    );
+  }
+
   /** 查詢收銀機(POS1002) (依照館別、樓層、區域、機台類型查詢) */
   queryEcr(body: EcrQuery): Observable<EcrItem[] | null> {
     return this.queryDropdownWithParams<EcrItem, EcrQuery>('/queryECRDropDownList', body).pipe(
@@ -1063,6 +1072,21 @@ export class DropdownApiService {
       shareReplay({ bufferSize: 1, refCount: true })// 避免重複查詢
     );
   }
+
+  /** * 查詢對帳 Key 值(GLS3002.ACCT_KEY) 下拉選單
+   * Value: ACCT_KEY, Label: ACCT_KEY - ACCT_KEY
+   */
+  queryGls3002AcctKey(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<Gls3002AcctKeyItem>(
+      '/queryGLS3002_DropDownList', // 對應後端 Controller 的路由
+      'ACCT_KEY',
+      'ACCT_KEY'
+    ).pipe(
+      map(options => options?.map(opt => ({ ...opt, label: opt.value })) ?? null),
+      shareReplay({ bufferSize: 1, refCount: true })
+    );
+  }
+
   /** 查詢銀行+分行資料表(APS1001 JOIN APS1004)下拉選單 */
   queryAps1001_DropDownList(body: Aps1001ComboQuery = { SearchKeyword: '' }): Observable<Option[] | null> {
     return this.queryAndMapDropdown<Aps1001ComboItem, Aps1001ComboQuery>(
