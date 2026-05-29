@@ -3,80 +3,38 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="通告編號"
-              controlName="NOT_No"
-              [control]="queryForm.controls.NOT_No"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="通告編號" controlName="NOT_No" [control]="queryForm.controls.NOT_No"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateOne"
-              label="建立日期"
-              controlName="NOT_Date"
-              [control]="queryForm.controls.NOT_Date"
-              [submitted]="submitted"
-            ></app-calendar>
+            <app-calendar calendarType="dateOne" label="建立日期" controlName="NOT_Date"
+              [control]="queryForm.controls.NOT_Date" [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              label="有效開始日期時間"
-              calendarType="dateTimeRange"
-              startControlName="NOT_BegDate_Start"
-              endControlName="NOT_BegDate_End"
-              [startControl]="queryForm.controls.NOT_BegDate_Start"
-              [endControl]="queryForm.controls.NOT_BegDate_End"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range label="有效開始日期時間" calendarType="dateTimeRange" startControlName="NOT_BegDate_Start"
+              endControlName="NOT_BegDate_End" [startControl]="queryForm.controls.NOT_BegDate_Start"
+              [endControl]="queryForm.controls.NOT_BegDate_End" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              label="有效結束日期時間"
-              calendarType="dateTimeRange"
-              startControlName="NOT_EndDate_Start"
-              endControlName="NOT_EndDate_End"
-              [startControl]="queryForm.controls.NOT_EndDate_Start"
-              [endControl]="queryForm.controls.NOT_EndDate_End"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range label="有效結束日期時間" calendarType="dateTimeRange" startControlName="NOT_EndDate_Start"
+              endControlName="NOT_EndDate_End" [startControl]="queryForm.controls.NOT_EndDate_Start"
+              [endControl]="queryForm.controls.NOT_EndDate_End" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="媒體檔案名稱"
-              controlName="NOT_File"
-              [control]="queryForm.controls.NOT_File"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="媒體檔案名稱" controlName="NOT_File" [control]="queryForm.controls.NOT_File"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="狀態"
-              controlName="NOT_Status"
-              [options]="NOT_Status_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.NOT_Status"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="狀態" controlName="NOT_Status" [options]="NOT_Status_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.NOT_Status" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -86,38 +44,25 @@
 </div>
 
 <div class="card">
-  <app-table-report
-    dataKey="ID"
-    [data]="data"
-    [columns]="columns"
-    (detail)="onDetail($event)"
-    [showEdit]="false"
-    [totalRecords]="totalRecords"
-    [showDelete]="false"
-    [showCheckBox]="true"
-    [loading]="loading"
-    [addButton]="addButton"
-    [buttonsLoading]="btnLoading"
-    [lastQueryBody]="lastQueryBody"
-    (selectionChange)="selectedRows = $event"
-    [selectedItems]="selectedRows"
-    [queryFunction]="tls43020Service.queryTls43020.bind(tls43020Service)"
-  >
-    <header>
-      <p-button
-        [ngStyle]="{ width: '35px', height: '35px' }"
-        [style]="{ width: '35px', height: '35px' }"
-        pTooltip="下傳"
-        tooltipPosition="top"
-        pButton
-        [rounded]="true"
-        icon="pi pi-upload rotate-180"
-        severity="success"
-        class="p-button-rounded p-button-text"
-        [disabled]="selectedRows.length === 0"
-        (click)="onDownload()"
-        [loading]="downloadLoading"
-      />
+  <app-table-report dataKey="ID" [data]="data" [columns]="columns" (detail)="onDetail($event)" [showEdit]="false"
+    [totalRecords]="totalRecords" [showDelete]="false" [showCheckBox]="true" [loading]="loading" [addButton]="addButton"
+    [buttonsLoading]="false" [lastQueryBody]="lastQueryBody" (selectionChange)="selectedRows = $event"
+    [selectedItems]="selectedRows" [queryFunction]="tls43020Service.queryTls43020.bind(tls43020Service)">
+    <header class="flex gap-2">
+      <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="審核"
+        tooltipPosition="top" [rounded]="true" icon="pi pi-check-circle" severity="success"
+        class="p-button-rounded p-button-text" [disabled]="isVerifyDisabled" (click)="onAction('verify')"
+        [loading]="verifyLoading" />
+
+      <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="反審核"
+        tooltipPosition="top" [rounded]="true" icon="pi pi-undo" severity="warning"
+        class="p-button-rounded p-button-text" [disabled]="isUnverifyDisabled" (click)="onAction('unverify')"
+        [loading]="unverifyLoading" />
+
+      <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="下傳"
+        tooltipPosition="top" [rounded]="true" icon="pi pi-upload rotate-180" severity="info"
+        class="p-button-rounded p-button-text" [disabled]="isDownloadDisabled" (click)="onDownload()"
+        [loading]="downloadLoading" />
     </header>
   </app-table-report>
 </div>

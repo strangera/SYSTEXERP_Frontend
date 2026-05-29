@@ -1,4 +1,4 @@
-import { NgStyle } from '@angular/common'; // <-- 確保引入，HTML 的按鈕有用到
+import { NgStyle } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -15,8 +15,8 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { AddButton, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
-import { Button } from 'primeng/button'; // <-- 確保引入 p-button
-import { TooltipModule } from 'primeng/tooltip'; // <-- 確保引入 pTooltip
+import { Button } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { finalize, Observable } from 'rxjs';
 
 @Component({
@@ -35,13 +35,14 @@ import { finalize, Observable } from 'rxjs';
     TableReportComponent,
     TranslateModule,
     CalendarRangeComponent,
-    Button,        // <-- 新增
-    TooltipModule, // <-- 新增
-    NgStyle        // <-- 新增
+    Button,
+    TooltipModule,
+    NgStyle
   ]
 })
 export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Response> implements OnInit {
   @ViewChild(TableReportComponent) tableReport!: TableReportComponent;
+
   queryForm = this.formBuilder.nonNullable.group({
     NOT_No: ['', [Validators.maxLength(20)]],
     NOT_Date: [null as null | Date],
@@ -60,9 +61,44 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
   data: QueryTls43020Response[] = [];
   lastQueryBody: QueryTls43020Request | null = null;
 
-  // 新增：用來記錄勾選的資料與按鈕 Loading 狀態
   selectedRows: QueryTls43020Response[] = [];
+
+  // 各按鈕的獨立 Loading 狀態
   downloadLoading = false;
+  verifyLoading = false;
+  unverifyLoading = false;
+
+  /**
+   * 控制批次審核按鈕是否要 disabled
+   * 規則：沒選資料，或者選中的資料中只要有任何一筆「不是未審核(0)」，就禁用。
+   */
+  get isVerifyDisabled(): boolean {
+    if (!this.selectedRows || this.selectedRows.length === 0) {
+      return true;
+    }
+    // 必須全部都是 0 (未審核) 才能按審核
+    return !this.selectedRows.every(row => row.NOT_Status === '0');
+  }
+
+  /**
+   * 控制批次反審核按鈕是否要 disabled
+   * 規則：沒選資料，或者選中的資料中只要有任何一筆「不是已審核(1)」，就禁用。
+   */
+  get isUnverifyDisabled(): boolean {
+    if (!this.selectedRows || this.selectedRows.length === 0) {
+      return true;
+    }
+    // 必須全部都是 1 (已審核) 才能按反審核
+    return !this.selectedRows.every(row => row.NOT_Status === '1');
+  }
+
+  /**
+   * 控制補下傳按鈕是否要 disabled
+   * 規則：沒選資料就禁用（下傳通常不限狀態，只要有選就能補傳，或是已審核才能傳，這裡比照你原本的邏輯：只要有選就能按）
+   */
+  get isDownloadDisabled(): boolean {
+    return !this.selectedRows || this.selectedRows.length === 0;
+  }
 
   columns: ReportColumn[] = [
     { field: 'NOT_No', header: '通告編號', visible: true },
@@ -80,20 +116,8 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
     { value: '2', label: '已刪除' },
   ];
 
-  addButton: AddButton[] = [
-    {
-      label: '審核',
-      icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: QueryTls43020Response) => { this.statusChange(rowData, "1"); },
-      disabled: (rowData: QueryTls43020Response) => rowData.NOT_Status == "1" || rowData.NOT_Status == "2"
-    },
-    {
-      label: '反審核',
-      icon: 'pi pi-undo text-orange-500',
-      action: (rowData: QueryTls43020Response) => { this.statusChange(rowData, "0"); },
-      disabled: (rowData: QueryTls43020Response) => rowData.NOT_Status == "0" || rowData.NOT_Status == "2"
-    },
-  ];
+  // 改為批次多選後，清空 row-level 的操作按鈕
+  addButton: AddButton[] = [];
 
   constructor(
     public readonly tls43020Service: Tls43020Service,
@@ -119,42 +143,29 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
         this.data = res.Data;
         this.lastQueryBody = body;
         this.totalRecords = res.TotalCount || 0;
-        this.selectedRows = []; // 重新查詢時清空已選取欄位
+        this.selectedRows = [];
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
 
-  btnLoading = false;
-  statusChange(rowData: QueryTls43020Response, status: string) {
-    this.btnLoading = true;
-    const requestBody = { ID: rowData.ID, NOT_No: rowData.NOT_No, NOT_Status: status };
-    let serviceCall: Observable<any>;
-    if (status === "1") {
-      serviceCall = this.tls43020Service.verifyTls43020(requestBody);
-    } else {
-      serviceCall = this.tls43020Service.unverifyTls43020(requestBody);
-    }
-    serviceCall.pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe(response => {
-      this.messageService.successBubble(response.Message || '更新成功');
-      this.onSubmit(this.queryForm);
-    });
-  }
-
-  // 新增：下傳功能處理函式
-  onDownload() {
+  /**
+   * 批次審核 / 反審核功能處理函式 (完全對標後端傳入規格)
+   * @param action 'verify' | 'unverify'
+   */
+  onAction(action: 'verify' | 'unverify') {
     let params: any = {};
+    const isAll = this.tableReport?.isAllSelected;
 
-    // 判斷使用者是否勾選了「全選」
-    if (this.tableReport && this.tableReport.isAllSelected) {
+    if (isAll) {
       params = {
         IsAllSelected: true,
-        // 將上一次成功的查詢條件解構進來 (包含通告編號、日期、起迄時間等)
         QueryConditions: this.lastQueryBody
       };
     } else {
       params = {
         IsAllSelected: false,
+        // 後端接收的是 ActionDetailItem 陣列
         ExportDetails: this.selectedRows.map((item) => ({
           ID: item.ID,
           STO_No: item.STO_No,
@@ -163,16 +174,43 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
       };
     }
 
+    let serviceCall: Observable<any>;
+    if (action === 'verify') {
+      this.verifyLoading = true;
+      serviceCall = this.tls43020Service.verifyTls43020(params).pipe(finalize(() => this.verifyLoading = false));
+    } else {
+      this.unverifyLoading = true;
+      serviceCall = this.tls43020Service.unverifyTls43020(params).pipe(finalize(() => this.unverifyLoading = false));
+    }
+
+    serviceCall.pipe(untilDestroyed(this)).subscribe((response) => {
+      this.messageService.successBubble(response.Message || `${action === 'verify' ? '審核' : '反審核'}作業處理完畢`);
+      this.selectedRows = [];
+      this.onSubmit(this.queryForm);
+    });
+  }
+
+  // 下傳功能處理函式保持不變
+  onDownload() {
+    let params: any = {};
+    if (this.tableReport?.isAllSelected) {
+      params = {
+        IsAllSelected: true,
+        QueryConditions: this.lastQueryBody
+      };
+    } else {
+      params = {
+        IsAllSelected: false,
+        ExportDetails: this.selectedRows.map((item) => ({ ID: item.ID, STO_No: item.STO_No, NOT_No: item.NOT_No }))
+      };
+    }
     this.downloadLoading = true;
     this.tls43020Service.downloadTls43020(params)
-      .pipe(
-        finalize(() => this.downloadLoading = false),
-        untilDestroyed(this)
-      )
+      .pipe(finalize(() => this.downloadLoading = false), untilDestroyed(this))
       .subscribe((response) => {
         this.messageService.successBubble(response.Message || '下傳成功');
-        this.selectedRows = []; // 清空選取
-        this.onSubmit(this.queryForm); // 重新整理查詢畫面
+        this.selectedRows = [];
+        this.onSubmit(this.queryForm);
       });
   }
 }
