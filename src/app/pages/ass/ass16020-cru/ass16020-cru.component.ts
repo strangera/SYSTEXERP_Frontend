@@ -16,6 +16,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { validateDuplicate, validateMaxLength, validateMaxNumber } from '@shared/componentkit/table-edit/validate-field.model';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
+import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { FileExportService } from '@shared/service/file-export.service';
 import { ButtonModule } from 'primeng/button';
@@ -99,7 +100,7 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
         { field: 'NOTES', header: '說明', type: 'autoComplete', disabled: () => this.isReadOnly(), validate: [validateMaxLength(100)] },
     ];
 
-    reportColumns = [
+    reportColumns: ReportColumn[] = [
         { field: 'B_CLASS_ID', header: '大分類編號' },
         { field: 'BClassName', header: '大分類名稱' },
         { field: 'M_CLASS_ID', header: '中分類編號' },
@@ -108,11 +109,11 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
         { field: 'SClassName', header: '小分類名稱' },
         { field: 'FASITEM_ID', header: '品項編號' },
         { field: 'GOODS_NAME', header: '品項名稱' },
-        { field: 'QTY', header: '庫存數量' },
-        { field: 'FINE_QTY', header: '盤點數量' },
-        { field: 'DIFF_QTY', header: '差異數量' },
-        { field: 'AVER_AMT', header: '平均單價' },
-        { field: 'DIFF_AMT', header: '差異金額' },
+        { field: 'QTY', header: '庫存數量', isSubTotal: true },
+        { field: 'FINE_QTY', header: '盤點數量', isSubTotal: true },
+        { field: 'DIFF_QTY', header: '差異數量', isSubTotal: true },
+        { field: 'AVER_AMT', header: '平均單價', isSubTotal: true },
+        { field: 'DIFF_AMT', header: '差異金額', isSubTotal: true },
     ]
 
     isReadOnly(): boolean {
@@ -227,31 +228,17 @@ export class ASS16020CRUComponent extends BasicCruPageComponent<ASS16020Data> im
 
                             console.log('mappedDetails', mappedDetails);
 
-                            this.subTotalData = mappedDetails.filter(item => item.RowType === 1);
-                            this.reportData = mappedDetails.filter(item => item.RowType === 0);
-
-                            // this.subTotalData = response.Data.Details.filter(item => item.RowType === 1); // 取出小計資料
-                            console.log('subTotalData', this.subTotalData);
-                            // this.reportData = response.Data.Details.filter(item => item.RowType === 0);
-                            console.log('reportData', this.reportData);
+                            this.subTotalData = mappedDetails.filter(item => item.RowType === 1);  // 取出小計資料
+                            this.reportData = mappedDetails.filter(item => item.RowType === 0);  // 取出報表資料
 
                             this.group_name = [
-                                // { group_name: '小計' },
                                 { group_name: '盤盈項數' },
                                 { group_name: '盤損項數' },
                                 { group_name: '總差異金額' },
                                 { group_name: '說明' },
                             ]
 
-                            // 計算小計
-                            // const TotalQTY = response.Data.Details.reduce((total, item) => total + (item.QTY ?? 0), 0);
-                            // const TotalFINE_QTY = response.Data.Details.reduce((total, item) => total + (item.FINE_QTY ?? 0), 0);
-                            // const TotalDIFF_QTY = response.Data.Details.reduce((total, item) => total + (item.DIFF_QTY ?? 0), 0);
-                            // const TotalAVER_AMT = response.Data.Details.reduce((total, item) => total + (item.AVER_AMT ?? 0), 0);
-                            // const TotalDIFF_AMT = response.Data.Details.reduce((total, item) => total + (item.DIFF_AMT ?? 0), 0);
-
                             this.footerData = [
-                                // { group_name: '小計', QTY: TotalQTY, FINE_QTY: TotalFINE_QTY, DIFF_QTY: TotalDIFF_QTY, AVER_AMT: TotalAVER_AMT, DIFF_AMT: TotalDIFF_AMT },
                                 { group_name: '盤盈項數', DIFF_AMT: response.Data.SurplusCount },
                                 { group_name: '盤損項數', DIFF_AMT: response.Data.LossCount },
                                 { group_name: '總差異金額', DIFF_AMT: response.Data.TotalDiffAmt },
