@@ -92,7 +92,7 @@ export class TLS46050Component extends BasicQueryPageComponent<Tls46050Response>
     { field: 'EOS_DataSysVer', header: '收銀系統 KGDataFunc 版本', cellClass: (row) => row.EOS_DataSysNew === 'N' ? 'text-red-500 font-bold' : 'text-color' }, // 預設顯示
     { field: 'EOS_PrmSysVer', header: '收銀系統 KGPrmFunc 版本', cellClass: (row) => row.EOS_PrmSysNew === 'N' ? 'text-red-500 font-bold' : 'text-color' }, // 預設顯示
     { field: 'EOS_DmnSysVer', header: '收銀系統 STDmnPOS 版本', cellClass: (row) => row.EOS_DmnSysNew === 'N' ? 'text-red-500 font-bold' : 'text-color' }, // 預設顯示
-    { field: 'EOS_KBLevel', header: '鍵盤編號-機台回傳' }, // 預設顯示
+    { field: 'EOS_KBLevel', header: '鍵盤編號-機台回傳', cellClass: (row) => row.EOS_KBLevel === row.ECR_KBLevel ? 'text-color' : 'text-red-500 font-bold' }, // 預設顯示
 
     // 客戶顯示器周邊 (以 EOS_CDCheck 判斷 COM 埠顏色)
     { field: 'EOS_CD', header: '客戶顯示器型態', visible: false },
