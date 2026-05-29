@@ -60,7 +60,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   data: Garantee_Ticket[] = [];// 表格數據和篩選數據
   columns: Column[] = [// 表格欄位定義
     { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true, align: 'left' },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
     { field: 'VEN_No', header: '廠商編號', visible: true, align: 'left' },
     { field: 'VEN_Name', header: '廠商名稱', visible: true, align: 'left' },
     {
@@ -75,7 +75,13 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
       field: 'ticket_kind', header: '票據種類', visible: true,
       format: (value: string) =>
         this.ticket_kindOption.find((option) => option.value === value)?.label ||
-        value
+        value,
+      exportFormat: [
+        { '1': '本票' },
+        { '2': '支票' },
+        { '3': '銀行保證函' },
+        { '9': '其他' }
+      ]
       , align: 'left'
     },
     { field: 'ticket_amount', header: '保證票金額', visible: true, format: formatAmount, align: 'right' },
@@ -87,7 +93,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
         value
       , align: 'left'
     },
-    { field: 'get_date', header: '繳票日期', visible: true, format: formatDate },
+    { field: 'get_date', header: '繳票日期', visible: true, format: formatDate }, // date這邊以string呈現
     { field: 'return_date', header: '退票日期', visible: true, format: formatDate },
     { field: 'close_date', header: '封存日期', visible: true, format: formatDate },
     { field: 'ticket_remarks', header: '保證票摘要-合約主檔', visible: true, align: 'left' },
