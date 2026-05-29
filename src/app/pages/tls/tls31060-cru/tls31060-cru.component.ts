@@ -173,7 +173,7 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
         this.messageService.successBubble(res.Message);
         if (res.Data && res.Data.Print_URL) {
           const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-          window.open(downloadUrl, '_blank');
+          globalThis.open(downloadUrl, '_blank');
         }
       });
   }

@@ -790,6 +790,14 @@ export interface queryPOS1002_DropDownListItem {
 }
 
 /**
+ * 收銀機下拉選單項目型別(自營)
+ */
+export interface queryOwnPOS1002_DropDownListItem {
+  ECR_No: string;
+  ECR_Name: string;
+}
+
+/**
  * 查詢過濾後的收銀機設定檔 (POS1002 Filtered) 回傳項目
  * 對應後端 SQL: ECR_No, ECR_Name, ECR_TLT_No, ECR_TLT_Name, ECR_Status
  */

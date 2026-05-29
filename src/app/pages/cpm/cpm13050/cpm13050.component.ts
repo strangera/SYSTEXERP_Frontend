@@ -227,13 +227,13 @@ export class CPM13050Component extends BasicQueryPageComponent<any> implements O
     if (!blob || blob.size === 0) {
       return;
     }
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
     document.body.removeChild(a);
   }
 }

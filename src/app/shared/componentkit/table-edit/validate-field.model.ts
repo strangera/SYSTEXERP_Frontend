@@ -127,3 +127,23 @@ export function validateDateDuplicate(value: any, rowData: any, data: any[], fie
 
   return { isValid: !duplicate, errorMessage: [`已重複`] };
 }
+export function validateMaxByteLength(maxBytes: number) {
+  return (value: string): { isValid: boolean; errorMessage: string[] } => {
+    const val = value ?? '';
+    const str = val.toString();
+
+    // 中文算 2，英文算 1
+    const byteLength = str.replace(/[^\x00-\xff]/g, 'xx').length;
+    const isValid = byteLength <= maxBytes;
+
+    // 換算出對應的中文字數與英數字數
+    const maxChinese = Math.floor(maxBytes / 2);
+    const maxEnglish = maxBytes;
+
+    return {
+      isValid,
+      // 這裡直接寫死或動態帶入 SA 的 16 中文 / 32 英文
+      errorMessage: isValid ? [] : [`長度已超過限制（上限為 ${maxChinese} 個中文字 或 ${maxEnglish} 個英數字）`]
+    };
+  };
+}

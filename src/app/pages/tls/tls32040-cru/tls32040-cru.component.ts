@@ -161,7 +161,7 @@ export class Tls32040CRUComponent extends BasicCruPageComponent<TLS32040DetailRe
     //     this.messageService.successBubble(res.Message);
     //     if (res.Data && res.Data.Print_URL) {
     //       const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-    //       window.open(downloadUrl, '_blank');
+    //       globalThis.open(downloadUrl, '_blank');
     //     }
     //   });
   }

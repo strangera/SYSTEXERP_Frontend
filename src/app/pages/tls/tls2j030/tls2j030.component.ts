@@ -247,12 +247,12 @@ export class TLS2J030Component extends BasicQueryPageComponent<any> implements O
       .pipe(finalize(() => (this.btnLoading2 = false)))
       .subscribe({
         next: (blob) => {
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const link = document.createElement('a');
           link.href = url;
           link.download = `發票換開報表_${formatDateToYYYY_MM_DD(new Date())}.pdf`;
           link.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
 
           this.messageService.successBubble('PDF 匯出成功');
         },

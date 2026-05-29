@@ -207,7 +207,7 @@ export class AuthService {
 
     if (options?.redirectToLogin) {
       // 不要只用 navigate，改用這個可以 100% 銷毀所有 Service 記憶體殘留
-      window.location.href = window.location.origin + (this.locationStrategy.prepareExternalUrl('/login'));
+      globalThis.location.href = globalThis.location.origin + (this.locationStrategy.prepareExternalUrl('/login'));
     }
 
     if (options?.showMessage) {

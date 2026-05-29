@@ -81,7 +81,7 @@ export class FIN15100Component extends BasicQueryPageComponent<unknown> implemen
       this.fin15100Service.printFIN15100(payload).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         const rawUrl = res.Data.Print_URL;
         const finalUrl = rawUrl.startsWith('http') ? rawUrl : this.joinUrlNoEncode(environment.ApiUrl, rawUrl);
-        window.open(finalUrl, '_blank', 'noopener');
+        globalThis.open(finalUrl, '_blank', 'noopener');
       });
     });
   }

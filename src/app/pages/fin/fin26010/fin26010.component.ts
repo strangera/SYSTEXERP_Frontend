@@ -526,7 +526,7 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
             }
 
             const url =
-              window.URL.createObjectURL(blob);
+              globalThis.URL.createObjectURL(blob);
 
             const a =
               document.createElement('a');
@@ -540,7 +540,7 @@ export class FIN26010Component extends BasicQueryPageComponent<any> {
 
             document.body.removeChild(a);
 
-            window.URL.revokeObjectURL(url);
+            globalThis.URL.revokeObjectURL(url);
           } catch (e) {
             console.error(e);
 

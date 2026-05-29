@@ -33,7 +33,7 @@ export class AppInitializationService {
       });
       interval(5 * 60 * 1000).subscribe(() => this.swUpdate.checkForUpdate());
       this.swUpdate.checkForUpdate();
-      window.addEventListener('focus', () => this.swUpdate.checkForUpdate());
+      globalThis.addEventListener('focus', () => this.swUpdate.checkForUpdate());
     }
   }
   private startVersionMonitoring(): void {

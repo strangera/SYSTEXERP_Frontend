@@ -205,7 +205,7 @@ export class TLS26080Service {
 
   public dealErrorFilePath(data: TLS26080UploadResult): void {
     const path = data.ErrorFilePath;
-    if (path && !data.Success) window.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
+    if (path && !data.Success) globalThis.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
   }
 
   /**
@@ -228,14 +228,14 @@ export class TLS26080Service {
     }).pipe(
       take(1),
       tap(res => {
-        const url = window.URL.createObjectURL(res);
+        const url = globalThis.URL.createObjectURL(res);
         const link = document.createElement('a');
         link.href = url;
         link.download = haveData ? 'TLS26080_範例檔案.xlsx' : 'TLS26080_空白範本.xlsx';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.logger.debug(haveData ? `範例下載` : `空白範本下載`);
       })
     );

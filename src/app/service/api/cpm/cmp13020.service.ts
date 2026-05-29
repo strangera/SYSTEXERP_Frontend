@@ -10,6 +10,7 @@ export interface QueryCPM13020Request {
   TXN_BDate?: string; // yyyy-MM-dd
   TXN_EDate?: string; // yyyy-MM-dd
   PAY_No?: string[];    // 後端使用 LIKE @PAY_No，空則不送
+  ECR_No?: string[];    // 收銀機號（機台彙總用）
   pageIndex?: number;
   pageSize?: number;
   SortBy?: SortMeta[];
@@ -17,6 +18,11 @@ export interface QueryCPM13020Request {
 export interface PayNoOption {
   No: string;
   Name: string;
+}
+export interface ECRDropDownOption {
+  ECR_No: string;
+  ECR_Name: string;
+  building_desc: string | null;
 }
 
 export interface DropDownListResponse<T> {
@@ -84,11 +90,18 @@ queryPosForReport(body: QueryCPM13020Request): Observable<{ Data: any[]; TotalCo
   );
 }
  private payNoDropUrl = `${environment.ApiUrl}/queryPOS1006_PAY_No_DropDownList`;
-
+  private ecrDropUrl = `${environment.ApiUrl}/CPM0000/CPM1000/queryCPM13020_ECR_DropDown`;
 
 queryPOS1006_PAY_No_DropDownList(): Observable<PayNoOption[]> {
   return this.http
     .post<DropDownListResponse<PayNoOption[]>>(this.payNoDropUrl, {})
+    .pipe(map((res) => (Array.isArray(res?.Data) ? res.Data : [])));
+}
+
+/** 收銀機號下拉清單（機號、名稱、館別） */
+queryCPM13020_ECR_DropDown(): Observable<ECRDropDownOption[]> {
+  return this.http
+    .get<DropDownListResponse<ECRDropDownOption[]>>(this.ecrDropUrl)
     .pipe(map((res) => (Array.isArray(res?.Data) ? res.Data : [])));
 }
 }

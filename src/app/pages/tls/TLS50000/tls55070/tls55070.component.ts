@@ -92,7 +92,7 @@ export class TLS55070Component extends BasicQueryPageComponent<any> implements O
     { field: 'DiscRate', header: '折扣率', align: 'right', width: '5rem' },
     { field: 'TXN_SaleAmt', header: '單項小計', align: 'right', width: '10rem', format: formatAmount2, isTotal: true, isSubTotal: true, },
   ];
-  ECRNoOptions = this.dropdown.queryPos1002();
+  ECRNoOptions = this.dropdown.queryOwnPOS1002();
   cashierOptions = this.dropdown.queryPos2001();
   logoOptions = this.dropdown.queryPluLogo();
   hosOptions = this.dropdown.queryPos2034();

@@ -159,7 +159,6 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
   data: any[] = [];
   private _originalDetails: any[] = [];
   private _detailCountPrev = 0;
-  private _alertDateInitiallyProvided = false;
   columns: EditColumn[] = [
     {
       field: 'ANSWER',
@@ -234,10 +233,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       .pipe(untilDestroyed(this))
       .subscribe({
         next: (blob: Blob) => {
-          const objectUrl = window.URL.createObjectURL(blob);
-          window.open(objectUrl, '_blank');
+          const objectUrl = globalThis.URL.createObjectURL(blob);
+          globalThis.open(objectUrl, '_blank');
           // release after a while
-          setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+          setTimeout(() => { try { globalThis.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
         },
 
       });
@@ -249,10 +248,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       if (apiBase && url.startsWith(apiBase)) {
         this.openProtectedUrl(url);
       } else {
-        window.open(url, '_blank');
+        globalThis.open(url, '_blank');
       }
     } catch (e) {
-      window.open(url, '_blank');
+      globalThis.open(url, '_blank');
     }
   }
 
@@ -285,10 +284,10 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
         .pipe(untilDestroyed(this))
         .subscribe({
           next: (blob: Blob) => {
-            const objectUrl = window.URL.createObjectURL(blob);
+            const objectUrl = globalThis.URL.createObjectURL(blob);
             this.galleriaItems = [{ url: objectUrl, type: 'image', name: full.split('/').pop() || '' }];
             this.visible = true;
-            setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+            setTimeout(() => { try { globalThis.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
           },
           error: (err: any) => {
             const msg = err?.status === 404 ? '找不到檔案' : (err?.status === 401 ? '需要授權存取檔案' : '無法載入檔案');
@@ -324,9 +323,9 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
         const headers = token ? { Authorization: `Bearer ${token}` } : undefined;
         this.http.get(makeFull(u), { responseType: 'blob', headers: headers as any }).pipe(untilDestroyed(this)).subscribe({
           next: (blob: Blob) => {
-            const objectUrl = window.URL.createObjectURL(blob);
+            const objectUrl = globalThis.URL.createObjectURL(blob);
             // autoset revoke after 60s
-            setTimeout(() => { try { window.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
+            setTimeout(() => { try { globalThis.URL.revokeObjectURL(objectUrl); } catch (e) { } }, 60000);
             resolve(objectUrl);
           },
           error: (err: any) => reject(err)
@@ -383,44 +382,15 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
       try { statusCtrl.setValue('3', { emitEvent: false }); } catch (e) { /* ignore */ }
     }
 
-    const applyRules = (status: any) => {
-      const key = status ? String(status).toUpperCase() : '';
-      const isRequired = key === '1' || key === '2';
-      if (isRequired) {
-        alertCtrl.setValidators([Validators.required]);
-        alertCtrl.updateValueAndValidity({ emitEvent: true });
-        // 不在此處改變 enable/disable，以避免在使用者互動時被自動鎖定
-      } else {
-        alertCtrl.clearValidators();
-        alertCtrl.updateValueAndValidity({ emitEvent: true });
-        // 非必填時由後續邏輯決定是否 enable（例如檢視模式）
-      }
-    };
+    // ALERT_DATE 不設必填
+    alertCtrl.clearValidators();
+    alertCtrl.updateValueAndValidity({ emitEvent: false });
 
-    // 先套用一次當前狀態（只設定驗證規則）
-    applyRules(statusCtrl.value);
-
-    // 當 STATUS 改變時僅更新驗證器，不自動鎖定欄位
-    statusCtrl.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe((s: any) => applyRules(s));
-
-    // 不監聽 ALERT_DATE 的 valueChanges 避免在使用者輸入後被自動鎖住
-
-    // 初始化後：若為檢視模式且不允許強制編輯，或是後端載入時已有 ALERT_DATE 且狀態為 Y/Z，則把欄位設為唯讀
+    // 初始化後：只有純檢視模式才 disable
     try {
-      const statusKey = statusCtrl.value ? String(statusCtrl.value).toUpperCase() : '';
-      const isYorZ = statusKey === '1' || statusKey === '2';
       if (this.crudstatus === CRUDStatus.Read && !this.forceEditAll) {
-        console.log('DEBUG: init disable ALERT_DATE because Read mode');
-        alertCtrl.disable({ emitEvent: false });
-      } else if (this._alertDateInitiallyProvided && isYorZ) {
-        // 如果後端原本就有 ALERT_DATE 且狀態為 Y/Z，則初始化為唯讀
-        console.log('DEBUG: init disable ALERT_DATE because backend provided + status Y/Z');
         alertCtrl.disable({ emitEvent: false });
       } else {
-        // 其他情況（新增、編輯且無後端 ALERT_DATE），保持可編輯
-        console.log('DEBUG: init enable ALERT_DATE');
         alertCtrl.enable({ emitEvent: false });
       }
     } catch (e) {
@@ -519,7 +489,6 @@ export class CPM12050CRUComponent extends BasicCruPageComponent<CPM12050Data> im
           this.existingFile1 = extractName(master.FileName1);
           this.existingFile2 = extractName(master.FileName2);
           this.existingFile3 = extractName(master.FileName3);
-          this._alertDateInitiallyProvided = !!master.ALERT_DATE;
 
           // 明細 table：只取有 DETAIL_ID 的筆數
           this.data = allRows.filter(r => r.DETAIL_ID != null).map(r => ({

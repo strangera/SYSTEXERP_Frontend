@@ -364,14 +364,14 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
       type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     });
 
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
 
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
     document.body.removeChild(a);
   }
 

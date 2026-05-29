@@ -557,7 +557,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> implements O
             return;
           }
 
-          window.open(openUrl, '_blank', 'noopener');
+          globalThis.open(openUrl, '_blank', 'noopener');
         },
         error: () => this.messageService?.errorBubble?.('PDF 匯出失敗'),
       });
@@ -621,13 +621,13 @@ export class TLS23040Component extends BasicQueryPageComponent<any> implements O
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = name;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');

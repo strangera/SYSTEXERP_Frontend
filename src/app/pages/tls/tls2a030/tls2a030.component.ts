@@ -189,12 +189,12 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
             }
           }
         }
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = customFilename;
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.btnLoading2 = false;
       },
     });

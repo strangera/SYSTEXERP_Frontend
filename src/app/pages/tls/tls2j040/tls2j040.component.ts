@@ -108,7 +108,7 @@ export class TLS2J040Component extends BasicQueryPageComponent<any> implements O
           rawUrl = decodeURIComponent(rawUrl);
 
           // 開新分頁
-          window.open(rawUrl, '_blank');
+          globalThis.open(rawUrl, '_blank');
         } else {
           this.messageService.errorBubble(response.Message);
         }

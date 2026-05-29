@@ -456,24 +456,24 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       console.log('匯出Excel');
       this.btnExcelLoading = true;
       this.tls31090Service.exportTLS31090(formValue).subscribe(blob => {
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = '各時段之大分類之營業報表.xlsx';
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.btnExcelLoading = false;
       });
     } else {
       console.log('匯出PDF');
       this.btnPDFLoading = true;
       this.tls31090Service.exportTLS31090PDF(formValue).subscribe(blob => {
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = '各時段之大分類之營業報表.pdf';
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.btnPDFLoading = false;
       });
     }

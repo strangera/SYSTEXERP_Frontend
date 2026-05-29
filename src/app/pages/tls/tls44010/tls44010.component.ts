@@ -102,7 +102,13 @@ export class TLS44010Component extends BasicQueryPageComponent<QueryTLS44010Resp
   getStatusClass(status: EOSStatus): string {
     return STATUS_CONFIG[status]?.class ?? 'status-chip';
   }
-
+  /** * 計算目前畫面上特定狀態的機台總數
+   * @param status 狀態碼 '0' ~ '5'
+   */
+  getStatusCount(status: EOSStatus): number {
+    if (!this.filteredData || this.filteredData.length === 0) return 0;
+    return this.filteredData.filter(row => this.getDisplayStatus(row) === status).length;
+  }
   onSubmit(form: FormGroup) {
     this.loading = true;
     const rawValue = form.getRawValue();

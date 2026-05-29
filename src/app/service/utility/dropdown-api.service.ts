@@ -69,6 +69,7 @@ import {
   Pos2013LogoRequest,
   Pos2013Query,
   Pos2064MpcsNoDropDownItem,
+  queryOwnPOS1002_DropDownListItem,
   queryPOS1002_DropDownListItem,
   Sys1000Query,
   Sys5000SubModuleItem,
@@ -462,6 +463,13 @@ export class DropdownApiService {
   /** 查詢收銀機設定檔(POS1002) */
   queryPos1002(): Observable<Option[] | null> {
     return this.queryAndMapDropdown<queryPOS1002_DropDownListItem>('/queryPOS1002_DropDownList', 'No', 'Name').pipe(
+      shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
+    );
+  }
+
+  /** 查詢收銀機設定檔(POS1002)自營用 */
+  queryOwnPOS1002(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<queryOwnPOS1002_DropDownListItem>('/queryOwnPOS_DropDownList', 'ECR_No', 'ECR_Name').pipe(
       shareReplay({ bufferSize: 1, refCount: true }) // 避免重複查詢;
     );
   }

@@ -84,7 +84,7 @@ export class TLS41020CRUComponent extends BasicCruPageComponent<TLS41020Data> im
         const ecrData = res.Data[0];
         this.dataForm.patchValue({
           EDC_BegDate: ecrData.ECR_ActiveDate || '',
-          EDC_EndDate: ecrData.ECR_CloseDate || '',
+          EDC_EndDate: ecrData.ECR_ExpireDate || '',
         });
       }
     });

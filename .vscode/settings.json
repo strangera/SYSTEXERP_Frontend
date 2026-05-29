@@ -48,8 +48,8 @@
   // 可選：當檔案儲存時是否自動重新載入
   "liveServer.settings.reloadBrowserWhenSaved": true,
   "sonarlint.connectedMode.project": {
-    "connectionId": "http-127-0-0-1-9000-",
-    "projectKey": "TSRDERP"
+    "connectionId": "http-172-20-10-2-9000-",
+    "projectKey": "TSRDERP_Frontend_Angular"
   },
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",

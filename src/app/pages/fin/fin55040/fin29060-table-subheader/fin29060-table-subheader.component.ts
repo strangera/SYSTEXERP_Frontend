@@ -119,9 +119,9 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
   @Input() subtotalLabel = '小計';
   /** 群組表頭小計欄位設定，預設使用 ACP_Amt / PayAmt / NotPayAmt */
   @Input() subTotalGroupHeaders: { field: string; label: string }[] = [
-    { field: 'ACP_Amt',    label: '廠商立帳合計' },
-    { field: 'PayAmt',     label: '廠商沖銷合計' },
-    { field: 'NotPayAmt',  label: '廠商未沖銷合計' },
+    { field: 'ACP_Amt', label: '廠商立帳合計' },
+    { field: 'PayAmt', label: '廠商沖銷合計' },
+    { field: 'NotPayAmt', label: '廠商未沖銷合計' },
   ];
   groupTotals: Record<string, Record<string, number>> = {};
   // 群組 Footer 科目餘額
@@ -484,7 +484,7 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
 
   // 視窗大小變化時重新計算表格寬度
   ngAfterViewInit() {
-    fromEvent(window, 'resize')
+    fromEvent(globalThis, 'resize')
       .pipe(debounceTime(300))
       .subscribe(() => {
         this.cd.detectChanges();
@@ -514,7 +514,7 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
           const all = this.dt.el.nativeElement.querySelectorAll('*');
           all.forEach((n: any) => {
             try {
-              const style = window.getComputedStyle(n);
+              const style = globalThis.getComputedStyle(n);
               if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && n.clientHeight > 0) {
                 elements.push({ el: n, selector: 'computed-overflow' });
               }
@@ -563,7 +563,7 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
     }, 500);
 
     // 監聽整頁滾動（處理使用者在整頁滾動而非 table 內部滾動的情況）
-    fromEvent(window, 'scroll')
+    fromEvent(globalThis, 'scroll')
       .pipe(debounceTime(150))
       .subscribe(() => {
         try {
@@ -573,14 +573,14 @@ export class Fin29060TableSubheaderComponent extends BasicPrintDataComponent imp
           const rect = tableEl.getBoundingClientRect();
           const threshold = 200; // 距離視窗底部 threshold
 
-          console.log('[window scroll] table rect', { top: rect.top, bottom: rect.bottom, innerHeight: window.innerHeight });
+          console.log('[globalThis scroll] table rect', { top: rect.top, bottom: rect.bottom, innerHeight: globalThis.innerHeight });
 
           // 如果 table 的底部接近或低於視窗底部，嘗試載入更多
-          if (rect.bottom <= window.innerHeight + threshold && rect.top < window.innerHeight) {
+          if (rect.bottom <= globalThis.innerHeight + threshold && rect.top < globalThis.innerHeight) {
             if (this._loading) return;
             const hasMoreData = this.queryFunction ? (this.data.length < this.totalRecords) : (this.data.length < this.fullData.length);
             if (hasMoreData) {
-              console.log('[window scroll] 接近 table 底部，觸發載入更多資料');
+              console.log('[globalThis scroll] 接近 table 底部，觸發載入更多資料');
               this.loadMoreData();
             }
           }

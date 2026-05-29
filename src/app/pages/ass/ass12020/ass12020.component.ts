@@ -245,13 +245,13 @@ export class ASS12020Component extends BasicQueryPageComponent<ASS12020QueryRow>
         next: response => {
           const blob = response.body;
           if (blob && blob.size > 0) {
-            const url = window.URL.createObjectURL(blob);
+            const url = globalThis.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = `詢價登錄_${id}.pdf`;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
+            globalThis.URL.revokeObjectURL(url);
             document.body.removeChild(a);
             this.messageService.successBubble('匯出成功');
           } else {

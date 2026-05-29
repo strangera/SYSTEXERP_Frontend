@@ -142,7 +142,7 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
                 `<a href="#"
                       class="acp-link"
                       data-acpid="${acpId}"
-                      onclick="window.open('${acpIdUrl}', '_blank'); return false;"
+                      onclick="globalThis.open('${acpIdUrl}', '_blank'); return false;"
                     >
                       ${acpId}
                     </a>`
@@ -152,7 +152,7 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
                 `<a href="#"
                       class="invoice-link"
                       data-invoice="${guiNo}"
-                      onclick="window.open('${invoiceNoUrl}', '_blank'); return false;"
+                      onclick="globalThis.open('${invoiceNoUrl}', '_blank'); return false;"
                     >
                       ${guiNo}
                     </a>`
@@ -187,6 +187,6 @@ export class FIN29120Component extends BasicQueryPageComponent<any> implements O
     } else if (type === 'Invoice') {
       url = `/account/fin/fin13050cru?GUI_No=${encodeURIComponent(String(value ?? '').trim().toUpperCase())}`;
     }
-    window.open(url, '_blank');
+    globalThis.open(url, '_blank');
   }
 }

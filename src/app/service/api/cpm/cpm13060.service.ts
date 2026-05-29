@@ -13,6 +13,7 @@ export interface QueryCPM13060Request {
   SortBy?: SortMeta[];
   TXN_BDATE?: string;
   TXN_EDATE?: string;
+  rule_nameList?: string[];
 }
 
 /** ======== Response 型別 ======== */

@@ -331,12 +331,12 @@ export class CPM11070Component extends BasicQueryPageComponent<CPM11070Data> imp
           const excelBlob = new Blob([blob], {
             type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           });
-          const url = window.URL.createObjectURL(excelBlob);
+          const url = globalThis.URL.createObjectURL(excelBlob);
           const a = document.createElement('a');
           a.href = url;
           a.download = `CPM11070_未領取報表_${this.datePipe.transform(new Date(), 'yyyyMMdd_HHmmss')}.xlsx`;
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
         },
       });
   }

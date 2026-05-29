@@ -357,7 +357,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
 
     if (ct.includes('application/pdf')) {
       const url = URL.createObjectURL(resp.body!);
-      window.open(url, '_blank');
+      globalThis.open(url, '_blank');
       return;
     }
 
@@ -367,7 +367,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
         json = JSON.parse(text);
       } catch {
         const url = URL.createObjectURL(resp.body!);
-        window.open(url, '_blank');
+        globalThis.open(url, '_blank');
         return;
       }
 
@@ -380,7 +380,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       const base = environment.ApiUrl;
       const fullUrl = `${base}${printUrl}`;
 
-      window.open(fullUrl, '_blank');
+      globalThis.open(fullUrl, '_blank');
     });
   }
 }

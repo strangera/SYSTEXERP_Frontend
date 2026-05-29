@@ -99,14 +99,14 @@ export class FIN54020Component extends BasicQueryPageComponent<any> implements O
       const vouNo = event.row?.VouNo;
       const handoff = {
         vouNo,
-        fromRoute: window.location.pathname,
+        fromRoute: globalThis.location.pathname,
         ts: Date.now(),
       };
       localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
       localStorage.setItem('FIN55050_CRU_PROGNO', 'FIN55050');
       const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
-      const finalUrl = `${window.location.origin}${externalUrl}`;
-      window.open(finalUrl, '_blank', 'noopener');
+      const finalUrl = `${globalThis.location.origin}${externalUrl}`;
+      globalThis.open(finalUrl, '_blank', 'noopener');
     }
   }
 

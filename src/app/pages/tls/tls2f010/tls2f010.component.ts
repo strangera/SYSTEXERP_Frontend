@@ -470,17 +470,17 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
         const blob = res.body;
         if (!blob) return;
 
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         a.download = 'TLS2F010_匯入範本.xlsx';
         a.click();
 
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
       });
   }
   downloadErrorFile(filePath: string): void {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+    globalThis.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 
   private buildExportPayloadFromForm(): any {
@@ -550,12 +550,12 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
           const m = /filename\*=UTF-8''(.+)$/.exec(cd) || /filename="?([^";]+)"?/.exec(cd);
           if (m && m[1]) filename = decodeURIComponent(m[1]);
 
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = filename;
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
         },
 
       });
@@ -580,12 +580,12 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
           const m = /filename\*=UTF-8''(.+)$/.exec(cd) || /filename="?([^";]+)"?/.exec(cd);
           if (m && m[1]) filename = decodeURIComponent(m[1]);
 
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = filename;
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
         },
 
       });
