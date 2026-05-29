@@ -99,6 +99,15 @@ export interface TLS42020DropdownRequest {
   TLT_NO: string; // 專櫃編號清單
 }
 
+export interface TLS42020DropdownResponse {
+  PLU_MagNo: string,
+  PLU_No: string,
+  PLU_Name: string,
+  PLU_PrnName: string,
+  PLU_FixPrc: number,
+  PLU_SalePrc: number
+}
+
 // ExecSpFunc request interface for TLS42020
 export interface TLS42020ExecSpFuncRequest {
   idList: number[];               // ID清單
@@ -163,7 +172,7 @@ export class TLS42020Service {
     return this.http.post<any>(`${this.apiUrl}/dropdownTLS42020`, data).pipe(
       map(res => {
         return {
-          Data: res.Data.map((item: any) => {
+          Data: res.Data.map((item: TLS42020DropdownResponse) => {
             return {
               ...item,
               label: item.PLU_MagNo + '-' + item.PLU_Name,
