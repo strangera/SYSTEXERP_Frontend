@@ -122,7 +122,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   ];
   opData: any[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
-    { field: 'No', header: '合約編號' },
+    { field: 'No', header: '合約編號', align: 'left' },
     { field: 'Name', header: '專櫃名稱' },
     { field: 'contract_subno', header: '版次' },
   ];
