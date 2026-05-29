@@ -95,10 +95,10 @@ export class CPM13030Component extends BasicQueryPageComponent<any> implements O
       }));
     });
 
-    this.dropDownListService.querySYS3100_DropDownList()
+    this.cpm13030Service.queryCPM13030_Org_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
-        this.org_id_Options = (res.Data || []).map(item => ({
+        this.org_id_Options = (res.Data || []).map((item: { No: string; Name: string }) => ({
           ...item,
           label: `${item.No}-${item.Name}`,
           value: item.No

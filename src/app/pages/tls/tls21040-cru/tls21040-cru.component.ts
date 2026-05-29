@@ -61,7 +61,7 @@ export class TLS21040CRUComponent extends BasicCruPageComponent<TLS21040Data> im
     { value: 'I', label: '無限卡' },
     { value: 'O', label: '其他' },
     { value: 'P', label: '白金卡' },
-    { value: 'S', label: '御璽、鈦金、晶緻卡' },
+    { value: 'S', label: '御璽卡' },
     { value: 'T', label: '鈦金卡' },
   ];
   constructor(
