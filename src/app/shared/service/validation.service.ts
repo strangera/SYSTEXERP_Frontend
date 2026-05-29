@@ -26,8 +26,8 @@ export class ValidationService {
       invalidElectronicnum: '請補上錯誤訊息',
       invalidDateRange: '日期起不可大於日期迄',
       invalidNumberRange: '起始數字不可大於結束數字',
-      passwordsMismatch: '兩次輸入不一致，請重新輸入。',
-      invalidPasswordStrength: '強度不足，至少包含一個英文小寫字母與一個數字。',
+      passwordsMismatch: '兩次輸入不一致，請重新輸入。', // NOSONAR
+      invalidPasswordStrength: '強度不足，至少包含一個英文小寫字母與一個數字。', // NOSONAR
       invalidGuiTrack: '僅能輸入大寫英文字母',
       invalidGuiBegNo: '起號結尾只能為 00 或 50',
       invalidGuiEndNo: '迄號結尾只能為 49 或 99',
