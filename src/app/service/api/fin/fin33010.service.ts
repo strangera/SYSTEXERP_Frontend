@@ -17,4 +17,7 @@ export class Fin33010Service {
   insertFIN33010(payload: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertFIN33010`, payload);
   }
+  queryFIN33010RCVNODropDown(params: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/queryFIN33010RCVNODropDown`, params);
+  }
 }
