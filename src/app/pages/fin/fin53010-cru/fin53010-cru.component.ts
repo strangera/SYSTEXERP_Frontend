@@ -614,13 +614,24 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         type: 'input',
         placeholder: '點擊選擇...',
         onFocus: (_r, _v, _c, index: number) => {
-          if (!this.isFormReadable) {
-            this.openPtaDialog(index);
-          }
+          if (this.isFormReadable) return;
+          const rowData = this.tableData()[index];
+          const { ABAT_YN } = this.getAccAbatInfo(rowData?.AccNo);
+          if (ABAT_YN !== 'Y') return;
+          if (this.isAutoCodeRow(rowData)) return;
+          this.openPtaDialog(index);
         },
         disabled: (_v, _i, rowData) => {
           if (this.isFormReadable) return true;
-          return !rowData?.AccNo;
+          if (!rowData?.AccNo) return true;
+          const { AccDC, ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
+          if (ABAT_YN !== 'Y') return true;
+          // 同方向（自動編碼）禁用
+          if (this.isAutoCodeRow(rowData)) return true;
+          // 反方向有金額才開放，否則禁用（還沒輸金額時不可點）
+          if (AccDC === 'D') return !((rowData.AccAmtC ?? 0) > 0);
+          if (AccDC === 'C') return !((rowData.AccAmtD ?? 0) > 0);
+          return true;
         },
       },
       {
@@ -651,7 +662,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     { field: 'org_id', header: '組織代號', textAlign: 'left', type: 'dropdown', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ven_no', header: '廠商代號', textAlign: 'left', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ven_pay_type', header: '付款方式', textAlign: 'left', type: 'dropdown', options: () => this.service.venPayTypeOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'acp_amt', header: '金額', textAlign: 'right', width: '7rem', type: 'inputNumber', disabled: () => true },
+    { field: 'acp_amt', header: '金額', textAlign: 'right', width: '7rem', type: 'inputNumber', disabled: () => true, format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'acp_expect_pay_date', header: '預計付款日', textAlign: 'left', width: '9rem', type: 'date' },
     { field: 'acp_date', header: '立帳日期', textAlign: 'left', width: '9rem', type: 'date', disabled: () => true },
     { field: 'ven_bnk_no', header: '匯款銀行代號', textAlign: 'left', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
@@ -665,7 +676,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly stepARColumns: EditColumn[] = [
     { field: 'org_id', header: '組織代號', type: 'dropdown', textAlign: 'left', options: () => this.service.orgNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
     { field: 'ven_no', header: '廠商代號', type: 'dropdown', textAlign: 'left', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
-    { field: 'ars_amt', header: '金額', type: 'inputNumber', disabled: () => true, textAlign: 'right' },
+    { field: 'ars_amt', header: '金額', type: 'inputNumber', disabled: () => true, textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'pta_date', header: '預計收款日', type: 'date', textAlign: 'left' },
     { field: 'ars_date', header: '立帳日期', type: 'date', disabled: () => true, textAlign: 'left' },
     { field: 'acc_no', header: '會計科目代號', type: 'dropdown', textAlign: 'left', options: () => this.service.accNoOptions(), optionLabel: 'label', optionValue: 'value', disabled: () => true },
@@ -717,8 +728,8 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
   public readonly stepBankColumns: EditColumn[] = [
     { field: 'ven_no', header: '廠商代號', type: 'dropdown', options: () => this.service.vendorOptions(), optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)], textAlign: 'left' },
     { field: 'bank_no', header: '銀行代號', type: 'dropdown', options: () => this.bankNoOptionsForStep(), optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)], textAlign: 'left' },
-    { field: 'deposit_amt', header: '存款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)], textAlign: 'right' },
-    { field: 'withdraw_amt', header: '提款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)], textAlign: 'right' },
+    { field: 'deposit_amt', header: '存款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)], textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
+    { field: 'withdraw_amt', header: '提款', type: 'inputNumber', validate: [this.validateBankRequired.bind(this)], textAlign: 'right', format: (v) => (v !== null && v !== undefined) ? formatAmount(v) : '' },
     { field: 'status', header: '狀態', type: 'dropdown', options: [{ label: '作廢', value: '0' }, { label: '建立', value: '1' }], optionLabel: 'label', optionValue: 'value', validate: [this.validateBankRequired.bind(this)], textAlign: 'left' },
     { field: 'note_desc', header: '摘要', type: 'input', textAlign: 'left' },
     { field: 'txn_date', header: '日期', type: 'date', disabled: () => true, textAlign: 'left' },
@@ -1624,6 +1635,7 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
     this.logger.debug(`onDataChange:`, [data]);
     const renumbered = data.map((row, i) => ({ ...row, SerNo: (i + 1) * 10, index: i }));
     this.tableData.set(renumbered);
+    this.rebuildAllAutoPta();
     this.rowEditCanSave.set(this.tableData().some(row => row.AccNo && row.ORG_ID) || !!this.isBalanced());
   }
 
@@ -1900,16 +1912,23 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
           }
           // 取得立沖代號下拉選單
           this.service.getPTADropdownOptions(String(event.value));
+          // 科目不需立沖時清空 PTA
+          if (this.getAccAbatInfo(String(event.value)).ABAT_YN !== 'Y') {
+            rowData.PTA = undefined;
+          }
+          this.rebuildAllAutoPta();
           break;
 
         case 'AccAmtD':
           // 自動互斥借貸方金額
           if (event.value) rowData.AccAmtC = void 0;
+          this.rebuildAllAutoPta();
           break;
 
         case 'AccAmtC':
           // 自動互斥借貸方金額
           if (event.value) rowData.AccAmtD = void 0;
+          this.rebuildAllAutoPta();
           break;
 
         case 'ORG_ID':
@@ -1932,6 +1951,41 @@ export class FIN53010CRUComponent extends BasicCruPageComponent<QueryFIN53010Det
         rowData.AccCName = this.service.accNoMap().get('123208')?.label ?? '';
       }
     }
+  }
+
+  /** 從 accNoMap 取得科目的 AccDC 與 ABAT_YN */
+  private getAccAbatInfo(accNo: string | undefined | null): { AccDC: string; ABAT_YN: string } {
+    const info = this.service.accNoMap().get(String(accNo ?? ''));
+    return {
+      AccDC: String(info?.['AccDC'] ?? '').trim(),
+      ABAT_YN: String(info?.['ABAT_YN'] ?? '').trim(),
+    };
+  }
+
+  /** 判斷該列是否應自動編碼 PTA（同方向 + ABAT_YN=Y） */
+  private isAutoCodeRow(rowData: FIN53010DetailTable): boolean {
+    const { AccDC, ABAT_YN } = this.getAccAbatInfo(rowData.AccNo);
+    if (ABAT_YN !== 'Y') return false;
+    if (AccDC === 'D' && (rowData.AccAmtD ?? 0) > 0) return true;
+    if (AccDC === 'C' && (rowData.AccAmtC ?? 0) > 0) return true;
+    return false;
+  }
+
+  /** 重新為所有「自動編碼」列指定 PTA = VouNo-1, VouNo-2...
+   *  新增模式（VouNo='自動給號'）時不處理 */
+  private rebuildAllAutoPta(): void {
+    const vouNo = this.dataForm.getRawValue().VouNo?.trim() ?? '';
+    if (!vouNo || vouNo === '自動給號') return;
+
+    let counter = 1;
+    this.tableData.update(rows =>
+      rows.map(row => {
+        if (this.isAutoCodeRow(row)) {
+          return { ...row, PTA: `${vouNo}-${counter++}` };
+        }
+        return row;
+      })
+    );
   }
 
   public onDelete(event: (FIN53010DetailTable & EditColumnExtend)[]): void {
