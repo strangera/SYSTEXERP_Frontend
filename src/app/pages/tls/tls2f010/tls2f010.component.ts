@@ -206,7 +206,7 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private readonly dropdown: DropdownApiService,
     private readonly dropDownListService: DropDownListService,
-    private readonly tls2f010Service: Tls2f010Service
+    public readonly tls2f010Service: Tls2f010Service,
   ) {
     super();
   }
@@ -279,20 +279,11 @@ export class TLS2F010Component extends BasicQueryPageComponent<any> implements O
       const raw = frm.getRawValue() as any;
       // Page-local normalization: compute normalized DEC_YM (YYYYMM) for payload and query-state
       const decYm = this.normalizeYearMonth(raw?.DEC_YM);
-
-      const pageSize = Number(raw.pageSize ?? 30);
-      const pageIndex = Number(raw.pageIndex ?? 1);
-
       const payload: any = {
-        PageSize: pageSize,
-        PageIndex: pageIndex,
-        Offset: (pageIndex - 1) * pageSize,
+        pageIndex: 1,
+        pageSize: 30,
         SortBy: Array.isArray(raw.SortBy) && raw.SortBy.length ? raw.SortBy : [{ field: 'tlt_no', order: 1 }],
       };
-
-      if (!payload.OrderBy && payload.SortBy[0]?.field) {
-        payload.OrderBy = payload.SortBy[0].field;
-      }
 
       payload.sam_yyymm = this.formatYearMonth(raw.sam_yyymm);
       payload.tlt_no = raw.tlt_no || '';
