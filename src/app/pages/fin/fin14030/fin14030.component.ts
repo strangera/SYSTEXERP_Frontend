@@ -6,6 +6,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { DomSanitizer } from '@angular/platform-browser';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin14030Service } from '@service/api/fin/fin14030.service';
@@ -97,6 +98,7 @@ export class FIN14030Component
 
   constructor(
     private readonly fin14030Service: Fin14030Service,
+    private readonly sanitizer: DomSanitizer,
   ) {
     super();
   }
@@ -170,7 +172,7 @@ export class FIN14030Component
 
               rawUrl = decodeURIComponent(rawUrl);
 
-              this.pdfUrl = rawUrl;
+              this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
             }
 
             this.loading = false;
