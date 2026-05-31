@@ -7,8 +7,11 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="匯款單號" controlName="WSLIP_NO"
-            [control]="queryForm.controls.WSLIP_NO" [submitted]="submitted"></app-input-text>
+          <div class="col-12 md:col-6 lg:col-4" style="cursor:pointer" (click)="openWslipDialog(); $event.stopPropagation()">
+            <app-input-text label="匯款單號" controlName="WSLIP_NO" [control]="queryForm.controls.WSLIP_NO"
+              [submitted]="submitted" [readonly]="true" [customPlaceholder]="'點擊選取匯款單號'"
+              [alwaysShowPlaceholder]="true"></app-input-text>
+          </div>
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="傳票日期" controlName="VouDate"
             [control]="queryForm.controls.VouDate" [submitted]="submitted" />
         </div>
@@ -20,6 +23,16 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
+<!-- 匯款單號開窗 Dialog -->
+<app-dialog [visible]="wslipDialogVisible" header="選取匯款單號" (visibleChange)="wslipDialogVisible = $event"
+  [showFooter]="false" width="800px">
+  <app-table [data]="wslipDialogData" [columns]="wslipDialogColumns" [totalRecords]="wslipDialogTotalRecords"
+    [loading]="wslipDialogLoading" [showCheckBox]="true" [selectionMode]="'single'" [selectedItems]="selectedWslipItem"
+    [showManage]="false" [showDelete]="false" [showExcel]="false" [showReportMode]="false" [lazy]="false"
+    dataKey="WSLIP_NO" (selectionChange)="onWslipSelect($event)">
+  </app-table>
+</app-dialog>
 
 <!-- <div class="card">
   <div class="col-12">
