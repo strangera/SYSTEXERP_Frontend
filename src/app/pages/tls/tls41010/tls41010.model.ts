@@ -326,14 +326,16 @@ export const columns: Column[] = [
   { field: 'ECR_SettleHHNN', header: '清機提示時間-時分', visible: true, format: formatTimeHHMM },
   { field: 'ECR_KBLevel', header: '機台鍵盤等級', visible: true },
   {
-    field: 'ECR_KBType', header: '訂單印表機型態', visible: true,
-    format: (value) => SystemOptionsService.getOptions('ECR_KBType')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+    field: 'ECR_OrderPrn', header: '訂單印表機型態', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_OrderPrn')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
   },
   {
-    field: 'ECR_KBType', header: '訂單印表機連接埠', visible: true,
+    field: 'ECR_OrderPrnCom', header: '訂單印表機連接埠', visible: true,
+  },
+  {
+    field: 'ECR_KBType', header: '鍵盤型態', visible: true,
     format: (value) => SystemOptionsService.getOptions('ECR_KBType')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
   },
-  { field: 'ECR_OrderPrn', header: '鍵盤型態', visible: true },
   {
     field: 'ECR_MSR', header: '磁條讀卡機型態', visible: true,
     format: (value) => SystemOptionsService.getOptions('ECR_MSR')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
