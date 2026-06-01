@@ -1,65 +1,101 @@
 import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
 
 /**
- * ASS16040 領用審核作業 - 查詢請求
+ * ASS16040 領用審核作業 — 查詢請求
+ * SPEC §7.1/§7.2: queryASS16040M（主檔模式）/ queryASS16040（主檔+明細模式）共用此 Request
  */
 export interface ASS16040QueryRequest extends BaseQueryRequest {
-  MTAPPLY_ID?: string;   // 領用單號（長度 15）
-  EMP_ID?: string;       // 申請人代號
-  FASITEM_ID?: number;   // 品項編號
-  APPLY_DATE_S?: string; // 申請日期起 (YYYY-MM-DD)
-  APPLY_DATE_E?: string; // 申請日期迄 (YYYY-MM-DD)
-  APRV_DATE_S?: string;  // 審核日期起 (YYYY-MM-DD)
-  APRV_DATE_E?: string;  // 審核日期迄 (YYYY-MM-DD)
-  ORG_ID?: string;       // 部門代號
-  CHECK_DATE?: string;   // 發料日期 (YYYY-MM-DD)
-  APRV_EMP_ID?: string;  // 審核者代號
-  WH_ID?: string;        // 倉別
-  STATUS?: string;       // 領用單狀態
+  MTAPPLY_ID?: string | null;          // 領用單號（長度 15）
+  EMP_ID?: string | null;              // 申請人代號
+  FASITEM_ID?: number | null;          // 品項編號（FASITEM.ID, int64）
+  APPLY_DATE_S?: Date | string | null; // 申請日期起
+  APPLY_DATE_E?: Date | string | null; // 申請日期迄
+  APRV_DATE_S?: Date | string | null;  // 審核日期起
+  APRV_DATE_E?: Date | string | null;  // 審核日期迄
+  ORG_ID?: string | null;              // 部門代號
+  CHECK_DATE?: Date | string | null;   // 發料日期
+  APRV_EMP_ID?: string | null;         // 審核者代號
+  WH_ID?: string | null;               // 倉別
+  STATUS?: string | null;              // 領用單狀態 (MTAPPLY_STATUS)
 }
 
 /**
- * ASS16040 查詢結果列
- * 每筆代表一筆明細，MTAPPLY_ID 相同的 rows 屬於同一張領用單
+ * ASS16040 主檔模式列（給查詢頁用）
+ * 來源：POST /ASS0000/ASS1000/queryASS16040M
+ * SPEC §7.1
  */
-export interface ASS16040Data {
-  ID: number;
-  MTAPPLY_ID: string;        // 領用單號
-  EMP_ID: string;            // 申請人代號
-  EMP_NAME?: string;         // 申請人名稱
-  ORG_ID: string;            // 部門代號
-  ORG_NAME?: string;         // 部門名稱
-  APPLY_DATE: string;        // 申請日期
-  MTAPPLY_STATUS: string;        // 領用單狀態代碼
-  MTAPPLY_STATUS_NAME?: string;  // 領用單狀態名稱
-  AMT: number;
-  APRV_EMP_ID: string;       // 審核者代號
-  APRV_EMP_NAME?: string;    // 審核者名稱
-  APRV_DATE: string;         // 審核日期
-  WH_ID: string;             // 倉別代號
-  WH_NAME?: string;          // 倉別名稱
-  CHECK_DATE: string;        // 發料日期
-  LINE_NUM: number;          // 明細筆數（頭檔總計）
-  FASITEM_ID: number;        // 品項編號（明細）
-  QTY: number;               // 數量（明細）
-  GOODS_PRICE: number;
-  ITEM_AMT: number;
+export interface ASS16040MasterRow {
+  MASTER_ID: number;
+  MTAPPLY_ID: string;
+  EMP_ID: string;
+  ORG_ID: string;
+  APPLY_DATE: string;
+  MTAPPLY_STATUS: string;
+  AMT: number | null;
+  APRV_EMP_ID: string | null;
+  APRV_DATE: string | null;
+  WH_ID: string;
+  CHECK_DATE: string | null;
+  TOTAL_COUNT: number;              // 明細筆數
+  // ↓ 後端待補欄位（user-answer-Q-007）；前端 model 預留 binding
+  SUGGEST_DAYS?: number | null;
+  NOTES?: string | null;
 }
 
 /**
- * ASS16040 審核請求
+ * ASS16040 主檔 + 明細模式列（給 CRU 頁用）
+ * 後端把主檔欄位 join 在每筆明細上。
+ * 來源：POST /ASS0000/ASS1000/queryASS16040
+ * SPEC §7.2
+ */
+export interface ASS16040DetailRow extends ASS16040MasterRow {
+  DETAIL_ID: number;
+  MID: number | null;
+  STO_NO: string | null;
+  MTAPPLYM_ID: number;
+  FASITEM_ID: number;
+  LINE_NUM: number;
+  QTY: number;
+  GOODS_PRICE: number | null;
+  TAX_CODE: string | null;
+  ITEM_AMT: number | null;
+  CHECK_QTY: number | null;
+  RETURN_QTY: number | null;
+  NOTES: string | null;             // 明細層 NOTES（單項說明）
+  CRT_USR_No?: string | null;
+  CRT_Date?: string | null;
+  CRT_USR_Name?: string | null;
+  UPD_USR_No?: string | null;
+  UPD_Date?: string | null;
+  UPD_USR_Name?: string | null;
+}
+
+/**
+ * 後端原始（巢狀）回傳結構 — service 層展平 mapping 使用
+ * SPEC §10.2
+ */
+export interface ASS16040NestedQueryData<T> {
+  QueryData?: T[] | null;
+  TotalCount?: number;
+  TotalPage?: number;
+}
+
+/**
+ * 審核 Request — 只送 MTAPPLY_ID（APRV_EMP_ID 由後端 JWT 取，前端不送）
+ * SPEC §7.3, user-answer-Q-005
  */
 export interface ASS16040ApproveRequest {
-  MTAPPLY_ID: string;   // 領用單號
-  APRV_EMP_ID: string;  // 審核者代號（登入者 user_No）
+  MTAPPLY_ID: string;
 }
 
 /**
- * ASS16040 CRU 明細列
+ * FASITEM 下拉 row 子集（CRU 頁明細「單位」資料來源）
+ * SPEC §6.3, user-answer-Q-009/011
  */
-export interface ASS16040DetailRow {
-  FASITEM_ID: number;    // 品項編號
-  UNIT?: string;         // 單位
-  QTY: number;           // 數量
-  ITEM_REMARK?: string;  // 單項說明
+export interface FASITEMDropdownRow {
+  ID: number;                     // 對應 FASITEM_ID（下拉 value）
+  GOODS_ID: string;
+  GOODS_NAME: string;
+  UNIT_NAME?: string | null;      // 單位名稱（明細「單位」欄位直接顯示此欄位）
+  UNIT?: string | null;
 }

@@ -18,7 +18,7 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
-import { ASS16040Data, ASS16040DetailRow } from '../ass16040/ass16040.model';
+import { ASS16040MasterRow } from '../ass16040/ass16040.model';
 
 /** 3.1.6.4 領用審核作業 — 審核頁 */
 @UntilDestroy()
@@ -41,7 +41,7 @@ import { ASS16040Data, ASS16040DetailRow } from '../ass16040/ass16040.model';
     TableEditComponent,
   ],
 })
-export class ASS16040CRUComponent extends BasicCruPageComponent<ASS16040Data> implements OnInit {
+export class ASS16040CRUComponent extends BasicCruPageComponent<ASS16040MasterRow> implements OnInit {
 
   // ─── 頭檔表單（全部唯讀：由帶回資料填入，不可手輸）───────────────────────────
   readonly dataForm = this.formBuilder.group({
@@ -54,8 +54,8 @@ export class ASS16040CRUComponent extends BasicCruPageComponent<ASS16040Data> im
     DESCRIPTION: new FormControl<string | null>({ value: null, disabled: true }),
   });
 
-  // ─── 明細（唯讀，從查詢 response 取同 MTAPPLY_ID 的 rows）────────────────────
-  detailData: ASS16040DetailRow[] = [];
+  // ─── 明細（唯讀；F-003 改為呼叫 queryASS16040 取明細，此 stub 待 F-003 完整重寫）
+  detailData: { FASITEM_ID: number; UNIT?: string; QTY: number; ITEM_REMARK?: string }[] = [];
 
   readonly detailColumns: EditColumn[] = [
     { field: 'FASITEM_ID',   header: '品項編號', type: 'input',       disabled: () => true },
@@ -116,7 +116,7 @@ export class ASS16040CRUComponent extends BasicCruPageComponent<ASS16040Data> im
   private populateFromRowdata(): void {
     if (!this.rowdata) return;
 
-    const row = this.rowdata as ASS16040Data;
+    const row = this.rowdata as ASS16040MasterRow;
 
     // 頭檔資料填入（全部唯讀）
     this.dataForm.patchValue({
@@ -127,18 +127,8 @@ export class ASS16040CRUComponent extends BasicCruPageComponent<ASS16040Data> im
       WH_ID:       row.WH_ID      ?? null,
     });
 
-    // 明細：querystate 中可能包含 allRows（同一次查詢的全部資料），
-    // 從中篩出同 MTAPPLY_ID 的 rows 作為明細
-    const queryState = this.queryData as { allRows?: ASS16040Data[] } | null;
-    const allRows: ASS16040Data[] = queryState?.allRows ?? [];
-    const sameIdRows = allRows.filter(r => r.MTAPPLY_ID === row.MTAPPLY_ID);
-
-    this.detailData = sameIdRows.map(r => ({
-      FASITEM_ID:  r.FASITEM_ID,
-      UNIT:        undefined, // TODO: 待後端補回 UNIT 欄位
-      QTY:         r.QTY,
-      ITEM_REMARK: undefined, // TODO: 待後端補回 ITEM_REMARK 欄位
-    }));
+    // 明細：F-003 改為呼叫 queryASS16040 取明細（待 F-003 commit 完整實作）
+    this.detailData = [];
   }
 
   // ─── 確認審核 ─────────────────────────────────────────────────────────────────
@@ -155,15 +145,9 @@ export class ASS16040CRUComponent extends BasicCruPageComponent<ASS16040Data> im
       return;
     }
 
-    const aprvEmpId = this.user?.user_No;
-    if (!aprvEmpId) {
-      this.messageService.warnBubble('無法取得登入使用者資訊');
-      return;
-    }
-
     this.loading = true;
     this.ass16040Service
-      .approveASS16040({ MTAPPLY_ID: mtapplyId, APRV_EMP_ID: aprvEmpId })
+      .approveASS16040({ MTAPPLY_ID: mtapplyId })
       .pipe(
         untilDestroyed(this),
         finalize(() => (this.loading = false)),
