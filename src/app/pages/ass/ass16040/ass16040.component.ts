@@ -20,7 +20,12 @@ import { removeEmptyValues } from '@shared/utils/object-utils';
 import { ApiResponse } from '@shared/utils/rxjs-operators/validate-api-response';
 import { TLSFormUtils } from '@shared/utils/tls-form-utils';
 
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+
 import { ASS16040MasterRow, ASS16040QueryRequest } from './ass16040.model';
+
+/** 「領用申請」狀態代碼（SYS1000 MTAPPLY_STATUS）。可審核狀態。 */
+const MTAPPLY_STATUS_APPLIED = '1';
 
 /** 3.1.6.4 領用審核作業 — 查詢頁（SPEC §4 / F-001 / F-002） */
 @UntilDestroy()
@@ -248,6 +253,20 @@ export class ASS16040Component extends BasicQueryPageComponent<ASS16040MasterRow
     });
     return this.ass16040Service.queryASS16040M(payload);
   };
+
+  /**
+   * SPEC F-002：點列進入 CRU 頁。
+   * - 有 Edit 權限且狀態為「領用申請」→ Edit 模式
+   * - 否則 → Read 模式
+   */
+  override onEdit(row: ASS16040MasterRow): void {
+    const canApprove = this.hasPermission('30') && row?.MTAPPLY_STATUS === MTAPPLY_STATUS_APPLIED;
+    this.navigateWithState(canApprove ? CRUDStatus.Edit : CRUDStatus.Read, row);
+  }
+
+  override onDetail(row: ASS16040MasterRow): void {
+    this.navigateWithState(CRUDStatus.Read, row);
+  }
 
   /** SPEC F-001：使用者按【查詢】按鈕觸發 */
   onSubmit(frm: FormGroup): void {
