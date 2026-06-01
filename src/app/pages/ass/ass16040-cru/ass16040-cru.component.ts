@@ -232,7 +232,10 @@ export class ASS16040CRUComponent
     });
   }
 
-  /** F-004 預留：確認審核（將於後續 commit 完整實作 confirm + flow） */
+  /**
+   * F-004 確認審核：先彈確認對話框 → approveASS16040（只傳 MTAPPLY_ID，
+   * APRV_EMP_ID 由後端從 JWT 取）→ 成功訊息 + 返回查詢頁。
+   */
   onApprove(): void {
     if (!this.canEdit() || !this.isFormEditable) return;
     const mtapplyId = this.dataForm.getRawValue().MTAPPLY_ID;
@@ -240,6 +243,14 @@ export class ASS16040CRUComponent
       this.messageService.warnBubble('找不到領用單號');
       return;
     }
+    this.messageService.confirm({
+      header: '確認審核',
+      message: '是否確認審核此筆領用單？',
+      accept: () => this.executeApprove(mtapplyId),
+    });
+  }
+
+  private executeApprove(mtapplyId: string): void {
     const payload: ASS16040ApproveRequest = { MTAPPLY_ID: mtapplyId };
     this.loading = true;
     this.ass16040Service
