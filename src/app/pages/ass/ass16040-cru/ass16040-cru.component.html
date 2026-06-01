@@ -2,7 +2,7 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
 
-    <!-- 確認審核：僅 Edit 模式且有 Edit 權限時顯示 -->
+    <!-- 確認審核：僅 Edit 模式且有 Edit 權限時顯示（F-004） -->
     <app-button
       *ngIf="isFormEditable"
       btnType="default"
@@ -18,31 +18,47 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
 
+        <!-- 領用單號（唯讀） -->
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="領用單號"
+          controlName="MTAPPLY_ID"
+          [control]="dataForm.controls.MTAPPLY_ID"
+          [submitted]="submitted"
+          [disabled]="true"
+        ></app-input-text>
+
         <!-- 申請人代號（唯讀） -->
-        <app-dropdown
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="申請人代號"
           controlName="EMP_ID"
-          [options]="empIdOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.EMP_ID"
           [submitted]="submitted"
           [disabled]="true"
-        ></app-dropdown>
+        ></app-input-text>
+
+        <!-- 申請人名稱（lookup 顯示） -->
+        <div class="col-12 md:col-6 lg:col-4 field">
+          <label class="form-label">申請人名稱</label>
+          <input type="text" class="p-inputtext" [value]="empName" [disabled]="true" />
+        </div>
 
         <!-- 部門代號（唯讀） -->
-        <app-dropdown
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="部門代號"
           controlName="ORG_ID"
-          [options]="orgIdOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.ORG_ID"
           [submitted]="submitted"
           [disabled]="true"
-        ></app-dropdown>
+        ></app-input-text>
+
+        <!-- 部門名稱（lookup 顯示） -->
+        <div class="col-12 md:col-6 lg:col-4 field">
+          <label class="form-label">部門名稱</label>
+          <input type="text" class="p-inputtext" [value]="orgName" [disabled]="true" />
+        </div>
 
         <!-- 申請日期（唯讀） -->
         <app-calendar
@@ -55,50 +71,90 @@
           [disabled]="true"
         ></app-calendar>
 
-        <!-- 建議需求(日)（唯讀） -->
+        <!-- 建議需求(日)（唯讀，後端待補欄位） -->
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="建議需求(日)"
-          controlName="NOTES"
-          [control]="dataForm.controls.NOTES"
+          controlName="SUGGEST_DAYS"
+          [control]="dataForm.controls.SUGGEST_DAYS"
           [submitted]="submitted"
-          [readonly]="true"
+          [disabled]="true"
         ></app-input-text>
 
         <!-- 倉別（唯讀） -->
-        <app-dropdown
+        <app-input-text
           class="col-12 md:col-6 lg:col-4"
-          label="倉別"
+          label="倉別代號"
           controlName="WH_ID"
-          [options]="whIdOptions"
-          optionLabel="label"
-          optionValue="value"
           [control]="dataForm.controls.WH_ID"
           [submitted]="submitted"
           [disabled]="true"
-        ></app-dropdown>
+        ></app-input-text>
 
-        <!-- 說明（唯讀） -->
+        <!-- 倉別名稱（lookup 顯示） -->
+        <div class="col-12 md:col-6 lg:col-4 field">
+          <label class="form-label">倉別名稱</label>
+          <input type="text" class="p-inputtext" [value]="whName" [disabled]="true" />
+        </div>
+
+        <!-- 說明（唯讀，後端待補欄位） -->
         <app-input-text
           class="col-12 md:col-6 lg:col-4"
           label="說明"
-          controlName="DESCRIPTION"
-          [control]="dataForm.controls.DESCRIPTION"
+          controlName="NOTES"
+          [control]="dataForm.controls.NOTES"
           [submitted]="submitted"
-          [readonly]="true"
+          [disabled]="true"
         ></app-input-text>
 
-        <!-- 明細表格（唯讀） -->
-        <app-table-edit
+        <!-- 審核者代號（唯讀） -->
+        <app-input-text
+          class="col-12 md:col-6 lg:col-4"
+          label="審核者代號"
+          controlName="APRV_EMP_ID"
+          [control]="dataForm.controls.APRV_EMP_ID"
+          [submitted]="submitted"
+          [disabled]="true"
+        ></app-input-text>
+
+        <!-- 審核者名稱（lookup 顯示） -->
+        <div class="col-12 md:col-6 lg:col-4 field">
+          <label class="form-label">審核者名稱</label>
+          <input type="text" class="p-inputtext" [value]="aprvEmpName" [disabled]="true" />
+        </div>
+
+        <!-- 審核日期（唯讀） -->
+        <app-calendar
+          class="col-12 md:col-6 lg:col-4"
+          calendarType="dateOne"
+          label="審核日期"
+          controlName="APRV_DATE"
+          [control]="dataForm.controls.APRV_DATE"
+          [submitted]="submitted"
+          [disabled]="true"
+        ></app-calendar>
+
+        <!-- 領用單狀態（唯讀；顯示 SYS1000 lookup 後的中文） -->
+        <div class="col-12 md:col-6 lg:col-4 field">
+          <label class="form-label">領用單狀態</label>
+          <input type="text" class="p-inputtext" [value]="statusName" [disabled]="true" />
+        </div>
+
+      </div>
+
+      <!-- 明細表格（唯讀） -->
+      <div class="col-12">
+        <app-table-report
           tableKey="ASS16040Detail"
-          class="col-12"
           [data]="detailData"
           [columns]="detailColumns"
+          [totalRecords]="detailData.length"
+          [loading]="loading"
+          [lazy]="false"
           [showCheckBox]="false"
+          [showManage]="false"
           [showReorder]="false"
-          [disabled]="true"
-        ></app-table-edit>
-
+        ></app-table-report>
       </div>
     </form>
   </p-panel>
