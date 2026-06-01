@@ -93,7 +93,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
   ticket_typeOption: option[] = [ //保證票型態
     { value: '1', label: '準時開業保證票' },
     { value: '2', label: '施工保證票' },
-    { value: '3', label: '契約屆滿' },
+    { value: '3', label: '契約屆滿保證票' },
   ];
 
   ticket_kindOption: option[] = [ //票據種類
