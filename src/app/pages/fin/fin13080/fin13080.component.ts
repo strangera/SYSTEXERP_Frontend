@@ -113,6 +113,8 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
+  isRowSelectable = (row: any): boolean => !!row?.CanDel;
+
   onDelete(rowData: any[]) {
     if (!rowData || rowData.length === 0) {
       this.messageService.warnBubble('請先選擇要刪除的資料');

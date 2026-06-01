@@ -12,7 +12,7 @@ import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calend
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
 import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
@@ -59,36 +59,45 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
   data: Garantee_Ticket[] = [];// 表格數據和篩選數據
   columns: Column[] = [// 表格欄位定義
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'VEN_No', header: '廠商編號', visible: true },
-    { field: 'VEN_Name', header: '廠商名稱', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
+    { field: 'VEN_No', header: '廠商編號', visible: true, align: 'left' },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true, align: 'left' },
     {
       field: 'ticket_type', header: '保證票型態', visible: true,
       format: (value: string) =>
         this.ticket_typeOption.find((option) => option.value === value)?.label ||
         value
+      , align: 'left'
     },
-    { field: 'ticket_no', header: '票據編號', visible: true },
+    { field: 'ticket_no', header: '票據編號', visible: true, align: 'left' },
     {
       field: 'ticket_kind', header: '票據種類', visible: true,
       format: (value: string) =>
         this.ticket_kindOption.find((option) => option.value === value)?.label ||
-        value
+        value,
+      exportFormat: [
+        { '1': '本票' },
+        { '2': '支票' },
+        { '3': '銀行保證函' },
+        { '9': '其他' }
+      ]
+      , align: 'left'
     },
-    { field: 'ticket_amount', header: '保證票金額', visible: true, format: formatAmount },
-    { field: 'expiry_date', header: '票據到期日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
+    { field: 'ticket_amount', header: '保證票金額', visible: true, format: formatAmount, align: 'right' },
+    { field: 'expiry_date', header: '票據到期日期', visible: true, format: formatDate },
     {
       field: 'get_ticket_status', header: '票據收票狀態', visible: true,
       format: (value: string) =>
         this.get_ticket_statusOption.find((option) => option.value === value)?.label ||
         value
+      , align: 'left'
     },
-    { field: 'get_date', header: '繳票日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'return_date', header: '退票日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'close_date', header: '封存日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'ticket_remarks', header: '保證票摘要-合約主檔', visible: true },
-    { field: 'remark', header: '備註', visible: true },
+    { field: 'get_date', header: '繳票日期', visible: true, format: formatDate }, // date這邊以string呈現
+    { field: 'return_date', header: '退票日期', visible: true, format: formatDate },
+    { field: 'close_date', header: '封存日期', visible: true, format: formatDate },
+    { field: 'ticket_remarks', header: '保證票摘要-合約主檔', visible: true, align: 'left' },
+    { field: 'remark', header: '備註', visible: true, align: 'left' },
   ];
   selectedItems: Garantee_Ticket[] = [];// 多選項目
 
@@ -102,10 +111,9 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   orgOption: apiOption[] = []; //組織
 
   tlt_openflagOption: option[] = [ //營業狀態
-    { value: '0', label: '閉店/撤櫃' },
+    { value: '0', label: '已撤櫃' },
     { value: '1', label: '營業中' },
-    { value: '2', label: '合約結束' },
-    { value: '9', label: '核准時合約尚未開始' },
+    { value: '9', label: '合約未生效' },
   ];
 
   apply_statusOption: option[] = [ //申請案件狀態
@@ -154,7 +162,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   ];
   opData: any[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
-    { field: 'No', header: '專櫃編號' },
+    { field: 'No', header: '專櫃編號', align: 'left' },
     { field: 'Name', header: '專櫃名稱' },
     { field: 'contract_subno', header: '版次' },
   ];

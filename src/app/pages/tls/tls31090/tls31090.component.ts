@@ -58,6 +58,7 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
   queryForm = this.formBuilder.nonNullable.group({
     TxnDate: [yesterday, [Validators.required]],//交易日期_起
+    // TxnDate: [new Date(2025, 0, 1), [Validators.required]],//交易日期_起 (測試)
     TimeMode: ['A'],// 時段模式：'A'=全時段(預設)，'T'=依範圍 (全時段不用帶TimeFromHH、TimeToHH)
     TimeFromHH: [null, [Validators.min(0), Validators.max(23)]],// 起始小時 (0~23)，當 TimeMode='T' 時生效
     TimeToHH: [null, [Validators.min(0), Validators.max(23)]],// 結束小時 (0~23)，當 TimeMode='T' 時生效
@@ -85,15 +86,22 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
   totalRecords = 0;
   data: TLS31090Response[] = [];
+  footerData: TLS31090Response | null = null;
   historyRequestBody: TLS31090Request | null = null; //歷史查詢條件
 
   btnPDFLoading = false;
   btnExcelLoading = false;
 
-  columns: ReportColumn[] = [
-    { field: 'BusTypeName', header: '大分類名稱', visible: true, align: 'left' },
-    { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
-
+  // 時段column
+  private readonly ALL_HOUR_COLUMNS: ReportColumn[] = [
+    { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
+    { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
@@ -110,11 +118,77 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
     { field: 'H21', header: '21時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
     { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Reentry', header: '補登', visible: true, format: formatAmount, align: 'right' },
-    { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
-    { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
-    { field: 'AVN_PreOrderAmt', header: '預售業績', visible: true, format: formatAmount, align: 'right' },
   ];
+
+  // 2. 將 columns 改為 Getter，根據表單狀態動態產生
+  get columns(): ReportColumn[] {
+    const { TimeMode, TimeFromHH, TimeToHH } = this.queryForm.getRawValue();
+
+    // 進行小時欄位的範圍篩選
+    const filteredHours = this.ALL_HOUR_COLUMNS.filter(col => {
+      // 若非範圍模式('T')，或是未同時填寫起訖點，就顯示完整的 24 小時
+      if (TimeMode !== 'T' || TimeFromHH === null || TimeToHH === null) {
+        return true;
+      }
+
+      // 從欄位屬性名稱擷取數字 (例如 'H09' -> 9)
+      const hourNum = parseInt(col.field.substring(1), 10);
+
+      // 範圍判定 (同時相容常規範圍與跨午夜區間)
+      if (TimeFromHH <= TimeToHH) {
+        return hourNum >= TimeFromHH && hourNum <= TimeToHH;
+      } else {
+        return hourNum >= TimeFromHH || hourNum <= TimeToHH;
+      }
+    });
+
+    // 3. 重新組裝回 90 報表的欄位結構（前置欄位為大分類名稱、後置欄位欄位名對齊原規格）
+    return [
+      { field: 'BusTypeName', header: '大分類名稱', visible: true, align: 'left' },
+      { field: 'TimeType', header: '時段類型', visible: true, align: 'left' },
+
+      ...filteredHours, // 注入動態過濾後的小時區間
+
+      { field: 'Reentry', header: '補登', visible: true, format: formatAmount, align: 'right' },
+      { field: 'AVN_PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
+      { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
+      { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
+    ];
+  }
+
+  // columns: ReportColumn[] = [
+  //   { field: 'BusTypeName', header: '大分類名稱', visible: true, align: 'left' },
+  //   { field: 'TimeType', header: '時段類型', visible: true, align: 'left' }, // (營業實績 / 交易筆數 / 營業實績佔比)
+
+  //   { field: 'H00', header: '00時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H01', header: '01時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H02', header: '02時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H03', header: '03時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H04', header: '04時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H05', header: '05時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H06', header: '06時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H07', header: '07時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H08', header: '08時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H09', header: '09時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H10', header: '10時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H11', header: '11時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H12', header: '12時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H13', header: '13時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H14', header: '14時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H15', header: '15時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H16', header: '16時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H17', header: '17時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H18', header: '18時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H19', header: '19時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H20', header: '20時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H21', header: '21時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H22', header: '22時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'H23', header: '23時段', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'Reentry', header: '補登', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'AVN_PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'PresaleCheckout', header: '預售結帳', visible: true, format: formatAmount, align: 'right' },
+  //   { field: 'Subtotal', header: '小計', visible: true, format: formatAmount, align: 'right' },
+  // ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
     { field: 'sum', header: '營業佔比' },
@@ -314,8 +388,41 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
 
       console.log('送出request請求', formValue);
       this.tls31090Service.queryTLS31090(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data ?? [];               // 查詢資料
-        this.totalRecords = res.Data.length;      // 長度計算筆數
+        this.data = res.Data.Data ?? [];               // 查詢資料
+        this.footerData = {
+          BusTypeName: '營業實績',
+          TimeType: '',
+          H00: res.Data.TotalData?.TotalH00 ?? 0,
+          H01: res.Data.TotalData?.TotalH01 ?? 0,
+          H02: res.Data.TotalData?.TotalH02 ?? 0,
+          H03: res.Data.TotalData?.TotalH03 ?? 0,
+          H04: res.Data.TotalData?.TotalH04 ?? 0,
+          H05: res.Data.TotalData?.TotalH05 ?? 0,
+          H06: res.Data.TotalData?.TotalH06 ?? 0,
+          H07: res.Data.TotalData?.TotalH07 ?? 0,
+          H08: res.Data.TotalData?.TotalH08 ?? 0,
+          H09: res.Data.TotalData?.TotalH09 ?? 0,
+          H10: res.Data.TotalData?.TotalH10 ?? 0,
+          H11: res.Data.TotalData?.TotalH11 ?? 0,
+          H12: res.Data.TotalData?.TotalH12 ?? 0,
+          H13: res.Data.TotalData?.TotalH13 ?? 0,
+          H14: res.Data.TotalData?.TotalH14 ?? 0,
+          H15: res.Data.TotalData?.TotalH15 ?? 0,
+          H16: res.Data.TotalData?.TotalH16 ?? 0,
+          H17: res.Data.TotalData?.TotalH17 ?? 0,
+          H18: res.Data.TotalData?.TotalH18 ?? 0,
+          H19: res.Data.TotalData?.TotalH19 ?? 0,
+          H20: res.Data.TotalData?.TotalH20 ?? 0,
+          H21: res.Data.TotalData?.TotalH21 ?? 0,
+          H22: res.Data.TotalData?.TotalH22 ?? 0,
+          H23: res.Data.TotalData?.TotalH23 ?? 0,
+
+          Reentry: res.Data.TotalData?.TotalReentry ?? 0, // 補登總計
+          PresaleCheckout: res.Data.TotalData?.TotalPresaleCheckout ?? 0, // 預售結帳總計
+          Subtotal: res.Data.TotalData?.TotalSales ?? 0, // 營業實績總計
+          AVN_PreOrderAmt: res.Data.TotalData?.TotalPreOrderAmt ?? 0, // 預售實績總計
+        };
+        this.totalRecords = res.Data.Data.length;      // 長度計算筆數
         console.log('查詢結果', res.Data ?? []);
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
@@ -343,30 +450,30 @@ export class TLS31090Component extends BasicQueryPageComponent<TLS31090Response>
       Buildings: (raw.Buildings || []).join(','),
     } as TLS31090Request;
 
-    console.log('時段之大分類之營業報表print請求(Excel)', JSON.stringify(formValue));
+    console.log('各時段之大分類之營業報表print請求(Excel)', JSON.stringify(formValue));
 
     if (isExcel) {
       console.log('匯出Excel');
       this.btnExcelLoading = true;
       this.tls31090Service.exportTLS31090(formValue).subscribe(blob => {
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = '時段之大分類之營業報表.xlsx';
+        a.download = '各時段之大分類之營業報表.xlsx';
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.btnExcelLoading = false;
       });
     } else {
       console.log('匯出PDF');
       this.btnPDFLoading = true;
       this.tls31090Service.exportTLS31090PDF(formValue).subscribe(blob => {
-        const url = window.URL.createObjectURL(blob);
+        const url = globalThis.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = '時段之大分類之營業報表.pdf';
+        a.download = '各時段之大分類之營業報表.pdf';
         a.click();
-        window.URL.revokeObjectURL(url);
+        globalThis.URL.revokeObjectURL(url);
         this.btnPDFLoading = false;
       });
     }

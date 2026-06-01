@@ -7,7 +7,7 @@ import { filter, take } from 'rxjs/operators';
 })
 export class FormStatusService {
   // 記錄該程式編號 (ProgNo) 的表單初始狀態是否已截取完成
-  private formInitializedSource = new BehaviorSubject<{ progNo: string, isReady: boolean }>({ progNo: '', isReady: false });
+  private readonly formInitializedSource = new BehaviorSubject<{ progNo: string, isReady: boolean }>({ progNo: '', isReady: false });
 
   // 發出訊號：通知初始值已存好
   notifyReady(progNo: string) {

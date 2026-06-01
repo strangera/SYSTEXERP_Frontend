@@ -119,7 +119,6 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
     PUR_Type: '類別區分',
     Source_Doc_No: '憑證單號',
     Voucher_No: '傳票號碼',
-    SAL_Type: '系統別',
     PUR_Remark: '備註',
   };
 
@@ -311,7 +310,7 @@ export class FIN13050CRUComponent extends BasicCruPageComponent<any> implements 
 
       Source_Doc_No: row.Source_Doc_No ?? '',
       Voucher_No: row.Voucher_No ?? '',
-      SYS_ORIGIN: row.SYS_ORIGIN ?? row.SAL_Type ?? 'G',
+      SYS_ORIGIN: row.SYS_ORIGIN ?? 'G',
       PUR_Remark: row.PUR_Remark ?? '',
     };
 

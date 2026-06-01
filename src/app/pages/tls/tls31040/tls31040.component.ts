@@ -155,7 +155,7 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     { field: 'TxnCount', header: '交易筆數', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: '營業坪效', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
-    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
+    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
 
     { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: '臨時櫃', format: formatAmount, align: 'right' },
     { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: '臨時櫃', format: formatAmount, align: 'right' },
@@ -422,7 +422,7 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
         this.messageService.successBubble(res.Message);
         if (res.Data && res.Data.Print_URL) {
           const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-          window.open(downloadUrl, '_blank');
+          globalThis.open(downloadUrl, '_blank');
         }
       });
   }

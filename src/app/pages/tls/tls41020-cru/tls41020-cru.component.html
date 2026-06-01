@@ -9,12 +9,26 @@
       <div class="grid p-fluid">
         <!-- 收銀機號、日期控制 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.ECR_No" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            label="收銀機號"
+            controlName="ECR_No"
+            [options]="ECRNoOptions | async"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.ECR_No"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range startLabel="啟用日期" endLabel="停用日期" [startControl]="dataForm.controls.EDC_BegDate"
-            [endControl]="dataForm.controls.EDC_EndDate" [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range
+            startLabel="啟用日期"
+            endLabel="停用日期"
+            startControlName="EDC_BegDate"
+            endControlName="EDC_EndDate"
+            [startControl]="dataForm.controls.EDC_BegDate"
+            [endControl]="dataForm.controls.EDC_EndDate"
+            [submitted]="submitted"
+          ></app-calendar-range>
         </div>
         <div class="col-12 md:col-6 lg:col-4"></div>
 
@@ -22,97 +36,126 @@
         <!-- 第 1 組：中信刷卡機 -->
         <!-- ========================================== -->
         <div class="col-12 md:col-4">
-          <app-dropdown label="中信刷卡機狀態" controlName="EDC_Status1" [options]="EDC_Status_Option" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.EDC_Status1" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            label="中信刷卡機狀態"
+            controlName="EDC_Status1"
+            [options]="EDC_Status_Option"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.EDC_Status1"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-4">
-          <app-input-text label="中信刷卡機IP" controlName="EDC_IP1" [control]="dataForm.controls.EDC_IP1"
-            [submitted]="submitted"></app-input-text>
-          <small *ngIf="dataForm.get('EDC_IP1')?.errors?.['pattern'] && dataForm.get('EDC_IP1')?.touched"
-            class="p-error"> 請輸入有效的 IP 格式 </small>
+          <app-input-text
+            label="中信刷卡機IP"
+            controlName="EDC_IP1"
+            [control]="dataForm.controls.EDC_IP1"
+            [submitted]="submitted"
+          ></app-input-text>
+          <small
+            *ngIf="
+              dataForm.get('EDC_IP1')?.errors?.['pattern'] &&
+              dataForm.get('EDC_IP1')?.touched
+            "
+            class="p-error"
+          >
+            請輸入有效的 IP 格式
+          </small>
         </div>
         <div class="col-12 md:col-4">
-          <app-input-text label="中信刷卡機端末機代碼" controlName="EDC_TmID1" [control]="dataForm.controls.EDC_TmID1"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="中信刷卡機端末機代碼"
+            controlName="EDC_TmID1"
+            [control]="dataForm.controls.EDC_TmID1"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
         <!-- ========================================== -->
         <!-- 第 2 組：聯合刷卡機 -->
         <!-- ========================================== -->
         <div class="col-12 md:col-4">
-          <app-dropdown label="聯合刷卡機狀態" controlName="EDC_Status2" [options]="EDC_Status_Option" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.EDC_Status2" [submitted]="submitted"></app-dropdown>
+          <app-dropdown
+            label="聯合刷卡機狀態"
+            controlName="EDC_Status2"
+            [options]="EDC_Status_Option"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.EDC_Status2"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-4">
-          <app-input-text label="聯合刷卡機IP" controlName="EDC_IP2" [control]="dataForm.controls.EDC_IP2"
-            [submitted]="submitted"></app-input-text>
-          <small *ngIf="dataForm.get('EDC_IP2')?.errors?.['pattern'] && dataForm.get('EDC_IP2')?.touched"
-            class="p-error"> 請輸入有效的 IP 格式 </small>
+          <app-input-text
+            label="聯合刷卡機IP"
+            controlName="EDC_IP2"
+            [control]="dataForm.controls.EDC_IP2"
+            [submitted]="submitted"
+          ></app-input-text>
+          <small
+            *ngIf="
+              dataForm.get('EDC_IP2')?.errors?.['pattern'] &&
+              dataForm.get('EDC_IP2')?.touched
+            "
+            class="p-error"
+          >
+            請輸入有效的 IP 格式
+          </small>
         </div>
         <div class="col-12 md:col-4">
-          <app-input-text label="聯合刷卡機端末機代碼" controlName="EDC_TmID2" [control]="dataForm.controls.EDC_TmID2"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="聯合刷卡機端末機代碼"
+            controlName="EDC_TmID2"
+            [control]="dataForm.controls.EDC_TmID2"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
         <!-- ========================================== -->
         <!-- 第 3 組：中信分期刷卡機 -->
         <!-- ========================================== -->
         <div class="col-12 md:col-4">
-          <app-dropdown label="中信分期刷卡機狀態" controlName="EDC_Status3" [options]="EDC_Status_Option" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.EDC_Status3" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-4">
-          <app-input-text label="中信分期刷卡機IP" controlName="EDC_IP3" [control]="dataForm.controls.EDC_IP3"
-            [submitted]="submitted"></app-input-text>
-          <small *ngIf="dataForm.get('EDC_IP3')?.errors?.['pattern'] && dataForm.get('EDC_IP3')?.touched"
-            class="p-error"> 請輸入有效的 IP 格式 </small>
-        </div>
-        <div class="col-12 md:col-4">
-          <app-input-text label="中信分期刷卡機端末機代碼" controlName="EDC_TmID3" [control]="dataForm.controls.EDC_TmID3"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="中信分期刷卡機端末機代碼"
+            controlName="EDC_TmID3"
+            [control]="dataForm.controls.EDC_TmID3"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
         <!-- ========================================== -->
         <!-- 第 4 組：中信紅利刷卡機 -->
         <!-- ========================================== -->
         <div class="col-12 md:col-4">
-          <app-dropdown label="中信紅利刷卡機狀態" controlName="EDC_Status4" [options]="EDC_Status_Option" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.EDC_Status4" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-4">
-          <app-input-text label="中信紅利刷卡機IP" controlName="EDC_IP4" [control]="dataForm.controls.EDC_IP4"
-            [submitted]="submitted"></app-input-text>
-          <small *ngIf="dataForm.get('EDC_IP4')?.errors?.['pattern'] && dataForm.get('EDC_IP4')?.touched"
-            class="p-error"> 請輸入有效的 IP 格式 </small>
-        </div>
-        <div class="col-12 md:col-4">
-          <app-input-text label="中信紅利刷卡機端末機代碼" controlName="EDC_TmID4" [control]="dataForm.controls.EDC_TmID4"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="中信紅利刷卡機端末機代碼"
+            controlName="EDC_TmID4"
+            [control]="dataForm.controls.EDC_TmID4"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
         <!-- ========================================== -->
         <!-- 第 5 組：中信銀聯刷卡機 -->
         <!-- ========================================== -->
         <div class="col-12 md:col-4">
-          <app-dropdown label="中信銀聯刷卡機狀態" controlName="EDC_Status5" [options]="EDC_Status_Option" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.EDC_Status5" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-4">
-          <app-input-text label="中信銀聯刷卡機IP" controlName="EDC_IP5" [control]="dataForm.controls.EDC_IP5"
-            [submitted]="submitted"></app-input-text>
-          <small *ngIf="dataForm.get('EDC_IP5')?.errors?.['pattern'] && dataForm.get('EDC_IP5')?.touched"
-            class="p-error"> 請輸入有效的 IP 格式 </small>
-        </div>
-        <div class="col-12 md:col-4">
-          <app-input-text label="中信銀聯刷卡機端末機代碼" controlName="EDC_TmID5" [control]="dataForm.controls.EDC_TmID5"
-            [submitted]="submitted"></app-input-text>
+          <app-input-text
+            label="中信銀聯刷卡機端末機代碼"
+            controlName="EDC_TmID5"
+            [control]="dataForm.controls.EDC_TmID5"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
       </div>
 
       <!-- 按鈕列 -->
-      <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
-        <app-button btnType="cancel" [form]="dataForm" (click)="onClearForm()" />
-        <app-button btnType="submit"></app-button>
+      <div
+        class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
+        *ngIf="!isFormReadable"
+      >
+        <app-button btnType="cancel" [form]="dataForm" />
+        <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
   </p-panel>

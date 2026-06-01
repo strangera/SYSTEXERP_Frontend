@@ -8,6 +8,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { Column } from '@shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { PanelModule } from 'primeng/panel';
@@ -211,6 +212,12 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           this.dataForm.patchValue({ PUR_InvoiceTitle: selected.VEN_Name }, { emitEvent: false });
         }
       });
+
+    // 稅類別改變時，重新載入稅率
+    this.dataForm.get('PUR_TaxType')?.valueChanges.subscribe((taxType) => {
+      this.recalculateAllDetailByTaxType(taxType);
+    });
+
   }
 
   loadGuiTrackOptions(event: any): void {
@@ -301,14 +308,24 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       return;
     }
 
-    this.data = details.map(d => ({
-      PLU_No: d.PLU_MagNo ?? d.PLU_No ?? '',
-      PLU_Name: d.PLU_Name ?? '',
-      TXN_Qty: Number(d.TXN_Qty ?? 0),
-      PLU_SalePrc: Number(d.PLU_SalePrc ?? 0),
-      TXN_SaleAmt: Number(d.TXN_SaleAmt ?? 0),
-      TXN_Tax: Number(d.TXN_Tax ?? 0),
-    }));
+    this.data = details.map(d => {
+      const saleAmt = Number(d.TXN_SaleAmt ?? 0);
+      const tax = Number(d.TXN_Tax ?? 0);
+      const qty = Number(d.TXN_Qty ?? 0);
+      // 重算未稅單價，確保顯示一致
+      const unitPrice = qty > 0
+        ? Math.round(((saleAmt / qty) - (saleAmt / qty) / 21) * 100) / 100
+        : Number(d.PLU_SalePrc ?? 0);
+      return {
+        PLU_No: d.PLU_MagNo ?? d.PLU_No ?? '',
+        PLU_Name: d.PLU_Name ?? '',
+        TXN_Qty: qty,
+        PLU_SalePrc: unitPrice,
+        TXN_SaleAmt: saleAmt,
+        TXN_Tax: tax,
+        SaleAmt: saleAmt - tax,
+      };
+    });
     this.totalRecords = this.data.length;
     if (this.INV_ItemName_Options && this.INV_ItemName_Options.length > 0) {
       const normalize = (s: any) => (s ?? '').toString().trim();
@@ -335,8 +352,13 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
       });
     }
 
-    // 填完明細後更新主檔金額
-    this.updateMasterAmounts();
+    // 填完明細後，依課稅別重算（確保免稅/零稅時 TXN_Tax=0）
+    const taxType = this.dataForm.get('PUR_TaxType')?.value;
+    if (taxType) {
+      this.recalculateAllDetailByTaxType(taxType);
+    } else {
+      this.updateMasterAmounts();
+    }
   }
 
   // ======================== 下拉選單 ========================
@@ -453,7 +475,8 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           (value: any) => ({
             isValid: !!value,
             errorMessage: ['請選擇品名']
-          })
+          }),
+          validateRequired
         ],
         calculate: (rowData, value) => {
           const selected = this.INV_ItemName_Options.find(opt => opt.INV_ItemNo === value);
@@ -469,14 +492,49 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
           (value: any) => ({
             isValid: value !== null && !isNaN(value) && Number(value) > 0,
             errorMessage: ['數量必須大於 0']
-          })
+          }),
+          validateRequired
+        ],
+        // calculate: (rowData, value) => {
+        //   const qty = Number(value) || 0;
+        //   const price = Number(rowData.PLU_SalePrc) || 0;
+        //   const saleAmt = qty * price;
+        //   const tax = Math.round(saleAmt / 21);
+        //   return { TXN_SaleAmt: saleAmt, TXN_Tax: tax };
+        // },
+      },
+      {
+        field: 'TXN_SaleAmt',
+        header: '含稅金額',
+        type: 'inputNumber',
+        validate: [
+          (value: any) => ({
+            isValid: value !== null && value !== '' && !isNaN(Number(value)),
+            errorMessage: ['含稅金額為必填且須為數字']
+          }),
+          validateRequired
         ],
         calculate: (rowData, value) => {
-          const qty = Number(value) || 0;
-          const price = Number(rowData.PLU_SalePrc) || 0;
-          const saleAmt = qty * price;
-          const tax = Math.round(saleAmt / 21);
-          return { TXN_SaleAmt: saleAmt, TXN_Tax: tax };
+          const taxType = this.dataForm.get('PUR_TaxType')?.value;
+          const isNoTax = this.isNoTaxType(taxType);
+
+          const qty = Number(rowData.TXN_Qty) || 0;
+
+          const tax = isNoTax
+            ? 0
+            : Math.round(value / 21);
+
+          const saleAmt = value - tax;
+          const unitPrice = isNoTax
+            ? (qty > 0 ? Math.round(value / qty) : value)
+            : Math.round((value / qty) - (value / qty) / 21);
+
+          return {
+            TXN_SaleAmt: value,
+            TXN_Tax: tax,
+            PLU_SalePrc: unitPrice,
+            SaleAmt: saleAmt
+          };
         },
       },
       {
@@ -484,47 +542,146 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
         header: '單價',
         type: 'inputNumber',
         defaultValue: 0,
-        validate: [
-          (value: any) => ({
-            isValid: value !== null && !isNaN(value),
-            errorMessage: ['單價為必填且須為數字']
-          })
-        ],
+        validate: [validateRequired],
         calculate: (rowData, value) => {
-          const price = Number(value) || 0;
+          const taxType = this.dataForm.get('PUR_TaxType')?.value;
+          const isNoTax = this.isNoTaxType(taxType);
           const qty = Number(rowData.TXN_Qty) || 0;
-          const saleAmt = qty * price;
-          const tax = Math.round(saleAmt / 21);
-          return { TXN_SaleAmt: saleAmt, TXN_Tax: tax };
+          const saleAmt = Math.round(Number(value) * qty);
+          const txnSaleAmt = isNoTax ? saleAmt : Math.round(saleAmt * 21 / 20);
+          const tax = txnSaleAmt - saleAmt;
+          return { SaleAmt: saleAmt, TXN_SaleAmt: txnSaleAmt, TXN_Tax: tax };
         },
       },
       {
-        field: 'TXN_SaleAmt',
+        field: 'SaleAmt',
         header: '銷售金額',
         type: 'inputNumber',
-        validate: [
-          (value: any) => ({
-            isValid: value !== null && !isNaN(value),
-            errorMessage: ['請輸入有效的銷售金額']
-          })
-        ],
-      },
-      {
-        field: 'TXN_Tax',
-        header: '稅額',
-        type: 'inputNumber',
-        validate: [
-          (value: any) => ({
-            isValid: value !== null && !isNaN(value),
-            errorMessage: ['請輸入有效的稅額']
-          })
-        ],
+        defaultValue: 0,
+        validate: [validateRequired],
+        calculate: (rowData, value) => {
+          const taxType = this.dataForm.get('PUR_TaxType')?.value;
+          const isNoTax = this.isNoTaxType(taxType);
+          const qty = Number(rowData.TXN_Qty) || 0;
+          const saleAmt = Number(value);
+          const txnSaleAmt = isNoTax ? saleAmt : Math.round(saleAmt * 21 / 20);
+          const tax = txnSaleAmt - saleAmt;
+          const unitPrice = qty > 0 ? Math.round(saleAmt / qty) : 0;
+          return { TXN_SaleAmt: txnSaleAmt, TXN_Tax: tax, PLU_SalePrc: unitPrice };
+        },
       },
     ];
   }
 
+  // 判斷明細是否為空值
+  validateDetailRow = (rowData: any): { isValid: boolean; errorMessage: string } => {
+
+    const requiredFields = [
+      { value: rowData.PLU_No?.trim(), name: '品名' },
+      { value: rowData.TXN_Qty, name: '數量' },
+      { value: rowData.TXN_SaleAmt, name: '含稅金額' },
+      // { value: rowData.UnitPrice, name: '單價' },
+      // { value: rowData.SaleAmt, name: '銷售金額' }
+    ];
+
+    const emptyField = requiredFields.find(field =>
+      this.isEmptyValue(field.value)
+    );
+
+    if (emptyField) {
+      return {
+        isValid: false,
+        errorMessage: `${emptyField.name}不可為空，請輸入有效的${emptyField.name}。`
+      };
+    }
+    return { isValid: true, errorMessage: '' };
+  };
+
+  // 判斷是否為空值
+  // 注意：0 不算空值，因為金額、稅額可能合法為 0
+  isEmptyValue(value: any): boolean {
+    return value === null || value === undefined || value === '';
+  }
+
+  // 判斷是否為免稅或零稅
+  isNoTaxType(taxType: any): boolean {
+    return ['2', '0'].includes(taxType);
+  }
+
+  // 重新計算所有金額
+  private recalculateAllDetailByTaxType(taxType: any): void {
+    const isNoTax = this.isNoTaxType(taxType);
+
+    this.data = this.data.map(row => {
+      return this.recalculateDetailAmount(row, taxType, isNoTax);
+    });
+
+    this.recalculateMasterAmount();
+  }
+
+  // 重新計算明細金額
+  private recalculateDetailAmount(row: any, taxType: any, isNoTax: boolean): any {
+    const qty = Number(row.TXN_Qty) || 0;
+    const txnSaleAmt = Number(row.TXN_SaleAmt) || 0; // 含稅金額
+
+    // 稅額：免稅 / 零稅時強制為 0
+    const tax = isNoTax
+      ? 0
+      : Math.round(txnSaleAmt / 21);
+
+    // 未稅金額
+    const saleAmt = txnSaleAmt - tax;
+    // 含稅單價
+    const taxIncludedUnitPrice = qty > 0
+      ? txnSaleAmt / qty
+      : 0;
+    // 未稅單價
+    const unitPrice = isNoTax
+      ? taxIncludedUnitPrice
+      : Math.round((taxIncludedUnitPrice - taxIncludedUnitPrice / 21) * 100) / 100;
+
+    return {
+      ...row,
+      TXN_SaleAmt: txnSaleAmt, // 含稅金額
+      TXN_Tax: tax,            // 稅額
+      SaleAmt: saleAmt,        // 未稅金額
+      PLU_SalePrc: unitPrice   // 未稅單價
+    };
+  }
+
+  // 重新計算主表金額
+  private recalculateMasterAmount(): void {
+    const purAmt = this.data.reduce((sum, row) => {
+      return sum + (Number(row.TXN_SaleAmt) || 0);
+    }, 0);
+
+    const purTax = this.data.reduce((sum, row) => {
+      return sum + (Number(row.TXN_Tax) || 0);
+    }, 0);
+
+    const purNet = purAmt - purTax;
+
+    this.dataForm.patchValue({
+      PUR_Amt: purAmt,
+      PUR_Tax: purTax,
+      PUR_Net: purNet
+    }, { emitEvent: false });
+  }
+
+
+
   // ======================== 儲存 ========================
   onSubmit(form: FormGroup): void {
+    // 驗證明細（排除自動插入的空白候選列）
+    for (const item of this.data.filter(d => !d._isAutoInsertCandidate)) {
+      const { isValid, errorMessage } = this.validateDetailRow(item);
+      if (isValid) continue;
+
+      this.loading = false;
+      this.messageService.errorBubble(errorMessage);
+      return;
+    }
+
     this.handleSubmit(form, () => {
       console.log('Form submitted with values:', form.value);
       const v = form.getRawValue();
@@ -615,12 +772,12 @@ export class FIN13040CRUComponent extends BasicCruPageComponent<any> implements 
             }).subscribe({
               next: (printRes) => {
                 const blob = new Blob([printRes.body as Blob], { type: 'application/pdf' });
-                const url = window.URL.createObjectURL(blob);
+                const url = globalThis.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
                 a.download = `${savedInvoiceNumber || savedId}.pdf`;
                 a.click();
-                window.URL.revokeObjectURL(url);
+                globalThis.URL.revokeObjectURL(url);
                 this.onCancel();
               },
               error: () => {

@@ -45,85 +45,383 @@
     }
   }
 }
+/* ==========================================================================
+   Dashboard & Monitor Bar (頂部狀態計數列)
+   ========================================================================== */
+.status-monitor-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 
-.relative {
-  position: relative;
+  .monitor-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #495057;
+  }
 
-  .status-icon {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 20px;
-    height: 20px;
+  .monitor-badges {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
 
-    font-size: 18px;
+  .m-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    transition: all 0.2s;
+
+    .count {
+      background: rgba(0, 0, 0, 0.08);
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 11px;
+      margin-left: 2px;
+      font-family: monospace;
+    }
+
+    /* 各狀態專屬精緻配色 */
+    &.shutdown {
+      border-color: #adb5bd;
+      color: #495057;
+      i {
+        color: #6c757d;
+      }
+    }
+    &.logout {
+      border-color: #f8d7da;
+      color: #842029;
+      background-color: #fff5f5;
+      i {
+        color: #dc3545;
+      }
+    }
+    &.success {
+      border-color: #d1e7dd;
+      color: #0f5132;
+      background-color: #f4fbf7;
+      i {
+        color: #198754;
+      }
+    }
+    &.primary {
+      border-color: #cff4fc;
+      color: #055160;
+      background-color: #f0faff;
+      i {
+        color: #0d6efd;
+      }
+    }
+    &.warning {
+      border-color: #fff3cd;
+      color: #664d03;
+      background-color: #fffdf5;
+      i {
+        color: #fd7e14;
+      }
+    }
+    &.purple {
+      border-color: #e2d9f3;
+      color: #3d0a91;
+      background-color: #faf7ff;
+      i {
+        color: #6f42c1;
+      }
+    }
   }
 }
 
-:host ::ng-deep .p-dataview.p-dataview-list .grid.grid-nogutter {
-  display: block;
+/* 讓交易中的同步旋轉 icon 慢速轉動，更有運作感 */
+.pi-spin-slow {
+  animation: fa-spin 4s infinite linear;
 }
 
-:host ::ng-deep .p-dataview.p-dataview-list .grid.grid-nogutter > div {
-  padding: 0;
+/* ==========================================================================
+   Common: Pulse Dot (即時連線動態小燈)
+   ========================================================================== */
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    left: 0;
+    top: 0;
+    animation: pulse 2s infinite ease-in-out;
+  }
+
+  &.online {
+    background-color: #22c55e;
+    &::after {
+      background-color: #22c55e;
+    }
+  }
+  &.offline {
+    background-color: #ef4444;
+    &::after {
+      background-color: #ef4444;
+    }
+  }
 }
 
-:host ::ng-deep .custom-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 0;
-  background: transparent;
-  border: 1px solid #e6e6e6; /* 外框 */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
 }
 
-:host ::ng-deep .custom-grid-item {
-  background-color: #fff;
-  box-sizing: border-box;
-  border-right: 1px solid #e6e6e6;
-  border-bottom: 1px solid #e6e6e6;
-}
-
-:host ::ng-deep .custom-grid .surface-card,
-:host ::ng-deep .custom-grid .surface-border,
-:host ::ng-deep .custom-grid .border-1 {
-  border: none !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
+/* ==========================================================================
+   List 模式優化樣式
+   ========================================================================== */
+.list-container {
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
   background: #fff;
+  overflow: hidden;
 }
 
-:host ::ng-deep .custom-grid > *:nth-child(5n) {
-  border-right: none;
+.list-row-item {
+  border-bottom: 1px solid #f1f3f5;
+  transition: background-color 0.15s;
+
+  &:last-child {
+    border-bottom: none;
+  }
+  &:hover {
+    background-color: #f8f9fa;
+  }
+
+  .loc-badge {
+    background: #f1f3f5;
+    color: #495057;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    min-width: 60px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+  }
+
+  .vertical-divider {
+    width: 1px;
+    height: 32px;
+    background-color: #e9ecef;
+  }
+
+  .counter-no-tag {
+    background: #edf2f7;
+    color: #4a5568;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 12px;
+  }
 }
 
-:host ::ng-deep .custom-grid > *:nth-last-child(-n + 5) {
-  border-bottom: none;
-}
-
-:host ::ng-deep .card > .card .custom-grid {
-  background-color: #e6e6e6;
-}
-
-:host ::ng-deep .search-bar-container {
-  flex: 1;
-  max-width: 800px;
-  display: flex;
-  justify-content: flex-start;
-}
-
-:host ::ng-deep .search-bar {
-  flex: 1;
-  display: flex;
+/* List 專用狀態 Tag */
+.ux-status-tag {
+  display: inline-flex;
   align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 110px;
+  justify-content: center;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+
+  &.shutdown {
+    background: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+  }
+  &.logout {
+    background: #fff5f5;
+    color: #e03131;
+    border: 1px solid #ffc9c9;
+  }
+  &.success {
+    background: #f4fbf7;
+    color: #2b8a3e;
+    border: 1px solid #b7ebc6;
+  }
+  &.primary {
+    background: #f0faff;
+    color: #1c7ed6;
+    border: 1px solid #a5d8ff;
+  }
+  &.warning {
+    background: #fffdf5;
+    color: #e67e22;
+    border: 1px solid #ffe8cc;
+  }
+  &.purple {
+    background: #faf7ff;
+    color: #9c36b5;
+    border: 1px solid #eebefa;
+  }
 }
 
-:host ::ng-deep .search-bar input {
-  border: 1px solid #e0dcdc !important;
-  background-color: #f9f7f7 !important;
-  padding: 0.5rem 0.75rem 0.5rem 2rem !important;
-  font-size: 1rem !important;
-  border-radius: 6px !important;
+/* ==========================================================================
+   Grid 模式：全新前衛監控面板 (Responsive CSS Grid)
+   ========================================================================== */
+:host ::ng-deep .ux-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.ux-monitor-card {
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s;
+  cursor: pointer;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+  }
+
+  /* 核心元件：左側彩色直條 */
+  .card-indicator {
+    width: 6px;
+    height: 100%;
+    flex-shrink: 0;
+  }
+
+  .card-body-content {
+    flex: 1;
+    width: calc(100% - 6px);
+  }
+
+  .card-top-actions {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .state-icon-mini {
+      font-size: 15px;
+    }
+  }
+
+  .card-main-info {
+    .loc-text {
+      font-size: 11px;
+      font-weight: 700;
+      color: #adb5bd;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      max-width: 80%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ecr-no {
+      font-size: 22px;
+      font-weight: 800;
+      color: #212529;
+      font-family: "Courier New", Courier, monospace;
+      margin-top: 2px;
+      line-height: 1.2;
+    }
+  }
+
+  .text-ellipse {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 根據不同狀態決定卡片的直條色與小圖示顏色 */
+  &.shutdown {
+    .card-indicator {
+      background-color: #6c757d;
+    }
+    .state-icon-mini {
+      color: #6c757d;
+    }
+  }
+  &.logout {
+    .card-indicator {
+      background-color: #dc3545;
+    }
+    .state-icon-mini {
+      color: #dc3545;
+    }
+    background-color: #fffafb;
+  }
+  &.success {
+    .card-indicator {
+      background-color: #28a745;
+    }
+    .state-icon-mini {
+      color: #28a745;
+    }
+    background-color: #fafd96; /* 極輕微綠底 */
+    background-color: #f7fdf9;
+  }
+  &.primary {
+    .card-indicator {
+      background-color: #0d6efd;
+    }
+    .state-icon-mini {
+      color: #0d6efd;
+    }
+  }
+  &.warning {
+    .card-indicator {
+      background-color: #fd7e14;
+    }
+    .state-icon-mini {
+      color: #fd7e14;
+    }
+    background-color: #fffdf9;
+  }
+  &.purple {
+    .card-indicator {
+      background-color: #6f42c1;
+    }
+    .state-icon-mini {
+      color: #6f42c1;
+    }
+    background-color: #faf9fe;
+  }
+}
+
+/* 覆蓋原先覆蓋過於強硬的 5 等分 RWD 設定，讓 auto-fill 彈性排版 */
+:host ::ng-deep .custom-grid {
+  display: none !important;
 }

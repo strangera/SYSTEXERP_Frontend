@@ -91,18 +91,28 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
     const startVal = this.startControl.value;
     const endVal = this.endControl.value;
 
-    // 取得目前 startControl 所有的錯誤
     const errors = this.startControl.errors || {};
 
-    if (startVal && endVal && startVal > endVal) {
-      // 增加日期區間錯誤，但不影響原本已存在的錯誤 (如全形錯誤)
-      this.startControl.setErrors({ ...errors, invalidDateRange: true });
+    if (startVal instanceof Date && endVal instanceof Date) {
+      // 關鍵修正：複製一個純粹日期的 Date 物件，並把時分秒、毫秒全面歸零
+      const startDateOnly = new Date(startVal.getFullYear(), startVal.getMonth(), startVal.getDate());
+      const endDateOnly = new Date(endVal.getFullYear(), endVal.getMonth(), endVal.getDate());
+
+      // 這樣在台灣時間比，就保證是 2026/05/21 比較 2026/05/21
+      if (startDateOnly > endDateOnly) {
+        this.startControl.setErrors({ ...errors, invalidDateRange: true });
+      } else {
+        if (errors['invalidDateRange']) {
+          delete errors['invalidDateRange'];
+        }
+        const remainingErrors = Object.keys(errors).length > 0 ? errors : null;
+        this.startControl.setErrors(remainingErrors);
+      }
     } else {
-      // 移除日期區間錯誤
+      // 如果欄位被清空了，移除錯誤
       if (errors['invalidDateRange']) {
         delete errors['invalidDateRange'];
       }
-      // 如果移除後沒有其他錯誤了，就給 null，否則保留剩餘錯誤
       const remainingErrors = Object.keys(errors).length > 0 ? errors : null;
       this.startControl.setErrors(remainingErrors);
     }

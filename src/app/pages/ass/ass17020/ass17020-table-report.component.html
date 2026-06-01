@@ -193,26 +193,10 @@
           </ng-container>
         </ng-container>
         <ng-template #defaultCell>
-          <ng-container *ngIf="col.type === 'image'">
-            <div class="flex justify-content-center align-items-center">
-              <p-image *ngIf="rowData[col.field] && !rowData[col.field + '_error']"
-                [src]="tableUtility.getImage(rowData[col.field])" alt="Image" width="50" [preview]="true"
-                appendTo="body" (onImageError)="rowData[col.field + '_error'] = true">
-              </p-image>
-
-              <span *ngIf="!rowData[col.field] || rowData[col.field + '_error']"
-                class="text-xs p-2 bg-gray-100 border-round text-500">
-                無法讀取圖片
-              </span>
-            </div>
-          </ng-container>
           <ng-container *ngIf="col.type === 'button'">
             <p-button [label]="col.buttonLabel ?? rowData?.[col.field]" severity="info"
               (click)="selectButton.emit(rowData)" [disabled]="col.disabled ? col.disabled(rowData) : false"
               [link]="col.link"></p-button>
-          </ng-container>
-          <ng-container *ngIf="col.type === 'html'">
-            <div [innerHTML]="sanitizer.bypassSecurityTrustHtml(rowData[col.field])" class="html-cell"></div>
           </ng-container>
           <ng-container *ngIf="col.type === 'link'">
             <p-button *ngIf="!(col.linkDisabled && col.linkDisabled(rowData)); else linkDisabled" [link]="true"
@@ -230,8 +214,7 @@
         </ng-template>
       </td>
       <td [hidden]="!showManage" [ngClass]="{ 'flex justify-content-center gap-2': showManage }"
-        [style]="{ height: '46px'}" class="no-wrap icon-button"
-        [style.text-align]="'center'">
+        [style]="{ height: '46px'}" class="no-wrap icon-button" [style.text-align]="'center'">
         <p-button [text]="true" [outlined]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil"
           (click)="edit.emit(rowData)" *ngIf="showEdit" [disabled]="editDisabled(rowData) || !hasPermission('30')"
           [loading]="buttonsLoading" />

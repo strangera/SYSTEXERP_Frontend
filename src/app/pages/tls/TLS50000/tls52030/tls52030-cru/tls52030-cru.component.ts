@@ -112,20 +112,23 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
       },
       { field: 'ODD_ConfirmQty_Finished', header: '已驗收數量', format: formatAmount },
       { field: 'UNIT_NAME', header: '商品單位' },
-      { field: 'ODD_BuyPrc', header: '採購單價', format: formatAmount },
+      // 【核心改動】：現在是「採購單價」開放反審核修改
+      {
+        field: 'ODD_BuyPrc',
+        header: '採購單價',
+        format: formatAmount,
+        // 如果是反審核狀態，切換成可輸入型態
+        type: isReApprovedAndEditable ? 'inputNumber' : undefined,
+        minFractionDigits: 2,
+        // 當使用者修改「採購單價」時，即時重新計算未稅金額、稅額等
+        calculate: (row) => this.ComponentLineCalculate(row)
+      },
 
-      // 【核心改動】：驗收單價（進價）
+      // 驗收單價回復為純顯示（唯讀）
       {
         field: 'ODD_BuyPrc',
         header: '驗收單價',
-        format: formatAmount,
-        // 💡 根據你們 TableEditComponent 的設計，如果是反審核狀態，切換成可輸入型態
-        type: isReApprovedAndEditable ? 'inputNumber' : undefined,
-        // 如果你們元件是用 [disabled] 或 readonly 屬性控制，可以這樣加：
-        // readonly: !isReApprovedAndEditable
-        minFractionDigits: 2,
-        // 💡 當使用者在欄位內修改「驗收單價」時，必須即時重新計算未稅金額、稅額與售價小計
-        calculate: (row) => this.ComponentLineCalculate(row)
+        format: formatAmount
       },
 
       { field: 'PLU_StockTaxType', header: '稅別', format: (value) => getSYS1000('PLU_StockTaxType', value) },

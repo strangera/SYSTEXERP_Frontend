@@ -148,7 +148,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     { field: 'TxnCount', header: '交易筆數', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: '營業坪效', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
-    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
+    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
 
     // { field: 'MonthlyPayment', header: '月坪貢獻(未稅)', visible: true, format: formatAmount, align: 'right' },
 
@@ -428,7 +428,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
           this.messageService.successBubble(res.Message);
           if (res.Data && res.Data.Print_URL) {
             const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-            window.open(downloadUrl, '_blank');
+            globalThis.open(downloadUrl, '_blank');
           }
         });
     } else {
@@ -438,7 +438,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
           this.messageService.successBubble(res.Message);
           if (res.Data && res.Data.Print_URL) {
             const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-            window.open(downloadUrl, '_blank');
+            globalThis.open(downloadUrl, '_blank');
           }
         });
     }

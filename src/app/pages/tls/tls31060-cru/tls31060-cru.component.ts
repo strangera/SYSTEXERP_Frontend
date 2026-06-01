@@ -81,7 +81,6 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
     { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
     { field: 'location_no', header: '位置編號', visible: true, align: 'left' },
     { field: 'tlt_name', header: '專櫃名稱', visible: true, align: 'left' },
-
     { field: 'budget', header: '營業目標', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: '營業額', format: formatAmount, align: 'right' },
     { field: 'AchievementRate', header: '達成率', visible: true, groupField: '營業額', format: (value) => formatPercentage(value, 2), align: 'right' },
@@ -90,12 +89,11 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
     { field: 'TxnCount', header: '交易筆數', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: '客單價', format: formatAmount, align: 'right' },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: '營業坪效', format: (value) => formatAmountWithDecimals(value, 2), align: 'right' },
-    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
-    { field: 'MonthlyPayment', header: '月坪貢獻(未稅)', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
-
+    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: '營業坪效', format: formatAmount, align: 'right' },
     { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
-    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
+    { field: 'MonthlySalesTotal', header: '月營業實績', visible: true, groupField: '月累計', format: formatAmount, align: 'right' },
     { field: 'CompletionRate', header: '完成率', visible: true, groupField: '月累計', format: (value) => formatPercentage(value, 2), align: 'right' },
+    { field: 'PreOrderAmt', header: '預售實績', visible: true, format: formatAmount, align: 'right' },
   ];
   columnGroup: ColumnGroup[] = [
     { field: '營業額', header: '營業額' },
@@ -175,7 +173,7 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
         this.messageService.successBubble(res.Message);
         if (res.Data && res.Data.Print_URL) {
           const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-          window.open(downloadUrl, '_blank');
+          globalThis.open(downloadUrl, '_blank');
         }
       });
   }
@@ -205,18 +203,12 @@ export class Tls31060CRUComponent extends BasicCruPageComponent<TLS31060Response
         AvgTicket: this.footerTotal.AvgTicket,
         tlt_space: this.footerTotal.TotalSpace,
         MonthlyPSM: this.footerTotal.AvgPSM,
-        MonthlyPayment: this.footerTotal.AvgMonthlyPayment,
-        // TempCounterSaleAmt: this.footerTotal.TotalTempCounterSales,
-
         MonthlyBudgetTotal: this.footerTotal.TotalMonthlyBudget,
         MonthlySalesTotal: this.footerTotal.TotalMonthlySales,
-
+        PreOrderAmt: this.footerTotal.TotalPreOrderAmt,
         AchievementRate: this.footerTotal.AvgAchievementRate,
         CompletionRate: this.footerTotal.AvgCompletionRate,
       } : null;
-      // this.footershowPercent = this.footerTotal ? {    // 人工轉換百分比欄位
-
-      // } : null;
 
       this.historyRequestBody = request;                 // 查詢條件
       console.log('明細資料', this.data)

@@ -9,7 +9,7 @@
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div *ngIf="isFormReadable" class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-3">
-          <app-input-text label="應付帳款ID" controlName="PAM_No" [control]="dataForm.controls.PAM_No"
+          <app-input-text label="匯款來源單號" controlName="PAM_No" [control]="dataForm.controls.PAM_No"
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-3">
@@ -67,12 +67,10 @@
       </div>
       <hr>
     </form>
-    <app-table-report [apiUrl]="apiUrl" tableKey="FIN25010cru" dataKey="UniqueKey" [data]="data" [columns]="columns"
-      [showCheckBox]="isFormCreateable" [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event; calculateFooter()" [totalRecords]="totalRecords" [loading]="loading"
-      [lastQueryBody]="lastQueryBody" [queryFunction]="fin25010Service.queryAddFIN25010.bind(fin25010Service)"
-      groupRowsBy="ven_no" [subTotalData]="subTotalData" [footerData]="footerData" [lazy]="false"
-      [customTemplates]="{ 'ACP_Amt': acpAmtTemplate }">
+    <app-table-report [apiUrl]="apiUrl" [data]="data" [columns]="columns" [showCheckBox]="isFormCreateable"
+      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event; calculateFooter()"
+      [totalRecords]="totalRecords" [loading]="loading" groupRowsBy="ven_no" [subTotalData]="subTotalData"
+      [footerData]="footerData" [customTemplates]="{ 'ACP_Amt': acpAmtTemplate }">
     </app-table-report>
   </p-panel>
 </div>

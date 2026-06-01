@@ -1,5 +1,5 @@
 import { HttpResponse } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { MessageService } from 'primeng/api'; // 需引入 PrimeNG 原生 MessageService
 import { Observable, tap } from 'rxjs';
@@ -8,14 +8,11 @@ import { Observable, tap } from 'rxjs';
   providedIn: 'root'
 })
 export class FileExportService {
+  private readonly messageService = inject(NotificationService);
+  private readonly primengMessageService = inject(MessageService);
   // 用於暫存待存檔的資料
   private pendingBlob: Blob | null = null;
   private pendingFilename = '';
-
-  constructor(
-    private messageService: NotificationService,
-    private primengMessageService: MessageService
-  ) { }
 
   public executeFileExport(
     exportObservable: Observable<HttpResponse<Blob>>,
@@ -59,11 +56,8 @@ export class FileExportService {
     if (!filename) {
       const contentDisposition = response.headers.get('Content-Disposition');
       filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
-    } else {
-      // 確保自定義檔名包含正確的副檔名
-      if (!filename.toLowerCase().endsWith(fileExtension.toLowerCase())) {
-        filename += fileExtension;
-      }
+    } else if (!filename.toLowerCase().endsWith(fileExtension.toLowerCase())) {
+      filename += fileExtension;
     }
     const contentType = response.headers.get('Content-Type');
 
@@ -98,9 +92,9 @@ export class FileExportService {
   public async savePendingFile(): Promise<void> {
     if (!this.pendingBlob) return;
 
-    if ('showSaveFilePicker' in window) {
+    if ('showSaveFilePicker' in globalThis) {
       try {
-        const handle = await (window as any).showSaveFilePicker({
+        const handle = await (globalThis as any).showSaveFilePicker({
           suggestedName: this.pendingFilename,
           types: [{
             description: '純文字檔案',
@@ -129,20 +123,20 @@ export class FileExportService {
   }
 
   private fallbackDownload(blob: Blob, filename: string, contentType?: string | null) {
-    const url = window.URL.createObjectURL(new Blob([blob], { type: contentType || 'text/plain' }));
+    const url = globalThis.URL.createObjectURL(new Blob([blob], { type: contentType || 'text/plain' }));
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      globalThis.URL.revokeObjectURL(url);
+      a.remove();
     }, 200);
   }
 
   private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
-    if (!contentDisposition) return `export_${new Date().getTime()}${defaultExtension}`;
+    if (!contentDisposition) return `export_${Date.now()}${defaultExtension}`;
     let filename = '';
     const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
     if (filenameStarMatch?.[1]) {
@@ -151,7 +145,7 @@ export class FileExportService {
     }
     if (!filename) {
       const filenameMatch = /filename="?([^";]+)"?/.exec(contentDisposition);
-      if (filenameMatch?.[1]) filename = decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      if (filenameMatch?.[1]) filename = decodeURIComponent(filenameMatch[1].replaceAll('+', ' '));
     }
     return filename || `download${defaultExtension}`;
   }

@@ -67,6 +67,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   selectedItems: ASS21020Data[] = [];
   totalRecords = 0;
   lastQueryBody: ASS21020Query | null = null;
+  isRowSelectable = (rowData: ASS21020Data): boolean => rowData.CanDelete !== false;
 
   public readonly columns: ReportColumn[] = [
     { field: 'ENG_TypeDesc', header: '能源類型' },

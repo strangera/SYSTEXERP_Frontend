@@ -60,6 +60,8 @@
 <div class="card">
   <app-table-report tableKey="FIN24020" dataKey="ACP_No" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
     [loading]="loading" [showDelete]="false" [editDisabled]="editDisabledByVouNo"
+    [queryFunction]="fin24020Service.queryFIN24020.bind(fin24020Service)"
     (edit)="onEdit($event, queryForm.getRawValue())" (detail)="onDetail($event, queryForm.getRawValue())"
-    [lastQueryBody]="lastQueryBody" [lazy]="false"></app-table-report>
+    [lastQueryBody]="lastQueryBody" expansionDataKey="Details" [expansionColumns]="expansionColumns"
+    [expansionMultiSortMeta]="[{ field: 'acp_termno', order: 1 }]"></app-table-report>
 </div>

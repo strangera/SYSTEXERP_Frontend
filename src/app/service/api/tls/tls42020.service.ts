@@ -59,7 +59,7 @@ export interface TLS42020DetailData {
   PLU_MagNo: string;              // 商品貨號
   PLU_No: string;                 // 國際條碼
   PLU_Name: string;               // 商品名稱
-  PLU_PrnName: string;            // 商品列印名稱
+  PLU_PrnName: string;            // 商品按鍵名稱
   PLU_FixPrc: number;    // 商品定價
   PLU_SalePrc: number;   // 商品售價
   SBM_BtnNo: number;              // 菜單按鍵序號
@@ -83,7 +83,7 @@ export interface TLS42020InsertUpdateDetailData {
   PLU_MagNo?: string;              // 商品貨號
   PLU_No?: string;                 // 國際條碼
   PLU_Name: string;               // 商品名稱
-  PLU_PrnName?: string;            // 商品列印名稱
+  PLU_PrnName?: string;            // 商品按鍵名稱
   PLU_FixPrc?: number;             // 商品定價
   PLU_SalePrc: number;            // 商品售價
   SBM_BtnNo: number;              // 菜單按鍵序號
@@ -97,6 +97,15 @@ export interface TLS42020DeleteRequest {
 // Dropdown request interface for TLS42020
 export interface TLS42020DropdownRequest {
   TLT_NO: string; // 專櫃編號清單
+}
+
+export interface TLS42020DropdownResponse {
+  PLU_MagNo: string,
+  PLU_No: string,
+  PLU_Name: string,
+  PLU_PrnName: string,
+  PLU_FixPrc: number,
+  PLU_SalePrc: number
 }
 
 // ExecSpFunc request interface for TLS42020
@@ -163,7 +172,7 @@ export class TLS42020Service {
     return this.http.post<any>(`${this.apiUrl}/dropdownTLS42020`, data).pipe(
       map(res => {
         return {
-          Data: res.Data.map((item: any) => {
+          Data: res.Data.map((item: TLS42020DropdownResponse) => {
             return {
               ...item,
               label: item.PLU_MagNo + '-' + item.PLU_Name,

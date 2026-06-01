@@ -170,12 +170,12 @@ export class FIN55010CRUComponent extends BasicCruPageComponent<any> implements 
     const blob = resp?.body instanceof Blob ? resp.body : resp;
     const cd = resp?.headers?.get?.('Content-Disposition') ?? resp?.headers?.get?.('content-disposition');
     const fileName = this.getFilenameFromHeader(cd, ext) ?? `${baseName}_${new Date().getTime()}${ext}`;
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 
   private getFilenameFromHeader(contentDisposition: string | null | undefined, ext: string): string | null {

@@ -27,12 +27,12 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   @Input() override controlName = '';
   @Input() set control(value: FormControl) { this._control = value; }
   @Input() set options(value: any[] | null) {
-    if (value !== null) {
-      this.loading = false;
-      this._options = [...value]; // 使用 spread operator 確保參考更新
-    } else {
+    if (value === null) {
       this.loading = true;
       this._options = [];
+    } else {
+      this.loading = false;
+      this._options = [...value]; // 使用 spread operator 確保參考更新
     }
   }
   get options(): any[] { return this._options; }
@@ -106,7 +106,6 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
 
     // 如果值是自訂輸入且不在選項中，則清除 control 的值
     if (!isValidOption) {
-      // console.log(`值 "${currentValue}" 無效，已清空。`);
       this.control.setValue(null);
       this.valueChange.emit(null);
       this.changeEvent.emit({ originalEvent: new Event('clear'), value: null });
@@ -123,9 +122,9 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
     );
 
     if (selectedOption) {
-      return this.templateLabel !== '' ?
-        selectedOption[this.templateLabel] :
-        selectedOption[this.optionLabel];
+      return this.templateLabel === '' ?
+        selectedOption[this.optionLabel] :
+        selectedOption[this.templateLabel];
     }
 
     return this.control.value?.toString() || '';

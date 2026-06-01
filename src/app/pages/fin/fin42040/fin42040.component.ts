@@ -23,12 +23,12 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import {
   FIN42040Data,
   FIN42040QueryRequest,
   FIN42040Service,
 } from '../../../service/api/fin/fin42040.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 
 @UntilDestroy()
 @Component({
@@ -53,8 +53,7 @@ import {
 })
 export class FIN42040Component
   extends BasicQueryPageComponent<any>
-  implements OnInit
-{
+  implements OnInit {
   data: FIN42040Data[] = [];
   totalRecords = 0;
   showTable = true;
@@ -355,13 +354,13 @@ export class FIN42040Component
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');

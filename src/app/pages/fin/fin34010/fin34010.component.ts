@@ -493,14 +493,14 @@ export class FIN34010Component extends BasicQueryPageComponent<any> implements O
     });
 
     const fileName = this.getFilenameFromResponse(res, defaultName);
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
 
     a.href = url;
     a.download = fileName;
     a.click();
 
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 
   downloadFIN34010Excel(): void {

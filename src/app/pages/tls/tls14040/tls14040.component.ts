@@ -3,7 +3,7 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -71,20 +71,19 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Garantee_Ticket[] = [];// 表格數據和篩選數據
 
-  columns: any[] = [// 表格欄位定義
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'VEN_No', header: '廠商編號', visible: true },
-    { field: 'VEN_Name', header: '廠商名稱', visible: true },
-    { field: 'ticket_type', header: '保證票型態', visible: true },
-    { field: 'tlt_bdate', header: '合約起日', visible: true },
-    { field: 'tlt_edate', header: '合約迄日', visible: true },
-    { field: 'levelname', header: 'TEAM別', visible: true },
-    { field: 'org_name', header: '組織別', visible: true },
-    { field: 'open_fees', header: '準時開業保證票', visible: true },
-    { field: 'construct_fees', header: '施工保證票', visible: true },
-    { field: 'expiration_fees', header: '契約屆滿', visible: true },
-    { field: 'remark', header: '保證票備註', visible: true },
+  columns: Column[] = [// 表格欄位定義
+    { field: 'tlt_no', header: '專櫃編號', visible: true, align: 'left' },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, align: 'left' },
+    { field: 'VEN_No', header: '廠商編號', visible: true, align: 'left' },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true, align: 'left' },
+    { field: 'tlt_bdate', header: '合約起日', visible: true, format: formatDate },
+    { field: 'tlt_edate', header: '合約迄日', visible: true, format: formatDate },
+    { field: 'levelname', header: 'TEAM別', visible: true, align: 'left' },
+    { field: 'org_name', header: '組織別', visible: true, align: 'left' },
+    { field: 'open_fees', header: '準時開業保證票', visible: true, format: formatAmount, align: 'right' },
+    { field: 'construct_fees', header: '施工保證票', visible: true, format: formatAmount, align: 'right' },
+    { field: 'expiration_fees', header: '契約屆滿', visible: true, format: formatAmount, align: 'right' },
+    { field: 'remark', header: '保證票備註', visible: true, align: 'left' },
   ];
   selectedItems: Garantee_Ticket[] = [];// 多選項目
 
@@ -97,10 +96,9 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
   orgOption: apiOption[] = []; //組織
 
   tlt_openflagOption: option[] = [ //營業狀態
-    { value: '0', label: '閉店/撤櫃' },
+    { value: '0', label: '已撤櫃' },
     { value: '1', label: '營業中' },
-    { value: '2', label: '合約結束' },
-    { value: '9', label: '核准時合約尚未開始' },
+    { value: '9', label: '合約未生效' },
   ];
 
   apply_statusOption: option[] = [ //申請案件狀態

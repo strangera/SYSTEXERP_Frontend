@@ -23,12 +23,12 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { TableReportComponent } from '../../../shared/componentkit/table-report/table-report.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import {
   FIN42030Data,
   FIN42030QueryRequest,
   FIN42030Service,
 } from '../../../service/api/fin/fin42030.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 
 @UntilDestroy()
 @Component({
@@ -63,7 +63,7 @@ export class FIN42030Component
   readonly defaultSort: any[] = [{ field: 'SortNo', order: 1 }];
 
   queryForm = this.formBuilder.group({
-     YM: [null as Date | string | null, [Validators.required]],
+    YM: [null as Date | string | null, [Validators.required]],
     Org_ID: [''],
     ReportType: [1, [Validators.required]],
     AmtUnit: [1, [Validators.required]],
@@ -180,27 +180,27 @@ export class FIN42030Component
     super();
   }
 
-ngOnInit(): void {
-  this.initializePage(
-    'FIN42030',
-    'fin/fin42030',
-    this.queryForm,
-    (form) => this.onSubmit(form)
-  );
+  ngOnInit(): void {
+    this.initializePage(
+      'FIN42030',
+      'fin/fin42030',
+      this.queryForm,
+      (form) => this.onSubmit(form)
+    );
 
-  const now = new Date();
+    const now = new Date();
 
-  this.queryForm.patchValue(
-    {
-      YM: now, // ⭐ 這行就是預設「今年本月」
-      SortBy: this.defaultSort,
-      pageSize: 30,
-    },
-    { emitEvent: false }
-  );
+    this.queryForm.patchValue(
+      {
+        YM: now, // ⭐ 這行就是預設「今年本月」
+        SortBy: this.defaultSort,
+        pageSize: 30,
+      },
+      { emitEvent: false }
+    );
 
-  this.loadDropdowns();
-}
+    this.loadDropdowns();
+  }
 
   private loadDropdowns(): void {
     this.tls11010Service
@@ -211,11 +211,11 @@ ngOnInit(): void {
       )
       .subscribe((res: any[]) => {
         this.orgOptions = (res || []).map((x: any) => ({
-  label: x.label,
-  formLabel: `${x.value} - ${x.label}`,
-  value: x.value,
-  name: x.label,
-}));
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+          name: x.label,
+        }));
       });
   }
 
@@ -225,26 +225,26 @@ ngOnInit(): void {
 
       const selectedOrg = this.orgOptions.find(x => x.value === raw.Org_ID);
 
-const payload: FIN42030QueryRequest = {
-  ...raw,
-  YM: this.normalizeYM(raw.YM),
-  Org_ID:
-    !raw.Org_ID || raw.Org_ID === '100000'
-      ? undefined
-      : raw.Org_ID,
-  Org_Name:
-    !raw.Org_ID || raw.Org_ID === '100000'
-      ? '全公司'
-      : selectedOrg?.name ?? selectedOrg?.label ?? '',
-  ReportType: Number(raw.ReportType ?? 1),
-  AmtUnit: Number(raw.AmtUnit ?? 1),
-  pageIndex: Number(raw.pageIndex ?? 1),
-  pageSize: Number(raw.pageSize ?? 30),
-  SortBy:
-    Array.isArray(raw.SortBy) && raw.SortBy.length
-      ? raw.SortBy
-      : this.defaultSort,
-};
+      const payload: FIN42030QueryRequest = {
+        ...raw,
+        YM: this.normalizeYM(raw.YM),
+        Org_ID:
+          !raw.Org_ID || raw.Org_ID === '100000'
+            ? undefined
+            : raw.Org_ID,
+        Org_Name:
+          !raw.Org_ID || raw.Org_ID === '100000'
+            ? '全公司'
+            : selectedOrg?.name ?? selectedOrg?.label ?? '',
+        ReportType: Number(raw.ReportType ?? 1),
+        AmtUnit: Number(raw.AmtUnit ?? 1),
+        pageIndex: Number(raw.pageIndex ?? 1),
+        pageSize: Number(raw.pageSize ?? 30),
+        SortBy:
+          Array.isArray(raw.SortBy) && raw.SortBy.length
+            ? raw.SortBy
+            : this.defaultSort,
+      };
 
       Object.keys(payload).forEach((k) => {
         const v = (payload as any)[k];
@@ -345,13 +345,13 @@ const payload: FIN42030QueryRequest = {
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } else {
       this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
@@ -409,32 +409,32 @@ const payload: FIN42030QueryRequest = {
     return Number.isFinite(n) ? n.toLocaleString('en-US') : '';
   }
   private getAmtUnitText(unit?: any): string {
-  const value = Number(unit ?? this.queryForm?.get('AmtUnit')?.value ?? 1);
+    const value = Number(unit ?? this.queryForm?.get('AmtUnit')?.value ?? 1);
 
-  switch (value) {
-    case 2:
-      return '千元';
-    case 3:
-      return '萬元';
-    case 1:
-    default:
-      return '元';
+    switch (value) {
+      case 2:
+        return '千元';
+      case 3:
+        return '萬元';
+      case 1:
+      default:
+        return '元';
+    }
   }
-}
 
-private updateAmountColumnHeaders(unit?: any): void {
-  const unitText = this.getAmtUnitText(unit);
+  private updateAmountColumnHeaders(unit?: any): void {
+    const unitText = this.getAmtUnitText(unit);
 
-  const amountHeaderMap: Record<string, string> = {
-    CurrentAmount: `本期金額(${unitText})`,
-    BudgetSamePeriodAmount: `預算同期金額(${unitText})`,
-    CurrentAccumAmount: `本期累計金額(${unitText})`,
-    BudgetAccumAmount: `預算累計金額(${unitText})`,
-  };
+    const amountHeaderMap: Record<string, string> = {
+      CurrentAmount: `本期金額(${unitText})`,
+      BudgetSamePeriodAmount: `預算同期金額(${unitText})`,
+      CurrentAccumAmount: `本期累計金額(${unitText})`,
+      BudgetAccumAmount: `預算累計金額(${unitText})`,
+    };
 
-  this.columns = this.columns.map((col) => ({
-    ...col,
-    header: amountHeaderMap[col.field] ?? col.header,
-  }));
-}
+    this.columns = this.columns.map((col) => ({
+      ...col,
+      header: amountHeaderMap[col.field] ?? col.header,
+    }));
+  }
 }

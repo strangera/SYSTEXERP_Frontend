@@ -48,8 +48,18 @@
                 pInputText
                 formControlName="PCS_UsrDisplay"
                 placeholder="請選擇"
+                class="user-display-input"
                 readonly
               />
+              <button
+                *ngIf="queryForm.get('PCS_UsrDisplay')?.value"
+                type="button"
+                aria-label="清除"
+                pButton
+                icon="pi pi-times"
+                class="clear-user-button"
+                (click)="clearUser('PCS')"
+              ></button>
               <button
                 type="button"
                 aria-label="搜尋"
@@ -69,8 +79,18 @@
                 pInputText
                 formControlName="Keep_UsrDisplay"
                 placeholder="請選擇"
+                class="user-display-input"
                 readonly
               />
+              <button
+                *ngIf="queryForm.get('Keep_UsrDisplay')?.value"
+                type="button"
+                aria-label="清除"
+                pButton
+                icon="pi pi-times"
+                class="clear-user-button"
+                (click)="clearUser('Keep')"
+              ></button>
               <button
                 type="button"
                 aria-label="搜尋"

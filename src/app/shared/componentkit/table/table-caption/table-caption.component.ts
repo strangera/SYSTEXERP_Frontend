@@ -97,6 +97,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() footerData: any;     // (總計)頁尾資料
   // 底層匯出
   @Input() apiUrl?: string;                         // table API URL (可選)
+  @Input() reportTitle?: string;                    // 自訂報表標題，優先於 apiUrl / REPORT_TITLES 查詢
   @Input() DataKeyName?: string;                    // table 資料key名稱 (可選)
   @Input() Conditions?: any;                         // table 條件 (可選)
   @Input() PrintRemark = true;                    // 是否列印備註 (可選)

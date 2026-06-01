@@ -45,14 +45,19 @@ export class EditorTextComponent extends BasicKitComponent implements OnInit {
       if (isOnlyHtmlTags) {
         this.control.setValue('');
       }
-      // validateHtmlContent(value, this.control); // 驗證html標籤，自訂義
     });
   }
 
   onInit(event: any) {
     const quill = event.editor;
     if (!quill) return;
-
+    quill.on('text-change', (delta: any, oldDelta: any, source: string) => {
+      if (source === 'user') {
+        console.log('[Editor] 內容發生變更 (Source: User)');
+      }
+      // 觀察 HTML 變化
+      console.log('[Editor] 目前編輯器內容:', quill.root.innerHTML);
+    });
     // 1. 攔截工具列按鈕點擊
     const toolbar = quill.getModule('toolbar');
     toolbar.addHandler('image', () => this.imageHandler(quill));
@@ -71,18 +76,22 @@ export class EditorTextComponent extends BasicKitComponent implements OnInit {
           Files: [file]
         };
 
-        this.imageService.uploadImages(body).subscribe({
-          next: (res: any) => {
-            const uploadResult = res.Data?.[0];
-            if (uploadResult?.ImageUrl) {
-              const finalUrl = `${environment.ApiUrl}${uploadResult.ImageUrl}`;
-              // 這裡插入圖片到當前游標位置
-              quill.insertEmbed(range.index, 'image', finalUrl);
-              quill.setSelection(range.index + 1);
-            }
-            resolve(true);
-          },
-          error: () => reject('Upload failed')
+        this.imageService.uploadImages(body).subscribe((res: any) => {
+          console.log('[Editor] Uploader 上傳回應:', res);
+          const uploadResult = res.Data?.[0];
+          if (uploadResult?.ImageUrl) {
+            const finalUrl = `${environment.ApiUrl}${uploadResult.ImageUrl}`;
+            const range = quill.getSelection();
+            quill.insertEmbed(range.index, 'image', finalUrl);
+
+            // 【關鍵 Log】確認這裡有沒有觸發同步
+            console.log('[Editor] Uploader 插入圖片後的 HTML:', quill.root.innerHTML);
+
+            const html = quill.root.innerHTML;
+            this.control.setValue(html, { emitEvent: true });
+            this.control.markAsDirty();
+            console.log('[Editor] FormControl 已同步更新');
+          }
         });
       });
     };
@@ -106,17 +115,20 @@ export class EditorTextComponent extends BasicKitComponent implements OnInit {
         };
 
         this.imageService.uploadImages(body).subscribe((res: any) => {
-          // 根據後端 ApiResponse 結構取出 Data
-          // res.Data 會是 [{ fileName: '...', imageUrl: '/IMAGES/...' }]
           const uploadResult = res.Data?.[0];
-
-          if (uploadResult?.imageUrl) {
+          if (uploadResult?.ImageUrl) {
+            const finalUrl = `${environment.ApiUrl.replace('/api', '')}${uploadResult.ImageUrl}`;
             const range = quill.getSelection();
-            // 使用環境變數組合完整的 API 位址 (如果需要的話)
-            // 或者後端如果給的是絕對路徑，直接用即可
-            const finalUrl = `${environment.ApiUrl.replace('/api', '')}${uploadResult.imageUrl}`;
-
             quill.insertEmbed(range.index, 'image', finalUrl);
+            quill.setSelection(range.index + 1);
+
+            // --- 強制同步：將編輯器內容塞回 Angular Control ---
+            const html = quill.root.innerHTML;
+            this.control.setValue(html);
+            this.control.updateValueAndValidity(); // 強制觸發 Angular 驗證機制
+            this.control.markAsDirty(); // 告訴 Angular 資料已變更
+
+            console.log('[Editor] 已手動將圖片 HTML 同步至 FormControl:', html);
           }
         });
       }

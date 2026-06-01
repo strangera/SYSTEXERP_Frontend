@@ -213,7 +213,7 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
 
   /* ---------- Checkbox ---------- */
 
-  isRowSelectable = (): boolean => true;
+  isRowSelectable = (row: any): boolean => !!row?.CanDel;
 
   /* ---------- 刪除 ---------- */
 
@@ -223,7 +223,13 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
       return;
     }
 
-    const idList = selectedRows
+    const deletableRows = selectedRows.filter((r) => r?.CanDel);
+    if (!deletableRows.length) {
+      this.messageService.warnBubble('所選資料已審核或已建立傳票，無法刪除');
+      return;
+    }
+
+    const idList = deletableRows
       .map((r) => Number(r.id ?? r.ID ?? r.Id))
       .filter((id) => Number.isFinite(id) && id > 0);
 
@@ -232,7 +238,7 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
       return;
     }
 
-    const retNoList = selectedRows
+    const retNoList = deletableRows
       .map((r) => r.TXN_Ret_No)
       .filter((n) => !!n)
       .join('、');

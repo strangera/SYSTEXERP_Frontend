@@ -11,6 +11,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 
@@ -35,6 +36,7 @@ interface FIN13100Row {
     TranslateModule,
     InputTextRangeComponent,
     CalendarRangeComponent,
+    MultiSelectComponent,
     TableComponent,
   ],
 })
@@ -44,8 +46,14 @@ export class FIN13100Component extends BasicQueryPageComponent<FIN13100Row> impl
     VouNoEnd: [null as string | null],
     VouDateStart: [new Date() as Date | null],
     VouDateEnd: [new Date() as Date | null],
+    InvoiceStatus: [[]], // 發票狀態多選：Y=發票已入 N=發票未入 空=全部
     ...createPaginationConfig([{ field: 'VouNo', order: 1 }]),
   });
+
+  invoiceStatusOptions = [
+    { label: '發票已入', value: 'Y' },
+    { label: '發票未入', value: 'N' },
+  ];
 
   data: FIN13100Row[] = [];
   totalRecords = 0;

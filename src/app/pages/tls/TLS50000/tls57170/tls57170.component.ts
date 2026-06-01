@@ -207,12 +207,12 @@ export class TLS57170Component extends BasicQueryPageComponent<TLS57170Data> imp
       return;
     }
     const fileName = `${baseName}_${new Date().getTime()}${ext}`;
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 
   //#region 商品管理編號下拉選單相關

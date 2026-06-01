@@ -12,11 +12,11 @@ import { finalize, map } from 'rxjs/operators';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
 import { DeductionService } from '../../../service/basic/queryAPS1003.service';
 import { BigCategoryCodeService } from '../../../service/basic/queryTLTBUSTYPE.service';
-import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 // UI
 import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -24,7 +24,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { CounterNameService } from '@service/basic/queryTLTTALENT.service';
@@ -47,7 +46,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
     MultiLocationFilterComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
-     TableReportComponent,
+    TableReportComponent,
     TranslateModule,
     DropdownComponent,
     CalendarRangeComponent,
@@ -60,8 +59,8 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
   private readonly includePagingAndSorting = true;
-lastQueryBody: any = null;
-queryTLS13030Fn = (body: any) => this.tls13030Service.queryTLS13030(body);
+  lastQueryBody: any = null;
+  queryTLS13030Fn = (body: any) => this.tls13030Service.queryTLS13030(body);
   private readonly allowedSortFields = new Set<string>([
     'tlt_no', 'tlt_name', 'tlt_building', 'location_no',
     'floor_desc', 'area_desc', 'bus_type', 'bus_type_name',
@@ -77,40 +76,39 @@ queryTLS13030Fn = (body: any) => this.tls13030Service.queryTLS13030(body);
   selectedItems: any[] = [];
 
   // ===== 表單 =====
-queryForm = this.formBuilder.group({
-  tlt_no: ['', [Validators.maxLength(10)]],
-  tlt_name: ['', [Validators.maxLength(50)]],
-  floor_noList: [[] as string[]],
-  area_noList: [[] as string[]],
-  tlt_openflagList: [[] as string[]],
-  tlt_bdate_start: [],
-  tlt_bdate_end: [],
-  tlt_edate_start: [null],
-  tlt_edate_end: [null],
+  queryForm = this.formBuilder.group({
+    tlt_no: ['', [Validators.maxLength(10)]],
+    tlt_name: ['', [Validators.maxLength(50)]],
+    floor_noList: [[] as string[]],
+    area_noList: [[] as string[]],
+    tlt_openflagList: [[] as string[]],
+    tlt_bdate_start: [],
+    tlt_bdate_end: [],
+    tlt_edate_start: [null],
+    tlt_edate_end: [null],
 
-  cap_typeList: [[] as string[]], // 扣款類別
-  cap_itemList: [[] as string[]], // 扣款代碼
+    cap_typeList: [[] as string[]], // 扣款類別
+    cap_itemList: [[] as string[]], // 扣款代碼
 
-  tpy_bdate_start: [null],
-  tpy_bdate_end: [null],
-  tpy_edate_start: [null],
-  tpy_edate_end: [null],
-  bus_typeList: [[] as string[]],
-  tlt_building: ['', [Validators.maxLength(1)]],
-  org_idList: [[] as string[]],
+    tpy_bdate_start: [null],
+    tpy_bdate_end: [null],
+    tpy_edate_start: [null],
+    tpy_edate_end: [null],
+    bus_typeList: [[] as string[]],
+    tlt_building: ['', [Validators.maxLength(1)]],
+    org_idList: [[] as string[]],
 
-  // ✅ 分頁 + 排序（小寫 pageIndex / pageSize）
-  ...createPaginationConfig([
-    { field: 'tlt_no', order: 1 },
-  ]),
-});
+    // ✅ 分頁 + 排序（小寫 pageIndex / pageSize）
+    ...createPaginationConfig([
+      { field: 'tlt_no', order: 1 },
+    ]),
+  });
 
   // ===== 下拉選項 =====
   operationStatusOptions = [
-    { value: 0, label: '0-閉店/撤櫃' },
-    { value: 1, label: '1-營業中' },
-    { value: 2, label: '2-合約結束' },
-    { value: 9, label: '9-核准時合約尚未開始' },
+    { value: '0', label: '已撤櫃' },
+    { value: '1', label: '營業中' },
+    { value: '9', label: '合約未生效' },
   ];
 
   bus_typeOptions: any[] = [];
@@ -206,11 +204,11 @@ queryForm = this.formBuilder.group({
           value: x.value,
         }));
       });
-   this.tls13030Service.getAPS1003DropDownList()
+    this.tls13030Service.getAPS1003DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(v => {
         this.deductCodeNameOptions = (v || []).map((x) => ({
-          label:  `${x.value} - ${x.label}`,
+          label: `${x.value} - ${x.label}`,
           formLabel: `${x.value} - ${x.label}`,
           value: x.value,
         }));
@@ -218,113 +216,113 @@ queryForm = this.formBuilder.group({
 
   }
 
-  
+
 
   // ===== lazy 事件（分頁/排序）=====
-// ===== lazy 事件（分頁/排序）=====
-// ※前提：queryForm 內請改成 pageIndex: [1] (小寫)
-override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-  // 1) 取出 event 的 pageIndex / pageSize（若沒給就 undefined）
-  const evPageIndex =
-    Number.isFinite(event.pageIndex) ? Number(event.pageIndex) : undefined;
+  // ===== lazy 事件（分頁/排序）=====
+  // ※前提：queryForm 內請改成 pageIndex: [1] (小寫)
+  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
+    // 1) 取出 event 的 pageIndex / pageSize（若沒給就 undefined）
+    const evPageIndex =
+      Number.isFinite(event.pageIndex) ? Number(event.pageIndex) : undefined;
 
-  const evPageSize =
-    Number.isFinite(event.pageSize) ? Number(event.pageSize) : undefined;
+    const evPageSize =
+      Number.isFinite(event.pageSize) ? Number(event.pageSize) : undefined;
 
-  // 2) 判斷排序是否改變：排序一變就要回到第一頁
-  const currSort = JSON.stringify(form.value?.SortBy ?? []);
-  const nextSort = JSON.stringify(event.SortBy ?? form.value?.SortBy ?? []);
+    // 2) 判斷排序是否改變：排序一變就要回到第一頁
+    const currSort = JSON.stringify(form.value?.SortBy ?? []);
+    const nextSort = JSON.stringify(event.SortBy ?? form.value?.SortBy ?? []);
 
-  const nextPageIndex =
-    currSort !== nextSort
-      ? 1
-      : (evPageIndex ?? form.value?.pageIndex ?? 1);
+    const nextPageIndex =
+      currSort !== nextSort
+        ? 1
+        : (evPageIndex ?? form.value?.pageIndex ?? 1);
 
-  // 3) 寫回表單（emitEvent:false 避免 valueChanges 連鎖）
-  form.patchValue(
-    {
-      SortBy: event.SortBy ?? form.value?.SortBy ?? [],
-      pageIndex: nextPageIndex,
-      pageSize: evPageSize ?? form.value?.pageSize ?? 30,
-    },
-    { emitEvent: false }
-  );
+    // 3) 寫回表單（emitEvent:false 避免 valueChanges 連鎖）
+    form.patchValue(
+      {
+        SortBy: event.SortBy ?? form.value?.SortBy ?? [],
+        pageIndex: nextPageIndex,
+        pageSize: evPageSize ?? form.value?.pageSize ?? 30,
+      },
+      { emitEvent: false }
+    );
 
-  // 4) 更新本地 sortMeta（若你 table 需要）
-  this.sortMeta = (event.SortBy ?? []).map((s: any) => ({ ...s }));
+    // 4) 更新本地 sortMeta（若你 table 需要）
+    this.sortMeta = (event.SortBy ?? []).map((s: any) => ({ ...s }));
 
-  // 5) 防止同樣分頁/排序重複打 API
-  const sig = JSON.stringify({
-    pageIndex: form.value?.pageIndex,
-    pageSize: form.value?.pageSize,
-    SortBy: form.value?.SortBy,
-  });
-
-  if (sig === this.lastQuerySig) return;
-  this.lastQuerySig = sig;
-
-  // 6) 觸發查詢（避免連續事件）
-  if (this.lazyTimer) clearTimeout(this.lazyTimer);
-  this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-}
-
-
-// ===== 組 payload（分頁/排序 + 清理空值）=====
-private buildPayload(val: any) {
-  // 1) pageSize / pageIndex（小寫）
-  const pageSize =
-    Number.isFinite(val?.pageSize) ? Number(val.pageSize) : 30;
-
-  const pageIndex =
-    Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
-
-  // 2) SortBy：優先 val.SortBy，其次 this.sortMeta，再其次 defaultSort
-  const rawSortBy = Array.isArray(val?.SortBy) ? val.SortBy : [];
-  const sortByArr =
-    rawSortBy.length
-      ? rawSortBy
-      : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
-
-  // 3) 只允許後端認得的排序欄位（避免 SQL injection / 後端報錯）
-  const filteredSortBy = (sortByArr || []).filter((s: any) =>
-    this.allowedSortFields.has(String(s?.field || ''))
-  );
-
-  // 4) 複製一份當 payload 基礎
-  const o: any = { ...val };
-
-  // 5) 只在需要時帶入分頁/排序（你原本的行為）
-  if (this.includePagingAndSorting) {
-    Object.assign(o, {
-      pageSize,
-      pageIndex,
-      SortBy: filteredSortBy,
+    // 5) 防止同樣分頁/排序重複打 API
+    const sig = JSON.stringify({
+      pageIndex: form.value?.pageIndex,
+      pageSize: form.value?.pageSize,
+      SortBy: form.value?.SortBy,
     });
+
+    if (sig === this.lastQuerySig) return;
+    this.lastQuerySig = sig;
+
+    // 6) 觸發查詢（避免連續事件）
+    if (this.lazyTimer) clearTimeout(this.lazyTimer);
+    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
   }
 
-  // 6) 清掉表單內同名欄位（避免帶出重複欄位）
-  //    你表單有 pageSize/pageIndex 就會被上面 Object.assign 覆蓋成 number，
-  //    但還是建議清掉不必要的舊欄位（包含你以前的 PageIndex）
-  delete o.PageIndex; // ★如果你有舊欄位殘留，直接保險砍掉
-  // （注意：不要 delete o.pageSize / o.pageIndex，因為這次 payload 就要送它們）
 
-  // 7) 清理空值/空陣列
-  Object.keys(o).forEach((k) => {
-    const v = o[k];
+  // ===== 組 payload（分頁/排序 + 清理空值）=====
+  private buildPayload(val: any) {
+    // 1) pageSize / pageIndex（小寫）
+    const pageSize =
+      Number.isFinite(val?.pageSize) ? Number(val.pageSize) : 30;
 
-    if (v === undefined || v === '') {
-      delete o[k];
-      return;
+    const pageIndex =
+      Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
+
+    // 2) SortBy：優先 val.SortBy，其次 this.sortMeta，再其次 defaultSort
+    const rawSortBy = Array.isArray(val?.SortBy) ? val.SortBy : [];
+    const sortByArr =
+      rawSortBy.length
+        ? rawSortBy
+        : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
+
+    // 3) 只允許後端認得的排序欄位（避免 SQL injection / 後端報錯）
+    const filteredSortBy = (sortByArr || []).filter((s: any) =>
+      this.allowedSortFields.has(String(s?.field || ''))
+    );
+
+    // 4) 複製一份當 payload 基礎
+    const o: any = { ...val };
+
+    // 5) 只在需要時帶入分頁/排序（你原本的行為）
+    if (this.includePagingAndSorting) {
+      Object.assign(o, {
+        pageSize,
+        pageIndex,
+        SortBy: filteredSortBy,
+      });
     }
 
-    if (Array.isArray(v) && v.length === 0) {
-      delete o[k];
-      return;
-    }
-  });
+    // 6) 清掉表單內同名欄位（避免帶出重複欄位）
+    //    你表單有 pageSize/pageIndex 就會被上面 Object.assign 覆蓋成 number，
+    //    但還是建議清掉不必要的舊欄位（包含你以前的 PageIndex）
+    delete o.PageIndex; // ★如果你有舊欄位殘留，直接保險砍掉
+    // （注意：不要 delete o.pageSize / o.pageIndex，因為這次 payload 就要送它們）
 
-  return o;
-}
+    // 7) 清理空值/空陣列
+    Object.keys(o).forEach((k) => {
+      const v = o[k];
+
+      if (v === undefined || v === '') {
+        delete o[k];
+        return;
+      }
+
+      if (Array.isArray(v) && v.length === 0) {
+        delete o[k];
+        return;
+      }
+    });
+
+    return o;
+  }
 
 
   // ===== 查詢 =====
@@ -373,10 +371,10 @@ private buildPayload(val: any) {
 
     const payload = this.buildPayload({ ...raw });
 
-// ✅ 給 table-report 往下滾用
-this.lastQueryBody = { ...payload };
-// ✅（可選）同步一下 sortMeta，避免 UI sort 箭頭不同步
-this.sortMeta = payload.SortBy ?? this.sortMeta;
+    // ✅ 給 table-report 往下滾用
+    this.lastQueryBody = { ...payload };
+    // ✅（可選）同步一下 sortMeta，避免 UI sort 箭頭不同步
+    this.sortMeta = payload.SortBy ?? this.sortMeta;
     this.loading = true;
     this.messageService.blockUi();
 
@@ -452,7 +450,7 @@ this.sortMeta = payload.SortBy ?? this.sortMeta;
 
   onDelete(selectedItems: any[]): void {
     if (!selectedItems.length) return;
-    const confirmDel = window.confirm('是否確定刪除選取項目？');
+    const confirmDel = globalThis.confirm('是否確定刪除選取項目？');
     if (!confirmDel) return;
 
     const idList = selectedItems.map((item) => item.id);

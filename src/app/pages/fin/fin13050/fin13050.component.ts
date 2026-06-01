@@ -48,8 +48,8 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   selectedItems: any[] = [];
   lastQueryBody: any = null;
 
-  isRowSelectable = (row: any): boolean => !row?.Voucher_No;
-  editDisabled = (row: any): boolean => !this.isRowSelectable(row) || !row?.CanEdit;
+  isRowSelectable = (row: any): boolean => !row?.Voucher_No && !!row?.CanDel;
+  editDisabled = (row: any): boolean => !!row?.Voucher_No || !row?.CanEdit;
   detailDisabled = (row: any): boolean => !this.isRowSelectable(row);
 
   queryForm = this.formBuilder.group({
@@ -58,21 +58,21 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
     PUR_GUINo: [null, [Validators.maxLength(10)]],
     PUR_GUIDate_Start: [null], PUR_GUIDate_End: [null],
     PUR_GUIDate_YYYYMM: [null],
-    PUR_RepYYYYMM: [null as Date | null],
+    PUR_RepYYYYMM: [null as string | null],
     PUR_VenUniform: [[]],
     PUR_Amt_Small: [null], PUR_Amt_Big: [null],
     PUR_Net_Small: [null], PUR_Net_Big: [null],
     PUR_Tax_Small: [null], PUR_Tax_Big: [null],
     PUR_DirectType: [[]], PUR_TaxType: [[]], PUR_DiscNo: [[]], PUR_Type: [[]],
     SYS_ORIGIN: [[]], Source_Doc_No: [null, [Validators.maxLength(14)]],
-    Voucher_No: [null, [Validators.maxLength(11)]], SAL_Type: [[]],
+    Voucher_No: [null, [Validators.maxLength(11)]],
     PUR_Remark: [null, [Validators.maxLength(100)]],
     CRT_USR_Name: [null], CRT_Date_Start: [null], CRT_Date_End: [null],
     UPD_USR_Name: [null], UPD_Date_Start: [null], UPD_Date_End: [null],
   });
 
   columns = [
-    { field: 'PUR_VoucherType', header: '發票格式' },
+    { field: 'PUR_VoucherType', header: '發票格式', format: (v: string | number) => v },
     { field: 'PUR_GUINo', header: '發票號碼' },
     { field: 'PUR_GUIDate', header: '發票日期', format: formatYYYYMMDD },
     { field: 'PUR_GUIDate_YYYYMM', header: '資料所屬年月' },
@@ -87,7 +87,6 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
     { field: 'PUR_TypeDesc', header: '類別區分' },
     { field: 'Source_Doc_No', header: '憑證單號' },
     { field: 'Voucher_No', header: '傳票號碼' },
-    { field: 'SAL_Type', header: '系統別' },
     { field: 'PUR_Remark', header: '備註' },
   ];
 
@@ -110,8 +109,10 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
 
   private setDefaultRepYYYYMM() {
     const now = new Date();
-    const targetM = (now.getMonth() + 1) % 2 === 0 ? now.getMonth() + 1 : now.getMonth() + 2;
-    this.queryForm.patchValue({ PUR_RepYYYYMM: new Date(now.getFullYear(), (targetM > 12 ? 12 : targetM) - 1, 1) });
+    const currentMonth = now.getMonth() + 1;
+    const targetM = currentMonth % 2 === 0 ? currentMonth : Math.min(currentMonth + 1, 12);
+    const yyyymm = `${now.getFullYear()}${String(targetM).padStart(2, '0')}`;
+    this.queryForm.patchValue({ PUR_RepYYYYMM: yyyymm });
   }
 
   private initOptions() {
@@ -144,7 +145,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
         ...raw,
         PUR_GUIDate_YYYYMM: this.datePipe.transform(raw.PUR_GUIDate_YYYYMM, 'yyyyMM'),
         PUR_GUINo: raw.PUR_GUINo?.toUpperCase(),
-        ...['PUR_VoucherType', 'PUR_DirectType', 'PUR_TaxType', 'PUR_DiscNo', 'PUR_Type', 'SYS_ORIGIN', 'SAL_Type'].reduce((acc, key) => {
+        ...['PUR_VoucherType', 'PUR_DirectType', 'PUR_TaxType', 'PUR_DiscNo', 'PUR_Type', 'SYS_ORIGIN'].reduce((acc, key) => {
           acc[key] = raw[key]?.length ? raw[key] : undefined;
           return acc;
         }, {} as any),
@@ -177,6 +178,7 @@ export class FIN13050Component extends BasicQueryPageComponent<any> implements O
   onDelete = (selection: any | any[]) => {
     const rows = Array.isArray(selection) ? selection : [selection];
     if (rows.some(r => r?.Voucher_No)) return this.messageService.warnBubble('已產生傳票之資料不可刪除');
+    if (rows.some(r => !r?.CanDel)) return this.messageService.warnBubble('已審核之申報年月資料不可刪除');
 
     const ids = rows.map(r => r.id).filter(id => id != null);
     this.messageService.confirm({

@@ -39,7 +39,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   // OverlayPanel
   @Input() showOverlay = true;// 控制是否顯示 Overlay Panel，預設為 true (打開)
   @ViewChild('op') op: OverlayPanel | undefined;
-  private destroy$ = new Subject<void>();      // 訂閱，為了監聽表單改變
+  private readonly destroy$ = new Subject<void>();      // 訂閱，為了監聽表單改變
   @Input() formGroup?: FormGroup;          // 下拉要輸入的form 必填
   @Input() dialogData: any = [];           // 下拉table 的資料 必填
   @Input() loading = false;
@@ -49,7 +49,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   @Input() totalRecords = 0;             // 總筆數
   @Output() select = new EventEmitter<any>(); // 選擇事件
   @Input() lazy = true;                  // 是否啟用分頁
-  private inputChangeSubject = new Subject<Record<string, string>>();
+  private readonly inputChangeSubject = new Subject<Record<string, string>>();
   private initialLoadDone = false;
   private suppressNextFocus = false;
 
@@ -82,13 +82,13 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     let selectedData: any;
     if (typeof this.control.value === 'object' && this.control.value !== null) {
       // 情況一：如果 optionValue 未傳入（為空字串），control.value 就是選取的完整物件。
-      if (!this.optionValue) {
-        selectedData = this.control.value;
-      } else {
+      if (this.optionValue) {
         // 情況二：如果 optionValue 有傳入，control.value 是該屬性的值。
         // 需從 suggestions 中尋找完整的物件。
         const selectedValue = this.control.value[this.optionValue];
         selectedData = this.suggestions.find((item: any) => item[this.optionValue] === selectedValue);
+      } else {
+        selectedData = this.control.value;
       }
     } else if (typeof this.control.value === 'string' && this.optionLabel) {
       // 情況三：如果 control.value 是字串，且我們沒有設定 optionValue，
@@ -154,17 +154,29 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
     this.op?.hide();
   }
 
-  onFocusAndInitialLoad(event: any) {
+  onFocusAndInitialLoad(event: Event): void {
+    // 1. 同步阻止事件冒泡，不讓點擊訊號繼續往外擴散
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+
     if (this.suppressNextFocus) {
       this.suppressNextFocus = false;
       return;
     }
-    if (this.showOverlay) {
-      this.op?.toggle(event);
-    }
-    // 如果表格資料為空，且尚未載入過，則發送一次空的查詢請求，讓父元件載入所有資料
+
+    // 2. 【核心修正】利用 setTimeout 延遲執行，確保在 PrimeNG 所有內建焦點事件處理完後才打開
+    setTimeout(() => {
+      if (this.showOverlay && this.op) {
+        // 檢查目前是否已經開啟，如果沒開啟再打開，避免重複 toggle 閃爍
+        // 註：有些版本的 PrimeNG op.el.nativeElement 存在時代表已開啟
+        this.op.show(event);
+      }
+    }, 50); // 延遲 50ms 避開事件競爭
+
+    // 3. 處理初次載入資料
     if (!this.initialLoadDone && (!this.dialogData || this.dialogData.length === 0)) {
-      // 修改：如果沒有 formGroup，就傳空物件或目前的 control 值
       const emitValue = this.formGroup ? this.formGroup.value : { [this.optionLabel]: this.control.value };
       this.formValueChanged.emit(emitValue);
     }

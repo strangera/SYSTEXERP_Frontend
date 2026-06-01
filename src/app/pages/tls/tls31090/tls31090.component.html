@@ -53,6 +53,17 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
+              label="專櫃編號"
+              controlName="CounterNos"
+              [options]="CounterNos_Option"
+              optionLabel="label"
+              optionValue="No"
+              [control]="queryForm.controls.CounterNos"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
               label="館別"
               controlName="Buildings"
               [options]="tlt_building_Option"
@@ -134,17 +145,6 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="專櫃編號"
-              controlName="CabinetKinds"
-              [options]="CounterNos_Option"
-              optionLabel="label"
-              optionValue="No"
-              [control]="queryForm.controls.CabinetKinds"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
               label="抽成別"
               controlName="ChargeTypes"
               [options]="tlt_term_type"
@@ -204,6 +204,7 @@
     tableKey="tls31090"
     [lastQueryBody]="historyRequestBody"
     [data]="data"
+    [footerData]="footerData"
     [columns]="columns"
     [columnGroup]="columnGroup"
     [totalRecords]="totalRecords"
@@ -218,7 +219,7 @@
       <div class="flex justify-content-end align-items-center gap-2">
         <p-button
           styleClass="p-2"
-          label="時段之大分類營業報表.PDF"
+          label="各時段之大分類營業報表.PDF"
           [loading]="btnPDFLoading"
           icon="pi pi-file"
           (click)="onReport(queryForm, false)"
@@ -227,7 +228,7 @@
         ></p-button>
         <p-button
           styleClass="p-2"
-          label="時段之大分類營業報表.XLSX"
+          label="各時段之大分類營業報表.XLSX"
           [loading]="btnExcelLoading"
           icon="pi pi-file"
           (click)="onReport(queryForm, true)"

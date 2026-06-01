@@ -4,6 +4,9 @@ import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from "@shared/componentkit/calendar-range/calendar-range.component";
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 import { DialogModule } from 'primeng/dialog';
 import { PanelModule } from 'primeng/panel';
 import { finalize, forkJoin } from 'rxjs';
@@ -25,8 +28,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column, formatAmountWithFraction, formatDate } from '../../../shared/componentkit/table/table.model';
-import { TableEditComponent } from './table-edit/table-edit.component';
-import { EditColumn } from './table-edit/table-edit.model';
+
 
 // 擴展應收帳款類型,添加收款金額欄位
 interface ARWithRCVAmt extends QueryFIN32030ARResponse {
@@ -87,13 +89,64 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       header: '應收ID',
       type: 'input',
       maxLength: 50,
-      placeholder: '點擊選擇...',
-      onFocus: (_rowData: ARWithRCVAmt, _value: string | null, _col: EditColumn, index: number) => {
-        // 點擊時開啟彈跳視窗
-        if (!this.isFormReadable) {
-          this.openARDialogForRow(index);
+      placeholder: '直接輸入，或雙擊欄位查詢...',
+      // onFocus: (_rowData: ARWithRCVAmt, _value: string | null, _col: EditColumn, index: number) => {
+      //   // 點擊時開啟彈跳視窗
+      //   if (!this.isFormReadable) {
+      //     this.openARDialogForRow(index);
+      //   }
+      // },
+      // 1. 處理手動輸入：當應收ID變更時，自動匹配並帶出廠客、摘要與收款金額
+      calculate: (rowData: ARWithRCVAmt, newValue: string) => {
+        if (!newValue) {
+          return {
+            ARS_ID: null,
+            VEN_No: null,
+            NoteDesc: null,
+            RCV_Amt: null
+          };
+        }
+
+        // 從彈窗所使用的資料集（或當前已被載入的應收明細快取）中尋找完全吻合的 ID
+        // 註：若此處的 arDialogData 在手動輸入時尚未透過 API 載入，
+        // 建議確保對話框資料或後端有預載機制，才能順利在前端 find 匹配。
+        const matchedItem = this.arDialogData.find(item => item.ARS_ID === newValue);
+
+        if (matchedItem) {
+          return {
+            ARS_ID: matchedItem.ARS_ID || '',
+            VEN_No: matchedItem.VEN_No || null,
+            NoteDesc: matchedItem.NoteDesc || null,
+            RCV_Amt: matchedItem.UnpaidAmt || 0 // 預設收款金額為未收款金額
+          };
+        } else {
+          // 找不到代號時，不清除使用者打的字，但清除或提示其他欄位
+          return {
+            VEN_No: null,
+            NoteDesc: '⚠️ 找不到此應收ID',
+            RCV_Amt: null
+          };
         }
       },
+      onFocus: (_rowData: ARWithRCVAmt, _value: string | null, _col: EditColumn, index: number) => {
+        if (this.isFormReadable) return;
+
+        // 取得當前聚焦的 input 元素
+        const activeElement = document.activeElement as HTMLInputElement;
+        if (activeElement && activeElement.tagName === 'INPUT') {
+
+          // 檢查是否已經綁定過雙擊事件，避免重複綁定
+          if (!(activeElement as any)._hasDblClickBound) {
+            (activeElement as any)._hasDblClickBound = true;
+
+            // 監聽雙擊事件：只有在使用者 double click 時才觸發彈窗
+            activeElement.addEventListener('dblclick', () => {
+              this.openARDialogForRow(index);
+            });
+          }
+        }
+      },
+
       disabled: () => this.isFormReadable // 檢視模式不可點擊
     },
     {
@@ -162,19 +215,134 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       header: '收款代號',
       type: 'input',
       maxLength: 50,
-      placeholder: '點擊選擇...',
+      placeholder: '直接輸入，或雙擊欄位查詢...',
+      // onFocus: (_rowData: any, _value: string | null, _col: EditColumn, index: number) => {
+      //   if (!this.isFormReadable) {
+      //     this.openCapItemDialogForRow(index);
+      //   }
+      // },
+      // 1. 利用內建的 calculate 處理手動輸入：只要代號一變更，立刻自動匹配並帶出名稱！
+      calculate: (rowData: any, newValue: string) => {
+        if (!newValue) {
+          return {
+            CAP_Item: null,
+            CAP_Name: null,
+            AccNo: null,
+            ABAT_YN: null,
+            AbatAcct: null
+          };
+        }
+
+        // 從前端預載的快取中匹配資料
+        const matchedItem = this.capItemAllData.find(item => item.CAP_Item === newValue);
+
+        if (matchedItem) {
+          // 核心：回傳新物件，底層 table-edit 會立刻將這些欄位同步更新到畫面上！
+          return {
+            CAP_Item: matchedItem.CAP_Item || '',
+            CAP_Name: matchedItem.CAP_Name || '',
+            AccNo: matchedItem.AccNo || '',
+            ABAT_YN: matchedItem.ABAT_YN || '',
+            AbatAcct: '' // 收款項目變更，清空舊的沖帳代號
+          };
+        } else {
+          // 找不到代號時，不清除原本打的字，但回傳清空隔壁名稱，方便使用者知道打錯了
+          return {
+            CAP_Name: '⚠️ 找不到此代號',
+            AccNo: null,
+            ABAT_YN: null,
+            AbatAcct: null
+          };
+        }
+      },
+      // 利用 onFocus 監聽原生 HTML 的 dblclick (雙擊) 事件來決定要不要開 Dialog
       onFocus: (_rowData: any, _value: string | null, _col: EditColumn, index: number) => {
-        if (!this.isFormReadable) {
-          this.openCapItemDialogForRow(index);
+        if (this.isFormReadable) return;
+
+        // 取得當前聚焦的 input 元素
+        const activeElement = document.activeElement as HTMLInputElement;
+        // if (activeElement && activeElement.tagName === 'INPUT') {
+
+        //   // 檢查是否已經綁定過雙擊事件，避免重複綁定
+        //   if (!(activeElement as any)._hasDblClickBound) {
+        //     (activeElement as any)._hasDblClickBound = true;
+
+        //     // 監聽雙擊事件：只有在使用者 double click 時才觸發彈窗
+        //     activeElement.addEventListener('dblclick', () => {
+        //       this.openCapItemDialogForRow(index);
+        //     });
+        //   }
+        // }
+        if (activeElement && activeElement.tagName === 'INPUT') {
+
+          // 檢查是否已經綁定過雙擊事件，避免重複綁定
+          if (!(activeElement as any)._hasDblClickBound) {
+            (activeElement as any)._hasDblClickBound = true;
+
+            // 監聽雙擊事件：只有在使用者 double click 時才觸發彈窗
+            activeElement.addEventListener('dblclick', () => {
+
+              // 💡 解決同步斷層的奇招：
+              // 開窗的瞬間，如果發現目前這欄是空的，先塞個暫時的字（例如 '...' 或 '未選擇內容!'）
+              // 這樣當視窗跳出來、輸入框強制失焦時，內部的驗證邏輯會看到「有字」，就不會跳出必填錯誤！
+              if (!this.step2TableData[index]?.CAP_Item) {
+                this.step2TableData[index] = {
+                  ...this.step2TableData[index],
+                  CAP_Item: null
+                };
+                // 刷回陣列，讓 table-edit 內部感知到這個暫時的值
+                this.step2TableData = [...this.step2TableData];
+                this.cdr.detectChanges();
+              }
+
+              this.openCapItemDialogForRow(index);
+            });
+          }
+        }
+      },
+      // 支援直接手動輸入，當滑鼠離開或 Tab 離開時觸發
+      onBlur: (rowData: any, value: string | null, _col: EditColumn, index: number) => {
+        if (!value) return;
+
+        // 從前端已經載入的完整選單中，尋找完全符合輸入代號的資料
+        const matchedItem = this.capItemAllData.find(item => item.CAP_Item === value);
+
+        if (matchedItem) {
+          // 找到了，比照 Dialog 選擇的邏輯，把名稱、科目與沖帳屬性帶進來
+          this.step2TableData[index] = {
+            ...this.step2TableData[index],
+            CAP_Item: matchedItem.CAP_Item || '',
+            CAP_Name: matchedItem.CAP_Name || '',
+            AccNo: matchedItem.AccNo || '',
+            ABAT_YN: matchedItem.ABAT_YN || '',
+            AbatAcct: '', // 收款項目變更，清空舊的沖帳代號
+          };
+          this.step2TableData = [...this.step2TableData]; // 觸發變更檢測
+          this.calculateBillTotalAmount(); // 重新計算票據總金額
+        } else {
+          // 輸入錯誤的代號時給予警示，並清空錯誤的值
+          // this.messageService.warnBubble(`找不到收款代號: "${value}"，請重新輸入或雙擊欄位進行查詢`);
+
+          this.step2TableData[index] = {
+            ...this.step2TableData[index],
+            CAP_Item: null,
+            CAP_Name: null,
+            AccNo: null,
+            ABAT_YN: null,
+            AbatAcct: null
+          };
+          this.step2TableData = [...this.step2TableData];
+          this.calculateBillTotalAmount();
         }
       },
       disabled: () => this.isFormReadable,
-      validate: [
-        (value: string) => ({
-          isValid: !!value,
-          errorMessage: ['收款項目為必填']
-        })
-      ]
+      // validate: [
+      //   (value: string) => ({
+      //     isValid: !!value,
+      //     errorMessage: ['收款項目為必填']
+      //   })
+      // ],
+      validate: [validateRequired]
     },
     {
       field: 'CAP_Name',
@@ -261,7 +429,7 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       optionValue: 'value',
       showClear: true,
       width: '250px',
-      panelStyle: { 'min-width': '420px' },
+      // panelStyle: { 'min-width': '420px' },
       calculate: (_rowData, newValue: string) => {
         // 選擇銀行後自動帶入分行代號和帳號長度
         const selectedBank = this.bankBranchOptions.find(b => b.value === newValue);
@@ -477,14 +645,15 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
 
     // 初始化一筆空白收款項目資料(避免表格錯位)
     if (this.isFormCreateable) {
-      this.step2TableData = [{
-        CAP_Item: null,
-        CAP_Name: '',
-        AccNo: '',
-        ARS_Amt: null,
-        NoteDesc: '',
-        AbatAcct: ''
-      }];
+      // this.step2TableData = [{
+      //   CAP_Item: '',
+      //   CAP_Name: '',
+      //   AccNo: '',
+      //   ARS_Amt: null,
+      //   NoteDesc: '',
+      //   AbatAcct: ''
+      // }];
+      this.step2TableData = [];
     }
 
     // 載入下拉選單資料，完成後再載入收款資料
@@ -502,28 +671,30 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       // 切換到步驟3(應收帳款確認)時，需要驗證票據資訊
       if (buttonID === 3) {
         // 檢查是否有應收票據項目 (Voucher_Type=2)
-        if (this.hasVoucherType2Item()) {
-          // 有應收票據項目，必須檢查票據資訊
-          if (!this.hasValidCheckData()) {
-            this.messageService.errorBubble('收款項目包含應收票據，請先填寫至少一筆票據資訊');
-            // 自動導向到票據資訊步驟
-            this.buttonID = 2;
-            this.cdr.detectChanges();
-            return;
-          }
+        /** ↓↓↓選擇應收帳款要卡控票據資訊，0524整測：卡控先mark起來↓↓↓ */
+        // if (this.hasVoucherType2Item()) {
+        //   // 有應收票據項目，必須檢查票據資訊
+        //   if (!this.hasValidCheckData()) {
+        //     this.messageService.errorBubble('收款項目包含應收票據，請先填寫至少一筆票據資訊');
+        //     // 自動導向到票據資訊步驟
+        //     this.buttonID = 2;
+        //     this.cdr.detectChanges();
+        //     return;
+        //   }
 
-          // 檢查票據總金額是否等於票據明細總計
-          const billTotal = this.billTotalAmountControl.value || 0;
-          const checkTotal = this.totalCheckAmount;
-          if (billTotal !== checkTotal) {
-            const billTotalStr = billTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const checkTotalStr = checkTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            this.messageService.errorBubble(`票據總金額(${billTotalStr})與票據明細總計(${checkTotalStr})不符`);
-            this.buttonID = 2;
-            this.cdr.detectChanges();
-            return;
-          }
-        }
+        //   // 檢查票據總金額是否等於票據明細總計
+        //   const billTotal = this.billTotalAmountControl.value || 0;
+        //   const checkTotal = this.totalCheckAmount;
+        //   if (billTotal !== checkTotal) {
+        //     const billTotalStr = billTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        //     const checkTotalStr = checkTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        //     this.messageService.errorBubble(`票據總金額(${billTotalStr})與票據明細總計(${checkTotalStr})不符`);
+        //     this.buttonID = 2;
+        //     this.cdr.detectChanges();
+        //     return;
+        //   }
+        // }
+        /** ↑↑↑選擇應收帳款要卡控票據資訊，0524整測：卡控先mark起來↑↑↑ */
       }
     }
 
@@ -1306,25 +1477,27 @@ export class FIN32030CRUComponent extends BasicCruPageComponent<QueryFIN32030Res
       return;
     }
 
+    /** ↓↓↓選擇應收帳款要卡控票據資訊，0524整測：卡控先mark起來↓↓↓ */
     // 檢查是否有應收票據項目，若有則必須填寫票據資訊
-    if (this.hasVoucherType2Item()) {
-      if (!this.hasValidCheckData()) {
-        this.messageService.errorBubble('收款項目包含應收票據，請先填寫至少一筆票據資訊');
-        this.buttonID = 2; // 導向到票據資訊步驟
-        return;
-      }
+    // if (this.hasVoucherType2Item()) {
+    //   if (!this.hasValidCheckData()) {
+    //     this.messageService.errorBubble('收款項目包含應收票據，請先填寫至少一筆票據資訊');
+    //     this.buttonID = 2; // 導向到票據資訊步驟
+    //     return;
+    //   }
 
-      // 檢查票據總金額是否等於票據明細總計
-      const billTotal = this.billTotalAmountControl.value || 0;
-      const checkTotal = this.totalCheckAmount;
-      if (billTotal !== checkTotal) {
-        const billTotalStr = billTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const checkTotalStr = checkTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        this.messageService.errorBubble(`票據總金額(${billTotalStr})與票據明細總計(${checkTotalStr})不符`);
-        this.buttonID = 2; // 導向到票據資訊步驟
-        return;
-      }
-    }
+    //   // 檢查票據總金額是否等於票據明細總計
+    //   const billTotal = this.billTotalAmountControl.value || 0;
+    //   const checkTotal = this.totalCheckAmount;
+    //   if (billTotal !== checkTotal) {
+    //     const billTotalStr = billTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    //     const checkTotalStr = checkTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    //     this.messageService.errorBubble(`票據總金額(${billTotalStr})與票據明細總計(${checkTotalStr})不符`);
+    //     this.buttonID = 2; // 導向到票據資訊步驟
+    //     return;
+    //   }
+    // }
+    /** ↑↑↑選擇應收帳款要卡控票據資訊，0524整測：卡控先mark起來↑↑↑ */
 
     if (this.step4TableData.length === 0) {
       this.messageService.errorBubble('請至少新增一筆應收帳款');

@@ -7,84 +7,212 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="flex flex-wrap col-12 md:col-8">
-          <app-input-text class="col-12 md:col-6" label="通告編號" controlName="NOT_No" [control]="dataForm.controls.NOT_No"
-            [submitted]="submitted" />
-          <app-calendar class="col-12 md:col-6 lg:col-6" calendarType="dateOne" label="建立日期" controlName="NOT_Date"
-            [control]="dataForm.controls.NOT_Date" [submitted]="submitted" />
-          <app-calendar class="col-12 md:col-6 lg:col-6" calendarType="dateTimeOne" label="有效開始日期時間"
-            controlName="NOT_BegDate" [control]="dataForm.controls.NOT_BegDate" [submitted]="submitted"
-            [minDate]="isFormCreateable? today : null" />
-          <app-calendar class="col-12 md:col-6 lg:col-6" calendarType="dateTimeOne" label="有效結束日期時間"
-            controlName="NOT_EndDate" [control]="dataForm.controls.NOT_EndDate" [submitted]="submitted"
-            [minDate]="isFormCreateable? today : null" />
-          <app-dropdown class="col-12 md:col-6 lg:col-6" label="狀態" controlName="NOT_Status"
-            [options]="NOT_Status_Options" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.NOT_Status" [submitted]="submitted" [filter]="false" />
-          <app-input-number class="col-12 md:col-6 lg:col-6" [useGrouping]="false" label="優先順序"
-            controlName="NOT_Priority" [control]="dataForm.controls.NOT_Priority" [submitted]="submitted" />
-          <app-input-number class="col-12 md:col-6 lg:col-6" label="媒體檔播放秒數" controlName="NOT_PlayTime"
-            [control]="dataForm.controls.NOT_PlayTime" [submitted]="submitted" [useGrouping]="false" />
-          <app-dropdown class="col-12 md:col-6 lg:col-6" label="是否限制播放條件" controlName="NOT_DtlLimit"
-            [options]="NOT_DtlLimit_Options" optionLabel="label" optionValue="value"
-            [control]="dataForm.controls.NOT_DtlLimit" [submitted]="submitted" [filter]="false" />
+          <app-input-text
+            class="col-12 md:col-6"
+            label="通告編號"
+            controlName="NOT_No"
+            [control]="dataForm.controls.NOT_No"
+            [submitted]="submitted"
+          />
+          <app-calendar
+            class="col-12 md:col-6 lg:col-6"
+            calendarType="dateOne"
+            label="建立日期"
+            controlName="NOT_Date"
+            [control]="dataForm.controls.NOT_Date"
+            [submitted]="submitted"
+          />
+          <app-calendar
+            class="col-12 md:col-6 lg:col-6"
+            label="有效開始日期時間"
+            controlName="NOT_BegDate"
+            [control]="dataForm.controls.NOT_BegDate"
+            [submitted]="submitted"
+            [minDate]="isFormCreateable ? today : null"
+          />
+          <app-calendar
+            class="col-12 md:col-6 lg:col-6"
+            label="有效結束日期時間"
+            controlName="NOT_EndDate"
+            [control]="dataForm.controls.NOT_EndDate"
+            [submitted]="submitted"
+            [minDate]="isFormCreateable ? today : null"
+            [isEndDate]="true"
+          />
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-6"
+            label="狀態"
+            controlName="NOT_Status"
+            [options]="NOT_Status_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.NOT_Status"
+            [submitted]="submitted"
+            [filter]="false"
+          />
+          <app-input-number
+            class="col-12 md:col-6 lg:col-6"
+            [useGrouping]="false"
+            label="優先順序"
+            controlName="NOT_Priority"
+            [control]="dataForm.controls.NOT_Priority"
+            [submitted]="submitted"
+          />
+          <app-input-number
+            class="col-12 md:col-6 lg:col-6"
+            label="媒體檔播放秒數"
+            controlName="NOT_PlayTime"
+            [control]="dataForm.controls.NOT_PlayTime"
+            [submitted]="submitted"
+            [useGrouping]="false"
+          />
+          <app-dropdown
+            class="col-12 md:col-6 lg:col-6"
+            label="是否限制播放條件"
+            controlName="NOT_DtlLimit"
+            [options]="NOT_DtlLimit_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.NOT_DtlLimit"
+            [submitted]="submitted"
+            [filter]="false"
+          />
         </div>
         <div class="flex flex-column col-12 md:col-4">
           <div class="col-12">
-            <label for="file">媒體檔案名稱</label>
-            <p-fileUpload #fileUpload [multiple]="false" accept=".bmp,.jpg,.wmv,.avi,.mpeg,.mp4" maxFileSize="100000000"
-              mode="advanced" [showUploadButton]="false" [disabled]="isFormReadable" chooseLabel="選擇檔案"
-              (onSelect)="onSelectFile($event)" [showCancelButton]="false"
-              [disabled]="dataForm.controls.NOT_Status.value === '1' || this.isFormReadable">
-              <ng-template pTemplate="content" let-files let-removeFileCallback="removeFileCallback">
-                <div *ngIf="mediaItems().length > 0; else noURL"
-                  class="flex align-items-center justify-content-between gap-2">
+            <div class="flex flex-column gap-1 mb-2">
+              <label for="file" class="m-0 font-bold text-lg">
+                媒體檔案名稱
+              </label>
+              <div class="flex flex-wrap gap-2 text-sm">
+                <span class="text-color-secondary">
+                  <i class="pi pi-image text-blue-500 mr-1"></i>
+                  圖片格式：
+                  <strong class="text-900">bmp, jpg</strong>
+                </span>
+                <span class="text-color-secondary hidden sm:inline">|</span>
+                <span class="text-color-secondary">
+                  <i class="pi pi-video text-green-500 mr-1"></i>
+                  影片格式：
+                  <strong class="text-900">mp4, wmv, avi, mpeg</strong>
+                </span>
+              </div>
+            </div>
+
+            <p-fileUpload
+              #fileUpload
+              [multiple]="false"
+              accept=".bmp,.jpg,.wmv,.avi,.mpeg,.mp4"
+              maxFileSize="100000000"
+              mode="advanced"
+              [showUploadButton]="false"
+              chooseLabel="選擇檔案"
+              (onSelect)="onSelectFile($event)"
+              [showCancelButton]="false"
+              [disabled]="
+                dataForm.controls.NOT_Status.value === '1' ||
+                this.isFormReadable
+              "
+            >
+              <ng-template
+                pTemplate="content"
+                let-files
+                let-removeFileCallback="removeFileCallback"
+              >
+                <div
+                  *ngIf="mediaItems().length > 0; else noURL"
+                  class="flex align-items-center justify-content-between gap-2"
+                >
                   <i class="pi pi-file text-blue-600 text-xl flex-shrink-0"></i>
-                  <p-button label="{{ mediaItems()[0].name }}" [link]="true" (click)="visible.set(true)"
+                  <p-button
+                    label="{{ mediaItems()[0].name }}"
+                    [link]="true"
+                    (click)="visible.set(true)"
                     [ngClass]="{ 'flex-1': true, 'overflow-hidden': true }"
-                    [ngStyle]="{ 'text-overflow': 'ellipsis', 'white-space': 'nowrap' }">
-                  </p-button>
+                    [ngStyle]="{
+                      'text-overflow': 'ellipsis',
+                      'white-space': 'nowrap',
+                    }"
+                  ></p-button>
                   <div class="flex-shrink-0">
-                    <button *ngIf="dataForm.controls.NOT_Status.value !== '1' && !this.isFormReadable" type="button"
-                      (click)="removeFileCallback(files[0], 0); mediaItems().splice(0, 1)"
-                      class="p-button p-button-text p-button-danger p-button-sm w-auto">
+                    <button
+                      *ngIf="
+                        dataForm.controls.NOT_Status.value !== '1' &&
+                        !this.isFormReadable
+                      "
+                      type="button"
+                      (click)="
+                        removeFileCallback(files[0], 0);
+                        mediaItems().splice(0, 1)
+                      "
+                      class="p-button p-button-text p-button-danger p-button-sm w-auto"
+                    >
                       <i class="pi pi-trash text-lg"></i>
                     </button>
                   </div>
                 </div>
                 <ng-template #noURL>
                   <div>請拖拉檔案至此上傳 或 點擊「選擇檔案」按鈕</div>
-                  <div>支持圖檔/影片類型：bmp、jpg、wmv、avi、mpeg、mp4</div>
                 </ng-template>
               </ng-template>
               <ng-template pTemplate="file"></ng-template>
             </p-fileUpload>
           </div>
-          <app-input-textarea class="col-12" label="備註" controlName="NOT_Note" [control]="dataForm.controls.NOT_Note"
-            [submitted]="submitted" styleClass="h-10rem" />
+          <app-input-textarea
+            class="col-12"
+            label="備註"
+            controlName="NOT_Note"
+            [control]="dataForm.controls.NOT_Note"
+            [submitted]="submitted"
+            styleClass="h-10rem"
+          />
         </div>
       </div>
-      <app-table-edit [hidden]="hiddenTable()" title="廣告資訊設定" tableKey="TLS43010Detail" [data]="data"
-        [columns]="columns" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-        (dataChange)="data = $event" [rowValidate]="validateEntireRow" dataStatusField="status" [keepDeletedData]="true"
-        [disabled]="dataForm.controls.NOT_Status.value === '1' || isFormReadable" [loading]="loading"
-        [tableRequired]="dataForm.controls.NOT_DtlLimit.value !== '0'" [showSort]="true">
-      </app-table-edit>
-      <div *ngIf="dataForm.controls.NOT_Status.value !== '1' && !isFormReadable"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-table-edit
+        [hidden]="hiddenTable()"
+        title="廣告資訊設定"
+        tableKey="TLS43010Detail"
+        [data]="data"
+        [columns]="columns"
+        (selectionChange)="selectedItems = $event"
+        [selectedItems]="selectedItems"
+        (dataChange)="data = $event"
+        [rowValidate]="validateEntireRow"
+        dataStatusField="status"
+        [keepDeletedData]="true"
+        [disabled]="
+          dataForm.controls.NOT_Status.value === '1' || isFormReadable
+        "
+        [loading]="loading"
+        [tableRequired]="dataForm.controls.NOT_DtlLimit.value !== '0'"
+        [showSort]="true"
+      ></app-table-edit>
+      <div
+        *ngIf="dataForm.controls.NOT_Status.value !== '1' && !isFormReadable"
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
   </p-panel>
 </div>
-<p-galleria #galleria [value]="mediaItems()" [(visible)]="visible" [containerStyle]="{ 'max-width': '850px' }"
-  [circular]="true" [fullScreen]="true" [showThumbnails]="false" [autoPlay]="true">
+<p-galleria
+  #galleria
+  [value]="mediaItems()"
+  [(visible)]="visible"
+  [containerStyle]="{ 'max-width': '850px' }"
+  [circular]="true"
+  [fullScreen]="true"
+  [showThumbnails]="false"
+  [autoPlay]="true"
+>
   <ng-template pTemplate="item" let-item>
     <ng-container *ngIf="item.type === 'image'">
-      <img [src]="item.url" alt="Image" style="width: 100%; display: block;" />
+      <img [src]="item.url" alt="Image" style="width: 100%; display: block" />
     </ng-container>
     <ng-container *ngIf="item.type === 'video'">
-      <video [src]="item.url" controls style="width: 100%; display: block;">
+      <video [src]="item.url" controls style="width: 100%; display: block">
         您的瀏覽器不支援影片標籤。
       </video>
     </ng-container>

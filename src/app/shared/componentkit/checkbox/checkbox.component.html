@@ -1,28 +1,21 @@
 <label>
   @if (_title() !== '') {
-    {{ _title() }}
-    @if (isRequired) { <span class="text-red-500">*</span> }
+  {{ _title() }}
+  @if (isRequired) { <span class="text-red-500">*</span> }
   } @else {
-    &nbsp;
+  &nbsp;
   }
 </label>
 <div class="flex items-center gap-1 py-2 align-items-center">
   @if (!tri()) {
-  <p-checkbox [inputId]="_label()"
-              [binary]="!0"
-              [formControl]="control()"
-              (onChange)="onBinaryChange()"
-              [disabled]="disabled()">
+  <p-checkbox [inputId]="_label()" [binary]="!0" [formControl]="control()" (onChange)="onBinaryChange()"
+    [disabled]="disabled()" (keydown.enter)="handleEnterKey($event)">
   </p-checkbox>
   } @else {
-  <p-triStateCheckbox [inputId]="_label()"
-                      [ngModel]="triViewValue()"
-                      (ngModelChange)="onTriChange($event)"
-                      [disabled]="disabled()">
+  <p-triStateCheckbox [inputId]="_label()" [ngModel]="triViewValue()" (ngModelChange)="onTriChange($event)"
+    [disabled]="disabled()" (keydown.enter)="handleEnterKey($event)">
   </p-triStateCheckbox>
   }
-  <label class="ml-2"
-         [for]="_label()">{{ _label() }}</label>
+  <label class="ml-2" [for]="_label()">{{ _label() }}</label>
 </div>
-<app-control-messages [onerror]="submitted()"
-                      [control]="control()"></app-control-messages>
+<app-control-messages [onerror]="submitted()" [control]="control()"></app-control-messages>
