@@ -75,7 +75,6 @@
 .readonly-field {
   background-color: #f8f9fa !important;
   border: 1px solid #e9ecef !important;
-  color: #495057 !important;
   cursor: text !important;
   font-weight: 500;
 
@@ -100,11 +99,9 @@
 .readonly-field-distinct {
   background-color: #f8f9fa !important;
   border: 1px dashed #6c757d !important;
-  color: #495057 !important;
   cursor: not-allowed !important;
 
   &::placeholder {
-    color: #6c757d !important;
     font-style: italic;
   }
 }

@@ -378,7 +378,7 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
 
   /** 自動下載錯誤檔 */
   downloadErrorFile(filePath: string) {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+    globalThis.open(`${environment.ApiUrl}/${filePath}`, '_blank');
   }
 
   openImportDialog() {

@@ -45,6 +45,7 @@ export interface FIN15020Data {
   PUR_RepYYYYMM?: string; // 申報年月
   PUR_Net?: number; // 退出折讓單金額
   PUR_Tax?: number; // 退出折讓單稅額
+  PUR_TotalAmt?: number; // 折讓總金額
   Source_Doc_No?: string; // 憑證單號
   Voucher_No?: string; // 傳票編號
   SAL_Type?: string; // 系統別

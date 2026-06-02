@@ -23,6 +23,11 @@ interface VOID_TLS13010Request {
   talentId: string;
 }
 
+interface EARLY_TERMINATION_TLS13010Request {
+  talentId: string;
+  tlt_contract_edate: string; // YYYY-MM-DD
+}
+
 interface TLS13010CommissionRequest {
   TalentId: string;
   CurrentTltTermType: string;
@@ -222,12 +227,19 @@ export class TLS13010Service {
             warnings: response.Data?.Warnings || []
           };
         } else {
-          throw new Error(response.Message || '提交失敗');
+          // 業務邏輯失敗（Status !== '0000'）：回傳 success: false，不拋出例外
+          // 避免觸發 catchError 導致重複顯示錯誤通知
+          return {
+            success: false,
+            message: response.Message || response.Data?.Message || '提交失敗'
+          };
         }
       }),
       catchError((error) => {
+        // 此處只會接到 HTTP 層錯誤（interceptor 已顯示通知並 rethrow）
+        // 不再重複呼叫 handleError，直接 rethrow
         console.error('❌ TLS13010Service: 提交契約資料失敗:', error);
-        return this.errorHandler.handleError(error);
+        return throwError(() => error);
       })
     );
   }
@@ -250,6 +262,13 @@ export class TLS13010Service {
   voidTLS13010(request: VOID_TLS13010Request) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/voidTLS13010`, request).pipe(
       tap((res) => console.log('作廢結果:', res)),
+    );
+  }
+
+  /** 提前撤櫃 */
+  earlyTerminationTLS13010(request: EARLY_TERMINATION_TLS13010Request) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/earlyTerminationTLS13010`, request).pipe(
+      tap((res) => console.log('提前撤櫃結果:', res)),
     );
   }
 
@@ -301,6 +320,17 @@ export class TLS13010Service {
 
         return throwError(() => ({ message: errorMessage, originalError: error }));
       })
+    );
+  }
+
+  /**
+   * TLS13020 續約維護 - 查詢每個專櫃最新版次合約
+   * 只讀 TLTTALENT，每個 tlt_no 只回傳 contract_subno 最大的那筆
+   */
+  queryTLS13020(payload: any) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13020`, payload).pipe(
+      tap((res) => console.log('[queryTLS13020] 結果:', res)),
+      catchError(this.errorHandler.handleError)
     );
   }
 

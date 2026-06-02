@@ -15,7 +15,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ValidationService } from '@shared/service/validation.service';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize, Observable } from 'rxjs';
-import { CPM12050Data, CPM12050Service } from '../../../service/api/cpm/cpm12050.service';
+import { CPM12050Data, CPM12050Service, QueryCPM12050Request } from '../../../service/api/cpm/cpm12050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -50,15 +50,15 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     STATUS: [null],                                     // 處理狀況
     KIND_ID: [null],                                    // 意見類型
     SUGG_SOURCE: [null],                                // 建議來源
-    CONTACT_TEL: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(30)]], // 聯絡電話
-    CELL_PHONE: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(30)]],  // 手機號碼
+    CONTACT_TEL: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(20)]], // 聯絡電話
+    CELL_PHONE: [null, [this.validationService.phoneNumberValidator, Validators.maxLength(10)]],  // 手機號碼
     E_MAIL: [null, [this.validationService.emailValidator, Validators.maxLength(100)]],           // Email
     COMPLAIN_NOTES: [null, Validators.maxLength(1000)], // 顧客意見內容
-    ORG_ID: [null],                                     // 責任單位
-    ORG_ID_QUERY: [null],                               // 組織(查詢責任單位用)
+    ORG_ID: [null],                                     // 組織
+    CLASS_ID: [null],                                   // 責任單位
     CRT_USR_Name: [null, Validators.maxLength(50)],     // 建檔人員
-    COMPLAIN_DATE_F: [null as Date | null],             // 接件日期(起)
-    COMPLAIN_DATE_T: [null as Date | null],             // 接件日期(迄)
+    COMPLAIN_DATE_F: [(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })() as Date | null],   // 接件日期(起) 預設今天 00:00:00
+    COMPLAIN_DATE_T: [(() => { const d = new Date(); d.setHours(23, 59, 59, 999); return d; })() as Date | null], // 接件日期(迄) 預設今天 23:59:59
     ...createPaginationConfig([])
   });
 
@@ -101,19 +101,16 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     { field: 'COMPLAIN_NOTES', header: '顧客意見內容', visible: true, align: 'left' },
     { field: 'COMPLAIN_DATE', header: '接件日期', visible: true, format: formatDate },
     { field: 'CRT_USR_Name', header: '建檔人員', visible: true },
-    { field: 'ORG_ID', header: '責任單位', visible: true },
+    { field: 'CLASS_ID', header: '責任單位', visible: true },
+    { field: 'CLASS_NAME', header: '責任單位名稱', visible: true },
     { field: 'STATUS', header: '處理狀況', visible: true, format: (value: any) => this.statusOptions.find(option => option.value === value)?.label || value },
   ];
 
   expansionColumns: Column[] = [
     { field: 'ID', header: '序號', hidden: true },
-    { field: 'ANSWER', header: '回覆內容', visible: true },
-    { field: 'ANSWER_ID', header: '回覆人員代碼', visible: true },
-    { field: 'ANSWER_DATE', header: '回覆日期', visible: true, format: formatDate },
-    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: true },
-    { field: 'CRT_Date', header: '建立時間', visible: true, format: formatDate },
-    { field: 'UPD_USR_Name', header: '異動人員名稱', visible: true },
-    { field: 'UPD_Date', header: '異動時間', visible: true, format: formatDate }
+    { field: 'ANSWER', header: '處理紀錄', visible: true },
+    { field: 'ANSWER_DATE', header: '處理日期時間', visible: true, format: (v: unknown) => { if (!v) return ''; const d = new Date(v as string); if (isNaN(d.getTime())) return String(v); return d.toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); } },
+    { field: 'ANSWER_ID', header: '處理者', visible: true },
   ]
 
   addButton: AddButton[] = [
@@ -160,6 +157,48 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
     CLOSE_MEMO: ['', [Validators.required, Validators.maxLength(1000)]],  // 結案備註
     ALERT_DATE: [null, Validators.required] // 通知相關單位處理日期 (必填)
   });
+
+  exportLoading = false;
+
+  /** 呼叫後端 API 並觸發瀏覽器下載 */
+  private downloadBlob(blob: Blob, fileName: string): void {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  exportCustomPdf(): void {
+    if (!this.data.length) { this.messageService.warnBubble('無資料可匯出'); return; }
+    this.exportLoading = true;
+    const req = this.queryForm.getRawValue() as unknown as QueryCPM12050Request;
+    this.cpm12050Service.exportCPM12050Pdf(req)
+      .pipe(untilDestroyed(this), finalize(() => this.exportLoading = false))
+      .subscribe({
+        next: (blob) => {
+          const today = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '');
+          this.downloadBlob(blob, `顧客意見管理作業_${today}.pdf`);
+        },
+        error: () => this.messageService.errorBubble('PDF 匯出失敗')
+      });
+  }
+
+  exportCustomExcel(): void {
+    if (!this.data.length) { this.messageService.warnBubble('無資料可匯出'); return; }
+    this.exportLoading = true;
+    const req = this.queryForm.getRawValue() as unknown as QueryCPM12050Request;
+    this.cpm12050Service.exportCPM12050Excel(req)
+      .pipe(untilDestroyed(this), finalize(() => this.exportLoading = false))
+      .subscribe({
+        next: (blob) => {
+          const today = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '');
+          this.downloadBlob(blob, `顧客意見管理作業_${today}.xlsx`);
+        },
+        error: () => this.messageService.errorBubble('Excel 匯出失敗')
+      });
+  }
 
   constructor(
     private cpm12050Service: CPM12050Service,
@@ -219,9 +258,14 @@ export class CPM12050Component extends BasicQueryPageComponent<CPM12050Data> imp
   }
 
   onOrgQueryChange(orgId: string) {
-    // 不影響 ORG_ID 下拉選單：保持 ORG_ID 與 ORG_ID_QUERY 完全獨立
-    // 此處保留為空以供未來擴充（例如僅做查詢條件相關動作），但不會修改 orgIdOptions 或 ORG_ID 控件
-    return;
+    // 清除已選的責任單位
+    this.queryForm.patchValue({ CLASS_ID: null });
+    // 依組織過濾責任單位下拉選單
+    this.dropdownApiService.queryCss1005({ ORG_ID: orgId || '' })
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.orgIdOptions = res || [];
+      });
   }
 
   // 判斷是否禁用編輯按鈕: 只有結案（value '2'）為不可編輯

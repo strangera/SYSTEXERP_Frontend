@@ -20,7 +20,7 @@ export const POS2008M_COLUMNS: Column[] = [
   { field: 'VEN_No', header: '廠商編號', visible: true },
   { field: 'VEN_Name', header: '廠商名稱', visible: true },
   { field: 'MAM_Status', header: '單據狀態', visible: true, format: (value: string) => getSYS1000('MAM_Status', value) },
-  { field: 'MAM_Method', header: '促銷方式', visible: true, format: (value: string) => getSYS1000('MAM_Method', value) },
+  // { field: 'MAM_Method', header: '促銷方式', visible: true, format: (value: string) => getSYS1000('MAM_Method', value) },
   { field: 'MAM_TotAmt', header: '組合價格/滿額金額', visible: false, format: formatAmount },
   { field: 'MAM_MaxCondition', header: '限購組數', visible: false },
   { field: 'MAM_DiscType', header: '優惠方式', visible: false, format: (value: string) => getSYS1000('MAM_DiscType', value) },

@@ -1,28 +1,24 @@
-import { NgIf } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
-import {
-  FormGroup,
-  FormsModule,
-  ReactiveFormsModule,
-  Validators,
-} from '@angular/forms';
+import { AsyncPipe, DatePipe, NgIf } from '@angular/common';
+import { Component, inject, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS41010Service } from '@service/api/tls/tls41010.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { ValidationService } from '@shared/service/validation.service';
 import { PanelModule } from 'primeng/panel';
-import { TLS41020Service } from '../../../service/api/tls/tls41020.service';
-import { ECRNoService } from '../../../service/basic/queryPOS1002.service';
+import { finalize } from 'rxjs';
+import { TLS41020Data, TLS41020Service } from '../../../service/api/tls/tls41020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
-// 2.4.1.2 收銀機EDC資料維護 CRU
 @Component({
   selector: 'app-tls41020-cru',
   templateUrl: './tls41020-cru.component.html',
-  styleUrl: './tls41020-cru.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -35,162 +31,79 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
     NgIf,
     TranslateModule,
     CalendarRangeComponent,
+    AsyncPipe,
   ],
 })
-export class TLS41020CRUComponent
-  extends BasicCruPageComponent<any>
-  implements OnInit {
-  ECRNoOptions: any[] = [];
-  EDC_Status_Option = [
-    { value: 'A', label: '啟用' },
-    { value: 'C', label: '停用' },
-  ];
-
+export class TLS41020CRUComponent extends BasicCruPageComponent<TLS41020Data> implements OnInit {
+  private readonly tls41020Service = inject(TLS41020Service);
+  private readonly tls41010Service = inject(TLS41010Service);
+  private readonly dropDown = inject(DropdownApiService);
+  private readonly datePipe = inject(DatePipe);
+  private readonly validationService = inject(ValidationService);
+  ECRNoOptions = this.dropDown.queryPos1002();
+  EDC_Status_Option = getSYS1000Options('EDC_Status1');
   dataForm = this.formBuilder.nonNullable.group({
     id: [''],
-    SYS_StoreNo: [''],
-    ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
-
+    SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo || '10'],
+    ECR_No: [null, [Validators.required, Validators.maxLength(10)]],
     EDC_BegDate: ['', Validators.required],
     EDC_EndDate: ['', Validators.required],
-    EDC_Status1: ['', Validators.required],
-    EDC_Status2: [''],
-    EDC_Status3: [''],
-    EDC_IP1: [
-      '',
-      [
-        Validators.required,
-        Validators.maxLength(20),
-        Validators.pattern(
-          /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/,
-        ),
-      ],
-    ],
-    EDC_IP2: ['', [Validators.maxLength(20)]],
-    EDC_IP3: ['', [Validators.maxLength(20)]],
+    EDC_Status1: [null, Validators.required],
+    EDC_Status2: [null],
+    EDC_Status3: [null],
+    EDC_Status4: [null],
+    EDC_Status5: [null],
+    EDC_IP1: ['', [Validators.required, Validators.maxLength(20), this.validationService.ipValidator,],],
+    EDC_IP2: ['', [Validators.maxLength(20), this.validationService.ipValidator]], // 補上格式驗證
+    EDC_IP3: ['', [Validators.maxLength(20), this.validationService.ipValidator]], // 補上格式驗證
+    EDC_IP4: ['', [Validators.maxLength(20), this.validationService.ipValidator]],
+    EDC_IP5: ['', [Validators.maxLength(20), this.validationService.ipValidator]],
     EDC_TmID1: ['', [Validators.required, Validators.maxLength(8)]],
     EDC_TmID2: ['', [Validators.maxLength(8)]],
     EDC_TmID3: ['', [Validators.maxLength(8)]],
+    EDC_TmID4: ['', [Validators.maxLength(8)]],
+    EDC_TmID5: ['', [Validators.maxLength(8)]],
   });
 
-  constructor(
-    private tls41020Service: TLS41020Service,
-    private ECRNoService: ECRNoService,
-  ) {
-    super();
-  }
+  constructor() { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS41020', this.dataForm);
-    const id = this.dataForm.get('id')?.value;
-    if (id != null) {
-      this.dataForm.patchValue({ id: String(id) });
-    }
-
-    this.updateDisabledState();
-    this.ECRNoService.getECRNo().subscribe((res) => {
-      this.ECRNoOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
+    this.dataForm.get('ECR_No')?.valueChanges.subscribe(ecrNo => {
+      if (ecrNo) {
+        this.fetchECRData(ecrNo);
+      }
+    });
+    if (!this.isFormCreateable) this.dataForm.get('ECR_No')?.disable();
+  }
+  private fetchECRData(ecrNo: string): void {
+    // 使用 TLS41010Service 查詢單筆收銀機資料
+    // 假設 API 的參數名稱為 ECR_No，如果 API 是用 QueryTLS41010Request，請確保篩選條件正確
+    this.tls41010Service.queryTLS41010({ ECR_No: ecrNo }).subscribe(res => {
+      if (res?.Data && res.Data.length > 0) {
+        const ecrData = res.Data[0];
+        this.dataForm.patchValue({
+          EDC_BegDate: ecrData.ECR_ActiveDate || '',
+          EDC_EndDate: ecrData.ECR_ExpireDate || '',
+        });
+      }
     });
   }
-
-  private updateDisabledState(): void {
-    if (this.crudstatus === CRUDStatus.Edit) {
-      const editableFields = [
-        'EDC_BegDate',
-        'EDC_EndDate',
-        'EDC_Status',
-        'ECR_TLT_No',
-        'ECR_TLT_Name',
-        'EDC_Status1',
-        'EDC_Status2',
-        'EDC_Status3',
-        'EDC_IP1',
-        'EDC_IP2',
-        'EDC_IP3',
-        'EDC_TmID1',
-        'EDC_TmID2',
-        'EDC_TmID3',
-      ];
-      Object.keys(this.dataForm.controls).forEach((key) => {
-        const control = this.dataForm.get(key);
-        if (editableFields.includes(key)) {
-          control?.enable();
-        } else {
-          control?.disable();
-        }
-      });
-    } else if (this.crudstatus === CRUDStatus.Read) {
-      this.dataForm.disable();
-    } else {
-      this.dataForm.enable(); // 新增狀態全部開放
-    }
-  }
-
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-      let payload = form.getRawValue();
-
-      //  從 localStorage 取得門市代號
-      const userInfoStr = localStorage.getItem('UserInfo');
-      const storeNo = userInfoStr ? JSON.parse(userInfoStr)?.SYS_StoreNo : null;
-
-      if (this.crudstatus === CRUDStatus.Create && storeNo) {
-        payload.SYS_StoreNo = storeNo;
-      }
-
-      //  將日期轉為 ISO 字串（去除毫秒部分）
-     const toDateOnly = (value: any): string => {
-  if (!value) return '';
-  const d = value instanceof Date ? value : new Date(value);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-};
-
-      payload.EDC_BegDate = toDateOnly(payload.EDC_BegDate);
-      payload.EDC_EndDate = toDateOnly(payload.EDC_EndDate);
-
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (this.canAdd()) {
-            this.tls41020Service.insertTLS41020(payload).subscribe({
-              next: () => {
-                this.messageService.successBubble('新增成功');
-                this.dataForm.reset();
-              },
-              error: () => {
-                //  所有錯誤統一顯示成收銀機號重複
-                this.messageService.errorBubble('新增失敗：收銀機號重複');
-              },
-            });
-          }
-          break;
-
-        case CRUDStatus.Edit:
-          if (this.canEdit()) {
-            this.tls41020Service.updateTLS41020(payload).subscribe(() => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel();
-            });
-          }
-          break;
-      }
+      const payload = form.getRawValue();
+      payload.EDC_BegDate = this.datePipe.transform(payload.EDC_BegDate, 'yyyy-MM-dd') || '';
+      payload.EDC_EndDate = this.datePipe.transform(payload.EDC_EndDate, 'yyyy-MM-dd') || '';
+      const requestPayload$ = this.isFormCreateable ? this.tls41020Service.insertTLS41020(payload) : this.tls41020Service.updateTLS41020({ ...payload, id: this.rowdata?.id || 0 });
+      requestPayload$.pipe(finalize(() => this.loading = false)).subscribe(() => {
+        const successMessage = this.isFormCreateable ? '新增成功' : '更新成功';
+        this.messageService.successBubble(successMessage);
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+        } else {
+          this.onCancel();
+        }
+      })
     });
   }
-
-  onClearForm(): void {
-    this.dataForm.reset();
-    this.updateDisabledState();
-  }
-  override onCancel(): void {
-  sessionStorage.setItem('TLS41020_fromCru', '1'); // 保險：避免瀏覽器上一頁沒帶 state
-  this.router.navigate(['/account/tls', 'tls41020'], {
-    state: { fromCru: true },
-  });
-}
-
 }

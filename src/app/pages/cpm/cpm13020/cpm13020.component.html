@@ -51,6 +51,20 @@
             [submitted]="submitted"
           >
           </app-dropdown>
+
+          <!-- 收銀機號（機台彙總用） -->
+          <app-multi-select
+            *ngIf="reportMode === 'POS'"
+            class="col-12 md:col-6 lg:col-4"
+            label="收銀機號"
+            controlName="ECR_No"
+            [options]="ecrNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.ECR_No"
+            [submitted]="submitted"
+          >
+          </app-multi-select>
         </div>
 
         <div

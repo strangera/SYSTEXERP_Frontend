@@ -310,29 +310,35 @@ export class TLS2J030CRUComponent extends BasicCruPageComponent<TLS2J030Data> im
       return;
     }
 
+    // 2. 檢查是否已關帳
+    if (source.isClose === 'Y') {
+      this.messageService.warnBubble(`發票日期已關帳，不可登入發票`);
+      return;
+    }
+
+    // 3. 檢查是否已存在
     const formatted = this.formatTxnNoInSingleData(source);
 
-    // 2. 檢查是否已存在
     if (this.data.some(d => d.TXN_GUIBegNo === formatted.TXN_GUIBegNo && d.TXN_No === formatted.TXN_No)) {
       this.messageService.infoBubble('來源發票已存在，已略過');
       this.dataForm.get('TXN_GUIBegNo')?.setValue('');
       return;
     }
 
-    // 3. 加入來源發票
+    // 4. 加入來源發票
     this.data = [...this.data, formatted];
     this.sourceInvoiceData = formatted;
     this.messageService.successBubble('查詢並加入來源發票成功');
 
-    // 4. 初始化編輯資料 (如果尚未初始化)
+    // 5. 初始化編輯資料 (如果尚未初始化)
     if (!this.changeEditData || this.changeEditData.length === 0) {
       this.initializeEditData();
     }
 
-    // 5. 自動計算來源合計並同步到換開發票的 TXN_SaleAmt
+    // 6. 自動計算來源合計並同步到換開發票的 TXN_SaleAmt
     this.syncSourceSumToChangeInvoice();
 
-    // 6. 清空輸入欄位
+    // 7. 清空輸入欄位
     this.dataForm.get('TXN_GUIBegNo')?.setValue('');
     this.txnNotesChange(); // 同步更新換開發票的備註欄位
   }

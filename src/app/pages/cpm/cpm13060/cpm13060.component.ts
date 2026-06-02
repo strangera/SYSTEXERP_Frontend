@@ -4,10 +4,12 @@ import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angula
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { Cpm13060Service } from '@service/api/cpm/cpm13060.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { ReportColumn } from '@shared/componentkit/table-report/table-report.model';
 import { createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
@@ -29,6 +31,7 @@ import { finalize } from 'rxjs';
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
+    MultiSelectComponent,
   ],
   providers: [DatePipe]
 })
@@ -36,8 +39,11 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     TXN_BDATE: [new Date(), [Validators.required]],
     TXN_EDATE: [new Date(), [Validators.required]],
+    PKG_disc_rule_name: [[] as string[]],
     ...createPaginationConfig([{ field: 'building_desc', order: 1 }]),
   });
+
+  PKG_disc_rule_name_Options: { label: string; value: string }[] = [];
 
   totalRecords = 0;
   data: any[] = [];
@@ -61,6 +67,7 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     public readonly cpm13060Service: Cpm13060Service,
+    private readonly dropDownListService: DropDownListService,
     private datePipe: DatePipe,
   ) {
     super();
@@ -68,6 +75,20 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('CPM13060', '/CPM/CPM13060cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.loadDropdowns();
+  }
+
+  loadDropdowns(): void {
+    this.dropDownListService.queryCPM13050_RuleNameDropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res?.Status === '0000' && res.Data) {
+          this.PKG_disc_rule_name_Options = res.Data.map(item => ({
+            label: item.Name,
+            value: item.No
+          }));
+        }
+      });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -84,6 +105,7 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
         TXN_EDATE: formValue.TXN_EDATE
           ? this.datePipe.transform(formValue.TXN_EDATE, 'yyyy-MM-dd')!
           : undefined,
+        rule_nameList: formValue.PKG_disc_rule_name ?? [],
       };
 
       this.loading = true;
@@ -129,13 +151,13 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
             return;
           }
 
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = `APS停車抵扣報表_${new Date().toISOString().slice(0, 10)}.pdf`;
           document.body.appendChild(a);
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
           document.body.removeChild(a);
         },
       });
@@ -160,13 +182,13 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
             return;
           }
 
-          const url = window.URL.createObjectURL(blob);
+          const url = globalThis.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
           a.download = `APS停車抵扣報表_${new Date().toISOString().slice(0, 10)}.xlsx`;
           document.body.appendChild(a);
           a.click();
-          window.URL.revokeObjectURL(url);
+          globalThis.URL.revokeObjectURL(url);
           document.body.removeChild(a);
         },
       });
@@ -180,13 +202,13 @@ export class CPM13060Component extends BasicQueryPageComponent<any> implements O
       this.messageService.warnBubble('無可匯出的資料。');
       return;
     }
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
     document.body.removeChild(a);
   }
 }

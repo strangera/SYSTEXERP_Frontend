@@ -52,7 +52,7 @@
       [queryFunction]="ass21050Service.queryASS21050.bind(ass21050Service)" [lastQueryBody]="lastQueryBody"
       [loading]="loading" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
       (delete)="onDelete($event)" [showDetail]="false" (edit)="onEdit($event)" [showCheckBox]="true" [showDelete]="true"
-      [showReportMode]="false" [showExcel]="false">
+      [showReportMode]="false" [showExcel]="false" [isRowSelectable]="isRowSelectable">
     </app-table-report>
 
   </div>

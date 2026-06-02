@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef } from '@angular/core';
 import { HttpResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import {
   FormGroup,
   FormsModule,
@@ -12,7 +11,6 @@ import {
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { getSYS1000Options } from '@service/system/sys1000.service';
-import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
@@ -72,8 +70,7 @@ import { InputTextRange2Component } from './input-text-range2/input-text-range2.
   ],
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> implements OnInit {
-  private _syncingSortMeta = false;
-  private _obsCache = new Map<string, any>();
+  private readonly _obsCache = new Map<string, any>();
   private once<T>(key: string, factory: () => import('rxjs').Observable<T>) {
     if (!this._obsCache.has(key)) {
       const obs$ = factory().pipe(shareReplay({ bufferSize: 1, refCount: false }));
@@ -117,8 +114,8 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     TXN_No_Start: [null],
     TXN_No_End: [null],
     TLT_No: [[]],
-    TXN_GUIBegNo: [, [Validators.maxLength(8), Validators.minLength(8)]],
-    TXN_GUIEndNo: [, [Validators.maxLength(8), Validators.minLength(8)]],
+    TXN_GUIBegNo: [null, [Validators.maxLength(8), Validators.minLength(8)]],
+    TXN_GUIEndNo: [null, [Validators.maxLength(8), Validators.minLength(8)]],
     TXN_Status: [[]],
     TXN_FlagStatus: [[]],
     USR_No: [''],
@@ -174,29 +171,29 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
   CounterOptions: any[] = [];
 
   constructor(
-    private tls23010Service: TLS23010Service,
-    private cdr: ChangeDetectorRef,
-    private tls11010Service: Tls11010Service,
-    private floorService: FloorService,
-    private counterNameService: CounterNameService,
-    private ECRNoService: ECRNoService,
-    private cashierService: CashierService,
+    private readonly tls23010Service: TLS23010Service,
+    private readonly cdr: ChangeDetectorRef,
+    private readonly tls11010Service: Tls11010Service,
+    private readonly floorService: FloorService,
+    private readonly counterNameService: CounterNameService,
+    private readonly ECRNoService: ECRNoService,
+    private readonly cashierService: CashierService,
   ) {
     super();
   }
   private normalizeTxnNo(v: any, maxLen = 6): string {
-  // 1) 轉字串 + trim
-  const s = String(v ?? '').trim();
-  if (!s) return '';
+    // 1) 轉字串 + trim
+    const s = String(v ?? '').trim();
+    if (!s) return '';
 
-  // 2) 只保留數字（把空白、-、字母等全去掉）
-  const digits = s.replace(/\D+/g, '');
-  if (!digits) return '';
+    // 2) 只保留數字（把空白、-、字母等全去掉）
+    const digits = s.replace(/\D+/g, '');
+    if (!digits) return '';
 
-  // 3) 規格：你原本顯示用 6 碼（不足補 0）
-  //    若你想保留原長度就把 padStart 拿掉
-  return digits.padStart(maxLen, '0');
-}
+    // 3) 規格：你原本顯示用 6 碼（不足補 0）
+    //    若你想保留原長度就把 padStart 拿掉
+    return digits.padStart(maxLen, '0');
+  }
 
 
   ngOnInit(): void {
@@ -205,16 +202,14 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
     this.sortMeta = this.defaultSort.map(x => ({ ...x }));
     this.queryForm.patchValue({ SortBy: this.sortMeta, pageSize: 30 }, { emitEvent: false });
 
-    if (!this.dropdownInit$) {
-      this.dropdownInit$ = forkJoin({
-        floors: this.floorService.getFloors(),
-        buildings: this.tls11010Service.getBuildingOptions(),
-        orgs: this.tls11010Service.getOrgOptions(),
-        counters: this.counterNameService.getCounters(),
-        ecrs: this.ECRNoService.getECRNo(),
-        cashiers: this.cashierService.getCashierOptions(),
-      }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
-    }
+    this.dropdownInit$ ??= forkJoin({
+      floors: this.floorService.getFloors(),
+      buildings: this.tls11010Service.getBuildingOptions(),
+      orgs: this.tls11010Service.getOrgOptions(),
+      counters: this.counterNameService.getCounters(),
+      ecrs: this.ECRNoService.getECRNo(),
+      cashiers: this.cashierService.getCashierOptions(),
+    }).pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
     this.dropdownInit$.pipe(untilDestroyed(this))
       .subscribe((res) => {
@@ -243,96 +238,154 @@ export class TLS23010Component extends BasicQueryPageComponent<any> implements O
 
 
   // ========= 查詢（明細 / 彙總） =========
-onSubmit(frm: FormGroup) {
-  this.handleSubmit(frm, () => {
-    const val = this.queryForm.getRawValue() as any;
-    const isSummary = !!this.queryForm.get('showSummary')?.value;
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const val = this.queryForm.getRawValue() as any;
+      const isSummary = !!this.queryForm.get('showSummary')?.value;
 
-    const pageSize = 30;
-    const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
+      const pageSize = 30;
+      const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
 
-    const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
-      ? val.SortBy
-      : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
-    ).map((s: any) => ({ ...s }));
+      const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
+        ? val.SortBy
+        : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
+      ).map((s: any) => ({ ...s }));
 
-    /** 🔥🔥🔥 關鍵：先收合所有展開列 */
-    this.showTable = false;
+      /** 🔥🔥🔥 關鍵：先收合所有展開列 */
+      this.showTable = false;
 
-    /** 清空資料 */
-    this.data = [];
-    this.summaryData = [];
-    this.totalRecords = 0;
-    this.detailTotals = {};
-    this.summaryTotals = {};
-    this.historyRequestBody = null;
+      /** 清空資料 */
+      this.data = [];
+      this.summaryData = [];
+      this.totalRecords = 0;
+      this.detailTotals = {};
+      this.summaryTotals = {};
+      this.historyRequestBody = null;
 
-    this.cdr.detectChanges();
-
-    setTimeout(() => {
-      /** 🔥 重建 table */
-      this.showTable = true;
       this.cdr.detectChanges();
 
-      // ===== 原本你的 payload =====
-      const payload: any = {
-        ...val,
-        TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
-        TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
-      };
+      setTimeout(() => {
+        /** 🔥 重建 table */
+        this.showTable = true;
+        this.cdr.detectChanges();
 
-      payload.TXN_No_Start = this.normalizeTxnNo(payload.TXN_No_Start, 6) || undefined;
-      payload.TXN_No_End = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined;
+        // ===== 原本你的 payload =====
+        const payload: any = {
+          ...val,
+          TXN_DateStart: this.toDateOnly(val?.TXN_DateStart),
+          TXN_DateEnd: this.toDateOnly(val?.TXN_DateEnd),
+        };
 
-      delete payload.showSummary;
+        payload.TXN_No_Start = this.normalizeTxnNo(payload.TXN_No_Start, 6) || undefined;
+        payload.TXN_No_End = this.normalizeTxnNo(payload.TXN_No_End, 6) || undefined;
 
-      Object.keys(payload).forEach((k) => {
-        const v = payload[k];
-        if (v === null || v === undefined) delete payload[k];
-        if (Array.isArray(v) && v.length === 0) delete payload[k];
-        if (typeof v === 'string' && v.trim() === '') delete payload[k];
-      });
+        delete payload.showSummary;
 
-      this.loading = true;
+        for (const k of Object.keys(payload)) {
+          const v = payload[k];
+          if (v === null || v === undefined) delete payload[k];
+          if (Array.isArray(v) && v.length === 0) delete payload[k];
+          if (typeof v === 'string' && v.trim() === '') delete payload[k];
+        }
 
-      // =========================
-      // 明細
-      // =========================
-      if (!isSummary) {
-        const detailBody = {
+        this.loading = true;
+
+        // =========================
+        // 明細
+        // =========================
+        if (!isSummary) {
+          const detailBody = {
+            ...payload,
+            pageSize,
+            pageIndex,
+            SortBy: sortByArr,
+          };
+
+          this.historyRequestBody = { ...detailBody };
+
+          this.tls23010Service
+            .queryTLS23010(detailBody)
+            .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+            .subscribe({
+              next: (resp: any) => {
+                const queryData = Array.isArray(resp?.Data?.QueryData)
+                  ? resp.Data.QueryData
+                  : Array.isArray(resp?.Data)
+                    ? resp.Data
+                    : [];
+
+                this.data = queryData as TLS23010Data[];
+                this.summaryData = [];
+
+                this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
+                this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
+
+                this.summaryTotals = {};
+
+                this.updatePdfSummary?.();
+                this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
+              },
+              error: () => {
+                this.data = [];
+                this.summaryData = [];
+                this.totalRecords = 0;
+                this.detailTotals = {};
+                this.summaryTotals = {};
+                this.pdfSummary = [];
+              },
+            });
+
+          return;
+        }
+
+        // =========================
+        // 彙總
+        // =========================
+        const summaryBody: any = {
           ...payload,
-          pageSize,
-          pageIndex,
           SortBy: sortByArr,
         };
 
-        this.historyRequestBody = { ...detailBody };
+        delete summaryBody.pageIndex;
+        delete summaryBody.pageSize;
 
         this.tls23010Service
-          .queryTLS23010(detailBody)
+          .queryTLS23010Summary(summaryBody)
           .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
           .subscribe({
             next: (resp: any) => {
-              const queryData = Array.isArray(resp?.Data?.QueryData)
-                ? resp.Data.QueryData
-                : Array.isArray(resp?.Data)
-                  ? resp.Data
-                  : [];
+              const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
+              const head = dataArr[0] ?? {};
 
-              this.data = queryData as TLS23010Data[];
-              this.summaryData = [];
+              const details =
+                Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
+                  Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+                    [];
 
-              this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
-              this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
+              this.summaryData = details.map((row: any) => ({ ...row }));
+              this.data = [];
+              this.totalRecords = this.summaryData.length;
 
-              this.summaryTotals = {};
+              this.summaryTotals = this.coerceNumberMap({
+                Total_TXN_TotGUI: head?.Total_TXN_TotGUI,
+                Total_TXN_TotGUI_Inv: head?.Total_TXN_TotGUI_Inv,
+              });
+
+              this.detailTotals = {};
+
+              const summaryPageSize = this.summaryData.length || 30;
+              this.historyRequestBody = {
+                ...summaryBody,
+                pageIndex: 1,
+                pageSize: summaryPageSize,
+              };
 
               this.updatePdfSummary?.();
               this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
             },
             error: () => {
-              this.data = [];
               this.summaryData = [];
+              this.data = [];
               this.totalRecords = 0;
               this.detailTotals = {};
               this.summaryTotals = {};
@@ -340,67 +393,9 @@ onSubmit(frm: FormGroup) {
             },
           });
 
-        return;
-      }
-
-      // =========================
-      // 彙總
-      // =========================
-      const summaryBody: any = {
-        ...payload,
-        SortBy: sortByArr,
-      };
-
-      delete summaryBody.pageIndex;
-      delete summaryBody.pageSize;
-
-      this.tls23010Service
-        .queryTLS23010Summary(summaryBody)
-        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
-        .subscribe({
-          next: (resp: any) => {
-            const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
-            const head = dataArr[0] ?? {};
-
-            const details =
-              Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
-              Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
-              [];
-
-            this.summaryData = details.map((row: any) => ({ ...row }));
-            this.data = [];
-            this.totalRecords = this.summaryData.length;
-
-            this.summaryTotals = this.coerceNumberMap({
-              Total_TXN_TotGUI: head?.Total_TXN_TotGUI,
-              Total_TXN_TotGUI_Inv: head?.Total_TXN_TotGUI_Inv,
-            });
-
-            this.detailTotals = {};
-
-            const summaryPageSize = this.summaryData.length || 30;
-            this.historyRequestBody = {
-              ...summaryBody,
-              pageIndex: 1,
-              pageSize: summaryPageSize,
-            };
-
-            this.updatePdfSummary?.();
-            this.queryStateService?.setQueryState?.(this.ProgNo, this.queryForm.value);
-          },
-          error: () => {
-            this.summaryData = [];
-            this.data = [];
-            this.totalRecords = 0;
-            this.detailTotals = {};
-            this.summaryTotals = {};
-            this.pdfSummary = [];
-          },
-        });
-
-    }); // end setTimeout
-  });
-}
+      }); // end setTimeout
+    });
+  }
 
 
 
@@ -529,14 +524,14 @@ onSubmit(frm: FormGroup) {
     const blob = response.body;
 
     if (blob && blob.size > 0) {
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      globalThis.URL.revokeObjectURL(url);
+      a.remove();
     } else {
       this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
     }
@@ -559,7 +554,7 @@ onSubmit(frm: FormGroup) {
     const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
     if (filenameMatch && filenameMatch.length > 1) {
       try {
-        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+        return decodeURIComponent(filenameMatch[1].replaceAll('+', ' '));
       } catch {
         return filenameMatch[1];
       }
@@ -573,7 +568,7 @@ onSubmit(frm: FormGroup) {
     const out: Record<string, number> = {};
     if (!src) return out;
     for (const k of Object.keys(src)) {
-      const v = (src as any)[k];
+      const v = (src)[k];
       out[k] = typeof v === 'number' ? v : Number(v) || 0;
     }
     return out;
@@ -582,7 +577,7 @@ onSubmit(frm: FormGroup) {
   formatISOToHHMMSS = (val: string): string => {
     if (!val) return '';
     const d = new Date(val);
-    if (isNaN(d.getTime())) return '';
+    if (Number.isNaN(d.getTime())) return '';
     const hh = String(d.getHours()).padStart(2, '0');
     const mm = String(d.getMinutes()).padStart(2, '0');
     const ss = String(d.getSeconds()).padStart(2, '0');
@@ -599,13 +594,13 @@ onSubmit(frm: FormGroup) {
   }
 
   moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
+    return value == null ? '0' : value.toLocaleString('en-US');
   }
 
   formatDateTimeYMDHM(val: string | Date): string {
     if (!val) return '';
     const d = typeof val === 'string' ? new Date(val) : val;
-    if (isNaN(d.getTime())) return String(val ?? '');
+    if (Number.isNaN(d.getTime())) return String(val ?? '');
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -614,17 +609,17 @@ onSubmit(frm: FormGroup) {
 
   formatYMD = (val: unknown): string => {
     if (val == null) return '';
-    if (val instanceof Date && !isNaN(val.getTime())) {
+    if (val instanceof Date && !Number.isNaN(val.getTime())) {
       const y = val.getFullYear();
       const m = String(val.getMonth() + 1).padStart(2, '0');
       const d = String(val.getDate()).padStart(2, '0');
       return `${y}/${m}/${d}`;
     }
     const s = String(val);
-    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    const m = RegExp(/^(\d{4})-(\d{2})-(\d{2})/).exec(s);
     if (m) return `${m[1]}/${m[2]}/${m[3]}`;
     const dt = new Date(s);
-    if (!isNaN(dt.getTime())) {
+    if (!Number.isNaN(dt.getTime())) {
       const y = dt.getFullYear();
       const mm = String(dt.getMonth() + 1).padStart(2, '0');
       const dd = String(dt.getDate()).padStart(2, '0');
@@ -634,7 +629,12 @@ onSubmit(frm: FormGroup) {
   };
 
   nyToYesNo = (val: unknown): string => {
-    const v = String(val ?? '').replace(/^[\s\u00A0\u3000]+|[\s\u00A0\u3000]+$/g, '').toUpperCase();
+    // 將所有「會引起問題的空白字元」統一替換成普通空格，再執行 trim()
+    const v = String(val ?? '')
+      .replace(/[\s\u00A0\u3000]+/g, ' ') // 先統一取代
+      .trim()                            // 再用原生的 trim 清理
+      .toUpperCase();
+
     if (v === 'Y' || v === 'TRUE' || v === '1') return '是';
     if (v === 'N' || v === 'FALSE' || v === '0') return '否';
     return '';
@@ -698,8 +698,6 @@ onSubmit(frm: FormGroup) {
     const isSummary = !!this.queryForm.get('showSummary')?.value;
 
     if (isSummary) {
-      const totalAmt = this.getSum('TXN_TotSaleAmt');
-      const totalTxn = this.getSum('TotalTxn');
       this.pdfSummary = [
         // `總金額合計 = ${Number(totalAmt || 0).toLocaleString()}`,
         // `總交易筆數合計 = ${Number(totalTxn || 0).toLocaleString()}`,
@@ -771,9 +769,9 @@ onSubmit(frm: FormGroup) {
     };
   }
 
-private padTxnNo(v: any): string {
-  return this.normalizeTxnNo(v, 6);
-}
+  private padTxnNo(v: any): string {
+    return this.normalizeTxnNo(v, 6);
+  }
 
 
   // ========= 欄位 =========
@@ -866,7 +864,7 @@ private padTxnNo(v: any): string {
   private toDateOnly(x: any): string | undefined {
     if (!x) return undefined;
     const d = typeof x === 'string' ? new Date(x) : (x as Date);
-    if (isNaN(d.getTime())) return undefined;
+    if (Number.isNaN(d.getTime())) return undefined;
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
@@ -893,13 +891,13 @@ private padTxnNo(v: any): string {
   private coerceNumberMap(src: any): Record<string, number> {
     const out: Record<string, number> = {};
     if (!src) return out;
-    Object.keys(src).forEach((k) => {
+    for (const k of Object.keys(src)) {
       const v = src[k];
       out[k] = typeof v === 'number' ? v : Number(v) || 0;
-    });
+    }
     return out;
   }
   get isSummaryMode(): boolean {
-  return !!this.queryForm.get('showSummary')?.value;
-}
+    return !!this.queryForm.get('showSummary')?.value;
+  }
 }

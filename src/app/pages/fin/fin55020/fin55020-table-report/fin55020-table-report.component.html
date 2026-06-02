@@ -1,10 +1,9 @@
 <p-table #dt [columns]="selectedColumns" [value]="totalRecords < 30 ? data : virtualData" [scrollable]="true"
   scrollHeight="700px" [rows]="30" sortMode="multiple" (onSort)="onSort($event)" [resizableColumns]="true"
   [reorderableColumns]="true" [loading]="isLoading" (onColReorder)="onColReorder($event)" [totalRecords]="totalRecords"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
-  [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading" [lazy]="totalRecords < 30 ? false : true"
-  [virtualScrollItemSize]="24" [virtualScrollOptions]="{  delay: 50,  inline: true, onScroll: onScroll}"
-  rowGroupMode="rowspan" groupRowsBy="VouNo">
+  styleClass="p-datatable-sm p-datatable-gridlines " [virtualScroll]="totalRecords < 30 ? false : true"
+  [loading]="loading" [lazy]="totalRecords < 30 ? false : true" [virtualScrollItemSize]="24"
+  [virtualScrollOptions]="{  delay: 50,  inline: true, onScroll: onScroll}" rowGroupMode="rowspan" groupRowsBy="VouNo">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" [showDelete]="false" (columnsEvent)="columns = $event"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event" [tableKey]="tableKey"

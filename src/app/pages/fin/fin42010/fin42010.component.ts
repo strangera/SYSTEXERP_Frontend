@@ -117,12 +117,22 @@ export class FIN42010Component extends BasicQueryPageComponent<fin42010DetailDat
     });
   }
 
-  //列印(功能串接中)
+  //列印
   btnPDFLoading = false;
   btnExcelLoading = false;
   printPDF(isPDF: boolean) {
-    console.log('列印PDF', isPDF);
-    this.messageService.successBubble('功能串接中')
+    if (!this.lastQueryBody) return;
+    if (isPDF) {
+      this.btnPDFLoading = true;
+      this.fin42010Service.exportPDFFIN42010(this.lastQueryBody)
+        .pipe(finalize(() => this.btnPDFLoading = false))
+        .subscribe(blob => this.downloadFile(blob, 'application/pdf', '預算損益表.pdf'));
+    } else {
+      this.btnExcelLoading = true;
+      this.fin42010Service.exportExcelFIN42010(this.lastQueryBody)
+        .pipe(finalize(() => this.btnExcelLoading = false))
+        .subscribe(blob => this.downloadFile(blob, 'application/vnd.ms-excel', '預算損益表.xlsx'));
+    }
   }
 
   //讀取下拉  
@@ -135,5 +145,16 @@ export class FIN42010Component extends BasicQueryPageComponent<fin42010DetailDat
       }));
       // console.log('res', res.Data);
     });
+  }
+
+  // 下載pdf/excel
+  private downloadFile(blob: Blob, type: string, fileName: string) {
+    const newBlob = new Blob([blob], { type });
+    const url = URL.createObjectURL(newBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 }

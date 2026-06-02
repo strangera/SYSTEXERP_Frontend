@@ -329,7 +329,7 @@ export class FIN15090Component
                   ? printURL
                   : environment.BaseUrl + printURL;
 
-                window.open(url, '_blank');
+                globalThis.open(url, '_blank');
               }
             }
 

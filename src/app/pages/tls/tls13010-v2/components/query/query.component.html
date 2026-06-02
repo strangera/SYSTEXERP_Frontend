@@ -488,6 +488,82 @@
   </form>
 </div>
 
+<!-- 提前撤櫃 Dialog -->
+<p-dialog
+  header="提前撤櫃"
+  [(visible)]="earlyTerminationDialogVisible"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [closable]="true"
+  [focusOnShow]="false"
+>
+  @if (earlyTerminationRow) {
+    <div class="grid p-fluid">
+      <div class="col-6">
+        <label class="font-semibold text-sm text-color-secondary">招募編號</label>
+        <div class="mt-1">{{ earlyTerminationRow.apply_no }}</div>
+      </div>
+      <div class="col-6">
+        <label class="font-semibold text-sm text-color-secondary">版本編號</label>
+        <div class="mt-1">{{ earlyTerminationRow.contract_subno }}</div>
+      </div>
+      <div class="col-6">
+        <label class="font-semibold text-sm text-color-secondary">專櫃編號</label>
+        <div class="mt-1">{{ earlyTerminationRow.tlt_no }}</div>
+      </div>
+      <div class="col-6">
+        <label class="font-semibold text-sm text-color-secondary">櫃位名稱</label>
+        <div class="mt-1">{{ earlyTerminationRow.tlt_name }}</div>
+      </div>
+      <div class="col-12">
+        <label class="font-semibold text-sm text-color-secondary">廠商名稱</label>
+        <div class="mt-1">{{ earlyTerminationRow.VEN_Name }}</div>
+      </div>
+      <div class="col-6">
+        <label class="font-semibold text-sm text-color-secondary">營運起始日</label>
+        <div class="mt-1">{{ earlyTerminationRow.tlt_contract_bdate | date:'yyyy/MM/dd' }}</div>
+      </div>
+      <div class="col-6">
+        <label class="font-semibold text-sm text-color-secondary">營運截止日</label>
+        <div class="mt-1">{{ earlyTerminationRow.tlt_contract_edate | date:'yyyy/MM/dd' }}</div>
+      </div>
+      <div class="col-6">
+        <label class="font-semibold text-sm text-color-secondary">契約起始日</label>
+        <div class="mt-1">{{ earlyTerminationRow.tlt_bdate | date:'yyyy/MM/dd' }}</div>
+      </div>
+      <div class="col-6">
+        <label class="font-semibold text-sm text-color-secondary">契約截止日</label>
+        <div class="mt-1">{{ earlyTerminationRow.tlt_edate | date:'yyyy/MM/dd' }}</div>
+      </div>
+      <div class="col-12 mt-2">
+        <app-calendar
+          label="提前撤櫃日期"
+          calendarType="dateOne"
+          [control]="earlyTerminationDateControl"
+          [submitted]="true"
+          [minDate]="earlyTerminationMinDate"
+          [maxDate]="earlyTerminationMaxDate"
+        ></app-calendar>
+        <small class="text-color-secondary">必須大於今日且小於契約截止日</small>
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        label="取消"
+        severity="secondary"
+        (click)="earlyTerminationDialogVisible = false"
+      />
+      <p-button
+        label="確定"
+        icon="pi pi-check"
+        (click)="confirmEarlyTermination()"
+      />
+    </div>
+  </ng-template>
+</p-dialog>
+
 <!-- 資料表格 -->
 <div class="card">
   <div class="col-12">

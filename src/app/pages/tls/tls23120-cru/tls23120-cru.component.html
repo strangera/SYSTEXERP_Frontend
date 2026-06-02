@@ -8,27 +8,14 @@
   <div class="flex flex-wrap items-center justify-start gap-1 mb-3 toolbar">
     <button pButton type="button" label="專櫃日對帳單.PDF" icon="pi pi-file-pdf" class="p-button-sm p-button-danger"
       (click)="exportPDF()"></button>
-
-    <!-- <button
-      pButton
-      type="button"
-      label="匯出 Excel"
-      icon="pi pi-file-excel"
-      class="p-button-sm p-button-success"
-      (click)="exportExcel()"
-    ></button> -->
-
-    <button pButton type="button" icon="pi pi-arrow-left" label="回上頁" class="p-button-sm p-button-secondary"
-      (click)="goBack()"></button>
+    <app-button btnType="back" (click)="onCancel()" label="回上頁"></app-button>
   </div>
 
   <!-- 內容：TLT_NO 群組，群組內按 TLT_ID 多表 -->
   <div id="print-section" class="grouped-view">
     <ng-container *ngFor="let group of tltGroups; let gi = index">
-
       <!-- 群組內的每一張子表 -->
       <ng-container *ngFor="let sub of group.subTables; let si = index">
-
         <!-- si===0：完整抬頭 -->
         <div class="grid p-fluid mb-2" *ngIf="si === 0; else onlyTltIdBanner">
           <!-- 公司與標題：各佔一列置中 -->
@@ -36,41 +23,50 @@
             南紡流通事業股份有限公司
           </div>
           <div class="col-12 text-center text-xl font-bold">
-            專櫃日對帳單{{group.header.day_lock === 'Y' ? '（已確帳）' : '（未確帳）'}}
+            專櫃日對帳單{{
+            group.header.day_lock === "Y" ? "（已確帳）" : "（未確帳）"
+            }}
           </div>
 
           <!-- 三列資訊區：寬度與表格同寬，左右對齊表格左右，中間對齊整頁中央 -->
           <div class="col-12">
             <!-- 第一列：左 大分類 / 中 銷售日期 / 右 製表日期 -->
-            <div class="mb-1"
-              style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; width: 100%;">
-              <div style="text-align: left;">
+            <div class="mb-1" style="
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                align-items: center;
+                width: 100%;
+              ">
+              <div style="text-align: left">
                 <ng-container *ngIf="showBusType; else noBusType">
-                  大分類：{{ group.header.busType }} / {{ group.header.busTypeName }}
+                  大分類：{{ group.header.busType }} /
+                  {{ group.header.busTypeName }}
                 </ng-container>
                 <ng-template #noBusType>&nbsp;</ng-template>
               </div>
 
-              <div style="text-align: center;">
-                銷售日期：{{ group.header.txnDate | date: 'yyyy/MM/dd' }}
+              <div style="text-align: center">
+                銷售日期：{{ group.header.txnDate | date: "yyyy/MM/dd" }}
               </div>
 
-              <div style="text-align: right;">
-                製表日期：{{ printedAt }}
-              </div>
+              <div style="text-align: right">製表日期：{{ printedAt }}</div>
             </div>
 
             <!-- 第二列：左 專櫃 / 中 樓層＋抽成類別 / 右 交易總件數 / 退貨件數 -->
-            <div class="mb-1"
-              style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; width: 100%;">
+            <div class="mb-1" style="
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                align-items: center;
+                width: 100%;
+              ">
               <!-- 左：專櫃 -->
-              <div style="text-align: left;">
+              <div style="text-align: left">
                 專櫃：{{ group.header.tltNo }} / {{ group.header.tltName }}
               </div>
 
               <!-- 中：樓層＋抽成類別（置中） -->
-              <div style="text-align: center;">
-                樓層：{{ group.header.floor || '－' }}
+              <div style="text-align: center">
+                樓層：{{ group.header.floor || "－" }}
                 <span class="commission-line ml-2">
                   <span class="commission-label">抽成類別：</span>
                   <span class="commission-value">{{ sub.tltId }}</span>
@@ -78,34 +74,35 @@
               </div>
 
               <!-- 右：交易總件數／退貨件數 -->
-              <div style="text-align: right;">
+              <div style="text-align: right">
                 交易總件數：{{
-                (sub?.rows?.[0]?.total_count || 0) | number: '1.0-0'
+                sub?.rows?.[0]?.total_count || 0 | number: "1.0-0"
                 }}
-                /
-                退貨件數：{{
-                (sub?.rows?.[0]?.return_qty || 0) | number: '1.0-0'
+                / 退貨件數：{{
+                sub?.rows?.[0]?.return_qty || 0 | number: "1.0-0"
                 }}
               </div>
             </div>
 
             <!-- 第三列：左 區域 / 中 空白 / 右 退貨金額 -->
-            <div class="mb-1"
-              style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; width: 100%;">
+            <div class="mb-1" style="
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                align-items: center;
+                width: 100%;
+              ">
               <!-- 左：區域 -->
-              <div style="text-align: left;">
-                區域：{{ group.header.area || '－' }}
+              <div style="text-align: left">
+                區域：{{ group.header.area || "－" }}
               </div>
 
               <!-- 中：空白，保持版面置中 -->
-              <div style="text-align: center;">
-                &nbsp;
-              </div>
+              <div style="text-align: center">&nbsp;</div>
 
               <!-- 右：退貨金額 -->
-              <div style="text-align: right;">
+              <div style="text-align: right">
                 退貨金額：{{
-                (sub?.rows?.[0]?.return_amt || 0) | number: '1.0-0'
+                sub?.rows?.[0]?.return_amt || 0 | number: "1.0-0"
                 }}
               </div>
             </div>
@@ -114,12 +111,16 @@
 
         <!-- si>0：只顯示置中的抽成類別橫幅（與上面三欄寬度對齊，略偏右） -->
         <ng-template #onlyTltIdBanner>
-          <div class="mb-2"
-            style="display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: center; width: 100%;">
+          <div class="mb-2" style="
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              align-items: center;
+              width: 100%;
+            ">
             <div></div>
 
             <!-- 在這裡加一點 margin-left，數值可自行微調 -->
-            <div style="text-align: center; margin-left: 60px;">
+            <div style="text-align: center; margin-left: 60px">
               <span class="commission-line inline-block">
                 <span class="commission-label">抽成類別：</span>
                 <span class="commission-value">{{ sub.tltId }}</span>
@@ -132,8 +133,7 @@
 
         <!-- 該子表的表格 -->
         <p-table [value]="sub.rows" [columns]="selectedColumns" [paginator]="false" scrollable="true"
-          [style]="{ width: '100%' }"
-          [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines th-center'">
+          [style]="{ width: '100%' }" [styleClass]="'p-datatable-sm  p-datatable-gridlines th-center'">
           <!-- 表頭 -->
           <ng-template pTemplate="header">
             <tr>
@@ -169,7 +169,7 @@
                   <ng-container *ngSwitchCase="'__index'">小計</ng-container>
                   <ng-container *ngSwitchDefault>
                     <ng-container *ngIf="subtotalFields.includes(col.field)">
-                      {{ (sub.subtotal[col.field] || 0) | number:'1.0-0' }}
+                      {{ sub.subtotal[col.field] || 0 | number: "1.0-0" }}
                     </ng-container>
                   </ng-container>
                 </ng-container>
@@ -183,7 +183,7 @@
                   <ng-container *ngSwitchCase="'__index'">總計</ng-container>
                   <ng-container *ngSwitchDefault>
                     <ng-container *ngIf="subtotalFields.includes(col.field)">
-                      {{ (group.grandAll[col.field] || 0) | number:'1.0-0' }}
+                      {{ group.grandAll[col.field] || 0 | number: "1.0-0" }}
                     </ng-container>
                   </ng-container>
                 </ng-container>

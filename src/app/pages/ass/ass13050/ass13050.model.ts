@@ -14,8 +14,8 @@ export interface QueryASS13050Request extends BaseQueryRequest {
   NEW_USE_ORG_ID?: string | null;
   /** 新使用人 */
   NEW_USE_EMP_ID?: string | null;
-  /** 進貨類型（多選） */
-  PURCHASE_TYPE?: string[] | null;
+  /** 進貨類型 */
+  DEPRE_YN?: string | null;
   /** 大分類編號 */
   B_CLASS_ID?: string | null;
   /** 中分類編號 */
@@ -25,7 +25,7 @@ export interface QueryASS13050Request extends BaseQueryRequest {
   /** 財產編號 */
   ASSET_ID?: string | null;
   /** 標題（1: 交接, 2: 移轉） */
-  TITLE?: number | null;
+  GOODS_NAME?: number | null;
   /** 保管單位 */
   HOLD_ORG_ID?: string | null;
   /** 保管人 */

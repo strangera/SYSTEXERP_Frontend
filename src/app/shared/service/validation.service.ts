@@ -1,12 +1,9 @@
 import { Injectable } from '@angular/core';
 import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { formatDate } from '@shared/componentkit/table/table.model';
-// taiwan-id-validator
-// https://github.com/enylin/taiwan-id-validator
 @Injectable({
   providedIn: 'root',
 })
-//
 export class ValidationService {
   getValidatorErrorMessage(validatorName: string, validatorValue?: any) {
     const config: any = {
@@ -16,7 +13,7 @@ export class ValidationService {
       email: '「電子郵件」格式錯誤，請重新輸入。',
       invalidCreditCard: 'Is invalid credit card number',
       invalidEmailAddress: '「電子郵件」格式錯誤，請重新輸入。',
-      invalidPassword: `密碼無效。密碼長度至少為 6 個字元，且必須包含一個數字。`,
+      invalidPassword: `輸入無效。長度至少為 6 個字元，且必須包含一個數字。`,
       minlength: `最短長度為 ${validatorValue.requiredLength}`,
       maxlength: `最長長度為 ${validatorValue.requiredLength}`,
       exactLength: `長度只能為 ${validatorValue.requiredLength}`,
@@ -29,8 +26,8 @@ export class ValidationService {
       invalidElectronicnum: '請補上錯誤訊息',
       invalidDateRange: '日期起不可大於日期迄',
       invalidNumberRange: '起始數字不可大於結束數字',
-      passwordsMismatch: '兩次輸入的密碼不一致，請重新輸入。',
-      invalidPasswordStrength: '密碼強度不足，至少包含一個英文小寫字母與一個數字。',
+      passwordsMismatch: '兩次輸入不一致，請重新輸入。', // NOSONAR
+      invalidPasswordStrength: '強度不足，至少包含一個英文小寫字母與一個數字。', // NOSONAR
       invalidGuiTrack: '僅能輸入大寫英文字母',
       invalidGuiBegNo: '起號結尾只能為 00 或 50',
       invalidGuiEndNo: '迄號結尾只能為 49 或 99',
@@ -57,6 +54,9 @@ export class ValidationService {
       accNoClassNoMismatch: '「科目代號」與「三碼代號」不符',
       requireOneGroup: '請輸入「退出/折讓單號」或「發票號碼」擇一輸入',
       bnkIdDuplicate: '此【公司銀行科目】已有【帳戶編號】使用，請重新輸入。',
+      invalidCompanyId: '統一編號格式錯誤',
+      reserveAmtTooLarge: '保留款金額不可大於應付金額',
+      invalidIp: 'IP 位址格式錯誤 (範例: 192.168.1.1)',
     };
     return config[validatorName];
   }
@@ -68,7 +68,7 @@ export class ValidationService {
     // ＝＝＝
     // 第一碼必須為英文，第二碼若為數字１或２請以國民身分證驗證方式進行，若第二碼為英文Ａ、Ｂ、Ｃ、Ｄ請以統一居留證號驗證方式進行，第二碼非上述數字或代碼者，為異常資料。
     // ====
-    // 0414 農保加保增加檢核說明 :　邏輯檢核，若有錯誤顯示＂身分證號邏輯檢核錯誤，確定要繼續申報嗎?”，若回應確定，則繼續進行作業。
+    // 0414 農保加保增加檢核說明 : 邏輯檢核，若有錯誤顯示＂身分證號邏輯檢核錯誤，確定要繼續申報嗎?”，若回應確定，則繼續進行作業。
     // }
 
     // ====NA=====
@@ -79,7 +79,7 @@ export class ValidationService {
     }
 
     if (control.value !== null) {
-      if (!control.value.match(/^[A-Za-z][12]\d{8}$/)) {
+      if (!RegExp(/^[A-Za-z][12]\d{8}$/).exec(control.value)) {
         return { invalidIdn: true };
       }
     }
@@ -129,7 +129,7 @@ export class ValidationService {
     };
   }
 
-  // 密碼強度驗證器
+  // 強度驗證器
   passwordStrengthValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const value = control.value;
@@ -145,7 +145,7 @@ export class ValidationService {
       return isValid ? null : { invalidPasswordStrength: true };
     };
   }
-  // 密碼匹配驗證
+  // 匹配驗證
   passwordsMatchValidator(password: string, rePassword: string): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const passwordControl = control.get(password);
@@ -223,7 +223,7 @@ export class ValidationService {
         const beg = Number(begNo);
         const end = Number(endNo);
 
-        if (!isNaN(beg) && !isNaN(end)) {
+        if (!Number.isNaN(beg) && !Number.isNaN(end)) {
           if (beg > end) {
             // 如果起始號大於迄號，將錯誤設置在『結束號』的控制項上
             // 這樣錯誤訊息會顯示在 GUI_EndNo 的欄位上
@@ -243,7 +243,7 @@ export class ValidationService {
   oddMonthValidator(control: { value: Date | null }) {
     const value = control.value;
 
-    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+    if (value !== null && value instanceof Date && !Number.isNaN(value.getTime())) {
       const month = value.getMonth() + 1; // JS 月份是 0-based，要+1
       // 檢查是否為單數月
       if (month % 2 === 0) {
@@ -262,7 +262,7 @@ export class ValidationService {
   evenMonthValidator(control: { value: Date | null }): ValidationErrors | null {
     const value = control.value;
 
-    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+    if (value !== null && value instanceof Date && !Number.isNaN(value.getTime())) {
       const month = value.getMonth() + 1; // JS 月份是 0-based，要+1
       // 檢查是否為雙數月
       if (month % 2 !== 0) {
@@ -281,7 +281,7 @@ export class ValidationService {
   minMonthValidator(control: { value: Date | null }): ValidationErrors | null {
     const value = control.value;
 
-    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+    if (value !== null && value instanceof Date && !Number.isNaN(value.getTime())) {
       const now = new Date();
       const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); // 當前月的前一個月 1 號
       const inputDate = new Date(value.getFullYear(), value.getMonth(), 1);
@@ -302,10 +302,10 @@ export class ValidationService {
     const value = control.value;
     const now = new Date();
     const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); // 當前月的前一個月 1 號
-    if (value && value.length === 6) {
-      const year = parseInt(value.substring(0, 4), 10);
-      const month = parseInt(value.substring(4, 6), 10) - 1; // JS 月份從 0 開始
-      if (!isNaN(year) && !isNaN(month)) {
+    if (value?.length === 6) {
+      const year = Number.parseInt(value.substring(0, 4), 10);
+      const month = Number.parseInt(value.substring(4, 6), 10) - 1; // JS 月份從 0 開始
+      if (!Number.isNaN(year) && !Number.isNaN(month)) {
         const inputDate = new Date(year, month, 1);
         if (inputDate < prevMonth) {
           return { invalidMinMonthDate: true };
@@ -319,7 +319,7 @@ export class ValidationService {
   maxMonthValidator(control: { value: Date | null }): ValidationErrors | null {
     const value = control.value;
 
-    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+    if (value !== null && value instanceof Date && !Number.isNaN(value.getTime())) {
       const now = new Date();
       const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1); // 當前月 1 號
       const inputDate = new Date(value.getFullYear(), value.getMonth(), 1);
@@ -336,17 +336,31 @@ export class ValidationService {
     return null;
   }
 
-  //起始日期必須大於等於今日
   dateAfterTodayValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const value = control.value;
-      if (!value) return null; // 空值交給 required 判斷
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // 只比日期，不比時間
-      const controlDate = new Date(value);
-      controlDate.setHours(0, 0, 0, 0);
 
-      return controlDate >= today ? null : { dateNotAfterToday: true };
+      // 1. 處理空值 (由 required 處理，這裡跳過)
+      if (value === null || value === undefined || value === '') {
+        return null;
+      }
+
+      // 2. 嚴格檢查：只接受 Date 物件
+      // 這是最關鍵的一步，直接擋掉 `{length: Infinity}`, 'a', 'b' 等垃圾資料
+      if (!(value instanceof Date)) {
+        return null;
+      }
+
+      // 3. 檢查是否為有效的日期 (防止 Invalid Date)
+      if (Number.isNaN(value.getTime())) {
+        return null;
+      }
+
+      // 4. 邏輯比較 (使用 YYYYMMDD 格式比較，不受時區影響)
+      const formatDate = (d: Date) => d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+      const today = new Date();
+
+      return formatDate(value) >= formatDate(today) ? null : { dateNotAfterToday: true };
     };
   }
 
@@ -484,7 +498,7 @@ export class ValidationService {
     const requiredDateOnly = new Date(requiredDate.getFullYear(), requiredDate.getMonth(), requiredDate.getDate());
     return (control: AbstractControl): ValidationErrors | null => {
       const inputTime = control.value;
-      if (!inputTime || !(inputTime instanceof Date) || isNaN(inputTime.getTime())) {
+      if (!inputTime || !(inputTime instanceof Date) || Number.isNaN(inputTime.getTime())) {
         return null;
       }
       const inputDateOnly = new Date(inputTime.getFullYear(), inputTime.getMonth(), inputTime.getDate());
@@ -587,13 +601,42 @@ export class ValidationService {
     };
   }
 
+  // 公司統一編號（8碼數字，加權檢核碼驗證）
+  // 演算法：每位數字乘以對應權重 [1,2,1,2,1,2,4,1]，
+  // 乘積若為兩位數則將十位與個位相加，最終各位結果總和需為 5 的倍數。
+  // 特例：第7碼為 7 時（7×4=28，2+8=10），提供兩種合法總和（取 1 或 0 皆可接受）。
+  companyIdValidator(control: { value: string | null }): ValidationErrors | null {
+    const value = control.value;
+    if (!value) return null;
+    if (!/^\d{8}$/.test(value)) return { invalidCompanyId: true };
+
+    const weights = [1, 2, 1, 2, 1, 2, 4, 1];
+    const digitSums: number[] = [];
+    let altDigit = -1;
+
+    for (let i = 0; i < 8; i++) {
+      let product = Number.parseInt(value[i]) * weights[i];
+      if (product >= 10) product = Math.floor(product / 10) + (product % 10);
+      // 僅第 7 碼(index 6)數字為 7 時會再次 >= 10（7×4=28 → 2+8=10）
+      if (product >= 10) { altDigit = product % 10; product = Math.floor(product / 10); }
+      digitSums.push(product);
+    }
+
+    const sum = digitSums.reduce((a, b) => a + b, 0);
+    const valid = altDigit === -1
+      ? sum % 5 === 0
+      : (sum % 5 === 0) || ((sum - digitSums[6] + altDigit) % 5 === 0);
+
+    return valid ? null : { invalidCompanyId: true };
+  }
+
   invoicePeriodValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const value = control.value;
       if (!value || value.length < 6) return null;
 
-      const year = parseInt(value.substring(0, 4), 10);
-      const month = parseInt(value.substring(4, 6), 10);
+      const year = Number.parseInt(value.substring(0, 4), 10);
+      const month = Number.parseInt(value.substring(4, 6), 10);
 
       // 邏輯：今天 2026/05/01，當期起點是 202605
       // 鎖死不可小於 202605
@@ -602,5 +645,20 @@ export class ValidationService {
       }
       return null;
     };
+  }
+
+  // 只能輸入正確的 IPv4 格式
+  ipValidator(control: { value: string | null }): ValidationErrors | null {
+    const value = control.value;
+    if (value === null || value === '') {
+      return null;
+    }
+    // IP 位址正規表達式
+    const ipPattern = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/;
+
+    if (!ipPattern.test(value)) {
+      return { invalidIp: true }; // 定義錯誤 key 為 invalidIp
+    }
+    return null;
   }
 }

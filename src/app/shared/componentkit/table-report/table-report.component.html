@@ -22,7 +22,7 @@
       [showCustomExcelImport]="showCustomExcelImport" [exportExcelLoading]="exportExcelLoading" [showPage]="false"
       (delete)="delete.emit($event)" [deleteDisabled]="deleteDisabled" (exportExcel)="exportExcel.emit()"
       (importExcel)="importExcel.emit($event)" [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl"
-      [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark" [customReport]="customReport"
+      [reportTitle]="reportTitle" [DataKeyName]="DataKeyName" [PrintRemark]="PrintRemark" [customReport]="customReport"
       (exportEvent)="exportEvent.emit($event)" [Conditions]="Conditions">
       <header>
         <ng-content select="header"></ng-content>
@@ -157,13 +157,11 @@
               [label]="col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field]"
               (click)="!(col.linkDisabled && col.linkDisabled(rowData)) && linkClick.emit({rowData: rowData, field: col.field})"></p-button>
             <ng-template #linkDisabled>
-              <span>
-                {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
-              </span>
+              <span> {{ tableUtility.getFormattedValue(col, rowData?.[col.field], rowIndex, rowData) }} </span>
             </ng-template>
           </ng-container>
           <span *ngIf="!col.type">
-            {{ col.format ? col.format(rowData?.[col.field], rowIndex, rowData) : rowData?.[col.field] }}
+            {{ tableUtility.getFormattedValue(col, rowData?.[col.field], rowIndex, rowData) }}
           </span>
         </ng-template>
       </td>
@@ -239,7 +237,7 @@
           [ngStyle]="{'text-align': col.align ? col.align : 'center'}"
           [ngClass]="[ col.cellClass ? col.cellClass(rowData, 'footer') || '' : '']">
           <span class="font-bold">
-            {{ col.format ? col.format(row[col.field]) : row[col.field] }}
+            {{ tableUtility.getFormattedValue(col, row[col.field], 0, row) }}
           </span>
         </td>
       </ng-container>

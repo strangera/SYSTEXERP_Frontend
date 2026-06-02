@@ -12,6 +12,7 @@ import { ReportColumn, formatAmount, formatDate } from '@shared/componentkit/tab
 import { ValidationService } from '@shared/service/validation.service';
 import { removeEmptyValues } from '@shared/utils/object-utils';
 import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
 import { finalize } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
@@ -48,7 +49,8 @@ export interface Option {
     MultiSelectComponent,
     CommonModule,
     TableReportComponent,
-    YearMonthComponent
+    YearMonthComponent,
+    CheckboxModule
   ]
 })
 export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> implements OnInit {
@@ -71,6 +73,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票號碼訖 (string(16))
     SAL_Type: [null],           // 使用別 (dropdown)
     SYS_ORIGIN: [null],         // 系統別 (dropdown)
+    IncludeNextDayVoid: [true], // 包含隔日作廢 (預設打勾)
     ...createPaginationConfig([{ field: 'INV_GUIType', order: 1 }, { field: 'TXN_GUINo', order: 1 }])
   });
 
@@ -96,9 +99,10 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
     { field: 'TXN_Date', header: '退出/折讓日期', visible: true, format: formatDate },
     { field: 'Credit_Type', header: '區別', visible: true, format: (value: string) => this.creditTypeOptions.find(opt => opt.value === value)?.label ?? value },
-    { field: 'INV_YM', header: '申報年月', visible: true },
+    { field: 'INV_DeclareYM', header: '申報年月', visible: true },
     { field: 'TXN_Net', header: '退出折讓單金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'TXN_Tax', header: '退出折讓單稅額', visible: true, format: formatAmount, isTotal: true },
+    { field: 'TXN_TotalAmt', header: '折讓總金額', visible: true, format: formatAmount, isTotal: true },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票號碼', visible: true },
     { field: 'SYS_ORIGIN', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? value },
@@ -178,6 +182,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
             group_name: '合計',
             TXN_Net: d.TotalNet,
             TXN_Tax: d.TotalTax,
+            TXN_TotalAmt: (d.TotalNet ?? 0) + (d.TotalTax ?? 0),
           };
         }
       }),
@@ -260,7 +265,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
 
   private openDownloadWindow(printUrl: string): void {
     const downloadUrl = `${environment.ApiUrl}${printUrl}`;
-    window.open(downloadUrl, '_blank', 'width=1024,height=768,scrollbars=yes,resizable=yes');
+    globalThis.open(downloadUrl, '_blank', 'width=1024,height=768,scrollbars=yes,resizable=yes');
   }
 
   private loadDropdownOptions(): void {

@@ -230,6 +230,12 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     if (changes['dataReady'] && this.dataReady && this.form?.get('bus_type')?.value) {
       this.loadDependentDropdowns();
     }
+    // 父元件 API 載入完成，表單已 patch → 強制所有 OnPush 子 dropdown 重新渲染
+    // app-dropdown 使用 OnPush，patchValue({ emitEvent: false }) 不會觸發 markForCheck，
+    // 需呼叫 detectChanges 讓所有靜態選項的 dropdown 也能讀到最新的 control.value
+    if (changes['dataReady'] && this.dataReady) {
+      this.cdr.detectChanges();
+    }
   }
 
   ngOnInit(): void {
@@ -274,6 +280,11 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
         this.regionOptions = results.regions || [];
 
         this.updateSelectorPanelOptions();
+
+        // 若表單已 patch（dataReady 已觸發），強制所有 OnPush 子 dropdown 重新渲染
+        if (this.dataReady) {
+          this.cdr.detectChanges();
+        }
       },
       error: (err: unknown) => {
         console.error('初始化下拉選項失敗:', err);
@@ -452,7 +463,8 @@ export class Step1ContractInfoComponent implements OnInit, OnChanges, OnDestroy 
     // });
 
     // 設定日期驗證器
-    this.dateValidationService.setupDateValidators(this.form, this.messageService);
+    const dateSubs = this.dateValidationService.setupDateValidators(this.form, this.messageService);
+    this.subscriptions.push(...dateSubs);
 
     // 設定預收租金相關監聽
     this.setupRentAheadCalculation();

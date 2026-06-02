@@ -84,7 +84,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
     CLOS_Date_End: [null], // 強制結案日期 迄
     pageSize: [30],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'CRN_No', order: 1 }]],
+    SortBy: [[{ field: 'APPLY_Date', order: -1 }, { field: 'CRN_No', order: -1 }]],
   });
   totalRecords = 0;
   data: ITLS52020Data[] = [];

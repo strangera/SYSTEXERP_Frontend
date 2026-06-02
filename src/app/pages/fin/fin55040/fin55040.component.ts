@@ -156,7 +156,7 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     if (event.col.field === 'VouNo') {
       // 範例：導向傳票維護介面
       const vouNo = event.row?.VouNo;
-      const handoff = { vouNo, fromRoute: window.location.pathname, ts: Date.now() };
+      const handoff = { vouNo, fromRoute: globalThis.location.pathname, ts: Date.now() };
       localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
       // ... 導向邏輯
     }
@@ -221,7 +221,7 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     try {
       const handoff = {
         vouNo,
-        fromRoute: window.location.pathname,
+        fromRoute: globalThis.location.pathname,
         ts: Date.now(),
       };
       localStorage.setItem('FIN55050_CRU_HANDOFF', JSON.stringify(handoff));
@@ -233,9 +233,9 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
     }
 
     const externalUrl = this.location.prepareExternalUrl('/account/fin/fin55050cru');
-    const finalUrl = `${window.location.origin}${externalUrl}`;
+    const finalUrl = `${globalThis.location.origin}${externalUrl}`;
     // 開新分頁
-    window.open(finalUrl, '_blank', 'noopener');
+    globalThis.open(finalUrl, '_blank', 'noopener');
   }
 
   getAccSubtotal(accNo: string, field: string): number {
@@ -267,11 +267,11 @@ export class FIN55040Component extends BasicQueryPageComponent<fin55040response>
   private handleFileExport(resp: any, ext: '.pdf' | '.xlsx', baseName: string) {
     const blob = resp?.body instanceof Blob ? resp.body : resp;
     const fileName = `${baseName}_${new Date().getTime()}${ext}`;
-    const url = window.URL.createObjectURL(blob);
+    const url = globalThis.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
     a.click();
-    window.URL.revokeObjectURL(url);
+    globalThis.URL.revokeObjectURL(url);
   }
 }

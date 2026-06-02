@@ -23,6 +23,7 @@ import {
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
+import { CheckboxModule } from 'primeng/checkbox';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
@@ -63,6 +64,7 @@ import {
     DropdownRangeComponent,
     DropdownComponent,
     InputTextComponent,
+    CheckboxModule,
     NgIf,
     NgFor,
   ],
@@ -78,6 +80,7 @@ export class FIN15110Component
     ECR_No_E: [''],
     Data_Source: [''],
     INV_GUIType: [''],
+    IncludeExchange: [false],
     displayMode: ['2'],
     ...createPaginationConfig([{ field: 'Ecr_No', order: 1 }]),
     pageSize: [30],
@@ -122,6 +125,17 @@ export class FIN15110Component
     return this.fmt(sum);
   }
 
+  /** Type 7 單列前16欄金額加總（不含無原交易資料銷售總額） */
+  getType7RowTotal(row: any): number {
+    return this.type7DataFields.slice(0, 16).reduce((sum, field) => sum + (row[field] ?? 0), 0);
+  }
+
+  /** Type 7 合計金額欄的最終總計 */
+  getType7TotalSum(): string {
+    const sum = this.data.reduce((acc, row) => acc + this.getType7RowTotal(row), 0);
+    return this.fmt(sum);
+  }
+
   /** 下拉選項 */
   ECRNoOptions: IDropdownItem[] = [];
   displayModeOptions = [
@@ -130,8 +144,8 @@ export class FIN15110Component
     { value: '3', label: '發票報表依機台明細' },
     { value: '4', label: '跨日作廢發票報表' },
     { value: '5', label: '跨期作廢發票報表' },
-    { value: '6', label: '二收及二電發票表-明細表' },
-    { value: '7', label: '二收及二電發票表-彙總表' },
+    { value: '6', label: 'POS發票明細表' },
+    { value: '7', label: 'POS發票彙總表' },
   ];
   dataSourceOptions = [
     { label: '轉檔報表', value: '1' },
@@ -439,8 +453,9 @@ export class FIN15110Component
     const dataSource = this.queryForm.get('Data_Source');
     const invGUIType = this.queryForm.get('INV_GUIType');
     const txnEs = this.queryForm.get('TXN_DT_E');
+    const includeExchange = this.queryForm.get('IncludeExchange');
 
-    if (!ecrS || !ecrE || !dataSource || !invGUIType || !txnEs) return;
+    if (!ecrS || !ecrE || !dataSource || !invGUIType || !txnEs || !includeExchange) return;
 
     // 收銀機號：mode '4', '5' 時停用並清空
     if (mode === '4' || mode === '5') {
@@ -462,6 +477,14 @@ export class FIN15110Component
       dataSource.patchValue('', { emitEvent: false });
       invGUIType.disable({ emitEvent: false });
       invGUIType.patchValue('', { emitEvent: false });
+    }
+
+    // 包含換開發票：mode 2, 3, 6, 7 才啟用，其餘停用並清空
+    if (mode === '2' || mode === '3' || mode === '6' || mode === '7') {
+      includeExchange.enable({ emitEvent: false });
+    } else {
+      includeExchange.disable({ emitEvent: false });
+      includeExchange.patchValue(false, { emitEvent: false });
     }
 
     // mode '2', '3' 時結束日自動同步起始日（由 setupDisplayModeWatcher 處理），此處保持啟用
@@ -489,7 +512,7 @@ export class FIN15110Component
             TXN_SaleAmt: data.TotalTXN_SaleAmt,
             TXN_SaleTax: data.TotalTXN_SaleTax,
             TXN_SaleNoTax: data.TotalTXN_SaleNoTax,
-            TXN_SaleZeroTax: data.TotalTXN_SaleZeroTax ?? this.data.reduce((sum: number, row: Record<string, number>) => sum + (row['TXN_SaleZeroTax'] ?? 0), 0),
+            TXN_SaleZeroTax: data.TotalTXN_SaleZeroTax,
           },
         ];
         break;
@@ -579,6 +602,7 @@ export class FIN15110Component
         ECR_No_E: v.ECR_No_E || '',
         Data_Source: v.Data_Source || '',
         INV_GUIType: v.INV_GUIType || '',
+        IncludeExchange: v.IncludeExchange ? 1 : 0,
         ReportType: v.displayMode || '2',
       };
 
@@ -664,6 +688,7 @@ export class FIN15110Component
       ECR_No_E: v.ECR_No_E || '',
       Data_Source: v.Data_Source || '',
       INV_GUIType: v.INV_GUIType || '',
+      IncludeExchange: v.IncludeExchange ? 1 : 0,
       ReportType: reportType,
       IsMerge: isMerge,
       IsExcel: isExcel,

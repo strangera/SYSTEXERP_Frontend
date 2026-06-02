@@ -8,9 +8,9 @@
   [rowTrackBy]="trackByRow" [scrollable]="true" [scrollHeight]="data.length ? '450px' : '200px'" [lazy]="false"
   [rows]="lazyBatchSize" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
   (selectionChange)="onSelectionChange($event)" (onRowReorder)="onRowReorder($event)" tableStyleClass="h-full"
-  styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines p-datatable-striped"
-  [virtualScroll]="enableVirtualScroll && !groupRowsBy" [virtualScrollItemSize]="46" [virtualScrollDelay]="0"
-  [loading]="loading && data.length === 0" [groupRowsBy]="groupRowsBy" rowGroupMode="subheader">
+  styleClass="p-datatable-sm  p-datatable-gridlines " [virtualScroll]="enableVirtualScroll && !groupRowsBy"
+  [virtualScrollItemSize]="46" [virtualScrollDelay]="0" [loading]="loading && data.length === 0"
+  [groupRowsBy]="groupRowsBy" rowGroupMode="subheader">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
       [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event" [tableKey]="tableKey"
@@ -91,7 +91,7 @@
             <div class="flex items-center gap-6">
               <span *ngFor="let sth of subTotalGroupHeaders">
                 {{ sth.label }}：{{
-                  getGroupSubtotal(rowData[groupRowsBy], sth.field) | number
+                getGroupSubtotal(rowData[groupRowsBy], sth.field) | number
                 }}
               </span>
             </div>

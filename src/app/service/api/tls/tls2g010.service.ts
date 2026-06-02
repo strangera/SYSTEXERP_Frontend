@@ -26,6 +26,9 @@ export interface PrintBudgetUrlData {
 export interface ImportResultData {
   IsImportSuccess: boolean;
   ErrorMsg: string | null;
+  ErrorFilePath: string | null;
+  SuccessCount: number;
+  ErrorCount: number;
 }
 @Injectable({
   providedIn: 'root'

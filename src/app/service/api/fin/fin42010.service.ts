@@ -54,12 +54,22 @@ export interface fin42010Response {
 })
 export class FIN42010Service {
     // 預算損益表
-    apiUrl: string = environment.ApiUrl + '/FIN0000/FIN4000';
+    // apiUrl: string = environment.ApiUrl + '/FIN0000/FIN4000';
+    apiUrl: string = environment.ApiUrl + '/Controllers/FIN40000';
     constructor(private http: HttpClient) { }
 
     //查詢 預算損益表
     queryFIN42010(body: any): Observable<fin42010Response> {
         return this.http.post<fin42010Response>(`${this.apiUrl}/queryFIN42010`, body);
     }
-    // ---下拉---
+
+    // 匯出 Excel
+    exportExcelFIN42010(body: any): Observable<Blob> {
+        return this.http.post(`${this.apiUrl}/exportExcelFIN42010`, body, { responseType: 'blob' });
+    }
+
+    // 匯出 Pdf
+    exportPDFFIN42010(body: any): Observable<Blob> {
+        return this.http.post(`${this.apiUrl}/exportPDFFIN42010`, body, { responseType: 'blob' });
+    }
 }

@@ -62,17 +62,7 @@ export class ASS13040AssetDialogComponent implements OnInit {
   columns: ReportColumn[] = [
     { field: 'ASSET_ID', header: '資產編號', visible: true },
     { field: 'AssetName', header: '資產名稱', visible: true },
-    {
-      field: 'UnitName',
-      header: '單位',
-      visible: true,
-      format: (_value, _index, row) => {
-        const unit = row?.Unit ?? '';
-        const unitName = row?.UnitName ?? '';
-        if (unit && unitName) return `${unit} - ${unitName}`;
-        return unit || unitName;
-      },
-    },
+    { field: 'UnitName', header: '單位', visible: true },
     { field: 'ASSET_STATUSName', header: '狀態', visible: true },
     { field: 'PurchaseAmt', header: '購入金額', visible: true },
     { field: 'ChangeAmt', header: '異動金額', visible: true },

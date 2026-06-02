@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -15,7 +15,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { YearMonthComponent } from '../fin11020/query-year-month.component';
 
-type StoTaxNoOption = {
+interface StoTaxNoOption {
   label: string;
   value: string;
   REP_BegGUIYM?: string;
@@ -24,7 +24,7 @@ type StoTaxNoOption = {
   STO_Status?: string;
   STO_TaxNo?: string;
   STO_TaxName?: string;
-};
+}
 
 @Component({
   selector: 'app-fin15080',
@@ -45,7 +45,7 @@ type StoTaxNoOption = {
     YearMonthComponent,
   ],
 })
-export class FIN15080Component extends BasicQueryPageComponent<any> {
+export class FIN15080Component extends BasicQueryPageComponent<any> implements OnInit {
   stoTaxNoOptions: StoTaxNoOption[] = [];
   pageReady = false;
 
@@ -54,7 +54,7 @@ export class FIN15080Component extends BasicQueryPageComponent<any> {
     Business_ID: ['' as string, Validators.required],
   });
 
-  constructor(private fin15080Service: FIN15080Service) {
+  constructor(private readonly fin15080Service: FIN15080Service) {
     super();
   }
 
@@ -113,12 +113,12 @@ export class FIN15080Component extends BasicQueryPageComponent<any> {
   private buildStoTaxNoOptions(rows: any[]): StoTaxNoOption[] {
     const map = new Map<string, StoTaxNoOption>();
 
-    rows.forEach((x) => {
+    for (const x of rows) {
       const taxNo = String(x?.STO_TaxNo ?? '').trim();
       const taxName = String(x?.STO_TaxName ?? '').trim();
       const status = String(x?.STO_Status ?? '').trim();
 
-      if (!taxNo) return;
+      if (!taxNo) continue;
 
       const option: StoTaxNoOption = {
         label: `${taxNo}-${taxName}`,
@@ -136,14 +136,14 @@ export class FIN15080Component extends BasicQueryPageComponent<any> {
       // 沒有重複：直接放
       if (!exists) {
         map.set(taxNo, option);
-        return;
+        continue;
       }
 
       // 有重複：如果新資料是啟用狀態，就取代舊資料
       if (status === '1') {
         map.set(taxNo, option);
       }
-    });
+    }
 
     return Array.from(map.values());
   }
@@ -198,7 +198,7 @@ export class FIN15080Component extends BasicQueryPageComponent<any> {
           ? urlFromData
           : this.joinUrlNoEncode(environment.ApiUrl, urlFromData);
 
-        window.open(finalUrl, '_blank', 'noopener');
+        globalThis.open(finalUrl, '_blank', 'noopener');
       },
       error: (err) => {
         this.loading = false;
@@ -230,26 +230,38 @@ export class FIN15080Component extends BasicQueryPageComponent<any> {
 
   private toYYYYMM(val: any): string {
     if (!val) return '';
-
     if (val instanceof Date) {
       const y = val.getFullYear();
       const m = String(val.getMonth() + 1).padStart(2, '0');
       return `${y}${m}`;
     }
 
-    const s = String(val);
-    const m = s.match(/^(\d{4})[\/\-]?(\d{2})/);
+    const s = String(val).trim();
 
-    if (m) {
-      return `${m[1]}${m[2]}`;
+    // 移除可能的分隔符，直接取前 6 位數字
+    const cleanS = s.replace(/[\/\-]/g, '');
+
+    // 如果長度大於等於 6，且前 6 位是數字，則回傳
+    if (cleanS.length >= 6 && /^\d{6}/.test(cleanS)) {
+      return cleanS.substring(0, 6);
     }
 
-    return s;
+    return s; // 或回傳預設值
   }
 
   private joinUrlNoEncode(base: string, path: string): string {
-    const cleanBase = base.replace(/\/+$/, '');
-    const cleanPath = String(path).replace(/^\/+/, '');
+    // 使用 while 或 if 檢查字尾是否為斜線，是的話就切除
+    let cleanBase = base.trim();
+    if (cleanBase.endsWith('/')) {
+      cleanBase = cleanBase.slice(0, -1);
+    }
+
+    // 字首斜線同樣可以用原生方法處理
+    let cleanPath = path.trim();
+    if (cleanPath.startsWith('/')) {
+      cleanPath = cleanPath.slice(1);
+    }
+
     return `${cleanBase}/${cleanPath}`;
   }
 

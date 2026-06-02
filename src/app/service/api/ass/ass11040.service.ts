@@ -3,11 +3,11 @@ import { Injectable } from '@angular/core';
 import {
   CreateASS11040Request,
   CreateASS11040Response,
-  QueryASS11040DataWrapper,
-  QueryASS11040Request,
-  QueryASS11040Response,
   FACLASS1Data,
   FACLASS2Data,
+  QueryASS11040DataResponse,
+  QueryASS11040DataWrapper,
+  QueryASS11040Request,
   QueryFACLASS1Request,
   QueryFACLASS2Request,
   QueryFACLASSMDataWrapper,
@@ -69,5 +69,14 @@ export class ASS11040Service {
    */
   queryFACLASS2_DropDownList(params: QueryFACLASS2Request): Observable<ApiResponse<FACLASS2Data[]>> {
     return this.http.post<ApiResponse<FACLASS2Data[]>>(`${this.apiUrl}/queryFACLASS2_DropDownList`, params);
+  }
+
+  /**
+   * 查詢品項資料（queryFASITEM_DropDownList）
+   */
+  queryFASITEM_DropDownList(
+    params: QueryASS11040Request
+  ): Observable<ApiResponse<QueryASS11040DataResponse>> {
+    return this.http.post<ApiResponse<QueryASS11040DataResponse>>(`${this.apiUrl}/queryFASITEM_DropDownList`, params);
   }
 }

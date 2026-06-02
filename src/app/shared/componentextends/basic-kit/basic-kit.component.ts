@@ -33,13 +33,13 @@ export class BasicKitComponent {
   }
 
   updateControlState(...controls: FormControl[]) {
-    controls.forEach((control, index) => {
+    for (const [index, control] of controls.entries()) {
       this.checkRequiredValidator(control, index);
       this.checkIntLengthValidator(control);
       this.checkMinMaxValidator(control);
       this.checkNumberValidator(control);
       this.setPlaceholder(control, index);
-    });
+    }
   }
 
   checkRequiredValidator(control: FormControl, index = 0): void {
@@ -70,7 +70,7 @@ export class BasicKitComponent {
     // 用超過最大值來觸發 max 錯誤
     const maxTest = validator(new FormControl(Number.MAX_SAFE_INTEGER));
     this.maxValue = maxTest?.['max']?.max ?? null;
-    if (this.maxValue !== null && !isNaN(this.maxValue)) {
+    if (this.maxValue !== null && !Number.isNaN(this.maxValue)) {
       this.maxLength = this.maxValue.toString().length;
     }
     // 用小於最小值來觸發 min 錯誤
@@ -134,5 +134,37 @@ export class BasicKitComponent {
     }).catch(err => {
       console.error('Could not copy text: ', err);
     });
+  }
+
+  handleEnterKey(event: Event): void {
+    // 將 event 轉型為 KeyboardEvent
+    const keyboardEvent = event as KeyboardEvent;
+    const target = keyboardEvent.target as HTMLElement;
+
+    // 之後的邏輯使用 keyboardEvent 或 target 即可
+    if (target.tagName === 'BUTTON' || target.tagName === 'TEXTAREA') {
+      return;
+    }
+
+    keyboardEvent.preventDefault();
+    keyboardEvent.stopImmediatePropagation();
+    keyboardEvent.stopPropagation();
+
+    // 定義所有可被跳轉到的選擇器
+    const focusableSelector = 'input:not([disabled]):not([type="hidden"]), textarea:not([disabled])';
+    const focusableElements = Array.from(document.querySelectorAll(focusableSelector)) as HTMLElement[];
+    const index = focusableElements.indexOf(target);
+
+    if (index > -1 && focusableElements[index + 1]) {
+      const nextElement = focusableElements[index + 1];
+
+      // 針對 PrimeNG 這類包裝元件，嘗試找到內部的 input
+      const pInput = nextElement.querySelector('input');
+      if (pInput) {
+        pInput.focus();
+      } else {
+        nextElement.focus();
+      }
+    }
   }
 }

@@ -100,6 +100,8 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
 
   totalRecords = 0;
   data: FIN13030Data[] = [];
+  editDisabledFn = (row: any) => !row?.CanEdit;
+  isRowSelectable = (row: any): boolean => !!row?.CanDel;
   exportExcelLoading = false;
   exportPdfLoading = false;
   selectedItems: FIN13030Data[] = [];
@@ -188,6 +190,10 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
   }
 
   deleteRow(rowData: FIN13030Data[]) {
+    if (rowData.some(r => !(r as any)?.CanDel)) {
+      this.messageService.warnBubble('已審核之申報年月資料不可刪除');
+      return;
+    }
     this.messageService.confirm({
       header: '是否確認刪除',
       accept: () => {

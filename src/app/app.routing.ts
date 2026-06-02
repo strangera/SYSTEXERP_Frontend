@@ -24,14 +24,5 @@ export const routes: Routes = [
     loadChildren: () => import('./reports/reports.routes').then(m => m.reportsRoutes),
     canActivate: [AuthGuard]
   },
-  {
-    path: 'demo',
-    loadComponent: () => import('./pages/base/demo/input.table.component').then(m => m.InputTableComponent)
-  },
-
-  // 5. 任何未匹配的路由導向 NotFoundComponent (404 頁面)
-  //    注意：這個應該放在所有路由的最後面。
-  // { path: '**', loadComponent: () => import('./pages/base/notfound/notfound.component').then(m => m.NotfoundComponent) },
-  // 或者你也可以保持 redirectTo: 'login'，但通常 404 頁面更適合
   { path: '**', redirectTo: 'login' },
 ];

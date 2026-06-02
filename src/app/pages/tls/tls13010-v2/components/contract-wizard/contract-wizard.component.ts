@@ -458,7 +458,7 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
       check_type: [''],
       check_typeList: [[] as string[]],
       paytype: [''],
-      vip_yn: [''],
+      vip_yn: ['Y'],
       credit_card: [null],
       invoice_type: ['', [Validators.required]],
 
@@ -1696,12 +1696,12 @@ export class ContractWizardComponent extends BasicCruPageComponent<CategoryItem>
         });
         this.showSuccessDialog = true;
       } else {
-        throw new Error(response?.message || '契約書資料提交失敗');
+        // 業務邏輯失敗：直接顯示一次錯誤，不拋出例外（避免重複顯示）
+        this.messageService.errorBubble(response?.message || '契約書資料提交失敗');
       }
     } catch (error: unknown) {
+      // 此處只處理 HTTP 層例外（interceptor 已顯示通知，這裡僅記錄 log）
       console.error('契約書資料提交失敗:', error);
-      const errorMessage = error instanceof Error ? error.message : '未知錯誤';
-      this.messageService.errorBubble(`契約書資料提交失敗: ${errorMessage}`);
     } finally {
       this.isSaving = false;
     }

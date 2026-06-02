@@ -124,31 +124,36 @@ export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> imp
 
   // 報表欄位結構 (已補齊 BasePyeff/PyContrib, ComparePyeff/PyContrib)
   columns: ReportColumn[] = [
-    { field: 'YM', header: '月份' }, // 預設為 '月份' (因為 DayType 預設為 3)
-    { field: 'BuildingName', header: '館別' },
+    { field: 'YM', header: '月份', align: 'left' }, // 描述性日期文字
+    { field: 'BuildingName', header: '館別', align: 'left' },
+
     // ======================= 基準期 (Base) 欄位 =======================
-    { field: 'BaseTarget', header: '營業目標', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
-    { field: 'BaseSale', header: '營業實績', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
-    { field: 'BaseAchieveRate', header: '達成率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true, groupField: 'revenue' },
-    { field: 'BaseTxnCnt', header: '交易筆數', isSubTotal: true, groupField: 'atv' },
-    { field: 'BaseTicket', header: '客單價', format: formatAmount, isSubTotal: true, groupField: 'atv' },
-    { field: 'BasePyeff', header: '月坪效', format: formatAmount, isSubTotal: true, groupField: 'salesPerArea' }, // <--- 新增欄位
-    { field: 'BasePyContrib', header: '月坪貢獻(未稅)', format: formatAmount, isSubTotal: true, groupField: 'salesPerArea' }, // <--- 新增欄位
+    { field: 'BaseTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
+    { field: 'BaseSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'revenue' },
+    { field: 'BaseAchieveRate', header: '達成率', align: 'right', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true, groupField: 'revenue' },
+    { field: 'BaseTxnCnt', header: '交易筆數', align: 'right', isSubTotal: true, groupField: 'atv' },
+    { field: 'BaseTicket', header: '客單價', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'atv' },
+    { field: 'BasePyeff', header: '月坪效', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'salesPerArea' },
+    { field: 'BasePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'salesPerArea' },
+
     // ======================= 比較期 (Compare) 欄位 =======================
-    { field: 'CompareTarget', header: '營業目標', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' }, // 修改 GroupField
-    { field: 'CompareSale', header: '營業實績', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' }, // 修改 GroupField
-    { field: 'CompareAchieveRate', header: '達成率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true, groupField: 'compareRevenue' },
-    { field: 'CompareTxnCnt', header: '交易筆數', isSubTotal: true, groupField: 'compareATV' },
-    { field: 'CompareTicket', header: '客單價', format: formatAmount, isSubTotal: true, groupField: 'compareATV' },
-    { field: 'ComparePyeff', header: '月坪效', format: formatAmount, isSubTotal: true, groupField: 'compareSalesPerArea' }, // <--- 新增欄位
-    { field: 'ComparePyContrib', header: '月坪貢獻(未稅)', format: formatAmount, isSubTotal: true, groupField: 'compareSalesPerArea' }, // <--- 新增欄位
+    { field: 'CompareTarget', header: '營業目標', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' },
+    { field: 'CompareSale', header: '營業實績', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareRevenue' },
+    { field: 'CompareAchieveRate', header: '達成率', align: 'right', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true, groupField: 'compareRevenue' },
+    { field: 'CompareTxnCnt', header: '交易筆數', align: 'right', isSubTotal: true, groupField: 'compareATV' },
+    { field: 'CompareTicket', header: '客單價', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareATV' },
+    { field: 'ComparePyeff', header: '月坪效', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareSalesPerArea' },
+    { field: 'ComparePyContrib', header: '月坪貢獻(未稅)', align: 'right', format: formatAmount, isSubTotal: true, groupField: 'compareSalesPerArea' },
+
     // ======================= 差異 (Difference) 欄位 =======================
-    { field: 'DiffAmt', header: '業績差異', format: formatAmount, isSubTotal: true },
-    { field: 'GrowthRate', header: '成長率', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true },
-    { field: 'DiffTxn', header: '交易筆數差異', isSubTotal: true },
-    { field: 'DiffTicket', header: '客單價差異', format: formatAmount, isSubTotal: true },
-    { field: 'DiffPyeff', header: '月坪效差異', format: formatAmount, isSubTotal: true },
-    { field: 'DiffPyContrib', header: '月坪貢獻差異(未稅)', format: formatAmount, isSubTotal: true },
+    { field: 'DiffAmt', header: '業績差異', align: 'right', format: formatAmount, isSubTotal: true },
+    { field: 'GrowthRate', header: '成長率', align: 'right', format: (value: number) => value ? `${(value * 100).toFixed(1)}%` : '0%', isSubTotal: true },
+    { field: 'DiffTxn', header: '交易筆數差異', align: 'right', isSubTotal: true },
+    { field: 'DiffTicket', header: '客單價差異', align: 'right', format: formatAmount, isSubTotal: true },
+    { field: 'DiffPyeff', header: '月坪效差異', align: 'right', format: formatAmount, isSubTotal: true },
+    { field: 'DiffPyContrib', header: '月坪貢獻差異(未稅)', align: 'right', format: formatAmount, isSubTotal: true },
+
+    { field: 'BasePreOrderAmt', header: '預售業績', align: 'right', format: formatAmount, isSubTotal: true },
   ];
   // 報表分組標頭 (配合新增的欄位進行調整)
   columnGroup = [

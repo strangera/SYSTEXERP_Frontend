@@ -29,7 +29,7 @@ export class CPM11090CRUComponent extends BasicCruPageComponent<QueryCPM11090Res
     MISSING_PEOPLE: [null as string | null, [Validators.maxLength(20)]], // 尋人者
     RelationsCode: [null as string | null], // 與被尋人關係
     REC_DATE: [new Date(), [Validators.required]], // 登錄日期
-    BROADCAST_YN: ['N'], // 預設為 N // 是否傳播
+    BROADCAST_YN: [null as string | null], // 預設為 N // 是否傳播
     IsFinished: [{ value: false, disabled: true }] // 是否結案
   });
   SALUTATIONOPTIONS = getSYS1000Options('SALUTATION');

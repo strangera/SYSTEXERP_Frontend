@@ -3,11 +3,11 @@
 </label>
 <p-editor *ngIf="!control.disabled" [id]="controlName" [formControl]="control" [style]="{ height: '500px' }"
   (onTextChange)="onTextChange($event)" (onInit)="onInit($event)" [readonly]="control.disabled"
-  [placeholder]="control.disabled ? '' : placeholder" [modules]="modules" (keydown.enter)="$event.preventDefault()">
+  [placeholder]="control.disabled ? '' : placeholder" [modules]="modules" (keydown.enter)="handleEnterKey($event)">
 </p-editor>
 <p-editor *ngIf="control.disabled" [id]="controlName" [formControl]="control" [style]="{ height: '500px' }"
   [readonly]="control.disabled" [placeholder]="control.disabled ? '' : placeholder" [modules]="{}"
-  (keydown.enter)="$event.preventDefault()">
+  (keydown.enter)="handleEnterKey($event)">
 </p-editor>
 
 <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"

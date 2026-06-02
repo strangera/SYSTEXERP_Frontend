@@ -6,8 +6,9 @@
  * - 顯示合約列表
  * - 導航到編輯/檢視頁面
  */
+import { DatePipe } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
 // 基礎組件
@@ -19,22 +20,24 @@ import {
   formatDate,
   formatYN
 } from '@shared/componentkit/table/table.model';
-import { Actions } from '@shared/service/permission-guard.service';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { Actions } from '@shared/service/permission-guard.service';
 
 // PrimeNG
 import { AccordionModule } from 'primeng/accordion';
 import { Button } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 
 // 共用組件
 import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 
@@ -44,9 +47,9 @@ import { ContractItem } from '../../core/models/contract';
 
 // API 服務
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { TLS13010Service } from '@service/api/tls/tls13010.service';
 import { ExecSpFuncService } from '@service/utility/execSpFunc.service';
-import { TLS13010DropdownService, TLS13010_DROPDOWN_OPTIONS } from '@pages/tls/shared/constants/tls13010.dropdown';
 import { concatMap, finalize, from } from 'rxjs';
 
 // 格式化函數
@@ -73,12 +76,15 @@ import {
     InputTextComponent,
     MultiSelectComponent,
     CalendarRangeComponent,
+    CalendarComponent,
     DropdownComponent,
     TableComponent,
     TranslateModule,
     InputTextRangeComponent,
     Button,
-    TooltipModule
+    TooltipModule,
+    DialogModule,
+    DatePipe
   ]
 })
 export class QueryComponent extends BasicQueryPageComponent<ContractItem> implements OnInit {
@@ -101,8 +107,10 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
       disabled: (rowData: ContractItem) =>
         rowData.source_type === '要約書' ||
         rowData.approve_status !== '2' ||
+        rowData.tlt_openflag !== '9' ||
         !this.hasPermission(Actions.AntiAudit)
     },
+
     {
       label: '作廢',
       icon: 'pi pi-times-circle text-red-500',
@@ -111,8 +119,21 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
         rowData.source_type === '要約書' ||
         this.isVoidDisabled(rowData) ||
         !this.hasPermission(Actions.Invalidate)
+    },
+    {
+      label: '提前撤櫃',
+      icon: 'pi pi-calendar-times text-purple-500',
+      action: (rowData: ContractItem) => this.onEarlyTermination(rowData),
+      disabled: (rowData: ContractItem) =>
+        rowData.source_type === '要約書' ||
+        rowData.approve_status !== '2'
     }
   ];
+
+  // ========== 提前撤櫃 Dialog ==========
+  earlyTerminationDialogVisible = false;
+  earlyTerminationRow: ContractItem | null = null;
+  earlyTerminationDateControl = new FormControl<Date | null>(null, Validators.required);
 
   // ========== 表單定義 ==========
   queryForm = this.formBuilder.nonNullable.group({
@@ -387,6 +408,15 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
   }
 
   onUnapprove(rowData: ContractItem): void {
+    if (rowData.approve_status !== '2') {
+      this.messageService.warnBubble('只有已審核狀態的合約才能反審核');
+      return;
+    }
+    if (rowData.tlt_openflag !== '9') {
+      this.messageService.warnBubble('合約已開始營運，無法反審核');
+      return;
+    }
+
     this.messageService.confirm({
       message: `確定要反審核合約 ${rowData.apply_no} 嗎？`,
       accept: () => {
@@ -399,7 +429,7 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
               this.messageService.errorBubble(`反審核失敗: ${res.Message}`);
             }
           },
-          error: () => this.messageService.errorBubble('反審核失敗')
+          error: (err: any) => this.messageService.errorBubble(err?.error?.Message || '反審核失敗')
         });
       }
     });
@@ -431,6 +461,52 @@ export class QueryComponent extends BasicQueryPageComponent<ContractItem> implem
           error: () => this.messageService.errorBubble('作廢失敗')
         });
       }
+    });
+  }
+
+  // ========== 提前撤櫃功能 ==========
+  earlyTerminationMinDate: Date = new Date();
+  earlyTerminationMaxDate: Date | null = null;
+
+  onEarlyTermination(rowData: ContractItem): void {
+    this.earlyTerminationRow = rowData;
+    // minDate: 明天 (必須 > 系統日)
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    this.earlyTerminationMinDate = tomorrow;
+    // maxDate: 契約截止日前一天 (必須 < tlt_edate)
+    if (rowData.tlt_edate) {
+      const contractEnd = new Date(rowData.tlt_edate);
+      contractEnd.setDate(contractEnd.getDate() - 1);
+      this.earlyTerminationMaxDate = contractEnd;
+    } else {
+      this.earlyTerminationMaxDate = null;
+    }
+    this.earlyTerminationDateControl.setValue(null);
+    this.earlyTerminationDialogVisible = true;
+  }
+
+  confirmEarlyTermination(): void {
+    if (!this.earlyTerminationRow || !this.earlyTerminationDateControl.value) {
+      this.earlyTerminationDateControl.markAsTouched();
+      return;
+    }
+    const date = this.earlyTerminationDateControl.value;
+    const formatted = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const row = this.earlyTerminationRow;
+
+    this.apiService.earlyTerminationTLS13010({ talentId: row.talent_id, tlt_contract_edate: formatted }).subscribe({
+      next: (res: { Status: string; Message: string }) => {
+        if (res.Status === '0000') {
+          this.messageService.successBubble('提前撤櫃成功');
+          this.earlyTerminationDialogVisible = false;
+          this.onSubmit(this.queryForm);
+        } else {
+          this.messageService.errorBubble(`提前撤櫃失敗: ${res.Message}`);
+        }
+      },
+      error: () => this.messageService.errorBubble('提前撤櫃失敗')
     });
   }
 

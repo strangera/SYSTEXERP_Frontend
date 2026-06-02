@@ -1,8 +1,7 @@
-import { AsyncPipe, NgIf } from '@angular/common';
+import { NgIf } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { PanelModule } from 'primeng/panel';
 import { finalize } from 'rxjs';
@@ -38,7 +37,7 @@ function safeValidator(
   selector: 'app-sysb200-cru',
   templateUrl: './sysb200.cru.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, RadiobuttonComponent, TableComponent, NgIf, AsyncPipe, TranslateModule, InputNumberComponent]
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, RadiobuttonComponent, TableComponent, NgIf, TranslateModule, InputNumberComponent]
 })
 
 export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> implements OnInit {
@@ -118,23 +117,35 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   ];
 
 
-  bankOptions$ = this.dropDown.queryAps1001NoBranch();
+  bankBranchOptions: { label: string; value: string; BNK_No: string; BNK_BranchNo: string }[] = [];
 
   constructor(
     override readonly formBuilder: FormBuilder,
-    private sysb200Service: Sysb200Service,
-    private readonly dropDown: DropdownApiService
+    private sysb200Service: Sysb200Service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('SYSB200', this.dataForm);
-    // 若路由 state 或 rowdata 包含 VEN_BNK_No，帶入到表單的 VEN_BankNo（後端欄位 VEN_BNK_No -> 前端 VEN_BankNo）
-    const rd: any = this.rowdata as any;
-    if (rd && rd.VEN_BNK_No) {
-      this.dataForm.get('VEN_BankNo')?.setValue(rd.VEN_BNK_No);
-    }
+
+    // 載入銀行分行下拉選單
+    this.sysb200Service.queryBankBranchDropdown().subscribe(res => {
+      this.bankBranchOptions = (res.Data || []).map(item => ({
+        label: `${item.BNK_No || ''}${item.BNK_BranchNo || ''} - ${item.BNK_Name || ''}${item.BNK_BranchName ? `(${item.BNK_BranchName})` : ''}`,
+        value: (item.BNK_No || '') + (item.BNK_BranchNo || ''),
+        BNK_No: item.BNK_No || '',
+        BNK_BranchNo: item.BNK_BranchNo || ''
+      }));
+
+      // 編輯模式：等選單載入後再設定選中值（BNK_No+BNK_BranchNo 組合）
+      const rowdata = this.rowdata as unknown as Record<string, unknown>;
+      if (rowdata?.['VEN_BNK_No']) {
+        this.dataForm.get('VEN_BankNo')?.setValue(
+          String(rowdata['VEN_BNK_No'] || '') + String(rowdata['VEN_BNK_BranchNo'] || '')
+        );
+      }
+    });
 
     // 儲存表單原始值快照（供取消還原用）
     this.originalForm = this.dataForm.getRawValue();
@@ -208,26 +219,6 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     this.selectedRows = [];
   }
 
-  // 離開：導回查詢頁
-  goBack() {
-    super.onCancel();
-  }
-
-  // 取消：還原表單與 contacts（不導回查詢頁）
-  override onCancel(returnValue?: any) {
-    // 還原表單值
-    if (this.originalForm) {
-      this.dataForm.reset(this.originalForm);
-    } else {
-      this.dataForm.reset();
-    }
-    // 還原 contacts
-    this.contacts = JSON.parse(JSON.stringify(this.originalContacts || []));
-    // 重置狀態
-    this.submitted = false;
-    this.loading = false;
-  }
-
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       console.log("表單 valid 狀態：", form.valid);
@@ -282,6 +273,10 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       ? form.get('VEN_No')?.value[0]
       : form.get('VEN_No')?.value;
 
+    // 查找選中的銀行分行，取得 BNK_No 和 BNK_BranchNo
+    const selectedBankValue = form.get('VEN_BankNo')?.value;
+    const selectedBank = this.bankBranchOptions.find(b => b.value === selectedBankValue);
+
     // 組資料
     const data = {
       id: this.rowdata?.id ?? 0,
@@ -289,6 +284,8 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       VEN_No: VEN_No,
       VEN_Uniform: uniformTrimmed === '' ? null : uniformTrimmed,
       VEN_PayConditionDay: Number(form.get('VEN_PayConditionDay')?.value),
+      VEN_BNK_No: selectedBank?.BNK_No ?? null,
+      VEN_BNK_BranchNo: selectedBank?.BNK_BranchNo ?? null,
       pOS20131Details: this.contacts.map(item => ({
         VEN_Boss: item.VEN_Boss,
         VEN_BossID: item.VEN_BossID?.trim() === '' ? null : item.VEN_BossID?.trim(),

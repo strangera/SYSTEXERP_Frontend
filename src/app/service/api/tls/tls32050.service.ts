@@ -54,6 +54,7 @@ export interface TLS32050Response extends BaseQueryRequest {
   "Diff_AvgTicket": number, // 客單價差異
   "Space": number, // 營業坪數（坪）
   "Base_DaySpaceEff": number // 本期日平均坪效（每坪每日銷售）
+  "AVN_PreOrderAmt": number; // 預售金額
 }
 
 // 明細 request

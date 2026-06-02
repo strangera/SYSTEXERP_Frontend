@@ -64,11 +64,18 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
   lastQueryBody: any = null;
   footerData: any = {};
 
-  addButton: AddButton[] = [{
-    label: '列印', icon: 'pi pi-file-pdf',
-    action: (row: any) => this.onPrint(row),
-    disabled: () => !this.hasPermission(this.Actions.Query)
-  }];
+  addButton: AddButton[] = [
+    {
+      label: '列印', icon: 'pi pi-file-pdf',
+      action: (row: any) => this.onPrint(row),
+      disabled: () => !this.hasPermission(this.Actions.Query)
+    },
+    {
+      label: '作廢', icon: 'pi pi-ban',
+      action: (row: any) => this.onVoid(row),
+      disabled: (row: any) => row?.INV_Cancel === 'Y' || !row?.CanEdit || !this.hasPermission(this.Actions.Edit)
+    }
+  ];
 
   queryFn = (body: any) => this.fin13040Service.queryFIN13040(body).pipe(
     map(res => ({
@@ -78,7 +85,7 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     }))
   );
 
-  editDisabled = (row: any) => row?.InvoiceType === '35';
+  editDisabled = (row: any) => row?.InvoiceType === '35' || !row?.CanEdit;
 
   queryForm = this.formBuilder.group({
     ...createPaginationConfig([{ field: 'InvoiceType', order: 1 }]),
@@ -197,16 +204,35 @@ export class FIN13040Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
+  onVoid(row: any): void {
+    if (!row?.ID) return;
+    this.messageService.confirm({
+      header: '確認作廢',
+      message: `確定要作廢發票 ${row.InvoiceNumber} 嗎？此操作無法復原。`,
+      type: 'delete',
+      accept: () => {
+        this.fin13040Service.voidFIN13040({ ID: row.ID }).pipe(untilDestroyed(this)).subscribe({
+          next: (res) => {
+            if (res?.Status === '0000') {
+              this.messageService.successBubble(`發票 ${row.InvoiceNumber} 已作廢`);
+              this.onSubmit(this.queryForm);
+            }
+          }
+        });
+      }
+    });
+  }
+
   onPrint(row: any): void {
     if (!row?.ID) return;
     this.fin13040Service.printFIN13040({ MID: 0, STO_No: '10', ID: row.ID }).subscribe(res => {
       const blob = new Blob([res.body as Blob], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
+      const url = globalThis.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${row.InvoiceNumber || 'report'}.pdf`;
       a.click();
-      window.URL.revokeObjectURL(url);
+      globalThis.URL.revokeObjectURL(url);
     });
   }
 }

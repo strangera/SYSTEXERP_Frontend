@@ -17,6 +17,7 @@ export interface ReportColumn {
   align?: 'left' | 'center' | 'right';
   reportType?: reportType; // 共通匯出格式類型
   type?: TableTypes; // 欄位類型
+  buttonLabel?: string;
   cellClass?: (rowData: any, field?: string) => string;// 新增動態樣式 Callback，不影響舊邏輯
   link?: boolean; // 是否為連結
   linkDisabled?: (rowData: any) => boolean;
@@ -78,6 +79,23 @@ export const formatDateTime = (dateStr: string) => {
   const seconds = String(date.getSeconds()).padStart(2, '0');
   return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 };
+
+/**
+ * 將小數轉換為百分比字串 (例如: 0.12000 -> '12%')
+ * 如果需要保留小數點，例如 12.00%，可以改成 (value * 100).toFixed(2) + '%'
+ */
+export const formatPercentage = (value: any): string => {
+  if (value === null || value === undefined || isNaN(Number(value))) {
+    return '';
+  }
+  const num = Number(value) * 100;
+  // 使用 Math.round 或 toFixed 根據你的業務需求決定
+  // 範例 A (無條件捨入到整數，如 12%):
+  // return `${Math.round(num)}%`;
+
+  // 範例 B (如果需要保留兩位小數，如 12.00%):
+  return `${num.toFixed(2)}%`;
+}
 
 // formatYYYYMM 輸出為 YYYY/MM
 export const formatYYYYMM = (value: string | Date | null): string => {
