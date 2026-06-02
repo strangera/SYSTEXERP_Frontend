@@ -128,10 +128,10 @@ export class FIN72010Component extends BasicQueryPageComponent<FIN72010Service> 
 
   addButton: AddButton[] = [
     {
-      label: '刪除',
+      label: '作廢',
       icon: 'pi pi-trash',
       action: (rowData: FIN72010Data) => this.onDelete(rowData),
-      disabled: () => !this.hasPermission(this.Actions.Delete),
+      disabled: (rowData: FIN72010Data) => !this.hasPermission(this.Actions.Delete) || rowData.PCS_Status == '作廢',
     }
   ];
 

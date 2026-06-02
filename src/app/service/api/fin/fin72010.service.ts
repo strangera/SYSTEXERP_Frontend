@@ -318,7 +318,8 @@ export class FIN72010Service {
       '1': '建立',
       '2': '請款',
       '3': '拋轉',
-      '4': '撥補'
+      '4': '撥補',
+      '9': '作廢'
     };
 
     return statusMap[String(status ?? '')] ?? '';
