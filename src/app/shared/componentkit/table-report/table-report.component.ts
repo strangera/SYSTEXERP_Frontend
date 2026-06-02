@@ -610,14 +610,19 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       // 加上 padding 核心偏移量
       let finalMax = maxLength;
       let finalMin = minLength;
-
-      // 設定安全邊界：最少不低於 80px (避免太擠)，最高不超過 500px (避免單一欄位拉太長)
-      finalMin = Math.max(finalMin, 55);
-      finalMax = Math.min(Math.max(finalMax, 120), 200);
-
-      // 如果算出來的最短比最長還大，做個修正
-      if (finalMin > finalMax) finalMin = finalMax;
-
+      if (col.format) {
+        // 如果有下 format：絕對不能折行！
+        // 最小寬度直接塞滿最長內容的長度，取消 200px 的上限限制，讓它根據內容完全撐開
+        finalMin = finalMax;
+        // 可以視專案需求加上極端防禦上限（例如 800px），避免後端髒資料毀掉排版
+        finalMax = Math.min(finalMax, 800);
+        if (finalMin > finalMax) finalMin = finalMax;
+      } else {
+        // 如果沒有下 format：維持一般欄位的彈性安全邊界
+        finalMin = Math.max(finalMin, 55);
+        finalMax = Math.min(Math.max(finalMax, 120), 200);
+        if (finalMin > finalMax) finalMin = finalMax;
+      }
       // 將計算好的寬度字串直接回填到 column 物件中
       return {
         ...col,
