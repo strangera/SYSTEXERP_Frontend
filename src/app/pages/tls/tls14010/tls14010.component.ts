@@ -74,8 +74,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   tlt_openOptions: option[] = [ //營運狀況選單
     { value: '0', label: '已撤櫃' },
     { value: '1', label: '營業中' },
-    // { value: '9', label: '合約未生效' },
-    { value: '9', label: '核准時合約尚未開始' }, // DB規格是 9: 核准時合約尚未開始，有需求再改
+    { value: '9', label: '合約未生效' }, // user需求需使用 '合約未生效'
   ];
   statusOptions: option[] = [ // 合約狀態的下拉選單
     { value: "1", label: '未審核' },
