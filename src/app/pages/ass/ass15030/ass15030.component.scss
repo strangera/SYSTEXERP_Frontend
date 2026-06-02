@@ -1,0 +1,8 @@
+// 小計列樣式：重現原本 table-report 群組底小計的視覺
+// （bg-gray-200 + font-bold + text-sm + text-primary）
+:host ::ng-deep td.ass15030-subtotal-cell {
+  background-color: var(--gray-200);
+  color: var(--primary-color);
+  font-weight: 700;
+  font-size: 0.875rem;
+}

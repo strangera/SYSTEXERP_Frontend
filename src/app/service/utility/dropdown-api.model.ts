@@ -30,11 +30,15 @@ export interface Pos2002LocationItem {
   area_desc?: string | null;
 }
 
-/** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME） */
+/** queryFASITEM_DropDownList 回傳列（GOODS_ID / GOODS_NAME / UNIT_NAME / ID） */
 export interface FasItemDropdownItem {
   RowNo?: string;
+  RowNum?: number;
+  ID?: number | null;
   GOODS_ID?: string | null;
   GOODS_NAME?: string | null;
+  UNIT?: string | null;
+  UNIT_NAME?: string | null;
 }
 
 /**
